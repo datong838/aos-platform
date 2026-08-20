@@ -1,0 +1,100 @@
+{
+  "schema": "aos-workshop-watchdog-delivery-evidence/v1",
+  "taskId": "workshop-watchdog-safe-blocked-periodic-recheck-v28-20260820",
+  "capturedAt": "2026-08-20T22:35:00+08:00",
+  "authorityRevision": "AOS-000146",
+  "branch": "w2-workshop",
+  "headBefore": "befe139335a809d677f4a8742c74cf992dd42d67",
+  "result": "IMPLEMENTED_GREEN_SAFE_BLOCKED_RECHECK_ARMED",
+  "purpose": "Let the same Workshop task periodically recheck safe-blocked dependencies without treating Watchdog input as authority, and immediately enter the established continuous wave loop once independent verification is GREEN.",
+  "rules": {
+    "watchdogRole": "wake-only",
+    "injectedFactsTrusted": false,
+    "independentRecheckRequired": [
+      "authority",
+      "01/06",
+      "git branch/log/status",
+      "latest Delivery Receipt",
+      "memory status/validate/gate",
+      "all leases",
+      "real data probe",
+      "actual code state"
+    ],
+    "waveLoop": [
+      "review upstream design",
+      "freeze file-level wave checklist",
+      "minimal implementation",
+      "focused tests",
+      "cumulative regression",
+      "built-in browser acceptance when UI is involved",
+      "design-code consistency review",
+      "evidence and context update",
+      "enter next wave"
+    ],
+    "primeMemory": "Each wave emits Delivery Receipt facts for serialized m1 CAS consumption; w2 does not directly write authority, 01/06, or Prime core projections."
+  },
+  "configuration": {
+    "configRevision": "workshop-watchdog-v2.8-20260820",
+    "launchIntervalSeconds": 300,
+    "blockedRecheckDelaySeconds": 1800,
+    "continuationDelaySeconds": 300,
+    "configMode": "0600"
+  },
+  "redGreen": {
+    "red": "The new focused test failed with KeyError blocked_recheck_armed before implementation.",
+    "focused": "5/5 passed",
+    "cumulative": "53/53 passed",
+    "pythonCompile": "GREEN",
+    "compileall": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "browser": "NOT_APPLICABLE_NO_UI_CHANGE"
+  },
+  "liveNoop": {
+    "decision": "turn-running",
+    "activeTurnDetected": true,
+    "totalAttemptsBefore": 183,
+    "totalAttemptsAfter": 183,
+    "blockedRecheckArmed": true,
+    "blockedRecheckTaskId": "W2-00B",
+    "blockedRecheckReadyAt": "2026-08-20T15:05:03Z",
+    "continuationArmed": false,
+    "dependencyWaitArmed": false,
+    "launchAgentRuns": 1491,
+    "launchAgentLastExitCode": 0
+  },
+  "realDependencyProbe": {
+    "firstSha256": "568abf5e4d77304a883e7b18a4fe5f9ea5ecb6966a128fd564e6964d78c82f9d",
+    "secondSha256": "568abf5e4d77304a883e7b18a4fe5f9ea5ecb6966a128fd564e6964d78c82f9d",
+    "deterministic": true,
+    "succeeded": 11,
+    "failed": 1,
+    "failedPipelineId": "P07-shipment-qyh",
+    "failedErrorCode": "PIPELINE_EXECUTOR_FAILED",
+    "canarySourceCount": 0,
+    "canaryProjectionCount": 0,
+    "gateConclusion": "W2_RUNTIME_REMAINS_SAFE_BLOCKED"
+  },
+  "preSha256": {
+    "scripts/long-task-watchdog/watchdog.py": "fd711c072887722108dffefff2422cb8e14b937407161ec7cdf8e32899a1289f",
+    "scripts/long-task-watchdog/test_watchdog.py": "9226e30f165d2b2d000ac21eb552a07ecd072f62fe2a122e9cdc1025b93971d5",
+    "scripts/long-task-watchdog/README.md": "025dfc46652f9b29684b141d030fd363529815c0dc4f040220375485add02ba2",
+    "25-WorkshopWatchdogADR.md": "f3ddc6fad5e4382a7d941db7da3bd128a3917df3aa4a7bad70bb4b2d1adf1bb0",
+    "local-config.json": "6c4a12519627aab3c15552636c991741fe89879318b48c9dc4453335e9610c87"
+  },
+  "postSha256": {
+    "scripts/long-task-watchdog/watchdog.py": "6677f5da1cbf1bce6dcef6bcc9a5163001797425bfb556afafc0aeeb41147a14",
+    "scripts/long-task-watchdog/test_watchdog.py": "9ccf5d31882ad501d12e15645e34e520a2cff1c5dce02a16c9b2bf17701a7ac9",
+    "scripts/long-task-watchdog/README.md": "8dca8ea0159ad105d5415e3801db0e6e8188c0864b123b78653d2fb1914d00af",
+    "25-WorkshopWatchdogADR.md": "9ef4942859dfde3e259e17dbcc31f06c885e2f026b1d59a0576ff6cd7f659903",
+    "local-config.json": "7c0bb0ea609e1794a101e6db36747d249c5b8b08db06f2eaed7a5ff9d4bb7762"
+  },
+  "excludedEffects": [
+    "no authority/01/06/Prime direct write",
+    "no migration",
+    "no database write",
+    "no Pipeline or Schedule trigger",
+    "no real tenant business data mutation",
+    "no external publish",
+    "no read or overwrite of w1-aip uncommitted worktree"
+  ]
+}

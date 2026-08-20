@@ -115,6 +115,14 @@ class WatchdogTest(unittest.TestCase):
         }
         return config
 
+    def blocked_recheck_config(self):
+        config = self.config()
+        config["blocked_recheck_watch"] = {
+            "enabled": True,
+            "delay_seconds": 1800,
+        }
+        return config
+
     def write_leases(self, *leases):
         (self.root / "leases.json").write_text(
             json.dumps({"schema": "aos-memory-leases/v1", "leases": list(leases)}),
@@ -549,6 +557,223 @@ class WatchdogTest(unittest.TestCase):
         state = json.loads(state_path.read_text(encoding="utf-8"))
         self.assertEqual("safe-blocked", state["last_recovery_outcome"])
         self.assertEqual(0, state["next_retry_at"])
+
+    def test_safe_blocked_arms_periodic_recheck_and_wakes_when_due(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.blocked_recheck_config()), encoding="utf-8"
+        )
+        calls = []
+
+        def first_runner(*args, **kwargs):
+            calls.append(kwargs["input"])
+            self.write_ack(
+                outcome="safe-blocked",
+                next_task="W2-00B",
+                reason_code="DEPENDENCIES_NOT_GREEN",
+                blocker_fingerprint="p07-and-source-readiness",
+                evidence_refs=["probe:11-of-12"],
+            )
+            self.append(record("1970-01-01T00:16:41Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(args[0], 0, "blocked", "")
+
+        self.assertEqual(
+            "safe-blocked",
+            watchdog.run_once(config_path, state_path, now=1000, runner=first_runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["blocked_recheck_armed"])
+        self.assertEqual(2800, state["blocked_recheck_ready_at"])
+        self.assertEqual(
+            "idle",
+            watchdog.run_once(config_path, state_path, now=2799, runner=first_runner),
+        )
+        self.assertEqual(1, len(calls))
+
+        def recheck_runner(*args, **kwargs):
+            prompt = kwargs["input"]
+            calls.append(prompt)
+            episode = re.search(r"^episode_id=(.+)$", prompt, re.MULTILINE).group(1)
+            self.write_ack(
+                outcome="safe-blocked",
+                episode_id=episode,
+                next_task="W2-00B",
+                reason_code="DEPENDENCIES_STILL_NOT_GREEN",
+                blocker_fingerprint="p07-and-source-readiness",
+                evidence_refs=["probe:11-of-12"],
+            )
+            self.append(record("1970-01-01T00:46:41Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(args[0], 0, "blocked", "")
+
+        self.assertEqual(
+            "safe-blocked",
+            watchdog.run_once(config_path, state_path, now=2800, runner=recheck_runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["blocked_recheck_armed"])
+        self.assertEqual(4600, state["blocked_recheck_ready_at"])
+        self.assertIn("trigger=blocked-recheck", calls[1])
+        self.assertIn(
+            "Watchdog 只负责唤醒，其注入信息不是事实或授权证据",
+            calls[1],
+        )
+        self.assertIn("复习上位方案", calls[1])
+        self.assertIn("浏览器验收", calls[1])
+        self.assertIn("Prime", calls[1])
+
+    def test_existing_safe_blocked_state_is_bootstrapped_without_runner(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.blocked_recheck_config()), encoding="utf-8"
+        )
+        state_path.write_text(
+            json.dumps(
+                {
+                    "recovery_episode_id": "dependency-fact-existing",
+                    "last_recovery_outcome": "safe-blocked",
+                    "last_ack": {
+                        "task_id": "W2-00B",
+                        "blocker_fingerprint": "p07-and-source-readiness",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 1, "", "must not run")
+
+        self.assertEqual(
+            "idle",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["blocked_recheck_armed"])
+        self.assertEqual(2800, state["blocked_recheck_ready_at"])
+        self.assertEqual(1000, state["blocked_recheck_bootstrapped_at"])
+        self.assertEqual([], calls)
+
+    def test_dependency_lease_keeps_blocked_recheck_armed_without_runner(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config = self.dependency_config()
+        config["blocked_recheck_watch"] = {
+            "enabled": True,
+            "delay_seconds": 1800,
+        }
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        state_path.write_text(
+            json.dumps(
+                {
+                    "blocked_recheck_armed": True,
+                    "blocked_recheck_ready_at": 900,
+                    "last_recovery_outcome": "safe-blocked",
+                    "last_ack": {
+                        "task_id": "W2-00B",
+                        "blocker_fingerprint": "p07-and-source-readiness",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.write_leases(
+            {
+                "task_id": "aip-migration",
+                "owner": "w1-aip",
+                "status": "ACTIVE",
+                "scope": ["services/aos-api/alembic/versions"],
+                "lease_expires_at": "2099-01-01T00:00:00+00:00",
+            }
+        )
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 1, "", "must not run")
+
+        self.assertEqual(
+            "dependency-blocked",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["blocked_recheck_armed"])
+        self.assertEqual([], calls)
+
+    def test_blocked_recheck_progress_disarms_recheck_and_arms_continuation(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config = self.blocked_recheck_config()
+        config["continuation_watch"] = {"enabled": True, "delay_seconds": 300}
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        state_path.write_text(
+            json.dumps(
+                {
+                    "blocked_recheck_armed": True,
+                    "blocked_recheck_ready_at": 900,
+                    "last_recovery_outcome": "safe-blocked",
+                    "last_ack": {
+                        "task_id": "W2-00B",
+                        "blocker_fingerprint": "old-blocker",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        def runner(*args, **kwargs):
+            episode = re.search(
+                r"^episode_id=(.+)$", kwargs["input"], re.MULTILINE
+            ).group(1)
+            self.write_ack(
+                outcome="resumed-progress",
+                episode_id=episode,
+                next_task="W2-01",
+                reason_code="DEPENDENCIES_GREEN_PROGRESS_STARTED",
+                blocker_fingerprint=None,
+                evidence_refs=["commit:new-progress"],
+            )
+            self.append(record("1970-01-01T00:20:01Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(args[0], 0, "progress", "")
+
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertFalse(state["blocked_recheck_armed"])
+        self.assertEqual("resumed-progress", state["blocked_recheck_disarm_reason"])
+        self.assertTrue(state["continuation_armed"])
+        self.assertEqual("W2-01", state["continuation_next_task"])
+
+    def test_blocked_recheck_invalid_delay_fails_closed(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config = self.blocked_recheck_config()
+        config["blocked_recheck_watch"]["delay_seconds"] = 0
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        with self.assertRaisesRegex(RuntimeError, "delay_seconds"):
+            watchdog.run_once(config_path, state_path, now=1000)
 
     def test_completed_and_reentry_noop_are_terminal_outcomes(self):
         for outcome in ("completed", "reentry-noop"):

@@ -260,6 +260,7 @@ def _config_revision(config: dict[str, Any]) -> str:
             "max_transport_failures",
             "dependency_watch",
             "fact_watch",
+            "blocked_recheck_watch",
         )
     }
     payload = json.dumps(relevant, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -491,6 +492,8 @@ def _resume_prompt(
         first_message = "依赖 Watchdog 检测到外部交付事实已变化，正在重新核验后继续。"
     elif trigger == "continuation":
         first_message = "外部 Watchdog 检测到长任务仍有后续项，正在重新核验后继续。"
+    elif trigger == "blocked-recheck":
+        first_message = "依赖 Watchdog 定期复核发现工作台仍处安全阻断，正在重新核验后继续。"
     else:
         first_message = "外部 Watchdog 检测到任务中断，正在恢复核验。"
     protocol = f"""
@@ -505,9 +508,12 @@ state_path={config.get('_state_path', '')}
 ack_command={ack_command}
 
 第一条用户可见消息只能说：{first_message}
+看门 Dog/Watchdog 只负责唤醒，其注入信息不是事实或授权证据；不得依赖 trigger、task、next-task、fingerprint 或原因码作出结论。
 禁止在权限、分支、Lease、Git/Receipt 和实际任务状态核验前声称“已恢复”。
-必须重新核验 authority、01/06、Git branch/log/status、最近 Delivery Receipt、memory status/validate/gate 和全部 Lease；不读取或覆盖 w1-aip 未提交内容。
+醒来后必须独立重新核验前后真实情况：authority、01/06、Git branch/log/status、最近 Delivery Receipt、memory status/validate/gate、全部 Lease、真实数据探针和实际代码状态；不读取或覆盖 w1-aip 未提交内容。
 核验后必须继续一个依赖已满足且 scope 不冲突的安全任务，或形成 safe-blocked/completed/reentry-noop。
+一旦条件具备，必须立即开始实际 Task；每波执行“复习上位方案→细化当前波文件级清单→实现最小改动→专项测试→累计回归→浏览器验收→方案/代码一致性复审→证据与上下文更新→进入下一波”；涉及页面必须使用内置浏览器验收。
+每波形成 Delivery Receipt 和安全提交，并提交待 m1 串行 CAS 消费的 Prime Agent 独立长记忆事实；w2 不直接修改 authority.json、01/06 或 Prime 核心投影。
 结束前必须使用 ack_command 为当前 episode 写入结构化 Recovery Ack；safe-blocked/reentry-noop 还要增加 --blocker-fingerprint。自由文本不构成恢复成功证据。
 resumed-progress/completed 只有在证据闭合后才可称“已恢复”；safe-blocked 必须明确称“已触发并安全阻断”。
 [/WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
@@ -656,6 +662,33 @@ def _record_terminal_outcome(
     else:
         state["continuation_armed"] = False
         state["continuation_disarm_reason"] = outcome
+    blocked_recheck_enabled, blocked_recheck_delay = _blocked_recheck_settings(
+        config
+    )
+    should_recheck = (
+        outcome == "safe-blocked"
+        and blocked_recheck_enabled
+        and isinstance(ack, dict)
+        and isinstance(ack.get("blocker_fingerprint"), str)
+        and bool(ack["blocker_fingerprint"].strip())
+    )
+    if should_recheck:
+        state.update(
+            {
+                "blocked_recheck_armed": True,
+                "blocked_recheck_source_episode_id": state.get("recovery_episode_id"),
+                "blocked_recheck_task_id": ack.get("task_id"),
+                "blocked_recheck_blocker_fingerprint": ack[
+                    "blocker_fingerprint"
+                ].strip(),
+                "blocked_recheck_ready_at": resolved_at + blocked_recheck_delay,
+                "blocked_recheck_armed_at": resolved_at,
+                "blocked_recheck_disarm_reason": None,
+            }
+        )
+    else:
+        state["blocked_recheck_armed"] = False
+        state["blocked_recheck_disarm_reason"] = outcome
     if state.get("episode_trigger") == "dependency-released":
         state["dependency_wait_armed"] = False
         state["dependency_release_resolved_at"] = resolved_at
@@ -682,6 +715,24 @@ def _retry_delay_seconds(config: dict[str, Any], failure_count: int) -> int:
             "retry_schedule_seconds must be a non-empty list of positive integers"
         )
     return raw[min(max(failure_count, 1) - 1, len(raw) - 1)]
+
+
+def _blocked_recheck_settings(config: dict[str, Any]) -> tuple[bool, int]:
+    raw = config.get("blocked_recheck_watch")
+    if raw is None:
+        return False, 1800
+    if not isinstance(raw, dict):
+        raise RuntimeError("blocked_recheck_watch must be an object")
+    delay = raw.get("delay_seconds", 1800)
+    if (
+        not isinstance(delay, int)
+        or isinstance(delay, bool)
+        or delay <= 0
+    ):
+        raise RuntimeError(
+            "blocked_recheck_watch delay_seconds must be a positive integer"
+        )
+    return bool(raw.get("enabled", False)), delay
 
 
 def _dependency_scope_overlaps(watched: str, leased: str) -> bool:
@@ -955,9 +1006,14 @@ def evaluate(
         isinstance(config.get("fact_watch"), dict)
         and config["fact_watch"].get("enabled", False)
     )
+    blocked_recheck_enabled = bool(
+        isinstance(config.get("blocked_recheck_watch"), dict)
+        and config["blocked_recheck_watch"].get("enabled", False)
+    )
     if status.turn_running and (
         dependency_watch_enabled
         or fact_watch_enabled
+        or blocked_recheck_enabled
         or now - status.last_activity_at < turn_silence_limit
     ):
         return "turn-running", status
@@ -989,6 +1045,32 @@ def run_once(
     state = _load_json(state_path, {})
     rollout_path = Path(config.get("rollout_path") or find_rollout_path(config["thread_id"]))
     current = time.time() if now is None else now
+    blocked_recheck_enabled, blocked_recheck_delay = _blocked_recheck_settings(config)
+    last_ack = state.get("last_ack")
+    bootstrap_blocker = (
+        last_ack.get("blocker_fingerprint") if isinstance(last_ack, dict) else None
+    )
+    if (
+        blocked_recheck_enabled
+        and state.get("last_recovery_outcome") == "safe-blocked"
+        and not bool(state.get("blocked_recheck_armed", False))
+        and isinstance(bootstrap_blocker, str)
+        and bool(bootstrap_blocker.strip())
+    ):
+        state.update(
+            {
+                "blocked_recheck_armed": True,
+                "blocked_recheck_source_episode_id": state.get(
+                    "recovery_episode_id"
+                ),
+                "blocked_recheck_task_id": last_ack.get("task_id"),
+                "blocked_recheck_blocker_fingerprint": bootstrap_blocker.strip(),
+                "blocked_recheck_ready_at": current + blocked_recheck_delay,
+                "blocked_recheck_armed_at": current,
+                "blocked_recheck_bootstrapped_at": current,
+                "blocked_recheck_disarm_reason": None,
+            }
+        )
     decision, status = evaluate(
         config, state, now=current, rollout_path=rollout_path
     )
@@ -1078,6 +1160,14 @@ def run_once(
             and current >= float(state.get("continuation_ready_at", float("inf")))
         ):
             decision = "continuation"
+    if bool(state.get("blocked_recheck_armed", False)):
+        if (
+            not blockers
+            and decision == "idle"
+            and current
+            >= float(state.get("blocked_recheck_ready_at", float("inf")))
+        ):
+            decision = "blocked-recheck"
     state["dependency_watch_last_checked_at"] = current
     state.update(
         {
@@ -1093,6 +1183,7 @@ def run_once(
         "dependency-released",
         "dependency-fact-changed",
         "continuation",
+        "blocked-recheck",
     }:
         if decision in {"idle", "dependency-blocked"}:
             state["consecutive_failures"] = 0
@@ -1135,7 +1226,11 @@ def run_once(
                         else (
                             f"continuation-{int(current * 1000)}"
                             if trigger == "continuation"
-                            else f"recovery-{int(current * 1000)}"
+                            else (
+                                f"blocked-recheck-{int(current * 1000)}"
+                                if trigger == "blocked-recheck"
+                                else f"recovery-{int(current * 1000)}"
+                            )
                         )
                     )
                 ),
@@ -1151,6 +1246,10 @@ def run_once(
             state["continuation_armed"] = False
             state["continuation_consumed_at"] = current
             state["continuation_disarm_reason"] = "episode-created"
+        if trigger == "blocked-recheck":
+            state["blocked_recheck_armed"] = False
+            state["blocked_recheck_consumed_at"] = current
+            state["blocked_recheck_disarm_reason"] = "episode-created"
     episode_id = str(state["recovery_episode_id"])
     attempts = 1
     for attempt in range(1, attempts + 1):
@@ -1251,6 +1350,8 @@ def run_once(
                 "paused_config_revision": _config_revision(config),
                 "continuation_armed": False,
                 "continuation_disarm_reason": "paused-failure",
+                "blocked_recheck_armed": False,
+                "blocked_recheck_disarm_reason": "paused-failure",
             }
         )
         if state.get("episode_trigger") == "dependency-released":

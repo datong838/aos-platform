@@ -13,7 +13,11 @@ Recovery Ack 的 outcome 固定为：
 
 四种 outcome 都停止当前 episode 重试。新 final 无 Ack 为 `protocol-failed`；当前 Ack 无新 final 为 `outcome-uncertain`，两者都停止盲重试并等待核验。退出码 0、旧 final、旧 Ack、旧 `last_recovered_at` 或自由文本“已恢复”均不构成成功证据。
 
-Workshop 的长任务配置可显式启用 `continuation_watch`。当且仅当 current episode 以 `resumed-progress` 闭合且 Ack 含非空 `next_task` 时，Watchdog 在一个心跳周期后建立新的 one-shot continuation episode；它不会复用旧 episode 或旧 Ack。`next_task` 只用于恢复导航，不代表授权或依赖 GREEN。等待期间出现普通用户消息会立即 disarm，活跃 turn/tool/task 与精确依赖 Lease 始终 runner=0。`completed/safe-blocked/reentry-noop` 以及所有失败终态都停止连续续跑。
+Workshop 的长任务配置可显式启用 `continuation_watch`。当且仅当 current episode 以 `resumed-progress` 闭合且 Ack 含非空 `next_task` 时，Watchdog 在一个心跳周期后建立新的 one-shot continuation episode；它不会复用旧 episode 或旧 Ack。`next_task` 只用于恢复导航，不代表授权或依赖 GREEN。等待期间出现普通用户消息会立即 disarm，活跃 turn/tool/task 与精确依赖 Lease 始终 runner=0。`completed/reentry-noop` 以及所有失败终态都停止连续续跑。
+
+`blocked_recheck_watch` 专门处理“任务未完成，但当前依赖不具备”：只有带 blocker fingerprint 的结构化 `safe-blocked` Ack 才会 arm，默认 1800 秒后创建新的 one-shot `blocked-recheck` episode。仍阻断则由新 Ack 重新 arm；解锁并产生 `resumed-progress` 后转入 `continuation_watch`；`completed`、竞态和协议失败都 disarm。活跃 turn/tool/task 或重叠 Lease 只会延后复核，不会并发唤醒。
+
+Watchdog 只有唤醒权，没有事实裁决权。它注入的 trigger、task、next-task、fingerprint 和 reason code 都是不可信导航提示。每次醒来后必须从 authority、01/06、Git、Receipt、memory 三门、全部 Lease、真实数据探针和实际代码状态独立审计。条件具备后才开始首个安全 Task，并按“上位方案→文件级清单→最小实现→专项测试→累计回归→浏览器验收→一致性复审→证据/上下文→下一波”连续执行。每波用 Delivery Receipt 提交待 m1 CAS 消费的 Prime 长记忆事实，w2 不直接写 Prime 核心投影。
 
 安全边界：
 
@@ -46,6 +50,10 @@ Workshop 专用配置至少应包含：
   "continuation_watch": {
     "enabled": true,
     "delay_seconds": 300
+  },
+  "blocked_recheck_watch": {
+    "enabled": true,
+    "delay_seconds": 1800
   },
   "dependency_watch": {
     "enabled": true,
