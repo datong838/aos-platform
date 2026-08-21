@@ -80,62 +80,81 @@ def compute_catalog_item_runtime(
     published_skills = [
         skill for skill in role_skills if _value(getattr(skill, "lifecycle", None)) == "published"
     ]
-    if not published_skills:
+    all_skills_published = bool(role_skills) and len(published_skills) == len(role_skills)
+    if not all_skills_published:
         blockers.append("skill_templates_not_published")
-    published_by_id = {getattr(skill, "skill_id"): skill for skill in published_skills}
 
     instance_id = getattr(instance, "instance_id", None) if instance is not None else None
-    fresh_skill = False
+    all_skills_fresh = all_skills_published
     stale_skill = False
-    for binding in skill_bindings:
-        if instance_id and getattr(binding, "instance_id", None) != instance_id:
-            continue
-        skill_ref = getattr(binding, "skill", None)
-        skill = published_by_id.get(getattr(skill_ref, "asset_id", None))
-        if skill is None or getattr(skill_ref, "revision", None) != getattr(skill, "revision", None):
-            continue
-        if _fresh_available(
-            getattr(binding, "status", None),
-            getattr(binding, "readiness", None),
-            getattr(binding, "readiness_expires_at", None),
-            now,
+    unavailable_skill = False
+    for skill in published_skills:
+        exact_bindings = []
+        for binding in skill_bindings:
+            if instance_id and getattr(binding, "instance_id", None) != instance_id:
+                continue
+            skill_ref = getattr(binding, "skill", None)
+            if (
+                getattr(skill_ref, "asset_id", None) == getattr(skill, "skill_id", None)
+                and getattr(skill_ref, "revision", None) == getattr(skill, "revision", None)
+            ):
+                exact_bindings.append(binding)
+        if any(
+            _fresh_available(
+                getattr(binding, "status", None),
+                getattr(binding, "readiness", None),
+                getattr(binding, "readiness_expires_at", None),
+                now,
+            )
+            for binding in exact_bindings
         ):
-            fresh_skill = True
-        elif _value(getattr(binding, "status", None)) == "active":
+            continue
+        all_skills_fresh = False
+        if any(_value(getattr(binding, "status", None)) == "active" for binding in exact_bindings):
             stale_skill = True
-    if not fresh_skill:
-        blockers.append(
-            "skill_binding_readiness_stale" if stale_skill else "skill_binding_unavailable"
-        )
+        else:
+            unavailable_skill = True
+    if stale_skill:
+        blockers.append("skill_binding_readiness_stale")
+    if unavailable_skill or not published_skills:
+        blockers.append("skill_binding_unavailable")
 
     required = {
         cap
-        for skill in published_skills
+        for skill in role_skills
         for cap in getattr(skill, "required_capabilities", [])
     }
-    fresh_cap = False
+    all_capabilities_fresh = bool(required)
     stale_cap = False
-    for binding in capability_bindings:
-        cap_ref = getattr(binding, "capability", None)
-        cap_id = getattr(cap_ref, "asset_id", None)
-        if required and cap_id not in required:
-            continue
-        if _fresh_available(
-            getattr(binding, "status", None),
-            getattr(binding, "operational_readiness", None),
-            getattr(binding, "readiness_expires_at", None),
-            now,
+    unavailable_cap = False
+    for capability_id in required:
+        matching = [
+            binding
+            for binding in capability_bindings
+            if getattr(getattr(binding, "capability", None), "asset_id", None) == capability_id
+        ]
+        if any(
+            _fresh_available(
+                getattr(binding, "status", None),
+                getattr(binding, "operational_readiness", None),
+                getattr(binding, "readiness_expires_at", None),
+                now,
+            )
+            for binding in matching
         ):
-            fresh_cap = True
-        elif _value(getattr(binding, "status", None)) == "active":
+            continue
+        all_capabilities_fresh = False
+        if any(_value(getattr(binding, "status", None)) == "active" for binding in matching):
             stale_cap = True
-    if not fresh_cap:
-        blockers.append(
-            "capability_binding_readiness_stale" if stale_cap else "capability_bindings_unavailable"
-        )
+        else:
+            unavailable_cap = True
+    if stale_cap:
+        blockers.append("capability_binding_readiness_stale")
+    if unavailable_cap or not required:
+        blockers.append("capability_bindings_unavailable")
 
     blockers = sorted(set(blockers))
-    if instance_active and fresh_skill and fresh_cap:
+    if instance_active and all_skills_fresh and all_capabilities_fresh:
         return "runnable", []
     return "blocked", blockers
 
@@ -164,7 +183,7 @@ class AipEcommerceAgentInstaller:
     def _tenant(principal: Principal) -> TenantContext:
         return TenantContext(org_id=principal.org_id, project_id=principal.project_id)
 
-    def _definitions(self):
+    def _definitions(self, principal: Principal):
         templates = self._agents.list_templates(
             source_resource_id=SOLUTION_PACK_ID,
             source_revision=AIP_DEFINITION_SOURCE_VERSION,
@@ -185,8 +204,23 @@ class AipEcommerceAgentInstaller:
             [item for item in templates if item.template_id in AGENT_LOGIC_COUNTS],
             "template_id",
         )
+        # Published Skill revisions are tenant-scoped authority.  Another
+        # tenant may discover the global evaluated definition, but must never
+        # receive a revision carrying a foreign publicationTenant.
+        eligible_skills = [
+            item
+            for item in skills
+            if item.skill_id in expected_skill_ids
+            and (
+                item.publication_tenant is None
+                or (
+                    item.publication_tenant.org_id == principal.org_id
+                    and item.publication_tenant.project_id == principal.project_id
+                )
+            )
+        ]
         latest_skills = self._latest(
-            [item for item in skills if item.skill_id in expected_skill_ids],
+            eligible_skills,
             "skill_id",
         )
         latest_capabilities = self._latest(
@@ -211,7 +245,7 @@ class AipEcommerceAgentInstaller:
         return result
 
     def catalog(self, principal: Principal) -> AgentCatalogResponse:
-        templates, skills, capabilities = self._definitions()
+        templates, skills, capabilities = self._definitions(principal)
         scope = self._scope(principal)
         now = self._clock()
         instances = {item.template.asset_id: item for item in self._agents.list_instances(scope)}
@@ -258,7 +292,7 @@ class AipEcommerceAgentInstaller:
         )
 
     def capability_catalog(self, principal: Principal) -> CapabilityCatalogResponse:
-        _, _, capabilities = self._definitions()
+        _, _, capabilities = self._definitions(principal)
         items = [capabilities[key] for key in sorted(capabilities)]
         return CapabilityCatalogResponse(
             tenant=self._tenant(principal),
@@ -359,7 +393,7 @@ class AipEcommerceAgentInstaller:
         return self.runtime_readiness(principal)
 
     def install(self, principal: Principal, *, idempotency_key: str) -> AgentInstallResponse:
-        templates, _, _ = self._definitions()
+        templates, _, _ = self._definitions(principal)
         scope = self._scope(principal)
         results = []
         for template_id in sorted(templates):

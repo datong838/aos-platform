@@ -1,0 +1,39 @@
+{
+  "wave": "R14",
+  "status": "GREEN_WITH_WARNINGS",
+  "verifiedAt": "2026-08-21T11:56:59Z",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "tests": {
+    "webTargeted": { "files": 3, "tests": 16, "status": "GREEN" },
+    "webTypecheck": "GREEN",
+    "webCumulative": { "files": 198, "tests": 2008, "status": "GREEN" },
+    "backendW2D": { "tests": 25, "status": "GREEN", "warnings": 18 },
+    "diffCheck": "GREEN"
+  },
+  "runtimeFacts": {
+    "actionProposalCount": 1,
+    "eligibleActionProposalCount": 0,
+    "impactPreviewCount": 1,
+    "productionContextCount": 0,
+    "startDecisionCount": 0,
+    "publishedLogicCount": 37,
+    "startButtonEnabled": false
+  },
+  "negativeCanary": {
+    "tenant": "dev-org/dev-project",
+    "actionProposalCount": 0,
+    "status": "GREEN"
+  },
+  "sideEffects": {
+    "providerCalls": 0,
+    "agentRuns": 0,
+    "taskRunsCreated": 0,
+    "productionActions": 0,
+    "databaseWrites": 0,
+    "migrations": 0,
+    "secretPayloadReads": 0
+  }
+}

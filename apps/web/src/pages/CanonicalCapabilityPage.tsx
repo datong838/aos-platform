@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { aipAgentControl, type AgentRuntimeReadinessResponse, type CapabilityCatalogResponse, type OperationalBindingDependencies } from "../api/aipAgentControl";
 import { PageChrome } from "../components/PageChrome";
+import { AipOperationalProjectionStrip } from "../components/aip/AipOperationalProjectionStrip";
 import {
   bindingStatusDisplayName,
   definitionReadinessDisplayName,
@@ -52,6 +53,7 @@ export function CanonicalCapabilityPage() {
   useEffect(() => { void load(); }, [load]);
 
   return <PageChrome title="智能体插件" lede="10 类共享专业能力：组织绑定与定义八维分栏阅读">
+    <AipOperationalProjectionStrip />
     {catalog && runtime ? (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 14 }}>
         {[

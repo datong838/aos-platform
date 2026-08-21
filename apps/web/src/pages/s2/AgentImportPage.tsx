@@ -5,6 +5,26 @@ import { apiPost } from "../../api/client";
 export type SourceType = "github" | "local" | "market";
 export type AdapterType = "http" | "process" | "mcp" | "docker" | "session";
 
+export const INITIAL_AGENT_IMPORT_SOURCE = {
+  githubUrl: "",
+  agentPath: "",
+  branch: "main",
+  capabilityName: "",
+  capabilityDisplayName: "",
+  capabilityDescription: "",
+} as const;
+
+export function canAdvanceAgentImport(scanReceiptId: string | null | undefined): boolean {
+  return Boolean(scanReceiptId?.trim());
+}
+
+export function agentImportStateLabel(input: { success: boolean; importing: boolean; error: string | null }): string {
+  if (input.success) return "成功";
+  if (input.importing) return "导入中";
+  if (input.error) return "受阻";
+  return "未开始";
+}
+
 const STEPS = [
   { num: 1, label: "选择来源" },
   { num: 2, label: "仓库扫描" },
@@ -204,13 +224,14 @@ export function AgentImportPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [githubUrl, setGithubUrl] = useState("github.com/Shubhamsaboo/awesome-llm-apps");
-  const [agentPath, setAgentPath] = useState("advanced_ai_agents/single_agent_apps/ai_fraud_investigation_agent");
-  const [branch, setBranch] = useState("main");
+  const [githubUrl, setGithubUrl] = useState<string>(INITIAL_AGENT_IMPORT_SOURCE.githubUrl);
+  const [agentPath, setAgentPath] = useState<string>(INITIAL_AGENT_IMPORT_SOURCE.agentPath);
+  const [branch, setBranch] = useState<string>(INITIAL_AGENT_IMPORT_SOURCE.branch);
+  const [scanReceiptId] = useState<string | null>(null);
 
-  const [capName, setCapName] = useState("fraud-investigation");
-  const [capDisplayName, setCapDisplayName] = useState("欺诈调查分析 Agent");
-  const [capDesc, setCapDesc] = useState("分析交易记录，识别欺诈模式，生成调查报告");
+  const [capName, setCapName] = useState<string>(INITIAL_AGENT_IMPORT_SOURCE.capabilityName);
+  const [capDisplayName, setCapDisplayName] = useState<string>(INITIAL_AGENT_IMPORT_SOURCE.capabilityDisplayName);
+  const [capDesc, setCapDesc] = useState<string>(INITIAL_AGENT_IMPORT_SOURCE.capabilityDescription);
   const [capLevel, setCapLevel] = useState("C0 sync");
   const [timeout, setTimeout] = useState("60");
   const [memory, setMemory] = useState("512Mi");
@@ -232,6 +253,10 @@ export function AgentImportPage() {
 
   const goStep = (n: number) => {
     if (n < 1 || n > 5) return;
+    if (n > 1 && !canAdvanceAgentImport(scanReceiptId)) {
+      setError("尚未生成 exact Scan Receipt；真实扫描链接入前不得进入映射、安全或导入步骤");
+      return;
+    }
     setStep(n);
     setError(null);
   };
@@ -348,7 +373,7 @@ spec:
           { label: "来源", value: sourceType },
           { label: "Adapter", value: adapterType },
           { label: "安全确认", value: securityApproved ? "已批" : "未批" },
-          { label: "导入态", value: success ? "成功" : importing ? "导入中" : error ? "失败" : "待跑" },
+          { label: "导入态", value: agentImportStateLabel({ success, importing, error }) },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -484,7 +509,7 @@ spec:
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                 {[
-                  { key: "github", label: "GitHub 仓库", desc: "从 awesome-llm-apps 或任意 GitHub 仓库导入", icon: "⌨" },
+                  { key: "github", label: "GitHub 仓库", desc: "从已授权的 GitHub 仓库登记导入来源", icon: "⌨" },
                   { key: "local", label: "本地代码库", desc: "从 AOS 代码库中已有的 Agent 代码导入", icon: "📁" },
                   { key: "market", label: "市场安装", desc: "从 AOS 专业能力市场搜索安装", icon: "🛒" },
                 ].map((src) => (
@@ -516,6 +541,7 @@ spec:
                       仓库地址（GitHub URL）
                     </label>
                     <input
+                      data-testid="agent-import-github-url"
                       value={githubUrl}
                       onChange={(e) => setGithubUrl(e.target.value)}
                       style={{
@@ -537,6 +563,7 @@ spec:
                         Agent 路径（仓库内子目录）
                       </label>
                       <input
+                        data-testid="agent-import-agent-path"
                         value={agentPath}
                         onChange={(e) => setAgentPath(e.target.value)}
                         style={{
@@ -572,11 +599,12 @@ spec:
                     </div>
                   </div>
                   <div
+                    data-testid="agent-import-scan-unknown"
                     style={{
                       padding: "10px 12px",
                       borderRadius: 2,
-                      background: "rgba(240, 253, 244, 0.7)",
-                      border: "1px solid var(--aos-green-border)",
+                      background: "var(--aos-surface-hover)",
+                      border: "1px solid var(--aos-border)",
                       fontSize: 11,
                       color: "var(--aos-text)",
                       display: "flex",
@@ -584,8 +612,8 @@ spec:
                       gap: 8,
                     }}
                   >
-                    <span style={{ color: "var(--aos-green-600)", fontSize: 14 }}>✓</span>
-                    <span>仓库可达 · Apache-2.0 许可证 · 包含 requirements.txt + agent.py</span>
+                    <span style={{ color: "var(--aos-amber-700)", fontSize: 14 }}>○</span>
+                    <span>尚未扫描 · 未生成 Source/Scan Receipt；仓库可达性、许可证、文件和兼容性均为未知</span>
                   </div>
                 </div>
               )}
@@ -2117,15 +2145,18 @@ spec:
               {step < 5 && (
                 <button
                   onClick={() => goStep(step + 1)}
+                  disabled={!canAdvanceAgentImport(scanReceiptId)}
+                  title={!canAdvanceAgentImport(scanReceiptId) ? "需要 exact Scan Receipt 才能继续" : undefined}
                   style={{
                     padding: "8px 20px",
                     fontSize: 13,
                     fontWeight: 500,
                     borderRadius: 2,
                     border: "none",
-                    background: "var(--aos-amber-700)",
-                    color: "var(--text-on-brand)",
-                    cursor: "pointer",
+                    background: canAdvanceAgentImport(scanReceiptId) ? "var(--aos-amber-700)" : "var(--aos-gray-100)",
+                    color: canAdvanceAgentImport(scanReceiptId) ? "var(--text-on-brand)" : "var(--aos-text-secondary)",
+                    cursor: canAdvanceAgentImport(scanReceiptId) ? "pointer" : "not-allowed",
+                    opacity: canAdvanceAgentImport(scanReceiptId) ? 1 : 0.65,
                   }}
                 >
                   {step === 4 ? "运行测试" : "下一步"}

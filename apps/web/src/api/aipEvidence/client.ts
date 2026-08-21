@@ -9,6 +9,7 @@ import {
   type TelemetrySpan,
   type UsageReceipt,
   type EvalRunAuthority,
+  type AuthorityEvidenceChain,
 } from "./contracts";
 
 export class AipEvidenceSdk {
@@ -33,6 +34,17 @@ export class AipEvidenceSdk {
     return parseUsageReceipts(await this.client.request("listUsageReceipts", {
       params: { lineage_id: lineageId },
     }), lineageId);
+  }
+
+  async evidenceChain(rootType: LineageRootType, rootId: string): Promise<AuthorityEvidenceChain> {
+    const events = await this.lineage(rootType, rootId);
+    const lineageId = events[0]?.lineageId ?? null;
+    if (!lineageId) return { rootType, rootId, lineageId: null, events, spans: [], usageReceipts: [] };
+    const [spans, usageReceipts] = await Promise.all([
+      this.spans(lineageId),
+      this.usage(lineageId),
+    ]);
+    return { rootType, rootId, lineageId, events, spans, usageReceipts };
   }
 
   async evalRun(runId: string): Promise<EvalRunAuthority> {

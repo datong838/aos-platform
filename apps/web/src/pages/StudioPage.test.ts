@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   formatStudioSaveMsg,
+  STUDIO_DEFAULT_QUERY,
+  STUDIO_UNASSESSED_COPY,
+  studioModelRouteGate,
   mapApiAgentToStudio,
   sameToolIds,
   studioOverlayBlockedMessage,
@@ -9,6 +12,46 @@ import {
   validateGuardrailsResponse,
   validatePromptResponse,
 } from "./StudioPage";
+
+const projection = {
+  tenant: { orgId: "org-org", projectId: "dev-project" },
+  roles: { definition: 6, bound: 6, enabled: 6, runnable: 0 },
+  capabilities: { definition: 10, bound: 10, enabled: 10, runnable: 0 },
+  tools: { definition: 22, bound: 12, enabled: 12, runnable: 0 },
+  evalGates: { definition: 6, bound: 6, enabled: 6, runnable: 6 },
+  routes: { definition: 3, bound: 3, enabled: 3, runnable: 0 },
+  overallReadiness: "blocked" as const,
+  blockerCodes: ["MODEL_ROUTE_NOT_RUNNABLE"],
+  sources: { agentReadinessAt: "2026-08-21T01:00:00Z", modelRuntimeAt: "2026-08-21T01:00:01Z" },
+  snapshotHash: "a".repeat(64),
+  generatedAt: "2026-08-21T01:00:02Z",
+};
+
+describe("StudioPage · 真实模型路由门禁", () => {
+  it("首屏不预填演示订单且发布门不投影虚构分数", () => {
+    expect(STUDIO_DEFAULT_QUERY).toBe("");
+    expect(STUDIO_UNASSESSED_COPY).toContain("未评测");
+    expect(STUDIO_UNASSESSED_COPY).not.toMatch(/ORD-|87%/);
+  });
+
+  it("canonical 路由 0/3 时禁止试运行并不暴露 mock-llm", () => {
+    const gate = studioModelRouteGate("mock-llm", projection);
+    expect(gate.ready).toBe(false);
+    expect(gate.label).toContain("未就绪");
+    expect(gate.label).not.toContain("mock-llm");
+  });
+
+  it("投影未读取或模型为 fallback 时失败关闭", () => {
+    expect(studioModelRouteGate("agnes-2.5-flash", null).ready).toBe(false);
+    expect(studioModelRouteGate("fallback-mock", { ...projection, routes: { ...projection.routes, runnable: 1 } }).ready).toBe(false);
+  });
+
+  it("只有非 Mock exact 模型且 canonical 路由可派发才放行", () => {
+    const gate = studioModelRouteGate("agnes-2.5-flash", { ...projection, routes: { ...projection.routes, runnable: 1 } });
+    expect(gate.ready).toBe(true);
+    expect(gate.label).toContain("agnes-2.5-flash");
+  });
+});
 
 describe("StudioPage · Agent API 映射", () => {
   it("列表响应映射为 Studio 项且不注入硬编码 Agent", () => {

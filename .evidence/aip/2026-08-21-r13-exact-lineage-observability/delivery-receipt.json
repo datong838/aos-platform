@@ -1,0 +1,52 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-R13-EXACT-LINEAGE-OBSERVABILITY-20260821",
+  "receiptType": "AIP_WAVE_DELIVERY",
+  "waveId": "R13",
+  "status": "GREEN_WITH_WARNINGS",
+  "branch": "w1-aip",
+  "baseCommit": "916090d",
+  "sourceCommit": "5df7d9fb142588aeab2ba810db4d2db7f39f6ee2",
+  "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+  "changedFiles": [
+    "apps/web/src/api/aipEvidence/contracts.ts",
+    "apps/web/src/api/aipEvidence/client.ts",
+    "apps/web/src/api/aipEvidence/client.test.ts",
+    "apps/web/src/pages/s2/ObservabilityPage.tsx",
+    "apps/web/src/pages/s2/ObservabilityPage.test.ts",
+    "apps/web/src/pages/s2/aip.tsx",
+    "apps/web/src/pages/s2/DecisionLineagePage.test.tsx",
+    "apps/web/src/pages/s2/LogicCanvasPage.tsx",
+    "apps/web/src/pages/s2/LogicCanvasPage.interaction.test.tsx",
+    "apps/web/src/pages/s2/AipAssistPage.tsx",
+    "apps/web/src/pages/s2/AipAssistPage.test.tsx",
+    ".evidence/aip/2026-08-21-r13-exact-lineage-observability/browser-lineage.png",
+    ".evidence/aip/2026-08-21-r13-exact-lineage-observability/browser-observability.png"
+  ],
+  "verification": {
+    "frontendTargeted": "43 passed",
+    "webTypecheck": "GREEN",
+    "webCumulative": "198 files, 2006 tests passed",
+    "browserPages": 2,
+    "browserConsistency": "GREEN_WITH_WARNINGS",
+    "consoleErrors": 0,
+    "diffCheck": "GREEN"
+  },
+  "sideEffects": {
+    "migration": false,
+    "agentRun": false,
+    "providerBusinessCall": false,
+    "externalAction": false,
+    "productionAction": false,
+    "secretPayloadRead": false,
+    "oldPilotReplay": false
+  },
+  "knownWarnings": ["当前 exact Lineage 没有 Telemetry Span；此状态已被显式建模为缺失证据。"],
+  "externalBlockers": [
+    {"id": "B5_RECEIPT_NOT_CAS_CONSUMED", "owner": "m1 serialized CAS", "status": "RED"},
+    {"id": "W2_00_SOURCE_READINESS_OWNER_MISSING", "owner": "Data/Adapter", "status": "RED"},
+    {"id": "W2_00_SAME_CUTOFF_EVIDENCEPACK_MISSING", "owner": "Data/Adapter", "status": "RED"}
+  ],
+  "nextGate": "R14_PRODUCTION_CONTRACT_COMPOSITION_GATE",
+  "evidencePath": ".evidence/aip/2026-08-21-r13-exact-lineage-observability"
+}

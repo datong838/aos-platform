@@ -1,0 +1,56 @@
+{
+  "receipt_id": "AIP-R05-20260821-LOGIC-CANVAS",
+  "wave": "R05",
+  "status": "GREEN",
+  "branch": "w1-aip",
+  "base_commit": "47d1f9f2ea852f98830176d30bebe2b64a5ff0e7",
+  "delivery_commit": "SELF",
+  "tenant": {
+    "org_id": "org-org",
+    "project_id": "dev-project",
+    "negative_canary": "dev-org/dev-project"
+  },
+  "files": [
+    {
+      "path": "apps/web/src/pages/s2/LogicCanvasPage.tsx",
+      "pre_sha256": "a396b6a1a37e542b40367a1064d4d6ca82aa36f55972b0af2fcbb1d603fca3c7",
+      "post_sha256": "fe2ae7e97198b961dc25abb921bf95387f903a4111d5602f8faf9ae6e0a3248a"
+    },
+    {
+      "path": "apps/web/src/pages/s2/LogicCanvasPage.interaction.test.tsx",
+      "pre_sha256": "0383d34ba57f29cb4c69f7e8bbe66b451907139f4204142e318e74c10ca5ab96",
+      "post_sha256": "c71e7effd9e81baf0e3bd1be34806e66aa990fcde49200b96493b92fc5caaee0"
+    },
+    {
+      "path": "apps/web/src/pages/s2/LogicRunPanel.css",
+      "pre_sha256": "610d06fb5007fc170c1e63036dc3b058ee817cc8d73bd9b19f1a7119aaadea3e",
+      "post_sha256": "22527e7e2dfb7e0fa5d4a39100b7988744d7ddfa6edc4b1b461d4cab701db5b3"
+    }
+  ],
+  "verification": {
+    "targeted_web": "6 files / 60 tests passed",
+    "cumulative_web": "198 files / 1999 tests passed",
+    "typescript_vite_build": "GREEN",
+    "git_diff_check": "GREEN",
+    "browser": "GREEN"
+  },
+  "browser_facts": {
+    "entry_redirect": "/aip/logic -> /aip/logic/ecommerce.logic.V01",
+    "persisted_graph": "ecommerce.logic.V01@1",
+    "history_records": 1,
+    "tabpanel_count": 1,
+    "keyboard_navigation": "Home/End/Arrow verified",
+    "automation_uses": "UNOBSERVED_NOT_ZERO",
+    "theme": "dark history panel uses AOS surface token"
+  },
+  "side_effects": [
+    "NO_MIGRATION",
+    "NO_REAL_DB_WRITE",
+    "NO_PROVIDER_CALL",
+    "NO_SECRET_PAYLOAD_READ",
+    "NO_TASK_RUN",
+    "NO_LOGIC_DRY_RUN",
+    "NO_PUBLICATION_WRITE"
+  ],
+  "next_wave": "R06"
+}

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { PageChrome } from "../../components/PageChrome";
 import { apiGet } from "../../api/client";
@@ -15,6 +15,7 @@ import {
 import {
   createLogicGraph,
   getLogicGraph,
+  listLogicGraphs,
   replaceLogicGraph,
   type LogicGraphDraft,
 } from "./logicGraphApi";
@@ -88,6 +89,9 @@ export const KIND_META: Record<LogicBlockKind, { label: string; color: string; b
 export interface LogicCanvasPageProps {
   flowId?: string;
 }
+
+type ShellTab = "edit" | "history" | "automation";
+const SHELL_TABS: readonly ShellTab[] = ["edit", "history", "automation"];
 
 let nextTemplateId = 0;
 
@@ -198,16 +202,21 @@ interface LogicEvalReport {
 }
 
 export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
-  type ShellTab = "edit" | "history" | "automation";
   const params = useParams<{ flowId?: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const activeFlowId = flowId ?? params.flowId;
+  const requestedTab = searchParams.get("tab");
+  const shellTab: ShellTab = SHELL_TABS.includes(requestedTab as ShellTab)
+    ? requestedTab as ShellTab
+    : "edit";
+  const explicitNewDraft = !activeFlowId && searchParams.get("new") === "1";
   const templateRef = useRef<LogicGraphSnapshot | null>(null);
   if (!templateRef.current) templateRef.current = createTemplate();
 
-  const [shellTab, setShellTab] = useState<ShellTab>("edit");
-  const [graph, setGraph] = useState<LogicGraphSnapshot | null>(() => cloneGraph(templateRef.current!));
-  const [dirty, setDirty] = useState(true);
+  const tabRefs = useRef<Partial<Record<ShellTab, HTMLButtonElement | null>>>({});
+  const [graph, setGraph] = useState<LogicGraphSnapshot | null>(null);
+  const [dirty, setDirty] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState("");
@@ -362,10 +371,61 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
     setPublicationError("");
     setSelectedPublicationId(null);
     setPublishing(false);
-    if (!activeFlowId) {
+    if (!activeFlowId && explicitNewDraft) {
       setGraph(cloneGraph(templateRef.current!));
       setDirty(true);
       setLoading(false);
+      return;
+    }
+
+    if (!activeFlowId) {
+      setGraph(null);
+      setDirty(false);
+      setLoading(true);
+      void listLogicGraphs()
+        .then((response) => {
+          if (requestGeneration.current !== generation) return;
+          const selected = response.items.find((item) => item.persisted && item.revision > 0);
+          if (!selected) {
+            setGraph(null);
+            setHistoryState("idle");
+            setEvalEvidenceState("idle");
+            setPublicationsState("idle");
+            return;
+          }
+          setGraph(selected);
+          setDirty(false);
+          setHistoryState("loading");
+          setEvalEvidenceState("loading");
+          setPublicationsState("loading");
+          const next = new URLSearchParams(searchParams);
+          next.delete("new");
+          const query = next.toString();
+          navigate({
+            pathname: `/aip/logic/${encodeURIComponent(selected.id)}`,
+            search: query ? `?${query}` : "",
+          }, { replace: true });
+          void loadPublicationPrerequisites(selected, generation);
+          void listLogicRuns(selected.id, { limit: HISTORY_PAGE_SIZE })
+            .then((response) => {
+              if (requestGeneration.current !== generation) return;
+              setHistory(response.items);
+              setHistoryCursor(response.next_cursor);
+              setHistoryState("ready");
+            })
+            .catch((historyLoadError: unknown) => {
+              if (requestGeneration.current !== generation) return;
+              setHistoryState("error");
+              setHistoryError(errorMessage(historyLoadError));
+            });
+        })
+        .catch((listError: unknown) => {
+          if (requestGeneration.current !== generation) return;
+          setError(`Logic Graph 列表读取失败：${errorMessage(listError)}`);
+        })
+        .finally(() => {
+          if (requestGeneration.current === generation) setLoading(false);
+        });
       return;
     }
 
@@ -400,7 +460,36 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       .finally(() => {
         if (requestGeneration.current === generation) setLoading(false);
       });
-  }, [activeFlowId]);
+  }, [activeFlowId, explicitNewDraft]);
+
+  function selectShellTab(nextTab: ShellTab): void {
+    const next = new URLSearchParams(searchParams);
+    if (nextTab === "edit") next.delete("tab");
+    else next.set("tab", nextTab);
+    setSearchParams(next, { replace: true });
+  }
+
+  function handleShellTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, currentTab: ShellTab): void {
+    const currentIndex = SHELL_TABS.indexOf(currentTab);
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % SHELL_TABS.length;
+    if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + SHELL_TABS.length) % SHELL_TABS.length;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = SHELL_TABS.length - 1;
+    if (nextIndex === null) return;
+    event.preventDefault();
+    const nextTab = SHELL_TABS[nextIndex];
+    selectShellTab(nextTab);
+    requestAnimationFrame(() => tabRefs.current[nextTab]?.focus());
+  }
+
+  function startNewDraft(): void {
+    if (dirty) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete("tab");
+    next.set("new", "1");
+    navigate({ pathname: "/aip/logic", search: `?${next.toString()}` });
+  }
 
   async function loadPublicationPrerequisites(
     targetGraph: LogicGraphSnapshot,
@@ -814,16 +903,21 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         ).map(([id, label]) => (
           <button
             key={id}
+            id={`logic-tab-${id}`}
             type="button"
             role="tab"
             aria-selected={shellTab === id}
+            aria-controls={`logic-panel-${id}`}
+            tabIndex={shellTab === id ? 0 : -1}
+            ref={(node) => { tabRefs.current[id] = node; }}
             className="btn"
             style={{
               borderBottom: shellTab === id ? "2px solid var(--aos-indigo-600,#4f46e5)" : "2px solid transparent",
               borderRadius: 0,
               fontWeight: shellTab === id ? 700 : 500,
             }}
-            onClick={() => setShellTab(id)}
+            onClick={() => selectShellTab(id)}
+            onKeyDown={(event) => handleShellTabKeyDown(event, id)}
           >
             {label}
           </button>
@@ -849,8 +943,20 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         ))}
       </div>
 
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+        <button
+          type="button"
+          className="btn"
+          disabled={dirty || loading || saving || running || explicitNewDraft}
+          title={dirty ? "请先保存或刷新当前草稿" : "显式创建本地草稿；默认入口不会自动生成模板"}
+          onClick={startNewDraft}
+        >
+          新建 Logic 草稿
+        </button>
+      </div>
+
       {shellTab === "edit" ? (
-      <>
+      <div role="tabpanel" id="logic-panel-edit" aria-labelledby="logic-tab-edit">
       <div
         className="notice"
         role="note"
@@ -1017,7 +1123,14 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       )}
 
       {loading && !graph && <p>正在加载 canonical Logic Graph…</p>}
-      {!loading && !graph && !error && <p>Logic Graph 不可用</p>}
+      {!loading && !graph && !error && (
+        <section className="card" style={{ padding: 18 }} data-testid="logic-honest-empty">
+          <h2 style={{ marginTop: 0 }}>尚无已保存 Logic Graph</h2>
+          <p style={{ color: "var(--aos-text-secondary)" }}>
+            当前组织/工作区没有可选择的 persisted revision。默认入口不会生成演示图；如需创建，请显式点击“新建 Logic 草稿”。
+          </p>
+        </section>
+      )}
 
       {graph && (
         <LogicGraphCanvas
@@ -1130,14 +1243,26 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           </section>
         )}
       </div>
-      </>
+      </div>
       ) : null}
 
       {shellTab === "history" ? (
-        <div style={{ display: "grid", gap: 10 }} role="tabpanel" aria-label="运行历史">
+        <div style={{ display: "grid", gap: 10 }} role="tabpanel" id="logic-panel-history" aria-labelledby="logic-tab-history">
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Link to="/aip/observability" className="btn" style={{ textDecoration: "none" }} data-testid="history-jump-observability">可观测性 →</Link>
-            <Link to="/aip/lineage" className="btn" style={{ textDecoration: "none" }} data-testid="history-jump-lineage">决策谱系 →</Link>
+            {selectedRunId ? (
+              <Link
+                to={`/aip/lineage?rootType=task_run&rootId=${encodeURIComponent(selectedRunId)}`}
+                className="btn"
+                style={{ textDecoration: "none" }}
+                data-testid="history-jump-lineage"
+              >
+                当前 Run 谱系与可观测 →
+              </Link>
+            ) : (
+              <span className="muted" data-testid="history-lineage-blocked" title="先选择真实 TaskRun，再从谱系进入可观测证据">
+                选择 Run 后查看谱系与可观测
+              </span>
+            )}
             <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }}>Evals 门控 →</Link>
           </div>
           {graph?.persisted ? (
@@ -1167,12 +1292,12 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       ) : null}
 
       {shellTab === "automation" ? (
-        <section className="card" style={{ padding: 18 }} role="tabpanel" aria-label="自动化" data-testid="logic-automation-panel">
+        <section className="card" style={{ padding: 18 }} role="tabpanel" id="logic-panel-automation" aria-labelledby="logic-tab-automation" data-testid="logic-automation-panel">
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "start" }}>
             <div>
               <h2 style={{ marginTop: 0, marginBottom: 6 }}>自动化</h2>
               <p style={{ margin: 0, color: "var(--aos-text-secondary)", maxWidth: 560 }}>
-                Uses / 触发器以权威登记为准。当前无假列表、无演示触发；有 Uses 真源后再填充。
+                Uses / 触发器以权威登记为准。当前尚未接入 Uses 列表真源，不把“未观测”展示为 0，也不提供演示触发。
               </p>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -1183,10 +1308,10 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, margin: "14px 0" }}>
             {[
-              ["已登记 Uses", "0"],
-              ["启用中", "0"],
-              ["最近触发", "无"],
-              ["真源", "待权威"],
+              ["Exact Graph", graph?.persisted ? graph.id : "未选择"],
+              ["Revision", graph?.persisted ? String(graph.revision) : "—"],
+              ["Uses 观测", "未接入"],
+              ["最近触发", "未观测"],
             ].map(([k, v]) => (
               <div key={k} className="notice" style={{ padding: "10px 12px" }}>
                 <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{k}</div>
@@ -1194,8 +1319,13 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
               </div>
             ))}
           </div>
+          {graph?.persisted && (
+            <div className="notice" style={{ padding: 12 }} data-testid="automation-exact-revision">
+              当前只读绑定 <code>{graph.id}@{graph.revision}</code> · hash <code>{graph.graph_hash.slice(0, 12)}…</code>；任何未来 Uses 必须引用这一 exact revision 或独立 publication。
+            </div>
+          )}
           <div className="notice" style={{ padding: 12 }} role="status" data-testid="automation-empty">
-            当前组织尚无已登记的逻辑自动化 Uses。请经 Draft / Evals / 生产契约完成发布与门控后再回此查看；本页不伪造触发成功。
+            当前组织的逻辑自动化 Uses 真源尚未接入本页。请经 Draft / Evals / 生产契约完成发布与门控；本页不把未知计数显示为 0，也不伪造触发成功。
           </div>
           <button type="button" className="btn" disabled title="无 Uses 真源前禁止绑定演示自动化" style={{ marginTop: 12 }}>
             绑定自动化（禁用）

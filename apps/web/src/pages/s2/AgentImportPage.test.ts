@@ -6,8 +6,37 @@ import {
   DEFAULT_PERMISSION_MAPPINGS,
   computeMappingStats,
   getAdapterDetail,
+  INITIAL_AGENT_IMPORT_SOURCE,
+  agentImportStateLabel,
+  canAdvanceAgentImport,
   type AdapterType,
 } from "./AgentImportPage";
+
+describe("AgentImportPage · 真实初始态", () => {
+  it("不预填第三方仓库、路径或业务能力", () => {
+    expect(INITIAL_AGENT_IMPORT_SOURCE).toEqual({
+      githubUrl: "",
+      agentPath: "",
+      branch: "main",
+      capabilityName: "",
+      capabilityDisplayName: "",
+      capabilityDescription: "",
+    });
+  });
+
+  it("没有 exact Scan Receipt 时禁止进入后续步骤", () => {
+    expect(canAdvanceAgentImport(undefined)).toBe(false);
+    expect(canAdvanceAgentImport("")).toBe(false);
+    expect(canAdvanceAgentImport("scan-receipt-1")).toBe(true);
+  });
+
+  it("门禁错误显示受阻而不是误报导入失败", () => {
+    expect(agentImportStateLabel({ success: false, importing: false, error: null })).toBe("未开始");
+    expect(agentImportStateLabel({ success: false, importing: false, error: "缺少 Scan Receipt" })).toBe("受阻");
+    expect(agentImportStateLabel({ success: false, importing: true, error: null })).toBe("导入中");
+    expect(agentImportStateLabel({ success: true, importing: false, error: null })).toBe("成功");
+  });
+});
 
 describe("AgentImportPage · ADAPTER_TYPES", () => {
   it("包含 5 种 Adapter 类型", () => {

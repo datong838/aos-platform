@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { aipModelRuntime, type ModelRuntimeOverview, type RuntimeAssetSummary } from "../../api/aipModelRuntime";
+import { aipModelRuntime, type ModelRuntimeCostOverview, type ModelRuntimeOverview, type RuntimeAssetSummary } from "../../api/aipModelRuntime";
 import { PageChrome } from "../../components/PageChrome";
+import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
 import { formatBlockers } from "../../lib/aipChineseLabels";
 
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 14 } as const;
@@ -12,6 +13,7 @@ const names: Record<string, string> = {
   priceSnapshots: "价格快照",
   evalGates: "评测门",
   capacityPools: "容量池",
+  healthObservations: "Health",
 };
 const lifecycle: Record<string, string> = { draft: "草稿", validated: "已校验", active: "生效", suspended: "暂停", revoked: "撤销" };
 
@@ -38,9 +40,10 @@ export function modelRuntimeControlLabel(state: "empty" | "blocked" | "partial" 
 
 export function ModelRuntimePage() {
   const [data, setData] = useState<ModelRuntimeOverview | null>(null);
+  const [cost, setCost] = useState<ModelRuntimeCostOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const load = useCallback(async () => { setLoading(true); try { setData(await aipModelRuntime.overview()); setError(""); } catch (e) { setData(null); setError(String((e as Error).message || e)); } finally { setLoading(false); } }, []);
+  const load = useCallback(async () => { setLoading(true); try { const [overview, costOverview] = await Promise.all([aipModelRuntime.overview(), aipModelRuntime.costOverview()]); setData(overview); setCost(costOverview); setError(""); } catch (e) { setData(null); setCost(null); setError(String((e as Error).message || e)); } finally { setLoading(false); } }, []);
   useEffect(() => { void load(); }, [load]);
   const state = useMemo(() => data ? modelRuntimeControlStatus(data) : "empty", [data]);
   const blockedResolutions = useMemo(
@@ -53,6 +56,7 @@ export function ModelRuntimePage() {
   );
 
   return <PageChrome title="模型运行就绪" lede="Exact 供应商、模型、路由、策略、评测、价格与容量权威快照；控制面就绪不等于外部供应商已可调用">
+    <AipOperationalProjectionStrip />
     {error ? <div role="alert" className="notice bad">模型运行权威读取失败：{error}</div> : null}
     {loading ? <div role="status" className="card">正在读取当前组织的 exact 模型运行权威…</div> : null}
     {!loading && data ? <>
@@ -68,7 +72,11 @@ export function ModelRuntimePage() {
           { label: "路由就绪", value: data.resolutions.length ? `${readyResolutionCount}/${data.resolutions.length}` : "0/0" },
           { label: "未就绪", value: String(blockedResolutions.length) },
           { label: "容量池", value: String(data.capacityPools.length) },
+          { label: "Health", value: String(data.healthObservations.length) },
           { label: "评测门", value: String(data.evalGates.length) },
+          { label: "已定价", value: cost ? `${cost.modelPrices.filter((item) => item.status === "priced" || item.status === "approved_zero").length}/${cost.modelPrices.length}` : "—" },
+          { label: "预算生效", value: cost ? `${cost.budgets.filter((item) => item.status === "active").length}/${cost.budgets.length}` : "—" },
+          { label: "用量证据", value: cost?.usage.state === "unobserved" ? "未观测" : cost?.usage.state === "measured" ? "实测" : cost?.usage.state === "partial" ? "部分" : "未知" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -104,9 +112,16 @@ export function ModelRuntimePage() {
         {(["providers", "models", "routes", "policies", "priceSnapshots"] as const).map(key => <div className="card" style={{ padding: 16 }} key={key}><h2 style={{ marginTop: 0 }}>{names[key]} · {data[key].length}</h2><AssetList items={data[key]} empty={`当前组织尚无 ${names[key]} exact revision。`} /></div>)}
         <div className="card" style={{ padding: 16 }}><h2 style={{ marginTop: 0 }}>评测门 · {data.evalGates.length}</h2>{data.evalGates.length ? data.evalGates.map(item => <p key={item.ref.assetId}><code>{item.ref.assetId}@{item.ref.revision}</code> · {item.status}</p>) : <div className="notice">尚无路由 / 模型引用的评测门。</div>}</div>
         <div className="card" style={{ padding: 16 }}><h2 style={{ marginTop: 0 }}>容量池 · {data.capacityPools.length}</h2>{data.capacityPools.length ? data.capacityPools.map(pool => <article key={pool.poolId}><strong>{pool.poolId}@{pool.revision}</strong><p>{pool.activeReservations}/{pool.maxConcurrency} 并发 · {pool.reservedTokenUnits}/{pool.maxTokenUnits} token 单位</p></article>) : <div className="notice">尚无 exact 容量池；AgentRun 运行门将失败关闭。</div>}</div>
+        <div className="card" style={{ padding: 16 }}><h2 style={{ marginTop: 0 }}>Health · {data.healthObservations.length}</h2>{data.healthObservations.length ? data.healthObservations.map(item => <article key={item.observationId}><strong>{item.provider.assetId}@{item.provider.revision}</strong><p>{Date.parse(item.expiresAt) > Date.now() ? "新鲜" : "已过期"} · {item.status} · P50 {item.p50LatencyMs ?? "—"} ms</p></article>) : <div className="notice">尚无 Provider Health observation；相关路由必须失败关闭。</div>}</div>
       </section>
       <section className="card" style={{ padding: 18, marginTop: 16 }}><h2 style={{ marginTop: 0 }}>路由运行就绪</h2>{data.resolutions.length ? data.resolutions.map(item => <article key={item.route.assetId} style={{ padding: "12px 0", borderTop: "1px solid var(--aos-border)" }}><strong>{item.route.assetId}@{item.route.revision} · {item.readiness === "ready" ? "就绪" : "阻断"}</strong>{item.readiness === "ready" ? <p>模型 {item.selectedModel?.assetId} · 供应商 {item.selectedProvider?.assetId} · 价格 {item.selectedPriceSnapshot?.assetId}</p> : <ul>{item.blockerCodes.map(code => <li key={code}>{formatBlockers([code])}</li>)}</ul>}</article>) : <div className="notice">没有 exact 路由，因此没有可解析的运行就绪结果。</div>}</section>
-      <div className="notice" style={{ marginTop: 16 }}>本页从不显示 secretRef 或凭据。供应商 operational、真实调用、Usage Receipt 与成本对账仍必须分别取得真实外部证据。</div>
+      {cost ? <section className="card" style={{ padding: 18, marginTop: 16 }} aria-label="成本与预算权威">
+        <h2 style={{ marginTop: 0 }}>成本与预算权威</h2>
+        <p>用量：{cost.usage.state === "unobserved" ? "尚未观测，不能按 0 成本解释" : `${cost.usage.receiptCount} 条 Receipt（实测 ${cost.usage.measuredCount} / 估算 ${cost.usage.estimatedCount} / 未知 ${cost.usage.unknownCount}）`} · 调整单 {cost.usage.adjustmentCount}</p>
+        {Object.keys(cost.usage.costTotals).length ? <p>成本合计：{Object.entries(cost.usage.costTotals).map(([currency, amount]) => `${currency} ${amount}`).join(" · ")}</p> : <p>成本合计：无可归集的权威成本 Receipt</p>}
+        <div style={grid}>{cost.modelPrices.map(item => <article className="notice" key={item.modelRef.assetId}><strong>{item.providerModelId}</strong><div>{item.status === "priced" ? "已定价" : item.status === "approved_zero" ? "审批零价" : item.status === "unit_mismatch" ? "计价单位不匹配" : "价格未就绪"}</div>{item.blockerCodes.length ? <small>{formatBlockers(item.blockerCodes)}</small> : null}</article>)}</div>
+      </section> : null}
+      <div className="notice" style={{ marginTop: 16 }}>本页从不显示 secretRef 或凭据。供应商 operational、真实调用和成本对账仍必须以 exact Health、Usage Receipt 与追加 Adjustment 为准。</div>
     </> : null}
   </PageChrome>;
 }

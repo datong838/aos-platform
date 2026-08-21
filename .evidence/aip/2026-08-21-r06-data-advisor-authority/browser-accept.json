@@ -1,0 +1,32 @@
+{
+  "schema": "aos-browser-acceptance/v1",
+  "wave": "R06",
+  "browser": "Codex in-app browser",
+  "base_url": "http://localhost:5174",
+  "tenant": "org-org/dev-project",
+  "checks": [
+    {
+      "route": "/aip/logic/ecommerce.logic.D06",
+      "result": "GREEN",
+      "evidence": [
+        "已确认 revision 1",
+        "Logic 名称=D06 效果归因与复盘",
+        "节点 3 / 连接 2",
+        "生产旁路已关闭",
+        "安全试跑在未应用 Inputs 时禁用"
+      ]
+    },
+    {
+      "route": "/aip/agent-registry",
+      "result": "GREEN",
+      "evidence": [
+        "组织=栖月汇商贸有限公司",
+        "工作区=默认工作区",
+        "数据参谋=可派发 runnable",
+        "6 个技能状态可读",
+        "页面明确区分已安装与可派发"
+      ]
+    }
+  ],
+  "side_effects": "read-only; no AgentRun, Provider call, publication or production action"
+}

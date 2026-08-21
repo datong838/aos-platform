@@ -1,10 +1,11 @@
 import { apiGet, apiPost } from "../client";
 import type { CompileStageTemplateInput, CreateArtifactRelationInput, CreateEvalContractInput, CreateImpactPreviewInput, CreateResponsibilityPlanInput, CreateReviewIssueInput, CreateStageTemplateInput, CreateTaskBriefInput, ProductionStartInput, ResolveReviewIssueInput, ReturnReviewIssueInput, ReviseEvalContractInput, ReviseImpactPreviewInput, ReviseResponsibilityPlanInput, ReviseStageTemplateInput } from "./contracts";
-import { parseArtifactRelation, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContract, parseEvalContractList, parseImpactPreview, parseImpactPreviewList, parseProductionStartDecision, parseProductionStartDecisionList, parseResponsibilityPlan, parseResponsibilityPlanList, parseReturnDecision, parseReviewIssue, parseReviewIssueList, parseStageCompilation, parseStageTemplate, parseStageTemplateList, parseTaskBrief } from "./parser";
+import { parseArtifactRelation, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContract, parseEvalContractList, parseImpactPreview, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecision, parseProductionStartDecisionList, parseResponsibilityPlan, parseResponsibilityPlanList, parseReturnDecision, parseReviewIssue, parseReviewIssueList, parseStageCompilation, parseStageTemplate, parseStageTemplateList, parseTaskBrief } from "./parser";
 
 const ROOT="/v1/aip/production-contracts";
 function keyHeaders(key:string){if(!key.trim())throw new Error("Idempotency-Key 不能为空");return{"Idempotency-Key":key};}
 export const aipProductionContracts={
+  async listProductionContexts(){return parseProductionContextList(await apiGet<unknown>(`${ROOT}/production-contexts`));},
   async listImpactPreviews(){return parseImpactPreviewList(await apiGet<unknown>(`${ROOT}/impact-previews`));},
   async getImpactPreview(previewId:string,revision?:number){return parseImpactPreview(await apiGet<unknown>(`${ROOT}/impact-previews/${encodeURIComponent(previewId)}${revision?`?revision=${revision}`:""}`));},
   async createImpactPreview(input:CreateImpactPreviewInput,key:string){return parseImpactPreview(await apiPost<unknown>(`${ROOT}/impact-previews`,input,keyHeaders(key)));},

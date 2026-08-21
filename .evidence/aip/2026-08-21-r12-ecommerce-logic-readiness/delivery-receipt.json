@@ -1,0 +1,58 @@
+{
+  "schema": "aos-delivery-receipt/v1",
+  "deliveryId": "AIP-R12-ECOMMERCE-LOGIC-READINESS-20260821",
+  "receiptType": "AIP_WAVE_DELIVERY",
+  "waveId": "R12",
+  "status": "GREEN_WITH_WARNINGS",
+  "branch": "w1-aip",
+  "baseCommit": "cf1c064c54dfab6c175d8f65870718c48e136028",
+  "sourceCommit": "3b30daea815b8cbfbca7914aee690c0a78ff0593",
+  "sourceCommits": ["1a3ce12", "b255bd3", "3b30dae"],
+  "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+  "negativeCanary": {"orgId": "dev-org", "projectId": "dev-project", "status": "GREEN_ZERO_ROWS"},
+  "changedFiles": [
+    "scripts/aip/audit_r12_ecommerce_logic_readiness_matrix.py",
+    "scripts/aip/refresh_r12_ecommerce_runtime_readiness.py",
+    "services/aos-api/aos_api/aip_ecommerce_agent_installer.py",
+    "services/aos-api/tests/aip/test_aip6_agent_control_api.py",
+    "services/aos-api/tests/aip/test_aip_catalog_item_runtime.py",
+    "services/aos-api/tests/aip/test_audit_r12_ecommerce_logic_readiness_matrix.py",
+    "services/aos-api/tests/aip/test_refresh_r12_ecommerce_runtime_readiness.py",
+    "apps/web/src/api/aipAgentControl/contracts.ts",
+    "apps/web/src/api/aipAgentControl/parser.ts",
+    "apps/web/src/api/aipAgentControl/parser.test.ts",
+    "apps/web/src/pages/s2/CanonicalAgentRegistryPage.tsx",
+    "apps/web/src/pages/s2/CanonicalAgentRegistryPage.test.tsx"
+  ],
+  "verification": {
+    "exactMatrix": "37/37 runnable, 6/6 agents runnable, canary isolated",
+    "backendTargeted": "7 passed, 6 warnings",
+    "frontendTargeted": "15 passed",
+    "cumulativeR06ThroughR12": "281 passed, 7 warnings",
+    "browserPages": 5,
+    "browserConsistency": "GREEN_WITH_WARNINGS",
+    "consoleErrors": 0,
+    "diffCheck": "GREEN"
+  },
+  "sideEffects": {
+    "migration": false,
+    "agentRun": false,
+    "providerHealthProbeCalls": 3,
+    "providerBusinessCall": false,
+    "externalAction": false,
+    "productionAction": false,
+    "secretPayloadRead": false,
+    "oldPilotReplay": false
+  },
+  "knownWarnings": [
+    "Cross-page capability/tool/route projections remain later-wave scope.",
+    "Pre-existing Web typecheck failure remains at apps/web/src/api/aipWorkbench/parser.ts:189."
+  ],
+  "externalBlockers": [
+    {"id": "B5_RECEIPT_NOT_CAS_CONSUMED", "owner": "m1 serialized CAS", "status": "RED"},
+    {"id": "W2_00_SOURCE_READINESS_OWNER_MISSING", "owner": "Data/Adapter", "status": "RED"},
+    {"id": "W2_00_SAME_CUTOFF_EVIDENCEPACK_MISSING", "owner": "Data/Adapter", "status": "RED"}
+  ],
+  "nextGate": "R13_EXACT_LINEAGE_OBSERVABILITY",
+  "evidencePath": ".evidence/aip/2026-08-21-r12-ecommerce-logic-readiness"
+}

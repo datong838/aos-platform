@@ -15,7 +15,7 @@ const runtime = {
   catalog: { tenant, stats: { definitionCount: 6, installedCount: 1, runnableCount: 0, skillDefinitionCount: 37, capabilityDefinitionCount: 10 }, items: [{
     template: { templateId: "ecommerce.content_officer", revision: 1, displayName: "内容官", roleKey: "content_officer", lifecycle: "published", sourceRef: { resourceType: "SolutionPack", resourceId: "solution.ecommerce.growth", revision: "1.3.0", authority: "bundle" }, sourceLicense: "internal", manifest: { logicIds: ["C01"], responsibility: "内容生产", runtimeReadiness: "blocked", blockers: [] }, contentHash: hash },
     instance: { tenant, instanceId: "ecommerce.content_officer.default", instanceRef: { assetType: "AgentInstance", assetId: "ecommerce.content_officer.default", revision: 1, contentHash: hash }, template: { assetType: "AgentTemplate", assetId: "ecommerce.content_officer", revision: 1, contentHash: hash }, status: "provisioning", overlay: { displayName: "内容官", allowedCapabilityIds: [] }, version: 1, updatedAt: "2026-08-15T00:00:00Z" },
-    skills: [{ skillId: "content.plan", canonicalLogicId: "C01", lifecycle: "evaluated", requiredCapabilities: ["copy.generate"], riskLevel: "medium" }], requiredCapabilityIds: ["copy.generate"], runtimeReadiness: "blocked", blockers: ["skill_revision_not_published:C01"],
+    skills: [{ skillId: "content.plan", revision: 2, canonicalLogicId: "C01", lifecycle: "evaluated", requiredCapabilities: ["copy.generate"], riskLevel: "medium" }], requiredCapabilityIds: ["copy.generate"], runtimeReadiness: "blocked", blockers: ["skill_revision_not_published:C01"],
   }] }, capabilityBindings: [], skillBindings: [], bindingStats: { capabilityBindingCount: 0, skillBindingCount: 0, activeCapabilityBindingCount: 0, activeSkillBindingCount: 0 }, evaluatedAt: "2026-08-15T06:00:00Z",
 };
 
@@ -83,12 +83,75 @@ describe("CanonicalAgentRegistryPage", () => {
           blockers: [],
         }],
       },
+      skillBindings: [{
+        tenant, bindingId: "binding-d03", instanceId: "ecommerce.data_advisor.default",
+        skill: { assetType: "SkillTemplate", assetId: "content.plan", revision: 2, contentHash: hash },
+        capabilityBindingIds: ["cap-copy"], budgetPolicyRef: { assetType: "BudgetPolicyRevision", assetId: "budget", revision: 1, contentHash: hash },
+        dependencies: {}, readiness: "available", readinessReasons: [], dependencySnapshotHash: hash,
+        lastEvaluatedAt: "2099-08-15T06:00:00Z", readinessExpiresAt: "2099-08-15T06:15:00Z", status: "active", version: 1,
+        createdAt: "2026-08-15T06:00:00Z", updatedAt: "2026-08-15T06:00:00Z",
+      }],
+      capabilityBindings: [{
+        tenant, bindingId: "cap-copy", capability: { assetType: "CapabilityRevision", assetId: "copy.generate", revision: 1, contentHash: hash },
+        secretRef: "keychain://test", health: "healthy", networkPolicyRevision: "net-r1", quotaPolicyRevision: "quota-r1", timeoutMs: 1000, maxConcurrency: 1,
+        dependencies: {}, operationalReadiness: "available", readinessReasons: [], dependencySnapshotHash: hash,
+        lastEvaluatedAt: "2099-08-15T06:00:00Z", readinessExpiresAt: "2099-08-15T06:15:00Z", status: "active", version: 1,
+        observedAt: "2099-08-15T06:00:00Z", createdAt: "2026-08-15T06:00:00Z", updatedAt: "2026-08-15T06:00:00Z",
+      }],
     });
     const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>)); await act(async () => undefined);
     expect(host.textContent).toMatch(/可派发\s*1/);
     expect(host.textContent).toContain("数据参谋");
     expect(host.textContent).toContain("可派发（runnable）");
     expect(host.textContent).not.toContain("Pilot");
+    const precheck = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "预检（可派发）");
+    expect(precheck).toBeTruthy();
+    await act(async () => { precheck!.click(); });
+    expect(host.querySelector('[role="status"]')?.textContent).toContain("只读预检通过");
+    expect(host.textContent).toContain("模板 ecommerce.data_advisor@1");
+    expect(host.textContent).toContain("实例 ecommerce.data_advisor.default");
+    expect(host.textContent).toContain("canonical 技能 1/1");
+    expect(host.textContent).toContain("唯一专业能力 1/1");
+    expect(host.textContent).toContain("未触发 Provider、AgentRun 或生产 Action");
+    expect(sdk.refreshReadiness).not.toHaveBeenCalled();
+    await act(async () => root.unmount());
+  });
+
+  it("角色卡仅统计 canonical exact Skill 与唯一 Capability，不累加专项和历史行", async () => {
+    sdk.runtimeReadiness.mockResolvedValue({
+      ...runtime,
+      catalog: {
+        ...runtime.catalog,
+        items: [{
+          ...runtime.catalog.items[0],
+          instance: { ...runtime.catalog.items[0].instance!, status: "active" },
+          skills: [
+            { ...runtime.catalog.items[0].skills[0], lifecycle: "published" },
+            { ...runtime.catalog.items[0].skills[0], skillId: "content.review", revision: 3, canonicalLogicId: "C02", lifecycle: "published" },
+          ],
+          requiredCapabilityIds: ["copy.generate", "content.review", "copy.generate"],
+          runtimeReadiness: "blocked",
+          blockers: ["capability_binding_readiness_stale"],
+        }],
+      },
+      skillBindings: [
+        { tenant, bindingId: "c01", instanceId: "ecommerce.content_officer.default", skill: { assetType: "SkillTemplate", assetId: "content.plan", revision: 2, contentHash: hash }, status: "active" },
+        { tenant, bindingId: "c02-old", instanceId: "ecommerce.content_officer.default", skill: { assetType: "SkillTemplate", assetId: "content.review", revision: 2, contentHash: hash }, status: "active" },
+        { tenant, bindingId: "i01", instanceId: "ecommerce.content_officer.default", skill: { assetType: "SkillTemplate", assetId: "ecommerce.skill.I01", revision: 2, contentHash: hash }, status: "active" },
+      ],
+      capabilityBindings: [
+        { tenant, bindingId: "copy-r1", capability: { assetType: "CapabilityRevision", assetId: "copy.generate", revision: 1, contentHash: hash }, status: "active", operationalReadiness: "available", readinessExpiresAt: "2099-08-15T06:15:00Z" },
+        { tenant, bindingId: "copy-history", capability: { assetType: "CapabilityRevision", assetId: "copy.generate", revision: 1, contentHash: hash }, status: "provisioning", operationalReadiness: "blocked", readinessExpiresAt: "2026-08-15T06:15:00Z" },
+        { tenant, bindingId: "review-history", capability: { assetType: "CapabilityRevision", assetId: "content.review", revision: 1, contentHash: hash }, status: "provisioning", operationalReadiness: "blocked", readinessExpiresAt: "2026-08-15T06:15:00Z" },
+      ],
+    });
+    const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>)); await act(async () => undefined);
+    expect(host.textContent).toContain("技能 1/2 已绑定");
+    expect(host.textContent).toContain("专业能力 1/2 已绑定");
+    expect(host.textContent).not.toContain("技能 3/2");
+    expect(host.textContent).not.toContain("专业能力 3/2");
+    expect(host.textContent).toContain("能力绑定记录");
+    expect(host.textContent).toContain("活跃 / 全部");
     await act(async () => root.unmount());
   });
 });

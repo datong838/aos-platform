@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { aipAgentControl, type AgentRuntimeReadinessResponse } from "../../api/aipAgentControl";
 import { PageChrome } from "../../components/PageChrome";
+import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
 import {
   agentReadinessLadderSummary,
   bindingStatusDisplayName,
@@ -13,6 +14,10 @@ import {
 
 function statusLabel(status: string | undefined) {
   return ({ provisioning: "待配置", active: "已启用", suspended: "已暂停", deleted: "已删除" } as Record<string, string>)[status || ""] || "未安装";
+}
+
+function freshAt(expiresAt: string | null, now = Date.now()): boolean {
+  return expiresAt !== null && Date.parse(expiresAt) > now;
 }
 
 function ReadinessLadderStrip({ ladder }: { ladder: ReturnType<typeof deriveAgentReadinessLadder> }) {
@@ -27,8 +32,8 @@ function ReadinessLadderStrip({ ladder }: { ladder: ReturnType<typeof deriveAgen
             padding: "2px 8px",
             borderRadius: 4,
             border: "1px solid var(--aos-border)",
-            background: stage.done ? (stage.id === "runnable" ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-surface-2, #f8fafc)") : "transparent",
-            color: stage.done ? (stage.id === "runnable" ? "var(--aos-green-700)" : "var(--aos-text)") : "var(--aos-text-secondary)",
+            background: stage.done ? (stage.id === "runnable" ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-surface)") : "transparent",
+            color: stage.done ? (stage.id === "runnable" ? "var(--aos-green-700)" : "var(--aos-text-secondary)") : "var(--aos-text-secondary)",
             opacity: stage.done ? 1 : 0.55,
           }}
         >
@@ -56,6 +61,7 @@ export function CanonicalAgentRegistryPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [precheckedTemplateId, setPrecheckedTemplateId] = useState<string | null>(null);
   const load = useCallback(async () => {
     try { setData(await aipAgentControl.runtimeReadiness()); setError(""); }
     catch (e) { setData(null); setError(String((e as Error).message || e)); }
@@ -80,6 +86,7 @@ export function CanonicalAgentRegistryPage() {
   }
   const stale = useMemo(() => data ? runtimeSnapshotStale(data.evaluatedAt) : false, [data]);
   return <PageChrome title="智能体目录" lede="绑定真相台 · 安装、技能与专业能力就绪（非市场发现壳）">
+    <AipOperationalProjectionStrip />
     {error && <div role="alert" className="notice bad">运行就绪度读取失败：{error}</div>}
     {!data ? <div role="status" className="card">正在读取组织智能体目录与绑定…</div> : <>
       <section className="card" style={{padding:18,marginBottom:16}}>
@@ -87,8 +94,8 @@ export function CanonicalAgentRegistryPage() {
           <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>角色定义</div><strong>{data.catalog.stats.definitionCount}</strong></div>
           <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>已安装</div><strong>{data.catalog.stats.installedCount}</strong></div>
           <div className="notice" style={{padding:10}} data-testid="catalog-dispatchable-count"><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>可派发</div><strong style={{color:data.catalog.stats.runnableCount === data.catalog.stats.definitionCount ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>{data.catalog.stats.runnableCount}</strong></div>
-          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>技能绑定</div><strong>{data.bindingStats.activeSkillBindingCount}/{data.bindingStats.skillBindingCount}</strong></div>
-          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>能力绑定</div><strong>{data.bindingStats.activeCapabilityBindingCount}/{data.bindingStats.capabilityBindingCount}</strong></div>
+          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>技能绑定记录</div><strong>{data.bindingStats.activeSkillBindingCount}/{data.bindingStats.skillBindingCount}</strong><small style={{display:"block",color:"var(--aos-text-secondary)"}}>活跃 / 全部</small></div>
+          <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>能力绑定记录</div><strong>{data.bindingStats.activeCapabilityBindingCount}/{data.bindingStats.capabilityBindingCount}</strong><small style={{display:"block",color:"var(--aos-text-secondary)"}}>活跃 / 全部</small></div>
           <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>技能定义</div><strong>{data.catalog.stats.skillDefinitionCount}</strong></div>
           <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>专业能力类</div><strong>{data.catalog.stats.capabilityDefinitionCount}</strong></div>
         </div>
@@ -115,20 +122,46 @@ export function CanonicalAgentRegistryPage() {
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(360px,1fr))",gap:14}}>
         {data.catalog.items.map(item => {
           const instanceId = item.instance?.instanceId;
-          const bindings = data.skillBindings.filter(binding => binding.instanceId === instanceId);
-          const activeBindings = bindings.filter(binding => binding.status === "active");
-          const requiredBindingCount = data.capabilityBindings.filter(binding => item.requiredCapabilityIds.includes(binding.capability.assetId)).length;
-          const opsReady = item.requiredCapabilityIds.length > 0
-            && item.requiredCapabilityIds.every((capId) => data.capabilityBindings.some((b) => b.capability.assetId === capId && b.status === "active" && b.operationalReadiness === "available"));
+          const canonicalSkillIds = new Set(item.skills.map((skill) => skill.skillId));
+          const bindings = data.skillBindings.filter(binding => binding.instanceId === instanceId && canonicalSkillIds.has(binding.skill.assetId));
+          const activeSkillIds = new Set(item.skills.filter((skill) => bindings.some((binding) => (
+            binding.skill.assetId === skill.skillId
+            && binding.skill.revision === skill.revision
+            && binding.status === "active"
+          ))).map((skill) => skill.skillId));
+          const requiredCapabilityIds = [...new Set(item.requiredCapabilityIds)];
+          const activeCapabilityIds = new Set(requiredCapabilityIds.filter((capId) => data.capabilityBindings.some((binding) => (
+            binding.capability.assetId === capId && binding.status === "active"
+          ))));
+          const opsReady = requiredCapabilityIds.length > 0
+            && requiredCapabilityIds.every((capId) => data.capabilityBindings.some((binding) => (
+              binding.capability.assetId === capId
+              && binding.status === "active"
+              && binding.operationalReadiness === "available"
+              && freshAt(binding.readinessExpiresAt)
+            )));
           const ladder = deriveAgentReadinessLadder({
             templatePublished: item.template.lifecycle === "published",
             installed: Boolean(item.instance),
-            hasActiveSkillBinding: activeBindings.length > 0,
+            hasActiveSkillBinding: activeSkillIds.size === item.skills.length && item.skills.length > 0,
             skillsPublished: item.skills.length > 0 && item.skills.every((skill) => skill.lifecycle === "published"),
             capabilityOperational: opsReady,
             runtimeReadiness: item.runtimeReadiness,
           });
           const blockedTitle = precheckDisabledTitle(item.blockers);
+          const precheckOpen = precheckedTemplateId === item.template.templateId;
+          const matchedSkillBindings = item.skills.flatMap((skill) => bindings.filter((binding) => (
+            binding.skill.assetId === skill.skillId && binding.skill.revision === skill.revision
+          )));
+          const readinessExpiries = [
+            ...matchedSkillBindings.map((binding) => binding.readinessExpiresAt),
+            ...requiredCapabilityIds.flatMap((capId) => data.capabilityBindings
+              .filter((binding) => binding.capability.assetId === capId && binding.status === "active")
+              .map((binding) => binding.readinessExpiresAt)),
+          ].filter((value): value is string => Boolean(value));
+          const earliestExpiry = readinessExpiries.length
+            ? readinessExpiries.reduce((earliest, value) => Date.parse(value) < Date.parse(earliest) ? value : earliest)
+            : null;
           return <article key={item.template.templateId} className="card" style={{padding:18}}>
             <div style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"start"}}>
               <div>
@@ -140,12 +173,12 @@ export function CanonicalAgentRegistryPage() {
             <ReadinessLadderStrip ladder={ladder} />
             <div style={{marginTop:8,fontSize:12,color:"var(--aos-text-secondary)"}} data-testid="agent-readiness-summary">{agentReadinessLadderSummary(ladder)}</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8,fontSize:13,marginTop:10}}>
-              <div className="notice">技能 {activeBindings.length}/{item.skills.length} 已绑定</div>
-              <div className="notice">专业能力 {requiredBindingCount}/{item.requiredCapabilityIds.length} 已绑定</div>
+              <div className="notice">技能 {activeSkillIds.size}/{item.skills.length} 已绑定</div>
+              <div className="notice">专业能力 {activeCapabilityIds.size}/{requiredCapabilityIds.length} 已绑定</div>
             </div>
             <details style={{marginTop:12}}><summary>查看 {item.skills.length} 个技能状态</summary>
               <ul>{item.skills.map(skill => {
-                const binding = bindings.find(value => value.skill.assetId === skill.skillId);
+                const binding = bindings.find(value => value.skill.assetId === skill.skillId && value.skill.revision === skill.revision);
                 return <li key={skill.skillId}>
                   <strong>{logicDisplayName(skill.canonicalLogicId)}</strong>
                   {" · "}
@@ -158,7 +191,31 @@ export function CanonicalAgentRegistryPage() {
             <div style={{marginTop:10,padding:10,background:ladder.dispatchable ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-amber-bg)",color:ladder.dispatchable ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>
               {ladder.dispatchable ? "可派发（runnable）" : (item.blockers.length ? formatBlockers(item.blockers) : "缺少完整能力/技能绑定与依赖快照")}
             </div>
-            <button className="btn" disabled={!ladder.dispatchable} title={ladder.dispatchable ? "目录可派发；本页不直接外呼" : blockedTitle} style={{marginTop:12}}>{ladder.dispatchable ? "预检（可派发）" : "预检（不可派发）"}</button>
+            <button
+              className="btn"
+              disabled={!ladder.dispatchable}
+              aria-expanded={precheckOpen}
+              aria-controls={`agent-precheck-${item.template.templateId}`}
+              title={ladder.dispatchable ? "查看本次目录就绪摘要；不触发外部调用" : blockedTitle}
+              style={{marginTop:12}}
+              onClick={() => setPrecheckedTemplateId(precheckOpen ? null : item.template.templateId)}
+            >
+              {precheckOpen ? "收起预检" : ladder.dispatchable ? "预检（可派发）" : "预检（不可派发）"}
+            </button>
+            {precheckOpen && <div
+              id={`agent-precheck-${item.template.templateId}`}
+              role="status"
+              data-testid={`agent-precheck-${item.template.roleKey}`}
+              className="notice"
+              style={{marginTop:10,fontSize:12,lineHeight:1.7}}
+            >
+              <strong>只读预检通过</strong><br />
+              模板 {item.template.templateId}@{item.template.revision}<br />
+              实例 {item.instance?.instanceId || "未安装"}<br />
+              canonical 技能 {activeSkillIds.size}/{item.skills.length} · 唯一专业能力 {activeCapabilityIds.size}/{requiredCapabilityIds.length}<br />
+              权威截止 {new Date(data.evaluatedAt).toLocaleString()} · 最早到期 {earliestExpiry ? new Date(earliestExpiry).toLocaleString() : "未提供"}<br />
+              本操作未触发 Provider、AgentRun 或生产 Action。
+            </div>}
           </article>;
         })}
       </div>

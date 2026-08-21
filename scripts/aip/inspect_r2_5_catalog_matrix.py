@@ -104,13 +104,25 @@ def _health(now: datetime) -> dict[str, Any]:
     }
 
 
-def refresh_readiness(*, now: datetime) -> dict[str, Any]:
+def refresh_readiness(
+    *, now: datetime, data_advisor_only: bool = False
+) -> dict[str, Any]:
     facts = _health(now)
     health_key = str(facts["observationId"])
     capability_service = AipCapabilityBindingService()
     skill_service = AipSkillRegistry()
+    capability_binding_ids = (
+        (CAPABILITY_BINDING_ID,)
+        if data_advisor_only
+        else CAPABILITY_BINDING_IDS
+    )
+    skill_binding_ids = (
+        (SKILL_BINDING_ID,)
+        if data_advisor_only
+        else SKILL_BINDING_IDS
+    )
     refreshed_capabilities: list[str] = []
-    for capability_binding_id in CAPABILITY_BINDING_IDS:
+    for capability_binding_id in capability_binding_ids:
         capability = capability_service.get(SCOPE, capability_binding_id)
         if (
             capability.status == "active"
@@ -142,7 +154,7 @@ def refresh_readiness(*, now: datetime) -> dict[str, Any]:
             )
         refreshed_capabilities.append(capability_binding_id)
     refreshed_skills: list[str] = []
-    for skill_binding_id in SKILL_BINDING_IDS:
+    for skill_binding_id in skill_binding_ids:
         binding = skill_service.get_binding(SCOPE, skill_binding_id)
         if (
             binding.status == "active"
@@ -169,16 +181,22 @@ def refresh_readiness(*, now: datetime) -> dict[str, Any]:
             )
         refreshed_skills.append(skill_binding_id)
     return {
+        "mode": "data_advisor_only" if data_advisor_only else "all_bindings",
         "healthObservationId": health_key,
         "capabilityBindingId": CAPABILITY_BINDING_ID,
-        "capabilityBindingIds": list(CAPABILITY_BINDING_IDS),
+        "capabilityBindingIds": list(capability_binding_ids),
         "capabilityBindingsReevaluated": refreshed_capabilities,
-        "skillBindingIds": list(SKILL_BINDING_IDS),
+        "skillBindingIds": list(skill_binding_ids),
         "skillBindingsReevaluated": refreshed_skills,
     }
 
 
-def inspect(*, refresh: bool = False, catalog_only: bool = False) -> dict[str, Any]:
+def inspect(
+    *,
+    refresh: bool = False,
+    catalog_only: bool = False,
+    data_advisor_only: bool = False,
+) -> dict[str, Any]:
     now = datetime.now(UTC)
 
     def _items(catalog: Any) -> list[dict[str, Any]]:
@@ -211,7 +229,11 @@ def inspect(*, refresh: bool = False, catalog_only: bool = False) -> dict[str, A
             "secretPayloadReads": 0,
         }
     health = _health(now)
-    refreshed = refresh_readiness(now=now) if refresh else {"skipped": True}
+    refreshed = (
+        refresh_readiness(now=now, data_advisor_only=data_advisor_only)
+        if refresh
+        else {"skipped": True}
+    )
     catalog = AipEcommerceAgentInstaller().catalog(_principal())
     items = _items(catalog)
     data_advisor = next(row for row in items if row["templateId"] == "ecommerce.data_advisor")
@@ -224,17 +246,16 @@ def inspect(*, refresh: bool = False, catalog_only: bool = False) -> dict[str, A
         catalog.stats.runnable_count == EXPECTED_RUNNABLE_COUNT
         and runnable_templates == set(EXPECTED_RUNNABLE_TEMPLATES)
     )
-    dep_adp = (
-        "GREEN"
-        if (
-            six_text_runnable
-            and data_advisor["runtimeReadiness"] == "runnable"
-            and health["v8AgentRunStatus"] == "succeeded"
-            and health["v8AttemptStatus"] == "succeeded"
-            and health["canaryAgentRuns"] == 0
-        )
-        else "RED"
+    data_advisor_text_green = (
+        data_advisor["runtimeReadiness"] == "runnable"
+        and health["v8AgentRunStatus"] == "succeeded"
+        and health["v8AttemptStatus"] == "succeeded"
+        and health["canaryAgentRuns"] == 0
     )
+    dep_adp = "GREEN" if (
+        data_advisor_text_green
+        and (data_advisor_only or six_text_runnable)
+    ) else "RED"
     return {
         "status": "R2_5_DEP_ADP_QUERY_EVIDENCE_GREEN" if dep_adp == "GREEN" else "blocked",
         "scope": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
@@ -259,7 +280,7 @@ def inspect(*, refresh: bool = False, catalog_only: bool = False) -> dict[str, A
             "attemptStatus": health["v8AttemptStatus"],
         },
         "depAdpQuery": {
-            "dataAdvisorD03Text": dep_adp,
+            "dataAdvisorD03Text": "GREEN" if data_advisor_text_green else "RED",
             "sixTextColleagues": "GREEN" if six_text_runnable else "RED",
             "multimodalPilots": "GREEN",
             "workshopPage": "unchanged_red_until_w2_consumes",
@@ -274,11 +295,20 @@ def inspect(*, refresh: bool = False, catalog_only: bool = False) -> dict[str, A
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--refresh-readiness", action="store_true")
+    parser.add_argument("--data-advisor-only", action="store_true")
     parser.add_argument("--catalog-only", action="store_true")
     parser.add_argument("--write-evidence", action="store_true")
     args = parser.parse_args()
+    if args.data_advisor_only and not args.refresh_readiness:
+        parser.error("--data-advisor-only requires --refresh-readiness")
+    if args.data_advisor_only and args.catalog_only:
+        parser.error("--data-advisor-only cannot be combined with --catalog-only")
     try:
-        result = inspect(refresh=args.refresh_readiness, catalog_only=args.catalog_only)
+        result = inspect(
+            refresh=args.refresh_readiness,
+            catalog_only=args.catalog_only,
+            data_advisor_only=args.data_advisor_only,
+        )
     except MatrixBlocked as exc:
         result = {
             "status": "blocked",

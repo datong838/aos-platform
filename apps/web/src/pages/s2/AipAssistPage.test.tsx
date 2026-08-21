@@ -30,6 +30,21 @@ describe("AipAssistPage exact subject", () => {
     expect(subjectFromSearch(params())).toEqual(expect.objectContaining({ taskRef: expect.objectContaining({ resourceType: "Task", revision: "1" }), taskRunRef: expect.objectContaining({ resourceType: "TaskRun", revision: "2" }), agentRunRef: expect.objectContaining({ resourceType: "AgentRun", revision: "3" }) }));
   });
   it("does not invent a default AgentRun", () => { const value = params(); value.delete("agentRunAuthority"); expect(subjectFromSearch(value)).toBeNull(); });
+
+  it("uses the exact TaskRun ref for the lineage deep link and never guesses a lineageId", async () => {
+    const client = { createThread: vi.fn(), streamTurn: vi.fn(), cancelTaskRun: vi.fn(), newKey: vi.fn(() => "key") };
+    await act(async () => root.render(<MemoryRouter><AipAssistPage client={client} /></MemoryRouter>));
+    expect(host.querySelector<HTMLAnchorElement>("[data-testid='assist-jump-lineage']")?.getAttribute("href"))
+      .toBe("/aip/lineage?rootType=task_run&rootId=run-1");
+    expect(host.innerHTML).not.toContain("lineageId=");
+
+    act(() => root.unmount());
+    root = createRoot(host);
+    window.history.replaceState({}, "", "/aip/assist");
+    await act(async () => root.render(<MemoryRouter><AipAssistPage client={client} /></MemoryRouter>));
+    expect(host.querySelector("[data-testid='assist-lineage-blocked']")).not.toBeNull();
+    expect(host.querySelector("[data-testid='assist-jump-lineage']")).toBeNull();
+  });
   it("rejects invalid cutoff and partial Task authority", () => {
     const invalidCutoff = params(); invalidCutoff.set("cutoffAt", "not-a-time"); expect(subjectFromSearch(invalidCutoff)).toBeNull();
     const partialTask = params(); partialTask.delete("taskRevision"); expect(subjectFromSearch(partialTask)).toBeNull();
