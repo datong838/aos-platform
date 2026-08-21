@@ -1,0 +1,49 @@
+{
+  "schema": "aos.workshop-receipt-schema-repair-evidence/v1",
+  "taskId": "workshop-w2-00b-correction-receipt-schema-repair-20260821",
+  "checkedAt": "2026-08-21T23:48:50+08:00",
+  "authorityRevision": "AOS-000147",
+  "tenantSideEffects": "none",
+  "browserAcceptance": "NOT_APPLICABLE_NO_PAGE_CHANGE",
+  "targetReceipt": {
+    "path": "docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/workshop-w2-00b-catalog-search-path-correction-20260821.json",
+    "preRepairSha256": "bf1065ce9188f9e5201bf98ac0c4c804787e14eb4ba3f2fa99644d8e7c0df2c3",
+    "postRepairSha256": "1224120eb28587f623f5775bdc5117571d3aa374d5eac878e45a6e802c0241fd",
+    "removedInvalidKeys": [
+      "corrections"
+    ],
+    "preservedValues": [
+      "The committed W2-00B source-readiness test file hash is a9da60216ac85c67f01c44883e10bc223002cc5acdd7ed5eadf95176984cffb0, replacing the pre-format hash recorded in the original immutable evidence.",
+      "The original W2-00B cumulative set did not expose the search_path rollback regression; this additive Receipt closes it without rewriting prior Receipts."
+    ],
+    "preservedFields": [
+      "schema",
+      "task_id",
+      "base_revision",
+      "completed_revision",
+      "completed_at",
+      "result",
+      "commits",
+      "changed_files",
+      "blockers",
+      "risks"
+    ]
+  },
+  "verification": {
+    "memoryStatus": "GREEN_WITH_WARNINGS_STRONG_PROJECTIONS_CURRENT",
+    "memoryValidate": "GREEN_435_DELIVERY_RECEIPTS_987_EVENTS_424_TASK_RECEIPTS",
+    "memoryGate": "CAN_CHANGE_STATE_TRUE",
+    "memoryctlTests": "15_PASSED",
+    "workshopCumulative": "37_PASSED",
+    "gitDiffCheck": "GREEN",
+    "sourceReadinessData": "P01_P12_LATEST_SUCCEEDED_COUNTS_UNCHANGED",
+    "negativeCanary": "dev-org/dev-project sourceCount=0 projectionCount=0"
+  },
+  "dependencySnapshot": {
+    "w2Head": "c5a1d51eb6c67e1abb539b074e709c735cbef670",
+    "m1Head": "c308707bf1ddcc4749a2354ad063a01c49c050ce",
+    "w3DataReadinessHead": "c308707bf1ddcc4749a2354ad063a01c49c050ce",
+    "dataDeliveryReceipt": "SOURCE_READINESS_12_OF_12_READY_EXACT_AUTHORITY_M1_GREEN_CAS_PENDING",
+    "remainingGate": "M1_AUTHORITY_01_06_PRIME_CAS_AND_LEASE_RELEASE"
+  }
+}
