@@ -1,0 +1,55 @@
+{
+  "status": "GREEN_WITH_UI_WARNING",
+  "wave": "R11_CONTENT_OFFICER_C01_C08",
+  "scope": {"orgId": "org-org", "projectId": "dev-project"},
+  "negativeCanary": {"orgId": "dev-org", "projectId": "dev-project", "rowsAdded": 0},
+  "logicHashes": {
+    "C01": "49540c6b",
+    "C02": "ad5a0710",
+    "C03": "14de709a",
+    "C04": "508bc7c1",
+    "C05": "1ec1e5c9",
+    "C06": "d248809d",
+    "C07": "e0bbe647",
+    "C08": "fae40724"
+  },
+  "skillHashes": {
+    "C01": "3ba22b24",
+    "C02": "5ed89742",
+    "C03": "bc7adad4",
+    "C04": "4fac691e",
+    "C05": "b90a3934",
+    "C06": "c88c14dc",
+    "C07": "ce05e0b1",
+    "C08": "6fd04cd5"
+  },
+  "governanceEvalCases": "56/56",
+  "publishedSkills": "8/8",
+  "activeSkillBindings": "8/8",
+  "runtimeAtBrowserCutoff": "runnable",
+  "health": {
+    "observationId": "health-agnes-text-qyh-r2-20260821081101300545",
+    "samples": "3/3",
+    "status": "healthy",
+    "observedAt": "2026-08-21T08:11:01.300545Z",
+    "bindingReadinessExpiresAt": "2026-08-21T08:33:11.027045Z",
+    "secretPayloadReads": 0
+  },
+  "safety": {
+    "agentRunsCreated": 0,
+    "providerBusinessCalls": 0,
+    "externalContentActions": 0,
+    "mediaGenerations": 0,
+    "memoryPromotions": 0,
+    "productionActions": 0
+  },
+  "verification": {
+    "targetedR11": "41 passed",
+    "cumulativeR06ThroughR11": "261 passed",
+    "compile": "GREEN",
+    "diffCheck": "GREEN",
+    "browser": "GREEN_WITH_UI_WARNING",
+    "consoleErrors": 0
+  },
+  "commits": ["1b0f5da", "74b3c3f", "2736c84", "910c3b1", "4f16c00", "80644fc", "11e02e7"]
+}

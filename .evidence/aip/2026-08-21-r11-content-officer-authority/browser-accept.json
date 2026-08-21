@@ -1,0 +1,23 @@
+{
+  "status": "GREEN_WITH_UI_WARNING",
+  "checkedAt": "2026-08-21T08:29:47Z",
+  "baseUrl": "http://127.0.0.1:5174",
+  "scope": "org-org/dev-project",
+  "tenantLabel": "栖月汇商贸有限公司",
+  "workspaceLabel": "默认工作区",
+  "pages": ["/aip/agents", "/aip/agent-registry"],
+  "assertions": {
+    "contentOfficerEnabled": true,
+    "contentOfficerRunnable": true,
+    "canonicalSkills": 8,
+    "expandedSkillRows": 8,
+    "allExpandedSkillsPublishedAndActive": true,
+    "consoleErrors": 0,
+    "productionSideEffects": 0
+  },
+  "warning": {
+    "id": "R15_AGENT_REGISTRY_CAPABILITY_COUNT_SEMANTICS",
+    "observed": ["技能 10/8", "专业能力 34/7"],
+    "disposition": "R15 最终 UI 真相封板前统一分子分母口径"
+  }
+}
