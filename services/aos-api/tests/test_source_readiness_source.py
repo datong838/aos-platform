@@ -44,6 +44,7 @@ class Connection:
                         "pipeline_id": item.pipeline_id,
                         "object_type_hint": item.object_type,
                         "source_id": "niushop-qyh",
+                        "target": {"objectType": item.object_type},
                     }
                     for item in CANONICAL_QYH_SOURCES
                 ]
@@ -53,6 +54,12 @@ class Connection:
                 [
                     {
                         "pipeline_id": item.pipeline_id,
+                        "schedule_id": f"sch-{item.pipeline_id}",
+                        "cron": f"0 {index + 2} * * *",
+                        "schedule_enabled": True,
+                        "ingest_kind": "pipeline-live-v1",
+                        "ingest_pipeline_id": item.pipeline_id,
+                        "ingest_source_id": "niushop-qyh",
                         "id": f"run-{item.pipeline_id}",
                         "status": "succeeded",
                         "scheduled_for": NOW,
@@ -61,7 +68,7 @@ class Connection:
                         "rows_written": 1,
                         "error_code": None,
                     }
-                    for item in CANONICAL_QYH_SOURCES
+                    for index, item in enumerate(CANONICAL_QYH_SOURCES)
                 ]
             )
         if "FROM ecom_object" in normalized:
@@ -82,6 +89,18 @@ class Connection:
                 [
                     {"object_type": item.object_type, "projection_total": 1}
                     for item in CANONICAL_QYH_SOURCES
+                ]
+            )
+        if "FROM aip_capability_binding" in normalized:
+            return Result(
+                [
+                    {
+                        "binding_id": "ecommerce.data_advisor.strategy.plan.r2",
+                        "capability_id": "strategy.plan",
+                        "version": 63,
+                        "status": "active",
+                        "dependency_snapshot_hash": "a" * 64,
+                    }
                 ]
             )
         return Result([])
