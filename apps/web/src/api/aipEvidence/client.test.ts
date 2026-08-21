@@ -78,6 +78,39 @@ describe("AipEvidenceSdk", () => {
     expect(request).toHaveBeenNthCalledWith(2, "listUsageReceipts", { params: { lineage_id: "lin-1" } });
   });
 
+  it("按 exact root 组合读取 Lineage、Span 与 Usage，且只采用服务端 lineageId", async () => {
+    const request = vi.fn()
+      .mockResolvedValueOnce([event])
+      .mockResolvedValueOnce([span])
+      .mockResolvedValueOnce([usage]);
+    const sdk = new AipEvidenceSdk({ request } as unknown as AipClient);
+    await expect(sdk.evidenceChain("task_run", "run-1")).resolves.toMatchObject({
+      rootType: "task_run",
+      rootId: "run-1",
+      lineageId: "lin-1",
+      events: [{ eventId: "evt-1" }],
+      spans: [{ spanRecordId: "span-record-1" }],
+      usageReceipts: [{ receiptId: "usage-1" }],
+    });
+    expect(request).toHaveBeenNthCalledWith(1, "listLineageAuthority", { params: { root_type: "task_run", root_id: "run-1" } });
+    expect(request).toHaveBeenNthCalledWith(2, "listTelemetrySpans", { params: { lineage_id: "lin-1" } });
+    expect(request).toHaveBeenNthCalledWith(3, "listUsageReceipts", { params: { lineage_id: "lin-1" } });
+  });
+
+  it("exact root 没有 Lineage 时保持真实空链，不猜测 lineageId 或读取 Telemetry", async () => {
+    const request = vi.fn().mockResolvedValueOnce([]);
+    const sdk = new AipEvidenceSdk({ request } as unknown as AipClient);
+    await expect(sdk.evidenceChain("action", "proposal-1")).resolves.toEqual({
+      rootType: "action",
+      rootId: "proposal-1",
+      lineageId: null,
+      events: [],
+      spans: [],
+      usageReceipts: [],
+    });
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
   it("跨 lineage、重复 provider receipt 与 usage 质量伪造失败关闭", () => {
     expect(() => parseTelemetrySpans([{ ...span, lineageId: "other" }], "lin-1")).toThrow("lineageId 不匹配");
     expect(() => parseTelemetrySpans([span, { ...span, spanRecordId: "span-record-2" }])).toThrow("重复 provider receipt");

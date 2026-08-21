@@ -3757,6 +3757,30 @@ export function DecisionLineagePage() {
       )}
 
       <div style={{ display: "flex", gap: 8, marginTop: "1rem", flexWrap: "wrap" }} data-testid="lineage-chain-links">
+        {lineageId ? (
+          <Link
+            to={`/aip/observability?lineageId=${encodeURIComponent(lineageId)}&rootType=${encodeURIComponent(rootType)}&rootId=${encodeURIComponent(rootId.trim())}`}
+            style={{
+              padding: "6px 12px",
+              fontSize: 12,
+              borderRadius: 2,
+              border: "1px solid var(--aos-green-border)",
+              color: "var(--aos-green-600)",
+              textDecoration: "none",
+            }}
+            data-testid="lineage-jump-observability"
+          >
+            exact 可观测证据 →
+          </Link>
+        ) : (
+          <span
+            data-testid="lineage-observability-blocked"
+            title="请先成功读取真实谱系；禁止根据 Root ID 猜测 lineageId"
+            style={{ padding: "6px 12px", fontSize: 12, border: "1px solid var(--aos-border)", color: "var(--aos-muted)" }}
+          >
+            可观测证据（需先读取谱系）
+          </span>
+        )}
         <Link
           to="/ontology/graph-health"
           style={{
@@ -4297,7 +4321,7 @@ export function LegacyProviderDetailPage() {
                     </td>
                     <td>
                       {l.trace_id ? (
-                        <Link to={`/aip/observability?trace=${l.trace_id}`}>{l.trace_id.slice(0, 8)}</Link>
+                        <span title="仅有 trace_id 不足以定位 canonical Lineage；请从决策谱系进入可观测性">{l.trace_id.slice(0, 8)}</span>
                       ) : "—"}
                     </td>
                   </tr>

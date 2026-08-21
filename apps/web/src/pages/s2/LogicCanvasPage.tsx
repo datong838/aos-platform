@@ -1249,8 +1249,20 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       {shellTab === "history" ? (
         <div style={{ display: "grid", gap: 10 }} role="tabpanel" id="logic-panel-history" aria-labelledby="logic-tab-history">
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Link to="/aip/observability" className="btn" style={{ textDecoration: "none" }} data-testid="history-jump-observability">可观测性 →</Link>
-            <Link to="/aip/lineage" className="btn" style={{ textDecoration: "none" }} data-testid="history-jump-lineage">决策谱系 →</Link>
+            {selectedRunId ? (
+              <Link
+                to={`/aip/lineage?rootType=task_run&rootId=${encodeURIComponent(selectedRunId)}`}
+                className="btn"
+                style={{ textDecoration: "none" }}
+                data-testid="history-jump-lineage"
+              >
+                当前 Run 谱系与可观测 →
+              </Link>
+            ) : (
+              <span className="muted" data-testid="history-lineage-blocked" title="先选择真实 TaskRun，再从谱系进入可观测证据">
+                选择 Run 后查看谱系与可观测
+              </span>
+            )}
             <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }}>Evals 门控 →</Link>
           </div>
           {graph?.persisted ? (

@@ -646,12 +646,15 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     await openHistoryTab();
 
     expect(host.textContent).toContain("历史暂时不可用");
+    expect(host.querySelector("[data-testid='history-lineage-blocked']")).not.toBeNull();
     await act(async () => button("重试").click());
     await flush();
 
     await act(async () => button("run-history-failed").click());
     await flush();
     expect(runApi.getLogicRun).toHaveBeenCalledWith("history", "run-history-failed");
+    expect(host.querySelector<HTMLAnchorElement>("[data-testid='history-jump-lineage']")?.getAttribute("href"))
+      .toBe("/aip/lineage?rootType=task_run&rootId=run-history-failed");
     expect(host.textContent).toContain("SAFE_TOOL_FAILED");
     expect(host.textContent).not.toContain("未保存更改");
     await act(async () => button("定位节点 history-llm").click());
