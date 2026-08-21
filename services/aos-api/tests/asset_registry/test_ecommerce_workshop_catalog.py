@@ -79,6 +79,8 @@ class _ReadOnlyConnection:
     def execute(self, statement, params=None):
         normalized = " ".join(statement.split())
         self.calls.append((normalized, params))
+        if normalized == "SHOW search_path":
+            return _QueryResult(one={"search_path": '"tenant_fixture", public'})
         if "to_regclass('bundle_installation')" in normalized:
             return _QueryResult(
                 one={
@@ -397,8 +399,13 @@ def test_postgres_source_uses_repeatable_read_and_explicit_tenant_predicates() -
     ) == ()
 
     assert conn.rollback_count == 1
-    assert conn.calls[0][0] == "ROLLBACK"
-    assert conn.calls[1][0] == "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+    assert conn.calls[0][0] == "SHOW search_path"
+    assert conn.calls[1][0] == "ROLLBACK"
+    assert conn.calls[2][0] == "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+    assert conn.calls[3] == (
+        "SELECT set_config('search_path', %s, true)",
+        ('"tenant_fixture", public',),
+    )
     scope_query = next(call for call in conn.calls if "current_setting(" in call[0])
     assert "current_setting('aos.org_id'" in scope_query[0]
     assert "current_setting('aos.project_id'" in scope_query[0]

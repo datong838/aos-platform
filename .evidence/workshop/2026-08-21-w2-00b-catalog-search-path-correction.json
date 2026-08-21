@@ -1,0 +1,43 @@
+{
+  "schema": "aos-workshop-delivery-evidence-correction/v1",
+  "task_id": "W2-00B-CORRECTION-1",
+  "authority_revision": "AOS-000147",
+  "base_commit": "b15c06ded514af9872ea5a8f09fb27c381a0eb2b",
+  "result": "CATALOG_SEARCH_PATH_ROLLBACK_REGRESSION_GREEN",
+  "problem": "PostgresWorkshopCatalogSource rolled back a caller-established isolated search_path before opening its repeatable-read transaction, so active installations were read from the default schema and projected as zero modules.",
+  "fix": "Capture the effective search_path before rollback and restore it with parameterized transaction-local set_config after SET TRANSACTION; tenant GUCs are not preserved and remain canonically rebound afterward.",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_catalog.py",
+      "pre_sha256": "7fb2614a93a039fbd531050cd6843067225280f804b758d418ce8b0b854e4c6c",
+      "post_sha256": "1846fe8db9fb0c0426d7c0ce05ff0521f46629d1a223dc67de878890daab1ff1"
+    },
+    {
+      "path": "services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py",
+      "pre_sha256": "c0c7261cfccb141c1eed7660a9f08aadfc4503ecf171fe0b7c94ed5ce6c229ff",
+      "post_sha256": "45e3db7d6a44a1dbba3a5cc01e37d5e1ec66a79487cd4971d597e80bd377d624"
+    }
+  ],
+  "verification": [
+    "14 catalog unit and PostgreSQL installation-projection tests passed",
+    "37 combined W2-00B facade, OpenAPI, catalog and installation-projection tests passed",
+    "23 directly affected W2-00B and OpenAPI tests passed before the correction",
+    "19 W2-00C strict SDK tests and TypeScript noEmit passed",
+    "200 Web test files and 2022 pre-00C tests passed under bounded four-worker execution; the sealed W2-00C Receipt separately records 2031 post-00C tests",
+    "OpenAPI export check and git diff check passed"
+  ],
+  "receipt_corrections": [
+    "The original W2-00B evidence recorded the pre-format test_ecommerce_workshop_source_readiness.py hash d17d45a6...; the committed file hash is a9da60216ac85c67f01c44883e10bc223002cc5acdd7ed5eadf95176984cffb0.",
+    "The original W2-00B cumulative set did not include the installation-projection regression exposed after m1 integration; this correction closes it without rewriting the immutable original evidence or Receipt."
+  ],
+  "side_effects": "NONE",
+  "browser_acceptance": "NOT_APPLICABLE_BACKEND_CORRECTION",
+  "operational_blockers": [
+    "SOURCE_CONFIG_EXACT_REF_MISSING",
+    "FRESHNESS_POLICY_REF_MISSING",
+    "QUALITY_POLICY_REF_MISSING",
+    "RECONCILIATION_POLICY_REF_MISSING",
+    "QUERY_CAPABILITY_REF_MISSING"
+  ],
+  "next_task": "W2-00D"
+}
