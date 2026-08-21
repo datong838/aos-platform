@@ -8,6 +8,7 @@ export type ReceiptStatus = "accepted" | "applied" | "failed" | "unknown" | "rec
 
 export type ActorRef = { actorType: string; actorId: string };
 export type ResourceRef = { resourceType: string; resourceId: string; revision: string | null; authority: string };
+export type ExactRevisionRef = { resourceType: string; resourceId: string; revision: number; contentHash: string };
 export type ActionTypeRevisionRef = { actionTypeId: string; revisionHash: string; objectType: string };
 
 export type ActionProposal = {
@@ -16,6 +17,7 @@ export type ActionProposal = {
   taskId: string | null;
   runId: string | null;
   objectRef: ResourceRef | null;
+  impactPreviewRef: ExactRevisionRef | null;
   purpose: string;
   riskLevel: ActionRiskLevel;
   payload: Record<string, unknown>;
@@ -111,6 +113,15 @@ function resources(value: unknown, label: string): ResourceRef[] {
   if (!Array.isArray(value)) throw new TypeError(`${label} 必须是数组`);
   return value.map((item, index) => resource(item, `${label}[${index}]`));
 }
+function exactRevision(value: unknown, label: string): ExactRevisionRef {
+  const item = record(value, label);
+  return {
+    resourceType: stringValue(item.resourceType, `${label}.resourceType`),
+    resourceId: stringValue(item.resourceId, `${label}.resourceId`),
+    revision: positiveInt(item.revision, `${label}.revision`),
+    contentHash: hash(item.contentHash, `${label}.contentHash`),
+  };
+}
 
 export function parseActionProposal(value: unknown): ActionProposal {
   const item = record(value, "ActionProposal");
@@ -129,6 +140,9 @@ export function parseActionProposal(value: unknown): ActionProposal {
     taskId: nullableString(item.taskId, "ActionProposal.taskId"),
     runId: nullableString(item.runId, "ActionProposal.runId"),
     objectRef: item.objectRef === null || item.objectRef === undefined ? null : resource(item.objectRef, "ActionProposal.objectRef"),
+    impactPreviewRef: item.impactPreviewRef === null || item.impactPreviewRef === undefined
+      ? null
+      : exactRevision(item.impactPreviewRef, "ActionProposal.impactPreviewRef"),
     purpose: stringValue(item.purpose, "ActionProposal.purpose"),
     riskLevel: risk as ActionRiskLevel,
     payload: objectValue(item.payload, "ActionProposal.payload"),

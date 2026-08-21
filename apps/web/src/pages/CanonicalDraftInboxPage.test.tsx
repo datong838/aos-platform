@@ -10,7 +10,7 @@ import { CanonicalDraftInboxPage, actionStatusTab, filterCanonicalProposals } fr
 const hash = "a".repeat(64);
 function bundle(status: ActionDraftBundle["proposal"]["status"] = "approved"): ActionDraftBundle {
   return {
-    proposal: { id: "proposal-1", actionType: { actionTypeId: "send_notice", revisionHash: hash, objectType: "Order" }, taskId: "task-1", runId: "run-1", objectRef: null, purpose: "发送已审订单通知", riskLevel: "R2", payload: {}, proposalHash: hash, status, expiresAt: "2026-08-12T00:00:00Z", version: 3, createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-08-11T00:00:00Z", updatedAt: "2026-08-11T01:00:00Z" },
+    proposal: { id: "proposal-1", actionType: { actionTypeId: "send_notice", revisionHash: hash, objectType: "Order" }, taskId: "task-1", runId: "run-1", objectRef: null, impactPreviewRef: null, purpose: "发送已审订单通知", riskLevel: "R2", payload: {}, proposalHash: hash, status, expiresAt: "2026-08-12T00:00:00Z", version: 3, createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-08-11T00:00:00Z", updatedAt: "2026-08-11T01:00:00Z" },
     draft: { id: "draft-1", proposalId: "proposal-1", proposalVersion: 1, proposalHash: hash, diff: { status: "notified" }, evidenceRefs: [], status, createdAt: "2026-08-11T00:00:00Z" },
     approvals: [{ id: "approval-1", proposalId: "proposal-1", proposalVersion: 2, proposalHash: hash, decision: "approved", actor: { actorType: "user", actorId: "checker" }, reason: "通过", expiresAt: null, createdAt: "2026-08-11T00:30:00Z" }],
   };

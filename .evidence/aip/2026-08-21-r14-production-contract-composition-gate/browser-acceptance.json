@@ -1,0 +1,24 @@
+{
+  "page": "/aip/production-contracts",
+  "browser": "Codex in-app browser",
+  "tenant": "org-org/dev-project",
+  "status": "GREEN_WITH_WARNINGS",
+  "checks": [
+    "页面从 canonical ActionProposal API 读取 1 条真实 Proposal",
+    "选择真实 ImpactPreview 后只展示同 Task、同 exact Preview、approved、未过期的 Proposal",
+    "当前真实 Proposal 为 drafted、已过期且 impactPreviewRef 为空，因此候选列表为空",
+    "页面不再提供 ActionProposal ID/version/hash 手工粘贴入口",
+    "页面明确提示回到 Draft 审批台处理真实 Proposal，本页不生成或批准样例",
+    "ProductionContext 为空时 Start 保持 disabled，StartDecision 仍为 0",
+    "37 条已发布 Logic 仍可读取，未发生现有能力退化"
+  ],
+  "screenshots": [
+    "production-contracts-real-tenant.png",
+    "production-contracts-exact-proposal-gate.png",
+    "production-contracts-start-disabled.png"
+  ],
+  "warnings": [
+    "真实租户当前没有合法的 ProductionContext 与 eligible ActionProposal，因此本波只验收 fail-closed 路径，不制造启动成功样例",
+    "三视口累计验收留在最终 R15 浏览器矩阵统一执行；本波已完成当前桌面视口真实交互"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "receiptType": "AIP_R14_PRODUCTION_CONTRACT_COMPOSITION_GATE",
+  "deliveryStatus": "GREEN_WITH_WARNINGS",
+  "sourceBranch": "w1-aip",
+  "sourceHeadBeforeCommit": "56cf985a405cca28e5cc2c5d5240331f9117a2aa",
+  "scope": [
+    "apps/web/src/api/aipActions/contracts.ts",
+    "apps/web/src/api/aipActions/client.test.ts",
+    "apps/web/src/pages/CanonicalDraftInboxPage.test.tsx",
+    "apps/web/src/pages/s2/ProductionContractsPage.tsx",
+    "apps/web/src/pages/s2/ProductionContractsPage.test.tsx",
+    ".evidence/aip/2026-08-21-r14-production-contract-composition-gate/"
+  ],
+  "claims": [
+    "ActionProposal impactPreviewRef 以严格 exact revision/hash 契约解析",
+    "Production Start 页面只允许选择 canonical eligible Proposal 并自动提交 ID/version/hash",
+    "malformed exact ref 在前端 SDK 失败关闭",
+    "真实租户无 eligible Proposal 时保持 Start disabled 且不制造样例"
+  ],
+  "externalBlockersNotResolved": [
+    "B5_RECEIPT_NOT_CAS_CONSUMED",
+    "W2_00_SOURCE_READINESS_OWNER_MISSING",
+    "W2_00_SAME_CUTOFF_EVIDENCEPACK_MISSING"
+  ],
+  "ownerBoundaries": {
+    "B5_RECEIPT_NOT_CAS_CONSUMED": "m1 serialized CAS",
+    "W2_00_SOURCE_READINESS_OWNER_MISSING": "Data/Adapter owner",
+    "W2_00_SAME_CUTOFF_EVIDENCEPACK_MISSING": "Data/Adapter owner"
+  },
+  "safeToConsume": true,
+  "authorizesWorkshopW200B": false,
+  "authorizesProviderOrAgentRun": false
+}
