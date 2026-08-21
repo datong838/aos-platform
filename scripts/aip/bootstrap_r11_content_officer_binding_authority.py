@@ -75,8 +75,7 @@ def _snapshot_c02(registry: Any) -> dict[str, Any]:
     return item.model_dump(mode="json", by_alias=True)
 
 
-def apply(*, now: datetime | None = None) -> dict[str, Any]:
-    _configure_base()
+def _apply_configured(*, now: datetime | None = None) -> dict[str, Any]:
     _base._require_schema_head()
     evaluated_at = now or datetime.now(UTC)
     canary_before = _base._counts(CANARY_SCOPE)
@@ -144,6 +143,22 @@ def apply(*, now: datetime | None = None) -> dict[str, Any]:
     }
 
 
+def apply(*, now: datetime | None = None) -> dict[str, Any]:
+    original = {
+        "ACTOR": _base.ACTOR,
+        "INSTANCE_ID": _base.INSTANCE_ID,
+        "A02_BINDING_ID": _base.A02_BINDING_ID,
+        "BINDING_SPECS": _base.BINDING_SPECS,
+        "binding_id": _base.binding_id,
+    }
+    _configure_base()
+    try:
+        return _apply_configured(now=now)
+    finally:
+        for name, value in original.items():
+            setattr(_base, name, value)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true")
@@ -159,9 +174,6 @@ def main() -> int:
         }
     print(json.dumps(result, ensure_ascii=False, sort_keys=True, default=str))
     return 0 if result["status"] != "blocked" else 2
-
-
-_configure_base()
 
 
 if __name__ == "__main__":

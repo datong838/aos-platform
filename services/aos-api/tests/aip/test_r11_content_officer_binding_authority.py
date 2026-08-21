@@ -64,3 +64,8 @@ def test_only_expired_runtime_readiness_is_an_allowed_tail() -> None:
         "CAPABILITY_BINDING_NOT_ACTIVE",
         "CAPABILITY_HEALTH_STALE",
     }
+
+
+def test_import_does_not_mutate_campaign_planner_base_configuration() -> None:
+    assert module._base.INSTANCE_ID == "ecommerce.campaign_planner.default"
+    assert len(module._base.BINDING_SPECS) == 5
