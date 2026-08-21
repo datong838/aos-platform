@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "wave": "R12_ECOMMERCE_37_LOGIC_RUNTIME_READINESS",
+  "status": "GREEN_WITH_WARNINGS",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "organizationLabel": "栖月汇商贸有限公司",
+    "workspaceLabel": "默认工作区"
+  },
+  "baseUrl": "http://localhost:5175",
+  "pages": [
+    {"path": "/aip/agent-registry", "result": "GREEN", "screenshot": "01-agent-registry.png"},
+    {"path": "/aip/agents", "result": "GREEN", "screenshot": "02-agents.png"},
+    {"path": "/aip/studio", "result": "GREEN", "screenshot": "03-studio.png"},
+    {"path": "/aip/tools", "result": "GREEN_WITH_SCOPE_BLOCKERS", "screenshot": "04-tools.png"},
+    {"path": "/aip/agent-marketplace", "result": "GREEN_READ_ONLY_DISCOVERY", "screenshot": "05-marketplace.png"}
+  ],
+  "registry": {
+    "runnableAgents": "6/6",
+    "roleCoverage": {
+      "campaignPlanner": {"skills": "6/6", "capabilities": "3/3"},
+      "contentOfficer": {"skills": "8/8", "capabilities": "7/7"},
+      "customerService": {"skills": "6/6", "capabilities": "4/4"},
+      "dataAdvisor": {"skills": "6/6", "capabilities": "3/3"},
+      "privateDomainManager": {"skills": "5/5", "capabilities": "4/4"},
+      "shoppingAdvisor": {"skills": "6/6", "capabilities": "3/3"}
+    },
+    "readOnlyPrecheck": "GREEN_VISIBLE_FEEDBACK",
+    "darkThemeLadder": "GREEN_AOS_TOKENS"
+  },
+  "console": {"errors": 0, "warnings": ["React Router future flags"]},
+  "knownWarnings": [
+    "Cross-page projection remains capabilities 7/10, tools 12/53, routes 1/3; these are later-wave scope and are not counted as R12 37-logic failure.",
+    "Formal keyboard/focus/contrast conformance remains a later cumulative accessibility gate."
+  ]
+}

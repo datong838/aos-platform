@@ -1,0 +1,52 @@
+{
+  "status": "GREEN_WITH_WARNINGS",
+  "wave": "R12_ECOMMERCE_37_LOGIC_RUNTIME_READINESS",
+  "scope": {"orgId": "org-org", "projectId": "dev-project"},
+  "evaluatedAt": "2026-08-21T10:38:22.219799Z",
+  "gates": {
+    "catalogExactly37": true,
+    "staticAuthority37of37": true,
+    "runtimeRunnable37of37": true,
+    "sixAgentInstancesRunnable": true,
+    "negativeCanaryIsolated": true,
+    "browserFivePages": true
+  },
+  "counts": {
+    "canonicalLogic": 37,
+    "canonicalPublishedSkill": 37,
+    "specialtyPilotSkill": 2,
+    "skillRevisionRows": 80,
+    "tenantSkillBindingRows": 41,
+    "canonicalFreshSkillBindings": 37,
+    "tenantCapabilityBindingRows": 48,
+    "canonicalCapabilityClasses": 7,
+    "runnableAgentInstances": 6
+  },
+  "health": {
+    "observationId": "health-agnes-text-qyh-r2-20260821102341222496",
+    "samples": "3/3",
+    "status": "healthy",
+    "observedAt": "2026-08-21T10:23:41.222496Z",
+    "expiresAt": "2026-08-21T10:38:41.222496Z",
+    "providerCalls": 3,
+    "secretPayloadReads": 0
+  },
+  "safety": {
+    "agentRunsCreated": 0,
+    "providerBusinessCalls": 0,
+    "externalActions": 0,
+    "productionActions": 0,
+    "secretPayloadReads": 0,
+    "oldPilotsReplayed": 0
+  },
+  "verification": {
+    "backendTargeted": "7 passed, 6 warnings",
+    "frontendTargeted": "15 passed",
+    "cumulativeR06ThroughR12": "281 passed, 7 warnings",
+    "diffCheck": "GREEN",
+    "browser": "GREEN_WITH_WARNINGS",
+    "consoleErrors": 0,
+    "negativeCanary": "GREEN"
+  },
+  "codeCommits": ["1a3ce12", "b255bd3", "3b30dae"]
+}
