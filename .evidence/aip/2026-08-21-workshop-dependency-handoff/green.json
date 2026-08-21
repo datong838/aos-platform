@@ -1,0 +1,92 @@
+{
+  "schema": "aos-aip-workshop-dependency-handoff/v1",
+  "recordedAt": "2026-08-21T11:24:30+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "code": {
+    "branch": "w1-aip",
+    "commit": "932f9e9",
+    "change": "data-advisor-only readiness refresh"
+  },
+  "pipelineReadiness": {
+    "status": "GREEN",
+    "succeeded": 12,
+    "expected": 12,
+    "p08": {
+      "scheduleId": "sch-P08-customer-lite-qyh",
+      "runId": "scr-1aaa28e4968946f1",
+      "status": "succeeded",
+      "rowsWritten": 53,
+      "durationMs": 1564,
+      "startedAt": "2026-08-21T02:58:44.819515+00:00",
+      "finishedAt": "2026-08-21T02:58:46.400081+00:00"
+    },
+    "latestRuns": [
+      {"scheduleId": "sch-P01-shop-qyh", "runId": "scr-5d34f9df4e614990", "status": "succeeded", "rowsWritten": 1, "startedAt": "2026-08-20T18:00:22.490046+00:00"},
+      {"scheduleId": "sch-P02-product-qyh", "runId": "scr-166764273aa24a27", "status": "succeeded", "rowsWritten": 124, "startedAt": "2026-08-20T19:00:03.856130+00:00"},
+      {"scheduleId": "sch-P03-product-sku-qyh", "runId": "scr-2ece2f1e89ac4e32", "status": "succeeded", "rowsWritten": 82, "startedAt": "2026-08-20T20:00:09.733927+00:00"},
+      {"scheduleId": "sch-P04-category-qyh", "runId": "scr-94362f84d9384217", "status": "succeeded", "rowsWritten": 11, "startedAt": "2026-08-20T21:00:07.812118+00:00"},
+      {"scheduleId": "sch-P05-order-qyh", "runId": "scr-030d04ab797346f8", "status": "succeeded", "rowsWritten": 360, "startedAt": "2026-08-20T22:00:11.564972+00:00"},
+      {"scheduleId": "sch-P06-order-line-qyh", "runId": "scr-059a92ac459543bd", "status": "succeeded", "rowsWritten": 920, "startedAt": "2026-08-20T23:00:06.691845+00:00"},
+      {"scheduleId": "sch-P07-shipment-qyh", "runId": "scr-8f083e08572541a5", "status": "succeeded", "rowsWritten": 38, "startedAt": "2026-08-21T00:00:10.655789+00:00"},
+      {"scheduleId": "sch-P08-customer-lite-qyh", "runId": "scr-1aaa28e4968946f1", "status": "succeeded", "rowsWritten": 53, "startedAt": "2026-08-21T02:58:44.819515+00:00"},
+      {"scheduleId": "sch-P09-weapp-qyh", "runId": "scr-406de65074db409c", "status": "succeeded", "rowsWritten": 6, "startedAt": "2026-08-21T02:00:04.886290+00:00"},
+      {"scheduleId": "sch-P10-system-config-qyh", "runId": "scr-cd531bd1fd194268", "status": "succeeded", "rowsWritten": 38, "startedAt": "2026-08-21T03:00:12.921567+00:00"},
+      {"scheduleId": "sch-P11-product-review-qyh", "runId": "scr-ea60d81c11ac4c69", "status": "succeeded", "rowsWritten": 20, "startedAt": "2026-08-20T04:00:08.579113+00:00"},
+      {"scheduleId": "sch-P12-payment-qyh", "runId": "scr-86f2647bd2d042db", "status": "succeeded", "rowsWritten": 412, "startedAt": "2026-08-20T05:00:06.799525+00:00"}
+    ]
+  },
+  "depAdpQuery": {
+    "status": "GREEN",
+    "mode": "data_advisor_only",
+    "healthObservationId": "health-agnes-text-qyh-r2-20260821031915883161",
+    "healthExpiresAt": "2026-08-21T03:34:15.883161+00:00",
+    "exactCombination": {
+      "skill": "ecommerce.skill.D03 r4",
+      "skillBinding": "ecommerce.data_advisor.skill.D03.r4",
+      "capability": "strategy.plan r2",
+      "capabilityBinding": "ecommerce.data_advisor.strategy.plan.r2",
+      "route": "route-qyh-text-dev r4",
+      "provider": "agnes-text-qyh-dev r7",
+      "host": "api.agnes-ai.cn",
+      "model": "agnes-2.5-flash",
+      "agentRun": "ecommerce.data_advisor.D03.real-pilot.v8",
+      "agentRunStatus": "succeeded",
+      "attempt": "ecommerce.data_advisor.D03.real-pilot.v8.attempt-1",
+      "attemptStatus": "succeeded"
+    },
+    "dataAdvisorRuntimeReadiness": "runnable",
+    "sixTextColleagues": "RED_STALE_BINDINGS_CONTINUE_R07_TO_R12",
+    "providerBusinessCallsDuringBindingRefresh": 0,
+    "agentRunsCreatedDuringBindingRefresh": 0,
+    "secretPayloadReadsReported": 0
+  },
+  "negativeCanary": {
+    "scope": "dev-org/dev-project",
+    "ecomObject": 0,
+    "objInstance": 0,
+    "agentRun": 0,
+    "status": "GREEN"
+  },
+  "remainingExternalGates": {
+    "sourceReadinessOwnerApi": {
+      "status": "BLOCKED_EXTERNAL_DATA_OWNER",
+      "owner": "Data/Adapter",
+      "reason": "canonical SourceReadinessEnvelope owner/API is not present; AIP must not create a duplicate authority"
+    },
+    "sameCutoffEvidencePack": {
+      "status": "PARTIAL_EXTERNAL_DATA_OWNER",
+      "owner": "Data/Adapter",
+      "available": "12/12 latest Pipeline snapshot plus negative canary at this evidence cutoff",
+      "missing": "canonical SourceReadiness envelope, quality and reconciliation fields"
+    },
+    "b5M1Cas": {
+      "status": "BLOCKED_M1_INTEGRATION_OWNER",
+      "owner": "serialized m1 integration",
+      "m1Sha": "5b71a32",
+      "reason": "Workshop B4/B5 Receipt has not been consumed by m1 CAS and m1 contains protected user changes"
+    }
+  }
+}
