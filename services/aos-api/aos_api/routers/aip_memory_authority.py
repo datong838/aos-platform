@@ -33,6 +33,7 @@ from aos_api.aip_memory_pipeline_contracts import (
     KnowledgePipelineAlert,
     KnowledgePipelineCheckpointRevision,
     KnowledgePipelinePolicy,
+    KnowledgePipelineOperationalReadinessEnvelope,
     KnowledgePipelineReceipt,
     KnowledgePipelineRun,
     KnowledgePipelineRunEvent,
@@ -468,6 +469,22 @@ def list_pipeline_policies(
 ) -> list[KnowledgePipelinePolicy]:
     _scope(principal)
     return [service.policy_for(kind) for kind in service.policy_kinds()]
+
+
+@router.get(
+    "/pipelines/readiness",
+    response_model=KnowledgePipelineOperationalReadinessEnvelope,
+)
+def get_pipeline_readiness(
+    principal: Principal = Depends(require_principal),
+    service: AipMemoryPipelineService = Depends(get_aip_memory_pipeline_service),
+) -> KnowledgePipelineOperationalReadinessEnvelope:
+    try:
+        return service.operational_readiness(
+            _scope(principal), occurred_at=datetime.now(UTC)
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
 
 
 @router.get("/pipelines/schedules", response_model=list[KnowledgePipelineSchedule])

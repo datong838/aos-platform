@@ -1,0 +1,76 @@
+{
+  "evidenceVersion": "1.0",
+  "wave": "AIP-R16",
+  "verifiedAt": "2026-08-22T02:06:00+08:00",
+  "branch": "w1-aip",
+  "baselineSha": "089a06aebe01d7a48f06e406980a353c653221db",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "evidenceUse": "real-target-read-only"
+  },
+  "negativeCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project",
+    "result": "GREEN",
+    "detail": "两租户均返回唯一七管道；当前均为零 Schedule/Run 的独立未配置状态，未见跨租户活动泄漏。"
+  },
+  "verification": [
+    {
+      "gate": "targeted-backend",
+      "result": "GREEN",
+      "detail": "33 passed"
+    },
+    {
+      "gate": "cumulative-aip-memory-backend",
+      "result": "GREEN",
+      "detail": "136 passed, 18 pre-existing warnings"
+    },
+    {
+      "gate": "targeted-web",
+      "result": "GREEN",
+      "detail": "21 passed"
+    },
+    {
+      "gate": "cumulative-web",
+      "result": "GREEN",
+      "detail": "200 test files, 2023 tests passed"
+    },
+    {
+      "gate": "web-typecheck",
+      "result": "GREEN"
+    },
+    {
+      "gate": "openapi-freeze",
+      "result": "GREEN",
+      "detail": "13 passed; deterministic generated artifacts"
+    },
+    {
+      "gate": "browser-org-org",
+      "result": "GREEN_WITH_WARNINGS",
+      "detail": "七条知识管道均显示真实未配置/失败关闭状态；无示例成功。首次错误端口产生历史 CORS 日志，切换隔离验收端口并刷新后页面正常。"
+    }
+  ],
+  "browserEvidence": {
+    "url": "http://127.0.0.1:1420/aip/memory-governance?view=pipelines",
+    "screenshot": "browser-org-org-pipelines.png",
+    "screenshotSha256": "2faa95b0406cc622e6a1d08f3d04fec6321549c8f2ec5e04afa447d66a4b7b89",
+    "observed": {
+      "pipelineCount": 7,
+      "operationalStatus": "unconfigured",
+      "scheduleCount": 0,
+      "runCount": 0,
+      "sampleSuccessCount": 0
+    }
+  },
+  "forbiddenSideEffects": {
+    "migration": false,
+    "cron": false,
+    "providerCall": false,
+    "realDatabaseWrite": false,
+    "workshopWrite": false,
+    "authorityCas": false,
+    "primeProjectionWrite": false
+  },
+  "operationalBoundary": "EXTERNAL_DATA_GATED"
+}

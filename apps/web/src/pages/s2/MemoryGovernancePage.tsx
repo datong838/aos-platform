@@ -6,6 +6,7 @@ import {
   type KnowledgePipelineAlert,
   type KnowledgePipelineCheckpoint,
   type KnowledgePipelinePolicy,
+  type KnowledgePipelineOperationalReadinessEnvelope,
   type KnowledgePipelineReceipt,
   type KnowledgePipelineRun,
   type KnowledgePipelineSchedule,
@@ -34,6 +35,7 @@ const statusLabels: Record<string, string> = {
   queued: "排队中", running: "运行中", paused: "已暂停", succeeded: "已成功", partial: "部分成功",
   failed: "已失败", cancelled: "已取消", unknown: "状态未知", disabled: "已停用",
   complete: "完整", degraded: "降级回源", blocked: "已阻断",
+  ready: "运行就绪", unconfigured: "未配置",
 };
 
 const pipelineKindLabels: Record<string, string> = {
@@ -79,6 +81,7 @@ export function MemoryGovernancePage() {
   const [pipelinePolicies, setPipelinePolicies] = useState<KnowledgePipelinePolicy[]>([]);
   const [pipelineSchedules, setPipelineSchedules] = useState<KnowledgePipelineSchedule[]>([]);
   const [pipelineRuns, setPipelineRuns] = useState<KnowledgePipelineRun[]>([]);
+  const [pipelineReadiness, setPipelineReadiness] = useState<KnowledgePipelineOperationalReadinessEnvelope | null>(null);
   const [pipelineLoadState, setPipelineLoadState] = useState<LoadState>("loading");
   const [pipelineError, setPipelineError] = useState("");
   const [busyScheduleId, setBusyScheduleId] = useState("");
@@ -112,19 +115,22 @@ export function MemoryGovernancePage() {
     setPipelineLoadState("loading");
     setPipelineError("");
     try {
-      const [policies, schedules, runs] = await Promise.all([
+      const [policies, schedules, runs, operational] = await Promise.all([
         aipMemorySdk.pipelinePolicies(),
         aipMemorySdk.pipelineSchedules(),
         aipMemorySdk.pipelineRuns(),
+        aipMemorySdk.pipelineReadiness(),
       ]);
       setPipelinePolicies(policies);
       setPipelineSchedules(schedules);
       setPipelineRuns(runs);
+      setPipelineReadiness(operational);
       setPipelineLoadState("loaded");
     } catch (caught) {
       setPipelinePolicies([]);
       setPipelineSchedules([]);
       setPipelineRuns([]);
+      setPipelineReadiness(null);
       setPipelineError(String((caught as Error).message || caught));
       setPipelineLoadState("error");
     }
@@ -349,10 +355,19 @@ export function MemoryGovernancePage() {
           {!pipelinePolicies.length ? <div className="callout warning">服务端未返回冻结的管道策略；为避免把未知配置当作可运行状态，所有操作已失败关闭。</div> : <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
             {pipelinePolicies.map((policy) => {
               const schedules = pipelineSchedules.filter((item) => item.pipelineKind === policy.pipelineKind);
+              const operational = pipelineReadiness?.pipelines.find((item) => item.pipelineKind === policy.pipelineKind);
               return <article key={policy.pipelineKind} style={{ border: "1px solid var(--aos-border)", borderRadius: 6, padding: 14 }}>
-                <strong>{pipelineKindLabels[policy.pipelineKind] || policy.pipelineKind}</strong>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+                  <strong>{pipelineKindLabels[policy.pipelineKind] || policy.pipelineKind}</strong>
+                  <span className="tag" data-testid={`pipeline-operational-${policy.pipelineKind}`}>{operational ? memoryStatusLabel(operational.operationalStatus) : "权威未返回"}</span>
+                </div>
                 <div className="muted" style={{ marginTop: 5 }}>触发：{policy.allowedTriggers.join(" / ")} · 默认：{memoryStatusLabel(policy.defaultStatus)}</div>
                 <div className="muted">必需依赖：{policy.requiredDependencies.join("、")}</div>
+                {operational && <div data-testid={`pipeline-blockers-${policy.pipelineKind}`} style={{ marginTop: 8 }}>
+                  <div className="muted">Schedule：{operational.scheduleCounts.map(item => `${memoryStatusLabel(item.status)} ${item.count}`).join(" / ") || "0"} · Run：{operational.runCounts.map(item => `${memoryStatusLabel(item.status)} ${item.count}`).join(" / ") || "0"} · Alert：{operational.alertCount}</div>
+                  <div className="muted">Adapter：{operational.adapterRequired ? (operational.adapterRegistered ? "已注册" : "未注册") : "不要求"} · 最近 Receipt：{operational.lastReceipt ? memoryStatusLabel(operational.lastReceipt.status) : "无"}</div>
+                  {!!operational.blockerCodes.length && <div className="callout warning" style={{ marginTop: 8, padding: 8 }}>阻断：{operational.blockerCodes.join("、")}</div>}
+                </div>}
                 {!schedules.length ? <div style={{ marginTop: 10 }}>
                   <span className="tag">未注册 Schedule</span>
                   <button type="button" className="btn" style={{ marginTop: 8, width: "100%" }} disabled title="需管理员提交带精确 revision/hash 的权威 config Artifact">等待权威配置</button>

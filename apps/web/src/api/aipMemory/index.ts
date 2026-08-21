@@ -8,6 +8,8 @@ export type {
   KnowledgePipelineAlert,
   KnowledgePipelineCheckpoint,
   KnowledgePipelinePolicy,
+  KnowledgePipelineOperationalReadiness,
+  KnowledgePipelineOperationalReadinessEnvelope,
   KnowledgePipelineReceipt,
   KnowledgePipelineRun,
   KnowledgePipelineSchedule,
