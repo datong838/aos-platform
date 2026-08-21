@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { EcommerceWorkshopModule } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { CapabilityBlocker } from "./CapabilityBlocker";
+import { SourceReadinessPanel } from "./SourceReadinessPanel";
 
 export const WORKSHOP_FOCUS_EVENT = "aos-workshop-focus-mode";
 
@@ -88,6 +89,8 @@ export function EcommerceWorkshopShell({
         <div><dt>Installation</dt><dd>r{module.installationRef.revision} / lock r{module.installationRef.lockRevision}</dd></div>
         <div><dt>数据截止</dt><dd>{dataCutoff ?? "尚无可验证时间"}</dd></div>
       </dl>
+
+      <SourceReadinessPanel />
 
       <section
         id="ecommerce-workshop-main"

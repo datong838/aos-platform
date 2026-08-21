@@ -1,0 +1,92 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "task_id": "W2-00D-BLOCKED-STATE-UI",
+  "authority_revision": "AOS-000147",
+  "result": "COMPLETED_GREEN_WITH_OPERATIONAL_BLOCKERS",
+  "branch": "w2-workshop",
+  "base_commit": "b15c06ded514af9872ea5a8f09fb27c381a0eb2b",
+  "implementation": {
+    "summary": "Render the canonical P01-P12 SourceReadiness blocked envelope in the shared ecommerce Workshop shell for all eight installed modules.",
+    "boundaries": [
+      "read-only GET with no automatic retry or write",
+      "tenant echo mismatch, forbidden, network, and parser failure remain explicit fail-closed states",
+      "null counts render as unknown rather than zero",
+      "no operational status upgrade and no exact-ref fabrication"
+    ]
+  },
+  "files": [
+    {
+      "path": "apps/web/src/components/workshop/SourceReadinessPanel.tsx",
+      "pre_sha256": null,
+      "post_sha256": "8c931e347394c18110abbd81152b9c3b085b425752a1ad686acb4fbed239cda8"
+    },
+    {
+      "path": "apps/web/src/components/workshop/SourceReadinessPanel.test.tsx",
+      "pre_sha256": null,
+      "post_sha256": "abcb06b29f1d7ba4b55a72b843e3b50ac6e813230a16b22a2556bf2366dcf701"
+    },
+    {
+      "path": "apps/web/src/components/workshop/EcommerceWorkshopShell.tsx",
+      "pre_sha256": "796792942020bf2f8a55b3f85ddb89679f083b556a5bf2938741b410f59f6e92",
+      "post_sha256": "6f61ebc21f7d6830518990b4af18678a500fd40ce9675d2361e126cc4d8e3716"
+    },
+    {
+      "path": "apps/web/src/components/workshop/EcommerceWorkshopHost.test.tsx",
+      "pre_sha256": "6745f4274596da5bbc6f7cc0ba92b3540cfd430ddda2a6d7b7fd54056fc9f10b",
+      "post_sha256": "ce756ce22025b633c300f5ec47e043b03077a2cfe76af619604d3f34c7b17aed"
+    },
+    {
+      "path": "apps/web/src/components/workshop/index.ts",
+      "pre_sha256": "9225a5a47858e55e5012aad7fbe170a845619f0b12a59823125641bc39791895",
+      "post_sha256": "0a0274e9fb0484d2e3e4c3877aefec30fd4a6e8fe4a28b20730a1251fa433536"
+    },
+    {
+      "path": "apps/web/src/styles/45-ecommerce-workshop.css",
+      "pre_sha256": "03153d64c19a21a85e663f2589c3327f10381339f108a4568aae8d8fcb2d734d",
+      "post_sha256": "9f515da92488c2a53407ce291d2027ac11e4f93d8bd510a6a2b06cf38e451004"
+    }
+  ],
+  "verification": [
+    "2 focused component files and 5 tests passed",
+    "201 Web test files and 2034 tests passed",
+    "TypeScript tsc --noEmit passed",
+    "production Vite build passed",
+    "git diff --check passed"
+  ],
+  "browser_acceptance": {
+    "browser": "Codex built-in browser",
+    "tenant": "org-org/dev-project",
+    "menus": "8/8",
+    "unique_h1": "8/8",
+    "source_rows": 12,
+    "aggregate_status": "blocked",
+    "distinct_blockers": 5,
+    "refresh_persistence": "GREEN",
+    "viewports": [
+      "1920x1080",
+      "1440x1000",
+      "1280x900"
+    ],
+    "body_horizontal_overflow": 0,
+    "clean_tab_console_errors": 0,
+    "failed_page_requests": 0,
+    "harness": "LOCAL_COMPOSITE_READONLY: installed Workshop catalog from canonical 8080 reader; exact SourceReadiness envelope from this worktree canonical 8081 /v1/data/source-readiness; facade path mapped without response mutation or business-data writes"
+  },
+  "operational_blockers": [
+    "SOURCE_CONFIG_EXACT_REF_MISSING",
+    "FRESHNESS_POLICY_REF_MISSING",
+    "QUALITY_POLICY_REF_MISSING",
+    "RECONCILIATION_POLICY_REF_MISSING",
+    "QUERY_CAPABILITY_REF_MISSING"
+  ],
+  "unrelated_worktree_changes_preserved": [
+    "services/aos-api/aos_api/ecommerce_workshop_catalog.py",
+    "services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py"
+  ],
+  "prime_agent_memory_candidate": {
+    "status": "PENDING_M1_SERIAL_CAS",
+    "fact": "W2-00D blocked-state UI is complete across eight installed menus with real P01-P12 blocked evidence; five data-readiness exact refs remain externally owned and missing.",
+    "w2_core_projection_write": false
+  },
+  "next_task": "W2-00D-OPERATIONAL-PREFLIGHT"
+}

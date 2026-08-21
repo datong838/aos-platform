@@ -191,6 +191,40 @@
 .ecommerce-workshop-blockers li p { margin: 8px 0; color: var(--aos-text-secondary); }
 .ecommerce-workshop-blockers li small { color: var(--aos-text-tertiary); overflow-wrap: anywhere; }
 
+.source-readiness-panel {
+  margin-bottom: 20px;
+  border: 1px solid var(--aos-border);
+  background: var(--aos-surface);
+  padding: 16px;
+}
+.source-readiness-panel > h2,
+.source-readiness-heading h2 { margin: 0; font-size: 16px; }
+.source-readiness-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.source-readiness-status { display: inline-flex; border: 1px solid var(--aos-border); border-radius: 999px; padding: 2px 7px; font-size: 11px; color: var(--aos-text-secondary); white-space: nowrap; }
+.source-readiness-status.is-ready { color: var(--aos-green); border-color: var(--aos-green-border); }
+.source-readiness-status.is-empty,
+.source-readiness-status.is-degraded,
+.source-readiness-status.is-unknown,
+.source-readiness-status.is-stale { color: var(--aos-amber); }
+.source-readiness-status.is-failed,
+.source-readiness-status.is-blocked,
+.source-readiness-status.is-forbidden { color: var(--aos-red); border-color: var(--aos-red-border); }
+.source-readiness-summary { display: grid; grid-template-columns: 100px 100px minmax(200px, 1fr) minmax(200px, 1fr); gap: 1px; margin: 14px 0; background: var(--aos-border); border: 1px solid var(--aos-border); }
+.source-readiness-summary div { min-width: 0; padding: 9px 10px; background: var(--aos-surface); }
+.source-readiness-summary dt { color: var(--aos-text-tertiary); font-size: 11px; }
+.source-readiness-summary dd { margin: 3px 0 0; overflow-wrap: anywhere; }
+.source-readiness-blockers { margin: 0 0 14px; padding: 10px 12px; border-left: 3px solid var(--aos-red); background: color-mix(in srgb, var(--aos-red) 6%, var(--aos-surface)); color: var(--aos-text-secondary); overflow-wrap: anywhere; }
+.source-readiness-table-wrap { overflow-x: auto; }
+.source-readiness-panel table { width: 100%; min-width: 780px; border-collapse: collapse; font-size: 12px; }
+.source-readiness-panel th,
+.source-readiness-panel td { padding: 8px 10px; border-top: 1px solid var(--aos-border); text-align: left; vertical-align: top; }
+.source-readiness-panel thead th { color: var(--aos-text-tertiary); font-weight: 600; }
+.source-readiness-panel tbody th { white-space: nowrap; }
+
+@media (max-width: 900px) {
+  .source-readiness-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 .task-cockpit-page,
 .task-cockpit-read-model,
 .task-cockpit-tasks {
