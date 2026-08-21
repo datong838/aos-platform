@@ -111,6 +111,11 @@ class PromoteCandidateRequest(AipContractModel):
     expires_at: datetime | None = None
 
 
+class RevokeMemoryRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    reason_code: str = Field(min_length=1, max_length=120)
+
+
 class MemoryAuthorityItem(AipContractModel):
     item: MemoryItem
     revision: MemoryItemRevision
@@ -367,6 +372,28 @@ def get_memory(
 ) -> MemoryAuthorityItem:
     try:
         item, revision = store.get_memory_item(_scope(principal), memory_item_id)
+        return MemoryAuthorityItem(item=item, revision=revision)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/memories/{memory_item_id}/revoke", response_model=MemoryAuthorityItem)
+def revoke_memory(
+    memory_item_id: str,
+    body: RevokeMemoryRequest,
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryStore = Depends(get_aip_memory_store),
+) -> MemoryAuthorityItem:
+    _require_role(principal, {"admin", "reviewer"})
+    try:
+        item, revision = store.revoke_memory_item(
+            _scope(principal),
+            memory_item_id,
+            expected_version=body.expected_version,
+            reason_code=body.reason_code,
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
         return MemoryAuthorityItem(item=item, revision=revision)
     except Exception as exc:
         raise _map_error(exc) from exc

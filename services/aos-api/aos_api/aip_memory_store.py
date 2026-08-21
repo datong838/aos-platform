@@ -489,6 +489,135 @@ class AipMemoryStore:
                 raise AipMemoryPersistenceError("current memory revision is missing")
             return self._item_from_row(scope, row), self._revision_from_row(scope, revision)
 
+    def revoke_memory_item(
+        self,
+        scope: TenantScope,
+        memory_item_id: str,
+        *,
+        expected_version: int,
+        reason_code: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> tuple[MemoryItem, MemoryItemRevision]:
+        """CAS-revoke an active item while retaining its immutable revision.
+
+        The deterministic evidence id makes an exact client retry idempotent.
+        A changed reason, actor, or expected version is a different command and
+        cannot silently reuse the prior revocation.
+        """
+
+        self._require_scope(scope)
+        reason = reason_code.strip()
+        principal = actor.strip()
+        if expected_version < 1 or not reason or not principal:
+            raise ValueError("expected version, reason code and actor are required")
+        command = {
+            "memoryItemId": memory_item_id,
+            "expectedVersion": expected_version,
+            "reasonCode": reason,
+            "actor": principal,
+        }
+        command_hash = hashlib.sha256(
+            json.dumps(
+                command, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+            ).encode("utf-8")
+        ).hexdigest()
+        evidence_id = f"memory-revoke-{command_hash[:40]}"
+        try:
+            with self._connect(scope) as conn:
+                row = conn.execute(
+                    """SELECT * FROM aip_memory_item
+                       WHERE org_id=%s AND project_id=%s AND memory_item_id=%s
+                       FOR UPDATE""",
+                    (*scope.key, memory_item_id),
+                ).fetchone()
+                if row is None:
+                    raise AipMemoryNotFound("memory item not found")
+                current_version = int(row["version"])
+                if row["status"] == MemoryItemStatus.REVOKED.value:
+                    replay = conn.execute(
+                        """SELECT content_hash FROM aip_evidence
+                           WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
+                        (*scope.key, evidence_id),
+                    ).fetchone()
+                    if replay is None or replay["content_hash"] != command_hash:
+                        raise AipMemoryConflict("memory item was revoked by another command")
+                    if current_version != expected_version + 1:
+                        raise AipMemoryConflict("memory item version changed")
+                    revision = self._revision_row(
+                        conn, scope, memory_item_id, int(row["current_revision"])
+                    )
+                    if revision is None:
+                        raise AipMemoryPersistenceError(
+                            "current memory revision is missing"
+                        )
+                    return (
+                        self._item_from_row(scope, row),
+                        self._revision_from_row(scope, revision),
+                    )
+                if current_version != expected_version:
+                    raise AipMemoryConflict("memory item version changed")
+                if row["status"] != MemoryItemStatus.ACTIVE.value:
+                    raise AipMemoryTransitionBlocked(
+                        f"memory item cannot revoke while {row['status']}"
+                    )
+                revision = self._revision_row(
+                    conn, scope, memory_item_id, int(row["current_revision"])
+                )
+                if revision is None:
+                    raise AipMemoryPersistenceError("current memory revision is missing")
+                subject_ref = {
+                    "resourceType": "aip.memory_item",
+                    "resourceId": memory_item_id,
+                    "revision": str(row["current_revision"]),
+                    "authority": "postgresql",
+                }
+                payload = {
+                    **command,
+                    "newVersion": expected_version + 1,
+                    "occurredAt": occurred_at.isoformat(),
+                    "contentHash": revision["content_hash"],
+                }
+                conn.execute(
+                    """INSERT INTO aip_evidence (
+                       org_id,project_id,evidence_id,run_id,evidence_type,
+                       subject_ref,source_type,source_ref,observed_at,freshness_at,
+                       content_hash,redaction,payload,created_by,created_at)
+                       VALUES (%s,%s,%s,NULL,'memory_revoke',%s::jsonb,
+                         'aip-memory-authority',%s,%s,%s,%s,'{}'::jsonb,%s::jsonb,%s,%s)""",
+                    (
+                        *scope.key,
+                        evidence_id,
+                        self._json(subject_ref),
+                        memory_item_id,
+                        occurred_at,
+                        occurred_at,
+                        command_hash,
+                        self._json(payload),
+                        principal,
+                        occurred_at,
+                    ),
+                )
+                updated = conn.execute(
+                    """UPDATE aip_memory_item
+                       SET status='revoked',version=version+1,updated_at=%s
+                       WHERE org_id=%s AND project_id=%s AND memory_item_id=%s
+                         AND status='active' AND version=%s
+                       RETURNING *""",
+                    (occurred_at, *scope.key, memory_item_id, expected_version),
+                ).fetchone()
+                if updated is None:
+                    raise AipMemoryConflict("memory item changed concurrently")
+                conn.commit()
+                return (
+                    self._item_from_row(scope, updated),
+                    self._revision_from_row(scope, revision),
+                )
+        except (AipMemoryStoreError, ValueError):
+            raise
+        except Exception as exc:
+            raise AipMemoryPersistenceError("memory item revocation failed") from exc
+
     def list_memory_items(
         self,
         scope: TenantScope,

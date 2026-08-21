@@ -788,11 +788,12 @@ def seed_running_agent_run(chain) -> tuple[ResourceRef, ResourceRef, VersionedAs
                output_schema,tool_allowlist,required_capabilities,risk_level,
                memory_policy_ref,handoff_policy_ref,source_ref,source_license,
                parent_ref,publication_tenant,release_gate_ref,publication_ref,
-               model_route_ref,runtime_policy_ref,
+               model_route_ref,runtime_policy_ref,logic_revision_ref,
                content_hash,created_by)
                VALUES (%s,1,%s,'published','{}','{}','[]','[]','low',
                  '{}'::jsonb,'{}'::jsonb,'{}'::jsonb,'internal',
                  %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+                 %s::jsonb,
                  %s,'pytest')""",
             (
                 skill_id,
@@ -810,6 +811,7 @@ def seed_running_agent_run(chain) -> tuple[ResourceRef, ResourceRef, VersionedAs
                 ),
                 json.dumps(asset("ModelRouteRevision", f"e7-route-{suffix}").model_dump(mode="json", by_alias=True)),
                 json.dumps(asset("RuntimePolicyRevision", f"e7-policy-{suffix}").model_dump(mode="json", by_alias=True)),
+                json.dumps(logic_ref.model_dump(mode="json", by_alias=True)),
                 HASH_A,
             ),
         )

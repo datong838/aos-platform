@@ -214,6 +214,29 @@ def test_reference_projection_is_restart_safe_scoped_and_rebuildable(promoted_me
         ).fetchone()["n"] == 1
 
 
+def test_single_reference_upsert_is_idempotent_and_does_not_rebuild_scope(
+    promoted_memory,
+) -> None:
+    index = AipMemorySearchIndex()
+    first = draft(promoted_memory)
+    assert index.upsert_reference(PRIMARY, first, indexed_at=NOW) is True
+    assert index.upsert_reference(
+        PRIMARY, first, indexed_at=NOW + timedelta(minutes=1)
+    ) is False
+    with pytest.raises(AipMemorySearchIndexConflict, match="idempotency"):
+        index.upsert_reference(
+            PRIMARY,
+            first.model_copy(update={"terms": ["different"]}),
+            indexed_at=NOW,
+        )
+    with connect(PRIMARY) as conn:
+        assert conn.execute(
+            """SELECT COUNT(*) AS n FROM aip_memory_search_reference
+               WHERE memory_item_id=%s""",
+            (first.memory_item_id,),
+        ).fetchone()["n"] == 1
+
+
 def test_reference_rejects_authority_drift_and_pii(promoted_memory) -> None:
     with pytest.raises(ValueError, match="PII"):
         draft(promoted_memory, terms=["联系 13800138000"])
