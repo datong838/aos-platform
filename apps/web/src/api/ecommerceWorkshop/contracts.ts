@@ -91,6 +91,52 @@ export type EcommerceWorkshopApiErrorBody = {
   traceId: string;
 };
 
+export const SOURCE_READINESS_SCHEMA_VERSION = "aos.source-readiness/v1" as const;
+export type SourceReadinessStatus = "ready" | "empty" | "degraded" | "unknown" | "stale" | "failed" | "blocked" | "forbidden";
+export type SourceReadinessObservationStatus = "succeeded" | "failed" | "running" | "unknown";
+export type SourceReadinessPolicyStatus = "pass" | "fail" | "unknown";
+export type SourceReadinessExactRef = { resourceType: string; resourceId: string; revision: string; contentHash: string; authority: string };
+export type SourceReadinessLatestRun = { runId: string | null; status: SourceReadinessObservationStatus; scheduledFor: string | null; startedAt: string | null; finishedAt: string | null; rowsWritten: number | null; errorCode: string | null };
+export type SourceReadinessCounts = { sourceTotal: number | null; sourceActive: number | null; sourceDeleted: number | null; projectionTotal: number | null; unexplainedDelta: number | null };
+export type SourceReadinessPolicyObservation = { status: SourceReadinessPolicyStatus; ruleRef: SourceReadinessExactRef | null; summary: string | null };
+export type SourceReadinessItem = {
+  schemaVersion: typeof SOURCE_READINESS_SCHEMA_VERSION;
+  tenant: WorkshopTenant;
+  sourceId: string;
+  pipelineId: string;
+  objectType: string;
+  status: SourceReadinessStatus;
+  checkedAt: string;
+  observedAt: string | null;
+  sourceEventAt: string | null;
+  projectedAt: string | null;
+  dataCutoff: string | null;
+  freshnessExpiresAt: string | null;
+  sourceConfigRef: SourceReadinessExactRef | null;
+  mappingRef: SourceReadinessExactRef | null;
+  schemaRef: SourceReadinessExactRef | null;
+  maskingPolicyRef: SourceReadinessExactRef | null;
+  freshnessPolicyRef: SourceReadinessExactRef | null;
+  qualityPolicyRef: SourceReadinessExactRef | null;
+  reconciliationPolicyRef: SourceReadinessExactRef | null;
+  queryCapabilityRef: SourceReadinessExactRef | null;
+  latestRun: SourceReadinessLatestRun;
+  counts: SourceReadinessCounts;
+  quality: SourceReadinessPolicyObservation;
+  reconciliation: SourceReadinessPolicyObservation;
+  reasons: string[];
+  blockers: string[];
+};
+export type SourceReadinessEnvelope = {
+  schemaVersion: typeof SOURCE_READINESS_SCHEMA_VERSION;
+  tenant: WorkshopTenant;
+  checkedAt: string;
+  cutoffAt: string;
+  status: SourceReadinessStatus;
+  sources: SourceReadinessItem[];
+  receiptRef: SourceReadinessExactRef | null;
+};
+
 export const TASK_COCKPIT_SCHEMA_VERSION = "aos.ecommerce-workshop.task-cockpit/v1" as const;
 export type TaskCockpitTaskStatus = "pending" | "planning" | "awaiting_approval" | "approved" | "executing" | "paused" | "completed" | "failed" | "cancelled" | "rolled_back";
 export type TaskCockpitRunStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled" | "unknown";

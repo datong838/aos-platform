@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
+import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -29,6 +29,51 @@ describe("ecommerceWorkshop strict parser", () => {
     expect(() => parseEcommerceWorkshopModuleList({ ...list, items: [{ ...module, readiness: "available" }] })).toThrow("不一致");
     expect(() => parseEcommerceWorkshopModuleList({ ...list, count: 2 })).toThrow("count");
     expect(() => parseEcommerceWorkshopModuleList({ ...list, items: [{ ...module, requiredObjects: ["Z", "A"] }] })).toThrow("排序");
+  });
+});
+
+const sourcePipelines = ["P01-shop-qyh", "P02-product-qyh", "P03-product-sku-qyh", "P04-category-qyh", "P05-order-qyh", "P06-order-line-qyh", "P07-shipment-qyh", "P08-customer-lite-qyh", "P09-weapp-qyh", "P10-system-config-qyh", "P11-product-review-qyh", "P12-payment-qyh"];
+const sourceCheckedAt = "2026-08-21T14:00:00Z";
+const sourceBlockers = ["FRESHNESS_POLICY_REF_MISSING", "QUALITY_POLICY_REF_MISSING", "QUERY_CAPABILITY_REF_MISSING", "RECONCILIATION_POLICY_REF_MISSING", "SOURCE_CONFIG_EXACT_REF_MISSING"];
+const sourceItem = (pipelineId: string, status = "blocked") => ({
+  schemaVersion: "aos.source-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, sourceId: "niushop-qyh", pipelineId, objectType: "Object", status, checkedAt: sourceCheckedAt,
+  observedAt: sourceCheckedAt, sourceEventAt: null, projectedAt: sourceCheckedAt, dataCutoff: sourceCheckedAt, freshnessExpiresAt: null,
+  sourceConfigRef: null, mappingRef: null, schemaRef: null, maskingPolicyRef: null, freshnessPolicyRef: null, qualityPolicyRef: null, reconciliationPolicyRef: null, queryCapabilityRef: null,
+  latestRun: { runId: "run-1", status: "succeeded", scheduledFor: sourceCheckedAt, startedAt: sourceCheckedAt, finishedAt: sourceCheckedAt, rowsWritten: 1, errorCode: null },
+  counts: { sourceTotal: 1, sourceActive: 1, sourceDeleted: 0, projectionTotal: 1, unexplainedDelta: 0 },
+  quality: { status: "unknown", ruleRef: null, summary: null }, reconciliation: { status: "unknown", ruleRef: null, summary: null }, reasons: sourceBlockers, blockers: sourceBlockers,
+});
+const sourceEnvelope = (status = "blocked") => ({ schemaVersion: "aos.source-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, checkedAt: sourceCheckedAt, cutoffAt: sourceCheckedAt, status, sources: sourcePipelines.map((pipelineId) => sourceItem(pipelineId, status)), receiptRef: null });
+
+describe("source readiness strict parser", () => {
+  it.each(["blocked", "unknown", "empty", "forbidden"])("诚实保留 %s 与 ordered P01-P12", (status) => {
+    const parsed = parseSourceReadinessEnvelope(sourceEnvelope(status));
+    expect(parsed.status).toBe(status);
+    expect(parsed.sources).toHaveLength(12);
+    expect(parsed.sources[0].pipelineId).toBe("P01-shop-qyh");
+  });
+  it("只在 exact authority 与 policy/run/freshness 全部闭合时接受 ready", () => {
+    const exactRef = { resourceType: "Policy", resourceId: "policy-1", revision: "1", contentHash: "a".repeat(64), authority: "Data" };
+    const base = sourceEnvelope("ready");
+    const ready = { ...base, sources: base.sources.map((item) => ({ ...item, freshnessExpiresAt: "2026-08-22T14:00:00Z", sourceConfigRef: exactRef, mappingRef: exactRef, schemaRef: exactRef, maskingPolicyRef: exactRef, freshnessPolicyRef: exactRef, qualityPolicyRef: exactRef, reconciliationPolicyRef: exactRef, queryCapabilityRef: exactRef, quality: { status: "pass", ruleRef: exactRef, summary: "pass" }, reconciliation: { status: "pass", ruleRef: exactRef, summary: "pass" }, reasons: [], blockers: [] })) };
+    expect(parseSourceReadinessEnvelope(ready).status).toBe("ready");
+  });
+  it("拒绝字段、枚举、顺序、tenant、checkedAt 与 aggregate 漂移", () => {
+    expect(() => parseSourceReadinessEnvelope({ ...sourceEnvelope(), extra: true })).toThrow("字段漂移");
+    expect(() => parseSourceReadinessEnvelope({ ...sourceEnvelope(), status: "future" })).toThrow("未知枚举");
+    const reversed = sourceEnvelope(); reversed.sources = [...reversed.sources].reverse();
+    expect(() => parseSourceReadinessEnvelope(reversed)).toThrow("ordered P01-P12");
+    const tenantDrift = sourceEnvelope(); tenantDrift.sources[0] = { ...tenantDrift.sources[0], tenant: { orgId: "dev-org", projectId: "dev-project" } };
+    expect(() => parseSourceReadinessEnvelope(tenantDrift)).toThrow("tenant 漂移");
+    const checkedAtDrift = sourceEnvelope(); checkedAtDrift.sources[0] = { ...checkedAtDrift.sources[0], checkedAt: "2026-08-21T14:00:01Z" };
+    expect(() => parseSourceReadinessEnvelope(checkedAtDrift)).toThrow("checkedAt 漂移");
+    expect(() => parseSourceReadinessEnvelope({ ...sourceEnvelope(), status: "empty" })).toThrow("aggregate status 漂移");
+  });
+  it("拒绝伪 ready、坏 exact ref hash 与非排序 blocker", () => {
+    expect(() => parseSourceReadinessEnvelope(sourceEnvelope("ready"))).toThrow("伪 ready");
+    expect(() => parseSourceReadinessEnvelope({ ...sourceEnvelope(), receiptRef: { resourceType: "Receipt", resourceId: "receipt-1", revision: "1", contentHash: "bad", authority: "Data" } })).toThrow("SHA-256");
+    const unsorted = sourceEnvelope(); unsorted.sources[0] = { ...unsorted.sources[0], blockers: [...sourceBlockers].reverse() };
+    expect(() => parseSourceReadinessEnvelope(unsorted)).toThrow("唯一且排序");
   });
 });
 
