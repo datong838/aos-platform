@@ -27,6 +27,7 @@ export type AgentInstance = {
 
 export type SkillTemplate = {
   skillId: string;
+  revision: number;
   canonicalLogicId: string;
   lifecycle: "evaluated" | "published";
   requiredCapabilities: string[];

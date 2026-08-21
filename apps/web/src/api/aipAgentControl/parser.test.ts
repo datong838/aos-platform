@@ -89,6 +89,7 @@ describe("aipAgentControl strict parser", () => {
     expect(parsed.stats.runnableCount).toBe(1);
     expect(parsed.items[0].runtimeReadiness).toBe("runnable");
     expect(parsed.items[0].skills[0].canonicalLogicId).toBe("D03");
+    expect(parsed.items[0].skills[0].revision).toBe(4);
   });
 
   it("安装响应保留并校验 SolutionPack 容器版本", () => {
