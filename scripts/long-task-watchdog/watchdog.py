@@ -660,6 +660,9 @@ def _record_terminal_outcome(
     ack: dict[str, Any] | None,
     resolved_at: float,
     latest_user_at: float | None,
+    notification_runner: Callable[
+        ..., subprocess.CompletedProcess[str]
+    ] = subprocess.run,
 ) -> None:
     state.update(
         {
@@ -746,6 +749,15 @@ def _record_terminal_outcome(
     if state.get("episode_trigger") == "dependency-released":
         state["dependency_wait_armed"] = False
         state["dependency_release_resolved_at"] = resolved_at
+    _publish_visibility(
+        config,
+        state,
+        stage="closed",
+        outcome=outcome,
+        ack=ack,
+        recorded_at=resolved_at,
+        notification_runner=notification_runner,
+    )
 
 
 def _log(message: str) -> None:
@@ -799,6 +811,125 @@ def _visibility_watch_enabled(config: dict[str, Any]) -> bool:
     if not isinstance(enabled, bool):
         raise RuntimeError("visibility_watch enabled must be a boolean")
     return enabled
+
+
+def _desktop_notification_enabled(config: dict[str, Any]) -> bool:
+    raw = config.get("visibility_watch")
+    if raw is None:
+        return False
+    if not isinstance(raw, dict):
+        raise RuntimeError("visibility_watch must be an object")
+    enabled = raw.get("desktop_notification", False)
+    if not isinstance(enabled, bool):
+        raise RuntimeError(
+            "visibility_watch desktop_notification must be a boolean"
+        )
+    return bool(raw.get("enabled", False)) and enabled
+
+
+def _visibility_status_path(config: dict[str, Any]) -> Path:
+    state_path = config.get("_state_path")
+    if not isinstance(state_path, str) or not state_path:
+        raise RuntimeError("visibility status requires state path")
+    return Path(state_path).with_name("visible-status.json")
+
+
+def _visibility_next_strategy(state: dict[str, Any], outcome: str) -> str:
+    if outcome == "attempting":
+        return "await-current-episode-result"
+    if bool(state.get("blocked_recheck_armed", False)):
+        return "blocked-recheck"
+    if bool(state.get("continuation_armed", False)):
+        return "continuation"
+    if outcome == "completed":
+        return "stopped-completed"
+    if outcome in TERMINAL_FAILURE_OUTCOMES or outcome == "reentry-noop":
+        return "manual-audit"
+    return "next-launchd-check"
+
+
+def _notification_value(value: object, *, limit: int = 120) -> str:
+    rendered = value if isinstance(value, str) else ""
+    rendered = re.sub(r"[\x00-\x1f\x7f]+", " ", rendered).strip()
+    return rendered[:limit]
+
+
+def _publish_visibility(
+    config: dict[str, Any],
+    state: dict[str, Any],
+    *,
+    stage: str,
+    outcome: str,
+    ack: dict[str, Any] | None,
+    recorded_at: float,
+    notification_runner: Callable[..., subprocess.CompletedProcess[str]],
+) -> None:
+    if not _visibility_watch_enabled(config):
+        return
+    task_id = ack.get("task_id") if isinstance(ack, dict) else None
+    next_task = ack.get("next_task") if isinstance(ack, dict) else None
+    reason_code = ack.get("reason_code") if isinstance(ack, dict) else None
+    card: dict[str, Any] = {
+        "schema": "aos-watchdog-visible-status/v1",
+        "thread_id": str(config["thread_id"]),
+        "episode_id": state.get("recovery_episode_id"),
+        "trigger": state.get("episode_trigger"),
+        "wake_sequence": int(state.get("total_attempts", 0)),
+        "wake_started_at": state.get("last_attempt_at"),
+        "stage": stage,
+        "outcome": outcome,
+        "task_id": task_id,
+        "next_task": next_task,
+        "reason_code": reason_code,
+        "next_strategy": _visibility_next_strategy(state, outcome),
+        "recorded_at": recorded_at,
+        "notification_status": "disabled",
+        "delivery_error": None,
+    }
+    if _desktop_notification_enabled(config):
+        sequence = card["wake_sequence"]
+        task = _notification_value(task_id or next_task or "pending")
+        if stage == "waking":
+            body = f"Dog #{sequence} 已唤醒，正在独立核验。"
+        else:
+            body = f"Dog #{sequence} 结果：{_notification_value(outcome)}；Task：{task}"
+        script = (
+            "on run argv\n"
+            "display notification (item 2 of argv) with title (item 1 of argv)\n"
+            "end run"
+        )
+        command = [
+            "/usr/bin/osascript",
+            "-e",
+            script,
+            "AOS Workshop Dog",
+            body,
+        ]
+        try:
+            result = notification_runner(
+                command,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=5,
+                env=_sanitized_environment(),
+            )
+            if result.returncode == 0:
+                card["notification_status"] = "delivered"
+            else:
+                card["notification_status"] = "failed"
+                card["delivery_error"] = (
+                    f"desktop notification exit {result.returncode}"
+                )
+        except (OSError, subprocess.SubprocessError) as exc:
+            card["notification_status"] = "failed"
+            card["delivery_error"] = (
+                f"desktop notification {type(exc).__name__}"
+            )
+    state["visibility_delivery_status"] = card["notification_status"]
+    state["visibility_delivery_error"] = card["delivery_error"]
+    state["visibility_status_path"] = str(_visibility_status_path(config))
+    _write_json(_visibility_status_path(config), card)
 
 
 def _dependency_scope_overlaps(watched: str, leased: str) -> bool:
@@ -1064,23 +1195,9 @@ def evaluate(
     )
     if turn_silence_limit <= 0:
         raise RuntimeError("max_turn_silence_seconds must be positive")
-    dependency_watch_enabled = bool(
-        isinstance(config.get("dependency_watch"), dict)
-        and config["dependency_watch"].get("enabled", False)
-    )
-    fact_watch_enabled = bool(
-        isinstance(config.get("fact_watch"), dict)
-        and config["fact_watch"].get("enabled", False)
-    )
-    blocked_recheck_enabled = bool(
-        isinstance(config.get("blocked_recheck_watch"), dict)
-        and config["blocked_recheck_watch"].get("enabled", False)
-    )
-    if status.turn_running and (
-        dependency_watch_enabled
-        or fact_watch_enabled
-        or blocked_recheck_enabled
-        or now - status.last_activity_at < turn_silence_limit
+    if (
+        status.turn_running
+        and now - status.last_activity_at < turn_silence_limit
     ):
         return "turn-running", status
     if status.pending_tool_calls and status.oldest_pending_tool_at is not None and (
@@ -1102,6 +1219,9 @@ def run_once(
     *,
     now: float | None = None,
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    notification_runner: Callable[
+        ..., subprocess.CompletedProcess[str]
+    ] = subprocess.run,
 ) -> str:
     config = _load_json(config_path, {})
     if not config:
@@ -1113,6 +1233,7 @@ def run_once(
     current = time.time() if now is None else now
     blocked_recheck_enabled, blocked_recheck_delay = _blocked_recheck_settings(config)
     visibility_required = _visibility_watch_enabled(config)
+    _desktop_notification_enabled(config)
     last_ack = state.get("last_ack")
     bootstrap_blocker = (
         last_ack.get("blocker_fingerprint") if isinstance(last_ack, dict) else None
@@ -1325,6 +1446,15 @@ def run_once(
         attempt_started_at = time.time()
         state["last_attempt_at"] = attempt_started_at
         state["total_attempts"] = int(state.get("total_attempts", 0)) + 1
+        _publish_visibility(
+            config,
+            state,
+            stage="waking",
+            outcome="attempting",
+            ack=None,
+            recorded_at=attempt_started_at,
+            notification_runner=notification_runner,
+        )
         _write_json(state_path, state)
         _log(f"resume attempt {attempt}/{attempts} thread={config['thread_id']}")
         try:
@@ -1376,6 +1506,7 @@ def run_once(
                     ack=ack,
                     resolved_at=current,
                     latest_user_at=after_resume.latest_user_at,
+                    notification_runner=notification_runner,
                 )
                 state["last_error"] = "visible status marker missing"
                 state["paused_user_at"] = after_resume.latest_user_at
@@ -1392,6 +1523,7 @@ def run_once(
                     ack=ack,
                     resolved_at=current,
                     latest_user_at=after_resume.latest_user_at,
+                    notification_runner=notification_runner,
                 )
                 _write_json(state_path, state)
                 return outcome
@@ -1404,6 +1536,7 @@ def run_once(
                     ack=ack,
                     resolved_at=current,
                     latest_user_at=after_resume.latest_user_at,
+                    notification_runner=notification_runner,
                 )
                 state["last_error"] = ack_error
                 state["paused_user_at"] = after_resume.latest_user_at
@@ -1419,6 +1552,7 @@ def run_once(
                     ack=ack,
                     resolved_at=current,
                     latest_user_at=after_resume.latest_user_at,
+                    notification_runner=notification_runner,
                 )
                 state["last_error"] = "current episode ack exists without clean visible final"
                 state["paused_user_at"] = after_resume.latest_user_at
@@ -1446,6 +1580,15 @@ def run_once(
         )
         if state.get("episode_trigger") == "dependency-released":
             state["dependency_wait_armed"] = False
+        _publish_visibility(
+            config,
+            state,
+            stage="closed",
+            outcome="paused-failure",
+            ack=None,
+            recorded_at=current,
+            notification_runner=notification_runner,
+        )
         _write_json(state_path, state)
         return "paused-failure"
     retry_delay = _retry_delay_seconds(config, state["consecutive_failures"])
@@ -1453,6 +1596,15 @@ def run_once(
     state["next_retry_at"] = current + retry_delay
     state["last_recovery_outcome"] = "transport-failed"
     state["last_decision"] = "retry-scheduled"
+    _publish_visibility(
+        config,
+        state,
+        stage="retry-scheduled",
+        outcome="transport-failed",
+        ack=None,
+        recorded_at=current,
+        notification_runner=notification_runner,
+    )
     _write_json(state_path, state)
     return "retry-scheduled"
 

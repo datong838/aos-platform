@@ -123,9 +123,12 @@ class WatchdogTest(unittest.TestCase):
         }
         return config
 
-    def visibility_config(self):
+    def visibility_config(self, *, desktop_notification=False):
         config = self.config()
-        config["visibility_watch"] = {"enabled": True}
+        config["visibility_watch"] = {
+            "enabled": True,
+            "desktop_notification": desktop_notification,
+        }
         return config
 
     def write_leases(self, *leases):
@@ -208,6 +211,20 @@ class WatchdogTest(unittest.TestCase):
         )
         decision, status = watchdog.evaluate(
             self.config(), {}, now=1000, rollout_path=self.transcript
+        )
+        self.assertTrue(status.turn_running)
+        self.assertEqual("recover", decision)
+
+    def test_stale_running_turn_with_production_watches_allows_recovery(self):
+        self.write(
+            task_event("1970-01-01T00:00:05Z", "task_started"),
+            record("1970-01-01T00:00:10Z", "user"),
+        )
+        config = self.blocked_recheck_config()
+        config["fact_watch"] = {"enabled": True, "paths": []}
+        config["dependency_watch"] = {"enabled": False}
+        decision, status = watchdog.evaluate(
+            config, {}, now=1000, rollout_path=self.transcript
         )
         self.assertTrue(status.turn_running)
         self.assertEqual("recover", decision)
@@ -697,6 +714,146 @@ class WatchdogTest(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "enabled must be a boolean"):
             watchdog.run_once(config_path, state_path, now=1000)
 
+        config = self.visibility_config()
+        config["visibility_watch"]["desktop_notification"] = "yes"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        with self.assertRaisesRegex(
+            RuntimeError, "desktop_notification must be a boolean"
+        ):
+            watchdog.run_once(config_path, state_path, now=1000)
+
+    def test_visible_wake_persists_status_and_delivers_desktop_notifications(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.visibility_config(desktop_notification=True)),
+            encoding="utf-8",
+        )
+        notifications = []
+
+        def notification_runner(command, **kwargs):
+            notifications.append((command, kwargs))
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        def runner(command, **kwargs):
+            self.write_ack(
+                evidence_refs=["secret-evidence-must-not-leak"],
+                blocker_fingerprint="secret-fingerprint-must-not-leak",
+            )
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    "[DOG_VISIBLE_STATUS] outcome=resumed-progress",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "completed", "")
+
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(
+                config_path,
+                state_path,
+                now=1000,
+                runner=runner,
+                notification_runner=notification_runner,
+            ),
+        )
+        visible_path = self.root / "visible-status.json"
+        visible = json.loads(visible_path.read_text(encoding="utf-8"))
+        self.assertEqual("closed", visible["stage"])
+        self.assertEqual("resumed-progress", visible["outcome"])
+        self.assertEqual("workshop-test", visible["task_id"])
+        self.assertEqual("workshop-next", visible["next_task"])
+        self.assertEqual("delivered", visible["notification_status"])
+        self.assertEqual(0o600, visible_path.stat().st_mode & 0o777)
+        self.assertEqual(2, len(notifications))
+        rendered = visible_path.read_text(encoding="utf-8")
+        self.assertNotIn("secret-evidence-must-not-leak", rendered)
+        self.assertNotIn("secret-fingerprint-must-not-leak", rendered)
+
+    def test_visible_notification_failure_is_audited_without_replaying_outcome(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.visibility_config(desktop_notification=True)),
+            encoding="utf-8",
+        )
+
+        def notification_runner(command, **kwargs):
+            return subprocess.CompletedProcess(command, 1, "", "notification denied")
+
+        def runner(command, **kwargs):
+            self.write_ack()
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    "[DOG_VISIBLE_STATUS] outcome=resumed-progress",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "completed", "")
+
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(
+                config_path,
+                state_path,
+                now=1000,
+                runner=runner,
+                notification_runner=notification_runner,
+            ),
+        )
+        visible = json.loads(
+            (self.root / "visible-status.json").read_text(encoding="utf-8")
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("failed", visible["notification_status"])
+        self.assertEqual("desktop notification exit 1", visible["delivery_error"])
+        self.assertEqual(
+            "desktop notification exit 1", state["visibility_delivery_error"]
+        )
+        self.assertEqual("resumed-progress", state["last_recovery_outcome"])
+
+    def test_visible_transport_failure_persists_retry_result(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.visibility_config(desktop_notification=True)),
+            encoding="utf-8",
+        )
+        notifications = []
+
+        def notification_runner(command, **kwargs):
+            notifications.append(command)
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        def runner(command, **kwargs):
+            return subprocess.CompletedProcess(command, 1, "", "network")
+
+        self.assertEqual(
+            "retry-scheduled",
+            watchdog.run_once(
+                config_path,
+                state_path,
+                now=1000,
+                runner=runner,
+                notification_runner=notification_runner,
+            ),
+        )
+        visible = json.loads(
+            (self.root / "visible-status.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual("retry-scheduled", visible["stage"])
+        self.assertEqual("transport-failed", visible["outcome"])
+        self.assertEqual("next-launchd-check", visible["next_strategy"])
+        self.assertEqual(2, len(notifications))
+
     def test_existing_safe_blocked_state_is_bootstrapped_without_runner(self):
         self.write(
             record("1970-01-01T00:00:10Z", "user"),
@@ -1101,7 +1258,7 @@ class WatchdogTest(unittest.TestCase):
 
         self.assertEqual(
             "turn-running",
-            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+            watchdog.run_once(config_path, state_path, now=150, runner=runner),
         )
         state = json.loads(state_path.read_text(encoding="utf-8"))
         self.assertTrue(state["dependency_wait_armed"])
@@ -1281,7 +1438,9 @@ class WatchdogTest(unittest.TestCase):
         deliveries.mkdir()
         config_path = self.root / "config.json"
         state_path = self.root / "state.json"
-        config_path.write_text(json.dumps(self.fact_config()), encoding="utf-8")
+        config = self.fact_config()
+        config["max_turn_silence_seconds"] = 2000
+        config_path.write_text(json.dumps(config), encoding="utf-8")
         calls = []
 
         def runner(*args, **kwargs):

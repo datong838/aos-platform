@@ -1,0 +1,80 @@
+{
+  "schema": "aos-workshop-watchdog-evidence/v1",
+  "task_id": "workshop-watchdog-visible-delivery-and-stale-turn-v30-20260821",
+  "authority_revision": "AOS-000146",
+  "baseline_head": "db3104a0d97bd10c93e454cabdd81a1d857340c0",
+  "recorded_at": "2026-08-21T03:33:32Z",
+  "root_causes": [
+    "production watches made any unmatched task_started permanently return turn-running, bypassing max_turn_silence_seconds",
+    "V2.9 proved final marker persistence in the rollout transcript but did not prove Codex Desktop surfaced background turns"
+  ],
+  "changes": [
+    "time-bound task_started reentry protection by max_turn_silence_seconds while preserving tool, grace, backoff, Lease and episode gates",
+    "atomic mode-0600 visible-status.json for wake start, terminal result and retry-scheduled result",
+    "optional local Notification Center delivery with fixed osascript argv and sanitized non-sensitive content",
+    "notification delivery failure is audited without replaying or downgrading an Ack plus final terminal outcome"
+  ],
+  "file_hashes": {
+    "scripts/long-task-watchdog/watchdog.py": {
+      "before": "sha256:3c397bddc5c1eed3bbcec7792e536f3245509c37bacbe135b97ccaec38447bfa",
+      "after": "sha256:b73794498cbb70f059464c5f4dd516fc11a30e654595f11ca3c339416c6a7c88"
+    },
+    "scripts/long-task-watchdog/test_watchdog.py": {
+      "before": "sha256:f768cfdb6f2d7d6f607910848062ca172ce5e2a6cf78ba66eec518aebcff5678",
+      "after": "sha256:2651fb8bc303ff63b4aa87637a15cff4cef354360f8768114cea13909081c58e"
+    },
+    "scripts/long-task-watchdog/README.md": {
+      "before": "sha256:84234fa5801b98cbb63dfe57badd5296e15ad28df2df69ea73c1ccf03373e0eb",
+      "after": "sha256:6093db0e72d42d0785564a87b38a3bfa95fe10ff0a57a2ee4b2a3d6a3d92e4db"
+    },
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/25-Workshop长任务Watchdog恢复闭环与权限ADR.md": {
+      "before": "sha256:caa04a28a80830c90a475d09adcb0d00af3316a024346f91b16b5261a6186739",
+      "after": "sha256:dd3ff55eb13c86ccd13499e43a440f1d0181ea0d94695ef35c356dac6d1a138a"
+    },
+    "/Users/ddt/.codex/long-task-watchdog-workshop/config.json": {
+      "before": "sha256:7e38031f7068d5b1723ced3640c45c2a4120d08348dd3fe4de3696ddd1536b46",
+      "after": "sha256:9a79a2746e0837f9e971c9308dc338b37fa54503de65c8ebe857835598ef5af9"
+    }
+  },
+  "verification": {
+    "red_tests": [
+      "stale running turn with production watches returned turn-running instead of recover",
+      "run_once had no notification_runner or durable visible status delivery"
+    ],
+    "focused": "3/3 GREEN before cumulative expansion",
+    "cumulative": "60/60 GREEN",
+    "python_compile": "GREEN",
+    "compileall": "GREEN",
+    "diff_check": "GREEN",
+    "real_active_turn_smoke": {
+      "decision": "turn-running",
+      "attempts_before": 211,
+      "attempts_after": 211,
+      "runner_started": false
+    },
+    "desktop_notification_smoke": "osascript exit 0 with non-sensitive V3.0 test notification",
+    "config": {
+      "revision": "workshop-watchdog-v3.0-20260821",
+      "mode": "0600",
+      "visibility_enabled": true,
+      "desktop_notification_enabled": true
+    },
+    "launch_agent": {
+      "label": "com.aos.codex-long-task-watchdog-workshop",
+      "run_interval_seconds": 300,
+      "last_exit_code": 0,
+      "runs": 1607
+    },
+    "browser": "NOT_APPLICABLE_NO_PAGE_OR_VISUAL_CHANGE",
+    "business_data_writes": 0,
+    "w1_aip_workspace_reads_or_writes": 0
+  },
+  "review": {
+    "plan_code_consistent": true,
+    "ack_authority_unchanged": true,
+    "notification_failure_does_not_repeat_side_effects": true,
+    "codex_sqlite_not_modified": true,
+    "desktop_read_confirmation_not_claimed": true
+  },
+  "remaining_boundary": "The local notifier proves Notification Center invocation, not that Codex Desktop has acknowledged or rendered a background transcript turn."
+}

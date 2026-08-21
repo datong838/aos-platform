@@ -19,7 +19,11 @@ Workshop 的长任务配置可显式启用 `continuation_watch`。当且仅当 c
 
 Watchdog 只有唤醒权，没有事实裁决权。它注入的 trigger、task、next-task、fingerprint 和 reason code 都是不可信导航提示。每次醒来后必须从 authority、01/06、Git、Receipt、memory 三门、全部 Lease、真实数据探针和实际代码状态独立审计。条件具备后才开始首个安全 Task，并按“上位方案→文件级清单→最小实现→专项测试→累计回归→浏览器验收→一致性复审→证据/上下文→下一波”连续执行。每波用 Delivery Receipt 提交待 m1 CAS 消费的 Prime 长记忆事实，w2 不直接写 Prime 核心投影。
 
-`visibility_watch` 用于把真实唤醒结果固定展示在同一 Codex task：首条消息在 trigger 固定句后展示累计唤醒序号、UTC 时间、episode 和 trigger；最终答复必须包含 `[DOG_VISIBLE_STATUS]` 状态卡，列出 outcome、task/next、阻断或完成证据以及下一次复核策略。启用时，Ack 与新 final 虽存在但 final 缺少该标记，仍按 `protocol-failed` 拒绝闭环。可见性检查只新增 marker 是否存在的布尔判断，不额外复制 final 正文，也不发送桌面通知或外部消息。
+V2.9 的 `visibility_watch` 用于把真实唤醒结果固定写入同一 Codex task：首条消息在 trigger 固定句后展示累计唤醒序号、UTC 时间、episode 和 trigger；最终答复必须包含 `[DOG_VISIBLE_STATUS]` 状态卡，列出 outcome、task/next、阻断或完成证据以及下一次复核策略。启用时，Ack 与新 final 虽存在但 final 缺少该标记，仍按 `protocol-failed` 拒绝闭环。V2.9 的检查只有 marker 是否存在的布尔判断，不额外复制 final 正文，当时也不发送桌面通知或外部消息。
+
+V3.0 起，transcript marker 不再被当成 Desktop 已经展示的证明。每次唤醒开始和终态都会把非敏感状态卡原子写入 Watchdog 本地状态目录的 `visible-status.json`（mode `0600`）。当 `visibility_watch.desktop_notification=true` 时，同时通过本机 Notification Center 展示唤醒和结果；通知不包含 evidence、fingerprint、路径、业务数据或凭据。通知投递失败会记入 state/状态卡，但不改写 Ack+final 已确立的 episode outcome，避免重复副作用。
+
+`task_started` 防重入同样是有时限的：只在 transcript 最近活动未超过 `max_turn_silence_seconds`（默认复用 `max_tool_silence_seconds`）时返回 `turn-running`。超时后仍必须继续通过待完成 tool、grace、backoff、Lease 和 episode 门，不会因 dependency/fact/blocked-recheck watch 已启用而永久拦截。
 
 安全边界：
 
@@ -58,7 +62,8 @@ Workshop 专用配置至少应包含：
     "delay_seconds": 1800
   },
   "visibility_watch": {
-    "enabled": true
+    "enabled": true,
+    "desktop_notification": true
   },
   "dependency_watch": {
     "enabled": true,
