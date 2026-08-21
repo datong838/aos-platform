@@ -1,0 +1,78 @@
+{
+  "schema": "aos-workshop-w3-sdk-preflight/v1",
+  "taskId": "workshop-w3-01-sdk-exact-ref-preflight-20260814",
+  "sourceCommit": "e9b8122",
+  "authorityRevision": "AOS-000022",
+  "result": "W3_01_PREFLIGHT_COMPLETE_RUNTIME_CONTROL_API_BLOCKED",
+  "committedBaselineOnly": true,
+  "availableCanonicalHttp": [
+    "GET /v1/aip/agent-registry",
+    "GET /v1/aip/agents",
+    "GET /v1/aip/agents/{instance_id}",
+    "GET /v1/aip/capability-catalog",
+    "POST /v1/aip/agents/install-ecommerce"
+  ],
+  "availableFrontendSdk": {
+    "root": "apps/web/src/api/aipAgentControl",
+    "operations": [
+      "listCatalog",
+      "listInstances",
+      "listCapabilities",
+      "installEcommerce"
+    ],
+    "exactRefFields": [
+      "AgentInstance.instanceRef",
+      "AgentInstance.template",
+      "CapabilityRevision.revision+contentHash"
+    ]
+  },
+  "serviceWithoutHttpAuthority": [
+    "AipCapabilityBindingService",
+    "AipAgentRunService",
+    "AipHandoffService"
+  ],
+  "missingCanonicalHttpAndOpenApi": [
+    "CapabilityBinding list/get/readiness",
+    "AgentRun get/list/readiness",
+    "HandoffEnvelope issue/get/consume/reject/request-more"
+  ],
+  "strictParserGaps": [
+    "exact ref revision is not constrained to a positive integer",
+    "field-specific assetType is not enforced",
+    "response tenant is not cross-checked against nested instance tenants",
+    "count and unique identity invariants are not cross-checked",
+    "catalog readiness does not carry exact CapabilityBinding refs"
+  ],
+  "dependencyDecision": {
+    "DEP-A6F": "CATALOG_AND_INSTANCE_HTTP_GREEN",
+    "DEP-A6R": "BLOCKED_CANONICAL_RUNTIME_CONTROL_HTTP_MISSING",
+    "W3-01": "NOT_STARTED_PREFLIGHT_COMPLETE"
+  },
+  "ownership": {
+    "AIP": "publish canonical runtime-control HTTP/OpenAPI and strict lifecycle/readiness contracts",
+    "Workshop": "extend the existing aipAgentControl SDK and add a stateless L1 readiness adapter only after the AIP API reaches m1"
+  },
+  "candidateWorkshopFiles": [
+    "apps/web/src/api/aipAgentControl/contracts.ts",
+    "apps/web/src/api/aipAgentControl/parser.ts",
+    "apps/web/src/api/aipAgentControl/index.ts",
+    "apps/web/src/api/aipAgentControl/parser.test.ts",
+    "apps/web/src/api/aipAgentControl/client.test.ts",
+    "apps/web/src/api/ecommerceWorkshop/agentReadiness.ts",
+    "apps/web/src/api/ecommerceWorkshop/agentReadiness.test.ts"
+  ],
+  "redTests": [
+    "reject revision 0, fractional revision and wrong assetType",
+    "reject response/nested tenant mismatch and duplicate instance/capability identities",
+    "reject count mismatch and unknown readiness/status",
+    "map revoked, unavailable, drifted and unknown bindings to explicit blockers",
+    "preserve exact instance, capability, binding and policy refs without upgrading to latest",
+    "prove adapter performs no localStorage, mock fallback or business-state write"
+  ],
+  "forbidden": [
+    "Workshop-owned Handoff/Binding/AgentRun authority",
+    "direct import of backend service internals into Web",
+    "legacy singleton or localStorage fallback",
+    "treating six installed instances or ten published capabilities as runnable"
+  ]
+}

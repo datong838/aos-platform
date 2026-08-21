@@ -1,0 +1,96 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w3-13-analyst-authority-preflight-20260815",
+  "workshopTask": "W3-13",
+  "recordedAt": "2026-08-15T12:36:00+08:00",
+  "authorityRevision": "AOS-000039",
+  "branch": "w2-workshop",
+  "baselineCommit": "edc6ca30805d9bff826795d7106b90a783716685",
+  "scope": {
+    "tenant": "org-org/dev-project",
+    "operation": "read-only committed-code and approved-plan inspection",
+    "externalEffect": false,
+    "migrationLeaseAcquired": false
+  },
+  "dependencyVerdict": {
+    "W3-10": "NOT_STARTED / CUMULATIVE_GATE_RED",
+    "W2-06": "NOT_STARTED / HARD_GATE_BLOCKED",
+    "DEP-C0": "PARTIAL_FOUNDATION_ONLY",
+    "DEP-A8": "PLAN_AND_CHECKLIST_ONLY; AIP-8 not implementation GREEN",
+    "metricData": "BLOCKED; latest required source readiness is not GREEN",
+    "overall": "HARD_GATE_BLOCKED"
+  },
+  "sourceInspection": {
+    "insightRevisionAuthority": "ABSENT",
+    "decisionSummaryAuthority": "ABSENT",
+    "growthPlanRevisionAuthority": "ABSENT",
+    "taskGraphRevisionAuthority": "ABSENT",
+    "effectReviewAuthority": "ABSENT",
+    "analystStoreApiSdkWeb": "ABSENT",
+    "reusableFoundations": [
+      "MetricDefinitionRevision",
+      "QueryJob and governed query primitives",
+      "Evidence/Eval contracts",
+      "Task and Handoff primitives",
+      "SavedExploration PostgreSQL target design"
+    ],
+    "legacyWarning": "Legacy in-memory SavedExploration or generic workshop UI cannot prove restart-safe canonical authority.",
+    "aip8Boundary": "AIP-8 owns a generic query/plan/saved-exploration shell; ecommerce Insight/GrowthPlan/EffectReview semantics stay in the SolutionPack/Workshop L1 domain."
+  },
+  "frozenAuthorityDecision": {
+    "insight": "InsightRevision is append-only and typed as observation, correlation, attribution or causal claim, with exact metric/evidence/method/eval refs and uncertainty.",
+    "decisionSummary": "DecisionSummary stores conclusion, evidence chain, attribution path, key assumptions, counter-evidence, alternatives and uncertainty; it never stores or exposes private model chain-of-thought.",
+    "growthPlan": "GrowthPlanRevision is append-only with objective, constraints, budget, expected effects, confidence, stop conditions and exact refs; revise uses expectedVersion.",
+    "materialization": "TaskGraph materialization is an explicit idempotent command over one approved exact GrowthPlanRevision and atomically preserves eligible plan-item to canonical Task count and mapping.",
+    "effectReview": "EffectReview is append-only and binds baseline, comparison, maturity window, eligible population, method, assumptions, limitations, receipts and exact plan/task refs.",
+    "correction": "Late data, method drift, assumption correction or plan replacement creates a successor revision and invalidates affected readiness without overwriting historical decisions or effects."
+  },
+  "requiredCommands": [
+    "createInsightRevision",
+    "recordDecisionSummary",
+    "createGrowthPlanRevision",
+    "reviseGrowthPlanWithExpectedVersion",
+    "approveGrowthPlan",
+    "materializeGrowthPlanTaskGraph",
+    "recordEffectReview",
+    "correctInsightPlanOrEffectWithSuccessor"
+  ],
+  "requiredInvariants": [
+    "Observation/correlation/attribution/causal types never silently upgrade one another.",
+    "Every conclusion and plan item has exact metric/evidence/method/eval refs at one frozen cutoff.",
+    "Materialization is all-or-nothing and eligiblePlanItemCount equals createdOrExistingCanonicalTaskCount with a one-to-one mapping ledger.",
+    "Repeated materialization key with the same hash returns the same graph; a different hash conflicts.",
+    "Metric/evidence/eval drift after approval blocks materialization until an explicit successor decision.",
+    "EffectReview remains pending before maturity and unknown/inconclusive is not counted as success or zero effect.",
+    "Assumption correction and late data append successors while prior DecisionSummary, Plan, TaskGraph and EffectReview remain reachable.",
+    "MemoryCandidate creation is a separate governed proposal and never automatic promotion from EffectReview."
+  ],
+  "additionalDependencies": [
+    "DEP-ANALYST-METRIC-OBSERVATION-QUALITY",
+    "DEP-INSIGHT-DECISION-AUTHORITY",
+    "DEP-GROWTH-PLAN-AUTHORITY",
+    "DEP-GROWTH-PLAN-TASKGRAPH-MATERIALIZER",
+    "DEP-EFFECT-REVIEW-AUTHORITY",
+    "DEP-EFFECT-MATURITY-POLICY",
+    "DEP-A8-GENERIC-ANALYST-SHELL"
+  ],
+  "requiredVerification": [
+    "metric definition/unit/grain/timezone/cohort/filter/cutoff compatibility and unknown-not-zero",
+    "observation versus causal claim negative cases",
+    "DecisionSummary disclosure scan with no private chain-of-thought",
+    "GrowthPlan CAS, approval drift and stop-condition preservation",
+    "TaskGraph all-or-nothing materialization, idempotency and count/mapping conservation",
+    "EffectReview maturity, late data, inconclusive, correction and counterfactual limitations",
+    "same-tenant exact refs, cross-tenant fail-closed and small-cohort minimum disclosure",
+    "Store/API/strict SDK/Web/browser/security cumulative evidence on one release identity"
+  ],
+  "result": "PREFLIGHT_GREEN; W3-13_RUNTIME_NOT_STARTED; HARD_GATE_BLOCKED; NO_EXTERNAL_EFFECT",
+  "completionRevalidation": {
+    "authorityRevision": "AOS-000040",
+    "phase": "BIND1_3_SKILL_PUBLICATION_AND_BINDING_READINESS_GREEN_WITH_WARNINGS",
+    "memoryValidate": "GREEN",
+    "memoryGate": true,
+    "impact": "No verdict change: AIP-8 remains incomplete, org-org/dev-project keeps zero real bindings, and the five analyst authorities remain absent."
+  },
+  "next": "Run two-round plan remediation to freeze generic AIP-8 versus ecommerce L1 ownership, typed insight/decision contracts, atomic TaskGraph materialization and EffectReview maturity/correction before any implementation."
+}

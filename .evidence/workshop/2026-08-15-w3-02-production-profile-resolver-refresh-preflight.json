@@ -1,0 +1,149 @@
+{
+  "schema": "aos-workshop-w3-production-profile-resolver-refresh-preflight/v1",
+  "taskId": "workshop-w3-02-production-profile-resolver-refresh-preflight-20260815",
+  "workItem": "W3-02",
+  "projectRevision": "AOS-000038",
+  "branch": "w2-workshop",
+  "head": "69bbf34c67ec8b63c5e23109d1a64753faef203d",
+  "recordedAt": "2026-08-15T11:05:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "preparationStatus": "REFRESHED_GREEN",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W2 is not GREEN; all eight module manifests still lack production and responsibility refs; the installed signed production-profile exact resolver and operational bindings are absent"
+  },
+  "authorityRefresh": {
+    "currentPhase": "BIND1_1_CONTRACT_ADDITIVE_MIGRATION_GREEN_WITH_WARNINGS",
+    "hardBoundary": "No Agent is runnable and no evaluated binding is activatable",
+    "nextGate": "BIND1_2_CAPABILITY_READINESS_SERVICE",
+    "interpretation": "BIND-1 contract and migration progress does not publish module profiles resolve signed artifacts bind responsibility or replace the W2 exit gate"
+  },
+  "moduleInventory": {
+    "moduleCount": 8,
+    "emptyViewRefCount": 8,
+    "emptyProductionContractRefCount": 8,
+    "emptyResponsibilityTemplateRefCount": 8,
+    "placeholderEvalRefCount": 6,
+    "legacyDryRunEvalRefCount": 2,
+    "modules": [
+      {
+        "moduleId": "ecommerce.task-cockpit",
+        "eval": "content/evals/placeholder.json"
+      },
+      {
+        "moduleId": "ecommerce.content-campaign",
+        "eval": "content/evals/placeholder.json"
+      },
+      {
+        "moduleId": "ecommerce.operations",
+        "eval": "content/evals/logic-dry-run-cases.json"
+      },
+      {
+        "moduleId": "ecommerce.creator-growth",
+        "eval": "content/evals/placeholder.json"
+      },
+      {
+        "moduleId": "ecommerce.media-studio",
+        "eval": "content/evals/placeholder.json"
+      },
+      {
+        "moduleId": "ecommerce.analyst",
+        "eval": "content/evals/placeholder.json"
+      },
+      {
+        "moduleId": "ecommerce.price-governance",
+        "eval": "content/evals/placeholder.json"
+      },
+      {
+        "moduleId": "ecommerce.customer",
+        "eval": "content/evals/w03-l05-dry-run-cases.json"
+      }
+    ]
+  },
+  "foundationFacts": {
+    "commonAuthorities": "TaskBrief EvidenceBundle EvalContract and ResponsibilityPlan strict contracts PostgreSQL store router and Web SDK foundations exist in the committed Workshop baseline",
+    "moduleContractFields": "viewRefs evalPackRefs productionContractRefs responsibilityTemplateRefs and impactCalculatorRefs are carried through Module manifest catalog API and strict Web parser",
+    "installedProductionProfileResolver": "ABSENT",
+    "responsibilityTemplateExactResolver": "ABSENT",
+    "artifactHashAndInstallationLockBinding": "ABSENT for production profiles",
+    "moduleProfilePublication": "ABSENT",
+    "operationalReadiness": "BLOCKED"
+  },
+  "profileContract": {
+    "commonEnvelope": [
+      "profileId schemaVersion moduleId workloadKind purpose and riskLevel",
+      "TaskBrief schema ref Evidence selection profile EvalContract ref Responsibility template ref",
+      "required capability refs role slots hard separation and allowed merge policy refs",
+      "Impact calculator and required data object refs",
+      "artifact hash publisher bundle revision installation lock and minimum runtime version"
+    ],
+    "resolverRules": [
+      "resolve only from the current active signed installation lock and exact artifact hash",
+      "return exact immutable refs and never choose latest by id",
+      "verify schema signature publisher version minimum runtime module compatibility permission marking purpose and revocation",
+      "unknown missing placeholder dry-run revoked drifted signature-failed or version-conflicted profiles are blockers",
+      "profile contribution never creates Brief Evidence Eval Responsibility Task AgentRun Handoff or Action authority",
+      "task-cockpit is reference-only and cannot create a supervisory second Brief"
+    ],
+    "eightModuleRequirements": [
+      "each module publishes non-placeholder Brief Evidence Eval and Responsibility exact refs",
+      "six digital-colleague responsibilities and ten shared capabilities are mapped by responsibility not fixed Agent count",
+      "LITE STANDARD FULL are signed profile revisions with explicit coverage not arbitrary strings",
+      "hard independent evaluation approval privacy legal security and policy responsibilities cannot be merged away",
+      "profile Diff and drift invalidate only dependent freezes approvals and starts through exact refs"
+    ]
+  },
+  "dependencyDecision": {
+    "W2": "NOT_GREEN",
+    "DEP_C0": "COMMON_AUTHORITY_FOUNDATION_PRESENT_NOT_SUFFICIENT",
+    "DEP_C0_PROFILE_RESOLVER": "BLOCKED",
+    "BIND1_1": "GREEN_WITH_WARNINGS_CONTRACT_AND_MIGRATION_ONLY",
+    "W3_02": "NOT_STARTED_REFRESH_PREFLIGHT_COMPLETE"
+  },
+  "ownership": {
+    "AIP_or_AssetRegistry": [
+      "own the generic installed signed production-profile exact resolver",
+      "verify artifact lock signature schema publisher runtime permission marking purpose revocation and exact hashes",
+      "return canonical refs without copying L1 profiles into a common writable authority"
+    ],
+    "Workshop_DomainPack": [
+      "publish immutable ecommerce profile artifacts through new reviewed Bundle revisions",
+      "bind the eight module manifests to exact profile and Eval refs after resolver availability",
+      "supply typed domain schemas responsibility profiles and tests without creating common authorities"
+    ]
+  },
+  "requiredGreenEvidence": [
+    "W2 cumulative exit gate GREEN",
+    "generic installed-production-profile resolver Contract Store or read service API OpenAPI and strict SDK GREEN",
+    "eight signed immutable module profiles with non-placeholder Eval production and responsibility refs",
+    "Bundle publish install active-lock exact read rollback and revocation EvidencePack",
+    "org-org positive and dev-org isolation with no Brief Task AgentRun Handoff Action or provider side effect",
+    "current authority memory Git and lease revalidation before publication"
+  ],
+  "sourceHashes": {
+    "eightModuleContributionAggregate": "5718b7817ded4ccfbdd29a87036155cb1f99caaa505766150ef7711d771a75f4",
+    "services/aos-api/aos_api/aip_production_contracts.py": "d89d8c6e2076360c41260fa1a43e076c281f5ba2760d4e74f6670f6327ab3d11",
+    "services/aos-api/aos_api/aip_production_contract_store.py": "a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708",
+    "services/aos-api/aos_api/routers/aip_production_contracts.py": "f8fca466f6f3c03c467eff7f1189f0f0cb8e412882be27010bd14d48482dceaf",
+    "apps/web/src/api/ecommerceWorkshop/contracts.ts": "91b5afc5c97e432bb07d980f7d3758b83707506f0d596e5eb5e90c025a602ef5",
+    "apps/web/src/api/ecommerceWorkshop/parser.ts": "5c6306b63c4fc8520e8a62e2f3395452bfdbe388466ee5fa2c0749cc0f4e2792"
+  },
+  "tests": {
+    "executed": false,
+    "reason": "the task refreshes current dependency and asset facts only; no profile publication or resolver implementation exists",
+    "doesNotProve": [
+      "a signed installed profile",
+      "an exact Responsibility template resolution",
+      "a non-placeholder Eval binding",
+      "an operational assignee or runnable Agent",
+      "a safe prepare freeze or start"
+    ]
+  },
+  "next": "refresh the W3-02 ADR and D-waves through two review rounds while keeping publication and implementation blocked",
+  "safety": [
+    "read-only committed Bundle code authority document Git and shared-memory inspection only",
+    "no Bundle publish install profile mutation Brief Task AgentRun Handoff Action database tenant provider or external effect",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w6-10-cumulative-gate-doc-alignment-20260814",
+  "authorityRevision": "AOS-000029",
+  "authorityRevisionAtCompletion": "AOS-000029",
+  "repositoryBaseRevision": "4151aeda5a26e7568eefd48d6fb473075c486126",
+  "result": "W6_10_CUMULATIVE_GATE_DOC_LEDGER_ALIGNED",
+  "decision": "TARGET_CONTRACT_REVIEWED_IMPLEMENTATION_BLOCKED_NO_EXTERNAL_EFFECT",
+  "documents": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/20-实施波次依赖门与交付清单.md",
+      "preSha256": "ac5f420c4bb64a786b779f9880789c5c51ed8f3948757625d75bb1eed479153c",
+      "postSha256": "8dee7658ca52a342448a904922db648b133db2f01e15dbf727db59a460fc11ae",
+      "change": "added the W6-10 Contract, Service, Browser and Security sub-gates, exact Receipt consumption and independent completion-state rules"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/06-安全租户可观测测试与回滚.md",
+      "preSha256": "ff054e7fe8d965482039df6fa68ea7017388e1d0f2373bf5b5f5145f09addd50",
+      "postSha256": "bd32d12d551f096719fb7225d2bb588939f817d8e4e6d63d52efc9e0dde98788",
+      "change": "added W6 cumulative security, browser-positive, five-axis and canary-isolation requirements"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/58-W6-10累计ContractServiceBrowserSecurity门预检ADR.md",
+      "preSha256": null,
+      "postSha256": "0f5a31a24f03c659ece3026c1c6d099b35662d765fb0e2de31cd51d90449be42",
+      "change": "added current cumulative findings, five sub-gates, ten stable blockers, anti-false-green rules and two-round review"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "60b4ac83dfd87dc63b20be9ee4b04271dbb66e4d79fba8b365ce71eac481d86f",
+      "postSha256": "6c382920ddd68bd11b79b4e1d3699fa6cbb358c663861a233b0c2e72ac02d796",
+      "change": "replaced the empty W6-10 evidence field with exact blockers, current tests, browser truth and explicit unchecked status"
+    }
+  ],
+  "review": {
+    "round1": "GREEN: all nine upstream tasks remain visibly unimplemented; generic foundations, browser failure-closed evidence and domain completion are not conflated",
+    "round2": "GREEN: five cumulative sub-gates, five-axis state, stable blockers and exact exit conditions are complete; W6-10 remains unchecked",
+    "implementationStatus": "NOT_STARTED",
+    "checklistStatus": "UNCHECKED",
+    "externalEffectStatus": "NONE"
+  },
+  "verification": {
+    "preflightEvidenceJson": "VALID",
+    "documentHashes": "MATCH",
+    "backend": "30 passed and 1 retained-canary isolation failure before fail-fast",
+    "frontend": "15 files and 59 tests passed",
+    "browser": "built-in browser reached /workshop/customer and truthfully exposed offline, API 500 and catalog read failure",
+    "visualHtml": "UNCHANGED"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "staticVisualHtmlChanged": false,
+    "databaseChanged": false,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "customerDataRead": false,
+    "externalProviderEffect": false,
+    "externalChannelEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w8-03-total-control-cross-domain-dispatch-reject-request-more-takeover-doc-align-20260815",
+  "workItem": "W8-03",
+  "projectRevision": "AOS-000033",
+  "branch": "w2-workshop",
+  "sourceCommit": "0073e35",
+  "recordedAt": "2026-08-15T07:54:00+08:00",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/10-日常任务总控技术方案.md",
+      "preSha256": "a9f6a67e05faaf2e0d4184af1063dd347d54b5027f570e8e8a5506bd73af7d17",
+      "postSha256": "d0bd5edf63e280f843479b10544f99e8f4af6a81eeab0e632bfd250803dbd77d",
+      "change": "added exact dispatch binding decision states takeover safety and reconstruction contract"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/18-跨Module端到端场景技术方案.md",
+      "preSha256": "482992940a340ccc0a20f08965df46e8bb4e57ab5fcb5cc0f62aa9d004f1a49d",
+      "postSha256": "709beeb6d5e0963548fb96064105aa5760f1ff9b79d895c5c22fe66218eef5c9",
+      "change": "expanded scenario C into canonical dispatch reject request-more return and takeover lifecycle"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "38c187e6f804b0f697fdcec352bacf0da005b5a0edc278376783ad961a682e0d",
+      "postSha256": "cff206bb02374c82f307caa2f00f284e02874dac44619e3609fe247ba5f6a8c2",
+      "change": "replaced W8-03 evidence placeholder with exact blockers primitive evidence and no-owner-mutation decision"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/72-W8-03-日常总控跨域派发拒绝RequestMore人工接管预检ADR.md",
+      "preSha256": null,
+      "postSha256": "c4889ceea5e35ef3ecb5a8e075da416b9ab97cbbe555de734914b83de6998de9",
+      "change": "created W8-03 scenario ADR and two review rounds"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "focus": "authority semantics and user intervention",
+      "result": "PASS",
+      "evidence": [
+        "cockpit proposes while canonical Task and Handoff services decide",
+        "accept reject request-more return and takeover remain distinct auditable states",
+        "request-more preserves scoped requirements without copying protected payload",
+        "single active owner and task counts are reconstructable from receipts"
+      ]
+    },
+    {
+      "round": 2,
+      "focus": "concurrency safety execution qualification and false completion prevention",
+      "result": "PASS_WITH_HARD_GATE_BLOCKED",
+      "evidence": [
+        "expectedVersion idempotency and decision fingerprint gate conflicting decisions",
+        "takeover cannot bypass approval separation lease fence or provider unknown",
+        "generic Handoff tests are explicitly not Workshop E2E evidence",
+        "no owner real tenant browser or external action mutation occurred"
+      ]
+    }
+  ],
+  "verification": {
+    "command": "services/aos-api/.venv/bin/python -m pytest -q services/aos-api/tests/aip/test_aip6_capability_run_handoff.py",
+    "result": "6 passed, 7 warnings in 4.76s",
+    "qualification": "generic AIP Handoff primitive only"
+  },
+  "decision": "SCENARIO_CONTRACT_APPROVED_HARD_GATE_BLOCKED",
+  "implementationStatus": "NOT_STARTED",
+  "ownerMutation": "NONE",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant or browser mutation",
+    "no owner assignment takeover or external action was executed",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

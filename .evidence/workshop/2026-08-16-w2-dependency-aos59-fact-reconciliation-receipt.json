@@ -1,0 +1,73 @@
+{
+  "schema": "aos-workshop-preparation-receipt/v1",
+  "taskId": "workshop-w2-dependency-aos59-fact-reconciliation-20260816",
+  "recordedAt": "2026-08-16T12:19:59+08:00",
+  "branch": "w2-workshop",
+  "baselineSha": "e400e8b7d2a56a74c7edec1fe3dd83dfc904a2e2",
+  "authorityRevision": "AOS-000059",
+  "result": "FACT_RECONCILIATION_GREEN_RUNTIME_IMPLEMENTATION_BLOCKED",
+  "scope": {
+    "businessCodeChanged": false,
+    "databaseChanged": false,
+    "migrationExecuted": false,
+    "externalSideEffect": false,
+    "authorityChanged": false,
+    "checkpointChanged": false,
+    "primeMemoryChanged": false
+  },
+  "freshDependencyProbe": {
+    "script": "scripts/long-task-watchdog/w2_data_fact_probe.py",
+    "succeeded": 12,
+    "total": 12,
+    "p08Rows": 53,
+    "p12Rows": 412,
+    "canarySourceRows": 0,
+    "canaryProjectionRows": 0,
+    "result": "DEP_DATA_GREEN"
+  },
+  "runtimeReadiness": {
+    "installedAgents": 6,
+    "runnableAgents": 0,
+    "result": "DEP_ADP_OPERATIONAL_QUERY_RED",
+    "missing": [
+      "runnable AgentRun",
+      "real CapabilityBinding",
+      "Provider and Model runtime",
+      "Route and Policy",
+      "Eval and Health",
+      "Capacity and Price",
+      "Budget"
+    ]
+  },
+  "updatedFiles": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "0af0dbb8c46de4816b03dde4c65463664f0e99e709789f92f30728b283f1b02b",
+      "postSha256": "f292eebe555955d914a3c7a8f044c5eeee7569c9269bdad35d7574ac8bea25ae"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/106-W2至W8依赖并行执行准备与冲突控制ADR.md",
+      "preSha256": "0c43e9cc992af1631002c7faba36b80647cbf63b8e7287c6486bcc1b530839b4",
+      "postSha256": "90d9e25fe73dbd68944e5ed2ab0db6c63e000c37e1544effdfa90369ed032454"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "0167b24a8a0a21c774aaf1bd3486c6ef35f4f58b05cbb422119bcff892ec2156",
+      "postSha256": "f017a3aaf8abcc4a7462396580177569c57e2c5a695b475312a21d3843c09878"
+    }
+  ],
+  "reviewedDeliveryReceipts": [
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/aip-p9-content0b-migration-20260816.json",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/aip-wks-dep0b-bind-r0-20260816.json"
+  ],
+  "remainingBlockers": [
+    "W2-00 requires the operational query contract and unified readiness envelope to be GREEN",
+    "BIND-R0 currently reports six installed agents but zero runnable agents",
+    "W2-00 remains NOT_STARTED"
+  ],
+  "progress": {
+    "completed": 21,
+    "total": 96,
+    "nextTask": "W2-00"
+  }
+}

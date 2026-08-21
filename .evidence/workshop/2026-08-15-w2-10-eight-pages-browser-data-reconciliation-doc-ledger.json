@@ -1,0 +1,68 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w2-10-eight-pages-browser-data-reconciliation-doc-align-20260815",
+  "workItem": "W2-10",
+  "projectRevision": "AOS-000038",
+  "sourceCommit": "d420e863a4219db4fdeb6556f3914e23816e31d3",
+  "recordedAt": "2026-08-15T10:50:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "froze the six-axis W2 cumulative gate and same-release receipt requirement",
+        "froze eight modules three viewports applicable states and DOM keyboard focus network console authority screenshot evidence per cell",
+        "separated formal positive org-org evidence from shell mocks static pages and blocked negative evidence"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "froze twelve-source latest-run cutoff freshness quality count join and privacy reconciliation",
+        "recorded six failed latest pipelines and rejected historical count equality as current readiness",
+        "bounded the current five-file twenty-two-test pass to generic shell foundations only"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/05-前端壳交互状态与无障碍.md",
+      "preSha256": "18323b962e9567e1eee80b67aa6f77a879a23a74745f2d1ff21c52514acd3acf",
+      "postSha256": "45273cdc43fc932eeff449626bd719c084424f9166bde7c967ffd294a2969824"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/06-安全租户可观测测试与回滚.md",
+      "preSha256": "8c10b81a61a93e1b1ae0470dccba4f835d2f6b1c4de92336aa6e4ee8009d9a36",
+      "postSha256": "b0217492177b6a905ae04997f6cd9f06a889f657d5ed49eaf6cf7e3ae08fc622"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/20-实施波次依赖门与交付清单.md",
+      "preSha256": "f80e5e16141ea69e034078dc914ea4efec2a7d058ecdb4f16abff0de0a5fe261",
+      "postSha256": "f99414570816489b75de4009c488981373340dc9b22aafd17d298b99e50ee421"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "8b36fb0b2a16c818f9fed655686221f957397ac61acd07266dd56108ae7d1d92",
+      "postSha256": "b6dbb165c924fbbc29f8165abffafd49b587ee056584c1393801bb3d4c83ee46"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+      "preSha256": null,
+      "postSha256": "ab09a0348b9cba36aaab0ad8b09afd80ad681415a6b1d6a60ffa5bdbd67a0ba0"
+    }
+  ],
+  "decision": {
+    "gateContract": "APPROVED",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "positiveBrowserMatrix": "NOT_RUN",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review rounds passed after remediation",
+    "all five post hashes match",
+    "generic shell suite remains five files and twenty-two tests passed",
+    "W2-10 remains unchecked and no false positive browser data database pipeline tenant route installation PII Secret or external mutation was introduced"
+  ]
+}

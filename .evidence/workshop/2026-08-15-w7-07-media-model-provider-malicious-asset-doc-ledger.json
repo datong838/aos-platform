@@ -1,0 +1,30 @@
+{
+  "schema":"aos-workshop-doc-alignment-ledger/v1",
+  "taskId":"workshop-w7-07-media-model-provider-malicious-asset-doc-alignment-20260815",
+  "projectRevision":"AOS-000031",
+  "branch":"w2-workshop",
+  "baselineCommit":"d99bb0232e3e9464aa18973ef3ade06592af4cc9",
+  "recordedAt":"2026-08-15T07:00:00+08:00",
+  "files":[
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md","preSha256":"2c4660a966f2fb9a617ba5c22e491858eedf64f4d9ad819cf11b76d4c8ee1422","postSha256":"6586db685d5f3fce4168380c7d2ccfd78c18244d34544318014b39e84f412ab3"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md","preSha256":"f7b1af7fed02531bff22982bea7ea9279ea142a67268ea6437f3854cac991c65","postSha256":"2aaff86f5e3132d2e6ad08154730f7b1687fd3065bb5c5dc78b068e809578abf"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"e41e0128b417da4850c6a61fe3a0377fbb70f13fa9362d19db841b8acd0d982c","postSha256":"8c22d94914de80074d5b1a5c4537afe58729c81043da5f33a662cdcc0e6f7843"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/65-W7-07-媒体模型ProviderAdapter与恶意资产门预检ADR.md","preSha256":null,"postSha256":"50cad6a3cbe2a371ec02c0c9f9d9b6968dcff24125434d2766fb8caaf61ec436"}
+  ],
+  "decisions":{
+    "authorities":"canonical Task Artifact Usage Receipt and AIP-7 route provider policy only",
+    "adapter":"versioned dryValidate submit status webhook cancel reconcile with stable request fingerprint",
+    "inputOutput":"separate tenant quarantine and malicious-asset policy gates",
+    "access":"short-lived purpose-bound principal and hash access with receipt",
+    "secrets":"resolve secretRef only inside adapter and never disclose payload credentials or PII",
+    "legacy":"in-memory MediaReference file URL and mock S3 are non-production",
+    "implementationStatus":"NOT_STARTED",
+    "contractStatus":"CONTRACT_BASELINE_APPROVED",
+    "dependencyStatus":"IMPLEMENTATION_BLOCKED"
+  },
+  "review":{
+    "round1":{"result":"PASS","focus":"visible source authorization security provider unknown reconcile and output acceptance"},
+    "round2":{"result":"PASS","focus":"single authorities exact provider quarantine access idempotency secret minimization and fail-closed"}
+  },
+  "verification":["four post hashes matched","two review rounds passed","provider usage and legacy media tests 25 passed","JSON parsed","git diff check"]
+}

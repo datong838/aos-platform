@@ -1,0 +1,30 @@
+{
+  "schema":"aos-workshop-doc-alignment-ledger/v1",
+  "taskId":"workshop-w7-04-stage-executor-lease-checkpoint-takeover-doc-alignment-20260815",
+  "projectRevision":"AOS-000029",
+  "branch":"w2-workshop",
+  "baselineCommit":"69c5c7e9583b1064f923b1da100d3c695e510a3e",
+  "recordedAt":"2026-08-15T06:40:00+08:00",
+  "files":[
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md","preSha256":"1baf7b0c44fe540713f1dd2724a3825d2d6189e06e68111f9644e6ad048bf42c","postSha256":"9655813c6bf8932044d5e6933e7a6ba37a4194064c35a53830002fda80625d61"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md","preSha256":"e125216a469eb7aee1e0a939989aefe869026ff36331821369a49e1d1ab534bb","postSha256":"792ba55a52da5ba048ef4413159181cbc5312989ffbbdb3403e43c7d51e2cd78"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-PRODUCT-V2-产品方案循环整改与技术方案编制总清单.md","preSha256":"c0783fb2589ef5fc1943cb2d8bb097c87ad1e3aad97828ee7b13e7d6480cff66","postSha256":"f775c3e702275c31bad327ed4e51954ae412de62779ed4ed7d99ec17ecbca1f8"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/62-W7-04-StageExecutorLeaseCheckpoint暂停恢复与接管预检ADR.md","preSha256":null,"postSha256":"96634178d1b708e9b3ca9f68e3c493586c705dda7c16fe556668a01d68b51865"}
+  ],
+  "decisions":{
+    "runtimeAuthority":"canonical AIP TaskRun StepRun Checkpoint RunEvent only",
+    "leaseScope":"TaskRun plus stepKey plus attempt",
+    "fencing":"monotonic fence token on claim takeover heartbeat checkpoint and terminal writes",
+    "pauseResume":"safe point or unknown reconcile before paused; exact drift revalidation before resume",
+    "takeover":"append-only TakeoverDecisionReceipt without history erasure",
+    "providerSafety":"stable request fingerprint and reconcile before retry after ambiguous submission",
+    "implementationStatus":"NOT_STARTED",
+    "contractStatus":"CONTRACT_BASELINE_APPROVED",
+    "dependencyStatus":"IMPLEMENTATION_BLOCKED"
+  },
+  "review":{
+    "round1":{"result":"PASS","focus":"visible lifecycle pause truth takeover history and user intervention"},
+    "round2":{"result":"PASS","focus":"single runtime authority attempt fencing CAS idempotency drift and fail-closed"}
+  },
+  "verification":["four post hashes matched","two review rounds passed","generic task runtime 12 tests passed in preflight","JSON parsed","git diff check"]
+}

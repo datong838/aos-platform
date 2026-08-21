@@ -25,13 +25,21 @@ def get_dsn() -> str:
 
 
 @contextmanager
-def connect(scope: TenantScope | None = None) -> Iterator[psycopg.Connection]:
+def connect(
+    scope: TenantScope | None = None,
+    *,
+    inherit_scope: bool = True,
+) -> Iterator[psycopg.Connection]:
     dsn = get_dsn()
     log.debug("db_connect host_port_from_env=%s", "AOS_DATABASE_URL" in os.environ)
     with psycopg.connect(dsn, row_factory=dict_row) as conn:
         # 强制 UTF-8，避免客户端/驱动默认编码把中文写成 ???
         conn.execute("SET client_encoding TO 'UTF8'")
-        effective_scope = scope if scope is not None else current_tenant_scope()
+        effective_scope = (
+            scope
+            if scope is not None
+            else (current_tenant_scope() if inherit_scope else None)
+        )
         if effective_scope is not None:
             apply_transaction_scope(conn, effective_scope)
         yield conn

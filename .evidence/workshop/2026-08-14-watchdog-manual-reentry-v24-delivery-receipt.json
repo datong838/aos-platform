@@ -1,0 +1,49 @@
+{
+  "schema": "aos-workshop-watchdog-delivery-receipt/v1",
+  "taskId": "workshop-watchdog-manual-reentry-v24-20260814",
+  "authorityRevision": "AOS-000023",
+  "result": "WATCHDOG_MANUAL_REENTRY_V24_IMPLEMENTED_GREEN",
+  "incident": {
+    "trigger": "dependency-released",
+    "detectedAt": "2026-08-14T16:06:28+08:00",
+    "resumeProcessStarted": true,
+    "effectiveRecoveryProven": false,
+    "reason": "the episode had no current Recovery Ack or new final before the user manually re-entered",
+    "duplicateResumeProcessTerminated": true,
+    "gitOrBusinessMutationObserved": false
+  },
+  "changes": [
+    "classify the latest user message as watchdog protocol or non-watchdog without storing message text",
+    "consume an unresolved dependency release or fact-change episode when a newer non-watchdog user message takes over",
+    "record manual-reentry plus reentry-noop, clear transport retry and keep last_recovered_at empty",
+    "preserve retry behavior for the watchdog's own protocol-marked resume prompt"
+  ],
+  "hashes": {
+    "watchdogBefore": "d5a8ece4f9a283d62d877db66785724e6fdd9573a2b5f9f5bd014e5e1bc2f263",
+    "watchdogAfter": "9de91a9d5ebf036a7de5acf8291a98467917273a8f636b076be19272d545eb89",
+    "testsBefore": "73cd2bdf9453551162a7902aacabd0e1b55252c65ed55669ff21c4be084a815f",
+    "testsAfter": "91ad18fa073c0b13c317fb83e323f18eea9dad100c7a034cd6cb9cb687e9d0c3",
+    "readmeBefore": "fd5e5f8e0df2f7f12bfd8fe33a96488eac9ac7b3344eefc38608784bf395fd88",
+    "readmeAfter": "40b417a1179e9460a7d1409e6c79f35f1c71e00e2672995bce2590e3d6fa28ec",
+    "adrAfter": "d0dff101b6bdfc7eab3c325437bf19a1bb465993c4d61305e2f419d12d09adf6",
+    "localConfig": "669854e235780bd204fef4c24a17d44dee8e098779cfa111a5296ecbf562eb72",
+    "launchAgent": "5eaa643572541b7b36b4e89c5276a1b1f685b58b22219292e1846d8c35ce12aa"
+  },
+  "verification": [
+    "red tests first reproduced manual re-entry returning live and retaining the unresolved release episode",
+    "39/39 Watchdog unit and isolated-loop tests GREEN after the minimal fix",
+    "Python compile and git diff check GREEN",
+    "real current-thread tick returned manual-reentry, reentry-noop, dependency_wait_armed=false, retry=0 and last_recovered_at=null",
+    "no codex exec resume child remained after the manual takeover",
+    "local config revision is workshop-watchdog-v2.4-20260814",
+    "LaunchAgent remains installed with a 300-second interval"
+  ],
+  "safety": {
+    "storesUserMessageText": false,
+    "acquiresMigrationLease": false,
+    "executesMigration": false,
+    "modifiesRealTenant": false,
+    "claimsAutomaticRecovery": false
+  },
+  "residualRisk": "A future natural recovery is successful only when that episode produces a valid Recovery Ack and a new final; process launch alone remains insufficient evidence."
+}

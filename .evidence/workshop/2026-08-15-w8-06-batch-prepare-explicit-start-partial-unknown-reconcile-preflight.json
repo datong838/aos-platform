@@ -1,0 +1,114 @@
+{
+  "schema": "aos-workshop-scenario-preflight/v1",
+  "taskId": "workshop-w8-06-batch-prepare-explicit-start-partial-unknown-reconcile-preflight-20260815",
+  "workItem": "W8-06",
+  "scenario": "batch_prepare_explicit_start_partial_unknown_reconcile",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "head": "23648e3",
+  "aipBaseline": "m1@4018dd382c169fbed567c633bdbb698e6f26447f",
+  "recordedAt": "2026-08-15T08:18:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "SCENARIO_TARGET_CONTRACT_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayRunScenario": false,
+    "reason": "product freeze and W4-08 W5-08 W6-10 are not GREEN; no shared canonical batch preparation start and item-outcome runtime exists across the five target workflows"
+  },
+  "dependencyMatrix": [
+    {"dependency": "W4-08", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "Evidence Wiki query and saved-view cross-capability browser security gate is incomplete"},
+    {"dependency": "W5-08", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "external Action production adapters canary kill compensation and browser gate is incomplete"},
+    {"dependency": "W6-10", "status": "IMPLEMENTATION_BLOCKED", "reason": "creator price customer and operation batch runtimes plus positive browser proof are absent"},
+    {"dependency": "shared_batch_runtime", "status": "MISSING", "reason": "there is no canonical BatchPreparation Revision BatchStartDecision and cross-domain child-item outcome authority"},
+    {"dependency": "product_formal_freeze", "status": "NOT_FROZEN", "reason": "formal product review remains pending"},
+    {"dependency": "technical_formal_freeze", "status": "GREEN", "reason": "technical baseline V3 is formally frozen"}
+  ],
+  "canonicalJourney": [
+    "collect candidate asset subject or target refs under one explicit query definition cutoff and purpose",
+    "validate identity deduplication consent license marking freshness eligibility policy and required facts without external effects",
+    "freeze a BatchPreparationRevision with included excluded blocked and unknown item decisions plus a conserved frozen total",
+    "show missing reasons ImpactPreview estimated cost risk and exact target diff to the user",
+    "record a separate explicit BatchStartDecision bound to the unchanged preparation hash and user confirmation",
+    "the canonical start service revalidates all item and policy dependencies and creates one parent TaskRun plus exact child item refs",
+    "each child advances independently with Attempt Action Receipt and Usage lineage",
+    "aggregate the frozen item set as complete partial blocked cancelled or unknown without converting item failures into batch success",
+    "reconcile unknown items under the original request fingerprint and append final or still-unknown receipts"
+  ],
+  "bindingContract": {
+    "root": "exact BatchPreparationRevision",
+    "binding": "batchStartBindingHash",
+    "requiredRefs": [
+      "QueryDefinitionRevisionRef cutoff purpose and target snapshot hash",
+      "candidate original refs and deterministic item keys",
+      "DeduplicationPolicy Consent License Marking Eligibility and RequiredFacts policy refs",
+      "ItemPreparationDecision refs with included excluded blocked unknown reason codes",
+      "ImpactPreviewRevisionRef ProjectedCostRange and budget refs",
+      "BatchStartDecisionRef actor approval expectedVersion and idempotency key",
+      "parent TaskRunRef child item refs Attempt and Handoff refs",
+      "Action Proposal Approval Lease Receipt and Reconcile refs",
+      "UsageBinding Settlement EffectReview and count-conservation refs"
+    ],
+    "outcomeAxes": [
+      "business_item_outcome",
+      "external_action_outcome",
+      "usage_settlement",
+      "effect_maturity",
+      "handoff_decision"
+    ]
+  },
+  "invariants": [
+    "prepare performs zero external calls zero charged jobs and zero owner or target mutation",
+    "prepared approved previewed or confirmed never means started",
+    "start is explicit idempotent and fails closed on preparation target consent license policy account budget or capability drift",
+    "the frozen total equals included plus excluded plus blocked plus unknown before start and remains reconcilable afterward",
+    "one item may fail cancel or remain unknown without rewriting successful sibling facts or marking the whole batch succeeded",
+    "business Action Usage Effect and Handoff outcomes remain independent axes",
+    "unknown reserves frequency budget and side-effect exposure and permits only authoritative reread callback or reconcile",
+    "reconcile appends a receipt and never overwrites the original unknown receipt",
+    "original candidate event material and target refs are preserved through aggregation",
+    "cross-tenant batch item customer creator price content Wiki Action or Receipt refs are rejected"
+  ],
+  "requiredNegativeJourneys": [
+    "duplicate candidates or deterministic item keys conflict",
+    "consent license marking freshness required facts or eligibility are missing or revoked",
+    "target set preparation hash policy account price budget or capability drifts before start",
+    "start is replayed with the same key and same payload or with a drifted payload",
+    "some child items succeed while others fail cancel block or remain unknown",
+    "provider timeout callback gap duplicate late or out-of-order result occurs",
+    "consent withdrawal races customer dispatch or a target is removed after preparation",
+    "cancel happens before submit after submit or while provider result is unknown",
+    "refresh and restart reconstruct the same frozen total item decisions and receipt lineage",
+    "cross-tenant refs or protected payload copying are attempted"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "the shared cross-domain batch authority is absent and all three cumulative dependencies are blocked; generic Action ResearchJob or domain batch tests would not prove this scenario",
+    "safeChecks": [
+      "scenario F and W6-09 public closure contracts were reread",
+      "repository search confirmed generic reconcile primitives but no shared Workshop batch preparation runtime",
+      "current authority dependency and active Lease scopes were revalidated"
+    ],
+    "doesNotProve": [
+      "zero-effect preparation across five workflows",
+      "explicit canonical batch start",
+      "frozen item conservation and cross-domain partial reduction",
+      "org-org positive browser journey or dev-org isolation journey"
+    ]
+  },
+  "blockers": [
+    "product formal review and freeze are incomplete",
+    "W4-08 W5-08 and W6-10 are not GREEN",
+    "shared BatchPreparation BatchStartDecision child-item and item-outcome authorities are absent",
+    "domain consent license price customer publish and Wiki bridges are not operationally ready",
+    "no org-org positive browser lineage or dev-org negative isolation EvidencePack exists"
+  ],
+  "next": "align W8-06 batch preparation start and outcome contract through two review rounds with every external effect disabled, then preflight W8-07",
+  "safety": [
+    "no source code changed",
+    "no migration or migration lease requested",
+    "no real tenant or browser mutation",
+    "no external call charged job customer contact price write publication or Wiki promotion was executed",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

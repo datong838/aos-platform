@@ -1,0 +1,76 @@
+{
+  "schema": "aos-workshop-task-ledger-completeness-audit/v1",
+  "taskId": "workshop-96-task-ledger-completeness-audit-20260815",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "head": "c6c4dee88f1389dbd883318f0292ccfaf309b4f4",
+  "recordedAt": "2026-08-15T09:05:00+08:00",
+  "inventory": {
+    "declaredTasks": 96,
+    "completedGreen": 20,
+    "open": 76,
+    "countInvariant": "20 + 76 = 96",
+    "w0": "11/11",
+    "w1": "9/10",
+    "w2ThroughW8Implemented": 0
+  },
+  "contractPreflightCoverage": {
+    "w4": "8/8",
+    "w5": "9/9",
+    "w6": "10/10",
+    "w7": "11/11",
+    "w8": "12/12",
+    "w2": "1/11 grouped readiness preaudit only",
+    "w3": "3/14 individual preflights",
+    "conclusion": "the implementation DAG is complete, but per-task preflight and evidence references are not yet complete for W2 and W3"
+  },
+  "missingPerTaskPreflight": [
+    "W2-01",
+    "W2-02",
+    "W2-03",
+    "W2-04",
+    "W2-05",
+    "W2-06",
+    "W2-07",
+    "W2-08",
+    "W2-09",
+    "W2-10",
+    "W3-03",
+    "W3-04",
+    "W3-06",
+    "W3-07",
+    "W3-08",
+    "W3-09",
+    "W3-10",
+    "W3-11",
+    "W3-12",
+    "W3-13",
+    "W3-14"
+  ],
+  "currentHardBlockers": [
+    "product formal review and freeze pending",
+    "W1-10 real Registry reconciliation and positive projection gate blocked",
+    "W2-00 DEP-DATA RED with six of twelve latest schedules not succeeded",
+    "downstream AIP Adapter Provider media operational readiness remains capability-specific and incomplete",
+    "release-specific approval is absent"
+  ],
+  "safeContinuation": {
+    "next": "W2-01 contract and live-code preflight",
+    "allowed": [
+      "read-only code and authority inspection",
+      "preflight evidence",
+      "technical contract remediation with exact shared-doc hashes",
+      "tests that do not touch real tenant state"
+    ],
+    "forbidden": [
+      "W2 runtime implementation before W1-10 and W2-00 are GREEN",
+      "real Registry repair without a dedicated real-effect authorization and Lease",
+      "migration database tenant provider flag or publication operations"
+    ]
+  },
+  "review": {
+    "round1": "verified 96 unique task IDs and the 20/76 count invariant; found 21 open entries still saying evidence pending",
+    "round2": "cross-checked repository evidence and ADR names; confirmed W4-W8 full preflight coverage and isolated the remaining gap to W2/W3 rather than claiming all 96 implementation tasks are ready"
+  },
+  "externalEffect": "NONE"
+}

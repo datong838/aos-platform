@@ -1,0 +1,83 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-w2-02-core-decoupling-audit-20260815",
+  "authorityRevision": "AOS-000045",
+  "branch": "w2-workshop",
+  "baseHead": "d74f821",
+  "decision": "TASK_RUN_CORE_SUBWAVE_READY_FULL_W2_02_REMAINS_BLOCKED",
+  "readOnlyRuntimeProbe": {
+    "transaction": "REPEATABLE READ READ ONLY",
+    "tablesPresent": ["aip_task", "aip_task_run", "aip_step_run", "aip_checkpoint"],
+    "realTenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project",
+      "taskCount": 1,
+      "runCount": 1,
+      "stepCount": 0,
+      "checkpointCount": 0,
+      "taskStatuses": {"cancelled": 1}
+    },
+    "isolationCanary": {
+      "orgId": "dev-org",
+      "projectId": "dev-project",
+      "taskCount": 1,
+      "runCount": 1,
+      "stepCount": 0,
+      "checkpointCount": 0,
+      "taskStatuses": {"cancelled": 1},
+      "acceptedAsRealCompletionEvidence": false
+    },
+    "businessAttributesRead": false,
+    "databaseMutation": false
+  },
+  "confirmedBaseline": [
+    "AIP Task, Plan, Run, Step and Checkpoint tables are canonical PostgreSQL authority protected by FORCE RLS",
+    "task and run list queries are tenant scoped and deterministically ordered by updated_at and identity",
+    "existing public task and run lists do not provide stable cursor pagination",
+    "TaskTimeline exposes steps, checkpoints, artifacts and evidence as weakly typed dictionaries",
+    "signed production Stage mapping and cross-domain responsibility, handoff, approval and issue aggregation are not currently available as one Workshop view"
+  ],
+  "dependencyDecision": {
+    "taskRunCore": ["W1-10", "DEP-AIP-TASK-READ"],
+    "businessContextEnrichment": ["W2-00", "module source readiness refs"],
+    "fullW2_02": ["typed Step and Checkpoint", "exact Stage mapping", "Responsibility and assignee readiness", "Handoff Approval ReviewIssue", "Action reconciliation", "strict SDK", "browser evidence"]
+  },
+  "authorizedCoreScope": [
+    "strict TaskCockpitCoreEnvelope",
+    "read-only Task and latest Run projection",
+    "tenant and filter bound stable keyset cursor",
+    "explicit degraded readiness and blockers for unavailable enrichment",
+    "GET-only Workshop endpoint with no new table and no Task control"
+  ],
+  "externalArtifacts": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/12-\u5de5\u4f5c\u53f0\u5c42\u6280\u672f\u65b9\u6848/83-W2-02-TaskRunStageBlocker\u65e5\u5e38\u603b\u63a7\u53ea\u8bfb\u6a21\u578b\u9884\u68c0ADR.md",
+      "preSha256": "e2c5f7997f37ecf2784f7aef1cccf2fecb1fb53e2219b78cec604bff8dff7581",
+      "postSha256": "810749d74f464151b49eb8078ae25f7013d4664d83309d1f4c57b1416c8950cf"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/12-\u5de5\u4f5c\u53f0\u5c42\u6280\u672f\u65b9\u6848/D-waves/00-\u5de5\u4f5c\u53f0\u957f\u4efb\u52a1\u5f00\u53d1\u8ba1\u5212\u603b\u6e05\u5355.md",
+      "preSha256": "6299304fd5265538db582d0c9dca9415ed8888664e09ae35f176c6c45b198e1f",
+      "postSha256": "273b08323b5e43a2489ef83c0ec73f6639901fc244e0e5df6614a1980c873165"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/12-\u5de5\u4f5c\u53f0\u5c42\u6280\u672f\u65b9\u6848/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-\u5de5\u4f5c\u53f0\u5c42\u5f00\u53d1\u8be6\u7ec6\u6e05\u5355\u4e0e\u4f9d\u8d56\u5173\u7cfb.md",
+      "preSha256": "c4adaa53da1a057682c29bf42f7e8c8e819b00c178e315f3114968ad1a073f73",
+      "postSha256": "45f4e73ae6e72ee5b3f31d53afa50217095b602f08349437201813bbaa151cc4"
+    }
+  ],
+  "safety": {
+    "businessCodeChanged": false,
+    "taskControlInvoked": false,
+    "databaseMutation": false,
+    "realBusinessValuesRead": false,
+    "aipWorktreeRead": false
+  },
+  "progress": {
+    "completedTasks": 21,
+    "totalTasks": 96,
+    "w2Completed": 0,
+    "w2Total": 11,
+    "status": "W2_02_CORE_READY_FULL_TASK_NOT_STARTED"
+  }
+}

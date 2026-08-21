@@ -1,0 +1,168 @@
+{
+  "schema": "aos-workshop-w2-media-assets-job-readiness-target-state-preflight/v1",
+  "taskId": "workshop-w2-05-media-assets-job-readiness-target-state-preflight-20260815",
+  "workItem": "W2-05",
+  "projectRevision": "AOS-000037",
+  "branch": "w2-workshop",
+  "head": "4d762cf24beb2024ed09124cd71459c52edac3d1",
+  "recordedAt": "2026-08-15T10:20:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "MEDIA_ASSET_JOB_READINESS_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W1-10 and W2-00 are not GREEN; the canonical media family job readiness usage and settlement projection is incomplete; operational provider routes remain zero"
+  },
+  "dependencyFactRevalidation": {
+    "authorityRevision": "AOS-000037",
+    "authorityStage": "BIND1_0_READ_ONLY_PREFLIGHT_GREEN_WITH_WARNINGS",
+    "bind0Facts": "six provisioning instances and zero bindings routes providers evals",
+    "bind1Effect": "future assignee readiness only; it does not create media Provider Artifact family Job Usage or Settlement authority",
+    "w1_10": "not GREEN",
+    "w2_00": "not GREEN",
+    "leaseConflict": false
+  },
+  "liveCodeFindings": {
+    "workshopHttpOperations": [
+      "GET /v1/ecommerce-workshop/modules",
+      "GET /v1/ecommerce-workshop/modules/{module_id}/readiness"
+    ],
+    "mediaStudioViewStoreSdk": "ABSENT",
+    "genericProductionContracts": "PRESENT for StageTemplate ArtifactRelation ReviewIssue and ProductionStartDecision, but no media-studio aggregate projection exists",
+    "artifactRelationTypes": [
+      "family_member",
+      "variant_of",
+      "supersedes",
+      "derived_from"
+    ],
+    "artifactFamilyAuthority": "TARGET CONTRACT ONLY; no complete immutable family manifest selection and conservation view is exposed",
+    "modelRuntimeContracts": "PRESENT for ProviderInstance ModelRoute resolution health and capacity, but AOS-000037 reports zero operational routes and providers",
+    "usageAndSettlementProjection": "PARTIAL AIP primitives exist; no media Stage attempt aggregate with measured estimated unknown adjustment refund and residual dispute is exposed",
+    "legacyMediaReference": "IN_MEMORY_DEMO_ONLY with local file URLs and mock S3; mutable delete is supported and cannot be production Artifact authority",
+    "moduleManifest": {
+      "moduleId": "ecommerce.media-studio",
+      "requiredObjects": [
+        "Product",
+        "TaskRun",
+        "Checkpoint",
+        "Artifact",
+        "ContentVariant",
+        "ReviewIssue"
+      ],
+      "requiredAipFeatures": [
+        "aip.task-runtime",
+        "aip.production.task-brief",
+        "aip.production.evidence-bundle",
+        "aip.production.eval-contract",
+        "aip.production.responsibility-plan",
+        "aip.production.stage-template",
+        "aip.production.artifact-family",
+        "aip.production.review-issue",
+        "aip.production.impact-preview",
+        "aip.model-route",
+        "aip.media-provider"
+      ],
+      "viewRefs": [],
+      "evalPackRefs": [
+        "content/evals/placeholder.json"
+      ],
+      "productionContractRefs": [],
+      "responsibilityTemplateRefs": []
+    }
+  },
+  "targetViewContract": {
+    "operationId": "ecommerceWorkshopMediaStudioViewGet",
+    "method": "GET",
+    "canonicalPath": "/v1/ecommerce-workshop/views/media-studio",
+    "tenantSource": "verified Principal only",
+    "filters": [
+      "view=context|execution|delivery",
+      "productionContextRef",
+      "taskRunRef",
+      "artifactFamilyRef",
+      "status",
+      "cursor"
+    ],
+    "rootAuthorities": [
+      "TaskBrief EvidenceBundle EvalContract ResponsibilityPlan exact revisions",
+      "StageTemplate PlanRevision TaskRun PlanStep Checkpoint and attempt exact refs",
+      "Artifact ArtifactRelation ArtifactFamily manifest FamilySelectionDecision and ReviewIssue exact refs",
+      "ModelRoute Provider RuntimePolicy price license and readiness exact refs",
+      "CapacityReservation BudgetReservation UsageReceipt Adjustment Settlement and reconcile exact refs",
+      "ImpactPreview Approval Action Delivery Receipt and EffectReview exact refs"
+    ],
+    "readSlices": [
+      "frozen production context profile recommendation confirmation and typed blockers",
+      "responsibility slots assignee capability and provider readiness without inferring runnable state",
+      "Stage DAG attempt lease checkpoint takeover and unknown reconcile status",
+      "Artifact family Master Variant supersedes derived-from gate review and return lineage",
+      "projected versus measured estimated unknown usage and append-only settlement outcomes",
+      "publish candidate impact approval action provider receipt reconcile and effect review states"
+    ],
+    "requiredEnvelope": [
+      "schemaVersion resourceRevision evaluatedAt dataCutoff and stable cursor",
+      "module slice capability assignee provider and action readiness kept separate",
+      "exact scoped refs disclosure decisions typed blockers and lineage refs",
+      "counts using one frozen cutoff and declared eligible denominator",
+      "target-state items explicitly marked target blocked or not-applicable and excluded from achieved totals"
+    ]
+  },
+  "authorityBoundaries": [
+    "The view is rebuildable and never becomes Task Run Stage Artifact Provider Usage Action or Settlement authority",
+    "target-state means planned contract only and never implies code-green operational-ready queued running or delivered",
+    "preview draft Master Variant approved executed reconciled and effect-reviewed remain separate states",
+    "Artifact relations are append-only exact-ref edges; latest timestamp never selects a family winner",
+    "Stage readiness capability readiness assignee readiness provider readiness budget readiness and publication readiness remain separate axes",
+    "unknown provider or publication outcomes remain unknown and enter reconcile without blind retry",
+    "measured estimated unknown adjustment refund and dispute remain separate currency buckets and are never collapsed",
+    "local file URLs mock S3 and mutable MediaReference records are excluded from production evidence",
+    "the W2 view exposes no prepare freeze compile approve start claim pause resume cancel publish settle or reconcile mutation"
+  ],
+  "lifecycleAndCountInvariants": [
+    "planned Stage count equals applicable plus evidenced not-applicable and unresolved applicability",
+    "attempt totals preserve queued running succeeded failed cancelled unknown and reconciled without overwriting history",
+    "every family member belongs to one exact family manifest and every Variant has at most one exact Master",
+    "current candidate conflicts remain conflict until an explicit FamilySelectionDecision exists",
+    "artifact gate results bind one exact Artifact hash and EvalContract revision",
+    "provider submitted applied usage settled lineage projected and effect matured are distinct counts",
+    "different currencies are never summed without an explicit governed conversion decision",
+    "refresh reconstructs the same production Stage Artifact Usage Action and Effect lineage from canonical refs"
+  ],
+  "requiredTestsWhenUnblocked": [
+    "strict production context Stage attempt Artifact family readiness usage settlement publication blocker and cursor DTO parsers",
+    "tenant no-scope wrong-scope cross-tenant marking purpose license consent and secret-disclosure checks",
+    "stable cursor deterministic order one-cutoff and late-response rejection",
+    "Stage applicability attempt and Artifact family cardinality conservation",
+    "family graph cycle orphan duplicate Master hash drift stale selection and relation-direction failures",
+    "target-state cannot count as code-green operational-ready running delivered or published",
+    "local file mock S3 mutable MediaReference and preview cannot satisfy production Artifact evidence",
+    "provider unknown cancel late callback Usage Adjustment Settlement and reconcile ordering",
+    "read-only HTTP method and absence of mutation controls in W2",
+    "org-org positive and dev-org negative three-viewport keyboard browser evidence"
+  ],
+  "blockers": [
+    "W1-10 real Registry reconciliation and positive Workshop projection are not GREEN",
+    "W2-00 DEP-DATA remains RED for Product and production business context",
+    "media-studio Workshop view Store and strict SDK do not exist",
+    "artifact family selection and Stage attempt aggregate projection are incomplete",
+    "zero operational Agent bindings ModelRoutes Providers and Evals at AOS-000037",
+    "legacy MediaReference is mutable in-memory demo infrastructure with file and mock S3 adapters",
+    "module manifest has no viewRefs productionContractRefs or responsibilityTemplateRefs and uses a placeholder Eval pack"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "no W2-05 implementation exists and hard dependencies are RED; generic production-contract model-runtime or MediaReference tests do not prove the media-studio aggregate read model",
+    "doesNotProve": [
+      "positive operational media Provider readiness",
+      "immutable Artifact family and selected Master Variant lineage",
+      "Stage attempt Usage Settlement and publication conservation",
+      "positive real-tenant browser readiness"
+    ]
+  },
+  "next": "align the W2-05 contract and evidence reference through two review rounds without runtime coding",
+  "safety": [
+    "read-only code document Git and shared-memory inspection only",
+    "no migration database tenant browser provider media generation publication or external action",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

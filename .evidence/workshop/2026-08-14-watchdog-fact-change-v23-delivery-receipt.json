@@ -1,0 +1,57 @@
+{
+  "schema": "aos-workshop-watchdog-delivery-receipt/v1",
+  "taskId": "workshop-watchdog-fact-change-v23-20260814",
+  "authorityRevision": "AOS-000022",
+  "result": "WATCHDOG_FACT_CHANGE_V23_IMPLEMENTED_GREEN",
+  "scope": {
+    "code": [
+      "scripts/long-task-watchdog/watchdog.py",
+      "scripts/long-task-watchdog/test_watchdog.py",
+      "scripts/long-task-watchdog/README.md"
+    ],
+    "localControl": [
+      "/Users/ddt/.codex/long-task-watchdog-workshop/config.json",
+      "/Users/ddt/Library/LaunchAgents/com.aos.codex-long-task-watchdog-workshop.plist"
+    ],
+    "excluded": [
+      "AIP/w1-aip uncommitted content",
+      "Alembic acquire or migration execution",
+      "real tenant data and Pipeline/Schedule mutation",
+      "m1 authority/01/06/Prime CAS"
+    ]
+  },
+  "changes": [
+    "deterministic content fingerprint for explicit files and directories",
+    "baseline-only first observation",
+    "active-turn changes absorbed without concurrent wake",
+    "idle no-Lease fact change creates one dependency-fact-changed episode",
+    "fixed external-fact first sentence and unchanged Ack plus new-final success gate",
+    "symbolic links, missing paths and configured size/count limits fail closed"
+  ],
+  "hashes": {
+    "watchdogBefore": "dc22d950015a2488eebf1f8ae41ab131cf52d44dd192c1bf7b96f773397224f9",
+    "watchdogAfter": "d5a8ece4f9a283d62d877db66785724e6fdd9573a2b5f9f5bd014e5e1bc2f263",
+    "testsBefore": "d76fbbda740f1e81e1eaa65b6757ceb22d75cc50c7087289eccdd64f6817e792",
+    "testsAfter": "73cd2bdf9453551162a7902aacabd0e1b55252c65ed55669ff21c4be084a815f",
+    "readmeBefore": "a14d53365ae3b61d9618d7155f2cdcac889bb90f471236d44d2fcd2654610e22",
+    "readmeAfter": "fd5e5f8e0df2f7f12bfd8fe33a96488eac9ac7b3344eefc38608784bf395fd88",
+    "localConfig": "86caa6f458494c309fb2b584acfbdd10cb47c96fa4cd714147855b3b9e99cd75",
+    "launchAgent": "5eaa643572541b7b36b4e89c5276a1b1f685b58b22219292e1846d8c35ce12aa"
+  },
+  "verification": [
+    "37/37 Watchdog unit and isolated-loop tests GREEN",
+    "Python compile and git diff check GREEN",
+    "real current-thread tick returned turn-running with total_attempts=0",
+    "AIP migration Lease remained armed while the external-fact baseline was established",
+    "authority and Delivery Receipt watcher paths contain control facts only"
+  ],
+  "safety": {
+    "storesOnlyFingerprint": true,
+    "readsBusinessData": false,
+    "acquiresLease": false,
+    "executesMigration": false,
+    "modifiesRealTenant": false,
+    "recoveryClaimRequiresCurrentAckAndNewFinal": true
+  },
+  "residualRisk": "A fact change only triggers revalidation; it does not prove the dependency is GREEN. A future real episode still requires current Ack, a new final response and task evidence."
+}

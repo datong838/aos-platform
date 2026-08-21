@@ -1,0 +1,23 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w3-12-operations-authority-doc-alignment-20260815",
+  "recordedAt": "2026-08-15T12:34:00+08:00",
+  "authorityRevision": "AOS-000039",
+  "baselineCommit": "e74b5fd73e9c4a24ee8bbb873d80d6c896e772ab",
+  "files": [
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md","preSha256":"14f2514e2fc4c9d2befd823a95168911c43aecc41ef2195027ef3fca05df43b8","postSha256":"f98afbc260904f7ff63775593c66cfb4d56b5f57cb8ac777bdb4a9c61d85946c"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/12-统一运营技术方案.md","preSha256":"80aaae62bb5f37ede3f682c8deca632585862cfaa93a5e77ba7894129c15c2ae","postSha256":"653d23b83b20f28f3605d4f5fa07af449c8c9ae924a8d927fb6a21061c7f8b9e"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/82-W2-01-统一运营订单库存履约售后事件只读模型预检ADR.md","preSha256":"ab9620c2e761318b8422d3a7ea40627db18583ab446b6972ec0350bf756610b4","postSha256":"683836aca06b5fd038644054197aaf705be48459f8ac5630928d951f31522268"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/100-W3-12统一运营Case分类可逆聚合SLA与Kill预检ADR.md","preSha256":null,"postSha256":"81e9a07a6f6905d7b2a695262f6edd85feb1c05ba75e344d146a4449a7a627ce"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"75cf22e9df5d574fb31f0cdb6a77c9ff9f6ece322c6a8d268398a3ab402f8110","postSha256":"7f356c816c8a64d6baaf33beb15d79f59f48d3e447724bdcd506d5ec434fe586"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/W0-全量技术条款施工追踪矩阵与W1精确施工包.md","preSha256":"f5c0ac902167aeb286cf884f5ab3125f4854589e4918dd697e927fff132459cd","postSha256":"28fa31f5fbc55679a510473284fdd5974055c5009f3f12b80ce10c018199f98a"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md","preSha256":"e798d635c5e409d86ebdfcd1805c66babaf68b5cae9d46fba3f72da6ad6f382a","postSha256":"c090255064d634d92ea1da8bb61beaae38067f1d5dc64799eb561719f6c0913a"}
+  ],
+  "reviewRounds": [
+    {"round":1,"finding":"OperationCase was described both as L1 and as forbidden without an L0 authority, leaving authority ownership contradictory.","remediation":"Separated immutable L0/O1 originals, event-sourced L1 OperationCase authority and rebuildable Workshop projections."},
+    {"round":2,"finding":"The plan named idempotency, SLA and kill but lacked classification decisions, policy-version acceptance, reversible split/merge, multiset conservation, SLA clock decisions and kill in-flight semantics.","remediation":"Added append-only decision types, successor/Diff rules, conservation equations, three kill checkpoints and unknown reconcile behavior."}
+  ],
+  "reviewVerdict": "PLAN_REMEDIATED_GREEN; W3-12_RUNTIME_NOT_STARTED; HARD_GATE_BLOCKED",
+  "noCodeOrVisualChange": true,
+  "externalEffect": false
+}

@@ -1,0 +1,127 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w7-01-signed-stage-responsibility-capability-mapping-preflight-20260814",
+  "authorityRevision": "AOS-000029",
+  "repositoryRevision": "f29f19a079e115f90d0ea448332dedb7b6c0211f",
+  "result": "W7_01_SIGNED_STAGE_RESPONSIBILITY_CAPABILITY_MAPPING_PREFLIGHT_FACTS_FROZEN",
+  "decision": "GENERIC_STAGE_AUTHORITY_AND_TEN_CAPABILITY_DEFINITIONS_GREEN_SIGNED_MEDIA_TEMPLATES_AND_ADAPTIVE_MAPPING_BLOCKED",
+  "foundations": [
+    "AIP W2-C provides tenant-scoped StageTemplateRevision create, revise, freeze, exact source validation, seal, graph validation and deterministic compilation into canonical Plan authority",
+    "AIP W2-B provides ResponsibilityPlanRevision data shape and exact ResponsibilityTemplateRevision reference, while its production resolver remains fail-closed when template authority is unavailable",
+    "the ecommerce capability catalog declares exactly ten stable Capability definitions and the media Module requires the same ten IDs",
+    "the product and Workshop technical plans preserve professional film responsibilities while allowing adaptive assignee composition instead of a fixed Agent headcount"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W7-01-W6-UPSTREAM",
+      "severity": "P0",
+      "finding": "W7-01 depends on W6-01 and W6-02, both of which remain unchecked: exact assignee resolution, signed Responsibility templates, stable LITE/STANDARD/FULL profiles and MergePolicy authority are not implemented."
+    },
+    {
+      "id": "DEP-W7-01-AIP9-UPSTREAM",
+      "severity": "P0",
+      "finding": "DEP-M9 remains unresolved. AIP-9 is still plan-only and its current development checklist describes a fixed content coordinator plus named specialist Agent team, which has not yet been reconciled to ResponsibilityPlan plus capability-driven adaptive composition."
+    },
+    {
+      "id": "DEP-W7-01-TEMPLATE-ASSETS",
+      "severity": "P0",
+      "finding": "the growth bundle contains no signed LITE, STANDARD or FULL media Stage/Responsibility template asset. The media Module has zero productionContractRefs and zero responsibilityTemplateRefs."
+    },
+    {
+      "id": "DEP-W7-01-INSTALLATION-RESOLUTION",
+      "severity": "P0",
+      "finding": "no bundle contribution publisher or installation compiler turns immutable media template definitions into tenant-scoped exact StageTemplateRevision and ResponsibilityTemplateRevision refs and writes them into the active Module installation lock."
+    },
+    {
+      "id": "DEP-W7-01-STAGE-SOURCE-RESOLVER",
+      "severity": "P0",
+      "finding": "the canonical production router instantiates AipProductionContractStore without a StageTemplate sourceBundleRef resolver; real Stage templates therefore remain blocked by STAGE_SOURCE_AUTHORITY_UNAVAILABLE even though isolated resolver-injected tests pass."
+    },
+    {
+      "id": "DEP-W7-01-RESPONSIBILITY-SOURCE-RESOLVER",
+      "severity": "P0",
+      "finding": "the canonical production router also lacks ResponsibilityTemplate authority injection; the formal create path fails closed with RESPONSIBILITY_TEMPLATE_AUTHORITY_UNAVAILABLE."
+    },
+    {
+      "id": "DEP-W7-01-CAPABILITY-SLOT-CROSSWALK",
+      "severity": "P0",
+      "finding": "the media plan lists role requirements such as production.plan, budget, license, creative.direction, art.direction, media.acquire and media.edit that are not canonical IDs in the ten-capability catalog. No versioned slot-to-exact-CapabilityRevision crosswalk resolves these requirements or proves complete coverage."
+    },
+    {
+      "id": "DEP-W7-01-ALIAS-NOT-RESPONSIBILITY",
+      "severity": "P0",
+      "finding": "script.compose currently aliases storyboard.compose. A capability alias cannot merge the independent script and storyboard responsibility slots; the signed template must preserve both responsibilities even when one assignee covers both."
+    },
+    {
+      "id": "DEP-W7-01-EIGHT-ROLE-COUNT",
+      "severity": "P1",
+      "finding": "the current media plan table has nine rows because release/delivery is listed alongside the eight professional film responsibilities. The contract needs exactly eight professional responsibility slots plus separately governed external release approval and Receipt reconciliation duties, preserving both without presenting a fixed ninth Agent."
+    },
+    {
+      "id": "DEP-W7-01-PROFILE-ENUM-AND-SCHEMA",
+      "severity": "P0",
+      "finding": "StageTemplate.profile remains an arbitrary non-blank string and the bundle has no signed profile schema, required slot schema, merge constraints, applicability policy or deterministic content hash for media LITE/STANDARD/FULL."
+    },
+    {
+      "id": "DEP-W7-01-REVOCATION-PROPAGATION",
+      "severity": "P0",
+      "finding": "no runtime propagation path invalidates active installation refs, Responsibility plans, compiled Plans, pending starts and readiness when a source template, capability revision, policy, provider or license is revoked or superseded."
+    },
+    {
+      "id": "DEP-W7-01-BUNDLE-VERSION-READINESS",
+      "severity": "P0",
+      "finding": "the Module points to solution.ecommerce.growth@1.3.0 while the W6-01 preflight records a publisher that accepts only 1.2.0. The ten-capability catalog itself is explicitly blocked by provider_unknown, eval_pack_unavailable, w0b_contracts_unavailable and aip7_route_authority_unavailable."
+    },
+    {
+      "id": "DEP-W7-01-EVAL-PACK",
+      "severity": "P0",
+      "finding": "the media Module still references content/evals/placeholder.json; no signed media template can be declared operational without its factuality, brand, license/safety and platform technical Eval gates."
+    }
+  ],
+  "staticVerification": {
+    "mediaRequiredCapabilityCount": 10,
+    "capabilityCatalogDefinitionCount": 10,
+    "mediaCapabilityIdsMatchCatalog": true,
+    "mediaResponsibilityTemplateRefCount": 0,
+    "mediaProductionContractRefCount": 0,
+    "signedMediaStageTemplateAssetCount": 0,
+    "signedMediaResponsibilityTemplateAssetCount": 0,
+    "mediaEvalPack": "content/evals/placeholder.json",
+    "canonicalStageTemplateAuthorityFound": true,
+    "canonicalResponsibilityPlanAuthorityFound": true,
+    "productionRouterStageSourceResolverWired": false,
+    "productionRouterResponsibilityTemplateResolverWired": false,
+    "aip9Implemented": false
+  },
+  "verification": {
+    "backendCommand": "services/aos-api/.venv/bin/pytest -q services/aos-api/tests/aip/test_w2c_contracts.py services/aos-api/tests/aip/test_w2c_api.py services/aos-api/tests/test_w2b_production_contracts.py services/aos-api/tests/asset_registry/test_workshop_module_contracts.py services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py",
+    "backendResult": "28 tests passed",
+    "frontendCommand": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/api/aipProductionContracts/parser.test.ts src/api/aipProductionContracts/index.test.ts src/pages/s2/ProductionContractsPage.test.tsx src/api/ecommerceWorkshop/parser.test.ts",
+    "frontendResult": "4 files and 16 tests passed",
+    "interpretation": "generic Stage/Responsibility contract shapes, canonical compilation primitives and ten stable capability definitions are usable, while signed media templates, source resolution, adaptive responsibility mapping, template revocation and AIP-9 runtime are absent"
+  },
+  "sourceHashes": {
+    "bundles/solutions/ecommerce-growth/content/workshops/ecommerce.media-studio.json": "c9f5775ebbc57910442b96235cfbb418782fa04dbf112a7f4bbb86983ef9bc35",
+    "bundles/solutions/ecommerce-growth/content/agents/ecommerce-capability-catalog.json": "0d33aac853f9f7cac835ea97cd8409388a9c4afe22ddec3b4a8eb668c72acf5a",
+    "services/aos-api/aos_api/aip_production_contracts.py": "d89d8c6e2076360c41260fa1a43e076c281f5ba2760d4e74f6670f6327ab3d11",
+    "services/aos-api/aos_api/aip_production_contract_store.py": "a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708",
+    "services/aos-api/aos_api/routers/aip_production_contracts.py": "f8fca466f6f3c03c467eff7f1189f0f0cb8e412882be27010bd14d48482dceaf",
+    "docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/08-228-AIP内容官多媒体生产与平台Harness实施方案.md": "68e1c2eed7e104b3aa5c22011f485bf7768fa1da35abbeedf5109a9ef3b5e1b7",
+    "docs/palantier/20_tech/电商平台接入/AIP通用能力实施方案/全量开发清单/08-AIP内容官多媒体与平台Harness开发清单.md": "584c8f9c1ee10ea375bd897b151f01fa039368fb36e3cc5ca440824dd5cf15bd",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md": "a7806495f457ca8d38216fd88de7eb602bd9628e5789ac0e14c7b0e16e73c9bd",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md": "d3a2ac7e366f99181d535a6231fd6ee971b096f5c57f3c9318d5227e4b039125"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "bundleChanged": false,
+    "sharedDocumentationChanged": false,
+    "staticVisualHtmlChanged": false,
+    "databaseChanged": false,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "externalChannelEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

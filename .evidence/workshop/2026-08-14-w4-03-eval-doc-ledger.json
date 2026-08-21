@@ -1,0 +1,59 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w4-03-eval-doc-ledger-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_03_EVAL_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the main technical plan stated that a ProductionRun fixes the contract hash but did not define the missing runner contract input",
+        "the D-wave item had no evidence or transitive revocation dependency",
+        "publication revocation and ImpactPreview transitive invalidation were not explicit acceptance gates"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "DOCUMENT_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "authority ownership and forbidden duplicate-store paths are explicit",
+        "exact contract run, server-owned diff and transitive invalidation have testable acceptance gates",
+        "discarded substitute implementations are listed without weakening the product goal",
+        "W4-03 remains unchecked and accurately blocked on upstream facts"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "e8fb4dd4af83257ab06efca7448b7ce5643d9d1609d75cb55abdde40a21a7606",
+      "postSha256": "afcf38ee5c5080e3a3ea923ed316643cfde30e114e7dfcbdfcaa5439f2f63875"
+    },
+    {
+      "path": "12-工作台层技术方案/34-W4-03-EvalContract同版运行Diff与撤销传播预检ADR.md",
+      "preSha256": null,
+      "postSha256": "26df1707ee63f40cdccf72aec255f478d582c7031b6c9c5a84147b21ca04491c"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "52420c95d7b694d3d1e2cc99bddfefab17ab78a6ebaf810b65ebf58f468476d4",
+      "postSha256": "962bdbceac6cdbad17495c6c9e7e84cb8771549e7b1259783a5a79158e31adcc"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w4-03-eval-binding-preflight.json",
+    "preflightCommit": "890b47f",
+    "w4ItemChecked": false,
+    "implementationAuthorized": false,
+    "aipW2D3FilesTouched": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "migrationLeaseAcquired": false
+  }
+}

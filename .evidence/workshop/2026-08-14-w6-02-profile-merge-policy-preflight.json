@@ -1,0 +1,89 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w6-02-profile-merge-policy-preflight-20260814",
+  "authorityRevision": "AOS-000027",
+  "repositoryRevision": "7ff5331787bf1dcc19d0fd85e71fb3eb544d817f",
+  "result": "W6_02_PROFILE_MERGE_POLICY_PREFLIGHT_FACTS_FROZEN",
+  "decision": "GENERIC_MERGE_SHAPE_GREEN_PROFILE_RECOMMENDER_AND_POLICY_BLOCKED",
+  "foundations": [
+    "ResponsibilityPlan stores profile, exact templateRef, slots and mergeDecisions in append-only revisions",
+    "MergeDecision rejects duplicate source slot IDs and four protected responsibility types: independent_review, hard_compliance, external_publication_approval and receipt_reconciliation",
+    "the product baseline defines LITE, STANDARD and FULL as task-specific responsibility profiles rather than fixed Agent staffing",
+    "strict frontend parsing preserves profile, responsibility slots, merge decisions, coverage and readiness"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W6-PROFILE-TEMPLATE-ASSETS",
+      "severity": "P0",
+      "finding": "no signed LITE, STANDARD or FULL ResponsibilityTemplateRevision assets exist in either ecommerce solution pack; all eight module responsibilityTemplateRefs are empty."
+    },
+    {
+      "id": "DEP-W6-PROFILE-ENUM-EXACTNESS",
+      "severity": "P0",
+      "finding": "profile is an arbitrary non-empty string rather than an exact versioned profile/template identity; neither backend nor frontend restricts it to a published profile contract."
+    },
+    {
+      "id": "DEP-W6-PROFILE-RECOMMENDER",
+      "severity": "P0",
+      "finding": "no canonical profile recommender consumes artifact type, channel count, brand/compliance risk, budget, asset reuse and provider readiness to produce a reasoned recommendation."
+    },
+    {
+      "id": "DEP-W6-PROFILE-USER-CONFIRMATION",
+      "severity": "P0",
+      "finding": "no separate recommendation, user confirmation or override Receipt exists; a caller can directly create a ResponsibilityPlan with any profile string."
+    },
+    {
+      "id": "DEP-W6-MERGE-POLICY-AUTHORITY",
+      "severity": "P0",
+      "finding": "MergeDecision has no exact MergePolicyRevision, actor, policy result, evidence, risk, createdAt or approval ref and is accepted as caller-supplied text."
+    },
+    {
+      "id": "DEP-W6-MERGE-GRAPH-INTEGRITY",
+      "severity": "P0",
+      "finding": "the plan validator does not prove source and target slot IDs exist, source differs from target, merge groups do not overlap, merged responsibility types match source slots or target contracts preserve all inputs, outputs, gates and return paths."
+    },
+    {
+      "id": "DEP-W6-MERGE-CAPABILITY-UNION",
+      "severity": "P0",
+      "finding": "merge acceptance does not verify that the target assignee satisfies the exact union of source capabilities, permission, capacity and separation constraints."
+    },
+    {
+      "id": "DEP-W6-TEMPLATE-COVERAGE-COMPARISON",
+      "severity": "P0",
+      "finding": "coverage is calculated only from submitted slots and generic binding checks; it does not compare the plan against the required slots and gates of an exact profile template, so omitted responsibilities can disappear silently."
+    },
+    {
+      "id": "DEP-W6-PROTECTED-RESPONSIBILITY-POLICY",
+      "severity": "P1",
+      "finding": "four hard-coded protected names are a useful floor but not a versioned industry or organization policy; fact/material authorization, task objective, content creation and delivery responsibilities still need template coverage even when mergeable."
+    },
+    {
+      "id": "DEP-W6-PROFILE-DRIFT-INVALIDATION",
+      "severity": "P1",
+      "finding": "template, policy, Brief risk or provider readiness changes do not create a profile-drift invalidation and re-confirmation path."
+    },
+    {
+      "id": "DEP-W6-UPSTREAM-W6-01",
+      "severity": "P0",
+      "finding": "W6-01 exact assignee readiness is blocked, so no merged responsibility plan can be operationally frozen."
+    }
+  ],
+  "verification": {
+    "backendCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/test_w2b_production_contracts.py services/aos-api/tests/aip/test_w2c_contracts.py",
+    "backendResult": "8 passed, 7 warnings in 2.20s",
+    "frontendCommand": "pnpm exec vitest run src/api/aipProductionContracts/parser.test.ts src/api/aipProductionContracts/index.test.ts src/pages/s2/ProductionContractsPage.test.tsx",
+    "frontendResult": "3 files and 13 tests passed",
+    "profileAssetScan": "0 signed LITE/STANDARD/FULL ResponsibilityTemplate assets; 8 of 8 module responsibilityTemplateRefs empty",
+    "profileRecommenderScan": "0 canonical implementation found",
+    "interpretation": "generic merge data-shape and four protected names are stable, while profile recommendation, user confirmation, template coverage and governed merge semantics are absent"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

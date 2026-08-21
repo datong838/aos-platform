@@ -1,0 +1,130 @@
+{
+  "schema": "aos-workshop-preflight/v1",
+  "taskId": "workshop-w7-02-profile-cost-confirmation-preflight-20260815",
+  "workItem": "W7-02",
+  "projectRevision": "AOS-000029",
+  "branch": "w2-workshop",
+  "head": "7fe98a79da58a93ff4c9b71df75bb301fafcede2",
+  "recordedAt": "2026-08-15T04:52:00+08:00",
+  "scope": "read-only implementation and dependency audit plus committed evidence",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "TARGET_CONTRACT_REVIEWED",
+    "dependencyStatus": "IMPLEMENTATION_BLOCKED",
+    "externalEffect": "NONE",
+    "mayImplementNow": false,
+    "reason": "W7-01 is not implementation GREEN and the canonical recommendation, confirmation, merge-policy and projected-cost authorities do not exist"
+  },
+  "verifiedFoundations": [
+    {
+      "fact": "generic ResponsibilityPlan and StageTemplate DTO/store authority exists",
+      "evidence": "services/aos-api/aos_api/aip_production_contracts.py and aip_production_contract_store.py"
+    },
+    {
+      "fact": "post-run cost attribution separates measured estimated and unknown and fails hard-budget eligibility closed",
+      "evidence": "services/aos-api/aos_api/aip_cost_attribution_service.py"
+    },
+    {
+      "fact": "frontend UsageReceipt parser preserves measured estimated unknown and currency invariants",
+      "evidence": "apps/web/src/api/aipEvidence/contracts.ts"
+    },
+    {
+      "fact": "media Module declares all ten canonical capabilities",
+      "evidence": "bundles/solutions/ecommerce-growth/content/workshops/ecommerce.media-studio.json"
+    }
+  ],
+  "blockers": [
+    {
+      "code": "W7_01_NOT_GREEN",
+      "detail": "W7-02 hard-depends on W7-01; signed Stage and Responsibility templates are not published or installed"
+    },
+    {
+      "code": "PROFILE_RECOMMENDATION_AUTHORITY_MISSING",
+      "detail": "ProfileRecommendationRevision has zero implementation hits in backend frontend and ecommerce bundle content"
+    },
+    {
+      "code": "PROFILE_CONFIRMATION_AUTHORITY_MISSING",
+      "detail": "ProfileConfirmationReceipt has zero implementation hits"
+    },
+    {
+      "code": "MERGE_POLICY_AUTHORITY_MISSING",
+      "detail": "MergePolicyRevision has zero implementation hits"
+    },
+    {
+      "code": "PROFILE_ENUM_NOT_EXACT",
+      "detail": "CreateResponsibilityPlanRequest.profile and CreateStageTemplateRequest.profile remain arbitrary nonblank strings"
+    },
+    {
+      "code": "PROJECTED_COST_CONTRACT_MISSING",
+      "detail": "No versioned CostRange/projected-cost contract; existing cost attribution is retrospective UsageReceipt aggregation"
+    },
+    {
+      "code": "PROJECTED_COST_MODEL_MISSING",
+      "detail": "No exact Provider price revision, stage quantity assumptions, currency, tax, contingency, confidence or validity window model"
+    },
+    {
+      "code": "RECOMMENDATION_POLICY_FLOOR_MISSING",
+      "detail": "No policy authority for minimum profile, forced upgrade, allowed downgrade or required unknown handling"
+    },
+    {
+      "code": "CONFIRMATION_CAS_AND_IDEMPOTENCY_MISSING",
+      "detail": "No confirmation command with recommendation hash, actor, reason, ETag/CAS and Idempotency-Key"
+    },
+    {
+      "code": "RECOMMENDATION_DRIFT_INVALIDATION_MISSING",
+      "detail": "No invalidation from Brief Evidence Eval template policy provider price license or budget drift to recommendation and confirmation"
+    },
+    {
+      "code": "MEDIA_MODULE_REFS_EMPTY",
+      "detail": "responsibilityTemplateRefs and productionContractRefs are empty; evalPackRefs remains placeholder"
+    },
+    {
+      "code": "PROFILE_COST_CONFIRMATION_UI_MISSING",
+      "detail": "No Workshop UI/SDK parser for recommendation reasons cost/time range unknowns and explicit user confirmation"
+    },
+    {
+      "code": "TENANT_ISOLATION_NOT_PROVEN",
+      "detail": "No W7-02 positive real-tenant and negative isolation-canary evidence exists"
+    }
+  ],
+  "targetContract": {
+    "recommendation": [
+      "exact Brief Evidence Eval ResponsibilityTemplate MergePolicy Policy ProviderPrice refs",
+      "stable LITE STANDARD FULL profile key",
+      "reason codes and policy floor",
+      "required optional and merge-candidate responsibilities",
+      "cost and duration ranges with unknowns confidence assumptions currency and expiry",
+      "immutable content hash and stale reasons"
+    ],
+    "confirmation": [
+      "exact recommendation revision and content hash",
+      "accepted or selected allowed profile",
+      "actor reason policy decision and timestamp",
+      "ETag/CAS Idempotency-Key and replay identity",
+      "no silent downgrade and no start side effect"
+    ],
+    "costBoundary": "projected cost is recommendation evidence; actual cost remains canonical UsageReceipt plus Attribution and Adjustment, and unknown or estimated cost is not hard-budget eligible",
+    "driftBoundary": "any frozen input or price/provider/template/policy/license change makes the recommendation stale and requires recomputation and reconfirmation"
+  },
+  "tests": {
+    "backend": {
+      "command": "uv run --project services/aos-api pytest -q services/aos-api/tests/test_w2b_production_contracts.py services/aos-api/tests/test_w2b_production_contract_store.py services/aos-api/tests/aip/test_aip_cost_attribution_service.py",
+      "result": "17 passed",
+      "meaning": "generic production contracts and retrospective cost authority are stable; this does not prove W7-02"
+    },
+    "frontend": {
+      "initialAttempt": "pnpm lacked node on inherited PATH and failed before tests",
+      "command": "PATH=<bundled-node-bin>:$PATH pnpm --dir apps/web test -- src/api/ecommerceWorkshop/parser.test.ts src/api/aipEvidence/client.test.ts",
+      "result": "188 files and 2112 tests passed because the project test script runs the full Vitest suite",
+      "meaning": "current frontend baseline is stable; no W7-02 UI/SDK exists"
+    }
+  },
+  "next": "align W7-02 technical documents and checklist, retain item unchecked, then preflight W7-03",
+  "safety": [
+    "no source code changed",
+    "no database migration",
+    "no real tenant mutation",
+    "no provider or external action",
+    "AIP active lease scope was excluded and untouched"
+  ]
+}

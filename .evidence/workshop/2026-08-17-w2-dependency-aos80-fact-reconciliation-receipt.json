@@ -1,0 +1,65 @@
+{
+  "schema": "aos-workshop-preparation-receipt/v1",
+  "taskId": "workshop-w2-dependency-aos80-fact-reconciliation-20260817",
+  "recordedAt": "2026-08-17T05:12:18+08:00",
+  "branch": "w2-workshop",
+  "baselineSha": "0d91549ff7b248988db6d72e9da37d7e0fc4ebab",
+  "authorityRevision": "AOS-000080",
+  "result": "FACT_RECONCILIATION_GREEN_RUNTIME_IMPLEMENTATION_BLOCKED",
+  "scope": {
+    "businessCodeChanged": false,
+    "databaseChanged": false,
+    "migrationExecutedByWorkshop": false,
+    "externalSideEffect": false,
+    "authorityChanged": false,
+    "checkpointChanged": false,
+    "primeMemoryChanged": false
+  },
+  "freshDependencyProbe": {
+    "succeeded": 12,
+    "total": 12,
+    "canarySourceRows": 0,
+    "canaryProjectionRows": 0,
+    "result": "DEP_DATA_GREEN"
+  },
+  "aipDelta": {
+    "r103": "IMMUTABLE_EGRESS_DATA_CLASSIFICATION_CODE_AUTHORITY_GREEN",
+    "verification": "W1_AIP_621_GREEN_M1_621_GREEN_ALEMBIC_HEAD_AIP10_002",
+    "keychainItem": "ABSENT",
+    "agnesRegionAndDataDestination": "UNKNOWN",
+    "liveActivePolicyAndProvider": "BLOCKED",
+    "r104ThroughR107": "BLOCKED",
+    "r2": "NOT_STARTED",
+    "result": "CODE_CONTROL_GREEN_OPERATIONAL_BLOCKED"
+  },
+  "updatedFiles": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/106-W2至W8依赖并行执行准备与冲突控制ADR.md",
+      "preSha256": "eb30674396895bf6bbc93449bad4993eb46d89baded31bbc57c71dd34ac03cc8",
+      "postSha256": "9b265b8236a8ef85df8fb4f39f47380289d60746866e6f6f28b16b9597525af0"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "2849a07a1e3f078708aba5816a6c2afdbf5b1c05e81bcf27e4869c468a7a14d6",
+      "postSha256": "58e98bc60e5a0f03caf6a096cb2c2c7a7a3e204e18f2a14b67a3cfb1e3811aa1"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "8242eff8d18b4b1c083bde7d9ea693689b4955f89f7dd1e8b8152a7d9ab342d7",
+      "postSha256": "38e802dc09be42bed12e2afd0fd3916b2e8b95712735e87fd3d527cbe022f151"
+    }
+  ],
+  "reviewedDeliveryReceipt": "aip-r1-03-runtime-guard-policy-authority.json",
+  "remainingBlockers": [
+    "Owner Keychain item and ProviderInstanceRevision are blocked",
+    "AGNES Region/data destination is unknown and no live active policy exists",
+    "R1-04 through R1-07 exact operational evidence is blocked",
+    "R2 Binding and runnable Agent combination are not started",
+    "W2-00 remains NOT_STARTED because DEP-ADP(query) is operational RED"
+  ],
+  "progress": {
+    "completed": 21,
+    "total": 96,
+    "nextTask": "W2-00"
+  }
+}

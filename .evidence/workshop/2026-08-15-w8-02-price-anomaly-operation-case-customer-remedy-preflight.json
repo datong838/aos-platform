@@ -1,0 +1,89 @@
+{
+  "schema": "aos-workshop-scenario-preflight/v1",
+  "taskId": "workshop-w8-02-price-anomaly-operation-case-customer-remedy-preflight-20260815",
+  "workItem": "W8-02",
+  "scenario": "price_anomaly_to_operation_case_to_customer_remedy",
+  "projectRevision": "AOS-000033",
+  "branch": "w2-workshop",
+  "head": "b9dc796",
+  "aipBaseline": "m1@8cfc29a3d44ac4e12915371a547304452dad6d37",
+  "recordedAt": "2026-08-15T08:05:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "SCENARIO_TARGET_CONTRACT_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayRunScenario": false,
+    "reason": "product freeze and W2-10 W4-08 W5-08 W6-10 are not GREEN; price write customer messaging refund and compensation capabilities are not operationally ready"
+  },
+  "dependencyMatrix": [
+    {"dependency": "W2-10", "status": "NOT_GREEN", "reason": "price operations and customer real-data browser reconciliation absent"},
+    {"dependency": "W4-08", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "cross Evidence Eval Wiki and saved-view proof absent"},
+    {"dependency": "W5-08", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "external Action production adapter canary kill compensation and browser proof absent"},
+    {"dependency": "W6-10", "status": "IMPLEMENTATION_BLOCKED", "reason": "price customer and operations runtime authorities and positive browser proof absent"},
+    {"dependency": "product_formal_freeze", "status": "NOT_FROZEN", "reason": "formal product review remains pending"},
+    {"dependency": "technical_formal_freeze", "status": "GREEN", "reason": "technical baseline V3 is formally frozen"}
+  ],
+  "canonicalJourney": [
+    "PriceObservation and ComparisonSnapshot with originals cutoff basis currency unit tax freight and promotion conditions",
+    "ProductMatchObservation plus explicit ProductMatchDecision",
+    "PriceCaseRevision calculated by exact MonitoringPolicy Eval and Evidence",
+    "price remedy recommendation and side-effect-free ImpactPreview",
+    "independent price Action Proposal Approval Lease Receipt or explicit disabled decision",
+    "affected exact Order and OrderLine refs handed to an OperationCase without customer payload copying",
+    "OperationDecisionBrief Evidence Eval and refund compensation or notification Impact",
+    "Customer Handoff with purpose requestedOutcome and protected Customer refs",
+    "Consent Preference retention frequency and ContactExecutionPermit revalidated at dispatch",
+    "message and financial-remedy Actions each produce independent Receipt unknown reconcile and compensation facts",
+    "PriceCase OperationCase Customer Journey and EffectReview remain joined by exact lineage"
+  ],
+  "invariants": [
+    "low-confidence or incomparable ProductMatch cannot create an automated price anomaly",
+    "a PriceCase does not authorize a price change notification customer message refund or compensation",
+    "price action financial remedy and customer communication require separate action types approvals leases and receipts",
+    "Order and Customer cross-module movement uses scoped refs and purpose and never copies PII or payment payload",
+    "Consent withdrawal frequency cap retention and contact permit are checked at the linearized dispatch boundary",
+    "message accepted or refund submitted does not equal applied settled customer-resolved or effect-mature",
+    "unknown outcomes reserve frequency and financial exposure and prohibit automatic replay",
+    "double remedy and double notification are prevented by exact Order Case customer purpose and action fingerprints",
+    "Task Handoff item Action Receipt and compensation counts remain conserved",
+    "no database rollback overwrites external effects or historical receipts"
+  ],
+  "requiredNegativeJourneys": [
+    "price observations are stale not comparable wrong-currency or originals are revoked",
+    "product match is preliminary or conflicts with SKU revision",
+    "price floor margin MAP inventory or budget blocks price action",
+    "Order is outside affected target set or already remedied",
+    "Consent is unknown withdrawn or races with dispatch",
+    "frequency retention purpose marking k-anonymity or protected contact resolution blocks communication",
+    "refund message or provider result is timeout unknown duplicate late or partially applied",
+    "kill switch account capability policy or approval drifts",
+    "cross-tenant Order Customer Case or Receipt reference is rejected"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "hard dependencies are blocked and the scenario includes price customer and financial side effects; fixture or mock execution would be false evidence",
+    "safeChecks": [
+      "scenario B was reconciled with price operations customer and Action boundaries",
+      "dependency and product freeze status were reread",
+      "no real target set consent contact account or financial authorization exists"
+    ]
+  },
+  "blockers": [
+    "product formal review and freeze are incomplete",
+    "W2-10 W4-08 W5-08 and W6-10 are not GREEN",
+    "PriceCase OperationCase Segment Journey and customer Batch runtime authorities are not end-to-end GREEN",
+    "price write notification customer message refund and compensation production adapters are absent",
+    "current P08 CustomerLite and shared canary test baselines include unresolved failures",
+    "no org-org positive browser lineage or dev-org negative isolation EvidencePack exists",
+    "no exact real-side-effect authorization exists"
+  ],
+  "next": "align W8-02 scenario contract and checklist through two review rounds while keeping all price customer and financial effects disabled, then preflight W8-03",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant order customer or browser mutation",
+    "no price message refund compensation or payment side effect",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

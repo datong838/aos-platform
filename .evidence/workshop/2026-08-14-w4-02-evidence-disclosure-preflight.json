@@ -1,0 +1,92 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w4-02-evidence-disclosure-preflight-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_02_EVIDENCE_DISCLOSURE_PREFLIGHT_FACTS_FROZEN",
+  "implementationStatus": "BUNDLE_METADATA_PRESENT_DISCLOSURE_RESOLVER_MISSING",
+  "dependencyStatus": "BLOCKED_W4_01_AND_EVIDENCE_ACCESS_GOVERNANCE",
+  "observations": {
+    "evidenceBundleCanonicalListGetPresent": true,
+    "evidenceBundleStrictParserPresent": true,
+    "productionContractsUiShowsBundleSummary": true,
+    "evidenceBundleDrawerPresent": false,
+    "bundleReturnsExactEvidenceRefs": true,
+    "canonicalEvidenceReadByExactRefPresent": false,
+    "evidenceCitationContractPresent": false,
+    "threeLayerDisclosureApiPresent": false,
+    "bundleReadChecksPrincipalMarkings": false,
+    "bundleReadChecksLicensePurpose": false,
+    "serverRedactsEvidencePayloadForDisclosure": false,
+    "memoryKnowledgeCitationReusableAsPattern": true,
+    "memoryKnowledgeQueryChecksMarkingFreshnessApplicability": true,
+    "memoryKnowledgeCitationIsEvidenceCitationAuthority": false,
+    "bundleLicenseSummaryIsCurrentlyCallerSupplied": true
+  },
+  "findings": [
+    {
+      "id": "DEP-EVIDENCE-READ-AUTHORITY",
+      "severity": "P0",
+      "finding": "EvidenceBundle exposes exact Evidence refs but no canonical tenant-scoped read command resolves a ref into an authorized evidence envelope or citation."
+    },
+    {
+      "id": "DEP-EVIDENCE-DISCLOSURE-MARKING",
+      "severity": "P0",
+      "finding": "bundle list/get uses authenticated tenant scope but does not enforce the bundle marking against principal markings, so restricted bundle metadata is not protected by the declared marking field."
+    },
+    {
+      "id": "DEP-EVIDENCE-THREE-LAYER-DISCLOSURE",
+      "severity": "P0",
+      "finding": "there is no server-owned summary, cited excerpt and full-source disclosure contract with independent authorization, redaction and audit decisions."
+    },
+    {
+      "id": "DEP-EVIDENCE-CITATION",
+      "severity": "P1",
+      "finding": "Evidence exact refs identify records but do not carry source locator, captured time, applicability, marking, license, redaction receipt and display-safe excerpt needed for a verifiable citation."
+    },
+    {
+      "id": "DEP-EVIDENCE-LICENSE-PURPOSE",
+      "severity": "P1",
+      "finding": "bundle read does not evaluate current license, intended purpose or minimum disclosure; the stored licenseSummary is currently caller-authored metadata."
+    },
+    {
+      "id": "DEP-EVIDENCE-DRAWER-UI",
+      "severity": "P1",
+      "finding": "the current Production Contracts page shows bundle count, coverage and refs only; no EvidenceBundleDrawer, citation navigation, disclosure escalation or blocked-state explanation exists."
+    }
+  ],
+  "decisions": [
+    "retain EvidenceBundleRevision and the base Evidence store as AIP authorities; Workshop must not copy evidence payloads",
+    "add an AIP EvidenceDisclosure resolver that accepts an exact Evidence ref, purpose, requested disclosure level and subject context",
+    "return a server-owned EvidenceCitation plus disclosure decision, redaction receipt and stable blocked reasons",
+    "enforce bundle marking on list and get, and re-evaluate item marking, license, purpose, freshness and revoke state on disclosure",
+    "define three levels as metadata summary, minimum cited excerpt and authorized full source; each higher level requires a separate allow decision and audit receipt",
+    "reuse the KnowledgeCitation fail-closed shape and citation-content alignment principles without treating Memory citation as the Evidence authority",
+    "build EvidenceBundleDrawer only after strict disclosure SDK exists; the browser renders decisions and never performs authoritative redaction"
+  ],
+  "verification": {
+    "backendCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/test_w2a_production_contract_store.py services/aos-api/tests/test_w2a_production_contract_api.py services/aos-api/tests/aip/test_aip_memory_retrieval.py",
+    "backendResult": "14 passed, 7 warnings",
+    "frontendCommand": "pnpm --filter @aos/web test -- src/api/aipProductionContracts/parser.test.ts src/api/aipMemory/client.test.ts",
+    "frontendResult": "not run: pnpm was present but the current recovery environment had no node executable",
+    "interpretation": "backend authority and Memory citation behavior are stable; frontend verification is an environment gap and no UI completion claim is made"
+  },
+  "hashes": {
+    "productionContractStore": "a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708",
+    "productionContractRouter": "f8fca466f6f3c03c467eff7f1189f0f0cb8e412882be27010bd14d48482dceaf",
+    "webProductionContracts": "fd8c7f34f201590ffd5db129a32ccc1024a1d6ec7fb0f9cca1a38c412097cccc",
+    "webProductionParser": "d18448f6f9751db4792ff60f4be863f6ee6a162053ade60c5d082fec6f72b9c2",
+    "productionContractsPage": "9e7bd32912e1ebfa6f8ae4699ca3786f0474ab65caeff3141a1690106ad1c19e",
+    "memoryRetrieval": "dab707c8c076bf12409cf655479b52979614efa6cf61e5ade76a8d11d02cad06",
+    "memoryGovernancePage": "ad3bfe9460cb58f68da6a1774aa718793e05a4432af8b7cadcc022fd86cd833c"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "productionDatabaseRead": false,
+    "productionDatabaseWrite": false,
+    "syntheticTestDatabaseMutatedByTests": true,
+    "realTenantMutation": false,
+    "aipW2D3FilesTouched": false,
+    "migrationLeaseAcquired": false
+  },
+  "nextGate": "Close W4-01 evidence authority governance, then authorize a tenant-safe EvidenceDisclosure and Citation contract before Workshop W4-02 UI implementation."
+}

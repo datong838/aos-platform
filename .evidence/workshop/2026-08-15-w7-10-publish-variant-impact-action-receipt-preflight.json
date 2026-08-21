@@ -1,0 +1,84 @@
+{
+  "schema": "aos-workshop-preflight/v1",
+  "taskId": "workshop-w7-10-publish-variant-impact-action-receipt-preflight-20260815",
+  "workItem": "W7-10",
+  "projectRevision": "AOS-000032",
+  "branch": "w2-workshop",
+  "head": "9f90763",
+  "aipBaseline": "m1@d9722b7c1fcbc590ead8606194a3ecb5f08b5700",
+  "recordedAt": "2026-08-15T07:27:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "foundationStatus": "GENERIC_ACTION_CHAIN_GREEN",
+    "dependencyStatus": "IMPLEMENTATION_AND_EXTERNAL_EFFECT_BLOCKED",
+    "externalEffect": "NONE",
+    "mayImplementNow": false,
+    "reason": "W7-05 and W7-06 are blocked and no publish capability is both code_green and operational_ready; production Action adapters remain unregistered"
+  },
+  "verifiedFoundations": [
+    "canonical Action Proposal Draft Approval ExecutionLease immutable Receipt and reconcile state chain exists",
+    "proposal and approval bind an immutable proposal hash and enforce maker approver executor separation",
+    "Action execution is tenant scoped role guarded marking checked and fail-closed when the Adapter is absent",
+    "unknown results require a provider request id and authorized provider reread before reconciliation",
+    "Canonical Draft Inbox distinguishes approved applied unknown and reconciled and rereads authority after commands",
+    "focused generic Action backend and frontend tests are GREEN"
+  ],
+  "currentReadiness": {
+    "w7_05": "IMPLEMENTATION_BLOCKED",
+    "w7_06": "IMPLEMENTATION_BLOCKED",
+    "w5_00_through_w5_07": "ALL_PREFLIGHTED_AND_NOT_IMPLEMENTED_GREEN",
+    "productionAdapterRegistrations": 0,
+    "publishCapabilityCodeGreen": false,
+    "publishCapabilityOperationalReady": false,
+    "realPublishAuthorized": false
+  },
+  "blockers": [
+    "W7-05 Artifact family and W7-06 same-artifact four-gate approval are not GREEN",
+    "no versioned publish ActionType defines target object payload diff receipt schema risk capability account adapter and settlement contract",
+    "no publish capability has both code_green and operational_ready evidence",
+    "ACTION_ADAPTERS has no production registration and its contract only exposes execute and reconcile",
+    "no side-effect-free publish dryValidate produces exact platform target account scope diff reversibility rate budget and policy blockers",
+    "Action Proposal does not enforce a joint binding to exact selected Variant content hash family selection four-gate decision approval license and module context",
+    "generic ResourceRef does not itself carry an Artifact content hash and cannot alone prove the approved bytes are the submitted bytes",
+    "the current execution service consumes and commits the lease before the Adapter call leaving a crash window without a durable Attempt or outbox",
+    "initial execution Receipt writes empty evidenceRefs and has no reviewed publish-specific post-state schema content hash or platform object observation",
+    "Usage settlement lineage and effect review are not automatically joined to the publish action binding hash",
+    "webhook inbox replay ordering late receipts cancel and partial platform outcomes are not implemented for Action",
+    "manual Handoff is not defined as the mandatory alternative when a platform has no approved API",
+    "no rule proves an approval remains valid after Variant family selection Eval license account policy or platform schema drift",
+    "no Media Studio Impact preview Draft approval execution receipt reconcile or manual Handoff UI exists",
+    "no org-org positive canary kill drill browser evidence or dev-org isolation evidence exists"
+  ],
+  "targetBoundary": {
+    "candidate": "immutable PublishCandidateRevision binds selected Variant content hash family selection four-gate decision approval license and destination context",
+    "impact": "side-effect-free ImpactPreviewRevision binds exact candidate platform account scope diff risk reversibility capacity budget policy and adapter dry-validation receipt",
+    "proposal": "ActionProposal binds candidate and impact hashes plus exact ActionType capability account adapter policy and idempotency envelope",
+    "approval": "Approval authorizes only the exact proposal and candidate hash and becomes stale on any relevant dependency drift",
+    "execution": "durable attempt and outbox bridge lease consumption to provider submission without a silent crash window",
+    "receipt": "publish-specific Receipt records request fingerprint platform observation exact submitted and observed hashes status evidence and uncertainty",
+    "reconcile": "unknown and late provider facts append reconcile receipts and never trigger blind resend",
+    "manual": "unsupported or unauthorized platform API produces a scoped manual Handoff with checklist evidence and completion Receipt instead of fake applied",
+    "visibility": "Media Studio shows impact approval execution receipt reconcile compensation and effect review as separate lifecycle facts"
+  },
+  "tests": [
+    {
+      "command": "UV_CACHE_DIR=/private/tmp/aos-workshop-uv-cache uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip3_action_control.py services/aos-api/tests/aip/test_aip3b_action_execution.py services/aos-api/tests/aip/test_aip_lineage_service.py",
+      "result": "20 passed",
+      "warnings": "7 existing dependency and Pydantic warnings",
+      "duration": "298.99s"
+    },
+    {
+      "command": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/api/aipActions/contracts.test.ts src/api/aipActions/client.test.ts src/pages/CanonicalDraftInboxPage.test.tsx src/interactionHonestyManifest.test.ts",
+      "cwd": "apps/web",
+      "result": "4 files and 9 tests passed"
+    }
+  ],
+  "next": "align W7-10 publish contracts and checklist through two review rounds, retain the item unchecked, then preflight W7-11 cumulative gate",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no browser or real tenant mutation",
+    "no provider publish or payment side effect",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

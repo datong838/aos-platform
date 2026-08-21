@@ -1,0 +1,45 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w6-05-price-research-match-policy-batch-prepare-doc-ledger-20260814",
+  "authorityRevision": "AOS-000027",
+  "repositoryBaseRevision": "641fef7797f22218b9185dc39c88809e220e3628",
+  "result": "W6_05_PRICE_RESEARCH_MATCH_POLICY_BATCH_PREPARE_DOC_LEDGER_ALIGNED",
+  "decision": "TARGET_CONTRACT_REVIEWED_IMPLEMENTATION_REMAINS_BLOCKED",
+  "documents": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/16-价格治理技术方案.md",
+      "preSha256": "3ca3b38fd3795489dde388777eabad4092bb95cef057ba3b274bee7875885437",
+      "postSha256": "fb8f647bd5d33709345ef555164be079a83675c2dd49a43f1056e7a2ace9b759",
+      "change": "expanded price authority, source profile, observation basis, originals conservation, match observation/decision, policy, zero-effect batch prepare, action boundaries and acceptance"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/53-W6-05-价格ResearchJob同款MatchPolicy与BatchPrepare预检ADR.md",
+      "preSha256": null,
+      "postSha256": "35c094e93a06da8d9d1ddbc7ce1ebdae40da2e9b59bb7db348d9efa93b811221",
+      "change": "added current-state findings, reusable boundaries, eleven blockers, ordered implementation decision and two-round review"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "3b547925e49ee3a4692c3b3169620b0741ba577f0789bfc4fb403d2ddf7e8b7a",
+      "postSha256": "921b3e6cc18cf4cbe05238f808075229939addb9d43d5688fecdf737003966e8",
+      "change": "replaced the empty W6-05 evidence field with exact dependency IDs, verified foundation results and the honest unchecked status"
+    }
+  ],
+  "review": {
+    "round1": "GREEN: Product truth, external observations and rebuildable aggregation are separated; price basis, originals, Match Observation/Decision and Policy exact refs are explicit",
+    "round2": "GREEN: every P0 gap has an exit condition; prepare has zero provider/notification/price-action effect; unknown, drift and three-view acceptance are testable",
+    "implementationStatus": "NOT_STARTED",
+    "checklistStatus": "UNCHECKED"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "staticVisualHtmlChanged": false,
+    "databaseChanged": false,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalResearchProviderEffect": false,
+    "priceActionEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

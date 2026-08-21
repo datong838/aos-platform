@@ -1,0 +1,154 @@
+{
+  "schema": "aos-workshop-w3-four-ref-freeze-preflight/v1",
+  "taskId": "workshop-w3-04-four-ref-freeze-preflight-20260815",
+  "workItem": "W3-04",
+  "projectRevision": "AOS-000039",
+  "branch": "w2-workshop",
+  "head": "6eb360fc0da34f86b2d96c8b854798a409e5f26e",
+  "recordedAt": "2026-08-15T11:05:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "preparationStatus": "PREFLIGHT_GREEN_WITH_PLAN_REMEDIATION_REQUIRED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "the current plan contains an Evidence-build dependency cycle and the committed AIP baseline has no pre-compile aggregate that atomically freezes the four user-visible production contract refs"
+  },
+  "authorityRefresh": {
+    "currentPhase": "BIND1_2_CAPABILITY_READINESS_SERVICE_GREEN_WITH_WARNINGS",
+    "hardBoundary": "No Agent is runnable and no real CapabilityBinding exists",
+    "nextGate": "BIND1_3_SKILL_PUBLICATION_AND_BINDING_READINESS",
+    "interpretation": "binding readiness progress does not provide an Evidence build path or a four-ref production-context freeze"
+  },
+  "committedM1Facts": {
+    "fixedCommit": "c48868b3f40c75fd625f9dac00e1c2cc9b02f6c0",
+    "individualFreezeOperations": [
+      "TaskBrief freeze",
+      "EvalContract freeze",
+      "ResponsibilityPlan freeze"
+    ],
+    "evidenceBundleSemantics": "EvidenceBundle is created frozen from a previously frozen TaskBrief and caller-supplied exact Evidence item refs",
+    "impactPreviewSemantics": "ImpactPreview atomically snapshots Brief, EvidenceBundle, EvalContract and ResponsibilityPlan plus Plan, StageTemplate and optional runtime authorities; freeze revalidates the whole dependency snapshot",
+    "productionStartSemantics": "Start consumes an already compiled Plan, frozen ImpactPreview and approved ActionProposal and revalidates them before creating TaskRun",
+    "missing": [
+      "a pre-compile ProductionContextRevision or equivalent composite freeze authority",
+      "an atomic command that binds the four core refs before Plan compilation",
+      "an explicit ProductionContext ref carried into Plan, ImpactPreview and Start decision",
+      "a non-circular Evidence Build dependency before W3-04"
+    ]
+  },
+  "dependencyCycle": {
+    "oldEdges": [
+      "W3-04 depends only on W3-03 but requires an EvidenceBundle exact ref",
+      "W3-03 now creates an EvidenceBuildRequest and deliberately does not execute a Provider-backed build",
+      "W4-01 creates the EvidenceBundle Build Job but currently depends on W3-14",
+      "W3-14 depends on W3-04 and later W3 tasks",
+      "using ImpactPreview as the W3-04 freeze also requires Plan and StageTemplate outputs that are produced during the later compiler/start path"
+    ],
+    "result": "CYCLE_AND_ORDERING_CONFLICT",
+    "forbiddenWorkarounds": [
+      "create a fake or empty EvidenceBundle",
+      "freeze four authorities independently and let the Web client claim atomic success",
+      "run Evidence Provider work inside prepare",
+      "compile a Plan before the user-visible freeze without recording the ordering change",
+      "use latest refs or an unfrozen ImpactPreview"
+    ]
+  },
+  "remediatedTargetSequence": [
+    "W3-03 prepare creates or revises draft Brief, EvidenceBuildRequest and ResponsibilityRecommendation with zero provider execution",
+    "W4-01A or an equivalent explicitly authorized early bridge executes the Evidence Build Job and produces a canonical EvidenceBundle before W3-04; it must not depend on W3-14",
+    "the user confirms or canonical policy creates and freezes EvalContract and ResponsibilityPlan through their owners",
+    "W3-04 atomically creates and freezes a ProductionContextRevision containing exactly TaskBrief, EvidenceBundle, EvalContract and ResponsibilityPlan refs plus preparation and profile provenance",
+    "W3-05 canonical compiler consumes the frozen ProductionContext ref and StageTemplate to create Plan",
+    "ImpactPreview and ActionProposal are created and frozen after Plan exists, and Start revalidates ProductionContext, Plan, Preview, Proposal and runtime dependencies"
+  ],
+  "targetContract": {
+    "recommendedAuthority": "ProductionContextRevision",
+    "owner": "AIP L0 common production contracts",
+    "workshopRole": "typed command adapter and read projection only",
+    "operation": {
+      "method": "POST",
+      "path": "/v1/ecommerce-workshop/modules/{moduleId}/commands/freeze",
+      "operationId": "ecommerceWorkshopFreeze"
+    },
+    "input": [
+      "preparation exact ref and expected version",
+      "draft TaskBrief exact ref",
+      "complete and fresh EvidenceBundle exact ref",
+      "ready EvalContract exact ref",
+      "complete and ready ResponsibilityPlan exact ref",
+      "installed production profile and active installation-lock exact refs",
+      "Idempotency-Key and If-Match or expected aggregate version"
+    ],
+    "output": [
+      "frozen ProductionContext exact ref and content hash",
+      "four exact refs with observed lifecycle, readiness and hash",
+      "dependencySnapshotHash and server-observed profile or installation provenance",
+      "FreezeReceipt, replay marker, semantic Diff and nextAllowedCommands",
+      "stable blockers for missing, conflict, stale, revoked, unknown and dependency-unavailable"
+    ]
+  },
+  "atomicityAndCas": [
+    "all four refs are re-read under one server-side decision and tenant scope",
+    "the aggregate is append-only; individual source objects remain owned by their canonical stores",
+    "same key and same request hash replays the same frozen context and Receipt",
+    "same key with a different hash conflicts and no partial aggregate is published",
+    "a crash before aggregate commit leaves no visible frozen context; a crash after commit is recovered by Receipt replay",
+    "source revisions are not upgraded to latest and any later drift invalidates dependent compile, preview, approval and start without rewriting history"
+  ],
+  "readinessRules": [
+    "TaskBrief lifecycle is frozen and its typed schema and active installation provenance are valid",
+    "EvidenceBundle coverage is complete, freshness is fresh and missing, conflict or uncertainty blockers are empty according to profile",
+    "EvalContract lifecycle is frozen and publication, rule and artifact-schema dependencies are current",
+    "ResponsibilityPlan lifecycle is frozen, coverage complete, readiness ready and hard separation preserved",
+    "unknown, revoked, expired, drifted, cross-tenant, placeholder, dry-run or profile-mismatched input blocks freeze"
+  ],
+  "zeroSideEffectInvariants": [
+    "no Provider call or fee",
+    "no TaskRun, AgentRun, Action, Handoff, Approval or ExecutionLease",
+    "no Plan compilation, ImpactPreview or external business mutation",
+    "no protected content, credential or Secret disclosure"
+  ],
+  "dependencyDecision": {
+    "W3_03": "NOT_STARTED_PREFLIGHT_GREEN_HARD_GATE_BLOCKED",
+    "W4_01_CURRENT": "NOT_STARTED_AND_CYCLICALLY_DEPENDENT_ON_W3_14",
+    "DEP_PRODUCTION_CONTEXT_FREEZE": "MISSING",
+    "IMPACT_PREVIEW": "PARTIAL_LATER_STAGE_FOUNDATION_NOT_A_W3_04_REPLACEMENT",
+    "W3_04": "NOT_STARTED_PLAN_REMEDIATION_REQUIRED"
+  },
+  "requiredGreenEvidence": [
+    "D-waves dependency graph is remediated so the Evidence Build bridge precedes W3-04 without depending on W3-14",
+    "AIP L0 approves and implements the unique pre-compile ProductionContext or an equivalent composite freeze authority",
+    "canonical API, Store, migration if required, OpenAPI and strict SDK are integrated into m1",
+    "four-ref type, tenant, lifecycle, readiness, content-hash, profile, publication, revocation and drift validation tests GREEN",
+    "atomicity, idempotency, crash-window, restart-readback, concurrent-freeze and no-partial-publish tests GREEN",
+    "W3-03 and the early Evidence Build bridge GREEN",
+    "org-org positive and dev-org isolation with all zero-side-effect counters GREEN",
+    "current authority, memory, Git, Delivery Receipts and Leases revalidated before coding"
+  ],
+  "sourceHashes": {
+    "origin/m1:services/aos-api/aos_api/aip_production_contracts.py": "d89d8c6e2076360c41260fa1a43e076c281f5ba2760d4e74f6670f6327ab3d11",
+    "origin/m1:services/aos-api/aos_api/aip_production_contract_store.py": "0a323aa91db03bed5f0a5af0281255b146db9380578f80c112fd193e616de622",
+    "origin/m1:services/aos-api/aos_api/routers/aip_production_contracts.py": "148697bf59ea4c9b7bfe66572ced7379bf934f27fb70bcebf094bb7f4da4f4f4",
+    "origin/m1:apps/web/src/api/aipProductionContracts/index.ts": "d68344ca82f9d71590fa038dbbad8527639498c07c908082f7770375bd367843"
+  },
+  "deliveryReceipts": [
+    "aip-w2d2-start-service-api-20260814 at 0391f68",
+    "aip-w2d3-strict-sdk-ui-browser-20260814 at 2eab0f78a1679aa4fb0adf17468cc9c1875157f0"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "this is a dependency and target-contract preflight; the composite freeze authority does not exist",
+    "doesNotProve": [
+      "a four-ref atomic freeze",
+      "an EvidenceBundle ready for freeze",
+      "a ProductionContext ref",
+      "a safe compile or start"
+    ]
+  },
+  "next": "remediate the cross-wave dependency graph and governing contracts through two review rounds while keeping W3-04 unchecked and unimplemented",
+  "safety": [
+    "read-only committed m1 and w2 code, Delivery Receipts, authority and plan inspection",
+    "no source, migration, database, tenant, provider or external mutation",
+    "w1-aip uncommitted content was not read or modified"
+  ]
+}

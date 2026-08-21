@@ -1,0 +1,63 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w2-06-analyst-metric-quality-evidence-plan-read-model-doc-align-20260815",
+  "workItem": "W2-06",
+  "projectRevision": "AOS-000038",
+  "sourceCommit": "6dbd0f80bbeaaf9f078639a281d2370d007270b3",
+  "recordedAt": "2026-08-15T11:05:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "added the canonical Analyst operation and seven read-only views",
+        "added full metric definition value denominator cutoff quality and source-run contract",
+        "added comparison compatibility and unknown-not-zero invariants"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "separated observation correlation attribution and causal claims",
+        "bounded DecisionSummary to auditable evidence assumptions counterevidence alternatives and uncertainty without private reasoning",
+        "registered absent Analyst aggregate Insight DecisionSummary GrowthPlan and AIP-8 gates and revalidated AOS-000038"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md",
+      "preSha256": "5fc90b323cc7ca05a85d36febdb6b6b9b256b8c45f245e36c8c23739a40898b5",
+      "postSha256": "eadf8f3a9b20d99e2904b1986808cf6f54a77f10ebdd66839b991dd983dd91d2"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/15-经营参谋技术方案.md",
+      "preSha256": "985b139be1fb187ae87a81b833d17824474c77466cd3bbdd340a19caae4df212",
+      "postSha256": "faeb954cc5190f5fd24637ba622e063edc604588bb9a7ac1eccd238c461b3bb6"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "52db300f49a54e81ad7ed4bd543414567040c003be196f4bb56acbc49be9b48c",
+      "postSha256": "90ad6df9a979179add4c9402f1a6d78fb1f9b0583b6cace2973b63f86a6946af"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/87-W2-06-经营参谋指标质量证据计划只读模型预检ADR.md",
+      "preSha256": null,
+      "postSha256": "5501d9910eba285aec5d9b5f8386a07b124900f9a5922c40a938e091ed938222"
+    }
+  ],
+  "decision": {
+    "contract": "APPROVED",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "mode": "READ_ONLY",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review rounds passed after remediation",
+    "all four post hashes match",
+    "AOS-000038 BIND-1 progress was revalidated without promoting Analyst readiness",
+    "W2-06 remains unchecked and no query plan Task memory or external action was introduced"
+  ]
+}

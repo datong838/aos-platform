@@ -1,0 +1,77 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w3-07-responsibility-reassign-takeover-doc-align-20260815",
+  "workItem": "W3-07",
+  "projectRevision": "AOS-000039",
+  "sourceCommit": "8b94953",
+  "recordedAt": "2026-08-15T11:42:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "structural coverage and operational readiness could collapse into one green state",
+        "tenant-wide healthy CapabilityBindings could falsely make an unrelated assignee look ready"
+      ],
+      "closed": [
+        "made coverage structural only",
+        "introduced immutable AssigneeResolutionReceipt ownership",
+        "required exact selected-assignee binding, rejected-candidate reasons, health, capacity, observedAt and expiry"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "reassign and takeover had no unique authority boundary",
+        "generic Handoff could be misread as ownership transfer"
+      ],
+      "closed": [
+        "froze pre-TaskRun reassign as an immutable successor ResponsibilityPlan",
+        "froze runtime takeover as maker-checker TakeoverDecision plus execution lease and fence",
+        "separated Handoff transport and decision state from assignment ownership",
+        "required provider unknown reconciliation and old-fence late-write rejection"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "e2e3dde3bc765019802b28a4fcf53be8d931d422ddf63b67212de6f513be5012",
+      "postSha256": "c57b7dd46b71ea8ed002fbbfe6897e116ffdaf9e5c302e23697c5ef4d98e5ece"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/49-W6-01-ExactCapabilityAssigneeResolver与Readiness预检ADR.md",
+      "preSha256": "a60010a02328fdfccbbfc8e770fcbd43b90a68c25ce77d66ab6290921e6e562d",
+      "postSha256": "dd7c8bd2491c0789ecc5ee8f47599c10f33254cac2635a10f8390fc6044bbd92"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/95-W3-07职责覆盖Readiness改派与人工接管分层预检ADR.md",
+      "preSha256": null,
+      "postSha256": "214dd67b20d0e5fcf3e84b135aea4d83d8d8957bd61dc4fe6906f0050958ac91"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "d564052887ed26283c8a46fa2ef92d56652a41d5ffc203e5fd8618b1f9577a0e",
+      "postSha256": "3c872309501506cb8a60b036a7e813ffa6ef55cc367275ad12f94cbbd6b99920"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "a0c04ea02d455482c6626c496371611652fed76231005045c038b9d231e4423e",
+      "postSha256": "b8db11afe074ea00b8ff68bcf6c948bd8b4cb4ccea175fcfae875ae19dad0cfc"
+    }
+  ],
+  "decision": {
+    "plan": "REMEDIATED_GREEN",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review and remediation rounds passed",
+    "all shared-document post hashes match",
+    "coverage, readiness, reassign and takeover have separate owners and lifecycle gates",
+    "runtime implementation and 96-item completion count were not advanced",
+    "no source, database, tenant, assignment, takeover or external mutation was introduced"
+  ]
+}

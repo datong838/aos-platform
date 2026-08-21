@@ -1,0 +1,63 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w2-08-customerlite-consent-segment-journey-read-model-doc-align-20260815",
+  "workItem": "W2-08",
+  "projectRevision": "AOS-000038",
+  "sourceCommit": "a315ee592f716394d3f5fa723117af3244dfd27b",
+  "recordedAt": "2026-08-15T10:30:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "added the canonical customer operation and customer segment journey dialogue read-only views",
+        "added CustomerLite minimum disclosure and server-authoritative Consent purpose marking retention contracts",
+        "added Segment exact revisions count conservation small-cohort aggregation and Journey lifecycle semantics"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "recorded latest P08 PIPELINE_NOT_FOUND and mapping-runtime privacy drift without promoting historical query rows",
+        "registered absent customer aggregate Consent Segment Journey Dialogue Touchpoint and Batch authorities",
+        "kept W2 read-only Batch prepare zero-send and real outreach behind the W6-08 specialized gate"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md",
+      "preSha256": "4726cc9ebf46034596627bd45e1360801392566d22712f3dfd4c03866e3cdfba",
+      "postSha256": "d668bbbc9b3c5f9107e89932aa57545bdd8c659095b5186de13c6ce83b94c724"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/17-客户关系技术方案.md",
+      "preSha256": "ee14a41f708ba8ac394b44aabf4bf079f906fa69459ff00cd5e4f391998eaa71",
+      "postSha256": "d68efdaee4f68b9581e4815a9645d5833e6f09ab04274e39684c62f723379ec0"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "5857ce06c1ad4bdfdcd7d226dba69f6a036ef07fbc5b217cc594eddbd8d58f7a",
+      "postSha256": "cbbcbac9815bcbf09107254e3423b1c529b7b7e625ccc3b59e2e496f46a65129"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/89-W2-08-客户CustomerLiteConsentSegmentJourney只读模型预检ADR.md",
+      "preSha256": null,
+      "postSha256": "5996c039617cd9a590c7dc794db0a9764f9db9417f137645e07f11904ee9dd90"
+    }
+  ],
+  "decision": {
+    "contract": "APPROVED",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "mode": "READ_ONLY",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review rounds passed after remediation",
+    "all four post hashes match",
+    "AOS-000038 BIND-1 progress was revalidated without promoting customer-domain readiness",
+    "W2-08 remains unchecked and no PII contact customer database tenant provider or external action was introduced"
+  ]
+}

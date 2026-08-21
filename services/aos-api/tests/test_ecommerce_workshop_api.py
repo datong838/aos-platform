@@ -166,7 +166,7 @@ def test_not_installed_and_invalid_module_id_fail_explicitly() -> None:
         assert invalid.json()["code"] == "VALIDATION"
 
 
-def test_openapi_freezes_exactly_two_w1_operations_and_no_writes() -> None:
+def test_openapi_freezes_w1_and_w2_core_operations_and_no_writes() -> None:
     app = FastAPI()
     app.include_router(ecommerce_workshop.router)
     schema = app.openapi()
@@ -183,6 +183,18 @@ def test_openapi_freezes_exactly_two_w1_operations_and_no_writes() -> None:
         ),
         "ecommerceWorkshopModuleReadinessGet": (
             "/v1/ecommerce-workshop/modules/{module_id}/readiness",
+            "get",
+        ),
+        "ecommerceWorkshopTaskCockpitCoreGet": (
+            "/v1/ecommerce-workshop/views/task-cockpit",
+            "get",
+        ),
+        "ecommerceWorkshopTaskCockpitRunStepsList": (
+            "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/steps",
+            "get",
+        ),
+        "ecommerceWorkshopTaskCockpitRunCheckpointsList": (
+            "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/checkpoints",
             "get",
         ),
     }

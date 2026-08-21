@@ -1,0 +1,59 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w4-02-evidence-disclosure-doc-ledger-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_02_EVIDENCE_DISCLOSURE_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the plan said evidence body is read on demand but did not define a server-owned disclosure decision",
+        "bundle marking enforcement and three independent disclosure levels were not acceptance gates",
+        "KnowledgeCitation reuse could be misread as permission to collapse Memory and Evidence authorities"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "DOCUMENT_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "L1 summary, L2 excerpt and L3 full source have independent authorization and receipt semantics",
+        "bundle and item marking enforcement, purpose, license, revoke and redaction gates are explicit",
+        "KnowledgeCitation pattern reuse preserves separate Evidence authority",
+        "W4-02 remains unchecked and accurately blocked"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/04-EvidenceWiki查询与保存视图.md",
+      "preSha256": "492f51e5e38a31e1ec9c6a21fa38235129c1873ba41ea7f5686504b5bd10b2d6",
+      "postSha256": "d3b396082503ad2d3aa4bcccb9fafde4036cef80bf32beac320ebcb9bee419ec"
+    },
+    {
+      "path": "12-工作台层技术方案/36-W4-02-EvidenceCitation三层披露与Marking执行预检ADR.md",
+      "preSha256": null,
+      "postSha256": "28b78df4e7e5dbdd557269e9f29cd04d6058f35550089556b57647b94291d43b"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "5f50c76a330c85dffedbe1800c5755b1efdd39c8bb58c7b524dc9276625a556b",
+      "postSha256": "59b14936dd6fc8ec376cbd1112517bfe07f3d5d188fc8e85e6ec9facdb2054ed"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w4-02-evidence-disclosure-preflight.json",
+    "preflightCommit": "8fa7579",
+    "w4ItemChecked": false,
+    "implementationAuthorized": false,
+    "aipW2D3FilesTouched": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "migrationLeaseAcquired": false
+  }
+}

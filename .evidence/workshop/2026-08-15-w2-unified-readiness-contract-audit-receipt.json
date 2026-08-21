@@ -1,0 +1,92 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-w2-unified-readiness-contract-audit-20260815",
+  "authorityRevision": "AOS-000045",
+  "branch": "w2-workshop",
+  "baseHead": "609f417a4eaef7a1991ed93dfc2e58180f1c06df",
+  "decision": "UNIFIED_SOURCE_READINESS_CONTRACT_APPROVED_OPERATIONAL_DEPENDENCIES_RED",
+  "reviewedCodeSha256": {
+    "services/aos-api/aos_api/ecommerce_workshop_contracts.py": "24b55de4d780e12fd83cf4bddaf6e438d8538ade9a0e0e363ea4a08d77dc2976",
+    "services/aos-api/aos_api/ecommerce_workshop_catalog.py": "a859c78e161ab8fc78f53a2783292228f0aa8dc4ef845515416f0dd216e5a32e",
+    "services/aos-api/aos_api/phase5_pipeline_engine.py": "6d0e2d6f35709489fec01c1123077e551d56c2d749149d0ab141c4f72e6a7701",
+    "services/aos-api/aos_api/aip_analyst_query.py": "21aee882e03396a75d0761afe041d2ead604991357c83a847fdf1e0d8b685aeb"
+  },
+  "confirmedFindings": [
+    "Workshop catalog readiness currently projects Registry, Installation and Manifest dependency placeholders rather than source runtime health",
+    "Workshop catalog dataCutoff is the minimum active composition lock creation time rather than a business data cutoff",
+    "Workshop module lastReceiptRef is currently null and dependency readers remain explicitly unverified",
+    "PipelineEngine health is currently demo and synthetic and is not joined to latest schedule run, exact quality rules or reconciliation evidence",
+    "the current branch Analyst query baseline still contains in-memory sample tables and fallback data and is not operational authority"
+  ],
+  "frozenOwnership": {
+    "dataAdapter": "owns atomic connection, latest-run, cutoff, quality and reconciliation facts plus canonical SourceReadinessEnvelope",
+    "aipP8_2P8_3": "owns QueryJob authority and exact production-adapter consumption against the same source and policy revisions",
+    "workshop": "consumes exact readiness refs and performs only deterministic module aggregation"
+  },
+  "frozenContract": {
+    "sourceCoverage": "P01-P12 always return one item, including failed, forbidden, unknown and blocked states",
+    "status": [
+      "ready",
+      "degraded",
+      "stale",
+      "empty",
+      "failed",
+      "forbidden",
+      "unknown",
+      "blocked"
+    ],
+    "requiredAxes": [
+      "tenant and exact source/pipeline/schema/mapping/query refs",
+      "observed, source-event, projection, cutoff and freshness timestamps",
+      "connection, tunnel generation, latest run and failure classification",
+      "separate source, read, write, active-object and deleted counts",
+      "exact reconciliation and quality-rule refs",
+      "masking, consent, retention and policy refs",
+      "reason codes, blockers, checkedAt and receiptRef"
+    ],
+    "failClosed": [
+      "unknown is never rendered as zero or empty",
+      "historical success or existing OT rows cannot override the latest failed run",
+      "synthetic demo health cannot enter a production envelope",
+      "P08 customer values and P10 config values never enter envelope, error, blocker or Receipt",
+      "Workshop cannot persist a second source-health authority or connect directly to niushop"
+    ]
+  },
+  "verification": {
+    "command": "services/aos-api/.venv/bin/pytest -q services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py services/aos-api/tests/test_ecommerce_workshop_api.py",
+    "passed": 11,
+    "failed": 0,
+    "warnings": 7
+  },
+  "externalArtifacts": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/12-\u5de5\u4f5c\u53f0\u5c42\u6280\u672f\u65b9\u6848/28-W2\u53ea\u8bfb\u57fa\u5ea7\u6570\u636e\u6e90Readiness\u9884\u5ba1\u4e0e\u5f00\u5de5\u95e8.md",
+      "preSha256": "f88ecd970c60f5af492138406d680ad9e7d9a7d8a15c1bc31fbca781b30fd6a4",
+      "postSha256": "af7e6089cd9badbf202fc28ad57b6e9690547cad980ff3bbe0fcec6b6d04e1f7"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/12-\u5de5\u4f5c\u53f0\u5c42\u6280\u672f\u65b9\u6848/D-waves/00-\u5de5\u4f5c\u53f0\u957f\u4efb\u52a1\u5f00\u53d1\u8ba1\u5212\u603b\u6e05\u5355.md",
+      "preSha256": "f0b62e1c07190122eb90ad930c4c2216a58a886f8e4f24daf753d6ae5095c7c6",
+      "postSha256": "16c338c92bb0d09825136bd94c7215ac7ac4d265d98628a77ed72a997ea2c8be"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/\u7535\u5546\u5e73\u53f0\u63a5\u5165/12-\u5de5\u4f5c\u53f0\u5c42\u6280\u672f\u65b9\u6848/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-\u5de5\u4f5c\u53f0\u5c42\u5f00\u53d1\u8be6\u7ec6\u6e05\u5355\u4e0e\u4f9d\u8d56\u5173\u7cfb.md",
+      "preSha256": "69d6a6c38f2d20309fe6b2639162249d7177650e80cf367124e8840173e13c81",
+      "postSha256": "0ae3d995ff6525b63e1a153bb9d7fdd4343d2b3d6f93af44de500c8913605d8b"
+    }
+  ],
+  "safety": {
+    "businessCodeChanged": false,
+    "pipelineTriggered": false,
+    "databaseMutation": false,
+    "realBusinessValuesRead": false,
+    "aipWorktreeRead": false
+  },
+  "progress": {
+    "completedTasks": 21,
+    "totalTasks": 96,
+    "w2Completed": 0,
+    "w2Total": 11,
+    "status": "W2_00_NOT_STARTED_DEP_DATA_RED_DEP_ADP_OPERATIONAL_QUERY_RED"
+  }
+}

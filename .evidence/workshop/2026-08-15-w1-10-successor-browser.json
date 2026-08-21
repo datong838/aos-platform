@@ -1,0 +1,288 @@
+{
+  "baselineInstallationRef": {
+    "installationId": "1286521e-6d6e-42b4-8aad-b5daaa1b01bb",
+    "lockHash": "sha256:cc188e7de7b1a48fb04e9d9bdc2affa028b6d83cda9ccefca4b324dcbe714d80",
+    "overlayRevision": "d3-qiyuehui-v2-decision-tags",
+    "revision": 5
+  },
+  "mode": "apply",
+  "moduleCount": 8,
+  "orgId": "org-org",
+  "outcome": "CANONICAL_SUCCESSOR_ACTIVE",
+  "projectId": "dev-project",
+  "published": [
+    {
+      "artifacts": [
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/agents/ecommerce-capability-catalog.json",
+          "digest": "sha256:0d33aac853f9f7cac835ea97cd8409388a9c4afe22ddec3b4a8eb668c72acf5a",
+          "relativePath": "content/agents/ecommerce-capability-catalog.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/agents/ecommerce-six-coworkers.json",
+          "digest": "sha256:ae351d4265f3c6757c17e6742dc32e7c7f0697d2a9676d379ab3cb5085192ba3",
+          "relativePath": "content/agents/ecommerce-six-coworkers.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/evals/placeholder.json",
+          "digest": "sha256:e90c23c9234793da6f76f82cc78ceddd677ce47c4c6ed7ced8397bb11d0a69c2",
+          "relativePath": "content/evals/placeholder.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/evals/w03-l05-dry-run-cases.json",
+          "digest": "sha256:e6b2f45d025adb071636b4c2f1f93ab1a59098357d52885819bda791cc93f78c",
+          "relativePath": "content/evals/w03-l05-dry-run-cases.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/logic/ecommerce-37-logic-catalog.json",
+          "digest": "sha256:2ebfba4bc26a308f4d93882eaa5105ae364b857cea667ed769fbb1fcb8e4463b",
+          "relativePath": "content/logic/ecommerce-37-logic-catalog.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/logic/l05-commission-anomaly.json",
+          "digest": "sha256:3cae12bc303c6b26d4b2cc8d5ec3a9866add4b286b554b91996e3bd5bf6ff257",
+          "relativePath": "content/logic/l05-commission-anomaly.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/policies/aip6-runtime-policies.json",
+          "digest": "sha256:2ff91b4c0b34906fcc18b40a467cb786835d6168a6301f8abc9647476417cd4f",
+          "relativePath": "content/policies/aip6-runtime-policies.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/policies/growth-gates.json",
+          "digest": "sha256:06f8b1453cc7297c23802ce1ef0a13f97ccd807f2ffca97a63d3572e682a33ac",
+          "relativePath": "content/policies/growth-gates.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/schemas/aip6-contribution-schemas.json",
+          "digest": "sha256:c3e4f9503222fed59eb150f6ac89b3fb49991123f15699fb36c9702ab35048b7",
+          "relativePath": "content/schemas/aip6-contribution-schemas.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.analyst.json",
+          "digest": "sha256:3091f1cc1943a03c444e44ed3dfb7720ea80c117780b6c3e75ef0b6157fb1605",
+          "relativePath": "content/workshops/ecommerce.analyst.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.content-campaign.json",
+          "digest": "sha256:685303041e18c3466da15ebf8ce406821866401b316d7bc15d0b2b26781c7269",
+          "relativePath": "content/workshops/ecommerce.content-campaign.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.creator-growth.json",
+          "digest": "sha256:e22b6fa81f68f8dcb28fba5bee9f6c28f0ec88e5a15e1bede022cb45df8c5da8",
+          "relativePath": "content/workshops/ecommerce.creator-growth.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.customer.json",
+          "digest": "sha256:5b6cfb5cb7d3e28dd5ad30c6ab61b276b9f7986358759604a236c4d33e46467c",
+          "relativePath": "content/workshops/ecommerce.customer.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.media-studio.json",
+          "digest": "sha256:c9f5775ebbc57910442b96235cfbb418782fa04dbf112a7f4bbb86983ef9bc35",
+          "relativePath": "content/workshops/ecommerce.media-studio.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.price-governance.json",
+          "digest": "sha256:de837ed99dbb64e56f94a42b53d66998bf11ad52b5ad91f84eb0f74ea4c52ba3",
+          "relativePath": "content/workshops/ecommerce.price-governance.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.task-cockpit.json",
+          "digest": "sha256:29d861844839ca59627ed34211a79816d0654c11c164bf7811892b8bc0f79d3d",
+          "relativePath": "content/workshops/ecommerce.task-cockpit.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/w03-customer-private-domain.json",
+          "digest": "sha256:25a34e673c4042088b6fe6e1025a7d40f1317c26c85cd277d65fe2bb621c4642",
+          "relativePath": "content/workshops/w03-customer-private-domain.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/evidence/bundle-evals.json",
+          "digest": "sha256:02b181ca7d55990bbca1e2e923a24eddefe97cc34f596c82def301d22563c4f6",
+          "relativePath": "evidence/bundle-evals.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0/evidence/sbom.json",
+          "digest": "sha256:ac64aec9f5d0d3535d1174026f3d9ed0bdeb11eef7fd76bb93e220cd1f079d5e",
+          "relativePath": "evidence/sbom.json"
+        }
+      ],
+      "contentHash": "sha256:acd2590090a731fd3fa4ed00833ebc09a64832fe88ee7b00855c4cd8c0968bbf",
+      "manifestHash": "sha256:aa81bc4985ca80150a018180ffd474c827ac78d5032cf97fe3f95bde4dcec861",
+      "sourceRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0",
+      "status": "published"
+    },
+    {
+      "artifacts": [
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/evals/logic-dry-run-cases.json",
+          "digest": "sha256:ad57598fb4d17dc41e7208b0c3ac721b5a6e08a6f9ffc7e7df69d117533ce148",
+          "relativePath": "content/evals/logic-dry-run-cases.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/logic/l01-product-launch.json",
+          "digest": "sha256:645d391d2a3790d7eac16aff4a9659d71d117e2baa6b90f50364bb7a21ab4229",
+          "relativePath": "content/logic/l01-product-launch.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/logic/l02-order-fulfillment.json",
+          "digest": "sha256:7ef2d449725f818e339f2326018b8b047d38f2bffe50f08e3a258e2250c09499",
+          "relativePath": "content/logic/l02-order-fulfillment.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/logic/l03-shipment-overdue.json",
+          "digest": "sha256:1753ec4e6a992cd3b6995729413b6d5afb14f3f58e120c0f367ea67bebbe070c",
+          "relativePath": "content/logic/l03-shipment-overdue.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/workshops/ecommerce.operations.json",
+          "digest": "sha256:93b01794b26e30566e3cbb17349520fc0aad5c25ab18ea7d86552678fb5b8ba1",
+          "relativePath": "content/workshops/ecommerce.operations.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/workshops/w01-order-management.json",
+          "digest": "sha256:11c285d88ecb18f87591ac7dd5bed4f2c9c3c507024687b63515f3c38ef53120",
+          "relativePath": "content/workshops/w01-order-management.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/workshops/w02-product-inventory.json",
+          "digest": "sha256:c26ee8d1a4fc9a72c9c5ed21c2ed87f9062a27649764c7b916df1b8066e3e6fa",
+          "relativePath": "content/workshops/w02-product-inventory.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/evidence/bundle-evals.json",
+          "digest": "sha256:ee6098af889097a92fdc293d0e699834d83cd5325d4ecacd9c81e8f963ea2a39",
+          "relativePath": "evidence/bundle-evals.json"
+        },
+        {
+          "artifactRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/evidence/sbom.json",
+          "digest": "sha256:6ce0aad42c30d72912766b3033f878f1d2bdb9757b54553cf0f5ae6c54415af5",
+          "relativePath": "evidence/sbom.json"
+        }
+      ],
+      "contentHash": "sha256:bc4a8bcf6105363bae2ec3099947d5951ec7b65ae84214e475c9457f8ab9c04f",
+      "manifestHash": "sha256:00b4cf3dd6be4e271bbd01b8e234dd71e6e8b47451a424536d1bf1aa645e7371",
+      "sourceRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.operations-base/1.1.0",
+      "status": "published"
+    }
+  ],
+  "releaseSnapshots": [
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "contentHash": "sha256:acd2590090a731fd3fa4ed00833ebc09a64832fe88ee7b00855c4cd8c0968bbf",
+      "moduleIds": [
+        "ecommerce.analyst",
+        "ecommerce.content-campaign",
+        "ecommerce.creator-growth",
+        "ecommerce.customer",
+        "ecommerce.media-studio",
+        "ecommerce.price-governance",
+        "ecommerce.task-cockpit"
+      ],
+      "routes": [
+        "/workshop/analyst",
+        "/workshop/cockpit",
+        "/workshop/content-campaign",
+        "/workshop/creator-growth",
+        "/workshop/customer",
+        "/workshop/media-studio",
+        "/workshop/price-governance"
+      ],
+      "sourceRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.growth/1.3.0",
+      "version": "1.3.0"
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "contentHash": "sha256:bc4a8bcf6105363bae2ec3099947d5951ec7b65ae84214e475c9457f8ab9c04f",
+      "moduleIds": [
+        "ecommerce.operations"
+      ],
+      "routes": [
+        "/workshop/operations"
+      ],
+      "sourceRef": "bundle://d3-catalog/releases/ecommerce/solution.ecommerce.operations-base/1.1.0",
+      "version": "1.1.0"
+    }
+  ],
+  "successor": {
+    "etagVersion": 5,
+    "installationId": "76799475-ebe8-4562-abd1-79796cca8e18",
+    "revision": 5,
+    "state": "active"
+  },
+  "browserAcceptance": {
+    "surface": "Codex built-in browser",
+    "baseUrl": "http://127.0.0.1:1420",
+    "tenant": "org-org/dev-project",
+    "routeViewportMatrix": {
+      "routes": 8,
+      "viewports": [1280, 1440, 1920],
+      "cases": 24,
+      "result": "GREEN",
+      "assertions": [
+        "canonical route and unique mapped H1",
+        "eight installed navigation entries",
+        "no horizontal document overflow",
+        "unknown readiness remains explicit"
+      ]
+    },
+    "legacyReplace": {
+      "cases": 8,
+      "result": "GREEN"
+    },
+    "networkConsole": {
+      "workshopResponsesObserved": 6,
+      "responseStatuses": [200],
+      "consoleErrors": 0,
+      "result": "GREEN"
+    },
+    "accessibility": {
+      "singlePageH1": true,
+      "skipLinkTarget": "#ecommerce-workshop-main",
+      "targetTabIndex": -1,
+      "sidebarCollapseRestore": "GREEN",
+      "nativeKeyInjection": "TOOL_LIMITED",
+      "keyboardFocusContractTest": "GREEN_20_WEB_TESTS_INCLUDED",
+      "interpretation": "Built-in browser verified the accessible structure and functional collapse/restore. The browser bridge did not dispatch native Enter to a protocol-focused element, so keyboard focus behavior is closed by the real component test rather than misreported as a native browser keystroke."
+    },
+    "positiveProjection": {
+      "schemaVersion": "aos.ecommerce-workshop/v1",
+      "moduleCount": 8,
+      "installationId": "76799475-ebe8-4562-abd1-79796cca8e18",
+      "readiness": ["unknown"]
+    },
+    "negativeCanary": {
+      "tenant": "dev-org/dev-project",
+      "moduleCount": 0,
+      "installationIds": []
+    }
+  },
+  "postConditions": {
+    "activeInstallationRows": 3,
+    "effectiveLeafInstallationId": "76799475-ebe8-4562-abd1-79796cca8e18",
+    "cronRunCount": 92,
+    "cronLatestStartedAt": "2026-08-15T00:00:02.451829+00:00",
+    "alembicHeads": ["bind1_003"],
+    "committedReleaseSignatureFiles": 0
+  },
+  "verification": {
+    "backendFocused": "59 passed",
+    "webFocused": "20 passed",
+    "webProductionBuild": "GREEN",
+    "dryRunReentry": "PREFLIGHT_GREEN",
+    "gitDiffCheck": "GREEN"
+  },
+  "truthBoundary": {
+    "w1_10": "GREEN_WITH_NATIVE_KEY_INJECTION_TOOL_LIMITATION",
+    "businessReadiness": "UNKNOWN",
+    "w2_00": "NOT_STARTED_DATA_GATE_RED",
+    "doesNotProve": [
+      "AIP capability binding readiness",
+      "object readiness",
+      "twelve data pipelines are green",
+      "W2 business read models are implemented"
+    ]
+  }
+}

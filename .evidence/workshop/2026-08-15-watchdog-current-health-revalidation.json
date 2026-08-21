@@ -1,0 +1,63 @@
+{
+  "schema": "aos-workshop-watchdog-health/v1",
+  "taskId": "workshop-watchdog-current-health-20260815",
+  "observedAt": "2026-08-15T13:58:29+08:00",
+  "authorityRevision": "AOS-000041",
+  "branch": "w2-workshop",
+  "result": "GREEN",
+  "source": {
+    "watchdogSha256": "05c64c19784349aba61a7ccd9a9426d87c6e0efb4f9426a8c2dfd1cc4879cef6",
+    "testsSha256": "89ef18761023ed40df9d15adfa12440cbf1fa712601d433717928d4e4c3919f5",
+    "pythonCompile": "GREEN",
+    "conflictMarkers": 0,
+    "matchesHead": true
+  },
+  "tests": {
+    "result": "GREEN",
+    "testsRun": 42,
+    "failures": 0,
+    "errors": 0,
+    "coverageSummary": [
+      "final and final_answer terminal recognition",
+      "current-episode Ack validation",
+      "active turn and tool reentry prevention",
+      "dependency Lease and external fact change wakeups",
+      "one-shot continuation after resumed-progress",
+      "300/600/900/1800/3600/7200 second transport backoff",
+      "transport failure pause limit"
+    ],
+    "initialInvocation": {
+      "result": "NO_TESTS_EXECUTED_ENVIRONMENT_ERROR",
+      "reason": "repository-root invocation did not put scripts/long-task-watchdog on Python import path"
+    },
+    "successfulInvocationCwd": "scripts/long-task-watchdog"
+  },
+  "runtime": {
+    "configSha256": "f326ef56d48b1fa7d9a436d7d59abc712b4e239619de3d3e2c6fc9e7a61ef9af",
+    "launchAgentSha256": "5eaa643572541b7b36b4e89c5276a1b1f685b58b22219292e1846d8c35ce12aa",
+    "launchAgentRuns": 222,
+    "launchAgentLastExitCode": 0,
+    "launchAgentIntervalSeconds": 300,
+    "manualNoOpSmoke": "tool-running",
+    "totalAttemptsHistorical": 12,
+    "consecutiveFailures": 0,
+    "dependencyWaitArmed": false
+  },
+  "diagnosticCorrection": {
+    "incorrectSignal": "an initial manual invocation omitted the Workshop-specific lock and reported already running; un-timestamped historical stderr entries were then initially mistaken for a current syntax failure",
+    "currentEvidence": "the current HEAD source contains no conflict markers, compiles, passes 42 tests, and returns tool-running with the Workshop-specific lock",
+    "codeRepairRequired": false
+  },
+  "safety": {
+    "sourceCodeChanges": 0,
+    "databaseWrites": 0,
+    "tenantDataChanges": 0,
+    "externalEffects": 0,
+    "concurrentRecoveryStarted": false
+  },
+  "doesNotProve": [
+    "a future network interruption will recover without current-episode Ack and final evidence",
+    "Workshop business task completion",
+    "W1-10 or downstream dependency readiness"
+  ]
+}

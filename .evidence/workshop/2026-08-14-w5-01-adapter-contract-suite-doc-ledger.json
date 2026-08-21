@@ -1,0 +1,60 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w5-01-adapter-contract-suite-doc-ledger-20260814",
+  "authorityRevision": "AOS-000025",
+  "result": "W5_01_ADAPTER_CONTRACT_SUITE_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the plan named contract-suite dimensions but not a reusable adapter definition or fixture interface",
+        "separate Action, Research callback and Usage patterns had no explicit reuse and authority boundary",
+        "passing tests were not bound to an adapter revision or production publish gate"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "SUITE_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "immutable definition, runtime interface and twelve parameterized suites are explicit",
+        "trusted account and secret resolution, dry validation, webhook, usage and unknown semantics are testable",
+        "reusable safety primitives do not merge their source authorities",
+        "W5-01 remains unchecked until W5-00 and implementation dependencies are GREEN"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/19-Adapter能力矩阵与降级策略.md",
+      "preSha256": "0ce3cabb9ab7a1475979007284ad57c591b342d8a059302f705c227d5149ada1",
+      "postSha256": "acff37404854e828cb80b9d0e9ff59f0376298c8f210634e7ebac490a2ec0447"
+    },
+    {
+      "path": "12-工作台层技术方案/41-W5-01-AdapterCapabilityContractSuite预检ADR.md",
+      "preSha256": null,
+      "postSha256": "ceb90c71c338c93bad31943979189b360960df8ec9fe324c8c9fd2fd3653f760"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "88d37aaf3202bf425cc1439a5938e5d2e3ef6582c607b9335611252f755be933",
+      "postSha256": "03656e4ebd6cc58faa8b66b97d88b87505f771c51a4b4074d8dcf8e53bcfac13"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w5-01-adapter-contract-suite-preflight.json",
+    "preflightCommit": "3106873ca21b39f3a31a3fc4afdb739ba7ed4d98",
+    "w5ItemChecked": false,
+    "implementationAuthorized": false,
+    "externalEffectAuthorized": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false
+  }
+}

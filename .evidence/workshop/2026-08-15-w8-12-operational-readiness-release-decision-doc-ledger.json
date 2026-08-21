@@ -1,0 +1,64 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w8-12-operational-readiness-release-decision-doc-align-20260815",
+  "workItem": "W8-12",
+  "projectRevision": "AOS-000034",
+  "sourceCommit": "889c3c492ea0cb07bfffb3461a5fc37469aab524",
+  "recordedAt": "2026-08-15T09:02:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "replaced aggregate readiness with capability and risk-tier decisions",
+        "defined strict READY BLOCKED and NOT_APPLICABLE semantics",
+        "bound decision evidence to one immutable release candidate"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS",
+      "closed": [
+        "separated continuous implementation authorization from publication approval",
+        "added maker-checker expiry revocation rollout stop rollback and automatic NO_GO",
+        "corrected stale W1 progress summary without changing Task completion evidence"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/08-部署配置FeatureFlag与运维.md",
+      "preSha256": "9cbb6e1735e6716e1342eadfffd93a688ea9980a1fc6d69fa31955914ee0ed3f",
+      "postSha256": "68c4832fdc66526bdb23eb2ccd905ce2fc3dee10106ff3fc5bb357b8944997f2"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/20-实施波次依赖门与交付清单.md",
+      "preSha256": "d4972dabb5500849e510223e00538bf37d53ddc58790177fc61415c3031fe3ab",
+      "postSha256": "f80e5e16141ea69e034078dc914ea4efec2a7d058ecdb4f16abff0de0a5fe261"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "f6f68c1fa0c4651017d86ab3c7d2419279208d0ac2b67e5c5ec7a9595613c6b6",
+      "postSha256": "204262571468b1c981f3b2787de5eb823b7ff2b721a2998cf8393aafe62df1ee"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/81-W8-12-运营就绪与发布决定预检ADR.md",
+      "preSha256": null,
+      "postSha256": "74fd37433c25049f9ca9fb6cbc56005eccdbf492b19a3774450356103eb9b6c5"
+    }
+  ],
+  "decision": {
+    "contract": "APPROVED",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "releaseDecision": "NO_GO",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review rounds passed",
+    "post hashes match",
+    "W8-12 remains unchecked",
+    "no release approval or operational readiness was inferred",
+    "no source migration tenant provider flag or publication effect"
+  ]
+}

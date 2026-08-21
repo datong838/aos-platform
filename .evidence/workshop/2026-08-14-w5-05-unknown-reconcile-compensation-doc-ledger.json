@@ -1,0 +1,68 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w5-05-unknown-reconcile-compensation-doc-ledger-20260814",
+  "authorityRevision": "AOS-000026",
+  "result": "W5_05_UNKNOWN_RECONCILE_COMPENSATION_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the prior plan used reconciled as if it were a provider outcome and a reconciliation method at the same time",
+        "manual reconciliation had no Case, evidence or duty-separation authority",
+        "accepted asynchronous results and unknown results without a provider reference had no canonical closure path",
+        "compensation was a new Proposal but its ActionType, payload and eligibility were not policy bound"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "DESIGN_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "provider outcome, reconciliation method and settlement status are now separate typed dimensions",
+        "automatic reconcile uses a durable attempt and manual reconcile uses an evidence-backed maker-checker Case",
+        "unresolved evidence remains unknown and cannot trigger blind resend or compensation",
+        "CompensationPolicy maps only confirmed applied or partial effects to an exact inverse action and full safety chain",
+        "lineage preserves original effect, reconciliation evidence, compensation and residual effect",
+        "W5-05 remains unchecked until W5-04 and all named reconcile and compensation dependencies are GREEN"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/03-TaskHandoff与Action闭环.md",
+      "preSha256": "97f46abc541b06fc443498d23f18c9500bb9b223ea1ccc9b20d9d3b8dd81e7a2",
+      "postSha256": "c64d43fcb796f007b5b730afc36eb4efcd83610f1e47837c445065d56d746c11"
+    },
+    {
+      "path": "12-工作台层技术方案/19-Adapter能力矩阵与降级策略.md",
+      "preSha256": "10074926e18e81775b3453196ccd8e91ccda9a3a42f00c74d797aea5271f4419",
+      "postSha256": "0a60f4dbfad8e3f57a27907820c0ba749979024abd8ef82901b88f29fe31d6d1"
+    },
+    {
+      "path": "12-工作台层技术方案/45-W5-05-Unknown人工对账与补偿策略预检ADR.md",
+      "preSha256": null,
+      "postSha256": "c40eb041c2a331570ffd2c075553a24c14310055cdc0703d4684db05440b93d6"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "44589a2fb63947c5ca00212dc4da0c02f57c3682ad5fc95c19687e35a3d0bccc",
+      "postSha256": "16c06de1cf92b92aaea626345cdbe131198761e4b95843251a789e158ddbfde7"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w5-05-unknown-reconcile-compensation-preflight.json",
+    "preflightCommit": "a443532a045082e689a7bf8e6ca59d58d6f78022",
+    "w5ItemChecked": false,
+    "implementationAuthorized": false,
+    "externalEffectAuthorized": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false
+  }
+}

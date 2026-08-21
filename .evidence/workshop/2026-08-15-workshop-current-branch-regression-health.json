@@ -1,0 +1,58 @@
+{
+  "schema": "aos-workshop-regression-health/v1",
+  "taskId": "workshop-current-branch-regression-health-20260815",
+  "recordedAt": "2026-08-15T13:52:32+08:00",
+  "authorityRevision": "AOS-000041",
+  "branch": "w2-workshop",
+  "baselineCommit": "3f475890f17071572fd29b121f99dbc4a9bf7b7c",
+  "result": "GREEN",
+  "checks": {
+    "backendTargetedRegression": {
+      "result": "GREEN",
+      "passed": 28,
+      "warnings": 6,
+      "warningClassification": "existing non-failing Pydantic schema-shadow warnings",
+      "targets": [
+        "services/aos-api/tests/asset_registry/test_workshop_module_contracts.py",
+        "services/aos-api/tests/asset_registry/test_workshop_legacy_migration.py",
+        "services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py",
+        "services/aos-api/tests/test_ecommerce_workshop_api.py",
+        "services/aos-api/tests/asset_registry/test_ecommerce_workshop_installation_projection.py"
+      ]
+    },
+    "frontendRegression": {
+      "result": "GREEN",
+      "testFilesPassed": 188,
+      "testsPassed": 2112,
+      "durationSeconds": 9.99,
+      "warningClassification": "existing non-failing React Router future-flag and React act warnings",
+      "initialAttempt": {
+        "result": "ENVIRONMENT_RETRY",
+        "reason": "the default shell PATH did not contain node; no test executed"
+      },
+      "rerunRuntime": "/Users/ddt/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin"
+    },
+    "typescript": {
+      "result": "GREEN",
+      "command": "pnpm -C apps/web exec tsc -p tsconfig.json --noEmit"
+    },
+    "productionBuild": {
+      "result": "GREEN",
+      "command": "pnpm -C apps/web build",
+      "modulesTransformed": 295
+    }
+  },
+  "scopeAssertions": {
+    "sourceCodeChanges": 0,
+    "databaseWrites": 0,
+    "tenantDataChanges": 0,
+    "browserMutations": 0,
+    "externalEffects": 0
+  },
+  "doesNotProve": [
+    "W1-10 positive registry repair or browser acceptance",
+    "W2 real read-model operational readiness",
+    "AIP BIND1-5 completion",
+    "production or real-tenant operational readiness"
+  ]
+}

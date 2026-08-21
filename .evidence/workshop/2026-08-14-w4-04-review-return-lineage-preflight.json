@@ -1,0 +1,106 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w4-04-review-return-lineage-preflight-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_04_REVIEW_RETURN_LINEAGE_PREFLIGHT_FACTS_FROZEN",
+  "implementationStatus": "PARTIAL_AUTHORITY_PRESENT_RETURN_DISPATCH_AND_LINEAGE_INCOMPLETE",
+  "dependencyStatus": "BLOCKED_W4_03_AND_RETURN_EXECUTION_CLOSURE",
+  "observations": {
+    "reviewIssuePostgresqlAuthorityPresent": true,
+    "reviewIssueCreateListGetResolveReturnPresent": true,
+    "reviewIssueAppendOnlyEventsPresent": true,
+    "returnDecisionAppendOnlyAuthorityPresent": true,
+    "returnCreatesNewQueuedStepAttempt": true,
+    "returnPreservesOldAttempt": true,
+    "artifactRelationExactHashAndCycleGuardPresent": true,
+    "artifactRelationCanonicalRoutesAndSdkPresent": true,
+    "reviewArtifactEvalReportEvidenceRefsValidated": true,
+    "reviewRuleRefValidatedAgainstAuthority": false,
+    "resolveResolutionRefsValidated": false,
+    "resolveReasonAndResolutionRefsReadableAfterCommand": false,
+    "returnDecisionListOrGetRoutePresent": false,
+    "reviewEventListOrGetRoutePresent": false,
+    "returnCopiesPreviousInputRefs": true,
+    "returnAddsIssueOrRepairArtifactToAttemptInputs": false,
+    "returnInvalidatesDownstreamSucceededStages": false,
+    "taorSelectsLatestAttemptPerStageForCompletion": false,
+    "taorCanSkipQueuedReturnAfterOlderSuccess": true,
+    "explicitReviewResolveReturnAuthorizationGatePresent": false,
+    "lineageServiceIncludesStepAttempts": true,
+    "lineageServiceIncludesReviewIssueAndReturnDecision": false
+  },
+  "findings": [
+    {
+      "id": "DEP-RETURN-ATTEMPT-DISPATCH",
+      "severity": "P0",
+      "finding": "return_review_issue permits a succeeded source attempt and appends a newer queued attempt, while CanonicalTaorRunner marks a step completed if any historical attempt succeeded; the queued return can therefore be skipped."
+    },
+    {
+      "id": "DEP-RETURN-DOWNSTREAM-INVALIDATION",
+      "severity": "P0",
+      "finding": "the return command queues only the target stage, copies the previous input_refs unchanged, and does not compute or persist downstream invalidation, issue input, repair artifact or reuse decisions."
+    },
+    {
+      "id": "DEP-REVIEW-RULE-AUTHORITY",
+      "severity": "P0",
+      "finding": "ReviewIssue validates Artifact, EvalReport and Evidence refs but persists rule_ref without resolving its exact revision and hash against a rule authority."
+    },
+    {
+      "id": "DEP-REVIEW-RESOLUTION-AUDIT",
+      "severity": "P1",
+      "finding": "resolve accepts reason and resolution_refs but does not validate the refs or store a readable event payload; only payload_hash survives, so the resolution evidence cannot be reconstructed through the canonical API."
+    },
+    {
+      "id": "DEP-RETURN-READ-MODEL",
+      "severity": "P1",
+      "finding": "ReturnDecision is returned from the mutation and internally readable for idempotency replay, but no canonical get/list route, SDK read method or Review event timeline is exposed."
+    },
+    {
+      "id": "DEP-REVIEW-COMMAND-AUTHZ",
+      "severity": "P1",
+      "finding": "create, resolve and return routes require an authenticated principal but no explicit review or production-control permission gate is visible at the route or store boundary."
+    },
+    {
+      "id": "DEP-REVIEW-LINEAGE-PROJECTION",
+      "severity": "P1",
+      "finding": "AIP lineage projects TaskRun and StepRun attempts, but does not include ReviewIssue, ReviewIssueEvent, ReturnDecision and their exact Eval or Evidence relations."
+    }
+  ],
+  "decisions": [
+    "retain the existing AIP ReviewIssue, ReviewIssueEvent, ReturnDecision, StepRun and ArtifactRelation tables as the only authorities",
+    "change TAOR completion selection to latest-attempt semantics and add a regression where attempt 1 succeeded and attempt 2 is queued by return",
+    "compute an explicit invalidation set and reuse decisions from exact Artifact dependency relations before queuing the return attempt",
+    "new attempt inputs must include the exact issue, return decision, source artifact and selected repair or evidence refs rather than copying old inputs silently",
+    "resolve must validate resolution refs and persist a readable immutable resolution event payload or exact payload artifact ref",
+    "add canonical read APIs and strict SDK parsers for issue events and return decisions",
+    "extend lineage with ReviewIssue and ReturnDecision facts and stable cross-links to EvalReport, Evidence, Artifact, Stage attempt and replacement Artifact",
+    "fail closed on unresolved rule authority and unauthorized review commands",
+    "do not implement Workshop Review panels beyond read-only current facts until W4-03 and the P0 return execution gaps are closed"
+  ],
+  "verification": {
+    "targetedCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_w2c_contracts.py::test_artifact_relation_rejects_hash_drift_and_directed_cycle services/aos-api/tests/aip/test_w2c_contracts.py::test_review_return_appends_one_queued_attempt_and_preserves_old_attempt",
+    "targetedResult": "2 passed, 7 warnings",
+    "broaderCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_w2c_contracts.py services/aos-api/tests/aip/test_aip1_taor_runtime.py",
+    "broaderResult": "13 passed, 7 warnings",
+    "interpretation": "current tests prove append-only return and base TAOR behavior separately but do not cover the critical succeeded-attempt then queued-return integration path"
+  },
+  "hashes": {
+    "productionContractStore": "a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708",
+    "productionContracts": "d89d8c6e2076360c41260fa1a43e076c281f5ba2760d4e74f6670f6327ab3d11",
+    "productionContractRouter": "f8fca466f6f3c03c467eff7f1189f0f0cb8e412882be27010bd14d48482dceaf",
+    "taskStore": "71f0dc1fdcd3da9882d5278e875ba731fb833e1362b04af02d06dd51322d1a1a",
+    "taorLoop": "1037227a17fa7e4d8714a1d7ed1cf7dcc8fa04c9d3800a978507027f99a11456",
+    "lineageService": "0c8e31b32ea5fdc5bdb199ce30b7d6f58dd02b0b7ffbbad44821fe89242bf94e",
+    "w2cTests": "004c8c24b1de511228297ae61823020d035cc4c79131c1d0f5e56fd69446a9e4"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "productionDatabaseRead": false,
+    "productionDatabaseWrite": false,
+    "syntheticTestDatabaseMutatedByTests": true,
+    "realTenantMutation": false,
+    "aipW2D3FilesTouched": false,
+    "migrationLeaseAcquired": false
+  },
+  "nextGate": "AIP must close latest-attempt dispatch, downstream invalidation, rule authority and auditable resolution lineage after W4-03 before Workshop W4-04 implementation can be authorized."
+}

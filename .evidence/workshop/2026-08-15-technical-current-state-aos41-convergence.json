@@ -1,0 +1,31 @@
+{
+  "schema": "aos-workshop-technical-current-state-convergence/v1",
+  "taskId": "workshop-technical-current-state-aos41-convergence-20260815",
+  "recordedAt": "2026-08-15T13:40:30+08:00",
+  "authorityRevision": "AOS-000041",
+  "phase": "BIND1_4_CANONICAL_API_OPENAPI_GREEN_WITH_WARNINGS",
+  "currentFacts": {
+    "bindingApiOpenApi": "GREEN_WITH_WARNINGS",
+    "realCapabilityBindings": 0,
+    "runnableAgents": 0,
+    "nextGate": "BIND1_5_STRICT_SDK_UI_BROWSER",
+    "dataLatest": "7 succeeded / 5 failed",
+    "P03": "PIPELINE_EXECUTOR_FAILED",
+    "P06": "succeeded / rowsWritten=920"
+  },
+  "documents": {
+    "creator": "replace BIND1-0 current wording with BIND1-4 and preserve assignee blocked",
+    "media": "replace zero-all BIND1-0 wording with zero operational binding/provider/eval and preserve aggregate blockers",
+    "analyst": "advance current authority from BIND1-3 to BIND1-4 without treating Binding API as Analyst authority",
+    "pricing": "replace stale P03 PIPELINE_NOT_FOUND with current executor failure and preserve price-domain blockers",
+    "formalReview": "separate the original review-time non-authorization fact from the later W1-W8 continuous implementation authorization"
+  },
+  "decision": "CURRENT_STATE_ALIGNED; NO_TASK_PROMOTION; NO_RUNTIME_OR_EXTERNAL_EFFECT",
+  "safety": {
+    "codeChanges": 0,
+    "visualChanges": 0,
+    "databaseWrites": 0,
+    "tenantChanges": 0,
+    "externalEffects": 0
+  }
+}

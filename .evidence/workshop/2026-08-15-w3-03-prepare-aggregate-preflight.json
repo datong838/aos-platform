@@ -1,0 +1,161 @@
+{
+  "schema": "aos-workshop-w3-prepare-aggregate-preflight/v1",
+  "taskId": "workshop-w3-03-prepare-aggregate-preflight-20260815",
+  "workItem": "W3-03",
+  "projectRevision": "AOS-000039",
+  "branch": "w2-workshop",
+  "head": "59d111e0207298821a1c81a02f6a7ccd9ab5f0b2",
+  "recordedAt": "2026-08-15T10:53:28+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "preparationStatus": "PREFLIGHT_GREEN",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W2-10, W3-01 and W3-02 are not GREEN; the committed baseline has common Brief, EvidenceBundle and ResponsibilityPlan authorities but has no ecommerce prepare aggregate, Evidence build-request authority or installed signed responsibility-profile resolver"
+  },
+  "authorityRefresh": {
+    "currentPhase": "BIND1_2_CAPABILITY_READINESS_SERVICE_GREEN_WITH_WARNINGS",
+    "completed": "CapabilityBinding exact readiness service, activation revalidation and ProviderInstance canonical correction",
+    "hardBoundary": "No Agent is runnable, no real CapabilityBinding exists and evaluated Skill r1 revisions remain immutable and unbindable",
+    "nextGate": "BIND1_3_SKILL_PUBLICATION_AND_BINDING_READINESS",
+    "interpretation": "BIND1_2 improves readiness truth but does not provide the eight production profiles, the responsibility resolver or the W3 prepare command"
+  },
+  "committedBaseline": {
+    "available": [
+      "TaskBrief create, revise, freeze, get and list PostgreSQL authority",
+      "EvidenceBundle create, get and list PostgreSQL authority for already selected exact evidence refs",
+      "EvalContract and ResponsibilityPlan common revision authorities",
+      "strict Web SDK foundations for common production contracts",
+      "ecommerce Workshop module-list and module-readiness read-only endpoints"
+    ],
+    "absent": [
+      "POST /v1/ecommerce-workshop/modules/{moduleId}/commands/prepare",
+      "ecommerceWorkshopPrepare OpenAPI operation and strict Web SDK parser",
+      "canonical EvidenceBuildRequest revision, lifecycle and readback",
+      "Evidence builder that resolves required facts and licensed sources without hidden provider work",
+      "installed signed responsibility-profile resolver and ResponsibilityRecommendation revision",
+      "atomic prepare orchestration Receipt with exact input and output refs",
+      "eight-module typed profile publication required by W3-02"
+    ]
+  },
+  "targetContract": {
+    "operation": {
+      "method": "POST",
+      "path": "/v1/ecommerce-workshop/modules/{moduleId}/commands/prepare",
+      "operationId": "ecommerceWorkshopPrepare",
+      "scopeSource": "authenticated Principal only",
+      "headers": [
+        "Idempotency-Key",
+        "If-Match when revising an existing Brief"
+      ]
+    },
+    "request": [
+      "moduleId and exact active Installation lock ref resolved server-side",
+      "commandId plus idempotency key and expected Brief version",
+      "new typed Brief spec or an existing draft TaskBrief exact ref",
+      "subject and object snapshot refs with purpose, marking and cutoff",
+      "exact installed Evidence-selection profile ref and required-facts profile ref",
+      "exact installed Responsibility profile ref",
+      "requested workload, output contract, risk class, budget ceiling and due-at without provider credentials"
+    ],
+    "response": [
+      "draft TaskBrief exact ref and semantic Diff",
+      "EvidenceBuildRequest exact ref with queued, blocked or satisfied readiness",
+      "zero or more already-canonical Evidence refs and explicit missing, conflict, uncertainty, freshness and license blockers",
+      "ResponsibilityRecommendation exact ref with coverage, uncovered slots, candidate assignee refs and readiness blockers",
+      "PreparationReceipt exact ref, replay marker and input-output count conservation",
+      "nextAllowedCommands where freeze is disabled until all exact prerequisites are reviewable"
+    ],
+    "ownership": {
+      "AIP_L0": [
+        "own TaskBrief, EvidenceBundle, EvalContract, ResponsibilityPlan and their revision authorities",
+        "own EvidenceBuildRequest lifecycle if it is common across domains",
+        "own Agent, Capability, Binding and assignee readiness truth"
+      ],
+      "Workshop_L1": [
+        "own the ecommerce prepare aggregate and typed profile interpretation",
+        "create or revise common authorities only through canonical AIP services",
+        "project blockers and recommendations without copying common objects into a second store"
+      ],
+      "Adapter_L2": [
+        "only report licensed source and provider capability readiness",
+        "perform no collection, generation, contact, publish, charge or external mutation during prepare"
+      ]
+    }
+  },
+  "semanticDecisions": [
+    "prepare may create or revise a draft TaskBrief but never freezes it",
+    "prepare creates an EvidenceBuildRequest; it must not falsely label the request as a complete EvidenceBundle",
+    "already canonical internal evidence may be selected without an external provider call, while missing facts remain explicit blockers",
+    "actual asynchronous or provider-backed Evidence building belongs to W4-01 and starts only through its own authorized execution path",
+    "responsibility output is a non-authoritative recommendation until a user or canonical policy creates or revises ResponsibilityPlan",
+    "prepare never creates Eval results, Approval, Lease, TaskRun, AgentRun, Handoff, Action, Provider Job or external side effect",
+    "same idempotency key and same request hash replays the same PreparationReceipt; a different hash conflicts",
+    "partial and unknown are never coerced to ready, and latest revisions are never substituted for exact refs"
+  ],
+  "zeroSideEffectInvariants": [
+    "providerInvocationCount equals 0",
+    "providerFee equals 0",
+    "taskRunCreatedCount equals 0",
+    "agentRunCreatedCount equals 0",
+    "actionOrHandoffCreatedCount equals 0",
+    "approvalOrExecutionLeaseCreatedCount equals 0",
+    "externalContactPublishMediaOrderShipmentPriceOrCustomerMutationCount equals 0",
+    "secret and protected contact values are absent from request, response, logs and Receipt",
+    "Brief, request and recommendation append revisions and never overwrite prior facts"
+  ],
+  "dependencyDecision": {
+    "W2_10": "NOT_GREEN",
+    "W3_01": "NOT_STARTED_PREPARATION_REFRESHED_HARD_GATE_BLOCKED",
+    "W3_02": "NOT_STARTED_PREPARATION_REFRESHED_HARD_GATE_BLOCKED",
+    "DEP_C0": "COMMON_REVISION_FOUNDATION_PRESENT_BUT_BUILD_REQUEST_AND_PROFILE_RESOLVER_INCOMPLETE",
+    "BIND1_2": "GREEN_WITH_WARNINGS_READINESS_TRUTH_ONLY",
+    "W3_03": "NOT_STARTED_PREFLIGHT_COMPLETE"
+  },
+  "requiredGreenEvidence": [
+    "W2-10 cumulative Contract, Store, API, Web, browser, security and tenant gate GREEN",
+    "W3-01 exact Agent Capability Handoff SDK and operational-readiness adapter GREEN",
+    "W3-02 eight installed signed production profiles and exact resolver GREEN",
+    "canonical EvidenceBuildRequest contract, Store, API, OpenAPI, strict SDK and lifecycle tests GREEN",
+    "ResponsibilityRecommendation or equivalent canonical recommendation contract and exact profile resolver GREEN",
+    "prepare atomicity, idempotency, restart readback, cross-tenant, stale, conflict, partial and unknown tests GREEN",
+    "org-org positive and dev-org isolation evidence proving every zero-side-effect invariant",
+    "current authority, memory, Git, Delivery Receipt and Lease revalidation immediately before coding"
+  ],
+  "candidateFilesWhenUnblocked": [
+    "services/aos-api/aos_api/ecommerce_workshop_contracts.py",
+    "services/aos-api/aos_api/ecommerce_workshop_prepare_service.py",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "services/aos-api/tests/test_ecommerce_workshop_prepare.py",
+    "apps/web/src/api/ecommerceWorkshop/contracts.ts",
+    "apps/web/src/api/ecommerceWorkshop/parser.ts",
+    "apps/web/src/api/ecommerceWorkshop/index.ts",
+    "apps/web/src/api/ecommerceWorkshop/prepare.test.ts"
+  ],
+  "sourceHashes": {
+    "apps/web/src/api/aipProductionContracts/index.ts": "035f8765dc86032293222396451d581771f4c94b86842fe4bf6446e17a4027c6",
+    "services/aos-api/aos_api/routers/aip_production_contracts.py": "f8fca466f6f3c03c467eff7f1189f0f0cb8e412882be27010bd14d48482dceaf",
+    "services/aos-api/aos_api/aip_production_contracts.py": "d89d8c6e2076360c41260fa1a43e076c281f5ba2760d4e74f6670f6327ab3d11",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "04c62fba6ee5d5eda6b47d9425eae7e73a04b321249ba16d98e337b5d0447b35",
+    "docs/07-领域读模型Command与错误契约.md": "d668bbbc9b3c5f9107e89932aa57545bdd8c659095b5186de13c6ce83b94c724",
+    "docs/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md": "9cdb835a0aa82bb44f657d41653117752f01a6c93bc06b69e8fec6ebc011bb58",
+    "docs/D-waves/00-工作台长任务开发计划总清单.md": "7f99a54508a756d6f775a050eddb79520cc3599962658f7cf633f1cb1cebf1ee"
+  },
+  "tests": {
+    "executed": false,
+    "reason": "this task freezes the live target contract and dependency facts only; no W3-03 runtime implementation exists",
+    "doesNotProve": [
+      "a callable prepare endpoint",
+      "an Evidence build request or completed EvidenceBundle",
+      "a responsibility-profile resolution",
+      "an operational assignee or runnable Agent",
+      "zero-side-effect runtime behavior"
+    ]
+  },
+  "next": "run two document review and remediation rounds, update the W3-03 ADR and D-waves evidence, and keep implementation blocked until every dependency is GREEN",
+  "safety": [
+    "read-only committed code, authority, plan, Git and shared-memory inspection only",
+    "no source implementation, database, tenant, provider, TaskRun, AgentRun, Handoff, Action or external mutation",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

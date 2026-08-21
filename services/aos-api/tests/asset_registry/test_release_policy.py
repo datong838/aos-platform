@@ -37,11 +37,13 @@ class Record:
     status: BundleVersionStatus
     evidence: list[BundleEvidence]
     artifacts: list[dict[str, object]]
+    persisted_manifest: dict[str, object] | None = None
 
 
 class Roots:
-    def __init__(self, root: TrustRoot) -> None:
+    def __init__(self, root: TrustRoot, private_key: Ed25519PrivateKey | None = None) -> None:
         self.root = root
+        self.private_key = private_key
         self.failure: Exception | None = None
 
     def get_trust_root(self, *, publisher: str, key_id: str) -> TrustRoot | None:
@@ -163,8 +165,38 @@ def _record() -> tuple[Record, Roots]:
             evidence=evidence,
             artifacts=[],
         ),
-        Roots(root),
+        Roots(root, private_key),
     )
+
+
+def test_snapshot_policy_accepts_only_signed_semantics_equivalent_legacy_manifest() -> None:
+    record, roots = _record()
+    assert roots.private_key is not None and record.signature is not None
+    persisted = record.manifest.model_dump(mode="json", by_alias=True, exclude_none=False)
+    persisted["spec"]["exports"].pop("knowledge")
+    descriptor = {"manifest": persisted, "artifacts": record.artifacts}
+    record.persisted_manifest = persisted
+    record.content_hash = canonical_sha256(descriptor)
+    record.signature = BundleSignature.model_validate({
+        **record.signature.model_dump(mode="python", by_alias=True),
+        "signature": base64.b64encode(roots.private_key.sign(canonical_json(descriptor))).decode("ascii"),
+    })
+    for index, evidence in enumerate(record.evidence):
+        payload = evidence.model_dump(mode="python", by_alias=True)
+        if evidence.type == BundleEvidenceType.CONTENT_HASH:
+            payload["artifactHash"] = record.content_hash
+        elif evidence.type == BundleEvidenceType.SIGNATURE_VERIFICATION:
+            payload["artifactHash"] = canonical_sha256(
+                record.signature.model_dump(mode="json", by_alias=True, exclude_none=False)
+            )
+        record.evidence[index] = BundleEvidence.model_validate(payload)
+
+    assert ReleasePolicy(trust_roots=roots).evaluate_snapshot_candidate(record, checked_at=NOW)
+
+    record.persisted_manifest = {**persisted, "kind": "DomainPack"}
+    with pytest.raises(AssetRegistryError) as caught:
+        ReleasePolicy(trust_roots=roots).evaluate_snapshot_candidate(record, checked_at=NOW)
+    assert caught.value.code == AssetRegistryErrorCode.MANIFEST_INVALID
 
 
 def test_release_policy_returns_stable_signature_and_evidence_revision() -> None:

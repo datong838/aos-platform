@@ -1,0 +1,49 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w2-catalog-logic-revision-ref-20260819",
+  "authorityRevision": "AOS-000146",
+  "branch": "w2-workshop",
+  "baseCommit": "ff274fb33c85777071d24bddf3227482f435cad3",
+  "outcome": "CODE_CONTROL_GREEN_BROWSER_INSTANCE_UNAVAILABLE",
+  "changedFiles": [
+    "apps/web/src/api/aipAgentControl/contracts.ts",
+    "apps/web/src/api/aipAgentControl/parser.ts",
+    "apps/web/src/api/aipAgentControl/parser.test.ts",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/109-W2-Catalog-logicRevisionRef严格契约兼容ADR.md"
+  ],
+  "sha256": {
+    "apps/web/src/api/aipAgentControl/contracts.ts": {
+      "before": "0d8775254d011517641bb3f5732588f8f39797124c7f25b15abadd7f36b9ec5f",
+      "after": "814488d326a51db902411ca79fd2566b13b6f4b2ee9bc2e029fdd4c133ee39a4"
+    },
+    "apps/web/src/api/aipAgentControl/parser.ts": {
+      "before": "abbbe24598ce1eb453b82faa02a683be840649ccac886b7f04ca1dff3e871974",
+      "after": "8cd16dea3a7ce01c9b67505226ba384241362b773e06e20d638f5de8a1236f33"
+    },
+    "apps/web/src/api/aipAgentControl/parser.test.ts": {
+      "before": "d2b5639453c18142a877099bed053fcb8556c139a4e4db760b4fbdc471670059",
+      "after": "6182950a6003a52347aed8b065171c1a870cea3dbb82aaf8ca456ee3fbc34e8a"
+    }
+  },
+  "verification": [
+    {"name": "red parser contract", "result": "EXPECTED_FAIL", "detail": "8 passed, 2 failed before implementation"},
+    {"name": "targeted parser", "result": "GREEN", "detail": "10/10"},
+    {"name": "parser and CanonicalAgentRegistryPage", "result": "GREEN", "detail": "11/11"},
+    {"name": "web full regression", "result": "GREEN", "detail": "192 files, 1952 tests"},
+    {"name": "TypeScript", "result": "GREEN", "detail": "tsc --noEmit -p tsconfig.json"},
+    {"name": "production build", "result": "GREEN", "detail": "Vite build, 300 modules transformed"},
+    {"name": "diff check", "result": "GREEN", "detail": "git diff --check"},
+    {"name": "built-in browser", "result": "BLOCKED", "detail": "runtime initialized, no browser instance available, browser list empty"}
+  ],
+  "invariants": {
+    "tenantValidationPreserved": true,
+    "hashValidationPreserved": true,
+    "unknownFieldFailClosedPreserved": true,
+    "installRunnableCountZeroPreserved": true,
+    "migrationPerformed": false,
+    "realBusinessDataWritten": false,
+    "authorityOrPrimeUpdated": false,
+    "browserSideEffectPerformed": false
+  },
+  "remainingGate": "Read-only browser acceptance when an in-app browser instance is available"
+}

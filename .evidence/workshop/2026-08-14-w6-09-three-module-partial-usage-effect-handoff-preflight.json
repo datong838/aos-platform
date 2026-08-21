@@ -1,0 +1,116 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w6-09-three-module-partial-usage-effect-handoff-preflight-20260814",
+  "authorityRevision": "AOS-000029",
+  "repositoryRevision": "96e9212a9ca99a1551685d11e1917d940603ad35",
+  "result": "W6_09_THREE_MODULE_PARTIAL_USAGE_EFFECT_HANDOFF_PREFLIGHT_FACTS_FROZEN",
+  "decision": "GENERIC_USAGE_AND_HANDOFF_AUTHORITIES_GREEN_THREE_MODULE_EFFECT_CLOSURE_BLOCKED",
+  "foundations": [
+    "AIP has a tenant-scoped one-time Handoff authority with exact Task, TaskRun and AgentInstance refs, bearer-token hashing, expiry, receiver reauthorization, CAS terminal transitions and append-only events",
+    "AIP has canonical provider Usage Receipt, Adjustment and exact-subject Attribution contracts with persistent authority, deterministic provider-receipt identity and unknown-without-fabricated-zero semantics",
+    "the growth solution pack declares EffectReviewRef and a policy-level EffectReviewSchema requiring metric definitions, evidence refs, assumptions and uncertainty",
+    "the Workshop shell and evidence client preserve partial and unknown as explicit states rather than replacing missing values with zero"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W6-THREE-MODULE-UPSTREAM",
+      "severity": "P0",
+      "finding": "W6-03 through W6-08 are all unchecked, so there are no completed creator, price or customer batch/action outcomes on which W6-09 can build partial, usage, effect or handoff closure."
+    },
+    {
+      "id": "DEP-W6-THREE-MODULE-PARTIAL-CONTRACT",
+      "severity": "P0",
+      "finding": "no shared item outcome algebra, immutable attempt identity, count-conservation reducer, cancellation semantics or domain mapping normalizes creator, price and customer eligible/accepted/applied/failed/unknown/reconciled/skipped states. Generic UI partial is only a display state."
+    },
+    {
+      "id": "DEP-W6-THREE-MODULE-USAGE-BRIDGE",
+      "severity": "P0",
+      "finding": "Usage authority exists, but current provider bridge is attached to the model/LLM path; no automatic bridge binds creator discovery/action, price research/action or customer channel Action provider receipts to canonical lineage and batch item attempts."
+    },
+    {
+      "id": "DEP-W6-THREE-MODULE-USAGE-ATTRIBUTION",
+      "severity": "P0",
+      "finding": "no three-domain attribution policy maps measured, estimated or unknown usage to exact Module, Batch, item, TaskRun, AgentRun, capability, account, budget and tenant refs with weights, adjustments and settlement reconciliation."
+    },
+    {
+      "id": "DEP-W6-EFFECT-REVIEW-AUTHORITY",
+      "severity": "P0",
+      "finding": "EffectReviewRef and EffectReviewSchema are declared assets only; no canonical EffectReview contract instance, PostgreSQL store, service, API, revision lifecycle, RLS, CAS or Receipt authority exists."
+    },
+    {
+      "id": "DEP-W6-EFFECT-MATURITY-POLICY",
+      "severity": "P0",
+      "finding": "no versioned maturity-window policy defines eligible observation sources, event-time cutoff, attribution window, late data, minimum sample, baseline/control, censoring, freshness, confidence, re-evaluation schedule or invalidation semantics per domain. The unrelated platform maturity-level page is not effect maturity."
+    },
+    {
+      "id": "DEP-W6-EFFECT-EVIDENCE-ATTRIBUTION",
+      "severity": "P0",
+      "finding": "no compiler binds action and outcome Receipts, Observation originals, metric definitions, assumptions, uncertainty, attribution method and ImpactPreview to a review; correlation cannot be promoted to causation or durable memory without these refs."
+    },
+    {
+      "id": "DEP-W6-MODULE-HANDOFF-BRIDGE",
+      "severity": "P0",
+      "finding": "generic Handoff is AgentInstance-to-AgentInstance inside a canonical TaskRun; no Module/Case/Batch-to-TaskRun bridge, purpose-to-policy compiler or domain command maps creator, price and customer scoped refs into the generic envelope."
+    },
+    {
+      "id": "DEP-W6-MODULE-HANDOFF-DECISIONS",
+      "severity": "P0",
+      "finding": "the generic Handoff lifecycle supports issue, consume, revoke and expire, but no accept, reject, request-more, requestedOutcome, return Receipt or EffectReview feedback contract exists for cross-Module collaboration."
+    },
+    {
+      "id": "DEP-W6-THREE-MODULE-CLOSURE-READ-MODEL",
+      "severity": "P1",
+      "finding": "no creator, price or customer business view exposes item partial conservation, measured/estimated/unknown Usage, effect maturity countdown and evidence, Handoff decision timeline or request-more intervention."
+    },
+    {
+      "id": "DEP-W6-THREE-MODULE-CLOSURE-GATES",
+      "severity": "P0",
+      "finding": "W5 and W6-03 through W6-08 are not GREEN, production adapters are absent and no real outcome cohort exists; operational effect or handoff closure cannot be claimed."
+    }
+  ],
+  "staticVerification": {
+    "genericHandoffAuthorityFound": true,
+    "genericUsageAuthorityFound": true,
+    "effectReviewSchemaAssetFound": true,
+    "effectReviewRuntimeAuthoritiesFound": 0,
+    "threeModulePartialReducersFound": 0,
+    "threeModuleUsageBridgesFound": 0,
+    "effectMaturityPolicyAuthoritiesFound": 0,
+    "moduleHandoffBridgesFound": 0,
+    "moduleHandoffDecisionLifecyclesFound": 0,
+    "threeModuleClosureBusinessViewsFound": 0
+  },
+  "verification": {
+    "backendCommand": "services/aos-api/.venv/bin/pytest -q services/aos-api/tests/aip/test_aip6_capability_run_handoff.py services/aos-api/tests/aip/test_aip_telemetry_usage_service.py services/aos-api/tests/aip/test_aip7_provider_usage_bridge.py services/aos-api/tests/aip/test_aip_telemetry_usage_api.py",
+    "backendResult": "18 tests passed",
+    "frontendCommand": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/api/aipEvidence/client.test.ts src/components/workshop/AsyncStateBoundary.test.tsx src/components/workshop/EcommerceWorkshopShell.test.tsx",
+    "frontendResult": "3 files and 20 tests passed",
+    "interpretation": "generic one-time Handoff, Usage Receipt and partial-display foundations are stable, while three-domain item closure, automatic Usage binding, EffectReview authority and maturity windows are absent"
+  },
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_handoff_service.py": "b2d5d227d264ad7e94053464aa4dca194ad33322c50a549808ab727c98d51d1d",
+    "services/aos-api/aos_api/aip_telemetry_usage_service.py": "6e28fb10a6eadd2f0138178cbd5a3a347fe2c3bf7ccea54561c6d13fe12a2f15",
+    "services/aos-api/aos_api/aip_provider_usage_bridge.py": "2ec258b2edb7dc164cfeafb56a1f06c7e6cd47389a7544393c314669460ee4ba",
+    "services/aos-api/aos_api/aip_cost_attribution_service.py": "ab9ed62b8e57e7f4a28a478d8bacd32a349e524d6843102b9758bdb550a88f7f",
+    "services/aos-api/aos_api/aip_solution_pack_publisher.py": "163901ede0dde98166dd65a72dc0502b664e5b938965dac6848b9dded446b279",
+    "bundles/solutions/ecommerce-growth/content/policies/aip6-runtime-policies.json": "2ff91b4c0b34906fcc18b40a467cb786835d6168a6301f8abc9647476417cd4f",
+    "bundles/solutions/ecommerce-growth/content/schemas/aip6-contribution-schemas.json": "c3e4f9503222fed59eb150f6ac89b3fb49991123f15699fb36c9702ab35048b7",
+    "apps/web/src/api/aipEvidence/contracts.ts": "0da26b062f0260c76b8bb83378cfb3bf50c5720b720c851413420aba5adf2951",
+    "apps/web/src/components/workshop/AsyncStateBoundary.tsx": "cc4deb37c2dec4d4f72a898fa2c52c592121268cafefe669c85a70c8a7a272dd",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/13-达人邀约技术方案.md": "f878a15ad8b7117d53a05ab738a75ef39be6b3ec5273939f6b361e29c22378a7",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/16-价格治理技术方案.md": "16222161386a4eae6b11d4064b04053f9be4c3b568738c44dd07c85d20acd996",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/17-客户关系技术方案.md": "ee14a41f708ba8ac394b44aabf4bf079f906fa69459ff00cd5e4f391998eaa71",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md": "4daf90f173d60aa7f0a678f42a6b8c3fe1b3faeaa7a6c2b163489e458ce48d24"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "customerDataRead": false,
+    "externalProviderEffect": false,
+    "externalChannelEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "aos-workshop-w2-readmodel-current-state-convergence/v1",
+  "taskId": "workshop-w2-readmodel-current-state-aos41-convergence-20260815",
+  "recordedAt": "2026-08-15T13:45:00+08:00",
+  "authorityRevision": "AOS-000041",
+  "sourceEvidence": ".evidence/workshop/2026-08-15-w2-00-data-readiness-aos41-refresh.json",
+  "currentFacts": {
+    "latestSchedules": "7 succeeded / 5 failed",
+    "P03": "PIPELINE_EXECUTOR_FAILED",
+    "P05": "PIPELINE_EXECUTOR_FAILED",
+    "P06": "succeeded / rowsWritten=920",
+    "P07": "PIPELINE_EXECUTOR_FAILED",
+    "P08": "PIPELINE_NOT_FOUND",
+    "P12": "PIPELINE_NOT_FOUND",
+    "bindingApiOpenApi": "GREEN_WITH_WARNINGS",
+    "realBindingsAndRunnableAgents": 0
+  },
+  "affectedAdrs": ["W2-01", "W2-04", "W2-05", "W2-06", "W2-07", "W2-10"],
+  "decision": "CURRENT_FACTS_ALIGNED; ALL_RUNTIME_TASKS_REMAIN_NOT_STARTED_HARD_GATE_BLOCKED",
+  "safety": {
+    "codeChanges": 0,
+    "databaseWrites": 0,
+    "pipelineRunsTriggered": 0,
+    "externalEffects": 0
+  }
+}

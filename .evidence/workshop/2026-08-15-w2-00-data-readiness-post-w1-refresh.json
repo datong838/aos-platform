@@ -1,0 +1,109 @@
+{
+  "schema": "aos-workshop-w2-data-readiness-refresh/v1",
+  "taskId": "workshop-w2-00-data-readiness-refresh-20260815",
+  "observedAt": "2026-08-15T15:52:56+08:00",
+  "authorityRevision": "AOS-000041",
+  "mode": "PostgreSQL REPEATABLE READ READ ONLY; source and code contract inspection; no Pipeline or Schedule triggered",
+  "result": "W1_GREEN_DEP_DATA_RED_W2_00_NOT_STARTED_PROGRESS_7_OF_12",
+  "w1Gate": {
+    "status": "GREEN",
+    "implementationCommit": "32e17cda7ebe155f2962f77ceaa67d65cfaf123e",
+    "deliveryReceiptCommit": "64ad8d9c754126e9b38587e637061bb404f915b8"
+  },
+  "scheduleRunSnapshot": {
+    "totalRuns": 92,
+    "latestStartedAt": "2026-08-15T00:00:02.451829+00:00",
+    "latestSucceeded": 7,
+    "latestFailed": 5,
+    "succeeded": [
+      "P01-shop-qyh",
+      "P02-product-qyh",
+      "P04-category-qyh",
+      "P06-order-line-qyh",
+      "P09-weapp-qyh",
+      "P10-system-config-qyh",
+      "P11-product-review-qyh"
+    ],
+    "failedByLastRunCode": {
+      "PIPELINE_EXECUTOR_FAILED": [
+        "P03-product-sku-qyh",
+        "P05-order-qyh",
+        "P07-shipment-qyh"
+      ],
+      "PIPELINE_NOT_FOUND": [
+        "P08-customer-lite-qyh",
+        "P12-payment-qyh"
+      ]
+    },
+    "registrationNow": {
+      "registered": 12,
+      "expected": 12,
+      "interpretation": "P08 and P12 are now present in meta_pipeline, but their latest durable runs predate that registration and remain failed. Registration is not fresh execution success."
+    }
+  },
+  "queryProjection": {
+    "allTwelveCountsEqual": true,
+    "sourceTable": "ecom_object",
+    "canonicalQueryTable": "obj_instance",
+    "realCounts": {
+      "Shop": 1,
+      "Product": 57,
+      "ProductSku": 62,
+      "Category": 11,
+      "Order": 120,
+      "OrderLine": 230,
+      "Shipment": 19,
+      "CustomerLite": 53,
+      "Weapp": 3,
+      "SystemConfig": 39,
+      "ProductReview": 5,
+      "Payment": 206
+    },
+    "canarySourceRows": 0,
+    "canaryCanonicalQueryRows": 0
+  },
+  "contractReview": {
+    "P08": {
+      "status": "DRIFTED_BLOCKER",
+      "finding": "The declared mapping still exposes direct and quasi-identifying fields while to_customer_lite persists only memberLevel/status and the two drop policies disagree with the mapping. No single minimal contract exists."
+    },
+    "P10": {
+      "status": "SECRET_FLOW_BLOCKER",
+      "finding": "The declared mapping still includes raw value and claims no PII. The normalizer omits value from persisted properties, but the source-to-normalized-to-DLQ/Dataset/error-evidence exclusion contract remains unsealed."
+    },
+    "readinessEnvelope": {
+      "status": "MISSING",
+      "required": [
+        "sourceEventAt versus observedAt",
+        "projection cutoff",
+        "quality dimensions and issue refs",
+        "latest run ref and blocker refs",
+        "rowsWritten/source/projected reconciliation",
+        "masking, consent and retention refs"
+      ]
+    }
+  },
+  "dependencyDecision": {
+    "DEP-ADP(query)": "BASE_READ_PROJECTION_AVAILABLE_READINESS_ENVELOPE_NOT_YET_INTEGRATED",
+    "DEP-DATA": "RED",
+    "W2-00": "NOT_STARTED",
+    "canStartW2Runtime": false,
+    "reason": "W1 is now GREEN, but five latest schedules are failed and the P08/P10 plus canonical readiness-envelope gates remain open."
+  },
+  "remainingExitConditions": [
+    "fresh P03, P05 and P07 executor success or an approved audited degradation",
+    "fresh P08 and P12 success after current registration or an approved audited degradation",
+    "one minimal P08 contract across mapping, normalizer, schema, drop policy and query",
+    "P10 raw secret value proven absent from logs, DLQ, Dataset, error evidence and Workshop query",
+    "per-source freshness, quality, cutoff, reconciliation and blocker envelope",
+    "fresh org-org positive and dev-org zero-row canary evidence"
+  ],
+  "safety": {
+    "databaseWrites": 0,
+    "pipelineRunsTriggered": 0,
+    "scheduleChanges": 0,
+    "tenantObjectsChanged": 0,
+    "externalEffects": 0,
+    "w2RuntimeFilesChanged": 0
+  }
+}

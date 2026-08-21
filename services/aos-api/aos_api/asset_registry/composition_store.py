@@ -21,6 +21,7 @@ from aos_api.asset_registry.composition_contracts import (
     CompositionRequest,
     CurrentInstallationRef,
     RegistrySnapshot,
+    RegistrySnapshotCandidate,
     StoredCompositionLock,
 )
 from aos_api.asset_registry.errors import (
@@ -556,10 +557,38 @@ def _snapshot_from_json(value: Any) -> RegistrySnapshot:
     if not isinstance(value, dict):
         raise TypeError("registry snapshot must be an object")
     payload = deepcopy(value)
+    stored_hash = payload.get("snapshotHash")
+    raw_hash_payload = {
+        "schemaVersion": payload.get("schemaVersion"),
+        "candidates": payload.get("candidates"),
+    }
+    if not isinstance(stored_hash, str) or stored_hash != canonical_sha256(
+        raw_hash_payload
+    ):
+        raise ValueError("snapshotHash does not match persisted snapshot payload")
+
+    raw_candidates = payload.get("candidates")
+    if not isinstance(raw_candidates, list):
+        raise TypeError("registry snapshot candidates must be an array")
+    candidates = [
+        RegistrySnapshotCandidate.model_validate(item) for item in raw_candidates
+    ]
+    normalized_hash = canonical_sha256(
+        {
+            "schemaVersion": payload.get("schemaVersion"),
+            "candidates": [
+                item.model_dump(mode="json", by_alias=True, exclude_none=False)
+                for item in candidates
+            ],
+        }
+    )
+    payload["candidates"] = candidates
+    payload["snapshotHash"] = normalized_hash
     checked_at = payload.get("checkedAt")
     if isinstance(checked_at, str):
         payload["checkedAt"] = datetime.fromisoformat(checked_at)
-    return RegistrySnapshot.model_validate(payload)
+    validated = RegistrySnapshot.model_validate(payload)
+    return validated.model_copy(update={"snapshot_hash": stored_hash})
 
 
 def _resource_uuid(value: str) -> uuid.UUID:

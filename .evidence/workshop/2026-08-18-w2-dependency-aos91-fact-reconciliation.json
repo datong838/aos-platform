@@ -1,0 +1,64 @@
+{
+  "schema": "workshop-dependency-fact-reconciliation/v1",
+  "taskId": "workshop-w2-dependency-aos91-fact-reconciliation",
+  "authorityRevision": "AOS-000091",
+  "w2HeadBefore": "9291b55ea3e6dc994f316043cbbee96afddeb569",
+  "m1HeadReviewed": "730c1f61259532c3054376017503ad3de22c1c43",
+  "fileScope": [
+    {
+      "path": "107-W2-00-SourceReadinessEnvelope接入与m1合流施工准备ADR.md",
+      "preSha256": "6904fc99bfb463347761b46f70551ccdb707df5c415a3e7dd8e90421eeb22ac9",
+      "postSha256": "181b4232b3ae2a8d757ae1d1749cf88ffe20c9a469fb4239125c17f7a8da59af"
+    },
+    {
+      "path": "D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "169094e7628dc8892a2ba049d4969a5f8b44ceb8c2a882e18ff4a3b8b0101d0d",
+      "postSha256": "7be26d1a9248985728ba9186637c1bc8d99f9e35fbba980c1e4507aa76094609"
+    },
+    {
+      "path": "D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "02fd1916bb06ca7439a2fe5637eac4fb820848750b4e170f8673c99e7e416e7a",
+      "postSha256": "5e6f8f220740e233b13c2fc4eb82344b891484eba313c8e2c4b36d556e1033af"
+    }
+  ],
+  "memory": {
+    "status": "GREEN_WITH_WARNINGS",
+    "validate": "GREEN",
+    "canChangeState": true
+  },
+  "currentData": {
+    "succeeded": 9,
+    "total": 12,
+    "failed": [
+      "P01:PIPELINE_EXECUTOR_FAILED",
+      "P02:PIPELINE_EXECUTOR_FAILED",
+      "P05:PIPELINE_EXECUTOR_FAILED"
+    ],
+    "canarySourceCount": 0,
+    "canaryProjectionCount": 0
+  },
+  "sourceReadiness": {
+    "canonicalOwnerOnM1": "ABSENT",
+    "sameVersionEvidencePack": "ABSENT"
+  },
+  "authorization": {
+    "r2CodeControl": "GREEN",
+    "realStart": "NOT_AUTHORIZED",
+    "workshopDepAdpQueryHandoff": "PENDING"
+  },
+  "mergeDecision": {
+    "action": "NO_MERGE",
+    "reason": "changed-in-both conflicts remain and runtime dependency closure is absent"
+  },
+  "progress": {
+    "completed": 21,
+    "total": 96,
+    "w2_00": "NOT_STARTED",
+    "w2_00b": "BLOCKED"
+  },
+  "sideEffects": {
+    "businessCodeChanges": 0,
+    "databaseWrites": 0,
+    "providerCalls": 0
+  }
+}

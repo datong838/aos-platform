@@ -1,0 +1,16 @@
+{
+  "schema":"aos-workshop-shared-doc-ledger/v1","taskId":"workshop-w3-10-common-orchestration-doc-align-20260815","workItem":"W3-10","projectRevision":"AOS-000039","sourceCommit":"f3d9ea3","recordedAt":"2026-08-15T12:15:00+08:00",
+  "reviewRounds":[
+    {"round":1,"result":"PASS_AFTER_REMEDIATION","findings":["the cumulative gate lacked a release-bound five-layer ledger"],"closed":["froze Contract, Store, API, Web and Browser axes on one release"]},
+    {"round":2,"result":"PASS_AFTER_REMEDIATION","findings":["plan, generic tests or negative-only pages could be misused as completion evidence"],"closed":["froze org-org positive, dev-org negative and explicit forbidden substitutes"]}
+  ],
+  "files":[
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/06-安全租户可观测测试与回滚.md","preSha256":"b0217492177b6a905ae04997f6cd9f06a889f657d5ed49eaf6cf7e3ae08fc622","postSha256":"716b94a25c8f447f66626f7097459fb11845cf1c11415d5e1536bae47b291750"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/20-实施波次依赖门与交付清单.md","preSha256":"adc68d394e18bdcf639f67fc1ae44ec101630ccee5ab387cd39df16991235c25","postSha256":"de8a48ab13abfd85f81f03c5abc00d9901f9cb8a1b88c92af5bff1b6b0ea6062"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/98-W3-10公共编排五层累计门预检ADR.md","preSha256":null,"postSha256":"ffb6e406b7be995e7c040ef855c1aca41e643a25f4f57166252175da2af815e2"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"59b594c47dd337f0895c82abe032697b8a9a8cf553ab11216bab1ab327d4a5e8","postSha256":"8cca317d18ee40eff11bc1ebe03e52981de365526f323234c880966493d22b0b"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md","preSha256":"dbb6821a19656253d196a75b715872041e76767f702bc1a46eb4ed6495e4fc9e","postSha256":"ef3dae596cedc38046890bedac05108d44a2ec7a94fd58232aa38142bda33465"}
+  ],
+  "decision":{"plan":"REMEDIATED_GREEN","implementation":"NOT_STARTED","gate":"CUMULATIVE_GATE_RED","externalEffect":"NONE"},
+  "verification":["two review rounds passed","all post hashes match","nine upstream runtime items remain NOT_STARTED","no source, database, tenant, browser or external mutation"]
+}

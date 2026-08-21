@@ -1,0 +1,121 @@
+{
+  "schema": "aos-workshop-operational-readiness-release-decision-preflight/v1",
+  "taskId": "workshop-w8-12-operational-readiness-release-decision-preflight-20260815",
+  "workItem": "W8-12",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "head": "fa4dfa5e958c152f3238caa8138304615b64a61e",
+  "recordedAt": "2026-08-15T08:57:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "READINESS_AND_DECISION_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayPublish": false,
+    "releaseDecision": "NO_GO",
+    "reason": "W8-11 is not GREEN, product formal review is pending, and the user has not issued an approval bound to an exact release candidate"
+  },
+  "authorizationBoundary": {
+    "continuousDevelopmentAuthorization": "The 2026-08-14 W1-W8 authorization permits safe implementation work subject to every dependency and safety gate",
+    "publicationAuthorization": "ABSENT",
+    "rule": "development authorization is never interpreted as approval to publish, mutate a real tenant, enable production flags, or execute provider side effects",
+    "requiredApprovalBinding": [
+      "exact release candidate identity and evidence ledger",
+      "approved capability rollout scope and tenant or audience",
+      "approver identity authority and timestamp",
+      "accepted residual risks and expiry",
+      "rollout window stop conditions and rollback owner"
+    ]
+  },
+  "dependencyMatrix": [
+    {"dependency": "W8-11", "status": "HARD_GATE_BLOCKED"},
+    {"dependency": "product_formal_review_and_freeze", "status": "NOT_FROZEN"},
+    {"dependency": "exact_release_candidate", "status": "ABSENT"},
+    {"dependency": "capability_operational_readiness_receipts", "status": "ABSENT"},
+    {"dependency": "release_specific_user_approval", "status": "ABSENT"}
+  ],
+  "readinessDimensions": [
+    "contract schema API SDK and migration compatibility",
+    "Bundle signature lock Installation and configuration readiness",
+    "tenant RLS purpose consent policy secret PII and supply-chain safety",
+    "service queue provider adapter model capacity and external account readiness",
+    "eight Module browser accessibility and degraded-state honesty",
+    "Action Approval Lease Receipt unknown reconcile compensation and Usage closure",
+    "SLI SLO alert ownership on-call runbook drill backup restore rollback and fail-forward",
+    "support communication incident escalation audit retention and post-release measurement"
+  ],
+  "capabilityDecisionModel": {
+    "states": ["READY", "BLOCKED", "NOT_APPLICABLE"],
+    "rule": "readiness is decided per capability and risk tier; an aggregate label cannot hide a blocked external action or an unknown evidence column",
+    "notApplicableRule": "NOT_APPLICABLE requires scope, rationale, owner, approver and release-bound evidence",
+    "unknownRule": "missing, stale, mixed-revision or unverifiable evidence is BLOCKED, never READY",
+    "promotionRule": "a capability may be promoted only through its approved canary stages and never because another capability is READY"
+  },
+  "releaseDecisionRecord": [
+    "candidate and environment exact identity",
+    "capability-by-capability READY BLOCKED or NOT_APPLICABLE matrix",
+    "evidence cutoff and drift check",
+    "open incidents vulnerabilities unknown backlog and residual risks",
+    "maker checker approvers and explicit GO or NO_GO rationale",
+    "rollout cohorts Feature Flag plan observation windows and stop conditions",
+    "rollback fail-forward compensation data-recovery and owner contacts",
+    "communication support audit and post-release verification plan"
+  ],
+  "goConditions": [
+    "W8-11 cumulative gate is GREEN for the same immutable candidate",
+    "all in-scope high-risk capabilities are READY and critical or high blockers are zero",
+    "real positive tenant and negative isolation evidence are current without cross-tenant or secret exposure",
+    "external providers accounts budgets licenses policies and kill controls are operationally verified",
+    "release-specific approval is present and its scope exactly matches the candidate and rollout plan",
+    "rollback or fail-forward and incident response have named owners and current drill evidence"
+  ],
+  "automaticNoGo": [
+    "candidate drift or dirty unbound generated artifacts",
+    "missing or mixed-revision gate evidence",
+    "unknown external action outcome unreconciled above the approved risk boundary",
+    "tenant isolation security secret PII license or policy violation",
+    "missing release-specific approval or approval scope mismatch",
+    "unavailable kill rollback restore on-call or canonical authority readback"
+  ],
+  "postDecisionRules": [
+    "GO authorizes only the exact scope and stages recorded; it is not blanket authority",
+    "each rollout stage rereads canonical authority gates and may fail closed",
+    "NO_GO preserves artifacts and receipts and records the next admissible remediation action",
+    "approval expiry revocation candidate drift or new critical evidence invalidates GO",
+    "post-release verification records customer impact usage effect reconcile age and rollback disposition separately"
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "finding": "A single platform-level readiness label could hide blocked external effects",
+      "remediation": "made readiness capability- and risk-tier-specific with explicit BLOCKED and NOT_APPLICABLE semantics"
+    },
+    {
+      "round": 2,
+      "finding": "Continuous implementation authorization could be mistaken for release approval",
+      "remediation": "separated authorization types and required candidate-bound maker-checker approval plus expiry and stop conditions"
+    }
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "W8-11 and release-specific approval are absent; executing release operations would cross explicit safety and external-effect gates",
+    "doesNotProve": [
+      "operational readiness",
+      "production provider or tenant safety",
+      "release approval",
+      "successful rollout"
+    ]
+  },
+  "blockers": [
+    "product formal review and freeze are incomplete",
+    "W8-11 cumulative release gate is not GREEN",
+    "no exact release candidate or capability readiness ledger exists",
+    "no release-specific user approval exists"
+  ],
+  "next": "align the W8-12 operational readiness and release decision contract through two review rounds while preserving NO_GO and no external effect",
+  "safety": [
+    "no source migration database tenant browser provider flag publication or restore operation",
+    "no real release approval inferred from continuous development authorization",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

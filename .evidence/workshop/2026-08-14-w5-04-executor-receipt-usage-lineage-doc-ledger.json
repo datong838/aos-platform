@@ -1,0 +1,73 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w5-04-executor-receipt-usage-lineage-doc-ledger-20260814",
+  "authorityRevision": "AOS-000025",
+  "result": "W5_04_EXECUTOR_RECEIPT_USAGE_LINEAGE_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the prior plan did not close the crash window between consuming a Lease, calling a provider and appending a Receipt",
+        "ActionReceipt, AIP-4 UsageReceipt and lineage existed as separate authorities without an exact delivery join",
+        "provider output schema, redaction, complete content hash and governed evidence extraction were underspecified",
+        "provider applied, budget settled and lineage projected could be misread as one success state"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "DESIGN_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "durable ActionExecutionAttempt and dispatch outbox now bridge the non-atomic provider boundary without blind retries",
+        "ActionReceipt freezes actionBindingHash and all execution authorities while raw output is governed through a controlled Artifact",
+        "Usage and settlement preserve measured, estimated and unknown semantics and do not coerce missing cost to zero",
+        "deterministic lineage projection binds the complete controlled Receipt hash and exposes projection lag honestly",
+        "execution, settlement and lineage remain separate visible states",
+        "W5-04 remains unchecked until W5-03 and all named delivery-bridge dependencies are GREEN"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/03-TaskHandoff与Action闭环.md",
+      "preSha256": "bdda2b950c0b7aa727466dd23cb753f96968452d1df261610fcf1a7ddc1fc77e",
+      "postSha256": "97f46abc541b06fc443498d23f18c9500bb9b223ea1ccc9b20d9d3b8dd81e7a2"
+    },
+    {
+      "path": "12-工作台层技术方案/19-Adapter能力矩阵与降级策略.md",
+      "preSha256": "8af80df348dbe572772f51594c6b3b90f97259c8111b86a23828f5892368a788",
+      "postSha256": "10074926e18e81775b3453196ccd8e91ccda9a3a42f00c74d797aea5271f4419"
+    },
+    {
+      "path": "12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "6a96b6b22dec0dafe242dec95d3ff1a38dd9cf139298861d8e679e878643b5ec",
+      "postSha256": "144c3f25adce2b2a01173c738f3fa471dfa3c45e3bbb685cc4dc8f57f372a64a"
+    },
+    {
+      "path": "12-工作台层技术方案/44-W5-04-ExecutorReceiptUsageLineage交付桥预检ADR.md",
+      "preSha256": null,
+      "postSha256": "706a09f2225faa9841a8d76cc64527e8c5d68feec8b8cf4f1bbb3b511cdf6013"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "247a785052ee1a1d25e87437bbf2377ddb7a1304b3ea3085116c28e474b23944",
+      "postSha256": "44589a2fb63947c5ca00212dc4da0c02f57c3682ad5fc95c19687e35a3d0bccc"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w5-04-executor-receipt-usage-lineage-preflight.json",
+    "preflightCommit": "f1c887c4374e1938d629825ebbb0b162ad939526",
+    "w5ItemChecked": false,
+    "implementationAuthorized": false,
+    "externalEffectAuthorized": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false
+  }
+}

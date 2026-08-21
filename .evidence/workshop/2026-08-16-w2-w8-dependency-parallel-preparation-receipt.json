@@ -1,0 +1,70 @@
+{
+  "schema": "aos-workshop-preparation-receipt/v1",
+  "taskId": "workshop-w2-w8-dependency-parallel-preparation-20260816",
+  "recordedAt": "2026-08-16T09:23:11+08:00",
+  "branch": "w2-workshop",
+  "baselineSha": "b93dee9bff68acf673b33cdb24525351b99f5701",
+  "authorityRevision": "AOS-000056",
+  "result": "PREPARATION_GREEN_RUNTIME_IMPLEMENTATION_BLOCKED",
+  "scope": {
+    "codeChanged": false,
+    "migrationLeaseAcquired": false,
+    "databaseWritePerformed": false,
+    "externalEffectPerformed": false,
+    "authorityOrPrimeUpdated": false
+  },
+  "freshDependencyProbe": {
+    "command": "services/aos-api/.venv/bin/python scripts/long-task-watchdog/w2_data_fact_probe.py",
+    "succeeded": 10,
+    "total": 12,
+    "failed": [
+      {
+        "pipelineId": "P08-customer-lite-qyh",
+        "errorCode": "PIPELINE_EXECUTOR_FAILED",
+        "rowsWritten": 0
+      },
+      {
+        "pipelineId": "P12-payment-qyh",
+        "errorCode": "PIPELINE_NOT_FOUND",
+        "rowsWritten": 0
+      }
+    ],
+    "canary": {
+      "sourceCount": 0,
+      "projectionCount": 0
+    }
+  },
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "7401b53c0556feed16da5f7f3ed981e49e52a01c5ddb6e914964a8731c1d38ff",
+      "postSha256": "0af0dbb8c46de4816b03dde4c65463664f0e99e709789f92f30728b283f1b02b"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "eb7a1ad9a805d5b44b06be7e3bf0320f29c7c54dedbcbdedf7bd6e3b81ebc32a",
+      "postSha256": "0167b24a8a0a21c774aaf1bd3486c6ef35f4f58b05cbb422119bcff892ec2156"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/106-W2至W8依赖并行执行准备与冲突控制ADR.md",
+      "preSha256": null,
+      "postSha256": "0c43e9cc992af1631002c7faba36b80647cbf63b8e7287c6486bcc1b530839b4"
+    }
+  ],
+  "remediations": [
+    "Refreshed W2 data readiness from stale 7/12 to fresh 10/12 without closing W2-00",
+    "Corrected W3-06 parallel wording to preserve its W3-05 dependency",
+    "Aligned W4-02 through W4-08 item dependencies with the stronger W4 wave gate",
+    "Clarified continuous W1-W8 development authorization versus separate W8-12 release approval",
+    "Added file ownership, conflict, test, evidence and Task Receipt preparation matrices"
+  ],
+  "remainingBlockers": [
+    "P08 fresh succeeded run is absent",
+    "P12 fresh succeeded run is absent",
+    "P08/P10 privacy and public projection contract closure is absent",
+    "Operational query and exact AgentRun/CapabilityBinding/ModelRoute authority are absent",
+    "W2-02 remaining Stage/Responsibility/Handoff/Approval/Issue/Action axes are not ready"
+  ],
+  "nextTask": "W2-00",
+  "progress": "21/96"
+}

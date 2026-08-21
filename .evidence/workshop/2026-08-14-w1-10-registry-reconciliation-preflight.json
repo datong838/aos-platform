@@ -1,0 +1,80 @@
+{
+  "schema": "aos-workshop-registry-reconciliation-preflight/v1",
+  "taskId": "workshop-w1-10-registry-reconciliation-preflight-20260814",
+  "observedAt": "2026-08-14T15:34:31+08:00",
+  "mode": "repeatable-read/read-only",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "result": "EXACT_RECONCILIATION_PLAN_READY_REAL_EFFECT_NOT_AUTHORIZED",
+  "rawActivePointerCount": 5,
+  "trustedReplacementChain": [
+    {
+      "installationId": "56c200af-9308-4125-af02-1035100785dd",
+      "overlayRevision": "d3-qiyuehui-v1-full-stack",
+      "activeRevision": 5,
+      "role": "predecessor-shadowed-by-exact-child"
+    },
+    {
+      "installationId": "1286521e-6d6e-42b4-8aad-b5daaa1b01bb",
+      "overlayRevision": "d3-qiyuehui-v2-decision-tags",
+      "activeRevision": 5,
+      "role": "effective-leaf"
+    }
+  ],
+  "independentRootsToReconcile": [
+    "3a933345-cada-4d5f-b102-54c1f7ed2f03",
+    "ff465fdc-e442-44fb-b1dc-0afb7df18229",
+    "3cff5d44-524e-42a6-9681-c51aa0d9e1bd"
+  ],
+  "diagnosis": {
+    "effectiveInstallationCount": 4,
+    "resolvedBundleRowCount": 16,
+    "duplicateRootShape": "three independent v1 roots plus one v1-to-v2 exact replacement chain",
+    "integrityFailure": "four effective leaves repeatedly contribute the same Workshop Module identities",
+    "graphIntegrity": "no broken predecessor ref, sibling fork, self-cycle or lock-hash mismatch was observed"
+  },
+  "proposedCanonicalCommands": {
+    "operation": "POST /v1/bundle-installations/{installation_id}/uninstall",
+    "targets": 3,
+    "requirements": [
+      "fresh ETag and If-Match per target",
+      "unique Idempotency-Key per target",
+      "asset-installer or admin role",
+      "exact org-org/dev-project Principal scope",
+      "reason records historical duplicate-root reconciliation",
+      "one target per command and Receipt"
+    ],
+    "forbidden": [
+      "direct SQL pointer update",
+      "delete or rewrite of installation revision/event/lock history",
+      "uninstall of the trusted predecessor or current leaf",
+      "use of dev-org/dev-project as positive evidence"
+    ]
+  },
+  "expectedPostState": {
+    "totalInstallationCount": 17,
+    "rawActivePointerCount": 2,
+    "effectiveInstallationCount": 1,
+    "effectiveLeafInstallationId": "1286521e-6d6e-42b4-8aad-b5daaa1b01bb",
+    "newUninstallEventCount": 3,
+    "historicalRowsDeleted": 0,
+    "canaryInstallationCount": 0
+  },
+  "acceptance": [
+    "preflight exact refs and ETags still match immediately before each command",
+    "all three targets remain active roots and have no active replacement child",
+    "catalog returns exactly eight canonical Workshop Modules from one effective leaf",
+    "legacy routes replace only under the returned exact active lock",
+    "three viewports, keyboard, network, console and nine explicit states remain GREEN",
+    "Cron latest identity and count do not change",
+    "canary remains empty and no cross-tenant row changes"
+  ],
+  "rollbackBoundary": {
+    "sameInstallationReactivationSupported": false,
+    "reason": "uninstall is an append-only terminal transition under the current state machine",
+    "recovery": "a wrong reconciliation requires a new reviewed installation/replacement command; history remains auditable",
+    "authorization": "explicit real-effect authorization and Lease are required before execution"
+  }
+}

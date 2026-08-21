@@ -1,0 +1,91 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w5-07-real-canary-kill-preflight-20260814",
+  "authorityRevision": "AOS-000026",
+  "repositoryRevision": "6a0db601b333ac17088c90253ca7b816a63a4816",
+  "result": "W5_07_REAL_CANARY_KILL_PREFLIGHT_FACTS_FROZEN",
+  "decision": "CANARY_PROTOCOL_DESIGN_ALLOWED_REAL_EXECUTION_BLOCKED",
+  "implementedFoundation": [
+    "generic Action kill checks run before Lease acquisition and again immediately before Adapter execution",
+    "platform environment kill and tenant-scoped org, project or action-type guardrail rows fail closed",
+    "cross-tenant Proposal and ExecutionLease reads are tenant isolated in the existing Action tests",
+    "org-org/dev-project remains the only real target and dev-org/dev-project remains a negative isolation canary"
+  ],
+  "findings": [
+    {
+      "id": "DEP-CANARY-W5-PREREQUISITES",
+      "severity": "P0",
+      "finding": "W5-03 through W5-06 are not implemented and W5-00 through W5-02 remain blocked, so no exact low-risk Action chain is eligible for a real canary."
+    },
+    {
+      "id": "DEP-CANARY-PRODUCTION-ADAPTER",
+      "severity": "P0",
+      "finding": "the production source scan found zero ACTION_ADAPTERS registrations; every real Action execution currently fails closed with adapter unavailable."
+    },
+    {
+      "id": "DEP-CANARY-EXPLICIT-AUTHORIZATION",
+      "severity": "P0",
+      "finding": "a real external side effect requires a separate scoped canary authorization naming ActionType, account, object, volume, budget, time window, operator, approvers, stop conditions and compensation path."
+    },
+    {
+      "id": "DEP-CANARY-EXACT-SCOPE",
+      "severity": "P0",
+      "finding": "no approved one-object or tiny-batch R2 candidate, exact account, Adapter, Preview, budget reservation, recipient allowlist or harmless test object is currently frozen."
+    },
+    {
+      "id": "DEP-KILL-POLICY-AUTHORITY",
+      "severity": "P0",
+      "finding": "kill rows are mutable guardrails and the platform switch is an environment variable; there is no versioned CAS command, maker-checker change Receipt, expiry or exact policy snapshot."
+    },
+    {
+      "id": "DEP-KILL-ACCOUNT-ADAPTER-SCOPE",
+      "severity": "P0",
+      "finding": "kill enforcement has no account, Adapter revision, CapabilityBinding or provider-operation scope, which prevents isolating one compromised integration without broader or narrower ambiguity."
+    },
+    {
+      "id": "DEP-KILL-INFLIGHT-SEMANTICS",
+      "severity": "P0",
+      "finding": "kill is checked before the in-process Adapter call but no durable attempt heartbeat or dispatch fence defines what happens when kill changes after the check and while a provider request is in flight."
+    },
+    {
+      "id": "DEP-KILL-DRILL-RECEIPT",
+      "severity": "P1",
+      "finding": "there is no KillDrillPlan or immutable drill Receipt proving propagation latency, blocked new dispatches, treatment of in-flight attempts, reconcile completion and safe reset."
+    },
+    {
+      "id": "DEP-CANARY-OBSERVABILITY-EXIT",
+      "severity": "P1",
+      "finding": "no canary dashboard or exit gate jointly covers Attempt, provider outcome, Usage settlement, webhook backlog, lineage projection, budget, error rate, unknown age and kill propagation."
+    },
+    {
+      "id": "DEP-CANARY-COMPENSATION-DRILL",
+      "severity": "P1",
+      "finding": "rollback cannot erase an external effect; the canary needs a pre-approved W5-05 reconciliation and compensation or harmless no-op verification path before execution."
+    }
+  ],
+  "verification": {
+    "command": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip3b_action_execution.py::test_executor_separation_kill_switch_and_budget_fail_closed services/aos-api/tests/aip/test_aip3b_action_execution.py::test_budget_and_cross_tenant_lease_fail_closed",
+    "result": "2 passed, 7 warnings in 8.46s",
+    "productionAdapterRegistrationScan": "0 registrations in services/aos-api/aos_api; registry declaration only",
+    "realCanaryExecuted": false,
+    "interpretation": "generic kill and tenant isolation are stable partial foundations, while real canary authorization and operational controls remain blocked"
+  },
+  "canaryProtocol": [
+    "start only after W5-00 through W5-06 and the selected Adapter capability are individually GREEN",
+    "use org-org/dev-project only for the named real target; use dev-org/dev-project only for negative isolation and never as positive evidence",
+    "freeze one reversible or harmless low-risk allowlisted action, one exact account, one object or tiny batch, a maximum budget and a short time window",
+    "perform dryValidate and ImpactPreview, approval, Lease, execute, Receipt, Usage settlement, lineage and provider reread as one observed journey",
+    "arm and verify platform, tenant, account, Adapter and ActionType kill before the canary; drill a scoped kill with no blind retry",
+    "stop on any unknown, binding drift, budget drift, signature failure, webhook gap, settlement pending beyond SLA or lineage conflict",
+    "declare GREEN only with immutable receipts and explicit user acceptance; successful HTTP status or UI toast is insufficient"
+  ],
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

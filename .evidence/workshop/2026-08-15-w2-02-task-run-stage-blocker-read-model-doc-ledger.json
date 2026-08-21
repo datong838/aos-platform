@@ -1,0 +1,20 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w2-02-task-run-stage-blocker-read-model-doc-align-20260815",
+  "workItem": "W2-02",
+  "projectRevision": "AOS-000035",
+  "sourceCommit": "b7ca69a7f08dbc3eb429b6321f0ec33cb6be1f62",
+  "recordedAt": "2026-08-15T09:18:00+08:00",
+  "reviewRounds": [
+    {"round": 1, "result": "PASS_AFTER_REMEDIATION", "closed": ["separated Task Run Step Stage and Agent readiness axes", "added attempt and count conservation", "defined typed blockers and one cutoff denominator"]},
+    {"round": 2, "result": "PASS", "closed": ["identified weak TaskTimeline collections and missing stable cursor", "separated production Stage from Asset Integration Stage", "kept W2 strictly read-only without run controls"]}
+  ],
+  "files": [
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md", "preSha256": "8cbe715dd3392e7dfe1cc192c9de7dc99bbcd5be805aebf8ab1bc0bda684158d", "postSha256": "ab061acac729f91a1e91109ab09c7cec983863ee4ae36857153d49f7426836e9"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/10-日常任务总控技术方案.md", "preSha256": "d0bd5edf63e280f843479b10544f99e8f4af6a81eeab0e632bfd250803dbd77d", "postSha256": "555d463ec7f36a9436e11df9202997f3b8b42d731d201139f6eb5c9508276c20"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md", "preSha256": "a6edc7f7cba97a3629339359fe986b3783b045860fbeb72a113f7fdd9b208ed1", "postSha256": "098965ad4a00d763a12623a93bf0c6e9eeff3d163dc7cf26d0fe9bb4f5961f5e"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/83-W2-02-TaskRunStageBlocker日常总控只读模型预检ADR.md", "preSha256": null, "postSha256": "e2c5f7997f37ecf2784f7aef1cccf2fecb1fb53e2219b78cec604bff8dff7581"}
+  ],
+  "decision": {"contract": "APPROVED", "implementation": "NOT_STARTED", "dependency": "HARD_GATE_BLOCKED", "mode": "READ_ONLY", "externalEffect": "NONE"},
+  "verification": ["two review rounds passed", "post hashes match", "W2-02 remains unchecked", "no Task Run control or second task authority was introduced"]
+}

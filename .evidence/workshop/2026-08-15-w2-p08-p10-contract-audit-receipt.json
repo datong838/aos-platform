@@ -1,0 +1,114 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-w2-p08-p10-contract-audit-20260815",
+  "authorityRevision": "AOS-000045",
+  "branch": "w2-workshop",
+  "baseHead": "5e3628fbcbdcc4300fccd5095b4e52c227dc4d8a",
+  "decision": "P08_P10_EXACT_SENSITIVE_FLOW_CONTRACT_READY_RUNTIME_REMEDIATION_REQUIRED",
+  "freshDataProbe": {
+    "latestRunSucceeded": 7,
+    "latestRunTotal": 12,
+    "failedPipelines": [
+      "P03-product-sku-qyh",
+      "P05-order-qyh",
+      "P07-shipment-qyh",
+      "P08-customer-lite-qyh",
+      "P12-payment-qyh"
+    ],
+    "registeredPipelines": 12,
+    "canarySourceCount": 0,
+    "canaryProjectionCount": 0,
+    "databaseMutation": false
+  },
+  "reviewedCodeSha256": {
+    "services/aos-api/aos_api/ec_source_adapter.py": "4e1a94e932594dd5c193880fa22831556fa4b72f9fedb2241d3933661bfa6be3",
+    "services/aos-api/aos_api/ec_normalizer.py": "a242f5479c80cdd87d263f8e6b48739616a7476c000ccf236cbf21278fcab814",
+    "services/aos-api/aos_api/ec_live_executor.py": "c9e6e740536daca84c1234a72d0feadd3b2109bba217ebf20142f88d7e028512",
+    "services/aos-api/aos_api/phase5_pipeline_engine.py": "6d0e2d6f35709489fec01c1123077e551d56c2d749149d0ab141c4f72e6a7701",
+    "services/aos-api/tests/test_ec_d1_5_p08_pipeline.py": "a91e508a92357cae2f7fbd34579f3661eeddb2b4a5721b76da0d11fba30aa954",
+    "services/aos-api/tests/test_ec_d4_p10_system_config.py": "e61353007a16bb9f2f0a3d69b2648d8365b204efc88ab277f6271660915966a4"
+  },
+  "reviewedAssetSha256": {
+    "bundles/platforms/ecommerce-niushop/content/mappings/p08-customer-lite.yaml": "9d35d293f9e2f73701f7c337413d0bb2862853d12d70bb08317bdfa9497c8093",
+    "bundles/platforms/ecommerce-niushop/content/mappings/p10-system-config.yaml": "48ea67edd560eee943058778cf43642c3ddc39f8752fa3baaf0fed56d1044301",
+    "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+  },
+  "confirmedFindings": [
+    "P08 mapping declares identifying fields beyond the canonical CustomerLite minimum",
+    "P08 source drop uses target name avatar while the mapped source field is headimg",
+    "Normalizer copies raw source rows before adding canonical properties",
+    "P08 normalized top-level retains username, email, headimg, realname, birthday, address and full_address in a deterministic sentinel smoke",
+    "P10 SourceAdapter has no ns_config drop or allowlist and the mapping declares raw value",
+    "P10 normalized top-level retains raw value while properties omit it",
+    "the authenticated trial-run API returns PipelineEngine output_rows without a dedicated disclosure projection",
+    "Dataset metadata/history currently persists counts and metadata rather than row payload, which must remain regression-locked"
+  ],
+  "deterministicSentinelSmoke": {
+    "realCustomerDataUsed": false,
+    "p08TopLevelSensitiveKeys": [
+      "address",
+      "birthday",
+      "email",
+      "full_address",
+      "headimg",
+      "realname",
+      "username"
+    ],
+    "p08PropertyKeys": [
+      "memberLevel",
+      "status"
+    ],
+    "p10ValueAtTopLevel": true,
+    "p10ValueInProperties": false
+  },
+  "currentTestBaseline": {
+    "command": "pytest -q test_ec_d1_5_p08_pipeline.py test_ec_d4_p10_system_config.py",
+    "passed": 18,
+    "failed": 6,
+    "failureClassification": {
+      "stalePymysqlMockBoundary": 4,
+      "forbiddenSampleInputFallbackDependency": 2
+    },
+    "realMySqlRequiredForUnitRemediation": false,
+    "sampleInputFallbackMayBeRestored": false
+  },
+  "frozenRemediation": [
+    "P08 source-column and public-projection allowlists replace blacklist-only filtering",
+    "P08 canonical status and timestamp source semantics become explicit and fail closed on unknown",
+    "P10 value becomes never-read and never-return with no SELECT-star fallback",
+    "Normalizer and executor assert protected fields are absent before public serialization",
+    "trial-run and preview return dedicated policy-governed public DTOs rather than internal output_rows",
+    "Dataset, DLQ, log, error, Receipt and hash surfaces receive zero-sensitive sentinel tests"
+  ],
+  "externalArtifacts": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/28-W2只读基座数据源Readiness预审与开工门.md",
+      "preSha256": "5b268ddd13ae72250b100154d74782651351b39358de1c757d052ac0c8f2eff8",
+      "postSha256": "f88ecd970c60f5af492138406d680ad9e7d9a7d8a15c1bc31fbca781b30fd6a4"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "cb0d206dfdec64151e612a0932566fc187a19762c0082bfc676d1e43eabb892f",
+      "postSha256": "f0b62e1c07190122eb90ad930c4c2216a58a886f8e4f24daf753d6ae5095c7c6"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "3be2c366efd0d5960b87ff4e1da712cee038c45d03ce0b7ce04df3231954e25a",
+      "postSha256": "69d6a6c38f2d20309fe6b2639162249d7177650e80cf367124e8840173e13c81"
+    }
+  ],
+  "safety": {
+    "businessCodeChanged": false,
+    "pipelineTriggered": false,
+    "realTenantMutated": false,
+    "realCustomerValuesRead": false,
+    "aipWorktreeRead": false
+  },
+  "progress": {
+    "completedTasks": 21,
+    "totalTasks": 96,
+    "w2Completed": 0,
+    "w2Total": 11,
+    "status": "DEP_DATA_RED_DEP_ADP_OPERATIONAL_QUERY_RED"
+  }
+}

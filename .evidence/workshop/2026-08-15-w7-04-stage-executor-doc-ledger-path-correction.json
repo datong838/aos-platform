@@ -1,0 +1,37 @@
+{
+  "schema": "aos-workshop-evidence-correction/v1",
+  "taskId": "workshop-w7-04-doc-ledger-path-correction-20260815",
+  "projectRevision": "AOS-000031",
+  "branch": "w2-workshop",
+  "recordedAt": "2026-08-15T06:40:00+08:00",
+  "supersededEvidenceRef": ".evidence/workshop/2026-08-15-w7-04-stage-executor-lease-checkpoint-takeover-doc-ledger.json",
+  "correction": {
+    "reason": "the W7-04 ledger recorded the product-loop checklist path although the W7-04 status line was written to the canonical long-task checklist",
+    "incorrectEntry": {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-PRODUCT-V2-产品方案循环整改与技术方案编制总清单.md",
+      "preSha256": "c0783fb2589ef5fc1943cb2d8bb097c87ad1e3aad97828ee7b13e7d6480cff66",
+      "postSha256": "f775c3e702275c31bad327ed4e51954ae412de62779ed4ed7d99ec17ecbca1f8"
+    },
+    "correctEntry": {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "c0783fb2589ef5fc1943cb2d8bb097c87ad1e3aad97828ee7b13e7d6480cff66",
+      "postSha256": "de8956f69ae3b6383f35c90e1b6ff01f4663d8c67831742ff82ad7c3ae4f98f5"
+    },
+    "currentLaterRevision": {
+      "sha256": "79a9bde9a780bda15f63a474b110bd0fc7a461c3e555a3a2d63bae4c10208fcd",
+      "reason": "W7-05 subsequently appended its own status to the same canonical checklist"
+    }
+  },
+  "impact": {
+    "w704ContractDecisionChanged": false,
+    "w704ImplementationStatusChanged": false,
+    "sourceOrRuntimeChanged": false,
+    "historicalEvidenceMutated": false
+  },
+  "verification": [
+    "W7-03 ledger proves the canonical checklist W7-04 pre-hash",
+    "W7-05 ledger proves the canonical checklist hash immediately before W7-05",
+    "the W7-04 line remains present in the canonical checklist",
+    "the old ledger and Delivery Receipt remain untouched"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w6-08-customer-start-frequency-revocation-contact-doc-ledger-20260814",
+  "authorityRevision": "AOS-000029",
+  "authorityRevisionAtCompletion": "AOS-000029",
+  "repositoryBaseRevision": "e3d7c2398fc66e426f48a439de7b6befc8a5c3da",
+  "result": "W6_08_CUSTOMER_START_FREQUENCY_REVOCATION_CONTACT_DOC_LEDGER_ALIGNED",
+  "decision": "TARGET_CONTRACT_REVIEWED_IMPLEMENTATION_BLOCKED_NO_EXTERNAL_EFFECT",
+  "documents": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/17-客户关系技术方案.md",
+      "preSha256": "531c7e0e1bc9569213296736320ec57cf140bd0c1a072f34742959f3f1246e29",
+      "postSha256": "ee14a41f708ba8ac394b44aabf4bf079f906fa69459ff00cd5e4f391998eaa71",
+      "change": "added explicit start linearization, consent-revocation ordering, one-time protected-contact permits, customer frequency reservation and item-level partial conservation"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/56-W6-08-客户显式Start频控撤回竞态与触达预检ADR.md",
+      "preSha256": null,
+      "postSha256": "1c51b91c1049f974c7e370d42a8674007fa27c5b4f40e4ecaf3efd5ae2acb15d",
+      "change": "added current findings, linearization decision, frequency semantics, thirteen blockers, exit conditions and two-round review"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "edcdde02639370a83e8e3b4cf0466c5cb1da698c2cf6a452fc259253c738a4de",
+      "postSha256": "4daf90f173d60aa7f0a678f42a6b8c3fe1b3faeaa7a6c2b163489e458ce48d24",
+      "change": "replaced the empty W6-08 evidence field with exact blockers, generic Action test evidence and explicit no-external-effect status"
+    }
+  ],
+  "review": {
+    "round1": "GREEN: start and consent withdrawal have a visible linearization rule; raw contact stays behind one-time permits; generic rate limits do not impersonate customer frequency policy",
+    "round2": "GREEN: durable Attempt, reservation settlement, item partial conservation, cancellation and unknown reconciliation are explicit; every blocker has an exit condition and W6-08 remains unchecked",
+    "implementationStatus": "NOT_STARTED",
+    "checklistStatus": "UNCHECKED",
+    "externalEffectStatus": "NONE"
+  },
+  "verification": {
+    "evidenceJson": "VALID",
+    "sourceHashes": "MATCH",
+    "backend": "29 tests passed",
+    "frontend": "4 files and 11 tests passed",
+    "visualHtml": "UNCHANGED"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "staticVisualHtmlChanged": false,
+    "databaseChanged": false,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "customerDataRead": false,
+    "customerDataMutation": false,
+    "externalChannelEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

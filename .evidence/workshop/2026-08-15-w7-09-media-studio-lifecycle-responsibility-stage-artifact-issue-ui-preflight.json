@@ -1,0 +1,88 @@
+{
+  "schema": "aos-workshop-preflight/v1",
+  "taskId": "workshop-w7-09-media-studio-lifecycle-ui-preflight-20260815",
+  "workItem": "W7-09",
+  "projectRevision": "AOS-000031",
+  "branch": "w2-workshop",
+  "head": "a9db5349734c7b38d47e494809f6385228840809",
+  "aipBaseline": "m1@5f80e62229f07836c11d280b891b48551febb038",
+  "recordedAt": "2026-08-15T07:18:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "foundationStatus": "CATALOG_SHELL_AND_GENERIC_AUTHORITY_VIEWS_GREEN",
+    "dependencyStatus": "IMPLEMENTATION_BLOCKED",
+    "externalEffect": "NONE",
+    "mayImplementNow": false,
+    "reason": "W7-03 through W7-08 are not GREEN and the installed media module exposes only the honest generic shell rather than a media lifecycle read model and governed commands"
+  },
+  "verifiedFoundations": [
+    "the installed module catalog resolves ecommerce.media-studio and its legacy redirect from the active installation projection",
+    "the generic Workshop shell has one H1 skip-link focus-mode cleanup explicit readiness and no sample business data fallback",
+    "installed navigation is projection-driven and does not inject a fixed eight-module menu",
+    "generic ProductionContractsPage exposes real empty and blocked states for Brief Evidence Eval Responsibility Stage ArtifactRelation and ReviewIssue",
+    "generic CanonicalTaskRunPanel restores server TaskRun state and exposes only status-valid controls",
+    "catalog bundle installation backend tests and focused frontend honesty tests are GREEN"
+  ],
+  "currentModuleManifest": {
+    "moduleId": "ecommerce.media-studio",
+    "route": "/workshop/media-studio",
+    "viewRefs": 0,
+    "productionContractRefs": 0,
+    "responsibilityTemplateRefs": 0,
+    "impactCalculatorRefs": 0,
+    "evalPackRefs": [
+      "content/evals/placeholder.json"
+    ],
+    "requiredAipFeatureCount": 11,
+    "meaning": "the module identity and dependency declaration exist but no executable or readable media product surface is delivered"
+  },
+  "blockers": [
+    "W7-03 through W7-08 are all unchecked and their canonical runtime authorities are not GREEN",
+    "EcommerceWorkshopHost passes no media-specific child view and therefore renders only the explicit W2 pending shell",
+    "no MediaStudio page component route-scoped read model SDK or command client exists",
+    "the module manifest has empty viewRefs productionContractRefs responsibilityTemplateRefs and impactCalculatorRefs plus a placeholder Eval pack",
+    "generic ProductionContractsPage is an administration surface and does not bind one frozen MediaProduction context or its exact module installation",
+    "generic CanonicalTaskRunPanel creates and approves a logic-graph Task and Plan from the UI and cannot be reused as the media ProductionStart combination gate",
+    "no media lifecycle projection joins prepare freeze confirm compile approve start run review return delivery publish reconcile and effect review",
+    "no responsibility matrix renders eight preserved slots merge decisions assignee capability readiness separation-of-duty or handoff receipts",
+    "no Stage timeline renders attempt lease heartbeat expiry fence checkpoint pause safe point takeover unknown reconcile reuse invalidation or late provider receipts",
+    "no Artifact family view renders immutable Master Variant supersedes derived-from conflicts selection approvals and execution receipts",
+    "no same-artifact four-gate view or ReviewIssue to ReturnDecision to new attempt path exists",
+    "no Capacity Budget Usage cancellation settlement or per-currency variance view exists",
+    "no quarantine provider readiness license malware or malicious-asset blocker view exists",
+    "no module-specific stale partial forbidden empty error and pagination consistency acceptance exists",
+    "no org-org positive browser evidence or dev-org isolation canary evidence exists"
+  ],
+  "targetBoundary": {
+    "composition": "one media-specific surface consumes canonical module view refs and does not fork Task Stage Artifact Review Usage or Action authorities",
+    "lifecycle": "a server-projected lifecycle timeline makes every transition blocker exact ref unknown and intervention visible",
+    "tabs": "production context responsibility and execution-delivery views share one frozen context without hiding cross-tab blockers",
+    "commands": "every command is server-authorized exact-version idempotent disabled with a reason and followed by authoritative re-read",
+    "responsibility": "all eight professional slots remain visible while assignment and agent count adapt per task",
+    "stage": "attempt lease fence checkpoint pause takeover provider unknown and reuse decisions are rendered as facts",
+    "artifact": "family topology current conflict selection gate approval and execution facts remain immutable and navigable",
+    "cost": "capacity budget usage cancellation settlement and currency variance are separate visible authorities",
+    "honesty": "missing dependencies render target-state or disabled states and never sample success data",
+    "accessibility": "one H1 semantic tabs keyboard focus status alerts and non-color state labels are mandatory"
+  },
+  "tests": [
+    {
+      "command": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/components/workshop/EcommerceWorkshopShell.test.tsx src/components/workshop/EcommerceWorkshopCatalogContext.test.tsx src/components/workshop/InstalledModuleNavigation.test.tsx src/pages/s2/ProductionContractsPage.test.tsx src/pages/s2/CanonicalTaskRunPanel.test.tsx src/api/ecommerceWorkshop/parser.test.ts src/interactionHonestyManifest.test.ts",
+      "cwd": "apps/web",
+      "result": "7 files and 20 tests passed"
+    },
+    {
+      "command": "UV_CACHE_DIR=/private/tmp/aos-workshop-uv-cache uv run --project services/aos-api pytest -q services/aos-api/tests/asset_registry/test_m5_ecommerce_bundle_contracts.py services/aos-api/tests/asset_registry/test_ecommerce_workshop_installation_projection.py services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py",
+      "result": "28 passed",
+      "warnings": "7 existing dependency and Pydantic warnings"
+    }
+  ],
+  "next": "align W7-09 media lifecycle UI contracts and checklist through two review rounds, retain the item unchecked, then preflight W7-10",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no browser or real tenant mutation",
+    "no provider or payment side effect",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w3-06-handoff-decision-doc-align-20260815",
+  "workItem": "W3-06",
+  "projectRevision": "AOS-000039",
+  "sourceCommit": "54fe1f4",
+  "recordedAt": "2026-08-15T11:34:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "the W3-01 ADR incorrectly listed reject and request-more as AipHandoffService operations",
+        "the common lifecycle still described Start as secretly compiling the TaskGraph"
+      ],
+      "closed": [
+        "separated issued, consumed, revoked and expired transport authority from domain decisions",
+        "aligned the production chain to prepare, Evidence Build, ProductionContext freeze, compile, Preview, Approval and start",
+        "kept all runtime items unchecked and blocked"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "request-more could otherwise be interpreted as reopening the already consumed envelope",
+        "accepted and rejected could otherwise be misread as execution completion or source cancellation"
+      ],
+      "closed": [
+        "required a newly authorized Envelope, new token and correlation or supersedes ref after request-more",
+        "made accepted mean scoped-context acceptance only",
+        "made rejected independent from source Task or TaskRun cancellation",
+        "froze one ModuleHandoffCompiler and append-only HandoffDecisionRevision ownership"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/03-TaskHandoff与Action闭环.md",
+      "preSha256": "90923421743af4c5e81a980c0aafa08f32163de9ea288a8592e89e69e17622c8",
+      "postSha256": "81e948d2f34c3b72ea904e6ef42db84fee45c6b13fb6b59f44490ead561cae55"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/29-W3-01唯一AgentCapabilityHandoff-SDK与ExactRef预检ADR.md",
+      "preSha256": "86e791e397a3db070afb704da8e076c571db66d2de7a9d2f4abe4cbedd0f9077",
+      "postSha256": "bc6da626582239395ae2cb169df985c91f3f6dfe2caa10d16c0601df47c46d6d"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/94-W3-06-HandoffEnvelope传输与领域Decision分层预检ADR.md",
+      "preSha256": null,
+      "postSha256": "bdad5ac3477221865ef67215e9c0b2f5fa796d02c165f9533e7d3640c22e0304"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "f34a1ba1ca104555378af23c6c9ed0b537de51a20c9a9766129b8171181f1bb6",
+      "postSha256": "d564052887ed26283c8a46fa2ef92d56652a41d5ffc203e5fd8618b1f9577a0e"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "ef884ca767c064afde7cd576f07808cc067e099f602fb7152ab582a6d7a2d74b",
+      "postSha256": "a0c04ea02d455482c6626c496371611652fed76231005045c038b9d231e4423e"
+    }
+  ],
+  "decision": {
+    "plan": "REMEDIATED_GREEN",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review and remediation rounds passed",
+    "all shared-document post hashes match",
+    "committed AipHandoffService operations match the corrected plan",
+    "transport and domain decision lifecycles are independently auditable",
+    "no source, database, tenant, Handoff runtime or external mutation was introduced"
+  ]
+}

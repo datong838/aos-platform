@@ -1,0 +1,83 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w3-08-cockpit-command-doc-align-20260815",
+  "workItem": "W3-08",
+  "projectRevision": "AOS-000039",
+  "sourceCommit": "5dde09b",
+  "recordedAt": "2026-08-15T11:55:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "prioritize, handoff or reassign and open-approval were presented as peer page actions without unique authority contracts",
+        "the cockpit could become a second task, ownership or approval state machine"
+      ],
+      "closed": [
+        "introduced immutable DispatchIntentRevision before canonical dispatch confirmation",
+        "introduced policy-constrained TaskPriorityDecisionRevision",
+        "introduced server-resolved ApprovalNavigationTarget",
+        "kept the cockpit as an intent composer and read-only projection"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "calling canonical APIs alone did not prevent optimistic owner, priority or approval success",
+        "view sorting could be confused with business priority and navigation could bypass destination authorization"
+      ],
+      "closed": [
+        "required Receipt-backed read-model refresh with zero optimistic authority mutation",
+        "separated ViewPreference from Task priority",
+        "required exact navigation target, destination reauthorization and focus return",
+        "kept navigation, approval decision and Action execution as separate visible states"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/10-日常任务总控技术方案.md",
+      "preSha256": "555d463ec7f36a9436e11df9202997f3b8b42d731d201139f6eb5c9508276c20",
+      "postSha256": "924992837009a1b2fbb17d7069a689ce17b8ac04c6bc30ca0b1929299f49ff7a"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/18-跨Module端到端场景技术方案.md",
+      "preSha256": "4562533a4cc238b3973c7a86dfbcab49a5167390cef96f95910bea98924f2e35",
+      "postSha256": "4e439f1b46a78dd229099282e33891996eac48f4bb95aa51186be5db1438fbf0"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/96-W3-08日常总控派发优先级与审批跳转命令分层预检ADR.md",
+      "preSha256": null,
+      "postSha256": "15f760a1ee47dd86703872a308d0fca77f14b882d57fb5eb304380e2cd8b58a6"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "3c872309501506cb8a60b036a7e813ffa6ef55cc367275ad12f94cbbd6b99920",
+      "postSha256": "9fb66d21fbb37d921474bad7c982d7af7c2504fec32a06e558d85443c578c0cf"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "b8db11afe074ea00b8ff68bcf6c948bd8b4cb4ccea175fcfae875ae19dad0cfc",
+      "postSha256": "8266f0be8097b2bb793bb5040b9367d17522bf019c47834f69aafb52b73f3047"
+    }
+  ],
+  "decision": {
+    "plan": "REMEDIATED_GREEN",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "externalFactReview": {
+    "observed": "AIP BIND1-3A delivery receipts added while authority remains AOS-000039",
+    "impact": "does not close W2-02, W3-05, W3-06, W3-07 or any W3-08 authority dependency",
+    "lease": "aip-bind1-3b is active but explicitly excludes w2 and this Workshop document scope"
+  },
+  "verification": [
+    "two review and remediation rounds passed",
+    "all shared-document post hashes match",
+    "dispatch, priority and approval navigation have separate contracts and user-visible states",
+    "runtime implementation and 96-item completion count were not advanced",
+    "no source, database, tenant, Task, Handoff, Approval, browser or external mutation was introduced"
+  ]
+}

@@ -47,6 +47,7 @@ class _SnapshotVersionRecord:
     status: BundleVersionStatus
     evidence: list[BundleEvidence]
     artifacts: list[dict[str, object]]
+    persisted_manifest: dict[str, object] | None
 
 
 class RegistrySnapshotReader:
@@ -162,6 +163,7 @@ class RegistrySnapshotReader:
             status=status,
             evidence=evidence,
             artifacts=artifacts,
+            persisted_manifest=dict(row["manifest_json"]),
         )
         release = release_policy.evaluate_snapshot_candidate(
             record,

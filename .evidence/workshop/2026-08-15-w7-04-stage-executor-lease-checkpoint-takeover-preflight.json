@@ -1,0 +1,37 @@
+{
+  "schema":"aos-workshop-preflight/v1",
+  "taskId":"workshop-w7-04-stage-executor-lease-checkpoint-takeover-preflight-20260815",
+  "workItem":"W7-04",
+  "projectRevision":"AOS-000029",
+  "branch":"w2-workshop",
+  "head":"28399ba291cc92e58b859464e597ca498aab8ae6",
+  "recordedAt":"2026-08-15T06:18:00+08:00",
+  "decision":{"implementationStatus":"NOT_STARTED","foundationStatus":"GENERIC_TASK_RUNTIME_PARTIAL_GREEN","dependencyStatus":"IMPLEMENTATION_BLOCKED","externalEffect":"NONE","mayImplementNow":false},
+  "verifiedFoundations":[
+    "canonical TaskRun and StepRun authorities exist",
+    "run pause and resume commands use task and run version checks",
+    "step claim uses bounded lease expiry and rejects an active competing owner",
+    "heartbeat phase writes completion and failure require the active owned lease",
+    "expired pre-action work can be reclaimed while expired post-action work becomes unknown and requires reconcile",
+    "checkpoint DTO and persistence surfaces exist",
+    "generic task runtime tests are GREEN"
+  ],
+  "blockers":[
+    "W7-03 is not GREEN and no executable media PlanStep exists",
+    "no media Stage executor binds exact capability assignee provider and artifact contracts",
+    "pause does not prove safe quiescence of in-flight provider work",
+    "resume does not prove checkpoint input hashes and dependency freshness before reuse",
+    "no explicit takeover decision receipt with old/new owner reason policy and fence token",
+    "lease model lacks monotonic fencing token to reject delayed former-owner writes after reacquire",
+    "checkpoint does not yet prove StageTemplate compiler input and Artifact lineage hash closure",
+    "no cancellation or pause race matrix across before-action after-action and unknown outcomes",
+    "no capacity reservation and usage bridge tied atomically to stage lease lifecycle",
+    "no provider idempotency envelope and reconcile policy for media stages",
+    "no template capability policy provider or license drift invalidation at claim heartbeat and resume",
+    "no org-org media positive path or dev-org isolation-canary evidence",
+    "no Workshop UI authority for lease owner heartbeat checkpoint pause resume takeover and unknown state"
+  ],
+  "tests":{"command":"uv run --project services/aos-api pytest -q services/aos-api/tests/test_aip_task_contract.py","result":"12 passed","meaning":"generic runtime foundation only; W7-04 remains unproved"},
+  "next":"align W7-04 contracts and checklist, retain unchecked, then preflight W7-05",
+  "safety":["no source code changed","no migration","no real tenant mutation","no provider action","AIP active scopes excluded"]
+}

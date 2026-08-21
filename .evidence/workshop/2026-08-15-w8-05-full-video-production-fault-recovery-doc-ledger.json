@@ -1,0 +1,75 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w8-05-full-video-production-fault-recovery-doc-align-20260815",
+  "workItem": "W8-05",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "sourceCommit": "657b58dceb3b0fd65b60a492af5f8aca63d3f022",
+  "sourceCommitCorrection": "96465bcf80093d789aaf393e339b00fcf9098dce",
+  "recordedAt": "2026-08-15T08:15:00+08:00",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md",
+      "preSha256": "87de12e9b78da9e3422bf5d260c7249a616c975217311a24a1a0f5d3a697ae2e",
+      "postSha256": "f8986f7e1c30018231ec7177e8382fcc7b0391418f7a1a09269296671a50b121",
+      "change": "added exact FULL production binding and durable recovery qualification"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/18-跨Module端到端场景技术方案.md",
+      "preSha256": "00005f24402802ca317052354ecd7addf4ec8e595412afb1636b4d2202b5f060",
+      "postSha256": "03643311b9993625c68fd1c54084b166e1891aa94be29484ff6b643c978ac75f",
+      "change": "expanded scenario E into full binding responsibility and fault recovery lifecycle"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "92f9c4e93727ff725103407e9f335a4f4db79a333d54b020fd3670b3f2d8acb9",
+      "postSha256": "aae2fa3ffeb96a9d0d397ccfab8a43e60a189e736ee1cd21f1782053ec023d48",
+      "change": "replaced W8-05 evidence placeholder with exact blockers source-diff proof and no-provider decision"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/74-W8-05-FULL短视频生产与故障恢复预检ADR.md",
+      "preSha256": null,
+      "postSha256": "0647f0e3f1994e4999e176fb5e2fcb337a844e971f2fa5800c9d32db31016439",
+      "change": "created W8-05 scenario ADR and two review rounds"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "focus": "responsibility preservation production lineage and user intervention",
+      "result": "PASS",
+      "evidence": [
+        "eight professional responsibilities are retained without fixing Agent count",
+        "Brief Stage Artifact four gates return publish and effect remain exact-linked",
+        "pause resume takeover cancel return and reconcile remain user-visible",
+        "FULL never means automatic execution or bypassing budget review and publish approval"
+      ]
+    },
+    {
+      "round": 2,
+      "focus": "fault semantics execution qualification and false completion prevention",
+      "result": "PASS_WITH_HARD_GATE_BLOCKED",
+      "evidence": [
+        "crash fence webhook cancellation checkpoint budget and restart cases are explicit",
+        "provider unknown only reconciles and never triggers blind replay",
+        "unchanged business source prevents repeated generic tests from becoming progress claims",
+        "no provider media real-tenant browser or publication effect occurred"
+      ]
+    }
+  ],
+  "verification": {
+    "command": "git diff --quiet 5c3ca93..924ac92 -- services apps packages bundles",
+    "result": "success",
+    "qualification": "no business source change since W7-11 cumulative preflight"
+  },
+  "decision": "SCENARIO_CONTRACT_APPROVED_HARD_GATE_BLOCKED",
+  "implementationStatus": "NOT_STARTED",
+  "providerOrPublishEffect": "NONE",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant or browser mutation",
+    "no provider submission media generation publication or external action was executed",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

@@ -1,5 +1,7 @@
 import json
 import os
+import sys
+import re
 import subprocess
 import tempfile
 import time
@@ -9,11 +11,14 @@ from pathlib import Path
 import watchdog
 
 
-def record(timestamp, role, phase=None):
+def record(timestamp, role, phase=None, content=None):
+    payload = {"type": "message", "role": role, "phase": phase}
+    if content is not None:
+        payload["content"] = [{"type": "input_text", "text": content}]
     return {
         "timestamp": timestamp,
         "type": "response_item",
-        "payload": {"type": "message", "role": role, "phase": phase},
+        "payload": payload,
     }
 
 
@@ -49,8 +54,8 @@ class WatchdogTest(unittest.TestCase):
             "resume_prompt": "continue from checkpoint",
             "grace_seconds": 10,
             "max_tool_silence_seconds": 100,
-            "retry_interval_seconds": 300,
-            "max_retry_interval_seconds": 3600,
+            "retry_schedule_seconds": [300, 600, 900, 1800, 3600, 7200],
+            "max_transport_failures": 12,
             "config_revision": "workshop-watchdog-v2",
             "ack_path": str(self.root / "recovery-ack.json"),
             "expected_branch": "w2-workshop",
@@ -61,6 +66,60 @@ class WatchdogTest(unittest.TestCase):
                 str(self.root / "docs"),
             ],
         }
+
+    def dependency_config(self):
+        config = self.config()
+        config["dependency_watch"] = {
+            "enabled": True,
+            "leases_path": str(self.root / "leases.json"),
+            "scope_tokens": ["services/aos-api/alembic/versions"],
+            "ignore_task_ids": ["workshop-test"],
+        }
+        return config
+
+    def fact_config(self):
+        config = self.config()
+        config["fact_watch"] = {
+            "enabled": True,
+            "paths": [
+                str(self.root / "authority.json"),
+                str(self.root / "deliveries"),
+            ],
+        }
+        return config
+
+    def probe_fact_config(self):
+        config = self.config()
+        probe = self.root / "fact-probe.py"
+        probe.write_text("print('stable-secret-fixture')\n", encoding="utf-8")
+        config["fact_watch"] = {
+            "enabled": True,
+            "paths": [],
+            "probes": [
+                {
+                    "name": "w2-data",
+                    "argv": [os.path.abspath(sys.executable), str(probe)],
+                    "cwd": str(self.root),
+                    "timeout_seconds": 5,
+                    "max_output_bytes": 1024,
+                }
+            ],
+        }
+        return config
+
+    def continuation_config(self):
+        config = self.config()
+        config["continuation_watch"] = {
+            "enabled": True,
+            "delay_seconds": 300,
+        }
+        return config
+
+    def write_leases(self, *leases):
+        (self.root / "leases.json").write_text(
+            json.dumps({"schema": "aos-memory-leases/v1", "leases": list(leases)}),
+            encoding="utf-8",
+        )
 
     def append(self, *records):
         with self.transcript.open("a", encoding="utf-8") as handle:
@@ -288,7 +347,7 @@ class WatchdogTest(unittest.TestCase):
     def test_invalid_backoff_config_fails_before_waking_runner(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
         config = self.config()
-        config["retry_interval_seconds"] = 0
+        config["retry_schedule_seconds"] = []
         config_path = self.root / "config.json"
         state_path = self.root / "state.json"
         config_path.write_text(json.dumps(config), encoding="utf-8")
@@ -322,6 +381,142 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual(0, state["consecutive_failures"])
         self.assertEqual("resumed-progress", state["last_recovery_outcome"])
         self.assertIsNotNone(state["visible_ack_at"])
+
+    def test_resumed_progress_arms_one_shot_continuation_after_delay(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.continuation_config()), encoding="utf-8"
+        )
+        calls = []
+
+        def first_runner(*args, **kwargs):
+            calls.append(kwargs["input"])
+            self.write_ack(next_task="W3-09")
+            self.append(record("1970-01-01T00:16:41Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(args[0], 0, "completed", "")
+
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(config_path, state_path, now=1000, runner=first_runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["continuation_armed"])
+        self.assertEqual("W3-09", state["continuation_next_task"])
+        self.assertEqual(
+            "idle",
+            watchdog.run_once(config_path, state_path, now=1299, runner=first_runner),
+        )
+        self.assertEqual(1, len(calls))
+
+        def continuation_runner(*args, **kwargs):
+            prompt = kwargs["input"]
+            calls.append(prompt)
+            episode = re.search(r"^episode_id=(.+)$", prompt, re.MULTILINE).group(1)
+            self.write_ack(
+                outcome="completed",
+                episode_id=episode,
+                next_task="NONE",
+            )
+            self.append(record("1970-01-01T00:21:41Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(args[0], 0, "completed", "")
+
+        self.assertEqual(
+            "completed",
+            watchdog.run_once(
+                config_path, state_path, now=1300, runner=continuation_runner
+            ),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertFalse(state["continuation_armed"])
+        self.assertIn("trigger=continuation", calls[1])
+        self.assertIn(
+            "外部 Watchdog 检测到长任务仍有后续项，正在重新核验后继续。",
+            calls[1],
+        )
+
+    def test_manual_user_message_consumes_pending_continuation(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.continuation_config()), encoding="utf-8"
+        )
+        state_path.write_text(
+            json.dumps(
+                {
+                    "continuation_armed": True,
+                    "continuation_next_task": "W3-09",
+                    "continuation_ready_at": 1300,
+                    "continuation_user_cutoff_at": 10,
+                    "last_recovery_outcome": "resumed-progress",
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.append(record("1970-01-01T00:18:20Z", "user", content="继续"))
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 1, "", "must not run")
+
+        self.assertEqual(
+            "continuation-manual-reentry",
+            watchdog.run_once(config_path, state_path, now=1200, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertFalse(state["continuation_armed"])
+        self.assertEqual([], calls)
+
+    def test_dependency_lease_keeps_continuation_armed_without_runner(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config = self.dependency_config()
+        config["continuation_watch"] = {"enabled": True, "delay_seconds": 300}
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        state_path.write_text(
+            json.dumps(
+                {
+                    "continuation_armed": True,
+                    "continuation_next_task": "W3-09",
+                    "continuation_ready_at": 900,
+                    "continuation_user_cutoff_at": 10,
+                    "last_recovery_outcome": "resumed-progress",
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.write_leases(
+            {
+                "task_id": "aip-migration",
+                "owner": "w1-aip",
+                "status": "ACTIVE",
+                "scope": ["services/aos-api/alembic/versions"],
+                "lease_expires_at": "2099-01-01T00:00:00+00:00",
+            }
+        )
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 1, "", "must not run")
+
+        self.assertEqual(
+            "dependency-blocked",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["continuation_armed"])
+        self.assertEqual([], calls)
 
     def test_safe_blocked_ack_stops_retry_and_next_tick_does_not_resume(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
@@ -446,9 +641,10 @@ class WatchdogTest(unittest.TestCase):
         )
         self.assertEqual(1, len(calls))
 
-    def test_transport_failures_continue_after_third_failure(self):
+    def test_transport_failures_pause_at_limit_and_stop_runner(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
         config = self.config()
+        config["max_transport_failures"] = 3
         config_path = self.root / "config.json"
         state_path = self.root / "state.json"
         config_path.write_text(json.dumps(config), encoding="utf-8")
@@ -467,19 +663,17 @@ class WatchdogTest(unittest.TestCase):
             watchdog.run_once(config_path, state_path, now=1300, runner=runner),
         )
         self.assertEqual(
-            "retry-scheduled",
+            "paused-failure",
             watchdog.run_once(config_path, state_path, now=1900, runner=runner),
         )
         self.assertEqual(
-            "retry-scheduled",
-            watchdog.run_once(config_path, state_path, now=2800, runner=runner),
+            "paused-failure",
+            watchdog.run_once(config_path, state_path, now=10000, runner=runner),
         )
-        self.assertEqual(4, len(calls))
+        self.assertEqual(3, len(calls))
         state = json.loads(state_path.read_text(encoding="utf-8"))
-        self.assertEqual("transport-failed", state["last_recovery_outcome"])
-        self.assertEqual(4, state["consecutive_failures"])
-        self.assertEqual(1200, state["retry_delay_seconds"])
-        self.assertEqual(4000, state["next_retry_at"])
+        self.assertEqual("paused-failure", state["last_recovery_outcome"])
+        self.assertEqual(0, state["next_retry_at"])
 
     def test_transport_backoff_decays_and_caps_without_third_failure_break(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
@@ -493,10 +687,7 @@ class WatchdogTest(unittest.TestCase):
             return subprocess.CompletedProcess(args[0], 1, "", "network")
 
         now = 1000
-        expected = [
-            300, 600, 900, 1200, 1500, 1800, 2100,
-            2400, 2700, 3000, 3300, 3600, 3600,
-        ]
+        expected = [300, 600, 900, 1800, 3600, 7200, 7200]
         for failure_number, delay in enumerate(expected, start=1):
             self.assertEqual(
                 "retry-scheduled",
@@ -507,7 +698,352 @@ class WatchdogTest(unittest.TestCase):
             self.assertEqual(delay, state["retry_delay_seconds"])
             self.assertEqual(now + delay, state["next_retry_at"])
             now += delay
-        self.assertEqual(13, len(calls))
+        self.assertEqual(7, len(calls))
+
+    def test_dependency_lease_blocks_idle_and_arms_without_runner(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        self.write_leases({
+            "task_id": "aip-w2d1",
+            "owner": "codex-aip-w1",
+            "status": "ACTIVE",
+            "scope": ["services/aos-api/alembic/versions"],
+            "lease_expires_at": "2099-01-01T00:00:00+08:00",
+        })
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 0, "", "")
+
+        self.assertEqual(
+            "dependency-blocked",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        self.assertEqual(
+            "dependency-blocked",
+            watchdog.run_once(config_path, state_path, now=1300, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["dependency_wait_armed"])
+        self.assertEqual(["aip-w2d1"], state["dependency_blocking_task_ids"])
+        self.assertEqual([], calls)
+
+    def test_dependency_directory_token_matches_descendant_file_lease(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        self.write_leases({
+            "task_id": "aip-p8-2",
+            "owner": "codex-aip-w1",
+            "status": "ACTIVE",
+            "scope": [
+                "services/aos-api/alembic/versions/"
+                "aip8_001_analyst_query_authority.py"
+            ],
+            "lease_expires_at": "2099-01-01T00:00:00+08:00",
+        })
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+
+        self.assertEqual(
+            "dependency-blocked",
+            watchdog.run_once(config_path, state_path, now=1000),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["dependency_wait_armed"])
+        self.assertEqual(["aip-p8-2"], state["dependency_blocking_task_ids"])
+
+    def test_dependency_directory_token_does_not_match_adjacent_prefix(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        self.write_leases({
+            "task_id": "aip-unrelated",
+            "owner": "codex-aip-w1",
+            "status": "ACTIVE",
+            "scope": [
+                "services/aos-api/alembic/versions-old/"
+                "aip8_001_analyst_query_authority.py"
+            ],
+            "lease_expires_at": "2099-01-01T00:00:00+08:00",
+        })
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+
+        self.assertEqual("idle", watchdog.run_once(config_path, state_path, now=1000))
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertFalse(state.get("dependency_wait_armed", False))
+
+    def test_dependency_release_waits_while_turn_is_running(self):
+        self.write(
+            task_event("1970-01-01T00:00:05Z", "task_started"),
+            record("1970-01-01T00:00:10Z", "user"),
+        )
+        self.write_leases()
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+        state_path.write_text(json.dumps({"dependency_wait_armed": True}), encoding="utf-8")
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 0, "", "")
+
+        self.assertEqual(
+            "turn-running",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["dependency_wait_armed"])
+        self.assertEqual([], calls)
+
+    def test_dependency_release_wakes_once_with_exact_prompt_and_ack(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        self.write_leases()
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+        state_path.write_text(json.dumps({"dependency_wait_armed": True}), encoding="utf-8")
+        calls = []
+
+        def runner(command, **kwargs):
+            calls.append(command)
+            self.assertIn(
+                "第一条用户可见消息只能说：依赖 Watchdog 检测到迁移 Lease 已释放，正在重新核验后继续。",
+                kwargs["input"],
+            )
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.write_ack(episode_id=state["recovery_episode_id"])
+            self.append(record("1970-01-01T00:16:41Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(command, 0, "completed", "")
+
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        self.assertEqual(
+            "idle",
+            watchdog.run_once(config_path, state_path, now=1300, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertFalse(state["dependency_wait_armed"])
+        self.assertEqual("dependency-released", state["episode_trigger"])
+        self.assertEqual(1, len(calls))
+
+    def test_manual_reentry_consumes_failed_dependency_release_episode(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        self.write_leases()
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+        state_path.write_text(json.dumps({"dependency_wait_armed": True}), encoding="utf-8")
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 1, "", "network")
+
+        self.assertEqual(
+            "retry-scheduled",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state["last_attempt_at"] = 1000
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+        self.append(record("1970-01-01T00:18:20Z", "user", content="继续开发"))
+
+        self.assertEqual(
+            "manual-reentry",
+            watchdog.run_once(config_path, state_path, now=1100, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("reentry-noop", state["last_recovery_outcome"])
+        self.assertFalse(state["dependency_wait_armed"])
+        self.assertEqual(0, state["consecutive_failures"])
+        self.assertEqual(0, state["next_retry_at"])
+        self.assertIsNone(state["last_recovered_at"])
+        self.assertEqual(1, len(calls))
+
+    def test_watchdog_resume_prompt_does_not_count_as_manual_reentry(self):
+        marker = "[WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]"
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+            record("1970-01-01T00:18:20Z", "user", content=marker),
+        )
+        self.write_leases()
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+        state_path.write_text(
+            json.dumps(
+                {
+                    "dependency_wait_armed": True,
+                    "episode_trigger": "dependency-released",
+                    "last_recovery_outcome": "transport-failed",
+                    "last_attempt_at": 1000,
+                    "consecutive_failures": 1,
+                    "next_retry_at": 1300,
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        self.assertEqual(
+            "live",
+            watchdog.run_once(config_path, state_path, now=1100),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("transport-failed", state["last_recovery_outcome"])
+        self.assertTrue(state["dependency_wait_armed"])
+
+    def test_nonmatching_lease_does_not_arm_dependency_watch(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        self.write_leases({
+            "task_id": "aip-ui",
+            "owner": "codex-aip-w1",
+            "status": "ACTIVE",
+            "scope": ["apps/web/src/pages/aip"],
+            "lease_expires_at": "2099-01-01T00:00:00+08:00",
+        })
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.dependency_config()), encoding="utf-8")
+        self.assertEqual("idle", watchdog.run_once(config_path, state_path, now=1000))
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertFalse(state.get("dependency_wait_armed", False))
+
+    def test_fact_watch_baselines_then_wakes_once_on_idle_change(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        (self.root / "authority.json").write_text(
+            json.dumps({"project_revision": "AOS-000019"}), encoding="utf-8"
+        )
+        deliveries = self.root / "deliveries"
+        deliveries.mkdir()
+        (deliveries / "one.json").write_text("{}", encoding="utf-8")
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.fact_config()), encoding="utf-8")
+        calls = []
+
+        def runner(command, **kwargs):
+            calls.append(command)
+            self.assertIn(
+                "第一条用户可见消息只能说：依赖 Watchdog 检测到外部交付事实已变化，正在重新核验后继续。",
+                kwargs["input"],
+            )
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.write_ack(episode_id=state["recovery_episode_id"])
+            self.append(record("1970-01-01T00:21:41Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(command, 0, "completed", "")
+
+        self.assertEqual("idle", watchdog.run_once(config_path, state_path, now=1000, runner=runner))
+        (deliveries / "two.json").write_text('{"result":"GREEN"}', encoding="utf-8")
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(config_path, state_path, now=1300, runner=runner),
+        )
+        self.assertEqual("idle", watchdog.run_once(config_path, state_path, now=1600, runner=runner))
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("dependency-fact-changed", state["episode_trigger"])
+        self.assertEqual(1, len(calls))
+
+    def test_fact_watch_active_turn_absorbs_change_without_wake(self):
+        self.write(
+            task_event("1970-01-01T00:00:05Z", "task_started"),
+            record("1970-01-01T00:00:10Z", "user"),
+        )
+        authority = self.root / "authority.json"
+        authority.write_text('{"project_revision":"AOS-000019"}', encoding="utf-8")
+        deliveries = self.root / "deliveries"
+        deliveries.mkdir()
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.fact_config()), encoding="utf-8")
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 0, "", "")
+
+        self.assertEqual("turn-running", watchdog.run_once(config_path, state_path, now=1000, runner=runner))
+        authority.write_text('{"project_revision":"AOS-000020"}', encoding="utf-8")
+        self.assertEqual("turn-running", watchdog.run_once(config_path, state_path, now=1300, runner=runner))
+        self.append(
+            task_event("1970-01-01T00:21:41Z", "task_complete"),
+            record("1970-01-01T00:21:42Z", "assistant", "final_answer"),
+        )
+        self.assertEqual("idle", watchdog.run_once(config_path, state_path, now=1600, runner=runner))
+        self.assertEqual([], calls)
+
+    def test_fact_watch_rejects_symlink(self):
+        target = self.root / "target.json"
+        target.write_text("{}", encoding="utf-8")
+        link = self.root / "authority.json"
+        link.symlink_to(target)
+        deliveries = self.root / "deliveries"
+        deliveries.mkdir()
+        with self.assertRaisesRegex(RuntimeError, "symbolic links"):
+            watchdog._fact_fingerprint(self.fact_config())
+
+    def test_fact_watch_applies_max_files_to_individual_roots(self):
+        first = self.root / "authority.json"
+        second = self.root / "receipt.json"
+        first.write_text("{}", encoding="utf-8")
+        second.write_text("{}", encoding="utf-8")
+        config = self.config()
+        config["fact_watch"] = {
+            "enabled": True,
+            "paths": [str(first), str(second)],
+            "max_files": 1,
+        }
+        with self.assertRaisesRegex(RuntimeError, "exceeds max_files"):
+            watchdog._fact_fingerprint(config)
+
+    def test_fact_watch_probe_is_deterministic_and_stores_only_digest(self):
+        config = self.probe_fact_config()
+        first = watchdog._fact_fingerprint(config)
+        second = watchdog._fact_fingerprint(config)
+        self.assertEqual(first, second)
+        self.assertNotIn("stable-secret-fixture", str(first))
+        probe = Path(config["fact_watch"]["probes"][0]["argv"][1])
+        probe.write_text("print('changed')\n", encoding="utf-8")
+        self.assertNotEqual(first, watchdog._fact_fingerprint(config))
+
+    def test_fact_watch_probe_rejects_relative_executable_and_nonzero_exit(self):
+        config = self.probe_fact_config()
+        config["fact_watch"]["probes"][0]["argv"][0] = "python3"
+        with self.assertRaisesRegex(RuntimeError, "existing absolute path"):
+            watchdog._fact_fingerprint(config)
+
+        config = self.probe_fact_config()
+        probe = Path(config["fact_watch"]["probes"][0]["argv"][1])
+        probe.write_text("raise SystemExit(2)\n", encoding="utf-8")
+        with self.assertRaisesRegex(RuntimeError, "exited nonzero"):
+            watchdog._fact_fingerprint(config)
 
     def test_exit_zero_without_visible_final_is_not_recovered(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))

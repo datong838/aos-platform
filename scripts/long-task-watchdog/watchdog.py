@@ -38,9 +38,10 @@ RECOVERY_OUTCOMES = frozenset(
     {"resumed-progress", "safe-blocked", "completed", "reentry-noop"}
 )
 TERMINAL_FAILURE_OUTCOMES = frozenset(
-    {"protocol-failed", "outcome-uncertain"}
+    {"paused-failure", "protocol-failed", "outcome-uncertain"}
 )
 ACK_SCHEMA = "aos-watchdog-recovery-ack/v1"
+RECOVERY_PROTOCOL_MARKER = "[WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]"
 
 
 @dataclass(frozen=True)
@@ -57,6 +58,7 @@ class TranscriptStatus:
     oldest_pending_tool_at: float | None
     latest_work_activity_at: float | None
     post_final_activity: bool
+    latest_user_is_watchdog: bool
 
 
 def _timestamp(value: object) -> float | None:
@@ -80,6 +82,28 @@ def _message_role_phase(record: dict[str, Any]) -> tuple[str | None, str | None]
     return None, None
 
 
+def _response_message_text(record: dict[str, Any]) -> str:
+    if record.get("type") != "response_item":
+        return ""
+    payload = record.get("payload")
+    if not isinstance(payload, dict) or payload.get("type") != "message":
+        return ""
+    content = payload.get("content")
+    if isinstance(content, str):
+        return content
+    if not isinstance(content, list):
+        return ""
+    parts: list[str] = []
+    for item in content:
+        if isinstance(item, str):
+            parts.append(item)
+        elif isinstance(item, dict):
+            text = item.get("text")
+            if isinstance(text, str):
+                parts.append(text)
+    return "\n".join(parts)
+
+
 def inspect_transcript(path: Path) -> TranscriptStatus:
     latest_user_at: float | None = None
     latest_assistant_at: float | None = None
@@ -88,6 +112,7 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
     latest_task_completed_at: float | None = None
     last_activity_at = path.stat().st_mtime
     latest_work_activity_at: float | None = None
+    latest_user_is_watchdog = False
     tool_calls: dict[str, float] = {}
     with path.open("r", encoding="utf-8") as handle:
         for raw in handle:
@@ -101,6 +126,9 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
             role, phase = _message_role_phase(record)
             if role == "user" and ts is not None:
                 latest_user_at = ts
+                latest_user_is_watchdog = (
+                    RECOVERY_PROTOCOL_MARKER in _response_message_text(record)
+                )
             elif role == "assistant" and ts is not None:
                 latest_assistant_at = ts
                 if phase in FINAL_PHASES:
@@ -160,6 +188,7 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
         min(tool_calls.values()) if tool_calls else None,
         latest_work_activity_at,
         post_final_activity,
+        latest_user_is_watchdog,
     )
 
 
@@ -227,6 +256,10 @@ def _config_revision(config: dict[str, Any]) -> str:
             "network_access",
             "writable_roots",
             "resume_prompt",
+            "retry_schedule_seconds",
+            "max_transport_failures",
+            "dependency_watch",
+            "fact_watch",
         )
     }
     payload = json.dumps(relevant, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -443,26 +476,38 @@ def resume_command(
     return command
 
 
-def _resume_prompt(config: dict[str, Any], episode_id: str) -> str:
+def _resume_prompt(
+    config: dict[str, Any], episode_id: str, *, trigger: str = "interrupted"
+) -> str:
     ack_command = (
         f"python3 {Path(__file__).resolve()} --config {config.get('_config_path', '')} "
         f"--state {config.get('_state_path', '')} --record-ack "
         f"--episode-id {episode_id} --outcome <outcome> --task-id <task> "
         "--next-task <next> --reason-code <code> --evidence-ref <ref>"
     )
+    if trigger == "dependency-released":
+        first_message = "依赖 Watchdog 检测到迁移 Lease 已释放，正在重新核验后继续。"
+    elif trigger == "dependency-fact-changed":
+        first_message = "依赖 Watchdog 检测到外部交付事实已变化，正在重新核验后继续。"
+    elif trigger == "continuation":
+        first_message = "外部 Watchdog 检测到长任务仍有后续项，正在重新核验后继续。"
+    else:
+        first_message = "外部 Watchdog 检测到任务中断，正在恢复核验。"
     protocol = f"""
 
 [WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
 episode_id={episode_id}
+trigger={trigger}
 ack_path={_ack_path(config)}
 expected_branch={config.get('expected_branch', '')}
 config_path={config.get('_config_path', '')}
 state_path={config.get('_state_path', '')}
 ack_command={ack_command}
 
-第一条用户可见消息只能说：外部 Watchdog 检测到任务中断，正在恢复核验。
+第一条用户可见消息只能说：{first_message}
 禁止在权限、分支、Lease、Git/Receipt 和实际任务状态核验前声称“已恢复”。
-核验后必须继续一个依赖已满足的安全任务，或形成 safe-blocked/completed/reentry-noop。
+必须重新核验 authority、01/06、Git branch/log/status、最近 Delivery Receipt、memory status/validate/gate 和全部 Lease；不读取或覆盖 w1-aip 未提交内容。
+核验后必须继续一个依赖已满足且 scope 不冲突的安全任务，或形成 safe-blocked/completed/reentry-noop。
 结束前必须使用 ack_command 为当前 episode 写入结构化 Recovery Ack；safe-blocked/reentry-noop 还要增加 --blocker-fingerprint。自由文本不构成恢复成功证据。
 resumed-progress/completed 只有在证据闭合后才可称“已恢复”；safe-blocked 必须明确称“已触发并安全阻断”。
 [/WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
@@ -474,9 +519,10 @@ def resume_once(
     config: dict[str, Any],
     episode_id: str,
     *,
+    trigger: str = "interrupted",
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> subprocess.CompletedProcess[str]:
-    prompt = _resume_prompt(config, episode_id)
+    prompt = _resume_prompt(config, episode_id, trigger=trigger)
     return runner(
         resume_command(config, episode_id=episode_id),
         input=prompt,
@@ -548,9 +594,12 @@ def _validate_ack(
 def _record_terminal_outcome(
     state: dict[str, Any],
     *,
+    config: dict[str, Any],
     outcome: str,
     final_at: float | None,
     ack: dict[str, Any] | None,
+    resolved_at: float,
+    latest_user_at: float | None,
 ) -> None:
     state.update(
         {
@@ -560,14 +609,56 @@ def _record_terminal_outcome(
             "last_recovery_outcome": outcome,
             "last_decision": outcome,
             "visible_ack_at": final_at,
-            "last_resolved_at": time.time(),
+            "last_resolved_at": resolved_at,
             "last_ack": ack,
             "last_error": None,
         }
     )
     state["last_recovered_at"] = (
-        time.time() if outcome in {"resumed-progress", "completed"} else None
+        resolved_at if outcome in {"resumed-progress", "completed"} else None
     )
+    continuation = config.get("continuation_watch")
+    continuation_enabled = False
+    continuation_delay = 300
+    if continuation is not None:
+        if not isinstance(continuation, dict):
+            raise RuntimeError("continuation_watch must be an object")
+        continuation_enabled = bool(continuation.get("enabled", False))
+        continuation_delay = continuation.get("delay_seconds", 300)
+        if (
+            not isinstance(continuation_delay, int)
+            or isinstance(continuation_delay, bool)
+            or continuation_delay <= 0
+        ):
+            raise RuntimeError(
+                "continuation_watch delay_seconds must be a positive integer"
+            )
+    next_task = ack.get("next_task") if isinstance(ack, dict) else None
+    should_continue = (
+        outcome == "resumed-progress"
+        and continuation_enabled
+        and isinstance(next_task, str)
+        and bool(next_task.strip())
+        and next_task.strip().upper() not in {"NONE", "COMPLETED"}
+    )
+    if should_continue:
+        state.update(
+            {
+                "continuation_armed": True,
+                "continuation_source_episode_id": state.get("recovery_episode_id"),
+                "continuation_next_task": next_task.strip(),
+                "continuation_ack_at": ack.get("written_at"),
+                "continuation_ready_at": resolved_at + continuation_delay,
+                "continuation_user_cutoff_at": latest_user_at,
+                "continuation_disarm_reason": None,
+            }
+        )
+    else:
+        state["continuation_armed"] = False
+        state["continuation_disarm_reason"] = outcome
+    if state.get("episode_trigger") == "dependency-released":
+        state["dependency_wait_armed"] = False
+        state["dependency_release_resolved_at"] = resolved_at
 
 
 def _log(message: str) -> None:
@@ -576,17 +667,254 @@ def _log(message: str) -> None:
 
 
 def _retry_delay_seconds(config: dict[str, Any], failure_count: int) -> int:
-    if failure_count < 1:
-        raise RuntimeError("failure_count must be positive")
-    base = int(config.get("retry_interval_seconds", 300))
-    maximum = int(config.get("max_retry_interval_seconds", 3600))
-    if base <= 0:
-        raise RuntimeError("retry_interval_seconds must be positive")
-    if maximum < base:
-        raise RuntimeError(
-            "max_retry_interval_seconds must be at least retry_interval_seconds"
+    raw = config.get(
+        "retry_schedule_seconds", [300, 600, 900, 1800, 3600, 7200]
+    )
+    if (
+        not isinstance(raw, list)
+        or not raw
+        or any(
+            not isinstance(item, int) or isinstance(item, bool) or item <= 0
+            for item in raw
         )
-    return min(base * failure_count, maximum)
+    ):
+        raise RuntimeError(
+            "retry_schedule_seconds must be a non-empty list of positive integers"
+        )
+    return raw[min(max(failure_count, 1) - 1, len(raw) - 1)]
+
+
+def _dependency_scope_overlaps(watched: str, leased: str) -> bool:
+    if watched == leased:
+        return True
+    if "/" not in watched or "/" not in leased:
+        return False
+    watched_path = watched.rstrip("/")
+    leased_path = leased.rstrip("/")
+    if not watched_path or not leased_path:
+        return False
+    return (
+        leased_path.startswith(watched_path + "/")
+        or watched_path.startswith(leased_path + "/")
+    )
+
+
+def _dependency_blockers(config: dict[str, Any], *, now: float) -> list[dict[str, Any]]:
+    raw = config.get("dependency_watch")
+    if raw is None:
+        return []
+    if not isinstance(raw, dict):
+        raise RuntimeError("dependency_watch must be an object")
+    if not raw.get("enabled", False):
+        return []
+    leases_path = raw.get("leases_path")
+    scope_tokens = raw.get("scope_tokens")
+    ignore_task_ids = raw.get("ignore_task_ids", [])
+    if not isinstance(leases_path, str) or not Path(leases_path).is_absolute():
+        raise RuntimeError("dependency_watch leases_path must be absolute")
+    if (
+        not isinstance(scope_tokens, list)
+        or not scope_tokens
+        or not all(isinstance(item, str) and item for item in scope_tokens)
+    ):
+        raise RuntimeError("dependency_watch scope_tokens must be non-empty strings")
+    if not isinstance(ignore_task_ids, list) or not all(
+        isinstance(item, str) and item for item in ignore_task_ids
+    ):
+        raise RuntimeError("dependency_watch ignore_task_ids must be strings")
+    try:
+        payload = json.loads(Path(leases_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"dependency_watch leases unavailable: {type(exc).__name__}") from exc
+    leases = payload.get("leases") if isinstance(payload, dict) else None
+    if not isinstance(leases, list):
+        raise RuntimeError("dependency_watch leases payload is invalid")
+    ignored = set(ignore_task_ids)
+    blockers: list[dict[str, Any]] = []
+    for lease in leases:
+        if not isinstance(lease, dict) or lease.get("status") != "ACTIVE":
+            continue
+        task_id = lease.get("task_id")
+        if not isinstance(task_id, str) or task_id in ignored:
+            continue
+        scopes = lease.get("scope")
+        if not isinstance(scopes, list) or not all(isinstance(item, str) for item in scopes):
+            raise RuntimeError("dependency_watch active lease scope is invalid")
+        expiry_raw = lease.get("lease_expires_at")
+        expiry = _timestamp(expiry_raw)
+        if expiry is None:
+            raise RuntimeError("dependency_watch active lease expiry is invalid")
+        if expiry <= now:
+            continue
+        matched = sorted(
+            token
+            for token in scope_tokens
+            if any(_dependency_scope_overlaps(token, scope) for scope in scopes)
+        )
+        if not matched:
+            continue
+        blockers.append(
+            {
+                "task_id": task_id,
+                "owner": lease.get("owner"),
+                "scope_tokens": matched,
+                "lease_expires_at": expiry_raw,
+            }
+        )
+    return sorted(blockers, key=lambda item: item["task_id"])
+
+
+def _dependency_fingerprint(blockers: list[dict[str, Any]]) -> str:
+    encoded = json.dumps(blockers, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _fact_file_hash(path: Path, *, max_file_bytes: int) -> str:
+    if path.is_symlink():
+        raise RuntimeError("fact_watch symbolic links are forbidden")
+    if not path.is_file():
+        raise RuntimeError(f"fact_watch path is not a regular file: {path}")
+    size = path.stat().st_size
+    if size > max_file_bytes:
+        raise RuntimeError(f"fact_watch file exceeds max_file_bytes: {path}")
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(64 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _fact_fingerprint(config: dict[str, Any]) -> str | None:
+    raw = config.get("fact_watch")
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise RuntimeError("fact_watch must be an object")
+    if not raw.get("enabled", False):
+        return None
+    paths = raw.get("paths", [])
+    probes = raw.get("probes", [])
+    if not isinstance(paths, list) or not all(
+        isinstance(item, str) and item for item in paths
+    ):
+        raise RuntimeError("fact_watch paths must be strings")
+    if not isinstance(probes, list):
+        raise RuntimeError("fact_watch probes must be a list")
+    if not paths and not probes:
+        raise RuntimeError("fact_watch requires paths or probes")
+    max_files = raw.get("max_files", 10_000)
+    max_file_bytes = raw.get("max_file_bytes", 16 * 1024 * 1024)
+    if (
+        not isinstance(max_files, int)
+        or isinstance(max_files, bool)
+        or max_files <= 0
+        or not isinstance(max_file_bytes, int)
+        or isinstance(max_file_bytes, bool)
+        or max_file_bytes <= 0
+    ):
+        raise RuntimeError("fact_watch limits must be positive integers")
+    records: list[tuple[str, str]] = []
+    for raw_path in sorted(set(paths)):
+        path = Path(raw_path)
+        if not path.is_absolute():
+            raise RuntimeError("fact_watch paths must be absolute")
+        if path.is_symlink():
+            raise RuntimeError("fact_watch symbolic links are forbidden")
+        if path.is_file():
+            records.append((raw_path, _fact_file_hash(path, max_file_bytes=max_file_bytes)))
+            if len(records) > max_files:
+                raise RuntimeError("fact_watch exceeds max_files")
+            continue
+        if not path.is_dir():
+            raise RuntimeError(f"fact_watch path is unavailable: {path}")
+        for child in sorted(path.rglob("*"), key=lambda item: item.as_posix()):
+            if child.is_symlink():
+                raise RuntimeError("fact_watch symbolic links are forbidden")
+            if child.is_dir():
+                continue
+            relative = child.relative_to(path).as_posix()
+            records.append(
+                (
+                    f"{raw_path}/{relative}",
+                    _fact_file_hash(child, max_file_bytes=max_file_bytes),
+                )
+            )
+            if len(records) > max_files:
+                raise RuntimeError("fact_watch exceeds max_files")
+    records.extend(_fact_probe_records(config, probes))
+    encoded = json.dumps(records, ensure_ascii=False, separators=(",", ":")).encode(
+        "utf-8"
+    )
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _fact_probe_records(
+    config: dict[str, Any], probes: list[object]
+) -> list[tuple[str, str]]:
+    project_root = Path(str(config["project_root"])).resolve()
+    records: list[tuple[str, str]] = []
+    names: set[str] = set()
+    for raw_probe in probes:
+        if not isinstance(raw_probe, dict):
+            raise RuntimeError("fact_watch probe must be an object")
+        name = raw_probe.get("name")
+        argv = raw_probe.get("argv")
+        cwd_raw = raw_probe.get("cwd", str(project_root))
+        timeout_seconds = raw_probe.get("timeout_seconds", 30)
+        max_output_bytes = raw_probe.get("max_output_bytes", 64 * 1024)
+        if not isinstance(name, str) or not name or name in names:
+            raise RuntimeError("fact_watch probe names must be unique non-empty strings")
+        if (
+            not isinstance(argv, list)
+            or not argv
+            or not all(isinstance(item, str) and item for item in argv)
+        ):
+            raise RuntimeError("fact_watch probe argv must be non-empty strings")
+        executable = Path(argv[0])
+        if not executable.is_absolute() or not executable.exists():
+            raise RuntimeError("fact_watch probe executable must be an existing absolute path")
+        cwd = Path(cwd_raw) if isinstance(cwd_raw, str) else Path("")
+        if not cwd.is_absolute() or not cwd.is_dir():
+            raise RuntimeError("fact_watch probe cwd must be an existing absolute directory")
+        resolved_cwd = cwd.resolve()
+        if not resolved_cwd.is_relative_to(project_root):
+            raise RuntimeError("fact_watch probe cwd must stay within project_root")
+        if (
+            not isinstance(timeout_seconds, int)
+            or isinstance(timeout_seconds, bool)
+            or not 1 <= timeout_seconds <= 60
+            or not isinstance(max_output_bytes, int)
+            or isinstance(max_output_bytes, bool)
+            or not 1 <= max_output_bytes <= 1024 * 1024
+        ):
+            raise RuntimeError("fact_watch probe limits are invalid")
+        try:
+            completed = subprocess.run(
+                argv,
+                cwd=resolved_cwd,
+                env=_sanitized_environment(),
+                capture_output=True,
+                timeout=timeout_seconds,
+                check=False,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise RuntimeError(
+                f"fact_watch probe failed: {name}:{type(exc).__name__}"
+            ) from exc
+        if completed.returncode != 0:
+            raise RuntimeError(f"fact_watch probe exited nonzero: {name}")
+        stdout = completed.stdout
+        if not isinstance(stdout, bytes):
+            stdout = str(stdout).encode("utf-8")
+        if not stdout or len(stdout) > max_output_bytes:
+            raise RuntimeError(f"fact_watch probe output is empty or too large: {name}")
+        try:
+            stdout.decode("utf-8", errors="strict")
+        except UnicodeDecodeError as exc:
+            raise RuntimeError(f"fact_watch probe output is not utf-8: {name}") from exc
+        names.add(name)
+        records.append((f"probe:{name}", hashlib.sha256(stdout).hexdigest()))
+    return sorted(records)
 
 
 def evaluate(
@@ -619,7 +947,19 @@ def evaluate(
     )
     if turn_silence_limit <= 0:
         raise RuntimeError("max_turn_silence_seconds must be positive")
-    if status.turn_running and now - status.last_activity_at < turn_silence_limit:
+    dependency_watch_enabled = bool(
+        isinstance(config.get("dependency_watch"), dict)
+        and config["dependency_watch"].get("enabled", False)
+    )
+    fact_watch_enabled = bool(
+        isinstance(config.get("fact_watch"), dict)
+        and config["fact_watch"].get("enabled", False)
+    )
+    if status.turn_running and (
+        dependency_watch_enabled
+        or fact_watch_enabled
+        or now - status.last_activity_at < turn_silence_limit
+    ):
         return "turn-running", status
     if status.pending_tool_calls and status.oldest_pending_tool_at is not None and (
         now - status.oldest_pending_tool_at
@@ -652,6 +992,93 @@ def run_once(
     decision, status = evaluate(
         config, state, now=current, rollout_path=rollout_path
     )
+    blockers = _dependency_blockers(config, now=current)
+    fact_fingerprint = _fact_fingerprint(config)
+    previous_fact_fingerprint = state.get("fact_watch_fingerprint")
+    fact_changed = (
+        fact_fingerprint is not None
+        and isinstance(previous_fact_fingerprint, str)
+        and fact_fingerprint != previous_fact_fingerprint
+    )
+    if fact_fingerprint is not None:
+        state["fact_watch_fingerprint"] = fact_fingerprint
+        state["fact_watch_last_checked_at"] = current
+    dependency_armed = bool(state.get("dependency_wait_armed", False))
+    if blockers:
+        state.update(
+            {
+                "dependency_wait_armed": True,
+                "dependency_blocker_fingerprint": _dependency_fingerprint(blockers),
+                "dependency_blocking_task_ids": [item["task_id"] for item in blockers],
+                "dependency_last_blocked_at": current,
+            }
+        )
+        if decision not in {
+            "turn-running",
+            "tool-running",
+            "live",
+            *TERMINAL_FAILURE_OUTCOMES,
+        }:
+            decision = "dependency-blocked"
+    else:
+        state["dependency_blocking_task_ids"] = []
+        if dependency_armed and decision in {"idle", "recover"}:
+            decision = "dependency-released"
+            state["dependency_released_at"] = current
+        elif fact_changed and decision in {"idle", "recover"}:
+            decision = "dependency-fact-changed"
+            state["fact_changed_at"] = current
+            state["fact_previous_fingerprint"] = previous_fact_fingerprint
+    last_attempt_at = state.get("last_attempt_at")
+    manual_reentry = (
+        state.get("episode_trigger")
+        in {"dependency-released", "dependency-fact-changed"}
+        and state.get("last_recovery_outcome") in {"attempting", "transport-failed"}
+        and isinstance(last_attempt_at, (int, float))
+        and status.latest_user_at is not None
+        and status.latest_user_at >= last_attempt_at
+        and not status.latest_user_is_watchdog
+    )
+    if manual_reentry:
+        decision = "manual-reentry"
+        state.update(
+            {
+                "consecutive_failures": 0,
+                "next_retry_at": 0,
+                "retry_delay_seconds": 0,
+                "last_recovery_outcome": "reentry-noop",
+                "manual_reentry_at": current,
+                "last_recovered_at": None,
+                "last_error": None,
+            }
+        )
+        if state.get("episode_trigger") == "dependency-released" and not blockers:
+            state["dependency_wait_armed"] = False
+            state["dependency_release_resolved_at"] = current
+    if bool(state.get("continuation_armed", False)):
+        cutoff = state.get("continuation_user_cutoff_at")
+        user_reentered = (
+            isinstance(cutoff, (int, float))
+            and status.latest_user_at is not None
+            and status.latest_user_at > cutoff
+            and not status.latest_user_is_watchdog
+        )
+        if user_reentered:
+            decision = "continuation-manual-reentry"
+            state.update(
+                {
+                    "continuation_armed": False,
+                    "continuation_disarm_reason": "manual-reentry",
+                    "continuation_manual_reentry_at": current,
+                }
+            )
+        elif (
+            not blockers
+            and decision == "idle"
+            and current >= float(state.get("continuation_ready_at", float("inf")))
+        ):
+            decision = "continuation"
+    state["dependency_watch_last_checked_at"] = current
     state.update(
         {
             "last_check_at": current,
@@ -661,14 +1088,27 @@ def run_once(
             "rollout_path": str(rollout_path),
         }
     )
-    if decision != "recover":
-        if decision == "idle":
+    if decision not in {
+        "recover",
+        "dependency-released",
+        "dependency-fact-changed",
+        "continuation",
+    }:
+        if decision in {"idle", "dependency-blocked"}:
             state["consecutive_failures"] = 0
             state["next_retry_at"] = 0
             state["retry_delay_seconds"] = 0
         _write_json(state_path, state)
         return decision
 
+    max_failures = int(
+        config.get(
+            "max_transport_failures",
+            config.get("max_consecutive_failures", 12),
+        )
+    )
+    if max_failures <= 0:
+        raise RuntimeError("max_transport_failures must be positive")
     _retry_delay_seconds(config, max(int(state.get("consecutive_failures", 0)) + 1, 1))
 
     if state.get("last_recovery_outcome") in TERMINAL_FAILURE_OUTCOMES:
@@ -683,9 +1123,23 @@ def run_once(
 
     failures = int(state.get("consecutive_failures", 0))
     if failures == 0:
+        trigger = decision
         state.update(
             {
-                "recovery_episode_id": f"recovery-{int(current * 1000)}",
+                "recovery_episode_id": (
+                    f"dependency-release-{int(current * 1000)}"
+                    if trigger == "dependency-released"
+                    else (
+                        f"dependency-fact-{int(current * 1000)}"
+                        if trigger == "dependency-fact-changed"
+                        else (
+                            f"continuation-{int(current * 1000)}"
+                            if trigger == "continuation"
+                            else f"recovery-{int(current * 1000)}"
+                        )
+                    )
+                ),
+                "episode_trigger": trigger,
                 "last_recovery_outcome": "attempting",
                 "visible_ack_at": None,
                 "last_recovered_at": None,
@@ -693,6 +1147,10 @@ def run_once(
                 "episode_config_revision": _config_revision(config),
             }
         )
+        if trigger == "continuation":
+            state["continuation_armed"] = False
+            state["continuation_consumed_at"] = current
+            state["continuation_disarm_reason"] = "episode-created"
     episode_id = str(state["recovery_episode_id"])
     attempts = 1
     for attempt in range(1, attempts + 1):
@@ -704,7 +1162,12 @@ def run_once(
         _write_json(state_path, state)
         _log(f"resume attempt {attempt}/{attempts} thread={config['thread_id']}")
         try:
-            result = resume_once(config, episode_id, runner=runner)
+            result = resume_once(
+                config,
+                episode_id,
+                trigger=str(state.get("episode_trigger", "interrupted")),
+                runner=runner,
+            )
         except (OSError, subprocess.SubprocessError) as exc:
             state["last_error"] = f"{type(exc).__name__}: {exc}"
             result = None
@@ -734,18 +1197,24 @@ def run_once(
                 outcome = str(ack["outcome"])
                 _record_terminal_outcome(
                     state,
+                    config=config,
                     outcome=outcome,
                     final_at=after_resume.latest_final_at,
                     ack=ack,
+                    resolved_at=current,
+                    latest_user_at=after_resume.latest_user_at,
                 )
                 _write_json(state_path, state)
                 return outcome
             if visible_final and not ack_valid:
                 _record_terminal_outcome(
                     state,
+                    config=config,
                     outcome="protocol-failed",
                     final_at=after_resume.latest_final_at,
                     ack=ack,
+                    resolved_at=current,
+                    latest_user_at=after_resume.latest_user_at,
                 )
                 state["last_error"] = ack_error
                 state["paused_user_at"] = after_resume.latest_user_at
@@ -755,9 +1224,12 @@ def run_once(
             if ack_valid and (not visible_final or result.returncode != 0):
                 _record_terminal_outcome(
                     state,
+                    config=config,
                     outcome="outcome-uncertain",
                     final_at=after_resume.latest_final_at if visible_final else None,
                     ack=ack,
+                    resolved_at=current,
+                    latest_user_at=after_resume.latest_user_at,
                 )
                 state["last_error"] = "current episode ack exists without clean visible final"
                 state["paused_user_at"] = after_resume.latest_user_at
@@ -767,6 +1239,24 @@ def run_once(
             if result.returncode == 0:
                 state["last_error"] = "resume exited 0 without current ack/final"
     state["consecutive_failures"] = failures + attempts
+    if state["consecutive_failures"] >= max_failures:
+        latest = inspect_transcript(rollout_path)
+        state.update(
+            {
+                "next_retry_at": 0,
+                "retry_delay_seconds": 0,
+                "last_recovery_outcome": "paused-failure",
+                "last_decision": "paused-failure",
+                "paused_user_at": latest.latest_user_at,
+                "paused_config_revision": _config_revision(config),
+                "continuation_armed": False,
+                "continuation_disarm_reason": "paused-failure",
+            }
+        )
+        if state.get("episode_trigger") == "dependency-released":
+            state["dependency_wait_armed"] = False
+        _write_json(state_path, state)
+        return "paused-failure"
     retry_delay = _retry_delay_seconds(config, state["consecutive_failures"])
     state["retry_delay_seconds"] = retry_delay
     state["next_retry_at"] = current + retry_delay

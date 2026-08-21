@@ -1,0 +1,115 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w6-06-price-notice-recommendation-reprice-gates-preflight-20260814",
+  "authorityRevision": "AOS-000027",
+  "repositoryRevision": "28f86c24ae10bd2e40920224948e46a8bd43edfa",
+  "result": "W6_06_PRICE_NOTICE_RECOMMENDATION_REPRICE_GATES_PREFLIGHT_FACTS_FROZEN",
+  "decision": "GENERIC_ACTION_SAFETY_SKELETON_GREEN_PRICE_DISPOSITION_GATES_BLOCKED",
+  "foundations": [
+    "the canonical Action chain has tenant-scoped Proposal, Approval, ExecutionLease, immutable initial Receipt, unknown without blind retry, provider reread reconcile and compensation Proposal foundations",
+    "generic execution rejects R4 or execution-disabled policy snapshots unless a specialized policy is supplied",
+    "the generic frontend distinguishes approved, leased, executing, applied, failed, unknown and reconciled and disables disconnected writes",
+    "the reviewed price target contract separates research, match and monitoring readiness from notice, recommendation and repricing readiness"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W6-PRICE-DISPOSITION-UPSTREAM",
+      "severity": "P0",
+      "finding": "W6-05 has no implemented PriceCase, MonitoringPolicy or frozen research batch, so W6-06 has no valid price decision authority to consume."
+    },
+    {
+      "id": "DEP-W6-PRICE-DISPOSITION-TYPES",
+      "severity": "P0",
+      "finding": "no versioned price notice, internal recommendation, campaign handoff or repricing Action/Draft types are declared; ecommerce.price-governance permissions.actionTypes is empty."
+    },
+    {
+      "id": "DEP-W6-PRICE-DISPOSITION-SEPARATION",
+      "severity": "P0",
+      "finding": "no domain compiler or policy guarantees independent PriceCase-to-Draft/Impact/Approval/Lease paths for notice, recommendation and repricing; research readiness cannot be proven separate from write readiness."
+    },
+    {
+      "id": "DEP-W6-PRICE-IMPACT-BINDING",
+      "severity": "P0",
+      "finding": "no exact joint binding ties PriceCase, affected Product/SKU/orders, account, capability, policy, budget and ImpactPreview to the resulting Proposal and Lease."
+    },
+    {
+      "id": "DEP-W6-PRICE-RISK-POLICY",
+      "severity": "P0",
+      "finding": "the generic risk policy remains insufficient for price semantics; no versioned authority classifies internal recommendation, external notice, campaign suggestion and repricing by amount, scope, channel and rollback/compensation risk."
+    },
+    {
+      "id": "DEP-W6-PRICE-REPRICE-SPECIALIZED-GATE",
+      "severity": "P0",
+      "finding": "generic R4 rejection is a safe floor but no specialized repricing maker-checker, floor/MAP/margin/inventory/order-impact policy, account binding, canary or kill authority exists; repricing must remain disabled."
+    },
+    {
+      "id": "DEP-W6-PRICE-PRODUCTION-ADAPTERS",
+      "severity": "P0",
+      "finding": "the production ActionAdapter registry has no typed notice or repricing adapter and no trusted account, dry validation, usage, webhook, partial or conformance contract."
+    },
+    {
+      "id": "DEP-W6-PRICE-DURABLE-EXECUTION",
+      "severity": "P0",
+      "finding": "the generic executor commits Lease consumption before provider invocation, retaining a crash-without-Receipt window; this is unacceptable for price notice or repricing."
+    },
+    {
+      "id": "DEP-W6-PRICE-UNKNOWN-COMPENSATION",
+      "severity": "P0",
+      "finding": "resolved provider outcome is embedded in a reconciled payload rather than a directly aggregateable field, manual Case is absent and no price-specific compensation mapping or state reread exists."
+    },
+    {
+      "id": "DEP-W6-PRICE-HANDOFF-CONTRACT",
+      "severity": "P1",
+      "finding": "no canonical minimal-ref Handoff maps PriceCase to content/activity, operations or customer modules with purpose, accept/reject/request-more Receipt and no copied competitor/customer payload."
+    },
+    {
+      "id": "DEP-W6-PRICE-DISPOSITION-READ-MODEL",
+      "severity": "P1",
+      "finding": "only the generic Draft Inbox and common Workshop shell exist; no price-specific Impact, approval separation, repricing disabled state, partial/unknown timeline or intervention UI is implemented."
+    },
+    {
+      "id": "DEP-W6-PRICE-W5-GATES",
+      "severity": "P0",
+      "finding": "W5-00 through W5-08 are all unchecked and production adapter registrations remain zero, so no price external capability is code-green or operational-ready."
+    }
+  ],
+  "staticVerification": {
+    "priceDispositionTypesDeclared": 0,
+    "priceProductionAdaptersRegistered": 0,
+    "priceImpactBindingsFound": 0,
+    "repricingSpecializedPoliciesFound": 0,
+    "priceHandoffContractsFound": 0,
+    "priceDispositionBusinessViewsFound": 0,
+    "moduleActionTypes": []
+  },
+  "verification": {
+    "backendCommand": "services/aos-api/.venv/bin/pytest -q services/aos-api/tests/aip/test_aip3_action_control.py services/aos-api/tests/aip/test_aip3b_action_execution.py services/aos-api/tests/test_w2b_production_contracts.py services/aos-api/tests/asset_registry/test_workshop_module_contracts.py",
+    "backendResult": "6 tests passed",
+    "frontendCommand": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/api/aipActions/contracts.test.ts src/api/aipActions/client.test.ts src/pages/CanonicalDraftInboxPage.test.tsx src/components/workshop/EcommerceWorkshopShell.test.tsx",
+    "frontendResult": "4 files and 11 tests passed",
+    "interpretation": "generic single-action safety and UI foundations are stable, while price notice, recommendation, handoff and repricing types, policies, adapters and read models are absent; repricing remains safely disabled"
+  },
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_action_models.py": "1dacef2f81483085129aa415679a554f535eb5917a7b935f78ae12a683bd9bb5",
+    "services/aos-api/aos_api/aip_action_execution.py": "7b18fd98192cb9ffb6188a8317ac0dbdc33d38793f2a694199c075d52cb549ab",
+    "services/aos-api/aos_api/aip_action_policy.py": "68daf0ae089e7e5117c2b9f5a5723bce0df1a6e56c95a7414b9bb80c145035e2",
+    "services/aos-api/aos_api/aip_action_adapters.py": "58ef4fb121c49a81ca9e7fc06d28b7db11bc2ca9143e71e1825c84cc03755974",
+    "services/aos-api/aos_api/aip_action_service.py": "d9879038feece8d5736050efd26de98eee49556f8c4eab8e29898462848872b4",
+    "apps/web/src/api/aipActions/contracts.ts": "19e6f907e21316ecca7d1be3ecb1fa08803cac90dbca46c82b33d95c9dec5614",
+    "apps/web/src/pages/CanonicalDraftInboxPage.tsx": "8a3234f4044f5fd142fe4fd7defed11f3163208995861611e0486a3bec044a18",
+    "bundles/solutions/ecommerce-growth/content/workshops/ecommerce.price-governance.json": "de837ed99dbb64e56f94a42b53d66998bf11ad52b5ad91f84eb0f74ea4c52ba3",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/16-价格治理技术方案.md": "fb8f647bd5d33709345ef555164be079a83675c2dd49a43f1056e7a2ace9b759",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md": "921b3e6cc18cf4cbe05238f808075229939addb9d43d5688fecdf737003966e8"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalNotificationEffect": false,
+    "recommendationDispatchEffect": false,
+    "repricingEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

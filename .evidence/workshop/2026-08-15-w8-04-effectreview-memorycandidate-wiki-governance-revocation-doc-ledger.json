@@ -1,0 +1,81 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w8-04-effectreview-memorycandidate-wiki-governance-revocation-doc-align-20260815",
+  "workItem": "W8-04",
+  "projectRevision": "AOS-000033",
+  "branch": "w2-workshop",
+  "sourceCommit": "17ff561",
+  "recordedAt": "2026-08-15T08:03:00+08:00",
+  "authorityRevalidatedAt": "2026-08-15T08:04:00+08:00",
+  "authorityRevalidation": {
+    "projectRevision": "AOS-000034",
+    "sourceCommit": "4018dd382c169fbed567c633bdbb698e6f26447f",
+    "newFact": "E7-4D read-only exposure/context API is GREEN; E7-5 remains",
+    "decisionImpact": "dependency improves but W8-04 remains HARD_GATE_BLOCKED"
+  },
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/04-EvidenceWiki查询与保存视图.md",
+      "preSha256": "cd4432e7e14f2245983760bc3a0768d8519415c13ddb8ca90d3d8d2650d66510",
+      "postSha256": "4f923b479e1f5ff644798e9d036d4eb59bc6de4457219b481676eb3c68a2e776",
+      "change": "added EffectReview learning binding independent governance promotion and revocation impact contract"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/18-跨Module端到端场景技术方案.md",
+      "preSha256": "709beeb6d5e0963548fb96064105aa5760f1ff9b79d895c5c22fe66218eef5c9",
+      "postSha256": "00005f24402802ca317052354ecd7addf4ec8e595412afb1636b4d2202b5f060",
+      "change": "expanded scenario D into exact maturity governance promotion retrieval and revocation lifecycle"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "cff206bb02374c82f307caa2f00f284e02874dac44619e3609fe247ba5f6a8c2",
+      "postSha256": "92f9c4e93727ff725103407e9f335a4f4db79a333d54b020fd3670b3f2d8acb9",
+      "change": "replaced W8-04 evidence placeholder with exact E7 maturity blockers and no-promotion decision"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/73-W8-04-EffectReviewMemoryCandidateWiki治理撤销预检ADR.md",
+      "preSha256": null,
+      "postSha256": "4135ebfb2782c98db293084b11d6e7671932a2d9a5882063bc744e6f2a1cf4ea",
+      "change": "created W8-04 scenario ADR and two review rounds"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "focus": "learning eligibility governance responsibility and user-visible uncertainty",
+      "result": "PASS",
+      "evidence": [
+        "EffectReview maturity governance approval promotion and knowledge validity are independent",
+        "assumptions counterevidence uncertainty and applicability remain visible",
+        "approval never implies promotion and every promotion requires an immutable receipt",
+        "working memory and free-form model output cannot bypass trusted pipelines"
+      ]
+    },
+    {
+      "round": 2,
+      "focus": "revocation propagation execution qualification and false completion prevention",
+      "result": "PASS_WITH_HARD_GATE_BLOCKED",
+      "evidence": [
+        "revocation preserves historical exposure and receipt while future reads fail closed",
+        "impact refs trigger review or recomputation and never silently rewrite historical decisions",
+        "E7-4D GREEN and generic tests are explicitly insufficient for DEP-E7 and Workshop E2E",
+        "no candidate Wiki real-tenant browser or revocation mutation occurred"
+      ]
+    }
+  ],
+  "verification": {
+    "command": "services/aos-api/.venv/bin/python -m pytest -q services/aos-api/tests/aip/test_aip_memory_store.py services/aos-api/tests/aip/test_aip_memory_pipeline_contracts.py services/aos-api/tests/aip/test_aip_memory_pipeline_store.py services/aos-api/tests/aip/test_aip_memory_pipeline_service.py services/aos-api/tests/aip/test_aip_memory_search_eval.py",
+    "result": "39 passed, 7 warnings in 5.52s",
+    "qualification": "w2 baseline generic Memory governance primitives only"
+  },
+  "decision": "SCENARIO_CONTRACT_APPROVED_HARD_GATE_BLOCKED",
+  "implementationStatus": "NOT_STARTED",
+  "promotionOrPublication": "NONE",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant or browser mutation",
+    "no candidate approval promotion Wiki publication or revocation was executed",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

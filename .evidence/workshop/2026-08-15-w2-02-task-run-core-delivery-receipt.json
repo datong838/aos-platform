@@ -1,0 +1,119 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-w2-02-task-run-core-implementation-v2-20260815",
+  "authorityRevision": "AOS-000046",
+  "branch": "w2-workshop",
+  "baseHead": "f3553d5",
+  "decision": "TASK_RUN_CORE_IMPLEMENTED_GREEN_FULL_W2_02_REMAINS_BLOCKED",
+  "implementation": {
+    "operationId": "ecommerceWorkshopTaskCockpitCoreGet",
+    "method": "GET",
+    "path": "/v1/ecommerce-workshop/views/task-cockpit",
+    "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
+    "authority": ["aip_task", "aip_task_run"],
+    "projection": "Task summary plus same-tenant latest Run at a fixed cutoff",
+    "pagination": "tenant, filter and cutoff bound descending (updated_at, task_id) keyset cursor",
+    "maximumReadiness": "degraded",
+    "moduleGate": "active and principal-visible ecommerce.task-cockpit installation required",
+    "writes": []
+  },
+  "explicitBlockers": [
+    "TASK_COCKPIT_STAGE_MAPPING_UNAVAILABLE",
+    "TASK_COCKPIT_RESPONSIBILITY_HANDOFF_UNAVAILABLE",
+    "TASK_COCKPIT_BUSINESS_CONTEXT_BLOCKED"
+  ],
+  "verification": {
+    "targetedAndCumulativeTests": {
+      "result": "32 passed",
+      "files": [
+        "services/aos-api/tests/test_ecommerce_workshop_task_cockpit.py",
+        "services/aos-api/tests/test_ecommerce_workshop_api.py",
+        "services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py",
+        "services/aos-api/tests/asset_registry/test_ecommerce_workshop_installation_projection.py",
+        "services/aos-api/tests/asset_registry/test_workshop_module_contracts.py"
+      ]
+    },
+    "pythonCompile": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "writeKeywordGuard": "GREEN",
+    "formatter": "ruff unavailable in services/aos-api/.venv; compile, diff-check and tests used as available repository gates",
+    "formalHttpReadOnly": {
+      "org-org/dev-project": {
+        "status": 200,
+        "readiness": "degraded",
+        "taskCount": 1,
+        "hasMore": false,
+        "blockerCount": 3
+      },
+      "dev-org/dev-project": {
+        "status": 404,
+        "code": "NOT_FOUND",
+        "reason": "ecommerce.task-cockpit is not installed for the isolation canary",
+        "acceptedAsRealCompletionEvidence": false
+      }
+    },
+    "readOnlyStoreProbe": {
+      "transaction": "REPEATABLE READ READ ONLY",
+      "org-org/dev-project": {
+        "taskCount": 1,
+        "runCount": 1,
+        "taskStatuses": {"cancelled": 1}
+      },
+      "dev-org/dev-project": {
+        "taskCount": 0,
+        "runCount": 0
+      }
+    }
+  },
+  "fileIntegrity": [
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_task_cockpit_contracts.py",
+      "preSha256": "ABSENT",
+      "postSha256": "4cf5382169ffd11cc934db437e0ee077f690006cfdc044e9d388331515b0eee7"
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_task_cockpit.py",
+      "preSha256": "ABSENT",
+      "postSha256": "8f90de619598f3face627389f4aa5b19848d112122ca8b6894ab708dc6f7ddfc"
+    },
+    {
+      "path": "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+      "preSha256": "04c62fba6ee5d5eda6b47d9425eae7e73a04b321249ba16d98e337b5d0447b35",
+      "postSha256": "af6eff1c0de9271f9ec5ae925df6aecfa7dff43d1a562f82ec88078c38256da0"
+    },
+    {
+      "path": "services/aos-api/tests/test_ecommerce_workshop_task_cockpit.py",
+      "preSha256": "ABSENT",
+      "postSha256": "48b9b42f187ba700474c7d9bf636d8412e55d27ea30835ad956e285e8ea37f57"
+    },
+    {
+      "path": "services/aos-api/tests/test_ecommerce_workshop_api.py",
+      "preSha256": "46667f032e866a7ce76b8c15fb010312d679612e9a297fc92504145e77503a12",
+      "postSha256": "4d949441e6ea2fd49f209c7985e51e3efdb09d4e32affc5e553a04b7ea4c738e"
+    }
+  ],
+  "safety": {
+    "databaseMutation": false,
+    "migrationChanged": false,
+    "taskControlInvoked": false,
+    "realBusinessPayloadLogged": false,
+    "aipWorktreeRead": false,
+    "canaryUsedAsCompletionEvidence": false
+  },
+  "remainingFullW2_02Gate": [
+    "typed Step and Checkpoint projection",
+    "exact signed production Stage mapping",
+    "Responsibility and assignee readiness",
+    "Handoff, Approval and ReviewIssue readers",
+    "Action unknown and reconciliation",
+    "W2-00 business context enrichment",
+    "strict frontend SDK and browser EvidencePack"
+  ],
+  "progress": {
+    "completedTasks": 21,
+    "totalTasks": 96,
+    "w2Completed": 0,
+    "w2Total": 11,
+    "status": "W2_02_CORE_SUBWAVE_GREEN_FULL_TASK_OPEN"
+  }
+}

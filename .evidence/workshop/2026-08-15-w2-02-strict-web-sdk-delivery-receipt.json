@@ -1,0 +1,61 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-w2-02-strict-web-sdk-20260815",
+  "authorityRevision": "AOS-000047",
+  "branch": "w2-workshop",
+  "planCommit": "509c5fd",
+  "implementationCommit": "eb38c3e",
+  "decision": "STRICT_WEB_SDK_GREEN_FULL_W2_02_REMAINS_BLOCKED",
+  "operations": [
+    "ecommerceWorkshopTaskCockpitCoreGet",
+    "ecommerceWorkshopTaskCockpitRunStepsList",
+    "ecommerceWorkshopTaskCockpitRunCheckpointsList"
+  ],
+  "contractSemantics": {
+    "transport": "GET only with existing tenant auth headers",
+    "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
+    "stateConsistency": "current_state_per_page",
+    "decimalRepresentation": "canonical string",
+    "staleCursor": "typed 409 TASK_COCKPIT_CURSOR_STALE; no automatic replay or empty fallback",
+    "empty": "only canonical HTTP 200 with items=[] and count=0"
+  },
+  "verification": {
+    "targetedParserClient": "10 passed",
+    "workshopAdjacent": "33 passed",
+    "webFullRegression": "2117 passed in 188 files",
+    "typescript": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "environmentCorrection": "a root-level invocation omitted the Web jsdom config and produced 21 document/sessionStorage failures; the same scope was rerun from apps/web as 33/33 GREEN, followed by 2117/2117 full GREEN"
+  },
+  "fileIntegrity": [
+    {"path":"apps/web/src/api/ecommerceWorkshop/client.test.ts","preSha256":"41d939b0ad3d202fa514a2b0781ba801c0dcd03bd902e3ec82de2d180e0491a3","postSha256":"6f57fbdc1dc3a2e413f8dcf24193733b08ed6238ab470c4d1c4d30f6774723e3"},
+    {"path":"apps/web/src/api/ecommerceWorkshop/client.ts","preSha256":"8532c96cb0c275f0a9dee9d22b45602f82690be5d35ba66404d30e278d73d7ec","postSha256":"7cf1641786da7cf9b788ac32bcece914631323f75ddca2128f2daf6b99c6ae20"},
+    {"path":"apps/web/src/api/ecommerceWorkshop/contracts.ts","preSha256":"91b5afc5c97e432bb07d980f7d3758b83707506f0d596e5eb5e90c025a602ef5","postSha256":"707ed3ed8c43bf5b7646c45236dd0cc36ac6418af14139c80204668ea27a9de1"},
+    {"path":"apps/web/src/api/ecommerceWorkshop/parser.test.ts","preSha256":"13d67d8639653f71a4636d13edfd79ab9613a34041c685a295d51475318d9ce3","postSha256":"394a235b3c52e4d32e467e6da3dfcabe7cf36338c3e0efd125e6980ed6c90419"},
+    {"path":"apps/web/src/api/ecommerceWorkshop/parser.ts","preSha256":"5c6306b63c4fc8520e8a62e2f3395452bfdbe388466ee5fa2c0749cc0f4e2792","postSha256":"85d0981abade396d6e5fc3eeff34f8a31f2ce609910598b43606e663d6ac70db"}
+  ],
+  "externalDocumentIntegrity": [
+    {"path":"12-工作台层技术方案/103-W2-02日常总控StrictWebSDK预检ADR.md","preSha256":"6e9a61e65ebb762df05c39fe668b0f2ed4fa364be8544deb4e492f29707aa29b","postSha256":"7f42e61c3399bf35cd1a0b3730cb514bd1d4b997f907b86ccc79c306042fa585"},
+    {"path":"12-工作台层技术方案/83-W2-02-TaskRunStageBlocker日常总控只读模型预检ADR.md","preSha256":"08b555c5f7fe7e62dbf0ae449de03797949dcad869f69b37990ba01c9b4c4cb3","postSha256":"40e3de6df7fdd9a80c769c58eb490c360b99fe80c9849d5400e9676577e012b7"},
+    {"path":"12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"36f335ea38e451a71c6dbe583abb6e9066c5b79f650a58c2b16388f912dc793a","postSha256":"e27b48eb9816ed8a2665dfe611412b394f64dff4115dca9c206e1eba5de1b2fc"},
+    {"path":"12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md","preSha256":"8330be76450f13dd31ae543f50682a75d027d99bb3c7fedc91c8a7c3ec6946d6","postSha256":"5f40a984fbdfa8739cd2b6f417f5493e3e8190d77b032ca1d716fc2a3ba350e5"}
+  ],
+  "safety": {
+    "backendChanged": false,
+    "databaseMutation": false,
+    "componentOrCssChanged": false,
+    "writeRequestAdded": false,
+    "localPersistenceAdded": false,
+    "realTenantMutation": false,
+    "aipWorktreeRead": false
+  },
+  "remainingFullW2_02Gate": [
+    "exact signed production Stage mapping",
+    "Responsibility and assignee readiness",
+    "Handoff, Approval and ReviewIssue readers",
+    "Action unknown and reconciliation",
+    "W2-00 business context enrichment",
+    "page Store, nine-state UI and browser EvidencePack"
+  ],
+  "progress": {"completedTasks":21,"totalTasks":96,"w2Completed":0,"w2Total":11,"status":"W2_02_SDK_SUBWAVE_GREEN_FULL_TASK_OPEN"}
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "aos-workshop-doc-ledger-evidence/v1",
+  "taskId": "workshop-w4-05-knowledge-memory-doc-ledger-20260814",
+  "authorityRevision": "AOS-000024",
+  "result": "W4_05_KNOWLEDGE_MEMORY_DOC_LEDGER_ALIGNED",
+  "reviewLoop": [
+    {
+      "round": 1,
+      "result": "REMEDIATION_REQUIRED",
+      "findings": [
+        "the plan described the target query and candidate flow but did not distinguish implemented services from production provider wiring",
+        "KnowledgeReadiness and real-tenant positive evidence were not explicit coding gates",
+        "module-local governance duplication and unsafe default resolvers were not explicitly forbidden"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "DOCUMENT_BASELINE_APPROVED_IMPLEMENTATION_BLOCKED",
+      "findings": [
+        "production wiring, trusted resolver and real-readiness gates are explicit",
+        "the current 503 fail-closed state is preserved as correct behavior",
+        "AIP remains the sole candidate, memory, governance, query and citation authority",
+        "W4-05 remains unchecked and accurately blocked"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "path": "12-工作台层技术方案/04-EvidenceWiki查询与保存视图.md",
+      "preSha256": "d3b396082503ad2d3aa4bcccb9fafde4036cef80bf32beac320ebcb9bee419ec",
+      "postSha256": "b293335f3f196e7835a8e7aad04d7a9c8c024d11d8d4587019bcce39f6f9153e"
+    },
+    {
+      "path": "12-工作台层技术方案/37-W4-05-KnowledgeQuery与Memory治理生产装配预检ADR.md",
+      "preSha256": null,
+      "postSha256": "324bb69dfea184683e06cb355bf07a7fc53b2d6c5e17aec1d3d59f56a1f96103"
+    },
+    {
+      "path": "12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "59b14936dd6fc8ec376cbd1112517bfe07f3d5d188fc8e85e6ec9facdb2054ed",
+      "postSha256": "df9e72f4d5223f0d730ac6437eb8dc6006a57e8470f56f3c4a7ba457ae5bf570"
+    }
+  ],
+  "alignment": {
+    "preflightEvidence": ".evidence/workshop/2026-08-14-w4-05-knowledge-memory-governance-preflight.json",
+    "preflightCommit": "b78ea7c",
+    "w4ItemChecked": false,
+    "implementationAuthorized": false,
+    "aipW2D3FilesTouched": false,
+    "staticVisualsTouched": false
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "migrationLeaseAcquired": false
+  }
+}

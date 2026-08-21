@@ -6,6 +6,7 @@ import {
   useEcommerceWorkshopCatalog,
 } from "./EcommerceWorkshopCatalogContext";
 import { EcommerceWorkshopShell } from "./EcommerceWorkshopShell";
+import { TaskCockpitPage } from "./TaskCockpitPage";
 
 function HostState({
   state,
@@ -43,7 +44,10 @@ export function EcommerceWorkshopHost() {
         module={match.module}
         dataCutoff={catalog.response?.dataCutoff ?? null}
         catalogStale={catalog.phase === "stale"}
-      />
+        exposeReadOnlyWhenUnverified={match.module.moduleId === "ecommerce.task-cockpit"}
+      >
+        {match.module.moduleId === "ecommerce.task-cockpit" ? <TaskCockpitPage /> : undefined}
+      </EcommerceWorkshopShell>
     );
   }
   if (catalog.phase === "loading") return <HostState state="loading" />;

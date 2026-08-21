@@ -1,0 +1,78 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w3-09-common-production-ui-doc-align-20260815",
+  "workItem": "W3-09",
+  "projectRevision": "AOS-000039",
+  "sourceCommit": "157b24e",
+  "recordedAt": "2026-08-15T12:08:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "the plan named shared components but did not freeze one package, strict props or intent ownership",
+        "the monolithic ProductionContractsPage could be copied into eight divergent state machines"
+      ],
+      "closed": [
+        "froze one components/workshop/production package",
+        "froze nine components and five shared primitives",
+        "limited components to canonical DTO or read-model input and typed intent output",
+        "kept SDK calls and Receipt refresh in page orchestration"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "findings": [
+        "generic accessibility wording did not test Dialog, Drawer, Timeline, Diff and blocked controls",
+        "async states could still collapse blocked or unknown into ready"
+      ],
+      "closed": [
+        "froze nine explicit authority states",
+        "added focus trap and return, keyboard, live region, text alternative, zoom and reduced-motion gates",
+        "kept page-level H1 and landmarks outside components",
+        "explicitly excluded static HTML visual changes"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/05-前端壳交互状态与无障碍.md",
+      "preSha256": "45273cdc43fc932eeff449626bd719c084424f9166bde7c967ffd294a2969824",
+      "postSha256": "3317d2ab96d79dad789be87313c8d4bf86fe400502c89e852e9a319858b2cf17"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "c57b7dd46b71ea8ed002fbbfe6897e116ffdaf9e5c302e23697c5ef4d98e5ece",
+      "postSha256": "a574cba54321bb3d43cbdc26f11216e5cffb9334187d40f6b0073e03679ac135"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/97-W3-09公共生产UI组件边界与无障碍预检ADR.md",
+      "preSha256": null,
+      "postSha256": "ac5efdf8737dfb0764edf9aa858bab1e5755bc89da9f339292ba5b0ea26d85a2"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "9fb66d21fbb37d921474bad7c982d7af7c2504fec32a06e558d85443c578c0cf",
+      "postSha256": "59b594c47dd337f0895c82abe032697b8a9a8cf553ab11216bab1ab327d4a5e8"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "8266f0be8097b2bb793bb5040b9367d17522bf019c47834f69aafb52b73f3047",
+      "postSha256": "dbb6821a19656253d196a75b715872041e76767f702bc1a46eb4ed6495e4fc9e"
+    }
+  ],
+  "decision": {
+    "plan": "REMEDIATED_GREEN",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review and remediation rounds passed",
+    "all shared-document post hashes match",
+    "one package, strict props, typed intents, nine states and accessibility matrix are frozen",
+    "runtime implementation and 96-item completion count were not advanced",
+    "no source, static visual, database, tenant, browser or external mutation was introduced"
+  ]
+}

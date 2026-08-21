@@ -1,0 +1,65 @@
+{
+  "schema": "aos-workshop-preflight/v1",
+  "taskId": "workshop-w7-08-capacity-budget-usage-cancel-settlement-preflight-20260815",
+  "workItem": "W7-08",
+  "projectRevision": "AOS-000031",
+  "branch": "w2-workshop",
+  "head": "32cf461fdcad1c14e1b908777a855f12df6f147b",
+  "aipBaseline": "m1@5f80e62229f07836c11d280b891b48551febb038",
+  "recordedAt": "2026-08-15T07:05:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "foundationStatus": "SEPARATE_CAPACITY_USAGE_ATTRIBUTION_AUTHORITIES_GREEN",
+    "dependencyStatus": "IMPLEMENTATION_BLOCKED",
+    "externalEffect": "NONE",
+    "mayImplementNow": false,
+    "reason": "W7-07 is blocked and current AIP authorities are not atomically joined to a media TaskRun step attempt budget reservation cancellation outcome and final settlement"
+  },
+  "verifiedFoundations": [
+    "AIP-7 capacity pool reservation is tenant scoped exact-route model provider bound and prevents pool oversell",
+    "AgentRun transition releases an unused capacity reservation on CAS or commit failure",
+    "UsageReceipt preserves measured estimated and unknown quality and provider replay is idempotent",
+    "UsageAdjustment is append-only and cost attribution keeps unknown separate from hard-budget-eligible measured cost",
+    "Provider usage bridge requires a provider receipt and forwards to canonical Usage authority",
+    "focused capacity transition usage attribution and provider bridge tests are GREEN"
+  ],
+  "blockers": [
+    "W7-07 is not GREEN and no media Provider attempt can produce authoritative capacity usage cancel or receipt facts",
+    "capacity reservation is keyed to AgentRun rather than TaskRun stepKey attempt and media adapter request fingerprint",
+    "capacity pool models concurrency and token units only; no reviewed GPU render TTS storage bandwidth or live-session dimensions exist",
+    "no budget reservation authority binds projected cost currency profile Stage count retry allowance ProviderPrice and approval",
+    "capacity reserve consume release and Stage lease or Provider submit are not one durable state transition",
+    "a consumed capacity reservation cannot be released by the current terminal API and remains active until expiry without settlement semantics",
+    "UsageReceipt is not atomically bound to media Artifact Stage attempt Provider request Capacity reservation or budget reservation",
+    "no settlement authority converts estimated or unknown usage to measured adjusted refunded disputed or written-off outcomes",
+    "multi-currency projected and actual amounts have no explicit no-conversion bucket reconciliation contract",
+    "cancel only expresses local intent unless the adapter proves provider cancellation; it cannot claim fee reversal or capacity release",
+    "late Provider receipts after cancel timeout or takeover have no ordering reducer against attempt fence and settlement state",
+    "partial Artifact and partial Usage allocation across successful failed cancelled and invalidated Stages is undefined",
+    "unknown usage is not reserved as configurable budget exposure until reconciliation matures",
+    "no final cost variance decision explains projection versus measured estimated unknown adjustments refunds and taxes",
+    "no Media Studio cost timeline or org-org positive and dev-org isolation evidence exists"
+  ],
+  "targetBoundary": {
+    "capacity": "reservation exact scope is TaskRun stepKey attempt request fingerprint and versioned multidimensional pool; it remains separate from budget",
+    "budget": "immutable BudgetReservation binds confirmed projected range currency bucket retry reserve policy approval and exact price refs before a chargeable submit",
+    "usage": "every provider receipt appends measured estimated or unknown Usage against exact Stage attempt Artifact provider request capacity and budget refs",
+    "cancel": "cancel records intent and adapter outcome separately; only trusted provider evidence can prove stopped work and no fee",
+    "settlement": "append-only SettlementDecision and UsageAdjustment mature unknown or estimated facts without overwriting original receipts",
+    "unknown": "unknown usage counts toward configurable exposure and is never removed from dashboards or success denominators",
+    "final": "final variance is grouped by currency and separates projection measured estimated unknown adjustment refund tax and residual dispute"
+  },
+  "tests": {
+    "command": "UV_CACHE_DIR=/private/tmp/aos-workshop-uv-cache uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip7_capacity_reservation_db.py services/aos-api/tests/aip/test_aip7_agent_run_transition.py services/aos-api/tests/aip/test_aip_telemetry_usage_service.py services/aos-api/tests/aip/test_aip_cost_attribution_service.py services/aos-api/tests/aip/test_aip7_provider_usage_bridge.py",
+    "result": "22 passed",
+    "meaning": "separate generic capacity usage attribution and provider bridge foundations are stable; no test proves their media-stage atomic join cancellation or settlement"
+  },
+  "next": "align W7-08 contracts and checklist through two review rounds, retain the item unchecked, then preflight W7-09",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant mutation",
+    "no provider or payment side effect",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

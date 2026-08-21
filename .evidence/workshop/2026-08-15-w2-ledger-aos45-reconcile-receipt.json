@@ -1,0 +1,60 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-w2-ledger-aos45-reconcile-20260815",
+  "authorityRevision": "AOS-000045",
+  "branch": "w2-workshop",
+  "baseHead": "04f7a4d5c6fd75849b73f85d3d3a04cda3c009c7",
+  "decision": "LEDGER_RECONCILED_W2_00_SAFE_BLOCKED",
+  "progress": {
+    "completedTasks": 21,
+    "totalTasks": 96,
+    "w2Completed": 0,
+    "w2Total": 11,
+    "dataGate": "RED_7_OF_12",
+    "queryGate": "CODE_CONTRACT_GREEN_OPERATIONAL_QUERY_RED"
+  },
+  "reconciledFacts": [
+    "P03 and P05 latest failures are SSH tunnel readiness failures",
+    "P07 latest failure is an unreachable or interrupted MySQL endpoint",
+    "P03/P05/P07 source connection failures are misclassified as VALIDATION_ERROR/UNCLASSIFIED_EXCEPTION",
+    "P08 and P12 are registered but have no fresh successful run after registration",
+    "P8-1 is code/control GREEN while P8-2 QueryJob authority and P8-3 exact production adapters remain operational blockers"
+  ],
+  "watchdogSmoke": {
+    "decision": "turn-running",
+    "dependencyWaitArmedBefore": true,
+    "dependencyWaitArmedAfter": true,
+    "blockingTaskIds": [
+      "aip-p8-2-query-authority-20260815"
+    ],
+    "wakeAttemptsBefore": 18,
+    "wakeAttemptsAfter": 18,
+    "scheduleRunCountBefore": 92,
+    "scheduleRunCountAfter": 92,
+    "latestScheduleRunBefore": "2026-08-15T00:00:02.451829+00:00",
+    "latestScheduleRunAfter": "2026-08-15T00:00:02.451829+00:00",
+    "runnerInvoked": false,
+    "databaseMutation": false
+  },
+  "externalArtifacts": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "5d9e8f7f76fade5e0aa62643b1aeecea3abe95387c89446f2f23fc33c45c2030",
+      "postSha256": "3999dcde7ff0d44e8b5f189918e8c4cd3bd3a46a410680d7316e97cb896fdfb8"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "31743eda493aaff4ae8012821cb44843ebf6fdc1e685f4796a5c11f6e7f49aa4",
+      "postSha256": "f7ba87f3eaa03d13fd1a90c0fd0f43c407529fcf7c9bdd135ed18f0de3d4b11c"
+    }
+  ],
+  "safety": {
+    "businessCodeChanged": false,
+    "aipWorktreeRead": false,
+    "migrationLeaseAcquired": false,
+    "pipelineTriggered": false,
+    "realTenantMutated": false,
+    "taskCompletionClaimed": false
+  },
+  "nextReentry": "AIP P8-2/P8-3 Delivery Receipt, migration Lease release, or W2 data fact fingerprint change; every change requires fresh gate verification."
+}

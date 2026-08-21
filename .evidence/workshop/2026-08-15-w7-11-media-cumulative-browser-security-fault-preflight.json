@@ -1,0 +1,109 @@
+{
+  "schema": "aos-workshop-cumulative-preflight/v1",
+  "taskId": "workshop-w7-11-media-cumulative-browser-security-fault-preflight-20260815",
+  "workItem": "W7-11",
+  "projectRevision": "AOS-000033",
+  "branch": "w2-workshop",
+  "head": "1adee73",
+  "aipBaseline": "m1@8cfc29a3d44ac4e12915371a547304452dad6d37",
+  "recordedAt": "2026-08-15T07:40:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "W7_01_THROUGH_W7_10_TARGET_CONTRACTS_REVIEWED",
+    "cumulativeStatus": "CUMULATIVE_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "maySignGreen": false,
+    "reason": "all ten upstream W7 implementation items remain unchecked, so no media end-to-end service browser security or fault-injection chain exists to certify"
+  },
+  "sourceContinuity": {
+    "baselineCommit": "084d185",
+    "currentCommit": "1adee73",
+    "command": "git diff --name-only 084d185..HEAD -- services apps packages bundles",
+    "result": "empty",
+    "meaning": "all W7 preflight tests exercised the same source tree; intervening commits contain evidence only"
+  },
+  "upstream": [
+    {"item": "W7-01", "status": "NOT_STARTED_IMPLEMENTATION_BLOCKED", "evidence": ".evidence/workshop/2026-08-14-w7-01-signed-stage-responsibility-capability-mapping-preflight.json", "tests": "backend 28; frontend 16"},
+    {"item": "W7-02", "status": "NOT_STARTED_IMPLEMENTATION_BLOCKED", "evidence": ".evidence/workshop/2026-08-15-w7-02-profile-cost-confirmation-preflight.json", "tests": "backend 17; frontend full baseline 2112"},
+    {"item": "W7-03", "status": "NOT_STARTED_IMPLEMENTATION_BLOCKED", "evidence": ".evidence/workshop/2026-08-15-w7-03-stage-template-compiler-taskrun-preflight.json", "tests": "backend 29"},
+    {"item": "W7-04", "status": "NOT_STARTED_IMPLEMENTATION_BLOCKED", "evidence": ".evidence/workshop/2026-08-15-w7-04-stage-executor-lease-checkpoint-takeover-preflight.json", "tests": "backend 12"},
+    {"item": "W7-05", "status": "NOT_STARTED_IMPLEMENTATION_BLOCKED", "evidence": ".evidence/workshop/2026-08-15-w7-05-artifact-family-master-variant-supersedes-preflight.json", "tests": "backend 8"},
+    {"item": "W7-06", "status": "NOT_STARTED_IMPLEMENTATION_BLOCKED", "evidence": ".evidence/workshop/2026-08-15-w7-06-four-gate-eval-review-return-attempt-preflight.json", "tests": "backend 13"},
+    {"item": "W7-07", "status": "NOT_STARTED_IMPLEMENTATION_BLOCKED", "evidence": ".evidence/workshop/2026-08-15-w7-07-media-model-provider-malicious-asset-preflight.json", "tests": "backend 25"},
+    {"item": "W7-08", "status": "NOT_STARTED_IMPLEMENTATION_BLOCKED", "evidence": ".evidence/workshop/2026-08-15-w7-08-capacity-budget-usage-cancel-settlement-preflight.json", "tests": "backend 22"},
+    {"item": "W7-09", "status": "NOT_STARTED_IMPLEMENTATION_BLOCKED", "evidence": ".evidence/workshop/2026-08-15-w7-09-media-studio-lifecycle-responsibility-stage-artifact-issue-ui-preflight.json", "tests": "backend 28; frontend 20"},
+    {"item": "W7-10", "status": "NOT_STARTED_IMPLEMENTATION_AND_EXTERNAL_EFFECT_BLOCKED", "evidence": ".evidence/workshop/2026-08-15-w7-10-publish-variant-impact-action-receipt-preflight.json", "tests": "backend 20; frontend 9"}
+  ],
+  "evidenceInterpretation": {
+    "duplicateWarning": "test totals overlap across upstream items and must not be summed as unique cumulative coverage",
+    "foundationResult": "generic AIP Task Contract Eval ArtifactRelation Capacity Usage Action and Workshop shell foundations are regression-green",
+    "notProven": "no test executes one signed media profile through canonical Stage runtime Provider Artifact four-gate return publishing settlement and effect review"
+  },
+  "gateMatrix": {
+    "contract_green": "TARGET_CONTRACTS_REVIEWED_NOT_IMPLEMENTED",
+    "service_green": false,
+    "database_restart_green": false,
+    "tenant_rls_green": false,
+    "browser_positive_green": false,
+    "browser_negative_green": false,
+    "security_green": false,
+    "fault_injection_green": false,
+    "provider_adapter_green": false,
+    "publish_canary_green": false,
+    "operational_ready": false
+  },
+  "requiredCumulativeJourneys": [
+    "LITE STANDARD and FULL preserve eight responsibilities and deterministic signed Stage DAGs",
+    "prepare freeze recommend confirm compile approve start pause checkpoint resume takeover and cancellation survive refresh and restart",
+    "Artifact family Master Variant supersedes conflict selection and exact approval remain immutable",
+    "fact brand copyright and platform gates evaluate the same Artifact and return creates a new attempt with correct invalidation",
+    "media Provider timeout unknown late receipt partial output cancel and reconcile never duplicate a paid request",
+    "Capacity Budget Usage Settlement and per-currency final variance reconcile every Stage and partial Artifact",
+    "publish candidate Impact Approval Lease Receipt reconcile manual Handoff lineage and effect review remain distinct",
+    "dependency drift revoke expiry conflict stale partial forbidden and unknown fail closed with visible reasons"
+  ],
+  "browserGate": [
+    "serve production build over real HTTP and use canonical installed route /workshop/media-studio",
+    "verify 1280 1440 and 1920 viewports no horizontal page overflow and stable responsive information order",
+    "verify one H1 semantic tabs full keyboard and focus recovery non-color states zoom and reduced motion",
+    "assert DOM network console and backend authority for the positive org-org/dev-project journey",
+    "assert dev-org/dev-project only as a negative isolation canary and prove no cross-tenant refs or media URLs",
+    "refresh and deep links must restore the same exact context rather than browser memory",
+    "loading empty blocked partial stale forbidden failed unknown and conflict states must contain no sample success data"
+  ],
+  "securityGate": [
+    "RLS and FORCE RLS plus tenant permission marking purpose and disclosure checks",
+    "signed Bundle template and exact Provider Capability Account Policy License and Eval refs",
+    "quarantine MIME size hash malware archive-bomb OCR EXIF subtitle prompt-injection and egress allowlist",
+    "purpose-bound short-lived media access with access Receipt and no credential PII prompt or media payload leakage",
+    "Action maker checker executor separation approval expiry kill rate budget and compensation",
+    "stored and rendered metadata resists XSS and untrusted Provider fields never become instructions"
+  ],
+  "faultInjectionGate": [
+    "lease loss stale fence heartbeat timeout and takeover race",
+    "crash before submit after submit before Receipt and after Receipt before projection",
+    "duplicate out-of-order and late webhook plus Provider request id loss",
+    "Checkpoint corruption dependency drift revoked template license account and price",
+    "capacity oversell budget race unknown usage settlement dispute and multi-currency mismatch",
+    "Artifact family concurrent candidate selection Eval return race publish cancel and kill switch",
+    "database restart API restart network partition and stale projection recovery"
+  ],
+  "blockers": [
+    "W7-01 through W7-10 implementation receipts are all absent",
+    "DEP-M9 AIP-9 media Provider runtime is not GREEN",
+    "signed media templates Profile recommendation compiler executor family gate settlement and UI authorities are absent",
+    "production publish Adapter and operational-ready capability are absent",
+    "no real HTTP positive Media Studio journey exists",
+    "no complete tenant RLS malicious-asset and security EvidencePack exists",
+    "no media-specific crash race timeout late-webhook restart and recovery fault-injection EvidencePack exists",
+    "no independently authorized org-org publish canary kill drill rollback or compensation exercise exists"
+  ],
+  "next": "align W7-11 cumulative gate documents through two review rounds, retain W7 exit gate blocked, then continue W8 only for dependency-safe preflight work",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant or browser mutation",
+    "no provider publish or payment side effect",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

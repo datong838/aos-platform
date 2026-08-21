@@ -1,0 +1,42 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-w2-ssh-contract-ledger-link-20260815",
+  "authorityRevision": "AOS-000045",
+  "branch": "w2-workshop",
+  "baseHead": "2f69dfa559110b8b59da07047e6831e9578bb3ed",
+  "decision": "W2_00_LEDGER_LINKED_TO_EXACT_SSH_LIFECYCLE_CONTRACT",
+  "externalArtifacts": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "3999dcde7ff0d44e8b5f189918e8c4cd3bd3a46a410680d7316e97cb896fdfb8",
+      "postSha256": "cb0d206dfdec64151e612a0932566fc187a19762c0082bfc676d1e43eabb892f"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md",
+      "preSha256": "f7ba87f3eaa03d13fd1a90c0fd0f43c407529fcf7c9bdd135ed18f0de3d4b11c",
+      "postSha256": "3be2c366efd0d5960b87ff4e1da712cee038c45d03ce0b7ce04df3231954e25a"
+    }
+  ],
+  "linkedEvidence": [
+    ".evidence/workshop/2026-08-15-w2-ssh-lifecycle-contract-receipt.json",
+    "28-W2只读基座数据源Readiness预审与开工门.md#12"
+  ],
+  "antiShortcutGate": [
+    "increasing retry count alone cannot close W2-00",
+    "an open local port alone cannot close W2-00",
+    "fresh canonical pipeline success and the complete lifecycle contract are both required"
+  ],
+  "progress": {
+    "completedTasks": 21,
+    "totalTasks": 96,
+    "w2Completed": 0,
+    "w2Total": 11,
+    "status": "DEP_DATA_RED_DEP_ADP_OPERATIONAL_QUERY_RED"
+  },
+  "safety": {
+    "businessCodeChanged": false,
+    "pipelineTriggered": false,
+    "databaseMutation": false,
+    "aipWorktreeRead": false
+  }
+}

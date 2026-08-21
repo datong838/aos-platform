@@ -1,0 +1,62 @@
+{
+  "schema": "aos-workshop-watchdog-delivery-receipt/v1",
+  "task_id": "workshop-watchdog-dependency-lease-heartbeat-v22-20260814",
+  "result": "IMPLEMENTED_REVIEWED_AND_ACCEPTED_GREEN",
+  "commit": "dbbcc4d",
+  "rules": [
+    "Watchdog monitoring is read-only and cannot acquire Lease, run migrations, modify code or touch real tenant data.",
+    "Only exact configured scope tokens block; unrelated AIP work remains parallel.",
+    "Every wake revalidates authority, 01/06, Git, Delivery Receipt, memory gates and all Leases before work.",
+    "Wake evidence is not recovery evidence; current episode Ack plus new final remains mandatory."
+  ],
+  "files": {
+    "scripts/long-task-watchdog/watchdog.py": {
+      "before_sha256": "314802d4497bc258b4a6c468fa9fb9cc4fa5e428397a37c0a4ac4562de41b386",
+      "after_sha256": "dc22d950015a2488eebf1f8ae41ab131cf52d44dd192c1bf7b96f773397224f9"
+    },
+    "scripts/long-task-watchdog/test_watchdog.py": {
+      "before_sha256": "82687eeee395f639737fc44c2dc82d9e02da918856c5afa6abc10cbf8ed8925c",
+      "after_sha256": "d76fbbda740f1e81e1eaa65b6757ceb22d75cc50c7087289eccdd64f6817e792"
+    },
+    "scripts/long-task-watchdog/README.md": {
+      "before_sha256": "85a83afb7ee34838c7c11bfdb225b141e43c4ccebfb6f50ab0def02cec6bd2a1",
+      "after_sha256": "a14d53365ae3b61d9618d7155f2cdcac889bb90f471236d44d2fcd2654610e22"
+    }
+  },
+  "local_configuration": {
+    "config_revision": "workshop-watchdog-v2.2-20260814",
+    "config_sha256": "7bae2a990473c4c919c3bf768c28245072944eef17a5deeda9c62373c01cdbc9",
+    "launch_agent_sha256": "5eaa643572541b7b36b4e89c5276a1b1f685b58b22219292e1846d8c35ce12aa",
+    "launch_agent_label": "com.aos.codex-long-task-watchdog-workshop",
+    "start_interval_seconds": 300,
+    "enabled": true,
+    "thread_id": "019fc55d-c8d4-72c1-9969-b1f2537d977b",
+    "expected_branch": "w2-workshop",
+    "dependency_scope_tokens": [
+      "services/aos-api/alembic/versions"
+    ]
+  },
+  "verification": {
+    "red_failures_before_implementation": 5,
+    "unit_and_isolated_loop_tests": "33 passed",
+    "python_compile": "GREEN",
+    "config_json": "GREEN",
+    "launch_agent_plist": "GREEN",
+    "git_diff_check": "GREEN",
+    "transport_backoff_seconds": [300, 600, 900, 1800, 3600, 7200],
+    "max_transport_failures": 12
+  },
+  "live_noop": {
+    "observed_blocking_task_id": "aip-w2d1-migration-store-20260814",
+    "dependency_wait_armed": true,
+    "last_decision": "turn-running",
+    "total_attempts": 0,
+    "meaning": "The live thread was active, so the watchdog only armed and did not invoke Codex."
+  },
+  "not_claimed": [
+    "The Watchdog does not block Workshop for unrelated AIP Leases.",
+    "The Watchdog does not inspect or overwrite w1-aip uncommitted work.",
+    "The Watchdog does not guarantee a future recovery outcome before current-episode Ack and final evidence exist.",
+    "No migration, real tenant mutation, m1 CAS or authority update was performed."
+  ]
+}

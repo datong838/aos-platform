@@ -1,0 +1,173 @@
+{
+  "schema": "aos-workshop-w2-analyst-metric-quality-evidence-plan-read-model-preflight/v1",
+  "taskId": "workshop-w2-06-analyst-metric-quality-evidence-plan-read-model-preflight-20260815",
+  "workItem": "W2-06",
+  "projectRevision": "AOS-000037",
+  "branch": "w2-workshop",
+  "head": "b394db2d890f53b619c3bdfb18dbe3017e556212",
+  "recordedAt": "2026-08-15T10:45:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "ANALYST_METRIC_QUALITY_EVIDENCE_PLAN_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W1-10 and W2-00 are not GREEN; current Order CustomerLite and Payment pipelines are failed; Analyst aggregate and Insight GrowthPlan authorities are absent"
+  },
+  "dependencyFactRevalidation": {
+    "authorityRevision": "AOS-000037",
+    "authorityStage": "BIND1_0_READ_ONLY_PREFLIGHT_GREEN_WITH_WARNINGS",
+    "w1_10": "not GREEN",
+    "w2_00": "not GREEN",
+    "dataSnapshot": "latest documented real schedules remain 6 succeeded and 6 failed; Order OrderLine CustomerLite Payment are among failed sources",
+    "aip8": "not overall GREEN; advanced analyst experience cannot be treated as operational",
+    "leaseConflict": false
+  },
+  "closureRevalidation": {
+    "authorityRevision": "AOS-000038",
+    "authorityStage": "BIND1_1_CONTRACT_ADDITIVE_MIGRATION_GREEN_WITH_WARNINGS",
+    "newFact": "BIND-1 additive contracts and migration are GREEN, while no Agent is runnable and no evaluated binding is activatable",
+    "remainingAipGates": [
+      "BIND-2 through BIND-6",
+      "AIP-8",
+      "AIP-9",
+      "AIP-10",
+      "W4"
+    ],
+    "impact": "does not close W1-10 W2-00 Analyst aggregate metric quality Insight DecisionSummary GrowthPlan or AIP-8 gates; the W2-06 HARD_GATE_BLOCKED decision is unchanged"
+  },
+  "liveCodeFindings": {
+    "workshopHttpOperations": [
+      "GET /v1/ecommerce-workshop/modules",
+      "GET /v1/ecommerce-workshop/modules/{module_id}/readiness"
+    ],
+    "analystViewStoreSdk": "ABSENT",
+    "metricDefinitionRevision": "PRESENT in AIP Eval authority",
+    "metricObservationAndQualityAggregate": "ABSENT as a canonical Analyst view with definition revision cutoff numerator denominator quality and source-run lineage",
+    "insightRevision": "ABSENT",
+    "decisionSummary": "ABSENT",
+    "growthPlanRevision": "ABSENT",
+    "effectReview": "TARGET REF AND GENERIC MEMORY LINEAGE ONLY; no Analyst aggregate authority exists",
+    "savedExploration": "legacy in-memory oe_enhancements implementation is present; it cannot by itself prove the required PostgreSQL authority and Analyst exact-ref projection",
+    "moduleManifest": {
+      "moduleId": "ecommerce.analyst",
+      "requiredObjects": [
+        "Shop",
+        "Product",
+        "Order",
+        "OrderLine",
+        "CustomerLite",
+        "ProductReview",
+        "Payment",
+        "Metric",
+        "Observation",
+        "GrowthPlan"
+      ],
+      "requiredCapabilities": [
+        "strategy.plan",
+        "performance.review"
+      ],
+      "viewRefs": [],
+      "evalPackRefs": [
+        "content/evals/placeholder.json"
+      ],
+      "productionContractRefs": [],
+      "responsibilityTemplateRefs": []
+    }
+  },
+  "targetViewContract": {
+    "operationId": "ecommerceWorkshopAnalystViewGet",
+    "method": "GET",
+    "canonicalPath": "/v1/ecommerce-workshop/views/analyst",
+    "tenantSource": "verified Principal only",
+    "filters": [
+      "view=overview|drivers|diagnosis|plan|effects|evidence|quality",
+      "metricRef",
+      "subjectRef",
+      "windowStart",
+      "windowEnd",
+      "comparisonWindow",
+      "planRef",
+      "cursor"
+    ],
+    "rootAuthorities": [
+      "MetricDefinitionRevision exact ref",
+      "MetricObservation or MetricResult exact ref with numerator denominator unit aggregation grain and window",
+      "source run cutoff quality and reconciliation exact refs",
+      "EvidenceBundleRevision EvidenceCitation QueryJob and SavedExploration exact refs",
+      "InsightRevision DecisionSummary and GrowthPlanRevision exact refs when they exist",
+      "TaskGraph TaskRun Handoff Receipt EffectReview and MemoryCandidate exact refs"
+    ],
+    "readSlices": [
+      "metric cards with definition value unit numerator denominator window cutoff and quality",
+      "driver observations and comparisons without converting correlation into causation",
+      "diagnosis summary with evidence assumptions counterevidence uncertainty and alternative explanations",
+      "GrowthPlan target constraints budget expected effect confidence stop conditions and exact evidence refs",
+      "plan to Task Handoff Receipt and mature EffectReview lineage",
+      "source quality freshness missingness reconciliation and typed blockers"
+    ],
+    "requiredEnvelope": [
+      "schemaVersion resourceRevision evaluatedAt dataCutoff and stable cursor",
+      "metric source query model eval plan-materialization and handoff readiness kept separate",
+      "exact scoped refs disclosure decisions typed blockers and quality issue refs",
+      "all comparisons declare timezone cohort filters grain eligible denominator and one frozen cutoff",
+      "unknown stale failed partial conflict and insufficient-sample values remain explicit and never become zero"
+    ]
+  },
+  "authorityBoundaries": [
+    "The view is rebuildable and never becomes Metric Evidence Insight Plan Task EffectReview or Memory authority",
+    "Metric definition revision and observed value revision are separate; definition drift invalidates comparisons rather than rewriting history",
+    "a displayed metric always carries unit grain window numerator denominator cutoff quality and lineage or is explicitly unavailable",
+    "correlation anomaly and attribution observation do not imply causation; causal claims require an approved method and evidence",
+    "DecisionSummary exposes conclusion evidence assumptions counterevidence uncertainty and alternatives, never private model reasoning",
+    "GrowthPlan draft approved materialized executing completed effect-matured and corrected remain separate states",
+    "unknown or stale values never display as zero and are excluded from success or improvement totals",
+    "the W2 view exposes no arbitrary SQL query save mutate approve materialize dispatch or memory-promote command"
+  ],
+  "metricAndPlanInvariants": [
+    "each metric value binds exactly one MetricDefinitionRevision and one declared calculation window",
+    "comparison values use compatible definition unit grain timezone cohort filters and source cutoff or return conflict",
+    "headline totals and chart points disclose eligible denominator and missing excluded late and revised populations",
+    "quality score cannot hide a failed latest source run; latest failure remains a blocker even when historical rows exist",
+    "Insight observations cite exact metric and evidence revisions; a later metric revision does not mutate the prior insight",
+    "GrowthPlan materialization preserves objective constraint budget stop-condition and evidence refs and conserves Task counts",
+    "EffectReview uses a declared maturity window and baseline and does not promote immature movement into causal success",
+    "assumption corrections and plan supersession append new revisions without erasing the previous decision context"
+  ],
+  "requiredTestsWhenUnblocked": [
+    "strict metric quality evidence insight decision plan effect blocker and cursor DTO parsers",
+    "tenant no-scope wrong-scope cross-tenant marking purpose aggregation privacy and minimum-sample checks",
+    "definition drift unit grain timezone cohort filter cutoff numerator denominator and late-data compatibility failures",
+    "unknown stale failed partial conflict and insufficient sample never display as zero",
+    "latest failed source run cannot be promoted by historical data or last-build success",
+    "correlation does not become causation and private reasoning is never returned",
+    "GrowthPlan CAS evidence drift materialization Task conservation stop condition and mature EffectReview",
+    "SavedExploration exact ref share revoke expiry and restart persistence before use",
+    "read-only HTTP method and absence of mutation controls in W2",
+    "org-org positive and dev-org negative three-viewport keyboard browser evidence"
+  ],
+  "blockers": [
+    "W1-10 real Registry reconciliation and positive Workshop projection are not GREEN",
+    "W2-00 DEP-DATA remains RED and Order OrderLine CustomerLite Payment latest runs are failed",
+    "analyst Workshop view Store and strict SDK do not exist",
+    "InsightRevision DecisionSummary and GrowthPlanRevision canonical authorities do not exist",
+    "metric observation quality cutoff and source-run aggregate contract is absent",
+    "AIP-8 advanced analyst capability is not overall GREEN",
+    "module manifest has no viewRefs productionContractRefs or responsibilityTemplateRefs and uses a placeholder Eval pack"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "no W2-06 implementation exists and hard dependencies are RED; MetricDefinition SavedExploration or generic Query tests do not prove the Analyst aggregate",
+    "doesNotProve": [
+      "current real-tenant metric freshness and quality",
+      "Insight DecisionSummary GrowthPlan authority",
+      "plan to Task EffectReview conservation",
+      "positive real-tenant browser readiness"
+    ]
+  },
+  "next": "align the W2-06 contract and evidence reference through two review rounds without runtime coding",
+  "safety": [
+    "read-only code document Git and shared-memory inspection only",
+    "no arbitrary query database tenant browser Task materialization memory promotion or external action",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

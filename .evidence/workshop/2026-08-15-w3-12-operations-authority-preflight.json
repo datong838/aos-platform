@@ -1,0 +1,88 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w3-12-operations-authority-preflight-20260815",
+  "workshopTask": "W3-12",
+  "recordedAt": "2026-08-15T12:30:00+08:00",
+  "authorityRevision": "AOS-000039",
+  "branch": "w2-workshop",
+  "baselineCommit": "55e24791094025d8190150d880ca6e112d99e5d0",
+  "scope": {
+    "tenant": "org-org/dev-project",
+    "operation": "read-only committed-code and approved-plan inspection",
+    "externalEffect": false,
+    "migrationLeaseAcquired": false
+  },
+  "dependencyVerdict": {
+    "W3-10": "NOT_STARTED / CUMULATIVE_GATE_RED",
+    "W2-01": "NOT_STARTED / HARD_GATE_BLOCKED",
+    "DEP-C0": "PARTIAL_FOUNDATION_ONLY",
+    "upstreamData": "PARTIAL; Order/OrderLine/ProductSku/Shipment/Payment projections exist historically but W2 data readiness is not GREEN",
+    "overall": "HARD_GATE_BLOCKED"
+  },
+  "sourceInspection": {
+    "manifestDeclaration": "OperationCase",
+    "operationCaseAuthority": "ABSENT",
+    "aggregationPolicyRevisionAuthority": "ABSENT",
+    "eventClassificationDecisionAuthority": "ABSENT",
+    "slaPolicyAuthority": "ABSENT",
+    "automationKillDecisionAuthority": "ABSENT",
+    "operationsStoreApiSdkWeb": "ABSENT",
+    "reusableUpstreamFacts": [
+      "Order",
+      "OrderLine",
+      "ProductSku approved inventory semantics",
+      "Shipment",
+      "Payment",
+      "approved aftersale Event/Object contract"
+    ],
+    "nonSubstitutionRule": "A manifest type name, generic Ontology list, Action runtime or historical upstream projection does not constitute OperationCase authority or current Workshop readiness."
+  },
+  "frozenAuthorityDecision": {
+    "originalFacts": "L0/O1 events and commerce objects remain immutable upstream authority and are referenced by exact scoped refs/hash; no transaction payload copy.",
+    "classification": "OperationEventClassificationDecisionRevision is append-only and records classifier/policy/evidence refs, confidence, actor and reason without mutating the original event.",
+    "aggregationPolicy": "AggregationPolicyRevision is append-only policy authority; it never becomes the original-event authority.",
+    "operationCase": "OperationCase is a tenant-scoped event-sourced L1 aggregate authority whose membership and status are rebuilt from exact originals and append-only decisions/events.",
+    "projection": "Case list/timeline/SLA summaries are rebuildable projections and may be deleted/rebuilt without deleting originals or decisions.",
+    "sla": "SLA deadlines and breach state are derived from an exact SlaPolicyRevision, case event time and pause/resume decisions; wall-clock display state is not authority.",
+    "kill": "Automation kill is an append-only policy/decision ref checked immediately before lease/acquisition and execution; it blocks new effects but never rewrites prior attempts or receipts."
+  },
+  "requiredCommands": [
+    "classifyOperationEvent",
+    "createOrAttachOperationCase",
+    "reviseAggregationPolicyWithExpectedVersion",
+    "splitOperationCase",
+    "mergeOperationCases",
+    "setCasePriorityWithExpectedVersion",
+    "recordSlaPauseOrResume",
+    "closeOrReopenCaseWithExpectedVersion",
+    "setAutomationKillDecision"
+  ],
+  "requiredInvariants": [
+    "Provider event/ref/hash replay is idempotent and duplicate or out-of-order input never duplicates actions.",
+    "Every Case member remains reachable to an original event/object and membership count reconciles after split/merge.",
+    "Policy revision change produces a new rebuild result and explicit migration/review decision; it does not silently rewrite current membership.",
+    "Split and merge append successor decisions and preserve predecessor Case timelines and receipts.",
+    "SLA policy drift marks readiness stale and recomputation is auditable.",
+    "Kill decision blocks new proposal/lease/execution according to policy while in-flight/unknown outcomes remain visible for reconcile.",
+    "Money, address and customer data follow purpose/marking/minimum-disclosure rules and never enter logs or Receipt plaintext."
+  ],
+  "additionalDependencies": [
+    "DEP-OPERATION-EVENT-CONTRACT",
+    "DEP-OPERATION-CASE-AUTHORITY",
+    "DEP-AGGREGATION-POLICY-AUTHORITY",
+    "DEP-CASE-REVERSIBLE-MEMBERSHIP",
+    "DEP-SLA-POLICY-AUTHORITY",
+    "DEP-AUTOMATION-KILL-AUTHORITY"
+  ],
+  "requiredVerification": [
+    "same-tenant exact originals and cross-tenant fail-closed",
+    "duplicate, late, out-of-order and deleted-source replay",
+    "policy-version rebuild with before/after membership reconciliation",
+    "split/merge predecessor-successor reachability and count conservation",
+    "SLA clock, pause/resume, timezone and policy drift",
+    "kill before proposal, lease and execution plus in-flight unknown reconcile",
+    "Store/API/strict SDK/Web/browser/security cumulative evidence on one release identity"
+  ],
+  "result": "PREFLIGHT_GREEN; W3-12_RUNTIME_NOT_STARTED; HARD_GATE_BLOCKED; NO_EXTERNAL_EFFECT",
+  "next": "Run two-round plan remediation to freeze L0/O1 originals versus L1 Case authority, classification and reversible aggregation decisions, SLA clock and kill semantics before any implementation."
+}

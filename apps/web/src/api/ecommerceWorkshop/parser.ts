@@ -1,5 +1,6 @@
 import {
   ECOMMERCE_WORKSHOP_SCHEMA_VERSION,
+  TASK_COCKPIT_SCHEMA_VERSION,
   type EcommerceWorkshopApiErrorBody,
   type EcommerceWorkshopModule,
   type EcommerceWorkshopModuleListResponse,
@@ -13,6 +14,15 @@ import {
   type WorkshopReadiness,
   type WorkshopReadinessBlocker,
   type WorkshopTenant,
+  type TaskCockpitBlocker,
+  type TaskCockpitCheckpoint,
+  type TaskCockpitCheckpointPageResponse,
+  type TaskCockpitCoreResponse,
+  type TaskCockpitPage,
+  type TaskCockpitRun,
+  type TaskCockpitStep,
+  type TaskCockpitStepPageResponse,
+  type TaskCockpitTask,
 } from "./contracts";
 
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
@@ -44,6 +54,11 @@ function integer(value: unknown, label: string, minimum = 0): number {
 function bool(value: unknown, label: string): boolean {
   if (typeof value !== "boolean") throw new TypeError(`${label} 必须是布尔值`);
   return value;
+}
+function boundedText(value: unknown, label: string, maximum: number): string {
+  const result = text(value, label);
+  if (result.length > maximum) throw new TypeError(`${label} 长度超限`);
+  return result;
 }
 function nullable<T>(value: unknown, parse: (value: unknown) => T): T | null {
   return value === null ? null : parse(value);
@@ -134,4 +149,67 @@ export function parseEcommerceWorkshopModuleReadiness(value: unknown): Ecommerce
 }
 export function parseEcommerceWorkshopApiError(value: unknown, fallback: string): EcommerceWorkshopApiErrorBody {
   try { const raw = record(value, "apiError"); exact(raw, ["code", "message", "details", "traceId"], "apiError"); return { code: text(raw.code, "apiError.code"), message: text(raw.message, "apiError.message"), details: raw.details === null ? null : record(raw.details, "apiError.details"), traceId: text(raw.traceId, "apiError.traceId") }; } catch { return { code: "INVALID_ERROR_RESPONSE", message: fallback, details: null, traceId: "" }; }
+}
+
+const TASK_STATUSES = ["pending", "planning", "awaiting_approval", "approved", "executing", "paused", "completed", "failed", "cancelled", "rolled_back"] as const;
+const RUN_STATUSES = ["queued", "running", "succeeded", "failed", "cancelled", "unknown"] as const;
+const STEP_STATUSES = ["queued", "running", "succeeded", "failed", "skipped", "unknown"] as const;
+const DECIMAL = /^\d+(?:\.\d+)?$/;
+
+function parseTaskCockpitPage(value: unknown): TaskCockpitPage {
+  const raw = record(value, "taskCockpit.page"); exact(raw, ["limit", "count", "hasMore", "nextCursor"], "taskCockpit.page");
+  const limit = integer(raw.limit, "taskCockpit.page.limit", 1); if (limit > 100) throw new TypeError("taskCockpit.page.limit 超限");
+  const count = integer(raw.count, "taskCockpit.page.count"); if (count > 100 || count > limit) throw new TypeError("taskCockpit.page.count 不一致");
+  const hasMore = bool(raw.hasMore, "taskCockpit.page.hasMore");
+  const nextCursor = raw.nextCursor === null ? null : boundedText(raw.nextCursor, "taskCockpit.page.nextCursor", 4096);
+  if (hasMore !== (nextCursor !== null)) throw new TypeError("taskCockpit.page cursor 不一致");
+  return { limit, count, hasMore, nextCursor };
+}
+function parseTaskCockpitBlocker(value: unknown): TaskCockpitBlocker {
+  const raw = record(value, "taskCockpit.blocker"); exact(raw, ["code", "severity", "dependency", "requiredAction"], "taskCockpit.blocker");
+  const code = boundedText(raw.code, "taskCockpit.blocker.code", 120); if (!REASON.test(code)) throw new TypeError("taskCockpit.blocker.code 非法");
+  return { code, severity: enumValue(raw.severity, ["warning", "blocking"] as const, "taskCockpit.blocker.severity"), dependency: boundedText(raw.dependency, "taskCockpit.blocker.dependency", 160), requiredAction: boundedText(raw.requiredAction, "taskCockpit.blocker.requiredAction", 500) };
+}
+function parseTaskCockpitRun(value: unknown): TaskCockpitRun {
+  const raw = record(value, "taskCockpit.run"); exact(raw, ["runId", "planRevisionId", "status", "version", "startedAt", "finishedAt", "createdAt", "updatedAt"], "taskCockpit.run");
+  return { runId: boundedText(raw.runId, "taskCockpit.run.runId", 200), planRevisionId: boundedText(raw.planRevisionId, "taskCockpit.run.planRevisionId", 200), status: enumValue(raw.status, RUN_STATUSES, "taskCockpit.run.status"), version: integer(raw.version, "taskCockpit.run.version", 1), startedAt: nullable(raw.startedAt, (item) => timestamp(item, "taskCockpit.run.startedAt")), finishedAt: nullable(raw.finishedAt, (item) => timestamp(item, "taskCockpit.run.finishedAt")), createdAt: timestamp(raw.createdAt, "taskCockpit.run.createdAt"), updatedAt: timestamp(raw.updatedAt, "taskCockpit.run.updatedAt") };
+}
+function parseTaskCockpitTask(value: unknown): TaskCockpitTask {
+  const raw = record(value, "taskCockpit.task"); exact(raw, ["taskId", "taskType", "title", "status", "priority", "version", "currentPlanRevisionId", "createdAt", "updatedAt", "run"], "taskCockpit.task");
+  const priority = integer(raw.priority, "taskCockpit.task.priority"); if (priority > 100) throw new TypeError("taskCockpit.task.priority 超限");
+  return { taskId: boundedText(raw.taskId, "taskCockpit.task.taskId", 200), taskType: boundedText(raw.taskType, "taskCockpit.task.taskType", 160), title: boundedText(raw.title, "taskCockpit.task.title", 500), status: enumValue(raw.status, TASK_STATUSES, "taskCockpit.task.status"), priority, version: integer(raw.version, "taskCockpit.task.version", 1), currentPlanRevisionId: nullable(raw.currentPlanRevisionId, (item) => boundedText(item, "taskCockpit.task.currentPlanRevisionId", 200)), createdAt: timestamp(raw.createdAt, "taskCockpit.task.createdAt"), updatedAt: timestamp(raw.updatedAt, "taskCockpit.task.updatedAt"), run: nullable(raw.run, parseTaskCockpitRun) };
+}
+function parseTaskCockpitStep(value: unknown): TaskCockpitStep {
+  const raw = record(value, "taskCockpit.step"); exact(raw, ["stepRunId", "stepKey", "attempt", "status", "tokenCount", "costAmount", "hasInputRefs", "hasOutputRefs", "hasError", "createdAt", "updatedAt"], "taskCockpit.step");
+  const costAmount = text(raw.costAmount, "taskCockpit.step.costAmount"); if (!DECIMAL.test(costAmount)) throw new TypeError("taskCockpit.step.costAmount 非规范 decimal");
+  return { stepRunId: boundedText(raw.stepRunId, "taskCockpit.step.stepRunId", 200), stepKey: boundedText(raw.stepKey, "taskCockpit.step.stepKey", 200), attempt: integer(raw.attempt, "taskCockpit.step.attempt", 1), status: enumValue(raw.status, STEP_STATUSES, "taskCockpit.step.status"), tokenCount: integer(raw.tokenCount, "taskCockpit.step.tokenCount"), costAmount, hasInputRefs: bool(raw.hasInputRefs, "taskCockpit.step.hasInputRefs"), hasOutputRefs: bool(raw.hasOutputRefs, "taskCockpit.step.hasOutputRefs"), hasError: bool(raw.hasError, "taskCockpit.step.hasError"), createdAt: timestamp(raw.createdAt, "taskCockpit.step.createdAt"), updatedAt: timestamp(raw.updatedAt, "taskCockpit.step.updatedAt") };
+}
+function parseTaskCockpitCheckpoint(value: unknown): TaskCockpitCheckpoint {
+  const raw = record(value, "taskCockpit.checkpoint"); exact(raw, ["checkpointId", "sequence", "schemaVersion", "stepKey", "stateHash", "artifactCount", "createdAt"], "taskCockpit.checkpoint");
+  return { checkpointId: boundedText(raw.checkpointId, "taskCockpit.checkpoint.checkpointId", 200), sequence: integer(raw.sequence, "taskCockpit.checkpoint.sequence", 1), schemaVersion: integer(raw.schemaVersion, "taskCockpit.checkpoint.schemaVersion", 1), stepKey: nullable(raw.stepKey, (item) => boundedText(item, "taskCockpit.checkpoint.stepKey", 200)), stateHash: boundedText(raw.stateHash, "taskCockpit.checkpoint.stateHash", 200), artifactCount: integer(raw.artifactCount, "taskCockpit.checkpoint.artifactCount"), createdAt: timestamp(raw.createdAt, "taskCockpit.checkpoint.createdAt") };
+}
+function parseTaskCockpitBase(raw: Record<string, unknown>, label: string): { tenant: WorkshopTenant; evaluatedAt: string } {
+  if (raw.schemaVersion !== TASK_COCKPIT_SCHEMA_VERSION) throw new TypeError(`${label}.schemaVersion 漂移`);
+  if (raw.stateConsistency !== "current_state_per_page") throw new TypeError(`${label}.stateConsistency 漂移`);
+  return { tenant: parseTenant(raw.tenant), evaluatedAt: timestamp(raw.evaluatedAt, `${label}.evaluatedAt`) };
+}
+function assertUnique(items: readonly string[], label: string): void { if (new Set(items).size !== items.length) throw new TypeError(`${label} identity 重复`); }
+
+export function parseTaskCockpitCore(value: unknown): TaskCockpitCoreResponse {
+  const raw = record(value, "taskCockpit.core"); exact(raw, ["schemaVersion", "tenant", "evaluatedAt", "taskCutoff", "stateConsistency", "readiness", "blockers", "items", "page"], "taskCockpit.core");
+  const base = parseTaskCockpitBase(raw, "taskCockpit.core"); if (raw.readiness !== "degraded") throw new TypeError("taskCockpit.core.readiness 漂移");
+  if (!Array.isArray(raw.blockers) || raw.blockers.length < 3 || raw.blockers.length > 20) throw new TypeError("taskCockpit.core.blockers 数量非法"); const blockers = raw.blockers.map(parseTaskCockpitBlocker); assertUnique(blockers.map((item) => item.code), "taskCockpit.core.blockers");
+  if (!Array.isArray(raw.items)) throw new TypeError("taskCockpit.core.items 必须是数组"); const items = raw.items.map(parseTaskCockpitTask); assertUnique(items.map((item) => item.taskId), "taskCockpit.core.items");
+  const page = parseTaskCockpitPage(raw.page); if (page.count !== items.length) throw new TypeError("taskCockpit.core.page count 不一致");
+  return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, ...base, taskCutoff: timestamp(raw.taskCutoff, "taskCockpit.core.taskCutoff"), stateConsistency: "current_state_per_page", readiness: "degraded", blockers, items, page };
+}
+export function parseTaskCockpitSteps(value: unknown): TaskCockpitStepPageResponse {
+  const raw = record(value, "taskCockpit.steps"); exact(raw, ["schemaVersion", "tenant", "runId", "evaluatedAt", "membershipCutoff", "stateConsistency", "items", "page"], "taskCockpit.steps"); const base = parseTaskCockpitBase(raw, "taskCockpit.steps");
+  if (!Array.isArray(raw.items)) throw new TypeError("taskCockpit.steps.items 必须是数组"); const items = raw.items.map(parseTaskCockpitStep); assertUnique(items.map((item) => item.stepRunId), "taskCockpit.steps.items"); const page = parseTaskCockpitPage(raw.page); if (page.count !== items.length) throw new TypeError("taskCockpit.steps.page count 不一致");
+  return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, ...base, runId: boundedText(raw.runId, "taskCockpit.steps.runId", 200), membershipCutoff: timestamp(raw.membershipCutoff, "taskCockpit.steps.membershipCutoff"), stateConsistency: "current_state_per_page", items, page };
+}
+export function parseTaskCockpitCheckpoints(value: unknown): TaskCockpitCheckpointPageResponse {
+  const raw = record(value, "taskCockpit.checkpoints"); exact(raw, ["schemaVersion", "tenant", "runId", "evaluatedAt", "membershipCutoff", "stateConsistency", "items", "page"], "taskCockpit.checkpoints"); const base = parseTaskCockpitBase(raw, "taskCockpit.checkpoints");
+  if (!Array.isArray(raw.items)) throw new TypeError("taskCockpit.checkpoints.items 必须是数组"); const items = raw.items.map(parseTaskCockpitCheckpoint); assertUnique(items.map((item) => item.checkpointId), "taskCockpit.checkpoints.items"); const page = parseTaskCockpitPage(raw.page); if (page.count !== items.length) throw new TypeError("taskCockpit.checkpoints.page count 不一致");
+  return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, ...base, runId: boundedText(raw.runId, "taskCockpit.checkpoints.runId", 200), membershipCutoff: timestamp(raw.membershipCutoff, "taskCockpit.checkpoints.membershipCutoff"), stateConsistency: "current_state_per_page", items, page };
 }

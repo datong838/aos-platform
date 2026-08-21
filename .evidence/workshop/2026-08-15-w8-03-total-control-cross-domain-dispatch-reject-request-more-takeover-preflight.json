@@ -1,0 +1,120 @@
+{
+  "schema": "aos-workshop-scenario-preflight/v1",
+  "taskId": "workshop-w8-03-total-control-cross-domain-dispatch-reject-request-more-takeover-preflight-20260815",
+  "workItem": "W8-03",
+  "scenario": "total_control_cross_domain_dispatch_reject_request_more_takeover",
+  "projectRevision": "AOS-000033",
+  "branch": "w2-workshop",
+  "head": "5c2521f",
+  "aipBaseline": "m1@8cfc29a8482973ace2bbe7b4f680936abe933ed5",
+  "recordedAt": "2026-08-15T07:50:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "SCENARIO_TARGET_CONTRACT_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayRunScenario": false,
+    "reason": "product freeze and W3-14 W6-10 W7-11 are not GREEN; the total-control projection and domain bridges do not yet provide one authoritative end-to-end assignment lifecycle"
+  },
+  "dependencyMatrix": [
+    {"dependency": "W3-14", "status": "NOT_GREEN", "reason": "three domain authorities plus common Task Handoff orchestration cumulative gate is incomplete"},
+    {"dependency": "W6-10", "status": "IMPLEMENTATION_BLOCKED", "reason": "creator price customer and operations runtime bridges plus positive browser proof are absent"},
+    {"dependency": "W7-11", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "media runtime browser security and fault-injection exit evidence is absent"},
+    {"dependency": "product_formal_freeze", "status": "NOT_FROZEN", "reason": "formal product review remains pending"},
+    {"dependency": "technical_formal_freeze", "status": "GREEN", "reason": "technical baseline V3 is formally frozen"},
+    {"dependency": "aip_canonical_handoff_primitive", "status": "AVAILABLE_BUT_INSUFFICIENT", "reason": "generic tenant-scoped one-time Handoff tests pass but no Workshop cross-domain decision compiler or total-control read model proves the scenario"}
+  ],
+  "canonicalJourney": [
+    "CockpitReadModel reads one canonical filtered Task and TaskRun set at an explicit cutoff and never writes task state",
+    "the cockpit computes a dispatch proposal from exact SLA risk priority responsibility coverage assignee capability and readiness refs",
+    "a user approval submits the proposal through the canonical Task Handoff command using expectedVersion and policy revalidation",
+    "the receiving module records one explicit accepted rejected request_more or returned Handoff decision receipt",
+    "request_more links required context or evidence requirements without completing rejecting or silently reassigning the task",
+    "rejected and returned decisions preserve the prior responsibility and create no second owner unless a later canonical decision succeeds",
+    "manual takeover is requested separately and requires approval conflict lease fence readiness and separation-of-duty checks",
+    "the cockpit observes the resulting canonical receipt and refreshes its projection without optimistic authority mutation",
+    "partial unknown stale and blocked remain separate outcome axes and never enter completed counts"
+  ],
+  "bindingContract": {
+    "root": "exact TaskGraphRevision plus TaskRunRef",
+    "binding": "dispatchBindingHash",
+    "requiredRefs": [
+      "TaskGraphRevisionRef",
+      "TaskRunRef",
+      "PlanStepRef and AttemptRef when present",
+      "sourceModuleInstallationRef",
+      "targetModuleInstallationRef",
+      "ResponsibilityPlanRevisionRef and ResponsibilitySlotRef",
+      "currentAssigneeRef and requestedAssigneeRef",
+      "CapabilityRevisionRef and AgentInstanceRef",
+      "HandoffPolicyRevisionRef",
+      "SlaPolicyRevisionRef",
+      "RiskPolicyRevisionRef",
+      "EvidenceBundleRef or ContextRequirementRefs",
+      "actorRef policyDecisionRef expectedVersion and cutoff"
+    ],
+    "decisionStates": [
+      "offered",
+      "accepted",
+      "rejected",
+      "request_more",
+      "returned",
+      "takeover_requested",
+      "takeover_approved",
+      "takeover_rejected",
+      "cancelled",
+      "unknown"
+    ]
+  },
+  "invariants": [
+    "the cockpit proposes and projects but never owns Task Handoff Responsibility or Agent truth",
+    "one accepted handoff decision cannot create two active owners for one responsibility slot and attempt",
+    "acceptance transfers or acknowledges responsibility but does not prove task execution completion",
+    "rejection request_more and return are first-class immutable decisions rather than generic failures",
+    "request_more names missing scoped context or evidence and does not copy evidence bodies or protected payload",
+    "manual takeover cannot bypass policy approval lease fence in-flight provider unknown or separation of duty",
+    "readiness is exact capability and instance readiness and disabled agents never count as available capacity",
+    "late duplicate or conflicting decisions are rejected by idempotency expectedVersion and decision fingerprint",
+    "filtered category counts equal the canonical Task set and partial unknown stale blocked are not counted as completed",
+    "cross-tenant Task Run Handoff Agent Evidence or Receipt refs are rejected"
+  ],
+  "requiredNegativeJourneys": [
+    "source or target Module installation is disabled missing or tenant-mismatched",
+    "capability instance policy evidence or expectedVersion drifts between proposal and decision",
+    "the receiver rejects or requests more context repeatedly without losing prior receipts",
+    "two operators race to accept reassign or take over the same responsibility",
+    "an active execution lease or provider unknown prevents takeover",
+    "a disabled or stale agent is incorrectly included in available capacity",
+    "a delayed receipt arrives after cancellation return or a newer accepted decision",
+    "projection refresh reconstructs the same owner timeline and conserved counts",
+    "PII evidence body media payload or customer list is requested across module boundaries",
+    "a second Task owner or shadow handoff table diverges from canonical authority"
+  ],
+  "tests": {
+    "executed": true,
+    "command": "services/aos-api/.venv/bin/python -m pytest -q services/aos-api/tests/aip/test_aip6_capability_run_handoff.py",
+    "result": "6 passed, 7 warnings in 4.76s",
+    "scope": "generic AIP tenant-scoped one-time Handoff primitive only",
+    "doesNotProve": [
+      "Workshop total-control CockpitReadModel",
+      "cross-domain dispatch decision compiler",
+      "reject request_more return and takeover end-to-end lifecycle",
+      "org-org positive browser journey or dev-org isolation journey"
+    ]
+  },
+  "blockers": [
+    "product formal review and freeze are incomplete",
+    "W3-14 W6-10 and W7-11 are not GREEN",
+    "CockpitReadModel and Workshop domain Handoff compiler are not implemented end to end",
+    "canonical rejection request_more return and takeover decision lifecycle is not proven across all involved modules",
+    "no org-org positive browser lineage or dev-org negative isolation EvidencePack exists"
+  ],
+  "next": "align W8-03 scenario contract and checklist through two review rounds while leaving the scenario blocked, then preflight W8-04",
+  "safety": [
+    "no source code changed",
+    "no migration or migration lease requested",
+    "no real tenant or browser mutation",
+    "no owner assignment takeover or external action was executed",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

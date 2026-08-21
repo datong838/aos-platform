@@ -1,0 +1,49 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w6-06-price-notice-recommendation-reprice-doc-ledger-20260814",
+  "authorityRevision": "AOS-000027",
+  "authorityRevisionAtCompletion": "AOS-000029",
+  "authorityChangeImpact": "Authority advanced from AOS-000027 through AOS-000028 to AOS-000029 while AIP E7-2 Store/Service was projected GREEN. Current authority still records E7-2 GREEN and E7-3 pending; the W6-06 price disposition findings, document scope and no-side-effect conclusion are unchanged, and completion uses the current revision CAS.",
+  "repositoryBaseRevision": "040e12fbf66fd781b13d3067cdf7462de4b4ef63",
+  "result": "W6_06_PRICE_NOTICE_RECOMMENDATION_REPRICE_DOC_LEDGER_ALIGNED",
+  "decision": "TARGET_CONTRACT_REVIEWED_IMPLEMENTATION_BLOCKED_REPRICING_DISABLED",
+  "documents": [
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/16-价格治理技术方案.md",
+      "preSha256": "fb8f647bd5d33709345ef555164be079a83675c2dd49a43f1056e7a2ace9b759",
+      "postSha256": "16222161386a4eae6b11d4064b04053f9be4c3b568738c44dd07c85d20acd996",
+      "change": "split internal recommendation, external notice, cross-module Handoff and repricing contracts; added joint binding, specialized R4 gate, default-disabled and acceptance semantics"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/54-W6-06-价格通知建议调价分门预检ADR.md",
+      "preSha256": null,
+      "postSha256": "08d5ac87f347cd8fbe10342653d59a088cfd77aa2b657f5b3f4cbb2af50fc180",
+      "change": "added current findings, four-disposition matrix, twelve blockers, implementation order and two-round review"
+    },
+    {
+      "path": "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "921b3e6cc18cf4cbe05238f808075229939addb9d43d5688fecdf737003966e8",
+      "postSha256": "c51c5b03c72151aa3f49bdcebf7a71919804b27b55d5e90f90ad9476293132ac",
+      "change": "replaced the empty W6-06 evidence field with exact blockers, generic Action test results and explicit repricing-disabled status"
+    }
+  ],
+  "review": {
+    "round1": "GREEN: four disposition types, effects and authorization boundaries are independent; research readiness cannot enable repricing; repricing is default-disabled",
+    "round2": "GREEN: unknown/manual Case/compensation and minimal-ref Handoff are explicit; each blocker has an exit condition and W6-05/W5 remain hard gates",
+    "implementationStatus": "NOT_STARTED",
+    "checklistStatus": "UNCHECKED",
+    "repricingStatus": "DISABLED"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "staticVisualHtmlChanged": false,
+    "databaseChanged": false,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalNotificationEffect": false,
+    "recommendationDispatchEffect": false,
+    "repricingEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w8-10-backup-projection-rebuild-rls-disaster-recovery-doc-align-20260815",
+  "workItem": "W8-10",
+  "projectRevision": "AOS-000034",
+  "sourceCommit": "83ec1abb820af63480db5e317dfaa402a7d74568",
+  "recordedAt": "2026-08-15T08:48:00+08:00",
+  "reviewRounds": [
+    {"round": 1, "result": "PASS_AFTER_REMEDIATION", "closed": ["separated authority restore from disposable projection rebuild", "moved FORCE RLS negative verification before projection serving", "froze dependency-aware restore order"]},
+    {"round": 2, "result": "PASS", "closed": ["added key PII retention and role-separation requirements", "prevented external-effect replay after database rollback", "added measured RPO RTO failback and phased mutation recovery"]}
+  ],
+  "files": [
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/09-数据存储索引与迁移策略.md", "preSha256": "0c2f8fde17bde6dc77ff53ec0271fa1c201f4116424d8a6b064e77794d330132", "postSha256": "75d48119d4e4ce61df4de1e32593f1e9666958a13b23575b9563253c4f74fef2"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/06-安全租户可观测测试与回滚.md", "preSha256": "c2b018b39a6c177dfabaadb00b73c8b76f0b90fe938372c3b1b30d7b44bb9fef", "postSha256": "20a28619c5bcc0933fd05bdb4c56e2278e482460b60ea59d65c930b3df5fbd2e"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md", "preSha256": "17d92fb74dea7f79e2b5499692be5d606313d5ef5a2cb01458a70fce8495de09", "postSha256": "998e9f2e4d662c2a98a0a0738461d94c8a74faffbebb9c76314b56832ecc71cc"},
+    {"path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/79-W8-10-备份恢复投影重建RLS与灾难恢复预检ADR.md", "preSha256": null, "postSha256": "8f78b3c3cbddde50b5e4e2d03a3544606101c8972278731082783ca84f2a17b1"}
+  ],
+  "decision": {"contract": "APPROVED", "implementation": "NOT_STARTED", "dependency": "HARD_GATE_BLOCKED", "externalEffect": "NONE"},
+  "verification": ["two review rounds passed", "post hashes match", "W8-10 remains unchecked", "no real backup restore database tenant or external-effect operation"]
+}

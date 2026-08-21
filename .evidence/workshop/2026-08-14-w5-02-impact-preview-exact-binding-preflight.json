@@ -1,0 +1,87 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w5-02-impact-preview-exact-binding-preflight-20260814",
+  "authorityRevision": "AOS-000025",
+  "workshopRepositoryRevision": "51f395c12358f58c7278f84f6fb4867bf2ea4d21",
+  "aipIntegratedRevision": "2eab0f7",
+  "aipBackendRevision": "0391f68",
+  "result": "W5_02_IMPACT_PREVIEW_EXACT_BINDING_PREFLIGHT_FACTS_FROZEN",
+  "decision": "PARTIAL_FOUNDATION_GREEN_W5_BINDING_BLOCKED",
+  "implementedFoundation": [
+    "ImpactPreviewRevision freezes exact Plan, Brief, EvidenceBundle, EvalContract, ResponsibilityPlan and StageTemplate refs",
+    "optional ModelRoute, RuntimePolicy, Capability and mutable binding refs enter a server-owned dependency snapshot",
+    "eight impact dimensions distinguish measured, estimated and unknown; known values require source refs and cutoff",
+    "freeze and start revalidate dependency snapshot and mutable binding versions",
+    "ActionProposal can bind an exact ImpactPreview ref and drift then blocks approval and execution lease",
+    "W2-D3 strict SDK, UI and real-tenant fail-closed empty browser evidence are integrated at m1"
+  ],
+  "findings": [
+    {
+      "id": "DEP-IMPACT-ACCOUNT-AUTHORITY",
+      "severity": "P0",
+      "finding": "accountRef is modeled but every supplied account is recorded as authority_unavailable and blocked; there is no exact controlled account resolver."
+    },
+    {
+      "id": "DEP-IMPACT-ACCOUNT-REQUIRED-FOR-ACTION",
+      "severity": "P0",
+      "finding": "accountRef and capabilityRef are optional, so an otherwise ready Preview can omit the external account and capability required for a W5 Action."
+    },
+    {
+      "id": "DEP-IMPACT-ACTION-JOINT-BINDING",
+      "severity": "P0",
+      "finding": "ActionProposal binds the Preview ref but does not prove that its ActionType, CapabilityBinding, account, Adapter, risk policy and budget policy are the same exact dependencies assessed by the Preview."
+    },
+    {
+      "id": "DEP-IMPACT-PREVIEW-MANDATORY-ACTION",
+      "severity": "P0",
+      "finding": "legacy-compatible Action proposals without an ImpactPreview remain approvable and leasable; W5 allowlisted external actions need a server-side mandatory-preview policy."
+    },
+    {
+      "id": "DEP-IMPACT-ADAPTER-DRY-VALIDATION",
+      "severity": "P0",
+      "finding": "impact values can carry evidence refs but are caller supplied; no exact Adapter dry-validation receipt proves account permission, provider quota, capacity, estimated cost, reversibility or reconcile mode."
+    },
+    {
+      "id": "DEP-IMPACT-POLICY-REFS",
+      "severity": "P0",
+      "finding": "Preview has no exact AdapterRevision, ActionTypeRevision, RiskPolicyRevision, BudgetPolicyRevision or KillPolicyRevision refs."
+    },
+    {
+      "id": "DEP-IMPACT-BINDING-HEALTH",
+      "severity": "P1",
+      "finding": "mutable CapabilityBinding snapshot checks version and active status only; it does not snapshot health, referenced capability hash, quota/network policy, secret/account binding or provider readiness."
+    },
+    {
+      "id": "DEP-IMPACT-TRANSITIVE-EVAL",
+      "severity": "P1",
+      "finding": "W4-03 already proved that Eval publication and release-gate revocation are not reliably propagated through frozen Preview revalidation."
+    },
+    {
+      "id": "DEP-IMPACT-ACTION-VS-PRODUCTION-START",
+      "severity": "P1",
+      "finding": "ProductionStartDecision authorizes canonical TaskRun creation only; it is not an Action ExecutionLease and cannot authorize an external provider side effect."
+    },
+    {
+      "id": "DEP-IMPACT-REAL-POSITIVE",
+      "severity": "P1",
+      "finding": "org-org/dev-project has 0 Preview and 0 StartDecision; W2-D browser evidence is correctly fail-closed but provides no positive W5 account or Action proof."
+    }
+  ],
+  "verification": {
+    "method": "read-only audit of fixed m1 revisions 0391f68 and 2eab0f7 plus their immutable delivery receipt",
+    "aipReceipt": ".evidence/aip/2026-08-14-w2d3-sdk-ui-browser-delivery-receipt.json at m1@2eab0f7",
+    "aipResult": "22 targeted tests; 188 files and 2121 web tests; TypeScript and Vite build; org-org/dev-project fail-closed browser empty state GREEN_WITH_WARNINGS",
+    "newTestsRun": "none; this Workshop task did not merge m1 or execute mutable W2-D fixtures",
+    "interpretation": "W2-D is a valid partial foundation, while W5 exact external-action binding remains unimplemented"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "m1Merged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "uncommittedAipWorkRead": false
+  }
+}

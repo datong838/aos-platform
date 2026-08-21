@@ -1,0 +1,103 @@
+{
+  "schema": "aos-workshop-w3-handoff-decision-preflight/v1",
+  "taskId": "workshop-w3-06-handoff-decision-preflight-20260815",
+  "workItem": "W3-06",
+  "projectRevision": "AOS-000039",
+  "branch": "w2-workshop",
+  "head": "e996b024db2b0ea874733ea8eea04bd4a591484f",
+  "recordedAt": "2026-08-15T11:28:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "preparationStatus": "PREFLIGHT_GREEN_WITH_PLAN_REMEDIATION_REQUIRED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "the committed AIP authority provides a tenant-scoped one-time Handoff transport service, but no canonical HTTP/OpenAPI/SDK surface or durable accept, reject, request-more and return decision authority exists; W3-01 and W3-05 are not runtime GREEN"
+  },
+  "authorityRefresh": {
+    "currentPhase": "BIND1_2_CAPABILITY_READINESS_SERVICE_GREEN_WITH_WARNINGS",
+    "hardBoundary": "No Agent is runnable and no real CapabilityBinding exists",
+    "nextGate": "BIND1_3_SKILL_PUBLICATION_AND_BINDING_READINESS"
+  },
+  "committedAipFacts": {
+    "fixedM1Commit": "c48868b3f40c75fd625f9dac00e1c2cc9b02f6c0",
+    "service": "AipHandoffService",
+    "transportOperations": [
+      "issue",
+      "get",
+      "consume",
+      "revoke",
+      "expire-on-consume"
+    ],
+    "transportProperties": [
+      "org and project scoped PostgreSQL authority",
+      "exact Task and TaskRun refs",
+      "exact active sender and receiver AgentInstance revisions",
+      "one-time bearer token stored only as a hash",
+      "expiry and receiver reauthorization",
+      "minimal object, artifact and evidence refs with allowlist and markings",
+      "issue idempotency and revoke version CAS"
+    ],
+    "terminalConsume": "consume changes issued to consumed and the same envelope cannot be consumed or reopened again",
+    "missingRuntimeSurface": "no canonical Handoff HTTP routes, OpenAPI operations or frontend SDK were found in the committed baseline",
+    "missingDomainAuthority": "no durable accept, reject, request_more or returned decision aggregate and no canonical list or decision timeline surface were found"
+  },
+  "ownershipDecision": {
+    "aipTransportAuthority": "HandoffEnvelope owns issued, consumed, revoked and expired transport lifecycle only",
+    "workshopCompiler": "one ModuleHandoffCompiler compiles source Module, Case or Batch item, requestedOutcome, purpose, deadline, allowed fields, markings, target Module and ResponsibilitySlot into canonical TaskRun refs and HandoffEnvelope input",
+    "domainDecisionAuthority": "a separate immutable HandoffDecisionRevision owns accepted, rejected, request_more and returned outcomes after successful consume",
+    "requestMoreRule": "request_more records only typed missing-context or missing-evidence codes; the source issues a new HandoffEnvelope with a new token and explicit correlation or supersedes ref after reauthorization",
+    "rejectRule": "reject does not cancel the source Task or TaskRun and does not change transport history",
+    "acceptRule": "accepted means the receiver accepted the scoped context, not that downstream work started or completed",
+    "returnRule": "results return as exact ReturnReceipt, Observation or EffectReview refs and never write the source Module domain table"
+  },
+  "targetCommands": [
+    {
+      "operationId": "ecommerceWorkshopHandoffIssue",
+      "authority": "AIP HandoffEnvelope through ModuleHandoffCompiler",
+      "result": "issued HandoffEnvelope plus one-time token and Receipt",
+      "forbidden": "client-side payload assembly or token persistence"
+    },
+    {
+      "operationId": "ecommerceWorkshopHandoffDecisionCreate",
+      "authority": "HandoffDecisionRevision",
+      "result": "append-only accepted, rejected, request_more or returned decision Receipt",
+      "forbidden": "reopening or mutating a consumed HandoffEnvelope"
+    }
+  ],
+  "dependencyDecision": {
+    "W3_01": "NOT_STARTED_PRECHECKED_HARD_GATE_BLOCKED_BY_DEP_A6R",
+    "W3_05": "NOT_STARTED_PLAN_REMEDIATED_HARD_GATE_BLOCKED",
+    "DEP_A6R": "MISSING_CANONICAL_HANDOFF_API_OPENAPI_SDK",
+    "DEP_AIP_ACTIVE_INSTANCES": "BLOCKED_NO_RUNNABLE_AGENT_OR_REAL_CAPABILITY_BINDING",
+    "DEP_HANDOFF_DECISION_AUTHORITY": "MISSING",
+    "DEP_MODULE_HANDOFF_COMPILER": "MISSING",
+    "W3_06": "NOT_STARTED_PREFLIGHT_COMPLETE"
+  },
+  "requiredGreenEvidence": [
+    "canonical tenant-scoped issue, get, consume, revoke and timeline API plus OpenAPI and strict SDK",
+    "server-side permission and receiver reauthorization for every transport and decision command",
+    "one ModuleHandoffCompiler with manifest, ResponsibilitySlot, exact-ref, allowlist and marking validation",
+    "append-only HandoffDecisionRevision with idempotency, expected version and typed reason codes",
+    "request-more creates a new correlated envelope and never reopens the consumed envelope",
+    "expiry, replay, wrong receiver, revoked instance, cross-tenant ref and over-disclosure failures",
+    "org-org positive flow and dev-org isolation without synthetic authority",
+    "refresh reconstruction and transport plus decision quantity conservation",
+    "W3-01 and W3-05 runtime GREEN before W3-06 implementation"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "this preflight inspected committed contracts, service behavior, tests and Workshop plans only; runtime implementation remains blocked",
+    "doesNotProve": [
+      "a canonical Handoff API or SDK",
+      "a runnable AgentInstance",
+      "a real cross-Module handoff",
+      "accept, reject, request-more or return persistence"
+    ]
+  },
+  "next": "remediate the Workshop Handoff plan so transport lifecycle and domain decision lifecycle are explicit, then re-review without marking W3-06 complete",
+  "safety": [
+    "read-only committed source, test, OpenAPI, authority and plan inspection",
+    "no source, database, tenant, AgentRun, Handoff, Action or external mutation",
+    "w1-aip uncommitted content was not read or modified"
+  ]
+}

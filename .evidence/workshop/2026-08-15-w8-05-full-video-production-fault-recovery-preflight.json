@@ -1,0 +1,119 @@
+{
+  "schema": "aos-workshop-scenario-preflight/v1",
+  "taskId": "workshop-w8-05-full-video-production-fault-recovery-preflight-20260815",
+  "workItem": "W8-05",
+  "scenario": "full_video_adaptive_production_and_fault_recovery",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "head": "924ac92",
+  "aipBaseline": "m1@4018dd382c169fbed567c633bdbb698e6f26447f",
+  "recordedAt": "2026-08-15T08:10:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "SCENARIO_TARGET_CONTRACT_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayRunScenario": false,
+    "reason": "product freeze and W7-11 are not GREEN; signed FULL templates media executor production Provider adapters and cumulative fault evidence are absent"
+  },
+  "dependencyMatrix": [
+    {"dependency": "W7-11", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "W7-01 through W7-10 implementations plus browser security fault provider and publish gates are not GREEN"},
+    {"dependency": "DEP-M9", "status": "NOT_GREEN", "reason": "AIP-9 media production authority and Provider runtime are not delivered"},
+    {"dependency": "signed_FULL_profile", "status": "MISSING", "reason": "no installed signed FULL StageTemplate and ResponsibilityTemplate exact refs exist"},
+    {"dependency": "production_provider_adapter", "status": "MISSING", "reason": "legacy MediaReference and mock S3 are not production authority"},
+    {"dependency": "product_formal_freeze", "status": "NOT_FROZEN", "reason": "formal product review remains pending"},
+    {"dependency": "technical_formal_freeze", "status": "GREEN", "reason": "technical baseline V3 is formally frozen"}
+  ],
+  "canonicalJourney": [
+    "freeze exact MediaProductionBrief Evidence Eval FULL ProfileRecommendation Confirmation StageTemplate ResponsibilityPlan MergePolicy and Impact refs",
+    "resolve eight professional responsibility slots to people digital colleagues shared Agents tools and Providers by exact capability and readiness without fixed agent count",
+    "compile the signed FULL template into one approved canonical Plan and create exactly one queued TaskRun after the independent start gate",
+    "produce immutable CreativeDirection Script ArtPack Storyboard ShotList RawAsset Master and Variant revisions through attempt-scoped stages",
+    "persist a safe Checkpoint only at declared boundaries with exact inputs artifacts provider request fingerprint usage and dependency snapshot",
+    "run fact brand copyright and platform gates against the same Artifact contract policy cutoff and attempt",
+    "map ReviewIssue and ReturnDecision to a new attempt and reuse only unaffected stages whose exact inputs and dependencies still match",
+    "bind selected Variant GateSet Approval Impact Action Lease Provider receipt Usage Settlement and EffectReview without collapsing their states",
+    "recover crashes timeouts late callbacks lease loss and dependency drift by authoritative reread fence rejection and reconcile rather than blind replay"
+  ],
+  "bindingContract": {
+    "root": "exact MediaProductionBriefRevision plus canonical TaskRunRef",
+    "binding": "fullProductionBindingHash",
+    "requiredRefs": [
+      "EvidenceBundleRevisionRef EvalContractRevisionRef",
+      "ProfileRecommendationRevisionRef ProfileConfirmationRef",
+      "StageTemplateRevisionRef ResponsibilityPlanRevisionRef MergePolicyRevisionRef",
+      "PlanRevisionRef TaskRunRef PlanStepRef AttemptRef",
+      "CapabilityRevisionRef AgentInstanceRef Provider ModelRoute RuntimePolicy Price and License refs",
+      "StageLeaseRef fenceToken CheckpointRef and dependency snapshot",
+      "ArtifactFamilyRevision Master Variant and ArtifactRelation refs",
+      "MediaGateSetDecision ReviewIssue ReturnDecision and Approval refs",
+      "CapacityReservation BudgetReservation Usage Settlement and Reconcile refs",
+      "PublishCandidate ImpactPreview Action Receipt EffectReview refs"
+    ],
+    "responsibilitySlots": [
+      "producer_coordinator",
+      "director_creative",
+      "writer",
+      "art",
+      "storyboard",
+      "acquisition_generation",
+      "editing_postproduction",
+      "evaluation_review"
+    ]
+  },
+  "invariants": [
+    "eight professional responsibilities are preserved but do not imply eight fixed Agents or workers",
+    "FULL means responsibility and gate coverage not automatic execution or unlimited budget",
+    "compiler and start are separate and only one canonical TaskRun exists",
+    "every charged stage requires current lease fence capacity budget capability Provider policy and exact input checks",
+    "Checkpoint is immutable compatibility evidence and never a copied media payload or permission to resume blindly",
+    "stale owner and delayed provider callbacks cannot commit after a newer fence",
+    "provider timeout unknown cancellation and late result are reconciled under the original request fingerprint",
+    "return creates a new attempt and immutable artifacts while preserving prior attempts usage receipts and issues",
+    "four gates apply to the same exact Artifact and cannot be assembled from different revisions",
+    "publishing delivery usage settlement lineage and effect maturity remain independent outcome axes"
+  ],
+  "requiredFaultJourneys": [
+    "crash before provider submit persists no false submission",
+    "crash after submit before local receipt recovers by provider idempotency lookup",
+    "lease loss and takeover reject the old owner by monotonic fence",
+    "duplicate out-of-order and late webhooks converge without double artifact or usage",
+    "provider timeout cancel accepted cancel unknown and result-after-cancel remain distinct",
+    "checkpoint corruption or exact input template capability policy license provider drift invalidates reuse",
+    "capacity and budget reservation races do not oversubscribe or erase unknown exposure",
+    "partial artifact quarantine malware license portrait trademark and prompt-injection failures block registration",
+    "ReviewIssue return and concurrent family candidates preserve lineage and require explicit selection",
+    "database API and worker restart plus network partition recover from durable authority",
+    "cross-tenant media refs signed URIs callbacks artifacts usage and receipts are rejected"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "W7-11 already established that generic tests overlap and no media source implementation exists; business source paths services apps packages bundles are unchanged from W7-11 head 5c3ca93 through this preflight",
+    "safeChecks": [
+      "git diff --quiet 5c3ca93..924ac92 -- services apps packages bundles returned success",
+      "W7-11 cumulative evidence and Media technical contract were reread",
+      "current AIP authority and missing AIP-9 Provider facts were revalidated"
+    ],
+    "doesNotProve": [
+      "signed FULL profile installation",
+      "media executor or production Provider adapter",
+      "fault recovery or database restart behavior",
+      "org-org positive browser journey or dev-org isolation journey"
+    ]
+  },
+  "blockers": [
+    "product formal review and freeze are incomplete",
+    "W7-11 cumulative gate is blocked",
+    "AIP-9 and signed FULL runtime assets are absent",
+    "media Stage executor Provider adapters quarantine and durable outbox are absent",
+    "no current-release browser security fault-injection provider or publish canary EvidencePack exists"
+  ],
+  "next": "align W8-05 FULL production and recovery contract through two review rounds without provider execution, then preflight W8-06",
+  "safety": [
+    "no source code changed",
+    "no migration or migration lease requested",
+    "no real tenant or browser mutation",
+    "no provider submission media generation publication or external action was executed",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

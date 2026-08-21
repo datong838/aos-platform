@@ -1,0 +1,78 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w3-11-content-campaign-authority-preflight-20260815",
+  "workshopTask": "W3-11",
+  "recordedAt": "2026-08-15T12:20:00+08:00",
+  "authorityRevision": "AOS-000039",
+  "branch": "w2-workshop",
+  "baselineCommit": "c0245eae6c781d0afb149a09afaa9a3fe16b5496",
+  "scope": {
+    "tenant": "org-org/dev-project",
+    "operation": "read-only committed-code and approved-plan inspection",
+    "externalEffect": false,
+    "migrationLeaseAcquired": false
+  },
+  "dependencyVerdict": {
+    "W3-10": "NOT_STARTED / CUMULATIVE_GATE_RED",
+    "W2-03": "NOT_STARTED / HARD_GATE_BLOCKED",
+    "DEP-C0": "PARTIAL_FOUNDATION_ONLY",
+    "overall": "HARD_GATE_BLOCKED"
+  },
+  "sourceInspection": {
+    "campaignRevisionAuthority": "ABSENT",
+    "calendarEntryAuthority": "ABSENT",
+    "masterContentIntentAuthority": "ABSENT",
+    "contentCampaignStoreApiSdk": "ABSENT",
+    "declaredManifestType": "ContentVariant",
+    "designAlias": "ChannelVariant",
+    "reusableCanonicalFoundations": [
+      "TaskBriefRevision",
+      "ArtifactRelation",
+      "Action Proposal/Approval/Lease/Receipt chain"
+    ],
+    "nonSubstitutionRule": "Reusable production and action primitives do not become CampaignRevision, CalendarEntry or MasterContentIntent authority."
+  },
+  "frozenAuthorityDecision": {
+    "campaign": "CampaignRevision is the append-only plan authority with version/CAS and exact brief/evidence refs.",
+    "calendar": "CalendarEntry is the append-only schedule authority with timezone, local window, resolved instant, exact CampaignRevision and exact content Artifact refs.",
+    "intent": "MasterContentIntent is the append-only creative-intent authority; generated master and channel variants remain canonical Artifacts related by ArtifactRelation.",
+    "variantNaming": "ContentVariant is the canonical manifest/read-model name; ChannelVariant is a product-language compatibility alias only and MUST NOT create a second authority or table.",
+    "publication": "Scheduling and publication are separate decisions. A scheduled CalendarEntry cannot imply or execute publication.",
+    "history": "Reschedule and cancellation append a successor revision/decision and never overwrite the prior schedule or published Artifact."
+  },
+  "requiredCommands": [
+    "createCampaign",
+    "reviseCampaignWithExpectedVersion",
+    "createCalendarEntry",
+    "rescheduleCalendarEntryWithExpectedVersion",
+    "cancelCalendarEntryWithExpectedVersion",
+    "createMasterContentIntent",
+    "reviseMasterContentIntentWithExpectedVersion",
+    "attachMasterArtifact",
+    "attachContentVariantArtifact"
+  ],
+  "requiredInvalidationRules": [
+    "MasterContentIntent revision drift marks dependent master/variant readiness stale.",
+    "Master Artifact or ContentVariant exact-ref drift blocks schedule readiness until an explicit successor is accepted.",
+    "CampaignRevision drift blocks stale CalendarEntry execution but does not rewrite history.",
+    "Publication revocation or unknown provider outcome is surfaced independently and is never repaired by blind reschedule."
+  ],
+  "additionalDependencies": [
+    "DEP-CONTENT-CANONICAL-NAMING",
+    "DEP-CAMPAIGN-CALENDAR-AUTHORITY",
+    "DEP-CONTENT-INTENT-ARTIFACT-BRIDGE",
+    "DEP-SCHEDULE-CONFLICT-POLICY",
+    "DEP-PUBLICATION-ACTION-ADAPTER"
+  ],
+  "requiredVerification": [
+    "same-tenant exact refs and cross-tenant fail-closed",
+    "idempotent command replay and expected-version conflict",
+    "timezone/DST ambiguous and nonexistent local-time cases",
+    "schedule collision detect, reject and explicit override decision",
+    "master/variant drift invalidation without historical overwrite",
+    "cancel/reschedule/publication separation",
+    "Store/API/strict SDK/Web/browser/security cumulative evidence on one release identity"
+  ],
+  "result": "PREFLIGHT_GREEN; W3-11_RUNTIME_NOT_STARTED; HARD_GATE_BLOCKED; NO_EXTERNAL_EFFECT",
+  "next": "Run two-round plan remediation to freeze the canonical name, authority ownership, command state machine, schedule/publication separation and verification matrix before any implementation."
+}

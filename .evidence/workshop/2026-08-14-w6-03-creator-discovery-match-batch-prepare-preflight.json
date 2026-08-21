@@ -1,0 +1,108 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w6-03-creator-discovery-match-batch-prepare-preflight-20260814",
+  "authorityRevision": "AOS-000027",
+  "repositoryRevision": "22f24995ebf1748a7286e05c1904972defa3e82d",
+  "result": "W6_03_CREATOR_DISCOVERY_MATCH_BATCH_PREPARE_PREFLIGHT_FACTS_FROZEN",
+  "decision": "GENERIC_RESEARCH_AND_PRODUCTION_FOUNDATIONS_GREEN_CREATOR_DOMAIN_AND_BATCH_PREPARE_BLOCKED",
+  "foundations": [
+    "tenant-scoped ResearchJob authority provides exact provider capability refs, manifest hashes, submission and artifact receipts, monotonic events, unknown handling and reconcile",
+    "TaskBrief, EvidenceBundle, EvalContract and ImpactPreview have PostgreSQL authority, immutable revisions, exact refs and receipt-first mutations",
+    "the installed Workshop catalog exposes the canonical ecommerce.creator-growth route and fails closed when dependencies are unavailable",
+    "the product and technical baselines separate discovery, evidence build, matching and side-effect-free batch prepare from the later explicit start and external actions"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W6-CREATOR-DOMAIN-AUTHORITY",
+      "severity": "P0",
+      "finding": "no canonical CreatorCandidate, CreatorIdentity, CreatorMatchObservation, CreatorMatchDecision or OutreachBatchRevision contract, PostgreSQL store, service or API exists in the current Workshop branch."
+    },
+    {
+      "id": "DEP-W6-CREATOR-BUNDLE-CONTRACT",
+      "severity": "P0",
+      "finding": "ecommerce.creator-growth declares object names and generic capabilities but viewRefs, productionContractRefs, responsibilityTemplateRefs and impactCalculatorRefs are empty; evalPackRefs points to placeholder.json."
+    },
+    {
+      "id": "DEP-W6-CREATOR-DISCOVERY-PROFILE",
+      "severity": "P0",
+      "finding": "the generic ResearchJob contract has no creator discovery profile, signed output schema, source inventory, source license decision, purpose/marking policy or provider-to-CreatorCandidate normalization contract."
+    },
+    {
+      "id": "DEP-W6-CREATOR-EVIDENCE-SELECTION",
+      "severity": "P0",
+      "finding": "EvidenceBundle creation accepts caller-supplied coverage, missing/conflicts/uncertainties, freshness, marking and licenseSummary after only exact item-ref checks; no creator required-facts profile or EvidenceBuildJob computes source permission, identity, match and frequency-control coverage."
+    },
+    {
+      "id": "DEP-W6-CREATOR-MATCH-AUTHORITY",
+      "severity": "P0",
+      "finding": "no versioned creator match feature set, model/policy exact refs, confidence threshold, explanation/evidence refs, PRELIMINARY lifecycle or human MatchDecision authority was found."
+    },
+    {
+      "id": "DEP-W6-CREATOR-IDENTITY-DEDUPE",
+      "severity": "P0",
+      "finding": "no tenant-scoped creator identity resolution, cross-source aliasing, stable external-ref deduplication or duplicate-conflict workflow exists for candidate preparation."
+    },
+    {
+      "id": "DEP-W6-CREATOR-FREQUENCY-CAPACITY",
+      "severity": "P0",
+      "finding": "no exact frequency policy, prior-contact lookup, channel/account capacity snapshot, budget reservation or per-candidate eligibility result is evaluated before a creator batch can be frozen."
+    },
+    {
+      "id": "DEP-W6-CREATOR-BATCH-PREPARE",
+      "severity": "P0",
+      "finding": "no OutreachBatch prepare/freeze state machine, immutable candidate item set, excluded-item reasons, zero-external-effect invariant, version CAS or prepare Receipt exists; generic ecommerce sync BatchCommand is unrelated to outreach."
+    },
+    {
+      "id": "DEP-W6-CREATOR-READ-MODEL",
+      "severity": "P1",
+      "finding": "the creator route currently renders only the common installed-module shell and explicit pending/readiness states; no five-stage creator view, case timeline, evidence disclosure, PRELIMINARY marker or batch preflight UI is implemented."
+    },
+    {
+      "id": "DEP-W6-CREATOR-UPSTREAM-GATES",
+      "severity": "P0",
+      "finding": "W4-08 and W6-01 remain unchecked; exact Evidence/ResearchJob integration and assignee/capability readiness therefore cannot authorize W6-03 implementation or completion."
+    }
+  ],
+  "staticVerification": {
+    "creatorDomainContractClassesFound": 0,
+    "creatorDomainStoresFound": 0,
+    "creatorDomainApisFound": 0,
+    "creatorBusinessViewsFound": 0,
+    "creatorViewRefs": 0,
+    "creatorProductionContractRefs": 0,
+    "creatorResponsibilityTemplateRefs": 0,
+    "creatorImpactCalculatorRefs": 0,
+    "creatorEvalPack": "content/evals/placeholder.json",
+    "canonicalRoute": "/workshop/creator-growth"
+  },
+  "verification": {
+    "backendCommand": "services/aos-api/.venv/bin/pytest -q services/aos-api/tests/aip/test_aip_research_job_store.py services/aos-api/tests/aip/test_aip_research_job_api.py services/aos-api/tests/test_w2b_production_contracts.py services/aos-api/tests/test_w2b_production_contract_store.py services/aos-api/tests/test_w2b_production_contract_api.py services/aos-api/tests/asset_registry/test_workshop_module_contracts.py services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py",
+    "backendResult": "22 tests passed",
+    "frontendCommand": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run src/api/ecommerceWorkshop/client.test.ts src/api/ecommerceWorkshop/parser.test.ts src/components/workshop/EcommerceWorkshopCatalogContext.test.tsx src/components/workshop/EcommerceWorkshopShell.test.tsx src/components/workshop/InstalledModuleNavigation.test.tsx src/shell/AppShell.workshop.test.tsx",
+    "frontendResult": "6 files and 18 tests passed",
+    "interpretation": "generic ResearchJob, production-contract and installed-module-shell foundations are stable, but none of the creator-domain authority, governed match or side-effect-free outreach batch preparation required by W6-03 is implemented"
+  },
+  "sourceHashes": {
+    "bundles/solutions/ecommerce-growth/content/workshops/ecommerce.creator-growth.json": "e22b6fa81f68f8dcb28fba5bee9f6c28f0ec88e5a15e1bede022cb45df8c5da8",
+    "bundles/solutions/ecommerce-growth/bundle.yaml": "30aad735fffaf55305869e2fe51b7f12a113950b052357302614249927f68a6b",
+    "services/aos-api/aos_api/aip_research_job.py": "5c2e1420b877ccdceffa89c5ebd4186da9db2709ce8c0c0420add30a0ad21ea8",
+    "services/aos-api/aos_api/aip_research_job_service.py": "539447e4aee3b2e3d4ed55a8307db4ce13b45055c85bd281a192524ae53f44d1",
+    "services/aos-api/aos_api/aip_production_contracts.py": "d89d8c6e2076360c41260fa1a43e076c281f5ba2760d4e74f6670f6327ab3d11",
+    "services/aos-api/aos_api/aip_production_contract_store.py": "a682142a2caf7ad56a49d724caeafbea82c0cff9bb220b6a9e5cef9878c83708",
+    "services/aos-api/aos_api/ecommerce_workshop_contracts.py": "24b55de4d780e12fd83cf4bddaf6e438d8538ade9a0e0e363ea4a08d77dc2976",
+    "services/aos-api/aos_api/ecommerce_workshop_catalog.py": "12eafb872bf132120f323c64053113a412037c4bba835f1878ce1ae3b54bae0d",
+    "apps/web/src/components/workshop/EcommerceWorkshopHost.tsx": "20c35edb772cee650ee81feb4a8cd88824aca1f644ee5a10e7a858c9e228f14d",
+    "apps/web/src/components/workshop/EcommerceWorkshopShell.tsx": "6ec6e7da34c7492768b3a72bbdff4ac5dd7b4756a4e4fb95f823f13544592dc9",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/13-达人邀约技术方案.md": "5865697c0a4b87c4cc6cf545e9e457bff167be18936cf1351876b4324e5b54a6",
+    "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md": "065480e298fafae285c0b44bf9364140bd3e1aa6f518ddff92882bd9dff8465c"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

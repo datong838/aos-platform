@@ -1,0 +1,95 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w6-01-exact-capability-assignee-readiness-preflight-20260814",
+  "authorityRevision": "AOS-000027",
+  "repositoryRevision": "da4bfc1f934ef5ec8c6632710bc53f73c397606d",
+  "result": "W6_01_EXACT_CAPABILITY_ASSIGNEE_READINESS_PREFLIGHT_FACTS_FROZEN",
+  "decision": "A6E_DEFINITION_CATALOG_GREEN_ASSIGNEE_RESOLVER_AND_READINESS_BLOCKED",
+  "foundations": [
+    "the ecommerce assets contain exactly six digital-colleague definitions, 37 Logic identities and ten canonical shared Capability definitions",
+    "all 37 Logic entries resolve to one of the six agent template IDs and all referenced capability IDs resolve to the ten-item catalog",
+    "A6E provides immutable AgentTemplate, SkillTemplate and CapabilityRevision authorities while keeping runtime readiness blocked until bindings are operational",
+    "ResponsibilityPlanRevision has PostgreSQL authority, exact templateRef, slot assignee refs, coverage, blockers and strict frontend parsing",
+    "AgentInstance, SkillBinding and CapabilityBinding have tenant-scoped stores with version, lifecycle, health and Receipt foundations"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W6-A6E-BUNDLE-PUBLISHER-VERSION",
+      "severity": "P0",
+      "finding": "solution.ecommerce.growth is now 1.3.0 but AipSolutionPackPublisher hard-codes 1.2.0; the canonical catalog/install API test deterministically rejects the current bundle as unsupported."
+    },
+    {
+      "id": "DEP-W6-RESPONSIBILITY-TEMPLATE-RESOLVER",
+      "severity": "P0",
+      "finding": "the production aip_production_contracts router constructs AipProductionContractStore without a ResponsibilityTemplateResolver, so real ResponsibilityPlan creation fails closed with RESPONSIBILITY_TEMPLATE_AUTHORITY_UNAVAILABLE."
+    },
+    {
+      "id": "DEP-W6-RESPONSIBILITY-TEMPLATE-ASSETS",
+      "severity": "P0",
+      "finding": "all eight Workshop module descriptors have empty responsibilityTemplateRefs; no installed exact template can be resolved from the module lock."
+    },
+    {
+      "id": "DEP-W6-ASSIGNEE-RESOLVER",
+      "severity": "P0",
+      "finding": "there is no canonical assignee resolver or ranked deterministic selection Receipt; callers submit an assignee directly in each slot."
+    },
+    {
+      "id": "DEP-W6-ASSIGNEE-KIND-COVERAGE",
+      "severity": "P0",
+      "finding": "the contract advertises agent_instance, human_principal, tool_binding and provider_capability_binding, but the backend dependency check rejects every kind except agent_instance."
+    },
+    {
+      "id": "DEP-W6-CAPABILITY-EXACTNESS",
+      "severity": "P0",
+      "finding": "Responsibility readiness reduces SkillBinding and CapabilityBinding refs to bare capability identifiers, dropping revision, content hash and binding identity from the comparison."
+    },
+    {
+      "id": "DEP-W6-CAPABILITY-ASSIGNEE-BINDING",
+      "severity": "P0",
+      "finding": "readiness intersects an assignee's SkillBinding capabilities with all active healthy capability bindings in the tenant, not bindings assigned or authorized for that exact assignee, account, tool or provider."
+    },
+    {
+      "id": "DEP-W6-AGENT-RUNTIME-READINESS",
+      "severity": "P0",
+      "finding": "assignee validation checks AgentInstance existence and version but not active status, template exact ref, policy, current health, route/model/provider readiness, freshness or capacity."
+    },
+    {
+      "id": "DEP-W6-REASSIGN-TAKEOVER",
+      "severity": "P1",
+      "finding": "no canonical ResponsibilityPlan reassign, human takeover or immutable resolver decision path was found; generic Handoff does not mutate responsibility authority."
+    },
+    {
+      "id": "DEP-W6-UPSTREAM-W3-W4",
+      "severity": "P0",
+      "finding": "W3-07 and W4-08 remain unchecked, so W6-01 cannot enter implementation or be marked complete even if the catalog layer is repaired."
+    }
+  ],
+  "staticVerification": {
+    "digitalColleagueDefinitions": 6,
+    "logicDefinitions": 37,
+    "capabilityDefinitions": 10,
+    "logicAgentMissing": 0,
+    "logicCapabilityMissing": 0,
+    "workshopModulesChecked": 8,
+    "modulesWithResponsibilityTemplateRefs": 0,
+    "productionRouterResolverWired": false,
+    "canonicalAssigneeResolverFound": false
+  },
+  "verification": {
+    "backendCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_w2c_contracts.py services/aos-api/tests/aip/test_w2c_api.py services/aos-api/tests/aip/test_aip_agent_registry_contracts.py services/aos-api/tests/aip/test_aip_agent_registry_store.py services/aos-api/tests/aip/test_aip6_capability_run_handoff.py services/aos-api/tests/aip/test_aip6_agent_control_api.py",
+    "backendResult": "25 passed, 1 failed, 18 warnings in 19.28s",
+    "backendFailure": "test_canonical_catalog_install_replay_and_tenant_canary: solution.ecommerce.growth@1.3.0 rejected because publisher only accepts 1.2.0",
+    "frontendCommand": "pnpm exec vitest run src/api/aipProductionContracts/parser.test.ts src/api/aipProductionContracts/index.test.ts src/pages/s2/ProductionContractsPage.test.tsx src/api/aipAgentControl/parser.test.ts",
+    "frontendResult": "4 files and 16 tests passed",
+    "interpretation": "definition and generic contract foundations are substantial, while current-bundle publication and operational assignee readiness are not GREEN"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

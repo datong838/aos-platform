@@ -1,0 +1,23 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w3-13-analyst-authority-doc-alignment-20260815",
+  "recordedAt": "2026-08-15T12:52:00+08:00",
+  "authorityRevision": "AOS-000040",
+  "baselineCommit": "24e3e92ebf971652d167b4481c87b466acfef677",
+  "files": [
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md","preSha256":"f98afbc260904f7ff63775593c66cfb4d56b5f57cb8ac777bdb4a9c61d85946c","postSha256":"c53307fc75d7edbac11bcf8b93839c2372bde77dbb2616014a1f8259aac226cd"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/15-经营参谋技术方案.md","preSha256":"faeb954cc5190f5fd24637ba622e063edc604588bb9a7ac1eccd238c461b3bb6","postSha256":"43c846c9b57a9c653b8571ac063f8d36f68acbf26157fda9e19a32e0eab79089"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/87-W2-06-经营参谋指标质量证据计划只读模型预检ADR.md","preSha256":"5501d9910eba285aec5d9b5f8386a07b124900f9a5922c40a938e091ed938222","postSha256":"4b65a15907a48e139cc2efbbe95d97ec723ef85b13f3d1807266bdb13480fa48"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/101-W3-13经营参谋InsightDecisionGrowthPlanTaskGraphEffectReview预检ADR.md","preSha256":null,"postSha256":"9db93fcae4e14a2e4c9248a2494ac64c6f35ce66999400339c78a553521b24a6"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md","preSha256":"7f356c816c8a64d6baaf33beb15d79f59f48d3e447724bdcd506d5ec434fe586","postSha256":"c431787ff3a7d2dc74e26a66b71eb3622eac8905778d1fd7c5a6bbdc8fcf2b21"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/W0-全量技术条款施工追踪矩阵与W1精确施工包.md","preSha256":"28fa31f5fbc55679a510473284fdd5974055c5009f3f12b80ce10c018199f98a","postSha256":"262b068269838367270e9b05cfda7b065522480a6bad7c3a1e5c03244793f8e4"},
+    {"path":"/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/WORKSHOP-TECH-FORMAL-REVIEW-工作台层开发详细清单与依赖关系.md","preSha256":"c090255064d634d92ea1da8bb61beaae38067f1d5dc64799eb561719f6c0913a","postSha256":"9caa873ac22c5affd10452fd890b2036856ac2a53e6c7b2454a46ce548d0a5d6"}
+  ],
+  "reviewRounds": [
+    {"round":1,"finding":"AIP-8 generic analyst shell, ecommerce L1 decision authority and canonical AIP Task authority were named together without a unique ownership boundary.","remediation":"Separated the generic query/plan shell, five ecommerce L1 authorities and canonical Task truth; froze exact-reference and disclosure contracts."},
+    {"round":2,"finding":"TaskGraph and EffectReview lacked atomic materialization, mapping/count conservation, maturity, late-data, inconclusive, correction and memory-promotion semantics; two status references still listed only three targets or AOS-000038.","remediation":"Added all-or-nothing idempotent materialization, stable mapping ledger and count equation, effect successor rules and MemoryCandidate governance; reconciled the five-target inventory to AOS-000040."}
+  ],
+  "reviewVerdict": "PLAN_REMEDIATED_GREEN; W3-13_RUNTIME_NOT_STARTED; HARD_GATE_BLOCKED",
+  "noCodeOrVisualChange": true,
+  "externalEffect": false
+}

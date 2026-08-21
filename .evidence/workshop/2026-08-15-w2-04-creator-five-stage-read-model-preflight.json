@@ -1,0 +1,145 @@
+{
+  "schema": "aos-workshop-w2-creator-five-stage-read-model-preflight/v1",
+  "taskId": "workshop-w2-04-creator-five-stage-read-model-preflight-20260815",
+  "workItem": "W2-04",
+  "projectRevision": "AOS-000037",
+  "branch": "w2-workshop",
+  "head": "b3bd69750f0ccbb4c267cdd140280faa0e569729",
+  "recordedAt": "2026-08-15T10:05:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "CREATOR_FIVE_STAGE_READ_MODEL_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W1-10 and W2-00 are not GREEN; creator-domain authorities and a tenant-safe Workshop five-stage view are absent; BIND-0 confirms no operational Agent bindings routes providers or evals"
+  },
+  "dependencyFactRevalidation": {
+    "authorityRevision": "AOS-000037",
+    "authorityStage": "BIND1_0_READ_ONLY_PREFLIGHT_GREEN_WITH_WARNINGS",
+    "bind0Facts": "six provisioning instances and zero bindings routes providers evals",
+    "bind1Effect": "future assignee readiness only; no creator-domain authority or operational assignee exists",
+    "w1_10": "not GREEN",
+    "w2_00": "not GREEN",
+    "leaseConflict": false
+  },
+  "liveCodeFindings": {
+    "creatorCandidateRevisionAuthority": "ABSENT",
+    "creatorMatchObservationAuthority": "ABSENT",
+    "creatorMatchDecisionRevisionAuthority": "ABSENT",
+    "outreachBatchAndItemAuthority": "ABSENT",
+    "creatorContractDeliveryRelationshipAuthority": "ABSENT",
+    "creatorGrowthViewStoreSdk": "ABSENT",
+    "genericResearchJob": "PRESENT with append-only provider events and reconciliation, but it does not normalize licensed creator candidates and production provider readiness is not proven",
+    "genericEvidenceHandoffAction": "PRESENT as reusable AIP primitives, but none supplies creator identity match batch contract delivery or relationship truth",
+    "moduleManifest": {
+      "moduleId": "ecommerce.creator-growth",
+      "requiredObjects": [
+        "Product",
+        "CreatorCandidate",
+        "OutreachBatchRevision",
+        "ContractRef",
+        "DeliveryRef",
+        "RelationshipRevision"
+      ],
+      "viewRefs": [],
+      "evalPackRefs": [
+        "content/evals/placeholder.json"
+      ],
+      "productionContractRefs": [],
+      "responsibilityTemplateRefs": []
+    },
+    "stageNamespaceRisk": "The technical plan calls Discovery Evidence Build Matching Batch prepare and Start five service phases, while the business UI also describes candidate outreach contract delivery and relationship stages; these are two axes and must not share one enum"
+  },
+  "targetViewContract": {
+    "operationId": "ecommerceWorkshopCreatorGrowthViewGet",
+    "method": "GET",
+    "canonicalPath": "/v1/ecommerce-workshop/views/creator-growth",
+    "tenantSource": "verified Principal only",
+    "filters": [
+      "businessStage=candidate|outreach|contract|delivery|relationship",
+      "workflowPhase=discovery|evidence|matching|batch_prepare|start",
+      "status",
+      "campaignRef",
+      "cursor"
+    ],
+    "rootAuthorities": [
+      "CreatorCandidateRevision exact ref",
+      "CreatorMatchObservation and CreatorMatchDecisionRevision exact refs",
+      "OutreachBatchRevision and OutreachBatchItemRevision exact refs",
+      "ContractRef and approved ContractTermDiffRevision",
+      "DeliveryRef and item Action Receipt refs",
+      "RelationshipRevision exact ref"
+    ],
+    "readSlices": [
+      "licensed discovery source freshness and candidate identity conflicts",
+      "evidence coverage preliminary match and human decision",
+      "batch eligibility deduplication frequency capacity budget and zero-side-effect prepare",
+      "outreach contract and delivery outcomes with item-level partial unknown reconciliation",
+      "mature relationship observations and effect lineage"
+    ],
+    "requiredEnvelope": [
+      "schemaVersion resourceRevision evaluatedAt dataCutoff and stable cursor",
+      "business-stage and workflow-phase namespaces kept separate",
+      "module slice and action readiness kept separate",
+      "exact scoped refs disclosure decisions and typed blockers",
+      "counts using one frozen input population and cutoff"
+    ]
+  },
+  "authorityBoundaries": [
+    "The view is rebuildable and never becomes creator identity match batch contract delivery relationship Task Evidence Handoff or Action authority",
+    "Observation and Decision are separate; a model score cannot automatically exclude or merge a candidate",
+    "Creator identity merge and split require revision actor reason and evidence; same-name accounts never auto-merge",
+    "prepare and freeze have zero provider outreach logistics contract commission or external quota side effects",
+    "accepted is not applied and unknown is never counted as success or automatically retried",
+    "contract delivery relationship and action status remain separate axes along one cooperation lineage",
+    "relationship rating changes only from maturity-window evidence and does not overwrite historical observations",
+    "PII is represented by controlled refs and never copied into cards logs receipts or model context",
+    "the W2 view has no discover start outreach ship accept commission reconcile or relationship mutation"
+  ],
+  "lifecycleAndCountInvariants": [
+    "input equals eligible plus excluded plus needs-review plus unknown plus deduplicated for one frozen batch cutoff",
+    "started equals accepted plus applied plus failed plus unknown plus skipped-before-action for item receipts only",
+    "workflow phase and business relationship stage are independent and never compressed",
+    "each item preserves candidate evidence match policy account action approval lease and receipt exact refs",
+    "partial batch status never overwrites item outcomes and unstarted items are not failures",
+    "contract or commission drift invalidates prior approval without rewriting old contract facts",
+    "refresh reconstructs the same candidate identity batch action contract delivery and relationship lineage"
+  ],
+  "requiredTestsWhenUnblocked": [
+    "strict creator candidate match batch contract delivery relationship blocker and cursor DTO parsers",
+    "tenant no-scope wrong-scope cross-tenant marking purpose PII and contact disclosure checks",
+    "licensed source freshness hash schema malicious-content and callback-gap failures",
+    "identity alias conflict merge split dedup and historical batch staleness",
+    "PRELIMINARY score cannot exclude and Observation cannot overwrite Decision",
+    "prepare freeze start separation and both batch cardinality equations",
+    "item partial accepted unknown reconcile and out-of-order delivery outcomes",
+    "contract diff maker-checker and relationship maturity-window rules",
+    "read-only HTTP method and absence of mutation controls in W2",
+    "org-org positive and dev-org negative three-viewport keyboard browser evidence"
+  ],
+  "blockers": [
+    "W1-10 real Registry reconciliation and positive Workshop projection are not GREEN",
+    "W2-00 DEP-DATA remains RED for Product and related business context",
+    "all creator-domain candidate match batch contract delivery and relationship authorities are absent",
+    "creator-growth Workshop view Store and strict SDK do not exist",
+    "five service phases and five business stages lack separate canonical namespaces",
+    "module manifest has no viewRefs productionContractRefs or responsibilityTemplateRefs and uses a placeholder Eval pack",
+    "BIND-0 reports zero operational bindings routes providers and evals"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "no W2-04 implementation exists and hard dependencies are RED; generic ResearchJob Evidence Handoff or Action tests do not prove the creator-domain read model",
+    "doesNotProve": [
+      "creator identity and match authority",
+      "batch cardinality and zero-side-effect prepare",
+      "contract delivery relationship lineage",
+      "positive real-tenant browser readiness"
+    ]
+  },
+  "next": "align the W2-04 contract and evidence reference through two review rounds without runtime coding",
+  "safety": [
+    "read-only code document Git and shared-memory inspection only",
+    "no migration database tenant browser provider outreach logistics contract or external action",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

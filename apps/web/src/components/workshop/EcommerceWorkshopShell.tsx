@@ -17,11 +17,13 @@ export function EcommerceWorkshopShell({
   module,
   dataCutoff,
   catalogStale = false,
+  exposeReadOnlyWhenUnverified = false,
   children,
 }: {
   module: EcommerceWorkshopModule;
   dataCutoff: string | null;
   catalogStale?: boolean;
+  exposeReadOnlyWhenUnverified?: boolean;
   children?: ReactNode;
 }) {
   const [focusMode, setFocusMode] = useState(false);
@@ -103,7 +105,14 @@ export function EcommerceWorkshopShell({
             {pendingView}
           </AsyncStateBoundary>
         ) : (
-          <AsyncStateBoundary state={state} dataCutoff={dataCutoff} />
+          <>
+            <AsyncStateBoundary state={state} dataCutoff={dataCutoff} />
+            {exposeReadOnlyWhenUnverified && children ? (
+              <div className="ecommerce-workshop-unverified-read-view">
+                {children}
+              </div>
+            ) : null}
+          </>
         )}
         <CapabilityBlocker readiness={module.readiness} blockers={module.blockers} />
       </section>

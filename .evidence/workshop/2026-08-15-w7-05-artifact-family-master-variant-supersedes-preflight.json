@@ -1,0 +1,72 @@
+{
+  "schema": "aos-workshop-preflight/v1",
+  "taskId": "workshop-w7-05-artifact-family-master-variant-supersedes-preflight-20260815",
+  "workItem": "W7-05",
+  "projectRevision": "AOS-000030",
+  "branch": "w2-workshop",
+  "head": "ed401393565e6b8fadcc933399db3dac13078da0",
+  "aipBaseline": "m1@c3a8e4eb0c95148af15893d878dbf9f32e3728f1",
+  "recordedAt": "2026-08-15T06:30:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "foundationStatus": "GENERIC_ARTIFACT_RELATION_FOUNDATION_GREEN",
+    "dependencyStatus": "IMPLEMENTATION_BLOCKED",
+    "externalEffect": "NONE",
+    "mayImplementNow": false,
+    "reason": "W7-04 runtime implementation is blocked, so no trustworthy media Artifact can yet enter a family; generic W2-C relation authority is necessary but does not express the W7-05 family and lifecycle invariants"
+  },
+  "dependencyFacts": [
+    "W2-C ArtifactRelation authority Store API SDK control page and tenant evidence are integrated GREEN",
+    "W2-D ImpactPreview and ProductionStart authority is integrated before the current AOS-000030 baseline",
+    "the W7-04 contract baseline is approved but its media executor fenced lease checkpoint and takeover implementation remains blocked",
+    "W7-05 therefore may align contracts but may not implement or manufacture media runtime evidence"
+  ],
+  "verifiedFoundations": [
+    "one canonical aip_artifact row per produced immutable-content reference is reused instead of creating a Workshop payload store",
+    "ArtifactRelation supports family_member variant_of supersedes and derived_from relation types",
+    "both endpoints are tenant scoped and relation creation is idempotent",
+    "relation creation revalidates both exact artifact content hashes",
+    "database and Store reject self reference and directed relation cycles",
+    "relation rows are append-only and preserve the old edge",
+    "canonical HTTP API strict SDK parser and AIP production-contract control page expose generic relations",
+    "focused W2-C contract and API tests are GREEN"
+  ],
+  "blockers": [
+    "W7-04 is not GREEN and cannot yet produce trustworthy Master or Variant artifacts",
+    "aip_artifact has no first-class revision family identity family revision or family head authority",
+    "aip_artifact content_hash remains nullable and the base table has no database append-only guard",
+    "generic relation DTO has no explicit artifact role such as preview draft master variant approved or executed",
+    "no invariant requires each Variant to reference exactly one compatible Master in exactly one family",
+    "no invariant constrains supersedes to the same family artifact type role profile platform and rendition specification",
+    "no family-head CAS or fork decision prevents two concurrent successors from both becoming current",
+    "generic cycle validation is shared by all relation types but type-specific direction cardinality and transitive rules are absent",
+    "family membership does not bind exact Stage attempt source template capability provider policy license Eval and evidence lineage",
+    "Preview Draft Approved and Executed are not separately bound to immutable Artifact ImpactPreview Approval StartDecision Action and Receipt exact refs",
+    "approval of one exact Variant is not protected from later Master Variant or relation drift",
+    "list API returns a tenant-wide relation collection without family root filter stable family topology or pagination contract",
+    "no Workshop media family projection timeline or user-visible current versus historical Variant semantics exist",
+    "no org-org media family positive path or dev-org isolation canary proves Master Variant supersedes and old-Variant preservation"
+  ],
+  "targetBoundary": {
+    "artifact": "continue using canonical append-only aip_artifact content references; make immutability enforceable before treating it as a revision authority",
+    "family": "add the minimum reviewed family identity head and typed invariant contract; do not encode family state only in metadata or UI",
+    "relations": "retain ArtifactRelation as the lineage edge authority and add relation-type-specific validation rather than a second Workshop lineage store",
+    "lifecycle": "preview draft approved and executed remain distinct exact references and decisions; no mutable status field may overwrite an old Variant",
+    "approvalExecution": "approval binds one exact artifact hash; execution consumes that approval through canonical Start Action Lease Receipt authorities",
+    "projection": "Workshop reads a reconstructable family topology and timeline but stores no independent business truth"
+  },
+  "tests": {
+    "initialAttempt": "uv default cache was outside the writable sandbox and failed before collection; it was not counted",
+    "command": "UV_CACHE_DIR=/private/tmp/aos-workshop-uv-cache uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_w2c_api.py services/aos-api/tests/aip/test_w2c_contracts.py",
+    "result": "8 passed",
+    "meaning": "generic ArtifactRelation DTO Store hash cycle idempotency API and route foundations are stable; this does not prove W7-05 family invariants or media lifecycle"
+  },
+  "next": "align W7-05 contracts and checklist through two review rounds, retain the item unchecked, then preflight W7-06",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant mutation",
+    "no provider action",
+    "w1-aip uncommitted work was not read or modified; only committed m1 facts were inspected"
+  ]
+}

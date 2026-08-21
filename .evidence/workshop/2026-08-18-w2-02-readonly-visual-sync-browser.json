@@ -1,0 +1,44 @@
+{
+  "schema": "workshop-browser-acceptance/v1",
+  "taskId": "workshop-w2-02-readonly-visual-sync-20260818",
+  "authorityRevisionAtAcceptance": "AOS-000094",
+  "branch": "w2-workshop",
+  "implementationCommit": "ac8739dc464e2321a86676b7cf8269f3c20710a2",
+  "surface": "Codex built-in browser",
+  "url": "http://127.0.0.1:5173/workshop/cockpit",
+  "tenant": "org-org/dev-project",
+  "runtimeSafety": {
+    "apiMigrationMode": "disabled",
+    "cronEnabled": false,
+    "httpMethodsUsed": ["GET"],
+    "businessWrites": 0,
+    "providerCalls": 0
+  },
+  "canonicalSnapshot": {
+    "taskCount": 4,
+    "activeTaskCount": 2,
+    "latestRunCount": 4,
+    "blockingBlockerCount": 0,
+    "warningBlockerCount": 3
+  },
+  "viewports": [
+    {"width": 1920, "height": 900, "clientWidth": 1920, "scrollWidth": 1920, "horizontalOverflow": false},
+    {"width": 1440, "height": 900, "clientWidth": 1440, "scrollWidth": 1440, "horizontalOverflow": false},
+    {"width": 1280, "height": 900, "clientWidth": 1280, "scrollWidth": 1280, "horizontalOverflow": false}
+  ],
+  "semanticAssertions": {
+    "installedMenuCount": 8,
+    "h1Count": 1,
+    "metricCount": 6,
+    "taskCardCount": 4,
+    "commandInputCountWithinCockpit": 0,
+    "issueButtonCount": 0,
+    "commandBlockedVisible": true,
+    "executionLaneVisible": true,
+    "planningLaneVisible": true,
+    "retrospectiveBlockersVisible": true,
+    "sharedDependencyStripVisible": true
+  },
+  "consoleErrorCount": 0,
+  "decision": "GREEN_READONLY_VISUAL_ACCEPTANCE"
+}

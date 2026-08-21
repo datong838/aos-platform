@@ -1,0 +1,12 @@
+{
+  "schema": "workshop-preflight-receipt/v1",
+  "taskId": "workshop-w2-02-readonly-page-20260815",
+  "authorityRevision": "AOS-000047",
+  "branch": "w2-workshop",
+  "baseHead": "e246400",
+  "decision": "PREFLIGHT_GREEN_PARTIAL_PAGE_SUBWAVE_AUTHORIZED_COMMANDS_BLOCKED_READ_ONLY",
+  "authority": ["TaskCockpitCoreResponse", "TaskCockpitStepPageResponse", "TaskCockpitCheckpointPageResponse"],
+  "allowed": ["ephemeral request store", "server blockers", "Task and latest Run summaries", "explicit Step and Checkpoint detail reads", "status filter", "manual refresh", "server cursor next page"],
+  "forbidden": ["commands", "optimistic state", "local persistence", "invented Stage or assignee", "automatic stale replay", "static visual draft changes", "backend or database changes"],
+  "remainingFullTaskGate": ["exact Stage", "responsibility and handoff", "approval and issue", "action reconciliation", "W2-00 enrichment", "full target-state browser EvidencePack"]
+}

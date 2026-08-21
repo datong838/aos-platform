@@ -1,0 +1,111 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w6-10-cumulative-contract-service-browser-security-preflight-20260814",
+  "authorityRevision": "AOS-000029",
+  "repositoryRevision": "1533ad2c8893a18efbdea09dfd3923aadd64dda5",
+  "result": "W6_10_CUMULATIVE_CONTRACT_SERVICE_BROWSER_SECURITY_PREFLIGHT_FACTS_FROZEN",
+  "decision": "GENERIC_FOUNDATIONS_PARTIALLY_GREEN_W6_CUMULATIVE_GATE_BLOCKED_BY_UNIMPLEMENTED_W6_01_TO_W6_09",
+  "foundations": [
+    "installed-module catalog, route shell, tenant-switch stale-response protection and explicit offline/error states have focused frontend coverage",
+    "generic ResearchJob, production-contract, single Action, one-time Handoff and Usage authorities have focused backend coverage",
+    "the visible Workshop shell retains a stable page-level H1 and reports API unavailability instead of fabricating domain content",
+    "all W6-01 through W6-09 preflights preserve missing creator, price and customer business authorities as blockers rather than treating declarations or generic primitives as completion"
+  ],
+  "findings": [
+    {
+      "id": "DEP-W6-10-UPSTREAM-NOT-GREEN",
+      "severity": "P0",
+      "finding": "W6-01 through W6-09 are all unchecked. Each item has a frozen preflight and refined target contract, but none has the required domain implementation and delivery evidence. Therefore W6-10 cannot satisfy its declared dependency gate."
+    },
+    {
+      "id": "DEP-W6-10-CONTRACT-COVERAGE",
+      "severity": "P0",
+      "finding": "there are no runtime creator, price or customer Segment/Journey/Dialogue/Match/Policy/Batch/EffectReview authorities to include in a cumulative contract suite; a cumulative pass over generic foundations cannot substitute for missing business contracts."
+    },
+    {
+      "id": "DEP-W6-10-SERVICE-COVERAGE",
+      "severity": "P0",
+      "finding": "no three-domain prepare/start/reconcile service, common item outcome reducer, protected customer contact resolver, repricing gate, creator relationship chain or ModuleHandoffCompiler exists. Service-gate completeness is therefore structurally impossible at this revision."
+    },
+    {
+      "id": "DEP-W6-10-BACKEND-ISOLATION-RED",
+      "severity": "P0",
+      "finding": "the cumulative backend run stopped at 30 passed and 1 failed because a test assumes dev-org/dev-project has zero ResponsibilityPlan rows while that negative canary currently contains two. No shared test data was deleted. The suite is not isolated enough for a cumulative GREEN claim."
+    },
+    {
+      "id": "DEP-W6-10-CUSTOMER-PIPELINE-RED",
+      "severity": "P0",
+      "finding": "W6-07 already records 27 passed and 6 failed in the CustomerLite/P08 pipeline: four legacy pymysql mocks no longer intercept JdbcConnectorRuntime and two legacy sample-input tests conflict with the current fail-closed source_id rule. This remains part of the cumulative service/security gate."
+    },
+    {
+      "id": "DEP-W6-10-CAPABILITY-READINESS-RED",
+      "severity": "P0",
+      "finding": "W6-01 already records 25 passed and 1 failed because the canonical catalog installation path rejects solution.ecommerce.growth@1.3.0 while the publisher accepts only 1.2.0. Operational assignee readiness and current-bundle publication are not GREEN."
+    },
+    {
+      "id": "DEP-W6-10-BROWSER-POSITIVE-PATH-BLOCKED",
+      "severity": "P0",
+      "finding": "the built-in browser reached /workshop/customer, but the page truthfully displayed offline mode, aos-api health HTTP 500 and catalog read failure. Only the shell/error-state path is observable; no customer business page or positive API result can be accepted as browser evidence."
+    },
+    {
+      "id": "DEP-W6-10-BROWSER-NAVIGATION-NOT-INSTALLED",
+      "severity": "P1",
+      "finding": "the visible installed-module navigation failed closed and did not inject a fixed eight-menu list. This is safe behavior, but it also means route, focus, seven-state and intervention coverage for the three W6 domain modules is not presently testable in the live page."
+    },
+    {
+      "id": "DEP-W6-10-DOMAIN-SECURITY-NOT-PROVEN",
+      "severity": "P0",
+      "finding": "generic tenant-scoped authorities do not prove domain security. W6 still lacks domain RLS/authorization matrices, protected contact resolution, consent-revocation linearization, frequency reservation, provider callback/reconcile controls and cross-tenant negative tests for creator, price and customer commands."
+    },
+    {
+      "id": "DEP-W6-10-EFFECT-AND-USAGE-CLOSURE",
+      "severity": "P0",
+      "finding": "generic Usage and Handoff tests are GREEN, but automatic three-domain Usage binding, item-level settlement, EffectReview authority, maturity policy and Handoff business-decision Receipts are absent; cumulative outcome closure is not implemented."
+    }
+  ],
+  "staticVerification": {
+    "w6PreflightsPresent": 9,
+    "w6UpstreamItemsChecked": 0,
+    "creatorDomainRuntimeAuthoritiesFound": 0,
+    "priceDomainRuntimeAuthoritiesFound": 0,
+    "customerDomainRuntimeAuthoritiesFound": 0,
+    "genericResearchFoundationFound": true,
+    "genericActionFoundationFound": true,
+    "genericHandoffFoundationFound": true,
+    "genericUsageFoundationFound": true,
+    "domainCumulativeGateEligible": false
+  },
+  "verification": {
+    "backendCommand": "services/aos-api/.venv/bin/pytest -q -x services/aos-api/tests/asset_registry/test_workshop_module_contracts.py services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py services/aos-api/tests/test_w2b_production_contracts.py services/aos-api/tests/test_w2b_production_contract_store.py services/aos-api/tests/test_w2b_production_contract_api.py services/aos-api/tests/aip/test_aip_research_job_store.py services/aos-api/tests/aip/test_aip_research_job_api.py services/aos-api/tests/aip/test_aip3_action_control.py services/aos-api/tests/aip/test_aip3b_action_execution.py services/aos-api/tests/aip/test_aip6_capability_run_handoff.py services/aos-api/tests/aip/test_aip_telemetry_usage_service.py services/aos-api/tests/aip/test_aip7_provider_usage_bridge.py services/aos-api/tests/aip/test_aip_telemetry_usage_api.py",
+    "backendResult": "30 passed and 1 failed before fail-fast; failure is the retained two-row dev-org/dev-project ResponsibilityPlan canary state, with no cleanup performed",
+    "frontendCommand": "/Users/ddt/.nvm/versions/node/v20.20.2/bin/node node_modules/vitest/vitest.mjs run 15 focused Workshop, production-contract, Action, Evidence and shell test files",
+    "frontendResult": "15 files and 59 tests passed",
+    "browserTarget": "http://127.0.0.1:5173/workshop/customer",
+    "browserResult": "built-in browser reached AOS Web scaffold; visible H1 is 电商工作台; offline alert, aos-api health HTTP 500 and 正式服务未返回可验证结果 were shown; installed catalog navigation failed closed; console had API and router warnings but no fabricated success",
+    "interpretation": "generic foundations and truthful failure states are useful, but backend isolation, current bundle readiness, CustomerLite/P08, domain authorities, positive browser paths and domain security are not GREEN"
+  },
+  "sourceHashes": {
+    ".evidence/workshop/2026-08-14-w6-01-exact-capability-assignee-readiness-preflight.json": "ed2de5f1784ce00d1d2b5912b8f36227707dd42a11322e79527f01fc806ab130",
+    ".evidence/workshop/2026-08-14-w6-02-profile-merge-policy-preflight.json": "c524d7a658382631e901eab6f91fd5412cd6c570d08dd8a90360af9410980aff",
+    ".evidence/workshop/2026-08-14-w6-03-creator-discovery-match-batch-prepare-preflight.json": "caeba74201405243384779bf0857d486f835481ac8124778842c0bac9025e3f4",
+    ".evidence/workshop/2026-08-14-w6-04-creator-start-partial-contract-relationship-preflight.json": "707883db1d588f18de7b854bed2c721509488039847c2fe0a67aa02cf27dd45e",
+    ".evidence/workshop/2026-08-14-w6-05-price-research-match-policy-batch-prepare-preflight.json": "6f57fd49cee9fc010eb4547462e78dd7cdd6eee9ecbded242a903113f1b7ba02",
+    ".evidence/workshop/2026-08-14-w6-06-price-notice-recommendation-reprice-gates-preflight.json": "6d555a4b73fa813af7f85485b518cfaf7c7a16bc0d1f690a2ad34491e002ef44",
+    ".evidence/workshop/2026-08-14-w6-07-customer-segment-journey-dialogue-batch-prepare-preflight.json": "2e6c3066b9d8edf311f2f63427f114382e6a18bff4fbdf9560b96d42fc7a06e4",
+    ".evidence/workshop/2026-08-14-w6-08-customer-start-frequency-revocation-contact-preflight.json": "dd8adfc17d8e293a77098d1487139b3778c086a839751f3bd625eff68163a63e",
+    ".evidence/workshop/2026-08-14-w6-09-three-module-partial-usage-effect-handoff-preflight.json": "7f3809d8334c9290d4b504c9ad014d0cc37ffa8472aababd75d9df87c14d82d6"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "sharedDocumentationChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantRead": false,
+    "realTenantMutation": false,
+    "customerDataRead": false,
+    "externalProviderEffect": false,
+    "externalChannelEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false,
+    "builtInBrowserReadOnly": true
+  }
+}

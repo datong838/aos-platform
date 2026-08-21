@@ -1,0 +1,65 @@
+{
+  "schema": "aos-workshop-preflight/v1",
+  "taskId": "workshop-w7-07-media-model-provider-malicious-asset-preflight-20260815",
+  "workItem": "W7-07",
+  "projectRevision": "AOS-000031",
+  "branch": "w2-workshop",
+  "head": "7e5e81ad2cc855d22271a56a50ad01a2ab90c663",
+  "aipBaseline": "m1@5f80e62229f07836c11d280b891b48551febb038",
+  "recordedAt": "2026-08-15T06:55:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "foundationStatus": "LEGACY_MEDIA_REFERENCE_AND_GENERIC_USAGE_FOUNDATION_ONLY",
+    "dependencyStatus": "IMPLEMENTATION_BLOCKED",
+    "externalEffect": "NONE",
+    "mayImplementNow": false,
+    "reason": "DEP-M9 AIP-9 and W7-04 are not GREEN; current MediaReference is an in-memory legacy bridge with mock storage and cannot be treated as a tenant-safe media production authority"
+  },
+  "verifiedFoundations": [
+    "AIP-7 exact model route provider policy price and readiness contracts exist as code-green foundations",
+    "AipProviderUsageBridge requires an exact selected provider and provider usage receipts before forwarding to canonical Usage authority",
+    "legacy MediaReference can represent local or mock-S3 paths and issue demonstration URLs",
+    "AIP-9 plan explicitly requires license provenance hash timeouts corrupted-output handling and no direct publish in this wave",
+    "focused generic provider usage and legacy media-reference tests are GREEN"
+  ],
+  "blockers": [
+    "DEP-M9 reports zero real Provider Route and Eval readiness; AIP-9 media and capacity are not GREEN",
+    "W7-04 media Stage executor fenced lease checkpoint takeover and provider reconcile are not GREEN",
+    "planned aip_media_jobs aip_avatar_sessions aip_content_pipeline and media workbench files are absent",
+    "speech.synthesize video.compose and live.orchestrate have no exact operational Provider binding for org-org/dev-project",
+    "no media adapter contract closes submit status cancel timeout webhook reconcile immutable provider receipt and idempotency",
+    "legacy MediaReference is process-memory state without tenant identity PostgreSQL RLS restart durability or canonical receipts",
+    "legacy MediaReference permits destructive delete and mutable thumbnails instead of append-only revision and revocation impact",
+    "legacy S3 adapter is a mock whose exists always succeeds and local signed URL exposes a file URI; neither is production evidence",
+    "signed URL issuance is not bound to principal purpose marking license object hash or bounded policy and has no access receipt",
+    "no input quarantine content-type sniff hash malware archive-bomb or decompression-limit gate exists",
+    "no prompt-injection isolation for OCR captions metadata EXIF subtitles scripts or embedded documents exists",
+    "no exact license provenance portrait trademark consent or product-claim authorization decision is enforced before Provider egress",
+    "no outbound egress allowlist redaction secret stripping or per-provider data-retention decision is bound to the attempt",
+    "legacy ProviderSecurity defaults to audit prompt and response and is not a safe proof that PII secrets or media payloads are excluded",
+    "no output malware policy watermark provenance schema media-decode duration dimension or corruption gate exists before Artifact acceptance",
+    "no org-org positive adapter path or dev-org isolation canary exists and no real Provider call is authorized"
+  ],
+  "targetBoundary": {
+    "adapter": "one reviewed media adapter interface covers acquire generate TTS render and optional live session operations without bypassing canonical Task lease",
+    "resolution": "every attempt freezes exact Capability Binding Model Route Provider Policy Price License and Eval refs and rechecks readiness before egress",
+    "input": "tenant-scoped immutable source refs pass quarantine hash malware license consent marking and prompt-injection isolation before short-lived purpose-bound fetch",
+    "provider": "stable request fingerprint submit receipt polling webhook reconcile cancel and timeout prevent blind retry after ambiguous side effects",
+    "output": "provider result stays quarantined until hash decode schema malware license provenance watermark and policy gates produce immutable evidence",
+    "secrets": "secret refs resolve only inside the adapter and never enter Artifact metadata prompt logs command arguments receipts or shared memory",
+    "authority": "Artifacts Usage and Receipts remain canonical AIP authorities; Workshop stores only projections and exact refs"
+  },
+  "tests": {
+    "command": "UV_CACHE_DIR=/private/tmp/aos-workshop-uv-cache uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip7_provider_usage_bridge.py services/aos-api/tests/test_media_reference.py",
+    "result": "25 passed",
+    "meaning": "three generic provider-usage and twenty-two legacy media-reference tests are stable; they do not prove production media adapters tenant safety or malicious-asset defenses"
+  },
+  "next": "align W7-07 contracts and checklist through two review rounds, retain the item unchecked, then preflight W7-08",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no real tenant mutation",
+    "no real provider call or signed production URL",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

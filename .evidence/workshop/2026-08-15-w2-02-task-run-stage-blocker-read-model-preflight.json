@@ -1,0 +1,110 @@
+{
+  "schema": "aos-workshop-w2-task-cockpit-read-model-preflight/v1",
+  "taskId": "workshop-w2-02-task-run-stage-blocker-read-model-preflight-20260815",
+  "workItem": "W2-02",
+  "projectRevision": "AOS-000035",
+  "branch": "w2-workshop",
+  "head": "ae94800ee4c3a5563f61e13adfccb9e2c25c31b3",
+  "recordedAt": "2026-08-15T09:16:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "COCKPIT_READ_MODEL_TARGET_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W1-10 and W2-00 are not GREEN; canonical AIP Task APIs exist but no tenant-safe cross-domain Workshop cockpit view or strict typed blocker projection exists"
+  },
+  "liveCodeFindings": {
+    "canonicalTaskAuthority": "PostgreSQL AipTaskStore with Task PlanRevision TaskRun StepRun Checkpoint",
+    "canonicalReadApis": [
+      "GET /v1/aip/tasks",
+      "GET /v1/aip/tasks/{task_id}",
+      "GET /v1/aip/task-runs",
+      "GET /v1/aip/task-runs/{run_id}",
+      "GET /v1/aip/task-runs/{run_id}/timeline"
+    ],
+    "taskTimelineTyping": "task plan and run are strict; steps checkpoints artifacts and evidence are list of untyped dictionaries in the HTTP model",
+    "pagination": "task and run lists use bounded limit but no stable cursor contract",
+    "crossDomainCockpitProjection": "ABSENT",
+    "workshopSdkContract": "ABSENT",
+    "existingWebPanel": "CanonicalTaskRunPanel reads canonical Task data but also creates and controls runs; it is Logic-Graph scoped and cannot serve as the W2 read-only cockpit",
+    "stageBoundary": "PlanStep and StepRun are canonical runtime concepts; StageTemplate is a production contract and requires exact compilation mapping before a Stage label can be projected",
+    "integrationStage": "Asset integration stage is a different lifecycle and must not be merged with Task production stages"
+  },
+  "targetViewContract": {
+    "operationId": "ecommerceWorkshopTaskCockpitViewGet",
+    "method": "GET",
+    "canonicalPath": "/v1/ecommerce-workshop/views/task-cockpit",
+    "tenantSource": "verified Principal only",
+    "filters": ["businessDate", "role", "status", "cursor"],
+    "rootAuthority": "TaskGraphRevision and TaskRun exact refs",
+    "readSlices": [
+      "task summary and priority",
+      "exact plan revision and run",
+      "typed step run and checkpoint",
+      "resolved production stage mapping",
+      "responsibility slot and assignee readiness",
+      "handoff and approval",
+      "review issue and external action unknown",
+      "evidence freshness and effect-review follow-up"
+    ],
+    "requiredFields": [
+      "evaluatedAt and dataCutoff",
+      "stable cursor and deterministic order",
+      "resource revision and exact refs",
+      "module and slice readiness",
+      "blocker code severity owner ref required action and evidence refs",
+      "counts with one frozen eligible denominator",
+      "partial unknown stale and blocked kept separate from completed"
+    ]
+  },
+  "authorityBoundaries": [
+    "CockpitReadModel is rebuildable and never writes Task Run Step Checkpoint Handoff Responsibility Approval or Action state",
+    "Task status Run status Step status Stage status and Agent readiness remain separate axes",
+    "Stage is shown only when a signed StageTemplate exact compilation mapping to PlanStep and StepRun exists",
+    "asset integration stages are never displayed as Task production stages",
+    "the W2 view has no create start pause resume cancel rollback prioritize or reassignment side effects",
+    "client tenant owner readiness completion totals and blocker resolution are never trusted"
+  ],
+  "countAndLifecycleInvariants": [
+    "each TaskRun appears once under one exact Task and Plan revision",
+    "each StepRun is keyed by run stepKey and attempt; retries do not overwrite prior attempts",
+    "queued running paused succeeded failed cancelled unknown and reconciled semantics are not compressed",
+    "blocked is a decision over typed blockers and is not inferred from silence or Agent offline count",
+    "completed total excludes partial unknown stale and blocked and all headline counts share a frozen cutoff",
+    "refresh reconstructs the same owner status and blocker timeline from canonical receipts"
+  ],
+  "requiredTestsWhenUnblocked": [
+    "strict Task Plan Run Step Checkpoint blocker and cursor DTO parsers",
+    "tenant no-scope wrong-scope cross-tenant and protected role workload disclosure",
+    "stable pagination sorting cutoff and concurrent late-response rejection",
+    "Task Run Plan Step attempt and checkpoint cardinality conservation",
+    "StageTemplate to PlanStep mapping drift and integration-stage namespace collision",
+    "handoff approval responsibility Agent and Action unknown blocker aggregation",
+    "read-only HTTP method and absence of mutation controls in W2",
+    "org-org positive and dev-org negative three-viewport keyboard browser evidence"
+  ],
+  "blockers": [
+    "W1-10 real Registry reconciliation and positive Workshop projection are not GREEN",
+    "W2-00 DEP-DATA remains RED for business context",
+    "CockpitReadModel API Store and Workshop SDK do not exist",
+    "TaskTimeline collection fields are not strict typed public DTOs",
+    "stable cursor and cross-domain blocker aggregation are absent",
+    "production Stage exact mapping and downstream Handoff Responsibility readiness remain incomplete"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "no W2-02 implementation exists and hard dependencies are RED; existing AIP Task or CanonicalTaskRunPanel tests do not prove a read-only cross-domain cockpit",
+    "doesNotProve": [
+      "Workshop cockpit projection",
+      "typed blockers",
+      "Stage mapping",
+      "positive real-tenant browser readiness"
+    ]
+  },
+  "next": "align W2-02 contract and evidence reference through two review rounds, then continue W2-03 preflight without runtime coding",
+  "safety": [
+    "read-only code and document inspection only",
+    "no Task Run control database tenant browser or external action",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

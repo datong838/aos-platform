@@ -1,0 +1,80 @@
+{
+  "schema": "aos-workshop-w2-data-readiness-refresh/v1",
+  "taskId": "workshop-w2-00-data-readiness-refresh-20260814",
+  "observedAt": "2026-08-14T15:40:35+08:00",
+  "mode": "repeatable-read/read-only",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "result": "DEP_DATA_RED_W2_00_NOT_STARTED_QUERY_PROJECTION_ALIGNED",
+  "scheduleRunSnapshot": {
+    "totalRuns": 85,
+    "latestStartedAt": "2026-08-14T05:00:02.222454+00:00",
+    "latestSucceeded": 6,
+    "latestFailed": 6,
+    "failedByCode": {
+      "PIPELINE_NOT_FOUND": [
+        "P03-product-sku-qyh",
+        "P05-order-qyh",
+        "P06-order-line-qyh",
+        "P08-customer-lite-qyh",
+        "P12-payment-qyh"
+      ],
+      "PIPELINE_EXECUTOR_FAILED": [
+        "P07-shipment-qyh"
+      ]
+    }
+  },
+  "queryProjection": {
+    "sourceTable": "ecom_object",
+    "canonicalQueryTable": "obj_instance",
+    "allTwelveCountsEqual": true,
+    "realCounts": {
+      "Shop": 1,
+      "Product": 57,
+      "ProductSku": 62,
+      "Category": 11,
+      "Order": 120,
+      "OrderLine": 230,
+      "Shipment": 19,
+      "CustomerLite": 53,
+      "Weapp": 3,
+      "SystemConfig": 39,
+      "ProductReview": 5,
+      "Payment": 206
+    },
+    "canarySourceRows": 0,
+    "canaryCanonicalQueryRows": 0
+  },
+  "dependencyDecision": {
+    "DEP-ADP(query)": "BASE_READ_PROJECTION_AVAILABLE_READINESS_ENVELOPE_NOT_YET_INTEGRATED",
+    "DEP-DATA": "RED",
+    "W2-00": "NOT_STARTED",
+    "reason": "historical queryable rows do not override six failed latest schedules or missing freshness, quality and blocker metadata"
+  },
+  "moduleImpact": {
+    "operations": "blocked",
+    "task-cockpit": "partial",
+    "content-campaign": "partial/blocked",
+    "creator-outreach": "target-state/blocked",
+    "media-studio": "partial/blocked",
+    "analyst": "blocked",
+    "pricing-governance": "blocked",
+    "customer": "blocked"
+  },
+  "nextGreenEvidence": [
+    "five missing live pipelines registered and exact-read by the runtime that executes Cron",
+    "P07 executor failure root cause fixed and a fresh run succeeds",
+    "P08 declared mapping converges to the runtime minimal CustomerLite contract",
+    "P10 secret-flow review keeps raw values outside Workshop query payloads",
+    "per-OT sourceEventAt, projectedAt, quality, cutoff and blocker refs are available",
+    "fresh org-org positive and dev-org zero-row canary evidence"
+  ],
+  "sideEffects": {
+    "databaseWrites": 0,
+    "pipelineRunsTriggered": 0,
+    "scheduleChanges": 0,
+    "realTenantObjectsChanged": 0
+  }
+}

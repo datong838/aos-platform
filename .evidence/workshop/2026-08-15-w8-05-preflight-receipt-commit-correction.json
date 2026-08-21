@@ -1,0 +1,24 @@
+{
+  "schema": "aos-workshop-receipt-correction/v1",
+  "taskId": "workshop-w8-05-preflight-receipt-commit-correction-20260815",
+  "authorityRevision": "AOS-000034",
+  "supersedesFact": {
+    "deliveryTaskId": "workshop-w8-05-full-video-production-fault-recovery-preflight-20260815",
+    "incorrectCommitToken": "HEAD"
+  },
+  "correctFact": {
+    "commit": "657b58dceb3b0fd65b60a492af5f8aca63d3f022",
+    "shortCommit": "657b58d",
+    "branch": "w2-workshop",
+    "remote": "origin/w2-workshop",
+    "pushVerified": true
+  },
+  "interpretation": "The W8-05 preflight result and evidence remain valid; only the symbolic delivery commit token is corrected to the immutable Git SHA.",
+  "safety": {
+    "sourceCodeChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "providerOrExternalEffect": false
+  }
+}

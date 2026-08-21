@@ -1,0 +1,63 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w2-07-price-quote-match-policy-observation-read-model-doc-align-20260815",
+  "workItem": "W2-07",
+  "projectRevision": "AOS-000038",
+  "sourceCommit": "2917c0cfcf9b94c70c941adc8246fc39b87efcfd",
+  "recordedAt": "2026-08-15T11:20:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "added the canonical price-governance operation and governance competitor schedule read-only views",
+        "added full price basis comparability original reachability and observation-versus-decision contracts",
+        "separated source freshness matching policy case readiness and evidence readiness into six independently visible axes"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "recorded ProductSku P03 PIPELINE_NOT_FOUND and the absence of price-domain authorities without promoting target-state readiness",
+        "bounded generic ResearchJob and Action primitives so they cannot substitute for a price research adapter MatchPolicy or PriceCase aggregate",
+        "kept repricing behind its specialized R4 approval execution idempotency and rollback gates"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md",
+      "preSha256": "eadf8f3a9b20d99e2904b1986808cf6f54a77f10ebdd66839b991dd983dd91d2",
+      "postSha256": "4726cc9ebf46034596627bd45e1360801392566d22712f3dfd4c03866e3cdfba"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/16-价格治理技术方案.md",
+      "preSha256": "16222161386a4eae6b11d4064b04053f9be4c3b568738c44dd07c85d20acd996",
+      "postSha256": "5616a2af4f6b17ae4d22458d0f9c79812e91c98206788c5ed18b3a545184efd9"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "90ad6df9a979179add4c9402f1a6d78fb1f9b0583b6cace2973b63f86a6946af",
+      "postSha256": "5857ce06c1ad4bdfdcd7d226dba69f6a036ef07fbc5b217cc594eddbd8d58f7a"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/88-W2-07-价格ObservationMatchPolicyCase只读模型预检ADR.md",
+      "preSha256": null,
+      "postSha256": "1550a7f26ac2c4d046b68d07f252a4ca280791c51bd4bd3d28386af45ece049e"
+    }
+  ],
+  "decision": {
+    "contract": "APPROVED",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "mode": "READ_ONLY",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review rounds passed after remediation",
+    "all four post hashes match",
+    "AOS-000038 BIND-1 progress was revalidated without promoting price-domain readiness",
+    "W2-07 remains unchecked and no price observation external research repricing or tenant mutation was introduced"
+  ]
+}

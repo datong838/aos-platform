@@ -1,0 +1,86 @@
+{
+  "schema": "aos-workshop-preparation-receipt/v1",
+  "taskId": "workshop-w2-00-source-readiness-integration-preparation-20260817",
+  "recordedAt": "2026-08-17T13:37:32+08:00",
+  "branch": "w2-workshop",
+  "baselineSha": "c2a057cc9fd4b7a1336024d4eabc083010397b11",
+  "reviewedM1Sha": "3ce94687d6b37f4e3406bd85dda3e6e4fcb1db88",
+  "mergeBaseSha": "a48ab4221d1a9dad93b7fa4897eb69b5e75baf57",
+  "authorityRevision": "AOS-000089",
+  "result": "PREPARATION_GREEN_INTEGRATION_AND_RUNTIME_BLOCKED",
+  "scope": {
+    "codeChanged": false,
+    "migrationLeaseAcquired": false,
+    "databaseWritePerformed": false,
+    "externalEffectPerformed": false,
+    "authorityOrPrimeUpdated": false,
+    "w1UncommittedWorkspaceRead": false
+  },
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/107-W2-00-SourceReadinessEnvelope接入与m1合流施工准备ADR.md",
+      "preSha256": null,
+      "postSha256": "df29469ce5360c12ff946dab04e413296bf50ad8abc7cd2988e055fc4c1c0c35"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "07890aeba0e25378cf8d26a2f5672f1bcf100439ac61ac5b665b833310359d93",
+      "postSha256": "edf35dd0ab910ee96c3decb0fcbf50cab2a9eab0ef7f5accf9609ec6150fced8"
+    }
+  ],
+  "serviceHealth": {
+    "web5173": 200,
+    "api8080": 200,
+    "webApiProxy": 200
+  },
+  "freshDependencyProbe": {
+    "command": "services/aos-api/.venv/bin/python scripts/long-task-watchdog/w2_data_fact_probe.py",
+    "succeeded": 12,
+    "total": 12,
+    "p08RowsWritten": 53,
+    "p12RowsWritten": 412,
+    "canary": {
+      "sourceCount": 0,
+      "projectionCount": 0
+    }
+  },
+  "activeLeases": [],
+  "completedDependencyReceipt": {
+    "taskId": "AIP-WKS-DEP-0B-R1-02-R1-03-LIVE-AUTHORITY",
+    "result": "COMPLETED_GREEN",
+    "commit": "3ce94687d6b37f4e3406bd85dda3e6e4fcb1db88",
+    "completedRevision": "AOS-000088",
+    "projectedByAuthorityRevision": "AOS-000089",
+    "note": "The immutable task receipt ACTIVE value is a start snapshot; current lease authority is memory/leases.json and is empty."
+  },
+  "fixedM1Audit": {
+    "queryJobAuthority": "CODE_PRESENT",
+    "canonicalSemanticAdapter": "CODE_PRESENT",
+    "capabilityBindingReadiness": "CODE_PRESENT",
+    "sourceReadinessEnvelopeOwner": "ABSENT",
+    "sourceReadinessOperationalEvidence": "ABSENT"
+  },
+  "predictedChangedInBoth": [
+    "packages/contracts/openapi/v1.generated.json",
+    "packages/contracts/openapi/v1.inventory.json",
+    "scripts/export_openapi.py",
+    "scripts/long-task-watchdog/test_watchdog.py",
+    "scripts/long-task-watchdog/watchdog.py",
+    "services/aos-api/tests/test_openapi_contract.py"
+  ],
+  "plannedSubwaves": [
+    "W2-00A m1 integration and canonical owner recheck",
+    "W2-00B Workshop pure-consumer contracts and backend aggregation",
+    "W2-00C strict Web SDK and honest readiness semantics",
+    "W2-00D cumulative tenant, browser, privacy and drift gates"
+  ],
+  "remainingBlockers": [
+    "Canonical SourceReadinessEnvelope owner and API are absent",
+    "Twelve-source freshness quality reconciliation blocker EvidencePack is absent",
+    "R1-04 through R1-08 exact ModelRoute Eval Health Capacity Quota Price and Budget operational chain is incomplete",
+    "Exact live Provider Model Policy Route Eval Health Capacity Price Budget Binding and runnable AgentRun are not operationally proven",
+    "m1 and w2 integration has six predicted changed-in-both files requiring serialized resolution"
+  ],
+  "nextTask": "Recheck canonical SourceReadiness owner API EvidencePack and R1-04 through R1-08 before W2-00A or W2-00B",
+  "progress": "21/96"
+}

@@ -1,0 +1,87 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w5-04-executor-receipt-usage-lineage-preflight-20260814",
+  "authorityRevision": "AOS-000025",
+  "repositoryRevision": "70f6c551d734a242d9368bdaeeaed381f117c0d7",
+  "result": "W5_04_EXECUTOR_RECEIPT_USAGE_LINEAGE_PREFLIGHT_FACTS_FROZEN",
+  "decision": "SEPARATE_AUTHORITIES_GREEN_W5_EXECUTION_BRIDGE_BLOCKED",
+  "implementedFoundation": [
+    "single-attempt Action execution consumes only an active tenant-scoped ExecutionLease and never automatically retries a timeout",
+    "initial and reconcile Action Receipts are append-only and protected from update, delete and truncate by PostgreSQL triggers",
+    "Action lineage can deterministically project ActionEvent and ActionReceipt rows with unknown and reconcile semantics",
+    "AIP-4 UsageReceipt distinguishes measured, estimated and unknown, enforces cost currency and supports append-only adjustments",
+    "the strict web clients reject mismatched Proposal, Lease, Receipt and lineage resources"
+  ],
+  "findings": [
+    {
+      "id": "DEP-ACTION-DURABLE-EXECUTION-ATTEMPT",
+      "severity": "P0",
+      "finding": "execute commits the Lease as consumed and Proposal as executing before calling the provider, but creates no durable dispatch attempt or outbox row first; a process crash can leave a consumed Lease with no ActionReceipt and no authoritative recovery instruction."
+    },
+    {
+      "id": "DEP-ACTION-RECEIPT-JOINT-BINDING",
+      "severity": "P0",
+      "finding": "ActionReceipt does not bind actionBindingHash, Preview, CapabilityBinding, AccountBinding, AdapterRevision, ApprovalSet, BudgetReservation or the exact DryValidationReceipt used for execution."
+    },
+    {
+      "id": "DEP-ACTION-RECEIPT-SCHEMA-REDACTION",
+      "severity": "P0",
+      "finding": "AdapterOutcome payload is accepted as an untyped object and copied into the Receipt without an Adapter output schema, marking, secret or PII filter, canonical provider-response hash or evidence extraction contract."
+    },
+    {
+      "id": "DEP-ACTION-USAGE-BRIDGE",
+      "severity": "P0",
+      "finding": "the Action executor never invokes AipTelemetryUsageService or the provider usage bridge; ActionReceipt and UsageReceipt remain separate authorities with no exact action, lease, adapter or provider-request join."
+    },
+    {
+      "id": "DEP-ACTION-BUDGET-SETTLEMENT",
+      "severity": "P0",
+      "finding": "no measured or unknown UsageReceipt settles or releases the W5-03 budget reservation; count-based aip_action_usage cannot prove currency, actual cost, quota consumption or refund."
+    },
+    {
+      "id": "DEP-ACTION-LINEAGE-AUTO-PROJECTION",
+      "severity": "P1",
+      "finding": "Action execution does not append canonical lineage in the same delivery path; a separate trusted reconcile endpoint must be called before the lineage list contains current Action facts."
+    },
+    {
+      "id": "DEP-ACTION-LINEAGE-RECEIPT-CONTENT-HASH",
+      "severity": "P1",
+      "finding": "Action lineage hashes selected Receipt columns but its source query omits the immutable Receipt payload, so the lineage artifact hash does not cover the complete provider result body."
+    },
+    {
+      "id": "DEP-ACTION-EVIDENCE-OUTPUT",
+      "severity": "P1",
+      "finding": "initial Action Receipts always write an empty evidenceRefs array and the AdapterOutcome protocol has no governed Artifact or Evidence output references."
+    },
+    {
+      "id": "DEP-ACTION-ACCEPTED-FOLLOWUP",
+      "severity": "P1",
+      "finding": "an accepted provider outcome keeps the Proposal executing, while the current reconcile endpoint accepts only unknown initial Receipts; no canonical callback or polling transition closes accepted to applied or failed."
+    }
+  ],
+  "verification": {
+    "backendCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip3b_action_execution.py services/aos-api/tests/aip/test_aip_lineage_service.py services/aos-api/tests/aip/test_aip_telemetry_usage_service.py services/aos-api/tests/aip/test_aip7_provider_usage_bridge.py",
+    "backendResult": "21 passed, 7 warnings in 35.73s",
+    "frontendCommand": "pnpm exec vitest run src/api/aipActions/contracts.test.ts src/api/aipActions/client.test.ts src/api/aipEvidence/client.test.ts src/pages/CanonicalDraftInboxPage.test.tsx src/pages/s2/DecisionLineagePage.test.tsx",
+    "frontendResult": "5 files and 18 tests passed",
+    "interpretation": "Action execution, immutable Receipt, lineage and Usage are individually stable, but their exact W5 delivery and settlement bridge is not implemented"
+  },
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_action_execution.py": "7b18fd98192cb9ffb6188a8317ac0dbdc33d38793f2a694199c075d52cb549ab",
+    "services/aos-api/alembic/versions/aip3b_002_receipt_immutability.py": "9289dcf3226f81cbaf4e60d184808ed998e79d6ba24826237f1fe573b9737d0f",
+    "services/aos-api/aos_api/aip_lineage_service.py": "0c8e31b32ea5fdc5bdb199ce30b7d6f58dd02b0b7ffbbad44821fe89242bf94e",
+    "services/aos-api/aos_api/aip_telemetry_usage_service.py": "6e28fb10a6eadd2f0138178cbd5a3a347fe2c3bf7ccea54561c6d13fe12a2f15",
+    "services/aos-api/aos_api/aip_provider_usage_bridge.py": "2ec258b2edb7dc164cfeafb56a1f06c7e6cd47389a7544393c314669460ee4ba",
+    "apps/web/src/api/aipActions/contracts.ts": "19e6f907e21316ecca7d1be3ecb1fa08803cac90dbca46c82b33d95c9dec5614",
+    "apps/web/src/api/aipEvidence/contracts.ts": "0da26b062f0260c76b8bb83378cfb3bf50c5720b720c851413420aba5adf2951",
+    "apps/web/src/pages/CanonicalDraftInboxPage.tsx": "8a3234f4044f5fd142fe4fd7defed11f3163208995861611e0486a3bec044a18"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

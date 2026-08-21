@@ -1,0 +1,52 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w3-01-sdk-exact-ref-refresh-doc-align-20260815",
+  "workItem": "W3-01",
+  "projectRevision": "AOS-000038",
+  "sourceCommit": "d492f9cf76a5fcae03764e32ed54eae1b4e5c142",
+  "recordedAt": "2026-08-15T11:00:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "refreshed the ADR from the old AOS-000022 snapshot to AOS-000038",
+        "separated catalog published instance installed binding persisted evaluated operational-ready and runnable",
+        "recorded BIND-1 contract and migration progress without promoting W3-01 readiness"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "revalidated the isolated w2 OpenAPI and strict SDK gaps without reading w1 uncommitted content",
+        "kept CapabilityBinding AgentRun Handoff HTTP OpenAPI operational readiness and positive tenant evidence owned by AIP",
+        "froze W2 BIND1_2 later runtime gates Delivery Receipt fixed m1 SHA and current revalidation as coding prerequisites"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/29-W3-01唯一AgentCapabilityHandoff-SDK与ExactRef预检ADR.md",
+      "preSha256": "e3862ba4f4bd40e137f19d9d6be63caa2aad1e3cda299698bc5abf8d32e9acb9",
+      "postSha256": "86e791e397a3db070afb704da8e076c571db66d2de7a9d2f4abe4cbedd0f9077"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "b6dbb165c924fbbc29f8165abffafd49b587ee056584c1393801bb3d4c83ee46",
+      "postSha256": "be8912d675d50c17190c41361284e779767a3ea46d89056ea6dfdbd74b260180"
+    }
+  ],
+  "decision": {
+    "preparation": "REFRESHED_GREEN",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review rounds passed after remediation",
+    "both post hashes match",
+    "AOS-000038 authority and isolated w2 OpenAPI facts remain explicitly separated",
+    "W3-01 remains unchecked and no Binding AgentRun Handoff route database tenant provider or external mutation was introduced"
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w5-05-unknown-reconcile-compensation-preflight-20260814",
+  "authorityRevision": "AOS-000025",
+  "repositoryRevision": "0b0c8b3766d4f14170b1d87d9c0423c3642e2d44",
+  "result": "W5_05_UNKNOWN_RECONCILE_COMPENSATION_PREFLIGHT_FACTS_FROZEN",
+  "decision": "AUTOMATIC_REREAD_SKELETON_GREEN_MANUAL_AND_COMPENSATION_BLOCKED",
+  "implementedFoundation": [
+    "provider timeout becomes unknown and the original Lease is not automatically retried",
+    "automatic reconcile uses provider request id plus request fingerprint and appends a superseding immutable Receipt",
+    "only an initial unknown Receipt enters the current reconcile path",
+    "compensation is created as a new Proposal referencing the original Receipt rather than mutating history",
+    "the Draft Inbox keeps unknown visible and disables automatic reread when provider request id is absent"
+  ],
+  "findings": [
+    {
+      "id": "DEP-ACTION-RECONCILE-RESOLVED-OUTCOME",
+      "severity": "P0",
+      "finding": "automatic reconcile stores both provider-applied and provider-failed results under top-level status reconciled; downstream policy cannot safely decide whether the external effect actually happened without parsing an untyped payload."
+    },
+    {
+      "id": "DEP-ACTION-COMPENSATION-OUTCOME-GATE",
+      "severity": "P0",
+      "finding": "compensation accepts any reconciled Receipt, including one whose embedded resolvedStatus is failed, so a confirmed non-effect can incorrectly become compensation-eligible."
+    },
+    {
+      "id": "DEP-ACTION-COMPENSATION-MAPPING",
+      "severity": "P0",
+      "finding": "the caller freely supplies compensation ActionType and payload; no versioned CompensationPolicy maps an exact original outcome to an allowed inverse operation, scope, amount or deadline."
+    },
+    {
+      "id": "DEP-ACTION-MANUAL-RECONCILE-AUTHORITY",
+      "severity": "P0",
+      "finding": "there is no ManualReconcileCase authority with evidence, two-person decision, marking, expiry and immutable decision Receipt; the UI label says manual reread but invokes the automatic Adapter reconcile endpoint."
+    },
+    {
+      "id": "DEP-ACTION-UNKNOWN-WITHOUT-PROVIDER-REF",
+      "severity": "P0",
+      "finding": "unknown without providerRequestId is only disabled in the UI and has no canonical handoff to manual investigation, provider support case or fail-closed terminal disposition."
+    },
+    {
+      "id": "DEP-ACTION-ACCEPTED-RECONCILE",
+      "severity": "P1",
+      "finding": "accepted asynchronous outcomes remain executing, while reconcile only permits unknown; no callback or polling authority closes accepted to applied, failed or unknown."
+    },
+    {
+      "id": "DEP-ACTION-RECONCILE-CONCURRENCY",
+      "severity": "P1",
+      "finding": "the row lock is released before provider reread, so concurrent requests can both call reconcile; the unique supersedes index protects storage but the service has no durable reconcile attempt or conflict-safe replay protocol."
+    },
+    {
+      "id": "DEP-ACTION-COMPENSATION-JOINT-BINDING",
+      "severity": "P1",
+      "finding": "the new compensation Proposal cites the original Receipt but does not bind the original actionBindingHash, affected object scope, measured applied delta, compensation policy, residual budget or dedicated approval chain."
+    },
+    {
+      "id": "DEP-ACTION-COMPENSATION-LINEAGE",
+      "severity": "P1",
+      "finding": "no canonical exact edge links original Attempt and Receipt, resolved outcome, compensation Proposal, compensation Receipt and residual or partial effect."
+    }
+  ],
+  "verification": {
+    "backendCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip3b_action_execution.py",
+    "backendResult": "10 passed, 7 warnings in 36.12s",
+    "frontendCommand": "pnpm exec vitest run src/api/aipActions/contracts.test.ts src/api/aipActions/client.test.ts src/pages/CanonicalDraftInboxPage.test.tsx",
+    "frontendResult": "3 files and 8 tests passed",
+    "interpretation": "the automatic unknown reread skeleton is stable, but manual reconciliation and policy-bound compensation are not implemented"
+  },
+  "sourceHashes": {
+    "services/aos-api/aos_api/aip_action_execution.py": "7b18fd98192cb9ffb6188a8317ac0dbdc33d38793f2a694199c075d52cb549ab",
+    "services/aos-api/aos_api/aip_action_adapters.py": "58ef4fb121c49a81ca9e7fc06d28b7db11bc2ca9143e71e1825c84cc03755974",
+    "services/aos-api/aos_api/aip_action_models.py": "1dacef2f81483085129aa415679a554f535eb5917a7b935f78ae12a683bd9bb5",
+    "services/aos-api/aos_api/routers/aip_actions.py": "735129f161e08954ad0e7d11548e8410c9f9105fd14f09110482a2952d0de791",
+    "apps/web/src/api/aipActions/client.ts": "a3302780958be0260aa6b2209c2585b05e2ba736c15043adf2f957d1b727f48b",
+    "apps/web/src/api/aipActions/contracts.ts": "19e6f907e21316ecca7d1be3ecb1fa08803cac90dbca46c82b33d95c9dec5614",
+    "apps/web/src/pages/CanonicalDraftInboxPage.tsx": "8a3234f4044f5fd142fe4fd7defed11f3163208995861611e0486a3bec044a18"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "testDatabaseUsed": true,
+    "realTenantMutation": false,
+    "externalProviderEffect": false,
+    "migrationLeaseAcquired": false,
+    "aipUncommittedWorkRead": false
+  }
+}

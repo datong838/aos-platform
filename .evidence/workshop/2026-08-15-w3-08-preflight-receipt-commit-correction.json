@@ -1,0 +1,14 @@
+{
+  "schema": "aos-delivery-receipt-correction/v1",
+  "taskId": "workshop-w3-08-cockpit-command-preflight-20260815",
+  "projectRevision": "AOS-000039",
+  "recordedAt": "2026-08-15T11:39:00+08:00",
+  "incorrectField": {
+    "commits": ["HEAD"]
+  },
+  "correctedField": {
+    "commits": ["76dd17ab91dd56483eaebd306b58c1c01aa101d5"]
+  },
+  "reason": "the completion command passed the symbolic word HEAD instead of the resolved immutable Git SHA",
+  "scope": "evidence correction only; the original preflight decision and files are unchanged"
+}

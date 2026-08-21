@@ -40,6 +40,7 @@ class _ReleaseRecord:
     status: BundleVersionStatus
     evidence: list[BundleEvidence]
     artifacts: list[dict[str, object]]
+    persisted_manifest: dict[str, object] | None
 
 
 class InstallationRevalidator:
@@ -124,4 +125,5 @@ def _record_from_row(row: Any) -> _ReleaseRecord:
         status=BundleVersionStatus(row["status"]),
         evidence=evidence,
         artifacts=artifacts,
+        persisted_manifest=dict(row["manifest_json"]),
     )

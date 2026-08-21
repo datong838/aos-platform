@@ -1,0 +1,107 @@
+{
+  "schema": "aos-workshop-scenario-preflight/v1",
+  "taskId": "workshop-w8-04-effectreview-memorycandidate-wiki-governance-revocation-preflight-20260815",
+  "workItem": "W8-04",
+  "scenario": "effectreview_to_memorycandidate_to_governed_wiki_and_revocation",
+  "projectRevision": "AOS-000033",
+  "branch": "w2-workshop",
+  "head": "a2a2135",
+  "aipBaseline": "m1@8cfc29a8482973ace2bbe7b4f680936abe933ed5",
+  "recordedAt": "2026-08-15T08:00:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "SCENARIO_TARGET_CONTRACT_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "mayRunScenario": false,
+    "reason": "product freeze W4-08 and DEP-E7 are not GREEN; generic memory governance exists but no exact EffectReview maturity bridge and complete API SDK UI browser seal proves this lifecycle"
+  },
+  "dependencyMatrix": [
+    {"dependency": "W4-08", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "Evidence Eval Wiki SavedExploration and browser security evidence is incomplete"},
+    {"dependency": "DEP-E7", "status": "PARTIAL_NOT_GREEN", "reason": "authority is at E7-4C GREEN; E7-4D read-only exposure context API and E7-5 SDK UI browser seal remain"},
+    {"dependency": "EffectReview_authority_and_maturity", "status": "MISSING", "reason": "only effect-review schema refs and candidate source kind are visible; no canonical EffectReviewRevision and maturity authority closes candidate eligibility"},
+    {"dependency": "product_formal_freeze", "status": "NOT_FROZEN", "reason": "formal product review remains pending"},
+    {"dependency": "technical_formal_freeze", "status": "GREEN", "reason": "technical baseline V3 is formally frozen"}
+  ],
+  "canonicalJourney": [
+    "an exact EffectReviewRevision binds Task Run Action Receipt Usage metrics baseline comparison attribution method cutoff maturity policy assumptions counterevidence and uncertainty",
+    "only an eligible mature or explicitly reviewable effect result may submit a MemoryCandidate through the trusted pipeline",
+    "the candidate keeps exact source payload evidence eval and governance refs and begins pending or quarantined without changing Wiki",
+    "governance inspection evaluates PII marking license freshness applicability conflict quality and review evidence",
+    "approval records governance evidence but does not publish knowledge",
+    "promotion is a separate idempotent command that creates an immutable versioned MemoryItem or Wiki revision and exact KnowledgeCitation",
+    "retrieval revalidates status freshness marking applicability exact content hash and purpose at the request cutoff",
+    "source or projection revocation appends revocation and impact facts preserves historical citations and blocks future use",
+    "affected exposures agent runs decisions and downstream candidates are enumerated by refs for human review or recomputation rather than silently rewritten"
+  ],
+  "bindingContract": {
+    "root": "exact EffectReviewRevision",
+    "binding": "learningBindingHash",
+    "requiredRefs": [
+      "TaskGraphRevisionRef TaskRunRef and AttemptRef",
+      "ActionReceiptRefs and ReconcileReceiptRefs",
+      "UsageBindingRevisionRef and settlement status",
+      "MetricDefinitionRefs MetricValue cutoffs and data-quality refs",
+      "baseline comparison cohort and AttributionPolicyRevisionRef",
+      "EffectMaturityPolicyRevisionRef and maturity window",
+      "EvidenceBundleRevisionRef and EvalContractRunRef",
+      "MemoryCandidateRef GovernanceApprovalRef and PromotionReceiptRef",
+      "MemoryItemRevisionRef or WikiRevisionRef and KnowledgeCitation",
+      "revocation fact impact refs and actor policy expectedVersion"
+    ],
+    "candidateStates": ["pending", "quarantined", "rejected", "approved", "promoted"],
+    "knowledgeStates": ["active", "stale", "revoked", "expired"]
+  },
+  "invariants": [
+    "EffectReview does not automatically submit approve promote or publish knowledge",
+    "effect maturity confidence and governance approval are independent axes",
+    "working memory and unsupported model output never enter the candidate pipeline",
+    "approval does not equal promotion and promotion does not prove universal applicability",
+    "promotion creates an immutable revision and never overwrites the source EffectReview or prior Wiki content",
+    "retrieval returns exact citations aligned with content and fails closed for stale revoked expired forbidden or hash-drifted knowledge",
+    "revocation preserves historical exposure and receipt facts but removes continuing authority to reuse the content",
+    "revocation impact is reference-only and cannot leak payloads or become an automatic rollback of past external decisions",
+    "conflicting candidates remain visible and are not resolved by last-write-wins",
+    "cross-tenant Candidate Memory Wiki Exposure Citation and EffectReview refs are rejected"
+  ],
+  "requiredNegativeJourneys": [
+    "EffectReview is immature partial unknown missing comparison or has unresolved counterevidence",
+    "candidate source is working memory free-form model output stale evidence or an untrusted caller",
+    "PII license marking applicability freshness or governance inspection blocks approval",
+    "approval and promotion race or the same idempotency key carries a different payload",
+    "source content or governance hashes drift after review",
+    "a promoted item becomes stale revoked or expired before query cutoff",
+    "an already exposed item is revoked and impact refs must retain historical exposure without returning payload",
+    "Wiki governance envelope citation or payload hash is missing or inconsistent",
+    "conflicting organization and workspace candidates cannot silently shadow one another",
+    "cross-tenant query promotion revocation or exposure is rejected"
+  ],
+  "tests": {
+    "executed": true,
+    "command": "services/aos-api/.venv/bin/python -m pytest -q services/aos-api/tests/aip/test_aip_memory_store.py services/aos-api/tests/aip/test_aip_memory_pipeline_contracts.py services/aos-api/tests/aip/test_aip_memory_pipeline_store.py services/aos-api/tests/aip/test_aip_memory_pipeline_service.py services/aos-api/tests/aip/test_aip_memory_search_eval.py",
+    "result": "39 passed, 7 warnings in 5.52s",
+    "scope": "w2 baseline generic Memory Candidate Pipeline Store governance promotion and search-eval primitives only",
+    "doesNotProve": [
+      "current m1 E7-4D or E7-5 completion",
+      "canonical EffectReview maturity authority",
+      "Workshop EffectReview to Wiki end-to-end bridge",
+      "revocation impact UI or org-org and dev-org browser evidence"
+    ]
+  },
+  "blockers": [
+    "product formal review and freeze are incomplete",
+    "W4-08 is not GREEN",
+    "DEP-E7 remains partial with E7-4D and E7-5 unfinished",
+    "canonical EffectReviewRevision and EffectMaturityPolicy runtime are absent",
+    "no Workshop bridge proves exact learningBindingHash from effect evidence through promotion and revocation",
+    "no org-org positive browser lineage or dev-org negative isolation EvidencePack exists"
+  ],
+  "next": "align W8-04 governance and revocation contract through two review rounds while leaving promotion disabled, then preflight W8-05",
+  "safety": [
+    "no source code changed",
+    "no migration or migration lease requested",
+    "no real tenant or browser mutation",
+    "no candidate approval promotion Wiki publication or revocation was executed",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

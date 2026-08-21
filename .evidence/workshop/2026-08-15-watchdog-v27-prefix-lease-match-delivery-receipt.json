@@ -1,0 +1,55 @@
+{
+  "schema": "workshop-delivery-receipt/v1",
+  "taskId": "workshop-watchdog-v27-prefix-lease-match-20260815",
+  "authorityRevision": "AOS-000045",
+  "branch": "w2-workshop",
+  "baseHead": "2afe538c4d2fcc99a7683d74c95cd4f23dd2ede5",
+  "decision": "ACCEPTED_GREEN",
+  "scope": {
+    "databaseMutation": false,
+    "migrationExecution": false,
+    "leaseAcquisition": false,
+    "aipWorktreeRead": false,
+    "realTenantMutation": false
+  },
+  "implementation": {
+    "exactMatchPreserved": true,
+    "pathOverlap": "segment-boundary-ancestor-or-descendant",
+    "nonPathTokens": "exact-only",
+    "filesystemResolution": false,
+    "storedMatchedScope": "configured-watch-token-only"
+  },
+  "verification": {
+    "redTest": "old implementation returned idle for a descendant migration-file Lease",
+    "focusedTests": "4/4 GREEN",
+    "fullTests": "46/46 GREEN",
+    "pythonCompile": "GREEN with isolated PYTHONPYCACHEPREFIX",
+    "diffCheck": "GREEN",
+    "liveBlockingTaskId": "aip-p8-2-query-authority-20260815",
+    "liveMatchedScopeToken": "services/aos-api/alembic/versions",
+    "wakeAttemptsBefore": 18,
+    "wakeAttemptsAfter": 18,
+    "runnerInvoked": false
+  },
+  "changedFiles": [
+    {
+      "path": "scripts/long-task-watchdog/watchdog.py",
+      "preSha256": "7eccf5c7846c49731d671782b89df4389274f1d214fa4d54bd35e58e6291d077",
+      "postSha256": "927ec4594320c0b52ec78ad6c3649454950873acd2c23bcdc3a4967493ab758c"
+    },
+    {
+      "path": "scripts/long-task-watchdog/test_watchdog.py",
+      "preSha256": "d23b8a5de75ea98da9b11975b55739c191c555c543804ca5ad67b6015b04a32f",
+      "postSha256": "a61c9e9f0f924c67facd609ead63a071e526c80c030d1a6f099cf2500ef2d362"
+    }
+  ],
+  "externalArtifacts": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/25-Workshop长任务Watchdog恢复闭环与权限ADR.md",
+      "preSha256": null,
+      "postSha256": "f3ddc6fad5e4382a7d941db7da3bd128a3917df3aa4a7bad70bb4b2d1adf1bb0",
+      "preHashGap": "shared documentation pre-hash was not captured before the edit"
+    }
+  ],
+  "knownBoundary": "This closes Lease overlap detection only. W2 remains DEP-DATA_RED, and AIP P8-2 activity or completion is not Workshop readiness evidence."
+}

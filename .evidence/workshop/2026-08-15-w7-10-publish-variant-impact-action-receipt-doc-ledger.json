@@ -1,0 +1,69 @@
+{
+  "schema": "aos-workshop-doc-ledger/v1",
+  "taskId": "workshop-w7-10-publish-variant-impact-action-receipt-doc-align-20260815",
+  "workItem": "W7-10",
+  "projectRevision": "AOS-000032",
+  "branch": "w2-workshop",
+  "sourceCommit": "6051b54",
+  "recordedAt": "2026-08-15T07:35:00+08:00",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/14-多媒体技术方案.md",
+      "preSha256": "40513a824c3d28869fd5be3bd8137e8b93a0c75806f838b83722a051f2d3583f",
+      "postSha256": "4b2034d2cdad3db1dd84ffa310a49dccc1e5308b25f478f4cf169b0bda56c79a",
+      "change": "added exact Variant publish impact action receipt reconcile and manual handoff contract"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/23-TaskBrief证据包评价契约与自适应生产编排技术方案.md",
+      "preSha256": "f19b8d793ca92eca7aa59b1c66eba787560f7ed28556e6aa7ba0b3656baffa19",
+      "postSha256": "7ace3f9f1e90ff10e825fcdbc1dadc58c69ef9873ad8496d821b83dd7da62ec5",
+      "change": "added media Variant publication joint binding durable attempt and publish receipt requirements"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "40996bd5c0436288a1cc16c7bb80b92a0e13869441ff3aa032c104c6aa6a1c1a",
+      "postSha256": "616fac9699c34e75de056d5d24dc043f827c2e6feb79b8f08ba0cfb8bea9ff33",
+      "change": "replaced W7-10 evidence placeholder with frozen facts and no-external-effect gate"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/68-W7-10-发布VariantImpactActionReceipt预检ADR.md",
+      "preSha256": null,
+      "postSha256": "675c9a3360de1a1927fcc4dec467dd1a53c32e6b76099c3714d32b98e75ed6e3",
+      "change": "created W7-10 preflight ADR and two review rounds"
+    }
+  ],
+  "reviewRounds": [
+    {
+      "round": 1,
+      "focus": "publish business facts and safety boundaries",
+      "result": "PASS",
+      "evidence": [
+        "approval binds exact Variant bytes four-gate result and exact destination",
+        "Impact Approval execution Receipt Usage lineage and effect stay separate",
+        "unknown partial late and manual handoff retain honest states",
+        "real publish remains behind independent authorization canary and kill gates"
+      ]
+    },
+    {
+      "round": 2,
+      "focus": "canonical reuse crash safety and no-gate-bypass",
+      "result": "PASS_WITH_IMPLEMENTATION_AND_EXTERNAL_EFFECT_BLOCKED",
+      "evidence": [
+        "canonical Action authority is reused with no media Proposal or Receipt fork",
+        "production adapter joint binding durable outbox and receipt schema remain explicit blockers",
+        "W7-05 W7-06 W5 readiness UI dual-tenant and canary evidence gate implementation",
+        "29 generic tests are not represented as a successful platform publish"
+      ]
+    }
+  ],
+  "decision": "CONTRACT_BASELINE_APPROVED_IMPLEMENTATION_AND_EXTERNAL_EFFECT_BLOCKED",
+  "implementationStatus": "NOT_STARTED",
+  "externalEffect": "NONE",
+  "safety": [
+    "no source code changed",
+    "no migration",
+    "no browser or real tenant mutation",
+    "no provider publish or payment side effect",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

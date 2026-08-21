@@ -1,0 +1,129 @@
+{
+  "schema": "aos-workshop-w3-sdk-refresh-preflight/v1",
+  "taskId": "workshop-w3-01-sdk-exact-ref-refresh-preflight-20260815",
+  "workItem": "W3-01",
+  "projectRevision": "AOS-000038",
+  "branch": "w2-workshop",
+  "head": "4d9adc1574b36c96e03a50c5689fad85d7cf2547",
+  "recordedAt": "2026-08-15T10:55:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "preparationStatus": "REFRESHED_GREEN",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W2 is not GREEN and AOS-000038 explicitly keeps every Agent non-runnable and every evaluated binding non-activatable; BIND1_2 capability readiness and later runtime-control gates are incomplete"
+  },
+  "authorityRefresh": {
+    "currentPhase": "BIND1_1_CONTRACT_ADDITIVE_MIGRATION_GREEN_WITH_WARNINGS",
+    "sourceCommitM1": "bd96c86a52c8517f6d0bb52db3a056cf6cf7765a",
+    "completed": "BIND-0 read-only preflight plus BIND-1 additive contract and bind1_001 migration with targeted regression",
+    "hardBoundary": "No Agent is runnable and no evaluated binding is activatable",
+    "nextGate": "BIND1_2_CAPABILITY_READINESS_SERVICE",
+    "incomplete": [
+      "BIND-2 through BIND-6",
+      "ecommerce solution pack version alignment",
+      "AIP-8 AIP-9 AIP-10 and W4"
+    ],
+    "interpretation": "BIND-1 persistence shape is a dependency lead only; it does not authorize Workshop SDK implementation or Handoff consumption"
+  },
+  "w2BranchFacts": {
+    "note": "the isolated Workshop branch may lag the newest m1 AIP commit; only its committed baseline plus shared authority was inspected and no w1-aip uncommitted content was read",
+    "availableFrontendSdkRoot": "apps/web/src/api/aipAgentControl",
+    "availableOperations": [
+      "listCatalog",
+      "listInstances",
+      "listCapabilities",
+      "installEcommerce"
+    ],
+    "availableCanonicalHttp": [
+      "GET /v1/aip/agent-registry",
+      "GET /v1/aip/agents",
+      "GET /v1/aip/agents/{instance_id}",
+      "GET /v1/aip/capability-catalog",
+      "POST /v1/aip/agents/install-ecommerce"
+    ],
+    "serviceFoundations": [
+      "AipCapabilityBindingService",
+      "AipAgentRunService",
+      "AipHandoffService"
+    ],
+    "openApiRuntimeControlPaths": [],
+    "missingCanonicalRuntimeControl": [
+      "CapabilityBinding exact list get readiness and activation decision",
+      "AgentRun exact get list readiness and lifecycle read",
+      "HandoffEnvelope issue get consume reject request-more and return",
+      "strict generated frontend SDK and Workshop blocker adapter for those operations"
+    ]
+  },
+  "dependencyDecision": {
+    "W2": "NOT_GREEN",
+    "DEP_A6F": "CATALOG_AND_INSTANCE_FOUNDATION_ONLY",
+    "DEP_A6R": "BLOCKED_RUNTIME_CONTROL_HTTP_SDK_AND_OPERATIONAL_READINESS_INCOMPLETE",
+    "BIND1_1": "GREEN_WITH_WARNINGS_CONTRACT_AND_MIGRATION_ONLY",
+    "BIND1_2": "NOT_GREEN",
+    "W3_01": "NOT_STARTED_REFRESH_PREFLIGHT_COMPLETE"
+  },
+  "ownership": {
+    "AIP": [
+      "publish and operate exact-revision Capability readiness Binding AgentRun and Handoff canonical authorities",
+      "provide HTTP OpenAPI generated SDK lifecycle readiness revocation drift unknown and tenant evidence",
+      "keep provider route policy eval license data tool budget and secret evidence server-side"
+    ],
+    "Workshop": [
+      "extend the existing aipAgentControl SDK only after the exact AIP operations reach the integration baseline",
+      "add a stateless readiness-to-blocker adapter and preserve all exact refs",
+      "never create a second Binding AgentRun Handoff or readiness authority"
+    ]
+  },
+  "targetStrictness": [
+    "exact ref revision is a positive integer and field-specific assetType is enforced",
+    "response tenant matches every nested tenant and scope derives only from Principal",
+    "count available-count unique identity and lifecycle invariants fail closed",
+    "catalog published installed bound evaluated operational-ready and runnable remain separate",
+    "revoked expired drifted unavailable unknown conflict and missing evidence become typed blockers",
+    "exact refs are never upgraded to latest and no localStorage singleton mock or fallback business state is used",
+    "Handoff is minimum-disclosure one-time versioned and receiver-exact; accepted does not mean downstream completed"
+  ],
+  "candidateWorkshopFilesWhenUnblocked": [
+    "apps/web/src/api/aipAgentControl/contracts.ts",
+    "apps/web/src/api/aipAgentControl/parser.ts",
+    "apps/web/src/api/aipAgentControl/index.ts",
+    "apps/web/src/api/aipAgentControl/parser.test.ts",
+    "apps/web/src/api/aipAgentControl/client.test.ts",
+    "apps/web/src/api/ecommerceWorkshop/agentReadiness.ts",
+    "apps/web/src/api/ecommerceWorkshop/agentReadiness.test.ts"
+  ],
+  "requiredGreenEvidence": [
+    "W2 cumulative exit gate GREEN",
+    "BIND1_2 and all required later Binding AgentRun Handoff gates GREEN",
+    "AIP Delivery Receipt and fixed m1 Git SHA for canonical HTTP OpenAPI and generated SDK",
+    "positive org-org and negative dev-org exact-read evidence with no Agent falsely runnable",
+    "current authority memory Git and lease revalidation immediately before coding"
+  ],
+  "sourceHashes": {
+    "apps/web/src/api/aipAgentControl/contracts.ts": "8bbac0cd924b554363189abde0eaabca5d7536ec9a3e3bc79d3040d0b25c3b96",
+    "apps/web/src/api/aipAgentControl/parser.ts": "ed4be9eb5feb5749392261cce7f68bb5f18714a4567b25498cf672e670f467f6",
+    "services/aos-api/aos_api/aip_capability_binding_service.py": "d958184e6b2273466f41eb89d4c9dc9ca65dd1ec6b009b0d921343231add51a4",
+    "services/aos-api/aos_api/aip_agent_run_service.py": "d8640536ad6f6215154060e7d03422af37e0672bc9a43d1f4d0f815125a44a42",
+    "services/aos-api/aos_api/aip_handoff_service.py": "b2d5d227d264ad7e94053464aa4dca194ad33322c50a549808ab727c98d51d1d",
+    "packages/contracts/openapi/v1.generated.json": "34d3183310546eff957ac6fae70eb6c468eef689e389faa2672ed5d8973b06ca"
+  },
+  "tests": {
+    "executed": false,
+    "reason": "the current task refreshes dependency facts only; no W3-01 implementation exists and current branch OpenAPI exposes no runtime-control paths",
+    "doesNotProve": [
+      "operational Capability readiness",
+      "an activatable Binding",
+      "a runnable Agent",
+      "AgentRun lifecycle read",
+      "Handoff issue consume reject or request-more",
+      "Workshop exact-ref SDK integration"
+    ]
+  },
+  "next": "update the W3-01 ADR and D-waves evidence through two review rounds while keeping implementation blocked",
+  "safety": [
+    "read-only committed code OpenAPI authority document Git and shared-memory inspection only",
+    "no Binding AgentRun Handoff route database tenant provider or external mutation",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

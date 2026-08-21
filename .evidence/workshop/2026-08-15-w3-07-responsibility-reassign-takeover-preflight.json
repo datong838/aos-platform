@@ -1,0 +1,86 @@
+{
+  "schema": "aos-workshop-w3-responsibility-reassign-takeover-preflight/v1",
+  "taskId": "workshop-w3-07-responsibility-reassign-takeover-preflight-20260815",
+  "workItem": "W3-07",
+  "projectRevision": "AOS-000039",
+  "branch": "w2-workshop",
+  "head": "9e07523639c6ef56e515975a045582c2bf0728c2",
+  "recordedAt": "2026-08-15T11:36:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "preparationStatus": "PREFLIGHT_GREEN_WITH_PLAN_REMEDIATION_REQUIRED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "ResponsibilityPlan draft, revise and freeze authority exists, but structural coverage is coupled to an incomplete agent-only readiness check; no exact assignee resolver, frozen-plan successor, runtime assignment authority or takeover decision authority exists"
+  },
+  "authorityRefresh": {
+    "currentPhase": "BIND1_2_CAPABILITY_READINESS_SERVICE_GREEN_WITH_WARNINGS",
+    "hardBoundary": "No Agent is runnable and no real CapabilityBinding exists",
+    "nextGate": "BIND1_3_SKILL_PUBLICATION_AND_BINDING_READINESS"
+  },
+  "committedAipFacts": {
+    "fixedM1Commit": "c48868b3f40c75fd625f9dac00e1c2cc9b02f6c0",
+    "responsibilityPlan": "tenant-scoped create, list, get, draft revise and freeze with idempotency or expected-version CAS",
+    "slotShape": "slotId, responsibilityType, required capability IDs, input/output refs, gate refs, return stage and AssigneeRef",
+    "protectedMerge": "independent_review, hard_compliance, external_publication_approval and receipt_reconciliation cannot be merged",
+    "currentAssigneeKinds": "public DTO declares multiple kinds but the committed store rejects every non-agent_instance assignee",
+    "currentReadiness": "checks exact AgentInstance version and active SkillBinding, then intersects required capability IDs with tenant-wide active healthy CapabilityBindings",
+    "bindingOwnershipDefect": "the current readiness query does not prove that each active healthy CapabilityBinding belongs to the selected assignee, account, tool or provider",
+    "frozenRevisionBoundary": "only draft ResponsibilityPlan may be revised; there is no canonical successor or reassign command for a frozen plan",
+    "missingRuntimeAuthority": "no AssigneeResolutionReceipt, ResponsibilityAssignmentRevision, TakeoverDecisionReceipt or task or stage owner fence authority was found"
+  },
+  "ownershipDecision": {
+    "structuralPlan": "ResponsibilityPlanRevision owns required slots, protected separation and chosen assignee refs for a production context",
+    "structuralCoverage": "coverage means every required slot has a structurally valid exact assignment and merge policy; it does not mean any assignee is runnable now",
+    "operationalReadiness": "AssigneeResolutionReceipt owns candidates, rejected reason codes, selected exact AssigneeBinding, capability and policy refs, health, capacity, observedAt and expiry",
+    "preStartReassign": "before TaskRun creation, reassign creates an explicit successor ResponsibilityPlanRevision with supersedes ref, Diff, actor, reason and CAS; a frozen revision remains immutable",
+    "runtimeTakeover": "after TaskRun or Stage attempt exists, takeover creates TakeoverDecisionReceipt and a new execution assignment lease or fence; it does not rewrite the frozen ResponsibilityPlan or Handoff transport",
+    "handoffBoundary": "Handoff carries scoped context only; accepted Handoff does not transfer ownership and reassign does not imply Handoff accepted",
+    "humanControl": "independent review, hard compliance, external publication approval and receipt reconciliation remain separate responsibilities even when one Agent executes multiple ordinary slots"
+  },
+  "targetOperations": [
+    "ecommerceWorkshopResponsibilityCoverageGet",
+    "ecommerceWorkshopAssigneeResolve",
+    "ecommerceWorkshopResponsibilityReassign",
+    "ecommerceWorkshopTakeoverRequest",
+    "ecommerceWorkshopTakeoverDecide"
+  ],
+  "dependencyDecision": {
+    "W3_01": "NOT_STARTED_PRECHECKED_HARD_GATE_BLOCKED",
+    "W3_04": "NOT_STARTED_PLAN_REMEDIATED_HARD_GATE_BLOCKED",
+    "DEP_RESPONSIBILITY_TEMPLATE_RESOLVER": "MISSING",
+    "DEP_EXACT_ASSIGNEE_RESOLVER": "MISSING",
+    "DEP_ASSIGNEE_BINDING_OWNERSHIP": "RED_TENANT_WIDE_BINDING_FALSE_POSITIVE_RISK",
+    "DEP_FROZEN_PLAN_SUCCESSOR": "MISSING",
+    "DEP_RUNTIME_ASSIGNMENT_FENCE": "MISSING",
+    "DEP_TAKEOVER_DECISION_AUTHORITY": "MISSING",
+    "W3_07": "NOT_STARTED_PREFLIGHT_COMPLETE"
+  },
+  "requiredGreenEvidence": [
+    "signed installed ResponsibilityTemplate exact resolver and eight-Module coverage",
+    "human, AgentInstance, ToolBinding and ProviderCapabilityBinding resolution either fully supported or removed from the published contract",
+    "selected assignee is bound to every required exact capability and policy, not merely sharing a tenant with an unrelated healthy binding",
+    "structural coverage and operational readiness are separately returned and separately displayed",
+    "deterministic candidate ordering, rejection reason codes, observedAt, expiry, capacity and Receipt hash",
+    "frozen-plan successor and pre-start reassign CAS with immutable prior revisions",
+    "runtime takeover maker-checker, separation policy, active lease, fence, checkpoint and provider-unknown gates",
+    "old owner writes fail after fence advances and unknown provider effects reconcile before takeover",
+    "org-org positive flow, dev-org isolation, refresh reconstruction and concurrent operator tests"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "this preflight inspected committed DTO, Store, Router, tests and plans only; W3-07 implementation remains blocked",
+    "doesNotProve": [
+      "a runnable assignee",
+      "exact capability ownership",
+      "reassign of a frozen plan",
+      "runtime takeover safety"
+    ]
+  },
+  "next": "remediate W3-07 plans to separate coverage, readiness, pre-start reassign and runtime takeover, then re-review without marking runtime complete",
+  "safety": [
+    "read-only committed source, test, authority and plan inspection",
+    "no source, database, tenant, assignment, takeover or external mutation",
+    "w1-aip uncommitted content was not read or modified"
+  ]
+}

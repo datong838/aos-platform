@@ -1,0 +1,63 @@
+{
+  "schema": "aos-workshop-shared-doc-ledger/v1",
+  "taskId": "workshop-w2-04-creator-five-stage-read-model-doc-align-20260815",
+  "workItem": "W2-04",
+  "projectRevision": "AOS-000037",
+  "sourceCommit": "87f063649df066258b5c13422d6229428c54f5d7",
+  "recordedAt": "2026-08-15T10:15:00+08:00",
+  "reviewRounds": [
+    {
+      "round": 1,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "separated five workflow phases from five business relationship stages",
+        "added independent filters readiness and status axes",
+        "prevented UI stage labels from becoming authority"
+      ]
+    },
+    {
+      "round": 2,
+      "result": "PASS_AFTER_REMEDIATION",
+      "closed": [
+        "confirmed all creator-domain authorities and the Workshop view SDK are absent",
+        "bounded generic ResearchJob Evidence Handoff and Action primitives",
+        "added identity Match prepare item batch contract delivery relationship and PII invariants"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/07-领域读模型Command与错误契约.md",
+      "preSha256": "591c1ae0caf65b493f563f5dde3f672e94b452665a00ae73f7001a9c44e1a33f",
+      "postSha256": "080337f45d36bfa2128e1f05e81c683442a8d9ff6f445faddafef8c3e7f06c44"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/13-达人邀约技术方案.md",
+      "preSha256": "f878a15ad8b7117d53a05ab738a75ef39be6b3ec5273939f6b361e29c22378a7",
+      "postSha256": "af85656129969b1707167d0f0256f839aa33f3752a927e51537ccedbd8ae7f8d"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": "0ef7ad2d6e84b1b4a75256638a447fd7c1aa5a05c36d7818509e989e35523274",
+      "postSha256": "5593ebf888d1cc8f2b8faa4ecc6fbbb329276e3b7abb4f5e9b99c5b10b508dc2"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/85-W2-04-达人双阶段轴候选合同履约关系只读模型预检ADR.md",
+      "preSha256": null,
+      "postSha256": "49bc580e51ab5433475486771b9465ee9a0b5dc025888743248128f80fcfb158"
+    }
+  ],
+  "decision": {
+    "contract": "APPROVED",
+    "implementation": "NOT_STARTED",
+    "dependency": "HARD_GATE_BLOCKED",
+    "mode": "READ_ONLY",
+    "externalEffect": "NONE"
+  },
+  "verification": [
+    "two review rounds passed after remediation",
+    "all four post hashes match",
+    "W2-04 remains unchecked",
+    "no creator-domain runtime provider or external action was introduced"
+  ]
+}

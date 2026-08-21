@@ -1,0 +1,59 @@
+{
+  "schema": "aos-workshop-preflight-evidence/v1",
+  "taskId": "workshop-w4-06-saved-exploration-preflight-20260814",
+  "authorityRevision": "AOS-000023",
+  "workshopHead": "3e943390a92b00ffe4db997b67bcfa9dacf4ceb5",
+  "result": "W4_06_SAVED_EXPLORATION_PREFLIGHT_FACTS_FROZEN",
+  "implementationStatus": "PARTIAL_EXISTING_IMPLEMENTATION",
+  "dependencyStatus": "BLOCKED_DEP_O1_SHARE_EXPIRY_REVOKE_AND_W3_EXIT_GATE",
+  "observations": {
+    "postgresqlAuthorityPresent": true,
+    "canonicalProductionRoutesUsePostgresqlAuthority": true,
+    "frontendSdkUsesCanonicalRoutes": true,
+    "workshopUsesServerReadback": true,
+    "urlContainsReferenceOnly": true,
+    "legacyInMemoryImplementationPresent": true,
+    "legacyInMemoryProductionRouteReferenceCount": 0,
+    "runtimeDoubleWriteFound": false,
+    "localStorageAuthorityFound": false,
+    "explicitShareGrantContractPresent": false,
+    "shareScopedReferencePresent": false,
+    "shareExpiryPresent": false,
+    "shareRevokePresent": false,
+    "workspaceVisibilityIsNotShareLifecycle": true
+  },
+  "decisions": [
+    "retain ontology_exploration_assets as the only runtime SavedExploration authority",
+    "do not create an AIP or Workshop SavedExploration store",
+    "treat the old ExplorationEngine as dead compatibility residue, not a live production authority",
+    "remove or quarantine the old in-memory model and tests only in an authorized implementation wave",
+    "add a tenant-scoped immutable share-grant authority with opaque reference, expiry and revoke semantics before enabling sharing",
+    "keep URL state reference-only and resolve authorization server-side",
+    "do not mark DEP-O1 green until restart, cross-tenant, expiry, revoke and no-double-write acceptance tests pass"
+  ],
+  "verification": {
+    "backendCommand": "uv run --project services/aos-api pytest -q services/aos-api/tests/test_oe_enhancements.py services/aos-api/tests/test_o1_ux2_exploration_assets.py",
+    "backendResult": "35 passed, 7 warnings",
+    "frontendCommand": "pnpm --filter @aos/web test -- ontologyExplorationAssets.test.ts",
+    "frontendResult": "NOT_RUN_NODE_UNAVAILABLE",
+    "frontendFailure": "apps/web/node_modules/.bin/vitest could not find node"
+  },
+  "hashes": {
+    "postgresqlAuthority": "c5d4f053c935e05bc0308ee3bc476a273586c1bc578b4d86d480ee49d6c5ed26",
+    "canonicalRouter": "c091ffdc5181f17eb5c791a639ac371cc53086a8c063e525df16c91511990510",
+    "legacyInMemoryImplementation": "83166dd425f3db71315589b843a6c1dd5945a0563cfadf12b7f8e2e1e1626aa7",
+    "postgresqlMigration": "6b1bb4b096727e17a853b984dc0917950e307d4f16adc0cdb0842c33d8ba0ced",
+    "frontendSdk": "e6f150d03ab6e0749096c2e7b788154738aad68641dfdd8bade504af1c56fa58",
+    "workshopConsumer": "dadd7c14658e7ef7e7a374430e674cbc9a77d447011291b536fbd5d3ef1373e1"
+  },
+  "safety": {
+    "sourceCodeChanged": false,
+    "documentationChanged": false,
+    "databaseRead": false,
+    "databaseWrite": false,
+    "realTenantMutation": false,
+    "migrationLeaseAcquired": false,
+    "aipCurrentLeaseFilesTouched": false
+  },
+  "nextGate": "After W3 exit, authorize a non-overlapping O1 contract wave for share grant, expiry, revoke, legacy residue removal and exact browser acceptance; migrations require the unique migration lease."
+}

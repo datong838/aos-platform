@@ -1,0 +1,110 @@
+{
+  "schema": "aos-workshop-operational-readiness-preflight/v1",
+  "taskId": "workshop-w8-09-slo-alert-unknown-reconcile-usage-runbook-preflight-20260815",
+  "workItem": "W8-09",
+  "projectRevision": "AOS-000034",
+  "branch": "w2-workshop",
+  "head": "c4926c1405407d2036feb2e14e10fbe390c9b2d4",
+  "aipBaseline": "m1@4018dd382c169fbed567c633bdbb698e6f26447f",
+  "recordedAt": "2026-08-15T08:41:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "contractStatus": "OPERATING_CONTRACT_REVIEWED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "W5-08 W6-10 and W7-11 are not GREEN and no release-bound cross-module SLO alert unknown-backlog reconcile-age Usage-quality and runbook evidence exists"
+  },
+  "dependencyMatrix": [
+    {"dependency": "W5-08", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "Action provider canary unknown reconcile kill and compensation operating evidence is incomplete"},
+    {"dependency": "W6-10", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "domain batch partial Usage Effect and Handoff operating evidence is incomplete"},
+    {"dependency": "W7-11", "status": "CUMULATIVE_GATE_BLOCKED", "reason": "media Provider capacity Usage settlement fault and publish operating evidence is incomplete"},
+    {"dependency": "product_formal_freeze", "status": "NOT_FROZEN"},
+    {"dependency": "cross_module_operational_projection", "status": "MISSING", "reason": "no canonical release-bound aggregate covers all independent outcome axes"}
+  ],
+  "sliCatalog": [
+    {"id": "view_availability", "dimensions": ["module", "view", "tenant", "release"], "rule": "valid canonical response divided by all eligible requests; forbidden blocked unknown and failures remain separately visible"},
+    {"id": "freshness_lag", "dimensions": ["module", "source", "read_model"], "rule": "now minus authoritative cutoff or observedAt; missing cutoff is unknown, never zero"},
+    {"id": "latency", "dimensions": ["module", "view", "command", "adapter"], "rule": "p50 p95 p99 with errors and timeouts counted in request totals"},
+    {"id": "partial_unknown_ratio", "dimensions": ["module", "operation", "capability"], "rule": "partial and unknown are independent numerators and are never removed from success denominators"},
+    {"id": "unknown_backlog", "dimensions": ["authority", "module", "risk", "provider", "actionType"], "rule": "count risk-weighted exposure oldest age and age buckets from unresolved canonical attempts or receipts"},
+    {"id": "reconcile_age", "dimensions": ["automatic_manual", "provider", "risk", "reasonCode"], "rule": "now minus first unknown observation plus last authoritative attempt and next eligible action"},
+    {"id": "receipt_closure", "dimensions": ["action", "usage", "lineage", "effect", "handoff"], "rule": "each axis has its own closure and age; no single success rollup"},
+    {"id": "usage_quality", "dimensions": ["module", "capability", "provider", "currency", "quality"], "rule": "measured estimated unknown adjustment refund dispute and unattributed are separate quantities"},
+    {"id": "effect_maturity", "dimensions": ["module", "policy", "metric"], "rule": "immature insufficient stale unknown mature are explicit and late data creates a new revision"}
+  ],
+  "sloRules": [
+    "each SLO has an owner service population eligibility clock target window error budget and exact source revision",
+    "a target is not defined until a measured baseline and business risk class exist; the platform must not invent numeric targets from visual mockups",
+    "unknown partial forbidden policy blocks and provider timeouts remain in published denominators or explicit companion budgets",
+    "SLO compliance cannot be computed from frontend events alone or from missing samples treated as success",
+    "release readiness consumes one immutable SLO report bound to the same release Bundle and installation refs"
+  ],
+  "alertContract": [
+    "multi-window burn alerts combine rate and absolute volume to avoid noisy low-traffic pages",
+    "backlog alerts use count oldest age age buckets risk exposure and reconcile capability rather than count alone",
+    "Usage alerts separate missing duplicate estimated unknown currency mismatch adjustment and residual dispute",
+    "every alert contains tenant-safe lineage or correlation refs owner severity firstSeen lastSeen runbookRef and evidence cutoff without PII payload",
+    "ack silence escalation and resolution are CAS-protected append-only receipts with actor reason expiry and scope",
+    "an alert resolves only after canonical reread proves recovery and the backlog or budget is within policy; a UI acknowledgement is not recovery"
+  ],
+  "unknownAndReconcileContract": [
+    "unknown begins at the first ambiguous external boundary and preserves the original request fingerprint account adapter policy lease and risk exposure",
+    "automatic reconcile uses the provider stable request or external ref; manual reconcile creates a typed maker-checker case",
+    "retry is forbidden until authority proves no effect or the original idempotency envelope is safely replayable",
+    "age is calculated from event time and first unknown observation; restart silence or queue delay never resets age",
+    "resolved is a separate dimension from applied failed partial cancelled refunded disputed or written-off",
+    "unknown continues to reserve budget frequency and capacity exposure according to policy"
+  ],
+  "runbookMinimum": [
+    "trigger and stable reason codes",
+    "owner incident role severity and communication boundary",
+    "read-only authority and tenant verification before intervention",
+    "containment order using kill capability module and global gates without deleting history",
+    "exact safe commands required approvals Leases idempotency and stop conditions",
+    "provider reread automatic or manual reconcile and evidence requirements",
+    "Usage budget reservation lineage and EffectReview conservation checks",
+    "rollback versus roll-forward versus compensation decision",
+    "recovery verification through canonical reread browser and backlog metrics",
+    "post-incident Receipt timeline assumptions residual unknown and follow-up"
+  ],
+  "requiredDrills": [
+    "catalog or readiness mass unknown",
+    "provider rate limit timeout webhook gap and out-of-order result",
+    "Action unknown backlog and kill propagation",
+    "Usage missing duplicate currency mismatch and estimated or unknown aging",
+    "Responsibility assignee capacity and Stage lease exhaustion",
+    "installation hash drift or wrong Bundle rollback",
+    "RLS GUC or cross-tenant visibility alarm",
+    "SavedExploration sharing or PII minimum-disclosure incident",
+    "EffectReview late data or invalid maturity",
+    "alert pipeline failure and silent monitoring gap"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "the three upstream cumulative runtimes and a release-bound operational projection are absent; unit tests of generic Usage Alert or Reconcile primitives cannot prove Workshop operating readiness",
+    "safeChecks": [
+      "deployment operations security Adapter Action Usage and media contracts were reread",
+      "current authority dependencies and Lease scopes were revalidated",
+      "repository search confirmed reusable primitives but no complete cross-module operating projection or drill pack"
+    ],
+    "doesNotProve": [
+      "numeric SLO targets or error budgets",
+      "unknown backlog convergence",
+      "reconcile age and Usage quality under production load",
+      "on-call runbook drills or release readiness"
+    ]
+  },
+  "blockers": [
+    "product formal review and freeze are incomplete",
+    "W5-08 W6-10 and W7-11 are not GREEN",
+    "release-bound multi-axis operational projection and alert receipts are absent",
+    "no measured baseline approved numeric SLO or complete runbook drill EvidencePack exists"
+  ],
+  "next": "align W8-09 SLO alert backlog reconcile Usage and runbook contract through two review rounds without inventing targets, then preflight W8-10",
+  "safety": [
+    "no source code changed",
+    "no migration database tenant browser or external-effect operation",
+    "no alert acknowledgement silence or incident action",
+    "w1-aip uncommitted work was not read or modified"
+  ]
+}

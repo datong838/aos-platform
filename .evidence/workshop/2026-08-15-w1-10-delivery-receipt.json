@@ -1,0 +1,295 @@
+{
+  "schema": "aos-workshop-delivery-receipt/v1",
+  "recordedAt": "2026-08-15T15:47:00+08:00",
+  "taskId": "workshop-w1-10-canonical-successor-browser-20260815",
+  "subWave": "W1-10",
+  "branch": "w2-workshop",
+  "implementationCommit": "32e17cda7ebe155f2962f77ceaa67d65cfaf123e",
+  "parentCommit": "d94f88bd52e777f2e115ef4761ff985ad9192db7",
+  "result": "W1_10_CANONICAL_SUCCESSOR_POSITIVE_BROWSER_GREEN",
+  "authorityBaseRevision": "AOS-000041",
+  "realEffect": {
+    "tenant": "org-org/dev-project",
+    "published": [
+      {
+        "bundleId": "solution.ecommerce.growth",
+        "version": "1.3.0",
+        "contentHash": "sha256:acd2590090a731fd3fa4ed00833ebc09a64832fe88ee7b00855c4cd8c0968bbf"
+      },
+      {
+        "bundleId": "solution.ecommerce.operations-base",
+        "version": "1.1.0",
+        "contentHash": "sha256:bc4a8bcf6105363bae2ec3099947d5951ec7b65ae84214e475c9457f8ab9c04f"
+      }
+    ],
+    "successorInstallation": "76799475-ebe8-4562-abd1-79796cca8e18@5",
+    "compositionId": "5b22a619-e09f-482a-989d-d31f11a017cf",
+    "lockHash": "sha256:6120c0462dfdefa8c8e49d8363eba5922be7e8c686614f2c7b2d9d770555dce0",
+    "directSqlMutation": false
+  },
+  "verification": {
+    "backendFocused": "59 passed",
+    "webFocused": "20 passed",
+    "webProductionBuild": "GREEN",
+    "browserRouteViewportMatrix": "24/24 GREEN",
+    "legacyReplace": "8/8 GREEN",
+    "network": "Workshop responses observed status 200",
+    "consoleErrors": 0,
+    "tenantProjection": "org-org 8 / dev-org 0",
+    "readiness": "unknown (honest fail-closed)",
+    "cronInvariant": "92; latest 2026-08-15T00:00:02.451829+00:00 unchanged",
+    "migrationHeadObserved": "bind1_003; task created no migration",
+    "dryRunReentry": "PREFLIGHT_GREEN",
+    "committedReleaseSecretsOrSignatures": 0,
+    "gitDiffCheck": "GREEN"
+  },
+  "accessibility": {
+    "browserStructure": "single H1, main target, skip link, tabindex -1, sidebar collapse/restore GREEN",
+    "nativeEnterInjection": "TOOL_LIMITED; not claimed",
+    "componentKeyboardFocusContract": "GREEN in 20 focused Web tests"
+  },
+  "changedFiles": [
+    {
+      "path": ".evidence/workshop/2026-08-15-w1-10-successor-browser.json",
+      "preSha256": null,
+      "postSha256": "da52b283132e21155c152b7e019b2824ab7e9d0e2d511916770ee828ab4d36e9"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/bundle.yaml",
+      "preSha256": null,
+      "postSha256": "253669088406c68009594418d97614e508e1a747368d6da547dab001210347e9"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/agents/ecommerce-capability-catalog.json",
+      "preSha256": null,
+      "postSha256": "0d33aac853f9f7cac835ea97cd8409388a9c4afe22ddec3b4a8eb668c72acf5a"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/agents/ecommerce-six-coworkers.json",
+      "preSha256": null,
+      "postSha256": "ae351d4265f3c6757c17e6742dc32e7c7f0697d2a9676d379ab3cb5085192ba3"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/evals/placeholder.json",
+      "preSha256": null,
+      "postSha256": "e90c23c9234793da6f76f82cc78ceddd677ce47c4c6ed7ced8397bb11d0a69c2"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/evals/w03-l05-dry-run-cases.json",
+      "preSha256": null,
+      "postSha256": "e6b2f45d025adb071636b4c2f1f93ab1a59098357d52885819bda791cc93f78c"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/logic/ecommerce-37-logic-catalog.json",
+      "preSha256": null,
+      "postSha256": "2ebfba4bc26a308f4d93882eaa5105ae364b857cea667ed769fbb1fcb8e4463b"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/logic/l05-commission-anomaly.json",
+      "preSha256": null,
+      "postSha256": "3cae12bc303c6b26d4b2cc8d5ec3a9866add4b286b554b91996e3bd5bf6ff257"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/policies/aip6-runtime-policies.json",
+      "preSha256": null,
+      "postSha256": "2ff91b4c0b34906fcc18b40a467cb786835d6168a6301f8abc9647476417cd4f"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/policies/growth-gates.json",
+      "preSha256": null,
+      "postSha256": "06f8b1453cc7297c23802ce1ef0a13f97ccd807f2ffca97a63d3572e682a33ac"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/schemas/aip6-contribution-schemas.json",
+      "preSha256": null,
+      "postSha256": "c3e4f9503222fed59eb150f6ac89b3fb49991123f15699fb36c9702ab35048b7"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.analyst.json",
+      "preSha256": null,
+      "postSha256": "3091f1cc1943a03c444e44ed3dfb7720ea80c117780b6c3e75ef0b6157fb1605"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.content-campaign.json",
+      "preSha256": null,
+      "postSha256": "685303041e18c3466da15ebf8ce406821866401b316d7bc15d0b2b26781c7269"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.creator-growth.json",
+      "preSha256": null,
+      "postSha256": "e22b6fa81f68f8dcb28fba5bee9f6c28f0ec88e5a15e1bede022cb45df8c5da8"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.customer.json",
+      "preSha256": null,
+      "postSha256": "5b6cfb5cb7d3e28dd5ad30c6ab61b276b9f7986358759604a236c4d33e46467c"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.media-studio.json",
+      "preSha256": null,
+      "postSha256": "c9f5775ebbc57910442b96235cfbb418782fa04dbf112a7f4bbb86983ef9bc35"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.price-governance.json",
+      "preSha256": null,
+      "postSha256": "de837ed99dbb64e56f94a42b53d66998bf11ad52b5ad91f84eb0f74ea4c52ba3"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/ecommerce.task-cockpit.json",
+      "preSha256": null,
+      "postSha256": "29d861844839ca59627ed34211a79816d0654c11c164bf7811892b8bc0f79d3d"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/content/workshops/w03-customer-private-domain.json",
+      "preSha256": null,
+      "postSha256": "25a34e673c4042088b6fe6e1025a7d40f1317c26c85cd277d65fe2bb621c4642"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/evidence/bundle-evals.json",
+      "preSha256": null,
+      "postSha256": "02b181ca7d55990bbca1e2e923a24eddefe97cc34f596c82def301d22563c4f6"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.growth/1.3.0/evidence/sbom.json",
+      "preSha256": null,
+      "postSha256": "ac64aec9f5d0d3535d1174026f3d9ed0bdeb11eef7fd76bb93e220cd1f079d5e"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/bundle.yaml",
+      "preSha256": null,
+      "postSha256": "48dc3ba60d5c17f9ea27f02600767eb16085b406f1b87f0cc1a3b7f4e3dbb332"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/evals/logic-dry-run-cases.json",
+      "preSha256": null,
+      "postSha256": "ad57598fb4d17dc41e7208b0c3ac721b5a6e08a6f9ffc7e7df69d117533ce148"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/logic/l01-product-launch.json",
+      "preSha256": null,
+      "postSha256": "645d391d2a3790d7eac16aff4a9659d71d117e2baa6b90f50364bb7a21ab4229"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/logic/l02-order-fulfillment.json",
+      "preSha256": null,
+      "postSha256": "7ef2d449725f818e339f2326018b8b047d38f2bffe50f08e3a258e2250c09499"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/logic/l03-shipment-overdue.json",
+      "preSha256": null,
+      "postSha256": "1753ec4e6a992cd3b6995729413b6d5afb14f3f58e120c0f367ea67bebbe070c"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/workshops/ecommerce.operations.json",
+      "preSha256": null,
+      "postSha256": "93b01794b26e30566e3cbb17349520fc0aad5c25ab18ea7d86552678fb5b8ba1"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/workshops/w01-order-management.json",
+      "preSha256": null,
+      "postSha256": "11c285d88ecb18f87591ac7dd5bed4f2c9c3c507024687b63515f3c38ef53120"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/content/workshops/w02-product-inventory.json",
+      "preSha256": null,
+      "postSha256": "c26ee8d1a4fc9a72c9c5ed21c2ed87f9062a27649764c7b916df1b8066e3e6fa"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/evidence/bundle-evals.json",
+      "preSha256": null,
+      "postSha256": "ee6098af889097a92fdc293d0e699834d83cd5325d4ecacd9c81e8f963ea2a39"
+    },
+    {
+      "path": "bundles/releases/ecommerce/solution.ecommerce.operations-base/1.1.0/evidence/sbom.json",
+      "preSha256": null,
+      "postSha256": "6ce0aad42c30d72912766b3033f878f1d2bdb9757b54553cf0f5ae6c54415af5"
+    },
+    {
+      "path": "bundles/solutions/ecommerce-growth/bundle.yaml",
+      "preSha256": "30aad735fffaf55305869e2fe51b7f12a113950b052357302614249927f68a6b",
+      "postSha256": "253669088406c68009594418d97614e508e1a747368d6da547dab001210347e9"
+    },
+    {
+      "path": "scripts/workshop_w1_10_successor_install.py",
+      "preSha256": null,
+      "postSha256": "edcb065c96c65a117fe6c41d4c155b60346c8288d774fd451cf104ec8d7833cb"
+    },
+    {
+      "path": "services/aos-api/aos_api/asset_registry/installation_revalidation.py",
+      "preSha256": "6d21b1c210252bbb603593eedc7d9e1a3d34d5c39ab246af07562758337f0bce",
+      "postSha256": "5f1ccba6e182ec26cd6579e27c25eb43220dc96890ee9c018708af8669127efe"
+    },
+    {
+      "path": "services/aos-api/aos_api/asset_registry/registry_snapshot.py",
+      "preSha256": "15d84647447c915713a69a776c824ddca8fd7799e2953c82357d375a273f0139",
+      "postSha256": "e7815ef15455869e95e4c22f72a98a8e6e76d8ce92c6cfbc53a142ad16309597"
+    },
+    {
+      "path": "services/aos-api/aos_api/asset_registry/release_policy.py",
+      "preSha256": "307a4dac34030b1d57a3afe8054dbd0d6c6d10b578c3adff1b41fd3ed893b78b",
+      "postSha256": "29e8a3f64cc5da0d661363fc43651bca071610f7e73626ccbc9bf477dd58988e"
+    },
+    {
+      "path": "services/aos-api/aos_api/asset_registry/tenant_transaction.py",
+      "preSha256": "2b58f5390ef6ed493a62f6f62b929d23d3b47e3b3b7ff7d206032f6c9e93ebe5",
+      "postSha256": "bb0e543b606989c567fb5e8f20a5c7fa35dd5c3a61942d4260918261306b1fb2"
+    },
+    {
+      "path": "services/aos-api/aos_api/db.py",
+      "preSha256": "58e9808ff77717947604dcf3d47d5fa0bd19407d8a06e8ab0911cfb4907162a0",
+      "postSha256": "285fe6671517385c4e0555b167b6c7d1bb1668e95952b84e5ab59890e5ff232e"
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_catalog.py",
+      "preSha256": "12eafb872bf132120f323c64053113a412037c4bba835f1878ce1ae3b54bae0d",
+      "postSha256": "a859c78e161ab8fc78f53a2783292228f0aa8dc4ef845515416f0dd216e5a32e"
+    },
+    {
+      "path": "services/aos-api/tests/asset_registry/test_ecommerce_workshop_catalog.py",
+      "preSha256": "c899444fb42ef7919d8e8cb597b004d708b11610d1c5a0021ae474be57e793b5",
+      "postSha256": "6606302a634bf3b091bb020172a337022421f3556238cba6c0129e0a85638495"
+    },
+    {
+      "path": "services/aos-api/tests/asset_registry/test_release_policy.py",
+      "preSha256": "2dd542e57a1e3a3b2ddac0ce2ed2b1f69634512b615df2a409ebcc13f6761883",
+      "postSha256": "e187be55581a4420f4c07eb96f3b29084316be595faa42fc0af8f18862c52ae6"
+    },
+    {
+      "path": "services/aos-api/tests/asset_registry/test_workshop_successor_install_script.py",
+      "preSha256": null,
+      "postSha256": "1d5855728a633b1ca77d34e62bd9c489cd287677cbfdecb93b864fd467b28b7e"
+    }
+  ],
+  "sharedDocs": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/24-W0实施准备Authority兼容迁移与安全ADR.md",
+      "preSha256": null,
+      "postSha256": "ee450d1fd9de1d7c78ca310fcdc851f6593ec5ba450174b6e7f52b8f6710387f",
+      "note": "shared unversioned docs; pre-hash was not captured before edit, current hash recorded below after receipt generation"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/00-工作台长任务开发计划总清单.md",
+      "preSha256": null,
+      "postSha256": "51179e5541a21bd776dce938d89d5632a1263a82c3f34de64922f4ae6702d6e7",
+      "note": "shared unversioned docs; pre-hash was not captured before edit, current hash recorded below after receipt generation"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/D-waves/W0-全量技术条款施工追踪矩阵与W1精确施工包.md",
+      "preSha256": null,
+      "postSha256": "f9246e7fbc527b520a545f2273f4246a54f1efec7b349f27bad6e3bcc55a8e51",
+      "note": "shared unversioned docs; pre-hash was not captured before edit, current hash recorded below after receipt generation"
+    }
+  ],
+  "evidenceRefs": [
+    ".evidence/workshop/2026-08-15-w1-10-successor-browser.json",
+    "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/24-W0实施准备Authority兼容迁移与安全ADR.md"
+  ],
+  "nonClaims": [
+    "Does not claim AIP bindings or business object readiness.",
+    "Does not claim W2-00 or any W2 business read model is GREEN.",
+    "Does not update authority.json, 01/06 or Prime outside serialized m1 CAS.",
+    "Does not write dev-org/dev-project business data.",
+    "Does not claim native keyboard Enter injection succeeded in the built-in browser."
+  ],
+  "nextGate": "Fresh-check W2-00 DEP-DATA and DEP-ADP(query); code no W2 runtime while either is not GREEN."
+}

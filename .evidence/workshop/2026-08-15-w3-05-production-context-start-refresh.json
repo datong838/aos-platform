@@ -1,0 +1,92 @@
+{
+  "schema": "aos-workshop-w3-production-context-start-refresh/v1",
+  "taskId": "workshop-w3-05-production-context-start-refresh-20260815",
+  "workItem": "W3-05",
+  "projectRevision": "AOS-000039",
+  "branch": "w2-workshop",
+  "head": "50021c461b4d65acba43f1191cdac70c283e73f6",
+  "recordedAt": "2026-08-15T11:16:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "preparationStatus": "REFRESH_GREEN_WITH_PLAN_REMEDIATION_REQUIRED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "AIP W2-D3 SDK/UI is now delivered, but the current compile and start authorities are separate, neither carries ProductionContext, explicit start authorization remains absent, and the real tenant has no positive ImpactPreview candidate"
+  },
+  "authorityRefresh": {
+    "currentPhase": "BIND1_2_CAPABILITY_READINESS_SERVICE_GREEN_WITH_WARNINGS",
+    "hardBoundary": "No Agent is runnable and no real CapabilityBinding exists",
+    "nextGate": "BIND1_3_SKILL_PUBLICATION_AND_BINDING_READINESS"
+  },
+  "committedM1Facts": {
+    "fixedCommit": "c48868b3f40c75fd625f9dac00e1c2cc9b02f6c0",
+    "w2d2": "GREEN at 0391f68; canonical Start service and decisions exist",
+    "w2d3": "GREEN_WITH_WARNINGS at 2eab0f78a1679aa4fb0adf17468cc9c1875157f0; strict SDK and UI exist; real positive Start was not exercised",
+    "compileOperation": "StageTemplate compile creates a canonical draft Plan before Start and does not create TaskRun",
+    "startOperation": "POST /v1/aip/production-contracts/production-runs/start consumes an existing Plan, frozen ImpactPreview, approved ActionProposal and LogicGraph revision",
+    "authorization": "the mutation uses require_principal only; no explicit start permission or role dependency is visible in the committed router",
+    "productionContext": "absent from compiler input, Plan productionContract, ImpactPreview DTO, ProductionStartRequest and StartDecision"
+  },
+  "planConflict": {
+    "oldStatement": "start revalidates and calls the canonical compiler",
+    "actualCommittedBehavior": "compile and start are separate operations and Start requires a previously compiled Plan",
+    "requiredCorrection": "W3-05 owns a staged compile-to-start orchestration, not a single start call that secretly compiles or approves",
+    "forbidden": [
+      "compile inside a client-only click sequence with no durable intent",
+      "create ImpactPreview before Plan exists",
+      "auto-create or auto-approve ActionProposal",
+      "treat authenticated as authorized to start",
+      "treat started plus queued TaskRun as running or AgentRun created"
+    ]
+  },
+  "targetSequence": [
+    "compile command consumes frozen ProductionContext and exact signed StageTemplate and creates a draft canonical Plan",
+    "Plan stores the ProductionContext exact ref and compiler or template provenance",
+    "ImpactPreview is created and frozen against ProductionContext, Plan, StageTemplate and runtime dependencies",
+    "ActionProposal and maker-checker Approval are explicit user-visible steps",
+    "start requires an explicit server-side permission, revalidates ProductionContext through Preview and creates at most one TaskRun",
+    "StartDecision returns blocked, stale, unknown or started; only a later TaskRun or AgentRun event may show running"
+  ],
+  "requiredContractChanges": [
+    "CompileStageTemplateRequest and StageCompilationResult carry ProductionContext exact ref",
+    "Plan risk productionContract carries ProductionContext exact ref",
+    "CreateImpactPreviewRequest and frozen snapshot carry ProductionContext exact ref",
+    "ProductionStartRequest and ProductionStartDecision carry or provably bind the same ProductionContext exact ref",
+    "start router enforces an explicit permission or policy decision distinct from authentication",
+    "Workshop exposes separate compile and start states and never locally approves"
+  ],
+  "dependencyDecision": {
+    "W3_04": "NOT_STARTED_PLAN_REMEDIATED_HARD_GATE_BLOCKED",
+    "DEP_AIP_W2D2": "CODE_CONTROL_GREEN_REAL_POSITIVE_BLOCKED",
+    "DEP_AIP_W2D3": "GREEN_WITH_WARNINGS_NOT_IN_PROGRESS",
+    "DEP_PRODUCTION_CONTEXT_PROPAGATION": "MISSING",
+    "DEP_AIP_START_AUTHZ": "RED_REVIEW_REQUIRED",
+    "DEP_AIP_REAL_PREVIEW": "BLOCKED",
+    "W3_05": "NOT_STARTED_REFRESH_COMPLETE"
+  },
+  "requiredGreenEvidence": [
+    "W3-04 and ProductionContext authority GREEN",
+    "compiler, Plan, ImpactPreview and Start exact-ref propagation GREEN",
+    "explicit start permission and revoked-role race tests GREEN",
+    "compile, preview, proposal, approval and start idempotency and crash-window tests GREEN",
+    "one successful org-org path and dev-org isolation without synthetic authority",
+    "started and running distinction plus restart readback GREEN",
+    "current authority, memory, Git, Delivery Receipts and Leases revalidated before coding"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "this refresh audits committed authority and ordering only; W3-05 implementation remains blocked",
+    "doesNotProve": [
+      "ProductionContext propagation",
+      "explicit start authorization",
+      "a real positive ImpactPreview or Start",
+      "a runnable Agent"
+    ]
+  },
+  "next": "align the W3-05 ADR and D-waves to the staged compile-preview-approval-start contract and current W2-D3 status",
+  "safety": [
+    "read-only committed m1 router SDK tests Delivery Receipts authority and plan inspection",
+    "no source, database, tenant, provider, TaskRun, AgentRun, Action, Handoff or external mutation",
+    "w1-aip uncommitted content was not read or modified"
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "schema": "aos-workshop-w3-common-production-ui-preflight/v1",
+  "taskId": "workshop-w3-09-common-production-ui-preflight-20260815",
+  "workItem": "W3-09",
+  "projectRevision": "AOS-000039",
+  "branch": "w2-workshop",
+  "head": "60e1113d144c869da977e377e2466e0c0a93e33d",
+  "recordedAt": "2026-08-15T12:03:00+08:00",
+  "decision": {
+    "implementationStatus": "NOT_STARTED",
+    "preparationStatus": "PREFLIGHT_GREEN_WITH_PLAN_REMEDIATION_REQUIRED",
+    "dependencyStatus": "HARD_GATE_BLOCKED",
+    "externalEffect": "NONE",
+    "reason": "the named shared production components do not exist; a monolithic ProductionContractsPage proves reusable SDK and fail-closed states but mixes seven authority cards and mutation forms, while W3-03 to W3-07 runtime contracts remain blocked"
+  },
+  "committedUiFacts": {
+    "workshopFoundation": [
+      "AsyncStateBoundary",
+      "CapabilityBlocker",
+      "EcommerceWorkshopCatalogContext",
+      "EcommerceWorkshopHost",
+      "EcommerceWorkshopShell",
+      "InstalledModuleNavigation"
+    ],
+    "existingAuthorityPage": "ProductionContractsPage lists Brief, EvidenceBundle, EvalContract, ResponsibilityPlan, StageTemplate, ArtifactRelation and ReviewIssue and exposes freeze, compile, resolve and return controls",
+    "existingTests": "page tests cover true empty states, blocked Eval freeze, Stage source blocker and no fake ResponsibilityTemplate",
+    "missingNamedComponents": [
+      "BriefInspector",
+      "EvidenceBundleDrawer",
+      "EvalContractBadge",
+      "EvalContractDiff",
+      "ResponsibilityMatrix",
+      "StageTimeline",
+      "ArtifactRevisionViewer",
+      "ReviewIssuePanel",
+      "ImpactPreviewDialog"
+    ],
+    "impactPreviewReuse": "no committed Workshop or web component matching ImpactPreviewDialog was found",
+    "currentRisk": "copying JSX from the monolithic authority page into eight modules would duplicate command readiness, lifecycle labels, focus handling and blocker semantics"
+  },
+  "componentDecision": {
+    "ownership": "components consume canonical DTOs or read models and emit typed intents only; they never store authority or recompute readiness",
+    "composition": "one common production-ui package exports pure display primitives plus intent callbacks; Module pages supply exact refs and server commandReadiness",
+    "states": "loading, empty, partial, stale, blocked, forbidden, unknown, ready and error remain explicit",
+    "mutation": "buttons emit an intent containing exact refs, expectedVersion and readiness token; page orchestration invokes canonical SDK and refreshes Receipt-backed state",
+    "accessibility": "stable H1 remains page-owned; component sections use heading hierarchy, status live regions, focusable blocked controls, dialog focus trap and return, and keyboard-operable tabs only where tabs are semantically required",
+    "visualBoundary": "no static HTML visual draft is changed by W3-09"
+  },
+  "targetPackage": {
+    "root": "apps/web/src/components/workshop/production",
+    "exports": [
+      "BriefInspector",
+      "EvidenceBundleDrawer",
+      "EvalContractBadge",
+      "EvalContractDiff",
+      "ResponsibilityMatrix",
+      "StageTimeline",
+      "ArtifactRevisionViewer",
+      "ReviewIssuePanel",
+      "ImpactPreviewDialog"
+    ],
+    "sharedPrimitives": [
+      "ExactRefLink",
+      "ReadinessBadge",
+      "BlockerList",
+      "ReceiptLink",
+      "AuthorityStateBoundary"
+    ]
+  },
+  "dependencyDecision": {
+    "W3_03_TO_W3_07": "NOT_STARTED_PLAN_REMEDIATED_HARD_GATE_BLOCKED",
+    "DEP_COMMON_PRODUCTION_READ_MODELS": "MISSING_OR_INCOMPLETE",
+    "DEP_IMPACT_PREVIEW_STRICT_SDK": "PARTIAL_AIP_FOUNDATION_NOT_WORKSHOP_COMPONENT_READY",
+    "DEP_ACCESSIBLE_DIALOG_AND_DIFF_PRIMITIVES": "NOT_VERIFIED",
+    "W3_09": "NOT_STARTED_PREFLIGHT_COMPLETE"
+  },
+  "requiredGreenEvidence": [
+    "one component implementation and one export identity for all eight Module consumers",
+    "strict props from canonical DTOs with unknown enum and malformed ref rejection",
+    "no localStorage, mock fallback, duplicated readiness or authority mutation",
+    "loading, empty, partial, stale, blocked, forbidden, unknown, ready and error tests",
+    "keyboard, focus return, live region, 200 percent zoom and reduced-motion tests",
+    "intent emission versus canonical command versus Receipt refresh separation",
+    "eight-Module integration matrix without copying component state machines",
+    "W3-03 to W3-07 runtime dependencies GREEN before enabling mutation controls"
+  ],
+  "tests": {
+    "executed": false,
+    "reason": "read-only committed component, page, SDK and test inventory only",
+    "doesNotProve": [
+      "the nine shared components exist",
+      "eight-Module integration",
+      "accessible dialogs or timelines",
+      "runtime command readiness"
+    ]
+  },
+  "next": "remediate W3-09 plans around one production component package, typed intents and accessibility matrix, then re-review without coding",
+  "safety": [
+    "no source, shared document, static visual, database, tenant, browser or external mutation",
+    "w1-aip uncommitted content was not read or modified"
+  ]
+}
