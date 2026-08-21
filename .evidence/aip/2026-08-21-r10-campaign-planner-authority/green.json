@@ -1,0 +1,86 @@
+{
+  "status": "GREEN_WITH_UI_WARNING",
+  "wave": "R10_CAMPAIGN_PLANNER_A01_A06",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanaryOrgId": "dev-org",
+    "negativeCanaryProjectId": "dev-project"
+  },
+  "authority": {
+    "logic": {
+      "A01": "ab6eaa7226a855cd0a9da1c6975f51e5d1d37f30496abf59c5fe0db0ce7ccb9f",
+      "A02": "6a67d23a11ab58f8cd7e7071b8cf76fc5e2a6138326c037eafe4b6c6d5016999",
+      "A03": "1698a0ec98ebfe6b1f34d37d63d26e99af41fcb5792e13e914245f92db3babed",
+      "A04": "4a56476374450ca8c7bd8d6989651be7152da94ce7bd455fbb7dac761c911c6d",
+      "A05": "5aa06f86ab7c7041e491f77bc948e6fb6b07797d82bf4761232070a29359670f",
+      "A06": "ac154d6bdd48922606d770604422ead311592ba471f28bf1cbb9376d28e27342"
+    },
+    "skill": {
+      "A01": "0acf3b309a55fa52466316f6ee50ef2e22fb693a2f525261cd175a1ae04fc3ab",
+      "A02": "e24302bcfc3e9001394abc2315d392663e31ff51562c2dc08120a1fd0050fb51",
+      "A03": "69a1b2099875832dae407f6361bf0357e7207b3ea50ccc6b42da85341217820d",
+      "A04": "ae6dbff1d34a5631092c666b0c07efe49ce312cdd6350362d03c1551e7cead7e",
+      "A05": "2714f0c8220d1a5ad0773f2c8d971ff648a967c718b367919a949dce7616d07a",
+      "A06": "cd0c986df3240e356870be2c43aa5137095b9630d212d6f579b48000d46227a0"
+    },
+    "publishedSkillCount": 6,
+    "activeSkillBindingCount": 6,
+    "agentInstanceStatus": "active",
+    "runtimeReadinessAtBrowserCutoff": "runnable",
+    "runtimeBlockersAtBrowserCutoff": []
+  },
+  "immutableA02": {
+    "logicRevision": 1,
+    "skillRevision": 2,
+    "logicPublicationChanged": false,
+    "skillRevisionChanged": false,
+    "bindingCompositionChanged": false,
+    "pilotReplayed": false,
+    "sourceHashes": {
+      "services/aos-api/aos_api/aip_a02_pilot.py": "29f5c0f216bbed5e9b42b0ec435f57389729aa6f2c77b9359003223ee087e2db",
+      "scripts/aip/bootstrap_r2_a02_pilot.py": "c0fcf4646a99cdbeddc113d70e5ccceb422b542b5a0a1c790e1d91b96d0afe83",
+      "scripts/aip/bootstrap_r2_a02_skill_authority.py": "2e9b380cd799b8cf21d9f6329e2ff91d49ea4ce4fa6eab7272131c9195b2865a",
+      "scripts/aip/bootstrap_r2_a02_binding_composition.py": "614b5dedfac281c143cfcf649de7c716c14dc807faf843fe9a230ead4e13fdc8",
+      "scripts/aip/execute_r2_a02_real_pilot.py": "f564befd64d4da264ffe0714faf581013688fdc873bfaa7eaad837c37f7c544b"
+    }
+  },
+  "health": {
+    "observationId": "health-agnes-text-qyh-r2-20260821070802980631",
+    "samples": "3/3",
+    "status": "healthy",
+    "observedAt": "2026-08-21T07:08:02.980631Z",
+    "expiresAt": "2026-08-21T07:23:02.980631Z",
+    "p50LatencyMs": 536,
+    "browserCutoff": "2026-08-21T07:14:39Z",
+    "freshAtBrowserCutoff": true,
+    "secretPayloadReads": 0
+  },
+  "safety": {
+    "agentRunsCreated": 0,
+    "providerBusinessCalls": 0,
+    "externalCampaignActions": 0,
+    "productionActions": 0,
+    "negativeCanaryRows": 0,
+    "draftOnly": true
+  },
+  "verification": {
+    "targetedR10Tests": "37 passed",
+    "cumulativeR06ThroughR10Tests": "219 passed",
+    "compile": "GREEN",
+    "browser": {
+      "baseUrl": "http://127.0.0.1:5174",
+      "tenant": "栖月汇商贸有限公司 / 默认工作区",
+      "agentRegistry": "活动策划师 6/6 active bindings; runnable; no blockers",
+      "agentList": "活动策划师已启用且可派发",
+      "toolbox": "Overlay-only; no fabricated enabled-count",
+      "consoleErrors": 0,
+      "warning": "R15_AGENT_REGISTRY_CAPABILITY_COUNT_SEMANTICS"
+    }
+  },
+  "commits": ["1808437", "20594eb", "cde7917", "b6580b4", "1074f0c"],
+  "externalOwners": {
+    "workshopB5M1Cas": "m1 serialized integration owner",
+    "sourceReadinessAndSameCutoffEvidencePack": "Data/Adapter owner"
+  }
+}
