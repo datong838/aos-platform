@@ -701,6 +701,107 @@ class WatchdogTest(unittest.TestCase):
         state = json.loads(state_path.read_text(encoding="utf-8"))
         self.assertEqual("visible status marker missing", state["last_error"])
 
+    def test_visible_safe_blocked_rejects_summary_without_blocker_details(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.visibility_config()), encoding="utf-8")
+
+        def runner(command, **kwargs):
+            self.write_ack(
+                outcome="safe-blocked",
+                reason_code="DEPENDENCY_NOT_GREEN",
+                blocker_fingerprint="sha256:blocker",
+            )
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    "[DOG_VISIBLE_STATUS] outcome=safe-blocked 阻断摘要：依赖未就绪",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "blocked", "")
+
+        self.assertEqual(
+            "protocol-failed",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("safe-blocked detail contract missing", state["last_error"])
+
+    def test_visible_safe_blocked_accepts_structured_blocker_details(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.visibility_config()), encoding="utf-8")
+
+        def runner(command, **kwargs):
+            prompt = kwargs["input"]
+            self.assertIn("[DOG_BLOCKER_DETAILS]", prompt)
+            self.assertIn("独立核验证据", prompt)
+            self.assertIn("责任边界", prompt)
+            self.assertIn("解除条件", prompt)
+            self.write_ack(
+                outcome="safe-blocked",
+                reason_code="DEPENDENCY_NOT_GREEN",
+                blocker_fingerprint="sha256:blocker",
+            )
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    """[DOG_VISIBLE_STATUS] outcome=safe-blocked
+[DOG_BLOCKER_DETAILS]
+- 阻断任务：W2-00B
+- 缺失条件：canonical owner 尚未进入 m1
+- 独立核验证据：m1 exact read-only 核验未命中
+- 责任边界：m1/AIP owner 负责交付，w2 不代写
+- 解除条件：owner、Receipt 与 CAS 同时 GREEN
+- 下次复核策略：按 blocked recheck 周期重新独立核验""",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "blocked", "")
+
+        self.assertEqual(
+            "safe-blocked",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+
+    def test_visible_safe_blocked_rejects_incomplete_blocker_fields(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.visibility_config()), encoding="utf-8")
+
+        def runner(command, **kwargs):
+            self.write_ack(
+                outcome="safe-blocked",
+                reason_code="DEPENDENCY_NOT_GREEN",
+                blocker_fingerprint="sha256:blocker",
+            )
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    """[DOG_VISIBLE_STATUS] outcome=safe-blocked
+[DOG_BLOCKER_DETAILS]
+- 阻断任务：W2-00B
+- 缺失条件：canonical owner 尚未进入 m1
+- 独立核验证据：m1 exact read-only 核验未命中
+- 责任边界：m1/AIP owner 负责交付，w2 不代写
+- 解除条件：owner、Receipt 与 CAS 同时 GREEN""",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "blocked", "")
+
+        self.assertEqual(
+            "protocol-failed",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+
     def test_visible_wake_invalid_enabled_value_fails_closed(self):
         self.write(
             record("1970-01-01T00:00:10Z", "user"),

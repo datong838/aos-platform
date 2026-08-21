@@ -43,6 +43,15 @@ TERMINAL_FAILURE_OUTCOMES = frozenset(
 ACK_SCHEMA = "aos-watchdog-recovery-ack/v1"
 RECOVERY_PROTOCOL_MARKER = "[WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]"
 DOG_VISIBILITY_MARKER = "[DOG_VISIBLE_STATUS]"
+DOG_BLOCKER_DETAILS_MARKER = "[DOG_BLOCKER_DETAILS]"
+BLOCKER_DETAIL_FIELDS = (
+    "阻断任务",
+    "缺失条件",
+    "独立核验证据",
+    "责任边界",
+    "解除条件",
+    "下次复核策略",
+)
 
 
 @dataclass(frozen=True)
@@ -61,6 +70,7 @@ class TranscriptStatus:
     post_final_activity: bool
     latest_user_is_watchdog: bool
     latest_final_has_visibility: bool
+    latest_final_has_blocker_details: bool
 
 
 def _timestamp(value: object) -> float | None:
@@ -111,6 +121,31 @@ def _response_message_text(record: dict[str, Any]) -> str:
     return "\n".join(parts)
 
 
+def _has_blocker_detail_contract(text: str) -> bool:
+    if DOG_BLOCKER_DETAILS_MARKER not in text:
+        return False
+    task_pattern = re.compile(
+        rf"(?m)^-\s*{re.escape(BLOCKER_DETAIL_FIELDS[0])}[：:]\s*\S.*$"
+    )
+    task_matches = list(task_pattern.finditer(text))
+    if not task_matches:
+        return False
+    for index, match in enumerate(task_matches):
+        end = (
+            task_matches[index + 1].start()
+            if index + 1 < len(task_matches)
+            else len(text)
+        )
+        block = text[match.start() : end]
+        if any(
+            re.search(rf"(?m)^-\s*{re.escape(field)}[：:]\s*\S.*$", block)
+            is None
+            for field in BLOCKER_DETAIL_FIELDS[1:]
+        ):
+            return False
+    return True
+
+
 def inspect_transcript(path: Path) -> TranscriptStatus:
     latest_user_at: float | None = None
     latest_assistant_at: float | None = None
@@ -121,6 +156,7 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
     latest_work_activity_at: float | None = None
     latest_user_is_watchdog = False
     latest_final_has_visibility = False
+    latest_final_has_blocker_details = False
     tool_calls: dict[str, float] = {}
     with path.open("r", encoding="utf-8") as handle:
         for raw in handle:
@@ -141,8 +177,10 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
                 latest_assistant_at = ts
                 if phase in FINAL_PHASES:
                     latest_final_at = ts
-                    latest_final_has_visibility = (
-                        DOG_VISIBILITY_MARKER in _response_message_text(record)
+                    final_text = _response_message_text(record)
+                    latest_final_has_visibility = DOG_VISIBILITY_MARKER in final_text
+                    latest_final_has_blocker_details = (
+                        _has_blocker_detail_contract(final_text)
                     )
                 elif phase == "commentary":
                     latest_work_activity_at = ts
@@ -201,6 +239,7 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
         post_final_activity,
         latest_user_is_watchdog,
         latest_final_has_visibility,
+        latest_final_has_blocker_details,
     )
 
 
@@ -540,7 +579,8 @@ def _resume_prompt(
         )
         final_visibility_rule = f"""
 最终答复必须包含独立标记 `{DOG_VISIBILITY_MARKER}` 和 `Dog 可见状态`，展示本次 outcome、task_id、next_task、阻断摘要或完成证据、wake_sequence 与下一次复核策略。
-safe-blocked 时只能说明将按 blocked_recheck_delay_seconds 重新 arm，不得在状态机闭环前虚构精确 ready_at；缺少标记会被判为 protocol-failed。
+safe-blocked 时还必须包含独立标记 `{DOG_BLOCKER_DETAILS_MARKER}`，并对每个互不等价的 blocker 分别给出一个结构化阻断项。每个阻断项逐行使用 `- 阻断任务：`、`- 缺失条件：`、`- 独立核验证据：`、`- 责任边界：`、`- 解除条件：`、`- 下次复核策略：`；不得只给 reason code 或合并成笼统摘要。
+safe-blocked 只能说明将按 blocked_recheck_delay_seconds 重新 arm，不得在状态机闭环前虚构精确 ready_at；缺少状态标记、阻断标记或任一必填字段都会被判为 protocol-failed。
 """
     protocol = f"""
 
@@ -1509,6 +1549,29 @@ def run_once(
                     notification_runner=notification_runner,
                 )
                 state["last_error"] = "visible status marker missing"
+                state["paused_user_at"] = after_resume.latest_user_at
+                state["paused_config_revision"] = _config_revision(config)
+                _write_json(state_path, state)
+                return "protocol-failed"
+            if (
+                ack_valid
+                and ack.get("outcome") == "safe-blocked"
+                and visible_final
+                and result.returncode == 0
+                and visibility_required
+                and not after_resume.latest_final_has_blocker_details
+            ):
+                _record_terminal_outcome(
+                    state,
+                    config=config,
+                    outcome="protocol-failed",
+                    final_at=after_resume.latest_final_at,
+                    ack=ack,
+                    resolved_at=current,
+                    latest_user_at=after_resume.latest_user_at,
+                    notification_runner=notification_runner,
+                )
+                state["last_error"] = "safe-blocked detail contract missing"
                 state["paused_user_at"] = after_resume.latest_user_at
                 state["paused_config_revision"] = _config_revision(config)
                 _write_json(state_path, state)

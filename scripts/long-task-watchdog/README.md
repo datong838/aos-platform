@@ -21,6 +21,8 @@ Watchdog 只有唤醒权，没有事实裁决权。它注入的 trigger、task�
 
 V2.9 的 `visibility_watch` 用于把真实唤醒结果固定写入同一 Codex task：首条消息在 trigger 固定句后展示累计唤醒序号、UTC 时间、episode 和 trigger；最终答复必须包含 `[DOG_VISIBLE_STATUS]` 状态卡，列出 outcome、task/next、阻断或完成证据以及下一次复核策略。启用时，Ack 与新 final 虽存在但 final 缺少该标记，仍按 `protocol-failed` 拒绝闭环。V2.9 的检查只有 marker 是否存在的布尔判断，不额外复制 final 正文，当时也不发送桌面通知或外部消息。
 
+V3.1 在可见状态卡上增加 `safe-blocked` 逐项阻断契约。每次唤醒仍先独立核验真实状态；若条件具备就继续首个安全 Task。若仍阻断，final 必须包含 `[DOG_BLOCKER_DETAILS]`，并为每个互不等价的 blocker 分别列出“阻断任务、缺失条件、独立核验证据、责任边界、解除条件、下次复核策略”。缺 marker 或任一字段时，即使 Ack 有效也按 `protocol-failed` 拒绝可见闭环。Watchdog 只在读取 transcript 时计算字段契约是否完整，不把阻断正文复制到 state、`visible-status.json`、通知、日志或 Receipt。
+
 V3.0 起，transcript marker 不再被当成 Desktop 已经展示的证明。每次唤醒开始和终态都会把非敏感状态卡原子写入 Watchdog 本地状态目录的 `visible-status.json`（mode `0600`）。当 `visibility_watch.desktop_notification=true` 时，同时通过本机 Notification Center 展示唤醒和结果；通知不包含 evidence、fingerprint、路径、业务数据或凭据。通知投递失败会记入 state/状态卡，但不改写 Ack+final 已确立的 episode outcome，避免重复副作用。
 
 `task_started` 防重入同样是有时限的：只在 transcript 最近活动未超过 `max_turn_silence_seconds`（默认复用 `max_tool_silence_seconds`）时返回 `turn-running`。超时后仍必须继续通过待完成 tool、grace、backoff、Lease 和 episode 门，不会因 dependency/fact/blocked-recheck watch 已启用而永久拦截。
