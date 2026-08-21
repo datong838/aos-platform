@@ -1,0 +1,49 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevisionBefore": "AOS-000141",
+  "recordedAt": "2026-08-19T02:32:00+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-VID-4",
+  "approvalRef": "46-§8.78-VID-4",
+  "assets": {
+    "policy": {
+      "assetId": "policy-qyh-video-dev",
+      "revision": 1,
+      "contentHash": "4796fb334d1b1f18f1c21a549e6248e685c6f5a5a219b54e37ab8895130217af"
+    },
+    "model": {
+      "assetId": "model-qyh-video-dev",
+      "revision": 1,
+      "contentHash": "15f3fc256b84cf744ab5b2c5c73581dba43db2586a9746cd27d08c6b613f3a23"
+    },
+    "route": {
+      "assetId": "route-qyh-video-dev",
+      "revision": 1,
+      "contentHash": "f04e5c2d899d6ee0f7a7fa84ca6705f5dde2fcad59563e4f798aaeceede81964"
+    },
+    "capacity": {
+      "assetId": "capacity-qyh-video-dev",
+      "revision": 1,
+      "contentHash": "010c132db377c17bba48cfdcfb3459cc1d696cb608503f1ab58d97d7fbd585a3"
+    },
+    "providerPinned": {
+      "assetId": "agnes-video-qyh-dev",
+      "revision": 1
+    }
+  },
+  "resolver": {
+    "routeId": "route-qyh-video-dev",
+    "readiness": "ready"
+  },
+  "result": "R2_VID_4_ROUTE_CAPACITY_GREEN",
+  "immutable": true,
+  "textRouteUntouched": true,
+  "providerBusinessCalls": 0,
+  "healthProbes": 0,
+  "agentRuns": 0,
+  "nextGate": "AIP_MULTIMODAL_RUNTIME_CLOSED_WAITING_PILOT_OR_W2"
+}

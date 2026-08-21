@@ -1,0 +1,33 @@
+{
+  "schema": "aos-browser-acceptance/v1",
+  "wave": "R13_EXACT_LINEAGE_OBSERVABILITY",
+  "status": "GREEN_WITH_WARNINGS",
+  "evaluatedAt": "2026-08-21T11:19:27Z",
+  "browser": "Codex In-app Browser",
+  "tenant": {"orgId": "org-org", "projectId": "dev-project", "organizationName": "栖月汇商贸有限公司", "workspaceName": "默认工作区"},
+  "root": {"rootType": "task_run", "rootId": "run-af0b0f59e7e44ea499ac"},
+  "lineageId": "lineage-2dce83d6911926580907fdf9",
+  "pages": [
+    {
+      "path": "/aip/lineage?rootType=task_run&rootId=run-af0b0f59e7e44ea499ac",
+      "events": 3,
+      "exactObservabilityLink": true,
+      "screenshot": "browser-lineage.png"
+    },
+    {
+      "path": "/aip/observability?lineageId=lineage-2dce83d6911926580907fdf9&rootType=task_run&rootId=run-af0b0f59e7e44ea499ac",
+      "telemetrySpans": 0,
+      "usageReceipts": 2,
+      "missingSpanReasonVisible": true,
+      "exactBackLink": true,
+      "exportEnabledAfterLoad": true,
+      "screenshot": "browser-observability.png"
+    }
+  ],
+  "usage": [
+    {"metricType": "output_token", "quantity": 143, "unit": "token", "quality": "measured"},
+    {"metricType": "input_token", "quantity": 340, "unit": "token", "quality": "measured"}
+  ],
+  "consoleErrors": 0,
+  "warnings": ["当前权威 Lineage 尚未写入 Telemetry Span；页面已按缺证状态显示，不解释为业务数量 0。"]
+}

@@ -47,6 +47,11 @@ from aos_api.aip_memory_pipeline_service import (
     AipMemoryPipelinePolicyBlocked,
     AipMemoryPipelineService,
 )
+from aos_api.aip_memory_production_factory import (
+    build_memory_governance_service,
+    build_memory_retrieval_service,
+    build_memory_search_service,
+)
 from aos_api.aip_memory_pipeline_store import (
     AipMemoryPipelineConflict,
     AipMemoryPipelineNotFound,
@@ -88,6 +93,9 @@ _PIPELINE_SERVICE = AipMemoryPipelineService(
     receipt_resolver=lambda _scope, _ref: None,
     license_resolver=lambda _scope, _receipt: LicensePolicyDecision.UNKNOWN,
 )
+_GOVERNANCE_SERVICE = build_memory_governance_service(store=_STORE)
+_RETRIEVAL_SERVICE = build_memory_retrieval_service()
+_SEARCH_SERVICE = build_memory_search_service()
 
 
 class ApproveCandidateRequest(AipContractModel):
@@ -140,15 +148,15 @@ def get_aip_memory_store() -> AipMemoryStore:
 
 
 def get_aip_memory_governance_service() -> AipMemoryGovernanceService | None:
-    return None
+    return _GOVERNANCE_SERVICE
 
 
 def get_aip_memory_retrieval_service() -> AipMemoryRetrieval | None:
-    return None
+    return _RETRIEVAL_SERVICE
 
 
 def get_aip_memory_search_service() -> AipMemoryKnowledgeSearch | None:
-    return None
+    return _SEARCH_SERVICE
 
 
 def get_aip_memory_readiness_service() -> AipMemoryReadinessService:

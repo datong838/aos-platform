@@ -11,16 +11,20 @@ from aos_api.aip_production_contract_store import (
     ProductionContractIdempotencyConflict, ProductionContractNotFound,
 )
 from aos_api.aip_production_start_service import AipProductionStartService
+from aos_api.aip_responsibility_template_authority import resolve_responsibility_template
+from aos_api.aip_stage_template_authority import resolve_stage_template_source
 from aos_api.aip_production_contracts import (
-    CreateBriefRequest, CreateEvidenceBundleRequest, EvidenceBundleListResponse,
+    CreateBriefRequest, CreateEvidenceBundleRequest, BuildEvidenceBundleRequest,
+    EvidenceBundleListResponse,
     EvidenceBundleRevision, ReviseBriefRequest, TaskBriefListResponse, TaskBriefRevision,
     CreateEvalContractRequest, ReviseEvalContractRequest, EvalContractRevision,
-    EvalContractListResponse, CreateResponsibilityPlanRequest,
+    EvalContractListResponse, EvalContractDiff, CreateResponsibilityPlanRequest,
     ReviseResponsibilityPlanRequest, ResponsibilityPlanRevision,
     ResponsibilityPlanListResponse,
     ArtifactRelation, ArtifactRelationListResponse, CompileStageTemplateRequest,
     CreateArtifactRelationRequest, CreateReviewIssueRequest,
     CreateStageTemplateRequest, ResolveReviewIssueRequest, ReturnDecision,
+    ReturnDecisionListResponse,
     ReturnReviewIssueRequest, ReviseStageTemplateRequest, ReviewIssue,
     ReviewIssueListResponse, StageCompilationResult, StageTemplateListResponse,
     StageTemplateRevision,
@@ -28,13 +32,20 @@ from aos_api.aip_production_contracts import (
     ImpactPreviewRevision, ImpactPreviewListResponse,
     ProductionStartRequest, ProductionStartDecision,
     ProductionStartDecisionListResponse,
+    RevokeEvidenceBundleRequest, ResolveEvidenceDisclosureRequest,
+    EvidenceDisclosureDecision,
+    FreezeProductionContextRequest, ProductionContextRevision,
+    ProductionContextListResponse,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/production-contracts", tags=["aip-production-contracts"])
-_STORE = AipProductionContractStore()
+_STORE = AipProductionContractStore(
+    responsibility_template_resolver=resolve_responsibility_template,
+    stage_template_source_resolver=resolve_stage_template_source,
+)
 _START_SERVICE = AipProductionStartService(contract_store=_STORE)
 
 
@@ -101,6 +112,24 @@ def freeze_impact_preview(preview_id: str, body: FreezeContractRequest, idempote
     except ProductionContractError as exc: raise _map(exc) from exc
 
 
+@router.post("/production-contexts/freeze", response_model=ProductionContextRevision, status_code=201)
+def freeze_production_context(body:FreezeProductionContextRequest,idempotency_key:str=Header(alias="Idempotency-Key"),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
+    try:return store.freeze_production_context(_scope(principal),principal.subject,_key(idempotency_key),body)
+    except ProductionContractError as exc:raise _map(exc) from exc
+
+
+@router.get("/production-contexts", response_model=ProductionContextListResponse)
+def list_production_contexts(principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
+    try:return store.list_production_contexts(_scope(principal))
+    except ProductionContractError as exc:raise _map(exc) from exc
+
+
+@router.get("/production-contexts/{context_id}", response_model=ProductionContextRevision)
+def get_production_context(context_id:str,revision:int=Query(default=1,ge=1),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
+    try:return store.get_production_context(_scope(principal),context_id,revision)
+    except ProductionContractError as exc:raise _map(exc) from exc
+
+
 @router.post("/production-runs/start", response_model=ProductionStartDecision)
 def start_production_run(body: ProductionStartRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), service: AipProductionStartService = Depends(get_start_service)):
     try: return service.start(_scope(principal), principal.subject, _key(idempotency_key), body)
@@ -155,15 +184,28 @@ def create_bundle(body:CreateEvidenceBundleRequest,idempotency_key:str=Header(al
     except ProductionContractError as exc:raise _map(exc) from exc
 
 
+@router.post("/evidence-bundles/build",response_model=EvidenceBundleRevision,status_code=status.HTTP_201_CREATED)
+def build_bundle(body:BuildEvidenceBundleRequest,idempotency_key:str=Header(alias="Idempotency-Key"),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
+    """W-L9: server-owned required-facts coverage Build Job."""
+    try:return store.build_evidence_bundle(_scope(principal),principal.subject,_key(idempotency_key),body)
+    except ProductionContractError as exc:raise _map(exc) from exc
+
+
 @router.get("/evidence-bundles",response_model=EvidenceBundleListResponse)
 def list_bundles(principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
-    try:return store.list_evidence_bundles(_scope(principal))
+    try:return store.list_evidence_bundles(_scope(principal), markings=principal.markings)
     except ProductionContractError as exc:raise _map(exc) from exc
 
 
 @router.get("/evidence-bundles/{bundle_id}",response_model=EvidenceBundleRevision)
 def get_bundle(bundle_id:str,revision:int=Query(default=1,ge=1),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
-    try:return store.get_evidence_bundle(_scope(principal),bundle_id,revision)
+    try:return store.get_evidence_bundle(_scope(principal),bundle_id,revision, markings=principal.markings)
+    except ProductionContractError as exc:raise _map(exc) from exc
+
+
+@router.post("/evidence-bundles/{bundle_id}/revoke",response_model=EvidenceBundleRevision)
+def revoke_bundle(bundle_id:str,body:RevokeEvidenceBundleRequest,idempotency_key:str=Header(alias="Idempotency-Key"),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
+    try:return store.revoke_evidence_bundle(_scope(principal),principal.subject,bundle_id,_key(idempotency_key),body)
     except ProductionContractError as exc:raise _map(exc) from exc
 
 
@@ -183,6 +225,22 @@ def list_eval_contracts(principal: Principal = Depends(require_principal), store
 def get_eval_contract(contract_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
     try: return store.get_eval_contract(_scope(principal), contract_id, revision)
     except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/eval-contracts/{contract_id}/diff", response_model=EvalContractDiff)
+def diff_eval_contract(
+    contract_id: str,
+    from_revision: int = Query(alias="fromRevision", ge=1),
+    to_revision: int = Query(alias="toRevision", ge=1),
+    principal: Principal = Depends(require_principal),
+    store: AipProductionContractStore = Depends(get_store),
+):
+    try:
+        return store.diff_eval_contract(
+            _scope(principal), contract_id, from_revision, to_revision
+        )
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
 
 
 @router.post("/eval-contracts/{contract_id}/revisions", response_model=EvalContractRevision, status_code=201)
@@ -303,3 +361,27 @@ def resolve_review_issue(issue_id: str, body: ResolveReviewIssueRequest, idempot
 def return_review_issue(issue_id: str, body: ReturnReviewIssueRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
     try: return store.return_review_issue(_scope(principal), principal.subject, issue_id, _key(idempotency_key), body)
     except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/return-decisions", response_model=ReturnDecisionListResponse)
+def list_return_decisions(
+    issue_id: str | None = Query(default=None, alias="issueId"),
+    principal: Principal = Depends(require_principal),
+    store: AipProductionContractStore = Depends(get_store),
+):
+    try:
+        return store.list_return_decisions(_scope(principal), issue_id=issue_id)
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+
+
+@router.get("/return-decisions/{decision_id}", response_model=ReturnDecision)
+def get_return_decision(
+    decision_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipProductionContractStore = Depends(get_store),
+):
+    try:
+        return store.get_return_decision(_scope(principal), decision_id)
+    except ProductionContractError as exc:
+        raise _map(exc) from exc

@@ -14,7 +14,7 @@ const GraphExplorerPage = lazify(() => import("./workshop"), "GraphExplorerPage"
 const EventsPage = lazify(() => import("./EventsPage"), "EventsPage");
 const ToolsPage = lazify(() => import("./aip"), "ToolsPage");
 const ProvidersPage = lazify(() => import("./aip"), "ProvidersPage");
-const ProviderDetailPage = lazify(() => import("./aip"), "ProviderDetailPage");
+const ProviderDetailPage = lazify(() => import("./ProviderDetailPage"), "ProviderDetailPage");
 const ModelRouterPage = lazify(() => import("./aip"), "ModelRouterPage");
 const EvalsPage = lazify(() => import("./aip"), "EvalsPage");
 const DecisionLineagePage = lazify(() => import("./aip"), "DecisionLineagePage");
@@ -53,7 +53,9 @@ const ObservabilityPage = lazify(() => import("./ObservabilityPage"), "Observabi
 const MemoryGovernancePage = lazify(() => import("./MemoryGovernancePage"), "MemoryGovernancePage");
 const LogicCanvasPage = lazify(() => import("./LogicCanvasPage"), "LogicCanvasPage");
 const AgentsPage = lazify(() => import("./CanonicalAgentsPage"), "CanonicalAgentsPage");
+const SkillPublishPage = lazify(() => import("./SkillPublishPage"), "SkillPublishPage");
 const CanonicalAgentRegistryPage = lazify(() => import("./CanonicalAgentRegistryPage"), "CanonicalAgentRegistryPage");
+const AgentMarketplacePage = lazify(() => import("./AgentMarketplacePage"), "AgentMarketplacePage");
 const CanonicalCapabilityPage = lazify(() => import("../CanonicalCapabilityPage"), "CanonicalCapabilityPage");
 const ProductionContractsPage = lazify(() => import("./ProductionContractsPage"), "ProductionContractsPage");
 const AgentImportPage = lazify(() => import("./AgentImportPage"), "AgentImportPage");
@@ -135,7 +137,9 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "aip/logic", Component: LogicCanvasPage },
   { path: "aip/logic/:flowId", Component: LogicCanvasPage },
   { path: "aip/agent-registry", Component: CanonicalAgentRegistryPage },
+  { path: "aip/agent-marketplace", Component: AgentMarketplacePage },
   { path: "aip/agents", Component: AgentsPage },
+  { path: "aip/skill-publish", Component: SkillPublishPage },
   { path: "aip/capabilities", Component: CanonicalCapabilityPage },
   { path: "aip/production-contracts", Component: ProductionContractsPage },
   { path: "aip/agent-import", Component: AgentImportPage },

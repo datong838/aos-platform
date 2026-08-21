@@ -110,6 +110,7 @@ class Transport:
         self.response = response or ProviderTransportResponse(
             status_code=200,
             payload={
+                "id": "provider-call-1",
                 "model": "agnes-2.0-flash",
                 "choices": [{"message": {"content": "真实回答"}}],
                 "usage": {"prompt_tokens": 7, "completion_tokens": 5, "total_tokens": 12},
@@ -241,15 +242,21 @@ def test_exact_invoker_composes_approved_request_and_returns_minimal_usage() -> 
         "approved_internal_knowledge",
     )
 
-    assert result == {
-        "answer": "真实回答",
-        "provider": "provider-1",
-        "model": "model-1",
-        "tokens": 12,
-        "promptTokens": 7,
-        "completionTokens": 5,
-        "route": "route-1",
-    }
+    assert result["answer"] == "真实回答"
+    assert result["provider"] == "provider-1"
+    assert result["model"] == "model-1"
+    assert result["tokens"] == 12
+    assert result["promptTokens"] == 7
+    assert result["completionTokens"] == 5
+    assert result["route"] == "route-1"
+    assert result["providerReceiptId"] == "provider-call-1"
+    assert [item["usageKind"] for item in result["usageReceipts"]] == [
+        "input_token",
+        "output_token",
+    ]
+    assert [item["quantity"] for item in result["usageReceipts"]] == [7, 5]
+    assert all(item["quality"] == "measured" for item in result["usageReceipts"])
+    assert all(len(item["sourceHash"]) == 64 for item in result["usageReceipts"])
     assert secret.calls == 1
     url, headers, payload, timeout_ms = transport.calls[0]
     assert url == "https://apihub.agnes-ai.com/v1/chat/completions"
@@ -317,10 +324,11 @@ def test_secret_and_transport_failures_are_mapped_without_sensitive_values() -> 
 @pytest.mark.parametrize(
     ("payload", "code"),
     [
-        ({}, "provider_response_model_missing"),
-        ({"model": "other", "choices": [], "usage": {}}, "provider_response_model_drifted"),
-        ({"model": "agnes-2.0-flash", "choices": [], "usage": {}}, "provider_response_answer_missing"),
-        ({"model": "agnes-2.0-flash", "choices": [{"message": {"content": "ok"}}], "usage": {}}, "provider_response_usage_missing"),
+        ({}, "provider_response_receipt_missing"),
+        ({"id": "call-1"}, "provider_response_model_missing"),
+        ({"id": "call-1", "model": "other", "choices": [], "usage": {}}, "provider_response_model_drifted"),
+        ({"id": "call-1", "model": "agnes-2.0-flash", "choices": [], "usage": {}}, "provider_response_answer_missing"),
+        ({"id": "call-1", "model": "agnes-2.0-flash", "choices": [{"message": {"content": "ok"}}], "usage": {}}, "provider_response_usage_missing"),
     ],
 )
 def test_malformed_provider_response_fails_closed(payload, code) -> None:
@@ -329,6 +337,29 @@ def test_malformed_provider_response_fails_closed(payload, code) -> None:
 
     with pytest.raises(ExactProviderInvocationError, match=code):
         invoker(resolution, "prompt", "approved_internal_knowledge")
+
+
+def test_image_invoker_uses_generations_endpoint_without_payload_leak() -> None:
+    invoker, resolution, assets, _, transport = assembly()
+    assets.plugin.modalities = ["image"]
+    assets.plugin.approved_capabilities = ["image"]
+    assets.plugin.default_models = ["agnes-2.0-flash"]
+    assets.model.input_modalities = ["text"]
+    assets.model.output_modalities = ["image"]
+    assets.model.capabilities = ["image"]
+    transport.response = ProviderTransportResponse(
+        status_code=200,
+        payload={
+            "model": "agnes-2.0-flash",
+            "data": [{"url": "https://example.invalid/secret.png"}],
+        },
+    )
+    result = invoker(resolution, "solid pale blue square", "approved_internal_knowledge")
+    assert result["answer"] == "image_generation_succeeded"
+    assert result["modality"] == "image"
+    assert transport.calls[0][0].endswith("/v1/images/generations")
+    assert "example.invalid" not in repr(result)
+    assert "secret.png" not in repr(result)
 
 
 @pytest.mark.parametrize("classification", ["", "unknown", "direct_pii"])

@@ -57,7 +57,7 @@ def test_w2c_stage_template_api_create_replay_list_get_and_blocked_freeze(client
     created = created_response.json()
     assert created["tenant"] == {"orgId": "dev-org", "projectId": "dev-project"}
     assert created["readiness"] == "blocked"
-    assert created["blockers"][0]["code"] == "STAGE_SOURCE_AUTHORITY_UNAVAILABLE"
+    assert created["blockers"][0]["code"] == "STAGE_SOURCE_MISSING_OR_DRIFTED"
 
     replay = client.post(
         "/v1/aip/production-contracts/stage-templates",

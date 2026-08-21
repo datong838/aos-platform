@@ -1,0 +1,71 @@
+{
+  "receiptType": "AIP_WAVE_DELIVERY",
+  "waveId": "R02",
+  "status": "GREEN_WITH_BASELINE_WARNINGS",
+  "branch": "w1-aip",
+  "baseCommit": "b5562f3d7ef68b3895afdae23e1b08299bf7743a",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "negativeCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project"
+  },
+  "sideEffects": {
+    "migration": false,
+    "providerCall": false,
+    "secretPayloadRead": false,
+    "endpointDatabaseWrite": false,
+    "serviceRestartLoadedExistingCronAndSshTunnel": true
+  },
+  "canonicalProjection": {
+    "snapshotHash": "d9134922a44d2354dd5bd87113f07b7cf198d430bbd446d1b9f80b2487e6548a",
+    "overallReady": false,
+    "runnable": {
+      "roles": "0/6",
+      "capabilities": "0/10",
+      "tools": "0/22",
+      "evals": "6/6",
+      "routes": "0/3"
+    },
+    "blockers": [
+      "roles_not_fully_runnable",
+      "capabilities_not_fully_runnable",
+      "tools_not_fully_runnable",
+      "routes_not_fully_runnable"
+    ]
+  },
+  "verification": {
+    "backendCumulative": "40 passed, 1 unrelated baseline test deselected",
+    "webCumulative": "198 files, 1980 passed",
+    "browserPages": 7,
+    "browserConsistency": "GREEN",
+    "diffCheck": "GREEN",
+    "viteBuild": "BLOCKED_BY_PREEXISTING_TYPESCRIPT_BASELINE"
+  },
+  "postHashes": {
+    "services/aos-api/aos_api/aip_agent_control_contracts.py": "3aafac5ff894d98eab44dba3a88de619936c5cbb9c2bc894d5c28e632fbb4dd2",
+    "services/aos-api/aos_api/routers/phase3_aip_agents.py": "fa48ee1235c0b462d72fe34872140262a8a82059aaf505d373dbd2444023a138",
+    "services/aos-api/tests/aip/test_aip6_agent_control_api.py": "aa7f50aad6646d784bb1edf0f12d52ecc8f063c99636d969fa5273b7cd7acdab",
+    "apps/web/src/api/aipOperationalProjection/contracts.ts": "f21ffafccf5eff7cf7986abca968406492e8fa13064e8595def1bb5dfd6908cd",
+    "apps/web/src/api/aipOperationalProjection/parser.ts": "7bf15a79fed3655ef4b5531b1c238893e4a1b4593033b3b52ff8d1340f44d4eb",
+    "apps/web/src/api/aipOperationalProjection/index.ts": "02edc4c9522d7a3092caaf4868bc59bc9faaa2b1f5759498b367a6926884b124",
+    "apps/web/src/api/aipOperationalProjection/parser.test.ts": "efdef9d3bc67bfe4e05d0759e3f7bf63940450ac2f9b96b4e20719b7f0a082a3",
+    "apps/web/src/components/aip/AipOperationalProjectionStrip.tsx": "1ab57fba673518b468d372f979dda3afa4103f684d9d266d7a262dbe93dfd387",
+    "apps/web/src/components/aip/AipOperationalProjectionStrip.test.tsx": "7afff6035690ce01470483ac7c73952a5b709307a9eaa437e6f93d5dfb192d6a",
+    "apps/web/src/pages/StudioPage.tsx": "c1b0e346d10bde725ac857249a3c586a6f1a9ae871173bb0ecf6bcc4a913ecee",
+    "apps/web/src/pages/s2/aip.tsx": "d9fcdb68bfe82a198687bcc4be48e861fe31a8f253543d64274a5fa2cbb8af01",
+    "apps/web/src/pages/s2/extras.tsx": "1f25f57a756e4a48da90c60f33828aa2f7f291ef3523abf73dd81c5f346301d5",
+    "apps/web/src/pages/s2/CanonicalAgentRegistryPage.tsx": "3733d6b32da35ea69f829ed3675077501130550d1f9d5e3bab54229236712c70",
+    "apps/web/src/pages/CanonicalCapabilityPage.tsx": "ff0d32fa915ae76da0207db110af12df2caf5c4a5e08fcfe68c08de09880d549",
+    "apps/web/src/pages/CanonicalCapabilityPage.test.tsx": "1d8568140d110d0db195429b81c41ec6dc2658791b5289b0c3f0d86a32113078",
+    "apps/web/src/pages/s2/ModelRuntimePage.tsx": "7c4f17309d30276c889e684d89a2439a9b3fb71d6cd2cb83236be3cbcee512ff",
+    "apps/web/src/pages/s2/EvalsPage.test.tsx": "4b29c3eda51d814c346ef431be409301dde25f12cbf7bc879027d2cdfa4a0d81"
+  },
+  "baselineWarnings": [
+    "Vite build remains blocked by two pre-existing TypeScript errors outside R02 scope",
+    "One backend baseline test pins an obsolete provider plugin revision"
+  ],
+  "evidencePath": ".evidence/aip/2026-08-21-r02-cross-page-operational-projection"
+}

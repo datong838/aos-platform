@@ -1,6 +1,6 @@
 from __future__ import annotations
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from aos_api.aip_task_models import CreateTaskRequest
 from aos_api.aip_task_store import AipTaskStore
@@ -102,33 +102,33 @@ def test_evidence_bundle_api_binds_exact_frozen_brief_and_evidence(client):
         evidence_hash="c"*64
         with connect(ORG) as conn:
             conn.execute(
-                """INSERT INTO aip_evidence(org_id,project_id,evidence_id,evidence_type,subject_ref,source_type,source_ref,observed_at,freshness_at,content_hash,created_by)
-                VALUES(%s,%s,%s,'order_fact','{}','database','w2a-api-real-order',NOW(),NOW(),%s,%s)""",
-                (*ORG.key,evidence_id,evidence_hash,EVIDENCE_ACTOR),
+                """INSERT INTO aip_evidence(org_id,project_id,evidence_id,evidence_type,subject_ref,source_type,source_ref,observed_at,freshness_at,content_hash,payload,created_by)
+                VALUES(%s,%s,%s,'order_fact','{}','database','w2a-api-real-order',NOW(),NOW(),%s,%s::jsonb,%s)""",
+                (*ORG.key,evidence_id,evidence_hash,'{"factIds":["order_snapshot"]}',EVIDENCE_ACTOR),
             )
             conn.commit()
         payload={
             "briefRef":{"resourceType":"TaskBriefRevision","resourceId":frozen["briefId"],"revision":frozen["revision"],"contentHash":frozen["contentHash"]},
             "subjectRefs":[],
-            "cutoffAt":datetime.now(timezone.utc).isoformat(),
+            "cutoffAt":(datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(),
             "itemRefs":[{"resourceType":"Evidence","resourceId":evidence_id,"revision":1,"contentHash":evidence_hash}],
-            "coverage":"partial",
-            "missing":[{"fact":"customer_profile"}],
-            "conflicts":[],
-            "uncertainties":[],
-            "freshness":"fresh",
-            "marking":["internal"],
+            "requiredFactIds":["order_snapshot","customer_profile"],
+            "marking":["public"],
             "licenseSummary":{"source":"authorized database"},
         }
         key=f"bundle-{uuid.uuid4().hex}"
-        response=client.post("/v1/aip/production-contracts/evidence-bundles",headers=headers(key=key),json=payload)
+        forged={**payload,"coverage":"complete","missing":[],"freshness":"fresh"}
+        assert client.post("/v1/aip/production-contracts/evidence-bundles/build",headers=headers(key=f"forge-{uuid.uuid4().hex}"),json=forged).status_code in (400, 422)
+        response=client.post("/v1/aip/production-contracts/evidence-bundles/build",headers=headers(key=key),json=payload)
         assert response.status_code==201,response.text
         bundle=response.json()
         assert bundle["itemRefs"][0]["resourceId"]==evidence_id
+        assert bundle["coverage"]=="partial"
+        assert bundle["missing"]==[{"factId":"customer_profile"}]
         listing=client.get("/v1/aip/production-contracts/evidence-bundles",headers=headers())
         assert listing.status_code==200 and any(item["bundleId"]==bundle["bundleId"] for item in listing.json()["items"])
         assert client.get("/v1/aip/production-contracts/evidence-bundles",headers=headers("dev-org")).json()["count"]==0
-        assert client.post("/v1/aip/production-contracts/evidence-bundles",headers=headers(key=key),json=payload).json()["bundleId"]==bundle["bundleId"]
+        assert client.post("/v1/aip/production-contracts/evidence-bundles/build",headers=headers(key=key),json=payload).json()["bundleId"]==bundle["bundleId"]
         assert client.get(f"/v1/aip/production-contracts/evidence-bundles/{bundle['bundleId']}",headers=headers()).status_code==200
         assert client.get(f"/v1/aip/production-contracts/evidence-bundles/{bundle['bundleId']}",headers=headers("dev-org")).status_code==404
     finally:

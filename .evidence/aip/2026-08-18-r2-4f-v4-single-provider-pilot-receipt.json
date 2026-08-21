@@ -1,0 +1,80 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000099",
+  "recordedAt": "2026-08-18T14:24:00+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4F-v4",
+  "approvalRef": "46-R2-4F-V4-SINGLE-PROVIDER-CALL-APPROVED",
+  "leaseRef": "AIP-R2-4F-V4-SINGLE-PROVIDER-CALL",
+  "commits": {
+    "w1-aip": "ad3b5fd",
+    "pilotHarness": "ad3b5fd"
+  },
+  "startGate": {
+    "schemaHead": "aip10_006",
+    "providerHealthObservationId": "health-agnes-text-qyh-r2-20260818062059512123",
+    "providerHealthProbeCount": 3,
+    "providerHealthStatus": "healthy",
+    "capacityGate": "released_after_attempt",
+    "negativeCanaryBefore": {
+      "task": 0,
+      "taskRun": 0,
+      "agentRun": 0,
+      "attempt": 0
+    }
+  },
+  "execution": {
+    "providerBusinessCallLimit": 1,
+    "providerBusinessCalls": 1,
+    "automaticRetries": 0,
+    "taskId": "task-c064192d888d4dfd9e11",
+    "taskStatus": "executing",
+    "taskRunId": "run-8e100de0bbdf48a58408",
+    "taskRunStatus": "running",
+    "agentRunId": "ecommerce.data_advisor.D03.real-pilot.v4",
+    "agentRunStatus": "unknown",
+    "attemptId": "ecommerce.data_advisor.D03.real-pilot.v4.attempt-1",
+    "attemptStatus": "unknown",
+    "reasonCode": "PROVIDER_RESULT_UNKNOWN",
+    "lineageIdPresent": true
+  },
+  "readback": {
+    "providerReceiptIdPresent": false,
+    "usageReceiptCount": 0,
+    "outputArtifactPresent": false,
+    "lineageEventCount": 0,
+    "capacityStatus": "released",
+    "negativeCanaryAfter": {
+      "task": 0,
+      "taskRun": 0,
+      "agentRun": 0,
+      "attempt": 0
+    },
+    "secretPayloadReads": 0,
+    "sensitiveBodiesPersisted": 0,
+    "externalBusinessActions": 0
+  },
+  "verification": {
+    "focusedTests": "28 passed",
+    "cumulativeSubsetTests": "69 passed",
+    "browserResult": "DEFERRED_TO_AUTHORITY_HONEST_BLOCKED_SAME_AS_PRIOR_WAVES"
+  },
+  "diagnosis": {
+    "rootCauseStatus": "NOT_PROVEN",
+    "observation": "R2-4E transport whitelist did not surface an exact reason on v4; failure remains generic PROVIDER_RESULT_UNKNOWN despite successful Health probes on the same Provider endpoint family.",
+    "hypothesis": [
+      "Invoker or Adapter raised a stable snake_case blocker that is not yet whitelisted in Executor",
+      "Non-LLMRuntimeBlocked exception path collapsed to PROVIDER_RESULT_UNKNOWN",
+      "Response contract mismatch after invoke that still failed to map through safe reason helper"
+    ],
+    "hypothesisIsInference": true,
+    "historicalAttemptsImmutable": ["v1", "v2", "v3", "v4"],
+    "nextWave": "R2-4G_EXPAND_SAFE_BLOCKER_WHITELIST_AND_CODE_ATTR_NO_PROVIDER_CALL"
+  },
+  "result": "OPERATIONAL_ATTEMPT_UNKNOWN",
+  "nextGate": "R2_4G_SAFE_BLOCKER_SURFACE_EXPANSION_CODE_CONTROL"
+}

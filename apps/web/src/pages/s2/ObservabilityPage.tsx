@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { aipEvidenceSdk } from "../../api/aipEvidence";
-import type { EvidenceQuality, TelemetrySpan, UsageReceipt } from "../../api/aipEvidence/contracts";
+import { LINEAGE_ROOT_TYPES, type EvidenceQuality, type LineageRootType, type TelemetrySpan, type UsageReceipt } from "../../api/aipEvidence/contracts";
 import { PageChrome } from "../../components/PageChrome";
 
 export type AuthorityObservabilitySummary = {
@@ -51,6 +52,30 @@ export function filterAuthoritySpans(spans: TelemetrySpan[], query: string): Tel
 type View = "overview" | "spans" | "usage";
 type LoadState = "idle" | "loading" | "loaded" | "error";
 
+export type ObservabilityDeepLink = {
+  lineageId: string;
+  rootType: LineageRootType | null;
+  rootId: string;
+};
+
+export function parseObservabilityDeepLink(search: string): ObservabilityDeepLink {
+  const params = new URLSearchParams(search);
+  const lineageId = params.get("lineageId")?.trim() ?? "";
+  const rootId = params.get("rootId")?.trim() ?? "";
+  const rawRootType = params.get("rootType")?.trim() ?? "";
+  const rootType = LINEAGE_ROOT_TYPES.includes(rawRootType as LineageRootType)
+    ? rawRootType as LineageRootType
+    : null;
+  return { lineageId, rootType: rootType && rootId ? rootType : null, rootId: rootType && rootId ? rootId : "" };
+}
+
+export function missingAuthorityReason(kind: "span" | "usage", count: number): string | null {
+  if (count > 0) return null;
+  return kind === "span"
+    ? "缺失：当前权威 Lineage 尚未写入 Telemetry Span；这不是业务数量 0。"
+    : "缺失：当前权威 Lineage 尚未写入 Usage Receipt；这不是 Token 或费用 0。";
+}
+
 const cardStyle = {
   border: "1px solid var(--aos-border)",
   background: "var(--aos-panel)",
@@ -68,7 +93,8 @@ function qualityTone(quality: EvidenceQuality): string {
 }
 
 export function ObservabilityPage() {
-  const [lineageId, setLineageId] = useState("");
+  const deepLink = useMemo(() => parseObservabilityDeepLink(window.location.search), []);
+  const [lineageId, setLineageId] = useState(deepLink.lineageId);
   const [spans, setSpans] = useState<TelemetrySpan[]>([]);
   const [receipts, setReceipts] = useState<UsageReceipt[]>([]);
   const [view, setView] = useState<View>("overview");
@@ -79,8 +105,8 @@ export function ObservabilityPage() {
   const summary = useMemo(() => summarizeAuthority(spans, receipts), [spans, receipts]);
   const filteredSpans = useMemo(() => filterAuthoritySpans(spans, query), [spans, query]);
 
-  async function load() {
-    const target = lineageId.trim();
+  const load = useCallback(async (requestedLineageId?: string) => {
+    const target = (requestedLineageId ?? lineageId).trim();
     if (!target) {
       setError("请输入真实 Lineage ID");
       setLoadState("idle");
@@ -102,11 +128,27 @@ export function ObservabilityPage() {
       setError(String((caught as Error).message || caught));
       setLoadState("error");
     }
-  }
+  }, [lineageId]);
+
+  useEffect(() => {
+    if (!deepLink.lineageId) return;
+    void load(deepLink.lineageId);
+    // deep-link auto query once per URL change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLink.lineageId]);
 
   function exportAuthority() {
     if (loadState !== "loaded") return;
-    const blob = new Blob([JSON.stringify({ lineageId: lineageId.trim(), spans, usageReceipts: receipts }, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify({
+      lineageId: lineageId.trim(),
+      root: deepLink.rootType ? { rootType: deepLink.rootType, rootId: deepLink.rootId } : null,
+      spans,
+      usageReceipts: receipts,
+      missingEvidence: {
+        spans: missingAuthorityReason("span", spans.length),
+        usageReceipts: missingAuthorityReason("usage", receipts.length),
+      },
+    }, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -117,6 +159,24 @@ export function ObservabilityPage() {
 
   return (
     <PageChrome title="AIP 可观测性" lede="按 Lineage 查询权威 Telemetry Span 与 Usage Receipt；不推算趋势，不回填演示数据。">
+      <div
+        data-testid="observability-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "加载态", value: loadState === "loaded" ? "已载" : loadState === "loading" ? "读取中" : loadState === "error" ? "失败" : "空闲" },
+          { label: "视图", value: view === "overview" ? "概览" : view === "spans" ? "Spans" : "Usage" },
+          { label: "Spans", value: String(spans.length) },
+          { label: "Usage", value: String(receipts.length) },
+          { label: "筛选命中", value: String(filteredSpans.length) },
+          { label: "输入", value: lineageId.trim() ? "已填" : "待填" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       <div className="bp5-card" style={{ ...cardStyle, display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap" }}>
         <label style={{ display: "grid", gap: 6, minWidth: 320 }}>
           <span className="muted">Lineage ID</span>
@@ -130,7 +190,30 @@ export function ObservabilityPage() {
         <button type="button" className="btn primary" onClick={() => void load()} disabled={loadState === "loading"}>
           {loadState === "loading" ? "读取中…" : "读取权威证据"}
         </button>
-        <button type="button" className="btn" onClick={exportAuthority} disabled={loadState !== "loaded"}>导出当前证据</button>
+        <button
+          type="button"
+          className="btn"
+          onClick={exportAuthority}
+          disabled={loadState !== "loaded"}
+          data-testid="observability-export"
+          title={
+            loadState === "loaded"
+              ? "导出当前已读取的 Span / Usage JSON"
+              : "请先读取权威证据后再导出；空闲/失败态不提供演示文件"
+          }
+        >
+          {loadState === "loaded" ? "导出当前证据" : "导出（需先读取）"}
+        </button>
+        {deepLink.rootType && (
+          <Link
+            className="btn"
+            to={`/aip/lineage?rootType=${encodeURIComponent(deepLink.rootType)}&rootId=${encodeURIComponent(deepLink.rootId)}`}
+            data-testid="observability-back-lineage"
+            style={{ textDecoration: "none" }}
+          >
+            返回 exact 谱系 →
+          </Link>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: 8, margin: "16px 0" }}>
@@ -145,7 +228,24 @@ export function ObservabilityPage() {
       {loadState === "loaded" && spans.length === 0 && receipts.length === 0 && <div data-testid="observability-empty" className="callout warning">该 Lineage 暂无权威 Span 或 Usage Receipt。</div>}
       {error && <div data-testid="observability-error" className="callout warning">权威可观测性读取失败：{error}</div>}
 
-      {loadState === "loaded" && view === "overview" && (spans.length > 0 || receipts.length > 0) && (
+      {loadState === "loaded" && (
+        <div data-testid="observability-evidence-status" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 12, marginBottom: 14 }}>
+          <div style={cardStyle}>
+            <strong>Telemetry Span</strong>
+            <div className={spans.length ? "callout success" : "callout warning"} style={{ marginTop: 10 }}>
+              {missingAuthorityReason("span", spans.length) ?? `已写入 ${spans.length} 条权威 Span。`}
+            </div>
+          </div>
+          <div style={cardStyle}>
+            <strong>Usage Receipt</strong>
+            <div className={receipts.length ? "callout success" : "callout warning"} style={{ marginTop: 10 }}>
+              {missingAuthorityReason("usage", receipts.length) ?? `已写入 ${receipts.length} 条权威 Usage Receipt。`}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {loadState === "loaded" && view === "overview" && (
         <div data-testid="observability-authority-summary">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
             {[

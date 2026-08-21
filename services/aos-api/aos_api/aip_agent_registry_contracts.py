@@ -241,6 +241,7 @@ class PublishSkillTemplateRequest(AipContractModel):
     publication_ref: ResourceRef | None = None
     model_route_ref: VersionedAssetRef | None = None
     runtime_policy_ref: VersionedAssetRef | None = None
+    logic_revision_ref: VersionedAssetRef | None = None
     content_hash: str = Field(pattern=SHA256_PATTERN)
 
     @field_validator("tool_allowlist", "required_capabilities")
@@ -275,8 +276,13 @@ class PublishSkillTemplateRequest(AipContractModel):
                     raise ValueError(f"{field_name} must reference {asset_type}")
             if self.publication_ref.resource_type != "PublicationEvent":
                 raise ValueError("publication_ref must reference PublicationEvent")
-        elif any(item is not None for item in provenance):
+        elif any(item is not None for item in provenance) or self.logic_revision_ref is not None:
             raise ValueError("non-published skill cannot carry publication provenance")
+        if (
+            self.logic_revision_ref is not None
+            and self.logic_revision_ref.asset_type != "LogicRevision"
+        ):
+            raise ValueError("logic_revision_ref must reference LogicRevision")
         return self
 
 
@@ -291,6 +297,7 @@ class PublishEvaluatedSkillRevisionRequest(AipContractModel):
     release_gate_decision_id: str = Field(min_length=1, max_length=200)
     model_route_ref: VersionedAssetRef
     runtime_policy_ref: VersionedAssetRef
+    logic_revision_ref: VersionedAssetRef
     idempotency_key: str = Field(min_length=1, max_length=200)
 
     @model_validator(mode="after")
@@ -299,6 +306,7 @@ class PublishEvaluatedSkillRevisionRequest(AipContractModel):
             "source_skill": "SkillTemplate",
             "model_route_ref": "ModelRouteRevision",
             "runtime_policy_ref": "RuntimePolicyRevision",
+            "logic_revision_ref": "LogicRevision",
         }
         for field_name, asset_type in expected.items():
             if getattr(self, field_name).asset_type != asset_type:
@@ -566,4 +574,82 @@ class IssuedHandoff(AipContractModel):
     # The bearer is returned only on the first successful issue. An idempotent
     # replay can return the durable result but must never mint another token.
     bearer_token: str | None = Field(default=None, min_length=32)
+    receipt: RegistryReceipt
+
+
+class ConsumeHandoffRequest(AipContractModel):
+    bearer_token: str = Field(min_length=1, max_length=512)
+    receiver_instance: VersionedAssetRef
+
+    @model_validator(mode="after")
+    def _receiver_kind(self) -> ConsumeHandoffRequest:
+        if self.receiver_instance.asset_type != "AgentInstance":
+            raise ValueError("receiver_instance must reference AgentInstance")
+        return self
+
+
+class HandoffDecisionKind(StrEnum):
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    REQUEST_MORE = "request_more"
+    RETURNED = "returned"
+
+
+class CreateHandoffDecisionRequest(AipContractModel):
+    decision: HandoffDecisionKind
+    expected_head_version: int = Field(ge=0)
+    reason_code: str | None = Field(default=None, max_length=120)
+    gap_codes: list[str] = Field(default_factory=list)
+    return_refs: list[ResourceRef] = Field(default_factory=list)
+    correlation_ref: ResourceRef | None = None
+    receiver_instance: VersionedAssetRef
+
+    @model_validator(mode="after")
+    def _decision_payload(self) -> CreateHandoffDecisionRequest:
+        if self.receiver_instance.asset_type != "AgentInstance":
+            raise ValueError("receiver_instance must reference AgentInstance")
+        if self.decision is HandoffDecisionKind.REQUEST_MORE and not self.gap_codes:
+            raise ValueError("request_more requires gapCodes")
+        if self.decision is HandoffDecisionKind.RETURNED and not self.return_refs:
+            raise ValueError("returned requires returnRefs")
+        if self.decision is HandoffDecisionKind.REJECTED and not (
+            self.reason_code and self.reason_code.strip()
+        ):
+            raise ValueError("rejected requires reasonCode")
+        return self
+
+
+class HandoffDecisionRevision(AipContractModel):
+    tenant: TenantContext
+    decision_id: str
+    handoff_id: str
+    revision: int
+    envelope_ref: ResourceRef
+    decision: HandoffDecisionKind
+    reason_code: str | None = None
+    gap_codes: list[str] = Field(default_factory=list)
+    return_refs: list[ResourceRef] = Field(default_factory=list)
+    correlation_ref: ResourceRef | None = None
+    receiver_instance: VersionedAssetRef
+    content_hash: str
+    created_by: str
+    created_at: datetime
+
+
+class HandoffDecisionListResponse(AipContractModel):
+    tenant: TenantContext
+    handoff_id: str
+    items: list[HandoffDecisionRevision]
+    count: int = Field(ge=0)
+    head_version: int = Field(ge=0)
+
+
+class DecidedHandoff(AipContractModel):
+    decision: HandoffDecisionRevision
+    receipt: RegistryReceipt
+
+
+class AgentRunCommandResponse(AipContractModel):
+    tenant: TenantContext
+    agent_run: AgentRun
     receipt: RegistryReceipt

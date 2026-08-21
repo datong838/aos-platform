@@ -1,0 +1,53 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevisionBefore": "AOS-000136",
+  "recordedAt": "2026-08-19T01:52:30+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-S04",
+  "approvalRef": "46-§8.72-customer-service / §8.66 serial text",
+  "startGate": "AIP_CUSTOMER_SERVICE_SERIAL",
+  "assets": {
+    "capabilityBinding": {"assetId": "ecommerce.data_advisor.strategy.plan.r2", "reused": true},
+    "skill": {
+      "assetId": "ecommerce.skill.S04",
+      "revision": 2,
+      "contentHash": "598ad839adb53ad67e69a5483c653510a1e6254acaefe3a1b8bd40e6bd4cdc39"
+    },
+    "instance": {"assetId": "ecommerce.customer_service.default", "status": "active"},
+    "binding": {"assetId": "ecommerce.customer_service.skill.S04.r2", "status": "active"}
+  },
+  "health": {
+    "observationId": "health-agnes-text-qyh-r2-20260818174749374959",
+    "note": "Reused G04-wave Health; no additional three-probe this wave."
+  },
+  "execution": {
+    "agentRunId": "ecommerce.customer_service.S04.real-pilot.v1",
+    "attemptId": "ecommerce.customer_service.S04.real-pilot.v1.attempt-1",
+    "agentRunStatus": "succeeded",
+    "attemptStatus": "succeeded",
+    "taskRunId": "run-3b51bc133cf44dedbd8b",
+    "providerBusinessCalls": 1,
+    "automaticRetries": 0,
+    "usageReceiptCount": 2,
+    "lineageEventCount": 3,
+    "artifactCount": 1,
+    "outputContentHash": "1d20f9e7273b485a536ddb74b46a9a74376105bb0a1e00c0983aaa947cdf23c8",
+    "canaryAgentRuns": 0,
+    "secretPayloadReads": 0,
+    "sensitiveBodiesPrinted": 0
+  },
+  "catalog": {
+    "runnableCount": 4,
+    "stillBlocked": [
+      "ecommerce.private_domain_manager",
+      "ecommerce.campaign_planner"
+    ]
+  },
+  "result": "R2_S04_CUSTOMER_SERVICE_PILOT_GREEN",
+  "immutable": true,
+  "nextGate": "AIP_PRIVATE_DOMAIN_SERIAL"
+}

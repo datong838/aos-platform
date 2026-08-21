@@ -1,0 +1,49 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevisionBefore": "AOS-000139",
+  "recordedAt": "2026-08-19T02:21:00+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-IMG-4",
+  "approvalRef": "46-§8.76-IMG-4",
+  "assets": {
+    "policy": {
+      "assetId": "policy-qyh-image-dev",
+      "revision": 1,
+      "contentHash": "0a55ef4b4fca87e69ee167c797b40da0c132cc1a4574eef9d2824c3b4c141add"
+    },
+    "model": {
+      "assetId": "model-qyh-image-dev",
+      "revision": 1,
+      "contentHash": "d932b45234a58391e3f5259343af20f4048bc3edbff5ac113adaf0391ef729de"
+    },
+    "route": {
+      "assetId": "route-qyh-image-dev",
+      "revision": 1,
+      "contentHash": "d19bb05e041257b1f635241f48f050d8978f96aae6cba3113d913662fda568f5"
+    },
+    "capacity": {
+      "assetId": "capacity-qyh-image-dev",
+      "revision": 1,
+      "contentHash": "530b791db81e93e4005fe3e4474b5d15e7c2e29e54c7f65183106dea8dc07172"
+    },
+    "providerPinned": {
+      "assetId": "agnes-image-qyh-dev",
+      "revision": 2
+    }
+  },
+  "resolver": {
+    "routeId": "route-qyh-image-dev",
+    "readiness": "ready"
+  },
+  "result": "R2_IMG_4_ROUTE_CAPACITY_GREEN",
+  "immutable": true,
+  "textRouteUntouched": true,
+  "providerBusinessCalls": 0,
+  "healthProbes": 0,
+  "agentRuns": 0,
+  "nextGate": "AIP_VID_0_AUTHORITY_WIRING"
+}

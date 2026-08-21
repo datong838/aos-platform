@@ -1,0 +1,155 @@
+{
+  "recordedAt": "2026-08-19T05:37:11.707Z",
+  "findings": [
+    {
+      "path": "/aip/assist",
+      "shellFail": false,
+      "orgOk": false,
+      "missingKeywords": [],
+      "probes": [],
+      "disabledLabels": [
+        "取消 TaskRun",
+        "发送"
+      ],
+      "badApis": [],
+      "preview": "AIP 助手 Canonical Thread · 持久化 SSE 重放 · 无本地答案与隐式 Provider 降级 收起上下文 Focus Mode 取消 TaskRun 运行上下文 尚无可执行上下文 请从 Task/AgentRun 工作流进入，或由上游在 URL 中传递 exact refs。页面不会创建默认测试 Agent。 taskId + taskRevision + taskAuthority taskRunId + taskRunRevision + taskRunAuthority agentRunId + agentRunRevis"
+    },
+    {
+      "path": "/aip/studio",
+      "shellFail": false,
+      "orgOk": false,
+      "missingKeywords": [],
+      "probes": [],
+      "disabledLabels": [
+        "新建智能体（契约协调中）",
+        "保存提示词"
+      ],
+      "badApis": [],
+      "preview": "对话机器人 Studio 配置壳：提示词 · 工具 · 本体/Wiki 上下文 · L4 须 Evals 绿 + Draft 默认 智能体列表 新建智能体（契约协调中） 暂无智能体 未选择智能体 配置壳：提示词 · 工具 · 本体/Wiki 上下文 · L4 须 Evals 绿 + Draft 默认 运行中 — 提示词 工具箱 试运行 发布 系统提示词 (System Prompt) * /Order.status /Wiki.sla 模型路由 → mock-llm 保存提示词"
+    },
+    {
+      "path": "/aip/logic",
+      "shellFail": false,
+      "orgOk": false,
+      "missingKeywords": [],
+      "probes": [
+        {
+          "sel": "button:has-text(\"刷新\")",
+          "result": "clicked"
+        }
+      ],
+      "disabledLabels": [
+        "安全试跑"
+      ],
+      "badApis": [],
+      "preview": "AIP Logic 无代码编辑器 自由编排 canonical Logic Graph；保存仅在服务端提交与严格 GET 回读一致后确认。 保存 * 刷新 安全试跑 请先保存 Logic Graph Draft 审批台 Evals 门控 未保存更改 Logic 名称 描述 未保存模板：当前 4 节点、3 连接仅在本地；点击“保存”显式创建服务端 Logic Graph。 Dry-Run Inputs 独立 JSON 对象；仅显式应用后用于安全试跑，不写入画布或生产数据。 应用 Inputs Inputs 尚未应用 − 100% + 1:1 节点 4 · "
+    },
+    {
+      "path": "/aip/tools",
+      "shellFail": false,
+      "orgOk": false,
+      "missingKeywords": [],
+      "probes": [
+        {
+          "sel": "button:has-text(\"刷新\")",
+          "result": "clicked"
+        }
+      ],
+      "disabledLabels": [],
+      "badApis": [],
+      "preview": "Agent 工具面板 配置当前智能体可用工具类型与细项。LLM 只「请求」工具；平台以调用用户权限代调。写路径默认可提案。 调用模式 Native（并行） Prompted（单次一工具） 刷新 重能力 → ← 成熟度 Logic → Chatbot Studio → 返回智能体列表 | 当前智能体： 维修派单 Buddy 运行中 L2 · HITL 4 个工具已启用 / 6 类可配 工具目录 Action 写回动作（可 HITL） Object Query 对象属性查询 Function 函数 / 已发布 Logic Update App Var 更新应"
+    },
+    {
+      "path": "/aip/evals",
+      "shellFail": false,
+      "orgOk": false,
+      "missingKeywords": [],
+      "probes": [],
+      "disabledLabels": [],
+      "badApis": [],
+      "preview": "Evals 门控 L4 自动化上线前须通过 Eval；未达标禁止发布为 Function / Automate。 选择 Eval 套件 V01 视频草稿方案生成契约门 v1（隔离 dry-run，非模型效果证据） · ecommerce.logic.V01.contract.v1 I01 视觉草稿方案生成契约门 v1（隔离 dry-run，非模型效果证据） · ecommerce.logic.I01.contract.v1 A02 活动策划方案生成契约门 v1（隔离 dry-run，非模型效果证据） · ecommerce.logic.A02.contr"
+    },
+    {
+      "path": "/aip/drafts",
+      "shellFail": false,
+      "orgOk": false,
+      "missingKeywords": [],
+      "probes": [
+        {
+          "sel": "button:has-text(\"刷新\")",
+          "result": "clicked"
+        }
+      ],
+      "disabledLabels": [],
+      "badApis": [],
+      "preview": "Draft 审批台 Proposal → Draft → Approval → Lease → Receipt 权威闭环；批准不等于已执行，只有 Receipt 证明外部结果。 真实 AIP Action 权威链 · 页面不注入示例 Draft，也不在浏览器维护第二套状态机。 刷新 / 对账 待审批 0已批准 0执行与对账 0已结束 0 当前工作区暂无受控 Action 这是有效的真实空状态，不会使用 Mock Proposal 填充页面。 决策谱系 →AIP 逻辑画布 →"
+    },
+    {
+      "path": "/aip/model-providers",
+      "shellFail": false,
+      "orgOk": false,
+      "missingKeywords": [
+        "健康",
+        "Provider"
+      ],
+      "probes": [
+        {
+          "sel": "button:has-text(\"刷新\")",
+          "result": "clicked"
+        }
+      ],
+      "disabledLabels": [
+        "运行态托管"
+      ],
+      "badApis": [],
+      "preview": "大模型接入(插件) 每种供应商 = 一个插件（20 §3.1）。先安装插件，再填类型化配置；运行时经平台网关，不直连厂商。 L1 · 当前 模型供应商 凭证管理 进入 → L2 模型路由 流量策略 · 熔断 进入 → L3 模型目录 可发现 → 注册 AIP 智能体调用 选模型 → 推理 刷新 插件工作室 Adapter 管理 路由策略 → 已配置大模型仅使用 secretRef；请勿从业务座舱进入 Vault/网关运维台 平台默认网关 运行态 = 网关托管的默认通道 · 就绪 ≠ 自动升运行态 当前默认 Agnes Image（内网）（插件就绪）· a"
+    },
+    {
+      "path": "/aip/model-router",
+      "shellFail": false,
+      "orgOk": false,
+      "missingKeywords": [],
+      "probes": [
+        {
+          "sel": "button:has-text(\"刷新\")",
+          "result": "clicked"
+        }
+      ],
+      "disabledLabels": [],
+      "badApis": [],
+      "preview": "模型路由策略 任务类型 · 出境 · 熔断降级。供应商安装与类型化配置见大模型接入(插件)。 L1 模型供应商 凭证管理 进入 → L2 · 当前 模型路由 流量策略 · 熔断 进入 → L3 模型目录 可发现 → 注册 AIP 智能体调用 选模型 → 推理 刷新 大模型接入(插件) 工具面板 → 预热与试聊 → 本页只选已就绪模型做策略。新装插件（如 DeepSeek）须在供应商页点「启用就绪」或「保存并启用」后，再回本页刷新。 路由规则 任务类型 / 回退 / 出境 · 可编辑 · 配置版本 v1 任务类型 首选 回退 出境 摘要 / 分类 — mo"
+    },
+    {
+      "path": "/aip/model-runtime",
+      "shellFail": false,
+      "orgOk": true,
+      "missingKeywords": [
+        "探活"
+      ],
+      "probes": [
+        {
+          "sel": "button:has-text(\"刷新\")",
+          "result": "clicked"
+        }
+      ],
+      "disabledLabels": [],
+      "badApis": [],
+      "preview": "模型运行就绪 AIP-7 exact Provider、Model、Route、Policy、Eval、价格与容量权威；控制面就绪不等于外部 Provider 已可调用 控制面：阻断 组织 org-org · 工作区 dev-project 刷新权威快照 Provider · 3 agnes-image-qyh-dev r2 · 576be0889559… 生效 · 3 个 exact 依赖 agnes-text-qyh-dev r7 · 02154e3dc240… 生效 · 3 个 exact 依赖 agnes-video-qyh-dev r1 · 8"
+    },
+    {
+      "path": "/aip/memory-governance",
+      "shellFail": false,
+      "orgOk": false,
+      "missingKeywords": [],
+      "probes": [
+        {
+          "sel": "button:has-text(\"刷新\")",
+          "result": "clicked"
+        }
+      ],
+      "disabledLabels": [],
+      "badApis": [],
+      "preview": "Memory Governance Candidate → 审批证据 → 正式 Memory → 带 Citation 的 Knowledge Query。所有状态来自 PostgreSQL 权威链，不回填示例知识。 知识候选（0） 正式 Memory（0） 数字同事记忆 Knowledge Query 知识管道（0） 冷启动与检索 刷新权威状态 活知识 Wiki → 知识候选 当前租户没有待治理或历史 Candidate；页面未注入静态候选。 治理证据与事件 选择 Candidate 查看精确 payload hash、来源、新鲜度、适用范围及不可变事"
+    }
+  ]
+}

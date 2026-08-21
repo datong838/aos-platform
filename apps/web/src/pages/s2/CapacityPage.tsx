@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiPut } from "../../api/client";
+import { aipModelRuntime, type ModelRuntimeCostOverview, type RuntimeCapacityPoolSummary } from "../../api/aipModelRuntime";
 import { PageChrome } from "../../components/PageChrome";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -61,21 +62,6 @@ export type ApiLimitItem = {
   rpmLimit?: number;
   tpmLimit?: number;
 };
-
-// ── Mock data ──────────────────────────────────────────────────
-
-const RATE_LIMITS: RateLimit[] = [
-  { model: "GPT-5.4 Pro", provider: "OpenAI", tokensPerMin: "1.5M", requestsPerMin: "1K" },
-  { model: "GPT-5.5", provider: "OpenAI", tokensPerMin: "7M", requestsPerMin: "3.5K" },
-  { model: "GPT-5.4 mini", provider: "OpenAI", tokensPerMin: "7.5M", requestsPerMin: "3.8K" },
-  { model: "Claude Opus 4.7", provider: "Anthropic", tokensPerMin: "8M", requestsPerMin: "900" },
-  { model: "Claude Sonnet 4.6", provider: "Anthropic", tokensPerMin: "7M", requestsPerMin: "2.5K" },
-  { model: "Claude Haiku 4.5", provider: "Anthropic", tokensPerMin: "6M", requestsPerMin: "2.5K" },
-  { model: "Grok 4.3", provider: "xAI", tokensPerMin: "1M", requestsPerMin: "200" },
-  { model: "Llama 4 Maverick 17B", provider: "Meta", tokensPerMin: "300K", requestsPerMin: "450" },
-  { model: "text-embedding-ada-002", provider: "OpenAI", tokensPerMin: "4.2M", requestsPerMin: "4.2K" },
-  { model: "Text Embedding 3 Large", provider: "OpenAI", tokensPerMin: "2M", requestsPerMin: "4K" },
-];
 
 // ── Pure functions (extracted for testing) ─────────────────────
 
@@ -230,6 +216,22 @@ export function validateLimitSnapshot(
     && Number(response.tpmLimit) === draft.tpmLimit;
 }
 
+export function rateLimitsFromRuntimePools(pools: RuntimeCapacityPoolSummary[]): RateLimit[] {
+  return pools.map((pool) => ({
+    model: pool.modelRef.assetId,
+    provider: pool.providerRef.assetId,
+    tokensPerMin: `${formatTokenCount(pool.maxTokenUnits)} token units / lease`,
+    requestsPerMin: `${pool.activeReservations}/${pool.maxConcurrency} active concurrency`,
+  }));
+}
+
+export function authoritativeCostLabel(cost: ModelRuntimeCostOverview | null): string {
+  if (!cost || cost.usage.state === "unobserved") return "未观测";
+  const totals = Object.entries(cost.usage.costTotals);
+  if (!totals.length) return cost.usage.state === "unknown" ? "未知" : "无可归集成本";
+  return totals.map(([currency, amount]) => `${currency} ${amount.toFixed(2)}`).join(" · ");
+}
+
 // ── Component ──────────────────────────────────────────────────
 
 export function CapacityPage() {
@@ -248,15 +250,19 @@ export function CapacityPage() {
   const [userDraft, setUserDraft] = useState({ userId: "", rpmLimit: 60, tpmLimit: 60000 });
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [runtimeCost, setRuntimeCost] = useState<ModelRuntimeCostOverview | null>(null);
+  const [runtimeLimits, setRuntimeLimits] = useState<RateLimit[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [usageRes, projectRes, usersRes] = await Promise.all([
+        const [usageRes, projectRes, usersRes, runtime, cost] = await Promise.all([
           apiGet<{ items?: ApiUsageItem[]; summary?: { totalTokens?: number } }>("/v1/aip/capacity/usage?limit=30"),
           apiGet<ApiLimitItem>("/v1/aip/capacity/project-limits"),
           apiGet<{ items?: ApiLimitItem[] } | ApiLimitItem>("/v1/aip/capacity/user-limits").catch(() => ({ items: [] as ApiLimitItem[] })),
+          aipModelRuntime.overview(),
+          aipModelRuntime.costOverview(),
         ]);
         if (cancelled) return;
         const buckets = mapUsageItemsToBuckets(usageRes.items || []);
@@ -274,6 +280,8 @@ export function CapacityPage() {
         setProjectDraft({ rpmLimit: pl.rpmLimit, tpmLimit: pl.tpmLimit });
         setQuotaUsage(projectQuotaFromLimit(pl, Math.min(todayTokens, pl.tpmLimit)));
         setUserLimits(userItems.map(mapApiLimitToUserLimit));
+        setRuntimeLimits(rateLimitsFromRuntimePools(runtime.capacityPools));
+        setRuntimeCost(cost);
         if (userItems[0]) setUserDraft({ userId: String(userItems[0].scopeKey || ""), rpmLimit: Number(userItems[0].rpmLimit ?? 60), tpmLimit: Number(userItems[0].tpmLimit ?? 60000) });
         setSourceMode("live");
         setLoadError(null);
@@ -283,6 +291,8 @@ export function CapacityPage() {
         setQuotaUsage([]);
         setUserLimits([]);
         setProjectLimit(null);
+        setRuntimeLimits([]);
+        setRuntimeCost(null);
         setSourceMode("error");
         setLoadError(String((e as Error).message || e));
       }
@@ -297,16 +307,16 @@ export function CapacityPage() {
     [usagePeriod, usageBuckets],
   );
   const filteredLimits = useMemo(
-    () => filterRateLimits(RATE_LIMITS, providerFilter),
-    [providerFilter],
+    () => filterRateLimits(runtimeLimits, providerFilter),
+    [providerFilter, runtimeLimits],
   );
   const filteredUsers = useMemo(
     () => filterUserLimits(userLimits, teamFilter),
     [teamFilter, userLimits],
   );
   const allProviders = useMemo(
-    () => Array.from(new Set(RATE_LIMITS.map((r) => r.provider))).sort(),
-    [],
+    () => Array.from(new Set(runtimeLimits.map((r) => r.provider))).sort(),
+    [runtimeLimits],
   );
   const allTeams = useMemo(
     () => Array.from(new Set(userLimits.map((u) => u.team))).sort(),
@@ -364,8 +374,11 @@ export function CapacityPage() {
     }
   }
 
+  const todayBucket = usageBuckets.find((b) => b.period === "today");
+  const warnQuotaCount = quotaUsage.filter((q) => usageTone(usagePercent(q.used, q.quota)) !== "ok").length;
+
   return (
-    <PageChrome title="容量管理" lede="管理 LLM 使用限制、速率限制和预留容量">
+    <PageChrome title="容量管理" lede="用量仪表盘、项目/用户速率限制与预留容量；Live 接容量权威 API，失败时不回落本地 MOCK">
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         {sourceMode === "error" && (
           <div className="w2-a6a7-demo-banner" role="alert">
@@ -378,9 +391,29 @@ export function CapacityPage() {
         {sourceMode === "live" && (
           <div className="w2-a6a7-live-banner" role="status">
             <span className="w2-a6a7-live-badge">Live</span>
-            <span className="w2-a6a7-demo-text">用量与限流已接 `/v1/aip/capacity/*`</span>
+            <span className="w2-a6a7-demo-text">兼容限额接 `/v1/aip/capacity/*`；exact 价格、预算、Receipt 与容量池接模型运行权威</span>
           </div>
         )}
+
+        <div
+          data-testid="capacity-ops-stats"
+          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "0 0 16px" }}
+        >
+          {[
+            { label: "数据源", value: sourceMode === "live" ? "Live" : sourceMode === "error" ? "Error" : "…" },
+            { label: "今日请求", value: (todayBucket?.totalRequests ?? 0).toLocaleString() },
+            { label: "今日 Token", value: formatTokenCount(todayBucket?.totalTokens ?? 0) },
+            { label: "用户限额条", value: String(userLimits.length) },
+            { label: "配额告警", value: String(warnQuotaCount) },
+            { label: "权威成本", value: authoritativeCostLabel(runtimeCost) },
+            { label: "当前 Tab", value: tab === "usage" ? "用量" : tab === "rate-limits" ? "限速" : "预留" },
+          ].map((s) => (
+            <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+              <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
 
         {/* Tab 导航 */}
         <div style={{ borderBottom: "1px solid var(--aos-border)", background: "var(--aos-surface)", marginBottom: 16 }}>
@@ -421,7 +454,7 @@ export function CapacityPage() {
               <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" />
             </svg>
             <p style={{ fontSize: 13, color: "var(--aos-blue-title)", margin: 0, lineHeight: 1.6 }}>
-              所有容量的 <span style={{ fontWeight: 600 }}>20%</span> 始终保留用于实时交互式 AIP 使用。如需额外容量，请联系 Palantir 支持。
+              当前仅展示租户内已发布的兼容限额与 exact 容量池；未发布的预留比例不会按静态演示值推断。
               {projectLimit && sourceMode === "live" && (
                 <> 当前项目限额：RPM {projectLimit.rpmLimit} · TPM {formatTokenCount(projectLimit.tpmLimit)}。</>
               )}
@@ -467,8 +500,8 @@ export function CapacityPage() {
               </div>
               <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>成本汇总</div>
-                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-amber-600)" }}>{formatUsd(currentBucket?.totalCostUsd ?? 0)}</div>
-                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket?.label} USD</div>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-amber-600)" }}>{authoritativeCostLabel(runtimeCost)}</div>
+                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>Usage Receipt 权威；未观测不等于 0</div>
               </div>
             </div>
 
@@ -588,7 +621,7 @@ export function CapacityPage() {
                 <div>
                   <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>登记限制</h3>
                   <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>
-                    per-model 限额 API 未提供，本表只读示意
+                    exact 容量池只读投影；字段是 lease token 单位和并发占用，不冒充 TPM/RPM
                   </p>
                 </div>
                 <select
@@ -606,8 +639,8 @@ export function CapacityPage() {
                   <thead>
                     <tr>
                       <th style={{ textAlign: "left", padding: "12px 20px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 12 }}>模型名称</th>
-                      <th style={{ textAlign: "left", padding: "12px 20px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 12 }}>每分钟 Token 数</th>
-                      <th style={{ textAlign: "left", padding: "12px 20px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 12 }}>每分钟请求数</th>
+                      <th style={{ textAlign: "left", padding: "12px 20px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 12 }}>Lease Token 单位</th>
+                      <th style={{ textAlign: "left", padding: "12px 20px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 12 }}>并发占用</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -699,13 +732,23 @@ export function CapacityPage() {
         {/* === Reserved Tab === */}
         {tab === "reserved" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 40, textAlign: "center" }}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--aos-faint)" strokeWidth="1.5" style={{ margin: "0 auto 12px" }}>
-                <rect x="3" y="4" width="18" height="6" rx="1" /><rect x="3" y="14" width="18" height="6" rx="1" />
-              </svg>
+            <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 28 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, marginBottom: 16 }}>
+                {[
+                  { label: "交互保留比例", value: "20%" },
+                  { label: "预留池状态", value: "未开通" },
+                  { label: "项目 RPM", value: projectLimit ? String(projectLimit.rpmLimit) : "—" },
+                  { label: "项目 TPM", value: projectLimit ? formatTokenCount(projectLimit.tpmLimit) : "—" },
+                ].map((s) => (
+                  <div key={s.label} style={{ padding: "10px 12px", border: "1px solid var(--aos-border)", borderRadius: 2 }}>
+                    <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
               <p style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: 0 }}>预留容量</p>
               <p style={{ fontSize: 12, color: "var(--aos-faint)", marginTop: 8, margin: "8px 0 0" }}>
-                预留容量功能即将上线。如需提前使用，请联系 Palantir 支持。
+                预留池控制面尚未开通；当前仅展示保留比例与项目限额快照，不伪造可用预留额度。
               </p>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

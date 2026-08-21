@@ -1,0 +1,46 @@
+{
+  "receiptType": "AIP_WAVE_DELIVERY",
+  "waveId": "R10",
+  "status": "GREEN_WITH_UI_WARNING",
+  "branch": "w1-aip",
+  "baseCommit": "5c3e0ef",
+  "sourceCommits": ["1808437", "20594eb", "cde7917", "b6580b4", "1074f0c"],
+  "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+  "negativeCanary": {"orgId": "dev-org", "projectId": "dev-project"},
+  "sideEffects": {
+    "migration": false,
+    "agentRun": false,
+    "providerBusinessCall": false,
+    "campaignWrite": false,
+    "experimentStart": false,
+    "secretPayloadRead": false
+  },
+  "verification": {
+    "targeted": "37 passed",
+    "cumulativeR06ThroughR10": "219 passed",
+    "compile": "GREEN",
+    "browserPages": 2,
+    "browserConsistency": "GREEN_WITH_UI_WARNING",
+    "consoleErrors": 0,
+    "diffCheck": "GREEN"
+  },
+  "postHashes": {
+    "services/aos-api/aos_api/aip_campaign_planner_logic.py": "a7725d11afa673e3442982a98cb60fb172174f34baa1013edd51582b10d24e48",
+    "services/aos-api/tests/aip/test_r10_campaign_planner_logic.py": "97982730e0c1bc39d9f372e566bd498c07ffbd9a90909c0fe2da1d802a0841b2",
+    "scripts/aip/bootstrap_r10_campaign_planner_authority.py": "da44fa70f4f254b5f258abecdb2219d8191b940532953cb9e5dbda7e12dd423a",
+    "services/aos-api/tests/aip/test_r10_campaign_planner_authority.py": "573bdf58f2c35fe781329a97af56ec1dc391c41c1ca0af2bcd91f1cba70d6f42",
+    "scripts/aip/bootstrap_r10_campaign_planner_skill_authority.py": "ff5bef7c24c83b81365f4085b9f53decaa6e24a284877fdeeb0fdfe1248b1bfb",
+    "services/aos-api/tests/aip/test_r10_campaign_planner_skill_authority.py": "8194bed3902ee33cba69b7e0c4cb223c5d308a340f7134e657765ca72c0fbaf0",
+    "scripts/aip/bootstrap_r10_campaign_planner_binding_authority.py": "affefca7d0165c58baaf7baae26fae28141b17562bb730f0e23b9c1aeeedf75f",
+    "services/aos-api/tests/aip/test_r10_campaign_planner_binding_authority.py": "c0de9e543ceacfe14ead33e6ab28c833f1cf2fe3400b29a13bd95be4d7d5cb12",
+    "scripts/aip/refresh_r10_campaign_planner_runtime_tail.py": "6bac9eca21dccf38c55915d47497d934c493bef0bd9bb3675b1b58c7974896c0",
+    "services/aos-api/tests/aip/test_refresh_r10_campaign_planner_runtime_tail.py": "4ba58190179f2ce7c2a9683ec5f95c74e81f0e311442c6dd3e32e6833ae51f0c"
+  },
+  "externalBlockedOwners": [
+    "B5_RECEIPT_NOT_CAS_CONSUMED:m1 serialized CAS owner",
+    "W2_00_SOURCE_READINESS_OWNER_MISSING:Data/Adapter owner",
+    "W2_00_SAME_CUTOFF_EVIDENCEPACK_MISSING:Data/Adapter owner"
+  ],
+  "followUps": ["R15_AGENT_REGISTRY_CAPABILITY_COUNT_SEMANTICS"],
+  "evidencePath": ".evidence/aip/2026-08-21-r10-campaign-planner-authority"
+}

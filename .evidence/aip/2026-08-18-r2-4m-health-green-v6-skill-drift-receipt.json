@@ -1,0 +1,46 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000106",
+  "recordedAt": "2026-08-18T16:22:00+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4M",
+  "approvalRef": "46-R2-4M-PROVIDER-R4-HEALTH-THEN-V6",
+  "leaseRef": "AIP-R2-4M-PROVIDER-R4-HEALTH-THEN-V6",
+  "startGate": {
+    "providerRevision": 4,
+    "healthStatus": "healthy",
+    "observationId": "health-agnes-text-qyh-r2-20260818081949967674",
+    "p50LatencyMs": 19461,
+    "probeCount": 3,
+    "expiresAt": "2026-08-18T08:34:49.967674+00:00"
+  },
+  "execution": {
+    "providerBusinessCallLimit": 1,
+    "providerBusinessCalls": 0,
+    "automaticRetries": 0,
+    "healthProbesCompleted": 3
+  },
+  "readback": {
+    "capabilityReadiness": "available",
+    "skillReadiness": "blocked",
+    "skillReasons": ["MODEL_ROUTE_BLOCKED", "SKILL_EVAL_GATE_BLOCKED"],
+    "runtimeResolution": "ready",
+    "catalogRunnableCount": 0
+  },
+  "diagnosis": {
+    "rootCauseStatus": "PROVEN",
+    "exactReasonCode": "SKILL_PUBLICATION_ROUTE_GATE_DRIFT",
+    "skillTemplateRevision": 2,
+    "skillTemplateRouteRevision": 1,
+    "bindingRouteRevision": 2,
+    "skillTemplateGateId": "gate-6ef82dc8eec775758457915de213c5ea",
+    "bindingGateId": "gate-0fe68a500e7fbee0147d1649ee4e33a6",
+    "note": "Health GREEN and CapabilityBinding available. SkillBinding stays blocked because SkillTemplate D03 r2 still pins route r1 and the old eval gate. v6 AgentRun was not started."
+  },
+  "result": "R2_4M_HEALTH_GREEN_V6_BLOCKED_SKILL_PUBLICATION_DRIFT",
+  "nextGate": "R2_4N_D03_SKILL_PUBLICATION_ROUTE_GATE_CASCADE"
+}

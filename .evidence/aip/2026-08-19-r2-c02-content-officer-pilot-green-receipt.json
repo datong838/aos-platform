@@ -1,0 +1,75 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevisionBefore": "AOS-000134",
+  "recordedAt": "2026-08-19T01:40:00+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-C02",
+  "approvalRef": "46-§8.66-content-officer-first / §8.70",
+  "startGate": "AIP_CONTENT_OFFICER_FIRST_ACTIVATION",
+  "assets": {
+    "provider": {"assetId": "agnes-text-qyh-dev", "revision": 7},
+    "network": {"assetId": "network-qyh-text-dev", "revision": 3},
+    "route": {"assetId": "route-qyh-text-dev", "revision": 4},
+    "policy": {"assetId": "policy-qyh-text-dev", "revision": 2},
+    "model": {"assetId": "model-agnes-2.5-flash", "revision": 3},
+    "capabilityBinding": {"assetId": "ecommerce.data_advisor.strategy.plan.r2", "reused": true},
+    "skill": {
+      "assetId": "ecommerce.skill.C02",
+      "revision": 2,
+      "contentHash": "5ed897426bb236810cd563ffd80ef46398586350c0ff976e4b61b4b06cbdace4"
+    },
+    "logic": {
+      "assetId": "ecommerce.logic.C02",
+      "revision": 1,
+      "contentHash": "ad5a07107f3671eb12433d8cb3d25caa8282acb1ea3af4bc2d848d3a58f9e3ed"
+    },
+    "instance": {"assetId": "ecommerce.content_officer.default", "status": "active", "version": 2},
+    "binding": {"assetId": "ecommerce.content_officer.skill.C02.r2", "status": "active"}
+  },
+  "health": {
+    "observationId": "health-agnes-text-qyh-r2-20260818173054852231",
+    "p50LatencyMs": 481,
+    "probeCount": 3,
+    "note": "Wave used existing Health observation; no additional business Health three-probe this seal."
+  },
+  "execution": {
+    "agentRunId": "ecommerce.content_officer.C02.real-pilot.v1",
+    "attemptId": "ecommerce.content_officer.C02.real-pilot.v1.attempt-1",
+    "agentRunStatus": "succeeded",
+    "attemptStatus": "succeeded",
+    "taskRunId": "run-af0b0f59e7e44ea499ac",
+    "taskRunStatus": "succeeded",
+    "providerBusinessCalls": 1,
+    "automaticRetries": 0,
+    "usageReceiptCount": 2,
+    "lineageEventCount": 3,
+    "artifactCount": 1,
+    "outputContentHash": "f5b368f86cb04d3782b4971bc131606fa5e3d492302eaae7eba48742a14cb209",
+    "capacityStatus": "released",
+    "canaryAgentRuns": 0,
+    "secretPayloadReads": 0,
+    "sensitiveBodiesPrinted": 0
+  },
+  "catalog": {
+    "runnableCount": 2,
+    "runnableRoles": ["ecommerce.data_advisor", "ecommerce.content_officer"],
+    "stillBlocked": [
+      "ecommerce.shopping_advisor",
+      "ecommerce.customer_service",
+      "ecommerce.private_domain_manager",
+      "ecommerce.campaign_planner"
+    ]
+  },
+  "result": "R2_C02_CONTENT_OFFICER_PILOT_GREEN",
+  "immutable": true,
+  "nextGate": "AIP_WAITING_PRODUCT_OR_W2",
+  "notes": [
+    "Only content officer activated; remaining four colleagues intentionally not batch-activated.",
+    "D03 v1-v8 not replayed; capability binding strategy.plan.r2 reused, not published as r3.",
+    "Image/video authority remains scheme-only (§8.67)."
+  ]
+}

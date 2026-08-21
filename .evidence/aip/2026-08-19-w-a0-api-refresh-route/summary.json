@@ -1,0 +1,19 @@
+{
+  "wave": "W-A0",
+  "at": "2026-08-19T13:48:15.842510+00:00",
+  "action": "ensure-api.sh --restart",
+  "post_refresh_readiness_http": 200,
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "evaluatedAt": "2026-08-19T13:48:09.199896Z",
+  "bindingStats": {
+    "capabilityBindingCount": 12,
+    "skillBindingCount": 10,
+    "activeCapabilityBindingCount": 12,
+    "activeSkillBindingCount": 10
+  },
+  "catalog_item_count": 6,
+  "pid_after": "82607"
+}

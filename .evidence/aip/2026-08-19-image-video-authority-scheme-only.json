@@ -1,0 +1,24 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "wave": "AIP-POST-R2-IMAGE-VIDEO-SCHEME",
+  "recordedAt": "2026-08-19T00:45:30+08:00",
+  "status": "AIP_IMAGE_VIDEO_AUTHORITY_SCHEME_ONLY_GREEN",
+  "scope": "documentation_only",
+  "w2ParserHasLogicRevisionRef": false,
+  "schemeRef": "46 §8.67",
+  "inventory": {
+    "agnesTextAuthorityGreen": true,
+    "agnesImagePluginScaffoldPresent": true,
+    "agnesImagePluginPath": "plugins/llm-providers/agnes-image/manifest.json",
+    "agnesVideoPluginPresent": false
+  },
+  "executed": {
+    "pluginPublish": false,
+    "providerCreate": false,
+    "healthProbes": 0,
+    "businessProviderCalls": 0,
+    "colleagueActivation": false
+  },
+  "productGateStillClosed": true,
+  "secretPayloadReads": 0
+}

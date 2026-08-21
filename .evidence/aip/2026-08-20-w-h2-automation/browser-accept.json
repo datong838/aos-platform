@@ -1,0 +1,10 @@
+{
+  "url": "http://127.0.0.1:5174/aip/logic",
+  "hasDrafts": true,
+  "hasEvals": true,
+  "hasContracts": true,
+  "hasEmpty": true,
+  "fakeList": false,
+  "honestZeroUses": true,
+  "disabledBind": true
+}

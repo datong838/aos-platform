@@ -84,6 +84,7 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
   const [params] = useSearchParams();
   const taskId = params.get("taskId")?.trim() ?? "";
   const runId = params.get("runId")?.trim() ?? "";
+  const proposalParam = params.get("proposal")?.trim() ?? "";
   const [items, setItems] = useState<ActionDraftBundle[]>([]);
   const [state, setState] = useState<LoadState>("loading");
   const [activeTab, setActiveTab] = useState<InboxTab>("approval");
@@ -140,12 +141,15 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
       if (current !== generation.current) return;
       const scoped = response.items.filter(({ proposal }) => (!taskId || proposal.taskId === taskId) && (!runId || proposal.runId === runId));
       setItems(response.items);
-      const nextId = preferredId && scoped.some(({ proposal }) => proposal.id === preferredId)
-        ? preferredId
+      const preferredHit = preferredId
+        ? response.items.find(({ proposal }) => proposal.id === preferredId)
+        : undefined;
+      const nextId = preferredHit
+        ? preferredHit.proposal.id
         : scoped[0]?.proposal.id ?? null;
       setSelectedId(nextId);
       if (nextId) {
-        const nextBundle = scoped.find(({ proposal }) => proposal.id === nextId);
+        const nextBundle = preferredHit ?? scoped.find(({ proposal }) => proposal.id === nextId);
         if (nextBundle) setActiveTab(actionStatusTab(nextBundle.proposal.status));
       }
       setState("ready");
@@ -163,9 +167,14 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
   }, [loadDetail, runId, sdk, taskId]);
 
   useEffect(() => {
-    void load();
+    void load(proposalParam || undefined);
     return () => { generation.current += 1; };
-  }, [load]);
+  }, [load, proposalParam]);
+
+  useEffect(() => {
+    if (!proposalParam) return;
+    setSearch((prev) => (prev.trim() ? prev : proposalParam));
+  }, [proposalParam]);
 
   const select = (proposalId: string) => {
     setSelectedId(proposalId);
@@ -200,10 +209,29 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
       title="Draft 审批台"
       lede="Proposal → Draft → Approval → Lease → Receipt 权威闭环；批准不等于已执行，只有 Receipt 证明外部结果。"
     >
+      <div
+        data-testid="drafts-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "加载态", value: state === "ready" ? "就绪" : state === "loading" ? "读取中" : "失败" },
+          { label: "合计", value: String(items.length) },
+          { label: "待批", value: String(counts.approval) },
+          { label: "已批", value: String(counts.approved) },
+          { label: "执行中", value: String(counts.execution) },
+          { label: "已关", value: String(counts.closed) },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       <div className="space-y-4" data-testid="canonical-action-inbox">
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900" data-testid="drafts-chain-banner">
           <strong>真实 AIP Action 权威链</strong> · 页面不注入示例 Draft，也不在浏览器维护第二套状态机。
           {(taskId || runId) && <span> 当前筛选：{taskId ? `Task ${taskId}` : ""}{taskId && runId ? " · " : ""}{runId ? `Run ${runId}` : ""}</span>}
+          {proposalParam && <span> · 深链 Proposal <code>{proposalParam}</code></span>}
         </div>
         {notice && <p role="status" className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
         {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
@@ -231,9 +259,13 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
 
         {state === "loading" && <p role="status" className="py-12 text-center text-sm text-gray-500">正在读取 Action Proposal…</p>}
         {state === "ready" && items.length === 0 && (
-          <div className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center">
+          <div className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center" data-testid="drafts-empty">
             <h2 className="font-medium text-gray-800">当前工作区暂无受控 Action</h2>
             <p className="mt-2 text-sm text-gray-500">这是有效的真实空状态，不会使用 Mock Proposal 填充页面。</p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <Link to="/aip/logic" className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white no-underline" data-testid="drafts-cta-logic">去逻辑画布产生提案</Link>
+              <Link to="/aip/evals" className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 no-underline" data-testid="drafts-cta-evals">查看 Evals 门控</Link>
+            </div>
           </div>
         )}
 
@@ -279,6 +311,34 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
                         <pre className="mt-2 max-h-48 overflow-auto rounded bg-gray-950 p-3 text-xs text-gray-100">{JSON.stringify(selected.draft.diff, null, 2)}</pre>
                       </div>
 
+                      <div data-testid="drafts-chain-links">
+                        <h3 className="text-sm font-semibold text-gray-800">Evals ↔ Lineage 样例链</h3>
+                        <div className="mt-2 flex flex-wrap gap-2 text-sm">
+                          <Link
+                            to={`/aip/lineage?rootType=action&rootId=${encodeURIComponent(selected.proposal.id)}`}
+                            className="rounded border border-amber-300 bg-amber-50 px-2 py-1 text-amber-900 no-underline"
+                            data-testid="drafts-jump-lineage"
+                          >
+                            决策谱系（action/{selected.proposal.id.slice(0, 12)}…）→
+                          </Link>
+                          {selected.draft.evidenceRefs
+                            .filter((ref) => ref.resourceType === "EvalSuite")
+                            .map((ref) => (
+                              <Link
+                                key={`${ref.resourceType}:${ref.resourceId}`}
+                                to={`/aip/evals?suite=${encodeURIComponent(ref.resourceId)}&proposal=${encodeURIComponent(selected.proposal.id)}`}
+                                className="rounded border border-blue-300 bg-blue-50 px-2 py-1 text-blue-800 no-underline"
+                                data-testid="drafts-jump-evals"
+                              >
+                                Evals · {ref.resourceId} →
+                              </Link>
+                            ))}
+                          {selected.draft.evidenceRefs.length === 0 && (
+                            <span className="text-gray-500">本 Draft 无 EvalSuite evidenceRefs；仍可跳转谱系。</span>
+                          )}
+                        </div>
+                      </div>
+
                       <div>
                         <h3 className="text-sm font-semibold text-gray-800">审批事实（{selected.approvals.length}）</h3>
                         {selected.approvals.length === 0 ? <p className="mt-2 text-sm text-gray-500">尚无 ApprovalEvent。</p> : (
@@ -322,7 +382,18 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
         )}
 
         <div className="flex gap-4 border-t border-gray-100 py-3 text-xs">
-          <Link to="/aip/lineage" className="text-blue-600 hover:underline">决策谱系 →</Link>
+          <Link
+            to={selectedId ? `/aip/lineage?rootType=action&rootId=${encodeURIComponent(selectedId)}` : "/aip/lineage"}
+            className="text-blue-600 hover:underline"
+          >
+            决策谱系 →
+          </Link>
+          <Link
+            to={selectedId ? `/aip/evals?proposal=${encodeURIComponent(selectedId)}` : "/aip/evals"}
+            className="text-blue-600 hover:underline"
+          >
+            Evals 门控 →
+          </Link>
           <Link to="/aip/logic" className="text-blue-600 hover:underline">AIP 逻辑画布 →</Link>
         </div>
       </div>

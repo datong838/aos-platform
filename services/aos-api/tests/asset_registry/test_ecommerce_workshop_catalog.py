@@ -64,12 +64,17 @@ class _ReadOnlyConnection:
         self.org_id = org_id
         self.project_id = project_id
         self.calls = []
+        self.rollback_count = 0
 
     def __enter__(self):
         return self
 
     def __exit__(self, *_args):
         return False
+
+    def rollback(self):
+        self.rollback_count += 1
+        self.calls.append(("ROLLBACK", None))
 
     def execute(self, statement, params=None):
         normalized = " ".join(statement.split())
@@ -391,7 +396,9 @@ def test_postgres_source_uses_repeatable_read_and_explicit_tenant_predicates() -
         markings=["restricted", "public", "public"],
     ) == ()
 
-    assert conn.calls[0][0] == "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+    assert conn.rollback_count == 1
+    assert conn.calls[0][0] == "ROLLBACK"
+    assert conn.calls[1][0] == "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
     scope_query = next(call for call in conn.calls if "current_setting(" in call[0])
     assert "current_setting('aos.org_id'" in scope_query[0]
     assert "current_setting('aos.project_id'" in scope_query[0]

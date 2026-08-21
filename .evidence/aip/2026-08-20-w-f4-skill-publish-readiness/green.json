@@ -1,0 +1,18 @@
+{
+  "wave": "W-F4",
+  "status": "GREEN",
+  "at": "2026-08-20T13:23:30+08:00",
+  "tenant": "org-org/dev-project",
+  "scheme": "69-W-F4-技能首批发布对账.md",
+  "publishedCount": 8,
+  "bindingCount": 10,
+  "logicPublicationCount": 8,
+  "ui": "SkillPublishPage batch readiness panel (fail-closed on missing Logic)",
+  "audit": ".evidence/aip/2026-08-20-w-f4-skill-publish-readiness/audit.json",
+  "f4Gate": {
+    "minOnePublishedPerPilotRole": true,
+    "bindingsPresent": true,
+    "honestNoForgeRemaining": true
+  },
+  "deferred": "W-F5 delayed; W-F6 full publish blocked until Logic graphs enter authority"
+}

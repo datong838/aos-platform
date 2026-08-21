@@ -1,0 +1,10 @@
+{
+  "stageCount": 1,
+  "planCount": 1,
+  "profiles": 1,
+  "empty": 0,
+  "err": 0,
+  "jump": "/aip/production-contracts",
+  "hasEcommerce": true,
+  "ok": true
+}

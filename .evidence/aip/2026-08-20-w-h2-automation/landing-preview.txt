@@ -1,0 +1,90 @@
+逻辑编排
+
+自由画布编辑 canonical Logic Graph；保存须与服务端严格回读一致。Tab 分区对齐蓝图信息架构，中栏仍保留自由图。
+
+编辑
+运行历史
+自动化
+分区
+编辑
+图
+未确认
+历史条
+0
+Uses
+—
+更多
+无
+互跳
+观测/谱系
+保存 *
+刷新
+安全试跑
+请先保存 Logic Graph
+Draft 审批台
+Evals 门控
+未保存更改
+Logic 名称
+描述
+未保存模板：当前 4 节点、3 连接仅在本地；点击“保存”显式创建服务端 Logic Graph。
+Dry-Run Inputs
+
+独立 JSON 对象；仅显式应用后用于安全试跑，不写入画布或生产数据。
+
+应用 Inputs
+Inputs 尚未应用
+−
+100%
++
+1:1
+节点 4 · 连接 3
+收起属性
+BLOCK 组件库 · 中英并列 · 10 种
+IN
+输入 · Input
+定义 Logic 输入
+VAR
+创建变量 · Create Variable
+创建中间变量
+GET
+获取属性 · Get Property
+读取 Ontology 属性
+LLM
+使用 LLM · Use LLM
+调用大模型能力
+TOOL
+使用工具 · Use Tool
+调用已注册工具
+FX
+数据变换 · Transform
+执行数据变换
+ACT
+应用动作 · Apply Action
+产生可审计 Action 提议
+RUN
+执行 · Execute
+提交执行结果
+IF
+分支 · Branch
+按条件选择路径
+JOIN
+汇聚 · Handoff
+汇聚上游上下文
+×
+×
+×
+INPUT
+WorkOrder 输入
+×
+GET_PROPERTY
+获取状态
+×
+USE_LLM
+LLM 分析
+×
+APPLY_ACTION
+提议更新 note
+×
+Block 属性
+
+选择一个 Block 查看和编辑属性

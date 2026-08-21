@@ -334,6 +334,21 @@ def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> Non
             observedAt=NOW, expiresAt=NOW + timedelta(minutes=5),
         )
         assert store.record_health(SCOPE, SUFFIX, "health-1", health).status == "healthy"
+        newer_health = ProviderHealthObservation(
+            tenant=TENANT, observationId=f"{SUFFIX}:health:newer",
+            provider=ref("ProviderInstanceRevision", SUFFIX, provider.content_hash),
+            status="degraded", availabilityPct=97, p50LatencyMs=120,
+            observedAt=NOW + timedelta(seconds=30), expiresAt=NOW + timedelta(minutes=5),
+        )
+        store.record_health(SCOPE, SUFFIX, "health-2", newer_health)
+        latest = store.list_latest_provider_health(SCOPE)
+        assert [item.observation_id for item in latest if item.provider.asset_id == SUFFIX] == [
+            newer_health.observation_id
+        ]
+        assert not any(
+            item.provider.asset_id == SUFFIX
+            for item in store.list_latest_provider_health(CANARY)
+        )
 
         price = hashed(ModelPriceSnapshotRevision, dict(
             tenant=TENANT, priceSnapshotId=f"{SUFFIX}:price", revision=1,

@@ -1,0 +1,28 @@
+{
+  "schema": "aos-provider-plugin-approval/v1",
+  "providerPluginId": "agnes-video",
+  "revision": 1,
+  "manifestVersion": "0.1.0",
+  "owner": "AOS/FDE",
+  "usageBasis": "AGNES internal authorized video model service; AOS self-developed adapter; development pilot and demo only",
+  "approvedCapabilities": [
+    "video"
+  ],
+  "deniedCapabilities": [
+    "llm",
+    "chat",
+    "structured_output",
+    "audio",
+    "image",
+    "tool-execution"
+  ],
+  "allowedTenants": [
+    {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    }
+  ],
+  "approvalStatus": "approved_for_dev",
+  "approvedBy": "杜大同",
+  "approvedAt": "2026-08-19T00:00:00+08:00"
+}

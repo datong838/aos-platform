@@ -68,6 +68,20 @@ def test_approved_guard_policy_contracts_are_strict_and_fail_closed() -> None:
     assert "credential" in data.prohibited_classifications
 
 
+def test_egress_contract_accepts_domestic_agnes_host() -> None:
+    body = egress_payload()
+    body["allowedHosts"] = ["api.agnes-ai.cn"]
+    egress = EgressPolicyRevisionCreate.model_validate(body)
+    assert egress.allowed_hosts == ["api.agnes-ai.cn"]
+
+
+def test_egress_contract_accepts_historical_apihub_cn_host() -> None:
+    body = egress_payload()
+    body["allowedHosts"] = ["apihub.agnes-ai.cn"]
+    egress = EgressPolicyRevisionCreate.model_validate(body)
+    assert egress.allowed_hosts == ["apihub.agnes-ai.cn"]
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [

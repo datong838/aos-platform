@@ -85,11 +85,25 @@ def test_approved_manifest_builds_deterministic_exact_revision(tmp_path: Path) -
 
 
 def test_real_approved_agnes_manifest_has_exact_readback() -> None:
-    item = ProviderPluginAuthority().get(SCOPE, "agnes-text", revision=1)
+    item = ProviderPluginAuthority().get(SCOPE, "agnes-text", revision=3)
 
     assert item.owner == "AOS/FDE"
-    assert item.default_models == ["agnes-2.0-flash"]
+    assert item.revision == 3
+    assert item.default_models == ["agnes-2.5-flash"]
     assert item.allowed_tenants[0].org_id == "org-org"
+    assert item.approved_capabilities == ["llm", "chat", "structured_output"]
+
+
+def test_real_approved_agnes_revision_1_is_no_longer_readable() -> None:
+    with pytest.raises(ProviderPluginAuthorityError) as captured:
+        ProviderPluginAuthority().get(SCOPE, "agnes-text", revision=1)
+
+    assert captured.value.code == "provider_plugin_ref_drifted"
+
+    with pytest.raises(ProviderPluginAuthorityError) as captured:
+        ProviderPluginAuthority().get(SCOPE, "agnes-text", revision=2)
+
+    assert captured.value.code == "provider_plugin_ref_drifted"
 
 
 def test_missing_approval_is_fail_closed(tmp_path: Path) -> None:

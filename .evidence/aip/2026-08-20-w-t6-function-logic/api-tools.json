@@ -1,0 +1,5 @@
+{
+  "fns": 9,
+  "echoBlocked": true,
+  "echoReason": "fn.echo 为演示 Function，非 published Logic exact；未挂已发布 Logic 不可用（W-T6）"
+}

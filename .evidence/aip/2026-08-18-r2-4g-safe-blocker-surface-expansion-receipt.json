@@ -1,0 +1,26 @@
+{
+  "schema": "aos-aip-code-control-evidence/v1",
+  "authorityRevision": "AOS-000100",
+  "recordedAt": "2026-08-18T14:28:30+08:00",
+  "scope": "R2-4G safe blocker surface expansion",
+  "commit": "9fc131e",
+  "changes": [
+    "LLMRuntimeBlocked now exposes explicit .code",
+    "Executor maps all stable snake_case ExactProviderInvoker/LLMAdapter blockers",
+    "secret_* stable codes map to SECRET_* without free-form text",
+    "comma-joined or non-snake_case blockers still collapse to PROVIDER_RESULT_UNKNOWN"
+  ],
+  "verification": {
+    "focusedTests": "50 passed",
+    "providerBusinessCalls": 0,
+    "realDatabaseWrites": 0,
+    "migrationChanges": 0,
+    "workshopChanges": 0
+  },
+  "boundaries": [
+    "v1-v4 immutable unknown incidents were not rewritten",
+    "No Provider response body, prompt, answer, Secret, header, cookie or bearer material is persisted"
+  ],
+  "result": "R2_4G_CODE_CONTROL_GREEN",
+  "nextGate": "R2_4H_V5_SINGLE_PROVIDER_CALL"
+}

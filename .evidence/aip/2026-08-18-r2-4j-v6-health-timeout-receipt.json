@@ -1,0 +1,38 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000103",
+  "recordedAt": "2026-08-18T16:13:20+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4J-v6",
+  "approvalRef": "46-R2-4J-V6-SINGLE-PROVIDER-CALL-APPROVED",
+  "leaseRef": "AIP-R2-4J-V6-SINGLE-PROVIDER-CALL",
+  "commits": {
+    "w1-aip": "1f1f0b9"
+  },
+  "startGate": {
+    "providerRevision": 4,
+    "healthStatus": "blocked",
+    "blockerCode": "provider_timeout",
+    "providerCallsCompleted": 2,
+    "healthObservationWritten": false,
+    "businessPilotStarted": false
+  },
+  "execution": {
+    "providerBusinessCallLimit": 1,
+    "providerBusinessCalls": 0,
+    "automaticRetries": 0,
+    "healthProbesAttempted": 3,
+    "healthProbesCompleted": 2
+  },
+  "diagnosis": {
+    "rootCauseStatus": "OBSERVED",
+    "exactReasonCode": "PROVIDER_TIMEOUT",
+    "note": "Provider r4 health path passed plugin authority (two probes completed) then timed out on the third probe. No Health observation was written. v6 business AgentRun was not started."
+  },
+  "result": "R2_4J_HEALTH_REFRESH_BLOCKED_PROVIDER_TIMEOUT",
+  "nextGate": "R2_4K_PROVIDER_R4_HEALTH_RETRY"
+}

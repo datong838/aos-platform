@@ -1,0 +1,21 @@
+{
+  "wave": "W-L17",
+  "scheme": "126-W-L17-ResearchJobQueryJob异步投影.md",
+  "status": "GREEN",
+  "verified_at": "2026-08-20T13:05:00+08:00",
+  "pytest": "tests/aip/test_w_l17_async_jobs.py — 3 passed",
+  "apis": [
+    "GET /v1/aip/research-authority/jobs",
+    "POST /v1/aip/research-authority/jobs/{id}/cancel",
+    "POST /v1/aip/research-authority/jobs/{id}/retry",
+    "GET /v1/aip/analyst/query-jobs",
+    "GET /v1/aip/async-jobs"
+  ],
+  "migration": "aip11_001",
+  "notes": [
+    "retry mints new job with retryOf; resumability=unsupported",
+    "cancel unsubmitted -> cancelled; submitted -> unknown + cancel_requested",
+    "AsyncJobProjection read-only; query_job_is_not_research_job blocker",
+    "dropped UNIQUE(run_id,step_key) to allow retry jobs"
+  ]
+}

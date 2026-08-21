@@ -1,0 +1,96 @@
+{
+  "status": "GREEN",
+  "wave": "R09_CUSTOMER_SERVICE_S01_S06",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanaryOrgId": "dev-org",
+    "negativeCanaryProjectId": "dev-project"
+  },
+  "authority": {
+    "logic": {
+      "S01": "e310ca2a60c01a76393da95f30887947aa8561fa231fadeb2ad609d51af6bf10",
+      "S02": "34636ff16f1dae962edc6c5ceb49b280df45f4fd06277d04c3da07bfaf4f7fc6",
+      "S03": "a8fcb91c6828c7296f7002835aca865d6fd7b60b3ac3cfbd51b7f77895000c3c",
+      "S04": "217db93376c24d30963afa1bcfaaeadbe391cf63e480e78d742902f61c43f4ad",
+      "S05": "294d27d325bdd11702dc5798c5e7cfa3be2c5265c2cb355ac5a508325960c829",
+      "S06": "6dcce53b2d0f22436430405e61b837cc9f1f06f87985170decb0ced9542181ba"
+    },
+    "skill": {
+      "S01": "afcce489a71eb7788dae5d21e9e4564d03d7ae98f9d87a74727c2786666ae480",
+      "S02": "e15b3aa248b5956275b0c1aa5fd7d0ff8c01fbd8ed27e9393cc89509a2fc6439",
+      "S03": "87a17cc793205e1940f439bafa2fbf20d0d82fce0a332951b02680bbd7596c71",
+      "S04": "598ad839adb53ad67e69a5483c653510a1e6254acaefe3a1b8bd40e6bd4cdc39",
+      "S05": "3d68a3c41e5b136c07e5dc5b7b5e62bbdc523d9914fd8a16f3b33a7b5544c25c",
+      "S06": "a11aedc3243906028e0c137391b9e0ae240c80fa6bb82c5eb8a829b9a0774c95"
+    },
+    "publishedSkillCount": 6,
+    "activeSkillBindingCount": 6,
+    "agentInstanceStatus": "active",
+    "runtimeReadinessAtBrowserCutoff": "runnable",
+    "runtimeBlockersAtBrowserCutoff": []
+  },
+  "immutableS04": {
+    "logicRevision": 1,
+    "logicPublicationChanged": false,
+    "skillRevisionChanged": false,
+    "bindingCompositionChanged": false,
+    "pilotReplayed": false,
+    "sourceHashes": {
+      "services/aos-api/aos_api/aip_s04_pilot.py": "1cdedc0e8e0fadb11336d0037940a0928c15dc31cf73441b947c2c8d9f8fefd7",
+      "scripts/aip/bootstrap_r2_s04_pilot.py": "4d4fa39b3616af96f8a58ed91497a72cb512cc949cef82355dde5bfc5799901c",
+      "scripts/aip/bootstrap_r2_s04_skill_authority.py": "b7e858f5ff9eb3ebea99f5747671ca0602ca22714a9ac21035b1e5f2085c5d08",
+      "scripts/aip/bootstrap_r2_s04_binding_composition.py": "f838b4a175cdba64e7870acdad5519ce821f6eecc3007c4b4a1172a2cbb88b60"
+    }
+  },
+  "health": {
+    "observationId": "health-agnes-text-qyh-r2-20260821060352408220",
+    "samples": "3/3",
+    "status": "healthy",
+    "observedAt": "2026-08-21T06:03:52.408220Z",
+    "expiresAt": "2026-08-21T06:18:52.408220Z",
+    "p50LatencyMs": 544,
+    "browserCutoff": "2026-08-21T06:13:54Z",
+    "freshAtBrowserCutoff": true,
+    "secretPayloadReads": 0
+  },
+  "safety": {
+    "agentRunsCreated": 0,
+    "providerBusinessCalls": 0,
+    "customerMessagesSent": 0,
+    "serviceTicketsCreated": 0,
+    "orderOrRefundWrites": 0,
+    "compensationPromises": 0,
+    "carrierCalls": 0,
+    "surveysSent": 0,
+    "productionActions": 0,
+    "negativeCanaryRows": 0,
+    "draftOnly": true
+  },
+  "verification": {
+    "targetedR09Tests": "40 passed",
+    "cumulativeR06R07R08R09Tests": "182 passed",
+    "compile": "GREEN",
+    "browser": {
+      "baseUrl": "http://127.0.0.1:5174",
+      "tenant": "栖月汇商贸有限公司 / 默认工作区",
+      "agentRegistry": "客服专员 6/6 published and active bindings; runnable; no blockers",
+      "expandedSkills": "意图与情绪识别、身份与订单安全查询、物流查询与异常分诊、售后资格与工单草拟、投诉与人工升级、满意度与问题反哺",
+      "logicS01": "canonical revision/hash visible; production bypass closed",
+      "logicS06": "canonical revision/hash visible; automation disabled",
+      "consoleErrors": 0
+    }
+  },
+  "commits": [
+    "80db8c6",
+    "aa80f8f",
+    "de93a6f",
+    "bbccf09",
+    "943870d"
+  ],
+  "externalOwners": {
+    "p08AndDepAdpQuery": "GREEN and closed",
+    "sourceReadinessAndSameCutoffEvidencePack": "Data/Adapter owner",
+    "workshopB5M1Cas": "m1 serialized integration owner"
+  }
+}

@@ -9,14 +9,15 @@
   ],
   "capabilities": [
     "llm",
-    "chat"
+    "chat",
+    "structured_output"
   ],
   "formFamily": "openai_compatible",
   "defaultModels": [
-    "agnes-2.0-flash"
+    "agnes-2.5-flash"
   ],
   "litellmPrefix": "openai/",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "aos",
   "configSchema": {
     "type": "object",
@@ -31,7 +32,7 @@
           "type": "string"
         },
         "default": [
-          "agnes-2.0-flash"
+          "agnes-2.5-flash"
         ]
       }
     }

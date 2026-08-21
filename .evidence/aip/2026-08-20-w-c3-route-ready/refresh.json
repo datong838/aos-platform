@@ -1,0 +1,69 @@
+{
+  "evaluatedAt": "2026-08-19T21:29:34.163625Z",
+  "bindingStats": {
+    "capabilityBindingCount": 12,
+    "skillBindingCount": 10,
+    "activeCapabilityBindingCount": 12,
+    "activeSkillBindingCount": 10
+  },
+  "runtime": {
+    "blocked": 6
+  },
+  "items": [
+    {
+      "instanceId": "ecommerce.campaign_planner.default",
+      "displayName": "活动策划师",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "capability_binding_readiness_stale",
+        "skill_binding_readiness_stale"
+      ]
+    },
+    {
+      "instanceId": "ecommerce.content_officer.default",
+      "displayName": "内容官",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "capability_binding_readiness_stale",
+        "skill_binding_readiness_stale"
+      ]
+    },
+    {
+      "instanceId": "ecommerce.customer_service.default",
+      "displayName": "客服专员",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "capability_binding_readiness_stale",
+        "skill_binding_readiness_stale"
+      ]
+    },
+    {
+      "instanceId": "ecommerce.data_advisor.default",
+      "displayName": "数据参谋",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "capability_binding_readiness_stale",
+        "skill_binding_readiness_stale"
+      ]
+    },
+    {
+      "instanceId": "ecommerce.private_domain_manager.default",
+      "displayName": "私域管家",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "capability_binding_readiness_stale",
+        "skill_binding_readiness_stale"
+      ]
+    },
+    {
+      "instanceId": "ecommerce.shopping_advisor.default",
+      "displayName": "导购顾问",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "capability_binding_readiness_stale",
+        "skill_binding_readiness_stale"
+      ]
+    }
+  ],
+  "note": "W-C1/C2 Health GREEN applied; refresh-readiness executed. Catalog still blocked on binding TTL/stale and definition gaps — D10 allows seal without forcing 6/6 runnable."
+}

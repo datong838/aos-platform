@@ -1,0 +1,61 @@
+"""XU2: same-observation-cutoff EvidencePack contract."""
+
+from __future__ import annotations
+
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[3]
+SCRIPT = ROOT / "scripts" / "data" / "export_source_readiness_evidence.py"
+
+
+def _load_module():
+    spec = importlib.util.spec_from_file_location("source_readiness_evidence", SCRIPT)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_evidence_hash_is_canonical_and_payload_fields_are_excluded(monkeypatch) -> None:
+    module = _load_module()
+
+    class Envelope:
+        def model_dump(self, **_kwargs):
+            return {
+                "schemaVersion": "aos.source-readiness/v1",
+                "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+                "checkedAt": "2026-08-21T12:00:00Z",
+                "cutoffAt": "2026-08-21T12:00:00Z",
+                "status": "blocked",
+                "sources": [
+                    {
+                        "pipelineId": f"P{index:02d}-x-qyh",
+                        "blockers": ["QUALITY_POLICY_REF_MISSING"],
+                    }
+                    for index in range(1, 13)
+                ],
+            }
+
+    class Service:
+        def read(self, **_kwargs):
+            return Envelope()
+
+    monkeypatch.setattr(module, "build_source_readiness_service", lambda: Service())
+    pack = module.build_evidence_pack(
+        org_id="org-org",
+        project_id="dev-project",
+        source_commit="a" * 40,
+    )
+    evidence_hash = pack.pop("evidenceHash")
+    canonical = json.dumps(
+        pack, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    assert evidence_hash == hashlib.sha256(canonical).hexdigest()
+    assert pack["observation"]["pipelineRunTimestampsRewritten"] is False
+    serialized = json.dumps(pack, ensure_ascii=False).lower()
+    assert "secret" not in serialized
+    assert "rawpayload" not in serialized

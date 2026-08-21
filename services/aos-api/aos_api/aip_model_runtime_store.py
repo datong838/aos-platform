@@ -278,6 +278,36 @@ class AipModelRuntimeStore:
             conn.commit()
             return self._health(conn, scope, observation.observation_id)
 
+    def list_latest_provider_health(
+        self, scope: TenantScope
+    ) -> list[ProviderHealthObservation]:
+        """Return one newest observation for each exact provider revision.
+
+        This read stays tenant scoped and intentionally does not refresh or
+        reinterpret Health. Freshness remains a consumer decision based on the
+        stored observed/expires boundary.
+        """
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_provider_health_observation
+                WHERE org_id=%s AND project_id=%s
+                ORDER BY observed_at DESC, observation_id DESC""",
+                scope.key,
+            ).fetchall()
+        latest: list[ProviderHealthObservation] = []
+        seen: set[tuple[str, str, int, str]] = set()
+        for row in rows:
+            provider = self._load(row["provider_ref"])
+            exact_key = (
+                provider["assetType"], provider["assetId"],
+                provider["revision"], provider["contentHash"],
+            )
+            if exact_key in seen:
+                continue
+            seen.add(exact_key)
+            latest.append(self._health_from_row(scope, row))
+        return latest
+
     def _publish(self, kind: str, scope: TenantScope, actor: str, key: str, item: RevisionT, expected_version: int) -> RevisionT:
         self._check_scope(scope, item)
         id_alias, _ = self._SPECS[kind]
@@ -387,9 +417,13 @@ class AipModelRuntimeStore:
         ).fetchone()
         if not row:
             raise ModelRuntimeNotFound("provider health observation not found")
+        return self._health_from_row(scope, row)
+
+    @staticmethod
+    def _health_from_row(scope: TenantScope, row: Any) -> ProviderHealthObservation:
         return ProviderHealthObservation(
             tenant={"orgId": scope.org_id, "projectId": scope.project_id},
-            observationId=row["observation_id"], provider=self._load(row["provider_ref"]),
+            observationId=row["observation_id"], provider=AipModelRuntimeStore._load(row["provider_ref"]),
             status=row["status"], availabilityPct=row["availability_pct"],
             p50LatencyMs=row["p50_latency_ms"], observedAt=row["observed_at"], expiresAt=row["expires_at"],
         )

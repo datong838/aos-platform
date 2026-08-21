@@ -1,0 +1,12 @@
+{
+  "auth": true,
+  "hrefOk": true,
+  "onTools": true,
+  "toolsAuth": true,
+  "backOk": true,
+  "roundTrip": true,
+  "href": "/aip/tools?instance=ecommerce.data_advisor.default",
+  "backHref": "/aip/studio?instance=ecommerce.data_advisor.default",
+  "url": "http://127.0.0.1:5174/aip/tools?instance=ecommerce.data_advisor.default",
+  "backUrl": "http://127.0.0.1:5174/aip/studio?instance=ecommerce.data_advisor.default"
+}

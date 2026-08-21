@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import {
   aipMemorySdk,
@@ -55,7 +55,13 @@ export function authoritySubjectLabel(subject: { resourceType: string; resourceI
 }
 
 export function MemoryGovernancePage() {
-  const [view, setView] = useState<View>("candidates");
+  const [searchParams] = useSearchParams();
+  const initialView = (searchParams.get("view") as View | null) || "candidates";
+  const [view, setView] = useState<View>(
+    ["candidates", "memories", "agents", "query", "pipelines", "readiness"].includes(initialView)
+      ? initialView
+      : "candidates"
+  );
   const [candidates, setCandidates] = useState<MemoryCandidate[]>([]);
   const [memories, setMemories] = useState<MemoryAuthorityItem[]>([]);
   const [events, setEvents] = useState<MemoryCandidateEvent[]>([]);
@@ -186,7 +192,7 @@ export function MemoryGovernancePage() {
   async function runKnowledgeQuery() {
     const required = [subjectType, subjectId, taskId, skillId].map((value) => value.trim());
     if (required.some((value) => !value)) {
-      setQueryError("请完整填写主体类型、主体 ID、Task ID 和 Skill ID。");
+      setQueryError("请完整填写主体类型、主体 ID、Task ID 和技能 ID。");
       setQueryState("idle");
       return;
     }
@@ -218,7 +224,25 @@ export function MemoryGovernancePage() {
   }
 
   return (
-    <PageChrome title="Memory Governance" lede="Candidate → 审批证据 → 正式 Memory → 带 Citation 的 Knowledge Query。所有状态来自 PostgreSQL 权威链，不回填示例知识。">
+    <PageChrome title="记忆与知识治理" lede="Candidate → 审批证据 → 正式 Memory → 带 Citation 的 Knowledge Query；全部来自权威链，不回填示例知识。">
+      <div
+        data-testid="memory-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "视图", value: view },
+          { label: "加载", value: loadState === "loaded" ? "就绪" : loadState === "loading" ? "读取中" : "失败" },
+          { label: "候选", value: String(candidates.length) },
+          { label: "正式记忆", value: String(memories.length) },
+          { label: "Pipeline", value: String(pipelineRuns.length) },
+          { label: "查询态", value: queryState },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
         {(["candidates", "memories", "agents", "query", "pipelines", "readiness"] as const).map((item) => (
           <button key={item} type="button" className={`btn ${view === item ? "primary" : ""}`} onClick={() => setView(item)} data-testid={`memory-tab-${item}`}>
@@ -237,7 +261,12 @@ export function MemoryGovernancePage() {
         <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(360px, 1.2fr)", gap: 16, alignItems: "start" }}>
           <section style={panel}>
             <h2 style={{ marginTop: 0, fontSize: 17 }}>知识候选</h2>
-            {!candidates.length ? <div data-testid="memory-candidates-empty" className="callout info">当前租户没有待治理或历史 Candidate；页面未注入静态候选。</div> : candidates.map((candidate) => (
+            {!candidates.length ? (
+              <div data-testid="memory-candidates-empty" className="callout info">
+                <strong>空态策略：</strong>
+                当前租户没有待治理或历史 Candidate。页面<strong>不</strong>注入静态/演示候选；有真实来源写入后再出现条目，再经审批晋升为正式 Memory。
+              </div>
+            ) : candidates.map((candidate) => (
               <button key={candidate.candidateId} type="button" className="btn" onClick={() => void inspectCandidate(candidate)} style={{ width: "100%", display: "grid", textAlign: "left", gap: 5, marginBottom: 8, padding: 12 }}>
                 <strong>{authoritySubjectLabel(candidate.request.subject)}</strong>
                 <span>{memoryStatusLabel(candidate.status)} · {candidate.scope} · v{candidate.version}</span>
@@ -268,7 +297,12 @@ export function MemoryGovernancePage() {
 
       {loadState === "loaded" && view === "memories" && <section style={panel}>
         <h2 style={{ marginTop: 0, fontSize: 17 }}>正式 Memory authority</h2>
-        {!memories.length ? <div data-testid="memory-items-empty" className="callout info">当前租户尚无正式 Memory；冷启动或治理晋升完成后才会出现，不以 Wiki 示例替代。</div> : <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
+        {!memories.length ? (
+          <div data-testid="memory-items-empty" className="callout info">
+            <strong>空态策略：</strong>
+            当前租户尚无正式 Memory。冷启动或 Candidate 治理晋升完成后才会出现；不以 Wiki 示例或本地 seed 冒充权威记忆。
+          </div>
+        ) : <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead><tr><th>主体</th><th>状态 / Scope</th><th>Revision</th><th>来源</th><th>适用范围</th><th>生效时间</th></tr></thead>
           <tbody>{memories.map(({ item, revision }) => <tr key={item.memoryItemId}>
             <td>{authoritySubjectLabel(item.subject)}<br /><span className="muted">{item.memoryItemId}</span></td>
@@ -287,7 +321,7 @@ export function MemoryGovernancePage() {
           <label>主体类型<input value={subjectType} onChange={(event) => setSubjectType(event.target.value)} aria-label="memory-subject-type" /></label>
           <label>主体 ID<input value={subjectId} onChange={(event) => setSubjectId(event.target.value)} aria-label="memory-subject-id" placeholder="真实 Object ID" /></label>
           <label>Task ID<input value={taskId} onChange={(event) => setTaskId(event.target.value)} aria-label="memory-task-id" placeholder="权威 Task ID" /></label>
-          <label>Skill ID<input value={skillId} onChange={(event) => setSkillId(event.target.value)} aria-label="memory-skill-id" placeholder="例如 content.strategy" /></label>
+          <label>技能 ID<input value={skillId} onChange={(event) => setSkillId(event.target.value)} aria-label="memory-skill-id" placeholder="例如 content.strategy" /></label>
           <label>请求 markings<input value={markings} onChange={(event) => setMarkings(event.target.value)} aria-label="memory-markings" /></label>
         </div>
         <button type="button" className="btn primary" style={{ marginTop: 14 }} onClick={() => void runKnowledgeQuery()} disabled={queryState === "loading"}>{queryState === "loading" ? "检索中…" : "执行权威检索"}</button>

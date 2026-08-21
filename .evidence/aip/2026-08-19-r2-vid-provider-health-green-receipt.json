@@ -1,0 +1,54 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevisionBefore": "AOS-000140",
+  "recordedAt": "2026-08-19T02:29:40+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-VID-0-3",
+  "approvalRef": "46-§8.77-VID-0..VID-3 / 35-R1-C",
+  "assets": {
+    "plugin": {
+      "assetId": "agnes-video",
+      "revision": 1,
+      "contentHash": "fb658c2f80218673538ac8bc1dd0a3a808dd359b9f4b00713c1bbf4453ebf543"
+    },
+    "egress": {
+      "assetId": "agnes-video-qyh-dev-egress",
+      "revision": 1,
+      "contentHash": "cf7486ab8d2ea4fd3b221d2dac2b6b6f7ee01cb94fc9ebfd32b1dc0c6124ea80"
+    },
+    "network": {
+      "assetId": "network-qyh-video-dev",
+      "revision": 1,
+      "contentHash": "f8356454db7381e5cb692b2f569714321e39a72c1ccfc325a3a2322ed582925f"
+    },
+    "provider": {
+      "assetId": "agnes-video-qyh-dev",
+      "revision": 1,
+      "contentHash": "87803c665c909317df443b083ee396ceb418cb59f0e4748bbb6a6cb7e7c84dcf"
+    },
+    "secretRefShape": "keychain://com.aos.llm/agnes-video/org-org/dev-project/agnes-video-qyh-dev#api-key",
+    "secretVersion": "v1"
+  },
+  "health": {
+    "observationId": "health-agnes-video-qyh-r2-20260818182940001155",
+    "status": "healthy",
+    "probeCount": 3,
+    "maxAttemptsPerProbe": 1,
+    "automaticRetries": 0,
+    "probeSpacingSeconds": 65,
+    "p50LatencyMs": 459,
+    "endpoint": "/v1/video/generations",
+    "providerModelId": "agnes-video-v2.0",
+    "expiresAt": "2026-08-18T18:44:40.001155+00:00"
+  },
+  "result": "PROVIDER_VIDEO_HEALTH_REFRESH_GREEN",
+  "immutable": true,
+  "secretPayloadReads": 0,
+  "sensitiveBodiesPrinted": 0,
+  "textAndImageUntouched": true,
+  "nextGate": "AIP_VID_4_ROUTE_CAPACITY_SPLIT"
+}

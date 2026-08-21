@@ -1,0 +1,78 @@
+{
+  "schema": "aip-r2-pilot-green-receipt/v1",
+  "status": "R2_I01_REAL_PILOT_GREEN",
+  "approvalRef": "46-R2-I01-VISUAL-DRAFT",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "modality": "image",
+  "endpoint": "/v1/images/generations",
+  "assets": {
+    "capability": {
+      "assetId": "image.generate",
+      "revision": 2
+    },
+    "skill": {
+      "assetId": "ecommerce.skill.I01",
+      "revision": 2
+    },
+    "logic": {
+      "assetId": "ecommerce.logic.I01",
+      "revision": 1
+    },
+    "capabilityBinding": {
+      "assetId": "ecommerce.content_officer.image.generate.r2",
+      "reused": false
+    },
+    "skillBinding": {
+      "assetId": "ecommerce.content_officer.skill.I01.r2",
+      "status": "active"
+    },
+    "instance": {
+      "assetId": "ecommerce.content_officer.default",
+      "status": "active"
+    },
+    "route": {
+      "assetId": "route-qyh-image-dev",
+      "revision": 1
+    },
+    "model": {
+      "assetId": "model-qyh-image-dev",
+      "revision": 1
+    },
+    "provider": {
+      "assetId": "agnes-image-qyh-dev",
+      "revision": 2
+    }
+  },
+  "pilot": {
+    "agentRunId": "ecommerce.content_officer.I01.real-pilot.v1",
+    "attemptId": "ecommerce.content_officer.I01.real-pilot.v1.attempt-1",
+    "agentRunStatus": "succeeded",
+    "attemptStatus": "succeeded",
+    "providerBusinessCalls": 1,
+    "retries": 0,
+    "usageReceiptCount": 2,
+    "lineageEventCount": 3,
+    "artifactCount": 1,
+    "secretPayloadReads": 0,
+    "sensitiveBodiesPrinted": 0,
+    "answerOpaque": "image_generation_succeeded"
+  },
+  "healthPrerequisite": {
+    "observationId": "health-agnes-image-qyh-r2-20260818191409594053",
+    "probeCount": 3,
+    "status": "PROVIDER_IMAGE_HEALTH_REFRESH_GREEN"
+  },
+  "verification": [
+    "pytest tests/aip/test_aip_i01_pilot.py: 5 passed",
+    "bootstrap I01 logic: I01_LOGIC_PUBLICATION_GREEN",
+    "skill+capability: I01_SKILL_CAPABILITY_PUBLICATION_GREEN (image.generate r2, skill I01 r2)",
+    "binding: I01_BINDING_COMPOSITION_GREEN",
+    "pilot: R2_I01_REAL_PILOT_GREEN; providerBusinessCalls=1; retries=0"
+  ],
+  "sealed": true,
+  "immutable": true,
+  "recordedAt": "2026-08-18T19:14:57.297386+00:00"
+}

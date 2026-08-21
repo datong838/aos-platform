@@ -1,0 +1,31 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000113",
+  "recordedAt": "2026-08-18T17:29:10+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4T",
+  "approvalRef": "46-R2-4T-PROVIDER-R4-HEALTH-THEN-V6",
+  "leaseRef": "AIP-R2-4T-PROVIDER-R4-HEALTH-THEN-V6",
+  "execution": {
+    "healthTripleProbeLimit": 1,
+    "healthProbesCompleted": 0,
+    "healthObservationWritten": false,
+    "blockerCode": "provider_timeout",
+    "providerBusinessCallLimit": 1,
+    "providerBusinessCalls": 0,
+    "automaticRetries": 0,
+    "recoveryWindowMinutesApprox": 10
+  },
+  "cursorDog": {
+    "sentinel": "AGENT_LOOP_WAKE_aip_dog",
+    "wakeOn": ["failed-stopped", "interrupted", "stale-working-heartbeat"],
+    "silentWhile": ["working", "looping"],
+    "note": "Agent self-looped after recovery window. Dog stayed silent. Loop independent of Dog."
+  },
+  "result": "R2_4T_HEALTH_TIMEOUT_NO_CONSECUTIVE_PROBE",
+  "nextGate": "R2_4U_PROVIDER_R4_HEALTH_THEN_V6"
+}

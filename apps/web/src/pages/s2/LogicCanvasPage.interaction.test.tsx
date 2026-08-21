@@ -9,6 +9,7 @@ import type { LogicDryRun, LogicRunSummary } from "./logicRunContracts";
 import type { LogicPublication } from "./logicPublicationContracts";
 
 const graphApi = vi.hoisted(() => ({
+  listLogicGraphs: vi.fn(),
   getLogicGraph: vi.fn(),
   createLogicGraph: vi.fn(),
   replaceLogicGraph: vi.fn(),
@@ -35,6 +36,24 @@ vi.mock("./logicPublicationApi", () => publicationApi);
 const clientApi = vi.hoisted(() => ({ apiGet: vi.fn() }));
 
 vi.mock("../../api/client", () => clientApi);
+
+const productionContracts = vi.hoisted(() => ({
+  listStageTemplates: vi.fn(async () => ({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 })),
+  listResponsibilityPlans: vi.fn(async () => ({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 })),
+}));
+vi.mock("../../api/aipProductionContracts", () => ({ aipProductionContracts: productionContracts }));
+
+const agentControl = vi.hoisted(() => ({
+  runtimeReadiness: vi.fn(async () => ({
+    tenant: { orgId: "org-org", projectId: "dev-project" },
+    catalog: { tenant: { orgId: "org-org", projectId: "dev-project" }, stats: { definitionCount: 6, installedCount: 1, runnableCount: 0, skillDefinitionCount: 0, capabilityDefinitionCount: 0 }, items: [] },
+    capabilityBindings: [],
+    skillBindings: [],
+    bindingStats: { capabilityBindingCount: 0, skillBindingCount: 0, activeCapabilityBindingCount: 0, activeSkillBindingCount: 0 },
+    evaluatedAt: "2026-08-20T00:00:00Z",
+  })),
+}));
+vi.mock("../../api/aipAgentControl", () => ({ aipAgentControl: agentControl }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -179,8 +198,11 @@ function historySummary(run: LogicDryRun): LogicRunSummary {
 }
 
 let currentPath = "";
+let currentSearch = "";
 function LocationProbe() {
-  currentPath = useLocation().pathname;
+  const location = useLocation();
+  currentPath = location.pathname;
+  currentSearch = location.search;
   return null;
 }
 
@@ -201,13 +223,28 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     document.body.appendChild(host);
     root = createRoot(host);
     currentPath = "";
+    currentSearch = "";
     Object.values(graphApi).forEach((mock) => mock.mockReset());
     Object.values(runApi).forEach((mock) => mock.mockReset());
     Object.values(publicationApi).forEach((mock) => mock.mockReset());
     clientApi.apiGet.mockReset();
+    productionContracts.listStageTemplates.mockClear();
+    productionContracts.listResponsibilityPlans.mockClear();
+    agentControl.runtimeReadiness.mockClear();
+    graphApi.listLogicGraphs.mockResolvedValue({ items: [], count: 0 });
     runApi.listLogicRuns.mockResolvedValue({ items: [], count: 0, next_cursor: null });
     publicationApi.listLogicPublications.mockResolvedValue({ items: [], count: 0 });
     clientApi.apiGet.mockResolvedValue({ items: [] });
+    productionContracts.listStageTemplates.mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 });
+    productionContracts.listResponsibilityPlans.mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 });
+    agentControl.runtimeReadiness.mockResolvedValue({
+      tenant: { orgId: "org-org", projectId: "dev-project" },
+      catalog: { tenant: { orgId: "org-org", projectId: "dev-project" }, stats: { definitionCount: 6, installedCount: 1, runnableCount: 0, skillDefinitionCount: 0, capabilityDefinitionCount: 0 }, items: [] },
+      capabilityBindings: [],
+      skillBindings: [],
+      bindingStats: { capabilityBindingCount: 0, skillBindingCount: 0, activeCapabilityBindingCount: 0, activeSkillBindingCount: 0 },
+      evaluatedAt: "2026-08-20T00:00:00Z",
+    });
   });
 
   afterEach(() => {
@@ -222,6 +259,11 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
         <LocationProbe />
       </MemoryRouter>,
     ));
+    await flush();
+  }
+
+  async function openHistoryTab() {
+    await act(async () => button("运行历史").click());
     await flush();
   }
 
@@ -245,8 +287,24 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  it("无 flowId 显示带 4 节点 3 连接的明确未保存模板，显式 POST 后 replace 导航", async () => {
+  it("无 flowId 优先选择 exact persisted Graph；空列表诚实展示且仅显式新建后产生草稿", async () => {
+    const saved = graphSnapshot("default-saved", 5);
+    graphApi.listLogicGraphs.mockResolvedValueOnce({ items: [saved], count: 1 });
     await renderPage();
+    expect(graphApi.listLogicGraphs).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toContain("Logic default-saved");
+    expect(host.textContent).not.toContain("未保存模板");
+    expect(currentPath).toBe("/aip/logic/default-saved");
+
+    act(() => root.unmount());
+    root = createRoot(host);
+    graphApi.listLogicGraphs.mockResolvedValueOnce({ items: [], count: 0 });
+    await renderPage();
+    expect(host.textContent).toContain("尚无已保存 Logic Graph");
+    expect(host.textContent).not.toContain("节点 4 · 连接 3");
+
+    await act(async () => button("新建 Logic 草稿").click());
+    await flush();
     expect(host.textContent).toContain("未保存模板");
     expect(host.textContent).toContain("节点 4 · 连接 3");
     expect(host.textContent).toContain("未保存更改");
@@ -268,7 +326,32 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     });
     const createdId = graphApi.createLogicGraph.mock.calls[0][0].id;
     expect(currentPath).toBe(`/aip/logic/${createdId}`);
-    expect(host.textContent).toContain("已保存并回读确认");
+  });
+
+  it("三个 Tab 与 URL/tabpanel 一一绑定，并支持方向键和 Home/End 焦点语义", async () => {
+    graphApi.getLogicGraph.mockResolvedValue(graphSnapshot("tabs", 2));
+    await renderPage("tabs");
+    expect(host.querySelectorAll('[role="tabpanel"]')).toHaveLength(1);
+    expect(host.querySelector('[role="tabpanel"]')?.id).toBe("logic-panel-edit");
+
+    await act(async () => button("运行历史").click());
+    expect(currentSearch).toBe("?tab=history");
+    expect(host.querySelectorAll('[role="tabpanel"]')).toHaveLength(1);
+    expect(host.querySelector('[role="tabpanel"]')?.id).toBe("logic-panel-history");
+
+    const historyTab = button("运行历史");
+    await act(async () => historyTab.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })));
+    await flush();
+    expect(currentSearch).toBe("?tab=automation");
+    expect(host.querySelector('[role="tabpanel"]')?.id).toBe("logic-panel-automation");
+    expect(host.textContent).toContain("tabs@2");
+    expect(host.textContent).toContain("Uses 真源尚未接入");
+    expect(host.textContent).not.toContain("已登记 Uses0");
+
+    await act(async () => button("自动化").dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true })));
+    await flush();
+    expect(currentSearch).toBe("");
+    expect(host.querySelector('[role="tabpanel"]')?.id).toBe("logic-panel-edit");
   });
 
   it("flowId 切换立即隔离旧图，迟到的旧 GET 不得覆盖新图", async () => {
@@ -406,6 +489,8 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
 
   it("安全试跑按钮始终可见，并按未保存、loading、dirty、saving、Inputs 与 running 严格门禁", async () => {
     await renderPage();
+    await act(async () => button("新建 Logic 草稿").click());
+    await flush();
     expect(button("安全试跑").disabled).toBe(true);
     expect(host.textContent).toContain("请先保存 Logic Graph");
 
@@ -503,6 +588,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
       expected_graph_hash: loaded.graph_hash,
       inputs: { objectId: "wo-7" },
     }, ["trusted-input", "trusted-llm"]);
+    await openHistoryTab();
     expect(host.textContent).toContain("服务端运行证据");
     expect(host.textContent).toContain("revision 7");
     expect(host.textContent).toContain(loaded.graph_hash);
@@ -521,19 +607,26 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     runApi.dryRunLogicGraph.mockRejectedValueOnce(Object.assign(new Error("revision 已变化"), { status: 409 }));
     await act(async () => button("安全试跑").click());
     await flush();
+    await openHistoryTab();
     expect(host.textContent).toContain("版本冲突：revision 已变化");
+    await act(async () => button("编辑").click());
+    await flush();
     expect(host.textContent).toContain("仍在画布");
     expect(host.textContent).not.toContain("未保存更改");
 
     runApi.dryRunLogicGraph.mockRejectedValueOnce(new Error("只读执行器不可用"));
     await act(async () => button("安全试跑").click());
     await flush();
+    await openHistoryTab();
     expect(host.textContent).toContain("只读执行器不可用");
+    await act(async () => button("编辑").click());
+    await flush();
     expect(host.textContent).toContain("仍在画布");
 
     runApi.dryRunLogicGraph.mockRejectedValueOnce(new Error("响应已收到，但历史持久化核验失败：detail 不一致"));
     await act(async () => button("安全试跑").click());
     await flush();
+    await openHistoryTab();
     expect(host.textContent).toContain("历史持久化核验失败");
     expect(host.textContent).not.toContain("服务端运行证据");
     expect(runApi.dryRunLogicGraph).toHaveBeenCalledTimes(3);
@@ -550,20 +643,27 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     graphApi.getLogicGraph.mockResolvedValue(loaded);
     runApi.getLogicRun.mockResolvedValue(failed);
     await renderPage("history");
+    await openHistoryTab();
 
     expect(host.textContent).toContain("历史暂时不可用");
+    expect(host.querySelector("[data-testid='history-lineage-blocked']")).not.toBeNull();
     await act(async () => button("重试").click());
     await flush();
 
     await act(async () => button("run-history-failed").click());
     await flush();
     expect(runApi.getLogicRun).toHaveBeenCalledWith("history", "run-history-failed");
+    expect(host.querySelector<HTMLAnchorElement>("[data-testid='history-jump-lineage']")?.getAttribute("href"))
+      .toBe("/aip/lineage?rootType=task_run&rootId=run-history-failed");
     expect(host.textContent).toContain("SAFE_TOOL_FAILED");
     expect(host.textContent).not.toContain("未保存更改");
     await act(async () => button("定位节点 history-llm").click());
+    await act(async () => button("编辑").click());
+    await flush();
     expect(host.textContent).toContain("Block 属性use_llm");
     expect(host.textContent).not.toContain("未保存更改");
 
+    await openHistoryTab();
     await act(async () => button("加载更多运行记录").click());
     await flush();
     expect(runApi.listLogicRuns).toHaveBeenLastCalledWith("history", { limit: 20, before: "cursor-1" });
@@ -597,8 +697,11 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
       .mockReturnValueOnce(secondDetail.promise);
     runApi.dryRunLogicGraph.mockReturnValueOnce(nextRun.promise);
     await renderPage("states");
+    await openHistoryTab();
 
     await act(async () => button("run-states-mixed").click());
+    await flush();
+    await act(async () => button("编辑").click());
     await flush();
     const expectedStates = new Map([
       ["states-input", "executed"],
@@ -613,7 +716,11 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     expect(host.querySelectorAll("[data-run-state]")).toHaveLength(4);
     expect(host.textContent).not.toContain("未保存更改");
 
+    await openHistoryTab();
     await act(async () => button("run-states-executed").click());
+    await flush();
+    await act(async () => button("编辑").click());
+    await flush();
     expect(host.querySelectorAll("[data-run-state]")).toHaveLength(0);
     secondDetail.resolve(allExecuted);
     await flush();
@@ -647,10 +754,13 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     }));
     runApi.getLogicRun.mockReturnValueOnce(oldDetail.promise);
 
-    await act(async () => root.render(<MemoryRouter><LogicCanvasPage flowId="old-run" /></MemoryRouter>));
+    await act(async () => root.render(<MemoryRouter><LogicCanvasPage key="old-run" flowId="old-run" /></MemoryRouter>));
     await flush();
+    await openHistoryTab();
     await act(async () => button("run-old-late").click());
-    await act(async () => root.render(<MemoryRouter><LogicCanvasPage flowId="new-run" /></MemoryRouter>));
+    await act(async () => root.render(<MemoryRouter><LogicCanvasPage key="new-run" flowId="new-run" /></MemoryRouter>));
+    await flush();
+    await act(async () => button("编辑").click());
     await flush();
     oldDetail.resolve(dryRunResult(oldGraph, "run-old-late"));
     await flush();

@@ -1,0 +1,28 @@
+{
+  "schema": "aos-provider-plugin-approval/v1",
+  "providerPluginId": "agnes-image",
+  "revision": 1,
+  "manifestVersion": "0.1.0",
+  "owner": "AOS/FDE",
+  "usageBasis": "AGNES internal authorized image model service; AOS self-developed adapter; development pilot and demo only",
+  "approvedCapabilities": [
+    "image"
+  ],
+  "deniedCapabilities": [
+    "llm",
+    "chat",
+    "structured_output",
+    "audio",
+    "video",
+    "tool-execution"
+  ],
+  "allowedTenants": [
+    {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    }
+  ],
+  "approvalStatus": "approved_for_dev",
+  "approvedBy": "杜大同",
+  "approvedAt": "2026-08-19T00:00:00+08:00"
+}

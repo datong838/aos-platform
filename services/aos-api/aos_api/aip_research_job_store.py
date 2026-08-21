@@ -13,6 +13,7 @@ import psycopg
 
 from aos_api.aip_contracts import ArtifactRef, ResourceRef, TenantContext
 from aos_api.aip_research_job import (
+    CancelResearchJobRequest,
     CreateResearchJobRequest,
     ReconcileResearchJobRequest,
     RecordResearchArtifactRequest,
@@ -22,12 +23,14 @@ from aos_api.aip_research_job import (
     ResearchArtifactReceipt,
     ResearchDeliveryReceipt,
     ResearchJobEvent,
+    ResearchJobListResponse,
     ResearchJobObservation,
     ResearchJobSnapshot,
     ResearchJobStatus,
     ResearchProviderRevision,
     ResearchProviderStatus,
     ResearchSubmissionReceipt,
+    RetryResearchJobRequest,
     canonical_research_manifest_hash,
 )
 from aos_api.db import connect
@@ -639,6 +642,173 @@ class AipResearchJobStore:
         with self._connect(scope) as conn:
             return self._snapshot(conn, scope, self._job(conn, scope, job_id))
 
+    def list_jobs(
+        self, scope: TenantScope, *, limit: int = 50
+    ) -> ResearchJobListResponse:
+        limit = max(1, min(int(limit), 200))
+        with self._connect(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_research_job_manifest
+                   WHERE org_id=%s AND project_id=%s
+                   ORDER BY created_at DESC, job_id DESC
+                   LIMIT %s""",
+                (scope.org_id, scope.project_id, limit),
+            ).fetchall()
+            items = [self._snapshot(conn, scope, row) for row in rows]
+            return ResearchJobListResponse(
+                tenant=_tenant(scope), items=items, count=len(items)
+            )
+
+    def cancel_job(
+        self,
+        scope: TenantScope,
+        job_id: str,
+        request: CancelResearchJobRequest,
+        actor: str,
+        idempotency_key: str,
+        *,
+        now: datetime,
+    ) -> ResearchJobSnapshot:
+        request_hash = _hash(
+            {
+                "jobId": job_id,
+                "reason": request.reason,
+                "actor": actor,
+                "command": "cancel",
+            }
+        )
+        with self._connect(scope) as conn:
+            job = self._job(conn, scope, job_id)
+            replay = conn.execute(
+                """SELECT request_hash, outcome_status FROM aip_research_job_command_receipt
+                   WHERE org_id=%s AND project_id=%s AND command='cancel'
+                     AND idempotency_key=%s""",
+                (scope.org_id, scope.project_id, idempotency_key),
+            ).fetchone()
+            if replay is not None:
+                if replay["request_hash"] != request_hash:
+                    raise AipResearchJobConflict(
+                        "cancel idempotency key reused with different payload"
+                    )
+                return self._snapshot(conn, scope, job)
+            snapshot = self._snapshot(conn, scope, job)
+            if snapshot.status in {
+                ResearchJobStatus.SUCCEEDED,
+                ResearchJobStatus.FAILED,
+                ResearchJobStatus.CANCELLED,
+            }:
+                raise AipResearchJobBlocked(
+                    f"research job already terminal ({snapshot.status.value})"
+                )
+            outcome = (
+                ResearchJobStatus.CANCELLED.value
+                if snapshot.provider_execution_id is None
+                else ResearchJobStatus.UNKNOWN.value
+            )
+            conn.execute(
+                """INSERT INTO aip_research_job_command_receipt
+                   (org_id,project_id,receipt_id,job_id,command,idempotency_key,
+                    request_hash,actor,outcome_status,created_at)
+                   VALUES(%s,%s,%s,%s,'cancel',%s,%s,%s,%s,%s)""",
+                (
+                    scope.org_id,
+                    scope.project_id,
+                    _id("research-cmd", scope, job_id, idempotency_key),
+                    job_id,
+                    idempotency_key,
+                    request_hash,
+                    actor,
+                    outcome,
+                    now,
+                ),
+            )
+            conn.commit()
+            return self._snapshot(conn, scope, self._job(conn, scope, job_id))
+
+    def retry_job(
+        self,
+        scope: TenantScope,
+        job_id: str,
+        request: RetryResearchJobRequest,
+        actor: str,
+        *,
+        now: datetime,
+    ) -> ResearchJobSnapshot:
+        """Provider resume is unsupported; mint a new job linked by retryOf."""
+        request_hash = _hash(
+            {
+                "jobId": job_id,
+                "reason": request.reason,
+                "actor": actor,
+                "command": "retry",
+                "idempotencyKey": request.idempotency_key,
+            }
+        )
+        with self._connect(scope) as conn:
+            source = self._job(conn, scope, job_id)
+            replay = conn.execute(
+                """SELECT request_hash, retry_job_id FROM aip_research_job_command_receipt
+                   WHERE org_id=%s AND project_id=%s AND command='retry'
+                     AND idempotency_key=%s""",
+                (scope.org_id, scope.project_id, request.idempotency_key),
+            ).fetchone()
+            if replay is not None:
+                if replay["request_hash"] != request_hash:
+                    raise AipResearchJobConflict(
+                        "retry idempotency key reused with different payload"
+                    )
+                if not replay["retry_job_id"]:
+                    raise AipResearchJobConflict("retry receipt missing retry job")
+                return self._snapshot(
+                    conn, scope, self._job(conn, scope, replay["retry_job_id"])
+                )
+            from aos_api.aip_research_job import ResearchJobManifest
+
+            raw_manifest = source["manifest"]
+            if isinstance(raw_manifest, str):
+                import json as _json_mod
+
+                raw_manifest = _json_mod.loads(raw_manifest)
+            manifest_model = ResearchJobManifest.model_validate(raw_manifest)
+            reminted = manifest_model.model_copy(
+                update={"idempotency_key": request.idempotency_key}
+            )
+            reminted = reminted.model_copy(
+                update={"manifest_hash": canonical_research_manifest_hash(reminted)}
+            )
+            create_req = CreateResearchJobRequest(
+                run_id=source["run_id"],
+                step_key=source["step_key"],
+                provider_id=source["provider_id"],
+                provider_revision=int(source["provider_revision"]),
+                manifest=reminted,
+            )
+        created = self.create_job(scope, create_req, actor, now)
+        with self._connect(scope) as conn:
+            conn.execute(
+                """INSERT INTO aip_research_job_command_receipt
+                   (org_id,project_id,receipt_id,job_id,command,idempotency_key,
+                    request_hash,actor,outcome_status,retry_job_id,created_at)
+                   VALUES(%s,%s,%s,%s,'retry',%s,%s,%s,%s,%s,%s)""",
+                (
+                    scope.org_id,
+                    scope.project_id,
+                    _id("research-cmd", scope, job_id, request.idempotency_key),
+                    job_id,
+                    request.idempotency_key,
+                    request_hash,
+                    actor,
+                    created.status.value,
+                    created.job_id,
+                    now,
+                ),
+            )
+            conn.commit()
+        # Attach retryOf on the new snapshot view via command lookup
+        with self._connect(scope) as conn:
+            snap = self._snapshot(conn, scope, self._job(conn, scope, created.job_id))
+            return snap.model_copy(update={"retry_of_job_id": job_id})
+
     def get_current_provider(
         self, scope: TenantScope, provider_id: str, revision: int
     ) -> ResearchProviderRevision:
@@ -662,6 +832,26 @@ class AipResearchJobStore:
             if latest_reconcile
             else observation.status
         )
+        cancel = conn.execute(
+            """SELECT outcome_status FROM aip_research_job_command_receipt
+               WHERE org_id=%s AND project_id=%s AND job_id=%s AND command='cancel'
+               ORDER BY created_at DESC, receipt_id DESC LIMIT 1""",
+            (scope.org_id, scope.project_id, job["job_id"]),
+        ).fetchone()
+        cancel_requested = cancel is not None
+        if cancel is not None and status not in {
+            ResearchJobStatus.SUCCEEDED,
+            ResearchJobStatus.FAILED,
+            ResearchJobStatus.CANCELLED,
+        }:
+            status = ResearchJobStatus(cancel["outcome_status"] or "unknown")
+        retry_of = conn.execute(
+            """SELECT job_id FROM aip_research_job_command_receipt
+               WHERE org_id=%s AND project_id=%s AND command='retry'
+                 AND retry_job_id=%s
+               ORDER BY created_at DESC LIMIT 1""",
+            (scope.org_id, scope.project_id, job["job_id"]),
+        ).fetchone()
         return ResearchJobSnapshot(
             tenant=_tenant(scope),
             job_id=job["job_id"],
@@ -693,6 +883,9 @@ class AipResearchJobStore:
             last_sequence=observation.last_sequence,
             has_gap=observation.has_gap,
             created_at=job["created_at"],
+            cancel_requested=cancel_requested,
+            resumability="unsupported",
+            retry_of_job_id=None if retry_of is None else retry_of["job_id"],
         )
 
     def _observation(

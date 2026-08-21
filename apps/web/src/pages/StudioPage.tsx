@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { aipAgentControl } from "../api/aipAgentControl";
+import type { AipOperationalProjection } from "../api/aipOperationalProjection";
 import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
+import { AipOperationalProjectionStrip } from "../components/aip/AipOperationalProjectionStrip";
+import { templateDisplayName } from "../lib/aipChineseLabels";
 
 type AgentItem = {
   id: string;
@@ -35,6 +39,15 @@ type ApiAgent = {
   tags?: string[];
   status?: string;
   calls?: number;
+  /** Canonical AgentInstance fields (AIP-6). */
+  instanceId?: string;
+  overlay?: {
+    displayName?: string | null;
+    allowedCapabilityIds?: string[];
+  };
+  template?: {
+    assetId?: string;
+  };
 };
 
 type StudioTool = {
@@ -45,12 +58,24 @@ type StudioTool = {
 };
 
 export function mapApiAgentToStudio(agent: ApiAgent): AgentItem {
-  const status = agent.status === "draft" ? "draft" : agent.status === "archived" ? "stopped" : "running";
+  const id = String(agent.instanceId || agent.id || "");
+  const rawStatus = String(agent.status || "");
+  const status: AgentItem["status"] =
+    rawStatus === "draft" || rawStatus === "provisioning"
+      ? "draft"
+      : rawStatus === "archived" || rawStatus === "suspended" || rawStatus === "deleted"
+        ? "stopped"
+        : "running";
   const level = agent.tags?.find((tag) => /^L[0-4]$/.test(tag)) || "L2";
+  const category =
+    agent.tags?.find((tag) => !/^L[0-4]$/.test(tag)) ||
+    (agent.template?.assetId ? templateDisplayName(agent.template.assetId) : null) ||
+    agent.source ||
+    "未分类";
   return {
-    id: String(agent.id || ""),
-    name: String(agent.name || "未命名智能体"),
-    category: agent.tags?.find((tag) => !/^L[0-4]$/.test(tag)) || agent.source || "未分类",
+    id,
+    name: String(agent.overlay?.displayName || agent.name || id || "未命名智能体"),
+    category,
     level,
     levelLabel: `${level} · API`,
     status,
@@ -59,6 +84,12 @@ export function mapApiAgentToStudio(agent: ApiAgent): AgentItem {
     iconColor: "var(--aos-indigo-600)",
     iconPath: "M21 11.5a8.5 8.5 0 01-8.5 8.5H5l-3 3V11.5A8.5 8.5 0 0110.5 3h2A8.5 8.5 0 0121 11.5z",
   };
+}
+
+export function studioOverlayBlockedMessage(error: unknown): string | null {
+  const code = (error as { body?: { code?: string } } | null)?.body?.code;
+  if (code !== "AIP_CANONICAL_OVERLAY_NOT_IMPLEMENTED") return null;
+  return "提示词/工具 overlay 尚未实现版本化权威契约（AIP_CANONICAL_OVERLAY_NOT_IMPLEMENTED）。本页不读写假配置；请到「智能体列表」查看实例状态，后续门完成后再编辑。";
 }
 
 export function sameToolIds(left: string[], right: string[]): boolean {
@@ -81,12 +112,55 @@ export function validateAgentToolsResponse(
   return response?.agent_id === agentId && sameToolIds((response.items || []).map((item) => String(item.id || "")), toolIds);
 }
 
+export function validateGuardrailsResponse(
+  response: { agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }> } | null | undefined,
+  agentId: string,
+  enabledIds: string[],
+): boolean {
+  if (response?.agent_id !== agentId) return false;
+  const actual = (response.items || []).filter((item) => item.enabled !== false).map((item) => String(item.id || ""));
+  return sameToolIds(actual, enabledIds);
+}
+
+export const STUDIO_GUARDRAIL_CATALOG = [
+  { id: "no_fs_write", name: "禁止写文件系统" },
+  { id: "no_fork", name: "禁止进程分叉" },
+  { id: "token_limit", name: "强制 Token 上限" },
+  { id: "auto_draft", name: "外呼默认进 Draft" },
+] as const;
+
 const STUDIO_TABS = [
   { id: "prompt", label: "提示词" },
   { id: "tools", label: "工具箱" },
+  { id: "guardrails", label: "护栏" },
   { id: "try", label: "试运行" },
   { id: "publish", label: "发布" },
 ];
+
+export const STUDIO_DEFAULT_QUERY = "";
+export const STUDIO_UNASSESSED_COPY =
+  "须 exact EvalRun 达到阈值且 Draft 审批通过后方可申请 L4 上线。当前 Agent 未在本页绑定 exact EvalRun，状态为“未评测”；本页不推测分数。";
+
+export type StudioModelRouteGate = { ready: boolean; label: string; reason: string };
+
+export function studioModelRouteGate(
+  defaultModel: string,
+  projection: AipOperationalProjection | null,
+): StudioModelRouteGate {
+  const modelId = defaultModel.trim();
+  const isMock = /(^|[-_])(mock|fallback)([-_]|$)/i.test(modelId) || /^mock/i.test(modelId);
+  if (!projection) {
+    return { ready: false, label: "未就绪（等待 canonical 运行投影）", reason: "真实模型路由状态尚未可用" };
+  }
+  if (!modelId || modelId === "—" || isMock || projection.routes.runnable < 1) {
+    return {
+      ready: false,
+      label: `未就绪（${projection.routes.runnable}/${projection.routes.definition} 可派发）`,
+      reason: "真实模型路由未就绪，禁止回落 Mock 冒充试运行",
+    };
+  }
+  return { ready: true, label: modelId, reason: "" };
+}
 
 
 function statusBadge(status: AgentItem["status"]) {
@@ -96,6 +170,7 @@ function statusBadge(status: AgentItem["status"]) {
 }
 
 export function StudioPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState("prompt");
   const [agents, setAgents] = useState<AgentItem[]>([]);
   const [activeId, setActiveId] = useState("");
@@ -105,15 +180,25 @@ export function StudioPage() {
   const [loadState, setLoadState] = useState<"loading" | "live" | "error">("loading");
   const [resourceError, setResourceError] = useState<string | null>(null);
   const [defaultModel, setDefaultModel] = useState("—");
+  const [operationalProjection, setOperationalProjection] = useState<AipOperationalProjection | null>(null);
   const [lastRoute, setLastRoute] = useState<string | null>(null);
-  const [query, setQuery] = useState("ORD-8821 超时了，怎么派？");
+  const [query, setQuery] = useState(STUDIO_DEFAULT_QUERY);
   const [answer, setAnswer] = useState("");
   const [toolCalls, setToolCalls] = useState<unknown[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [promptSaveMsg, setPromptSaveMsg] = useState<string | null>(null);
   const [toolsSaveMsg, setToolsSaveMsg] = useState<string | null>(null);
+  const [guardrailsSaveMsg, setGuardrailsSaveMsg] = useState<string | null>(null);
   const [promptSaving, setPromptSaving] = useState(false);
   const [toolsSaving, setToolsSaving] = useState(false);
+  const [guardrailsSaving, setGuardrailsSaving] = useState(false);
+  const [enabledGuardrails, setEnabledGuardrails] = useState<string[]>(
+    STUDIO_GUARDRAIL_CATALOG.map((item) => item.id),
+  );
+  const [overlayBlocked, setOverlayBlocked] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
+  const [installBusy, setInstallBusy] = useState(false);
+  const [installMsg, setInstallMsg] = useState<string | null>(null);
   const loadGeneration = useRef(0);
   const activeAgent = agents.find((a) => a.id === activeId) || null;
   const displayAgent: AgentItem = activeAgent || {
@@ -122,18 +207,44 @@ export function StudioPage() {
   };
   const selectedTools = enabledTools;
   const selectedToolItems = useMemo(() => toolCatalog.filter((tool) => enabledTools.includes(tool.id)), [enabledTools, toolCatalog]);
+  const modelRouteGate = useMemo(
+    () => studioModelRouteGate(defaultModel, operationalProjection),
+    [defaultModel, operationalProjection],
+  );
+
+  async function refreshAgents() {
+    const response = await apiGet<{ items?: ApiAgent[] }>("/v1/aip/agents");
+    const next = (response.items || []).map(mapApiAgentToStudio).filter((agent) => agent.id);
+    setAgents(next);
+    const fromUrl = String(searchParams.get("instance") || "").trim();
+    setActiveId((current) => {
+      if (fromUrl && next.some((agent) => agent.id === fromUrl)) return fromUrl;
+      if (current && next.some((agent) => agent.id === current)) return current;
+      return next[0]?.id || "";
+    });
+    setLoadState("live");
+    setResourceError(null);
+    return next;
+  }
+
+  useEffect(() => {
+    if (!activeId) return;
+    const current = String(searchParams.get("instance") || "").trim();
+    if (current === activeId) return;
+    const next = new URLSearchParams(searchParams);
+    next.set("instance", activeId);
+    setSearchParams(next, { replace: true });
+  }, [activeId, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const fromUrl = String(searchParams.get("instance") || "").trim();
+    if (!fromUrl || !agents.some((agent) => agent.id === fromUrl)) return;
+    if (fromUrl !== activeId) setActiveId(fromUrl);
+  }, [searchParams, agents, activeId]);
 
   useEffect(() => {
     let cancelled = false;
-    apiGet<{ items?: ApiAgent[] }>("/v1/aip/agents")
-      .then((response) => {
-        if (cancelled) return;
-        const next = (response.items || []).map(mapApiAgentToStudio).filter((agent) => agent.id);
-        setAgents(next);
-        setActiveId((current) => next.some((agent) => agent.id === current) ? current : next[0]?.id || "");
-        setLoadState("live");
-        setResourceError(null);
-      })
+    refreshAgents()
       .catch((error) => {
         if (cancelled) return;
         setAgents([]);
@@ -142,26 +253,38 @@ export function StudioPage() {
         setResourceError(String((error as Error).message || error));
       });
     apiGet<{ defaultTextModel?: string }>("/v1/aip/models")
-      .then((r) => setDefaultModel(r.defaultTextModel || "—"))
-      .catch(() => setDefaultModel("—"));
+      .then((r) => { if (!cancelled) setDefaultModel(r.defaultTextModel || "—"); })
+      .catch(() => { if (!cancelled) setDefaultModel("—"); });
     return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    if (!activeId) { setSystemPrompt(""); setEnabledTools([]); return; }
+    if (!activeId) {
+      setSystemPrompt("");
+      setEnabledTools([]);
+      setEnabledGuardrails(STUDIO_GUARDRAIL_CATALOG.map((item) => item.id));
+      setOverlayBlocked(false);
+      return;
+    }
     const generation = ++loadGeneration.current;
     setSystemPrompt("");
     setEnabledTools([]);
+    setEnabledGuardrails(STUDIO_GUARDRAIL_CATALOG.map((item) => item.id));
     setPromptSaveMsg(null);
     setToolsSaveMsg(null);
+    setGuardrailsSaveMsg(null);
     setResourceError(null);
+    setOverlayBlocked(false);
     Promise.all([
       apiGet<{ agent_id?: string; prompt?: string }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/prompt`),
       apiGet<{ agent_id?: string; items?: StudioTool[] }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/tools`),
+      apiGet<{ agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }> }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/guardrails`),
       apiGet<{ items?: Array<{ id?: string; name?: string; kind?: string }> }>("/v1/aip/tools"),
-    ]).then(([prompt, assigned, catalog]) => {
+    ]).then(([prompt, assigned, guardrails, catalog]) => {
       if (generation !== loadGeneration.current) return;
-      if (prompt.agent_id !== activeId || assigned.agent_id !== activeId) throw new Error("Agent 资源响应目标错配");
+      if (prompt.agent_id !== activeId || assigned.agent_id !== activeId || guardrails.agent_id !== activeId) {
+        throw new Error("Agent 资源响应目标错配");
+      }
       setSystemPrompt(String(prompt.prompt || ""));
       const assignedItems = assigned.items || [];
       setEnabledTools(assignedItems.map((tool) => tool.id));
@@ -175,15 +298,24 @@ export function StudioPage() {
           id: tool.id, name: tool.name || tool.id, category: tool.category || "tool", enabled: tool.enabled !== false,
         })),
       ]);
+      const saved = guardrails.items || [];
+      if (saved.length === 0) {
+        setEnabledGuardrails(STUDIO_GUARDRAIL_CATALOG.map((item) => item.id));
+      } else {
+        setEnabledGuardrails(saved.filter((item) => item.enabled !== false).map((item) => String(item.id || "")).filter(Boolean));
+      }
       setAgents((prev) => prev.map((agent) => agent.id === activeId ? { ...agent, toolCount: assignedItems.length } : agent));
+      setOverlayBlocked(false);
     }).catch((error) => {
       if (generation !== loadGeneration.current) return;
-      setResourceError(`Agent 配置加载失败：${String((error as Error).message || error)}`);
+      const blocked = studioOverlayBlockedMessage(error);
+      setOverlayBlocked(Boolean(blocked));
+      setResourceError(blocked || `Agent 配置加载失败：${String((error as Error).message || error)}`);
     });
   }, [activeId]);
 
   async function savePrompt() {
-    if (promptSaving || !activeId) return;
+    if (promptSaving || !activeId || overlayBlocked) return;
     const targetId = activeId;
     const snapshot = systemPrompt;
     setPromptSaving(true);
@@ -215,7 +347,7 @@ export function StudioPage() {
   }
 
   async function saveTools() {
-    if (toolsSaving || !activeId) return;
+    if (toolsSaving || !activeId || overlayBlocked) return;
     const targetId = activeId;
     const snapshot = [...enabledTools];
     setToolsSaving(true);
@@ -245,12 +377,73 @@ export function StudioPage() {
     }
   }
 
+  async function saveGuardrails() {
+    if (guardrailsSaving || !activeId || overlayBlocked) return;
+    const targetId = activeId;
+    const snapshot = [...enabledGuardrails];
+    setGuardrailsSaving(true);
+    setGuardrailsSaveMsg(null);
+    setErr(null);
+    try {
+      const items = STUDIO_GUARDRAIL_CATALOG.map((item) => ({
+        id: item.id,
+        name: item.name,
+        enabled: snapshot.includes(item.id),
+      }));
+      const written = await apiPut<{ agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }> }>(
+        `/v1/aip/agents/${encodeURIComponent(targetId)}/guardrails`,
+        { items },
+      );
+      if (!validateGuardrailsResponse(written, targetId, snapshot)) throw new Error("Guardrails 写回响应与目标不一致");
+      let reread: { agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }> };
+      try {
+        reread = await apiGet(`/v1/aip/agents/${encodeURIComponent(targetId)}/guardrails`);
+      } catch (error) {
+        setGuardrailsSaveMsg(formatStudioSaveMsg(false, String((error as Error).message || error)));
+        return;
+      }
+      if (!validateGuardrailsResponse(reread, targetId, snapshot)) {
+        setGuardrailsSaveMsg(formatStudioSaveMsg(false, "服务端护栏不一致"));
+        return;
+      }
+      setGuardrailsSaveMsg(formatStudioSaveMsg(true, "agents/{id}/guardrails"));
+    } catch (ex) {
+      setGuardrailsSaveMsg(`保存失败 · ${String((ex as Error).message || ex).slice(0, 120)}`);
+    } finally {
+      setGuardrailsSaving(false);
+    }
+  }
+
+  async function installEcommercePack() {
+    if (installBusy) return;
+    setInstallBusy(true);
+    setInstallMsg(null);
+    try {
+      await aipAgentControl.installEcommerce(`studio-install-${crypto.randomUUID()}`);
+      const next = await refreshAgents();
+      setInstallMsg(`安装完成 · 当前列表 ${next.length} 个实例`);
+      setInstallOpen(false);
+    } catch (ex) {
+      setInstallMsg(`安装失败 · ${String((ex as Error).message || ex).slice(0, 160)}`);
+    } finally {
+      setInstallBusy(false);
+    }
+  }
+
   async function onChat(e: FormEvent) {
     e.preventDefault();
     setErr(null);
     setAnswer("");
     setToolCalls([]);
     setLastRoute(null);
+    if (!query.trim()) {
+      setErr("请输入真实测试问题");
+      return;
+    }
+    if (!modelRouteGate.ready) {
+      setErr(modelRouteGate.reason);
+      return;
+    }
     try {
       const res = await apiPost<{
         answer: string;
@@ -272,7 +465,26 @@ export function StudioPage() {
   }
 
   return (
-    <PageChrome title="对话机器人 Studio" lede="配置壳：提示词 · 工具 · 本体/Wiki 上下文 · L4 须 Evals 绿 + Draft 默认">
+    <PageChrome title="对话机器人 Studio" lede="配置壳：提示词 · 工具 · 本体/Wiki 上下文；L4 须 Evals 绿且 Draft 默认，不伪造发布通过。">
+      <AipOperationalProjectionStrip onProjection={setOperationalProjection} />
+      <div
+        data-testid="studio-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "智能体数", value: String(agents.length) },
+          { label: "当前", value: activeAgent?.name ? activeAgent.name.slice(0, 10) : "未选" },
+          { label: "状态", value: activeAgent?.status || "—" },
+          { label: "工具开", value: String(enabledTools.length) },
+          { label: "页签", value: tab },
+          { label: "加载", value: loadState === "live" ? "Live" : loadState === "error" ? "Error" : "…" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       {resourceError && loadState === "live" && <p role="alert">{resourceError}</p>}
       <div
         style={{
@@ -301,8 +513,8 @@ export function StudioPage() {
             <button
               type="button"
               data-testid="studio-btn-new-agent"
-              disabled
-              title="共享创建向导与 Agent API 工具 ID 契约尚未对齐"
+              title="打开组织安装向导（SolutionPack）；不解封自由创建 Agent API"
+              onClick={() => { setInstallOpen((open) => !open); setInstallMsg(null); }}
               style={{
                 marginTop: 8,
                 width: "100%",
@@ -317,15 +529,47 @@ export function StudioPage() {
                 border: "none",
                 fontSize: 13,
                 fontWeight: 500,
-                cursor: "not-allowed",
-                opacity: 0.55,
+                cursor: "pointer",
+                boxSizing: "border-box",
               }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 5v14M5 12h14" strokeLinecap="round" />
               </svg>
-              新建智能体（契约协调中）
+              安装数字同事…
             </button>
+            {installOpen && (
+              <div
+                data-testid="studio-install-wizard"
+                style={{
+                  marginTop: 10,
+                  padding: 10,
+                  border: "1px solid var(--aos-border)",
+                  borderRadius: 2,
+                  background: "var(--aos-surface-hover)",
+                  fontSize: 12,
+                  color: "var(--aos-text-secondary)",
+                }}
+              >
+                <p style={{ margin: "0 0 8px" }}>
+                  权威入口是电商六数字同事 SolutionPack 组织安装，不是自由创建 Agent。
+                </p>
+                <button
+                  type="button"
+                  className="btn primary"
+                  data-testid="studio-install-ecommerce"
+                  disabled={installBusy}
+                  onClick={() => void installEcommercePack()}
+                  style={{ width: "100%", marginBottom: 8 }}
+                >
+                  {installBusy ? "安装中…" : "安装电商六数字同事"}
+                </button>
+                <Link to="/aip/agent-registry" data-testid="studio-install-registry-link" style={{ fontSize: 12 }}>
+                  打开智能体目录查看就绪度 →
+                </Link>
+                {installMsg && <p role="status" style={{ margin: "8px 0 0" }}>{installMsg}</p>}
+              </div>
+            )}
           </div>
 
           {loadState === "error" && <p role="alert" style={{ padding: 12 }}>Agent 列表加载失败：{resourceError}</p>}
@@ -417,7 +661,7 @@ export function StudioPage() {
                       {a.name}
                     </div>
                     <div style={{ fontSize: 10, color: "var(--aos-text-secondary)", marginTop: 2 }}>
-                      {a.category} · {a.levelLabel}
+                      {a.levelLabel} · {sb.label}
                     </div>
                     <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
                       <span
@@ -584,7 +828,7 @@ export function StudioPage() {
                       fontSize: 10,
                     }}
                   >
-                    模型路由 → {defaultModel}
+                    模型路由 → {modelRouteGate.label}
                   </span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
@@ -592,7 +836,7 @@ export function StudioPage() {
                     type="button"
                     className="w2-b2-save-btn"
                     onClick={() => void savePrompt()}
-                    disabled={promptSaving || !activeAgent}
+                    disabled={promptSaving || !activeAgent || overlayBlocked}
                     style={{
                       padding: "8px 16px",
                       borderRadius: 2,
@@ -698,7 +942,7 @@ export function StudioPage() {
                     type="button"
                     className="w2-b2-save-btn"
                     onClick={() => void saveTools()}
-                    disabled={toolsSaving || !activeAgent}
+                    disabled={toolsSaving || !activeAgent || overlayBlocked}
                     style={{
                       padding: "8px 16px",
                       borderRadius: 2,
@@ -719,8 +963,12 @@ export function StudioPage() {
                   )}
                 </div>
                 <div style={{ paddingTop: 12, marginTop: 12, borderTop: "1px solid var(--aos-gray-100)" }}>
+                  <p data-testid="studio-overlay-authority" style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 8 }}>
+                    工具权威：AgentInstance Overlay（与 `/aip/tools` 同一真源 · W-T8）
+                  </p>
                   <Link
-                    to="/aip/tools"
+                    to={activeId ? `/aip/tools?instance=${encodeURIComponent(activeId)}` : "/aip/tools"}
+                    data-testid="studio-to-tools-link"
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
@@ -745,6 +993,58 @@ export function StudioPage() {
                   </Link>
                 </div>
                 {err && <p style={{ color: "var(--aos-red)", fontSize: 12, marginTop: 12 }}>{err}</p>}
+              </div>
+            )}
+
+            {tab === "guardrails" && (
+              <div
+                data-testid="studio-guardrails-panel"
+                style={{
+                  borderRadius: 2,
+                  border: "1px solid var(--aos-border)",
+                  background: "var(--aos-surface)",
+                  padding: 20,
+                }}
+              >
+                <h3 style={{ margin: "0 0 8px", fontSize: 14 }}>运行护栏</h3>
+                <p style={{ margin: "0 0 16px", fontSize: 12, color: "var(--aos-text-secondary)" }}>
+                  租户作用域版本化配置；空初值表示尚未写入 overlay，默认勾选推荐项。
+                </p>
+                <div style={{ display: "grid", gap: 10 }}>
+                  {STUDIO_GUARDRAIL_CATALOG.map((item) => (
+                    <label key={item.id} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
+                      <input
+                        type="checkbox"
+                        checked={enabledGuardrails.includes(item.id)}
+                        disabled={overlayBlocked || !activeAgent}
+                        onChange={() => setEnabledGuardrails((prev) => toggleToolId(prev, item.id))}
+                      />
+                      <span>{item.name}</span>
+                      <code style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>{item.id}</code>
+                    </label>
+                  ))}
+                </div>
+                <div style={{ marginTop: 16, display: "flex", gap: 12, alignItems: "center" }}>
+                  <button
+                    type="button"
+                    data-testid="studio-save-guardrails"
+                    disabled={guardrailsSaving || !activeAgent || overlayBlocked}
+                    onClick={() => void saveGuardrails()}
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: 2,
+                      border: "none",
+                      background: guardrailsSaving ? "var(--aos-gray-100)" : "var(--aos-indigo-600)",
+                      color: guardrailsSaving ? "var(--aos-text-secondary)" : "var(--text-on-brand)",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: guardrailsSaving ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {guardrailsSaving ? "保存中…" : "保存护栏"}
+                  </button>
+                  {guardrailsSaveMsg && <span style={{ fontSize: 12 }}>{guardrailsSaveMsg}</span>}
+                </div>
               </div>
             )}
 
@@ -801,6 +1101,8 @@ export function StudioPage() {
                   />
                   <button
                     type="submit"
+                    disabled={!query.trim() || !modelRouteGate.ready}
+                    title={!modelRouteGate.ready ? modelRouteGate.reason : undefined}
                     style={{
                       padding: "8px 16px",
                       borderRadius: 2,
@@ -809,7 +1111,8 @@ export function StudioPage() {
                       border: "none",
                       fontSize: 13,
                       fontWeight: 500,
-                      cursor: "pointer",
+                      cursor: !query.trim() || !modelRouteGate.ready ? "not-allowed" : "pointer",
+                      opacity: !query.trim() || !modelRouteGate.ready ? 0.55 : 1,
                     }}
                   >
                     发送
@@ -886,7 +1189,7 @@ export function StudioPage() {
                   L4 门控状态
                 </h2>
                 <p style={{ fontSize: 12, color: "var(--aos-amber-700)", margin: "0 0 12px", lineHeight: 1.6 }}>
-                  须 Eval ≥ 92% 且 Draft 审批通过后方可申请 L4 上线。87% 为产品示意数据，本页只读，不代表当前 Agent 的真实评测结果。
+                  {STUDIO_UNASSESSED_COPY}
                 </p>
                 <label
                   style={{

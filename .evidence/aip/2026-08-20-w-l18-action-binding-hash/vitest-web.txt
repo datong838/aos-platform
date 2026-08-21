@@ -1,0 +1,15 @@
+
+> @aos/web@0.1.0 test
+> vitest run --run src/api/aipProductionContracts/parser.test.ts src/pages/s2/ProductionContractsPage.test.tsx
+
+
+ RUN  v2.1.9 /Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/apps/web
+
+ ✓ src/api/aipProductionContracts/parser.test.ts (9 tests) 4ms
+ ✓ src/pages/s2/ProductionContractsPage.test.tsx (7 tests) 129ms
+
+ Test Files  2 passed (2)
+      Tests  16 passed (16)
+   Start at  11:56:44
+   Duration  1.05s (transform 162ms, setup 0ms, collect 218ms, tests 132ms, environment 937ms, prepare 148ms)
+

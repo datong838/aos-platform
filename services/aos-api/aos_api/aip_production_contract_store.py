@@ -6,26 +6,33 @@ import json
 import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from aos_api.aip_contracts import PlanStep, ResourceRef, TenantContext
 from aos_api.aip_production_contracts import (
     ArtifactRelation, ArtifactRelationListResponse, BriefLifecycle,
-    CompileStageTemplateRequest, ContractBlocker, ContractReadiness, Coverage,
-    CreateArtifactRelationRequest, CreateBriefRequest, CreateEvalContractRequest,
-    CreateEvidenceBundleRequest, CreateResponsibilityPlanRequest,
-    CreateReviewIssueRequest, CreateStageTemplateRequest, EvalContractListResponse,
-    EvalContractRevision, EvidenceBundleRevision, ExactArtifactRef,
-    ExactRevisionRef, ImpactPreviewListResponse, ImpactPreviewRevision,
-    CreateImpactPreviewRequest, ReviseImpactPreviewRequest,
+    BuildEvidenceBundleRequest, CompileStageTemplateRequest, ContractBlocker,
+    ContractReadiness, Coverage, CreateArtifactRelationRequest, CreateBriefRequest,
+    CreateEvalContractRequest, CreateEvidenceBundleRequest,
+    CreateResponsibilityPlanRequest, CreateReviewIssueRequest,
+    CreateStageTemplateRequest, DisclosureLevel, DisclosureStatus,
+    EvalContractListResponse, EvalContractRevision, EvalContractDiff,
+    EvalContractDiffChange, EvidenceBundleListResponse,
+    EvidenceBundleRevision, EvidenceDisclosureDecision, ExactArtifactRef,
+    ExactRevisionRef, FreezeProductionContextRequest, Freshness,
+    ImpactPreviewListResponse, ImpactPreviewRevision,
+    CreateImpactPreviewRequest, ProductionContextListResponse,
+    ProductionContextRevision, ResolveEvidenceDisclosureRequest,
+    RevokeEvidenceBundleRequest, ReviseImpactPreviewRequest,
     ResolveReviewIssueRequest, ResponsibilityPlanListResponse,
-    ResponsibilityPlanRevision, ReturnDecision, ReturnReviewIssueRequest,
+    ResponsibilityPlanRevision, ReturnDecision, ReturnDecisionListResponse,
+    ReturnReviewIssueRequest,
     ReviseBriefRequest, ReviseEvalContractRequest,
     ReviseResponsibilityPlanRequest, ReviseStageTemplateRequest, ReviewIssue,
     ReviewIssueListResponse, ReviewIssueStatus, StageCompilationResult,
-    StageDefinition, StageTemplateListResponse, StageTemplateRevision, TaskBriefRevision,
-    EvidenceBundleListResponse, TaskBriefListResponse,
+    StageDefinition, StageTemplateListResponse, StageTemplateRevision,
+    TaskBriefListResponse, TaskBriefRevision,
 )
 from aos_api.aip_task_models import CreatePlanRevisionRequest
 from aos_api.aip_task_store import (
@@ -67,6 +74,35 @@ class ProductionContractDependencyBlocked(ProductionContractError):
 def canonical_hash(value: Any) -> str:
     raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def compute_action_binding_hash(
+    *,
+    org_id: str,
+    project_id: str,
+    preview_id: str,
+    revision: int,
+    content_hash: str,
+    dependency_snapshot_hash: str,
+    binding_refs: Any,
+    capability_ref: Any,
+    account_ref: Any,
+    expires_at: Any,
+) -> str:
+    """W-L18: server-owned Preview↔Action joint binding hash (ADR 42 §4 subset)."""
+    return canonical_hash(
+        {
+            "tenant": {"orgId": org_id, "projectId": project_id},
+            "previewId": preview_id,
+            "revision": int(revision),
+            "contentHash": content_hash,
+            "dependencySnapshotHash": dependency_snapshot_hash,
+            "bindingRefs": binding_refs,
+            "capabilityRef": capability_ref,
+            "accountRef": account_ref,
+            "expiresAt": expires_at,
+        }
+    )
 
 
 class AipProductionContractStore:
@@ -1344,20 +1380,6 @@ class AipProductionContractStore:
                 raise ProductionContractDependencyBlocked("RETURN_SOURCE_ATTEMPT_NOT_TERMINAL")
             attempt = int(latest["attempt"]) + 1
             step_run_id = f"step-run-{uuid.uuid4().hex[:20]}"
-            conn.execute(
-                """INSERT INTO aip_step_run
-                (org_id,project_id,step_run_id,run_id,step_key,attempt,status,input_refs,
-                 created_at,updated_at)
-                VALUES(%s,%s,%s,%s,%s,%s,'queued',%s::jsonb,NOW(),NOW())""",
-                (
-                    *scope.key,
-                    step_run_id,
-                    body.run_id,
-                    body.target_stage,
-                    attempt,
-                    self._json(self._load(latest["input_refs"])),
-                ),
-            )
             decision_id = f"return-decision-{uuid.uuid4().hex[:20]}"
             decision_hash = canonical_hash(
                 {
@@ -1371,6 +1393,44 @@ class AipProductionContractStore:
                     "reason": body.reason,
                     "actor": actor,
                 }
+            )
+            # W-L14: repair attempt carries exact Issue/Decision/Artifact refs;
+            # never mutate historical Artifact rows or prior attempt input_refs.
+            prior_inputs = self._load(latest["input_refs"]) or []
+            if not isinstance(prior_inputs, list):
+                prior_inputs = []
+            repair_inputs = [
+                *prior_inputs,
+                {
+                    "resourceType": "ReviewIssue",
+                    "resourceId": issue_id,
+                    "version": body.expected_version,
+                },
+                {
+                    "resourceType": "ReturnDecision",
+                    "resourceId": decision_id,
+                    "revision": 1,
+                    "contentHash": decision_hash,
+                },
+                {
+                    "resourceType": "Artifact",
+                    "resourceId": issue.artifact_ref.artifact_id,
+                    "contentHash": issue.artifact_ref.content_hash,
+                },
+            ]
+            conn.execute(
+                """INSERT INTO aip_step_run
+                (org_id,project_id,step_run_id,run_id,step_key,attempt,status,input_refs,
+                 created_at,updated_at)
+                VALUES(%s,%s,%s,%s,%s,%s,'queued',%s::jsonb,NOW(),NOW())""",
+                (
+                    *scope.key,
+                    step_run_id,
+                    body.run_id,
+                    body.target_stage,
+                    attempt,
+                    self._json(repair_inputs),
+                ),
             )
             decision = conn.execute(
                 """INSERT INTO aip_return_decision
@@ -1445,6 +1505,32 @@ class AipProductionContractStore:
             return read(conn)
         with self._connect_factory(scope) as connection:
             return read(connection)
+
+    def get_return_decision(self, scope: TenantScope, decision_id: str) -> ReturnDecision:
+        return self._return_decision_by_id(scope, decision_id)
+
+    def list_return_decisions(
+        self, scope: TenantScope, *, issue_id: str | None = None
+    ) -> ReturnDecisionListResponse:
+        with self._connect_factory(scope) as conn:
+            if issue_id:
+                rows = conn.execute(
+                    """SELECT * FROM aip_return_decision
+                       WHERE org_id=%s AND project_id=%s AND issue_id=%s
+                       ORDER BY created_at DESC, decision_id DESC""",
+                    (*scope.key, issue_id),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    """SELECT * FROM aip_return_decision
+                       WHERE org_id=%s AND project_id=%s
+                       ORDER BY created_at DESC, decision_id DESC""",
+                    scope.key,
+                ).fetchall()
+            items = [self._return_decision(scope, row) for row in rows]
+            return ReturnDecisionListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
 
     def create_brief(self, scope: TenantScope, actor: str, key: str, body: CreateBriefRequest) -> TaskBriefRevision:
         payload = body.model_dump(mode="json", by_alias=True)
@@ -1534,33 +1620,208 @@ class AipProductionContractStore:
             )
 
     def create_evidence_bundle(self, scope: TenantScope, actor: str, key: str, body: CreateEvidenceBundleRequest) -> EvidenceBundleRevision:
-        payload=body.model_dump(mode="json",by_alias=True); request_hash=canonical_hash(payload)
+        """W-L9: create is an alias of build; coverage is always server-owned."""
+        return self.build_evidence_bundle(scope, actor, key, BuildEvidenceBundleRequest.model_validate(body.model_dump()))
+
+    def build_evidence_bundle(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: BuildEvidenceBundleRequest,
+    ) -> EvidenceBundleRevision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
         with self._connect_factory(scope) as conn:
-            replay=self._replay(conn,scope,"evidence_bundle.create",key,request_hash)
-            if replay: return self.get_evidence_bundle(scope,replay["resourceId"],int(replay["revision"]),conn=conn)
-            brief=self.get_brief(scope,body.brief_ref.resource_id,body.brief_ref.revision,conn=conn)
-            if brief.lifecycle != BriefLifecycle.FROZEN or brief.content_hash != body.brief_ref.content_hash:
-                raise ProductionContractDependencyBlocked("brief exact ref is not frozen/current")
-            for item in body.item_refs:
-                if item.resource_type != "Evidence": raise ProductionContractDependencyBlocked("W2-A bundles only accept Evidence refs")
-                row=conn.execute("SELECT content_hash FROM aip_evidence WHERE org_id=%s AND project_id=%s AND evidence_id=%s",(*scope.key,item.resource_id)).fetchone()
-                if not row or row["content_hash"] != item.content_hash: raise ProductionContractDependencyBlocked("evidence exact ref missing or drifted")
-            bundle_id=f"evidence-bundle-{uuid.uuid4().hex[:20]}"; content_hash=canonical_hash(payload)
-            row=conn.execute("""INSERT INTO aip_evidence_bundle_revision(org_id,project_id,bundle_id,revision,brief_ref,subject_refs,cutoff_at,item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,license_summary,content_hash,lifecycle,created_by)
-                VALUES(%s,%s,%s,1,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,'frozen',%s) RETURNING *""",
-                (*scope.key,bundle_id,self._json(payload["briefRef"]),self._json(payload["subjectRefs"]),body.cutoff_at,self._json(payload["itemRefs"]),body.coverage.value,self._json(body.missing),self._json(body.conflicts),self._json(body.uncertainties),body.freshness.value,self._json(body.marking),self._json(body.license_summary),content_hash,actor)).fetchone()
-            self._receipt(conn,scope,"evidence_bundle.create",key,request_hash,{"resourceType":"EvidenceBundleRevision","resourceId":bundle_id,"revision":1,"contentHash":content_hash},actor)
-            conn.commit(); return self._bundle(scope,row)
+            replay = self._replay(conn, scope, "evidence_bundle.build", key, request_hash)
+            if replay:
+                return self.get_evidence_bundle(
+                    scope, replay["resourceId"], int(replay["revision"]), conn=conn
+                )
+            # Legacy create receipt key also replays for same payload.
+            legacy = self._replay(conn, scope, "evidence_bundle.create", key, request_hash)
+            if legacy:
+                return self.get_evidence_bundle(
+                    scope, legacy["resourceId"], int(legacy["revision"]), conn=conn
+                )
+            brief = self.get_brief(
+                scope, body.brief_ref.resource_id, body.brief_ref.revision, conn=conn
+            )
+            if (
+                brief.lifecycle != BriefLifecycle.FROZEN
+                or brief.content_hash != body.brief_ref.content_hash
+            ):
+                raise ProductionContractDependencyBlocked(
+                    "brief exact ref is not frozen/current"
+                )
+            coverage, missing, conflicts, uncertainties, freshness = (
+                self._compute_evidence_bundle_coverage(conn, scope, body)
+            )
+            authority_payload = {
+                **payload,
+                "coverage": coverage.value,
+                "missing": missing,
+                "conflicts": conflicts,
+                "uncertainties": uncertainties,
+                "freshness": freshness.value,
+            }
+            bundle_id = f"evidence-bundle-{uuid.uuid4().hex[:20]}"
+            content_hash = canonical_hash(authority_payload)
+            row = conn.execute(
+                """INSERT INTO aip_evidence_bundle_revision(
+                   org_id,project_id,bundle_id,revision,brief_ref,subject_refs,cutoff_at,
+                   item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,
+                   license_summary,content_hash,lifecycle,created_by)
+                   VALUES(%s,%s,%s,1,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s,%s::jsonb,
+                          %s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,'frozen',%s)
+                   RETURNING *""",
+                (
+                    *scope.key,
+                    bundle_id,
+                    self._json(payload["briefRef"]),
+                    self._json(payload["subjectRefs"]),
+                    body.cutoff_at,
+                    self._json(payload["itemRefs"]),
+                    coverage.value,
+                    self._json(missing),
+                    self._json(conflicts),
+                    self._json(uncertainties),
+                    freshness.value,
+                    self._json(body.marking),
+                    self._json(body.license_summary),
+                    content_hash,
+                    actor,
+                ),
+            ).fetchone()
+            result = {
+                "resourceType": "EvidenceBundleRevision",
+                "resourceId": bundle_id,
+                "revision": 1,
+                "contentHash": content_hash,
+            }
+            self._receipt(
+                conn, scope, "evidence_bundle.build", key, request_hash, result, actor
+            )
+            self._receipt(
+                conn, scope, "evidence_bundle.create", key, request_hash, result, actor
+            )
+            conn.commit()
+            return self._bundle(scope, row)
 
-    def get_evidence_bundle(self, scope: TenantScope, bundle_id: str, revision: int=1, *, conn: Any|None=None) -> EvidenceBundleRevision:
-        def read(c:Any):
-            row=c.execute("SELECT * FROM aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s",(*scope.key,bundle_id,revision)).fetchone()
-            if not row: raise ProductionContractNotFound("evidence bundle not found")
-            return self._bundle(scope,row)
-        if conn is not None:return read(conn)
-        with self._connect_factory(scope) as c:return read(c)
+    def _compute_evidence_bundle_coverage(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        body: BuildEvidenceBundleRequest | CreateEvidenceBundleRequest,
+    ) -> tuple[Coverage, list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], Freshness]:
+        required = list(body.required_fact_ids)
+        provided: set[str] = set()
+        providers: dict[str, list[str]] = {}
+        stale = False
+        cutoff = body.cutoff_at
+        if cutoff.tzinfo is None:
+            cutoff = cutoff.replace(tzinfo=timezone.utc)
+        for item in body.item_refs:
+            if item.resource_type != "Evidence":
+                raise ProductionContractDependencyBlocked(
+                    "W2-A bundles only accept Evidence refs"
+                )
+            row = conn.execute(
+                """SELECT evidence_id,content_hash,payload,freshness_at FROM aip_evidence
+                   WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
+                (*scope.key, item.resource_id),
+            ).fetchone()
+            if not row or row["content_hash"] != item.content_hash:
+                raise ProductionContractDependencyBlocked(
+                    "evidence exact ref missing or drifted"
+                )
+            for fact_id in self._evidence_fact_ids(row["payload"]):
+                provided.add(fact_id)
+                providers.setdefault(fact_id, []).append(row["evidence_id"])
+            freshness_at = row["freshness_at"]
+            if freshness_at is not None:
+                if freshness_at.tzinfo is None:
+                    freshness_at = freshness_at.replace(tzinfo=timezone.utc)
+                if freshness_at < cutoff:
+                    stale = True
+        missing = [
+            {"factId": fact_id}
+            for fact_id in required
+            if fact_id not in provided
+        ]
+        conflicts = [
+            {
+                "factId": fact_id,
+                "evidenceIds": evidence_ids,
+                "code": "FACT_MULTI_SOURCE",
+            }
+            for fact_id, evidence_ids in sorted(providers.items())
+            if len(evidence_ids) > 1 and fact_id in required
+        ]
+        uncertainties: list[dict[str, Any]] = []
+        covered = len(required) - len(missing)
+        if missing and covered == 0:
+            coverage = Coverage.BLOCKED
+        elif missing:
+            coverage = Coverage.PARTIAL
+        else:
+            coverage = Coverage.COMPLETE
+        freshness = Freshness.STALE if stale else Freshness.FRESH
+        if coverage is Coverage.BLOCKED:
+            freshness = Freshness.BLOCKED
+        return coverage, missing, conflicts, uncertainties, freshness
 
-    def list_evidence_bundles(self, scope: TenantScope) -> EvidenceBundleListResponse:
+    @staticmethod
+    def _evidence_fact_ids(payload: Any) -> list[str]:
+        value = json.loads(payload) if isinstance(payload, str) else payload
+        if not isinstance(value, dict):
+            return []
+        raw = value.get("factIds")
+        if raw is None:
+            raw = value.get("facts")
+        if isinstance(raw, dict):
+            return [str(key).strip() for key in raw.keys() if str(key).strip()]
+        if isinstance(raw, list):
+            return [str(item).strip() for item in raw if str(item).strip()]
+        return []
+
+    def get_evidence_bundle(
+        self,
+        scope: TenantScope,
+        bundle_id: str,
+        revision: int = 1,
+        *,
+        conn: Any | None = None,
+        markings: list[str] | None = None,
+    ) -> EvidenceBundleRevision:
+        def read(c: Any):
+            row = c.execute(
+                "SELECT * FROM aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s",
+                (*scope.key, bundle_id, revision),
+            ).fetchone()
+            if not row:
+                raise ProductionContractNotFound("evidence bundle not found")
+            bundle = self._bundle(scope, row, conn=c)
+            try:
+                self._assert_bundle_marking_access(bundle, markings)
+            except ProductionContractDependencyBlocked:
+                # API 调用方不得因 422 推断 Bundle 存在
+                if markings is not None:
+                    raise ProductionContractNotFound("evidence bundle not found") from None
+                raise
+            return bundle
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as c:
+            return read(c)
+
+    def list_evidence_bundles(
+        self,
+        scope: TenantScope,
+        *,
+        markings: list[str] | None = None,
+    ) -> EvidenceBundleListResponse:
         with self._connect_factory(scope) as conn:
             rows = conn.execute(
                 """SELECT * FROM aip_evidence_bundle_revision
@@ -1568,12 +1829,735 @@ class AipProductionContractStore:
                 ORDER BY created_at DESC, bundle_id, revision DESC""",
                 scope.key,
             ).fetchall()
-            items = [self._bundle(scope, row) for row in rows]
+            items: list[EvidenceBundleRevision] = []
+            for row in rows:
+                bundle = self._bundle(scope, row, conn=conn)
+                try:
+                    self._assert_bundle_marking_access(bundle, markings)
+                except ProductionContractDependencyBlocked:
+                    continue
+                items.append(bundle)
             return EvidenceBundleListResponse(
                 tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
                 items=items,
                 count=len(items),
             )
+
+    def revoke_evidence_bundle(
+        self,
+        scope: TenantScope,
+        actor: str,
+        bundle_id: str,
+        key: str,
+        body: RevokeEvidenceBundleRequest,
+    ) -> EvidenceBundleRevision:
+        request_hash = canonical_hash(
+            {
+                "bundleId": bundle_id,
+                **body.model_dump(mode="json", by_alias=True),
+            }
+        )
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "evidence_bundle.revoke", key, request_hash)
+            if replay:
+                return self.get_evidence_bundle(
+                    scope, replay["resourceId"], int(replay["revision"]), conn=conn
+                )
+            row = conn.execute(
+                """SELECT * FROM aip_evidence_bundle_revision
+                   WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s""",
+                (*scope.key, bundle_id, body.expected_revision),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("evidence bundle not found")
+            if row["content_hash"] != body.expected_content_hash:
+                raise ProductionContractDependencyBlocked("EVIDENCE_BUNDLE_HASH_DRIFTED")
+            existing = conn.execute(
+                """SELECT event_id FROM aip_evidence_bundle_revoke_event
+                   WHERE org_id=%s AND project_id=%s AND bundle_id=%s
+                     AND revision=%s AND content_hash=%s""",
+                (*scope.key, bundle_id, body.expected_revision, body.expected_content_hash),
+            ).fetchone()
+            if existing is None:
+                conn.execute(
+                    """INSERT INTO aip_evidence_bundle_revoke_event
+                       (org_id,project_id,event_id,bundle_id,revision,content_hash,reason,actor)
+                       VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
+                    (
+                        *scope.key,
+                        f"bundle-revoke-{uuid.uuid4().hex[:20]}",
+                        bundle_id,
+                        body.expected_revision,
+                        body.expected_content_hash,
+                        body.reason,
+                        actor,
+                    ),
+                )
+            self._receipt(
+                conn,
+                scope,
+                "evidence_bundle.revoke",
+                key,
+                request_hash,
+                {
+                    "resourceType": "EvidenceBundleRevision",
+                    "resourceId": bundle_id,
+                    "revision": body.expected_revision,
+                    "contentHash": body.expected_content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self.get_evidence_bundle(
+                scope, bundle_id, body.expected_revision, conn=conn
+            )
+
+    def resolve_evidence_disclosure(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: ResolveEvidenceDisclosureRequest,
+        *,
+        markings: list[str] | None = None,
+    ) -> EvidenceDisclosureDecision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(
+                conn, scope, "evidence_disclosure.resolve", key, request_hash
+            )
+            if replay:
+                return self.get_evidence_disclosure(
+                    scope, replay["resourceId"], conn=conn
+                )
+            decision = self._evaluate_disclosure(
+                conn, scope, actor, body, markings=markings or []
+            )
+            conn.execute(
+                """INSERT INTO aip_evidence_disclosure_decision
+                   (org_id,project_id,decision_id,evidence_id,evidence_hash,purpose,
+                    requested_level,granted_level,status,reasons,citation,display_payload,
+                    redaction_receipt,decision_hash,expires_at,actor)
+                   VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,
+                          %s::jsonb,%s,%s,%s)""",
+                (
+                    *scope.key,
+                    decision.decision_id,
+                    body.evidence_ref.resource_id,
+                    body.evidence_ref.content_hash,
+                    body.purpose,
+                    body.requested_level.value,
+                    decision.granted_level.value if decision.granted_level else None,
+                    decision.status.value,
+                    self._json(decision.reasons),
+                    self._json(decision.citation),
+                    self._json(decision.display_payload),
+                    self._json(decision.redaction_receipt),
+                    decision.decision_hash,
+                    decision.expires_at,
+                    actor,
+                ),
+            )
+            self._receipt(
+                conn,
+                scope,
+                "evidence_disclosure.resolve",
+                key,
+                request_hash,
+                {
+                    "resourceType": "EvidenceDisclosureDecision",
+                    "resourceId": decision.decision_id,
+                    "revision": 1,
+                    "contentHash": decision.decision_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return decision
+
+    def get_evidence_disclosure(
+        self,
+        scope: TenantScope,
+        decision_id: str,
+        *,
+        conn: Any | None = None,
+    ) -> EvidenceDisclosureDecision:
+        def read(c: Any) -> EvidenceDisclosureDecision:
+            row = c.execute(
+                """SELECT * FROM aip_evidence_disclosure_decision
+                   WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                (*scope.key, decision_id),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("disclosure decision not found")
+            return EvidenceDisclosureDecision(
+                tenant=self._tenant(scope),
+                decision_id=row["decision_id"],
+                evidence_ref=ExactRevisionRef(
+                    resource_type="Evidence",
+                    resource_id=row["evidence_id"],
+                    revision=1,
+                    content_hash=row["evidence_hash"],
+                ),
+                purpose=row["purpose"],
+                requested_level=row["requested_level"],
+                granted_level=row["granted_level"],
+                status=row["status"],
+                reasons=self._load(row["reasons"]),
+                citation=self._load(row["citation"]),
+                display_payload=self._load(row["display_payload"]),
+                redaction_receipt=self._load(row["redaction_receipt"]),
+                decision_hash=row["decision_hash"],
+                expires_at=row["expires_at"],
+                created_by=row["actor"],
+                created_at=row["created_at"],
+            )
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as c:
+            return read(c)
+
+    def freeze_production_context(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: FreezeProductionContextRequest,
+    ) -> ProductionContextRevision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(
+                conn, scope, "production_context.freeze", key, request_hash
+            )
+            if replay:
+                return self.get_production_context(
+                    scope, replay["resourceId"], int(replay["revision"]), conn=conn
+                )
+            snapshot: list[dict[str, Any]] = []
+            blockers: list[ContractBlocker] = []
+            self._assert_context_brief(conn, scope, body.brief_ref, snapshot, blockers)
+            self._assert_context_bundle(
+                conn, scope, body.evidence_bundle_ref, snapshot, blockers
+            )
+            self._assert_context_eval(
+                conn, scope, body.eval_contract_ref, snapshot, blockers
+            )
+            self._assert_context_responsibility(
+                conn, scope, body.responsibility_plan_ref, snapshot, blockers
+            )
+            if blockers:
+                raise ProductionContractDependencyBlocked(
+                    blockers[0].code + ":" + blockers[0].message
+                )
+            context_id = f"ctx-{uuid.uuid4().hex[:20]}"
+            dependency_snapshot_hash = canonical_hash(snapshot)
+            content_hash = canonical_hash(
+                {
+                    "taskId": body.task_id,
+                    "briefRef": payload["briefRef"],
+                    "evidenceBundleRef": payload["evidenceBundleRef"],
+                    "evalContractRef": payload["evalContractRef"],
+                    "responsibilityPlanRef": payload["responsibilityPlanRef"],
+                    "preparationRef": payload.get("preparationRef"),
+                    "profile": body.profile,
+                    "dependencySnapshotHash": dependency_snapshot_hash,
+                }
+            )
+            conn.execute(
+                """INSERT INTO aip_production_context_revision
+                   (org_id,project_id,context_id,revision,task_id,brief_ref,
+                    evidence_bundle_ref,eval_contract_ref,responsibility_plan_ref,
+                    preparation_ref,profile,dependency_snapshot,dependency_snapshot_hash,
+                    content_hash,lifecycle,readiness,blockers,created_by)
+                   VALUES(%s,%s,%s,1,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+                          %s::jsonb,%s,%s::jsonb,%s,%s,'frozen','ready','[]'::jsonb,%s)""",
+                (
+                    *scope.key,
+                    context_id,
+                    body.task_id,
+                    self._json(payload["briefRef"]),
+                    self._json(payload["evidenceBundleRef"]),
+                    self._json(payload["evalContractRef"]),
+                    self._json(payload["responsibilityPlanRef"]),
+                    None
+                    if body.preparation_ref is None
+                    else self._json(payload["preparationRef"]),
+                    body.profile,
+                    self._json(snapshot),
+                    dependency_snapshot_hash,
+                    content_hash,
+                    actor,
+                ),
+            )
+            self._receipt(
+                conn,
+                scope,
+                "production_context.freeze",
+                key,
+                request_hash,
+                {
+                    "resourceType": "ProductionContextRevision",
+                    "resourceId": context_id,
+                    "revision": 1,
+                    "contentHash": content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self.get_production_context(scope, context_id, 1, conn=conn)
+
+    def get_production_context(
+        self,
+        scope: TenantScope,
+        context_id: str,
+        revision: int = 1,
+        *,
+        conn: Any | None = None,
+    ) -> ProductionContextRevision:
+        def read(c: Any) -> ProductionContextRevision:
+            row = c.execute(
+                """SELECT * FROM aip_production_context_revision
+                   WHERE org_id=%s AND project_id=%s AND context_id=%s AND revision=%s""",
+                (*scope.key, context_id, revision),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("production context not found")
+            return self._production_context(scope, row)
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as c:
+            return read(c)
+
+    def list_production_contexts(
+        self, scope: TenantScope
+    ) -> ProductionContextListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_production_context_revision
+                   WHERE org_id=%s AND project_id=%s
+                   ORDER BY created_at DESC, context_id, revision DESC""",
+                scope.key,
+            ).fetchall()
+            items = [self._production_context(scope, row) for row in rows]
+            return ProductionContextListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
+
+    def _production_context(
+        self, scope: TenantScope, row: Any
+    ) -> ProductionContextRevision:
+        preparation = self._load(row["preparation_ref"])
+        return ProductionContextRevision(
+            tenant=self._tenant(scope),
+            context_id=row["context_id"],
+            revision=int(row["revision"]),
+            task_id=row["task_id"],
+            brief_ref=ExactRevisionRef.model_validate(self._load(row["brief_ref"])),
+            evidence_bundle_ref=ExactRevisionRef.model_validate(
+                self._load(row["evidence_bundle_ref"])
+            ),
+            eval_contract_ref=ExactRevisionRef.model_validate(
+                self._load(row["eval_contract_ref"])
+            ),
+            responsibility_plan_ref=ExactRevisionRef.model_validate(
+                self._load(row["responsibility_plan_ref"])
+            ),
+            preparation_ref=None
+            if preparation is None
+            else ExactRevisionRef.model_validate(preparation),
+            profile=row["profile"],
+            dependency_snapshot=self._load(row["dependency_snapshot"]),
+            dependency_snapshot_hash=row["dependency_snapshot_hash"],
+            content_hash=row["content_hash"],
+            lifecycle=row["lifecycle"],
+            readiness=row["readiness"],
+            blockers=[
+                ContractBlocker.model_validate(item)
+                for item in (self._load(row["blockers"]) or [])
+            ],
+            created_by=row["created_by"],
+            created_at=row["created_at"],
+        )
+
+    def _assert_context_brief(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        ref: ExactRevisionRef,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+    ) -> None:
+        row = conn.execute(
+            """SELECT revision,content_hash,lifecycle FROM aip_task_brief_revision
+               WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        snapshot.append(
+            {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "expectedRevision": ref.revision,
+                "observedRevision": None if row is None else int(row["revision"]),
+                "expectedHash": ref.content_hash,
+                "observedHash": None if row is None else row["content_hash"],
+                "lifecycle": None if row is None else row["lifecycle"],
+            }
+        )
+        if row is None:
+            blockers.append(
+                ContractBlocker(
+                    code="BRIEF_EXACT_REF_MISSING",
+                    message="TaskBrief exact ref 不存在",
+                    resource_ref=ref,
+                )
+            )
+            return
+        if row["content_hash"] != ref.content_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="BRIEF_EXACT_REF_DRIFTED",
+                    message="TaskBrief exact hash 漂移",
+                    resource_ref=ref,
+                )
+            )
+        if row["lifecycle"] != "frozen":
+            blockers.append(
+                ContractBlocker(
+                    code="BRIEF_NOT_FROZEN",
+                    message="TaskBrief 未冻结",
+                    resource_ref=ref,
+                )
+            )
+
+    def _assert_context_bundle(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        ref: ExactRevisionRef,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+    ) -> None:
+        row = conn.execute(
+            """SELECT revision,content_hash,lifecycle,coverage,freshness
+               FROM aip_evidence_bundle_revision
+               WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        revoked, reason = (False, None)
+        if row is not None:
+            revoked, reason = self._bundle_revoke(
+                conn, scope, ref.resource_id, int(row["revision"]), row["content_hash"]
+            )
+        snapshot.append(
+            {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "expectedHash": ref.content_hash,
+                "observedHash": None if row is None else row["content_hash"],
+                "coverage": None if row is None else row["coverage"],
+                "freshness": None if row is None else row["freshness"],
+                "revoked": revoked,
+                "revokeReason": reason,
+            }
+        )
+        if row is None or row["content_hash"] != ref.content_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_EXACT_REF_MISSING_OR_DRIFTED",
+                    message="EvidenceBundle exact ref 不可用",
+                    resource_ref=ref,
+                )
+            )
+            return
+        if row["lifecycle"] != "frozen":
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_NOT_FROZEN",
+                    message="EvidenceBundle 未冻结",
+                    resource_ref=ref,
+                )
+            )
+        if row["coverage"] != "complete":
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_NOT_COMPLETE",
+                    message="EvidenceBundle coverage 非 complete",
+                    resource_ref=ref,
+                )
+            )
+        if row["freshness"] != "fresh":
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_NOT_FRESH",
+                    message="EvidenceBundle freshness 非 fresh",
+                    resource_ref=ref,
+                )
+            )
+        if revoked:
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_REVOKED",
+                    message=f"EvidenceBundle 已撤销: {reason or 'revoked'}",
+                    resource_ref=ref,
+                )
+            )
+
+    def _assert_context_eval(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        ref: ExactRevisionRef,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+    ) -> None:
+        row = conn.execute(
+            """SELECT revision,content_hash,lifecycle FROM aip_eval_contract_revision
+               WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        snapshot.append(
+            {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "expectedHash": ref.content_hash,
+                "observedHash": None if row is None else row["content_hash"],
+                "lifecycle": None if row is None else row["lifecycle"],
+            }
+        )
+        if row is None or row["content_hash"] != ref.content_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="EVAL_CONTRACT_EXACT_REF_MISSING_OR_DRIFTED",
+                    message="EvalContract exact ref 不可用",
+                    resource_ref=ref,
+                )
+            )
+            return
+        if row["lifecycle"] != "frozen":
+            blockers.append(
+                ContractBlocker(
+                    code="EVAL_CONTRACT_NOT_FROZEN",
+                    message="EvalContract 未冻结",
+                    resource_ref=ref,
+                )
+            )
+
+    def _assert_context_responsibility(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        ref: ExactRevisionRef,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+    ) -> None:
+        # 近场：只校验 frozen exact；assignee SkillBinding 运营就绪由 W-L4/Start 另门复验
+        row = conn.execute(
+            """SELECT revision,content_hash,lifecycle FROM aip_responsibility_plan_revision
+               WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        snapshot.append(
+            {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "expectedHash": ref.content_hash,
+                "observedHash": None if row is None else row["content_hash"],
+                "lifecycle": None if row is None else row["lifecycle"],
+            }
+        )
+        if row is None or row["content_hash"] != ref.content_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="RESPONSIBILITY_PLAN_EXACT_REF_MISSING_OR_DRIFTED",
+                    message="ResponsibilityPlan exact ref 不可用",
+                    resource_ref=ref,
+                )
+            )
+            return
+        if row["lifecycle"] != "frozen":
+            blockers.append(
+                ContractBlocker(
+                    code="RESPONSIBILITY_PLAN_NOT_FROZEN",
+                    message="ResponsibilityPlan 未冻结",
+                    resource_ref=ref,
+                )
+            )
+
+    def _evaluate_disclosure(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        actor: str,
+        body: ResolveEvidenceDisclosureRequest,
+        *,
+        markings: list[str],
+    ) -> EvidenceDisclosureDecision:
+        reasons: list[str] = []
+        row = conn.execute(
+            """SELECT * FROM aip_evidence
+               WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
+            (*scope.key, body.evidence_ref.resource_id),
+        ).fetchone()
+        if row is None or row["content_hash"] != body.evidence_ref.content_hash:
+            reasons.append("EVIDENCE_EXACT_REF_MISSING_OR_DRIFTED")
+        revoked_bundle = None
+        if row is not None:
+            bundle_rows = conn.execute(
+                """SELECT bundle_id,revision,content_hash,item_refs
+                   FROM aip_evidence_bundle_revision
+                   WHERE org_id=%s AND project_id=%s""",
+                scope.key,
+            ).fetchall()
+            for bundle_row in bundle_rows:
+                refs = self._load(bundle_row["item_refs"]) or []
+                matched = any(
+                    isinstance(item, dict)
+                    and item.get("resourceId") == body.evidence_ref.resource_id
+                    and item.get("contentHash") == body.evidence_ref.content_hash
+                    for item in refs
+                )
+                if not matched:
+                    continue
+                revoked, reason = self._bundle_revoke(
+                    conn,
+                    scope,
+                    bundle_row["bundle_id"],
+                    int(bundle_row["revision"]),
+                    bundle_row["content_hash"],
+                )
+                if revoked:
+                    revoked_bundle = {"reason": reason}
+                    break
+            if revoked_bundle is not None:
+                reasons.append("EVIDENCE_BUNDLE_REVOKED")
+        required_markings = ["public"]
+        if row is not None:
+            payload = self._load(row["payload"]) if row["payload"] is not None else {}
+            if isinstance(payload, dict) and isinstance(payload.get("marking"), list):
+                required_markings = [
+                    str(item).strip() for item in payload["marking"] if str(item).strip()
+                ] or ["public"]
+        if not set(required_markings).issubset(set(markings or [])):
+            reasons.append("MARKING_ACCESS_DENIED")
+        if body.requested_level is DisclosureLevel.L2 and "restricted" not in set(
+            markings or []
+        ):
+            reasons.append("L2_REQUIRES_RESTRICTED_MARKING")
+        if body.requested_level is DisclosureLevel.L3 and "secret" not in set(
+            markings or []
+        ):
+            reasons.append("L3_REQUIRES_SECRET_MARKING")
+        status = DisclosureStatus.BLOCKED if reasons else DisclosureStatus.ALLOWED
+        granted = None if reasons else body.requested_level
+        display: dict[str, Any] = {}
+        citation: dict[str, Any] = {
+            "evidenceId": body.evidence_ref.resource_id,
+            "contentHashPrefix": body.evidence_ref.content_hash[:12],
+            "purpose": body.purpose,
+        }
+        expires_at = None
+        if status is DisclosureStatus.ALLOWED and row is not None:
+            payload = self._load(row["payload"]) if row["payload"] is not None else {}
+            if body.requested_level is DisclosureLevel.L1:
+                display = {
+                    "layer": "l1",
+                    "evidenceType": row["evidence_type"],
+                    "sourceType": row["source_type"],
+                    "observedAt": row["observed_at"].isoformat()
+                    if row["observed_at"]
+                    else None,
+                    "freshnessAt": row["freshness_at"].isoformat()
+                    if row["freshness_at"]
+                    else None,
+                    "marking": required_markings,
+                    "contentHashPrefix": row["content_hash"][:12],
+                    "revoked": False,
+                }
+            elif body.requested_level is DisclosureLevel.L2:
+                raw = json.dumps(payload or {}, ensure_ascii=False)
+                display = {
+                    "layer": "l2",
+                    "excerpt": raw[:200],
+                    "locator": {"path": "$.payload", "offset": 0, "length": min(200, len(raw))},
+                }
+            else:
+                expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+                display = {
+                    "layer": "l3",
+                    "scopedSourceRef": {
+                        "resourceType": "EvidenceDisclosureDecision",
+                        "resourceId": "pending",
+                        "authority": "aip-evidence-disclosure",
+                    },
+                }
+        decision_id = f"disclosure-{uuid.uuid4().hex[:20]}"
+        if (
+            status is DisclosureStatus.ALLOWED
+            and body.requested_level is DisclosureLevel.L3
+            and isinstance(display.get("scopedSourceRef"), dict)
+        ):
+            display["scopedSourceRef"]["resourceId"] = decision_id
+        redaction = {
+            "policy": "minimum-disclosure",
+            "requestedLevel": body.requested_level.value,
+            "grantedLevel": granted.value if granted else None,
+        }
+        decision_hash = canonical_hash(
+            {
+                "decisionId": decision_id,
+                "evidenceRef": body.evidence_ref.model_dump(mode="json", by_alias=True),
+                "purpose": body.purpose,
+                "status": status.value,
+                "grantedLevel": granted.value if granted else None,
+                "reasons": reasons,
+                "displayPayload": display,
+            }
+        )
+        return EvidenceDisclosureDecision(
+            tenant=self._tenant(scope),
+            decision_id=decision_id,
+            evidence_ref=body.evidence_ref,
+            purpose=body.purpose,
+            requested_level=body.requested_level,
+            granted_level=granted,
+            status=status,
+            reasons=reasons,
+            citation=citation,
+            display_payload=display,
+            redaction_receipt=redaction,
+            decision_hash=decision_hash,
+            expires_at=expires_at,
+            created_by=actor,
+            created_at=datetime.now(timezone.utc),
+        )
+
+    @staticmethod
+    def _assert_bundle_marking_access(
+        bundle: EvidenceBundleRevision, markings: list[str] | None
+    ) -> None:
+        if markings is None:
+            return
+        required = list(bundle.marking) or ["public"]
+        if not set(required).issubset(set(markings)):
+            raise ProductionContractDependencyBlocked("BUNDLE_MARKING_ACCESS_DENIED")
+
+    def _bundle_revoke(
+        self, conn: Any, scope: TenantScope, bundle_id: str, revision: int, content_hash: str
+    ) -> tuple[bool, str | None]:
+        row = conn.execute(
+            """SELECT reason FROM aip_evidence_bundle_revoke_event
+               WHERE org_id=%s AND project_id=%s AND bundle_id=%s
+                 AND revision=%s AND content_hash=%s
+               ORDER BY occurred_at DESC LIMIT 1""",
+            (*scope.key, bundle_id, revision, content_hash),
+        ).fetchone()
+        if row is None:
+            return False, None
+        return True, row["reason"]
 
     @staticmethod
     def _validate_stage_graph(stages: list[StageDefinition]) -> None:
@@ -1895,6 +2879,48 @@ class AipProductionContractStore:
                 blockers,
                 require_frozen=require_frozen,
             )
+        # W-L13: EvalContract dynamic Publication/ReleaseGate readiness enters snapshot + blockers
+        # Skip incomplete fixture rows that lack exact Publication binding (W2-D seeds).
+        eval_row = conn.execute(
+            """SELECT * FROM aip_eval_contract_revision
+               WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s""",
+            (
+                *scope.key,
+                body.eval_contract_ref.resource_id,
+                body.eval_contract_ref.revision,
+            ),
+        ).fetchone()
+        if eval_row is not None and eval_row["content_hash"] == body.eval_contract_ref.content_hash:
+            publication = self._load(eval_row["publication_ref"])
+            if isinstance(publication, dict) and publication.get("contentHash"):
+                eval_blockers = self._eval_blockers(conn, scope, eval_row)
+                blockers.extend(eval_blockers)
+                snapshot.append(
+                    {
+                        "resourceType": "EvalContractDynamicReadiness",
+                        "resourceId": body.eval_contract_ref.resource_id,
+                        "revision": body.eval_contract_ref.revision,
+                        "blockerCodes": [item.code for item in eval_blockers],
+                        "publicationEffective": self._publication_effective_type(
+                            conn, scope, eval_row
+                        ),
+                    }
+                )
+        revoked, reason = self._bundle_revoke(
+            conn,
+            scope,
+            body.evidence_bundle_ref.resource_id,
+            body.evidence_bundle_ref.revision,
+            body.evidence_bundle_ref.content_hash,
+        )
+        if revoked:
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_REVOKED",
+                    message=f"EvidenceBundle 已撤销: {reason or 'revoked'}",
+                    resource_ref=body.evidence_bundle_ref,
+                )
+            )
         if body.model_route_ref:
             self._snapshot_exact(
                 conn,
@@ -2177,6 +3203,18 @@ class AipProductionContractStore:
         self, scope: TenantScope, row: Any, version: int
     ) -> ImpactPreviewRevision:
         body = self._impact_body(row)
+        action_binding_hash = compute_action_binding_hash(
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            preview_id=row["preview_id"],
+            revision=int(row["revision"]),
+            content_hash=row["content_hash"],
+            dependency_snapshot_hash=row["dependency_snapshot_hash"],
+            binding_refs=self._load(row["binding_refs"]),
+            capability_ref=self._load(row["capability_ref"]),
+            account_ref=self._load(row["account_ref"]),
+            expires_at=row["expires_at"],
+        )
         return ImpactPreviewRevision(
             **body.model_dump(),
             tenant=self._tenant(scope),
@@ -2185,6 +3223,7 @@ class AipProductionContractStore:
             version=version,
             content_hash=row["content_hash"],
             dependency_snapshot_hash=row["dependency_snapshot_hash"],
+            action_binding_hash=action_binding_hash,
             lifecycle=row["lifecycle"],
             readiness=row["readiness"],
             blockers=self._load(row["blockers"]),
@@ -2222,10 +3261,25 @@ class AipProductionContractStore:
                 (*scope.key, ref.resource_id)).fetchone()
             if not publication_row:
                 blockers.append(ContractBlocker(code="EVAL_PUBLICATION_MISSING", message="发布事件不存在", resource_ref=ref))
-            elif publication_row["event_type"] != "published":
-                blockers.append(ContractBlocker(code="EVAL_PUBLICATION_REVOKED", message="发布事件不是有效 published", resource_ref=ref))
-            elif canonical_hash(self._publication_snapshot(publication_row)) != ref.content_hash:
-                blockers.append(ContractBlocker(code="EVAL_PUBLICATION_DRIFTED", message="发布事件 exact hash 漂移", resource_ref=ref))
+            else:
+                if canonical_hash(self._publication_snapshot(publication_row)) != ref.content_hash:
+                    blockers.append(ContractBlocker(code="EVAL_PUBLICATION_DRIFTED", message="发布事件 exact hash 漂移", resource_ref=ref))
+                # W-L13: effective status aggregates by publication_id, not bound event_id alone
+                latest = conn.execute(
+                    """SELECT * FROM aip_publication_event
+                       WHERE org_id=%s AND project_id=%s AND publication_id=%s
+                       ORDER BY occurred_at DESC, event_id DESC LIMIT 1""",
+                    (*scope.key, publication_row["publication_id"]),
+                ).fetchone()
+                effective = None if latest is None else latest["event_type"]
+                if effective != "published":
+                    blockers.append(
+                        ContractBlocker(
+                            code="EVAL_PUBLICATION_REVOKED",
+                            message=f"发布已失效（当前有效事件={effective or 'missing'}）",
+                            resource_ref=ref,
+                        )
+                    )
         gate = self._load(row["release_gate_ref"])
         if not gate:
             blockers.append(ContractBlocker(code="EVAL_GATE_MISSING", message="尚未绑定发布门决定"))
@@ -2262,36 +3316,95 @@ class AipProductionContractStore:
                 raise ProductionContractDependencyBlocked(f"ASSIGNEE_DRIFTED:{slot.slot_id}")
 
     def _responsibility_blockers(self, conn: Any, scope: TenantScope, row: Any) -> tuple[list[ContractBlocker], list[str]]:
+        """W-L4: coverage via assignee SkillBinding → CapabilityBinding operational, not tenant-global."""
         blockers: list[ContractBlocker] = []
         uncovered: list[str] = []
+        now = datetime.now(timezone.utc)
         for slot in self._load(row["slots"]):
             slot_id = slot["slotId"]
             assignee = slot["assignee"]
             instance_id = assignee["resourceId"]
-            capabilities = set(slot["requiredCapabilityIds"])
-            skill_rows = conn.execute("""SELECT capability_refs FROM aip_skill_binding
-                WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status='active'""",
-                (*scope.key, instance_id)).fetchall()
+            required = set(slot["requiredCapabilityIds"])
+            skill_rows = conn.execute(
+                """SELECT capability_refs FROM aip_skill_binding
+                   WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status='active'""",
+                (*scope.key, instance_id),
+            ).fetchall()
             if not skill_rows:
-                blockers.append(ContractBlocker(code="SKILL_BINDING_NOT_ACTIVE", message=f"职责 {slot_id} 没有 active SkillBinding"))
-            bound_capabilities: set[str] = set()
+                blockers.append(
+                    ContractBlocker(
+                        code="SKILL_BINDING_NOT_ACTIVE",
+                        message=f"职责 {slot_id} 没有 active SkillBinding",
+                    )
+                )
+                uncovered.append(slot_id)
+                continue
+            binding_ids: list[str] = []
             for skill in skill_rows:
-                for ref in self._load(skill["capability_refs"]):
-                    identifier = ref.get("assetId") or ref.get("resourceId") or ref.get("capabilityId")
-                    if identifier:
-                        bound_capabilities.add(identifier)
-            active_capability_rows = conn.execute("""SELECT capability_ref FROM aip_capability_binding
-                WHERE org_id=%s AND project_id=%s AND status='active' AND health='healthy'""",
-                scope.key).fetchall()
-            active_capabilities = {
-                value for item in active_capability_rows
-                if (value := (self._load(item["capability_ref"]).get("assetId")
-                              or self._load(item["capability_ref"]).get("resourceId")
-                              or self._load(item["capability_ref"]).get("capabilityId")))
-            }
-            if not capabilities <= (bound_capabilities & active_capabilities):
-                blockers.append(ContractBlocker(code="CAPABILITY_BINDING_NOT_ACTIVE", message=f"职责 {slot_id} 的 required capabilities 未全部 active/healthy"))
-            if not skill_rows or not capabilities <= (bound_capabilities & active_capabilities):
+                for ref in self._load(skill["capability_refs"]) or []:
+                    if isinstance(ref, str) and ref.strip():
+                        binding_ids.append(ref.strip())
+                    elif isinstance(ref, dict):
+                        identifier = ref.get("bindingId") or ref.get("resourceId")
+                        if isinstance(identifier, str) and identifier.strip():
+                            binding_ids.append(identifier.strip())
+            binding_ids = sorted(set(binding_ids))
+            if not binding_ids:
+                blockers.append(
+                    ContractBlocker(
+                        code="CAPABILITY_BINDING_MISSING",
+                        message=f"职责 {slot_id} 的 SkillBinding 未挂 CapabilityBinding",
+                    )
+                )
+                uncovered.append(slot_id)
+                continue
+            cap_rows = conn.execute(
+                """SELECT * FROM aip_capability_binding
+                   WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)""",
+                (*scope.key, binding_ids),
+            ).fetchall()
+            found = {item["binding_id"] for item in cap_rows}
+            slot_codes: set[str] = set()
+            if found != set(binding_ids):
+                slot_codes.add("CAPABILITY_BINDING_MISSING")
+            provided: set[str] = set()
+            for crow in cap_rows:
+                cap_id = self._capability_identifier(self._load(crow["capability_ref"]))
+                if not cap_id:
+                    slot_codes.add("CAPABILITY_BINDING_MISSING")
+                    continue
+                if crow["status"] != "active" or crow["health"] != "healthy":
+                    slot_codes.add("CAPABILITY_BINDING_NOT_ACTIVE")
+                    continue
+                usable = crow["operational_readiness"] == "available" or (
+                    crow["operational_readiness"] == "degraded"
+                    and bool(crow["allow_degraded"])
+                )
+                if not usable:
+                    slot_codes.add("CAPABILITY_BINDING_NOT_OPERATIONAL")
+                    continue
+                if (
+                    crow["dependency_snapshot_hash"] is None
+                    or crow["readiness_expires_at"] is None
+                    or crow["readiness_expires_at"] <= now
+                ):
+                    slot_codes.add("CAPABILITY_BINDING_STALE")
+                    continue
+                provided.add(cap_id)
+            if not required <= provided:
+                if "CAPABILITY_BINDING_NOT_OPERATIONAL" not in slot_codes and (
+                    "CAPABILITY_BINDING_STALE" not in slot_codes
+                ):
+                    slot_codes.add("CAPABILITY_BINDING_NOT_ACTIVE")
+            if slot_codes:
+                messages = {
+                    "CAPABILITY_BINDING_MISSING": f"职责 {slot_id} 缺少 assignee 归属的 CapabilityBinding",
+                    "CAPABILITY_BINDING_NOT_ACTIVE": f"职责 {slot_id} 的 required capabilities 未全部由 assignee 的 operational Binding 覆盖",
+                    "CAPABILITY_BINDING_NOT_OPERATIONAL": f"职责 {slot_id} 的 CapabilityBinding 未达 operational 可用",
+                    "CAPABILITY_BINDING_STALE": f"职责 {slot_id} 的 CapabilityBinding readiness 已过期或未求值",
+                }
+                for code in sorted(slot_codes):
+                    blockers.append(ContractBlocker(code=code, message=messages[code]))
                 uncovered.append(slot_id)
         return blockers, uncovered
 
@@ -2352,6 +3465,112 @@ class AipProductionContractStore:
             "event_id", "publication_id", "target_ref", "event_type",
             "release_gate_decision_id", "reason_hash", "actor", "occurred_at")}
 
+    def _publication_effective_type(
+        self, conn: Any, scope: TenantScope, eval_row: Any
+    ) -> str | None:
+        publication = self._load(eval_row["publication_ref"])
+        if not isinstance(publication, dict) or not publication.get("resourceId"):
+            return None
+        bound = conn.execute(
+            """SELECT publication_id FROM aip_publication_event
+               WHERE org_id=%s AND project_id=%s AND event_id=%s""",
+            (*scope.key, publication["resourceId"]),
+        ).fetchone()
+        if bound is None:
+            return None
+        latest = conn.execute(
+            """SELECT event_type FROM aip_publication_event
+               WHERE org_id=%s AND project_id=%s AND publication_id=%s
+               ORDER BY occurred_at DESC, event_id DESC LIMIT 1""",
+            (*scope.key, bound["publication_id"]),
+        ).fetchone()
+        return None if latest is None else latest["event_type"]
+
+    def diff_eval_contract(
+        self,
+        scope: TenantScope,
+        contract_id: str,
+        from_revision: int,
+        to_revision: int,
+    ) -> EvalContractDiff:
+        if from_revision == to_revision:
+            raise ProductionContractDependencyBlocked("EVAL_DIFF_SAME_REVISION")
+        with self._connect_factory(scope) as conn:
+            left = conn.execute(
+                """SELECT * FROM aip_eval_contract_revision
+                   WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s""",
+                (*scope.key, contract_id, from_revision),
+            ).fetchone()
+            right = conn.execute(
+                """SELECT * FROM aip_eval_contract_revision
+                   WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s""",
+                (*scope.key, contract_id, to_revision),
+            ).fetchone()
+            if left is None or right is None:
+                raise ProductionContractNotFound("eval contract revision not found")
+            changes: list[EvalContractDiffChange] = []
+            fields = (
+                ("suite_ref", "评测套件引用"),
+                ("publication_ref", "发布事件引用"),
+                ("release_gate_ref", "发布门决定引用"),
+                ("artifact_schema_ref", "产物 Schema"),
+                ("severity_thresholds", "严重级别阈值"),
+                ("gate_policy", "门禁策略"),
+                ("return_mapping", "退回映射"),
+                ("override_policy", "覆盖策略"),
+            )
+            for column, label in fields:
+                before = self._load(left[column])
+                after = self._load(right[column])
+                if before != after:
+                    changes.append(
+                        EvalContractDiffChange(
+                            field=column,
+                            label=label,
+                            before=before,
+                            after=after,
+                            impact="可能使已冻结 ImpactPreview/Approval 失效，需显式重编排",
+                        )
+                    )
+            if left["lifecycle"] != right["lifecycle"]:
+                changes.append(
+                    EvalContractDiffChange(
+                        field="lifecycle",
+                        label="生命周期",
+                        before=left["lifecycle"],
+                        after=right["lifecycle"],
+                        impact="生命周期变化会阻断未冻结依赖的启动门",
+                    )
+                )
+            return EvalContractDiff(
+                tenant=self._tenant(scope),
+                contract_id=contract_id,
+                from_revision=from_revision,
+                to_revision=to_revision,
+                from_content_hash=left["content_hash"],
+                to_content_hash=right["content_hash"],
+                changes=changes,
+                change_count=len(changes),
+                summary=(
+                    "无语义差异"
+                    if not changes
+                    else f"共 {len(changes)} 项语义变更，旧批准不可自动继承"
+                ),
+            )
+
+    @staticmethod
+    def _capability_identifier(ref: Any) -> str | None:
+        """Skill/capability bindings may store plain ids or ResourceRef-shaped objects."""
+        if isinstance(ref, str):
+            value = ref.strip()
+            return value or None
+        if isinstance(ref, dict):
+            value = ref.get("assetId") or ref.get("resourceId") or ref.get("capabilityId")
+            if isinstance(value, str):
+                value = value.strip()
+                return value or None
+        return None
+
     @staticmethod
     def _tenant(scope: TenantScope) -> TenantContext:
         return TenantContext(org_id=scope.org_id, project_id=scope.project_id)
@@ -2376,5 +3595,36 @@ class AipProductionContractStore:
         conn.execute("INSERT INTO aip_production_contract_receipt(org_id,project_id,receipt_id,operation,idempotency_key,request_hash,result_ref,created_by) VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb,%s)",(*scope.key,f"w2r-{uuid.uuid4().hex[:20]}",operation,key,request_hash,self._json(result),actor))
     def _brief(self,scope:TenantScope,row:Any,version:int)->TaskBriefRevision:
         return TaskBriefRevision(tenant=TenantContext(org_id=scope.org_id,project_id=scope.project_id),brief_id=row["brief_id"],task_id=row["task_id"],revision=int(row["revision"]),version=version,brief_type=row["brief_type"],schema_ref=ResourceRef.model_validate(self._load(row["schema_ref"])),spec=self._load(row["spec"]),content_hash=row["content_hash"],lifecycle=BriefLifecycle(row["lifecycle"]),created_by=row["created_by"],created_at=row["created_at"])
-    def _bundle(self,scope:TenantScope,row:Any)->EvidenceBundleRevision:
-        return EvidenceBundleRevision(tenant=TenantContext(org_id=scope.org_id,project_id=scope.project_id),bundle_id=row["bundle_id"],revision=int(row["revision"]),brief_ref=ExactRevisionRef.model_validate(self._load(row["brief_ref"])),subject_refs=[ResourceRef.model_validate(x) for x in self._load(row["subject_refs"])],cutoff_at=row["cutoff_at"],item_refs=[ExactRevisionRef.model_validate(x) for x in self._load(row["item_refs"])],coverage=row["coverage"],missing=self._load(row["missing"]),conflicts=self._load(row["conflicts"]),uncertainties=self._load(row["uncertainties"]),freshness=row["freshness"],marking=self._load(row["marking"]),license_summary=self._load(row["license_summary"]),content_hash=row["content_hash"],lifecycle=BriefLifecycle(row["lifecycle"]),created_by=row["created_by"],created_at=row["created_at"])
+    def _bundle(self,scope:TenantScope,row:Any, *, conn: Any | None = None)->EvidenceBundleRevision:
+        revoked = False
+        revoke_reason = None
+        if conn is not None:
+            revoked, revoke_reason = self._bundle_revoke(
+                conn,
+                scope,
+                row["bundle_id"],
+                int(row["revision"]),
+                row["content_hash"],
+            )
+        return EvidenceBundleRevision(
+            tenant=TenantContext(org_id=scope.org_id,project_id=scope.project_id),
+            bundle_id=row["bundle_id"],
+            revision=int(row["revision"]),
+            brief_ref=ExactRevisionRef.model_validate(self._load(row["brief_ref"])),
+            subject_refs=[ResourceRef.model_validate(x) for x in self._load(row["subject_refs"])],
+            cutoff_at=row["cutoff_at"],
+            item_refs=[ExactRevisionRef.model_validate(x) for x in self._load(row["item_refs"])],
+            coverage=row["coverage"],
+            missing=self._load(row["missing"]),
+            conflicts=self._load(row["conflicts"]),
+            uncertainties=self._load(row["uncertainties"]),
+            freshness=row["freshness"],
+            marking=self._load(row["marking"]),
+            license_summary=self._load(row["license_summary"]),
+            content_hash=row["content_hash"],
+            lifecycle=BriefLifecycle(row["lifecycle"]),
+            created_by=row["created_by"],
+            created_at=row["created_at"],
+            revoked=revoked,
+            revoke_reason=revoke_reason,
+        )

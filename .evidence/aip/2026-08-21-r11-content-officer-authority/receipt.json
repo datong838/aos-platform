@@ -1,0 +1,33 @@
+{
+  "receiptType": "AIP_WAVE_DELIVERY",
+  "waveId": "R11",
+  "status": "GREEN_WITH_UI_WARNING",
+  "branch": "w1-aip",
+  "sourceCommit": "11e02e7385908d88df07c26c6e635537ccfa3c41",
+  "sourceCommits": ["1b0f5da", "74b3c3f", "2736c84", "910c3b1", "4f16c00", "80644fc", "11e02e7"],
+  "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+  "sideEffects": {
+    "migration": false,
+    "agentRun": false,
+    "providerBusinessCall": false,
+    "mediaGeneration": false,
+    "externalPublish": false,
+    "secretPayloadRead": false
+  },
+  "verification": {
+    "targeted": "41 passed",
+    "cumulativeR06ThroughR11": "261 passed",
+    "compile": "GREEN",
+    "browserPages": 2,
+    "browserConsistency": "GREEN_WITH_UI_WARNING",
+    "consoleErrors": 0,
+    "diffCheck": "GREEN"
+  },
+  "externalBlockedOwners": [
+    "B5_RECEIPT_NOT_CAS_CONSUMED:m1 serialized CAS owner",
+    "W2_00_SOURCE_READINESS_OWNER_MISSING:Data/Adapter owner",
+    "W2_00_SAME_CUTOFF_EVIDENCEPACK_MISSING:Data/Adapter owner"
+  ],
+  "followUps": ["R15_AGENT_REGISTRY_CAPABILITY_COUNT_SEMANTICS"],
+  "evidencePath": ".evidence/aip/2026-08-21-r11-content-officer-authority"
+}

@@ -1,0 +1,34 @@
+{
+  "status": "GREEN_WITH_WARNINGS",
+  "wave": "R13_EXACT_LINEAGE_OBSERVABILITY",
+  "scope": {"orgId": "org-org", "projectId": "dev-project"},
+  "evaluatedAt": "2026-08-21T11:19:27Z",
+  "gates": {
+    "canonicalRootToLineage": true,
+    "lineageToObservability": true,
+    "exactBackLink": true,
+    "missingEvidenceHonest": true,
+    "usageReceiptsMeasured": true,
+    "exportAfterSuccessfulRead": true,
+    "browserAcceptance": true
+  },
+  "counts": {"lineageEvents": 3, "telemetrySpans": 0, "usageReceipts": 2, "inputTokens": 340, "outputTokens": 143},
+  "verification": {
+    "frontendTargeted": "43 passed",
+    "webTypecheck": "GREEN",
+    "webCumulative": "198 files, 2006 tests passed",
+    "diffCheck": "GREEN",
+    "browser": "GREEN_WITH_WARNINGS",
+    "consoleErrors": 0
+  },
+  "safety": {
+    "agentRunsCreated": 0,
+    "providerBusinessCalls": 0,
+    "externalActions": 0,
+    "productionActions": 0,
+    "secretPayloadReads": 0,
+    "oldPilotsReplayed": 0,
+    "migrations": 0
+  },
+  "codeCommit": "5df7d9fb142588aeab2ba810db4d2db7f39f6ee2"
+}

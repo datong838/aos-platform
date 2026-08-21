@@ -44,6 +44,18 @@ const routeConfig = {
   ],
 };
 
+const runtimeReady = {
+  providers: [],
+  models: [],
+  routes: [],
+  policies: [],
+  priceSnapshots: [],
+  evalGates: [],
+  capacityPools: [],
+  healthObservations: [],
+  resolutions: [{ readiness: "ready", blockerCodes: [] }],
+};
+
 describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
   let host: HTMLDivElement;
   let root: Root;
@@ -64,6 +76,7 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
         };
       }
       if (path === "/v1/aip/models/warmup") return { ready: true, models: [] };
+      if (path === "/v1/aip/model-runtime/overview") return runtimeReady;
       if (path === "/api/models/router") return routeConfig;
       if (path === "/api/models/router/circuit-config") return {};
       throw new Error(`unexpected ${path}`);
@@ -98,6 +111,7 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
         return { items: [{ id: "model-a", kind: "chat", ready: true }, { id: "model-b", kind: "chat", ready: true }] };
       }
       if (path === "/v1/aip/models/warmup") return { ready: true, models: [] };
+      if (path === "/v1/aip/model-runtime/overview") return runtimeReady;
       if (path === "/api/models/router/circuit-config") return {};
       if (path === "/api/models/router") return apiMocks.apiPut.mock.calls.length > 0 ? saved : routeConfig;
       throw new Error(`unexpected ${path}`);
@@ -149,12 +163,48 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
     expect(host.textContent).not.toContain("路由测试结果");
   });
 
+  it("canonical 路由未就绪时兼容配置只读且不允许写入或演练", async () => {
+    apiMocks.apiGet.mockImplementation(async (path: string) => {
+      if (path === "/v1/aip/models") {
+        return { items: [{ id: "model-a", kind: "chat", ready: true }], defaultTextModel: "model-a" };
+      }
+      if (path === "/v1/aip/models/warmup") return { ready: true, models: [] };
+      if (path === "/v1/aip/model-runtime/overview") {
+        return {
+          ...runtimeReady,
+          resolutions: [
+            { readiness: "blocked", blockerCodes: ["PROVIDER_HEALTH_EXPIRED"] },
+            { readiness: "blocked", blockerCodes: ["PRICE_SNAPSHOT_MISSING"] },
+            { readiness: "blocked", blockerCodes: ["EVAL_GATE_BLOCKED"] },
+          ],
+        };
+      }
+      if (path === "/api/models/router") return routeConfig;
+      if (path === "/api/models/router/circuit-config") return {};
+      throw new Error(`unexpected ${path}`);
+    });
+    await act(async () => root.render(<MemoryRouter><ModelRouterPage /></MemoryRouter>));
+    await flush();
+
+    expect(host.textContent).toContain("0/3 路由 ready");
+    expect(host.textContent).toContain("兼容只读");
+    expect(host.textContent).toContain("PROVIDER_HEALTH_EXPIRED");
+    expect(host.querySelector<HTMLSelectElement>("[aria-label='摘要 / 分类-primary']")?.disabled).toBe(true);
+    const save = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "保存策略")!;
+    const drill = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "熔断演练")!;
+    expect(save.disabled).toBe(true);
+    expect(drill.disabled).toBe(true);
+    expect(apiMocks.apiPut).not.toHaveBeenCalled();
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
+  });
+
   it("保存后重读不一致时保留失败，不显示伪成功", async () => {
     const saved = { ...routeConfig, version: 8, items: [{ ...routeConfig.items[0], primary: "model-b" }] };
     apiMocks.apiPut.mockResolvedValue(saved);
     apiMocks.apiGet.mockImplementation(async (path: string) => {
       if (path === "/v1/aip/models") return { items: [{ id: "model-a", kind: "chat", ready: true }, { id: "model-b", kind: "chat", ready: true }] };
       if (path === "/v1/aip/models/warmup") return { ready: true, models: [] };
+      if (path === "/v1/aip/model-runtime/overview") return runtimeReady;
       if (path === "/api/models/router/circuit-config") return {};
       if (path === "/api/models/router") {
         return apiMocks.apiPut.mock.calls.length > 0

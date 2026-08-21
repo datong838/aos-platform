@@ -1,0 +1,12 @@
+{
+  "wave": "W-D",
+  "gate": "AIP_THREE_DEBTS_GUARDRAILS_WIZARD_MEMORY",
+  "tenant": "org-org/dev-project",
+  "migration": "aip6_008",
+  "verifiedAt": "2026-08-19T15:15:00+08:00",
+  "checks": [
+    {"path": "GET/PUT .../guardrails", "status": 200, "reread": true},
+    {"path": "Studio install wizard", "tests": "W3BPageInteraction"},
+    {"path": "Studio guardrails validators", "tests": "StudioPage.test"}
+  ]
+}

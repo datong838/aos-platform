@@ -26,6 +26,7 @@ from aos_api.aip_agent_registry_contracts import (
     VersionedAssetRef,
 )
 from aos_api.aip_agent_registry_store import (
+    AipAgentRegistryConflict,
     AipAgentRegistryNotFound,
     AipAgentRegistryStore,
     AipAgentRegistryTransitionBlocked,
@@ -187,10 +188,10 @@ def _insert_governed_published_skill_fixture(ids):
                 output_schema,tool_allowlist,required_capabilities,risk_level,
                 memory_policy_ref,handoff_policy_ref,source_ref,source_license,
                 parent_ref,publication_tenant,release_gate_ref,publication_ref,
-                model_route_ref,runtime_policy_ref,content_hash,created_by)
+                model_route_ref,runtime_policy_ref,logic_revision_ref,content_hash,created_by)
                VALUES (%s,2,%s,'published',%s::jsonb,%s::jsonb,'[]'::jsonb,
                 '[]'::jsonb,'low',%s::jsonb,%s::jsonb,%s::jsonb,%s,
-                %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+                %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
                 %s,'pytest')""",
             (
                 source.skill_id,
@@ -207,6 +208,7 @@ def _insert_governed_published_skill_fixture(ids):
                 encoded({"resourceType": "PublicationEvent", "resourceId": "event-fixture", "revision": "publication-fixture", "authority": "postgresql"}),
                 encoded(asset("ModelRouteRevision", "route-fixture").model_dump(mode="json", by_alias=True)),
                 encoded(asset("RuntimePolicyRevision", "policy-fixture").model_dump(mode="json", by_alias=True)),
+                encoded(asset("LogicRevision", source.canonical_logic_id).model_dump(mode="json", by_alias=True)),
                 HASH_C,
             ),
         )
@@ -416,6 +418,22 @@ def test_agent_run_persists_exact_instance_snapshot_and_blocks_start_without_aip
         occurred_at=NOW,
     )
     assert run.status is AgentRunStatus.QUEUED and receipt.status == "applied"
+    mismatched = request.model_copy(
+        update={
+            "agent_run_id": f"{ids['agent_run']}-wrong-logic",
+            "run": request.run.model_copy(
+                update={"logic": asset("LogicRevision", "other.logic")}
+            ),
+        }
+    )
+    with pytest.raises(AipAgentRegistryConflict, match="exact published LogicRevision"):
+        service.create(
+            PRIMARY,
+            mismatched,
+            idempotency_key=f"agent-run-{ids['agent_run']}-wrong-logic",
+            actor="pytest",
+            occurred_at=NOW,
+        )
     with connect(PRIMARY) as conn:
         row = conn.execute(
             """SELECT instance_ref,instance_snapshot FROM aip_agent_run

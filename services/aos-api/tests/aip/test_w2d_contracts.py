@@ -171,6 +171,7 @@ def test_frozen_preview_requires_actor_and_timestamp() -> None:
         "version": 1,
         "content_hash": HASH,
         "dependency_snapshot_hash": OTHER_HASH,
+        "action_binding_hash": HASH,
         "lifecycle": BriefLifecycle.FROZEN,
         "readiness": ContractReadiness.READY,
         "blockers": [],
@@ -194,6 +195,7 @@ def test_preview_rejects_partial_freeze_or_ambiguous_readiness() -> None:
         "version": 1,
         "content_hash": HASH,
         "dependency_snapshot_hash": OTHER_HASH,
+        "action_binding_hash": HASH,
         "lifecycle": BriefLifecycle.DRAFT,
         "readiness": ContractReadiness.READY,
         "blockers": [],
@@ -222,11 +224,25 @@ def test_start_request_requires_plan_and_preview_exact_kinds() -> None:
         ProductionStartRequest(
             task_id="task-1",
             expected_task_version=1,
+            production_context_ref=exact("ProductionContextRevision", "ctx-1"),
             plan_ref=exact("PlanRevision", "plan-1"),
             preview_ref=exact("Artifact", "preview-1"),
             action_proposal_ref=proposal_ref(),
             logic_graph_id="logic-1",
             logic_revision=1,
+            logic_graph_hash=HASH,
+        )
+    with pytest.raises(ValidationError, match="productionContextRef must reference ProductionContextRevision"):
+        ProductionStartRequest(
+            task_id="task-1",
+            expected_task_version=1,
+            production_context_ref=exact("Artifact", "ctx-1"),
+            plan_ref=exact("PlanRevision", "plan-1"),
+            preview_ref=exact("ImpactPreviewRevision", "preview-1"),
+            action_proposal_ref=proposal_ref(),
+            logic_graph_id="logic-1",
+            logic_revision=1,
+            logic_graph_hash=HASH,
         )
 
 

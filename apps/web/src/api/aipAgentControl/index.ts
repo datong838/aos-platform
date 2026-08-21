@@ -7,6 +7,13 @@ export const aipAgentControl = {
   async listInstances() { return parseAgentInstances(await apiGet<unknown>("/v1/aip/agents"), getTenant()); },
   async listCapabilities() { return parseCapabilities(await apiGet<unknown>("/v1/aip/capability-catalog"), getTenant()); },
   async runtimeReadiness() { return parseRuntimeReadiness(await apiGet<unknown>("/v1/aip/agent-registry/runtime-readiness"), getTenant()); },
+  async refreshReadiness(idempotencyKey: string) {
+    if (!idempotencyKey.trim()) throw new Error("Idempotency-Key 不能为空");
+    return parseRuntimeReadiness(
+      await apiPost<unknown>("/v1/aip/agent-registry/refresh-readiness", {}, { "Idempotency-Key": idempotencyKey }),
+      getTenant(),
+    );
+  },
   async installEcommerce(idempotencyKey: string) {
     if (!idempotencyKey.trim()) throw new Error("Idempotency-Key 不能为空");
     return parseInstall(await apiPost<unknown>("/v1/aip/agents/install-ecommerce", {}, { "Idempotency-Key": idempotencyKey }), getTenant());

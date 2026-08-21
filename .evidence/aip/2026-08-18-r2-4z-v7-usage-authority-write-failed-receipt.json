@@ -1,0 +1,34 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000120",
+  "recordedAt": "2026-08-18T21:21:00+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4Z",
+  "approvalRef": "46-R2-4Y-V7-DATA-CLASSIFICATION-FIX",
+  "startGate": "R2_4Z_V7_DATA_CLASSIFICATION_FIX",
+  "assets": {
+    "provider": {"assetId": "agnes-text-qyh-dev", "revision": 7},
+    "route": {"assetId": "route-qyh-text-dev", "revision": 4},
+    "skill": {"assetId": "ecommerce.skill.D03", "revision": 4}
+  },
+  "execution": {
+    "agentRunId": "ecommerce.data_advisor.D03.real-pilot.v7",
+    "attemptId": "ecommerce.data_advisor.D03.real-pilot.v7.attempt-1",
+    "attemptStatus": "unknown",
+    "reasonCode": "PROVIDER_USAGE_AUTHORITY_WRITE_FAILED",
+    "providerBusinessCalls": 1,
+    "automaticRetries": 0,
+    "dataClassificationMapped": true,
+    "lineageEventCountAtUsageWrite": 0,
+    "usageReceiptCount": 0,
+    "replayed": false
+  },
+  "result": "R2_4Z_V7_USAGE_AUTHORITY_WRITE_FAILED",
+  "rootCause": "Usage ingest requires an existing aip_lineage_event; executor invoked Provider before lineage reconcile. Classification mapping is proven past DATA_CLASSIFICATION_BLOCKED.",
+  "immutable": true,
+  "nextGate": "R2_4Z_V8_LINEAGE_BEFORE_USAGE"
+}

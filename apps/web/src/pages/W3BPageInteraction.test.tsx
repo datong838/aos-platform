@@ -70,6 +70,22 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
       if (path.includes("/usage")) return { items: [] };
       if (path.includes("/project-limits")) return { scope: "project", scopeKey: "default", rpmLimit: 60, tpmLimit: 60000 };
       if (path.includes("/user-limits")) return { items: [] };
+      if (path === "/v1/aip/model-runtime/overview") return {
+        tenant: { orgId: "org-org", projectId: "dev-project" },
+        providers: [], models: [], routes: [], policies: [], priceSnapshots: [],
+        evalGates: [], capacityPools: [], healthObservations: [], resolutions: [],
+        generatedAt: "2026-08-21T00:00:00Z",
+      };
+      if (path === "/v1/aip/model-runtime/cost-overview") return {
+        tenant: { orgId: "org-org", projectId: "dev-project" },
+        modelPrices: [], budgets: [],
+        usage: {
+          state: "unobserved", receiptCount: 0, measuredCount: 0,
+          estimatedCount: 0, unknownCount: 0, adjustmentCount: 0,
+          costTotals: {}, latestObservedAt: null, truncated: false,
+        },
+        generatedAt: "2026-08-21T00:00:00Z",
+      };
       throw new Error(`unexpected ${path}`);
     });
     await act(async () => root.render(<MemoryRouter><CapacityPage /></MemoryRouter>));
@@ -97,13 +113,18 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
     expect(apiMocks.apiPut).not.toHaveBeenCalled();
   });
 
-  it("Studio Agent 空列表不回填硬编码，新建禁用", async () => {
+  it("Studio Agent 空列表不回填硬编码，新建入口打开安装向导", async () => {
     apiMocks.apiGet.mockImplementation(async (path: string) => path === "/v1/aip/agents" ? { items: [] } : { items: [] });
     await act(async () => root.render(<MemoryRouter><StudioPage /></MemoryRouter>));
     await flush();
     expect(host.querySelector("[data-testid='studio-agents-empty']")).not.toBeNull();
     const create = host.querySelector<HTMLButtonElement>("[data-testid='studio-btn-new-agent']")!;
-    expect(create.disabled).toBe(true);
+    expect(create.textContent).toContain("安装数字同事");
+    await act(async () => create.click());
+    await flush();
+    expect(host.querySelector("[data-testid='studio-install-wizard']")).not.toBeNull();
+    expect(host.querySelector("[data-testid='studio-install-ecommerce']")).not.toBeNull();
+    expect(host.querySelector<HTMLAnchorElement>("[data-testid='studio-install-registry-link']")?.getAttribute("href")).toBe("/aip/agent-registry");
     expect(host.textContent).not.toContain("维修派单 Buddy");
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
   });
@@ -113,8 +134,22 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
       if (path === "/v1/aip/agents") return { items: [{ id: "a1", name: "真实 Agent", status: "draft", tags: ["L2"] }] };
       if (path.endsWith("/prompt")) return { agent_id: "a1", prompt: "system" };
       if (path.endsWith("/tools")) return { agent_id: "a1", items: [] };
+      if (path.endsWith("/guardrails")) return { agent_id: "a1", items: [] };
       if (path === "/v1/aip/tools") return { items: [] };
       if (path === "/v1/aip/models") return { defaultTextModel: "m1" };
+      if (path === "/v1/aip/operational-projection") return {
+        tenant: { orgId: "org-org", projectId: "dev-project" },
+        roles: { definition: 6, bound: 6, enabled: 6, runnable: 6 },
+        capabilities: { definition: 10, bound: 10, enabled: 10, runnable: 10 },
+        tools: { definition: 12, bound: 12, enabled: 12, runnable: 12 },
+        evalGates: { definition: 3, bound: 3, enabled: 3, runnable: 3 },
+        routes: { definition: 3, bound: 3, enabled: 3, runnable: 3 },
+        overallReadiness: "ready",
+        blockerCodes: [],
+        sources: { agentReadinessAt: "2026-08-21T01:00:00Z", modelRuntimeAt: "2026-08-21T01:00:01Z" },
+        snapshotHash: "a".repeat(64),
+        generatedAt: "2026-08-21T01:00:02Z",
+      };
       throw new Error(`unexpected ${path}`);
     });
     apiMocks.apiPost.mockRejectedValue(new Error("chat unavailable"));
@@ -122,6 +157,9 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
     await flush();
     const tryTab = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "试运行")!;
     await act(async () => tryTab.click());
+    const query = host.querySelector<HTMLInputElement>("input[placeholder='输入测试问题…']")!;
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(query, "真实订单怎么处理？");
+    await act(async () => query.dispatchEvent(new Event("input", { bubbles: true })));
     const send = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "发送")!;
     await act(async () => send.click());
     await flush();

@@ -368,8 +368,36 @@ def _invoke_function_core(body: FnInvokeIn, principal: Principal):
 # —— T3.7 Tool registry ——
 @router.get("/v1/aip/tools")
 def list_tools(principal: Principal = Depends(require_principal)):
-    _ = principal
-    return {"items": _tools}
+    scope = TenantScope(principal.org_id, principal.project_id)
+    from aos_api.aip_action_tool_exits import list_action_tool_exits
+    from aos_api.aip_capability_binding_service import AipCapabilityBindingService
+    from aos_api.aip_capability_tool_exits import list_capability_tool_exits
+    from aos_api.aip_function_tool_exits import list_function_tool_exits
+
+    bindings: list[dict[str, Any]] = []
+    try:
+        rows = AipCapabilityBindingService().list_bindings(scope, limit=200)
+        for row in rows:
+            if hasattr(row, "model_dump"):
+                bindings.append(row.model_dump(by_alias=True))
+            elif isinstance(row, dict):
+                bindings.append(row)
+    except Exception:
+        bindings = []
+    caps = list_capability_tool_exits(scope, bindings=bindings)
+
+    graphs: list[Any] = []
+    try:
+        from aos_api.aip_logic_graph_store import LogicGraphStore
+
+        graphs = list(LogicGraphStore().list(scope.org_id, scope.project_id) or [])
+    except Exception:
+        graphs = []
+    functions = list_function_tool_exits(scope, graphs=graphs)
+    actions = list_action_tool_exits()
+
+    base = [t for t in _tools if str(t.get("id")) not in {"fn.echo", "action.close"}]
+    return {"items": [*base, *functions, *actions, *caps]}
 
 
 @router.post("/v1/aip/tools/{tool_id}/invoke")

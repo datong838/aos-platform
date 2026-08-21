@@ -1,0 +1,22 @@
+{
+  "skillCount": 39,
+  "publishedCount": 8,
+  "bindingCount": 10,
+  "logicPublicationCount": 8,
+  "perRolePublished": [
+    "ecommerce.skill.A02",
+    "ecommerce.skill.C02",
+    "ecommerce.skill.D03",
+    "ecommerce.skill.G04",
+    "ecommerce.skill.I01",
+    "ecommerce.skill.P02",
+    "ecommerce.skill.S04",
+    "ecommerce.skill.V01"
+  ],
+  "f4Gate": {
+    "minOnePublishedPerPilotRole": true,
+    "bindingsPresent": true,
+    "honestNoForgeRemaining": true
+  },
+  "note": "Remaining evaluated skills blocked by LOGIC_GRAPH_MISSING; no forged publish"
+}

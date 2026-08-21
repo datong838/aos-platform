@@ -1,0 +1,30 @@
+{
+  "schema": "aos-aip-workshop-handoff/v1",
+  "wave": "AIP-R2-catalog-skill-logicRevisionRef",
+  "recordedAt": "2026-08-18T22:26:20+08:00",
+  "owner": "w1-aip",
+  "consumer": "w2-workshop",
+  "aipDoesNotEditWorkshop": true,
+  "m1HeadAtHandoff": "f2655b2",
+  "catalogContract": {
+    "path": "GET /v1/aip/agent-registry/runtime-readiness",
+    "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+    "skillField": "logicRevisionRef",
+    "presence": "always",
+    "evaluatedValue": null,
+    "publishedValue": "VersionedAssetRef assetType=LogicRevision",
+    "workshopExactParserMustAllow": true
+  },
+  "aipAlreadyDid": {
+    "catalogRuntimeCompute": true,
+    "runnableCountHonest": 1,
+    "w1WebParserAllowsLogicRevisionRef": true,
+    "installRunnableCountPinned": 0
+  },
+  "workshopStillOwns": [
+    "apps/web catalog page/parser on w2-workshop",
+    "live 5173 agent-registry visual acceptance"
+  ],
+  "providerBusinessCalls": 0,
+  "secretPayloadReads": 0
+}

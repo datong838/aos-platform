@@ -23,6 +23,37 @@ def invoke_tool(
     scope: TenantScope, tool_id: str, payload: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     payload = payload or {}
+    if tool_id.startswith("cap."):
+        from aos_api.aip_capability_binding_service import AipCapabilityBindingService
+        from aos_api.aip_capability_tool_exits import (
+            capability_id_from_tool,
+            invoke_capability_tool,
+        )
+
+        cid = capability_id_from_tool(tool_id)
+        binding_dict = None
+        if cid:
+            try:
+                for row in AipCapabilityBindingService().list_bindings(scope, limit=200):
+                    dump = row.model_dump(by_alias=True) if hasattr(row, "model_dump") else dict(row)
+                    cap = dump.get("capability") or {}
+                    if str(cap.get("assetId") or "") == cid:
+                        binding_dict = dump
+                        break
+            except Exception:
+                binding_dict = None
+        return invoke_capability_tool(tool_id, binding=binding_dict, payload=payload)
+
+    if tool_id == "fn.echo" or tool_id.startswith("fn.logic."):
+        from aos_api.aip_function_tool_exits import invoke_function_tool
+
+        return invoke_function_tool(tool_id, payload=payload)
+
+    if tool_id == "action.close" or tool_id.startswith("action."):
+        from aos_api.aip_action_tool_exits import invoke_action_tool
+
+        return invoke_action_tool(tool_id, payload=payload)
+
     if tool_id not in KNOWN:
         raise ApiError(
             code="NOT_FOUND", message=f"tool {tool_id} unknown", status_code=404
@@ -67,8 +98,20 @@ def invoke_tool(
         }
 
     if tool_id == "wiki.read":
-        ot = str(payload.get("objectType") or "WorkOrder")
-        oid = str(payload.get("objectId") or "wo-1001")
+        ot = str(payload.get("objectType") or "").strip()
+        oid = str(payload.get("objectId") or "").strip()
+        if not ot or not oid:
+            raise ApiError(
+                code="AIP_INVALID_ARGUMENT",
+                message="wiki.read requires exact objectType and objectId (demo wo-1001 disabled)",
+                status_code=400,
+            )
+        if oid.lower() == "wo-1001":
+            raise ApiError(
+                code="AIP_INVALID_ARGUMENT",
+                message="demo objectId wo-1001 is disabled",
+                status_code=400,
+            )
         try:
             with connect(scope) as conn:
                 row = conn.execute(

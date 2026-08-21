@@ -14,6 +14,7 @@ from aos_api.aip_production_contract_store import (
     ProductionContractIdempotencyConflict,
     ProductionContractNotFound,
     canonical_hash,
+    compute_action_binding_hash,
 )
 from aos_api.aip_production_contracts import (
     ContractBlocker,
@@ -75,6 +76,7 @@ class AipProductionStartService:
             blockers: list[ContractBlocker] = []
             plan = self._check_plan(conn, scope, body, task, snapshot, blockers)
             preview = self._check_preview(conn, scope, body, snapshot, blockers)
+            self._check_production_context(conn, scope, body, preview, snapshot, blockers)
             self._check_action(conn, scope, body, preview, snapshot, blockers)
             self._check_logic(conn, scope, body, snapshot, blockers)
             status = self._blocked_status(blockers)
@@ -275,6 +277,78 @@ class AipProductionStartService:
             blockers.append(ContractBlocker(code="PREVIEW_TASK_PLAN_MISMATCH", message="ImpactPreview 未绑定本次 Task/Plan exact ref", resource_ref=body.preview_ref))
         return row
 
+    def _check_production_context(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        body: ProductionStartRequest,
+        preview: Any | None,
+        snapshot: list[dict[str, Any]],
+        blockers: list[ContractBlocker],
+    ) -> None:
+        ref = body.production_context_ref
+        row = conn.execute(
+            """SELECT * FROM aip_production_context_revision
+               WHERE org_id=%s AND project_id=%s AND context_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        snapshot.append(
+            {
+                "resourceType": ref.resource_type,
+                "resourceId": ref.resource_id,
+                "expectedRevision": ref.revision,
+                "expectedHash": ref.content_hash,
+                "observedHash": None if row is None else row["content_hash"],
+                "lifecycle": None if row is None else row["lifecycle"],
+                "readiness": None if row is None else row["readiness"],
+            }
+        )
+        if row is None or row["content_hash"] != ref.content_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="PRODUCTION_CONTEXT_EXACT_REF_MISSING_OR_DRIFTED",
+                    message="ProductionContext exact ref 不可用",
+                    resource_ref=ref,
+                )
+            )
+            return
+        if row["lifecycle"] != "frozen" or row["readiness"] != "ready":
+            blockers.append(
+                ContractBlocker(
+                    code="PRODUCTION_CONTEXT_NOT_READY",
+                    message="ProductionContext 未 frozen/ready",
+                    resource_ref=ref,
+                )
+            )
+        if preview is None:
+            return
+        pairs = (
+            ("brief_ref", "brief_ref"),
+            ("evidence_bundle_ref", "evidence_bundle_ref"),
+            ("eval_contract_ref", "eval_contract_ref"),
+            ("responsibility_plan_ref", "responsibility_plan_ref"),
+        )
+        for context_col, preview_col in pairs:
+            left = self._contracts._load(row[context_col])
+            right = self._contracts._load(preview[preview_col])
+            if left != right:
+                blockers.append(
+                    ContractBlocker(
+                        code="PRODUCTION_CONTEXT_PREVIEW_CONTRACT_MISMATCH",
+                        message=f"ProductionContext 与 Preview 的 {preview_col} 不一致",
+                        resource_ref=ref,
+                    )
+                )
+                break
+        if row["task_id"] != body.task_id:
+            blockers.append(
+                ContractBlocker(
+                    code="PRODUCTION_CONTEXT_TASK_MISMATCH",
+                    message="ProductionContext taskId 与 Start 请求不一致",
+                    resource_ref=ref,
+                )
+            )
+
     def _check_action(
         self,
         conn: Any,
@@ -317,6 +391,60 @@ class AipProductionStartService:
             and row["impact_preview_hash"] == body.preview_ref.content_hash
         ):
             blockers.append(ContractBlocker(code="ACTION_PREVIEW_BINDING_MISMATCH", message="ActionProposal 未绑定本次 ImpactPreview exact ref"))
+        elif row["impact_preview_id"] is not None and preview is not None:
+            draft = conn.execute(
+                """SELECT snapshot FROM aip_action_draft
+                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s
+                   ORDER BY proposal_version DESC LIMIT 1""",
+                (*scope.key, row["proposal_id"]),
+            ).fetchone()
+            draft_snapshot = draft["snapshot"] if draft is not None else None
+            if isinstance(draft_snapshot, str):
+                draft_snapshot = json.loads(draft_snapshot)
+            pinned = (draft_snapshot or {}).get("actionBindingHash") if isinstance(draft_snapshot, dict) else None
+            if not isinstance(pinned, str) or len(pinned) != 64:
+                blockers.append(
+                    ContractBlocker(
+                        code="ACTION_BINDING_HASH_REQUIRED",
+                        message="绑 Preview 的 ActionProposal 缺少 actionBindingHash",
+                    )
+                )
+            else:
+                binding_refs = preview["binding_refs"]
+                capability_ref = preview["capability_ref"]
+                account_ref = preview["account_ref"]
+                if isinstance(binding_refs, str):
+                    binding_refs = json.loads(binding_refs)
+                if isinstance(capability_ref, str):
+                    capability_ref = json.loads(capability_ref)
+                if isinstance(account_ref, str):
+                    account_ref = json.loads(account_ref)
+                expected = compute_action_binding_hash(
+                    org_id=scope.org_id,
+                    project_id=scope.project_id,
+                    preview_id=preview["preview_id"],
+                    revision=int(preview["revision"]),
+                    content_hash=preview["content_hash"],
+                    dependency_snapshot_hash=preview["dependency_snapshot_hash"],
+                    binding_refs=binding_refs,
+                    capability_ref=capability_ref,
+                    account_ref=account_ref,
+                    expires_at=preview["expires_at"],
+                )
+                snapshot.append(
+                    {
+                        "resourceType": "ActionBindingHash",
+                        "pinned": pinned,
+                        "expected": expected,
+                    }
+                )
+                if pinned != expected:
+                    blockers.append(
+                        ContractBlocker(
+                            code="ACTION_BINDING_HASH_MISMATCH",
+                            message="ActionProposal actionBindingHash 与 ImpactPreview 不一致",
+                        )
+                    )
         approvals = conn.execute(
             """SELECT actor_id,expires_at FROM aip_action_approval_event
                WHERE org_id=%s AND project_id=%s AND proposal_id=%s
@@ -346,7 +474,7 @@ class AipProductionStartService:
             (*scope.key, body.logic_graph_id),
         ).fetchone()
         revision = conn.execute(
-            """SELECT graph_hash FROM aip_logic_graph_revision
+            """SELECT graph_hash, snapshot FROM aip_logic_graph_revision
                WHERE org_id=%s AND project_id=%s AND graph_id=%s AND revision=%s
                FOR SHARE""",
             (*scope.key, body.logic_graph_id, body.logic_revision),
@@ -362,8 +490,26 @@ class AipProductionStartService:
         )
         if graph is None or revision is None:
             raise ProductionContractNotFound("logic graph revision not found in scope")
+        if revision["graph_hash"] != body.logic_graph_hash:
+            blockers.append(
+                ContractBlocker(
+                    code="LOGIC_GRAPH_HASH_MISMATCH",
+                    message="LogicGraph revision/hash 与权威不一致",
+                )
+            )
         if graph["status"] != "published":
             blockers.append(ContractBlocker(code="LOGIC_GRAPH_NOT_PUBLISHED", message="LogicGraph 尚未发布"))
+        payload = revision["snapshot"]
+        if isinstance(payload, str):
+            payload = json.loads(payload)
+        nodes = (payload or {}).get("nodes") if isinstance(payload, dict) else None
+        if not isinstance(nodes, list) or len(nodes) == 0:
+            blockers.append(
+                ContractBlocker(
+                    code="LOGIC_GRAPH_EMPTY",
+                    message="空 LogicGraph 不可进入 ProductionStart",
+                )
+            )
 
     @staticmethod
     def _lock_mutable_bindings(

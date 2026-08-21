@@ -1,0 +1,16 @@
+{
+  "countA": 9,
+  "countB": 5,
+  "differ": true,
+  "packBadge": true,
+  "sampleA": [
+    "1. Query · query.objects属性子集 · 含 Wiki 字段",
+    "2. Function · fn.echo或已发布 AIP Logic",
+    "3. Action · action.closeHITL: ●确认后执行"
+  ],
+  "sampleB": [
+    "1. Query · query.objects属性子集 · 含 Wiki 字段",
+    "2. Function · fn.echo或已发布 AIP Logic",
+    "3. Wiki · wiki.read结构化字段优先"
+  ]
+}

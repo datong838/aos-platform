@@ -9,6 +9,7 @@ from aos_api.aip_analyst_contracts import (
     AnalystQueryRequest,
     CreateQueryJobRequest,
     QueryJobCommand,
+    QueryJobListResponse,
     QueryJobSnapshot,
     QueryResultRevision,
     RecordQueryResultRequest,
@@ -75,6 +76,17 @@ def create_query_job(
         body,
         idempotency_key=idempotency_key,
         actor=principal.subject,
+    )
+
+
+@router.get("/query-jobs", response_model=QueryJobListResponse)
+def list_query_jobs(
+    limit: int = 50,
+    principal: Principal = Depends(require_principal),
+    store: AipAnalystQueryStore = Depends(get_aip_analyst_query_store),
+) -> QueryJobListResponse:
+    return store.list_jobs(
+        TenantScope(principal.org_id, principal.project_id), limit=limit
     )
 
 

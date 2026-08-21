@@ -1,0 +1,110 @@
+{"ts": "2026-08-19T21:22:16.897369+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-08-19T21:22:16.967238+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=True", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "skillCount": 39,
+  "publishedCount": 8,
+  "bindingCount": 10,
+  "logicPublicationCount": 8,
+  "perRolePublished": [
+    "ecommerce.skill.A02",
+    "ecommerce.skill.C02",
+    "ecommerce.skill.D03",
+    "ecommerce.skill.G04",
+    "ecommerce.skill.I01",
+    "ecommerce.skill.P02",
+    "ecommerce.skill.S04",
+    "ecommerce.skill.V01"
+  ],
+  "blockedSample": [
+    {
+      "skillId": "ecommerce.skill.A01",
+      "logicId": "ecommerce.logic.A01",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    },
+    {
+      "skillId": "ecommerce.skill.A03",
+      "logicId": "ecommerce.logic.A03",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    },
+    {
+      "skillId": "ecommerce.skill.A04",
+      "logicId": "ecommerce.logic.A04",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    },
+    {
+      "skillId": "ecommerce.skill.A05",
+      "logicId": "ecommerce.logic.A05",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    },
+    {
+      "skillId": "ecommerce.skill.A06",
+      "logicId": "ecommerce.logic.A06",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    },
+    {
+      "skillId": "ecommerce.skill.C01",
+      "logicId": "ecommerce.logic.C01",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    },
+    {
+      "skillId": "ecommerce.skill.C03",
+      "logicId": "ecommerce.logic.C03",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    },
+    {
+      "skillId": "ecommerce.skill.C04",
+      "logicId": "ecommerce.logic.C04",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    },
+    {
+      "skillId": "ecommerce.skill.C05",
+      "logicId": "ecommerce.logic.C05",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    },
+    {
+      "skillId": "ecommerce.skill.C06",
+      "logicId": "ecommerce.logic.C06",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    },
+    {
+      "skillId": "ecommerce.skill.C07",
+      "logicId": "ecommerce.logic.C07",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    },
+    {
+      "skillId": "ecommerce.skill.C08",
+      "logicId": "ecommerce.logic.C08",
+      "published": false,
+      "bound": false,
+      "blocker": "LOGIC_GRAPH_MISSING"
+    }
+  ],
+  "f4Gate": {
+    "minOnePublishedPerPilotRole": true,
+    "bindingsPresent": true,
+    "honestNoForgeRemaining": true
+  }
+}
+{"ts": "2026-08-19T21:22:16.978461+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

@@ -1,0 +1,10 @@
+{
+  "graphCount": 9,
+  "firstId": "ecommerce.logic.V01",
+  "selectVal": "ecommerce.logic.V01",
+  "exactOk": true,
+  "jump": "/aip/logic?graph=ecommerce.logic.V01",
+  "evidenceOk": true,
+  "blockedEmpty": false,
+  "ok": true
+}

@@ -10,7 +10,7 @@ import { CanonicalDraftInboxPage, actionStatusTab, filterCanonicalProposals } fr
 const hash = "a".repeat(64);
 function bundle(status: ActionDraftBundle["proposal"]["status"] = "approved"): ActionDraftBundle {
   return {
-    proposal: { id: "proposal-1", actionType: { actionTypeId: "send_notice", revisionHash: hash, objectType: "Order" }, taskId: "task-1", runId: "run-1", objectRef: null, purpose: "发送已审订单通知", riskLevel: "R2", payload: {}, proposalHash: hash, status, expiresAt: "2026-08-12T00:00:00Z", version: 3, createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-08-11T00:00:00Z", updatedAt: "2026-08-11T01:00:00Z" },
+    proposal: { id: "proposal-1", actionType: { actionTypeId: "send_notice", revisionHash: hash, objectType: "Order" }, taskId: "task-1", runId: "run-1", objectRef: null, impactPreviewRef: null, purpose: "发送已审订单通知", riskLevel: "R2", payload: {}, proposalHash: hash, status, expiresAt: "2026-08-12T00:00:00Z", version: 3, createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-08-11T00:00:00Z", updatedAt: "2026-08-11T01:00:00Z" },
     draft: { id: "draft-1", proposalId: "proposal-1", proposalVersion: 1, proposalHash: hash, diff: { status: "notified" }, evidenceRefs: [], status, createdAt: "2026-08-11T00:00:00Z" },
     approvals: [{ id: "approval-1", proposalId: "proposal-1", proposalVersion: 2, proposalHash: hash, decision: "approved", actor: { actorType: "user", actorId: "checker" }, reason: "通过", expiresAt: null, createdAt: "2026-08-11T00:30:00Z" }],
   };
@@ -64,5 +64,29 @@ describe("CanonicalDraftInboxPage", () => {
     await act(async () => button(host, "待审批").click());
     expect(host.textContent).toContain("当前筛选下暂无 Proposal");
     expect([...host.querySelectorAll("button")].some((candidate) => candidate.textContent?.includes("获取单次执行租约"))).toBe(false);
+  });
+
+  it("proposal 深链选中真实 Proposal，并露出 Evals/Lineage 跳转", async () => {
+    const item = {
+      ...bundle("drafted"),
+      draft: {
+        ...bundle("drafted").draft,
+        evidenceRefs: [{ resourceType: "EvalSuite", resourceId: "ecommerce.logic.A02.contract.v1", revision: "1", authority: "aip-evals" }],
+      },
+    };
+    const sdk = {
+      list: vi.fn().mockResolvedValue({ items: [item], count: 1 }),
+      timeline: vi.fn().mockResolvedValue(timeline(item)),
+      execution: vi.fn().mockResolvedValue(execution(item)),
+    } as unknown as AipActionsSdk;
+    await act(async () => root.render(
+      <MemoryRouter initialEntries={["/aip/drafts?proposal=proposal-1"]}>
+        <CanonicalDraftInboxPage sdk={sdk} />
+      </MemoryRouter>,
+    ));
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); });
+    expect(host.querySelector('[data-testid="drafts-chain-banner"]')?.textContent).toContain("proposal-1");
+    expect(host.querySelector('[data-testid="drafts-jump-lineage"]')?.getAttribute("href")).toContain("rootType=action");
+    expect(host.querySelector('[data-testid="drafts-jump-evals"]')?.getAttribute("href")).toContain("suite=ecommerce.logic.A02.contract.v1");
   });
 });

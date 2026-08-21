@@ -1,0 +1,16 @@
+{
+  "caps": 10,
+  "blocked": 10,
+  "sample": {
+    "id": "cap.material.collect",
+    "kind": "Capability",
+    "capabilityId": "material.collect",
+    "name": "素材采集",
+    "nameZh": "素材采集",
+    "blocked": true,
+    "blockedReason": "专业能力代调门尚未接通生产 invoke；禁止假成功（W-T4）",
+    "bindingId": "ecommerce.shared.material.collect.r1",
+    "health": "healthy",
+    "status": "active"
+  }
+}

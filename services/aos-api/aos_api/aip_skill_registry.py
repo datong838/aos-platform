@@ -89,11 +89,11 @@ class AipSkillRegistry(AipAgentRegistryStore):
                         output_schema,tool_allowlist,required_capabilities,risk_level,
                         eval_pack_ref,memory_policy_ref,handoff_policy_ref,source_ref,
                         source_license,parent_ref,publication_tenant,release_gate_ref,
-                        publication_ref,model_route_ref,runtime_policy_ref,content_hash,
+                        publication_ref,model_route_ref,runtime_policy_ref,logic_revision_ref,content_hash,
                         created_by)
                        VALUES (%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
                         %s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,
-                        %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s)
+                        %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s)
                        ON CONFLICT (skill_id,revision) DO NOTHING RETURNING *""",
                     (request.skill_id, request.revision, request.canonical_logic_id,
                      request.lifecycle.value, self._json(request.input_schema),
@@ -108,6 +108,7 @@ class AipSkillRegistry(AipAgentRegistryStore):
                      self._json(request.publication_ref) if request.publication_ref else None,
                      self._json(request.model_route_ref) if request.model_route_ref else None,
                      self._json(request.runtime_policy_ref) if request.runtime_policy_ref else None,
+                     self._json(request.logic_revision_ref) if request.logic_revision_ref else None,
                      request.content_hash, actor.strip()),
                 ).fetchone()
                 if row is None:
@@ -387,7 +388,7 @@ class AipSkillRegistry(AipAgentRegistryStore):
                        last_evaluated_at=%s,readiness_expires_at=%s,
                        version=version+1,updated_at=%s
                        WHERE org_id=%s AND project_id=%s AND binding_id=%s
-                         AND version=%s AND status IN ('provisioning','suspended')
+                         AND version=%s AND status IN ('provisioning','active','suspended')
                        RETURNING *""",
                     (
                         self._json(dependencies.model_route_ref),
@@ -498,6 +499,7 @@ class AipSkillRegistry(AipAgentRegistryStore):
             parent_ref=row.get("parent_ref"), publication_tenant=row.get("publication_tenant"),
             release_gate_ref=row.get("release_gate_ref"), publication_ref=row.get("publication_ref"),
             model_route_ref=row.get("model_route_ref"), runtime_policy_ref=row.get("runtime_policy_ref"),
+            logic_revision_ref=row.get("logic_revision_ref"),
             content_hash=row["content_hash"], created_by=row["created_by"], created_at=row["created_at"])
 
     @staticmethod

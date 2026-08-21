@@ -1,0 +1,6 @@
+{
+  "relationEmptyGone": true,
+  "reviewEmptyGone": true,
+  "snippetRelation": "Artifact Relation\nvariant_of\n\nartifact-3b3f238642a841dea5f6 → artifact-3f99405b570644658c7b\n\nW-E4 bootstrap: link two sealed pilot artifacts as variants for review desk density · user:dev\nReview Issue\nwarning · review-issue-5a620b9e1c5141d4a0b2\nopen\n\n核对输出与证据 Bundle exact ref，禁止用摘",
+  "snippetReview": "Review Issue\nwarning · review-issue-5a620b9e1c5141d4a0b2\nopen\n\n核对输出与证据 Bundle exact ref，禁止用摘要冒充事实。\n\n退回 Stage：content.review · version 1\nImpact Preview 与 Start 组合门\n\nPreview 只呈现权威影响评估；unknown 不显示为 0。只有 frozen + ready 的 exact revision 才能提交组合门，且成功只代表创建 canonical TaskRun，不代表 AgentRun "
+}

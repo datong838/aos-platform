@@ -1,0 +1,703 @@
+{
+  "auditedAt": "2026-08-19T08:13:35.346Z",
+  "base": "http://127.0.0.1:5174",
+  "cdp": "headless",
+  "headless": true,
+  "policy": "scroll_to_bottom + product_gap listing; blocked≠ok; user decides fixes",
+  "count": 22,
+  "product_ok": 21,
+  "warn": 1,
+  "product_gap": 0,
+  "crash": 0,
+  "pages": [
+    {
+      "path": "/aip/assist",
+      "label": "AIP 助手",
+      "mock": "aip-assist.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/assist",
+      "title": "AIP 助手 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 1,
+        "cards": 1,
+        "textLen": 404
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_assist__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_assist__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_assist__full.png"
+      },
+      "bodyPreview": "AIP 助手 Canonical Thread · 持久化 SSE 重放 · 无本地答案与隐式 Provider 降级 收起上下文 Focus Mode 取消 TaskRun 运行上下文 尚无可执行上下文 请从 Task/AgentRun 工作流进入，或由上游在 URL 中传递 exact refs。页面不会创建默认测试 Agent。 智能体列表 逻辑画布 智能体目录 taskId + taskRevision + taskAuthority taskRunId + taskRunRevision + taskRunAuthority agentRunI"
+    },
+    {
+      "path": "/aip/studio",
+      "label": "对话机器人",
+      "mock": "NO_MOCK",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/studio",
+      "title": "对话机器人 Studio · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 862,
+        "clientHeight": 852,
+        "maxY": 10,
+        "stepCount": 2,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 0,
+        "textLen": 554
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_studio__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_studio__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_studio__full.png"
+      },
+      "bodyPreview": "对话机器人 Studio 配置壳：提示词 · 工具 · 本体/Wiki 上下文 · L4 须 Evals 绿 + Draft 默认 智能体列表 安装数字同事… 内容官 ecommerce.content_officer · L2 · API 运行中 1 工具 活动策划师 ecommerce.campaign_planner · L2 · API 运行中 0 工具 私域管家 ecommerce.private_domain_manager · L2 · API 运行中 0 工具 客服专员 ecommerce.customer_service · L2 · "
+    },
+    {
+      "path": "/aip/analyst",
+      "label": "AIP 分析师",
+      "mock": "aip-analyst.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/analyst",
+      "title": "AIP 分析师 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 0,
+        "textLen": 259
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_analyst__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_analyst__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_analyst__full.png"
+      },
+      "bodyPreview": "AIP 分析师 受治理语义 / 知识 / 指标查询 · 单一 Result revision · 不生成演示数据 收起查询 收起证据 Focus Mode 查询构造器 查询类型 语义对象 行业知识 权威指标 Object Type 订单 商品 客户 支付 发货 运行真实查询 不接受任意 SQL；租户由登录 Principal 决定。 表格图表地图Raw 尚未运行查询 选择治理查询类型后读取真实 authority；服务不可用时保持失败关闭。 证据详情 运行受治理查询后显示来源、血缘、截点与不确定性。"
+    },
+    {
+      "path": "/aip/logic",
+      "label": "AIP 逻辑画布",
+      "mock": "aip-logic.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/logic",
+      "title": "AIP Logic 无代码编辑器 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 1457,
+        "clientHeight": 852,
+        "maxY": 605,
+        "stepCount": 2,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 1,
+        "cards": 4,
+        "textLen": 634
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_logic__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_logic__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_logic__full.png"
+      },
+      "bodyPreview": "AIP Logic 无代码编辑器 自由编排 canonical Logic Graph；保存仅在服务端提交与严格 GET 回读一致后确认。 保存 * 刷新 安全试跑 请先保存 Logic Graph Draft 审批台 Evals 门控 未保存更改 Logic 名称 描述 未保存模板：当前 4 节点、3 连接仅在本地；点击“保存”显式创建服务端 Logic Graph。 Dry-Run Inputs 独立 JSON 对象；仅显式应用后用于安全试跑，不写入画布或生产数据。 应用 Inputs Inputs 尚未应用 − 100% + 1:1 节点 4 · "
+    },
+    {
+      "path": "/aip/tools",
+      "label": "Agent 工具面板",
+      "mock": "aip-tools.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/tools",
+      "title": "Agent 工具面板 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 0,
+        "textLen": 936
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_tools__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_tools__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_tools__full.png"
+      },
+      "bodyPreview": "Agent 工具面板 配置当前智能体可用工具类型与细项。LLM 只「请求」工具；平台以调用用户权限代调。写路径默认可提案。 调用模式 Native（并行） Prompted（单次一工具） 刷新 重能力 → ← 成熟度 Logic → Chatbot Studio → 返回智能体列表 | 当前智能体： 内容官 运行中 L2 · HITL 4 个工具已启用 / 6 类可配 工具目录 Action 写回动作（可 HITL） Object Query 对象属性查询 Function 函数 / 已发布 Logic Update App Var 更新应用变量 Com"
+    },
+    {
+      "path": "/aip/maturity",
+      "label": "成熟度楼梯",
+      "mock": "aip-maturity.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/maturity",
+      "title": "Agent 成熟度楼梯 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 4,
+        "textLen": 560
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_maturity__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_maturity__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_maturity__full.png"
+      },
+      "bodyPreview": "Agent 成熟度楼梯 别一上来做自动化。先 Threads，再固化 Agent，再嵌应用，最后才自动化。 当前工作区 内容官 判定层 ◆ L2 任务 Agent Eval ● 绿 · Draft 审批台 0 项 执行范围 ● 用户范围 L1 临时分析 AIP Threads · 拖文档即问即答 沙箱 / 售前 L2 · 当前 任务专用 Agent Chatbot Studio · Prompt · 工具 · Ontology/Wiki 打开工具面板 → L3 Agentic 应用 工作台 / OSDK · Agent 组件 · 变量绑定 打开工作台 →"
+    },
+    {
+      "path": "/aip/production-contracts",
+      "label": "生产契约",
+      "mock": "NO_MOCK",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/production-contracts",
+      "title": "生产契约 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 2660,
+        "clientHeight": 852,
+        "maxY": 1808,
+        "stepCount": 4,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 35,
+        "textLen": 4195
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_production-contracts__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_production-contracts__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_production-contracts__full.png"
+      },
+      "bodyPreview": "生产契约 Brief、Evidence、Eval、Responsibility、Stage、Artifact Relation 与 Review 的租户权威视图；冻结不等于启动运行 8 Brief 8 Evidence 8 Eval 0 Responsibility 0 Stage 0 Relation 0 Review 0 Preview 0 Start Decision 刷新权威状态 创建契约（需真实依赖） Task Brief aip.skill-publication.approval 已冻结 brief-1bc80820829a49158080"
+    },
+    {
+      "path": "/aip/capabilities",
+      "label": "智能体插件",
+      "mock": "aip-capabilities.html",
+      "verdict": "warn",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/capabilities",
+      "title": "智能体插件 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 1673,
+        "clientHeight": 852,
+        "maxY": 821,
+        "stepCount": 3,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 9,
+        "disabledPrimary": 20,
+        "cards": 10,
+        "textLen": 2282
+      },
+      "issueCount": 1,
+      "issues": [
+        {
+          "severity": "warn",
+          "code": "capability_partial_bound",
+          "detail": "only subset of 10 capabilities bound; unbound cards show CTA"
+        }
+      ],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_capabilities__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_capabilities__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_capabilities__full.png"
+      },
+      "bodyPreview": "智能体插件 10 类共享专业 Capability 定义与当前组织 Binding 八维就绪度 刷新 智能体目录 → 能力导入 → 10 个定义 组织绑定 3 active 3 目录可用 1 内容审核 未绑定 content.review@1 · 风险 high · 组织绑定 0 · 定义 blocked Provider — Route — Eval — License — Data — Tool — Budget — 当前组织尚未创建该 Capability 的 Binding；定义层阻断码不代表运维失败。请经智能体目录完成 Skill/Capabi"
+    },
+    {
+      "path": "/aip/agent-registry",
+      "label": "智能体目录",
+      "mock": "NO_MOCK",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/agent-registry",
+      "title": "智能体目录 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 1100,
+        "clientHeight": 852,
+        "maxY": 248,
+        "stepCount": 2,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 1,
+        "cards": 7,
+        "textLen": 1000
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_agent-registry__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_agent-registry__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_agent-registry__full.png"
+      },
+      "bodyPreview": "智能体目录 六数字同事的模板、实例、Skill 与 Capability 运行绑定真相 6 个角色定义 6 个已安装 37 个技能定义 10 类专业能力 Skill Binding 10/10 active Capability Binding 3/3 active 可运行 6 六数字同事已安装 刷新 快照 2026/8/19 16:13:12 · 15 分钟有效期内 活动策划师 ecommerce.campaign_planner@1 已启用 campaign.coordination Skill 1/6 已绑定 Capability 1/3 已绑定 "
+    },
+    {
+      "path": "/aip/agents",
+      "label": "智能体列表",
+      "mock": "NO_MOCK",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/agents",
+      "title": "智能体列表 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 1008,
+        "clientHeight": 852,
+        "maxY": 156,
+        "stepCount": 2,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 6,
+        "textLen": 1002
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_agents__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_agents__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_agents__full.png"
+      },
+      "bodyPreview": "智能体列表 当前组织与工作区的 AgentInstance；运行前置门未满足时诚实失败关闭 刷新 打开智能体目录 → 目录可运行 6/6 内容官 ecommerce.content_officer.default · 模板 ecommerce.content_officer@1 组织 org-org · 工作区 dev-project · revision 12 active 受限 Pilot 可运行（目录已就绪；本页不直接外呼） 活动策划师 ecommerce.campaign_planner.default · 模板 ecommerce.campai"
+    },
+    {
+      "path": "/aip/agent-import",
+      "label": "智能体导入",
+      "mock": "aip-agent-import.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/agent-import",
+      "title": "导入外部 Agent（Adapter 桥接） · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 0,
+        "textLen": 544
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_agent-import__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_agent-import__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_agent-import__full.png"
+      },
+      "bodyPreview": "导入外部 Agent（Adapter 桥接） 从开源社区或自有代码导入 Agent，通过 Adapter 桥接为平台 Capability。 Adapter 路径说明 HTTP API 外部服务 URL REST/GraphQL Process Wrapper 沙箱子进程 Python/Node 脚本 MCP Bridge 协议桥接 MCP Server Docker Container K8s Pod 独立运行环境 Session Gateway 长连接 音视频/数字人 1 选择来源 2 仓库扫描 3 映射配置 4 安全与网络 5 连通测试与安全扫描 "
+    },
+    {
+      "path": "/aip/capability-import",
+      "label": "能力导入",
+      "mock": "aip-capability-import.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/capability-import",
+      "title": "接入插件能力 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 0,
+        "textLen": 446
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_capability-import__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_capability-import__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_capability-import__full.png"
+      },
+      "bodyPreview": "接入插件能力 声明外部能力端点和契约，注册为 C0/C1/C2 Capability 供智能体调用。 C0 / C1 / C2 能力分层 C0 sync — 同步函数， <15s，可直接挂 Function C1 Job — 异步任务， GPU/长耗时，产物写 MediaSet C2 Session — 实时会话， WebSocket 长连接，AV 流外置 1 能力类型 2 Manifest 配置 3 安全与配额 4 连通测试 选择能力类型 不同能力类型对应不同的运行时和资源配额 C0 sync 同步函数 超时 < 15s 直接挂 Function To"
+    },
+    {
+      "path": "/aip/evals",
+      "label": "Evals 门控",
+      "mock": "aip-evals.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/evals",
+      "title": "Evals 门控 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 4,
+        "textLen": 1392
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_evals__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_evals__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_evals__full.png"
+      },
+      "bodyPreview": "Evals 门控 L4 自动化上线前须通过 Eval；未达标禁止发布为 Function / Automate。 选择 Eval 套件 V01 视频草稿方案生成契约门 v1（隔离 dry-run，非模型效果证据） · ecommerce.logic.V01.contract.v1 I01 视觉草稿方案生成契约门 v1（隔离 dry-run，非模型效果证据） · ecommerce.logic.I01.contract.v1 A02 活动策划方案生成契约门 v1（隔离 dry-run，非模型效果证据） · ecommerce.logic.A02.contr"
+    },
+    {
+      "path": "/aip/drafts",
+      "label": "Draft 审批台",
+      "mock": "aip-draft-inbox.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/drafts",
+      "title": "Draft 审批台 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 0,
+        "textLen": 264
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_drafts__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_drafts__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_drafts__full.png"
+      },
+      "bodyPreview": "Draft 审批台 Proposal → Draft → Approval → Lease → Receipt 权威闭环；批准不等于已执行，只有 Receipt 证明外部结果。 真实 AIP Action 权威链 · 页面不注入示例 Draft，也不在浏览器维护第二套状态机。 刷新 / 对账 待审批 0已批准 0执行与对账 0已结束 0 当前工作区暂无受控 Action 这是有效的真实空状态，不会使用 Mock Proposal 填充页面。 去逻辑画布产生提案查看 Evals 门控 决策谱系 →AIP 逻辑画布 →"
+    },
+    {
+      "path": "/aip/lineage",
+      "label": "决策谱系",
+      "mock": "aip-decision-lineage.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/lineage",
+      "title": "Decision Lineage · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 0,
+        "textLen": 260
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_lineage__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_lineage__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_lineage__full.png"
+      },
+      "bodyPreview": "Decision Lineage 从服务端权威事件还原 TaskRun / Action / Eval / Publication / ResearchJob 因果链。 Root 类型 task_run action eval_run publication research_job legacy_decision_lineage Root ID 查询权威谱系 请选择 Root 类型并输入真实 Root ID；页面不会展示示例 Trace 或固定步骤。 图谱健康 → Evals 门控 Draft 审批台 →"
+    },
+    {
+      "path": "/aip/observability",
+      "label": "可观测性",
+      "mock": "aip-observability.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/observability",
+      "title": "AIP 可观测性 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 1,
+        "textLen": 167
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_observability__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_observability__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_observability__full.png"
+      },
+      "bodyPreview": "AIP 可观测性 按 Lineage 查询权威 Telemetry Span 与 Usage Receipt；不推算趋势，不回填演示数据。 Lineage ID 读取权威证据 导出当前证据 概览 Spans Usage Receipts 请输入真实 Lineage ID。页面不会显示固定 Trace、合成趋势或推算 Token。"
+    },
+    {
+      "path": "/aip/memory-governance",
+      "label": "记忆与知识治理",
+      "mock": "NO_MOCK",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/memory-governance",
+      "title": "Memory Governance · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 2,
+        "textLen": 284
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_memory-governance__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_memory-governance__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_memory-governance__full.png"
+      },
+      "bodyPreview": "Memory Governance Candidate → 审批证据 → 正式 Memory → 带 Citation 的 Knowledge Query。所有状态来自 PostgreSQL 权威链，不回填示例知识。 知识候选（0） 正式 Memory（0） 数字同事记忆 Knowledge Query 知识管道（0） 冷启动与检索 刷新权威状态 活知识 Wiki → 知识候选 当前租户没有待治理或历史 Candidate；页面未注入静态候选。 治理证据与事件 选择 Candidate 查看精确 payload hash、来源、新鲜度、适用范围及不可变事"
+    },
+    {
+      "path": "/aip/model-catalog",
+      "label": "模型目录",
+      "mock": "aip-model-catalog.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/model-catalog",
+      "title": "模型目录 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 23,
+        "textLen": 547
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-catalog__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-catalog__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-catalog__full.png"
+      },
+      "bodyPreview": "模型目录 管理 AIP 启用状态、模型家族和已注册模型 Live 目录/已注册已接 `/v1/aip/model-catalog` L1 模型供应商 凭证管理 进入 → L2 模型路由 流量策略 · 熔断 进入 → L3 · 当前 模型目录 可发现 → 注册 AIP 智能体调用 选模型 → 推理 3 目录模型总数 3 已注册 1 供应商数 3 免费模型 目录浏览 (3) AIP 设置 模型启用 已注册 (3) 所有供应商 agnes 所有能力 chat function-calling vision 所有价位 免费 低价 (<$1/1M) 中价 ($1-"
+    },
+    {
+      "path": "/aip/model-providers",
+      "label": "模型供应商",
+      "mock": "aip-model-providers.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/model-providers",
+      "title": "大模型接入(插件) · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 3173,
+        "clientHeight": 852,
+        "maxY": 2321,
+        "stepCount": 5,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 51,
+        "textLen": 2357
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-providers__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-providers__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-providers__full.png"
+      },
+      "bodyPreview": "大模型接入(插件) 每种供应商 = 一个插件（20 §3.1）。先安装插件，再填类型化配置；运行时经平台网关，不直连厂商。 L1 · 当前 模型供应商 凭证管理 进入 → L2 模型路由 流量策略 · 熔断 进入 → L3 模型目录 可发现 → 注册 AIP 智能体调用 选模型 → 推理 刷新 插件工作室 Adapter 管理 路由策略 → 已配置大模型仅使用 secretRef；请勿从业务座舱进入 Vault/网关运维台 平台默认网关 运行态 = 网关托管的默认通道 · 就绪 ≠ 自动升运行态 当前默认 Agnes Image（内网）（插件就绪）· a"
+    },
+    {
+      "path": "/aip/model-router",
+      "label": "模型路由",
+      "mock": "aip-model-router.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/model-router",
+      "title": "模型路由策略 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 1395,
+        "clientHeight": 852,
+        "maxY": 543,
+        "stepCount": 2,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 2,
+        "textLen": 1225
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-router__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-router__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-router__full.png"
+      },
+      "bodyPreview": "模型路由策略 任务类型 · 出境 · 熔断降级。供应商安装与类型化配置见大模型接入(插件)。 L1 模型供应商 凭证管理 进入 → L2 · 当前 模型路由 流量策略 · 熔断 进入 → L3 模型目录 可发现 → 注册 AIP 智能体调用 选模型 → 推理 刷新 大模型接入(插件) 工具面板 → 预热与试聊 → 本页只选已就绪模型做策略。新装插件（如 DeepSeek）须在供应商页点「启用就绪」或「保存并启用」后，再回本页刷新。 路由规则 任务类型 / 回退 / 出境 · 可编辑 · 配置版本 v1 任务类型 首选 回退 出境 摘要 / 分类 — mo"
+    },
+    {
+      "path": "/aip/capacity",
+      "label": "容量管理",
+      "mock": "aip-capacity-management.html",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/capacity",
+      "title": "容量管理 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 852,
+        "clientHeight": 852,
+        "maxY": 0,
+        "stepCount": 1,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 0,
+        "textLen": 285
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_capacity__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_capacity__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_capacity__full.png"
+      },
+      "bodyPreview": "容量管理 管理 LLM 使用限制、速率限制和预留容量 Live 用量与限流已接 `/v1/aip/capacity/*` 用量仪表盘 速率限制 预留容量 所有容量的 20% 始终保留用于实时交互式 AIP 使用。如需额外容量，请联系 Palantir 支持。 当前项目限额：RPM 60 · TPM 60.0K。 今日 本周 本月 总请求数 0 今日累计 Token 消耗 0 0 tokens 成本汇总 $0.00 今日 USD 模型配额使用 项目 TPM 限额 vs 今日 Token 用量 项目默认 TPM AIP 0 / 60.0K tpm · 0%"
+    },
+    {
+      "path": "/aip/model-runtime",
+      "label": "运行就绪",
+      "mock": "NO_MOCK",
+      "verdict": "product_ok",
+      "clickMode": "goto",
+      "finalUrl": "http://127.0.0.1:5174/aip/model-runtime",
+      "title": "模型运行就绪 · AOS",
+      "scroll": {
+        "root": "DIV.content",
+        "scrollHeight": 1502,
+        "clientHeight": 852,
+        "maxY": 650,
+        "stepCount": 3,
+        "reachedBottom": true
+      },
+      "counts": {
+        "blocked": 0,
+        "disabledPrimary": 0,
+        "cards": 28,
+        "textLen": 1956
+      },
+      "issueCount": 0,
+      "issues": [],
+      "screenshots": {
+        "top": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-runtime__top.png",
+        "bottom": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-runtime__bottom.png",
+        "full": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-aip-menu-headless-scroll-audit/screenshots/aip_model-runtime__full.png"
+      },
+      "bodyPreview": "模型运行就绪 AIP-7 exact Provider、Model、Route、Policy、Eval、价格与容量权威；控制面就绪不等于外部 Provider 已可调用 控制面：部分就绪 组织 org-org · 工作区 dev-project Route 就绪 2/3 刷新权威快照 部分 Route 已就绪；未就绪项恢复 Provider Health 后刷新本页即升为「控制面：就绪」，不伪造全绿。 route-qyh-video-dev · provider_health_unavailable_or_stale Provider · 3 agnes"
+    }
+  ],
+  "gaps": []
+}

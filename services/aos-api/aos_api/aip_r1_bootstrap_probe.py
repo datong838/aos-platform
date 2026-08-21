@@ -114,23 +114,61 @@ class AipR1BootstrapProbe:
         except SecretBackendError as exc:
             raise R1BootstrapProbeBlocked(f"secret_{exc.code}") from None
 
+        endpoint = urlsplit(str(provider.endpoint_profile.base_url))
+        host = endpoint.hostname or ""
+        image_mode = "image" in plugin.modalities and "image" in plugin.approved_capabilities
+        video_mode = "video" in plugin.modalities and "video" in plugin.approved_capabilities
         started = time.perf_counter()
         try:
-            response = self._transport.post(
-                url="https://apihub.agnes-ai.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {secret}",
-                    "Content-Type": "application/json",
-                },
-                payload={
-                    "model": request.provider_model_id,
-                    "messages": [{"role": "user", "content": request.prompt}],
-                },
-                timeout_ms=min(60_000, int(provider.endpoint_profile.timeout_ms)),
-            )
+            if video_mode:
+                response = self._transport.post(
+                    url=f"https://{host}/v1/video/generations",
+                    headers={
+                        "Authorization": f"Bearer {secret}",
+                        "Content-Type": "application/json",
+                    },
+                    payload={
+                        "model": request.provider_model_id,
+                        "prompt": request.prompt,
+                        "n": 1,
+                    },
+                    timeout_ms=min(60_000, int(provider.endpoint_profile.timeout_ms)),
+                )
+            elif image_mode:
+                response = self._transport.post(
+                    url=f"https://{host}/v1/images/generations",
+                    headers={
+                        "Authorization": f"Bearer {secret}",
+                        "Content-Type": "application/json",
+                    },
+                    payload={
+                        "model": request.provider_model_id,
+                        "prompt": request.prompt,
+                        "n": 1,
+                        "size": "256x256",
+                    },
+                    timeout_ms=min(60_000, int(provider.endpoint_profile.timeout_ms)),
+                )
+            else:
+                response = self._transport.post(
+                    url=f"https://{host}/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {secret}",
+                        "Content-Type": "application/json",
+                    },
+                    payload={
+                        "model": request.provider_model_id,
+                        "messages": [{"role": "user", "content": request.prompt}],
+                    },
+                    timeout_ms=min(60_000, int(provider.endpoint_profile.timeout_ms)),
+                )
         except ExactProviderInvocationError as exc:
             raise R1BootstrapProbeBlocked(exc.code) from None
         latency_ms = max(0, int((time.perf_counter() - started) * 1000))
+        if video_mode:
+            return self._video_result(request, response, latency_ms)
+        if image_mode:
+            return self._image_result(request, response, latency_ms)
         return self._result(request, response, latency_ms)
 
     def _provider(self, scope: TenantScope, ref: VersionedAssetRef):
@@ -182,21 +220,37 @@ class AipR1BootstrapProbe:
 
     @staticmethod
     def _validate_request(request, provider, plugin, egress, data_policy, network) -> None:
-        if (
-            request.provider_model_id not in plugin.default_models
-            or "text" not in plugin.modalities
-            or not {"llm", "chat"}.issubset(set(plugin.approved_capabilities))
-        ):
+        caps = set(plugin.approved_capabilities)
+        modalities = set(plugin.modalities)
+        text_ok = (
+            request.provider_model_id in plugin.default_models
+            and "text" in modalities
+            and {"llm", "chat"}.issubset(caps)
+        )
+        image_ok = (
+            request.provider_model_id in plugin.default_models
+            and "image" in modalities
+            and "image" in caps
+        )
+        video_ok = (
+            request.provider_model_id in plugin.default_models
+            and "video" in modalities
+            and "video" in caps
+        )
+        if not (text_ok or image_ok or video_ok):
             raise R1BootstrapProbeBlocked("provider_model_blocked")
         if (
             request.data_classification not in data_policy.allowed_classifications
             or request.data_classification in data_policy.prohibited_classifications
         ):
             raise R1BootstrapProbeBlocked("data_classification_blocked")
+        from aos_api.aip_runtime_guard_policy_contracts import APPROVED_AGNES_HOSTS
+
         endpoint = urlsplit(str(provider.endpoint_profile.base_url))
+        host = endpoint.hostname
         if (
             endpoint.scheme != "https"
-            or endpoint.hostname != "apihub.agnes-ai.com"
+            or host not in APPROVED_AGNES_HOSTS
             or (endpoint.port or 443) != 443
             or endpoint.path.rstrip("/") != "/v1"
             or endpoint.username is not None
@@ -209,12 +263,99 @@ class AipR1BootstrapProbe:
             provider.endpoint_profile.region != egress.region
             or network.egress_policy_ref != provider.egress_policy_ref
             or network.allowed_schemes != ["https"]
-            or network.allowed_hosts != ["apihub.agnes-ai.com"]
+            or network.allowed_hosts != [host]
             or network.allowed_ports != [443]
             or not network.tls_required
             or network.public_fallback_allowed
         ):
             raise R1BootstrapProbeBlocked("provider_network_boundary_blocked")
+
+    def _image_result(
+        self,
+        request: R1BootstrapProbeRequest,
+        response: ProviderTransportResponse,
+        latency_ms: int,
+    ) -> R1BootstrapProbeResult:
+        """Accept image generation metadata only; never retain URL/b64 payloads."""
+        if not 200 <= response.status_code < 300:
+            raise R1BootstrapProbeBlocked("provider_http_error")
+        body = response.payload
+        if not isinstance(body, dict):
+            raise R1BootstrapProbeBlocked("provider_response_invalid")
+        model = body.get("model")
+        if model is not None and model != request.provider_model_id:
+            raise R1BootstrapProbeBlocked("provider_response_model_drifted")
+        data = body.get("data")
+        if not isinstance(data, list) or not data or not isinstance(data[0], dict):
+            raise R1BootstrapProbeBlocked("provider_response_answer_missing")
+        item = data[0]
+        has_image = bool(item.get("url") or item.get("b64_json"))
+        if not has_image:
+            raise R1BootstrapProbeBlocked("provider_response_answer_missing")
+        if request.expected_response_behavior == "non_empty" and not has_image:
+            raise R1BootstrapProbeBlocked("provider_response_contract_failed")
+        return R1BootstrapProbeResult(
+            status="healthy",
+            responseModel=request.provider_model_id,
+            promptTokens=0,
+            completionTokens=0,
+            totalTokens=0,
+            latencyMs=latency_ms,
+            answerPresent=True,
+            responseContractPassed=(
+                True if request.expected_response_behavior == "non_empty" else None
+            ),
+            observedAt=self._clock(),
+        )
+
+    def _video_result(
+        self,
+        request: R1BootstrapProbeRequest,
+        response: ProviderTransportResponse,
+        latency_ms: int,
+    ) -> R1BootstrapProbeResult:
+        """Accept video generation metadata only; never retain URL/id payloads."""
+        if not 200 <= response.status_code < 300:
+            raise R1BootstrapProbeBlocked("provider_http_error")
+        body = response.payload
+        if not isinstance(body, dict):
+            raise R1BootstrapProbeBlocked("provider_response_invalid")
+        model = body.get("model")
+        if model is not None and model != request.provider_model_id:
+            raise R1BootstrapProbeBlocked("provider_response_model_drifted")
+        data = body.get("data")
+        has_video = False
+        if isinstance(data, list) and data and isinstance(data[0], dict):
+            item = data[0]
+            has_video = bool(
+                item.get("url")
+                or item.get("b64_json")
+                or item.get("id")
+                or item.get("video_url")
+            )
+        elif any(
+            isinstance(body.get(key), str) and body.get(key)
+            for key in ("id", "video_id", "task_id")
+        ):
+            # Domestic Agnes returns async generation metadata without data[].
+            has_video = True
+        if not has_video:
+            raise R1BootstrapProbeBlocked("provider_response_answer_missing")
+        if request.expected_response_behavior == "non_empty" and not has_video:
+            raise R1BootstrapProbeBlocked("provider_response_contract_failed")
+        return R1BootstrapProbeResult(
+            status="healthy",
+            responseModel=request.provider_model_id,
+            promptTokens=0,
+            completionTokens=0,
+            totalTokens=0,
+            latencyMs=latency_ms,
+            answerPresent=True,
+            responseContractPassed=(
+                True if request.expected_response_behavior == "non_empty" else None
+            ),
+            observedAt=self._clock(),
+        )
 
     def _result(
         self,

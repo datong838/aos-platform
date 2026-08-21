@@ -1,0 +1,53 @@
+{
+  "receiptType": "AIP_WAVE_DELIVERY",
+  "waveId": "R09",
+  "status": "GREEN",
+  "branch": "w1-aip",
+  "baseCommit": "0b6070b",
+  "sourceCommits": [
+    "80db8c6",
+    "aa80f8f",
+    "de93a6f",
+    "bbccf09",
+    "943870d",
+    "15592cb"
+  ],
+  "tenant": { "orgId": "org-org", "projectId": "dev-project" },
+  "negativeCanary": { "orgId": "dev-org", "projectId": "dev-project" },
+  "sideEffects": {
+    "migration": false,
+    "agentRun": false,
+    "providerBusinessCall": false,
+    "customerMessage": false,
+    "ticketCreate": false,
+    "orderOrRefundWrite": false,
+    "secretPayloadRead": false
+  },
+  "verification": {
+    "targeted": "40 passed",
+    "cumulativeR06R07R08R09": "182 passed",
+    "compile": "GREEN",
+    "browserPages": 3,
+    "browserConsistency": "GREEN",
+    "consoleErrors": 0,
+    "diffCheck": "GREEN"
+  },
+  "postHashes": {
+    "services/aos-api/aos_api/aip_customer_service_logic.py": "bfe7015d83482d675ebd774def297e37e7aa6e5298e9fda516efa85f3975928d",
+    "services/aos-api/tests/aip/test_r09_customer_service_logic.py": "b89873029217d23489cb2be981d843b919712c5c572da15ce7541753e64926d7",
+    "scripts/aip/bootstrap_r09_customer_service_authority.py": "f1e6f52c4bf155c8c89cabfeb0210c9dea0caf34165a294ae95474cc04849cd7",
+    "services/aos-api/tests/aip/test_r09_customer_service_authority.py": "24ce49aa7093063f693e7e84fe0735293cc85d78cbe0a598481b10a42ae9d7ca",
+    "scripts/aip/bootstrap_r09_customer_service_skill_authority.py": "6774356ac46f6232a4370c82980004f6b56f2c5eb038d7c598bd8e49b394d5b3",
+    "services/aos-api/tests/aip/test_r09_customer_service_skill_authority.py": "37c390eefcb4523c704d81e2900ec9bf161d3e08278012146177dfb5b8a21d4c",
+    "scripts/aip/bootstrap_r09_customer_service_binding_authority.py": "45cec962f7087bf33732105f0d1d55ede8baaef5040e8eee7081f4a512768573",
+    "services/aos-api/tests/aip/test_r09_customer_service_binding_authority.py": "187c3c5bb8e62d4c94e0c3fae6c88eecd9c909b55d03d815a4753a81d1d60ead",
+    "scripts/aip/refresh_r09_customer_service_runtime_tail.py": "10564ed2131f772ff33dbb308e626dfd7db1fe67f04bf0504426c040859276cc",
+    "services/aos-api/tests/aip/test_refresh_r09_customer_service_runtime_tail.py": "8eaee7c0b1db88777681ddbf37a6b1c6121bff692d3a55ed5a9740c1117194bc"
+  },
+  "externalBlockedOwners": [
+    "B5_RECEIPT_NOT_CAS_CONSUMED:m1 serialized CAS owner",
+    "W2_00_SOURCE_READINESS_OWNER_MISSING:Data/Adapter owner",
+    "W2_00_SAME_CUTOFF_EVIDENCEPACK_MISSING:Data/Adapter owner"
+  ],
+  "evidencePath": ".evidence/aip/2026-08-21-r09-customer-service-authority"
+}

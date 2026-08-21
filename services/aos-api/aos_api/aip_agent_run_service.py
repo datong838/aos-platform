@@ -9,6 +9,7 @@ from aos_api.aip_agent_registry_contracts import (
     AgentRunStatus,
     CreateAgentRunRequest,
     RegistryReceipt,
+    VersionedAssetRef,
 )
 from aos_api.aip_agent_registry_store import (
     AipAgentRegistryConflict,
@@ -81,7 +82,8 @@ class AipAgentRunService(AipAgentRegistryStore):
                 if instance["status"] != "active":
                     raise AipAgentRegistryTransitionBlocked("agent instance is not active")
                 binding = conn.execute(
-                    """SELECT b.*,s.content_hash FROM aip_skill_binding b
+                    """SELECT b.*,s.content_hash,s.canonical_logic_id,s.logic_revision_ref
+                       FROM aip_skill_binding b
                        JOIN aip_skill_template_revision s ON s.skill_id=b.skill_id
                         AND s.revision=b.skill_revision
                        WHERE b.org_id=%s AND b.project_id=%s AND b.binding_id=%s""",
@@ -95,6 +97,15 @@ class AipAgentRunService(AipAgentRegistryStore):
                     run.skill.asset_id, run.skill.revision, run.skill.content_hash
                 ):
                     raise AipAgentRegistryConflict("skill binding exact revision drifted")
+                if (
+                    binding["canonical_logic_id"] != run.logic.asset_id
+                    or not binding["logic_revision_ref"]
+                    or VersionedAssetRef.model_validate(binding["logic_revision_ref"])
+                    != run.logic
+                ):
+                    raise AipAgentRegistryConflict(
+                        "agent run logic differs from the Skill's exact published LogicRevision"
+                    )
                 self._require_healthy_capabilities(conn, scope, binding["capability_refs"])
                 self._require_logic(conn, scope, run.logic)
                 row = conn.execute(

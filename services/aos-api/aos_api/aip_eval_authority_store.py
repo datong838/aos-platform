@@ -803,6 +803,25 @@ class AipEvalAuthorityStore:
             raise AipEvalAuthorityPersistenceError("usage receipt read failed") from exc
         return [self._usage_from_row(scope, row) for row in rows]
 
+    def list_scope_usage_receipts(
+        self, scope: TenantScope, *, limit: int = 1000
+    ) -> list[UsageReceipt]:
+        """Read recent usage facts for one tenant scope without crossing lineage boundaries."""
+        self._require_scope(scope)
+        bounded_limit = max(1, min(limit, 5000))
+        try:
+            with self._connect(scope) as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_usage_receipt
+                       WHERE org_id=%s AND project_id=%s
+                       ORDER BY observed_at DESC,receipt_id DESC
+                       LIMIT %s""",
+                    (*scope.key, bounded_limit),
+                ).fetchall()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError("usage receipt read failed") from exc
+        return [self._usage_from_row(scope, row) for row in rows]
+
     def get_usage_receipt(self, scope: TenantScope, receipt_id: str) -> UsageReceipt:
         self._require_scope(scope)
         try:
@@ -831,6 +850,27 @@ class AipEvalAuthorityStore:
                        WHERE org_id=%s AND project_id=%s AND receipt_id=%s
                        ORDER BY created_at,adjustment_id""",
                     (*scope.key, receipt_id),
+                ).fetchall()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "usage adjustment read failed"
+            ) from exc
+        return [self._adjustment_from_row(scope, row) for row in rows]
+
+    def list_scope_usage_adjustments(
+        self, scope: TenantScope, *, limit: int = 1000
+    ) -> list[UsageAdjustment]:
+        """Read recent append-only adjustments for one tenant scope."""
+        self._require_scope(scope)
+        bounded_limit = max(1, min(limit, 5000))
+        try:
+            with self._connect(scope) as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_usage_adjustment
+                       WHERE org_id=%s AND project_id=%s
+                       ORDER BY created_at DESC,adjustment_id DESC
+                       LIMIT %s""",
+                    (*scope.key, bounded_limit),
                 ).fetchall()
         except Exception as exc:
             raise AipEvalAuthorityPersistenceError(

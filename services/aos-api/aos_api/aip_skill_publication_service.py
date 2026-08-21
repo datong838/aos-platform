@@ -20,9 +20,16 @@ from aos_api.aip_agent_registry_store import (
 )
 from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.aip_eval_contracts import AssetRevisionRef, AssetType
-from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
-from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
-from aos_api.aip_model_runtime_store import AipModelRuntimeStore, ModelRuntimeStoreError
+from aos_api.aip_eval_authority_store import (
+    AipEvalAuthorityStore,
+    AipEvalGateDependencyBlocked,
+)
+from aos_api.aip_model_runtime_contracts import ModelRuntimeLifecycle
+from aos_api.aip_model_runtime_store import (
+    AipModelRuntimeStore,
+    ModelRuntimeStoreError,
+    evaluation_candidate_ref,
+)
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.tenant_scope import TenantScope
 
@@ -38,15 +45,58 @@ class SkillPublicationRouteAuthority(Protocol):
     ) -> None: ...
 
 
+class SkillLogicPublicationAuthority(Protocol):
+    def require_published(
+        self,
+        conn,
+        scope: TenantScope,
+        canonical_logic_id: str,
+        logic_revision_ref: VersionedAssetRef,
+    ) -> None: ...
+
+
+class PostgresSkillLogicPublicationAuthority:
+    def require_published(
+        self,
+        conn,
+        scope: TenantScope,
+        canonical_logic_id: str,
+        logic_revision_ref: VersionedAssetRef,
+    ) -> None:
+        if canonical_logic_id != logic_revision_ref.asset_id:
+            raise AipAgentRegistryTransitionBlocked(
+                "skill canonical logic id does not match the exact LogicRevision"
+            )
+        row = conn.execute(
+            """SELECT 1 FROM aip_logic_graph_revision r
+               JOIN aip_logic_publication p
+                 ON p.org_id=r.org_id AND p.project_id=r.project_id
+                AND p.graph_id=r.graph_id AND p.graph_revision=r.revision
+                AND p.graph_hash=r.graph_hash
+               WHERE r.org_id=%s AND r.project_id=%s AND r.graph_id=%s
+                 AND r.revision=%s AND r.graph_hash=%s LIMIT 1""",
+            (
+                *scope.key,
+                logic_revision_ref.asset_id,
+                logic_revision_ref.revision,
+                logic_revision_ref.content_hash,
+            ),
+        ).fetchone()
+        if row is None:
+            raise AipAgentRegistryTransitionBlocked(
+                "skill publication requires an exact published LogicRevision"
+            )
+
+
 class PostgresSkillPublicationRouteAuthority:
     def __init__(
         self,
         *,
         store: AipModelRuntimeStore | None = None,
-        resolver: AipModelRuntimeResolver | None = None,
+        eval_authority: AipEvalAuthorityStore | None = None,
     ) -> None:
         self._store = store or AipModelRuntimeStore()
-        self._resolver = resolver or AipModelRuntimeResolver(self._store)
+        self._eval_authority = eval_authority or AipEvalAuthorityStore()
 
     def require_ready(
         self,
@@ -58,21 +108,29 @@ class PostgresSkillPublicationRouteAuthority:
     ) -> None:
         try:
             route = self._store.get_route(scope, route_ref.asset_id, route_ref.revision)
-            resolution = self._resolver.resolve(
-                scope, route_ref.asset_id, now=evaluated_at
+            policy = self._store.get_policy(
+                scope, policy_ref.asset_id, policy_ref.revision
             )
-        except ModelRuntimeStoreError as exc:
+            self._eval_authority.require_exact_passed(
+                scope,
+                route.eval_gate_ref,
+                expected_target=evaluation_candidate_ref(route),
+                now=evaluated_at,
+            )
+        except (ModelRuntimeStoreError, AipEvalGateDependencyBlocked) as exc:
             raise AipAgentRegistryTransitionBlocked(
                 "skill publication model route is unavailable"
             ) from exc
         if (
             route.content_hash != route_ref.content_hash
-            or resolution.route != route_ref
-            or resolution.policy != policy_ref
-            or resolution.readiness is not ModelRuntimeReadiness.READY
+            or route.lifecycle is not ModelRuntimeLifecycle.ACTIVE
+            or route.runtime_policy_ref != policy_ref
+            or policy.content_hash != policy_ref.content_hash
+            or policy.lifecycle is not ModelRuntimeLifecycle.ACTIVE
+            or policy.kill_switch_enabled
         ):
             raise AipAgentRegistryTransitionBlocked(
-                "skill publication requires an exact READY route and policy"
+                "skill publication requires exact active route, policy, and Eval gate"
             )
 
 
@@ -81,10 +139,19 @@ class AipSkillPublicationService(AipSkillRegistry):
 
     _OPERATION = "skill_template.publish_evaluated"
 
-    def __init__(self, connect_factory=None, *, route_authority=None) -> None:
+    def __init__(
+        self,
+        connect_factory=None,
+        *,
+        route_authority=None,
+        logic_authority=None,
+    ) -> None:
         super().__init__(connect_factory)
         self._route_authority = (
             route_authority or PostgresSkillPublicationRouteAuthority()
+        )
+        self._logic_authority = (
+            logic_authority or PostgresSkillLogicPublicationAuthority()
         )
 
     def publish_evaluated_revision(
@@ -183,6 +250,13 @@ class AipSkillPublicationService(AipSkillRegistry):
                         "skill publication event is revoked, drifted, or targets another revision"
                     )
 
+                self._logic_authority.require_published(
+                    conn,
+                    scope,
+                    source.canonical_logic_id,
+                    request.logic_revision_ref,
+                )
+
                 self._route_authority.require_ready(
                     scope,
                     request.model_route_ref,
@@ -235,6 +309,9 @@ class AipSkillPublicationService(AipSkillRegistry):
                     runtimePolicyRef=request.runtime_policy_ref.model_dump(
                         mode="json", by_alias=True
                     ),
+                    logicRevisionRef=request.logic_revision_ref.model_dump(
+                        mode="json", by_alias=True
+                    ),
                 )
                 published_request = PublishSkillTemplateRequest(
                     **payload, content_hash=self._hash(payload)
@@ -245,11 +322,11 @@ class AipSkillPublicationService(AipSkillRegistry):
                         output_schema,tool_allowlist,required_capabilities,risk_level,
                         eval_pack_ref,memory_policy_ref,handoff_policy_ref,source_ref,
                         source_license,parent_ref,publication_tenant,release_gate_ref,
-                        publication_ref,model_route_ref,runtime_policy_ref,content_hash,
+                        publication_ref,model_route_ref,runtime_policy_ref,logic_revision_ref,content_hash,
                         created_by,created_at)
                        VALUES (%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
                         %s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,
-                        %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s)
+                        %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s)
                        RETURNING *""",
                     (
                         published_request.skill_id,
@@ -274,6 +351,7 @@ class AipSkillPublicationService(AipSkillRegistry):
                         self._json(published_request.publication_ref),
                         self._json(published_request.model_route_ref),
                         self._json(published_request.runtime_policy_ref),
+                        self._json(published_request.logic_revision_ref),
                         published_request.content_hash,
                         actor.strip(),
                         happened_at,

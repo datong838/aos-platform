@@ -1,0 +1,115 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "wave": "R2-5",
+  "recordedAt": "2026-08-19T03:24:59.271093+08:00",
+  "status": "R2_5_DEP_ADP_QUERY_EVIDENCE_GREEN",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "health": {
+    "observationId": "health-agnes-text-qyh-r2-20260818192329256292",
+    "p50LatencyMs": 519,
+    "expiresAt": "2026-08-18 19:38:29.256292+00:00"
+  },
+  "readinessRefresh": {
+    "healthObservationId": "health-agnes-text-qyh-r2-20260818192329256292",
+    "capabilityBindingId": "ecommerce.data_advisor.strategy.plan.r2",
+    "capabilityBindingIds": [
+      "ecommerce.data_advisor.strategy.plan.r2",
+      "ecommerce.content_officer.image.generate.r2",
+      "ecommerce.content_officer.video.generate.r2"
+    ],
+    "capabilityBindingsReevaluated": [],
+    "skillBindingIds": [
+      "ecommerce.data_advisor.skill.D03.r4",
+      "ecommerce.content_officer.skill.C02.r2",
+      "ecommerce.content_officer.skill.I01.r2",
+      "ecommerce.content_officer.skill.V01.r2",
+      "ecommerce.shopping_advisor.skill.G04.r2",
+      "ecommerce.customer_service.skill.S04.r2",
+      "ecommerce.private_domain_manager.skill.P02.r2",
+      "ecommerce.campaign_planner.skill.A02.r2"
+    ],
+    "skillBindingsReevaluated": []
+  },
+  "catalogStats": {
+    "definitionCount": 6,
+    "installedCount": 6,
+    "runnableCount": 6,
+    "skillDefinitionCount": 37,
+    "capabilityDefinitionCount": 10
+  },
+  "colleagues": [
+    {
+      "templateId": "ecommerce.campaign_planner",
+      "displayName": "活动策划师",
+      "instanceStatus": "active",
+      "runtimeReadiness": "runnable",
+      "blockers": [],
+      "publishedSkillCount": 1
+    },
+    {
+      "templateId": "ecommerce.content_officer",
+      "displayName": "内容官",
+      "instanceStatus": "active",
+      "runtimeReadiness": "runnable",
+      "blockers": [],
+      "publishedSkillCount": 1
+    },
+    {
+      "templateId": "ecommerce.customer_service",
+      "displayName": "客服专员",
+      "instanceStatus": "active",
+      "runtimeReadiness": "runnable",
+      "blockers": [],
+      "publishedSkillCount": 1
+    },
+    {
+      "templateId": "ecommerce.data_advisor",
+      "displayName": "数据参谋",
+      "instanceStatus": "active",
+      "runtimeReadiness": "runnable",
+      "blockers": [],
+      "publishedSkillCount": 1
+    },
+    {
+      "templateId": "ecommerce.private_domain_manager",
+      "displayName": "私域管家",
+      "instanceStatus": "active",
+      "runtimeReadiness": "runnable",
+      "blockers": [],
+      "publishedSkillCount": 1
+    },
+    {
+      "templateId": "ecommerce.shopping_advisor",
+      "displayName": "导购顾问",
+      "instanceStatus": "active",
+      "runtimeReadiness": "runnable",
+      "blockers": [],
+      "publishedSkillCount": 1
+    }
+  ],
+  "combination": {
+    "skill": "ecommerce.skill.D03 r4",
+    "capability": "strategy.plan r2",
+    "route": "route-qyh-text-dev r4",
+    "provider": "agnes-text-qyh-dev r7",
+    "host": "api.agnes-ai.cn",
+    "model": "agnes-2.5-flash",
+    "agentRun": "ecommerce.data_advisor.D03.real-pilot.v8",
+    "attempt": "ecommerce.data_advisor.D03.real-pilot.v8.attempt-1",
+    "agentRunStatus": "succeeded",
+    "attemptStatus": "succeeded"
+  },
+  "depAdpQuery": {
+    "dataAdvisorD03Text": "GREEN",
+    "sixTextColleagues": "GREEN",
+    "multimodalPilots": "GREEN",
+    "workshopPage": "unchanged_red_until_w2_consumes"
+  },
+  "canaryAgentRuns": 0,
+  "providerBusinessCalls": 0,
+  "secretPayloadReads": 0,
+  "sensitiveBodiesPrinted": 0
+}

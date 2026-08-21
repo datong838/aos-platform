@@ -1,0 +1,61 @@
+{
+  "schema": "aos-aip-wave-receipt/v1",
+  "waveId": "AIP-R00",
+  "status": "GREEN",
+  "recordedAt": "2026-08-20T21:28:22+08:00",
+  "scope": {
+    "worktree": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip",
+    "branch": "w1-aip",
+    "realTenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "negativeCanary": {
+      "orgId": "dev-org",
+      "projectId": "dev-project"
+    }
+  },
+  "fixedRevisions": {
+    "w1HeadBefore": "5b71a320cfa96b58093f6a3293264219d294c6ce",
+    "m1": "5b71a320cfa96b58093f6a3293264219d294c6ce",
+    "originW1": "5b71a320cfa96b58093f6a3293264219d294c6ce",
+    "planSha256": "3eaa5e0d9cb613eb8f284d4b17d993cac98fb9cc8b4cf9fe868d6a87248c3afd",
+    "watchdogConfigSha256": "1a96830fd858ccd98b98e8d7acf99682273060d63053fd0bbcafd858856c637b"
+  },
+  "gates": {
+    "git": "GREEN_TRACKED_CLEAN_PROTECTED_UNTRACKED_PRESERVED",
+    "leases": "GREEN_NONE_ACTIVE",
+    "alembic": "GREEN_UNIQUE_HEAD_aip13_001",
+    "sharedMemory": "GREEN_WITH_WARNINGS_AOS_000146_HISTORICAL",
+    "watchdog": "GREEN_RUNNING_30S_TURN_RUNNING_NOOP",
+    "primeAgent": "GREEN_WITH_WARNINGS_PID_2270_REGISTRY_LIST_STALE",
+    "openapi": "BASELINE_WARNING_4297_CURRENT_VS_4264_FROZEN"
+  },
+  "browserEvidence": {
+    "baseUrl": "http://localhost:5173",
+    "tenantHeader": "栖月汇商贸有限公司 / 默认工作区",
+    "modelProviders": "legacy default and canonical runtime source conflict confirmed",
+    "providerDetail": "legacy plaintext credential write surface confirmed",
+    "modelRuntime": "canonical org-org/dev-project authority visible; route health blockers and cost gaps confirmed",
+    "console": "React Router future warnings only"
+  },
+  "tests": {
+    "watchdogUnit": "31 passed",
+    "memoryValidate": "GREEN_410_delivery_receipts_401_task_receipts",
+    "diffCheck": "GREEN"
+  },
+  "r01Freeze": {
+    "status": "REVIEWED_AND_AUTHORIZED",
+    "planSection": "130 §22.2-§22.3",
+    "migration": "NO_MIGRATION",
+    "providerCall": "NO_PROVIDER_CALL",
+    "realDbWrite": "NO_REAL_DB_WRITE",
+    "secretPayload": "FORBIDDEN",
+    "rollback": "restore legacy ProviderDetailPage route while preserving legacy API routers"
+  },
+  "carriedWarnings": [
+    "OpenAPI snapshot 4297/4264 drift predates R01 and blocks R33, not R01",
+    "Prime Agent list reports stale supervisor registry ownership while current socket and PID remain active"
+  ],
+  "nextWave": "AIP-R01_PROVIDER_CANONICAL_DETAIL"
+}

@@ -2,6 +2,7 @@ import hashlib
 import json
 import uuid
 from datetime import UTC, datetime
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
@@ -42,6 +43,10 @@ from aos_api.aip_release_publication_service import (
     AipReleasePublicationService,
 )
 from aos_api.aip_skill_publication_service import AipSkillPublicationService
+from aos_api.aip_skill_publication_service import (
+    PostgresSkillPublicationRouteAuthority,
+)
+from aos_api.aip_model_runtime_contracts import ModelRuntimeLifecycle
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.db import connect
 from aos_api.tenant_scope import TenantScope
@@ -95,6 +100,7 @@ def test_direct_registry_publication_is_fail_closed_before_persistence() -> None
         ),
         model_route_ref=ref("ModelRouteRevision", "route-1"),
         runtime_policy_ref=ref("RuntimePolicyRevision", "policy-1"),
+        logic_revision_ref=ref("LogicRevision", "logic.demo"),
     )
     with pytest.raises(
         AipAgentRegistryTransitionBlocked, match="governed Eval publication"
@@ -111,6 +117,30 @@ def test_published_contract_requires_all_exact_provenance() -> None:
         skill_request(parent_ref=ref("SkillTemplate", "skill.demo"))
 
 
+def test_legacy_published_skill_without_logic_ref_remains_readable_but_new_ref_is_exact() -> None:
+    legacy = skill_request(
+        lifecycle=TemplateLifecycle.PUBLISHED,
+        parent_ref=ref("SkillTemplate", "skill.demo"),
+        publication_tenant=TenantContext(org_id="org-org", project_id="dev-project"),
+        release_gate_ref=ref("EvalGateDecision", "gate-1"),
+        publication_ref=ResourceRef(
+            resource_type="PublicationEvent",
+            resource_id="event-1",
+            revision="publication-1",
+            authority="postgresql",
+        ),
+        model_route_ref=ref("ModelRouteRevision", "route-1"),
+        runtime_policy_ref=ref("RuntimePolicyRevision", "policy-1"),
+    )
+    assert legacy.logic_revision_ref is None
+    payload = legacy.model_dump(mode="json", by_alias=True)
+    payload["logicRevisionRef"] = ref(
+        "ModelRouteRevision", "logic.demo"
+    ).model_dump(mode="json", by_alias=True)
+    with pytest.raises(ValidationError, match="logic_revision_ref must reference"):
+        PublishSkillTemplateRequest.model_validate(payload)
+
+
 def test_governed_publication_request_rejects_wrong_ref_kinds() -> None:
     with pytest.raises(ValidationError, match="source_skill must reference SkillTemplate"):
         PublishEvaluatedSkillRevisionRequest(
@@ -119,6 +149,7 @@ def test_governed_publication_request_rejects_wrong_ref_kinds() -> None:
             release_gate_decision_id="gate-1",
             model_route_ref=ref("ModelRouteRevision", "route-1"),
             runtime_policy_ref=ref("RuntimePolicyRevision", "policy-1"),
+            logic_revision_ref=ref("LogicRevision", "logic.demo"),
             idempotency_key="publish-once",
         )
 
@@ -167,6 +198,113 @@ class _ReadyRouteAuthority:
         assert route_ref.asset_type == "ModelRouteRevision"
         assert policy_ref.asset_type == "RuntimePolicyRevision"
         assert evaluated_at.tzinfo is not None
+
+
+class _PublishedLogicAuthority:
+    def require_published(
+        self, _conn, scope, canonical_logic_id, logic_revision_ref
+    ):
+        assert scope.org_id.startswith("bind3-org-")
+        assert canonical_logic_id == logic_revision_ref.asset_id
+        assert logic_revision_ref.asset_type == "LogicRevision"
+
+
+def test_skill_publication_route_gate_does_not_consume_transient_health(
+    monkeypatch,
+) -> None:
+    route_ref = ref("ModelRouteRevision", "route-1")
+    policy_ref = ref("RuntimePolicyRevision", "policy-1")
+    gate_ref = ref("EvalGateDecision", "gate-1")
+    route = SimpleNamespace(
+        route_id="route-1",
+        revision=1,
+        content_hash=route_ref.content_hash,
+        lifecycle=ModelRuntimeLifecycle.ACTIVE,
+        runtime_policy_ref=policy_ref,
+        eval_gate_ref=gate_ref,
+    )
+    policy = SimpleNamespace(
+        content_hash=policy_ref.content_hash,
+        lifecycle=ModelRuntimeLifecycle.ACTIVE,
+        kill_switch_enabled=False,
+    )
+
+    class Store:
+        @staticmethod
+        def get_route(*_args):
+            return route
+
+        @staticmethod
+        def get_policy(*_args):
+            return policy
+
+    class EvalAuthority:
+        called = False
+
+        def require_exact_passed(self, scope, selected_gate, **kwargs):
+            self.called = True
+            assert scope.key == ("org-org", "dev-project")
+            assert selected_gate == gate_ref
+            assert kwargs["expected_target"] == route_ref
+
+    eval_authority = EvalAuthority()
+    monkeypatch.setattr(
+        "aos_api.aip_skill_publication_service.evaluation_candidate_ref",
+        lambda _route: route_ref,
+    )
+    authority = PostgresSkillPublicationRouteAuthority(
+        store=Store(), eval_authority=eval_authority
+    )
+    authority.require_ready(
+        TenantScope("org-org", "dev-project"),
+        route_ref,
+        policy_ref,
+        evaluated_at=datetime(2026, 8, 17, 12, 0, tzinfo=UTC),
+    )
+    assert eval_authority.called is True
+
+
+def test_skill_publication_route_gate_blocks_kill_switch(monkeypatch) -> None:
+    route_ref = ref("ModelRouteRevision", "route-1")
+    policy_ref = ref("RuntimePolicyRevision", "policy-1")
+    route = SimpleNamespace(
+        route_id="route-1",
+        revision=1,
+        content_hash=route_ref.content_hash,
+        lifecycle=ModelRuntimeLifecycle.ACTIVE,
+        runtime_policy_ref=policy_ref,
+        eval_gate_ref=ref("EvalGateDecision", "gate-1"),
+    )
+    policy = SimpleNamespace(
+        content_hash=policy_ref.content_hash,
+        lifecycle=ModelRuntimeLifecycle.ACTIVE,
+        kill_switch_enabled=True,
+    )
+
+    class Store:
+        get_route = staticmethod(lambda *_args: route)
+        get_policy = staticmethod(lambda *_args: policy)
+
+    class EvalAuthority:
+        require_exact_passed = staticmethod(lambda *_args, **_kwargs: None)
+
+    monkeypatch.setattr(
+        "aos_api.aip_skill_publication_service.evaluation_candidate_ref",
+        lambda _route: route_ref,
+    )
+    authority = PostgresSkillPublicationRouteAuthority(
+        store=Store(), eval_authority=EvalAuthority()
+    )
+    with pytest.raises(
+        AipAgentRegistryTransitionBlocked,
+        match="exact active route, policy, and Eval gate",
+    ):
+        authority.require_ready(
+            TenantScope("org-org", "dev-project"),
+            route_ref,
+            policy_ref,
+            evaluated_at=datetime(2026, 8, 17, 12, 0, tzinfo=UTC),
+        )
 
 
 def _canonical_hash(value) -> str:
@@ -300,9 +438,13 @@ def test_real_eval_publication_creates_new_immutable_skill_revision_and_receipt(
         release_gate_decision_id=gate.decision_id,
         model_route_ref=ref("ModelRouteRevision", f"route-{suffix}"),
         runtime_policy_ref=ref("RuntimePolicyRevision", f"policy-{suffix}"),
+        logic_revision_ref=ref("LogicRevision", source.canonical_logic_id),
         idempotency_key=f"publish-skill-{suffix}",
     )
-    service = AipSkillPublicationService(route_authority=_ReadyRouteAuthority())
+    service = AipSkillPublicationService(
+        route_authority=_ReadyRouteAuthority(),
+        logic_authority=_PublishedLogicAuthority(),
+    )
     published, receipt = service.publish_evaluated_revision(
         scope,
         request,
@@ -319,8 +461,27 @@ def test_real_eval_publication_creates_new_immutable_skill_revision_and_receipt(
     assert published.lifecycle is TemplateLifecycle.PUBLISHED and published.revision == 2
     assert published.parent_ref == request.source_skill
     assert published.release_gate_ref.asset_id == gate.decision_id
+    assert published.logic_revision_ref == request.logic_revision_ref
     assert published.publication_tenant == TenantContext(
         org_id=scope.org_id, project_id=scope.project_id
     )
     assert receipt.operation == "skill_template.publish_evaluated"
     assert replay == published and replay_receipt == receipt
+    r3_request = request.model_copy(
+        update={
+            "model_route_ref": ref("ModelRouteRevision", f"route-{suffix}-r2"),
+            "idempotency_key": f"publish-skill-{suffix}-r3",
+        }
+    )
+    published_r3, _ = service.publish_evaluated_revision(
+        scope,
+        r3_request,
+        actor="pytest-bind3",
+        occurred_at=datetime(2026, 8, 15, 3, 32, tzinfo=UTC),
+    )
+    unchanged_r2 = AipSkillRegistry().get_skill(skill_id, 2)
+    assert published_r3.revision == 3
+    assert published_r3.lifecycle is TemplateLifecycle.PUBLISHED
+    assert published_r3.model_route_ref == r3_request.model_route_ref
+    assert unchanged_r2.content_hash == published.content_hash
+    assert unchanged_r2.model_route_ref == request.model_route_ref

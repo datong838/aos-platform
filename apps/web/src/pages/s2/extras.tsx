@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiPost, S2Chrome, useJsonGet } from "./shared";
 import { BpMaturityStairs } from "./blueprintUi";
+import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
 
 export { ModuleInterfacePage } from "./ModuleInterfacePage";
 
@@ -13,6 +14,14 @@ export function isBreakerTripConfirmed(value: { open?: boolean; mode?: string })
 export function MaturityPage() {
   const evals = useJsonGet<{ green?: boolean; l4Allowed?: boolean }>("/v1/aip/evals/status");
   const drafts = useJsonGet<{ count?: number; items?: unknown[] }>("/v1/aip/drafts");
+  const agents = useJsonGet<{
+    items?: Array<{
+      instanceId?: string;
+      id?: string;
+      name?: string;
+      overlay?: { displayName?: string };
+    }>;
+  }>("/v1/aip/agents");
   const [level, setLevel] = useState(2);
   const [toast, setToast] = useState("");
 
@@ -28,14 +37,47 @@ export function MaturityPage() {
   }
 
   const green = evals.data?.green === true;
+  const workspaceAgentLabel = useMemo(() => {
+    const items = agents.data?.items || [];
+    if (!items.length) return null;
+    const preferred =
+      items.find((item) => String(item.instanceId || item.id || "").includes("content_officer")) || items[0];
+    return preferred.overlay?.displayName || preferred.name || preferred.instanceId || preferred.id || null;
+  }, [agents.data]);
 
   const levelLabel = level === 1 ? "临时分析" : level === 2 ? "任务 Agent" : level === 3 ? "Agentic 应用" : "自动化 Agent";
 
   return (
     <S2Chrome
       title="Agent 成熟度楼梯"
-      lede="别一上来做自动化。先 Threads，再固化 Agent，再嵌应用，最后才自动化。"
+      lede="先 Threads，再固化 Agent，再嵌应用，最后才自动化；楼梯预览不伪造 L4 真门控。"
     >
+      <AipOperationalProjectionStrip />
+      <div style={{ marginBottom: 12, fontSize: 13 }}>
+        <Link to="/aip/memory-governance?view=candidates" data-testid="maturity-memory-bridge">
+          Memory Candidate 治理 →
+        </Link>
+        <span style={{ color: "var(--aos-text-secondary)", margin: "0 8px" }}>·</span>
+        <Link to="/aip/memory-governance?view=readiness">Knowledge 就绪门 →</Link>
+      </div>
+      <div
+        data-testid="maturity-ops-stats"
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
+      >
+        {[
+          { label: "当前层", value: `L${level}` },
+          { label: "层名", value: levelLabel },
+          { label: "Eval", value: green ? "绿" : "未跑" },
+          { label: "Draft", value: String(drafts.data?.count ?? drafts.data?.items?.length ?? 0) },
+          { label: "同事数", value: String(agents.data?.items?.length ?? 0) },
+          { label: "L4 门", value: evals.data?.l4Allowed === true ? "允许" : "未开" },
+        ].map((s) => (
+          <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
+            <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
       {/* 顶部状态条 · 对齐 aip-maturity.html 黄色背景卡片 */}
       <div
         style={{
@@ -54,7 +96,12 @@ export function MaturityPage() {
       >
         <div>
           <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 2 }}>当前工作区</div>
-          <div style={{ color: "var(--aos-text)", fontWeight: 500 }}>维修派单 Buddy</div>
+          <div style={{ color: "var(--aos-text)", fontWeight: 500 }}>
+            {workspaceAgentLabel || (agents.loading ? "读取数字同事…" : "尚未安装栖月汇数字同事")}
+          </div>
+          {!workspaceAgentLabel && !agents.loading ? (
+            <Link to="/aip/studio" style={{ fontSize: 12 }}>去 Studio 安装 →</Link>
+          ) : null}
         </div>
         <div>
           <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 2 }}>判定层</div>

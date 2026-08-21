@@ -1,0 +1,7 @@
+{
+  "url": "http://127.0.0.1:5174/aip/production-contracts",
+  "emptyStateGone": true,
+  "hasPlanSignals": true,
+  "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/.evidence/aip/2026-08-19-w-e1-responsibility-plan/production-contracts.png",
+  "snippet": "Responsibility Plan\necommerce-standard\n阻断\n\n1 个职责槽 · 覆盖 阻断\n\n未覆盖：content.review\n\nTemplate ecommerce-standard@1 · version 1\nCAPABILITY_BINDING_NOT_ACTIVE · 职责 content.review 的 required capabilities 未全部 active/healthy\n冻结职责计划\nStage Template\n当前组织尚无 StageTemplate。模板必须来自已验证资产包 exact ref，本页不生成隐式 Stage。\nArtifact Relation\n当前组织尚无 Artifact Relation。只有两端 artifactId/contentHash 均匹配权威记录时才能建立关系。\nReview Issue\n当前组织尚无 Review Issue。问题必须绑定 exact Artifact、EvalReport 与 Evidence。\nImpact Preview 与 Start 组合门\n\nPreview 只呈现权威影响评估；unknown 不显示为 0。只有 frozen + ready 的 exact revision 才能提交组合门，且成功只代表创建 canonical TaskRun，不代表 AgentRun 或 Provider 已运行。\n\n当前组织尚无 ImpactPreview。请从真实 Task、Plan 与冻结的生产契约创建；本页不生成样例 Preview、费用或运行状态。\n受控创建 TaskRun\nImpactPreview\n选择 exact revision\nTask version\nActionProposal ID\nProposal version\nProposal exact hash\nLogicGraph ID\nLogic revision\n启动门保持关闭：请选择 ImpactPreview exact revision。可先刷新权威状态；若依赖漂移，请回到对应 aut"
+}

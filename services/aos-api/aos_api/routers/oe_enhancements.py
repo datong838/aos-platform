@@ -29,6 +29,14 @@ from aos_api.ontology_exploration_assets import (
     list_assets,
     set_archived,
 )
+from aos_api.ontology_exploration_share import (
+    CreateShareGrantRequest,
+    RevokeShareGrantRequest,
+    ShareGrantView,
+    create_share_grant,
+    resolve_share_grant,
+    revoke_share_grant,
+)
 from aos_api.ontology_explorer_contracts import GraphQueryDTO, GraphSnapshotDTO
 from aos_api.ontology_graph_query import get_authoritative_graph_service
 from aos_api.tenant_scope import TenantScope
@@ -305,6 +313,67 @@ def unshare_exploration(
         idempotency_key=idempotency_key,
         principal=principal,
         share=None,
+    )
+
+
+@router.post(
+    "/v1/ontology/explorations/{exp_id}/share-grants",
+    response_model=ShareGrantView,
+    status_code=201,
+)
+def create_exploration_share_grant(
+    exp_id: str,
+    body: CreateShareGrantRequest,
+    if_match: str = Header(alias="If-Match", min_length=1),
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=1),
+    principal: Principal = Depends(require_principal),
+) -> ShareGrantView:
+    try:
+        return create_share_grant(
+            _scope(principal),
+            asset_id=exp_id,
+            actor=principal.subject,
+            body=body,
+            idempotency_key=idempotency_key,
+            expected_revision=_expected_revision(if_match),
+        )
+    except ApiError:
+        raise
+    except Exception as exc:
+        raise ApiError(
+            code="SHARE_GRANT_FAILED",
+            message="share grant create failed",
+            status_code=500,
+        ) from exc
+
+
+@router.get(
+    "/v1/ontology/exploration-share-grants/{opaque_ref}",
+    response_model=ShareGrantView,
+)
+def resolve_exploration_share_grant(
+    opaque_ref: str,
+    principal: Principal = Depends(require_principal),
+) -> ShareGrantView:
+    return resolve_share_grant(_scope(principal), opaque_ref)
+
+
+@router.post(
+    "/v1/ontology/exploration-share-grants/{opaque_ref}/revoke",
+    response_model=ShareGrantView,
+)
+def revoke_exploration_share_grant(
+    opaque_ref: str,
+    body: RevokeShareGrantRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=1),
+    principal: Principal = Depends(require_principal),
+) -> ShareGrantView:
+    return revoke_share_grant(
+        _scope(principal),
+        opaque_ref=opaque_ref,
+        actor=principal.subject,
+        body=body,
+        idempotency_key=idempotency_key,
     )
 
 

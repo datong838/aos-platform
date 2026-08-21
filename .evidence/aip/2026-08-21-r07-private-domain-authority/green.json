@@ -1,0 +1,75 @@
+{
+  "status": "GREEN",
+  "wave": "R07_PRIVATE_DOMAIN_MANAGER_P01_P05",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanaryOrgId": "dev-org",
+    "negativeCanaryProjectId": "dev-project"
+  },
+  "authority": {
+    "logic": {
+      "P01": "1b64ef9ddfc6144534511bb378cf003e229bd233217dae52c038804b936965f6",
+      "P02": "24b2d41f4ec670604c0a21880c7816a59cbf82397de919f826275db00e12c82e",
+      "P03": "0f5f4fb1e4be8e557ee67bdd9c5696086a8a4f82f63f5e750545f857c1579bc8",
+      "P04": "285116e1c2dd75e71ff21b7d1947525206c4545e8fce2b29319901bde7cf5c8b",
+      "P05": "2000fc0f84442ea7deee1c163f6698b234ee59889f04e7efebfb71f888545994"
+    },
+    "skill": {
+      "P01": "7a0f44f286f48290df255cfc34765018f0fa7517f33ecf10ac08e81538f299ad",
+      "P02": "d4c00a17494403c9b5e4c27dd04773b4a5ef9da55939d5189150f95f6ee0905f",
+      "P03": "6536730295ba07867c41ab40b4c4fe3d803b98b991eb2b44cb39312f9c6c9766",
+      "P04": "0afa7f4e19cdf59de3c04593617f09f81e80f07ad6f0d9c7915e29299bea0d56",
+      "P05": "434bd15e680c2e9e7d2281e8642d1800dace295befecf0eefa4c48a6e0d7a80d"
+    },
+    "publishedSkillCount": 5,
+    "activeSkillBindingCount": 5,
+    "agentInstanceStatus": "active",
+    "runtimeReadinessAtBrowserCutoff": "runnable",
+    "runtimeBlockersAtBrowserCutoff": []
+  },
+  "health": {
+    "observationId": "health-agnes-text-qyh-r2-20260821041838643389",
+    "samples": "3/3",
+    "status": "healthy",
+    "observedAt": "2026-08-21T04:18:38.643389Z",
+    "expiresAt": "2026-08-21T04:33:38.643389Z",
+    "p50LatencyMs": 517,
+    "browserCutoff": "2026-08-21T04:29:28Z",
+    "freshAtBrowserCutoff": true,
+    "secretPayloadReads": 0
+  },
+  "safety": {
+    "agentRunsCreated": 0,
+    "providerBusinessCalls": 0,
+    "customerContacts": 0,
+    "productionActions": 0,
+    "negativeCanaryRows": 0,
+    "p02AuthorityPreserved": true,
+    "draftOnly": true
+  },
+  "verification": {
+    "targetedTests": "51 passed",
+    "cumulativeR06R07Tests": "90 passed",
+    "compile": "GREEN",
+    "browser": {
+      "baseUrl": "http://localhost:5174",
+      "tenant": "栖月汇商贸有限公司 / 默认工作区",
+      "agentRegistry": "5/5 published and active bindings; runnable; no blockers",
+      "logicP01": "canonical revision/hash and immutable publication visible",
+      "logicP05": "canonical revision/hash and immutable publication visible",
+      "consoleErrors": 0
+    }
+  },
+  "commits": [
+    "475a72d",
+    "cb3c63f",
+    "d2d7195",
+    "69d00f2",
+    "06b8311"
+  ],
+  "externalOwners": {
+    "sourceReadinessAndSameCutoffEvidencePack": "Data/Adapter owner",
+    "workshopB5M1Cas": "m1 serialized integration owner"
+  }
+}

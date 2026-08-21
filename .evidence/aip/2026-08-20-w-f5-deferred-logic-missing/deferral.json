@@ -1,0 +1,20 @@
+{
+  "wave": "W-F5",
+  "status": "DEFERRED",
+  "reason": "LOGIC_GRAPH_MISSING for content/投放 batch beyond C02",
+  "publishedStill": [
+    "A02",
+    "C02",
+    "D03",
+    "G04",
+    "I01",
+    "P02",
+    "S04",
+    "V01"
+  ],
+  "next": "seed Logic graphs then reopen F5→F6",
+  "pivotedTo": [
+    "W-L5",
+    "W-J5"
+  ]
+}

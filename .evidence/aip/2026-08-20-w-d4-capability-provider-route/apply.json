@@ -1,0 +1,181 @@
+{
+  "approvalRef": "93-W-D4-PROVIDER-ROUTE",
+  "canarySharedBindingCount": 0,
+  "items": [
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.material.collect.r5",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "material.collect",
+      "class": "text",
+      "disposition": "published",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "w0b_contracts_unavailable"
+      ],
+      "revision": 5
+    },
+    {
+      "capabilityId": "strategy.plan",
+      "disposition": "already_clean",
+      "readiness": "available",
+      "readinessReasons": [],
+      "revision": 5
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.copy.generate.r5",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "copy.generate",
+      "class": "text",
+      "disposition": "published",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "w0b_contracts_unavailable"
+      ],
+      "revision": 5
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.script.compose.r5",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "script.compose",
+      "class": "text",
+      "disposition": "published",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "w0b_contracts_unavailable"
+      ],
+      "revision": 5
+    },
+    {
+      "capabilityId": "speech.synthesize",
+      "class": "media",
+      "disposition": "kept_media_honest",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 4
+    },
+    {
+      "capabilityId": "video.compose",
+      "class": "media",
+      "disposition": "kept_media_honest",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 4
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.content.review.r5",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "content.review",
+      "class": "text",
+      "disposition": "published",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "w0b_contracts_unavailable"
+      ],
+      "revision": 5
+    },
+    {
+      "capabilityId": "live.orchestrate",
+      "class": "media",
+      "disposition": "kept_media_honest",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 4
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.platform.adapt.r5",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "platform.adapt",
+      "class": "text",
+      "disposition": "published",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "w0b_contracts_unavailable"
+      ],
+      "revision": 5
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.performance.review.r5",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "performance.review",
+      "class": "text",
+      "disposition": "published",
+      "readiness": "blocked",
+      "readinessReasons": [
+        "w0b_contracts_unavailable"
+      ],
+      "revision": 5
+    }
+  ],
+  "mode": "apply",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "wave": "W-D4"
+}

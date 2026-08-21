@@ -30,6 +30,19 @@ class Freshness(StrEnum):
     UNKNOWN = "unknown"
 
 
+class DisclosureLevel(StrEnum):
+    L1 = "l1"
+    L2 = "l2"
+    L3 = "l3"
+
+
+class DisclosureStatus(StrEnum):
+    ALLOWED = "allowed"
+    BLOCKED = "blocked"
+    STALE = "stale"
+    UNKNOWN = "unknown"
+
+
 class ContractReadiness(StrEnum):
     READY = "ready"
     BLOCKED = "blocked"
@@ -201,6 +214,26 @@ class EvalContractListResponse(AipContractModel):
     tenant: TenantContext
     items: list[EvalContractRevision]
     count: int = Field(ge=0)
+
+
+class EvalContractDiffChange(AipContractModel):
+    field: str
+    label: str
+    before: Any
+    after: Any
+    impact: str
+
+
+class EvalContractDiff(AipContractModel):
+    tenant: TenantContext
+    contract_id: str
+    from_revision: int = Field(ge=1)
+    to_revision: int = Field(ge=1)
+    from_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    to_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    changes: list[EvalContractDiffChange]
+    change_count: int = Field(ge=0)
+    summary: str
 
 
 class ReviseResponsibilityPlanRequest(CreateResponsibilityPlanRequest):
@@ -440,6 +473,12 @@ class ReturnDecision(AipContractModel):
     created_at: datetime
 
 
+class ReturnDecisionListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ReturnDecision]
+    count: int = Field(ge=0)
+
+
 class MutableAuthorityRef(AipContractModel):
     resource_type: str = Field(min_length=1, max_length=80)
     resource_id: str = Field(min_length=1, max_length=200)
@@ -556,6 +595,7 @@ class ImpactPreviewRevision(CreateImpactPreviewRequest):
     version: int = Field(ge=1)
     content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     dependency_snapshot_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    action_binding_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     lifecycle: BriefLifecycle
     readiness: ContractReadiness
     blockers: list[ContractBlocker]
@@ -590,14 +630,18 @@ class ImpactPreviewListResponse(AipContractModel):
 class ProductionStartRequest(AipContractModel):
     task_id: str = Field(min_length=1, max_length=200)
     expected_task_version: int = Field(ge=1)
+    production_context_ref: ExactRevisionRef
     plan_ref: ExactRevisionRef
     preview_ref: ExactRevisionRef
     action_proposal_ref: ActionProposalExactRef
     logic_graph_id: str = Field(min_length=1, max_length=200)
     logic_revision: int = Field(ge=1)
+    logic_graph_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
 
     @model_validator(mode="after")
     def _start_ref_kinds(self) -> ProductionStartRequest:
+        if self.production_context_ref.resource_type != "ProductionContextRevision":
+            raise ValueError("productionContextRef must reference ProductionContextRevision")
         if self.plan_ref.resource_type != "PlanRevision":
             raise ValueError("planRef must reference PlanRevision")
         if self.preview_ref.resource_type != "ImpactPreviewRevision":
@@ -638,6 +682,62 @@ class ProductionStartDecisionListResponse(AipContractModel):
     count: int = Field(ge=0)
 
 
+class FreezeProductionContextRequest(AipContractModel):
+    task_id: str = Field(min_length=1, max_length=200)
+    brief_ref: ExactRevisionRef
+    evidence_bundle_ref: ExactRevisionRef
+    eval_contract_ref: ExactRevisionRef
+    responsibility_plan_ref: ExactRevisionRef
+    profile: str = Field(default="default", min_length=1, max_length=120)
+    preparation_ref: ExactRevisionRef | None = None
+
+    @model_validator(mode="after")
+    def _four_contract_kinds(self) -> FreezeProductionContextRequest:
+        expected = {
+            "brief_ref": "TaskBriefRevision",
+            "evidence_bundle_ref": "EvidenceBundleRevision",
+            "eval_contract_ref": "EvalContractRevision",
+            "responsibility_plan_ref": "ResponsibilityPlanRevision",
+        }
+        for field, kind in expected.items():
+            ref = getattr(self, field)
+            if ref.resource_type != kind:
+                raise ValueError(f"{field} must reference {kind}")
+        if (
+            self.preparation_ref is not None
+            and self.preparation_ref.resource_type != "PreparationReceipt"
+        ):
+            raise ValueError("preparationRef must reference PreparationReceipt")
+        return self
+
+
+class ProductionContextRevision(AipContractModel):
+    tenant: TenantContext
+    context_id: str
+    revision: int
+    task_id: str
+    brief_ref: ExactRevisionRef
+    evidence_bundle_ref: ExactRevisionRef
+    eval_contract_ref: ExactRevisionRef
+    responsibility_plan_ref: ExactRevisionRef
+    preparation_ref: ExactRevisionRef | None
+    profile: str
+    dependency_snapshot: list[dict[str, Any]]
+    dependency_snapshot_hash: str
+    content_hash: str
+    lifecycle: BriefLifecycle
+    readiness: ContractReadiness
+    blockers: list[ContractBlocker]
+    created_by: str
+    created_at: datetime
+
+
+class ProductionContextListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ProductionContextRevision]
+    count: int = Field(ge=0)
+
+
 class CreateBriefRequest(AipContractModel):
     task_id: str = Field(min_length=1, max_length=200)
     brief_type: str = Field(min_length=1, max_length=160)
@@ -674,24 +774,29 @@ class TaskBriefListResponse(AipContractModel):
 
 
 class CreateEvidenceBundleRequest(AipContractModel):
+    """Legacy create surface — W-L9: coverage fields forbidden; use BuildEvidenceBundleRequest."""
+
     brief_ref: ExactRevisionRef
     subject_refs: list[ResourceRef] = Field(default_factory=list)
     cutoff_at: datetime
     item_refs: list[ExactRevisionRef] = Field(min_length=1)
-    coverage: Coverage
-    missing: list[dict[str, Any]] = Field(default_factory=list)
-    conflicts: list[dict[str, Any]] = Field(default_factory=list)
-    uncertainties: list[dict[str, Any]] = Field(default_factory=list)
-    freshness: Freshness
+    required_fact_ids: list[str] = Field(min_length=1)
     marking: list[str] = Field(default_factory=list)
     license_summary: dict[str, Any] = Field(default_factory=dict)
 
-    @field_validator("marking")
+    @field_validator("required_fact_ids", "marking")
     @classmethod
-    def _marking_unique(cls, values: list[str]) -> list[str]:
-        if len(values) != len(set(values)) or any(not value.strip() for value in values):
-            raise ValueError("marking must be unique and non-blank")
-        return values
+    def _nonblank_unique(cls, values: list[str]) -> list[str]:
+        cleaned = [value.strip() for value in values]
+        if any(not value for value in cleaned):
+            raise ValueError("values must be non-blank")
+        if len(cleaned) != len(set(cleaned)):
+            raise ValueError("values must be unique")
+        return cleaned
+
+
+class BuildEvidenceBundleRequest(CreateEvidenceBundleRequest):
+    """W-L9 canonical EvidenceBundle Build Job input (server-owned coverage)."""
 
 
 class EvidenceBundleRevision(AipContractModel):
@@ -713,9 +818,49 @@ class EvidenceBundleRevision(AipContractModel):
     lifecycle: BriefLifecycle
     created_by: str
     created_at: datetime
+    revoked: bool = False
+    revoke_reason: str | None = None
 
 
 class EvidenceBundleListResponse(AipContractModel):
     tenant: TenantContext
     items: list[EvidenceBundleRevision]
     count: int = Field(ge=0)
+
+
+class RevokeEvidenceBundleRequest(AipContractModel):
+    expected_revision: int = Field(ge=1)
+    expected_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    reason: str = Field(min_length=1, max_length=500)
+
+
+class ResolveEvidenceDisclosureRequest(AipContractModel):
+    evidence_ref: ExactRevisionRef
+    purpose: str = Field(min_length=1, max_length=200)
+    requested_level: DisclosureLevel
+    task_id: str | None = Field(default=None, max_length=200)
+    subject_ref: ResourceRef | None = None
+
+    @model_validator(mode="after")
+    def _evidence_kind(self) -> ResolveEvidenceDisclosureRequest:
+        if self.evidence_ref.resource_type != "Evidence":
+            raise ValueError("evidenceRef must reference Evidence")
+        return self
+
+
+class EvidenceDisclosureDecision(AipContractModel):
+    tenant: TenantContext
+    decision_id: str
+    evidence_ref: ExactRevisionRef
+    purpose: str
+    requested_level: DisclosureLevel
+    granted_level: DisclosureLevel | None
+    status: DisclosureStatus
+    reasons: list[str]
+    citation: dict[str, Any]
+    display_payload: dict[str, Any]
+    redaction_receipt: dict[str, Any]
+    decision_hash: str
+    expires_at: datetime | None
+    created_by: str
+    created_at: datetime

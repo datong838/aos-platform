@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildComparisonRows,
+  applyPriceAuthority,
   computeCatalogStats,
   extractAllCapabilities,
   extractAllProviders,
@@ -104,15 +105,20 @@ describe("ModelCatalogPage · parsePricePerMillion", () => {
     expect(parsePricePerMillion("免费")).toBe(0);
   });
 
-  it("空值或—返回 0", () => {
-    expect(parsePricePerMillion("—")).toBe(0);
-    expect(parsePricePerMillion("")).toBe(0);
+  it("空值或—保持未知，不冒充免费", () => {
+    expect(Number.isNaN(parsePricePerMillion("—"))).toBe(true);
+    expect(Number.isNaN(parsePricePerMillion(""))).toBe(true);
   });
 });
 
 describe("ModelCatalogPage · priceTierOf", () => {
   it("免费模型归类 free", () => {
     expect(priceTierOf("免费")).toBe("free");
+  });
+
+  it("缺失价格归类 unknown", () => {
+    expect(priceTierOf("—")).toBe("unknown");
+    expect(priceTierOf("价格未知")).toBe("unknown");
   });
 
   it("低价模型 < $1/1M", () => {
@@ -126,6 +132,25 @@ describe("ModelCatalogPage · priceTierOf", () => {
 
   it("高价模型 > $5/1M", () => {
     expect(priceTierOf("$10/1M")).toBe("high");
+  });
+});
+
+describe("ModelCatalogPage · exact price authority", () => {
+  const ref = { assetType: "RegisteredModelRevision", assetId: "model-1", revision: 1, contentHash: "a".repeat(64) };
+  it("已注册模型没有 exact 价格时显示未知", () => {
+    const result = applyPriceAuthority([{ ...MOCK_MODELS[0], providerModelId: "agnes-2.5-flash" }], []);
+    expect(result[0].inputPrice).toBe("价格未知");
+    expect(priceTierOf(result[0].inputPrice)).toBe("unknown");
+  });
+  it("只有 exact 零价审批才显示审批免费", () => {
+    const result = applyPriceAuthority([{ ...MOCK_MODELS[0], providerModelId: "agnes-2.5-flash" }], [{ modelRef: ref, providerModelId: "agnes-2.5-flash", outputModalities: ["text"], priceSnapshotRef: null, status: "approved_zero", currency: "CNY", inputTokenPrice: 0, outputTokenPrice: 0, cachedTokenPrice: null, tokenUnit: 1000, effectiveFrom: null, effectiveUntil: null, zeroPriceApprovalRef: "approval://zero", blockerCodes: [] }]);
+    expect(result[0].inputPrice).toBe("已审批免费");
+    expect(priceTierOf(result[0].inputPrice)).toBe("free");
+  });
+  it("图像 token 单位不匹配不会显示免费", () => {
+    const result = applyPriceAuthority([{ ...MOCK_MODELS[0], providerModelId: "agnes-image" }], [{ modelRef: ref, providerModelId: "agnes-image", outputModalities: ["image"], priceSnapshotRef: null, status: "unit_mismatch", currency: "CNY", inputTokenPrice: 0, outputTokenPrice: 0, cachedTokenPrice: null, tokenUnit: 1000, effectiveFrom: null, effectiveUntil: null, zeroPriceApprovalRef: null, blockerCodes: ["TOKEN_PRICE_UNIT_MISMATCH"] }]);
+    expect(result[0].inputPrice).toBe("计价单位待补");
+    expect(priceTierOf(result[0].inputPrice)).toBe("unknown");
   });
 });
 

@@ -234,6 +234,12 @@ class QueryJobSnapshot(AipContractModel):
     latest_result: QueryResultRevision | None = None
 
 
+class QueryJobListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[QueryJobSnapshot]
+    count: int = Field(ge=0)
+
+
 __all__ = [
     "ANALYST_QUERY_ADAPTER",
     "AnalystQueryKind",
@@ -248,6 +254,7 @@ __all__ = [
     "QueryResultRevision",
     "QueryJobCommand",
     "QueryJobEventKind",
+    "QueryJobListResponse",
     "QueryJobSnapshot",
     "QueryJobStatus",
     "RecordQueryResultRequest",

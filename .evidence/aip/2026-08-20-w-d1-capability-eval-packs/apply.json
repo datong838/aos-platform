@@ -1,0 +1,288 @@
+{
+  "approvalRef": "90-W-D1-EVALPACK",
+  "canarySuiteCount": 0,
+  "items": [
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.material.collect.r2",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "material.collect",
+      "contentHash": "c2d7f9027138378ac75f743d28e4e46d4694137f4415d3668614a718eba2c350",
+      "evalPackRef": {
+        "assetId": "ecommerce.shared.evalpack.material.collect",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "56f84f774d3ea4098a05846c99b07dff94bd9cb17285a0be6f4a6583e1d8e4f5",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.strategy.plan.r3",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "strategy.plan",
+      "contentHash": "0e77929899372fedd8dde44f0c1154e445d393ad1105eb840484339a35c076b8",
+      "evalPackRef": {
+        "assetId": "ecommerce.shared.evalpack.strategy.plan",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "185eb74636052f0d4319226ba54c071abb559eafb1c1d98325635f7606b3c2a0",
+        "revision": 1
+      },
+      "readiness": "available",
+      "readinessReasons": [],
+      "revision": 3
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.copy.generate.r2",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "copy.generate",
+      "contentHash": "0b8e6a94a772ed3cc4b410c2b0850b1432f47398e666164fcea495f949db0023",
+      "evalPackRef": {
+        "assetId": "ecommerce.shared.evalpack.copy.generate",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "d7ee87b9d26c15159c6f20ef7950e479d460b85bf3f981236e0d7525a78895db",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.script.compose.r2",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "script.compose",
+      "contentHash": "e0405aa35fb5d414177a33c8a7f88fbfd116ac4d76303975fc81e21229d0a493",
+      "evalPackRef": {
+        "assetId": "ecommerce.shared.evalpack.script.compose",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "a88ede61db16e86610b5c0079936c2e9e4a345318579cb3c747cb09bac87517e",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.speech.synthesize.r2",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "speech.synthesize",
+      "contentHash": "8032cbf081748b04fd71df7618d5b79ab495e3e7201f1bcc9901f4e5ebedc069",
+      "evalPackRef": {
+        "assetId": "ecommerce.shared.evalpack.speech.synthesize",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "865a13aa1af37102dc308e36c2ba94d05e96c59698aa3dad7953a660b99f7c16",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.video.compose.r2",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "video.compose",
+      "contentHash": "bbfc3bad7e416c8919b90f477ebf657ee8ce4f6a725eacb38931e708cead2d98",
+      "evalPackRef": {
+        "assetId": "ecommerce.shared.evalpack.video.compose",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "c52229cdd32be1a85cd984dd0e62a4013e24c2b3cd33d3ddd545395a1df9da6a",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.content.review.r2",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "content.review",
+      "contentHash": "8392986173b7b244d180110c922b32806bdc41e7cf5ae0e7a0ccb00df7d15d8f",
+      "evalPackRef": {
+        "assetId": "ecommerce.shared.evalpack.content.review",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "967c1ac42bd261f7f0294167b72de13d577c4e021955da62ed2f27aa61851ebd",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.live.orchestrate.r2",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "live.orchestrate",
+      "contentHash": "bc220566c2e9e98313bca56b08891ad3d407949c13e6506de9e3ee549320bd10",
+      "evalPackRef": {
+        "assetId": "ecommerce.shared.evalpack.live.orchestrate",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "87f7a6afa3e2e7881090d834dae6c16b325008b243c5e9cad9af9918fa167b70",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.platform.adapt.r2",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "platform.adapt",
+      "contentHash": "0d123e54acfc4c8e0d326f13e49d6b0783ca1a52f85b8c3540307ce03d1fceb3",
+      "evalPackRef": {
+        "assetId": "ecommerce.shared.evalpack.platform.adapt",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "98676a5f0d706a48e9e9345988821bea9ac0c28043471b5caeb32cb1c36c1e68",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "binding": {
+        "activated": false,
+        "bindingId": "ecommerce.shared.performance.review.r2",
+        "disposition": "created",
+        "operationalReadiness": "blocked",
+        "operationalReasons": [
+          "MODEL_ROUTE_BLOCKED",
+          "PROVIDER_HEALTH_UNAVAILABLE"
+        ],
+        "status": "provisioning"
+      },
+      "capabilityId": "performance.review",
+      "contentHash": "1191318dd5b9fb951e8b22de70669ee525a246536d17341e6f3e0e199d7f34e0",
+      "evalPackRef": {
+        "assetId": "ecommerce.shared.evalpack.performance.review",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "62ab6dc05806278617666c040c8cb1cc2ea4ebe1381c4774ac7894422a47284d",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "w0b_contracts_unavailable",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    }
+  ],
+  "mode": "apply",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "wave": "W-D1"
+}

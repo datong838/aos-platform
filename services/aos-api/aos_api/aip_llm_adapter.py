@@ -17,6 +17,10 @@ from aos_api.aip_provider_usage_bridge import AipProviderUsageBridge
 class LLMRuntimeBlocked(RuntimeError):
     """The exact model runtime or provider invocation is not safe to execute."""
 
+    def __init__(self, code: str) -> None:
+        self.code = str(code)
+        super().__init__(self.code)
+
 
 class LLMAdapter:
     def __init__(self, *, resolver: AipModelRuntimeResolver | None = None, provider_invoker: Any | None = None, usage_bridge: AipProviderUsageBridge | None = None) -> None:

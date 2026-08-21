@@ -1,0 +1,34 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "wave": "AIP-POST-R2-AD-DUAL-TRACK",
+  "recordedAt": "2026-08-19T00:30:00+08:00",
+  "status": "AIP_POST_R2_AD_PLAN_AND_CONTRACT_GREEN",
+  "tracks": {
+    "A": {
+      "roadmap": "46 §8.65",
+      "contractTest": "tests/aip/test_aip_catalog_skill_logic_revision_ref_contract.py",
+      "pytest": "2 passed",
+      "providerBusinessCalls": 0
+    },
+    "D": {
+      "scheme": "46 §8.66",
+      "activationExecuted": false,
+      "order": [
+        "ecommerce.content_officer",
+        "ecommerce.shopping_advisor",
+        "ecommerce.customer_service",
+        "ecommerce.private_domain_manager",
+        "ecommerce.campaign_planner"
+      ]
+    }
+  },
+  "parallel": {
+    "w2ParserWatcher": true,
+    "aipDoesNotEditWorkshop": true
+  },
+  "productGatesStillClosed": [
+    "activate remaining five colleagues",
+    "image/video AIP authority"
+  ],
+  "secretPayloadReads": 0
+}

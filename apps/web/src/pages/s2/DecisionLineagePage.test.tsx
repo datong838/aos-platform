@@ -56,6 +56,8 @@ describe("DecisionLineagePage authority interaction", () => {
     expect(evidenceMocks.lineage).toHaveBeenCalledWith("task_run", "run-1");
     expect(host.querySelector("[data-testid='lineage-empty']")).not.toBeNull();
     expect(host.querySelector("[data-testid='lineage-authority-timeline']")).toBeNull();
+    expect(host.querySelector("[data-testid='lineage-observability-blocked']")).not.toBeNull();
+    expect(host.querySelector("[data-testid='lineage-jump-observability']")).toBeNull();
   });
 
   it("权威事件按服务端序列展示 source 与质量", async () => {
@@ -76,5 +78,7 @@ describe("DecisionLineagePage authority interaction", () => {
     expect(host.textContent).toContain("#1 input");
     expect(host.textContent).toContain("task_run · run-1");
     expect(host.textContent).toContain("measured");
+    expect(host.querySelector<HTMLAnchorElement>("[data-testid='lineage-jump-observability']")?.getAttribute("href"))
+      .toBe("/aip/observability?lineageId=lin-1&rootType=task_run&rootId=run-1");
   });
 });

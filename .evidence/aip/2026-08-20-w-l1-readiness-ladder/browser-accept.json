@@ -1,0 +1,17 @@
+{
+  "registry": {
+    "hasNotEqual": true,
+    "hasDispatchable": true,
+    "ladderCount": 6,
+    "installNote": 1
+  },
+  "agents": {
+    "hasNotEqual": true,
+    "hasDispatchable": true
+  },
+  "logic": {
+    "summary": 1,
+    "hasNotEqual": true
+  },
+  "ok": true
+}

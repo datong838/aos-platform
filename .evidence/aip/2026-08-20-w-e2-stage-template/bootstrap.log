@@ -1,0 +1,21 @@
+/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/media_set.py:70: UserWarning: Field name "schema" in "MediaSet" shadows an attribute in parent "BaseModel"
+  class MediaSet(BaseModel):
+/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/materialized_access_control.py:130: UserWarning: Field name "schema" in "AgentTool" shadows an attribute in parent "BaseModel"
+  class AgentTool(BaseModel):
+/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/materialized_access_control.py:83: UserWarning: Field name "schema" in "CreateAgentToolRequest" shadows an attribute in parent "BaseModel"
+  class CreateAgentToolRequest(BaseModel):
+/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/aip_logic_dry_run_executor.py:45: UserWarning: Field name "schema" in "_InputConfig" shadows an attribute in parent "_Config"
+  class _InputConfig(_Config):
+/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/phase5_pipeline_engine.py:126: UserWarning: Field name "schema" in "Dataset" shadows an attribute in parent "BaseModel"
+  class Dataset(BaseModel):
+/Users/ddt/work/projects/ai_agent/aos-platform-w1-aip/services/aos-api/aos_api/routers/phase5_datasets.py:31: UserWarning: Field name "schema" in "CreateDatasetRequest" shadows an attribute in parent "BaseModel"
+  class CreateDatasetRequest(BaseModel):
+{"ts": "2026-08-19T21:16:13.898227+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "createdTemplateId": "stage-template-d4d555e8280640d88f2a",
+  "lifecycle": "draft",
+  "readiness": "ready",
+  "listCount": 1,
+  "sourceHash": "f34d764b2fbd2d5e7278a96edb9926c35024253c37d3a6d89cc05a9752eabf3e"
+}
+{"ts": "2026-08-19T21:16:13.961197+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

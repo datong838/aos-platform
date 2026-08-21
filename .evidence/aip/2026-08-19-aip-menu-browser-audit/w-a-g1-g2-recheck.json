@@ -1,0 +1,13 @@
+{
+  "assist": {
+    "ctaAgents": 1,
+    "sendDisabled": true,
+    "noSubject": true
+  },
+  "studio": {
+    "href": "/aip/agent-registry",
+    "installCta": true,
+    "six": 6
+  },
+  "recordedAt": "2026-08-19T06:32:25.420Z"
+}

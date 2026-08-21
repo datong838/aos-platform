@@ -1,0 +1,202 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "wave": "AIP-READONLY-REMAINING-COLLEAGUES-MATRIX",
+  "recordedAt": "2026-08-19T00:47:46+08:00",
+  "status": "READONLY_MATRIX_GREEN",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "mode": "catalog_only_no_health_refresh_no_provider",
+  "catalogStats": {
+    "definitionCount": 6,
+    "installedCount": 6,
+    "runnableCount": 0,
+    "skillDefinitionCount": 37,
+    "capabilityDefinitionCount": 10
+  },
+  "bindingCounts": {
+    "skillBindings": 3,
+    "capabilityBindings": 1,
+    "activeSkillBindings": 3,
+    "activeCapabilityBindings": 1
+  },
+  "healthObservation": {
+    "observationId": "health-agnes-text-qyh-r2-20260818141257094299",
+    "status": "healthy",
+    "expiresAt": "2026-08-18 14:27:57.094299+00:00",
+    "fresh": false
+  },
+  "colleagues": [
+    {
+      "templateId": "ecommerce.campaign_planner",
+      "displayName": "活动策划师",
+      "instanceStatus": "provisioning",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "agent_instance_not_active",
+        "capability_binding_readiness_stale",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "publishedSkillCount": 0,
+      "skillCount": 6,
+      "logicRevisionRefKeys": 6
+    },
+    {
+      "templateId": "ecommerce.content_officer",
+      "displayName": "内容官",
+      "instanceStatus": "provisioning",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "agent_instance_not_active",
+        "capability_binding_readiness_stale",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "publishedSkillCount": 0,
+      "skillCount": 8,
+      "logicRevisionRefKeys": 8
+    },
+    {
+      "templateId": "ecommerce.customer_service",
+      "displayName": "客服专员",
+      "instanceStatus": "provisioning",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "agent_instance_not_active",
+        "capability_binding_readiness_stale",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "publishedSkillCount": 0,
+      "skillCount": 6,
+      "logicRevisionRefKeys": 6
+    },
+    {
+      "templateId": "ecommerce.data_advisor",
+      "displayName": "数据参谋",
+      "instanceStatus": "active",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "capability_binding_readiness_stale",
+        "skill_binding_readiness_stale"
+      ],
+      "publishedSkillCount": 1,
+      "skillCount": 6,
+      "logicRevisionRefKeys": 6
+    },
+    {
+      "templateId": "ecommerce.private_domain_manager",
+      "displayName": "私域管家",
+      "instanceStatus": "provisioning",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "agent_instance_not_active",
+        "capability_binding_readiness_stale",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "publishedSkillCount": 0,
+      "skillCount": 5,
+      "logicRevisionRefKeys": 5
+    },
+    {
+      "templateId": "ecommerce.shopping_advisor",
+      "displayName": "导购顾问",
+      "instanceStatus": "provisioning",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "agent_instance_not_active",
+        "capability_binding_readiness_stale",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "publishedSkillCount": 0,
+      "skillCount": 6,
+      "logicRevisionRefKeys": 6
+    }
+  ],
+  "remainingBlocked": [
+    {
+      "templateId": "ecommerce.campaign_planner",
+      "displayName": "活动策划师",
+      "instanceStatus": "provisioning",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "agent_instance_not_active",
+        "capability_binding_readiness_stale",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "publishedSkillCount": 0,
+      "skillCount": 6,
+      "logicRevisionRefKeys": 6
+    },
+    {
+      "templateId": "ecommerce.content_officer",
+      "displayName": "内容官",
+      "instanceStatus": "provisioning",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "agent_instance_not_active",
+        "capability_binding_readiness_stale",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "publishedSkillCount": 0,
+      "skillCount": 8,
+      "logicRevisionRefKeys": 8
+    },
+    {
+      "templateId": "ecommerce.customer_service",
+      "displayName": "客服专员",
+      "instanceStatus": "provisioning",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "agent_instance_not_active",
+        "capability_binding_readiness_stale",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "publishedSkillCount": 0,
+      "skillCount": 6,
+      "logicRevisionRefKeys": 6
+    },
+    {
+      "templateId": "ecommerce.private_domain_manager",
+      "displayName": "私域管家",
+      "instanceStatus": "provisioning",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "agent_instance_not_active",
+        "capability_binding_readiness_stale",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "publishedSkillCount": 0,
+      "skillCount": 5,
+      "logicRevisionRefKeys": 5
+    },
+    {
+      "templateId": "ecommerce.shopping_advisor",
+      "displayName": "导购顾问",
+      "instanceStatus": "provisioning",
+      "runtimeReadiness": "blocked",
+      "blockers": [
+        "agent_instance_not_active",
+        "capability_binding_readiness_stale",
+        "skill_binding_unavailable",
+        "skill_templates_not_published"
+      ],
+      "publishedSkillCount": 0,
+      "skillCount": 6,
+      "logicRevisionRefKeys": 6
+    }
+  ],
+  "activationSchemeRef": "46 §8.66",
+  "canaryAgentRuns": 0,
+  "providerBusinessCalls": 0,
+  "healthProbes": 0,
+  "secretPayloadReads": 0
+}

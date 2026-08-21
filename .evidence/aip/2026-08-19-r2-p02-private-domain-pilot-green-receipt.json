@@ -1,0 +1,30 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevisionBefore": "AOS-000137",
+  "recordedAt": "2026-08-19T01:56:00+08:00",
+  "scope": {"orgId": "org-org", "projectId": "dev-project", "negativeCanary": "dev-org/dev-project"},
+  "wave": "R2-P02",
+  "approvalRef": "46-§8.73-private-domain / §8.66 serial text",
+  "assets": {
+    "skill": {"assetId": "ecommerce.skill.P02", "revision": 2, "contentHash": "d4c00a0145245e8fd6c00adf349115fcf4bbe14f5b48cf544e20dd59b3979e8f"},
+    "logic": {"assetId": "ecommerce.logic.P02", "revision": 1, "contentHash": "24b2d41a1df27c7f6ac306b6954dceb4345e21b0aaedc43a6e349cdf9fc52b0a"},
+    "instance": {"assetId": "ecommerce.private_domain_manager.default", "status": "active"},
+    "binding": {"assetId": "ecommerce.private_domain_manager.skill.P02.r2", "status": "active"},
+    "capabilityBinding": {"assetId": "ecommerce.data_advisor.strategy.plan.r2", "reused": true}
+  },
+  "execution": {
+    "agentRunId": "ecommerce.private_domain_manager.P02.real-pilot.v1",
+    "attemptId": "ecommerce.private_domain_manager.P02.real-pilot.v1.attempt-1",
+    "agentRunStatus": "succeeded",
+    "attemptStatus": "succeeded",
+    "taskRunId": "run-eeb7d9a129cb429e816b",
+    "providerBusinessCalls": 1,
+    "automaticRetries": 0,
+    "usageReceiptCount": 2,
+    "lineageEventCount": 3,
+    "outputContentHash": "bb6989f8005b37464a656ec51ff0a936a77dd5ae85cf99ee269be225fb2f7804",
+    "canaryAgentRuns": 0
+  },
+  "result": "R2_P02_PRIVATE_DOMAIN_PILOT_GREEN",
+  "immutable": true
+}

@@ -65,6 +65,15 @@ export type UsageReceipt = {
   observedAt: string;
 };
 
+export type AuthorityEvidenceChain = {
+  rootType: LineageRootType;
+  rootId: string;
+  lineageId: string | null;
+  events: LineageEvent[];
+  spans: TelemetrySpan[];
+  usageReceipts: UsageReceipt[];
+};
+
 export type AssetRevisionRef = {
   assetType: string;
   assetId: string;

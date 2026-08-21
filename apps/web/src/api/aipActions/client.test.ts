@@ -5,7 +5,7 @@ import { AipActionsSdk } from "./client";
 import type { ActionProposal } from "./contracts";
 
 const hash = "a".repeat(64);
-const proposal: ActionProposal = { id: "proposal-1", actionType: { actionTypeId: "send_notice", revisionHash: hash, objectType: "Order" }, taskId: null, runId: null, objectRef: null, purpose: "发送通知", riskLevel: "R2", payload: {}, proposalHash: hash, status: "drafted", expiresAt: "2026-08-12T00:00:00Z", version: 1, createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-08-11T00:00:00Z", updatedAt: "2026-08-11T00:00:00Z" };
+const proposal: ActionProposal = { id: "proposal-1", actionType: { actionTypeId: "send_notice", revisionHash: hash, objectType: "Order" }, taskId: null, runId: null, objectRef: null, impactPreviewRef: { resourceType: "ImpactPreviewRevision", resourceId: "preview-1", revision: 2, contentHash: hash }, purpose: "发送通知", riskLevel: "R2", payload: {}, proposalHash: hash, status: "drafted", expiresAt: "2026-08-12T00:00:00Z", version: 1, createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-08-11T00:00:00Z", updatedAt: "2026-08-11T00:00:00Z" };
 const bundle = { proposal, draft: { id: "draft-1", proposalId: "proposal-1", proposalVersion: 1, proposalHash: hash, diff: {}, evidenceRefs: [], status: "awaiting_approval", createdAt: "2026-08-11T00:00:00Z" }, approvals: [] };
 
 describe("AipActionsSdk", () => {
@@ -15,6 +15,7 @@ describe("AipActionsSdk", () => {
       .mockResolvedValueOnce({ ...bundle, proposal: { ...proposal, status: "approved", version: 2 } });
     const sdk = new AipActionsSdk({ request } as unknown as AipClient);
     const listed = await sdk.list(100);
+    expect(listed.items[0].proposal.impactPreviewRef).toEqual({ resourceType: "ImpactPreviewRevision", resourceId: "preview-1", revision: 2, contentHash: hash });
     await sdk.decide(listed.items[0], "approved", "通过");
     expect(request).toHaveBeenNthCalledWith(1, "listActionProposals", { params: { limit: "100" } });
     expect(request).toHaveBeenNthCalledWith(2, "decideActionProposal", expect.objectContaining({
@@ -22,6 +23,15 @@ describe("AipActionsSdk", () => {
       headers: { "Idempotency-Key": expect.stringMatching(/^action-approved-/) },
       body: expect.objectContaining({ expectedProposalVersion: 1, expectedProposalHash: hash, decision: "approved" }),
     }));
+  });
+
+  it("拒绝 ActionProposal 中漂移的 ImpactPreview exact ref", async () => {
+    const request = vi.fn().mockResolvedValue({
+      items: [{ ...bundle, proposal: { ...proposal, impactPreviewRef: { resourceType: "ImpactPreviewRevision", resourceId: "preview-1", revision: 2, contentHash: "bad" } } }],
+      count: 1,
+    });
+    const sdk = new AipActionsSdk({ request } as unknown as AipClient);
+    await expect(sdk.list()).rejects.toThrow("contentHash 不是 sha256");
   });
 
   it("没有 Lease 时禁止执行，不发送请求", async () => {

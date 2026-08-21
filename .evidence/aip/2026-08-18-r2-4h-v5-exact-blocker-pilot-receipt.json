@@ -1,0 +1,69 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000101",
+  "recordedAt": "2026-08-18T14:34:30+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4H-v5",
+  "approvalRef": "46-R2-4H-V5-SINGLE-PROVIDER-CALL-APPROVED",
+  "leaseRef": "AIP-R2-4H-V5-SINGLE-PROVIDER-CALL",
+  "commits": {
+    "w1-aip": "ed0a11e"
+  },
+  "startGate": {
+    "schemaHead": "aip10_006",
+    "providerHealthObservationId": "health-agnes-text-qyh-r2-20260818063248564174",
+    "providerHealthProbeCount": 3,
+    "providerHealthStatus": "healthy",
+    "negativeCanaryBefore": {
+      "task": 0,
+      "taskRun": 0,
+      "agentRun": 0,
+      "attempt": 0
+    }
+  },
+  "execution": {
+    "providerBusinessCallLimit": 1,
+    "providerBusinessCalls": 1,
+    "automaticRetries": 0,
+    "taskId": "task-260def23fc804bd791a1",
+    "taskStatus": "executing",
+    "taskRunId": "run-0837cf799f284d618a90",
+    "taskRunStatus": "running",
+    "agentRunId": "ecommerce.data_advisor.D03.real-pilot.v5",
+    "agentRunStatus": "unknown",
+    "attemptId": "ecommerce.data_advisor.D03.real-pilot.v5.attempt-1",
+    "attemptStatus": "unknown",
+    "reasonCode": "PROVIDER_PLUGIN_CAPABILITY_BLOCKED"
+  },
+  "readback": {
+    "providerReceiptIdPresent": false,
+    "usageReceiptCount": 0,
+    "outputArtifactPresent": false,
+    "capacityStatus": "released",
+    "negativeCanaryAfter": {
+      "task": 0,
+      "taskRun": 0,
+      "agentRun": 0,
+      "attempt": 0
+    },
+    "secretPayloadReads": 0,
+    "sensitiveBodiesPersisted": 0,
+    "externalBusinessActions": 0
+  },
+  "diagnosis": {
+    "rootCauseStatus": "PROVEN",
+    "exactReasonCode": "PROVIDER_PLUGIN_CAPABILITY_BLOCKED",
+    "provenMismatch": {
+      "pluginApprovedCapabilities": ["llm", "chat"],
+      "modelCapabilities": ["llm", "chat", "structured_output"],
+      "modelMinusPlugin": ["structured_output"]
+    },
+    "note": "Health probes do not enforce ExactProviderInvoker plugin capability subset; business path does. No Provider HTTP call body was required for this proof because the blocker fires before transport."
+  },
+  "result": "OPERATIONAL_EXACT_BLOCKER",
+  "nextGate": "R2_4I_PLUGIN_STRUCTURED_OUTPUT_CAPABILITY_AUTHORITY_ALIGN"
+}

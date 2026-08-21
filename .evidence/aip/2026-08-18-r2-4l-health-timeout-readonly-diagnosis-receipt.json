@@ -1,0 +1,37 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevision": "AOS-000105",
+  "recordedAt": "2026-08-18T16:18:00+08:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "wave": "R2-4L",
+  "approvalRef": "46-R2-4L-HEALTH-TIMEOUT-READONLY-DIAGNOSIS",
+  "leaseRef": "AIP-R2-4L-HEALTH-TIMEOUT-READONLY-DIAGNOSIS",
+  "execution": {
+    "providerBusinessCalls": 0,
+    "healthProbes": 0,
+    "codeChanges": 0
+  },
+  "diagnosis": {
+    "rootCauseStatus": "BOUNDED",
+    "exactReasonCode": "PROVIDER_TIMEOUT",
+    "timeoutBudgetMs": 60000,
+    "providerR4TimeoutMs": 60000,
+    "lastHealthyP50MsRange": [4193, 12083],
+    "lastHealthyProviderRevision": 3,
+    "providerR4HealthObservationWritten": false,
+    "r2_4jCompletedProbes": 2,
+    "r2_4kCompletedProbes": 0,
+    "pluginCapabilityBlockerRuledOut": true,
+    "authorityChainOnHealthPath": "PROVEN_BY_TWO_COMPLETED_R4_PROBES",
+    "threeOfThreeFailClosed": true,
+    "doNotRaiseTimeout": true,
+    "doNotAcceptTwoOfThree": true,
+    "note": "Timeout is transport-layer jitter after a working r4 plugin/secret/URL path. Immediate retry in R2-4K made it worse. Next window is one isolated triple-probe, then at most one v6 business call."
+  },
+  "result": "R2_4L_HEALTH_TIMEOUT_READONLY_DIAGNOSIS_GREEN",
+  "nextGate": "R2_4M_PROVIDER_R4_HEALTH_THEN_V6"
+}

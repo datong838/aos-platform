@@ -1,0 +1,36 @@
+{
+  "schema": "aos-aip-operational-evidence/v1",
+  "authorityRevisionBefore": "AOS-000137",
+  "recordedAt": "2026-08-19T01:56:00+08:00",
+  "scope": {"orgId": "org-org", "projectId": "dev-project", "negativeCanary": "dev-org/dev-project"},
+  "wave": "R2-A02",
+  "approvalRef": "46-§8.74-campaign-planner / §8.66 serial text close",
+  "assets": {
+    "skill": {"assetId": "ecommerce.skill.A02", "revision": 2, "contentHash": "e24302bcfc3e9001394abc2315d392663e31ff51562c2dc08120a1fd0050fb51"},
+    "logic": {"assetId": "ecommerce.logic.A02", "revision": 1, "contentHash": "6a67d23a11ab58f8cd7e7071b8cf76fc5e2a6138326c037eafe4b6c6d5016999"},
+    "instance": {"assetId": "ecommerce.campaign_planner.default", "status": "active"},
+    "binding": {"assetId": "ecommerce.campaign_planner.skill.A02.r2", "status": "active"},
+    "capabilityBinding": {"assetId": "ecommerce.data_advisor.strategy.plan.r2", "reused": true}
+  },
+  "execution": {
+    "agentRunId": "ecommerce.campaign_planner.A02.real-pilot.v1",
+    "attemptId": "ecommerce.campaign_planner.A02.real-pilot.v1.attempt-1",
+    "agentRunStatus": "succeeded",
+    "attemptStatus": "succeeded",
+    "taskRunId": "run-1f7d8081ebae47be988a",
+    "providerBusinessCalls": 1,
+    "automaticRetries": 0,
+    "usageReceiptCount": 2,
+    "lineageEventCount": 3,
+    "outputContentHash": "9e5b87312d5f204e5619e89f965e31597f6799108fbdcaf61d5d19a67c36fa15",
+    "canaryAgentRuns": 0
+  },
+  "catalog": {
+    "runnableCount": 6,
+    "note": "inspect_r2_5_catalog_matrix --refresh-readiness now re-evaluates all six SkillBindings"
+  },
+  "result": "R2_A02_CAMPAIGN_PLANNER_PILOT_GREEN",
+  "immutable": true,
+  "textSixColleagueClose": true,
+  "nextGate": "AIP_WAITING_IMAGE_VIDEO_OR_W2"
+}
