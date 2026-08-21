@@ -83,8 +83,20 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2499
-    assert len(schema.get("components", {}).get("schemas", {})) == 1867
+    assert len(schema["paths"]) == 2530
+    assert len(schema.get("components", {}).get("schemas", {})) == 1924
+
+
+def test_source_readiness_contract_is_principal_scoped_and_read_only() -> None:
+    schema = json.loads(OPENAPI_PATH.read_bytes())
+    operation = schema["paths"]["/v1/data/source-readiness"]["get"]
+    assert operation["operationId"] == "dataSourceReadinessGet"
+    assert operation["security"] == [{"HTTPBearer": []}]
+    assert all(item["in"] != "query" for item in operation.get("parameters", []))
+    response_ref = operation["responses"]["200"]["content"]["application/json"][
+        "schema"
+    ]["$ref"]
+    assert response_ref.endswith("/SourceReadinessEnvelope")
 
 
 def test_inventory_preserves_route_rows_and_known_duplicates() -> None:

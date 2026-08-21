@@ -536,6 +536,7 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.routers.phase6_syncs', 'router'),
         ('aos_api.routers.phase6_media_sets', 'router'),
         ('aos_api.routers.phase6_documents', 'router'),
+        ('aos_api.routers.source_readiness', 'router'),
     ),
     "model": (
         ('aos_api.routers.gantt_ml_drag_pricing', 'router'),

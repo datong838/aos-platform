@@ -3204,6 +3204,12 @@
       "module": "aos_api.routers.aip_handoffs",
       "attribute": "router",
       "order": 533
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.source_readiness",
+      "attribute": "router",
+      "order": 534
     }
   ]
 }
