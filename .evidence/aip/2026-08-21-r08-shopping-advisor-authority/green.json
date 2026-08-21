@@ -1,0 +1,79 @@
+{
+  "status": "GREEN",
+  "wave": "R08_SHOPPING_ADVISOR_G01_G06",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanaryOrgId": "dev-org",
+    "negativeCanaryProjectId": "dev-project"
+  },
+  "authority": {
+    "logic": {
+      "G01": "d927c437b3039b2a75bb39d0ee15a2d06999c19529b66017a12cf98f784c2f4f",
+      "G02": "be4dddf3c11e0a28b1878e962a666e658b39403764b00ee116fed8baff9918aa",
+      "G03": "19aec99e089ec0de2a1bfc423c6089c8310e23a922672279ce7d2e8c503b8d00",
+      "G04": "d1e548b4006e77e9ac61d818ac4a1e352ff192561cecca73a2eb6e2088afbfdb",
+      "G05": "d2c03fb0d2fc6e6f3ed6d6a417ceaa1b3982dba050bd5c64389bbbcd1408a7fd",
+      "G06": "9f1482355dbad634228c75fbb9724c4fbba9d88991d633415af5e74f7318cfa6"
+    },
+    "skill": {
+      "G01": "3670813668e37a5bd578c584522ac33febd88cf00af0b0194e794e6df9844c5e",
+      "G02": "c6992bdc57c5e3f1db5bbf8484707b7869d19d782cf0214e35eff47aa3423856",
+      "G03": "af3013fef8941d3d87d77b80e6ac95d77b53821aa20dd3774fb5c37e58d7cd95",
+      "G04": "5d813b08e06936638a0bdb186dc4340ad801ef727b3f98e2c5c9bbba5038ecd6",
+      "G05": "e0f4fd20417371f3655fce6d876e8351b2959dd39cd4e88f0f6e523aeff5402b",
+      "G06": "374955bd5630685c4ff54afd9d3606009c453051cf6c24b6ac564a956b633b23"
+    },
+    "publishedSkillCount": 6,
+    "activeSkillBindingCount": 6,
+    "agentInstanceStatus": "active",
+    "runtimeReadinessAtBrowserCutoff": "runnable",
+    "runtimeBlockersAtBrowserCutoff": []
+  },
+  "health": {
+    "observationId": "health-agnes-text-qyh-r2-20260821052056435534",
+    "samples": "3/3",
+    "status": "healthy",
+    "observedAt": "2026-08-21T05:20:56.435534Z",
+    "expiresAt": "2026-08-21T05:35:56.435534Z",
+    "p50LatencyMs": 514,
+    "browserCutoff": "2026-08-21T05:25:32Z",
+    "freshAtBrowserCutoff": true,
+    "secretPayloadReads": 0
+  },
+  "safety": {
+    "agentRunsCreated": 0,
+    "providerBusinessCalls": 0,
+    "recommendationDeliveries": 0,
+    "productionActions": 0,
+    "negativeCanaryRows": 0,
+    "g04AuthorityPreserved": true,
+    "draftOnly": true
+  },
+  "verification": {
+    "targetedRuntimeTests": "10 passed",
+    "cumulativeR06R07R08Tests": "141 passed",
+    "compile": "GREEN",
+    "browser": {
+      "baseUrl": "http://127.0.0.1:5174",
+      "tenant": "栖月汇商贸有限公司 / 默认工作区",
+      "agentRegistry": "6/6 published and active bindings; runnable; no blockers",
+      "expandedSkills": "需求诊断、产品检索与推荐、成分分析、产品对比、异议识别与处理、促单与成交交接",
+      "logicG01": "canonical revision/hash and immutable publication visible",
+      "logicG06": "canonical revision/hash, production bypass closed and automation disabled",
+      "consoleErrors": 0
+    }
+  },
+  "commits": [
+    "6ff7348",
+    "d958179",
+    "fa82a7f",
+    "420ebc9",
+    "1a0b244"
+  ],
+  "externalOwners": {
+    "p08AndDepAdpQuery": "GREEN and closed",
+    "sourceReadinessAndSameCutoffEvidencePack": "Data/Adapter owner",
+    "workshopB5M1Cas": "m1 serialized integration owner"
+  }
+}
