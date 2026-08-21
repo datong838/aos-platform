@@ -92,7 +92,7 @@ def build_plan() -> dict[str, object]:
         "providerCalls": 0,
         "agentRuns": 0,
         "productionWrites": 0,
-        "customerContacts": 0,
+        "recommendationDeliveries": 0,
         "forbiddenSideEffects": [
             "Secret payload read",
             "Provider call",
@@ -370,7 +370,7 @@ def apply() -> dict[str, Any]:
     if after_canary != before_canary:
         raise RuntimeError("R08 authority leaked into the negative tenant canary")
     return {
-        "status": "R08_PRIVATE_DOMAIN_LOGIC_AUTHORITY_GREEN",
+        "status": "R08_SHOPPING_ADVISOR_LOGIC_AUTHORITY_GREEN",
         "scope": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
         "model": {
             "assetId": model.registered_model_id,
@@ -383,7 +383,7 @@ def apply() -> dict[str, Any]:
         "providerCalls": 0,
         "agentRuns": 0,
         "productionWrites": 0,
-        "customerContacts": 0,
+        "recommendationDeliveries": 0,
     }
 
 
@@ -402,4 +402,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
