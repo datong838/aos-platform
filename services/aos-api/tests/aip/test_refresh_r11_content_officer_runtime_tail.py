@@ -20,6 +20,7 @@ def test_plan_is_exact_and_has_no_provider_or_agent_side_effect() -> None:
     plan = module.build_plan()
     assert plan["scope"] == {"orgId": "org-org", "projectId": "dev-project"}
     assert plan["capabilityBindings"] == [
+        "ecommerce.data_advisor.strategy.plan.r2",
         "ecommerce.shared.material.collect.r1",
         "ecommerce.shared.copy.generate.r1",
         "ecommerce.shared.script.compose.r1",

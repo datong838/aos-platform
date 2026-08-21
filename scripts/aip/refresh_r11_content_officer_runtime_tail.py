@@ -18,6 +18,7 @@ SCOPE = _base.SCOPE
 CANARY_SCOPE = _base.CANARY_SCOPE
 ACTOR = "aip-r11-content-officer-runtime-tail-refresh"
 CAPABILITY_BINDING_IDS = (
+    "ecommerce.data_advisor.strategy.plan.r2",
     "ecommerce.shared.material.collect.r1",
     "ecommerce.shared.copy.generate.r1",
     "ecommerce.shared.script.compose.r1",
