@@ -101,10 +101,14 @@ class AipSolutionPackPublisher:
         policy_path = root / "content/policies/aip6-runtime-policies.json"
         schema_document = self._json(schema_path)
         policy_document = self._json(policy_path)
+        analyst_templates = self._json(
+            root / "content/workshops/ecommerce-analyst-query-templates.json"
+        )
         agents = self._list(agent_document, "agents")
         logics = self._list(logic_document, "logics")
         capabilities = self._list(capability_document, "capabilities")
         self._validate(agents, logics, capabilities, manifest)
+        self._validate_analyst_templates(analyst_templates, agents)
         schema_names = schema_document.get("schemas")
         if (
             not isinstance(schema_names, list)
@@ -317,6 +321,41 @@ class AipSolutionPackPublisher:
         provided = manifest.get("spec", {}).get("capabilities", {}).get("provides")
         if tuple(provided or ()) != CAPABILITY_IDS:
             raise AipSolutionPackInvalid("bundle capability provides list drifted")
+
+    @staticmethod
+    def _validate_analyst_templates(
+        document: dict[str, Any], agents: list[dict[str, Any]]
+    ) -> None:
+        if set(document) != {"schemaVersion", "bundleRef", "templates"}:
+            raise AipSolutionPackInvalid("analyst template document fields drifted")
+        if document.get("schemaVersion") != 1:
+            raise AipSolutionPackInvalid("analyst template schema is unsupported")
+        if document.get("bundleRef") != (
+            f"bundle://aos/{SOLUTION_PACK_ID}@{SOLUTION_PACK_VERSION}"
+        ):
+            raise AipSolutionPackInvalid("analyst template bundle reference drifted")
+        templates = document.get("templates")
+        if not isinstance(templates, list) or len(templates) != 6:
+            raise AipSolutionPackInvalid("exactly six analyst role templates are required")
+        if any(not isinstance(item, dict) for item in templates):
+            raise AipSolutionPackInvalid("analyst template must be an object")
+        agent_logic = {item["id"]: set(item["logicIds"]) for item in agents}
+        roles = [item.get("roleId") for item in templates]
+        ids = [item.get("templateId") for item in templates]
+        if set(roles) != set(agent_logic) or len(set(roles)) != 6:
+            raise AipSolutionPackInvalid("analyst role template crosswalk drifted")
+        if len(set(ids)) != 6:
+            raise AipSolutionPackInvalid("analyst template ids must be unique")
+        for item in templates:
+            if item.get("policy") != "canonical-read-only":
+                raise AipSolutionPackInvalid("analyst template must be read-only")
+            if item.get("queryKind") != "semantic":
+                raise AipSolutionPackInvalid("analyst template query kind is unsupported")
+            if set(item.get("requiredLogicIds") or ()) != agent_logic[item["roleId"]]:
+                raise AipSolutionPackInvalid("analyst template Logic crosswalk drifted")
+            required_types = item.get("requiredObjectTypes") or ()
+            if item.get("defaultObjectType") not in required_types:
+                raise AipSolutionPackInvalid("analyst template default type drifted")
 
     @staticmethod
     def _require_keys(

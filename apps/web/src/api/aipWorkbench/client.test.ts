@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({ apiPost: vi.fn(), apiPostReadOnly: vi.fn(), apiGet: vi.fn() }));
 vi.mock("../client", () => api);
-import { cancelAssistTaskRun, queryAnalyst, streamAssistTurn } from "./client";
+import { cancelAssistTaskRun, listAnalystRoleQueryTemplates, queryAnalyst, streamAssistTurn } from "./client";
 
 afterEach(() => vi.restoreAllMocks());
 const base = { threadId: "thread-1", turnId: "turn-1", occurredAt: "2026-08-16T00:00:00Z", context: null, blocker: null, content: null, proposalRef: null, usageRefs: [], lineageRefs: [] };
@@ -15,6 +15,18 @@ describe("aipWorkbench Assist SSE client", () => {
       .rejects.toMatchObject({ body: { code: "OFFLINE_READ_ONLY" } });
     expect(api.apiPostReadOnly).toHaveBeenCalledWith("/v1/aip/analyst/query", expect.objectContaining({ kind: "semantic", objectType: "Order" }));
     expect(api.apiPost).not.toHaveBeenCalled();
+  });
+
+  it("reads six-role templates through the tenant-scoped GET authority", async () => {
+    const roles = ["data_advisor", "content_officer", "shopping_advisor", "customer_service", "private_domain_manager", "campaign_planner"];
+    api.apiGet.mockResolvedValueOnce({
+      tenant: { orgId: "org-org", projectId: "dev-project" },
+      bundleRef: { resourceType: "SolutionPack", resourceId: "solution.ecommerce.growth", revision: "1.3.0", authority: "asset-registry" },
+      contentHash: "c".repeat(64), count: 6,
+      items: roles.map((role) => ({ templateId: `template.${role}`, revision: 1, roleId: `ecommerce.${role}`, roleName: role, queryKind: "semantic", defaultObjectType: "Order", defaultPrompt: "", requiredObjectTypes: ["Order"], requiredLogicIds: ["D01"], sourceDataTypes: ["order"], purpose: "真实查询", policy: "canonical-read-only", readiness: "ready", blockers: [] })),
+    });
+    await expect(listAnalystRoleQueryTemplates()).resolves.toEqual(expect.objectContaining({ count: 6 }));
+    expect(api.apiGet).toHaveBeenCalledWith("/v1/aip/analyst/query-templates");
   });
 
   it("cancels through canonical TaskRun control with exact CAS and idempotency", async () => {

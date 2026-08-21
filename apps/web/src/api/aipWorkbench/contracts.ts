@@ -49,6 +49,11 @@ export type MetricQuery = {
 
 export type AnalystQuery = SemanticQuery | KnowledgeQuery | MetricQuery;
 export type AnalystStatus = "complete" | "empty" | "degraded" | "partial" | "blocked";
+export type QueryConfidence = {
+  status: "measured" | "not_applicable" | "unknown";
+  score: number | null;
+  basis: string[];
+};
 export type QueryColumn = {
   key: string;
   label: string;
@@ -81,9 +86,35 @@ export type QueryResultRevision = {
   lineageRefs: ResourceRef[];
   blockers: Blocker[];
   uncertainties: string[];
+  confidence: QueryConfidence;
   cutoffAt: string;
   contentHash: string;
   createdAt: string;
+};
+
+export type AnalystRoleQueryTemplate = {
+  templateId: string;
+  revision: number;
+  roleId: string;
+  roleName: string;
+  queryKind: "semantic" | "knowledge" | "metric";
+  defaultObjectType: string | null;
+  defaultPrompt: string;
+  requiredObjectTypes: string[];
+  requiredLogicIds: string[];
+  sourceDataTypes: string[];
+  purpose: string;
+  policy: "canonical-read-only";
+  readiness: "ready" | "blocked";
+  blockers: Blocker[];
+};
+
+export type AnalystRoleQueryTemplateList = {
+  tenant: Tenant;
+  bundleRef: ResourceRef;
+  contentHash: string;
+  items: AnalystRoleQueryTemplate[];
+  count: 6;
 };
 
 export type AssistSubject = {

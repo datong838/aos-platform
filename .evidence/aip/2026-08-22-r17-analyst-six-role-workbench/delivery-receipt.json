@@ -1,0 +1,19 @@
+{
+  "receiptType": "AIP_WAVE_DELIVERY",
+  "wave": "R17",
+  "status": "VERIFIED_GREEN_PENDING_SAFE_COMMIT",
+  "createdAt": "2026-08-22T06:09:45+08:00",
+  "sourceBranch": "w1-aip",
+  "sourceBaseline": "7f9ebf8c08df752ef0dbb4714b193c4d724868e8",
+  "scope": "AIP analyst six-role governed workbench",
+  "tenant": "org-org/dev-project",
+  "negativeCanary": "dev-org/dev-project",
+  "authorityMutation": false,
+  "r17BusinessDataMutation": false,
+  "harnessStartupSideEffectsObserved": true,
+  "harnessShutdownClean": true,
+  "providerSideEffect": false,
+  "workshopWrite": false,
+  "evidence": "verification.json",
+  "nextGate": "R18"
+}

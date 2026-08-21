@@ -29,6 +29,12 @@ class AnalystQueryStatus(StrEnum):
     BLOCKED = "blocked"
 
 
+class QueryConfidenceStatus(StrEnum):
+    MEASURED = "measured"
+    NOT_APPLICABLE = "not_applicable"
+    UNKNOWN = "unknown"
+
+
 class QueryJobStatus(StrEnum):
     QUEUED = "queued"
     RUNNING = "running"
@@ -53,6 +59,55 @@ class QueryBlocker(AipContractModel):
     message: str = Field(min_length=1, max_length=500)
     dependency_ref: ResourceRef | None = None
     retryable: bool = False
+
+
+class QueryConfidence(AipContractModel):
+    status: QueryConfidenceStatus
+    score: float | None = Field(default=None, ge=0.0, le=1.0)
+    basis: list[str] = Field(min_length=1, max_length=32)
+
+    @model_validator(mode="after")
+    def _honest_score(self) -> "QueryConfidence":
+        if self.status is QueryConfidenceStatus.MEASURED and self.score is None:
+            raise ValueError("measured query confidence requires a score")
+        if self.status is not QueryConfidenceStatus.MEASURED and self.score is not None:
+            raise ValueError("unmeasured query confidence must not contain a score")
+        return self
+
+
+class AnalystRoleQueryTemplate(AipContractModel):
+    template_id: str = Field(min_length=1, max_length=240)
+    revision: int = Field(ge=1)
+    role_id: str = Field(min_length=1, max_length=240)
+    role_name: str = Field(min_length=1, max_length=120)
+    query_kind: AnalystQueryKind
+    default_object_type: str | None = Field(default=None, min_length=1, max_length=160)
+    default_prompt: str = Field(default="", max_length=500)
+    required_object_types: list[str] = Field(min_length=1, max_length=32)
+    required_logic_ids: list[str] = Field(min_length=1, max_length=16)
+    source_data_types: list[str] = Field(min_length=1, max_length=32)
+    purpose: str = Field(min_length=1, max_length=500)
+    policy: Literal["canonical-read-only"]
+    readiness: Literal["ready", "blocked"]
+    blockers: list[QueryBlocker] = Field(default_factory=list, max_length=32)
+
+    @model_validator(mode="after")
+    def _honest_readiness(self) -> "AnalystRoleQueryTemplate":
+        if self.readiness == "ready" and self.blockers:
+            raise ValueError("ready query template must not contain blockers")
+        if self.readiness == "blocked" and not self.blockers:
+            raise ValueError("blocked query template requires blockers")
+        if self.query_kind is AnalystQueryKind.SEMANTIC and not self.default_object_type:
+            raise ValueError("semantic query template requires defaultObjectType")
+        return self
+
+
+class AnalystRoleQueryTemplateList(AipContractModel):
+    tenant: TenantContext
+    bundle_ref: ResourceRef
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    items: list[AnalystRoleQueryTemplate] = Field(min_length=6, max_length=6)
+    count: Literal[6]
 
 
 class QuerySourceRef(AipContractModel):
@@ -159,6 +214,12 @@ class QueryResultRevision(AipContractModel):
     lineage_refs: list[ResourceRef] = Field(default_factory=list, max_length=100)
     blockers: list[QueryBlocker] = Field(default_factory=list, max_length=100)
     uncertainties: list[str] = Field(default_factory=list, max_length=100)
+    confidence: QueryConfidence = Field(
+        default_factory=lambda: QueryConfidence(
+            status=QueryConfidenceStatus.UNKNOWN,
+            basis=["legacy_result_without_confidence"],
+        )
+    )
     cutoff_at: datetime
     content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     created_at: datetime
@@ -245,11 +306,15 @@ __all__ = [
     "AnalystQueryKind",
     "AnalystQueryRequest",
     "AnalystQueryStatus",
+    "AnalystRoleQueryTemplate",
+    "AnalystRoleQueryTemplateList",
     "CreateQueryJobRequest",
     "KnowledgeQueryRequest",
     "MetricQueryRequest",
     "QueryBlocker",
     "QueryColumn",
+    "QueryConfidence",
+    "QueryConfidenceStatus",
     "QueryFilter",
     "QueryResultRevision",
     "QueryJobCommand",
