@@ -1,0 +1,70 @@
+{
+  "schema": "aos-workshop-watchdog-evidence/v1",
+  "task_id": "workshop-watchdog-v30-first-real-wake-acceptance-20260821",
+  "authority_revision": "AOS-000146",
+  "baseline_head": "a13d406f2c2c6753fd340f2d6f48db91688ed466",
+  "recorded_at": "2026-08-21T03:48:36.687854+00:00",
+  "episode": {
+    "episode_id": "dependency-fact-1787283725024",
+    "trigger": "dependency-fact-changed",
+    "wake_sequence": 212,
+    "wake_started_at": 1787283737.111565,
+    "visible_stage_before_ack": "waking",
+    "visible_outcome_before_ack": "attempting",
+    "notification_status": "delivered",
+    "delivery_error": null,
+    "visible_status_mode": "0600",
+    "terminal_ack_readback": "PENDING_UNTIL_FINAL_RECOVERY_ACK"
+  },
+  "verification": {
+    "watchdog_cumulative": "60/60 GREEN",
+    "python_compile": "GREEN",
+    "compileall": "GREEN",
+    "diff_check": "GREEN",
+    "watchdog_logic_changed": false,
+    "watchdog_file_hashes": {
+      "scripts/long-task-watchdog/watchdog.py": "sha256:b73794498cbb70f059464c5f4dd516fc11a30e654595f11ca3c339416c6a7c88",
+      "scripts/long-task-watchdog/test_watchdog.py": "sha256:2651fb8bc303ff63b4aa87637a15cff4cef354360f8768114cea13909081c58e",
+      "scripts/long-task-watchdog/README.md": "sha256:6093db0e72d42d0785564a87b38a3bfa95fe10ff0a57a2ee4b2a3d6a3d92e4db"
+    },
+    "launch_agent": {
+      "label": "com.aos.codex-long-task-watchdog-workshop",
+      "run_interval_seconds": 300,
+      "last_exit_code": 0,
+      "state_during_recovery": "running"
+    },
+    "browser": "NOT_APPLICABLE_NO_PAGE_OR_VISUAL_CHANGE",
+    "business_data_writes": 0,
+    "migration_runs": 0,
+    "w1_aip_workspace_reads_or_writes": 0
+  },
+  "dependency_reconciliation": {
+    "m1_head": "5b71a320cfa96b58093f6a3293264219d294c6ce",
+    "authority_delivery_status": "W1_AIP_NEARFIELD_SEALED_AWAITING_W2_BROWSER",
+    "b5_cas_consumed": false,
+    "source_readiness_owner_on_m1": false,
+    "external_active_leases": [],
+    "data_probe_sha256": "sha256:590e1f147f0cedc2bec2954b21f139009d896bdaffb24f8711dcc508fb0ae59c",
+    "data_succeeded": 12,
+    "data_total": 12,
+    "canary": {
+      "sourceCount": 0,
+      "projectionCount": 0
+    },
+    "handoff_receipt": "AIP-WKS-DEP-ADP-OPERATIONAL-HANDOFF-REFRESH.json",
+    "handoff_result": "GREEN_WITH_EXTERNAL_OWNERS",
+    "remaining_blockers": [
+      "BLOCKED_EXTERNAL_DATA_OWNER: SourceReadiness canonical authority and same-cutoff EvidencePack",
+      "BLOCKED_M1_INTEGRATION_OWNER: B5 Receipt CAS consumption"
+    ],
+    "blocker_fingerprint": "sha256:e182c270dec3d0c64e18b74dce7644661864db29a16d780d57dce898694852bc",
+    "w2_00b_outcome": "SAFE_BLOCKED"
+  },
+  "review": {
+    "plan_evidence_consistent": true,
+    "notification_delivery_not_treated_as_desktop_read_confirmation": true,
+    "lease_release_and_data_green_not_treated_as_full_dependency_green": true,
+    "authority_01_06_prime_unchanged": true,
+    "terminal_visible_status_must_be_read_back_after_current_episode_ack": true
+  }
+}
