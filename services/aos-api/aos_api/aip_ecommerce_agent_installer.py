@@ -164,7 +164,7 @@ class AipEcommerceAgentInstaller:
     def _tenant(principal: Principal) -> TenantContext:
         return TenantContext(org_id=principal.org_id, project_id=principal.project_id)
 
-    def _definitions(self):
+    def _definitions(self, principal: Principal):
         templates = self._agents.list_templates(
             source_resource_id=SOLUTION_PACK_ID,
             source_revision=AIP_DEFINITION_SOURCE_VERSION,
@@ -185,8 +185,23 @@ class AipEcommerceAgentInstaller:
             [item for item in templates if item.template_id in AGENT_LOGIC_COUNTS],
             "template_id",
         )
+        # Published Skill revisions are tenant-scoped authority.  Another
+        # tenant may discover the global evaluated definition, but must never
+        # receive a revision carrying a foreign publicationTenant.
+        eligible_skills = [
+            item
+            for item in skills
+            if item.skill_id in expected_skill_ids
+            and (
+                item.publication_tenant is None
+                or (
+                    item.publication_tenant.org_id == principal.org_id
+                    and item.publication_tenant.project_id == principal.project_id
+                )
+            )
+        ]
         latest_skills = self._latest(
-            [item for item in skills if item.skill_id in expected_skill_ids],
+            eligible_skills,
             "skill_id",
         )
         latest_capabilities = self._latest(
@@ -211,7 +226,7 @@ class AipEcommerceAgentInstaller:
         return result
 
     def catalog(self, principal: Principal) -> AgentCatalogResponse:
-        templates, skills, capabilities = self._definitions()
+        templates, skills, capabilities = self._definitions(principal)
         scope = self._scope(principal)
         now = self._clock()
         instances = {item.template.asset_id: item for item in self._agents.list_instances(scope)}
@@ -258,7 +273,7 @@ class AipEcommerceAgentInstaller:
         )
 
     def capability_catalog(self, principal: Principal) -> CapabilityCatalogResponse:
-        _, _, capabilities = self._definitions()
+        _, _, capabilities = self._definitions(principal)
         items = [capabilities[key] for key in sorted(capabilities)]
         return CapabilityCatalogResponse(
             tenant=self._tenant(principal),
@@ -359,7 +374,7 @@ class AipEcommerceAgentInstaller:
         return self.runtime_readiness(principal)
 
     def install(self, principal: Principal, *, idempotency_key: str) -> AgentInstallResponse:
-        templates, _, _ = self._definitions()
+        templates, _, _ = self._definitions(principal)
         scope = self._scope(principal)
         results = []
         for template_id in sorted(templates):

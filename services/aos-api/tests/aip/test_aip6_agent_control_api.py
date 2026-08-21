@@ -188,6 +188,11 @@ def test_canonical_catalog_install_replay_and_tenant_canary(client):
         "agent_instance_not_installed" in item["blockers"]
         for item in canary_readiness.json()["catalog"]["items"]
     )
+    assert all(
+        skill.get("publicationTenant") in (None, {"orgId": "dev-org", "projectId": "dev-project"})
+        for item in canary_readiness.json()["catalog"]["items"]
+        for skill in item["skills"]
+    )
 
     projection = client.get(
         "/v1/aip/operational-projection",
