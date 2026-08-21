@@ -1,0 +1,36 @@
+{
+  "schema": "aos-aip-wave-evidence/v1",
+  "wave": "R06",
+  "tenant": {
+    "organization_id": "org-org",
+    "workspace_id": "dev-project"
+  },
+  "status": "GREEN",
+  "commits": [
+    "eedad17",
+    "4869a13",
+    "377c6d3",
+    "fffeb3d"
+  ],
+  "verification": {
+    "cumulative_tests": "40 passed",
+    "provider_health": "3/3 bounded text probes GREEN at evidence cutoff",
+    "logic_graphs": ["D01", "D02", "D03", "D04", "D05", "D06"],
+    "active_skill_bindings": ["D01", "D02", "D04", "D05", "D06"],
+    "data_advisor_runnable": true,
+    "negative_canary": {
+      "organization_id": "dev-org",
+      "workspace_id": "dev-project",
+      "capability_binding_count": 0,
+      "skill_binding_count": 0,
+      "agent_run_count": 0
+    }
+  },
+  "boundaries": [
+    "NO_MIGRATION",
+    "NO_AGENT_RUN",
+    "NO_PRODUCTION_ACTION",
+    "NO_SECRET_PAYLOAD_READ",
+    "PROVIDER_HEALTH_IS_TIME_BOUNDED"
+  ]
+}
