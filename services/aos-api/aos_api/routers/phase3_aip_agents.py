@@ -33,6 +33,13 @@ from aos_api.aip_agent_registry_store import (
 )
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_ecommerce_agent_installer import AipEcommerceAgentInstaller
+from aos_api.aip_import_preview import preview_import
+from aos_api.aip_marketplace_catalog import AipMarketplaceCatalog
+from aos_api.aip_marketplace_import_contracts import (
+    ImportPreviewRequest,
+    ImportPreviewResponse,
+    MarketplaceCatalogResponse,
+)
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
@@ -43,6 +50,7 @@ _STORE = AipAgentRegistryStore()
 _INSTALLER = AipEcommerceAgentInstaller(agents=_STORE)
 _ACTIVATION = AipAgentInstanceActivationService(store=_STORE)
 _OVERLAY = AipAgentOverlayStore(agents=_STORE)
+_MARKETPLACE = AipMarketplaceCatalog(installer=_INSTALLER)
 
 
 class PromptBody(BaseModel):
@@ -71,6 +79,29 @@ def get_agent_activation_service() -> AipAgentInstanceActivationService:
 
 def get_agent_overlay_store() -> AipAgentOverlayStore:
     return _OVERLAY
+
+
+def get_marketplace_catalog() -> AipMarketplaceCatalog:
+    return _MARKETPLACE
+
+
+@router.get("/marketplace/catalog", response_model=MarketplaceCatalogResponse)
+def list_marketplace_catalog(
+    principal: Principal = Depends(require_principal),
+    catalog: AipMarketplaceCatalog = Depends(get_marketplace_catalog),
+) -> MarketplaceCatalogResponse:
+    try:
+        return catalog.list(principal)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/import-previews", response_model=ImportPreviewResponse)
+def create_import_preview(
+    body: ImportPreviewRequest,
+    principal: Principal = Depends(require_principal),
+) -> ImportPreviewResponse:
+    return preview_import(principal, body)
 
 
 def _scope(principal: Principal) -> TenantScope:
