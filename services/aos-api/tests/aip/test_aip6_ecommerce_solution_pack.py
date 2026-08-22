@@ -50,6 +50,12 @@ def test_ecommerce_solution_pack_contains_exact_w0a_catalog_and_keeps_d3_assets(
     assert not (BUNDLE / "content/agents/placeholder.json").exists()
     assert not (BUNDLE / "content/logic/placeholder.json").exists()
     assert (BUNDLE / "content/workshops/w03-customer-private-domain.json").is_file()
+    templates = load(
+        "content/workshops/ecommerce-analyst-query-templates.json"
+    )["templates"]
+    assert len(templates) == 6
+    assert {item["roleId"] for item in templates} == set(AGENT_LOGIC_COUNTS)
+    assert all(item["policy"] == "canonical-read-only" for item in templates)
     assert (BUNDLE / "content/logic/l05-commission-anomaly.json").is_file()
     assert (BUNDLE / "content/evals/w03-l05-dry-run-cases.json").is_file()
 
@@ -134,3 +140,17 @@ def test_solution_pack_rejects_crosswalk_drift_before_any_publication(tmp_path):
 
     with pytest.raises(AipSolutionPackInvalid, match="unknown capability"):
         AipSolutionPackPublisher().publish(candidate, actor="pytest-invalid")
+
+
+def test_solution_pack_rejects_analyst_template_role_drift(tmp_path):
+    candidate = tmp_path / "ecommerce-growth"
+    shutil.copytree(BUNDLE, candidate)
+    path = candidate / "content/workshops/ecommerce-analyst-query-templates.json"
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["templates"][0]["roleId"] = "ecommerce.unknown"
+    path.write_text(
+        json.dumps(document, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(AipSolutionPackInvalid, match="crosswalk"):
+        AipSolutionPackPublisher().publish(candidate, actor="pytest-template-drift")

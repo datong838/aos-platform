@@ -16,6 +16,7 @@ from aos_api.aip_memory_pipeline_contracts import (
     CreateKnowledgePipelineScheduleRequest,
     KnowledgePipelineAlert,
     KnowledgePipelineAlertSeverity,
+    KnowledgePipelineActivitySnapshot,
     KnowledgePipelineCheckpointRevision,
     KnowledgePipelineReceipt,
     KnowledgePipelineRun,
@@ -25,6 +26,8 @@ from aos_api.aip_memory_pipeline_contracts import (
     KnowledgePipelineScheduleEvent,
     KnowledgePipelineScheduleStatus,
     KnowledgePipelineTrigger,
+    KnowledgePipelineKind,
+    KnowledgePipelineStatusCount,
     StartKnowledgePipelineRunRequest,
     TERMINAL_PIPELINE_RUN_STATUSES,
     TransitionKnowledgePipelineRunRequest,
@@ -166,6 +169,116 @@ class AipMemoryPipelineStore:
         except Exception as exc:
             raise AipMemoryPipelinePersistenceError(
                 "knowledge pipeline schedule list failed"
+            ) from exc
+
+    def summarize_activity(
+        self, scope: TenantScope
+    ) -> dict[KnowledgePipelineKind, KnowledgePipelineActivitySnapshot]:
+        """Return exact, unpaginated activity aggregates for every frozen pipeline kind."""
+
+        self._require_scope(scope)
+        snapshots = {
+            kind: KnowledgePipelineActivitySnapshot(pipeline_kind=kind)
+            for kind in KnowledgePipelineKind
+        }
+        try:
+            with self._connect(scope) as conn:
+                schedule_rows = conn.execute(
+                    """SELECT pipeline_kind,status,COUNT(*) AS count
+                       FROM aip_memory_pipeline_schedule
+                       WHERE org_id=%s AND project_id=%s
+                       GROUP BY pipeline_kind,status""",
+                    scope.key,
+                ).fetchall()
+                run_rows = conn.execute(
+                    """SELECT s.pipeline_kind,r.status,COUNT(*) AS count
+                       FROM aip_memory_pipeline_run r
+                       JOIN aip_memory_pipeline_schedule s
+                         ON s.org_id=r.org_id AND s.project_id=r.project_id
+                        AND s.schedule_id=r.schedule_id
+                       WHERE r.org_id=%s AND r.project_id=%s
+                       GROUP BY s.pipeline_kind,r.status""",
+                    scope.key,
+                ).fetchall()
+                latest_runs = conn.execute(
+                    """SELECT DISTINCT ON (s.pipeline_kind) r.*,s.pipeline_kind
+                       FROM aip_memory_pipeline_run r
+                       JOIN aip_memory_pipeline_schedule s
+                         ON s.org_id=r.org_id AND s.project_id=r.project_id
+                        AND s.schedule_id=r.schedule_id
+                       WHERE r.org_id=%s AND r.project_id=%s
+                       ORDER BY s.pipeline_kind,r.scheduled_for DESC,r.pipeline_run_id""",
+                    scope.key,
+                ).fetchall()
+                latest_receipts = conn.execute(
+                    """SELECT DISTINCT ON (s.pipeline_kind) p.*,s.pipeline_kind
+                       FROM aip_memory_pipeline_receipt p
+                       JOIN aip_memory_pipeline_run r
+                         ON r.org_id=p.org_id AND r.project_id=p.project_id
+                        AND r.pipeline_run_id=p.pipeline_run_id
+                       JOIN aip_memory_pipeline_schedule s
+                         ON s.org_id=r.org_id AND s.project_id=r.project_id
+                        AND s.schedule_id=r.schedule_id
+                       WHERE p.org_id=%s AND p.project_id=%s
+                       ORDER BY s.pipeline_kind,p.created_at DESC,p.receipt_id""",
+                    scope.key,
+                ).fetchall()
+                latest_checkpoints = conn.execute(
+                    """SELECT DISTINCT ON (s.pipeline_kind) c.*,s.pipeline_kind
+                       FROM aip_memory_pipeline_checkpoint_revision c
+                       JOIN aip_memory_pipeline_schedule s
+                         ON s.org_id=c.org_id AND s.project_id=c.project_id
+                        AND s.schedule_id=c.schedule_id
+                       WHERE c.org_id=%s AND c.project_id=%s
+                       ORDER BY s.pipeline_kind,c.created_at DESC,c.revision DESC""",
+                    scope.key,
+                ).fetchall()
+                alert_rows = conn.execute(
+                    """SELECT s.pipeline_kind,COUNT(*) AS count
+                       FROM aip_memory_pipeline_alert a
+                       JOIN aip_memory_pipeline_run r
+                         ON r.org_id=a.org_id AND r.project_id=a.project_id
+                        AND r.pipeline_run_id=a.pipeline_run_id
+                       JOIN aip_memory_pipeline_schedule s
+                         ON s.org_id=r.org_id AND s.project_id=r.project_id
+                        AND s.schedule_id=r.schedule_id
+                       WHERE a.org_id=%s AND a.project_id=%s
+                       GROUP BY s.pipeline_kind""",
+                    scope.key,
+                ).fetchall()
+                latest_receipt_models = [
+                    (
+                        KnowledgePipelineKind(row["pipeline_kind"]),
+                        self._receipt_from_row(conn, scope, row),
+                    )
+                    for row in latest_receipts
+                ]
+
+            for row in schedule_rows:
+                snapshots[KnowledgePipelineKind(row["pipeline_kind"])].schedule_counts.append(
+                    KnowledgePipelineStatusCount(status=row["status"], count=int(row["count"]))
+                )
+            for row in run_rows:
+                snapshots[KnowledgePipelineKind(row["pipeline_kind"])].run_counts.append(
+                    KnowledgePipelineStatusCount(status=row["status"], count=int(row["count"]))
+                )
+            for row in latest_runs:
+                snapshots[KnowledgePipelineKind(row["pipeline_kind"])].last_run = self._run_from_row(scope, row)
+            for kind, receipt in latest_receipt_models:
+                snapshots[kind].last_receipt = receipt
+            for row in latest_checkpoints:
+                snapshots[KnowledgePipelineKind(row["pipeline_kind"])].last_checkpoint = self._checkpoint_from_row(scope, row)
+            for row in alert_rows:
+                snapshots[KnowledgePipelineKind(row["pipeline_kind"])].alert_count = int(row["count"])
+            for snapshot in snapshots.values():
+                snapshot.schedule_counts.sort(key=lambda item: item.status)
+                snapshot.run_counts.sort(key=lambda item: item.status)
+            return snapshots
+        except (AipMemoryPipelineStoreError, ValueError):
+            raise
+        except Exception as exc:
+            raise AipMemoryPipelinePersistenceError(
+                "knowledge pipeline readiness summary failed"
             ) from exc
 
     def transition_schedule(

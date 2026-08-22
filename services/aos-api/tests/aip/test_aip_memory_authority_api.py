@@ -15,6 +15,7 @@ from aos_api.aip_memory_contracts import (
     MemoryCandidateStatus,
     MemoryItem,
     MemoryItemRevision,
+    MemoryItemStatus,
     RuntimeMemoryLayer,
     SubmitMemoryCandidateRequest,
 )
@@ -153,6 +154,13 @@ def memory_api(client):
             self._record(scope)
             return memory()
 
+        def revoke_memory_item(self, scope, _memory_item_id, **kwargs):
+            self._record(scope)
+            item, revision = memory()
+            return item.model_copy(
+                update={"status": MemoryItemStatus.REVOKED, "version": 2}
+            ), revision
+
     class FakeRetrieval:
         def __init__(self) -> None:
             self.call = None
@@ -237,6 +245,35 @@ def test_read_api_uses_authenticated_tenant_scope(memory_api) -> None:
     assert memories.status_code == 200
     assert memories.json()[0]["item"]["memoryItemId"] == "memory-1"
     assert store.scopes == [SCOPE, SCOPE]
+
+
+def test_revoke_api_uses_authenticated_scope_and_reviewer_role(memory_api) -> None:
+    client, store, _retrieval, _search = memory_api
+    response = client.post(
+        "/v1/aip/memory-authority/memories/memory-1/revoke",
+        json={"expectedVersion": 1, "reasonCode": "source_withdrawn"},
+    )
+    assert response.status_code == 200
+    assert response.json()["item"]["status"] == "revoked"
+    assert store.scopes == [SCOPE]
+
+
+def test_revoke_api_rejects_non_reviewer_before_store(memory_api) -> None:
+    client, store, _retrieval, _search = memory_api
+    client.app.dependency_overrides[require_principal] = lambda: Principal(
+        subject="reader",
+        org_id=SCOPE.org_id,
+        project_id=SCOPE.project_id,
+        roles=["developer"],
+        markings=["internal"],
+    )
+    response = client.post(
+        "/v1/aip/memory-authority/memories/memory-1/revoke",
+        json={"expectedVersion": 1, "reasonCode": "source_withdrawn"},
+    )
+    assert response.status_code == 403
+    assert response.json()["code"] == "AIP_SCOPE_FORBIDDEN"
+    assert store.scopes == []
 
 
 def test_knowledge_query_uses_principal_markings_and_derived_skill(memory_api) -> None:

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "aip.code-control-evidence.v1",
+  "wave": "R24",
+  "recordedAt": "2026-08-22T14:49:40+08:00",
+  "branch": "w1-aip",
+  "baselineCommit": "8668dd2",
+  "codeCommit": "8016893dce9385b3861360c18b2c6ae332b79003",
+  "tenantScope": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "delivery": {
+    "status": "GREEN_WITH_OPERATIONAL_BLOCKERS",
+    "codeControl": "GREEN",
+    "realDailyOperatingLoop": "BLOCKED_EXTERNAL_DEPENDENCIES",
+    "browser": "NOT_RUN_BY_DESIGN_NO_API_SDK_OR_PAGE_CHANGE"
+  },
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/aip_ecommerce_growth_daily.py",
+      "beforeSha256": "ABSENT",
+      "afterSha256": "4b48ed37ded45bc92ee18abb222f88dab34cc92bca106cd1f24e68c291bf773c"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_aip_ecommerce_growth_daily.py",
+      "beforeSha256": "ABSENT",
+      "afterSha256": "375d264412316f240a17125bf1accb52bb1b794d01efd8f25f5b62215e9c41ff"
+    },
+    {
+      "path": "bundles/solutions/ecommerce-growth/content/growth/daily-operating-loop.v1.json",
+      "beforeSha256": "ABSENT",
+      "afterSha256": "2346ffc0c81f27a3aa1cfa3aac794c8f0cdb2c3a44f5a426aa9034399f2dfa30"
+    }
+  ],
+  "verification": {
+    "targeted": {
+      "result": "GREEN",
+      "passed": 16
+    },
+    "cumulative": {
+      "result": "GREEN",
+      "passed": 57
+    },
+    "aipFull": {
+      "result": "GREEN",
+      "passed": 1298,
+      "warnings": 106,
+      "durationSeconds": 503.02
+    },
+    "pythonCompile": "GREEN",
+    "manifestJson": "GREEN",
+    "diffCheck": "GREEN"
+  },
+  "readOnlyOperationalProbe": {
+    "checkedAt": "2026-08-22T06:24:27.409384+00:00",
+    "positiveTenant": {
+      "status": "failed",
+      "ready": 10,
+      "failed": 2,
+      "failedSources": [
+        {
+          "pipelineId": "P02-product-qyh",
+          "latestRunStartedAt": "2026-08-21T19:00:09.377791+00:00",
+          "latestRunStatus": "failed"
+        },
+        {
+          "pipelineId": "P04-category-qyh",
+          "latestRunStartedAt": "2026-08-21T21:00:05.110043+00:00",
+          "latestRunStatus": "failed"
+        }
+      ]
+    },
+    "negativeCanary": {
+      "status": "blocked",
+      "blocked": 12,
+      "interpretation": "EXPECTED_TENANT_ISOLATION"
+    }
+  },
+  "externalBlockers": [
+    "P02_AND_P04_LATEST_RUNS_FAILED",
+    "DATA_SOURCE_READINESS_LEASE_STILL_ACTIVE",
+    "M1_W2_BASELINE_AND_SERIAL_CAS_NOT_CLOSED"
+  ],
+  "sideEffects": {
+    "pipelineReplay": 0,
+    "databaseWrite": 0,
+    "providerOrResearchCall": 0,
+    "planApproval": 0,
+    "taskDispatch": 0,
+    "productionAction": 0,
+    "secretPayloadRead": 0,
+    "migration": 0
+  },
+  "conclusion": "R24 adds a tenant-explicit, exact-reference, same-cutoff, draft-only G0/G1 compiler and reuses canonical Plan, Task and EffectReview authorities. It does not authorize or fabricate a real daily operating run while P02/P04, the Data Lease and m1 serialized integration remain unresolved."
+}

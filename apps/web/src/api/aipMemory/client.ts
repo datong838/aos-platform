@@ -1,5 +1,6 @@
 import { aipClient, type AipClient } from "../aip/client";
 import { parseKnowledgePipelineAlerts, parseKnowledgePipelineCheckpointView, parseKnowledgePipelinePolicies, parseKnowledgePipelineReceiptView, parseKnowledgePipelineRun, parseKnowledgePipelineRuns, parseKnowledgePipelineSchedule, parseKnowledgePipelineSchedules, parseKnowledgeQueryResult, parseKnowledgeReadiness, parseMemoryAgentInstances, parseMemoryAgentProjection, parseMemoryAgentProjections, parseMemoryAuthorityItem, parseMemoryAuthorityItems, parseMemoryCandidate, parseMemoryCandidateEvents, parseMemoryCandidates, parseMemoryExposures, parseMemoryImprovementObservations, parseMemoryRevocationImpact, type CreateMemoryAgentProjectionRequest, type GovernanceApprovalRef, type KnowledgePipelineAlert, type KnowledgePipelineCheckpoint, type KnowledgePipelinePolicy, type KnowledgePipelineReceipt, type KnowledgePipelineRun, type KnowledgePipelineSchedule, type KnowledgeQueryResult, type KnowledgeReadiness, type MemoryAgentInstance, type MemoryAgentProjection, type MemoryAuthorityItem, type MemoryCandidate, type MemoryCandidateEvent, type MemoryExposure, type MemoryImprovementObservation, type MemoryRevocationImpact } from "./contracts";
+import { parseKnowledgePipelineOperationalReadiness, type KnowledgePipelineOperationalReadinessEnvelope } from "./contracts";
 
 export class AipMemorySdk {
   constructor(private readonly client: AipClient = aipClient) {}
@@ -13,6 +14,7 @@ export class AipMemorySdk {
   async query(body: Record<string, unknown>): Promise<KnowledgeQueryResult> { return parseKnowledgeQueryResult(await this.client.request("queryMemoryKnowledge", { body })); }
   async knowledgeReadiness(): Promise<KnowledgeReadiness> { return parseKnowledgeReadiness(await this.client.request("getMemoryKnowledgeReadiness")); }
   async pipelinePolicies(): Promise<KnowledgePipelinePolicy[]> { return parseKnowledgePipelinePolicies(await this.client.request("listMemoryPipelinePolicies")); }
+  async pipelineReadiness(): Promise<KnowledgePipelineOperationalReadinessEnvelope> { return parseKnowledgePipelineOperationalReadiness(await this.client.request("getMemoryPipelineReadiness")); }
   async pipelineSchedules(): Promise<KnowledgePipelineSchedule[]> { return parseKnowledgePipelineSchedules(await this.client.request("listMemoryPipelineSchedules")); }
   async createPipelineSchedule(body: Record<string, unknown>, idempotencyKey: string): Promise<KnowledgePipelineSchedule> { return parseKnowledgePipelineSchedule(await this.client.request("createMemoryPipelineSchedule", { body, headers: { "X-Idempotency-Key": exactId(idempotencyKey) } })); }
   async transitionPipelineSchedule(id: string, body: Record<string, unknown>): Promise<KnowledgePipelineSchedule> { return parseKnowledgePipelineSchedule(await this.client.request("transitionMemoryPipelineSchedule", { params: { schedule_id: exactId(id) }, body })); }

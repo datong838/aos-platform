@@ -1,0 +1,46 @@
+{
+  "receiptType": "AIP_R31_A_B_C1_CODE_AND_BROWSER_CHECKPOINT",
+  "recordedAt": "2026-08-22T20:20:00+08:00",
+  "branch": "w1-aip",
+  "sourceCommit": "c67690be2646e6d464fbcba66432585551e3f568",
+  "tenant": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "deliveryStatus": "GREEN_WITH_EXTERNAL_BLOCKERS",
+  "completed": [
+    "R31-A semantic theme surfaces",
+    "R31-B page-level headings icons and labels",
+    "R31-C1 Draft two-column layout and Marketplace honest error state"
+  ],
+  "verification": {
+    "targetedWebTests": "5 files / 35 tests GREEN",
+    "cumulativeWebTests": "201 files / 1984 tests GREEN",
+    "webTypecheck": "GREEN",
+    "diffCheck": "GREEN",
+    "browserHighRiskRoutes": "GREEN for single H1 and no horizontal overflow",
+    "studioBlankAgentIcons": 0,
+    "marketplaceRuntime": "404 from current m1 backend; page fails closed without demo fallback"
+  },
+  "externalBlockers": [
+    "SourceReadiness org-org/dev-project is 10/12; P02 and P04 latest runs failed",
+    "data-source-readiness-exact-authority-20260821 remains ACTIVE and is not legally released",
+    "m1 serialized CAS for Data/Workshop delivery is not closed",
+    "global AppShell resource search lacks a readable label and is outside this w1 page scope",
+    "InstalledModuleNavigation still reports directory load failure and is Workshop-owned"
+  ],
+  "safety": {
+    "databaseWrites": false,
+    "migrationExecuted": false,
+    "providerCalled": false,
+    "leaseMutated": false,
+    "authority0106PrimeMutated": false,
+    "workshopFilesMutated": false,
+    "authStorageStateRead": false
+  },
+  "next": [
+    "finish R31-C readable names and safe empty-state CTAs",
+    "run R31-D 25-route three-viewport keyboard DOM network console matrix",
+    "seal evidence without editing read-only 130 while Data Lease is active"
+  ]
+}

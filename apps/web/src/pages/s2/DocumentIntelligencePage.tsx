@@ -564,6 +564,7 @@ function UploadDropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
       </div>
       <input
         id="doc-file-input"
+        aria-label="选择待导入文档"
         type="file"
         multiple
         style={{ display: "none" }}
@@ -647,6 +648,7 @@ function OcrPanel({ doc, onCorrectText }: { doc: DocItem; onCorrectText: (text: 
           )}
           {editing ? (
             <textarea
+              aria-label="OCR 识别文本修正"
               value={text}
               onChange={(e) => setText(e.target.value)}
               style={{ width: "100%", height: 180, padding: 8, fontSize: 12, border: "1px solid var(--aos-border)", borderRadius: 4, fontFamily: "monospace", resize: "vertical" }}
@@ -703,6 +705,7 @@ function ExtractionPanel({
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <select
+            aria-label="提取模板"
             value={selectedTemplate}
             onChange={(e) => onTemplateChange(e.target.value as TemplateId)}
             style={{ padding: "4px 8px", fontSize: 12, borderRadius: 4, border: "1px solid var(--aos-border)", background: "var(--aos-surface)", color: "var(--aos-text)" }}
@@ -755,6 +758,7 @@ function ExtractionPanel({
                 <td style={{ padding: "6px 8px", color: "var(--aos-text)" }}>
                   {isEditing ? (
                     <input
+                      aria-label={`修正字段 ${field.name}`}
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
                       onKeyDown={(e) => {
@@ -854,6 +858,7 @@ function ReviewPanel({
       <label style={{ display: "block", marginBottom: 8, fontSize: 12, color: "var(--aos-text-secondary)" }}>
         写入目标 Object Type
         <select
+          aria-label="写入目标 Object Type"
           data-testid="ontology-type-select"
           value={objectTypeId}
           onChange={(event) => onObjectTypeChange(event.target.value)}
@@ -1292,6 +1297,7 @@ export function DocumentIntelligencePage() {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "0 4px" }}>
             <input
               type="checkbox"
+              aria-label="选择全部文档"
               checked={selectedIds.size === docs.length && docs.length > 0}
               onChange={toggleSelectAll}
               style={{ cursor: "pointer" }}
@@ -1323,6 +1329,7 @@ export function DocumentIntelligencePage() {
                 >
                   <input
                     type="checkbox"
+                    aria-label={`选择文档 ${doc.title}`}
                     checked={isChecked}
                     onChange={(e) => {
                       e.stopPropagation();

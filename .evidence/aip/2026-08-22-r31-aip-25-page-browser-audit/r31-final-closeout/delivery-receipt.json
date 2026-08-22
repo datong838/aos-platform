@@ -1,0 +1,49 @@
+{
+  "receiptType": "AIP_R31_PRODUCT_QUALITY_GREEN_WITH_WARNINGS",
+  "recordedAt": "2026-08-22T21:15:00+08:00",
+  "branch": "w1-aip",
+  "codeCommit": "c67690be2646e6d464fbcba66432585551e3f568",
+  "followupCommits": [
+    "4529b8cd803a7fb39f43ddf01bcb902d8e18e48f",
+    "594ae0b"
+  ],
+  "tenant": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "deliveryStatus": "GREEN_WITH_WARNINGS",
+  "completed": [
+    "R31-A scoped AOS semantic surfaces",
+    "R31-B page-owned headings icons labels and accessible names",
+    "R31-C honest empty/error states readable names and Draft task layout",
+    "R31-D 25-route 1280 structure matrix and representative keyboard/focus matrix"
+  ],
+  "verification": {
+    "cumulativeWebTests": "201 files / 1984 tests GREEN",
+    "targetedWebTests": "5 files / 35 tests GREEN",
+    "assistTargetedTests": "1 file / 9 tests GREEN",
+    "draftTargetedTests": "2 files / 74 tests GREEN",
+    "productionContractsTargetedTests": "1 file / 9 tests GREEN",
+    "webTypecheck": "GREEN",
+    "diffCheck": "GREEN",
+    "browser1280": "25/25 single H1; 25/25 no horizontal overflow; 25/25 page-owned controls named",
+    "keyboard": "Assist Enter; Logic ArrowRight; Agent Import and Draft Tab; Model Catalog Space; Production Contract disabled reasons including Review resolution",
+    "longLoading": "7/7 resolved after stable-state wait"
+  },
+  "warnings": [
+    "1440 and 1920 post-fix matrices are not captured because the selected in-app browser does not expose viewport resize; old captures were not reused as proof",
+    "Marketplace and Analyst fail closed against the current m1 backend baseline where w1 routes are not integrated",
+    "global AppShell search labeling and InstalledModuleNavigation directory failure are outside w1 page ownership",
+    "Workshop operational readiness remains blocked by P02/P04, active Data Lease, and incomplete m1 serialized CAS"
+  ],
+  "safety": {
+    "databaseWrites": false,
+    "migrationExecuted": false,
+    "providerCalled": false,
+    "pipelineRetried": false,
+    "leaseMutated": false,
+    "authority0106PrimeMutated": false,
+    "workshopFilesMutated": false,
+    "authStorageStateRead": false
+  }
+}

@@ -7,6 +7,7 @@ export const PIPELINE_TRIGGERS = ["manual", "task_event", "scheduled", "version_
 export const PIPELINE_SCHEDULE_STATUSES = ["active", "paused", "disabled"] as const;
 export const PIPELINE_RUN_STATUSES = ["queued", "running", "paused", "succeeded", "partial", "failed", "cancelled", "unknown"] as const;
 export const PIPELINE_ALERT_SEVERITIES = ["warning", "error", "critical"] as const;
+export const PIPELINE_OPERATIONAL_STATUSES = ["ready", "blocked", "paused", "disabled", "unconfigured"] as const;
 
 export type MemoryCandidateStatus = typeof MEMORY_CANDIDATE_STATUSES[number];
 export type MemoryItemStatus = typeof MEMORY_ITEM_STATUSES[number];
@@ -203,6 +204,29 @@ export type KnowledgePipelineAlert = {
   evidenceRef: ResourceRef;
   alertHash: string;
   createdAt: string;
+};
+export type KnowledgePipelineOperationalReadiness = {
+  tenant: TenantContext;
+  pipelineKind: KnowledgePipelineKind;
+  defaultStatus: KnowledgePipelineScheduleStatus;
+  dependencyAllowed: boolean;
+  dependencyReasonCodes: string[];
+  adapterRequired: boolean;
+  adapterRegistered: boolean;
+  scheduleCounts: { status: string; count: number }[];
+  runCounts: { status: string; count: number }[];
+  lastRun?: KnowledgePipelineRun;
+  lastReceipt?: KnowledgePipelineReceipt;
+  lastCheckpoint?: KnowledgePipelineCheckpoint;
+  alertCount: number;
+  operationalStatus: typeof PIPELINE_OPERATIONAL_STATUSES[number];
+  blockerCodes: string[];
+  observedAt: string;
+};
+export type KnowledgePipelineOperationalReadinessEnvelope = {
+  tenant: TenantContext;
+  pipelines: KnowledgePipelineOperationalReadiness[];
+  observedAt: string;
 };
 export type KnowledgeReadiness = {
   tenant: TenantContext;
@@ -498,6 +522,51 @@ export function parseKnowledgePipelinePolicies(value: unknown): KnowledgePipelin
   const result = value.map(parseKnowledgePipelinePolicy);
   if (new Set(result.map(item => item.pipelineKind)).size !== result.length) throw new TypeError("PipelinePolicy kind 重复");
   return result;
+}
+export function parseKnowledgePipelineOperationalReadiness(value: unknown): KnowledgePipelineOperationalReadinessEnvelope {
+  const v = record(value, "PipelineOperationalReadiness");
+  const tenant = parseTenant(v.tenant, "pipelineReadiness.tenant");
+  const observedAt = text(v.observedAt, "pipelineReadiness.observedAt");
+  if (!Array.isArray(v.pipelines)) throw new TypeError("pipelineReadiness.pipelines 无效");
+  const pipelines = v.pipelines.map((raw, index) => {
+    const item = record(raw, `pipelineReadiness[${index}]`);
+    const itemTenant = parseTenant(item.tenant, `pipelineReadiness[${index}].tenant`);
+    if (itemTenant.orgId !== tenant.orgId || itemTenant.projectId !== tenant.projectId) throw new TypeError("pipelineReadiness tenant 漂移");
+    const operationalStatus = enumValue(item.operationalStatus, PIPELINE_OPERATIONAL_STATUSES, `pipelineReadiness[${index}].operationalStatus`);
+    const blockerCodes = strings(item.blockerCodes, `pipelineReadiness[${index}].blockerCodes`);
+    const dependencyAllowed = booleanValue(item.dependencyAllowed, `pipelineReadiness[${index}].dependencyAllowed`);
+    if (operationalStatus === "ready" && (blockerCodes.length || !dependencyAllowed)) throw new TypeError("ready pipeline 不能携带 blocker");
+    if (operationalStatus !== "ready" && !blockerCodes.length) throw new TypeError("non-ready pipeline 必须携带 blocker");
+    const parseCounts = (counts: unknown, label: string) => {
+      if (!Array.isArray(counts)) throw new TypeError(`${label} 无效`);
+      const parsed = counts.map((entry, countIndex) => { const count = record(entry, `${label}[${countIndex}]`); return { status: text(count.status, `${label}.status`), count: nonNegativeInteger(count.count, `${label}.count`) }; });
+      if (new Set(parsed.map(entry => entry.status)).size !== parsed.length) throw new TypeError(`${label} 状态重复`);
+      return parsed;
+    };
+    const adapterRequired = booleanValue(item.adapterRequired, `pipelineReadiness[${index}].adapterRequired`);
+    const adapterRegistered = booleanValue(item.adapterRegistered, `pipelineReadiness[${index}].adapterRegistered`);
+    if (!adapterRequired && !adapterRegistered) throw new TypeError("无需 Adapter 的管道必须视为 Adapter ready");
+    return {
+      tenant: itemTenant,
+      pipelineKind: enumValue(item.pipelineKind, PIPELINE_KINDS, `pipelineReadiness[${index}].pipelineKind`),
+      defaultStatus: enumValue(item.defaultStatus, PIPELINE_SCHEDULE_STATUSES, `pipelineReadiness[${index}].defaultStatus`),
+      dependencyAllowed,
+      dependencyReasonCodes: strings(item.dependencyReasonCodes, `pipelineReadiness[${index}].dependencyReasonCodes`),
+      adapterRequired,
+      adapterRegistered,
+      scheduleCounts: parseCounts(item.scheduleCounts, `pipelineReadiness[${index}].scheduleCounts`),
+      runCounts: parseCounts(item.runCounts, `pipelineReadiness[${index}].runCounts`),
+      lastRun: item.lastRun == null ? undefined : parseKnowledgePipelineRun(item.lastRun),
+      lastReceipt: item.lastReceipt == null ? undefined : parseKnowledgePipelineReceipt(item.lastReceipt),
+      lastCheckpoint: item.lastCheckpoint == null ? undefined : parseKnowledgePipelineCheckpoint(item.lastCheckpoint),
+      alertCount: nonNegativeInteger(item.alertCount, `pipelineReadiness[${index}].alertCount`),
+      operationalStatus,
+      blockerCodes,
+      observedAt: text(item.observedAt, `pipelineReadiness[${index}].observedAt`),
+    };
+  });
+  if (pipelines.length !== PIPELINE_KINDS.length || new Set(pipelines.map(item => item.pipelineKind)).size !== PIPELINE_KINDS.length || PIPELINE_KINDS.some(kind => !pipelines.some(item => item.pipelineKind === kind))) throw new TypeError("pipelineReadiness 必须包含唯一七管道");
+  return { tenant, pipelines, observedAt };
 }
 function parseEnumList<T extends readonly string[]>(value: unknown, allowed: T, label: string): T[number][] {
   if (!Array.isArray(value) || !value.length) throw new TypeError(`${label} 无效`);

@@ -1,14 +1,17 @@
 import { getApiBase } from "../apiBase";
 import { apiGet, apiPost, apiPostReadOnly } from "../client";
 import { getTenant, tenantAuthHeaders } from "../tenant";
-import type { AnalystQuery, AssistEvent, AssistThread, CancelTaskRunRequest, CreateAssistThread, CreateAssistTurn, QueryResultRevision, TaskRunControlResult } from "./contracts";
-import { parseAssistEvent, parseAssistThread, parseQueryResult, parseTaskRunControlResult, validateAssistStream } from "./parser";
+import type { AnalystQuery, AnalystRoleQueryTemplateList, AssistEvent, AssistThread, CancelTaskRunRequest, CreateAssistThread, CreateAssistTurn, QueryResultRevision, TaskRunControlResult } from "./contracts";
+import { parseAnalystRoleQueryTemplates, parseAssistEvent, parseAssistThread, parseQueryResult, parseTaskRunControlResult, validateAssistStream } from "./parser";
 
 function scope() { const { orgId, projectId } = getTenant(); return { orgId, projectId }; }
 export function newIdempotencyKey(): string { return globalThis.crypto.randomUUID(); }
 
 export async function queryAnalyst(query: AnalystQuery): Promise<QueryResultRevision> {
   return parseQueryResult(await apiPostReadOnly<unknown>("/v1/aip/analyst/query", query), scope());
+}
+export async function listAnalystRoleQueryTemplates(): Promise<AnalystRoleQueryTemplateList> {
+  return parseAnalystRoleQueryTemplates(await apiGet<unknown>("/v1/aip/analyst/query-templates"), scope());
 }
 export async function createAssistThread(body: CreateAssistThread, key = newIdempotencyKey()): Promise<AssistThread> {
   return parseAssistThread(await apiPost<unknown>("/v1/aip/assist/threads", body, { "Idempotency-Key": key }), scope());

@@ -203,6 +203,88 @@ class AipMemorySearchIndex:
             conn.commit()
         return len(items)
 
+    def upsert_reference(
+        self,
+        scope: TenantScope,
+        draft: SearchReferenceDraft,
+        *,
+        indexed_at: datetime,
+    ) -> bool:
+        """Insert one exact projection without rebuilding unrelated references.
+
+        Returns ``True`` when a row is created and ``False`` for an exact
+        idempotent replay.  A conflicting projection never overwrites the
+        existing row.
+        """
+
+        with self._connect_factory(scope) as conn:
+            authority = conn.execute(
+                """SELECT i.subject_ref,r.content_hash,r.source_id,r.source_revision,
+                          r.markings,r.applicability,s.freshness_expires_at
+                   FROM aip_memory_item i
+                   JOIN aip_memory_item_revision r
+                     ON r.org_id=i.org_id AND r.project_id=i.project_id
+                    AND r.memory_item_id=i.memory_item_id
+                    AND r.revision=i.current_revision
+                   JOIN aip_memory_source_revision s
+                     ON s.org_id=r.org_id AND s.project_id=r.project_id
+                    AND s.source_id=r.source_id AND s.revision=r.source_revision
+                   WHERE i.org_id=%s AND i.project_id=%s
+                     AND i.memory_item_id=%s AND r.revision=%s""",
+                (*scope.key, draft.memory_item_id, draft.revision),
+            ).fetchone()
+            if authority is None or not self._matches_authority(draft, authority):
+                raise AipMemorySearchIndexConflict(
+                    "search reference does not match canonical memory revision"
+                )
+            source_ref = ResourceRef(
+                resource_type="aip.memory_source_revision",
+                resource_id=draft.source_id,
+                revision=str(draft.source_revision),
+                authority="postgresql",
+            )
+            row = conn.execute(
+                """INSERT INTO aip_memory_search_reference (
+                   org_id,project_id,memory_item_id,revision,content_hash,
+                   subject_ref,source_id,source_revision,source_ref,search_terms,
+                   search_text,markings,applicability,freshness_expires_at,indexed_at)
+                   VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s::jsonb,%s::jsonb,
+                     %s,%s::jsonb,%s::jsonb,%s,%s)
+                   ON CONFLICT (org_id,project_id,memory_item_id,revision)
+                   DO NOTHING RETURNING *""",
+                (
+                    *scope.key,
+                    draft.memory_item_id,
+                    draft.revision,
+                    draft.content_hash,
+                    self._json(draft.subject.model_dump(mode="json", by_alias=True)),
+                    draft.source_id,
+                    draft.source_revision,
+                    self._json(source_ref.model_dump(mode="json", by_alias=True)),
+                    self._json(draft.terms),
+                    " ".join(draft.terms),
+                    self._json(draft.markings),
+                    self._json(draft.applicability),
+                    draft.freshness_expires_at,
+                    indexed_at,
+                ),
+            ).fetchone()
+            if row is None:
+                row = conn.execute(
+                    """SELECT * FROM aip_memory_search_reference
+                       WHERE org_id=%s AND project_id=%s
+                         AND memory_item_id=%s AND revision=%s""",
+                    (*scope.key, draft.memory_item_id, draft.revision),
+                ).fetchone()
+                if row is None or not self._matches_projection(draft, row):
+                    raise AipMemorySearchIndexConflict(
+                        "search reference idempotency conflict"
+                    )
+                conn.commit()
+                return False
+            conn.commit()
+            return True
+
     def clear_references(self, scope: TenantScope) -> int:
         with self._connect_factory(scope) as conn:
             result = conn.execute(
@@ -342,6 +424,14 @@ class AipMemorySearchIndex:
             and list(row["markings"]) == item.markings
             and list(row["applicability"]) == item.applicability
             and row["freshness_expires_at"] == item.freshness_expires_at
+        )
+
+    @staticmethod
+    def _matches_projection(item: SearchReferenceDraft, row: Any) -> bool:
+        return (
+            AipMemorySearchIndex._matches_authority(item, row)
+            and list(row["search_terms"]) == item.terms
+            and row["search_text"] == " ".join(item.terms)
         )
 
     @staticmethod

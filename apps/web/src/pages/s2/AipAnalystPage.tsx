@@ -2,7 +2,16 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import { Link } from "react-router-dom";
 import { apiGet } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
-import { queryAnalyst, type AnalystQuery, type QueryResultRevision, type ResourceRef } from "../../api/aipWorkbench";
+import {
+  listAnalystRoleQueryTemplates,
+  queryAnalyst,
+  templateBlockingReason,
+  type AnalystQuery,
+  type AnalystRoleQueryTemplate,
+  type AnalystRoleQueryTemplateList,
+  type QueryResultRevision,
+  type ResourceRef,
+} from "../../api/aipWorkbench";
 
 type View = "table" | "chart" | "map" | "raw";
 type QueryKind = AnalystQuery["kind"];
@@ -14,6 +23,10 @@ async function defaultListObjectTypes(): Promise<ObjectTypeOption[]> {
   return (payload.items || [])
     .filter((item) => typeof item.id === "string" && item.id.trim() && item.published !== false)
     .map((item) => ({ id: String(item.id).trim(), name: String(item.name || item.id).trim() }));
+}
+
+async function defaultListRoleTemplates(): Promise<AnalystRoleQueryTemplateList> {
+  return listAnalystRoleQueryTemplates();
 }
 
 export async function defaultListLogicGraphs(): Promise<LogicGraphOption[]> {
@@ -145,6 +158,12 @@ function Evidence({ result, logicMount }: { result: QueryResultRevision | null; 
           <Fact label="结果修订" value={`${result.queryId} · r${result.revision}`} />
           <Fact label="状态" value={result.status} />
           <Fact label="截点" value={new Date(result.cutoffAt).toLocaleString()} />
+          <Fact
+            label="置信度"
+            value={result.confidence.status === "measured"
+              ? `${Math.round((result.confidence.score || 0) * 100)}% · ${result.confidence.basis.join("、")}`
+              : `${result.confidence.status} · ${result.confidence.basis.join("、")}`}
+          />
           <Fact label="内容哈希" value={result.contentHash.slice(0, 16)} />
           <section>
             <strong>来源</strong>
@@ -155,6 +174,16 @@ function Evidence({ result, logicMount }: { result: QueryResultRevision | null; 
                 {source.freshness} · {new Date(source.cutoffAt).toLocaleString()}
               </div>
             )) : <p style={muted}>无来源（blocked 允许）</p>}
+          </section>
+          <section>
+            <strong>血缘</strong>
+            {result.lineageRefs.length ? result.lineageRefs.map((ref) => (
+              <div key={`${ref.resourceType}:${ref.resourceId}:${ref.revision}`} style={smallCard}>
+                {ref.resourceType}/{ref.resourceId}@{ref.revision}
+                <br />
+                authority {ref.authority}
+              </div>
+            )) : <p style={muted}>当前查询未返回 lineage ref；不以 trace 或本地路径代替。</p>}
           </section>
           {result.uncertainties.length > 0 && (
             <section>
@@ -183,16 +212,19 @@ export function AipAnalystPage({
   runQuery = queryAnalyst,
   listObjectTypes = defaultListObjectTypes,
   listLogicGraphs = defaultListLogicGraphs,
+  listRoleTemplates = defaultListRoleTemplates,
 }: {
   runQuery?: typeof queryAnalyst;
   listObjectTypes?: () => Promise<ObjectTypeOption[]>;
   listLogicGraphs?: () => Promise<LogicGraphOption[]>;
+  listRoleTemplates?: () => Promise<AnalystRoleQueryTemplateList>;
 } = {}) {
   const search = useMemo(() => new URLSearchParams(window.location.search), []);
   const taskRef = refFromSearch(search, "task");
   const skillRef = refFromSearch(search, "skill");
   const metricRef = refFromSearch(search, "metric");
   const preferredType = search.get("objectType") || "";
+  const preferredTemplateId = search.get("roleTemplateId") || "";
   const preferredLogic = {
     id: search.get("logicId") || "",
     revision: search.get("logicRevision") || "",
@@ -203,6 +235,11 @@ export function AipAnalystPage({
   const [objectTypes, setObjectTypes] = useState<ObjectTypeOption[]>([]);
   const [objectTypesReady, setObjectTypesReady] = useState(false);
   const [objectTypesError, setObjectTypesError] = useState<string | null>(null);
+  const [roleTemplates, setRoleTemplates] = useState<AnalystRoleQueryTemplate[]>([]);
+  const [roleTemplatesReady, setRoleTemplatesReady] = useState(false);
+  const [roleTemplatesError, setRoleTemplatesError] = useState<string | null>(null);
+  const [roleTemplateHash, setRoleTemplateHash] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState(preferredTemplateId);
   const [logicGraphs, setLogicGraphs] = useState<LogicGraphOption[]>([]);
   const [logicReady, setLogicReady] = useState(false);
   const [logicError, setLogicError] = useState<string | null>(null);
@@ -228,7 +265,7 @@ export function AipAnalystPage({
         setObjectType((current) => {
           if (current && items.some((item) => item.id === current)) return current;
           if (preferredType && items.some((item) => item.id === preferredType)) return preferredType;
-          return items[0]?.id || "";
+          return "";
         });
         setObjectTypesReady(true);
       })
@@ -241,6 +278,35 @@ export function AipAnalystPage({
       });
     return () => { cancelled = true; };
   }, [listObjectTypes, preferredType]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setRoleTemplatesReady(false);
+    setRoleTemplatesError(null);
+    void listRoleTemplates()
+      .then((catalog) => {
+        if (cancelled) return;
+        setRoleTemplates(catalog.items);
+        setRoleTemplateHash(catalog.contentHash);
+        const selected = catalog.items.find((item) => item.templateId === preferredTemplateId) || catalog.items[0] || null;
+        setSelectedTemplateId(selected?.templateId || "");
+        if (selected) {
+          setKind(selected.queryKind);
+          setObjectType(selected.defaultObjectType || "");
+          setPrompt(selected.defaultPrompt);
+        }
+        setRoleTemplatesReady(true);
+      })
+      .catch((cause) => {
+        if (cancelled) return;
+        setRoleTemplates([]);
+        setSelectedTemplateId("");
+        setRoleTemplateHash("");
+        setRoleTemplatesError(cause instanceof Error ? cause.message : String(cause));
+        setRoleTemplatesReady(true);
+      });
+    return () => { cancelled = true; };
+  }, [listRoleTemplates, preferredTemplateId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -273,7 +339,12 @@ export function AipAnalystPage({
     [logicGraphs, logicMountId],
   );
 
-  const disabled = disabledReason(
+  const selectedTemplate = useMemo(
+    () => roleTemplates.find((item) => item.templateId === selectedTemplateId) || null,
+    [roleTemplates, selectedTemplateId],
+  );
+
+  const queryDisabled = disabledReason(
     kind,
     objectType,
     prompt,
@@ -283,6 +354,32 @@ export function AipAnalystPage({
     objectTypesReady,
     objectTypes.length,
   );
+  const templateDisabled = templateBlockingReason(selectedTemplate);
+  const objectTypeDrift = kind === "semantic" && objectTypesReady && objectType
+    && !objectTypes.some((item) => item.id === objectType)
+    ? `模板要求的 Object Type 未出现在当前租户目录：${objectType}`
+    : null;
+  const disabled = queryDisabled || templateDisabled || objectTypeDrift;
+
+  function selectRoleTemplate(template: AnalystRoleQueryTemplate) {
+    setSelectedTemplateId(template.templateId);
+    setKind(template.queryKind);
+    setObjectType(template.defaultObjectType || "");
+    setPrompt(template.defaultPrompt);
+    setResult(null);
+    setError(null);
+    const next = new URL(window.location.href);
+    next.searchParams.set("roleTemplateId", template.templateId);
+    if (template.defaultObjectType) next.searchParams.set("objectType", template.defaultObjectType);
+    window.history.replaceState({}, "", `${next.pathname}${next.search}${next.hash}`);
+  }
+
+  function useCustomQuery() {
+    setSelectedTemplateId("");
+    const next = new URL(window.location.href);
+    next.searchParams.delete("roleTemplateId");
+    window.history.replaceState({}, "", `${next.pathname}${next.search}${next.hash}`);
+  }
 
   async function run() {
     const query = buildGovernedQuery({
@@ -324,6 +421,7 @@ export function AipAnalystPage({
           { label: "结果态", value: result ? result.status : "未跑" },
           { label: "行数", value: result ? String(result.rows.length) : "—" },
           { label: "对象类型", value: objectTypesReady ? String(objectTypes.length) : "…" },
+          { label: "六角色模板", value: !roleTemplatesReady ? "…" : `${roleTemplates.filter((item) => item.readiness === "ready").length}/6` },
           { label: "Logic挂载", value: !logicReady ? "…" : logicMount ? "已挂" : "未挂" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
@@ -332,6 +430,36 @@ export function AipAnalystPage({
           </div>
         ))}
       </div>
+      <section className="card" style={{ padding: 14, marginBottom: 12 }} data-testid="analyst-role-workbench">
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 10 }}>
+          <div>
+            <strong>六数字同事治理工作面</strong>
+            <div style={muted}>模板来自已版本化电商方案包；选择角色只装配查询，不代表 Agent 已执行。</div>
+          </div>
+          <div style={{ ...muted, fontSize: 12 }}>catalog {roleTemplateHash ? `${roleTemplateHash.slice(0, 12)}…` : "—"}</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10 }}>
+          {roleTemplates.map((template) => (
+            <button
+              key={template.templateId}
+              type="button"
+              aria-pressed={selectedTemplateId === template.templateId}
+              onClick={() => selectRoleTemplate(template)}
+              style={{ ...roleCard, ...(selectedTemplateId === template.templateId ? roleCardSelected : {}) }}
+              data-testid={`analyst-role-${template.roleId.replace("ecommerce.", "")}`}
+            >
+              <span style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <strong>{template.roleName}</strong>
+                <span style={{ color: template.readiness === "ready" ? "#047857" : "#b45309" }}>{template.readiness === "ready" ? "可查询" : "有阻断"}</span>
+              </span>
+              <span style={{ ...muted, fontSize: 12 }}>{template.purpose}</span>
+              <span style={{ ...muted, fontSize: 12 }}>{template.defaultObjectType} · {template.requiredLogicIds.length} Logic</span>
+            </button>
+          ))}
+          {roleTemplatesReady && roleTemplates.length === 0 && <div style={warning}>六角色模板未返回；未注入本地模板。</div>}
+        </div>
+        {roleTemplatesError && <p role="alert" style={warning}>六角色模板读取失败：{roleTemplatesError}。页面保持失败关闭。</p>}
+      </section>
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         <button type="button" aria-expanded={leftOpen} onClick={() => setLeftOpen((v) => !v)} onKeyDown={(event) => activateToggle(event, () => setLeftOpen((v) => !v))}>{leftOpen ? "收起查询" : "展开查询"}</button>
         <button type="button" aria-expanded={rightOpen} onClick={() => setRightOpen((v) => !v)} onKeyDown={(event) => activateToggle(event, () => setRightOpen((v) => !v))}>{rightOpen ? "收起证据" : "展开证据"}</button>
@@ -341,7 +469,7 @@ export function AipAnalystPage({
         <aside style={{ ...panel, overflow: "hidden", display: focus || !leftOpen ? "none" : "block" }} data-testid="analyst-query-builder">
           <h3>查询构造器</h3>
           <label style={label}>查询类型
-            <select value={kind} onChange={(e) => setKind(e.target.value as QueryKind)} style={input} aria-label="analyst-query-kind">
+            <select value={kind} onChange={(e) => { useCustomQuery(); setKind(e.target.value as QueryKind); }} style={input} aria-label="analyst-query-kind">
               <option value="semantic">语义对象</option>
               <option value="knowledge">行业知识</option>
               <option value="metric">权威指标</option>
@@ -351,7 +479,7 @@ export function AipAnalystPage({
             <label style={label}>Object Type
               <select
                 value={objectType}
-                onChange={(e) => setObjectType(e.target.value)}
+                onChange={(e) => { useCustomQuery(); setObjectType(e.target.value); }}
                 style={input}
                 aria-label="analyst-object-type"
                 data-testid="analyst-object-type"
@@ -366,7 +494,7 @@ export function AipAnalystPage({
           )}
           {kind === "knowledge" && (
             <label style={label}>知识问题
-              <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} style={{ ...input, minHeight: 100 }} />
+              <textarea value={prompt} onChange={(e) => { useCustomQuery(); setPrompt(e.target.value); }} style={{ ...input, minHeight: 100 }} />
             </label>
           )}
           <section data-testid="analyst-logic-mount" style={{ marginBottom: 16 }}>
@@ -445,4 +573,6 @@ export function AipAnalystPage({
   );
 }
 
-const panel = { background: "var(--color-surface, #fff)", border: "1px solid var(--color-border, #dbe2ea)", borderRadius: 10, padding: 18 }, label = { display: "grid", gap: 6, marginBottom: 16, fontWeight: 600 }, input = { width: "100%", padding: "9px 10px", border: "1px solid #cbd5e1", borderRadius: 7, background: "transparent", color: "inherit" }, primary = { background: "#2563eb", color: "white", border: 0, borderRadius: 7, padding: "9px 14px" }, muted = { color: "var(--color-text-muted, #64748b)", overflowWrap: "anywhere" as const }, warning = { padding: 10, color: "#92400e", background: "#fffbeb", border: "1px solid #f59e0b", borderRadius: 7 }, empty = { display: "grid", placeContent: "center", textAlign: "center" as const, minHeight: 360, color: "#64748b" }, smallCard = { padding: 9, marginTop: 7, border: "1px solid #dbe2ea", borderRadius: 7, overflowWrap: "anywhere" as const }, cell = { borderBottom: "1px solid #e2e8f0", textAlign: "left" as const, padding: "10px 12px", whiteSpace: "nowrap" as const }, raw = { maxHeight: 520, overflow: "auto", background: "#0f172a", color: "#e2e8f0", padding: 16, borderRadius: 8, fontSize: 12 };
+const panel = { background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 10, padding: 18 }, label = { display: "grid", gap: 6, marginBottom: 16, fontWeight: 600 }, input = { width: "100%", padding: "9px 10px", border: "1px solid var(--aos-border)", borderRadius: 7, background: "transparent", color: "var(--aos-text)" }, primary = { background: "var(--aos-accent, #2563eb)", color: "white", border: 0, borderRadius: 7, padding: "9px 14px" }, muted = { color: "var(--aos-text-muted)", overflowWrap: "anywhere" as const }, warning = { padding: 10, color: "var(--aos-amber)", background: "var(--aos-amber-bg)", border: "1px solid var(--aos-amber-border)", borderRadius: 7 }, empty = { display: "grid", placeContent: "center", textAlign: "center" as const, minHeight: 360, color: "var(--aos-text-muted)" }, smallCard = { padding: 9, marginTop: 7, border: "1px solid var(--aos-border)", borderRadius: 7, overflowWrap: "anywhere" as const }, cell = { borderBottom: "1px solid var(--aos-border)", textAlign: "left" as const, padding: "10px 12px", whiteSpace: "nowrap" as const }, raw = { maxHeight: 520, overflow: "auto", background: "#0f172a", color: "#e2e8f0", padding: 16, borderRadius: 8, fontSize: 12 };
+const roleCard = { display: "grid", gap: 8, textAlign: "left" as const, padding: 12, border: "1px solid var(--aos-border)", borderRadius: 9, background: "var(--aos-surface)", color: "var(--aos-text)", minHeight: 126 };
+const roleCardSelected = { borderColor: "var(--aos-accent, #2563eb)", boxShadow: "0 0 0 2px var(--aos-accent-light)", background: "var(--aos-accent-light)" };

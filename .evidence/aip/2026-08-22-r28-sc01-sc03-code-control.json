@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "aos.aip.code-control-evidence/v1",
+  "wave": "R28",
+  "capability": "SC01-SC03 independent replayable acceptance composition",
+  "recordedAt": "2026-08-22T09:01:14Z",
+  "tenant": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "sourceCommit": "7677212197570c3e15037f77ec321aa65b9493a0",
+  "codeControlStatus": "GREEN",
+  "realTenantEvidenceStatus": "BLOCKED_LATER",
+  "externalActionsStatus": "DRAFT_ONLY",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/aip_ecommerce_growth_scenarios_sc01_sc03.py",
+      "sha256": "a6527862497f4056b685a94697672d71eb1306f22832318001657c1c6b542930"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_aip_ecommerce_growth_scenarios_sc01_sc03.py",
+      "sha256": "002eee27524868655f77d246a8d81fb57267c37e15d4a8c0b8d31a471b97a119"
+    },
+    {
+      "path": "bundles/solutions/ecommerce-growth/content/growth/sc01-sc03-acceptance.v1.json",
+      "sha256": "5d43b09dcc96f74977053fcbe51068a014b11bd7c20648bd2d93887f3a461269"
+    }
+  ],
+  "verification": {
+    "targeted": "31 passed",
+    "cumulativeR24ToR28": "152 passed",
+    "aipFull": "1434 passed, 106 warnings",
+    "pythonCompile": "GREEN",
+    "manifestJson": "GREEN",
+    "diffCheck": "GREEN",
+    "browser": "NOT_RUN_BY_DESIGN_NO_API_SDK_OR_PAGE_CHANGE"
+  },
+  "scenarioResults": [
+    {
+      "scenarioId": "SC01",
+      "name": "新客获客与成交",
+      "codeControl": "GREEN",
+      "realTenantEvidence": "BLOCKED_BY_SOURCE_READINESS",
+      "externalActionAuthorized": false
+    },
+    {
+      "scenarioId": "SC02",
+      "name": "老客复购",
+      "codeControl": "GREEN",
+      "realTenantEvidence": "BLOCKED_BY_SOURCE_READINESS",
+      "externalActionAuthorized": false
+    },
+    {
+      "scenarioId": "SC03",
+      "name": "客户问题反哺产品与内容",
+      "codeControl": "GREEN",
+      "realTenantEvidence": "BLOCKED_BY_SOURCE_READINESS",
+      "externalActionAuthorized": false
+    }
+  ],
+  "readOnlyFacts": {
+    "checkedAt": "2026-08-22T08:11:11.309959Z",
+    "sourceReadiness": "FAILED_10_OF_12",
+    "failedPipelines": [
+      {
+        "pipelineId": "P02-product-qyh",
+        "status": "PIPELINE_EXECUTOR_FAILED",
+        "latestRunStartedAt": "2026-08-21T19:00:09.377791Z",
+        "rowsWritten": 0
+      },
+      {
+        "pipelineId": "P04-category-qyh",
+        "status": "PIPELINE_EXECUTOR_FAILED",
+        "latestRunStartedAt": "2026-08-21T21:00:05.110043Z",
+        "rowsWritten": 0
+      }
+    ],
+    "negativeCanary": "BLOCKED_12_OF_12_EXPECTED_TENANT_ISOLATION"
+  },
+  "failClosedGuarantees": [
+    "SC01, SC02 and SC03 produce three independent EvidencePack drafts",
+    "every pack binds exact Task, TaskRun, Logic, Handoff, Receipt, Lineage and EffectReview refs",
+    "SourceReadiness, observed cutoff and scenario time window must be current and aligned",
+    "mock, fixture, sample, fake and placeholder sources are rejected",
+    "SC01 requires content through attribution without treating content generation as conversion",
+    "SC02 consent, channel, frequency, opt-out and complaint guard all fail closed",
+    "SC03 requires aggregate evidence and never accepts SC09 single-case substitution",
+    "external action state is limited to draft or blocked"
+  ],
+  "externalBlockers": [
+    "P02_AND_P04_LATEST_RUNS_FAILED",
+    "DATA_SOURCE_READINESS_LEASE_NOT_LEGALLY_RELEASED",
+    "M1_SERIALIZED_AUTHORITY_01_06_PRIME_CAS_NOT_CLOSED"
+  ],
+  "sideEffects": {
+    "databaseWrites": 0,
+    "providerCalls": 0,
+    "actionExecutions": 0,
+    "externalMessages": 0,
+    "memoryWrites": 0,
+    "pipelineRetries": 0,
+    "leaseMutations": 0,
+    "m1OrWorkshopWrites": 0
+  }
+}

@@ -88,6 +88,7 @@ class CanonicalTaorRunner:
         }
         context: dict[str, Any] = {
             "taskRef": timeline.task.id,
+            "taskGoal": dict(timeline.task.goal),
             "runRef": timeline.run.id,
             "planRevisionRef": timeline.plan.id,
             "planContentHash": timeline.plan.content_hash,

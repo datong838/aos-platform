@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "ecommerce.growth.sc04-sc06-acceptance.v1",
+  "id": "ecommerce.growth.sc04-sc06-acceptance",
+  "status": "code_control_draft_real_tenant_evidence_blocked",
+  "scenarios": {
+    "SC04": {
+      "name": "大促经营协同与止损",
+      "logicIds": ["A01", "A02", "A03", "A04", "A05", "A06", "D03", "D04", "D05", "D06", "C02", "C03", "C04", "C05", "C06", "P03", "S01"],
+      "chain": ["CampaignPlanRevision", "BudgetEnvelopeRevision", "CostSnapshotRevision", "PriceSnapshotRevision", "InventorySnapshotRevision", "FulfillmentSnapshotRevision", "ExperimentRevision", "StopPolicyRevision", "MetricValidationRevision"],
+      "hardGates": ["budgetEnvelope", "marginFloor", "price", "inventory", "fulfillment", "capacity", "experimentFrozen", "assignmentClean", "pauseProposalOnly"]
+    },
+    "SC05": {
+      "name": "新品内容与发布准备",
+      "logicIds": ["D02", "D03", "C01", "C02", "C03", "C04", "C05", "C06", "G02", "G03", "G04", "A01", "A04", "S01"],
+      "chain": ["ProductFactsRevision", "ContentAssetRevision", "CopyrightEvidenceRevision", "PlatformRuleReviewRevision", "PublishDraftRevision"],
+      "hardGates": ["freshProductFacts", "assetReview", "copyrightEvidence", "platformRules", "publishDraftOnly"]
+    },
+    "SC06": {
+      "name": "每日经营巡检",
+      "logicIds": ["D01", "D02", "D03", "D04", "D05", "D06"],
+      "chain": ["PatrolTaskRevision", "CheckpointRevision", "CheckpointReceiptRevision", "EffectReviewRevision", "MemoryCandidateRevision"],
+      "allowedOutcomes": ["opportunity", "anomaly", "no_action"],
+      "hardGates": ["checkpointPair", "noForcedOpportunity", "memoryCandidateOnly"]
+    }
+  },
+  "evidencePack": {
+    "independentPerScenario": true,
+    "requires": [
+      "ScenarioRevision",
+      "SourceReadinessEvidencePackRevision",
+      "TaskRunRevision",
+      "LogicGraphRevision",
+      "LineageRevision",
+      "EffectReviewRevision",
+      "sameCutoffAndFreshness",
+      "replayDigest"
+    ]
+  },
+  "realInputPolicy": {
+    "requiredTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "sourceReadiness": "current P01-P12 12/12 READY",
+    "currentBlockers": ["P02_PIPELINE_EXECUTOR_FAILED", "P04_PIPELINE_EXECUTOR_FAILED", "DATA_LEASE_ACTIVE", "M1_CAS_PENDING"]
+  },
+  "externalActions": {
+    "campaignPauseAuthorized": false,
+    "contentPublishAuthorized": false,
+    "memoryPromotionAuthorized": false
+  },
+  "sideEffects": {
+    "databaseWrite": false,
+    "providerCall": false,
+    "actionExecution": false,
+    "memoryPromotion": false,
+    "pipelineRetry": false,
+    "productionWrite": false
+  }
+}

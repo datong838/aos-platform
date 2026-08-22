@@ -1,0 +1,40 @@
+{
+  "schema": "aos-aip-delivery-receipt/v1",
+  "delivery_id": "aip-r20-fde-s4-s6-reflection-20260822",
+  "branch": "w1-aip",
+  "base_commit": "80f4f8ba5553a865494ac361354058873b62f67e",
+  "code_commit": "66569e73a301d0f10b2708185bf7309c2568b8ed",
+  "status": "CODE_GREEN_OPERATIONAL_EXTERNAL_REQUIRED",
+  "tenant_scope": {
+    "positive": "org-org/dev-project",
+    "negative_canary": "dev-org/dev-project"
+  },
+  "capabilities": {
+    "fde_steps": 6,
+    "reflection_rules": 26,
+    "hard_rules": 21,
+    "soft_rules": 5,
+    "reflection_rule_set_hash": "93f43641ca9f57d852b02015d05c77e84de0dc46e79a0d02bcd7d23e4ed3a4eb",
+    "mapping_types_proposed": 12,
+    "pipeline_executed": false,
+    "database_write": false,
+    "provider_or_platform_call": false
+  },
+  "verification": {
+    "fde_targeted": "22 passed",
+    "canonical_taor": "8 passed",
+    "openapi_contract": "13 passed",
+    "aip_cumulative": "1238 passed, 106 warnings",
+    "openapi_summary": "2543 paths / 1974 schemas / 4311 operations",
+    "compileall": "GREEN",
+    "diff_check": "GREEN",
+    "tenant_canary": "GREEN"
+  },
+  "boundaries": [
+    "No concrete ecommerce platform connection is claimed.",
+    "No operational SourceReadiness GREEN is claimed.",
+    "No Secret payload, Pipeline execution, real database write, Provider call or destructive rollback occurred.",
+    "Data Lease covered files and Workshop/m1 authority were not modified."
+  ],
+  "next_wave": "R21 content director, text production chain and 14 Harness skills"
+}

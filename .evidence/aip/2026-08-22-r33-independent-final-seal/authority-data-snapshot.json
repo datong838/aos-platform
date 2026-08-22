@@ -1,0 +1,672 @@
+{
+  "checkedAt": "2026-08-22T14:22:38.023424+00:00",
+  "forbiddenData": {
+    "databaseWrite": false,
+    "providerCall": false,
+    "secretPayloadRead": false,
+    "sourcePayloadRead": false
+  },
+  "gates": {
+    "negativeCanaryIsolated": true,
+    "sixAgentsRunnable": false,
+    "sourceReadiness12of12": false
+  },
+  "mode": "REPEATABLE_READ_READ_ONLY_SECRET_FREE",
+  "negativeCanary": "dev-org/dev-project",
+  "positiveTenant": "org-org/dev-project",
+  "schemaVersion": "aip.r33.authority-snapshot.v1",
+  "tenants": {
+    "dev-org/dev-project": {
+      "agentRuntime": {
+        "bindingStats": {
+          "activeCapabilityBindingCount": 0,
+          "activeSkillBindingCount": 0,
+          "capabilityBindingCount": 0,
+          "skillBindingCount": 0
+        },
+        "blockedRoles": [
+          {
+            "blockerCodes": [
+              "agent_instance_not_installed",
+              "capability_bindings_unavailable",
+              "skill_binding_unavailable",
+              "skill_templates_not_published"
+            ],
+            "displayName": "活动策划师",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.campaign_planner"
+          },
+          {
+            "blockerCodes": [
+              "agent_instance_not_installed",
+              "capability_bindings_unavailable",
+              "skill_binding_unavailable",
+              "skill_templates_not_published"
+            ],
+            "displayName": "内容官",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.content_officer"
+          },
+          {
+            "blockerCodes": [
+              "agent_instance_not_installed",
+              "capability_bindings_unavailable",
+              "skill_binding_unavailable",
+              "skill_templates_not_published"
+            ],
+            "displayName": "客服专员",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.customer_service"
+          },
+          {
+            "blockerCodes": [
+              "agent_instance_not_installed",
+              "capability_bindings_unavailable",
+              "skill_binding_unavailable",
+              "skill_templates_not_published"
+            ],
+            "displayName": "数据参谋",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.data_advisor"
+          },
+          {
+            "blockerCodes": [
+              "agent_instance_not_installed",
+              "capability_bindings_unavailable",
+              "skill_binding_unavailable",
+              "skill_templates_not_published"
+            ],
+            "displayName": "私域管家",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.private_domain_manager"
+          },
+          {
+            "blockerCodes": [
+              "agent_instance_not_installed",
+              "capability_bindings_unavailable",
+              "skill_binding_unavailable",
+              "skill_templates_not_published"
+            ],
+            "displayName": "导购顾问",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.shopping_advisor"
+          }
+        ],
+        "evaluatedAt": "2026-08-22T14:22:43.787647+00:00",
+        "stats": {
+          "capabilityDefinitionCount": 10,
+          "definitionCount": 6,
+          "installedCount": 0,
+          "runnableCount": 0,
+          "skillDefinitionCount": 37
+        }
+      },
+      "authorityCounts": {
+        "freshCapabilityBindingCount": 0,
+        "freshProviderHealthCount": 0,
+        "freshSkillBindingCount": 0,
+        "tableCounts": {
+          "aip_agent_instance": 0,
+          "aip_agent_run": 0,
+          "aip_budget_head": 0,
+          "aip_capability_binding": 0,
+          "aip_eval_report_revision": 0,
+          "aip_eval_suite": 1,
+          "aip_memory_item": 0,
+          "aip_memory_pipeline_run": 0,
+          "aip_memory_pipeline_schedule": 0,
+          "aip_model_capacity_pool_head": 0,
+          "aip_model_governance_policy_head": 0,
+          "aip_model_price_snapshot_head": 0,
+          "aip_model_route_head": 0,
+          "aip_network_policy_head": 0,
+          "aip_provider_health_observation": 0,
+          "aip_provider_instance_head": 0,
+          "aip_registered_model_head": 0,
+          "aip_runtime_guard_policy_head": 0,
+          "aip_runtime_policy_head": 0,
+          "aip_skill_binding": 0,
+          "wiki_page": 1
+        }
+      },
+      "sourceReadiness": {
+        "checkedAt": "2026-08-22T14:22:43.663992+00:00",
+        "cutoffAt": "2026-08-22T14:22:43.663992+00:00",
+        "failures": [
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "Shop",
+            "pipelineId": "P01-shop-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          },
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "Product",
+            "pipelineId": "P02-product-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          },
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "ProductSku",
+            "pipelineId": "P03-product-sku-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          },
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "Category",
+            "pipelineId": "P04-category-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          },
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "Order",
+            "pipelineId": "P05-order-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          },
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "OrderLine",
+            "pipelineId": "P06-order-line-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          },
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "Shipment",
+            "pipelineId": "P07-shipment-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          },
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "CustomerLite",
+            "pipelineId": "P08-customer-lite-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          },
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "Weapp",
+            "pipelineId": "P09-weapp-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          },
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "SystemConfig",
+            "pipelineId": "P10-system-config-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          },
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "ProductReview",
+            "pipelineId": "P11-product-review-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          },
+          {
+            "blockers": [
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND"
+            ],
+            "dataCutoff": null,
+            "latestRunErrorCode": null,
+            "latestRunStatus": "unknown",
+            "objectType": "Payment",
+            "pipelineId": "P12-payment-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "PIPELINE_NOT_FOUND",
+              "QUERY_CAPABILITY_REF_MISSING",
+              "SCHEDULE_CRON_POLICY_MISMATCH",
+              "SCHEDULE_INGEST_KIND_MISMATCH",
+              "SCHEDULE_NOT_FOUND",
+              "SCHEDULE_PIPELINE_REF_MISMATCH",
+              "SCHEDULE_SOURCE_REF_MISMATCH",
+              "SOURCE_CONFIG_EXACT_REF_MISSING",
+              "SOURCE_NOT_FOUND",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "blocked"
+          }
+        ],
+        "receiptRef": null,
+        "sourceCount": 12,
+        "status": "blocked",
+        "statusCounts": {
+          "blocked": 12
+        }
+      }
+    },
+    "org-org/dev-project": {
+      "agentRuntime": {
+        "bindingStats": {
+          "activeCapabilityBindingCount": 12,
+          "activeSkillBindingCount": 41,
+          "capabilityBindingCount": 48,
+          "skillBindingCount": 41
+        },
+        "blockedRoles": [
+          {
+            "blockerCodes": [
+              "capability_binding_readiness_stale",
+              "skill_binding_readiness_stale"
+            ],
+            "displayName": "活动策划师",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.campaign_planner"
+          },
+          {
+            "blockerCodes": [
+              "capability_binding_readiness_stale",
+              "skill_binding_readiness_stale"
+            ],
+            "displayName": "内容官",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.content_officer"
+          },
+          {
+            "blockerCodes": [
+              "capability_binding_readiness_stale",
+              "skill_binding_readiness_stale"
+            ],
+            "displayName": "客服专员",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.customer_service"
+          },
+          {
+            "blockerCodes": [
+              "capability_binding_readiness_stale",
+              "skill_binding_readiness_stale"
+            ],
+            "displayName": "数据参谋",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.data_advisor"
+          },
+          {
+            "blockerCodes": [
+              "capability_binding_readiness_stale",
+              "skill_binding_readiness_stale"
+            ],
+            "displayName": "私域管家",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.private_domain_manager"
+          },
+          {
+            "blockerCodes": [
+              "capability_binding_readiness_stale",
+              "skill_binding_readiness_stale"
+            ],
+            "displayName": "导购顾问",
+            "runtimeReadiness": "blocked",
+            "templateId": "ecommerce.shopping_advisor"
+          }
+        ],
+        "evaluatedAt": "2026-08-22T14:22:43.542920+00:00",
+        "stats": {
+          "capabilityDefinitionCount": 10,
+          "definitionCount": 6,
+          "installedCount": 6,
+          "runnableCount": 0,
+          "skillDefinitionCount": 37
+        }
+      },
+      "authorityCounts": {
+        "freshCapabilityBindingCount": 0,
+        "freshProviderHealthCount": 0,
+        "freshSkillBindingCount": 0,
+        "tableCounts": {
+          "aip_agent_instance": 6,
+          "aip_agent_run": 15,
+          "aip_budget_head": 1,
+          "aip_capability_binding": 48,
+          "aip_eval_report_revision": 50,
+          "aip_eval_suite": 39,
+          "aip_memory_item": 0,
+          "aip_memory_pipeline_run": 0,
+          "aip_memory_pipeline_schedule": 0,
+          "aip_model_capacity_pool_head": 3,
+          "aip_model_governance_policy_head": 2,
+          "aip_model_price_snapshot_head": 1,
+          "aip_model_route_head": 3,
+          "aip_network_policy_head": 3,
+          "aip_provider_health_observation": 195,
+          "aip_provider_instance_head": 3,
+          "aip_registered_model_head": 3,
+          "aip_runtime_guard_policy_head": 4,
+          "aip_runtime_policy_head": 3,
+          "aip_skill_binding": 41,
+          "wiki_page": 0
+        }
+      },
+      "sourceReadiness": {
+        "checkedAt": "2026-08-22T14:22:43.366481+00:00",
+        "cutoffAt": "2026-08-22T14:22:43.366481+00:00",
+        "failures": [
+          {
+            "blockers": [],
+            "dataCutoff": "2026-08-21T19:00:20.088550+00:00",
+            "latestRunErrorCode": "PIPELINE_EXECUTOR_FAILED",
+            "latestRunStatus": "failed",
+            "objectType": "Product",
+            "pipelineId": "P02-product-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "failed"
+          },
+          {
+            "blockers": [],
+            "dataCutoff": "2026-08-21T21:00:15.593819+00:00",
+            "latestRunErrorCode": "PIPELINE_EXECUTOR_FAILED",
+            "latestRunStatus": "failed",
+            "objectType": "Category",
+            "pipelineId": "P04-category-qyh",
+            "reasons": [
+              "LATEST_RUN_NOT_SUCCEEDED",
+              "SOURCE_QUALITY_FAILED"
+            ],
+            "status": "failed"
+          }
+        ],
+        "receiptRef": null,
+        "sourceCount": 12,
+        "status": "failed",
+        "statusCounts": {
+          "failed": 2,
+          "ready": 10
+        }
+      }
+    }
+  },
+  "verdict": "CODE_API_GREEN_OPERATIONAL_BLOCKED"
+}

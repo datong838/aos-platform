@@ -72,6 +72,7 @@ describe("Wave 3B W1 · 页面交互真实性", () => {
     expect(host.querySelector('[data-testid="sql-editor"]')).toBeNull();
     const run = Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("运行真实查询"));
     expect(run).toBeDefined();
-    expect(run?.disabled).toBe(false);
+    expect(run?.disabled).toBe(true);
+    expect(host.textContent).toContain("六角色模板读取失败");
   });
 });

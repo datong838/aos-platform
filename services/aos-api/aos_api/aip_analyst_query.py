@@ -20,6 +20,8 @@ from aos_api.aip_analyst_contracts import (
     MetricQueryRequest,
     QueryBlocker,
     QueryColumn,
+    QueryConfidence,
+    QueryConfidenceStatus,
     QueryResultRevision,
     QueryRow,
     QuerySourceRef,
@@ -38,6 +40,7 @@ class AdapterResult:
     source_refs: list[QuerySourceRef]
     lineage_refs: list[ResourceRef]
     uncertainties: list[str]
+    confidence: QueryConfidence
 
 
 class CanonicalAdapterBlocked(RuntimeError):
@@ -118,6 +121,10 @@ def _blocked(
                 retryable=retryable,
             )
         ],
+        confidence=QueryConfidence(
+            status=QueryConfidenceStatus.UNKNOWN,
+            basis=[code],
+        ),
         cutoff_at=min(request.cutoff_at, created_at),
         content_hash=sha256(_canonical(payload)).hexdigest(),
         created_at=created_at,
@@ -186,6 +193,7 @@ def execute_analyst_query(
         "sources": [item.model_dump(mode="json", by_alias=True) for item in result.source_refs],
         "lineage": [item.model_dump(mode="json", by_alias=True) for item in result.lineage_refs],
         "uncertainties": result.uncertainties,
+        "confidence": result.confidence.model_dump(mode="json", by_alias=True),
     }
     return QueryResultRevision(
         tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
@@ -198,6 +206,7 @@ def execute_analyst_query(
         source_refs=result.source_refs,
         lineage_refs=result.lineage_refs,
         uncertainties=result.uncertainties,
+        confidence=result.confidence,
         cutoff_at=request.cutoff_at,
         content_hash=sha256(_canonical(payload)).hexdigest(),
         created_at=created_at,

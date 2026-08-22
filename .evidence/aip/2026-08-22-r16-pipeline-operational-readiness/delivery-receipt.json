@@ -1,0 +1,24 @@
+{
+  "receiptVersion": "1.0",
+  "receiptType": "AIP_WAVE_DELIVERY",
+  "wave": "AIP-R16",
+  "branch": "w1-aip",
+  "baselineSha": "089a06aebe01d7a48f06e406980a353c653221db",
+  "deliveryStatus": "CODE_CONTROL_GREEN_BROWSER_ACCEPTED",
+  "operationalStatus": "EXTERNAL_DATA_GATED",
+  "deliveredCapabilities": [
+    "tenant-scoped unpaginated seven-pipeline activity aggregate",
+    "fail-closed operational readiness envelope",
+    "strict Web parser and SDK method",
+    "seven-pipeline operational cards with exact blockers"
+  ],
+  "notDelivered": [
+    "beauty VerticalPack installation",
+    "licensed external source activation",
+    "GoldSet and quantitative Eval",
+    "real Schedule activation or first successful Receipt"
+  ],
+  "evidenceRef": ".evidence/aip/2026-08-22-r16-pipeline-operational-readiness/verification.json",
+  "nextGate": "AIP-R17_FIRST_UNFINISHED_SAFE_WAVE",
+  "sharedProjection": "DEFER_TO_M1_CAS_INTEGRATION"
+}

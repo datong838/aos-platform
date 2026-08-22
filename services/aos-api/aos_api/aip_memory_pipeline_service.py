@@ -13,7 +13,7 @@ from typing import Protocol
 
 from pydantic import Field
 
-from aos_api.aip_contracts import AipContractModel, ResourceRef
+from aos_api.aip_contracts import AipContractModel, ResourceRef, TenantContext
 from aos_api.aip_memory_contracts import (
     KnowledgeScope,
     KnowledgeSourceKind,
@@ -26,6 +26,9 @@ from aos_api.aip_memory_pipeline_contracts import (
     KnowledgePipelineDependencyStatus,
     KnowledgePipelineInputReceipt,
     KnowledgePipelineKind,
+    KnowledgePipelineOperationalReadiness,
+    KnowledgePipelineOperationalReadinessEnvelope,
+    KnowledgePipelineOperationalStatus,
     KnowledgePipelinePolicy,
     KnowledgePipelineRunStatus,
     KnowledgePipelineScheduleStatus,
@@ -246,6 +249,72 @@ class AipMemoryPipelineService:
     @staticmethod
     def policy_kinds() -> list[KnowledgePipelineKind]:
         return list(KnowledgePipelineKind)
+
+    def operational_readiness(
+        self, scope: TenantScope, *, occurred_at: datetime
+    ) -> KnowledgePipelineOperationalReadinessEnvelope:
+        """Build one fail-closed, unpaginated readiness view for all seven pipelines."""
+
+        activity = self._pipeline_store.summarize_activity(scope)
+        pipelines: list[KnowledgePipelineOperationalReadiness] = []
+        for kind in KnowledgePipelineKind:
+            policy = self.policy_for(kind)
+            snapshot = activity[kind]
+            dependency = self.evaluate_dependencies(scope, kind, occurred_at=occurred_at)
+            adapter_required = "trusted_adapter" in policy.required_dependencies
+            adapter_registered = (
+                self._adapter_registry.supports_kind(kind) if adapter_required else True
+            )
+            schedule_counts = {item.status: item.count for item in snapshot.schedule_counts}
+            blockers = list(dependency.reason_codes)
+            if not schedule_counts:
+                blockers.append("schedule_not_registered")
+            elif schedule_counts.get(KnowledgePipelineScheduleStatus.ACTIVE.value, 0) == 0:
+                blockers.append("schedule_not_active")
+            if adapter_required and not adapter_registered:
+                blockers.append("trusted_adapter_not_registered")
+            if snapshot.last_receipt is None:
+                blockers.append("successful_receipt_missing")
+            elif snapshot.last_receipt.status is not KnowledgePipelineRunStatus.SUCCEEDED:
+                blockers.append("latest_receipt_not_succeeded")
+            blockers = list(dict.fromkeys(blockers))
+
+            if not blockers:
+                status = KnowledgePipelineOperationalStatus.READY
+            elif not schedule_counts:
+                status = KnowledgePipelineOperationalStatus.UNCONFIGURED
+            elif schedule_counts.get(KnowledgePipelineScheduleStatus.ACTIVE.value, 0):
+                status = KnowledgePipelineOperationalStatus.BLOCKED
+            elif schedule_counts.get(KnowledgePipelineScheduleStatus.PAUSED.value, 0):
+                status = KnowledgePipelineOperationalStatus.PAUSED
+            else:
+                status = KnowledgePipelineOperationalStatus.DISABLED
+
+            pipelines.append(
+                KnowledgePipelineOperationalReadiness(
+                    tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+                    pipeline_kind=kind,
+                    default_status=policy.default_status,
+                    dependency_allowed=dependency.allowed,
+                    dependency_reason_codes=dependency.reason_codes,
+                    adapter_required=adapter_required,
+                    adapter_registered=adapter_registered,
+                    schedule_counts=snapshot.schedule_counts,
+                    run_counts=snapshot.run_counts,
+                    last_run=snapshot.last_run,
+                    last_receipt=snapshot.last_receipt,
+                    last_checkpoint=snapshot.last_checkpoint,
+                    alert_count=snapshot.alert_count,
+                    operational_status=status,
+                    blocker_codes=blockers,
+                    observed_at=occurred_at,
+                )
+            )
+        return KnowledgePipelineOperationalReadinessEnvelope(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            pipelines=pipelines,
+            observed_at=occurred_at,
+        )
 
     def create_schedule(
         self,

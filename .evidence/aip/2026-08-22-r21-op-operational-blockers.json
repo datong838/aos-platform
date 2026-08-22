@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "aip.r21-op.blocker-evidence.v1",
+  "status": "ASSESSMENT_GREEN_OPERATIONAL_BLOCKED",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "negativeCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project",
+    "productCount": 0
+  },
+  "sourceCommit": "a1221d69666c106241d4925646cb5571921ed258",
+  "responsibility": {
+    "historicalStrategySkill": "C02",
+    "realProductCopySkill": "C03",
+    "artifactReviewSkill": "C06"
+  },
+  "historicalTrace": {
+    "attemptId": "ecommerce.content_officer.C02.real-pilot.v1.attempt-1",
+    "status": "succeeded",
+    "artifactId": "artifact-fc097f0a29cd420e9677",
+    "artifactType": "agent_text_output",
+    "outputContentHash": "f5b368f86cb04d3782b4971bc131606fa5e3d492302eaae7eba48742a14cb209",
+    "usageReceiptCount": 2,
+    "lineageId": "lineage-2dce83d6911926580907fdf9",
+    "lineageEventCount": 3,
+    "sameProductBoundToHistoricalPilot": false
+  },
+  "realProductRefs": [
+    "Product:niushop:1:59@ab693ccc555fe4d44eb4d7436507709d265e6e5ab4d46131e7cbddfab55c8d14#ab693ccc555fe4d44eb4d7436507709d265e6e5ab4d46131e7cbddfab55c8d14",
+    "Product:niushop:1:58@f3d23d597e2106ef2e63144ea57b5af087d83154331f4dcaae4e723872ea0447#f3d23d597e2106ef2e63144ea57b5af087d83154331f4dcaae4e723872ea0447",
+    "Product:niushop:1:65@f096ec151321a076983d21c6fa5b29040cc255db5b5a89530a0313d1cbb728bb#f096ec151321a076983d21c6fa5b29040cc255db5b5a89530a0313d1cbb728bb"
+  ],
+  "blockers": [
+    {
+      "code": "CANONICAL_CONTENT_OBJECT_AUTHORITY_UNAVAILABLE",
+      "reason": "aip_artifact stores metadata and a sha256 reference but no governed readable content object"
+    },
+    {
+      "code": "CONTENT_DRAFT_BUDGET_BALANCE_AUTHORITY_UNAVAILABLE",
+      "reason": "BudgetRevision authorizes a window but does not prove usage and remaining balance"
+    },
+    {
+      "code": "PRODUCT_FACT_PACK_AUTHORITY_UNAVAILABLE",
+      "reason": "no exact fresh Product FactPack with policy and evidence references is composed for the pilot"
+    },
+    {
+      "code": "C06_ARTIFACT_LEVEL_EVAL_AUTHORITY_UNAVAILABLE",
+      "reason": "isolated logic contract eval is not a quality review of Provider output"
+    }
+  ],
+  "verification": {
+    "targetedTests": "9 passed",
+    "baselineAipRegression": "1253 passed",
+    "finalTrackedCodeDiff": 0,
+    "providerBusinessCalls": 0,
+    "databaseWrites": 0,
+    "artifactBodiesRead": 0,
+    "secretPayloadReads": 0,
+    "browserRequired": false
+  },
+  "safetyDecision": "NO_REAL_C03_PILOT_UNTIL_ALL_CANONICAL_AUTHORITIES_ARE_GREEN"
+}
