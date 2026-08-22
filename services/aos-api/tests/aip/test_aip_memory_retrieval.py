@@ -791,13 +791,16 @@ def seed_running_agent_run(chain) -> tuple[ResourceRef, ResourceRef, VersionedAs
                model_route_ref,runtime_policy_ref,logic_revision_ref,
                content_hash,created_by)
                VALUES (%s,1,%s,'published','{}','{}','[]','[]','low',
-                 '{}'::jsonb,'{}'::jsonb,'{}'::jsonb,'internal',
+                 %s::jsonb,%s::jsonb,%s::jsonb,'internal',
                  %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
                  %s::jsonb,
                  %s,'pytest')""",
             (
                 skill_id,
                 f"e7.logic.{suffix}",
+                json.dumps(asset("MemoryPolicy", f"e7-memory-{suffix}").model_dump(mode="json", by_alias=True)),
+                json.dumps(asset("HandoffPolicy", f"e7-handoff-{suffix}").model_dump(mode="json", by_alias=True)),
+                json.dumps(ref("SolutionPack", "ecommerce").model_dump(mode="json", by_alias=True)),
                 json.dumps(asset("SkillTemplate", skill_id).model_dump(mode="json", by_alias=True)),
                 json.dumps({"orgId": PRIMARY.org_id, "projectId": PRIMARY.project_id}),
                 json.dumps(asset("EvalGateDecision", f"e7-gate-{suffix}").model_dump(mode="json", by_alias=True)),

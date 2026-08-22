@@ -207,6 +207,7 @@ def test_expired_lease_after_action_enters_unknown_without_repeating_action(clie
 
 class _Adapter:
     def think(self, step: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+        assert context["taskGoal"] == {}
         return {"instruction": f"execute {step['stepKey']}", "context": context["runRef"]}
 
     def act(self, step: dict[str, Any], thought: dict[str, Any]) -> dict[str, Any]:
