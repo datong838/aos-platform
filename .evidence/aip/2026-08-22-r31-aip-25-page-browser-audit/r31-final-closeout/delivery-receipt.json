@@ -23,10 +23,11 @@
     "targetedWebTests": "5 files / 35 tests GREEN",
     "assistTargetedTests": "1 file / 9 tests GREEN",
     "draftTargetedTests": "2 files / 74 tests GREEN",
+    "productionContractsTargetedTests": "1 file / 9 tests GREEN",
     "webTypecheck": "GREEN",
     "diffCheck": "GREEN",
     "browser1280": "25/25 single H1; 25/25 no horizontal overflow; 25/25 page-owned controls named",
-    "keyboard": "Assist Enter; Logic ArrowRight; Agent Import and Draft Tab; Model Catalog Space; Production Contract disabled reasons",
+    "keyboard": "Assist Enter; Logic ArrowRight; Agent Import and Draft Tab; Model Catalog Space; Production Contract disabled reasons including Review resolution",
     "longLoading": "7/7 resolved after stable-state wait"
   },
   "warnings": [

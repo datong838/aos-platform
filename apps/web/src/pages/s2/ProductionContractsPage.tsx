@@ -229,7 +229,7 @@ export function ProductionContractsPage() {
           <label>真实运行 ID<input aria-label="Review 真实运行 ID" value={reviewRunId} onChange={event => setReviewRunId(event.target.value)} placeholder="仅退回时必填 run-…" /></label>
           <label>处置原因<input aria-label="Review 处置原因" value={reviewReason} onChange={event => setReviewReason(event.target.value)} placeholder="必填，进入审计事件" /></label>
         </div>
-        <div style={{ display: "flex", gap: 10, marginTop: 12 }}><button className="btn" disabled={!canReviewCommand || Boolean(busy)} onClick={resolveReview}>标记已解决</button><button className="btn primary" disabled={!canReviewCommand || !reviewRunId.trim() || Boolean(busy)} title="只向真实 running TaskRun 的目标 Stage 追加 queued attempt" onClick={returnReview}>退回目标 Stage</button></div>
+        <div style={{ display: "flex", gap: 10, marginTop: 12 }}><button className="btn" disabled={!canReviewCommand || Boolean(busy)} title={busy ? "正在提交处置，请稍候" : canReviewCommand ? "将当前 Open Issue 标记为已解决并写入审计事件" : "请选择待处置 Open Issue 并填写处置原因"} onClick={resolveReview}>标记已解决</button><button className="btn primary" disabled={!canReviewCommand || !reviewRunId.trim() || Boolean(busy)} title="只向真实 running TaskRun 的目标 Stage 追加 queued attempt" onClick={returnReview}>退回目标 Stage</button></div>
       </section>
       <div className="notice" style={{ marginTop: 16 }}>W2-D Preview / Start 组合门已接入 PostgreSQL authority；即使 Start Decision 为 started，也只创建 canonical TaskRun。AgentRun、Route、Provider、Binding 与容量仍由独立服务端门禁控制。</div>
     </> : null}

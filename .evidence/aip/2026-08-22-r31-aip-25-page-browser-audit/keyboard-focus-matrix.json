@@ -49,8 +49,8 @@
       "control": "高风险禁用动作",
       "interaction": "read-only semantic inspection",
       "result": "创建契约、冻结职责计划、冻结 Preview、组合门和编译 Plan 均保持 disabled，并提供失败关闭原因",
-      "status": "GREEN_WITH_ONE_LOW_PRIORITY_COPY_DEBT",
-      "note": "标记已解决在当前空选择态缺少 title；不构成可执行副作用，后续共享文案波处理。"
+      "status": "GREEN",
+      "note": "标记已解决在当前空选择态显示：请选择待处置 Open Issue 并填写处置原因。"
     }
   ],
   "routeWideSemanticResult": {
