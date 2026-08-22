@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "ecommerce.growth.daily-operating-loop.v1",
+  "id": "ecommerce.growth.daily-operating-loop",
+  "status": "draft_only_blocked_until_same_cutoff_evidence_ready",
+  "sourceGate": {
+    "requiredSources": ["P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10", "P11", "P12"],
+    "requirements": [
+      "same_tenant",
+      "same_cutoff",
+      "latest_run_succeeded",
+      "fresh_at_observation_time",
+      "reconciliation_passed",
+      "source_projection_count_equal",
+      "exact_evidence_pack_revision"
+    ]
+  },
+  "logicStages": [
+    {"order": 1, "logicId": "D01", "output": "DailyDataReadiness"},
+    {"order": 2, "logicId": "D02", "output": "OpportunityResearch.DRAFT"},
+    {"order": 3, "logicId": "D03", "output": "GrowthPlan.DRAFT"},
+    {"order": 4, "logicId": "D04", "output": "AgentTaskDAG.DRAFT"},
+    {"order": 5, "logicId": "D05", "output": "ExecutionAdjustmentAdvice.DRAFT"},
+    {"order": 6, "logicId": "D06", "output": "EffectReview.DRAFT+MemoryCandidate.DRAFT"}
+  ],
+  "requiredAuthorities": [
+    "SourceReadinessEvidencePackRevision",
+    "PipelineRunRevision",
+    "WikiSnapshotRevision",
+    "OkfMappingRevision",
+    "IntelligenceEvidenceRevision",
+    "LogicGraphRevision",
+    "GrowthPlanRevision",
+    "GrowthApprovalEventRevision",
+    "EffectReviewRevision"
+  ],
+  "insufficientDataOutcome": "INCONCLUSIVE_NO_ACTION",
+  "forbidden": [
+    "historical_green_overrides_latest_failure",
+    "cross_cutoff_evidence_stitching",
+    "missing_metric_as_zero",
+    "automatic_plan_approval",
+    "task_dispatch",
+    "external_publish_or_contact",
+    "price_or_inventory_write",
+    "automatic_memory_promotion",
+    "production_write"
+  ]
+}
