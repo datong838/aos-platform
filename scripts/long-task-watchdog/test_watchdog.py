@@ -115,6 +115,22 @@ class WatchdogTest(unittest.TestCase):
         }
         return config
 
+    def blocked_recheck_config(self):
+        config = self.config()
+        config["blocked_recheck_watch"] = {
+            "enabled": True,
+            "delay_seconds": 1800,
+        }
+        return config
+
+    def visibility_config(self, *, desktop_notification=False):
+        config = self.config()
+        config["visibility_watch"] = {
+            "enabled": True,
+            "desktop_notification": desktop_notification,
+        }
+        return config
+
     def write_leases(self, *leases):
         (self.root / "leases.json").write_text(
             json.dumps({"schema": "aos-memory-leases/v1", "leases": list(leases)}),
@@ -195,6 +211,20 @@ class WatchdogTest(unittest.TestCase):
         )
         decision, status = watchdog.evaluate(
             self.config(), {}, now=1000, rollout_path=self.transcript
+        )
+        self.assertTrue(status.turn_running)
+        self.assertEqual("recover", decision)
+
+    def test_stale_running_turn_with_production_watches_allows_recovery(self):
+        self.write(
+            task_event("1970-01-01T00:00:05Z", "task_started"),
+            record("1970-01-01T00:00:10Z", "user"),
+        )
+        config = self.blocked_recheck_config()
+        config["fact_watch"] = {"enabled": True, "paths": []}
+        config["dependency_watch"] = {"enabled": False}
+        decision, status = watchdog.evaluate(
+            config, {}, now=1000, rollout_path=self.transcript
         )
         self.assertTrue(status.turn_running)
         self.assertEqual("recover", decision)
@@ -550,6 +580,533 @@ class WatchdogTest(unittest.TestCase):
         self.assertEqual("safe-blocked", state["last_recovery_outcome"])
         self.assertEqual(0, state["next_retry_at"])
 
+    def test_safe_blocked_arms_periodic_recheck_and_wakes_when_due(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.blocked_recheck_config()), encoding="utf-8"
+        )
+        calls = []
+
+        def first_runner(*args, **kwargs):
+            calls.append(kwargs["input"])
+            self.write_ack(
+                outcome="safe-blocked",
+                next_task="W2-00B",
+                reason_code="DEPENDENCIES_NOT_GREEN",
+                blocker_fingerprint="p07-and-source-readiness",
+                evidence_refs=["probe:11-of-12"],
+            )
+            self.append(record("1970-01-01T00:16:41Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(args[0], 0, "blocked", "")
+
+        self.assertEqual(
+            "safe-blocked",
+            watchdog.run_once(config_path, state_path, now=1000, runner=first_runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["blocked_recheck_armed"])
+        self.assertEqual(2800, state["blocked_recheck_ready_at"])
+        self.assertEqual(
+            "idle",
+            watchdog.run_once(config_path, state_path, now=2799, runner=first_runner),
+        )
+        self.assertEqual(1, len(calls))
+
+        def recheck_runner(*args, **kwargs):
+            prompt = kwargs["input"]
+            calls.append(prompt)
+            episode = re.search(r"^episode_id=(.+)$", prompt, re.MULTILINE).group(1)
+            self.write_ack(
+                outcome="safe-blocked",
+                episode_id=episode,
+                next_task="W2-00B",
+                reason_code="DEPENDENCIES_STILL_NOT_GREEN",
+                blocker_fingerprint="p07-and-source-readiness",
+                evidence_refs=["probe:11-of-12"],
+            )
+            self.append(record("1970-01-01T00:46:41Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(args[0], 0, "blocked", "")
+
+        self.assertEqual(
+            "safe-blocked",
+            watchdog.run_once(config_path, state_path, now=2800, runner=recheck_runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["blocked_recheck_armed"])
+        self.assertEqual(4600, state["blocked_recheck_ready_at"])
+        self.assertIn("trigger=blocked-recheck", calls[1])
+        self.assertIn(
+            "Watchdog 只负责唤醒，其注入信息不是事实或授权证据",
+            calls[1],
+        )
+        self.assertIn("复习上位方案", calls[1])
+        self.assertIn("浏览器验收", calls[1])
+        self.assertIn("Prime", calls[1])
+
+    def test_visible_wake_prompt_contains_metadata_and_marker_contract(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.visibility_config()), encoding="utf-8")
+
+        def runner(command, **kwargs):
+            prompt = kwargs["input"]
+            self.assertIn("wake_sequence=1", prompt)
+            self.assertRegex(
+                prompt,
+                r"wake_started_at=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}",
+            )
+            self.assertIn("Dog 可见状态", prompt)
+            self.assertIn("[DOG_VISIBLE_STATUS]", prompt)
+            self.write_ack()
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    "[DOG_VISIBLE_STATUS] outcome=resumed-progress",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "completed", "")
+
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+
+    def test_visible_wake_rejects_final_without_status_marker(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.visibility_config()), encoding="utf-8")
+
+        def runner(command, **kwargs):
+            self.write_ack()
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    "result without required visibility marker",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "completed", "")
+
+        self.assertEqual(
+            "protocol-failed",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("visible status marker missing", state["last_error"])
+
+    def test_visible_safe_blocked_rejects_summary_without_blocker_details(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.visibility_config()), encoding="utf-8")
+
+        def runner(command, **kwargs):
+            self.write_ack(
+                outcome="safe-blocked",
+                reason_code="DEPENDENCY_NOT_GREEN",
+                blocker_fingerprint="sha256:blocker",
+            )
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    "[DOG_VISIBLE_STATUS] outcome=safe-blocked 阻断摘要：依赖未就绪",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "blocked", "")
+
+        self.assertEqual(
+            "protocol-failed",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("safe-blocked detail contract missing", state["last_error"])
+
+    def test_visible_safe_blocked_accepts_structured_blocker_details(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.visibility_config()), encoding="utf-8")
+
+        def runner(command, **kwargs):
+            prompt = kwargs["input"]
+            self.assertIn("[DOG_BLOCKER_DETAILS]", prompt)
+            self.assertIn("独立核验证据", prompt)
+            self.assertIn("责任边界", prompt)
+            self.assertIn("解除条件", prompt)
+            self.write_ack(
+                outcome="safe-blocked",
+                reason_code="DEPENDENCY_NOT_GREEN",
+                blocker_fingerprint="sha256:blocker",
+            )
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    """[DOG_VISIBLE_STATUS] outcome=safe-blocked
+[DOG_BLOCKER_DETAILS]
+- 阻断任务：W2-00B
+- 缺失条件：canonical owner 尚未进入 m1
+- 独立核验证据：m1 exact read-only 核验未命中
+- 责任边界：m1/AIP owner 负责交付，w2 不代写
+- 解除条件：owner、Receipt 与 CAS 同时 GREEN
+- 下次复核策略：按 blocked recheck 周期重新独立核验""",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "blocked", "")
+
+        self.assertEqual(
+            "safe-blocked",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+
+    def test_visible_safe_blocked_rejects_incomplete_blocker_fields(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(self.visibility_config()), encoding="utf-8")
+
+        def runner(command, **kwargs):
+            self.write_ack(
+                outcome="safe-blocked",
+                reason_code="DEPENDENCY_NOT_GREEN",
+                blocker_fingerprint="sha256:blocker",
+            )
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    """[DOG_VISIBLE_STATUS] outcome=safe-blocked
+[DOG_BLOCKER_DETAILS]
+- 阻断任务：W2-00B
+- 缺失条件：canonical owner 尚未进入 m1
+- 独立核验证据：m1 exact read-only 核验未命中
+- 责任边界：m1/AIP owner 负责交付，w2 不代写
+- 解除条件：owner、Receipt 与 CAS 同时 GREEN""",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "blocked", "")
+
+        self.assertEqual(
+            "protocol-failed",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+
+    def test_visible_wake_invalid_enabled_value_fails_closed(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:00:20Z", "assistant", "final_answer"),
+        )
+        config = self.visibility_config()
+        config["visibility_watch"]["enabled"] = "yes"
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        with self.assertRaisesRegex(RuntimeError, "enabled must be a boolean"):
+            watchdog.run_once(config_path, state_path, now=1000)
+
+        config = self.visibility_config()
+        config["visibility_watch"]["desktop_notification"] = "yes"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        with self.assertRaisesRegex(
+            RuntimeError, "desktop_notification must be a boolean"
+        ):
+            watchdog.run_once(config_path, state_path, now=1000)
+
+    def test_visible_wake_persists_status_and_delivers_desktop_notifications(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.visibility_config(desktop_notification=True)),
+            encoding="utf-8",
+        )
+        notifications = []
+
+        def notification_runner(command, **kwargs):
+            notifications.append((command, kwargs))
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        def runner(command, **kwargs):
+            self.write_ack(
+                evidence_refs=["secret-evidence-must-not-leak"],
+                blocker_fingerprint="secret-fingerprint-must-not-leak",
+            )
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    "[DOG_VISIBLE_STATUS] outcome=resumed-progress",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "completed", "")
+
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(
+                config_path,
+                state_path,
+                now=1000,
+                runner=runner,
+                notification_runner=notification_runner,
+            ),
+        )
+        visible_path = self.root / "visible-status.json"
+        visible = json.loads(visible_path.read_text(encoding="utf-8"))
+        self.assertEqual("closed", visible["stage"])
+        self.assertEqual("resumed-progress", visible["outcome"])
+        self.assertEqual("workshop-test", visible["task_id"])
+        self.assertEqual("workshop-next", visible["next_task"])
+        self.assertEqual("delivered", visible["notification_status"])
+        self.assertEqual(0o600, visible_path.stat().st_mode & 0o777)
+        self.assertEqual(2, len(notifications))
+        rendered = visible_path.read_text(encoding="utf-8")
+        self.assertNotIn("secret-evidence-must-not-leak", rendered)
+        self.assertNotIn("secret-fingerprint-must-not-leak", rendered)
+
+    def test_visible_notification_failure_is_audited_without_replaying_outcome(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.visibility_config(desktop_notification=True)),
+            encoding="utf-8",
+        )
+
+        def notification_runner(command, **kwargs):
+            return subprocess.CompletedProcess(command, 1, "", "notification denied")
+
+        def runner(command, **kwargs):
+            self.write_ack()
+            self.append(
+                record(
+                    "1970-01-01T00:16:41Z",
+                    "assistant",
+                    "final_answer",
+                    "[DOG_VISIBLE_STATUS] outcome=resumed-progress",
+                )
+            )
+            return subprocess.CompletedProcess(command, 0, "completed", "")
+
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(
+                config_path,
+                state_path,
+                now=1000,
+                runner=runner,
+                notification_runner=notification_runner,
+            ),
+        )
+        visible = json.loads(
+            (self.root / "visible-status.json").read_text(encoding="utf-8")
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertEqual("failed", visible["notification_status"])
+        self.assertEqual("desktop notification exit 1", visible["delivery_error"])
+        self.assertEqual(
+            "desktop notification exit 1", state["visibility_delivery_error"]
+        )
+        self.assertEqual("resumed-progress", state["last_recovery_outcome"])
+
+    def test_visible_transport_failure_persists_retry_result(self):
+        self.write(record("1970-01-01T00:00:10Z", "user"))
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.visibility_config(desktop_notification=True)),
+            encoding="utf-8",
+        )
+        notifications = []
+
+        def notification_runner(command, **kwargs):
+            notifications.append(command)
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        def runner(command, **kwargs):
+            return subprocess.CompletedProcess(command, 1, "", "network")
+
+        self.assertEqual(
+            "retry-scheduled",
+            watchdog.run_once(
+                config_path,
+                state_path,
+                now=1000,
+                runner=runner,
+                notification_runner=notification_runner,
+            ),
+        )
+        visible = json.loads(
+            (self.root / "visible-status.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual("retry-scheduled", visible["stage"])
+        self.assertEqual("transport-failed", visible["outcome"])
+        self.assertEqual("next-launchd-check", visible["next_strategy"])
+        self.assertEqual(2, len(notifications))
+
+    def test_existing_safe_blocked_state_is_bootstrapped_without_runner(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(
+            json.dumps(self.blocked_recheck_config()), encoding="utf-8"
+        )
+        state_path.write_text(
+            json.dumps(
+                {
+                    "recovery_episode_id": "dependency-fact-existing",
+                    "last_recovery_outcome": "safe-blocked",
+                    "last_ack": {
+                        "task_id": "W2-00B",
+                        "blocker_fingerprint": "p07-and-source-readiness",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 1, "", "must not run")
+
+        self.assertEqual(
+            "idle",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["blocked_recheck_armed"])
+        self.assertEqual(2800, state["blocked_recheck_ready_at"])
+        self.assertEqual(1000, state["blocked_recheck_bootstrapped_at"])
+        self.assertEqual([], calls)
+
+    def test_dependency_lease_keeps_blocked_recheck_armed_without_runner(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config = self.dependency_config()
+        config["blocked_recheck_watch"] = {
+            "enabled": True,
+            "delay_seconds": 1800,
+        }
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        state_path.write_text(
+            json.dumps(
+                {
+                    "blocked_recheck_armed": True,
+                    "blocked_recheck_ready_at": 900,
+                    "last_recovery_outcome": "safe-blocked",
+                    "last_ack": {
+                        "task_id": "W2-00B",
+                        "blocker_fingerprint": "p07-and-source-readiness",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        self.write_leases(
+            {
+                "task_id": "aip-migration",
+                "owner": "w1-aip",
+                "status": "ACTIVE",
+                "scope": ["services/aos-api/alembic/versions"],
+                "lease_expires_at": "2099-01-01T00:00:00+00:00",
+            }
+        )
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args[0], 1, "", "must not run")
+
+        self.assertEqual(
+            "dependency-blocked",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertTrue(state["blocked_recheck_armed"])
+        self.assertEqual([], calls)
+
+    def test_blocked_recheck_progress_disarms_recheck_and_arms_continuation(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config = self.blocked_recheck_config()
+        config["continuation_watch"] = {"enabled": True, "delay_seconds": 300}
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        state_path.write_text(
+            json.dumps(
+                {
+                    "blocked_recheck_armed": True,
+                    "blocked_recheck_ready_at": 900,
+                    "last_recovery_outcome": "safe-blocked",
+                    "last_ack": {
+                        "task_id": "W2-00B",
+                        "blocker_fingerprint": "old-blocker",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        def runner(*args, **kwargs):
+            episode = re.search(
+                r"^episode_id=(.+)$", kwargs["input"], re.MULTILINE
+            ).group(1)
+            self.write_ack(
+                outcome="resumed-progress",
+                episode_id=episode,
+                next_task="W2-01",
+                reason_code="DEPENDENCIES_GREEN_PROGRESS_STARTED",
+                blocker_fingerprint=None,
+                evidence_refs=["commit:new-progress"],
+            )
+            self.append(record("1970-01-01T00:20:01Z", "assistant", "final_answer"))
+            return subprocess.CompletedProcess(args[0], 0, "progress", "")
+
+        self.assertEqual(
+            "resumed-progress",
+            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+        )
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        self.assertFalse(state["blocked_recheck_armed"])
+        self.assertEqual("resumed-progress", state["blocked_recheck_disarm_reason"])
+        self.assertTrue(state["continuation_armed"])
+        self.assertEqual("W2-01", state["continuation_next_task"])
+
+    def test_blocked_recheck_invalid_delay_fails_closed(self):
+        self.write(
+            record("1970-01-01T00:00:10Z", "user"),
+            record("1970-01-01T00:16:41Z", "assistant", "final_answer"),
+        )
+        config = self.blocked_recheck_config()
+        config["blocked_recheck_watch"]["delay_seconds"] = 0
+        config_path = self.root / "config.json"
+        state_path = self.root / "state.json"
+        config_path.write_text(json.dumps(config), encoding="utf-8")
+        with self.assertRaisesRegex(RuntimeError, "delay_seconds"):
+            watchdog.run_once(config_path, state_path, now=1000)
+
     def test_completed_and_reentry_noop_are_terminal_outcomes(self):
         for outcome in ("completed", "reentry-noop"):
             with self.subTest(outcome=outcome):
@@ -802,7 +1359,7 @@ class WatchdogTest(unittest.TestCase):
 
         self.assertEqual(
             "turn-running",
-            watchdog.run_once(config_path, state_path, now=1000, runner=runner),
+            watchdog.run_once(config_path, state_path, now=150, runner=runner),
         )
         state = json.loads(state_path.read_text(encoding="utf-8"))
         self.assertTrue(state["dependency_wait_armed"])
@@ -982,7 +1539,9 @@ class WatchdogTest(unittest.TestCase):
         deliveries.mkdir()
         config_path = self.root / "config.json"
         state_path = self.root / "state.json"
-        config_path.write_text(json.dumps(self.fact_config()), encoding="utf-8")
+        config = self.fact_config()
+        config["max_turn_silence_seconds"] = 2000
+        config_path.write_text(json.dumps(config), encoding="utf-8")
         calls = []
 
         def runner(*args, **kwargs):

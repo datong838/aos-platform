@@ -42,6 +42,16 @@ TERMINAL_FAILURE_OUTCOMES = frozenset(
 )
 ACK_SCHEMA = "aos-watchdog-recovery-ack/v1"
 RECOVERY_PROTOCOL_MARKER = "[WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]"
+DOG_VISIBILITY_MARKER = "[DOG_VISIBLE_STATUS]"
+DOG_BLOCKER_DETAILS_MARKER = "[DOG_BLOCKER_DETAILS]"
+BLOCKER_DETAIL_FIELDS = (
+    "阻断任务",
+    "缺失条件",
+    "独立核验证据",
+    "责任边界",
+    "解除条件",
+    "下次复核策略",
+)
 
 
 @dataclass(frozen=True)
@@ -59,6 +69,8 @@ class TranscriptStatus:
     latest_work_activity_at: float | None
     post_final_activity: bool
     latest_user_is_watchdog: bool
+    latest_final_has_visibility: bool
+    latest_final_has_blocker_details: bool
 
 
 def _timestamp(value: object) -> float | None:
@@ -83,6 +95,11 @@ def _message_role_phase(record: dict[str, Any]) -> tuple[str | None, str | None]
 
 
 def _response_message_text(record: dict[str, Any]) -> str:
+    if record.get("type") == "event_msg":
+        payload = record.get("payload")
+        if isinstance(payload, dict) and payload.get("type") == "agent_message":
+            message = payload.get("message")
+            return message if isinstance(message, str) else ""
     if record.get("type") != "response_item":
         return ""
     payload = record.get("payload")
@@ -104,6 +121,31 @@ def _response_message_text(record: dict[str, Any]) -> str:
     return "\n".join(parts)
 
 
+def _has_blocker_detail_contract(text: str) -> bool:
+    if DOG_BLOCKER_DETAILS_MARKER not in text:
+        return False
+    task_pattern = re.compile(
+        rf"(?m)^-\s*{re.escape(BLOCKER_DETAIL_FIELDS[0])}[：:]\s*\S.*$"
+    )
+    task_matches = list(task_pattern.finditer(text))
+    if not task_matches:
+        return False
+    for index, match in enumerate(task_matches):
+        end = (
+            task_matches[index + 1].start()
+            if index + 1 < len(task_matches)
+            else len(text)
+        )
+        block = text[match.start() : end]
+        if any(
+            re.search(rf"(?m)^-\s*{re.escape(field)}[：:]\s*\S.*$", block)
+            is None
+            for field in BLOCKER_DETAIL_FIELDS[1:]
+        ):
+            return False
+    return True
+
+
 def inspect_transcript(path: Path) -> TranscriptStatus:
     latest_user_at: float | None = None
     latest_assistant_at: float | None = None
@@ -113,6 +155,8 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
     last_activity_at = path.stat().st_mtime
     latest_work_activity_at: float | None = None
     latest_user_is_watchdog = False
+    latest_final_has_visibility = False
+    latest_final_has_blocker_details = False
     tool_calls: dict[str, float] = {}
     with path.open("r", encoding="utf-8") as handle:
         for raw in handle:
@@ -133,6 +177,11 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
                 latest_assistant_at = ts
                 if phase in FINAL_PHASES:
                     latest_final_at = ts
+                    final_text = _response_message_text(record)
+                    latest_final_has_visibility = DOG_VISIBILITY_MARKER in final_text
+                    latest_final_has_blocker_details = (
+                        _has_blocker_detail_contract(final_text)
+                    )
                 elif phase == "commentary":
                     latest_work_activity_at = ts
             if record.get("type") == "event_msg":
@@ -189,6 +238,8 @@ def inspect_transcript(path: Path) -> TranscriptStatus:
         latest_work_activity_at,
         post_final_activity,
         latest_user_is_watchdog,
+        latest_final_has_visibility,
+        latest_final_has_blocker_details,
     )
 
 
@@ -260,6 +311,8 @@ def _config_revision(config: dict[str, Any]) -> str:
             "max_transport_failures",
             "dependency_watch",
             "fact_watch",
+            "blocked_recheck_watch",
+            "visibility_watch",
         )
     }
     payload = json.dumps(relevant, ensure_ascii=False, sort_keys=True).encode("utf-8")
@@ -477,7 +530,12 @@ def resume_command(
 
 
 def _resume_prompt(
-    config: dict[str, Any], episode_id: str, *, trigger: str = "interrupted"
+    config: dict[str, Any],
+    episode_id: str,
+    *,
+    trigger: str = "interrupted",
+    wake_sequence: int | None = None,
+    wake_started_at: float | None = None,
 ) -> str:
     ack_command = (
         f"python3 {Path(__file__).resolve()} --config {config.get('_config_path', '')} "
@@ -491,26 +549,60 @@ def _resume_prompt(
         first_message = "依赖 Watchdog 检测到外部交付事实已变化，正在重新核验后继续。"
     elif trigger == "continuation":
         first_message = "外部 Watchdog 检测到长任务仍有后续项，正在重新核验后继续。"
+    elif trigger == "blocked-recheck":
+        first_message = "依赖 Watchdog 定期复核发现工作台仍处安全阻断，正在重新核验后继续。"
     else:
         first_message = "外部 Watchdog 检测到任务中断，正在恢复核验。"
+    visibility_enabled = _visibility_watch_enabled(config)
+    visibility_metadata = ""
+    first_message_rule = f"第一条用户可见消息只能说：{first_message}"
+    final_visibility_rule = ""
+    if visibility_enabled:
+        sequence = wake_sequence if wake_sequence is not None else 0
+        started_at = (
+            datetime.fromtimestamp(wake_started_at, tz=timezone.utc).isoformat()
+            if wake_started_at is not None
+            else "unknown"
+        )
+        _, blocked_recheck_delay = _blocked_recheck_settings(config)
+        heartbeat_seconds = int(config.get("heartbeat_interval_seconds", 300))
+        visibility_metadata = (
+            f"wake_sequence={sequence}\n"
+            f"wake_started_at={started_at}\n"
+            f"heartbeat_interval_seconds={heartbeat_seconds}\n"
+            f"blocked_recheck_delay_seconds={blocked_recheck_delay}\n"
+        )
+        first_message_rule = (
+            f"第一条用户可见消息必须以此句开头：{first_message}\n"
+            "紧接一行 `Dog 可见状态`，展示 wake_sequence、wake_started_at、"
+            "episode_id 和 trigger；这些字段只证明唤醒发生。"
+        )
+        final_visibility_rule = f"""
+最终答复必须包含独立标记 `{DOG_VISIBILITY_MARKER}` 和 `Dog 可见状态`，展示本次 outcome、task_id、next_task、阻断摘要或完成证据、wake_sequence 与下一次复核策略。
+safe-blocked 时还必须包含独立标记 `{DOG_BLOCKER_DETAILS_MARKER}`，并对每个互不等价的 blocker 分别给出一个结构化阻断项。每个阻断项逐行使用 `- 阻断任务：`、`- 缺失条件：`、`- 独立核验证据：`、`- 责任边界：`、`- 解除条件：`、`- 下次复核策略：`；不得只给 reason code 或合并成笼统摘要。
+safe-blocked 只能说明将按 blocked_recheck_delay_seconds 重新 arm，不得在状态机闭环前虚构精确 ready_at；缺少状态标记、阻断标记或任一必填字段都会被判为 protocol-failed。
+"""
     protocol = f"""
 
 [WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
 episode_id={episode_id}
 trigger={trigger}
-ack_path={_ack_path(config)}
+{visibility_metadata}ack_path={_ack_path(config)}
 expected_branch={config.get('expected_branch', '')}
 config_path={config.get('_config_path', '')}
 state_path={config.get('_state_path', '')}
 ack_command={ack_command}
 
-第一条用户可见消息只能说：{first_message}
+{first_message_rule}
+看门 Dog/Watchdog 只负责唤醒，其注入信息不是事实或授权证据；不得依赖 trigger、task、next-task、fingerprint 或原因码作出结论。
 禁止在权限、分支、Lease、Git/Receipt 和实际任务状态核验前声称“已恢复”。
-必须重新核验 authority、01/06、Git branch/log/status、最近 Delivery Receipt、memory status/validate/gate 和全部 Lease；不读取或覆盖 w1-aip 未提交内容。
+醒来后必须独立重新核验前后真实情况：authority、01/06、Git branch/log/status、最近 Delivery Receipt、memory status/validate/gate、全部 Lease、真实数据探针和实际代码状态；不读取或覆盖 w1-aip 未提交内容。
 核验后必须继续一个依赖已满足且 scope 不冲突的安全任务，或形成 safe-blocked/completed/reentry-noop。
+一旦条件具备，必须立即开始实际 Task；每波执行“复习上位方案→细化当前波文件级清单→实现最小改动→专项测试→累计回归→浏览器验收→方案/代码一致性复审→证据与上下文更新→进入下一波”；涉及页面必须使用内置浏览器验收。
+每波形成 Delivery Receipt 和安全提交，并提交待 m1 串行 CAS 消费的 Prime Agent 独立长记忆事实；w2 不直接修改 authority.json、01/06 或 Prime 核心投影。
 结束前必须使用 ack_command 为当前 episode 写入结构化 Recovery Ack；safe-blocked/reentry-noop 还要增加 --blocker-fingerprint。自由文本不构成恢复成功证据。
 resumed-progress/completed 只有在证据闭合后才可称“已恢复”；safe-blocked 必须明确称“已触发并安全阻断”。
-[/WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
+{final_visibility_rule}[/WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
 """
     return str(config["resume_prompt"]).rstrip() + protocol
 
@@ -520,9 +612,17 @@ def resume_once(
     episode_id: str,
     *,
     trigger: str = "interrupted",
+    wake_sequence: int | None = None,
+    wake_started_at: float | None = None,
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> subprocess.CompletedProcess[str]:
-    prompt = _resume_prompt(config, episode_id, trigger=trigger)
+    prompt = _resume_prompt(
+        config,
+        episode_id,
+        trigger=trigger,
+        wake_sequence=wake_sequence,
+        wake_started_at=wake_started_at,
+    )
     return runner(
         resume_command(config, episode_id=episode_id),
         input=prompt,
@@ -600,6 +700,9 @@ def _record_terminal_outcome(
     ack: dict[str, Any] | None,
     resolved_at: float,
     latest_user_at: float | None,
+    notification_runner: Callable[
+        ..., subprocess.CompletedProcess[str]
+    ] = subprocess.run,
 ) -> None:
     state.update(
         {
@@ -656,9 +759,45 @@ def _record_terminal_outcome(
     else:
         state["continuation_armed"] = False
         state["continuation_disarm_reason"] = outcome
+    blocked_recheck_enabled, blocked_recheck_delay = _blocked_recheck_settings(
+        config
+    )
+    should_recheck = (
+        outcome == "safe-blocked"
+        and blocked_recheck_enabled
+        and isinstance(ack, dict)
+        and isinstance(ack.get("blocker_fingerprint"), str)
+        and bool(ack["blocker_fingerprint"].strip())
+    )
+    if should_recheck:
+        state.update(
+            {
+                "blocked_recheck_armed": True,
+                "blocked_recheck_source_episode_id": state.get("recovery_episode_id"),
+                "blocked_recheck_task_id": ack.get("task_id"),
+                "blocked_recheck_blocker_fingerprint": ack[
+                    "blocker_fingerprint"
+                ].strip(),
+                "blocked_recheck_ready_at": resolved_at + blocked_recheck_delay,
+                "blocked_recheck_armed_at": resolved_at,
+                "blocked_recheck_disarm_reason": None,
+            }
+        )
+    else:
+        state["blocked_recheck_armed"] = False
+        state["blocked_recheck_disarm_reason"] = outcome
     if state.get("episode_trigger") == "dependency-released":
         state["dependency_wait_armed"] = False
         state["dependency_release_resolved_at"] = resolved_at
+    _publish_visibility(
+        config,
+        state,
+        stage="closed",
+        outcome=outcome,
+        ack=ack,
+        recorded_at=resolved_at,
+        notification_runner=notification_runner,
+    )
 
 
 def _log(message: str) -> None:
@@ -682,6 +821,155 @@ def _retry_delay_seconds(config: dict[str, Any], failure_count: int) -> int:
             "retry_schedule_seconds must be a non-empty list of positive integers"
         )
     return raw[min(max(failure_count, 1) - 1, len(raw) - 1)]
+
+
+def _blocked_recheck_settings(config: dict[str, Any]) -> tuple[bool, int]:
+    raw = config.get("blocked_recheck_watch")
+    if raw is None:
+        return False, 1800
+    if not isinstance(raw, dict):
+        raise RuntimeError("blocked_recheck_watch must be an object")
+    delay = raw.get("delay_seconds", 1800)
+    if (
+        not isinstance(delay, int)
+        or isinstance(delay, bool)
+        or delay <= 0
+    ):
+        raise RuntimeError(
+            "blocked_recheck_watch delay_seconds must be a positive integer"
+        )
+    return bool(raw.get("enabled", False)), delay
+
+
+def _visibility_watch_enabled(config: dict[str, Any]) -> bool:
+    raw = config.get("visibility_watch")
+    if raw is None:
+        return False
+    if not isinstance(raw, dict):
+        raise RuntimeError("visibility_watch must be an object")
+    enabled = raw.get("enabled", False)
+    if not isinstance(enabled, bool):
+        raise RuntimeError("visibility_watch enabled must be a boolean")
+    return enabled
+
+
+def _desktop_notification_enabled(config: dict[str, Any]) -> bool:
+    raw = config.get("visibility_watch")
+    if raw is None:
+        return False
+    if not isinstance(raw, dict):
+        raise RuntimeError("visibility_watch must be an object")
+    enabled = raw.get("desktop_notification", False)
+    if not isinstance(enabled, bool):
+        raise RuntimeError(
+            "visibility_watch desktop_notification must be a boolean"
+        )
+    return bool(raw.get("enabled", False)) and enabled
+
+
+def _visibility_status_path(config: dict[str, Any]) -> Path:
+    state_path = config.get("_state_path")
+    if not isinstance(state_path, str) or not state_path:
+        raise RuntimeError("visibility status requires state path")
+    return Path(state_path).with_name("visible-status.json")
+
+
+def _visibility_next_strategy(state: dict[str, Any], outcome: str) -> str:
+    if outcome == "attempting":
+        return "await-current-episode-result"
+    if bool(state.get("blocked_recheck_armed", False)):
+        return "blocked-recheck"
+    if bool(state.get("continuation_armed", False)):
+        return "continuation"
+    if outcome == "completed":
+        return "stopped-completed"
+    if outcome in TERMINAL_FAILURE_OUTCOMES or outcome == "reentry-noop":
+        return "manual-audit"
+    return "next-launchd-check"
+
+
+def _notification_value(value: object, *, limit: int = 120) -> str:
+    rendered = value if isinstance(value, str) else ""
+    rendered = re.sub(r"[\x00-\x1f\x7f]+", " ", rendered).strip()
+    return rendered[:limit]
+
+
+def _publish_visibility(
+    config: dict[str, Any],
+    state: dict[str, Any],
+    *,
+    stage: str,
+    outcome: str,
+    ack: dict[str, Any] | None,
+    recorded_at: float,
+    notification_runner: Callable[..., subprocess.CompletedProcess[str]],
+) -> None:
+    if not _visibility_watch_enabled(config):
+        return
+    task_id = ack.get("task_id") if isinstance(ack, dict) else None
+    next_task = ack.get("next_task") if isinstance(ack, dict) else None
+    reason_code = ack.get("reason_code") if isinstance(ack, dict) else None
+    card: dict[str, Any] = {
+        "schema": "aos-watchdog-visible-status/v1",
+        "thread_id": str(config["thread_id"]),
+        "episode_id": state.get("recovery_episode_id"),
+        "trigger": state.get("episode_trigger"),
+        "wake_sequence": int(state.get("total_attempts", 0)),
+        "wake_started_at": state.get("last_attempt_at"),
+        "stage": stage,
+        "outcome": outcome,
+        "task_id": task_id,
+        "next_task": next_task,
+        "reason_code": reason_code,
+        "next_strategy": _visibility_next_strategy(state, outcome),
+        "recorded_at": recorded_at,
+        "notification_status": "disabled",
+        "delivery_error": None,
+    }
+    if _desktop_notification_enabled(config):
+        sequence = card["wake_sequence"]
+        task = _notification_value(task_id or next_task or "pending")
+        if stage == "waking":
+            body = f"Dog #{sequence} 已唤醒，正在独立核验。"
+        else:
+            body = f"Dog #{sequence} 结果：{_notification_value(outcome)}；Task：{task}"
+        script = (
+            "on run argv\n"
+            "display notification (item 2 of argv) with title (item 1 of argv)\n"
+            "end run"
+        )
+        command = [
+            "/usr/bin/osascript",
+            "-e",
+            script,
+            "AOS Workshop Dog",
+            body,
+        ]
+        try:
+            result = notification_runner(
+                command,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=5,
+                env=_sanitized_environment(),
+            )
+            if result.returncode == 0:
+                card["notification_status"] = "delivered"
+            else:
+                card["notification_status"] = "failed"
+                card["delivery_error"] = (
+                    f"desktop notification exit {result.returncode}"
+                )
+        except (OSError, subprocess.SubprocessError) as exc:
+            card["notification_status"] = "failed"
+            card["delivery_error"] = (
+                f"desktop notification {type(exc).__name__}"
+            )
+    state["visibility_delivery_status"] = card["notification_status"]
+    state["visibility_delivery_error"] = card["delivery_error"]
+    state["visibility_status_path"] = str(_visibility_status_path(config))
+    _write_json(_visibility_status_path(config), card)
 
 
 def _dependency_scope_overlaps(watched: str, leased: str) -> bool:
@@ -947,18 +1235,9 @@ def evaluate(
     )
     if turn_silence_limit <= 0:
         raise RuntimeError("max_turn_silence_seconds must be positive")
-    dependency_watch_enabled = bool(
-        isinstance(config.get("dependency_watch"), dict)
-        and config["dependency_watch"].get("enabled", False)
-    )
-    fact_watch_enabled = bool(
-        isinstance(config.get("fact_watch"), dict)
-        and config["fact_watch"].get("enabled", False)
-    )
-    if status.turn_running and (
-        dependency_watch_enabled
-        or fact_watch_enabled
-        or now - status.last_activity_at < turn_silence_limit
+    if (
+        status.turn_running
+        and now - status.last_activity_at < turn_silence_limit
     ):
         return "turn-running", status
     if status.pending_tool_calls and status.oldest_pending_tool_at is not None and (
@@ -980,6 +1259,9 @@ def run_once(
     *,
     now: float | None = None,
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    notification_runner: Callable[
+        ..., subprocess.CompletedProcess[str]
+    ] = subprocess.run,
 ) -> str:
     config = _load_json(config_path, {})
     if not config:
@@ -989,6 +1271,34 @@ def run_once(
     state = _load_json(state_path, {})
     rollout_path = Path(config.get("rollout_path") or find_rollout_path(config["thread_id"]))
     current = time.time() if now is None else now
+    blocked_recheck_enabled, blocked_recheck_delay = _blocked_recheck_settings(config)
+    visibility_required = _visibility_watch_enabled(config)
+    _desktop_notification_enabled(config)
+    last_ack = state.get("last_ack")
+    bootstrap_blocker = (
+        last_ack.get("blocker_fingerprint") if isinstance(last_ack, dict) else None
+    )
+    if (
+        blocked_recheck_enabled
+        and state.get("last_recovery_outcome") == "safe-blocked"
+        and not bool(state.get("blocked_recheck_armed", False))
+        and isinstance(bootstrap_blocker, str)
+        and bool(bootstrap_blocker.strip())
+    ):
+        state.update(
+            {
+                "blocked_recheck_armed": True,
+                "blocked_recheck_source_episode_id": state.get(
+                    "recovery_episode_id"
+                ),
+                "blocked_recheck_task_id": last_ack.get("task_id"),
+                "blocked_recheck_blocker_fingerprint": bootstrap_blocker.strip(),
+                "blocked_recheck_ready_at": current + blocked_recheck_delay,
+                "blocked_recheck_armed_at": current,
+                "blocked_recheck_bootstrapped_at": current,
+                "blocked_recheck_disarm_reason": None,
+            }
+        )
     decision, status = evaluate(
         config, state, now=current, rollout_path=rollout_path
     )
@@ -1078,6 +1388,14 @@ def run_once(
             and current >= float(state.get("continuation_ready_at", float("inf")))
         ):
             decision = "continuation"
+    if bool(state.get("blocked_recheck_armed", False)):
+        if (
+            not blockers
+            and decision == "idle"
+            and current
+            >= float(state.get("blocked_recheck_ready_at", float("inf")))
+        ):
+            decision = "blocked-recheck"
     state["dependency_watch_last_checked_at"] = current
     state.update(
         {
@@ -1093,6 +1411,7 @@ def run_once(
         "dependency-released",
         "dependency-fact-changed",
         "continuation",
+        "blocked-recheck",
     }:
         if decision in {"idle", "dependency-blocked"}:
             state["consecutive_failures"] = 0
@@ -1135,7 +1454,11 @@ def run_once(
                         else (
                             f"continuation-{int(current * 1000)}"
                             if trigger == "continuation"
-                            else f"recovery-{int(current * 1000)}"
+                            else (
+                                f"blocked-recheck-{int(current * 1000)}"
+                                if trigger == "blocked-recheck"
+                                else f"recovery-{int(current * 1000)}"
+                            )
                         )
                     )
                 ),
@@ -1151,6 +1474,10 @@ def run_once(
             state["continuation_armed"] = False
             state["continuation_consumed_at"] = current
             state["continuation_disarm_reason"] = "episode-created"
+        if trigger == "blocked-recheck":
+            state["blocked_recheck_armed"] = False
+            state["blocked_recheck_consumed_at"] = current
+            state["blocked_recheck_disarm_reason"] = "episode-created"
     episode_id = str(state["recovery_episode_id"])
     attempts = 1
     for attempt in range(1, attempts + 1):
@@ -1159,6 +1486,15 @@ def run_once(
         attempt_started_at = time.time()
         state["last_attempt_at"] = attempt_started_at
         state["total_attempts"] = int(state.get("total_attempts", 0)) + 1
+        _publish_visibility(
+            config,
+            state,
+            stage="waking",
+            outcome="attempting",
+            ack=None,
+            recorded_at=attempt_started_at,
+            notification_runner=notification_runner,
+        )
         _write_json(state_path, state)
         _log(f"resume attempt {attempt}/{attempts} thread={config['thread_id']}")
         try:
@@ -1166,6 +1502,8 @@ def run_once(
                 config,
                 episode_id,
                 trigger=str(state.get("episode_trigger", "interrupted")),
+                wake_sequence=int(state["total_attempts"]),
+                wake_started_at=attempt_started_at,
                 runner=runner,
             )
         except (OSError, subprocess.SubprocessError) as exc:
@@ -1193,6 +1531,51 @@ def run_once(
                     episode_id=episode_id,
                     attempt_started_at=attempt_started_at,
                 )
+            if (
+                ack_valid
+                and visible_final
+                and result.returncode == 0
+                and visibility_required
+                and not after_resume.latest_final_has_visibility
+            ):
+                _record_terminal_outcome(
+                    state,
+                    config=config,
+                    outcome="protocol-failed",
+                    final_at=after_resume.latest_final_at,
+                    ack=ack,
+                    resolved_at=current,
+                    latest_user_at=after_resume.latest_user_at,
+                    notification_runner=notification_runner,
+                )
+                state["last_error"] = "visible status marker missing"
+                state["paused_user_at"] = after_resume.latest_user_at
+                state["paused_config_revision"] = _config_revision(config)
+                _write_json(state_path, state)
+                return "protocol-failed"
+            if (
+                ack_valid
+                and ack.get("outcome") == "safe-blocked"
+                and visible_final
+                and result.returncode == 0
+                and visibility_required
+                and not after_resume.latest_final_has_blocker_details
+            ):
+                _record_terminal_outcome(
+                    state,
+                    config=config,
+                    outcome="protocol-failed",
+                    final_at=after_resume.latest_final_at,
+                    ack=ack,
+                    resolved_at=current,
+                    latest_user_at=after_resume.latest_user_at,
+                    notification_runner=notification_runner,
+                )
+                state["last_error"] = "safe-blocked detail contract missing"
+                state["paused_user_at"] = after_resume.latest_user_at
+                state["paused_config_revision"] = _config_revision(config)
+                _write_json(state_path, state)
+                return "protocol-failed"
             if ack_valid and visible_final and result.returncode == 0:
                 outcome = str(ack["outcome"])
                 _record_terminal_outcome(
@@ -1203,6 +1586,7 @@ def run_once(
                     ack=ack,
                     resolved_at=current,
                     latest_user_at=after_resume.latest_user_at,
+                    notification_runner=notification_runner,
                 )
                 _write_json(state_path, state)
                 return outcome
@@ -1215,6 +1599,7 @@ def run_once(
                     ack=ack,
                     resolved_at=current,
                     latest_user_at=after_resume.latest_user_at,
+                    notification_runner=notification_runner,
                 )
                 state["last_error"] = ack_error
                 state["paused_user_at"] = after_resume.latest_user_at
@@ -1230,6 +1615,7 @@ def run_once(
                     ack=ack,
                     resolved_at=current,
                     latest_user_at=after_resume.latest_user_at,
+                    notification_runner=notification_runner,
                 )
                 state["last_error"] = "current episode ack exists without clean visible final"
                 state["paused_user_at"] = after_resume.latest_user_at
@@ -1251,10 +1637,21 @@ def run_once(
                 "paused_config_revision": _config_revision(config),
                 "continuation_armed": False,
                 "continuation_disarm_reason": "paused-failure",
+                "blocked_recheck_armed": False,
+                "blocked_recheck_disarm_reason": "paused-failure",
             }
         )
         if state.get("episode_trigger") == "dependency-released":
             state["dependency_wait_armed"] = False
+        _publish_visibility(
+            config,
+            state,
+            stage="closed",
+            outcome="paused-failure",
+            ack=None,
+            recorded_at=current,
+            notification_runner=notification_runner,
+        )
         _write_json(state_path, state)
         return "paused-failure"
     retry_delay = _retry_delay_seconds(config, state["consecutive_failures"])
@@ -1262,6 +1659,15 @@ def run_once(
     state["next_retry_at"] = current + retry_delay
     state["last_recovery_outcome"] = "transport-failed"
     state["last_decision"] = "retry-scheduled"
+    _publish_visibility(
+        config,
+        state,
+        stage="retry-scheduled",
+        outcome="transport-failed",
+        ack=None,
+        recorded_at=current,
+        notification_runner=notification_runner,
+    )
     _write_json(state_path, state)
     return "retry-scheduled"
 

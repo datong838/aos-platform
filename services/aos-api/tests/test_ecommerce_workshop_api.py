@@ -13,8 +13,15 @@ from aos_api.ecommerce_workshop_contracts import (
     EcommerceWorkshopModuleListResponse,
     EcommerceWorkshopModuleReadinessResponse,
 )
+from aos_api.ecommerce_workshop_source_readiness import (
+    SourceReadinessTenantMismatchError,
+)
 from aos_api.errors import register_exception_handlers
 from aos_api.routers import ecommerce_workshop
+from aos_api.source_readiness_contracts import (
+    CANONICAL_QYH_SOURCES,
+    SourceReadinessEnvelope,
+)
 
 NOW = datetime(2026, 8, 14, tzinfo=UTC)
 
@@ -108,7 +115,53 @@ class FakeCatalog:
         )
 
 
-def _client(catalog: FakeCatalog) -> TestClient:
+def _source_envelope(*, org_id: str = "org-org") -> SourceReadinessEnvelope:
+    blockers = [
+        "SOURCE_CONFIG_EXACT_REF_MISSING",
+        "FRESHNESS_POLICY_REF_MISSING",
+        "QUALITY_POLICY_REF_MISSING",
+        "RECONCILIATION_POLICY_REF_MISSING",
+        "QUERY_CAPABILITY_REF_MISSING",
+    ]
+    return SourceReadinessEnvelope.model_validate(
+        {
+            "tenant": {"orgId": org_id, "projectId": "dev-project"},
+            "checkedAt": NOW,
+            "cutoffAt": NOW,
+            "status": "blocked",
+            "sources": [
+                {
+                    "tenant": {"orgId": org_id, "projectId": "dev-project"},
+                    "sourceId": "niushop-qyh",
+                    "pipelineId": source.pipeline_id,
+                    "objectType": source.object_type,
+                    "status": "blocked",
+                    "checkedAt": NOW,
+                    "reasons": blockers,
+                    "blockers": blockers,
+                }
+                for source in CANONICAL_QYH_SOURCES
+            ],
+        }
+    )
+
+
+class FakeSourceReadiness:
+    def __init__(self, *, mismatch: bool = False) -> None:
+        self.mismatch = mismatch
+        self.calls: list[tuple[str, str]] = []
+
+    def read(self, *, org_id: str, project_id: str) -> SourceReadinessEnvelope:
+        self.calls.append((org_id, project_id))
+        if self.mismatch:
+            raise SourceReadinessTenantMismatchError("tenant mismatch")
+        return _source_envelope()
+
+
+def _client(
+    catalog: FakeCatalog,
+    source_readiness: FakeSourceReadiness | None = None,
+) -> TestClient:
     app = FastAPI()
     register_exception_handlers(app)
     app.include_router(ecommerce_workshop.router)
@@ -120,6 +173,9 @@ def _client(catalog: FakeCatalog) -> TestClient:
         markings=["public"],
     )
     app.dependency_overrides[ecommerce_workshop.get_ecommerce_workshop_catalog] = lambda: catalog
+    app.dependency_overrides[
+        ecommerce_workshop.get_ecommerce_workshop_source_readiness
+    ] = lambda: source_readiness or FakeSourceReadiness()
     return TestClient(app, raise_server_exceptions=False)
 
 
@@ -166,6 +222,66 @@ def test_not_installed_and_invalid_module_id_fail_explicitly() -> None:
         assert invalid.json()["code"] == "VALIDATION"
 
 
+def test_source_readiness_is_installation_gated_and_principal_scoped() -> None:
+    catalog = FakeCatalog()
+    source_readiness = FakeSourceReadiness()
+    with _client(catalog, source_readiness) as client:
+        response = client.get("/v1/ecommerce-workshop/source-readiness")
+        assert response.status_code == 200
+        assert response.json()["status"] == "blocked"
+        assert len(response.json()["sources"]) == 12
+        injected = client.get(
+            "/v1/ecommerce-workshop/source-readiness?orgId=dev-org"
+        )
+        assert injected.status_code == 400
+        assert injected.json()["code"] == "VALIDATION"
+
+    assert source_readiness.calls == [("org-org", "dev-project")]
+    assert catalog.calls == [
+        (
+            "list",
+            {
+                "org_id": "org-org",
+                "project_id": "dev-project",
+                "roles": ["operator"],
+                "markings": ["public"],
+            },
+        )
+    ]
+
+
+def test_source_readiness_zero_visible_modules_and_tenant_drift_fail_closed() -> None:
+    class EmptyCatalog(FakeCatalog):
+        def list_modules(self, **kwargs):
+            self.calls.append(("list", kwargs))
+            return EcommerceWorkshopModuleListResponse.model_validate(
+                {
+                    "tenant": {
+                        "orgId": kwargs["org_id"],
+                        "projectId": kwargs["project_id"],
+                    },
+                    "evaluatedAt": NOW,
+                    "dataCutoff": None,
+                    "items": [],
+                    "count": 0,
+                }
+            )
+
+    unread = FakeSourceReadiness()
+    with _client(EmptyCatalog(), unread) as client:
+        missing = client.get("/v1/ecommerce-workshop/source-readiness")
+        assert missing.status_code == 404
+        assert missing.json()["code"] == "WORKSHOP_NOT_INSTALLED"
+    assert unread.calls == []
+
+    mismatch = FakeSourceReadiness(mismatch=True)
+    with _client(FakeCatalog(), mismatch) as client:
+        rejected = client.get("/v1/ecommerce-workshop/source-readiness")
+        assert rejected.status_code == 500
+        assert rejected.json()["code"] == "SOURCE_READINESS_TENANT_MISMATCH"
+        assert rejected.json()["message"] == "SourceReadiness dependency failed closed"
+
+
 def test_openapi_freezes_w1_and_w2_core_operations_and_no_writes() -> None:
     app = FastAPI()
     app.include_router(ecommerce_workshop.router)
@@ -183,6 +299,10 @@ def test_openapi_freezes_w1_and_w2_core_operations_and_no_writes() -> None:
         ),
         "ecommerceWorkshopModuleReadinessGet": (
             "/v1/ecommerce-workshop/modules/{module_id}/readiness",
+            "get",
+        ),
+        "ecommerceWorkshopSourceReadinessGet": (
+            "/v1/ecommerce-workshop/source-readiness",
             "get",
         ),
         "ecommerceWorkshopTaskCockpitCoreGet": (

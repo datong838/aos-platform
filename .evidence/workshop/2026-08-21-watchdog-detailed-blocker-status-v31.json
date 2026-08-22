@@ -1,0 +1,90 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "task_id": "workshop-watchdog-detailed-blocker-status-v31-20260821",
+  "recorded_at": "2026-08-21T13:32:34+08:00",
+  "branch": "w2-workshop",
+  "head_before": "81cf52354c226ceed9a191d18635f6b0e9e49387",
+  "authority_revision": "AOS-000146",
+  "result": "ACCEPTED_GREEN_WITH_NEXT_REAL_SAFE_BLOCKED_EPISODE_PENDING",
+  "scope": {
+    "changed": [
+      "scripts/long-task-watchdog/watchdog.py",
+      "scripts/long-task-watchdog/test_watchdog.py",
+      "scripts/long-task-watchdog/README.md",
+      "docs/palantier/20_tech/电商平台接入/12-工作台层技术方案/25-Workshop长任务Watchdog恢复闭环与权限ADR.md",
+      "/Users/ddt/.codex/long-task-watchdog-workshop/config.json"
+    ],
+    "excluded": [
+      "aos-platform-w1-aip",
+      "authority.json",
+      "01-当前项目状态.md",
+      "06-当前执行检查点.md",
+      "Prime core projection",
+      "business data",
+      "migration",
+      "page or visual code"
+    ]
+  },
+  "contract": {
+    "every_wake": "show current independently verified status before any recovery claim",
+    "ready": "continue the first dependency-satisfied, non-conflicting safe Task",
+    "safe_blocked": "emit DOG_BLOCKER_DETAILS and one complete six-field block per distinct blocker",
+    "required_blocker_fields": [
+      "阻断任务",
+      "缺失条件",
+      "独立核验证据",
+      "责任边界",
+      "解除条件",
+      "下次复核策略"
+    ],
+    "failure_mode": "protocol-failed when marker or any field is missing",
+    "persistence_boundary": "only boolean contract results are retained; blocker prose is not copied to state, visible-status, notification, log, or Receipt"
+  },
+  "red_green": {
+    "red": "legacy implementation accepted a safe-blocked final containing only DOG_VISIBLE_STATUS and a generic summary",
+    "green": [
+      "complete structured blocker details accepted",
+      "generic summary rejected",
+      "incomplete required fields rejected"
+    ]
+  },
+  "verification": {
+    "new_tests": "3/3 GREEN",
+    "cumulative_tests": "63/63 GREEN",
+    "python_py_compile": "GREEN",
+    "python_compileall": "GREEN",
+    "git_diff_check": "GREEN",
+    "browser_acceptance": "NOT_APPLICABLE_NO_PAGE_CHANGE",
+    "active_turn_noop": "decision=turn-running; total_attempts=217->217",
+    "launch_agent": "run_interval=300; last_exit_code=0",
+    "config": "revision=workshop-watchdog-v3.1-20260821; mode=0600; blocked_recheck_delay=1800; desktop_notification=true"
+  },
+  "sha256": {
+    "scripts/long-task-watchdog/watchdog.py": {
+      "before": "b73794498cbb70f059464c5f4dd516fc11a30e654595f11ca3c339416c6a7c88",
+      "after": "3de98ab7ac81330223551b6ec3b10a663cc4743dd67b2cb7da1b9ed6cf23f877"
+    },
+    "scripts/long-task-watchdog/test_watchdog.py": {
+      "before": "2651fb8bc303ff63b4aa87637a15cff4cef354360f8768114cea13909081c58e",
+      "after": "2bb0b990e763bb9c52d56c3ac4004cd66332add69373745fd2d0675ba25bfc55"
+    },
+    "scripts/long-task-watchdog/README.md": {
+      "before": "6093db0e72d42d0785564a87b38a3bfa95fe10ff0a57a2ee4b2a3d6a3d92e4db",
+      "after": "8915ed8facad982491f043f4e39d4bcf145b96ef492a15ceea9a8b57bb3d9ca9"
+    },
+    "watchdog_config": {
+      "before": "9a79a2746e0837f9e971c9308dc338b37fa54503de65c8ebe857835598ef5af9",
+      "after": "f2cd74dca574feea0a7e06e8069049d0ca4cbca85a617c87a9a1142649f125fa"
+    },
+    "watchdog_adr": {
+      "before": "0117c15093db6aa75d5383a83c1611ea52c0ac4d8f827393be02d88efdd41a91",
+      "after": "ab876a54cdd6a53b10ccddbdf57e28458cd4ab381da070c7427c9c501926a535"
+    }
+  },
+  "prime_memory_candidate": {
+    "consumer": "m1 serialized CAS",
+    "status": "PENDING_M1_CONSUMPTION",
+    "fact": "Workshop Watchdog V3.1 requires every real wake to expose independently verified status; safe-blocked final must list every distinct blocked Task with six required fields, otherwise the episode is protocol-failed."
+  },
+  "remaining_acceptance": "The next real safe-blocked episode must prove DOG_VISIBLE_STATUS, DOG_BLOCKER_DETAILS, current Ack, visible-status, notification delivery, and transcript final align."
+}

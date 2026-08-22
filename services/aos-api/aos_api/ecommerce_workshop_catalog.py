@@ -100,11 +100,22 @@ class PostgresWorkshopCatalogSource:
         )
         try:
             with self._connect_factory() as conn:
-                # connect() may already open a transaction (client_encoding /
-                # tenant GUC). SET TRANSACTION must be the first statement.
+                # A connection factory may establish an isolated schema in the
+                # transaction that connect() already opened. Preserve only its
+                # effective search_path: tenant GUCs must be rebound below.
+                search_path_row = conn.execute("SHOW search_path").fetchone()
+                if search_path_row is None or not str(
+                    search_path_row["search_path"]
+                ).strip():
+                    raise RegistryIntegrityCorruptError()
+                search_path = str(search_path_row["search_path"])
                 conn.rollback()
                 conn.execute(
                     "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+                )
+                conn.execute(
+                    "SELECT set_config('search_path', %s, true)",
+                    (search_path,),
                 )
                 apply_asset_transaction_scope(
                     conn, org_id=checked_org, project_id=checked_project

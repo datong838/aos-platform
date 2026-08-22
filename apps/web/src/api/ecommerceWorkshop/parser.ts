@@ -1,5 +1,6 @@
 import {
   ECOMMERCE_WORKSHOP_SCHEMA_VERSION,
+  SOURCE_READINESS_SCHEMA_VERSION,
   TASK_COCKPIT_SCHEMA_VERSION,
   type EcommerceWorkshopApiErrorBody,
   type EcommerceWorkshopModule,
@@ -14,6 +15,14 @@ import {
   type WorkshopReadiness,
   type WorkshopReadinessBlocker,
   type WorkshopTenant,
+  type SourceReadinessCounts,
+  type SourceReadinessEnvelope,
+  type SourceReadinessExactRef,
+  type SourceReadinessItem,
+  type SourceReadinessLatestRun,
+  type SourceReadinessPolicyObservation,
+  type SourceReadinessPolicyStatus,
+  type SourceReadinessStatus,
   type TaskCockpitBlocker,
   type TaskCockpitCheckpoint,
   type TaskCockpitCheckpointPageResponse,
@@ -26,6 +35,7 @@ import {
 } from "./contracts";
 
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
+const RAW_SHA256 = /^[0-9a-f]{64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const MODULE_ID = /^ecommerce\.[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
 const ID = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
@@ -49,6 +59,10 @@ function text(value: unknown, label: string): string {
 }
 function integer(value: unknown, label: string, minimum = 0): number {
   if (!Number.isSafeInteger(value) || (value as number) < minimum) throw new TypeError(`${label} 必须是安全整数`);
+  return value as number;
+}
+function signedInteger(value: unknown, label: string): number {
+  if (!Number.isSafeInteger(value)) throw new TypeError(`${label} 必须是安全整数`);
   return value as number;
 }
 function bool(value: unknown, label: string): boolean {
@@ -149,6 +163,60 @@ export function parseEcommerceWorkshopModuleReadiness(value: unknown): Ecommerce
 }
 export function parseEcommerceWorkshopApiError(value: unknown, fallback: string): EcommerceWorkshopApiErrorBody {
   try { const raw = record(value, "apiError"); exact(raw, ["code", "message", "details", "traceId"], "apiError"); return { code: text(raw.code, "apiError.code"), message: text(raw.message, "apiError.message"), details: raw.details === null ? null : record(raw.details, "apiError.details"), traceId: text(raw.traceId, "apiError.traceId") }; } catch { return { code: "INVALID_ERROR_RESPONSE", message: fallback, details: null, traceId: "" }; }
+}
+
+const SOURCE_STATUSES = ["ready", "empty", "degraded", "unknown", "stale", "failed", "blocked", "forbidden"] as const;
+const SOURCE_STATUS_PRECEDENCE: Record<SourceReadinessStatus, number> = { ready: 0, empty: 1, degraded: 2, unknown: 3, stale: 4, failed: 5, blocked: 6, forbidden: 7 };
+const SOURCE_PIPELINES = ["P01-shop-qyh", "P02-product-qyh", "P03-product-sku-qyh", "P04-category-qyh", "P05-order-qyh", "P06-order-line-qyh", "P07-shipment-qyh", "P08-customer-lite-qyh", "P09-weapp-qyh", "P10-system-config-qyh", "P11-product-review-qyh", "P12-payment-qyh"] as const;
+
+function reasonCodes(value: unknown, label: string): string[] {
+  const result = strings(value, label);
+  if (result.some((item) => !REASON.test(item))) throw new TypeError(`${label} reason code 非法`);
+  return result;
+}
+function parseSourceReadinessExactRef(value: unknown): SourceReadinessExactRef {
+  const raw = record(value, "sourceReadiness.exactRef");
+  exact(raw, ["resourceType", "resourceId", "revision", "contentHash", "authority"], "sourceReadiness.exactRef");
+  const contentHash = text(raw.contentHash, "sourceReadiness.exactRef.contentHash");
+  if (!RAW_SHA256.test(contentHash)) throw new TypeError("sourceReadiness.exactRef.contentHash 不是 SHA-256");
+  return { resourceType: text(raw.resourceType, "sourceReadiness.exactRef.resourceType"), resourceId: text(raw.resourceId, "sourceReadiness.exactRef.resourceId"), revision: text(raw.revision, "sourceReadiness.exactRef.revision"), contentHash, authority: text(raw.authority, "sourceReadiness.exactRef.authority") };
+}
+function parseSourceReadinessLatestRun(value: unknown): SourceReadinessLatestRun {
+  const raw = record(value, "sourceReadiness.latestRun");
+  exact(raw, ["runId", "status", "scheduledFor", "startedAt", "finishedAt", "rowsWritten", "errorCode"], "sourceReadiness.latestRun");
+  return { runId: nullable(raw.runId, (item) => boundedText(item, "sourceReadiness.latestRun.runId", 200)), status: enumValue(raw.status, ["succeeded", "failed", "running", "unknown"] as const, "sourceReadiness.latestRun.status"), scheduledFor: nullable(raw.scheduledFor, (item) => timestamp(item, "sourceReadiness.latestRun.scheduledFor")), startedAt: nullable(raw.startedAt, (item) => timestamp(item, "sourceReadiness.latestRun.startedAt")), finishedAt: nullable(raw.finishedAt, (item) => timestamp(item, "sourceReadiness.latestRun.finishedAt")), rowsWritten: nullable(raw.rowsWritten, (item) => integer(item, "sourceReadiness.latestRun.rowsWritten")), errorCode: nullable(raw.errorCode, (item) => boundedText(item, "sourceReadiness.latestRun.errorCode", 200)) };
+}
+function parseSourceReadinessCounts(value: unknown): SourceReadinessCounts {
+  const raw = record(value, "sourceReadiness.counts");
+  exact(raw, ["sourceTotal", "sourceActive", "sourceDeleted", "projectionTotal", "unexplainedDelta"], "sourceReadiness.counts");
+  return { sourceTotal: nullable(raw.sourceTotal, (item) => integer(item, "sourceReadiness.counts.sourceTotal")), sourceActive: nullable(raw.sourceActive, (item) => integer(item, "sourceReadiness.counts.sourceActive")), sourceDeleted: nullable(raw.sourceDeleted, (item) => integer(item, "sourceReadiness.counts.sourceDeleted")), projectionTotal: nullable(raw.projectionTotal, (item) => integer(item, "sourceReadiness.counts.projectionTotal")), unexplainedDelta: nullable(raw.unexplainedDelta, (item) => signedInteger(item, "sourceReadiness.counts.unexplainedDelta")) };
+}
+function parseSourceReadinessPolicy(value: unknown): SourceReadinessPolicyObservation {
+  const raw = record(value, "sourceReadiness.policy");
+  exact(raw, ["status", "ruleRef", "summary"], "sourceReadiness.policy");
+  return { status: enumValue<SourceReadinessPolicyStatus>(raw.status, ["pass", "fail", "unknown"], "sourceReadiness.policy.status"), ruleRef: nullable(raw.ruleRef, parseSourceReadinessExactRef), summary: nullable(raw.summary, (item) => boundedText(item, "sourceReadiness.policy.summary", 1000)) };
+}
+function parseSourceReadinessItem(value: unknown): SourceReadinessItem {
+  const raw = record(value, "sourceReadiness.item");
+  exact(raw, ["schemaVersion", "tenant", "sourceId", "pipelineId", "objectType", "status", "checkedAt", "observedAt", "sourceEventAt", "projectedAt", "dataCutoff", "freshnessExpiresAt", "sourceConfigRef", "mappingRef", "schemaRef", "maskingPolicyRef", "freshnessPolicyRef", "qualityPolicyRef", "reconciliationPolicyRef", "queryCapabilityRef", "latestRun", "counts", "quality", "reconciliation", "reasons", "blockers"], "sourceReadiness.item");
+  if (raw.schemaVersion !== SOURCE_READINESS_SCHEMA_VERSION) throw new TypeError("sourceReadiness.item.schemaVersion 漂移");
+  const item: SourceReadinessItem = { schemaVersion: SOURCE_READINESS_SCHEMA_VERSION, tenant: parseTenant(raw.tenant), sourceId: boundedText(raw.sourceId, "sourceReadiness.item.sourceId", 200), pipelineId: boundedText(raw.pipelineId, "sourceReadiness.item.pipelineId", 200), objectType: boundedText(raw.objectType, "sourceReadiness.item.objectType", 200), status: enumValue(raw.status, SOURCE_STATUSES, "sourceReadiness.item.status"), checkedAt: timestamp(raw.checkedAt, "sourceReadiness.item.checkedAt"), observedAt: nullable(raw.observedAt, (entry) => timestamp(entry, "sourceReadiness.item.observedAt")), sourceEventAt: nullable(raw.sourceEventAt, (entry) => timestamp(entry, "sourceReadiness.item.sourceEventAt")), projectedAt: nullable(raw.projectedAt, (entry) => timestamp(entry, "sourceReadiness.item.projectedAt")), dataCutoff: nullable(raw.dataCutoff, (entry) => timestamp(entry, "sourceReadiness.item.dataCutoff")), freshnessExpiresAt: nullable(raw.freshnessExpiresAt, (entry) => timestamp(entry, "sourceReadiness.item.freshnessExpiresAt")), sourceConfigRef: nullable(raw.sourceConfigRef, parseSourceReadinessExactRef), mappingRef: nullable(raw.mappingRef, parseSourceReadinessExactRef), schemaRef: nullable(raw.schemaRef, parseSourceReadinessExactRef), maskingPolicyRef: nullable(raw.maskingPolicyRef, parseSourceReadinessExactRef), freshnessPolicyRef: nullable(raw.freshnessPolicyRef, parseSourceReadinessExactRef), qualityPolicyRef: nullable(raw.qualityPolicyRef, parseSourceReadinessExactRef), reconciliationPolicyRef: nullable(raw.reconciliationPolicyRef, parseSourceReadinessExactRef), queryCapabilityRef: nullable(raw.queryCapabilityRef, parseSourceReadinessExactRef), latestRun: parseSourceReadinessLatestRun(raw.latestRun), counts: parseSourceReadinessCounts(raw.counts), quality: parseSourceReadinessPolicy(raw.quality), reconciliation: parseSourceReadinessPolicy(raw.reconciliation), reasons: reasonCodes(raw.reasons, "sourceReadiness.item.reasons"), blockers: reasonCodes(raw.blockers, "sourceReadiness.item.blockers") };
+  if (item.status === "ready" && ([item.sourceConfigRef, item.mappingRef, item.schemaRef, item.maskingPolicyRef, item.freshnessPolicyRef, item.qualityPolicyRef, item.reconciliationPolicyRef, item.queryCapabilityRef].some((entry) => entry === null) || item.latestRun.status !== "succeeded" || item.quality.status !== "pass" || item.reconciliation.status !== "pass" || item.dataCutoff === null || item.freshnessExpiresAt === null || item.blockers.length > 0)) throw new TypeError("sourceReadiness.item 伪 ready");
+  return item;
+}
+export function parseSourceReadinessEnvelope(value: unknown): SourceReadinessEnvelope {
+  const raw = record(value, "sourceReadiness");
+  exact(raw, ["schemaVersion", "tenant", "checkedAt", "cutoffAt", "status", "sources", "receiptRef"], "sourceReadiness");
+  if (raw.schemaVersion !== SOURCE_READINESS_SCHEMA_VERSION) throw new TypeError("sourceReadiness.schemaVersion 漂移");
+  if (!Array.isArray(raw.sources)) throw new TypeError("sourceReadiness.sources 必须是数组");
+  const tenant = parseTenant(raw.tenant); const checkedAt = timestamp(raw.checkedAt, "sourceReadiness.checkedAt"); const sources = raw.sources.map(parseSourceReadinessItem);
+  if (sources.length !== SOURCE_PIPELINES.length || sources.some((item, index) => item.pipelineId !== SOURCE_PIPELINES[index])) throw new TypeError("sourceReadiness.sources 必须是 ordered P01-P12");
+  if (sources.some((item) => item.tenant.orgId !== tenant.orgId || item.tenant.projectId !== tenant.projectId)) throw new TypeError("sourceReadiness tenant 漂移");
+  if (sources.some((item) => item.checkedAt !== checkedAt)) throw new TypeError("sourceReadiness checkedAt 漂移");
+  const status = enumValue<SourceReadinessStatus>(raw.status, SOURCE_STATUSES, "sourceReadiness.status");
+  const aggregate = sources.reduce<SourceReadinessStatus>((current, item) => SOURCE_STATUS_PRECEDENCE[item.status] > SOURCE_STATUS_PRECEDENCE[current] ? item.status : current, "ready");
+  if (status !== aggregate) throw new TypeError("sourceReadiness aggregate status 漂移");
+  return { schemaVersion: SOURCE_READINESS_SCHEMA_VERSION, tenant, checkedAt, cutoffAt: timestamp(raw.cutoffAt, "sourceReadiness.cutoffAt"), status, sources, receiptRef: nullable(raw.receiptRef, parseSourceReadinessExactRef) };
 }
 
 const TASK_STATUSES = ["pending", "planning", "awaiting_approval", "approved", "executing", "paused", "completed", "failed", "cancelled", "rolled_back"] as const;

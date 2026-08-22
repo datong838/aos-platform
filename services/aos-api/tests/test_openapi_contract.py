@@ -83,7 +83,7 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2535
+    assert len(schema["paths"]) == 2536
     assert len(schema.get("components", {}).get("schemas", {})) == 1942
 
 
@@ -97,6 +97,20 @@ def test_source_readiness_contract_is_principal_scoped_and_read_only() -> None:
         "schema"
     ]["$ref"]
     assert response_ref.endswith("/SourceReadinessEnvelope")
+
+    workshop_operation = schema["paths"][
+        "/v1/ecommerce-workshop/source-readiness"
+    ]["get"]
+    assert workshop_operation["operationId"] == "ecommerceWorkshopSourceReadinessGet"
+    assert workshop_operation["security"] == [{"HTTPBearer": []}]
+    assert all(
+        item["in"] != "query"
+        for item in workshop_operation.get("parameters", [])
+    )
+    workshop_response_ref = workshop_operation["responses"]["200"]["content"][
+        "application/json"
+    ]["schema"]["$ref"]
+    assert workshop_response_ref == response_ref
 
 
 def test_inventory_preserves_route_rows_and_known_duplicates() -> None:

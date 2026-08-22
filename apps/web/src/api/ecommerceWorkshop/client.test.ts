@@ -14,6 +14,10 @@ const blockers = [
 ];
 const core = { ...cockpitBase, taskCutoff: "2026-08-15T10:00:00Z", readiness: "degraded", blockers, items: [], page: emptyPage };
 const details = { ...cockpitBase, runId: "run-1", membershipCutoff: "2026-08-15T10:00:00Z", items: [], page: emptyPage };
+const sourcePipelines = ["P01-shop-qyh", "P02-product-qyh", "P03-product-sku-qyh", "P04-category-qyh", "P05-order-qyh", "P06-order-line-qyh", "P07-shipment-qyh", "P08-customer-lite-qyh", "P09-weapp-qyh", "P10-system-config-qyh", "P11-product-review-qyh", "P12-payment-qyh"];
+const sourceCheckedAt = "2026-08-21T14:00:00Z";
+const sourceBlockers = ["FRESHNESS_POLICY_REF_MISSING", "QUALITY_POLICY_REF_MISSING", "QUERY_CAPABILITY_REF_MISSING", "RECONCILIATION_POLICY_REF_MISSING", "SOURCE_CONFIG_EXACT_REF_MISSING"];
+const sourceReadiness = { schemaVersion: "aos.source-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, checkedAt: sourceCheckedAt, cutoffAt: sourceCheckedAt, status: "blocked", receiptRef: null, sources: sourcePipelines.map((pipelineId) => ({ schemaVersion: "aos.source-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, sourceId: "niushop-qyh", pipelineId, objectType: "Object", status: "blocked", checkedAt: sourceCheckedAt, observedAt: sourceCheckedAt, sourceEventAt: null, projectedAt: sourceCheckedAt, dataCutoff: sourceCheckedAt, freshnessExpiresAt: null, sourceConfigRef: null, mappingRef: null, schemaRef: null, maskingPolicyRef: null, freshnessPolicyRef: null, qualityPolicyRef: null, reconciliationPolicyRef: null, queryCapabilityRef: null, latestRun: { runId: "run-1", status: "succeeded", scheduledFor: sourceCheckedAt, startedAt: sourceCheckedAt, finishedAt: sourceCheckedAt, rowsWritten: 1, errorCode: null }, counts: { sourceTotal: 1, sourceActive: 1, sourceDeleted: 0, projectionTotal: 1, unexplainedDelta: 0 }, quality: { status: "unknown", ruleRef: null, summary: null }, reconciliation: { status: "unknown", ruleRef: null, summary: null }, reasons: sourceBlockers, blockers: sourceBlockers })) };
 
 describe("EcommerceWorkshopClient", () => {
   it("只发两个 canonical GET，并沿用会话鉴权头", async () => {
@@ -30,6 +34,25 @@ describe("EcommerceWorkshopClient", () => {
     const network = new EcommerceWorkshopClient({ fetch: vi.fn().mockRejectedValue(new Error("offline")), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
     await expect(network.listModules()).rejects.toBeInstanceOf(EcommerceWorkshopClientError);
     await expect(network.getModuleReadiness("bad")).rejects.toBeInstanceOf(TypeError);
+  });
+  it("只发 canonical SourceReadiness GET 并保留 blocked", async () => {
+    const fetch = vi.fn().mockResolvedValue(ok(sourceReadiness));
+    const client = new EcommerceWorkshopClient({ fetch, getBaseUrl: () => "http://api.test", getAuthHeaders: () => ({ Authorization: "Bearer test" }) });
+    const result = await client.getSourceReadiness();
+    expect(result.status).toBe("blocked");
+    expect(result.sources).toHaveLength(12);
+    expect(result.sources[0].pipelineId).toBe("P01-shop-qyh");
+    expect(fetch).toHaveBeenCalledWith("http://api.test/v1/ecommerce-workshop/source-readiness", expect.objectContaining({ method: "GET", headers: expect.objectContaining({ Authorization: "Bearer test" }) }));
+  });
+  it("SourceReadiness 的 forbidden、network、non-JSON 与 parser drift 均失败关闭", async () => {
+    const denied = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(new Response(JSON.stringify({ code: "FORBIDDEN", message: "denied", details: null, traceId: "trace-3" }), { status: 403 })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
+    await expect(denied.getSourceReadiness()).rejects.toMatchObject({ status: 403, operationId: "ecommerceWorkshopSourceReadinessGet" });
+    const network = new EcommerceWorkshopClient({ fetch: vi.fn().mockRejectedValue(new Error("offline")), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
+    await expect(network.getSourceReadiness()).rejects.toMatchObject({ status: 0, operationId: "ecommerceWorkshopSourceReadinessGet" });
+    const nonJson = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(new Response("not-json", { status: 200 })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
+    await expect(nonJson.getSourceReadiness()).rejects.toMatchObject({ status: 0, body: { code: "INVALID_SUCCESS_RESPONSE" } });
+    const drift = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(ok({ ...sourceReadiness, status: "ready" })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
+    await expect(drift.getSourceReadiness()).rejects.toBeInstanceOf(TypeError);
   });
   it("只发三条 Task Cockpit canonical GET 并规范编码 query", async () => {
     const fetch = vi.fn().mockResolvedValueOnce(ok(core)).mockResolvedValueOnce(ok(details)).mockResolvedValueOnce(ok(details));

@@ -19,6 +19,10 @@ from aos_api.ecommerce_workshop_contracts import (
     EcommerceWorkshopModuleListResponse,
     EcommerceWorkshopModuleReadinessResponse,
 )
+from aos_api.ecommerce_workshop_source_readiness import (
+    EcommerceWorkshopSourceReadiness,
+    SourceReadinessTenantMismatchError,
+)
 from aos_api.ecommerce_workshop_task_cockpit import (
     EcommerceWorkshopTaskCockpit,
     TaskCockpitPersistenceError,
@@ -30,6 +34,8 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
 )
 from aos_api.errors import ApiError, ErrorBody
 from aos_api.public_contracts import TaskStatus
+from aos_api.source_readiness import build_source_readiness_service
+from aos_api.source_readiness_contracts import SourceReadinessEnvelope
 
 _bearer = HTTPBearer(auto_error=False)
 router = APIRouter(
@@ -76,11 +82,20 @@ def get_ecommerce_workshop_task_cockpit() -> EcommerceWorkshopTaskCockpit:
     return EcommerceWorkshopTaskCockpit()
 
 
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_source_readiness() -> EcommerceWorkshopSourceReadiness:
+    return EcommerceWorkshopSourceReadiness(build_source_readiness_service())
+
+
 CatalogDependency = Annotated[
     EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)
 ]
 TaskCockpitDependency = Annotated[
     EcommerceWorkshopTaskCockpit, Depends(get_ecommerce_workshop_task_cockpit)
+]
+SourceReadinessDependency = Annotated[
+    EcommerceWorkshopSourceReadiness,
+    Depends(get_ecommerce_workshop_source_readiness),
 ]
 
 
@@ -135,6 +150,25 @@ def _require_task_cockpit_installation(
     )
 
 
+def _require_visible_workshop_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    projection = _invoke(
+        lambda: catalog.list_modules(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+    if projection.count == 0:
+        raise ApiError(
+            code="WORKSHOP_NOT_INSTALLED",
+            message="No active ecommerce Workshop module is visible",
+            status_code=404,
+        )
+
+
 @router.get(
     "/modules",
     response_model=EcommerceWorkshopModuleListResponse,
@@ -179,6 +213,33 @@ def get_ecommerce_workshop_module_readiness(
             markings=principal.markings,
         )
     )
+
+
+@router.get(
+    "/source-readiness",
+    response_model=SourceReadinessEnvelope,
+    operation_id="ecommerceWorkshopSourceReadinessGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_source_readiness_envelope(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    source_readiness: SourceReadinessDependency,
+) -> SourceReadinessEnvelope:
+    _reject_query_parameters(request)
+    _require_visible_workshop_installation(principal=principal, catalog=catalog)
+    try:
+        return source_readiness.read(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+        )
+    except SourceReadinessTenantMismatchError as exc:
+        raise ApiError(
+            code="SOURCE_READINESS_TENANT_MISMATCH",
+            message="SourceReadiness dependency failed closed",
+            status_code=500,
+        ) from exc
 
 
 @router.get(

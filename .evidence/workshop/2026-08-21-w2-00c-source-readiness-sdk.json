@@ -1,0 +1,72 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "task_id": "W2-00C",
+  "authority_revision": "AOS-000147",
+  "result": "COMPLETED_GREEN_WITH_OPERATIONAL_BLOCKERS",
+  "branch": "w2-workshop",
+  "base_commit": "d8fd31f7c0d69daf03ad7347c7f6eb66bb35adf5",
+  "implementation": {
+    "summary": "Add an exact TypeScript contract, fail-closed parser, and fixed GET client for the canonical Workshop SourceReadiness endpoint.",
+    "operation_id": "ecommerceWorkshopSourceReadinessGet",
+    "path": "/v1/ecommerce-workshop/source-readiness",
+    "boundaries": [
+      "no caller-provided tenant or query scope",
+      "no cache, fallback, browser authority, write, retry, or state upgrade",
+      "HTTP, network, non-JSON success, and parser drift remain errors",
+      "blocked, unknown, empty, and forbidden remain distinct canonical states",
+      "ordered P01-P12, tenant, checkedAt, aggregate status, refs, and ready invariants are exact"
+    ]
+  },
+  "files": [
+    {
+      "path": "apps/web/src/api/ecommerceWorkshop/contracts.ts",
+      "pre_sha256": "707ed3ed8c43bf5b7646c45236dd0cc36ac6418af14139c80204668ea27a9de1",
+      "post_sha256": "143c955b8dd00cce39b5249bae696e90a72b6a46db474ab90019d9b3405c8b8b"
+    },
+    {
+      "path": "apps/web/src/api/ecommerceWorkshop/parser.ts",
+      "pre_sha256": "85d0981abade396d6e5fc3eeff34f8a31f2ce609910598b43606e663d6ac70db",
+      "post_sha256": "fd077db4415b818866cb24ce3a9d564b91c45bf0c0afe4d1fdd71ea1fbbfa40e"
+    },
+    {
+      "path": "apps/web/src/api/ecommerceWorkshop/client.ts",
+      "pre_sha256": "7cf1641786da7cf9b788ac32bcece914631323f75ddca2128f2daf6b99c6ae20",
+      "post_sha256": "7e463aa8a55268b0521f7be0785830047c29e7fbe8b18a368b97a45cd8946403"
+    },
+    {
+      "path": "apps/web/src/api/ecommerceWorkshop/parser.test.ts",
+      "pre_sha256": "394a235b3c52e4d32e467e6da3dfcabe7cf36338c3e0efd125e6980ed6c90419",
+      "post_sha256": "1b03d04e158764f4ff7560325d1b60dcb179ebfc3ca61ac08239677cd255e2c4"
+    },
+    {
+      "path": "apps/web/src/api/ecommerceWorkshop/client.test.ts",
+      "pre_sha256": "6f57fbdc1dc3a2e413f8dcf24193733b08ed6238ab470c4d1c4d30f6774723e3",
+      "post_sha256": "beeafcdaccff8133d88ec94bd35f54891af816039742aa5ff598ea9df08fca9a"
+    }
+  ],
+  "verification": [
+    "2 focused Vitest files and 19 tests passed",
+    "200 Web test files and 2031 tests passed",
+    "TypeScript tsc --noEmit passed",
+    "production Vite build passed",
+    "git diff --check passed",
+    "org-org read-only evidence shape and ordered blocker facts match the strict parser"
+  ],
+  "browser_acceptance": {
+    "status": "NOT_APPLICABLE",
+    "reason": "No page, Store, component, CSS, route-navigation, or visual asset file changed in W2-00C."
+  },
+  "operational_blockers": [
+    "SOURCE_CONFIG_EXACT_REF_MISSING",
+    "FRESHNESS_POLICY_REF_MISSING",
+    "QUALITY_POLICY_REF_MISSING",
+    "RECONCILIATION_POLICY_REF_MISSING",
+    "QUERY_CAPABILITY_REF_MISSING"
+  ],
+  "prime_agent_memory_candidate": {
+    "status": "PENDING_M1_SERIAL_CAS",
+    "fact": "W2-00C strict Web SDK is complete with exact P01-P12 and fail-closed status semantics; no UI acceptance is claimed; five operational refs remain missing.",
+    "w2_core_projection_write": false
+  },
+  "next_task": "W2-00D-PREFLIGHT"
+}

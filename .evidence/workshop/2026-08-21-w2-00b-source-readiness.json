@@ -1,0 +1,117 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "task_id": "W2-00B",
+  "authority_revision": "AOS-000147",
+  "result": "COMPLETED_GREEN_WITH_OPERATIONAL_BLOCKERS",
+  "branch": "w2-workshop",
+  "workshop_base_commit": "fa80230ab644482ee176d0e063b698091433a91f",
+  "canonical_m1_commit": "33b474a3c88a0a7ee7151755952a9c3b3e297224",
+  "integration_commit": "5da5cdeed6e40c09ab7921fd222a1d1ff60b8ba6",
+  "implementation": {
+    "summary": "Expose canonical SourceReadinessEnvelope through a stateless Workshop GET facade after the Principal-visible installed-module gate.",
+    "route": "GET /v1/ecommerce-workshop/source-readiness",
+    "operation_id": "ecommerceWorkshopSourceReadinessGet",
+    "boundaries": [
+      "Principal org/project exact scope only",
+      "query parameters rejected",
+      "canonical blocked/stale/unknown preserved without upgrade",
+      "tenant mismatch fails closed without cross-tenant payload",
+      "zero visible active installed modules prevents canonical reader call",
+      "no persistence, retry, migration, Pipeline or OT query, Provider call, or real-data write"
+    ]
+  },
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/ecommerce_workshop_source_readiness.py",
+      "pre_sha256": null,
+      "post_sha256": "913791e8d1b1ae6e8bdeda1f66184f1970d246cd3ebde11b0707fccdc8c6b70b"
+    },
+    {
+      "path": "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+      "pre_sha256": "b350b6881eb2bbca2177871e6fceae56c1ca277e2e87a81e677a4307e9b4ab98",
+      "post_sha256": "e4306cd0be0f73305cd8c80329a7546f1f000b27ec999b5cab062133e7402527"
+    },
+    {
+      "path": "services/aos-api/tests/test_ecommerce_workshop_source_readiness.py",
+      "pre_sha256": null,
+      "post_sha256": "a9da60216ac85c67f01c44883e10bc223002cc5acdd7ed5eadf95176984cffb0"
+    },
+    {
+      "path": "services/aos-api/tests/test_ecommerce_workshop_api.py",
+      "pre_sha256": "640aead0f328b2759ba143e6cdfb839a2c1b2316ea39ff5c6edd0d23046123da",
+      "post_sha256": "04d35495dcb45ed020ac3454ff2edb21bdb72cf67c5caecf78adab8120a18597"
+    },
+    {
+      "path": "scripts/export_openapi.py",
+      "pre_sha256": "76973428acb1a331b84ecf63373bf5f6bf4f6f75f341d1aba667b8faba67aead",
+      "post_sha256": "2c085d858bebcd79c39b220e4c5d72e00d82921d04485fbb3bee24a3d064075b"
+    },
+    {
+      "path": "services/aos-api/tests/test_openapi_contract.py",
+      "pre_sha256": "52e0a1e34e4139cd38865aaeae11ed571b1475fd3c49e1c96269742cfa727d5f",
+      "post_sha256": "16d372a61fe232f2401f2df93b01b838049b27fd6f882f6283c9b25f5773e73f"
+    },
+    {
+      "path": "packages/contracts/openapi/v1.generated.json",
+      "pre_sha256": "f81ef061b205be132aec00202b5ab8212a6da7c09fba8f177dc469d456f1539a",
+      "post_sha256": "798a5925f58b0bad10cacf60ecd80906556cf4dcb206c98df57f891cbc8f9100"
+    },
+    {
+      "path": "packages/contracts/openapi/v1.inventory.json",
+      "pre_sha256": "916621103d67e6849b2c7cbf30849afb7897b89aec14a77a5b2d6c1b3498d740",
+      "post_sha256": "759136a05969b9cd9fee306062f4570865f52758e4279c6bde45fa93304d5769"
+    }
+  ],
+  "verification": [
+    "27 targeted canonical facade and OpenAPI tests passed",
+    "47 relevant Workshop and SourceReadiness backend tests passed serially",
+    "200 Web test files and 2022 tests passed",
+    "TypeScript tsc --noEmit passed",
+    "OpenAPI export --check passed deterministically",
+    "Alembic reports exactly one head: aip13_001",
+    "compileall and git diff --check passed"
+  ],
+  "browser_acceptance": {
+    "status": "NOT_APPLICABLE",
+    "reason": "No page, component, route-navigation, or visual asset file changed in W2-00B. Browser acceptance remains mandatory for a later page wave."
+  },
+  "live_read_only_probes": {
+    "org-org/dev-project": {
+      "status": "blocked",
+      "source_count": 12,
+      "blocker_count": 5,
+      "source_projection_counts_equal": true,
+      "evidence_hash": "54dade1f554099ad271be14043829dcd3cd946d2f3fd75700984b1f009fe512d",
+      "sealable": false
+    },
+    "dev-org/dev-project": {
+      "status": "blocked",
+      "source_count": 12,
+      "blocker_count": 8,
+      "nonzero_sources": [],
+      "nonzero_projections": [],
+      "evidence_hash": "e87998a0025649146a2178831475ec4a927c34d1eda6b5a4e80d1b02301e9ad4",
+      "sealable": false
+    }
+  },
+  "operational_blockers": [
+    "SOURCE_CONFIG_EXACT_REF_MISSING",
+    "FRESHNESS_POLICY_REF_MISSING",
+    "QUALITY_POLICY_REF_MISSING",
+    "RECONCILIATION_POLICY_REF_MISSING",
+    "QUERY_CAPABILITY_REF_MISSING"
+  ],
+  "known_baseline_failure": {
+    "test": "services/aos-api/tests/aip/test_aip_agent_registry_store.py::test_skill_binding_exact_revision_cas_and_tenant_isolation",
+    "classification": "INHERITED_AIP_FIXTURE_OUTSIDE_W2_SCOPE",
+    "evidence": "Reproduces alone because fixture data violates existing aip_skill_logic_revision_provenance_chk; full backend stopped after 1 failed and 480 passed.",
+    "action": "Do not modify AIP-owned fixture from W2."
+  },
+  "test_orchestration_learning": "Backend pytest suites sharing the test database must run serially; parallel migration setup can race on ALTER ROLE and produce tuple concurrently updated.",
+  "prime_agent_memory_candidate": {
+    "status": "PENDING_M1_SERIAL_CAS",
+    "fact": "W2-00B canonical blocked-state facade is complete and contract-tested; exact five operational references remain missing; W2-00C strict Web SDK is next.",
+    "w2_core_projection_write": false
+  },
+  "next_task": "W2-00C"
+}

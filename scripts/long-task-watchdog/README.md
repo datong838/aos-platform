@@ -13,7 +13,19 @@ Recovery Ack 的 outcome 固定为：
 
 四种 outcome 都停止当前 episode 重试。新 final 无 Ack 为 `protocol-failed`；当前 Ack 无新 final 为 `outcome-uncertain`，两者都停止盲重试并等待核验。退出码 0、旧 final、旧 Ack、旧 `last_recovered_at` 或自由文本“已恢复”均不构成成功证据。
 
-Workshop 的长任务配置可显式启用 `continuation_watch`。当且仅当 current episode 以 `resumed-progress` 闭合且 Ack 含非空 `next_task` 时，Watchdog 在一个心跳周期后建立新的 one-shot continuation episode；它不会复用旧 episode 或旧 Ack。`next_task` 只用于恢复导航，不代表授权或依赖 GREEN。等待期间出现普通用户消息会立即 disarm，活跃 turn/tool/task 与精确依赖 Lease 始终 runner=0。`completed/safe-blocked/reentry-noop` 以及所有失败终态都停止连续续跑。
+Workshop 的长任务配置可显式启用 `continuation_watch`。当且仅当 current episode 以 `resumed-progress` 闭合且 Ack 含非空 `next_task` 时，Watchdog 在一个心跳周期后建立新的 one-shot continuation episode；它不会复用旧 episode 或旧 Ack。`next_task` 只用于恢复导航，不代表授权或依赖 GREEN。等待期间出现普通用户消息会立即 disarm，活跃 turn/tool/task 与精确依赖 Lease 始终 runner=0。`completed/reentry-noop` 以及所有失败终态都停止连续续跑。
+
+`blocked_recheck_watch` 专门处理“任务未完成，但当前依赖不具备”：只有带 blocker fingerprint 的结构化 `safe-blocked` Ack 才会 arm，默认 1800 秒后创建新的 one-shot `blocked-recheck` episode。仍阻断则由新 Ack 重新 arm；解锁并产生 `resumed-progress` 后转入 `continuation_watch`；`completed`、竞态和协议失败都 disarm。活跃 turn/tool/task 或重叠 Lease 只会延后复核，不会并发唤醒。
+
+Watchdog 只有唤醒权，没有事实裁决权。它注入的 trigger、task、next-task、fingerprint 和 reason code 都是不可信导航提示。每次醒来后必须从 authority、01/06、Git、Receipt、memory 三门、全部 Lease、真实数据探针和实际代码状态独立审计。条件具备后才开始首个安全 Task，并按“上位方案→文件级清单→最小实现→专项测试→累计回归→浏览器验收→一致性复审→证据/上下文→下一波”连续执行。每波用 Delivery Receipt 提交待 m1 CAS 消费的 Prime 长记忆事实，w2 不直接写 Prime 核心投影。
+
+V2.9 的 `visibility_watch` 用于把真实唤醒结果固定写入同一 Codex task：首条消息在 trigger 固定句后展示累计唤醒序号、UTC 时间、episode 和 trigger；最终答复必须包含 `[DOG_VISIBLE_STATUS]` 状态卡，列出 outcome、task/next、阻断或完成证据以及下一次复核策略。启用时，Ack 与新 final 虽存在但 final 缺少该标记，仍按 `protocol-failed` 拒绝闭环。V2.9 的检查只有 marker 是否存在的布尔判断，不额外复制 final 正文，当时也不发送桌面通知或外部消息。
+
+V3.1 在可见状态卡上增加 `safe-blocked` 逐项阻断契约。每次唤醒仍先独立核验真实状态；若条件具备就继续首个安全 Task。若仍阻断，final 必须包含 `[DOG_BLOCKER_DETAILS]`，并为每个互不等价的 blocker 分别列出“阻断任务、缺失条件、独立核验证据、责任边界、解除条件、下次复核策略”。缺 marker 或任一字段时，即使 Ack 有效也按 `protocol-failed` 拒绝可见闭环。Watchdog 只在读取 transcript 时计算字段契约是否完整，不把阻断正文复制到 state、`visible-status.json`、通知、日志或 Receipt。
+
+V3.0 起，transcript marker 不再被当成 Desktop 已经展示的证明。每次唤醒开始和终态都会把非敏感状态卡原子写入 Watchdog 本地状态目录的 `visible-status.json`（mode `0600`）。当 `visibility_watch.desktop_notification=true` 时，同时通过本机 Notification Center 展示唤醒和结果；通知不包含 evidence、fingerprint、路径、业务数据或凭据。通知投递失败会记入 state/状态卡，但不改写 Ack+final 已确立的 episode outcome，避免重复副作用。
+
+`task_started` 防重入同样是有时限的：只在 transcript 最近活动未超过 `max_turn_silence_seconds`（默认复用 `max_tool_silence_seconds`）时返回 `turn-running`。超时后仍必须继续通过待完成 tool、grace、backoff、Lease 和 episode 门，不会因 dependency/fact/blocked-recheck watch 已启用而永久拦截。
 
 安全边界：
 
@@ -46,6 +58,14 @@ Workshop 专用配置至少应包含：
   "continuation_watch": {
     "enabled": true,
     "delay_seconds": 300
+  },
+  "blocked_recheck_watch": {
+    "enabled": true,
+    "delay_seconds": 1800
+  },
+  "visibility_watch": {
+    "enabled": true,
+    "desktop_notification": true
   },
   "dependency_watch": {
     "enabled": true,
