@@ -23,6 +23,7 @@ _MAPPINGS = {
     "product_reviews": "p11-product-review.yaml",
     "payments": "p12-payment.yaml",
 }
+_ALLOWED_FIELD_TYPES = {"bool", "date", "datetime", "decimal", "float", "int", "json", "string", "text", "timestamp"}
 
 
 def _sha(path: Path) -> str:
@@ -91,6 +92,92 @@ class FdeAdapterPackInspector:
             "missingDataTypes": missing,
         }
         result["snapshotHash"] = hashlib.sha256(
+            json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        return result
+
+    def mapping_proposal(self, adapter_pack_ref: str, data_types: list[str]) -> dict[str, Any]:
+        """Return normalized static mappings; never execute mapping expressions."""
+        inspection = self.inspect(adapter_pack_ref, data_types)
+        if inspection.get("packStatus") != "probed":
+            return {
+                "adapterPackRef": adapter_pack_ref,
+                "mappingStatus": "unknown",
+                "mappings": [],
+                "missingDataTypes": list(data_types),
+                "blockers": ["FDE_ADAPTER_PACK_UNKNOWN"],
+            }
+
+        proposals: list[dict[str, Any]] = []
+        blockers: list[str] = []
+        for data_type in data_types:
+            filename = _MAPPINGS.get(data_type)
+            if filename is None:
+                continue
+            path = self._root / "content/mappings" / filename
+            raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+            if not isinstance(raw, dict):
+                blockers.append(f"FDE_MAPPING_INVALID:{data_type}")
+                continue
+            field_mappings = raw.get("field_mappings")
+            if not isinstance(field_mappings, list):
+                blockers.append(f"FDE_MAPPING_FIELDS_MISSING:{data_type}")
+                continue
+            normalized_fields: list[dict[str, str]] = []
+            for row in field_mappings:
+                if not isinstance(row, dict):
+                    blockers.append(f"FDE_MAPPING_FIELD_INVALID:{data_type}")
+                    continue
+                source = row.get("source")
+                target = row.get("target")
+                field_type = row.get("type")
+                if not all(isinstance(value, str) and value.strip() == value and value for value in (source, target, field_type)):
+                    blockers.append(f"FDE_MAPPING_FIELD_INVALID:{data_type}")
+                    continue
+                if field_type not in _ALLOWED_FIELD_TYPES:
+                    blockers.append(f"FDE_MAPPING_TYPE_UNSUPPORTED:{data_type}:{field_type}")
+                normalized_fields.append({"source": source, "target": target, "type": field_type})
+
+            targets = [row["target"] for row in normalized_fields]
+            duplicate_targets = sorted({target for target in targets if targets.count(target) > 1})
+            primary_key = raw.get("primary_key")
+            primary_target = next(
+                (row["target"] for row in normalized_fields if row["source"] == primary_key),
+                None,
+            )
+            if duplicate_targets:
+                blockers.append(f"FDE_MAPPING_TARGET_CONFLICT:{data_type}")
+            if primary_target is None:
+                blockers.append(f"FDE_MAPPING_PRIMARY_TARGET_MISSING:{data_type}")
+            proposals.append(
+                {
+                    "dataType": data_type,
+                    "pipelineId": raw.get("pipeline_id"),
+                    "sourceTable": raw.get("source_table"),
+                    "targetObjectType": raw.get("target_ot"),
+                    "primaryKey": primary_key,
+                    "primaryTarget": primary_target,
+                    "siteFilter": raw.get("site_filter"),
+                    "incrementalStrategy": raw.get("incremental_strategy"),
+                    "incrementalCursor": raw.get("incremental_cursor"),
+                    "piiExclusion": list(raw.get("pii_exclusion") or []),
+                    "fieldMappings": normalized_fields,
+                    "mappingRef": f"bundle://platforms/ecommerce-niushop/content/mappings/{filename}",
+                    "contentHash": _sha(path),
+                    "coverage": 1.0 if normalized_fields else 0.0,
+                    "duplicateTargets": duplicate_targets,
+                }
+            )
+        result = {
+            "adapterPackRef": adapter_pack_ref,
+            "mappingStatus": "proposed" if proposals and not blockers else "partial",
+            "mappings": proposals,
+            "missingDataTypes": inspection.get("missingDataTypes", []),
+            "blockers": sorted(set(blockers)),
+            "allowedFieldTypes": sorted(_ALLOWED_FIELD_TYPES),
+            "expressionExecution": False,
+        }
+        result["proposalHash"] = hashlib.sha256(
             json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
         return result

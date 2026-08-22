@@ -1,4 +1,4 @@
-"""Strict contracts for the first three FDE onboarding skills."""
+"""Strict contracts for the canonical six-step FDE onboarding chain."""
 from __future__ import annotations
 
 import re
@@ -34,6 +34,7 @@ class FdeIntakeRequest(AipContractModel):
     secret_ref: str | None = Field(default=None, max_length=320)
     secret_version: str | None = Field(default=None, max_length=120)
     adapter_pack_ref: str = "platform.ecommerce.niushop@1.0.0"
+    access_mode: Literal["api", "jdbc", "browser"] = "api"
 
     @field_validator("requirement", "platform", "adapter_pack_ref")
     @classmethod
@@ -76,7 +77,14 @@ class FdeIntakeRequest(AipContractModel):
 
 
 class FdeStepEvidence(AipContractModel):
-    step_key: Literal["fde.s1.requirement", "fde.s2.auth-draft", "fde.s3.capability-probe"]
+    step_key: Literal[
+        "fde.s1.requirement",
+        "fde.s2.auth-draft",
+        "fde.s3.capability-probe",
+        "fde.s4.mapping-proposal",
+        "fde.s5.controlled-sync",
+        "fde.s6.validation",
+    ]
     status: FdeStepStatus
     artifact_type: str
     artifact_ref: str
@@ -91,13 +99,22 @@ class FdeSessionPreview(AipContractModel):
     status: FdeStepStatus
     executable: bool
     plan_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
-    steps: list[FdeStepEvidence] = Field(min_length=3, max_length=3)
+    steps: list[FdeStepEvidence] = Field(min_length=6, max_length=6)
+    reflection_rule_set_ref: str
+    reflection_rule_set_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
 
     @model_validator(mode="after")
     def _ordered_steps(self) -> "FdeSessionPreview":
-        expected = ["fde.s1.requirement", "fde.s2.auth-draft", "fde.s3.capability-probe"]
+        expected = [
+            "fde.s1.requirement",
+            "fde.s2.auth-draft",
+            "fde.s3.capability-probe",
+            "fde.s4.mapping-proposal",
+            "fde.s5.controlled-sync",
+            "fde.s6.validation",
+        ]
         if [step.step_key for step in self.steps] != expected:
-            raise ValueError("FDE preview must contain ordered S1-S3 evidence")
+            raise ValueError("FDE preview must contain ordered S1-S6 evidence")
         if self.executable and any(
             step.status in {FdeStepStatus.BLOCKED, FdeStepStatus.PAUSED, FdeStepStatus.PARTIAL}
             for step in self.steps

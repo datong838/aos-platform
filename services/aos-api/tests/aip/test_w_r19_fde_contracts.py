@@ -8,7 +8,7 @@ from aos_api.aip_fde_contracts import FdeIntakeRequest
 
 def _payload() -> dict[str, object]:
     return {
-        "requirement": "接入微商城订单与商品，只生成 S1-S3 计划",
+        "requirement": "接入微商城订单与商品，只生成 S1-S6 计划",
         "platform": "niushop",
         "dataTypes": ["orders", "products"],
         "syncFrequency": "hourly",

@@ -1,4 +1,4 @@
-"""FDE S1-S3 preview, session planning and canonical execution routes."""
+"""FDE S1-S6 preview, session planning and canonical execution routes."""
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Header, status
@@ -10,7 +10,7 @@ from aos_api.aip_fde_contracts import (
     FdeSessionCreated,
     FdeSessionPreview,
 )
-from aos_api.aip_fde_orchestrator import FdeS1S3Adapter, FdeS1S3Orchestrator
+from aos_api.aip_fde_orchestrator import FdeS1S3Adapter, FdeS1S6Orchestrator
 from aos_api.aip_task_store import AipTaskStore, AipTaskStoreError, AipTaskTransitionBlocked
 from aos_api.aip_taor_loop import CanonicalTaorRunner
 from aos_api.auth import Principal, require_principal
@@ -42,7 +42,7 @@ def preview_fde_session(
     body: FdeIntakeRequest,
     principal: Principal = Depends(require_principal),
 ) -> FdeSessionPreview:
-    return FdeS1S3Orchestrator().preview(_scope(principal), body)
+    return FdeS1S6Orchestrator().preview(_scope(principal), body)
 
 
 @router.post("/sessions", response_model=FdeSessionCreated, status_code=status.HTTP_201_CREATED)
@@ -53,7 +53,7 @@ def create_fde_session(
     store: AipTaskStore = Depends(get_aip_task_store),
 ) -> FdeSessionCreated:
     try:
-        return FdeS1S3Orchestrator().create_session(store, _scope(principal), principal.subject, _idem(idempotency_key), body)
+        return FdeS1S6Orchestrator().create_session(store, _scope(principal), principal.subject, _idem(idempotency_key), body)
     except AipTaskStoreError as exc:
         raise _store_error(exc) from exc
 
@@ -70,10 +70,17 @@ def execute_fde_run(
         timeline = store.timeline(scope, run_id)
         if timeline.task.type != "fde_platform_onboarding":
             raise AipTaskTransitionBlocked("run is not an FDE onboarding task")
-        expected = ["fde.s1.requirement", "fde.s2.auth-draft", "fde.s3.capability-probe"]
+        expected = [
+            "fde.s1.requirement",
+            "fde.s2.auth-draft",
+            "fde.s3.capability-probe",
+            "fde.s4.mapping-proposal",
+            "fde.s5.controlled-sync",
+            "fde.s6.validation",
+        ]
         if [step.step_key for step in timeline.plan.steps] != expected:
-            raise AipTaskTransitionBlocked("run plan is not the exact FDE S1-S3 plan")
-        adapter = FdeS1S3Adapter()
+            raise AipTaskTransitionBlocked("run plan is not the exact FDE S1-S6 plan")
+        adapter = FdeS1S3Adapter(FdeS1S6Orchestrator(execution_scope=scope))
 
         class _ContextAdapter:
             def __init__(self) -> None:

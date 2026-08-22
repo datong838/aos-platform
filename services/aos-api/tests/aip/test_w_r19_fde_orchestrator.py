@@ -15,7 +15,7 @@ SCOPE = TenantScope("org-org", "dev-project")
 
 def _intake(**overrides: object) -> FdeIntakeRequest:
     payload: dict[str, object] = {
-        "requirement": "接入微商城订单与商品，只生成 S1-S3 计划",
+        "requirement": "接入微商城订单与商品，只生成 S1-S6 计划",
         "platform": "niushop",
         "dataTypes": ["orders", "products"],
         "syncFrequency": "hourly",
@@ -40,6 +40,9 @@ def test_preview_is_deterministic_read_only_and_marks_live_probe_external() -> N
         FdeStepStatus.READY,
         FdeStepStatus.EXTERNAL_REQUIRED,
         FdeStepStatus.EXTERNAL_REQUIRED,
+        FdeStepStatus.EXTERNAL_REQUIRED,
+        FdeStepStatus.EXTERNAL_REQUIRED,
+        FdeStepStatus.EXTERNAL_REQUIRED,
     ]
     assert first.steps[2].facts["onlineVerification"] == "not_started"
     assert first.steps[2].facts["secretPayloadRead"] is False
@@ -62,7 +65,7 @@ def test_preview_blocks_unknown_platform_and_incomplete_mapping() -> None:
     assert unknown.executable is False
     assert "FDE_PLATFORM_UNKNOWN" in unknown.steps[0].blocker_codes
     assert "FDE_ADAPTER_PACK_UNKNOWN" in unknown.steps[2].blocker_codes
-    assert incomplete.status is FdeStepStatus.PARTIAL
+    assert incomplete.status is FdeStepStatus.BLOCKED
     assert incomplete.executable is False
     assert incomplete.steps[2].facts["missingDataTypes"] == ["unsupported_type"]
 
@@ -93,7 +96,7 @@ class _Store:
             created_at=now,
             current_plan_revision_id="plan-r19",
             version=2,
-            description="FDE S1-S3 canonical onboarding plan",
+            description="FDE S1-S6 canonical onboarding plan",
             goal={},
             updated_at=now,
         )
@@ -137,15 +140,15 @@ def test_create_session_reuses_canonical_task_and_draft_plan_authority() -> None
     assert created.execution_authority == "not_approved_not_started"
     assert store.task_request.type == "fde_platform_onboarding"
     assert store.task_request.goal["fdeIntake"]["secretRef"].startswith("keychain://")
-    assert store.plan_request.risk == {
-        "sideEffect": False,
-        "secretPayload": False,
-        "externalCall": False,
-    }
+    assert store.plan_request.risk["sideEffect"] is False
+    assert store.plan_request.risk["syncExecution"] == "not_authorized"
     assert [step.step_key for step in created.plan.steps] == [
         "fde.s1.requirement",
         "fde.s2.auth-draft",
         "fde.s3.capability-probe",
+        "fde.s4.mapping-proposal",
+        "fde.s5.controlled-sync",
+        "fde.s6.validation",
     ]
 
 
