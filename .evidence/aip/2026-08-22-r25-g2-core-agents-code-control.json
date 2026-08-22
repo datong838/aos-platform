@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "aos.aip.code-control-evidence/v1",
+  "wave": "R25",
+  "capability": "G2 CustomerLite and three-core-agent fail-closed composition",
+  "tenant": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "sourceCommit": "96234f6",
+  "codeControlStatus": "GREEN",
+  "operationalStatus": "BLOCKED_LATER",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/aip_ecommerce_growth_core_agents.py",
+      "sha256": "13eae5d12a02caf3809f53103e9aa11995467d418327dc034936eeb5012c5c13"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_aip_ecommerce_growth_core_agents.py",
+      "sha256": "f669453e1da6c015bc8d06830a871d563d19118fa92b7ba76758bc6a1d2bb8d7"
+    },
+    {
+      "path": "bundles/solutions/ecommerce-growth/content/growth/core-agent-collaboration.v1.json",
+      "sha256": "910ada47e6464abeb1d6d95a53d83f8bbb1f731714b94025780ff795c7dd6c01"
+    }
+  ],
+  "verification": {
+    "targeted": "23 passed",
+    "cumulative": "141 passed",
+    "aipFull": "1321 passed, 106 warnings",
+    "pythonCompile": "GREEN",
+    "manifestJson": "GREEN",
+    "diffCheck": "GREEN",
+    "browser": "NOT_RUN_BY_DESIGN_NO_PAGE_CHANGE"
+  },
+  "readOnlyFacts": {
+    "checkedAt": "2026-08-22T07:21:16Z",
+    "sourceReadiness": "FAILED_10_OF_12",
+    "failedPipelines": [
+      "P02-product-qyh:PIPELINE_EXECUTOR_FAILED",
+      "P04-category-qyh:PIPELINE_EXECUTOR_FAILED"
+    ],
+    "p08": "SUCCEEDED_ROWS_WRITTEN_53",
+    "customerLiteSourceCount": 53,
+    "customerLiteProjectionCount": 53,
+    "customerLiteForbiddenKeyHits": 0,
+    "customerLiteValueRecencyBandsAvailable": false,
+    "negativeCanary": "BLOCKED_12_OF_12_SOURCE_COUNT_0_PROJECTION_COUNT_0"
+  },
+  "failClosedBlockers": [
+    "P02 and P04 latest runs are failed; canonical SourceReadiness is not 12/12 READY",
+    "CustomerLite has no canonical paid-count, paid-amount or last-paid-recency band projection",
+    "Data SourceReadiness lease is not legally released",
+    "m1 serialized authority, 01/06 and Prime CAS is outside w1-aip and not closed"
+  ],
+  "sideEffects": {
+    "databaseWrites": 0,
+    "providerCalls": 0,
+    "toolOrActionCalls": 0,
+    "externalMessages": 0,
+    "productionDraftWrites": 0,
+    "pipelineRetries": 0,
+    "leaseMutations": 0,
+    "m1OrWorkshopWrites": 0
+  }
+}
