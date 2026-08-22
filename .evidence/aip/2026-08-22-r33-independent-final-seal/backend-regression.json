@@ -1,0 +1,27 @@
+{
+  "alembic": {
+    "head": "aip13_001",
+    "headCount": 1,
+    "status": "GREEN"
+  },
+  "checkedAt": "2026-08-22T14:18:15.587002+00:00",
+  "openapi": {
+    "command": "scripts/export_openapi.py --check",
+    "deterministic": true,
+    "status": "GREEN"
+  },
+  "pytest": {
+    "durationSeconds": 544.49,
+    "passed": 1510,
+    "status": "GREEN",
+    "warnings": 106
+  },
+  "schemaVersion": "aip.r33.backend-regression.v1",
+  "verdict": "CODE_API_GREEN_OPERATIONAL_BLOCKED",
+  "warningDisposition": [
+    "existing Pydantic schema field-shadow warnings",
+    "existing Starlette deprecation warning",
+    "existing Pydantic non-serializable default warning",
+    "known duplicate operation IDs on legacy ontology/build/pipeline/schedule/dataset routes"
+  ]
+}
