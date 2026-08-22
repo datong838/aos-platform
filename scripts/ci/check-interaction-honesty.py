@@ -77,7 +77,13 @@ def _scan_source(path: str, source: str, writes: str) -> list[Finding]:
         for match in pattern.finditer(source):
             findings.append(Finding(rule, path, line_at(source, match.start()), detail))
 
-    for match in re.finditer(r"<button\b(?P<attrs>[^>]*)>", source, re.DOTALL | re.IGNORECASE):
+    # JSX arrow handlers contain ``=>`` inside the opening tag. Treat that pair as
+    # attribute text instead of mistaking its ``>`` for the end of the element.
+    for match in re.finditer(
+        r"<button\b(?P<attrs>(?:=>|[^>])*)>",
+        source,
+        re.DOTALL | re.IGNORECASE,
+    ):
         attrs = match.group("attrs")
         interactive = re.search(r"\bon(?:Click|Pointer|Mouse|Key|Drag|Drop)\s*=", attrs)
         submit = re.search(r"\btype\s*=\s*(?:[\"']submit[\"']|\{[^}]*submit[^}]*\})", attrs)

@@ -16,11 +16,11 @@ SPEC.loader.exec_module(MODULE)
 
 
 class InteractionHonestyScannerTest(unittest.TestCase):
-    def test_repository_manifest_has_exactly_36_unique_pages(self) -> None:
+    def test_repository_manifest_has_expected_unique_pages(self) -> None:
         root = SCRIPT.parents[2]
         entries = MODULE.load_manifest(root / "apps/web/src/interactionHonestyManifest.ts")
-        self.assertEqual(36, len(entries))
-        self.assertEqual(36, len({entry["route"] for entry in entries}))
+        self.assertEqual(MODULE.EXPECTED_PAGE_COUNT, len(entries))
+        self.assertEqual(MODULE.EXPECTED_PAGE_COUNT, len({entry["route"] for entry in entries}))
         self.assertTrue(all(entry["tests"] for entry in entries))
 
     def test_apollo_manifest_matches_the_actual_app_entrypoint(self) -> None:
@@ -62,6 +62,18 @@ export function Page() { return <form><button type="submit">save</button>
   <button disabled>later</button><button onClick={save}>write</button></form>; }
 """
         self.assertEqual([], MODULE._scan_source("Page.tsx", source, "server"))
+
+    def test_accepts_multiline_jsx_arrow_handlers(self) -> None:
+        source = """
+export function Page() {
+  return <button
+    type="button"
+    onClick={() => selectTab("history")}
+    onKeyDown={(event) => handleKeyDown(event)}
+  >history</button>;
+}
+"""
+        self.assertEqual([], MODULE._scan_source("Page.tsx", source, "none"))
 
     def test_allowlist_requires_reason_and_nonexpired_date(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
