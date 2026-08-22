@@ -34,6 +34,12 @@ COUNT_TABLES = (
     "wiki_page",
 )
 
+REQUIRED_OPERATIONAL_GATES = (
+    "negativeCanaryIsolated",
+    "sourceReadiness12of12",
+    "sixAgentsRunnable",
+)
+
 
 def _value(value: Any) -> str:
     return str(getattr(value, "value", value))
@@ -159,6 +165,13 @@ def classify_gates(*, positive: dict[str, Any], negative: dict[str, Any]) -> dic
     }
 
 
+def classify_verdict(gates: dict[str, bool]) -> str:
+    """Promote only an exact all-green operational gate set."""
+    if all(gates.get(name) is True for name in REQUIRED_OPERATIONAL_GATES):
+        return "OPERATIONAL_GREEN"
+    return "CODE_API_GREEN_OPERATIONAL_BLOCKED"
+
+
 def build_snapshot(*, checked_at: str) -> dict[str, Any]:
     from aos_api.aip_ecommerce_agent_installer import AipEcommerceAgentInstaller
     from aos_api.auth import Principal
@@ -194,7 +207,7 @@ def build_snapshot(*, checked_at: str) -> dict[str, Any]:
         "mode": "REPEATABLE_READ_READ_ONLY_SECRET_FREE",
         "positiveTenant": "org-org/dev-project",
         "negativeCanary": "dev-org/dev-project",
-        "verdict": "CODE_API_GREEN_OPERATIONAL_BLOCKED",
+        "verdict": classify_verdict(gates),
         "gates": gates,
         "tenants": tenants,
         "forbiddenData": {

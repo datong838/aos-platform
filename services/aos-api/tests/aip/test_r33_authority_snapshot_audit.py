@@ -60,3 +60,35 @@ def test_classify_gates_fails_closed_for_partial_readiness_and_canary_binding() 
         "sourceReadiness12of12": False,
         "sixAgentsRunnable": False,
     }
+
+
+def test_classify_verdict_is_green_only_when_every_gate_is_true() -> None:
+    module = _load_module()
+
+    assert module.classify_verdict(
+        {
+            "negativeCanaryIsolated": True,
+            "sourceReadiness12of12": True,
+            "sixAgentsRunnable": True,
+        }
+    ) == "OPERATIONAL_GREEN"
+
+
+def test_classify_verdict_fails_closed_when_any_gate_is_false() -> None:
+    module = _load_module()
+
+    for blocked_gate in (
+        "negativeCanaryIsolated",
+        "sourceReadiness12of12",
+        "sixAgentsRunnable",
+    ):
+        gates = {
+            "negativeCanaryIsolated": True,
+            "sourceReadiness12of12": True,
+            "sixAgentsRunnable": True,
+        }
+        gates[blocked_gate] = False
+        assert (
+            module.classify_verdict(gates)
+            == "CODE_API_GREEN_OPERATIONAL_BLOCKED"
+        )
