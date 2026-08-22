@@ -6,7 +6,7 @@
     "positive": "org-org/dev-project",
     "negativeCanary": "dev-org/dev-project"
   },
-  "sourceCommit": "96234f6",
+  "sourceCommit": "96234f6d401534be146cd19ce362471ac435fc2a",
   "codeControlStatus": "GREEN",
   "operationalStatus": "BLOCKED_LATER",
   "files": [
