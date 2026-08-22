@@ -119,3 +119,16 @@ def test_operational_gate_exit_code_blocks_non_green_in_strict_mode() -> None:
         verdict="CODE_API_GREEN_OPERATIONAL_BLOCKED",
         require_operational_green=True,
     ) == 3
+
+
+def test_snapshot_consistency_discloses_non_atomic_multi_authority_reads() -> None:
+    module = _load_module()
+
+    assert module.snapshot_consistency() == {
+        "atomicAcrossAuthorities": False,
+        "atomicAcrossTenants": False,
+        "sourceReadiness": "SERVICE_SCOPED_READ_ONLY_SNAPSHOT",
+        "agentRuntime": "INDEPENDENT_READ_ONLY_EVALUATION",
+        "authorityCounts": "TENANT_SCOPED_REPEATABLE_READ",
+        "decisionRule": "FAIL_CLOSED_CURRENT_OBSERVATIONS",
+    }

@@ -136,6 +136,7 @@ def _database_counts(scope: Any) -> dict[str, Any]:
             scope.key,
         ).fetchone()
     return {
+        "observedAt": datetime.now(UTC).isoformat(),
         "tableCounts": counts,
         "freshProviderHealthCount": int(fresh_health["count"]),
         "freshSkillBindingCount": int(fresh_skill_bindings["count"]),
@@ -181,6 +182,18 @@ def operational_gate_exit_code(*, verdict: str, require_operational_green: bool)
     return 0
 
 
+def snapshot_consistency() -> dict[str, Any]:
+    """Describe the real transaction boundary without claiming cross-source atomicity."""
+    return {
+        "atomicAcrossAuthorities": False,
+        "atomicAcrossTenants": False,
+        "sourceReadiness": "SERVICE_SCOPED_READ_ONLY_SNAPSHOT",
+        "agentRuntime": "INDEPENDENT_READ_ONLY_EVALUATION",
+        "authorityCounts": "TENANT_SCOPED_REPEATABLE_READ",
+        "decisionRule": "FAIL_CLOSED_CURRENT_OBSERVATIONS",
+    }
+
+
 def build_snapshot(*, checked_at: str) -> dict[str, Any]:
     from aos_api.aip_ecommerce_agent_installer import AipEcommerceAgentInstaller
     from aos_api.auth import Principal
@@ -213,7 +226,8 @@ def build_snapshot(*, checked_at: str) -> dict[str, Any]:
     return {
         "schemaVersion": "aip.r33.authority-snapshot.v1",
         "checkedAt": checked_at,
-        "mode": "REPEATABLE_READ_READ_ONLY_SECRET_FREE",
+        "mode": "MULTI_AUTHORITY_READ_ONLY_SECRET_FREE",
+        "consistency": snapshot_consistency(),
         "positiveTenant": "org-org/dev-project",
         "negativeCanary": "dev-org/dev-project",
         "verdict": classify_verdict(gates),
