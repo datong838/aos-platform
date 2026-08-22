@@ -1,0 +1,33 @@
+{
+  "capturedAt": "2026-08-22T21:25:00+08:00",
+  "task": "AIP-R32",
+  "status": "PREFLIGHT_COMPLETE_EXECUTION_BLOCKED",
+  "refs": {
+    "m1": "c308707bf1ddcc4749a2354ad063a01c49c050ce",
+    "w1Aip": "4c25ce8092de8211c312f206fb9e1d8c42727934",
+    "w2Workshop": "a79db5163cbcc6ed75d1b0b6a6312903cbf44aec",
+    "authorityRevision": "AOS-000147"
+  },
+  "ancestry": {
+    "w1AipInM1": false,
+    "w2WorkshopInM1": false
+  },
+  "blockers": [
+    "m1 contains user-owned package.json modification and untracked package/plugin files",
+    "data-source-readiness-exact-authority-20260821 remains ACTIVE without a release record",
+    "real-time SourceReadiness is reported as 10/12 because P02 and P04 latest runs failed",
+    "R32 has not acquired the unique m1 integration task Lease"
+  ],
+  "cutoffBoundary": {
+    "historicalReceipt": "c308707 recorded a 12/12 READY repeatable-read snapshot",
+    "currentOperationalClaim": "BLOCKED; historical cutoff evidence does not override later P02/P04 failures"
+  },
+  "safety": {
+    "merges": false,
+    "databaseWrites": false,
+    "pipelineRetries": false,
+    "leaseChanges": false,
+    "authorityChanges": false,
+    "primeChanges": false
+  }
+}
