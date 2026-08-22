@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "ecommerce.growth.sc07-sc09-acceptance.v1",
+  "id": "ecommerce.growth.sc07-sc09-acceptance",
+  "status": "code_control_draft_real_tenant_evidence_blocked",
+  "scenarios": {
+    "SC07": {
+      "name": "达人邀约签约履约与长期关系",
+      "logicIds": ["D02", "D03", "G01", "G02", "G03", "G04", "G05", "G06", "C01", "C02", "C03", "C04", "C05", "C06", "A01", "A02", "A03", "A04", "A05", "A06", "S01", "S02", "P01"],
+      "chain": ["CreatorRecruitmentPlanRevision", "CreatorCandidateBatchRevision", "CreatorOutreachDraftRevision", "CreatorCommercialOfferRevision", "CreatorContractRevision", "CreatorFulfillmentRevision", "CreatorPerformanceReviewRevision", "CreatorRelationshipPlanRevision"],
+      "hardGates": ["dailyCapacity100", "stableIdentityDedup", "suppression", "freshContact", "authorizedChannel", "independentLifecycleReceipts", "outreachDraftOnly"]
+    },
+    "SC08": {
+      "name": "同款价格治理与同类目竞品比价",
+      "logicIds": ["D01", "D03", "G01", "G02", "A01", "A03", "C06", "S01", "P03"],
+      "chain": ["PriceMonitoringPolicyRevision", "ProductComparableDecisionRevision", "PriceObservationEvidenceRevision", "PriceObservationEvidenceRevision", "PriceNormalizationRevision", "PriceAnomalyCandidateRevision", "CompetitorBenchmarkRevision", "PriceActionDraftRevision"],
+      "hardGates": ["governanceBenchmarkSplit", "exactSkuAndBasis", "twoIndependentObservations", "alignedPriceContext", "noLegalConclusion", "priceActionDraftOnly"]
+    },
+    "SC09": {
+      "name": "客诉单案辅助处理",
+      "logicIds": ["S01", "S02", "S03", "S04", "S05", "S06", "G02", "P01", "P02", "D01"],
+      "chain": ["ServiceCaseRevision", "IdentityVerificationRevision", "ComplaintClassificationRevision", "ServiceReplyDraftRevision", "EscalationDecisionRevision", "PromiseBoundaryRevision", "ResolutionReceiptRevision", "EffectReviewRevision"],
+      "hardGates": ["minimumIdentity", "tokenizedPii", "lowConfidenceEscalation", "promiseBoundary", "singleCaseNotAggregate", "replyAndRefundDraftOnly"]
+    }
+  },
+  "realInputPolicy": {
+    "requiredTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "sourceReadiness": "current P01-P12 12/12 READY",
+    "currentBlockers": ["P02_PIPELINE_EXECUTOR_FAILED", "P04_PIPELINE_EXECUTOR_FAILED", "DATA_LEASE_ACTIVE", "M1_CAS_PENDING"]
+  },
+  "externalActions": {
+    "creatorOutreachAuthorized": false,
+    "creatorContractOrFulfillmentAuthorized": false,
+    "priceNotificationComplaintReportAuthorized": false,
+    "priceChangeAuthorized": false,
+    "complaintReplyAuthorized": false,
+    "refundOrCompensationAuthorized": false
+  },
+  "sideEffects": {
+    "pipelineRetry": false,
+    "databaseWrite": false,
+    "providerCall": false,
+    "actionExecution": false,
+    "memoryWrite": false,
+    "productionWrite": false
+  }
+}
