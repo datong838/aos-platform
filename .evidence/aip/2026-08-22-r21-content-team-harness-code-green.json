@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "aos.aip.delivery-evidence/v1",
+  "waveId": "R21",
+  "status": "CODE_GREEN_OPERATIONAL_BLOCKED_NEW_PRODUCT_PILOT",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "negativeCanaryOrgId": "dev-org"
+  },
+  "codeCommit": "dc7fbda85e682676a9b181192cee627b805f3b20",
+  "delivered": {
+    "contentResponsibilitySlots": 10,
+    "logicCrosswalk": "C01-C08",
+    "platformHarnessCount": 14,
+    "platformDistribution": {
+      "douyin": 5,
+      "kuaishou": 3,
+      "shipinhao": 3,
+      "xiaohongshu": 3
+    },
+    "providerCalls": 0,
+    "platformWrites": 0,
+    "databaseWritesByInspector": 0,
+    "secretPayloadReads": 0,
+    "artifactBodiesRead": 0
+  },
+  "verification": {
+    "targetedTests": "15 passed",
+    "aipCumulativeTests": "1253 passed",
+    "compileall": "GREEN",
+    "manifestJson": "GREEN",
+    "diffCheck": "GREEN",
+    "browser": "NOT_A_NEW_ACCEPTANCE_SURFACE"
+  },
+  "historicalTrace": {
+    "attemptId": "ecommerce.content_officer.C02.real-pilot.v1.attempt-1",
+    "attemptStatus": "succeeded",
+    "artifactId": "artifact-fc097f0a29cd420e9677",
+    "outputContentHash": "f5b368f86cb04d3782b4971bc131606fa5e3d492302eaae7eba48742a14cb209",
+    "lineageId": "lineage-2dce83d6911926580907fdf9",
+    "lineageEventCount": 3,
+    "usageReceiptCount": 2,
+    "sameProductBound": false
+  },
+  "realProductReadback": {
+    "activeProductObserved": true,
+    "exampleProductRef": "Product:niushop:1:59@ab693ccc555fe4d44eb4d7436507709d265e6e5ab4d46131e7cbddfab55c8d14#ab693ccc555fe4d44eb4d7436507709d265e6e5ab4d46131e7cbddfab55c8d14",
+    "negativeCanaryProductCount": 0
+  },
+  "operationalBlockers": [
+    "CURRENT_RUNNABLE_AGENT_COUNT_ZERO",
+    "CONTENT_AND_SKILL_BINDING_READINESS_STALE",
+    "NEW_UNIQUE_PRODUCT_PILOT_REQUIRED",
+    "FRESH_3_OF_3_TEXT_PROVIDER_HEALTH_REQUIRED",
+    "PRODUCT_TO_EVAL_TO_LINEAGE_SAME_VERSION_EVIDENCE_REQUIRED"
+  ],
+  "nextSafeStep": "R21-OP fresh Health, exact binding reevaluation and one unique real-product text pilot"
+}
