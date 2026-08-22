@@ -1,0 +1,42 @@
+{
+  "schema": "aos-aip-r32-merge-rehearsal/v1",
+  "checkedAt": "2026-08-22T21:37:00+08:00",
+  "base": {
+    "m1": "c308707bf1ddcc4749a2354ad063a01c49c050ce",
+    "workshop": "a79db5163cbcc6ed75d1b0b6a6312903cbf44aec",
+    "aip": "35bbfd6852c3e6ccc3de9fb822dd7b14b80cebd9"
+  },
+  "mode": "detached-temporary-worktree",
+  "persistentBranchesModified": false,
+  "results": {
+    "workshopIntoM1": "AUTO_MERGE_GREEN",
+    "aipIntoM1Alone": "AUTO_MERGE_GREEN",
+    "workshopThenAip": "FOUR_OPENAPI_CONFLICTS_RECONCILED",
+    "resolvedTree": "e76ac68f55ac239a4468a5721e9fdc33d6cf1e92"
+  },
+  "conflicts": [
+    "packages/contracts/openapi/v1.generated.json",
+    "packages/contracts/openapi/v1.inventory.json",
+    "scripts/export_openapi.py",
+    "services/aos-api/tests/test_openapi_contract.py"
+  ],
+  "resolution": {
+    "rule": "preserve both route-contract assertions, recompute cumulative route totals, regenerate canonical OpenAPI and inventory from the merged runtime",
+    "routeRows": 4322,
+    "uniqueOperationPairs": 4312,
+    "openapiOperations": 4312,
+    "paths": 2544,
+    "schemas": 1974
+  },
+  "verification": {
+    "backend": "23 passed",
+    "web": "34 passed",
+    "typescript": "GREEN",
+    "warnings": "seven existing Pydantic/Starlette warnings; no test failures"
+  },
+  "boundaries": [
+    "No m1, w1-aip or w2-workshop branch was modified by this rehearsal.",
+    "No authority, 01/06, Prime, Lease, migration, provider or real database state was written.",
+    "Operational SourceReadiness remains blocked until current Data evidence is independently GREEN."
+  ]
+}
