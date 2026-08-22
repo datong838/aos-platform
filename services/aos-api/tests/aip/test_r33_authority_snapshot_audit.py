@@ -92,3 +92,30 @@ def test_classify_verdict_fails_closed_when_any_gate_is_false() -> None:
             module.classify_verdict(gates)
             == "CODE_API_GREEN_OPERATIONAL_BLOCKED"
         )
+
+
+def test_operational_gate_exit_code_keeps_default_audit_compatible() -> None:
+    module = _load_module()
+
+    assert module.operational_gate_exit_code(
+        verdict="CODE_API_GREEN_OPERATIONAL_BLOCKED",
+        require_operational_green=False,
+    ) == 0
+
+
+def test_operational_gate_exit_code_allows_exact_green_in_strict_mode() -> None:
+    module = _load_module()
+
+    assert module.operational_gate_exit_code(
+        verdict="OPERATIONAL_GREEN",
+        require_operational_green=True,
+    ) == 0
+
+
+def test_operational_gate_exit_code_blocks_non_green_in_strict_mode() -> None:
+    module = _load_module()
+
+    assert module.operational_gate_exit_code(
+        verdict="CODE_API_GREEN_OPERATIONAL_BLOCKED",
+        require_operational_green=True,
+    ) == 3

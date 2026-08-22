@@ -40,6 +40,8 @@ REQUIRED_OPERATIONAL_GATES = (
     "sixAgentsRunnable",
 )
 
+OPERATIONAL_BLOCKED_EXIT_CODE = 3
+
 
 def _value(value: Any) -> str:
     return str(getattr(value, "value", value))
@@ -172,6 +174,13 @@ def classify_verdict(gates: dict[str, bool]) -> str:
     return "CODE_API_GREEN_OPERATIONAL_BLOCKED"
 
 
+def operational_gate_exit_code(*, verdict: str, require_operational_green: bool) -> int:
+    """Keep evidence collection compatible while offering an explicit strict gate."""
+    if require_operational_green and verdict != "OPERATIONAL_GREEN":
+        return OPERATIONAL_BLOCKED_EXIT_CODE
+    return 0
+
+
 def build_snapshot(*, checked_at: str) -> dict[str, Any]:
     from aos_api.aip_ecommerce_agent_installer import AipEcommerceAgentInstaller
     from aos_api.auth import Principal
@@ -224,6 +233,11 @@ def main() -> int:
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--checked-at", default=datetime.now(UTC).isoformat())
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--require-operational-green",
+        action="store_true",
+        help="exit 3 after writing the snapshot when the operational verdict is not GREEN",
+    )
     args = parser.parse_args()
     repo_root = args.repo_root.resolve()
     sys.path.insert(0, str(repo_root / "services" / "aos-api"))
@@ -236,7 +250,10 @@ def main() -> int:
         encoding="utf-8",
     )
     print(json.dumps({"verdict": snapshot["verdict"], "gates": snapshot["gates"]}, ensure_ascii=False))
-    return 0
+    return operational_gate_exit_code(
+        verdict=snapshot["verdict"],
+        require_operational_green=args.require_operational_green,
+    )
 
 
 if __name__ == "__main__":
