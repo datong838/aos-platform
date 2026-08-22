@@ -73,6 +73,26 @@ _SECRET_ASSIGNMENT = re.compile(
 )
 _BEARER_ASSIGNMENT = re.compile(r"(?i)authorization\s*[:=]\s*bearer\s+\S+")
 
+_ANALYST_TEMPLATE_DOCUMENT_FIELDS: Final = {
+    "schemaVersion",
+    "bundleRef",
+    "templates",
+}
+_ANALYST_TEMPLATE_FIELDS: Final = {
+    "templateId",
+    "revision",
+    "roleId",
+    "roleName",
+    "queryKind",
+    "defaultObjectType",
+    "defaultPrompt",
+    "requiredObjectTypes",
+    "requiredLogicIds",
+    "sourceDataTypes",
+    "purpose",
+    "policy",
+}
+
 
 @dataclass(frozen=True)
 class _BundleFile:
@@ -368,6 +388,11 @@ class ManifestLoader:
             try:
                 payload = ManifestLoader._parse_json_object(content)
                 ManifestLoader._scan_sensitive_value(payload)
+                if ManifestLoader._parse_analyst_query_template_asset(
+                    manifest=manifest,
+                    payload=payload,
+                ):
+                    continue
                 if "schema" in payload:
                     module = WorkshopModuleContribution.model_validate(payload)
                     if Path(relative_path).stem != module.module_id:
@@ -407,6 +432,85 @@ class ManifestLoader:
         if len(legacy_ids) != len(set(legacy_ids)):
             raise ManifestInvalidError("legacy Workshop ids must be unique")
         return modules, legacy
+
+    @staticmethod
+    def _parse_analyst_query_template_asset(
+        *, manifest: BundleManifest, payload: dict
+    ) -> bool:
+        """Recognize the immutable 1.3.0 Analyst auxiliary asset strictly.
+
+        The historical SolutionPack exported this read-only AIP catalog from its
+        Workshop directory.  It is an artifact of the installed bundle, but it
+        must never become a Workshop module projection.  Unknown JSON remains
+        fail-closed in ``_parse_legacy_workshop``.
+        """
+
+        if set(payload) != _ANALYST_TEMPLATE_DOCUMENT_FIELDS:
+            return False
+        expected_bundle_ref = (
+            f"bundle://{manifest.metadata.publisher}/"
+            f"{manifest.metadata.id}@{manifest.metadata.version}"
+        )
+        templates = payload.get("templates")
+        if (
+            payload.get("schemaVersion") != 1
+            or payload.get("bundleRef") != expected_bundle_ref
+            or not isinstance(templates, list)
+            or not templates
+        ):
+            raise ManifestInvalidError("Analyst query template document is invalid")
+
+        template_ids: list[str] = []
+        role_ids: list[str] = []
+        for item in templates:
+            if not isinstance(item, dict) or set(item) != _ANALYST_TEMPLATE_FIELDS:
+                raise ManifestInvalidError("Analyst query template fields drifted")
+            scalar_fields = (
+                "templateId",
+                "roleId",
+                "roleName",
+                "queryKind",
+                "defaultObjectType",
+                "purpose",
+                "policy",
+            )
+            if any(
+                not isinstance(item.get(field), str) or not item[field].strip()
+                for field in scalar_fields
+            ):
+                raise ManifestInvalidError("Analyst query template scalar is invalid")
+            if not isinstance(item.get("defaultPrompt"), str):
+                raise ManifestInvalidError("Analyst query template prompt is invalid")
+            revision = item.get("revision")
+            if isinstance(revision, bool) or not isinstance(revision, int) or revision < 1:
+                raise ManifestInvalidError("Analyst query template revision is invalid")
+            for field in (
+                "requiredObjectTypes",
+                "requiredLogicIds",
+                "sourceDataTypes",
+            ):
+                values = item.get(field)
+                if (
+                    not isinstance(values, list)
+                    or not values
+                    or any(not isinstance(value, str) or not value.strip() for value in values)
+                    or len(values) != len(set(values))
+                ):
+                    raise ManifestInvalidError(
+                        f"Analyst query template {field} is invalid"
+                    )
+            if item["queryKind"] != "semantic" or item["policy"] != "canonical-read-only":
+                raise ManifestInvalidError("Analyst query template is not read-only")
+            if item["defaultObjectType"] not in item["requiredObjectTypes"]:
+                raise ManifestInvalidError(
+                    "Analyst query template default Object Type is not required"
+                )
+            template_ids.append(item["templateId"])
+            role_ids.append(item["roleId"])
+
+        if len(template_ids) != len(set(template_ids)) or len(role_ids) != len(set(role_ids)):
+            raise ManifestInvalidError("Analyst query template identity is duplicated")
+        return True
 
     @staticmethod
     def _validate_workshop_module_binding(

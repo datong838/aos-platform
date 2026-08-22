@@ -51,7 +51,7 @@ def test_ecommerce_solution_pack_contains_exact_w0a_catalog_and_keeps_d3_assets(
     assert not (BUNDLE / "content/logic/placeholder.json").exists()
     assert (BUNDLE / "content/workshops/w03-customer-private-domain.json").is_file()
     templates = load(
-        "content/logic/ecommerce-analyst-query-templates.json"
+        "content/workshops/ecommerce-analyst-query-templates.json"
     )["templates"]
     assert len(templates) == 6
     assert {item["roleId"] for item in templates} == set(AGENT_LOGIC_COUNTS)
@@ -145,7 +145,7 @@ def test_solution_pack_rejects_crosswalk_drift_before_any_publication(tmp_path):
 def test_solution_pack_rejects_analyst_template_role_drift(tmp_path):
     candidate = tmp_path / "ecommerce-growth"
     shutil.copytree(BUNDLE, candidate)
-    path = candidate / "content/logic/ecommerce-analyst-query-templates.json"
+    path = candidate / "content/workshops/ecommerce-analyst-query-templates.json"
     document = json.loads(path.read_text(encoding="utf-8"))
     document["templates"][0]["roleId"] = "ecommerce.unknown"
     path.write_text(
