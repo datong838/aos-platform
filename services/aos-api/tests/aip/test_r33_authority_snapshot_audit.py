@@ -132,3 +132,54 @@ def test_snapshot_consistency_discloses_non_atomic_multi_authority_reads() -> No
         "authorityCounts": "TENANT_SCOPED_REPEATABLE_READ",
         "decisionRule": "FAIL_CLOSED_CURRENT_OBSERVATIONS",
     }
+
+
+def test_route_blockers_assigns_stable_owner_and_next_action() -> None:
+    module = _load_module()
+    positive = _tenant(ready=11, installed=6, runnable=0, bindings=0)
+    positive["sourceReadiness"]["failures"] = [
+        {
+            "pipelineId": "P02",
+            "latestRunErrorCode": "STORE_CONFLICT",
+            "reasons": ["SOURCE_VERSION_CONFLICT"],
+            "blockers": ["P02_FAILED"],
+        }
+    ]
+    positive["agentRuntime"]["blockedRoles"] = [
+        {"blockerCodes": ["HEALTH_EXPIRED", "SKILL_BINDING_STALE"]}
+    ]
+
+    assert module.route_blockers(
+        gates={
+            "negativeCanaryIsolated": True,
+            "sourceReadiness12of12": False,
+            "sixAgentsRunnable": False,
+        },
+        positive=positive,
+    ) == [
+        {
+            "gate": "sourceReadiness12of12",
+            "owner": "DATA_ADAPTER",
+            "reasonCodes": ["P02_FAILED", "SOURCE_VERSION_CONFLICT", "STORE_CONFLICT"],
+            "nextAction": "DELIVER_FRESH_12_OF_12_SOURCE_READINESS",
+        },
+        {
+            "gate": "sixAgentsRunnable",
+            "owner": "PROVIDER_RUNTIME_AND_AIP",
+            "reasonCodes": ["HEALTH_EXPIRED", "SKILL_BINDING_STALE"],
+            "nextAction": "DELIVER_FRESH_3_OF_3_HEALTH_THEN_REFRESH_READINESS",
+        },
+    ]
+
+
+def test_route_blockers_is_empty_only_for_all_green_gates() -> None:
+    module = _load_module()
+
+    assert module.route_blockers(
+        gates={
+            "negativeCanaryIsolated": True,
+            "sourceReadiness12of12": True,
+            "sixAgentsRunnable": True,
+        },
+        positive=_tenant(ready=12, installed=6, runnable=6, bindings=37),
+    ) == []

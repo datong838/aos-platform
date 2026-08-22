@@ -194,6 +194,54 @@ def snapshot_consistency() -> dict[str, Any]:
     }
 
 
+def route_blockers(*, gates: dict[str, bool], positive: dict[str, Any]) -> list[dict[str, Any]]:
+    """Route failed gates to their owner without attempting the remediation."""
+    blockers: list[dict[str, Any]] = []
+    if not gates.get("negativeCanaryIsolated", False):
+        blockers.append(
+            {
+                "gate": "negativeCanaryIsolated",
+                "owner": "AIP_SECURITY",
+                "reasonCodes": ["NEGATIVE_CANARY_ISOLATION_FAILED"],
+                "nextAction": "AIP_SECURITY_REVIEW_REQUIRED",
+            }
+        )
+    if not gates.get("sourceReadiness12of12", False):
+        reason_codes: set[str] = set()
+        for failure in positive["sourceReadiness"].get("failures", []):
+            for value in (
+                failure.get("latestRunErrorCode"),
+                *failure.get("reasons", []),
+                *failure.get("blockers", []),
+            ):
+                if isinstance(value, str) and value:
+                    reason_codes.add(value)
+        blockers.append(
+            {
+                "gate": "sourceReadiness12of12",
+                "owner": "DATA_ADAPTER",
+                "reasonCodes": sorted(reason_codes) or ["SOURCE_READINESS_NOT_12_OF_12"],
+                "nextAction": "DELIVER_FRESH_12_OF_12_SOURCE_READINESS",
+            }
+        )
+    if not gates.get("sixAgentsRunnable", False):
+        reason_codes = {
+            code
+            for role in positive["agentRuntime"].get("blockedRoles", [])
+            for code in role.get("blockerCodes", [])
+            if isinstance(code, str) and code
+        }
+        blockers.append(
+            {
+                "gate": "sixAgentsRunnable",
+                "owner": "PROVIDER_RUNTIME_AND_AIP",
+                "reasonCodes": sorted(reason_codes) or ["SIX_AGENTS_NOT_RUNNABLE"],
+                "nextAction": "DELIVER_FRESH_3_OF_3_HEALTH_THEN_REFRESH_READINESS",
+            }
+        )
+    return blockers
+
+
 def build_snapshot(*, checked_at: str) -> dict[str, Any]:
     from aos_api.aip_ecommerce_agent_installer import AipEcommerceAgentInstaller
     from aos_api.auth import Principal
@@ -232,6 +280,7 @@ def build_snapshot(*, checked_at: str) -> dict[str, Any]:
         "negativeCanary": "dev-org/dev-project",
         "verdict": classify_verdict(gates),
         "gates": gates,
+        "blockers": route_blockers(gates=gates, positive=positive),
         "tenants": tenants,
         "forbiddenData": {
             "secretPayloadRead": False,
