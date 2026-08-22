@@ -1,0 +1,56 @@
+{
+  "evidenceType": "AIP_R22_SHORT_VIDEO_CODE_CONTROL",
+  "capturedAt": "2026-08-22T13:28:04+08:00",
+  "tenantBoundary": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "databaseWrites": 0
+  },
+  "sourceBaseline": "f3e8340",
+  "codeCommit": "df4dda1",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/aip_short_video_pipeline.py",
+      "sha256": "b0aefa472c267e6904972112c480625bc1811d78b4f1cf8a581577bee3fafce1"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_aip_short_video_pipeline.py",
+      "sha256": "a98776a001b26f9e7a6843316a6e39e1c123738266752ab24c899b08c55f186e"
+    },
+    {
+      "path": "bundles/solutions/ecommerce-growth/content/media/short-video-pipeline.v1.json",
+      "sha256": "812b41fb5d18ec74efe2f94315f6bfa1e5c63bf2af57bd885561ca224b36f791"
+    }
+  ],
+  "verification": {
+    "targetedTests": "10 passed",
+    "contentCumulativeTests": "59 passed",
+    "fullAipRegression": "1263 passed, 106 warnings",
+    "compileall": "GREEN",
+    "bundleJson": "GREEN",
+    "gitDiffCheck": "GREEN",
+    "browser": "NOT_APPLICABLE_NO_API_SDK_PAGE_OR_REAL_MEDIA_JOB"
+  },
+  "sideEffects": {
+    "providerCalls": 0,
+    "ttsCalls": 0,
+    "ffmpegExecutions": 0,
+    "mediaJobsCreated": 0,
+    "filesRendered": 0
+  },
+  "readiness": {
+    "codeControl": "GREEN",
+    "realRender": "BLOCKED",
+    "ffmpegAvailable": false,
+    "canonicalAssetAuthorityAvailable": false,
+    "realAuthorizedAssetsReady": false,
+    "r21ProductFactAndContentEvalChainReady": false
+  },
+  "blockers": [
+    "SHORT_VIDEO_FFMPEG_UNAVAILABLE",
+    "SHORT_VIDEO_CANONICAL_ASSET_AUTHORITY_UNAVAILABLE",
+    "SHORT_VIDEO_AUTHORIZED_IMAGE_VOICE_BGM_FONT_ASSETS_UNAVAILABLE",
+    "SHORT_VIDEO_R21_PRODUCT_FACT_CONTENT_DRAFT_AND_C06_CHAIN_UNAVAILABLE"
+  ],
+  "decision": "CODE_CONTROL_GREEN_OPERATIONAL_BLOCKED_NO_REAL_RENDER"
+}
