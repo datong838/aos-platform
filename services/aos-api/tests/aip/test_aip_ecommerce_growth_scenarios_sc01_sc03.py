@@ -216,4 +216,3 @@ def test_compilation_has_no_side_effects() -> None:
     assert result.action_executed is False
     assert result.memory_written is False
     assert result.pipeline_retried is False
-
