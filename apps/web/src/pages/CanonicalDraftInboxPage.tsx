@@ -312,7 +312,7 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
                       </div>
 
                       <div data-testid="drafts-chain-links">
-                        <h3 className="text-sm font-semibold text-gray-800">Evals ↔ Lineage 样例链</h3>
+                        <h3 className="text-sm font-semibold text-gray-800">Evals ↔ Lineage 权威证据链</h3>
                         <div className="mt-2 flex flex-wrap gap-2 text-sm">
                           <Link
                             to={`/aip/lineage?rootType=action&rootId=${encodeURIComponent(selected.proposal.id)}`}
