@@ -17,7 +17,7 @@ from aos_api.tenant_scope import TenantScope
 REPO_ROOT = Path(__file__).resolve().parents[4]
 DOCUMENT = (
     REPO_ROOT
-    / "bundles/solutions/ecommerce-growth/content/workshops/"
+    / "bundles/solutions/ecommerce-growth/content/logic/"
     "ecommerce-analyst-query-templates.json"
 )
 

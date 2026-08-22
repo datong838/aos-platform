@@ -102,7 +102,7 @@ class AipSolutionPackPublisher:
         schema_document = self._json(schema_path)
         policy_document = self._json(policy_path)
         analyst_templates = self._json(
-            root / "content/workshops/ecommerce-analyst-query-templates.json"
+            root / "content/logic/ecommerce-analyst-query-templates.json"
         )
         agents = self._list(agent_document, "agents")
         logics = self._list(logic_document, "logics")
