@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "aip.r33.security-negative-matrix.v1",
+  "generatedAt": "2026-08-22T23:16:31+08:00",
+  "source": {
+    "branch": "w1-aip",
+    "commit": "7eb503d034ab14d6e8fd74c27e828c8313a43d83",
+    "positiveTenant": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "safetyBoundary": {
+    "providerCalled": false,
+    "realActionExecuted": false,
+    "realBusinessDataWritten": false,
+    "databaseMigrationExecuted": false,
+    "sealedPilotReplayed": false,
+    "secretPayloadRead": false
+  },
+  "canonicalResults": {
+    "backend": {
+      "testFiles": 21,
+      "passed": 162,
+      "failed": 0,
+      "warnings": 18,
+      "durationSeconds": 107.53
+    },
+    "web": {
+      "testFiles": 9,
+      "passed": 70,
+      "failed": 0,
+      "notes": [
+        "Existing React act and React Router future-flag warnings were retained as warnings and were not promoted to GREEN evidence."
+      ]
+    },
+    "harnessCorrections": [
+      {
+        "attempt": "backend uv run pytest",
+        "result": "INVOCATION_FAILED",
+        "reason": "The uv environment did not expose pytest.",
+        "canonicalRerun": "services/aos-api/.venv/bin/pytest",
+        "canonicalResult": "GREEN"
+      },
+      {
+        "attempt": "web tests from repository root",
+        "result": "INVOCATION_FAILED",
+        "reason": "The repository-root invocation did not load the Web Vitest jsdom configuration.",
+        "canonicalRerun": "apps/web with the bundled Node runtime and the project Vitest entrypoint",
+        "canonicalResult": "GREEN"
+      }
+    ]
+  },
+  "negativeGates": [
+    {
+      "id": "TENANT-ISOLATION",
+      "scope": "tenant boundary and negative canary",
+      "result": "GREEN",
+      "evidence": "Cross-tenant reads and mutations fail closed; dev-org/dev-project remains a negative canary."
+    },
+    {
+      "id": "APPROVAL-EXACTNESS",
+      "scope": "Proposal, Draft, Approval, Lease and Receipt exact references",
+      "result": "GREEN",
+      "evidence": "Version/hash drift, maker-checker violations, duplicate submit and unapproved starts are rejected."
+    },
+    {
+      "id": "RUNTIME-GUARDS",
+      "scope": "budget, capacity, quota, kill switch and network policy",
+      "result": "GREEN",
+      "evidence": "Missing or exhausted authority fails closed without Provider side effects."
+    },
+    {
+      "id": "ACTION-RECOVERY",
+      "scope": "unknown, reconcile, compensation and idempotency",
+      "result": "GREEN",
+      "evidence": "Unknown outcomes remain explicit and require canonical reconciliation; retries cannot duplicate execution."
+    },
+    {
+      "id": "MEMORY-GOVERNANCE",
+      "scope": "promotion, revoke, projection and retrieval",
+      "result": "GREEN",
+      "evidence": "Promotion and revocation remain approval/version controlled; stale or missing projections fail closed."
+    },
+    {
+      "id": "CONNECTOR-HARNESS",
+      "scope": "ecommerce connector and platform Harness action boundaries",
+      "result": "GREEN",
+      "evidence": "Unauthorized platform operations remain unreachable and no live connector action was executed."
+    },
+    {
+      "id": "ASSIST-RUNTIME",
+      "scope": "persisted Assist state and exact runtime references",
+      "result": "GREEN",
+      "evidence": "Assist does not synthesize local TaskRun or AgentRun state and remains disabled without exact references."
+    },
+    {
+      "id": "PRODUCTION-CONTRACT",
+      "scope": "production-context composition",
+      "result": "GREEN",
+      "evidence": "Expired, mismatched or unapproved Proposal revisions cannot produce a StartDecision."
+    }
+  ],
+  "preservedOperationalBlockers": [
+    "Current SourceReadiness is not 12/12 READY.",
+    "No currently runnable ecommerce digital colleague composition is proven.",
+    "Fresh Provider Health and exact Binding readiness are not proven.",
+    "R32 serialized m1 integration and CAS are not complete."
+  ],
+  "verdict": "SECURITY_NEGATIVE_CODE_GREEN_OPERATIONAL_BLOCKERS_PRESERVED"
+}
