@@ -693,6 +693,7 @@ export function ToolsPage() {
               <label key={c.id} className="bp-tool-cat">
                 <input
                   type="checkbox"
+                  aria-label={`${c.label}（${c.zh}）`}
                   checked={cats.has(c.id)}
                   onChange={() => toggleCat(c.id)}
                 />
@@ -707,6 +708,7 @@ export function ToolsPage() {
               <label key={c.id} className="bp-tool-cat is-wiki">
                 <input
                   type="checkbox"
+                  aria-label={`${c.label}（${c.zh}）`}
                   checked={cats.has(c.id)}
                   onChange={() => toggleCat(c.id)}
                 />

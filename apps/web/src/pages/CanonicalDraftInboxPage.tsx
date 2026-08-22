@@ -227,7 +227,7 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
           </div>
         ))}
       </div>
-      <div className="space-y-4" data-testid="canonical-action-inbox">
+      <div className="aip-draft-inbox space-y-4" data-testid="canonical-action-inbox">
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900" data-testid="drafts-chain-banner">
           <strong>真实 AIP Action 权威链</strong> · 页面不注入示例 Draft，也不在浏览器维护第二套状态机。
           {(taskId || runId) && <span> 当前筛选：{taskId ? `Task ${taskId}` : ""}{taskId && runId ? " · " : ""}{runId ? `Run ${runId}` : ""}</span>}

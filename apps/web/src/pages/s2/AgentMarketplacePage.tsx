@@ -24,10 +24,10 @@ export function AgentMarketplacePage() {
       <div className="notice" role="note" style={{ padding: 12, marginBottom: 16 }}>
         市场只投影已版本化资产包，不把发现等同安装。安装必须经过审批、Overlay 和精确绑定；本页没有直接写入按钮。
       </div>
-      {error ? <div className="notice bad" role="alert">目录读取失败：{error}</div> : null}
-      {!catalog ? <div className="card" role="status">正在读取组织市场目录…</div> : catalog.count === 0 ? (
+      {error ? <div className="notice bad" role="alert">目录读取失败：{error}。当前运行基线尚未提供目录时，请先完成 w1 AIP 路由的串行集成；本页不会用演示资产替代。</div> : null}
+      {!catalog && !error ? <div className="card" role="status">正在读取组织市场目录…</div> : catalog?.count === 0 ? (
         <div className="card"><h3>暂无可发现资产包</h3><p>目录返回为空；没有用演示包填充。</p></div>
-      ) : catalog.items.map((item) => (
+      ) : catalog ? catalog.items.map((item) => (
         <section className="card" key={`${item.packageId}@${item.version}`} style={{ padding: 18, marginBottom: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
             <div>
@@ -57,7 +57,7 @@ export function AgentMarketplacePage() {
             安装授权：{item.installAuthorized ? "已授权" : "未授权（需进入智能体目录完成审批与绑定）"}
           </p>
         </section>
-      ))}
+      )) : null}
     </PageChrome>
   );
 }

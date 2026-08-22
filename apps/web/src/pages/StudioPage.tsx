@@ -6,6 +6,7 @@ import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 import { AipOperationalProjectionStrip } from "../components/aip/AipOperationalProjectionStrip";
 import { templateDisplayName } from "../lib/aipChineseLabels";
+import { NavIcon } from "../shell/icons";
 
 type AgentItem = {
   id: string;
@@ -604,48 +605,7 @@ export function StudioPage() {
                       flexShrink: 0,
                     }}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={a.iconColor} strokeWidth="1.5">
-                      {a.id === "repair-buddy" && (
-                        <path
-                          d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      )}
-                      {a.id === "video-agent" && (
-                        <>
-                          <rect x="3" y="5" width="18" height="14" rx="1" />
-                          <path d="M3 10h18M9 10v9M15 10v9" />
-                        </>
-                      )}
-                      {a.id === "risk-agent" && (
-                        <>
-                          <path d="M12 9v4M12 17h.01" strokeLinecap="round" />
-                          <path
-                            d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </>
-                      )}
-                      {a.id === "order-agent" && (
-                        <path
-                          d="M21 11.5a8.5 8.5 0 01-8.5 8.5H5l-3 3V11.5A8.5 8.5 0 0110.5 3h2A8.5 8.5 0 0121 11.5z"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      )}
-                      {a.id === "doc-agent" && (
-                        <>
-                          <path
-                            d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
-                            strokeLinejoin="round"
-                          />
-                          <path d="M14 2v6h6" strokeLinejoin="round" />
-                          <path d="M16 13H8M16 17H8M10 9H8" strokeLinecap="round" />
-                        </>
-                      )}
-                    </svg>
+                    <NavIcon name="chat" style={{ width: 16, height: 16, color: a.iconColor }} />
                   </div>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div
@@ -701,9 +661,9 @@ export function StudioPage() {
             {/* Agent 标题 */}
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
               <div>
-                <h1 style={{ fontSize: 20, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>
                   {displayAgent.name}
-                </h1>
+                </h2>
                 <p style={{ fontSize: 13, color: "var(--aos-text-secondary)", margin: "4px 0 0", lineHeight: 1.5 }}>
                   配置壳：提示词 · 工具 · 本体/Wiki 上下文 · L4 须 Evals 绿 + Draft 默认
                 </p>

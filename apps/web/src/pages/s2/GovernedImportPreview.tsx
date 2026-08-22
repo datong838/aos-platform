@@ -58,23 +58,23 @@ export function GovernedImportPreview({ kind }: { kind: ImportKind }) {
       <div className="notice" role="note" style={{ padding: 12, marginBottom: 14 }}>
         请粘贴已经独立取得的不可变源码快照。预检只做确定性扫描和合同校验；连通测试、Provider 调用、ImportJob、审批及安装均保持未执行。
       </div>
-      <section className="card" style={{ padding: 18 }}>
+      <section className="card aip-governed-import" style={{ padding: 18 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 12 }}>
           {([
             ["sourceId", "来源资源 ID", "approved/repository"], ["sourceCommit", "精确提交号", "abcdef1"], ["licenseId", "许可证", "MIT"],
             ["sbomId", "SBOM 资源 ID", "sbom/repository"], ["targetId", "目标标识", capability ? "capability.vendor.name" : "agent.vendor.name"], ["displayName", "显示名称", ""], ["sourcePath", "源码相对路径", capability ? "capability.py" : "agent.py"],
           ] as const).map(([key, label, placeholder]) => (
-            <label key={key} style={{ display: "grid", gap: 6, fontSize: 13 }}>{label}<input className="input" value={form[key]} placeholder={placeholder} onChange={(event) => update(key, event.target.value)} /></label>
+            <label key={key} style={{ display: "grid", gap: 6, fontSize: 13 }}>{label}<input aria-label={label} className="input" value={form[key]} placeholder={placeholder} onChange={(event) => update(key, event.target.value)} /></label>
           ))}
-          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>风险等级<select className="input" value={form.riskLevel} onChange={(event) => update("riskLevel", event.target.value)}><option value="low">低</option><option value="medium">中</option><option value="high">高</option><option value="critical">关键</option></select></label>
-          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>网络策略引用（高/关键必填）<input className="input" value={form.networkPolicyRef} onChange={(event) => update("networkPolicyRef", event.target.value)} /></label>
-          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>Secret ref（可空）<input className="input" value={form.secretRef} placeholder="keychain://service/account" onChange={(event) => update("secretRef", event.target.value)} /></label>
+          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>风险等级<select aria-label="风险等级" className="input" value={form.riskLevel} onChange={(event) => update("riskLevel", event.target.value)}><option value="low">低</option><option value="medium">中</option><option value="high">高</option><option value="critical">关键</option></select></label>
+          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>网络策略引用（高/关键必填）<input aria-label="网络策略引用" className="input" value={form.networkPolicyRef} onChange={(event) => update("networkPolicyRef", event.target.value)} /></label>
+          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>Secret ref（可空）<input aria-label="Secret ref" className="input" value={form.secretRef} placeholder="keychain://service/account" onChange={(event) => update("secretRef", event.target.value)} /></label>
         </div>
         {capability ? <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
-          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>输入 Schema（JSON）<textarea className="input" rows={5} value={form.inputSchema} onChange={(event) => update("inputSchema", event.target.value)} /></label>
-          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>输出 Schema（JSON）<textarea className="input" rows={5} value={form.outputSchema} onChange={(event) => update("outputSchema", event.target.value)} /></label>
+          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>输入 Schema（JSON）<textarea aria-label="输入 Schema JSON" className="input" rows={5} value={form.inputSchema} onChange={(event) => update("inputSchema", event.target.value)} /></label>
+          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>输出 Schema（JSON）<textarea aria-label="输出 Schema JSON" className="input" rows={5} value={form.outputSchema} onChange={(event) => update("outputSchema", event.target.value)} /></label>
         </div> : null}
-        <label style={{ display: "grid", gap: 6, fontSize: 13, marginTop: 12 }}>源码快照<textarea className="input" rows={10} value={form.sourceContent} onChange={(event) => update("sourceContent", event.target.value)} /></label>
+        <label style={{ display: "grid", gap: 6, fontSize: 13, marginTop: 12 }}>源码快照<textarea aria-label="源码快照" className="input" rows={10} value={form.sourceContent} onChange={(event) => update("sourceContent", event.target.value)} /></label>
         <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
           <button className="btn primary" type="button" disabled={busy} onClick={() => void submit()}>{busy ? "正在预检…" : "生成预检证据"}</button>
           <Link className="btn" to={capability ? "/aip/capabilities" : "/aip/agent-registry"}>{capability ? "返回能力目录" : "返回智能体目录"}</Link>

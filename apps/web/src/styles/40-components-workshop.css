@@ -284,7 +284,7 @@
   text-align: center;
   gap: 2px;
   padding: 12px;
-  background: var(--aos-gray-50, #f9fafb);
+  background: var(--aos-surface-hover, #f9fafb);
   border: 1px solid transparent;
   border-radius: 6px;
   min-width: 0;
@@ -292,7 +292,7 @@
 }
 /* 对齐 catalog 视觉：当前层蓝边 + 浅蓝底 */
 .bp-arch-layer.is-active {
-  background: var(--aos-blue-50, #eff6ff);
+  background: var(--aos-accent-light, #eff6ff);
   border: 2px solid var(--aos-accent, #2563eb);
   box-shadow: none;
 }
@@ -314,21 +314,21 @@
 }
 /* AIP 终点卡：绿色调（视觉稿恒定） */
 .bp-arch-layer.is-aip {
-  background: #f0fdf4;
-  border: 1px solid #6ee7b7;
+  background: var(--aos-green-bg, #f0fdf4);
+  border: 1px solid var(--aos-green-border, #6ee7b7);
 }
 .bp-arch-layer.is-aip .bp-arch-layer-tag {
   background: transparent;
-  color: #059669;
+  color: var(--aos-green, #059669);
   border: none;
   padding: 0;
   text-transform: uppercase;
 }
 .bp-arch-layer.is-aip .bp-arch-layer-label {
-  color: #065f47;
+  color: var(--aos-text, #065f47);
 }
 .bp-arch-layer.is-aip .bp-arch-layer-hint {
-  color: #059669;
+  color: var(--aos-green, #059669);
 }
 .bp-arch-layer-tag {
   font-size: 11px;

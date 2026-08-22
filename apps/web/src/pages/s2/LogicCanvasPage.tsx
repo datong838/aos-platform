@@ -1103,6 +1103,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           </div>
           <textarea
             aria-label="Dry-Run Inputs JSON"
+            className="aos-input"
             value={inputsDraft}
             disabled={loading || saving || running}
             rows={4}
@@ -1113,7 +1114,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
               setInputsError("");
               setMessage("");
             }}
-            style={{ display: "block", width: "100%", resize: "vertical", fontFamily: "monospace" }}
+            style={{ display: "block", width: "100%", height: "auto", resize: "vertical", fontFamily: "monospace" }}
           />
           {inputsError && <div role="alert" style={{ marginTop: 6, color: "var(--aos-red)", fontSize: "0.74rem" }}>{inputsError}</div>}
           <div role="status" style={{ marginTop: 6, color: appliedInputs === null ? "var(--aos-muted)" : "var(--aos-green-700)", fontSize: "0.72rem" }}>

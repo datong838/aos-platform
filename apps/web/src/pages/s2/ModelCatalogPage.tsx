@@ -760,6 +760,7 @@ export function ModelCatalogPage() {
                         <label className="mc-compare-label">
                           <input
                             type="checkbox"
+                            aria-label={`将 ${m.name} 加入模型对比`}
                             checked={isSelected}
                             onChange={() => toggleCompare(m.id)}
                             disabled={!isSelected && compareSet.size >= 3}
@@ -799,7 +800,7 @@ export function ModelCatalogPage() {
                 >
                   <div className="mc-modal-header">
                     <h3 className="mc-modal-title">模型对比</h3>
-                    <button type="button" onClick={() => setShowCompare(false)} className="mc-modal-close">×</button>
+                    <button type="button" aria-label="关闭模型对比" onClick={() => setShowCompare(false)} className="mc-modal-close">×</button>
                   </div>
                   <table className="mc-compare-table">
                     <thead>
@@ -867,6 +868,7 @@ export function ModelCatalogPage() {
                       </svg>
                       <input
                         type="search"
+                        aria-label="搜索组织"
                         placeholder="搜索组织..."
                         value={orgSearch}
                         onChange={(e) => setOrgSearch(e.target.value)}
@@ -878,6 +880,7 @@ export function ModelCatalogPage() {
                         <label key={name} className="mc-org-item">
                           <input
                             type="checkbox"
+                            aria-label={`组织 ${name} 启用状态`}
                             checked={checked}
                             disabled
                             onChange={() => setOrgs((prev) => ({ ...prev, [name]: !prev[name] }))}
