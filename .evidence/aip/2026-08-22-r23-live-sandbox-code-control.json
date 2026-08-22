@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "aip.r23.code-control-evidence.v1",
+  "wave": "R23",
+  "status": "CODE_CONTROL_GREEN_OPERATIONAL_BLOCKED",
+  "sourceBaseline": "e3ec34f",
+  "codeCommit": "5771971",
+  "tenant": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/aip_live_sandbox.py",
+      "sha256": "8a5a19b6f15083dff09acad4a1b94c0d463aa450cb8876e433a7badbfeeff3c4"
+    },
+    {
+      "path": "services/aos-api/tests/aip/test_aip_live_sandbox.py",
+      "sha256": "7603e7fe10896dcfe2cc39dde2a36dc5f7123112d67b4e583c21e27902d165cb"
+    },
+    {
+      "path": "bundles/solutions/ecommerce-growth/content/live/digital-human-live-sandbox.v1.json",
+      "sha256": "30a073b8221f6d66a7877765e48c0041a897f88a3f7c8d52f13952e147f22634"
+    }
+  ],
+  "verification": {
+    "targeted": "19 passed",
+    "contentR21R22R23Cumulative": "112 passed, 7 warnings",
+    "aipFullRegression": "1282 passed, 106 warnings",
+    "pythonCompile": "GREEN",
+    "bundleJson": "GREEN",
+    "diffReview": "GREEN",
+    "browser": "N/A_NO_API_SDK_OR_PAGE_CHANGE_AND_NO_REAL_SESSION"
+  },
+  "readOnlyRuntimeProbe": {
+    "database": "GREEN_READ_ONLY",
+    "avatarSessionCount": 0,
+    "avatarSessionStatuses": {},
+    "localApi": "AUTH_REQUIRED_401_NO_BYPASS",
+    "ffmpegAvailable": false
+  },
+  "sideEffects": {
+    "avatarSessionOpened": 0,
+    "providerCalls": 0,
+    "ttsCalls": 0,
+    "avatarEngineCalls": 0,
+    "barrageCaptureCalls": 0,
+    "streamingCalls": 0,
+    "realBusinessWrites": 0
+  },
+  "blockers": [
+    "REAL_AVATAR_TTS_AND_INTERNAL_STREAM_EXECUTOR_NOT_VERIFIED",
+    "PROFILE_AND_VOICE_LICENSE_REVISIONS_NOT_VERIFIED",
+    "START_TIME_PROVIDER_HEALTH_3_OF_3_NOT_VERIFIED",
+    "REAL_LIVE_PLAN_AND_KNOWLEDGE_SNAPSHOT_NOT_VERIFIED",
+    "R21_PRODUCT_FACT_CONTENT_AND_C06_CHAIN_BLOCKED",
+    "BUDGET_BALANCE_AND_CAPACITY_NOT_VERIFIED",
+    "FFMPEG_UNAVAILABLE"
+  ],
+  "decision": {
+    "codeControl": "GREEN",
+    "operationalReadiness": "BLOCKED",
+    "executionAuthorized": false,
+    "nextGate": "R23_OP_REAL_FIVE_MINUTE_INTERNAL_SANDBOX_AFTER_EXACT_RUNTIME_AUTHORITIES"
+  }
+}
