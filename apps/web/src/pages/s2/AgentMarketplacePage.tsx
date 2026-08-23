@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { aipMarketplaceImport, type MarketplaceCatalog } from "../../api/aipMarketplaceImport";
 import { PageChrome } from "../../components/PageChrome";
-import { formatBlockers } from "../../lib/aipChineseLabels";
+import { businessDisplayName, formatBlockers } from "../../lib/aipChineseLabels";
 
 export function AgentMarketplacePage() {
   const [catalog, setCatalog] = useState<MarketplaceCatalog | null>(null);
@@ -24,16 +24,16 @@ export function AgentMarketplacePage() {
       <div className="notice" role="note" style={{ padding: 12, marginBottom: 16 }}>
         市场只投影已版本化资产包，不把发现等同安装。安装必须经过审批、Overlay 和精确绑定；本页没有直接写入按钮。
       </div>
-      {error ? <div className="notice bad" role="alert">目录读取失败：{error}。当前运行基线尚未提供目录时，请先完成 w1 AIP 路由的串行集成；本页不会用演示资产替代。</div> : null}
+      {error ? <div className="notice bad" role="alert">目录读取失败：{error}。当前运行基线尚未提供目录时，请由平台集成人员完成权威版本接入；本页不会用演示资产替代。</div> : null}
       {!catalog && !error ? <div className="card" role="status">正在读取组织市场目录…</div> : catalog?.count === 0 ? (
         <div className="card"><h3>暂无可发现资产包</h3><p>目录返回为空；没有用演示包填充。</p></div>
       ) : catalog ? catalog.items.map((item) => (
         <section className="card" key={`${item.packageId}@${item.version}`} style={{ padding: 18, marginBottom: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
             <div>
-              <h2 style={{ margin: 0 }}>{item.displayName}</h2>
-              <p style={{ margin: "6px 0", color: "var(--aos-text-secondary)" }}>{item.packageId}@{item.version} · {item.publisher} · {item.license}</p>
-              <code title={item.contentHash}>内容哈希 {item.contentHash.slice(0, 16)}…</code>
+              <h2 style={{ margin: 0 }}>{businessDisplayName(item.displayName, "智能体方案包")}</h2>
+              <p style={{ margin: "6px 0", color: "var(--aos-text-secondary)" }}>发布方：{item.publisher} · 使用许可：{item.license}</p>
+              <details><summary>方案包技术标识（审计用）</summary><code>{item.packageId}@{item.version}</code><br /><code title={item.contentHash}>内容摘要 {item.contentHash.slice(0, 16)}…</code></details>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignContent: "start" }}>
               <span className="notice" style={{ padding: "6px 10px" }}>智能体 {item.agentCount}</span>
@@ -46,7 +46,7 @@ export function AgentMarketplacePage() {
             {item.agents.map((agent) => (
               <article key={agent.templateId} style={{ border: "1px solid var(--aos-border)", borderRadius: 6, padding: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                  <strong>{agent.displayName}</strong><span>{agent.runtimeReadiness === "runnable" ? "可派发" : agent.installed ? "已安装·受阻" : "未安装"}</span>
+                  <strong>{businessDisplayName(agent.displayName, "未命名智能体")}</strong><span>{agent.runtimeReadiness === "runnable" ? "可派发" : agent.installed ? "已安装·受阻" : "未安装"}</span>
                 </div>
                 <p style={{ minHeight: 38, color: "var(--aos-text-secondary)", fontSize: 13 }}>{agent.blockers.length ? formatBlockers(agent.blockers) : "运行门已满足"}</p>
                 <Link to={agent.repairHref}>{agent.repairLabel} →</Link>

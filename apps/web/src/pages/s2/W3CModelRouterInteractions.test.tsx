@@ -186,9 +186,9 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
     await act(async () => root.render(<MemoryRouter><ModelRouterPage /></MemoryRouter>));
     await flush();
 
-    expect(host.textContent).toContain("0/3 路由 ready");
+    expect(host.textContent).toContain("0/3 条路由已就绪");
     expect(host.textContent).toContain("兼容只读");
-    expect(host.textContent).toContain("PROVIDER_HEALTH_EXPIRED");
+    expect(host.textContent).toContain("存在尚未归类的运行阻断");
     expect(host.querySelector<HTMLSelectElement>("[aria-label='摘要 / 分类-primary']")?.disabled).toBe(true);
     const save = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "保存策略")!;
     const drill = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "熔断演练")!;

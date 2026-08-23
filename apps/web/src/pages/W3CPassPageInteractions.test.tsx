@@ -140,7 +140,7 @@ describe("Wave 3C · six passing pages keep their main interactions honest", () 
   it("Model Providers distinguishes confirmed empty and never echoes a secret reference", async () => {
     await render(ProvidersPage);
     expect(host.textContent).toContain("服务端已确认暂无已安装插件");
-    expect(host.textContent).toContain("0/3 路由 ready");
+    expect(host.textContent).toContain("0/3 条路由已就绪");
     expect(host.textContent).not.toContain("never-render-this-token");
   });
 
@@ -163,7 +163,7 @@ describe("Wave 3C · six passing pages keep their main interactions honest", () 
     });
     await render(ProvidersPage);
 
-    expect(host.textContent).toContain("兼容默认网关（非 canonical 运行权威）");
+    expect(host.textContent).toContain("兼容默认网关（非权威运行链）");
     expect(host.textContent).toContain("非运行权威");
     expect(host.textContent).not.toContain("Legacy Mock · 运行态");
     expect(buttonByText(host, "保存为默认").disabled).toBe(true);

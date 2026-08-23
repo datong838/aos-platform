@@ -49,8 +49,8 @@ describe("MemoryGovernancePage", () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><MemoryGovernancePage /></MemoryRouter>));
     await act(async () => undefined);
-    expect(host.textContent).toContain("当前租户没有待治理或历史 Candidate");
-    expect(host.textContent).not.toContain("示例 Candidate");
+    expect(host.textContent).toContain("当前租户没有待治理或历史知识候选");
+    expect(host.textContent).not.toContain("示例知识候选");
     await act(async () => root.unmount());
   });
 
@@ -59,7 +59,7 @@ describe("MemoryGovernancePage", () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><MemoryGovernancePage /></MemoryRouter>));
     await act(async () => undefined);
-    expect(host.textContent).toContain("Memory authority 读取失败");
+    expect(host.textContent).toContain("记忆权威读取失败");
     expect(sdk.query).not.toHaveBeenCalled();
     await act(async () => root.unmount());
   });

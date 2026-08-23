@@ -24,10 +24,10 @@ export function toolsInvokeBlocker(
   const objectType = (ctx?.objectType || drafts.draftObjectType).trim();
   const objectId = (ctx?.objectId || drafts.draftObjectId).trim();
   if (!objectType || !objectId) {
-    return "缺少 exact 对象上下文（objectType + objectId）；禁止使用演示 wo-1001";
+    return "缺少精确的业务对象类型和真实对象标识；禁止使用演示对象";
   }
   if (objectId.toLowerCase() === "wo-1001") {
-    return "演示对象 wo-1001 已禁用；请提供真实对象 exact";
+    return "演示对象已禁用；请提供真实业务对象";
   }
   return null;
 }

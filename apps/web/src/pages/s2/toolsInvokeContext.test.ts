@@ -13,10 +13,10 @@ describe("toolsInvokeContext W-T3", () => {
     ).toBeNull();
     expect(
       toolsInvokeBlocker(null, { draftObjectType: "", draftObjectId: "" }),
-    ).toMatch(/缺少 exact/);
+    ).toMatch(/缺少精确的业务对象类型/);
     expect(
       toolsInvokeBlocker(null, { draftObjectType: "WorkOrder", draftObjectId: "wo-1001" }),
-    ).toMatch(/wo-1001/);
+    ).toMatch(/演示对象已禁用/);
   });
 
   it("accepts real exact ids", () => {

@@ -54,21 +54,21 @@ export function GovernedImportPreview({ kind }: { kind: ImportKind }) {
   };
   const capability = kind === "capability";
   return (
-    <PageChrome title={capability ? "能力导入预检" : "智能体导入预检"} lede="五步证据化预检 · 不抓取远端、不执行源码、不创建 ImportJob、不直接安装">
+    <PageChrome title={capability ? "能力导入预检" : "智能体导入预检"} lede="五步证据化预检 · 不抓取远端、不执行源码、不创建导入任务、不直接安装">
       <div className="notice" role="note" style={{ padding: 12, marginBottom: 14 }}>
-        请粘贴已经独立取得的不可变源码快照。预检只做确定性扫描和合同校验；连通测试、Provider 调用、ImportJob、审批及安装均保持未执行。
+        请粘贴已经独立取得的不可变源码快照。预检只做确定性扫描和契约校验；连通测试、模型供应商调用、导入任务、审批及安装均保持未执行。
       </div>
       <section className="card aip-governed-import" style={{ padding: 18 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 12 }}>
           {([
             ["sourceId", "来源资源 ID", "approved/repository"], ["sourceCommit", "精确提交号", "abcdef1"], ["licenseId", "许可证", "MIT"],
-            ["sbomId", "SBOM 资源 ID", "sbom/repository"], ["targetId", "目标标识", capability ? "capability.vendor.name" : "agent.vendor.name"], ["displayName", "显示名称", ""], ["sourcePath", "源码相对路径", capability ? "capability.py" : "agent.py"],
+            ["sbomId", "软件物料清单标识", "sbom/repository"], ["targetId", "目标标识", capability ? "capability.vendor.name" : "agent.vendor.name"], ["displayName", "显示名称", ""], ["sourcePath", "源码相对路径", capability ? "capability.py" : "agent.py"],
           ] as const).map(([key, label, placeholder]) => (
             <label key={key} style={{ display: "grid", gap: 6, fontSize: 13 }}>{label}<input aria-label={label} className="input" value={form[key]} placeholder={placeholder} onChange={(event) => update(key, event.target.value)} /></label>
           ))}
           <label style={{ display: "grid", gap: 6, fontSize: 13 }}>风险等级<select aria-label="风险等级" className="input" value={form.riskLevel} onChange={(event) => update("riskLevel", event.target.value)}><option value="low">低</option><option value="medium">中</option><option value="high">高</option><option value="critical">关键</option></select></label>
           <label style={{ display: "grid", gap: 6, fontSize: 13 }}>网络策略引用（高/关键必填）<input aria-label="网络策略引用" className="input" value={form.networkPolicyRef} onChange={(event) => update("networkPolicyRef", event.target.value)} /></label>
-          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>Secret ref（可空）<input aria-label="Secret ref" className="input" value={form.secretRef} placeholder="keychain://service/account" onChange={(event) => update("secretRef", event.target.value)} /></label>
+          <label style={{ display: "grid", gap: 6, fontSize: 13 }}>密钥引用（可空）<input aria-label="Secret ref" className="input" value={form.secretRef} placeholder="只填写安全存储引用，不填写密钥正文" onChange={(event) => update("secretRef", event.target.value)} /></label>
         </div>
         {capability ? <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
           <label style={{ display: "grid", gap: 6, fontSize: 13 }}>输入 Schema（JSON）<textarea aria-label="输入 Schema JSON" className="input" rows={5} value={form.inputSchema} onChange={(event) => update("inputSchema", event.target.value)} /></label>
@@ -83,7 +83,7 @@ export function GovernedImportPreview({ kind }: { kind: ImportKind }) {
       </section>
       {preview ? <section className="card" style={{ padding: 18, marginTop: 14 }} aria-label="预检证据">
         <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}><h2 style={{ margin: 0 }}>预检 {preview.status === "blocked" ? "受阻" : "等待外部授权"}</h2><code>{preview.previewId}</code></div>
-        <p>ImportJob 权威：未创建 · 审批：必需 · 内容哈希：<code>{preview.contentHash.slice(0, 16)}…</code></p>
+        <p>导入任务：未创建 · 审批：必需</p><details><summary>技术标识（审计用）</summary>内容摘要：<code>{preview.contentHash.slice(0, 16)}…</code></details>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 10 }}>
           {preview.steps.map((step) => <article key={step.step} style={{ border: "1px solid var(--aos-border)", borderRadius: 6, padding: 12 }}><strong>{stepName[step.step] || step.step}</strong><p>{step.status === "passed" ? "通过" : step.status === "blocked" ? "受阻" : "需外部授权"}</p><small>{step.summary}</small>{step.blockerCodes.length ? <ul>{step.blockerCodes.map((code) => <li key={code}><code>{code}</code></li>)}</ul> : null}</article>)}
         </div>

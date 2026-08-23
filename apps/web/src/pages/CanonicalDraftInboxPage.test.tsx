@@ -35,8 +35,8 @@ describe("CanonicalDraftInboxPage", () => {
     await act(async () => root.render(<MemoryRouter initialEntries={["/aip/drafts?taskId=task-1&runId=run-1"]}><CanonicalDraftInboxPage sdk={sdk} /></MemoryRouter>));
     await act(async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); });
     expect(host.textContent).toContain("已批准");
-    expect(host.textContent).toContain("尚无 Receipt，不能宣称已执行");
-    expect(host.textContent).toContain("Task task-1 · Run run-1");
+    expect(host.textContent).toContain("尚无交付凭证，不能宣称已执行");
+    expect(host.textContent).toContain("任务 task-1 · 运行 run-1");
     expect(button(host, "获取单次执行租约").disabled).toBe(false);
   });
 
@@ -62,7 +62,7 @@ describe("CanonicalDraftInboxPage", () => {
     await act(async () => root.render(<MemoryRouter><CanonicalDraftInboxPage sdk={sdk} /></MemoryRouter>));
     await act(async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); });
     await act(async () => button(host, "待审批").click());
-    expect(host.textContent).toContain("当前筛选下暂无 Proposal");
+    expect(host.textContent).toContain("当前筛选下暂无执行提案");
     expect([...host.querySelectorAll("button")].some((candidate) => candidate.textContent?.includes("获取单次执行租约"))).toBe(false);
   });
 

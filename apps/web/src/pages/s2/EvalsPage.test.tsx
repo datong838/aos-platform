@@ -135,7 +135,7 @@ describe("EvalsPage · 真实运行与门控", () => {
       root.render(createElement(MemoryRouter, null, createElement(EvalsPage)));
     });
     await flush();
-    expect(host.textContent).toContain("输入 x=1，期望 2（exact）");
+    expect(host.textContent).toContain("输入 x=1，期望 2（精确匹配）");
     expect(host.textContent).toContain("门控阈值 100%");
 
     const createButton = Array.from(host.querySelectorAll("button"))
@@ -146,7 +146,7 @@ describe("EvalsPage · 真实运行与门控", () => {
 
     expect(apiMocks.apiPost).toHaveBeenCalledWith("/v1/evals/suites", QUICK_START_EVAL_SUITE);
     expect(apiMocks.apiGet).toHaveBeenNthCalledWith(3, "/v1/evals/suites");
-    expect((host.querySelector('select[aria-label="Eval 套件"]') as HTMLSelectElement).value)
+    expect((host.querySelector('select[aria-label="评测套件"]') as HTMLSelectElement).value)
       .toBe("suite-quick-start");
     expect(host.textContent).toContain("已创建并选中真实套件");
     expect(host.textContent).toContain("尚未运行真实评测");
@@ -177,7 +177,7 @@ describe("EvalsPage · 真实运行与门控", () => {
     await flush();
 
     expect(host.textContent).toContain("基础套件回包核验失败");
-    expect((host.querySelector('select[aria-label="Eval 套件"]') as HTMLSelectElement).value).toBe("");
+    expect((host.querySelector('select[aria-label="评测套件"]') as HTMLSelectElement).value).toBe("");
     expect(host.textContent).toContain("尚未运行真实评测");
     expect(host.textContent).not.toContain("已创建并选中真实套件");
   });
@@ -335,7 +335,7 @@ describe("EvalsPage · 真实运行与门控", () => {
     const input = host.querySelector<HTMLInputElement>("[aria-label='eval-authority-run-id']")!;
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, "eval-run-1");
     await act(async () => input.dispatchEvent(new Event("input", { bubbles: true })));
-    const read = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "读取权威 Run")!;
+    const read = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "读取权威评测运行")!;
     await act(async () => read.click());
     await flush();
 

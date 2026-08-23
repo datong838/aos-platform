@@ -28,11 +28,11 @@ describe("DEFAULT_ARCH_LAYERS", () => {
 
 describe("layerTagText", () => {
   it("当前层追加 · 当前", () => {
-    expect(layerTagText("L3", "L3")).toBe("L3 · 当前");
+    expect(layerTagText("L3", "L3")).toBe("模型目录 · 当前");
   });
 
   it("非当前层仅返回 id", () => {
-    expect(layerTagText("L1", "L3")).toBe("L1");
+    expect(layerTagText("L1", "L3")).toBe("供应商配置");
   });
 });
 

@@ -220,8 +220,8 @@ export function rateLimitsFromRuntimePools(pools: RuntimeCapacityPoolSummary[]):
   return pools.map((pool) => ({
     model: pool.modelRef.assetId,
     provider: pool.providerRef.assetId,
-    tokensPerMin: `${formatTokenCount(pool.maxTokenUnits)} token units / lease`,
-    requestsPerMin: `${pool.activeReservations}/${pool.maxConcurrency} active concurrency`,
+    tokensPerMin: `每次租约 ${formatTokenCount(pool.maxTokenUnits)} 个模型用量单位`,
+    requestsPerMin: `当前并发 ${pool.activeReservations}/${pool.maxConcurrency}`,
   }));
 }
 
@@ -378,7 +378,7 @@ export function CapacityPage() {
   const warnQuotaCount = quotaUsage.filter((q) => usageTone(usagePercent(q.used, q.quota)) !== "ok").length;
 
   return (
-    <PageChrome title="容量管理" lede="用量仪表盘、项目/用户速率限制与预留容量；Live 接容量权威 API，失败时不回落本地 MOCK">
+    <PageChrome title="容量管理" lede="查看用量、项目与用户限速及预留容量；数据来自容量权威接口，读取失败时不回落到本地演示数据">
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         {sourceMode === "error" && (
           <div className="w2-a6a7-demo-banner" role="alert">
@@ -390,8 +390,8 @@ export function CapacityPage() {
         )}
         {sourceMode === "live" && (
           <div className="w2-a6a7-live-banner" role="status">
-            <span className="w2-a6a7-live-badge">Live</span>
-            <span className="w2-a6a7-demo-text">兼容限额接 `/v1/aip/capacity/*`；exact 价格、预算、Receipt 与容量池接模型运行权威</span>
+            <span className="w2-a6a7-live-badge">实时数据</span>
+            <span className="w2-a6a7-demo-text">兼容限额来自容量接口；精确价格、预算、用量凭证与容量池来自模型运行权威</span>
           </div>
         )}
 
@@ -400,13 +400,13 @@ export function CapacityPage() {
           style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "0 0 16px" }}
         >
           {[
-            { label: "数据源", value: sourceMode === "live" ? "Live" : sourceMode === "error" ? "Error" : "…" },
+            { label: "数据源", value: sourceMode === "live" ? "实时" : sourceMode === "error" ? "读取失败" : "读取中" },
             { label: "今日请求", value: (todayBucket?.totalRequests ?? 0).toLocaleString() },
-            { label: "今日 Token", value: formatTokenCount(todayBucket?.totalTokens ?? 0) },
+            { label: "今日模型用量", value: formatTokenCount(todayBucket?.totalTokens ?? 0) },
             { label: "用户限额条", value: String(userLimits.length) },
             { label: "配额告警", value: String(warnQuotaCount) },
             { label: "权威成本", value: authoritativeCostLabel(runtimeCost) },
-            { label: "当前 Tab", value: tab === "usage" ? "用量" : tab === "rate-limits" ? "限速" : "预留" },
+            { label: "当前视图", value: tab === "usage" ? "用量" : tab === "rate-limits" ? "限速" : "预留" },
           ].map((s) => (
             <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
               <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -454,7 +454,7 @@ export function CapacityPage() {
               <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" />
             </svg>
             <p style={{ fontSize: 13, color: "var(--aos-blue-title)", margin: 0, lineHeight: 1.6 }}>
-              当前仅展示租户内已发布的兼容限额与 exact 容量池；未发布的预留比例不会按静态演示值推断。
+              当前仅展示租户内已发布的兼容限额与精确容量池；未发布的预留比例不会按静态演示值推断。
               {projectLimit && sourceMode === "live" && (
                 <> 当前项目限额：RPM {projectLimit.rpmLimit} · TPM {formatTokenCount(projectLimit.tpmLimit)}。</>
               )}
@@ -494,14 +494,14 @@ export function CapacityPage() {
                 <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket?.label}累计</div>
               </div>
               <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
-                <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>Token 消耗</div>
+                <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>模型用量</div>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-purple-600)" }}>{formatTokenCount(currentBucket?.totalTokens ?? 0)}</div>
-                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{(currentBucket?.totalTokens ?? 0).toLocaleString()} tokens</div>
+                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{(currentBucket?.totalTokens ?? 0).toLocaleString()} 个模型用量单位</div>
               </div>
               <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>成本汇总</div>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-amber-600)" }}>{authoritativeCostLabel(runtimeCost)}</div>
-                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>Usage Receipt 权威；未观测不等于 0</div>
+                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>用量凭证为权威；未观测不等于 0</div>
               </div>
             </div>
 
@@ -510,7 +510,7 @@ export function CapacityPage() {
               <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--aos-border)" }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>模型配额使用</h3>
                 <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>
-                  {sourceMode === "live" ? "项目 TPM 限额 vs 今日 Token 用量" : "各模型当前分钟级 Token 用量 vs 配额"}
+                  {sourceMode === "live" ? "项目每分钟用量限额与今日用量" : "各模型当前分钟级用量与配额"}
                 </p>
               </div>
               <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
@@ -621,7 +621,7 @@ export function CapacityPage() {
                 <div>
                   <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>登记限制</h3>
                   <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>
-                    exact 容量池只读投影；字段是 lease token 单位和并发占用，不冒充 TPM/RPM
+                    精确容量池只读投影；字段是租约用量单位和并发占用，不冒充每分钟请求或用量限额
                   </p>
                 </div>
                 <select
@@ -639,7 +639,7 @@ export function CapacityPage() {
                   <thead>
                     <tr>
                       <th style={{ textAlign: "left", padding: "12px 20px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 12 }}>模型名称</th>
-                      <th style={{ textAlign: "left", padding: "12px 20px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 12 }}>Lease Token 单位</th>
+                      <th style={{ textAlign: "left", padding: "12px 20px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 12 }}>租约用量单位</th>
                       <th style={{ textAlign: "left", padding: "12px 20px", background: "var(--bg-surface-alt)", borderBottom: "1px solid var(--aos-border)", fontWeight: 600, color: "var(--aos-text-secondary)", fontSize: 12 }}>并发占用</th>
                     </tr>
                   </thead>

@@ -23,10 +23,10 @@ type CapabilityCard = {
 };
 
 const CAPABILITY_CARDS: CapabilityCard[] = [
-  { id: "video-job", title: "短视频生成", kindLabel: "C1 Job · GPU · → MediaSet", desc: "重能力 · 产物写入 MediaSet", status: "ready" },
-  { id: "live-script", title: "直播稿引擎", kindLabel: "C0 sync / 可升 C1 · → LiveScript", desc: "同步轻能力 · 可进 Function", status: "ready" },
-  { id: "avatar-commerce", title: "电商可交互数字人", kindLabel: "C2 Session · AV 外置 · AvatarSession", desc: "会话型 · 平台不进沙箱", status: "session" },
-  { id: "avatar-edu", title: "教育可交互数字人", kindLabel: "C2 Session · 课纲 Wiki · CourseSession", desc: "会话型 · 课纲关联 Wiki", status: "stopped" },
+  { id: "video-job", title: "短视频生成", kindLabel: "异步媒体任务 · 图形处理器 · 输出媒体集合", desc: "重型能力 · 产物进入受治理的媒体集合", status: "ready" },
+  { id: "live-script", title: "直播稿引擎", kindLabel: "同步调用 · 可升级为异步任务", desc: "轻量同步能力 · 可由平台函数执行", status: "ready" },
+  { id: "avatar-commerce", title: "电商可交互数字人", kindLabel: "持续会话 · 音视频外部执行", desc: "会话型能力 · 不进入函数沙箱", status: "session" },
+  { id: "avatar-edu", title: "教育可交互数字人", kindLabel: "持续会话 · 关联课程知识", desc: "会话型能力 · 关联课程知识库", status: "stopped" },
 ];
 
 const STATUS_META: Record<CapabilityCard["status"], { label: string; border: string; color: string }> = {
@@ -38,10 +38,10 @@ const STATUS_META: Record<CapabilityCard["status"], { label: string; border: str
 export type CfgType = "job" | "script" | "session" | "http";
 
 const CFG_TYPE_META: { id: CfgType; title: string; desc: string; defaultCapId: string }[] = [
-  { id: "job", title: "Media Job", desc: "C1 · submit / status / artifact", defaultCapId: "video-job" },
-  { id: "script", title: "Script Engine", desc: "C0 sync · 或短 Job", defaultCapId: "live-script" },
-  { id: "session", title: "Avatar Session", desc: "C2 · open / push / close", defaultCapId: "avatar-commerce" },
-  { id: "http", title: "HTTP Adapter", desc: "自定义重包契约", defaultCapId: "http-adapter" },
+  { id: "job", title: "异步媒体任务", desc: "提交 · 查询状态 · 获取产物", defaultCapId: "video-job" },
+  { id: "script", title: "脚本生成引擎", desc: "同步调用或短时异步任务", defaultCapId: "live-script" },
+  { id: "session", title: "数字人会话", desc: "开启 · 推送内容 · 关闭", defaultCapId: "avatar-commerce" },
+  { id: "http", title: "通用接口适配", desc: "自定义外部能力契约", defaultCapId: "http-adapter" },
 ];
 
 export type CapConfigForm = {
@@ -389,7 +389,7 @@ export function CapabilityPage() {
   return (
     <PageChrome
       title="智能体插件"
-      lede="大脑 vs 肌肉 · C0 同步轻能力可进 Function；C1 Job / C2 Session 外置 Adapter"
+      lede="统一管理轻量函数、异步任务和会话型专业能力；重型媒体处理保留在受治理的外部执行器。"
     >
       <div className={`w4-b5-banner ${live ? "is-live" : "is-demo"}`}>
         <span className={`w4-b5-badge ${live ? "is-live" : "is-demo"}`}>{live ? "真 API" : listSource === "loading" ? "加载中" : "不可用"}</span>
@@ -436,7 +436,7 @@ export function CapabilityPage() {
             <div style={{ fontSize: 14, fontWeight: 500, color: "#16A34A", marginTop: 4 }}>是</div>
           </div>
           <div style={{ border: "1px solid var(--aos-border)", borderRadius: 2, padding: 12, background: "var(--aos-surface)" }}>
-            <div style={{ fontSize: 11, color: "#6B7280" }}>Draft 门控</div>
+            <div style={{ fontSize: 11, color: "#6B7280" }}>草稿审批门控</div>
             <div style={{ fontSize: 14, fontWeight: 500, color: "#D97706", marginTop: 4 }}>默认</div>
           </div>
         </div>
@@ -459,7 +459,7 @@ export function CapabilityPage() {
       >
         <div style={{ fontSize: 14, fontWeight: 600, color: "#92400E" }}>大脑 vs 肌肉</div>
         <p style={{ margin: 0, lineHeight: 1.6 }}>
-          C0 同步轻能力可进 Function；C1 Job / C2 Session（短视频、可交互数字人）外置 Adapter，超 FUNC-03（60s/2GB）禁止塞进沙箱。
+          轻量同步能力可由平台函数执行；异步任务与会话型能力（如短视频、交互数字人）由外部执行器承载。超过单次执行限制的任务不得塞入函数沙箱。
         </p>
       </div>
 
@@ -511,7 +511,7 @@ export function CapabilityPage() {
                     type="button"
                     className="w4-b5-chip-btn"
                     disabled={!live || !isRegistered}
-                    title={!isRegistered ? "能力尚未登记，AIP-6 接入流程完成后开放配置" : undefined}
+                    title={!isRegistered ? "能力尚未登记，完成能力接入和审核后开放配置" : undefined}
                     onClick={() => openConfig(cardCfgType, cap.id)}
                   >
                     配置
@@ -571,7 +571,7 @@ export function CapabilityPage() {
                 </svg>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>插件引入（Capability Manifest）</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>插件能力引入</div>
                 <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>通过 YAML 声明接入外部 C0/C1/C2 能力，4 步向导</div>
               </div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" style={{ marginTop: 4 }}>
@@ -609,7 +609,7 @@ export function CapabilityPage() {
                 </svg>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>外部 Agent 导入（Adapter 桥接）</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>外部智能体能力接入</div>
                 <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>从 awesome-llm-apps 等开源社区导入，5 步向导</div>
               </div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" style={{ marginTop: 4 }}>
@@ -631,7 +631,7 @@ export function CapabilityPage() {
                 key={t.id}
                 type="button"
                 disabled
-                title="AIP-6 持久化 Capability Registry 完成后开放接入"
+                title="能力目录完成持久化登记与审核后开放接入"
                 onClick={() => openConfig(t.id, t.defaultCapId)}
                 style={{
                   textAlign: "left",
@@ -664,7 +664,7 @@ export function CapabilityPage() {
           {cfgType === "job" && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 12 }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                <span style={{ color: "#6B7280" }}>Adapter 端点</span>
+                <span style={{ color: "#6B7280" }}>外部执行器端点</span>
                 <input style={inputStyle} value={form.endpoint} onChange={(e) => patchForm("endpoint", e.target.value)} />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -680,7 +680,7 @@ export function CapabilityPage() {
                 <input style={inputStyle} value={form.webhook} onChange={(e) => patchForm("webhook", e.target.value)} />
               </label>
               <p style={{ gridColumn: "span 2", color: "#6B7280", fontSize: 11, margin: 0 }}>
-                产物写入 MediaSet；MediaJob Object 仅存状态与 RID。Logic 挂 Call Capability → Action 盖章。
+                媒体产物进入受治理的媒体集合；任务对象只保存状态与资源引用。业务逻辑调用能力后，由受控动作完成写回。
               </p>
             </div>
           )}
@@ -719,10 +719,10 @@ export function CapabilityPage() {
                 <input type="checkbox" checked={form.avExternal} onChange={(e) => patchForm("avExternal", e.target.checked)} /> AV 流外置（平台不进沙箱）
               </label>
               <label style={{ display: "flex", alignItems: "center", gap: 8, color: "#374151", marginTop: 12 }}>
-                <input type="checkbox" checked={form.draftGate} onChange={(e) => patchForm("draftGate", e.target.checked)} /> 开播须 Draft / Action
+                <input type="checkbox" checked={form.draftGate} onChange={(e) => patchForm("draftGate", e.target.checked)} /> 开播须经过草稿审批与受控动作
               </label>
               <p style={{ gridColumn: "span 2", color: "#6B7280", fontSize: 11, margin: 0 }}>
-                Agent 只推话术与 Wiki；实时音视频在数字人引擎。对齐 07b 旅程 P3。
+                智能体只提供话术与知识；实时音视频由数字人引擎处理。
               </p>
             </div>
           )}
@@ -810,7 +810,7 @@ export function CapabilityPage() {
       >
         <Link to="/aip/tools" style={{ color: "var(--aos-indigo-600)" }}>工具面板 →</Link>
         <Link to="/data/media-sets" style={{ color: "var(--aos-indigo-600)" }}>MediaSet →</Link>
-        <Link to="/aip/drafts" style={{ color: "var(--aos-indigo-600)" }}>Draft 审批 →</Link>
+        <Link to="/aip/drafts" style={{ color: "var(--aos-indigo-600)" }}>草稿审批 →</Link>
       </div>
 
       <p style={{ fontSize: 11, color: "#6B7280", margin: "12px 0 0" }}>

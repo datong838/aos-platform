@@ -65,15 +65,15 @@ export function OverviewDomainGrid() {
         <p className="hint">业务工作室 → 逻辑/工具 → 提案决策 → 模型配置</p>
         <div className="bp-index-grid bp-index-grid-4">
           <BpIndexTile to="/aip/studio" eyebrow="Studio" title="Chatbot Studio" accent="amber" />
-          <BpIndexTile to="/aip/logic" eyebrow="Logic" title="AIP 逻辑画布" accent="amber" />
-          <BpIndexTile to="/aip/tools" eyebrow="Tools" title="Agent 工具面板" accent="amber" />
+          <BpIndexTile to="/aip/logic" eyebrow="业务流程" title="业务逻辑编排" accent="amber" />
+          <BpIndexTile to="/aip/tools" eyebrow="调用配置" title="智能体工具配置" accent="amber" />
           <BpIndexTile to="/aip/capabilities" eyebrow="Capabilities" title="智能体插件" accent="amber" />
         </div>
         <BpLinkMini
           muted
           links={[
-            { to: "/aip/evals", label: "Evals 门控" },
-            { to: "/aip/drafts", label: "Draft 审批台" },
+            { to: "/aip/evals", label: "评测门控" },
+            { to: "/aip/drafts", label: "草稿审批台" },
             { to: "/aip/lineage", label: "决策谱系" },
             { to: "/aip/model-providers", label: "模型供应商" },
             { to: "/aip/model-router", label: "模型路由" },

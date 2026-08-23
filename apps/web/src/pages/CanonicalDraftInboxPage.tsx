@@ -10,6 +10,7 @@ import {
   type AipActionsSdk,
 } from "../api/aipActions";
 import { PageChrome } from "../components/PageChrome";
+import { actionDisplayName, businessDisplayName, objectTypeDisplayName, riskDisplayName, statusDisplayName } from "../lib/aipChineseLabels";
 
 type InboxTab = "approval" | "approved" | "execution" | "closed";
 type LoadState = "loading" | "ready" | "error";
@@ -206,8 +207,8 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
 
   return (
     <PageChrome
-      title="Draft 审批台"
-      lede="Proposal → Draft → Approval → Lease → Receipt 权威闭环；批准不等于已执行，只有 Receipt 证明外部结果。"
+      title="草稿审批台"
+      lede="执行提案 → 变更草稿 → 审批 → 执行租约 → 交付凭证；批准不等于已执行，只有交付凭证才能证明外部结果。"
     >
       <div
         data-testid="drafts-ops-stats"
@@ -229,18 +230,18 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
       </div>
       <div className="aip-draft-inbox space-y-4" data-testid="canonical-action-inbox">
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900" data-testid="drafts-chain-banner">
-          <strong>真实 AIP Action 权威链</strong> · 页面不注入示例 Draft，也不在浏览器维护第二套状态机。
-          {(taskId || runId) && <span> 当前筛选：{taskId ? `Task ${taskId}` : ""}{taskId && runId ? " · " : ""}{runId ? `Run ${runId}` : ""}</span>}
-          {proposalParam && <span> · 深链 Proposal <code>{proposalParam}</code></span>}
+          <strong>真实受控动作权威链</strong> · 页面不注入示例草稿，也不在浏览器维护第二套状态机。
+          {(taskId || runId) && <details><summary>当前筛选的技术标识</summary>{taskId ? `任务 ${taskId}` : ""}{taskId && runId ? " · " : ""}{runId ? `运行 ${runId}` : ""}</details>}
+          {proposalParam && <details><summary>深链提案标识</summary><code>{proposalParam}</code></details>}
         </div>
         {notice && <p role="status" className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">{notice}</p>}
         {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
 
         <div className="flex items-center justify-between gap-3">
           <input
-            aria-label="搜索受控 Action"
+            aria-label="搜索受控业务动作"
             className="min-w-0 flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
-            placeholder="搜索 Proposal、Action、对象类型或目的…"
+            placeholder="搜索执行提案、业务动作、对象类型或目的…"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -257,62 +258,62 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
           ))}
         </div>
 
-        {state === "loading" && <p role="status" className="py-12 text-center text-sm text-gray-500">正在读取 Action Proposal…</p>}
+        {state === "loading" && <p role="status" className="py-12 text-center text-sm text-gray-500">正在读取受控执行提案…</p>}
         {state === "ready" && items.length === 0 && (
           <div className="rounded-lg border border-dashed border-gray-300 bg-white py-16 text-center" data-testid="drafts-empty">
-            <h2 className="font-medium text-gray-800">当前工作区暂无受控 Action</h2>
-            <p className="mt-2 text-sm text-gray-500">这是有效的真实空状态，不会使用 Mock Proposal 填充页面。</p>
+            <h2 className="font-medium text-gray-800">当前工作区暂无受控动作</h2>
+            <p className="mt-2 text-sm text-gray-500">这是有效的真实空状态，不会使用演示提案填充页面。</p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               <Link to="/aip/logic" className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white no-underline" data-testid="drafts-cta-logic">去逻辑画布产生提案</Link>
-              <Link to="/aip/evals" className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 no-underline" data-testid="drafts-cta-evals">查看 Evals 门控</Link>
+              <Link to="/aip/evals" className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 no-underline" data-testid="drafts-cta-evals">查看评测门控</Link>
             </div>
           </div>
         )}
 
         {state === "ready" && items.length > 0 && (
           <div className="grid gap-4 xl:grid-cols-[minmax(320px,0.8fr)_minmax(520px,1.4fr)]">
-            <section className="max-h-[720px] space-y-2 overflow-y-auto" aria-label="Action Proposal 列表">
-              {visible.length === 0 && <p className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">当前筛选下暂无 Proposal。</p>}
+            <section className="max-h-[720px] space-y-2 overflow-y-auto" aria-label="执行提案列表">
+              {visible.length === 0 && <p className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">当前筛选下暂无执行提案。</p>}
               {visible.map((bundle) => (
                 <button key={bundle.proposal.id} type="button" onClick={() => select(bundle.proposal.id)} className={`w-full rounded-lg border p-3 text-left ${selectedId === bundle.proposal.id ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white hover:border-gray-300"}`}>
                   <div className="flex items-center justify-between gap-2"><ProposalBadge status={bundle.proposal.status} /><span className="text-xs text-gray-400">{formatTime(bundle.proposal.updatedAt)}</span></div>
-                  <h3 className="mt-2 font-medium text-gray-900">{bundle.proposal.actionType.actionTypeId}</h3>
-                  <p className="mt-1 line-clamp-2 text-sm text-gray-600">{bundle.proposal.purpose}</p>
-                  <p className="mt-2 text-xs text-gray-500">{bundle.proposal.actionType.objectType} · {bundle.proposal.riskLevel} · v{bundle.proposal.version}</p>
+                  <h3 className="mt-2 font-medium text-gray-900">{actionDisplayName(bundle.proposal.actionType.actionTypeId)}</h3>
+                  <p className="mt-1 line-clamp-2 text-sm text-gray-600">{businessDisplayName(bundle.proposal.purpose, "受控业务动作申请")}</p>
+                  <p className="mt-2 text-xs text-gray-500">{objectTypeDisplayName(bundle.proposal.actionType.objectType)} · {riskDisplayName(bundle.proposal.riskLevel)} · 版本 {bundle.proposal.version}</p>
                 </button>
               ))}
             </section>
 
-            <section className="rounded-lg border border-gray-200 bg-white" aria-label="Action Proposal 详情">
-              {!selected && <p className="p-12 text-center text-sm text-gray-500">请选择 Proposal 查看权威状态。</p>}
+            <section className="rounded-lg border border-gray-200 bg-white" aria-label="执行提案详情">
+              {!selected && <p className="p-12 text-center text-sm text-gray-500">请选择执行提案查看权威状态。</p>}
               {selected && (
                 <>
                   <header className="border-b border-gray-100 p-4">
-                    <div className="flex flex-wrap items-center gap-2"><ProposalBadge status={selected.proposal.status} /><span className="text-xs text-gray-500">{selected.proposal.riskLevel}</span><span className="ml-auto text-xs text-gray-400">v{selected.proposal.version}</span></div>
-                    <h2 className="mt-2 text-lg font-semibold text-gray-900">{selected.proposal.actionType.actionTypeId}</h2>
-                    <p className="mt-1 text-sm text-gray-600">{selected.proposal.purpose}</p>
+                    <div className="flex flex-wrap items-center gap-2"><ProposalBadge status={selected.proposal.status} /><span className="text-xs text-gray-500">{riskDisplayName(selected.proposal.riskLevel)}</span><span className="ml-auto text-xs text-gray-400">版本 {selected.proposal.version}</span></div>
+                    <h2 className="mt-2 text-lg font-semibold text-gray-900">{actionDisplayName(selected.proposal.actionType.actionTypeId)}</h2>
+                    <p className="mt-1 text-sm text-gray-600">{businessDisplayName(selected.proposal.purpose, "受控业务动作申请")}</p>
                   </header>
 
-                  {detailState === "loading" && <p role="status" className="p-10 text-center text-sm text-gray-500">正在读取 Lease / Receipt / Timeline…</p>}
+                  {detailState === "loading" && <p role="status" className="p-10 text-center text-sm text-gray-500">正在读取执行租约、交付凭证与事件时间线…</p>}
                   {detailState === "ready" && timeline && execution && (
                     <div className="space-y-5 p-4">
                       {selected.proposal.status === "unknown" && (
-                        <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">外部结果未知：禁止重复执行，只允许读取 provider 状态并追加 reconcile Receipt。</div>
+                        <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">外部结果未知：禁止重复执行，只允许读取供应商状态并追加对账凭证。</div>
                       )}
                       <div className="grid gap-3 sm:grid-cols-2">
-                        <div><strong className="block text-xs text-gray-500">Proposal</strong><code className="text-xs">{selected.proposal.id}</code></div>
-                        <div><strong className="block text-xs text-gray-500">Proposal hash</strong><code className="text-xs" title={selected.proposal.proposalHash}>{shortHash(selected.proposal.proposalHash)}</code></div>
-                        <div><strong className="block text-xs text-gray-500">Task / Run</strong><span className="text-sm">{selected.proposal.taskId ?? "—"} / {selected.proposal.runId ?? "—"}</span></div>
+                        <details><summary>提案标识（审计用）</summary><code className="text-xs">{selected.proposal.id}</code></details>
+                        <details><summary>内容摘要（审计用）</summary><code className="text-xs" title={selected.proposal.proposalHash}>{shortHash(selected.proposal.proposalHash)}</code></details>
+                        <details><summary>任务与运行标识（审计用）</summary><span className="text-sm">{selected.proposal.taskId ?? "—"} / {selected.proposal.runId ?? "—"}</span></details>
                         <div><strong className="block text-xs text-gray-500">到期时间</strong><span className="text-sm">{formatTime(selected.proposal.expiresAt)}</span></div>
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-semibold text-gray-800">Draft 变更</h3>
+                        <h3 className="text-sm font-semibold text-gray-800">草稿变更</h3>
                         <pre className="mt-2 max-h-48 overflow-auto rounded bg-gray-950 p-3 text-xs text-gray-100">{JSON.stringify(selected.draft.diff, null, 2)}</pre>
                       </div>
 
                       <div data-testid="drafts-chain-links">
-                        <h3 className="text-sm font-semibold text-gray-800">Evals ↔ Lineage 权威证据链</h3>
+                        <h3 className="text-sm font-semibold text-gray-800">评测与决策谱系证据链</h3>
                         <div className="mt-2 flex flex-wrap gap-2 text-sm">
                           <Link
                             to={`/aip/lineage?rootType=action&rootId=${encodeURIComponent(selected.proposal.id)}`}
@@ -330,36 +331,36 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
                                 className="rounded border border-blue-300 bg-blue-50 px-2 py-1 text-blue-800 no-underline"
                                 data-testid="drafts-jump-evals"
                               >
-                                Evals · {ref.resourceId} →
+                                评测套件 →
                               </Link>
                             ))}
                           {selected.draft.evidenceRefs.length === 0 && (
-                            <span className="text-gray-500">本 Draft 无 EvalSuite evidenceRefs；仍可跳转谱系。</span>
+                            <span className="text-gray-500">本草稿没有评测套件证据引用；仍可跳转查看决策谱系。</span>
                           )}
                         </div>
                       </div>
 
                       <div>
                         <h3 className="text-sm font-semibold text-gray-800">审批事实（{selected.approvals.length}）</h3>
-                        {selected.approvals.length === 0 ? <p className="mt-2 text-sm text-gray-500">尚无 ApprovalEvent。</p> : (
+                        {selected.approvals.length === 0 ? <p className="mt-2 text-sm text-gray-500">尚无审批事件。</p> : (
                           <ol className="mt-2 space-y-2">{selected.approvals.map((approval) => <li key={approval.id} className="rounded border border-gray-200 p-2 text-sm">{approval.decision === "approved" ? "批准" : "拒绝"} · {approval.actor.actorId} · {formatTime(approval.createdAt)}{approval.reason ? ` · ${approval.reason}` : ""}</li>)}</ol>
                         )}
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-semibold text-gray-800">ExecutionLease</h3>
-                        {execution.lease ? <p className="mt-2 rounded border border-purple-200 bg-purple-50 p-2 text-sm">{execution.lease.id} · attempt {execution.lease.attempt} · 到期 {formatTime(execution.lease.expiresAt)}</p> : <p className="mt-2 text-sm text-gray-500">尚未获取执行租约。</p>}
+                        <h3 className="text-sm font-semibold text-gray-800">执行租约</h3>
+                        {execution.lease ? <div className="mt-2 rounded border border-purple-200 bg-purple-50 p-2 text-sm">第 {execution.lease.attempt} 次执行尝试 · 到期 {formatTime(execution.lease.expiresAt)}<details><summary>租约技术标识</summary><code>{execution.lease.id}</code></details></div> : <p className="mt-2 text-sm text-gray-500">尚未获取执行租约。</p>}
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-semibold text-gray-800">不可变 Receipt 链（{execution.receipts.length}）</h3>
-                        {execution.receipts.length === 0 ? <p className="mt-2 text-sm text-gray-500">尚无 Receipt，不能宣称已执行。</p> : (
-                          <ol className="mt-2 space-y-2">{execution.receipts.map((receipt) => <li key={receipt.id} className="rounded border border-gray-200 p-2 text-sm"><strong>{receipt.status}</strong> · {receipt.receiptKind} · {receipt.providerRequestId ?? "无 provider request id"}<br /><code className="text-xs">{receipt.id}</code>{receipt.supersedesReceiptId ? <span className="text-xs text-gray-500"> · supersedes {receipt.supersedesReceiptId}</span> : null}</li>)}</ol>
+                        <h3 className="text-sm font-semibold text-gray-800">不可变交付凭证链（{execution.receipts.length}）</h3>
+                        {execution.receipts.length === 0 ? <p className="mt-2 text-sm text-gray-500">尚无交付凭证，不能宣称已执行。</p> : (
+                          <ol className="mt-2 space-y-2">{execution.receipts.map((receipt) => <li key={receipt.id} className="rounded border border-gray-200 p-2 text-sm"><strong>{statusDisplayName(receipt.status)}</strong> · {receipt.receiptKind === "initial" ? "首次交付" : "后续对账"}<details><summary>凭证技术详情</summary><code className="text-xs">{receipt.id}</code>{receipt.providerRequestId ? <span> · 供应商请求 {receipt.providerRequestId}</span> : null}{receipt.supersedesReceiptId ? <span className="text-xs text-gray-500"> · 替代凭证 {receipt.supersedesReceiptId}</span> : null}</details></li>)}</ol>
                         )}
                       </div>
 
                       <details>
-                        <summary className="cursor-pointer text-sm font-semibold text-gray-800">权威 Timeline（{timeline.events.length}）</summary>
+                        <summary className="cursor-pointer text-sm font-semibold text-gray-800">权威事件时间线（{timeline.events.length}）</summary>
                         <ol className="mt-2 space-y-2">{timeline.events.map((event) => <li key={event.id} className="border-l-2 border-blue-200 pl-3 text-sm">{event.type} · {event.actorId} · {formatTime(event.createdAt)}</li>)}</ol>
                       </details>
                     </div>
@@ -371,7 +372,7 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
                       <button type="button" disabled={!writable} className="rounded bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("拒绝", () => sdk.decide(selected, "rejected", "Draft Inbox 审批拒绝"))}>拒绝</button>
                     </>}
                     {selected.proposal.status === "approved" && <button type="button" disabled={!writable} className="rounded bg-purple-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("获取执行租约", () => sdk.acquireLease(selected))}>获取单次执行租约</button>}
-                    {selected.proposal.status === "leased" && execution?.lease && <button type="button" disabled={!writable} className="rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("执行受控 Action", () => sdk.execute(execution))}>执行一次</button>}
+                    {selected.proposal.status === "leased" && execution?.lease && <button type="button" disabled={!writable} className="rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("执行受控动作", () => sdk.execute(execution))}>执行一次</button>}
                     {selected.proposal.status === "unknown" && unknownReceipt && <button type="button" disabled={!writable || !unknownReceipt.providerRequestId} title={!unknownReceipt.providerRequestId ? "缺少 provider request id，不能自动对账" : undefined} className="rounded bg-amber-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("只读对账", () => sdk.reconcile(unknownReceipt.id, "Draft Inbox 手动只读对账"))}>只读对账</button>}
                     <button type="button" className="rounded border border-gray-300 bg-white px-3 py-2 text-sm" disabled={busy} onClick={() => void loadDetail(selected.proposal.id)}>重读详情</button>
                   </footer>
@@ -392,9 +393,9 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
             to={selectedId ? `/aip/evals?proposal=${encodeURIComponent(selectedId)}` : "/aip/evals"}
             className="text-blue-600 hover:underline"
           >
-            Evals 门控 →
+            评测门控 →
           </Link>
-          <Link to="/aip/logic" className="text-blue-600 hover:underline">AIP 逻辑画布 →</Link>
+          <Link to="/aip/logic" className="text-blue-600 hover:underline">业务逻辑编排 →</Link>
         </div>
       </div>
     </PageChrome>

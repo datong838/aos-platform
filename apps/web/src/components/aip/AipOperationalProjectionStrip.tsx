@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { aipOperationalProjection, type AipOperationalProjection } from "../../api/aipOperationalProjection";
+import { formatBlockers } from "../../lib/aipChineseLabels";
 
 const labels = [
   ["roles", "数字同事"],
   ["capabilities", "专业能力"],
   ["tools", "工具"],
-  ["evalGates", "Eval 门"],
+  ["evalGates", "评测门"],
   ["routes", "模型路由"],
 ] as const;
 
@@ -48,9 +49,9 @@ export function AipOperationalProjectionStrip({ onProjection }: AipOperationalPr
   return (
     <section className="card" data-testid="aip-operational-projection" style={{ padding: 12, marginBottom: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-        <strong>AIP 跨页运行真相</strong>
+        <strong>智能体运行总览</strong>
         <span style={{ color: data.overallReadiness === "ready" ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>
-          {data.overallReadiness === "ready" ? "全链就绪" : "存在阻断"} · <code>{data.snapshotHash.slice(0, 12)}…</code>
+          {data.overallReadiness === "ready" ? "全链就绪" : "存在阻断"}
         </span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 8 }}>
@@ -59,7 +60,15 @@ export function AipOperationalProjectionStrip({ onProjection }: AipOperationalPr
           return <div key={key} className="notice" style={{ padding: "8px 10px" }}><div style={{ fontSize: 12 }}>{label}</div><strong>{item.runnable}/{item.definition} 可派发</strong><div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>绑定 {item.bound} · 启用 {item.enabled}</div></div>;
         })}
       </div>
-      {data.blockerCodes.length ? <div style={{ marginTop: 8, fontSize: 12, color: "var(--aos-amber-700)" }}>阻断：{data.blockerCodes.join(" / ")}</div> : null}
+      {data.blockerCodes.length ? (
+        <div style={{ marginTop: 8, fontSize: 12, color: "var(--aos-amber-700)" }}>
+          阻断原因：{formatBlockers(data.blockerCodes)}
+          <details style={{ marginTop: 4 }}>
+            <summary>技术标识（审计用）</summary>
+            <code>{data.blockerCodes.join(" / ")}</code> · 快照 <code>{data.snapshotHash.slice(0, 12)}…</code>
+          </details>
+        </div>
+      ) : null}
     </section>
   );
 }

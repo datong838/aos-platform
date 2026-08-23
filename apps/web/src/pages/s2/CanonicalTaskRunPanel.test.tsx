@@ -38,11 +38,11 @@ describe("CanonicalTaskRunPanel", () => {
     await act(async () => root.render(<CanonicalTaskRunPanel graphId="logic-1" graphRevision={2} graphName="真实逻辑" sdk={sdk} />));
     await act(async () => { await Promise.resolve(); await Promise.resolve(); });
     expect(host.textContent).toContain("等待启动");
-    expect(host.textContent).toContain("PostgreSQL authority");
+    expect(host.textContent).toContain("服务端权威记录");
     expect(button(host, "启动").disabled).toBe(false);
     expect(button(host, "暂停").disabled).toBe(true);
     expect(sdk.listRunsByLogic).toHaveBeenCalledWith("logic-1");
-    expect(host.querySelector<HTMLAnchorElement>('a[href="/aip/drafts?taskId=task-1&runId=run-1"]')?.textContent).toContain("受控 Action");
+    expect(host.querySelector<HTMLAnchorElement>('a[href="/aip/drafts?taskId=task-1&runId=run-1"]')?.textContent).toContain("受控业务动作");
   });
 
   it("unknown 明确要求对账并禁用重复动作", async () => {

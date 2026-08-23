@@ -1,0 +1,37 @@
+{
+  "wave": "R34",
+  "checkedAt": "2026-08-23T11:20:00+08:00",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "workspaceName": "默认工作区"
+  },
+  "scope": {
+    "routesChecked": 24,
+    "visibleImplementationCodesRemaining": 0,
+    "retainedBusinessMetrics": ["p99"],
+    "consoleErrors": 0
+  },
+  "interactions": [
+    {"route": "/aip/production-contracts", "action": "刷新权威状态", "result": "GREEN"},
+    {"route": "/aip/model-catalog", "action": "读取真实模型目录", "result": "GREEN"},
+    {"route": "/aip/tools", "action": "读取 53 项工具及中文业务语义", "result": "GREEN"}
+  ],
+  "tests": {
+    "typescript": "GREEN",
+    "targeted": "5 files / 33 tests GREEN",
+    "webCumulative": "203 files / 2001 tests GREEN"
+  },
+  "operationalBoundary": {
+    "status": "CODE_UI_GREEN_OPERATIONAL_BLOCKED",
+    "modelRoutesRunnable": "0/3",
+    "providerHealth": "STALE",
+    "authority": "AOS-000149",
+    "nextGate": "DATA_ADAPTER_P02_P04_AND_BINDING_READINESS_REFRESH"
+  },
+  "notes": [
+    "Canonical IDs remain available only in collapsed audit details or invisible navigation URLs.",
+    "No Provider, Pipeline, Binding, AgentRun, secret payload, or real business write was triggered.",
+    "Mobile and narrow-screen visual acceptance is deferred to the dedicated responsive-layout wave and is not claimed here."
+  ]
+}

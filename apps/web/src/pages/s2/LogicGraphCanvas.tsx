@@ -38,20 +38,20 @@ export interface LogicPaletteItem {
 }
 
 export const DEFAULT_LOGIC_PALETTE: LogicPaletteItem[] = [
-  { kind: "input", label: "输入", title: "Input", description: "定义 Logic 输入", icon: "IN" },
-  { kind: "create_variable", label: "创建变量", title: "Create Variable", description: "创建中间变量", icon: "VAR" },
-  { kind: "get_property", label: "获取属性", title: "Get Property", description: "读取 Ontology 属性", icon: "GET" },
-  { kind: "use_llm", label: "使用 LLM", title: "Use LLM", description: "调用大模型能力", icon: "LLM" },
-  { kind: "use_tool", label: "使用工具", title: "Use Tool", description: "调用已注册工具", icon: "TOOL" },
-  { kind: "transform", label: "数据变换", title: "Transform", description: "执行数据变换", icon: "FX" },
-  { kind: "apply_action", label: "应用动作", title: "Apply Action", description: "产生可审计 Action 提议", icon: "ACT" },
-  { kind: "execute", label: "执行", title: "Execute", description: "提交执行结果", icon: "RUN" },
+  { kind: "input", label: "输入", title: "业务输入", description: "定义业务逻辑输入", icon: "入" },
+  { kind: "create_variable", label: "创建变量", title: "创建变量", description: "创建中间变量", icon: "变" },
+  { kind: "get_property", label: "获取属性", title: "获取属性", description: "读取本体属性", icon: "取" },
+  { kind: "use_llm", label: "使用大模型", title: "使用大模型", description: "调用大模型能力", icon: "模" },
+  { kind: "use_tool", label: "使用工具", title: "使用工具", description: "调用已注册工具", icon: "工" },
+  { kind: "transform", label: "数据变换", title: "数据变换", description: "执行数据变换", icon: "换" },
+  { kind: "apply_action", label: "应用动作", title: "应用动作", description: "产生可审计的动作提议", icon: "动" },
+  { kind: "execute", label: "执行", title: "执行结果", description: "提交执行结果", icon: "执" },
   {
     kind: "branch",
     label: "分支",
-    title: "Branch",
+    title: "条件分支",
     description: "按条件选择路径",
-    icon: "IF",
+    icon: "支",
     defaultConfig: {
       paths: [
         { id: "path-a", label: "路径 A", condition: "true", default: false },
@@ -62,9 +62,9 @@ export const DEFAULT_LOGIC_PALETTE: LogicPaletteItem[] = [
   {
     kind: "handoff",
     label: "汇聚",
-    title: "Handoff",
+    title: "上下文交接",
     description: "汇聚上游上下文",
-    icon: "JOIN",
+    icon: "汇",
     defaultConfig: { decision: "", artifacts: [], open_qs: [], handoff_to: "draft_inbox" },
   },
 ];
@@ -168,7 +168,7 @@ function PaletteButton({
       {...attributes}
     >
       <span className="bp-logic-canvas-palette-icon" aria-hidden>{item.icon}</span>
-      <span>{item.label} · {item.title}</span>
+      <span>{item.title}</span>
       <small>{item.description}</small>
     </button>
   );

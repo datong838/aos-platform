@@ -58,10 +58,16 @@ export function layerTagText(
   layerId: BpArchLayerId,
   activeLayer?: BpArchLayerId | null,
 ): string {
+  const labels: Record<BpArchLayerId, string> = {
+    L1: "供应商配置",
+    L2: "路由策略",
+    L3: "模型目录",
+    AIP: "智能体应用",
+  };
   if (activeLayer != null && activeLayer === layerId) {
-    return `${layerId} · 当前`;
+    return `${labels[layerId]} · 当前`;
   }
-  return layerId;
+  return labels[layerId];
 }
 
 /**箭头连接符（纯展示）*/

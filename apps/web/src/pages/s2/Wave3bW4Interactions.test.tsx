@@ -103,7 +103,7 @@ describe("Wave3B W4 · DOM 真实性闭环", () => {
     await act(async () => root.render(<MemoryRouter><MaturityPage /></MemoryRouter>));
     await flush();
     expect(host.textContent).toContain("审批台 2 项");
-    expect(host.textContent).toContain("查看 L4 申请条件");
+    expect(host.textContent).toContain("查看自动化申请条件");
     await act(async () => byText(host, "模拟熔断降级").click());
     await flush();
     expect(host.textContent).toContain("服务端已确认熔断");
