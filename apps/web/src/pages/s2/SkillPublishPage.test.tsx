@@ -80,7 +80,7 @@ describe("SkillPublishPage W-F4 batch stats", () => {
     const strip = host.querySelector('[data-testid="skill-publish-batch-stats"]');
     expect(strip?.textContent).toContain("已发布技能");
     expect(strip?.textContent).toContain("1");
-    expect(strip?.textContent).toContain("仍待 Logic 权威进库");
+    expect(strip?.textContent).toContain("仍待业务逻辑进入权威存储");
     expect(strip?.textContent).toContain("不在此页伪造发布");
   });
 });

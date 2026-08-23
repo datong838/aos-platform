@@ -7,6 +7,8 @@ import pytest
 from aos_api.aip_analyst_contracts import (
     AnalystQueryStatus,
     QueryColumn,
+    QueryConfidence,
+    QueryConfidenceStatus,
     QueryRow,
     QuerySourceRef,
     SemanticQueryRequest,
@@ -61,6 +63,10 @@ class SemanticAdapter:
             ],
             lineage_refs=[],
             uncertainties=[],
+            confidence=QueryConfidence(
+                status=QueryConfidenceStatus.NOT_APPLICABLE,
+                basis=["test_deterministic_read"],
+            ),
         )
 
 
@@ -92,6 +98,8 @@ def test_semantic_adapter_receives_server_scope_and_exact_sources() -> None:
     assert result.rows[0].values["orderNo"] == "20260815001"
     assert result.source_refs[0].ref.revision == "12"
     assert len(result.content_hash) == 64
+    assert result.confidence.status == QueryConfidenceStatus.NOT_APPLICABLE
+    assert result.confidence.score is None
 
 
 def test_cross_scope_principal_is_rejected_before_adapter() -> None:

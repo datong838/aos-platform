@@ -1,0 +1,29 @@
+{
+  "build": {
+    "bundledModules": 316,
+    "status": "GREEN"
+  },
+  "checkedAt": "2026-08-22T14:24:08+00:00",
+  "interactionHonesty": {
+    "manifestPages": 55,
+    "scannerTestsPassed": 7,
+    "status": "GREEN"
+  },
+  "r33PageScope": {
+    "consoleErrorsAtR31Cutoff": 0,
+    "duplicateIdsAtR31Cutoff": 0,
+    "pageCount": 25,
+    "source": ".evidence/aip/2026-08-22-r31-aip-25-page-browser-audit"
+  },
+  "schemaVersion": "aip.r33.web-regression.v1",
+  "typecheck": {
+    "status": "GREEN"
+  },
+  "verdict": "WEB_SDK_CODE_GREEN_BROWSER_REFRESH_REQUIRED",
+  "vitest": {
+    "durationSeconds": 12.85,
+    "passedFiles": 202,
+    "passedTests": 1986,
+    "status": "GREEN"
+  }
+}

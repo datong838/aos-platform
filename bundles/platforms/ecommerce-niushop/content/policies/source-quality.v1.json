@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "aos.source-readiness.quality-policy/v1",
+  "policyId": "platform.ecommerce.niushop.source-quality",
+  "revision": "1",
+  "checks": [
+    "pipeline-and-source-present",
+    "latest-run-succeeded",
+    "rows-written-observed",
+    "mapping-schema-and-masking-exact-refs-present"
+  ],
+  "claimBoundary": "Only metadata observable in the canonical read-only snapshot is evaluated; no row-level quality metric is inferred."
+}

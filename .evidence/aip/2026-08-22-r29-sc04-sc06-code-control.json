@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "aip.evidence.r29.sc04-sc06.v1",
+  "wave": "R29",
+  "capturedAt": "2026-08-22T17:22:00+08:00",
+  "tenant": {
+    "real": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "state": "CODE_CONTROL_GREEN_REAL_TENANT_EVIDENCE_BLOCKED_LATER",
+  "sourceCommit": "a86843e",
+  "files": {
+    "services/aos-api/aos_api/aip_ecommerce_growth_scenarios_sc04_sc06.py": "e341c674e2e045c5ced53c93f73c09099ded2ed799a5a4528182ad1ee7ce65b5",
+    "services/aos-api/tests/aip/test_aip_ecommerce_growth_scenarios_sc04_sc06.py": "bcbf84b34da4606e6b3eb4688a4fb0e14a445b60f383360c007c32f599032d2c",
+    "bundles/solutions/ecommerce-growth/content/growth/sc04-sc06-acceptance.v1.json": "d98dc09260c55e445ba616213befb3ad6c10ee0464c7f93f522b5c444f08a15d"
+  },
+  "verification": {
+    "targeted": "27 passed, 7 warnings",
+    "cumulativeR24R29": "179 passed, 7 warnings",
+    "aipFull": "1461 passed, 106 warnings",
+    "diffCheck": "GREEN",
+    "browser": "NOT_RUN_BY_DESIGN_NO_UI_ROUTE_OR_INTERACTION_CHANGE"
+  },
+  "invariants": {
+    "independentEvidencePackPerScenario": true,
+    "noForcedOpportunity": true,
+    "campaignPauseDraftOnly": true,
+    "contentPublishDraftOnly": true,
+    "memoryCandidateOnly": true,
+    "pipelineRetried": false,
+    "databaseWritten": false,
+    "providerCalled": false,
+    "actionExecuted": false,
+    "productionWritten": false
+  },
+  "operationalBlockers": [
+    "P02_PIPELINE_EXECUTOR_FAILED",
+    "P04_PIPELINE_EXECUTOR_FAILED",
+    "SOURCE_READINESS_10_OF_12",
+    "DATA_LEASE_ACTIVE_NOT_LEGALLY_RELEASED",
+    "M1_AUTHORITY_01_06_PRIME_CAS_PENDING"
+  ],
+  "riskReview": {
+    "result": "GREEN_WITH_OPERATIONAL_BLOCKERS",
+    "notes": [
+      "Code-control GREEN is not real-tenant execution GREEN.",
+      "No Pipeline retry, Lease mutation, m1 CAS, external publish, campaign pause or memory promotion was performed.",
+      "Existing AIP warnings were retained and no new regression was introduced."
+    ]
+  }
+}

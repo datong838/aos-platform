@@ -12,6 +12,12 @@ import {
   responsibilityDisplayName,
   riskDisplayName,
   templateDisplayName,
+  toolKindDisplayName,
+  toolDisplayName,
+  runtimeModeDisplayName,
+  contractSectionDisplayName,
+  statusDisplayName,
+  businessDisplayName,
 } from "./aipChineseLabels";
 
 describe("aipChineseLabels", () => {
@@ -25,6 +31,8 @@ describe("aipChineseLabels", () => {
     expect(capabilityDisplayName("strategy.plan")).toBe("策略规划");
     expect(responsibilityDisplayName("service.escalation")).toBe("售后服务与升级");
     expect(blockerDisplayName("skill_binding_readiness_stale")).toContain("技能绑定");
+    expect(blockerDisplayName("capabilities_not_fully_runnable")).toBe("当前方案所需专业能力尚未全部可派发");
+    expect(blockerDisplayName("tools_not_fully_runnable")).toBe("当前方案所需工具尚未全部可派发");
     expect(blockerDisplayName("skill_revision_not_published:C01")).toContain("热点竞品");
     expect(formatBlockers(["capability_binding_readiness_stale", "skill_binding_readiness_stale"])).toContain("；");
   });
@@ -60,5 +68,34 @@ describe("aipChineseLabels", () => {
     });
     expect(runnable.dispatchable).toBe(true);
     expect(agentReadinessLadderSummary(runnable)).toContain("可派发");
+  });
+
+  it("工具主展示使用中文业务名称，内部 Function ID 只作为审计标识", () => {
+    expect(toolKindDisplayName("Function")).toBe("业务逻辑工具");
+    expect(toolKindDisplayName("Object Query")).toBe("业务对象查询");
+    expect(toolDisplayName({ id: "fn.logic.ecommerce.logic.S05", kind: "Function" })).toBe("投诉与人工升级");
+    expect(toolDisplayName({ id: "query.objects", kind: "Object Query" })).toBe("业务对象查询");
+    expect(toolDisplayName({ id: "action.close", kind: "Action", nameZh: "关闭/写回（HITL）" })).toBe("关闭或写回（需人工确认）");
+    expect(toolDisplayName({ id: "fn.echo", kind: "Function", nameZh: "Echo（演示）" })).toBe("连通性校验");
+  });
+
+  it("运行模式、生产契约和状态使用中文业务语义", () => {
+    expect(runtimeModeDisplayName("native")).toBe("并行调用");
+    expect(runtimeModeDisplayName("prompted")).toBe("逐项调用");
+    expect(contractSectionDisplayName("Task Brief")).toBe("任务简报");
+    expect(contractSectionDisplayName("Evidence Bundle")).toBe("证据包");
+    expect(statusDisplayName("running")).toBe("运行中");
+    expect(statusDisplayName("published")).toBe("已发布");
+  });
+
+  it("业务标题移除实施波次前缀且不改权威 ID", () => {
+    expect(businessDisplayName("D3 · 内容策略助手")).toBe("内容策略助手");
+    expect(businessDisplayName("W03-短视频制作")).toBe("短视频制作");
+    expect(businessDisplayName("AIP-1C 权威运行验收")).toBe("权威运行验收");
+    expect(businessDisplayName("C08 内容到成交归因与优化治理契约门 v1（隔离 dry-run）"))
+      .toBe("内容到成交归因与优化治理契约门 v1（隔离试运行）");
+    expect(businessDisplayName("电商增长方案包（D3：W03 客户与私域运营台 + L05 分润异常检测）"))
+      .toBe("电商增长与客户运营方案包");
+    expect(businessDisplayName("内容官")).toBe("内容官");
   });
 });

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "aip.r33.final-manifest.v1",
+  "generatedAt": "2026-08-22T23:20:00+08:00",
+  "status": "PRESEALED_BLOCKED",
+  "tenantScope": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "git": {
+    "m1": "c308707bf1ddcc4749a2354ad063a01c49c050ce",
+    "w1Aip": "d52eb16b90fc3e2b96fcc7b34f31c09b4d646c5b",
+    "w2Workshop": "a79db5163cbcc6ed75d1b0b6a6312903cbf44aec",
+    "m1IsAncestorOfW1": true,
+    "w1IsAncestorOfM1": false,
+    "m1IsAncestorOfW2": false
+  },
+  "authority": {
+    "projectRevision": "AOS-000147",
+    "deliveryStatus": "B5_CAS_CONSUMED_SOURCE_READINESS_API_GREEN_OPERATIONAL_BLOCKED",
+    "nextGate": "W2_00B_CANONICAL_SOURCE_READINESS_BLOCKED_STATE_INTEGRATION",
+    "projectedSourceCommits": {
+      "m1": "33b474a",
+      "w1-aip": "3f69d34",
+      "w2-workshop": "603d95c"
+    },
+    "projectionMatchesCurrentGit": false
+  },
+  "r33Commits": [
+    "d620563",
+    "675919c",
+    "739f981",
+    "7eb503d",
+    "d52eb16"
+  ],
+  "artifacts": [
+    {
+      "path": "coverage-matrix.json",
+      "sha256": "cc6b32d1560d52d67e50d19262e314c8449c4e58bf2dd0d663d90403ebd5e820"
+    },
+    {
+      "path": "authority-data-snapshot.json",
+      "sha256": "c36ae14f6247b1b3840ff9b756c1cd314c84087a180813591ec9538c3e5b5c3f"
+    },
+    {
+      "path": "backend-regression.json",
+      "sha256": "e420f15c54ddd263b6becee379e6c0d97e55f08b172b49f9e630582ad64f1841"
+    },
+    {
+      "path": "web-regression.json",
+      "sha256": "2d815b27c893a33f09698a16e11cf63bd28c0143483916b9298f75e587fe885f"
+    },
+    {
+      "path": "browser-matrix.json",
+      "sha256": "4cb865923558b32ff9ac344d099485e8dd900f717eef0969cbf9aa90e97d17d8"
+    },
+    {
+      "path": "security-negative-matrix.json",
+      "sha256": "c98bc195d205ad54296dc2ca8cb0a3325eb9da06615836165f5375ddc77b2861"
+    }
+  ],
+  "verification": {
+    "backend": "1510 passed; OpenAPI deterministic GREEN; Alembic single head aip13_001",
+    "web": "202 files / 1986 passed; TypeScript GREEN; production build GREEN",
+    "interactionHonesty": "55 registered pages PASS",
+    "browser": "25/25 at 1280x720, 1440x1000 and 1920x1080; layout and base accessibility GREEN",
+    "safety": "162 backend + 70 Web negative tests passed without external side effects"
+  },
+  "liveOperational": {
+    "sourceReadiness": "10/12 READY; P02 and P04 failed",
+    "runnableAgents": 0,
+    "freshProviderHealth": 0,
+    "freshSkillBinding": 0,
+    "freshCapabilityBinding": 0,
+    "memoryItems": 0,
+    "wikiPages": 0
+  },
+  "finalSealAllowed": false,
+  "verdict": "R33_CODE_UI_SAFETY_PRESEAL_GREEN_FINAL_SIX_PARTY_SEAL_BLOCKED"
+}

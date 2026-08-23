@@ -133,9 +133,32 @@ def test_to_product_maps_goods_id_and_modify_time():
     assert out["properties"]["unit"] == "件"
     assert out["properties"]["state"] == "1"
     assert out["properties"]["isDelete"] == "0"
+    assert out["properties"]["createdAt"] == "2023-11-14T22:13:20Z"
+    assert out["properties"]["updatedAt"] == "2023-11-14T22:30:00Z"
+    assert out["properties"]["sourceModifiedAt"] == "2023-11-14T22:30:00Z"
     # raw 字段保留（供 apply_derived_metrics._get_field 读取 evaluate/evaluate_haoping）
     assert out["evaluate"] == 10
     assert out["evaluate_haoping"] == 8
+
+
+def test_to_product_uses_snapshot_observation_without_losing_source_business_time():
+    raw = {
+        "goods_id": 65,
+        "goods_name": "测试商品",
+        "modify_time": 1700001000,
+        "create_time": 1700000000,
+        "goods_stock": 120,
+        "sale_num": 18,
+        "_aos_observed_at": 1700005000.0,
+    }
+
+    out = to_product(raw)
+
+    assert out["source_updated_at"] == datetime.fromtimestamp(1700005000, tz=timezone.utc)
+    assert out["properties"]["createdAt"] == "2023-11-14T22:13:20Z"
+    assert out["properties"]["updatedAt"] == "2023-11-14T22:30:00Z"
+    assert out["properties"]["sourceModifiedAt"] == "2023-11-14T22:30:00Z"
+    assert "_aos_observed_at" not in out["properties"]
 
 
 def test_to_product_sku_maps_sku_id_and_price():

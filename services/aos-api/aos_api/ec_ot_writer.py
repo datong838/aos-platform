@@ -349,7 +349,6 @@ def _build_batch_command(
     )
     idempotency_key = (
         f"{pipeline_id}:{max_cursor[0].isoformat()}:{max_cursor[1]}"
-        f":{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
     )
 
     # 先用 expected=0 构造 probe 查当前 checkpoint（get_checkpoint 只用 scope）

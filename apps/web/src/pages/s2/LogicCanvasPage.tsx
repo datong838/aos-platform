@@ -48,6 +48,7 @@ import {
   projectProductionProfiles,
   type ProductionProfileProjection,
 } from "./logicProductionProjection";
+import { businessDisplayName } from "../../lib/aipChineseLabels";
 
 /** 向后兼容：旧测试和外部引用仍使用这些导出。 */
 export interface BranchPath {
@@ -539,7 +540,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
                 : !GRAPH_HASH_RE.test(graph.graph_hash)
                   ? "服务端 graph hash 无效"
                   : appliedInputs === null
-                    ? "请先显式应用 Dry-Run Inputs"
+                    ? "请先显式应用安全试跑输入"
                     : "";
 
   function mutateGraph(mutator: (current: LogicGraphSnapshot) => LogicGraphSnapshot): void {
@@ -623,11 +624,11 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
     try {
       const parsed: unknown = JSON.parse(inputsDraft);
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-        throw new Error("Inputs 必须是 JSON 对象");
+        throw new Error("试跑输入必须是 JSON 对象");
       }
       setAppliedInputs(parsed as JsonObject);
       setInputsError("");
-      setMessage("Dry-Run Inputs 已显式应用；未写入 Logic Graph");
+      setMessage("安全试跑输入已显式应用；未写入业务逻辑图");
     } catch (inputError: unknown) {
       setAppliedInputs(null);
       setInputsError(errorMessage(inputError));
@@ -891,7 +892,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
   return (
     <PageChrome
       title="逻辑编排"
-      lede="自由画布编辑 canonical Logic Graph；保存须与服务端严格回读一致。Tab 分区对齐蓝图信息架构，中栏仍保留自由图。"
+      lede="用自由画布编排权威业务逻辑；保存后必须与服务端严格回读一致。编辑、运行历史和自动化分区各司其职。"
     >
       <div role="tablist" aria-label="逻辑页分区" style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
         {(
@@ -932,7 +933,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           { label: "分区", value: shellTab === "edit" ? "编辑" : shellTab === "history" ? "历史" : "自动化" },
           { label: "图", value: graph?.persisted ? "已确认" : graph ? "未确认" : "未载" },
           { label: "历史条", value: String(history.length) },
-          { label: "Profile", value: projectionState === "ready" ? String(profileProjection.length) : projectionState === "loading" ? "…" : "—" },
+          { label: "生产流程", value: projectionState === "ready" ? String(profileProjection.length) : projectionState === "loading" ? "…" : "—" },
           { label: "更多", value: historyCursor ? "有" : "无" },
           { label: "互跳", value: shellTab === "automation" ? "草稿/评测" : "观测/谱系" },
         ].map((s) => (
@@ -951,7 +952,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           title={dirty ? "请先保存或刷新当前草稿" : "显式创建本地草稿；默认入口不会自动生成模板"}
           onClick={startNewDraft}
         >
-          新建 Logic 草稿
+          新建业务逻辑草稿
         </button>
       </div>
 
@@ -964,10 +965,10 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         style={{ padding: 12, marginBottom: 12, borderLeft: "3px solid var(--aos-amber-700,#b45309)" }}
       >
         <strong>生产旁路已关闭：</strong>
-        本画布不提供「一键创建 / 批准生产 Task」。请经{" "}
-        <Link to="/aip/drafts">Draft 审批台</Link>
+        本画布不提供「一键创建 / 批准生产任务」。请经{" "}
+        <Link to="/aip/drafts">草稿审批台</Link>
         {" · "}
-        <Link to="/aip/evals">Evals 门控</Link>
+        <Link to="/aip/evals">评测门控</Link>
         {" · "}
         <Link to="/aip/production-contracts">生产契约</Link>
         {" "}完成发布与启动；安全试跑不写生产。
@@ -1002,18 +1003,18 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         style={{ padding: 12, marginBottom: 12, border: "1px solid var(--aos-border)" }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <strong>可被引用的生产 Profile（只读）</strong>
+          <strong>可被引用的生产流程（只读）</strong>
           <Link to="/aip/production-contracts" data-testid="logic-projection-jump-contracts" style={{ fontSize: 12 }}>
             打开生产契约 →
           </Link>
         </div>
         <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--aos-muted)" }}>
-          来自 StageTemplate / ResponsibilityPlan 权威表；空表不伪造 Profile，画布不可由此旁路启动生产。
+          来自阶段模板和职责计划权威表；空表不伪造生产流程，画布不可由此旁路启动生产。
         </p>
         {projectionState === "loading" && <p style={{ marginTop: 8, fontSize: 12 }} data-testid="logic-projection-loading">正在读取生产契约…</p>}
         {projectionError && (
           <p role="alert" style={{ marginTop: 8, fontSize: 12, color: "var(--aos-amber-700)" }} data-testid="logic-projection-error">
-            投影读取失败：{projectionError}。未注入演示 Profile。
+            投影读取失败：{projectionError}。未注入演示生产流程。
           </p>
         )}
         {projectionState === "ready" && productionProjectionEmptyMessage(projectionStageCount, projectionPlanCount) && (
@@ -1025,9 +1026,9 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           <ul style={{ margin: "8px 0 0", paddingLeft: 18, fontSize: 13 }} data-testid="logic-projection-profiles">
             {profileProjection.map((row) => (
               <li key={row.profile}>
-                <code>{row.profile}</code>
-                {" · "}Stage {row.stageReady}/{row.stageCount} ready
-                {" · "}Plan {row.planReady}/{row.planCount} ready
+                <strong>{businessDisplayName(row.profile, "生产流程")}</strong>
+                {" · "}阶段 {row.stageReady}/{row.stageCount} 就绪
+                {" · "}职责 {row.planReady}/{row.planCount} 就绪
               </li>
             ))}
           </ul>
@@ -1052,19 +1053,19 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         <span data-testid="dry-run-gate-reason" style={{ color: dryRunDisabledReason ? "var(--aos-muted)" : "var(--aos-green-700)", fontSize: "0.72rem" }}>
           {dryRunDisabledReason || "已满足可信试跑门禁"}
         </span>
-        <Link to="/aip/drafts" className="btn" style={{ textDecoration: "none" }}>Draft 审批台</Link>
-        <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }}>Evals 门控</Link>
+        <Link to="/aip/drafts" className="btn" style={{ textDecoration: "none" }}>草稿审批台</Link>
+        <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }}>评测门控</Link>
         <span style={{ marginLeft: "auto", fontSize: "0.76rem", color: dirty ? "var(--aos-amber-700)" : "var(--aos-green-700)" }}>
-          {dirty ? "未保存更改" : graph ? `已确认 revision ${graph.revision}` : "未加载"}
+          {dirty ? "未保存更改" : graph ? `已确认修订 ${graph.revision}` : "未加载"}
         </span>
       </div>
 
       {graph && (
         <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 1fr) minmax(220px, 1fr)", gap: 8, marginBottom: 10 }}>
           <label style={{ fontSize: "0.75rem" }}>
-            Logic 名称
+            业务逻辑名称
             <input
-              aria-label="Logic 名称"
+              aria-label="业务逻辑名称"
               value={graph.name}
               disabled={loading || saving || running}
               onChange={(event) => mutateGraph((current) => ({ ...current, name: event.target.value }))}
@@ -1074,7 +1075,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           <label style={{ fontSize: "0.75rem" }}>
             描述
             <input
-              aria-label="Logic 描述"
+              aria-label="业务逻辑描述"
               value={graph.description}
               disabled={loading || saving || running}
               onChange={(event) => mutateGraph((current) => ({ ...current, description: event.target.value }))}
@@ -1086,7 +1087,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
 
       {graph && !graph.persisted && (
         <div style={{ background: "var(--aos-amber-bg)", color: "var(--aos-amber-700)", padding: "8px 12px", marginBottom: 10, borderRadius: 2, fontSize: "0.78rem" }}>
-          未保存模板：当前 4 节点、3 连接仅在本地；点击“保存”显式创建服务端 Logic Graph。
+          未保存模板：当前 4 个节点、3 条连接仅在本地；点击“保存”后显式创建服务端业务逻辑图。
         </div>
       )}
       {error && <div role="alert" style={{ background: "var(--aos-red-bg)", color: "var(--aos-red)", padding: "8px 12px", marginBottom: 10 }}>{error}</div>}
@@ -1096,13 +1097,14 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2, marginBottom: 10 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: "0.84rem" }}>Dry-Run Inputs</h3>
+              <h3 style={{ margin: 0, fontSize: "0.84rem" }}>安全试运行输入</h3>
               <p style={{ margin: "3px 0 0", color: "var(--aos-muted)", fontSize: "0.72rem" }}>独立 JSON 对象；仅显式应用后用于安全试跑，不写入画布或生产数据。</p>
             </div>
-            <button type="button" className="btn" disabled={loading || saving || running} onClick={applyDryRunInputs}>应用 Inputs</button>
+            <button type="button" className="btn" disabled={loading || saving || running} onClick={applyDryRunInputs}>应用试跑输入</button>
           </div>
           <textarea
-            aria-label="Dry-Run Inputs JSON"
+            aria-label="安全试跑输入 JSON"
+            className="aos-input"
             value={inputsDraft}
             disabled={loading || saving || running}
             rows={4}
@@ -1113,21 +1115,21 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
               setInputsError("");
               setMessage("");
             }}
-            style={{ display: "block", width: "100%", resize: "vertical", fontFamily: "monospace" }}
+            style={{ display: "block", width: "100%", height: "auto", resize: "vertical", fontFamily: "monospace" }}
           />
           {inputsError && <div role="alert" style={{ marginTop: 6, color: "var(--aos-red)", fontSize: "0.74rem" }}>{inputsError}</div>}
           <div role="status" style={{ marginTop: 6, color: appliedInputs === null ? "var(--aos-muted)" : "var(--aos-green-700)", fontSize: "0.72rem" }}>
-            {appliedInputs === null ? "Inputs 尚未应用" : "Inputs 已显式应用"}
+            {appliedInputs === null ? "试跑输入尚未应用" : "试跑输入已显式应用"}
           </div>
         </section>
       )}
 
-      {loading && !graph && <p>正在加载 canonical Logic Graph…</p>}
+      {loading && !graph && <p>正在加载权威业务逻辑…</p>}
       {!loading && !graph && !error && (
         <section className="card" style={{ padding: 18 }} data-testid="logic-honest-empty">
-          <h2 style={{ marginTop: 0 }}>尚无已保存 Logic Graph</h2>
+          <h2 style={{ marginTop: 0 }}>尚无已保存业务逻辑</h2>
           <p style={{ color: "var(--aos-text-secondary)" }}>
-            当前组织/工作区没有可选择的 persisted revision。默认入口不会生成演示图；如需创建，请显式点击“新建 Logic 草稿”。
+            当前组织/工作区没有可选择的已保存修订。默认入口不会生成演示图；如需创建，请显式点击“新建业务逻辑草稿”。
           </p>
         </section>
       )}
@@ -1210,7 +1212,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
                     setEvalEvidenceState("ready");
                   }}
                 >
-                  <option value="">选择 Eval suite</option>
+                  <option value="">选择评测套件</option>
                   {evalSuites.map((suite) => <option key={suite.id} value={suite.id}>{suite.name} · {suite.id}</option>)}
                 </select>
               </label>
@@ -1263,7 +1265,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
                 选择 Run 后查看谱系与可观测
               </span>
             )}
-            <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }}>Evals 门控 →</Link>
+            <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }}>评测门控 →</Link>
           </div>
           {graph?.persisted ? (
             <LogicRunPanel
@@ -1285,7 +1287,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           ) : (
             <section style={{ border: "1px solid var(--aos-border)", padding: 12, borderRadius: 2 }}>
               <h3 style={{ margin: "0 0 6px", fontSize: "0.84rem" }}>运行历史</h3>
-              <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>保存并回读确认后，才从服务端读取不可变运行历史。不伪造 Run 列表。</p>
+              <p style={{ margin: 0, color: "var(--aos-muted)", fontSize: "0.75rem" }}>保存并回读确认后，才从服务端读取不可变运行历史；不伪造运行列表。</p>
             </section>
           )}
         </div>
@@ -1301,8 +1303,8 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
               </p>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <Link to="/aip/drafts" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-drafts">Draft 审批台 →</Link>
-              <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-evals">Evals 门控 →</Link>
+              <Link to="/aip/drafts" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-drafts">草稿审批台 →</Link>
+              <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-evals">评测门控 →</Link>
               <Link to="/aip/production-contracts" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-contracts">生产契约 →</Link>
             </div>
           </div>
@@ -1321,13 +1323,13 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           </div>
           {graph?.persisted && (
             <div className="notice" style={{ padding: 12 }} data-testid="automation-exact-revision">
-              当前只读绑定 <code>{graph.id}@{graph.revision}</code> · hash <code>{graph.graph_hash.slice(0, 12)}…</code>；任何未来 Uses 必须引用这一 exact revision 或独立 publication。
+              当前自动化只读绑定已保存业务逻辑。<details><summary>技术标识（审计用）</summary><code>{graph.id}@{graph.revision}</code> · 摘要 <code>{graph.graph_hash.slice(0, 12)}…</code></details>后续使用必须引用这一精确修订或独立发布版本。
             </div>
           )}
           <div className="notice" style={{ padding: 12 }} role="status" data-testid="automation-empty">
-            当前组织的逻辑自动化 Uses 真源尚未接入本页。请经 Draft / Evals / 生产契约完成发布与门控；本页不把未知计数显示为 0，也不伪造触发成功。
+            当前组织的自动化使用关系尚未接入权威数据源。请依次完成草稿审批、正式评测和生产契约门控；本页不把未知计数显示为 0，也不伪造触发成功。
           </div>
-          <button type="button" className="btn" disabled title="无 Uses 真源前禁止绑定演示自动化" style={{ marginTop: 12 }}>
+          <button type="button" className="btn" disabled title="缺少权威使用关系前，禁止绑定演示自动化" style={{ marginTop: 12 }}>
             绑定自动化（禁用）
           </button>
         </section>

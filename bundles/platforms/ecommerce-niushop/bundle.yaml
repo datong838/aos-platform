@@ -21,6 +21,8 @@ spec:
       - content/schemas/
     mappings:
       - content/mappings/
+    policies:
+      - content/policies/
   capabilities:
     provides: []
     requires: []

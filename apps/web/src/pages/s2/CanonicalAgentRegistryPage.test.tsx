@@ -110,7 +110,7 @@ describe("CanonicalAgentRegistryPage", () => {
     expect(host.querySelector('[role="status"]')?.textContent).toContain("只读预检通过");
     expect(host.textContent).toContain("模板 ecommerce.data_advisor@1");
     expect(host.textContent).toContain("实例 ecommerce.data_advisor.default");
-    expect(host.textContent).toContain("canonical 技能 1/1");
+    expect(host.textContent).toContain("权威技能 1/1");
     expect(host.textContent).toContain("唯一专业能力 1/1");
     expect(host.textContent).toContain("未触发 Provider、AgentRun 或生产 Action");
     expect(sdk.refreshReadiness).not.toHaveBeenCalled();

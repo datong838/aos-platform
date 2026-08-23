@@ -45,7 +45,7 @@ def test_r2_4n_uses_skill_publication_gate_not_route_gate() -> None:
     assert "eval_gate_ref\": route.eval_gate_ref" not in source
 
 
-def test_r2_4n_pilot_retargets_skill_r3_without_executing_v6() -> None:
+def test_r2_4n_history_points_to_the_later_sealed_r4_v8_pilot() -> None:
     pilot = (
         Path(__file__).resolve().parents[4]
         / "scripts"
@@ -56,6 +56,6 @@ def test_r2_4n_pilot_retargets_skill_r3_without_executing_v6() -> None:
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    assert module.SKILL_REVISION == 3
-    assert module.SKILL_BINDING_ID == "ecommerce.data_advisor.skill.D03.r3"
-    assert module.AGENT_RUN_ID.endswith("real-pilot.v6")
+    assert module.SKILL_REVISION == 4
+    assert module.SKILL_BINDING_ID == "ecommerce.data_advisor.skill.D03.r4"
+    assert module.AGENT_RUN_ID.endswith("real-pilot.v8")

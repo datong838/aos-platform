@@ -12,7 +12,7 @@ describe("LogicCanvasPage · PALETTE 包含 branch 和 handoff", () => {
   it("test handoff block kind exists in palette", () => {
     const handoff = PALETTE.find((p) => p.kind === "handoff");
     expect(handoff).toBeTruthy();
-    expect(handoff!.title).toMatch(/Handoff|汇聚/);
+    expect(handoff!.title).toMatch(/上下文交接|汇聚/);
     expect(handoff!.desc.length).toBeGreaterThan(0);
   });
 

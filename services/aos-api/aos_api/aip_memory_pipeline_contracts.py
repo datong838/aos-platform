@@ -68,6 +68,14 @@ class KnowledgePipelineDependencyStatus(StrEnum):
     UNKNOWN = "unknown"
 
 
+class KnowledgePipelineOperationalStatus(StrEnum):
+    READY = "ready"
+    BLOCKED = "blocked"
+    PAUSED = "paused"
+    DISABLED = "disabled"
+    UNCONFIGURED = "unconfigured"
+
+
 TERMINAL_PIPELINE_RUN_STATUSES = frozenset(
     {
         KnowledgePipelineRunStatus.SUCCEEDED,
@@ -484,6 +492,69 @@ class KnowledgePipelinePolicy(AipContractModel):
         normalized = [str(item) for item in value]
         if len(normalized) != len(set(normalized)):
             raise ValueError("pipeline policy values must be unique")
+        return value
+
+
+class KnowledgePipelineStatusCount(AipContractModel):
+    status: str = Field(min_length=1, max_length=64)
+    count: int = Field(ge=0)
+
+
+class KnowledgePipelineActivitySnapshot(AipContractModel):
+    pipeline_kind: KnowledgePipelineKind
+    schedule_counts: list[KnowledgePipelineStatusCount] = Field(default_factory=list)
+    run_counts: list[KnowledgePipelineStatusCount] = Field(default_factory=list)
+    last_run: KnowledgePipelineRun | None = None
+    last_receipt: KnowledgePipelineReceipt | None = None
+    last_checkpoint: KnowledgePipelineCheckpointRevision | None = None
+    alert_count: int = Field(default=0, ge=0)
+
+
+class KnowledgePipelineOperationalReadiness(AipContractModel):
+    tenant: TenantContext
+    pipeline_kind: KnowledgePipelineKind
+    default_status: KnowledgePipelineScheduleStatus
+    dependency_allowed: bool
+    dependency_reason_codes: list[str]
+    adapter_required: bool
+    adapter_registered: bool
+    schedule_counts: list[KnowledgePipelineStatusCount]
+    run_counts: list[KnowledgePipelineStatusCount]
+    last_run: KnowledgePipelineRun | None = None
+    last_receipt: KnowledgePipelineReceipt | None = None
+    last_checkpoint: KnowledgePipelineCheckpointRevision | None = None
+    alert_count: int = Field(ge=0)
+    operational_status: KnowledgePipelineOperationalStatus
+    blocker_codes: list[str]
+    observed_at: datetime
+
+    @model_validator(mode="after")
+    def _consistent_operational_state(self) -> KnowledgePipelineOperationalReadiness:
+        if len(self.blocker_codes) != len(set(self.blocker_codes)):
+            raise ValueError("pipeline readiness blockers must be unique")
+        if self.operational_status is KnowledgePipelineOperationalStatus.READY:
+            if self.blocker_codes or not self.dependency_allowed:
+                raise ValueError("ready pipeline cannot carry blockers")
+        elif not self.blocker_codes:
+            raise ValueError("non-ready pipeline requires blockers")
+        if not self.adapter_required and not self.adapter_registered:
+            raise ValueError("pipeline without adapter requirement is adapter-ready by definition")
+        return self
+
+
+class KnowledgePipelineOperationalReadinessEnvelope(AipContractModel):
+    tenant: TenantContext
+    pipelines: list[KnowledgePipelineOperationalReadiness]
+    observed_at: datetime
+
+    @field_validator("pipelines")
+    @classmethod
+    def _all_pipeline_kinds_once(
+        cls, value: list[KnowledgePipelineOperationalReadiness]
+    ) -> list[KnowledgePipelineOperationalReadiness]:
+        kinds = [item.pipeline_kind for item in value]
+        if len(kinds) != len(KnowledgePipelineKind) or set(kinds) != set(KnowledgePipelineKind):
+            raise ValueError("pipeline readiness requires all seven unique kinds")
         return value
 
 

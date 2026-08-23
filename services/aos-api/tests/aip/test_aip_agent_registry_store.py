@@ -137,11 +137,11 @@ def insert_governed_published_skill_fixture(ids: dict[str, str]) -> None:
                 output_schema,tool_allowlist,required_capabilities,risk_level,
                 memory_policy_ref,handoff_policy_ref,source_ref,source_license,
                 parent_ref,publication_tenant,release_gate_ref,publication_ref,
-                model_route_ref,runtime_policy_ref,content_hash,created_by)
+                model_route_ref,runtime_policy_ref,logic_revision_ref,content_hash,created_by)
                VALUES (%s,2,%s,'published',%s::jsonb,%s::jsonb,'[]'::jsonb,
                 '[]'::jsonb,'low',%s::jsonb,%s::jsonb,%s::jsonb,%s,
                 %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
-                %s,'pytest')""",
+                %s::jsonb,%s,'pytest')""",
             (
                 source.skill_id,
                 source.canonical_logic_id,
@@ -157,6 +157,7 @@ def insert_governed_published_skill_fixture(ids: dict[str, str]) -> None:
                 encoded({"resourceType": "PublicationEvent", "resourceId": "event-fixture", "revision": "publication-fixture", "authority": "postgresql"}),
                 encoded(ref("ModelRouteRevision", "route-fixture", 1, HASH_A).model_dump(mode="json", by_alias=True)),
                 encoded(ref("RuntimePolicyRevision", "policy-fixture", 1, HASH_A).model_dump(mode="json", by_alias=True)),
+                encoded(ref("LogicRevision", source.canonical_logic_id, 1, HASH_A).model_dump(mode="json", by_alias=True)),
                 HASH_C,
             ),
         )

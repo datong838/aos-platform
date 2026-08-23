@@ -67,7 +67,7 @@ BUNDLE_CASES = (
         bundle_id="solution.ecommerce.growth",
         kind="SolutionPack",
         version="1.3.0",
-        display_name="电商增长方案包（六数字同事、37 Logic、十共享专业 Capability）",
+        display_name="电商增长方案包（D3：W03 客户与私域运营台 + L05 分润异常检测）",
         dependencies=CORE_DEPENDENCY,
         exports={
             "agents": ("content/agents/",),
@@ -101,6 +101,7 @@ BUNDLE_CASES = (
             "connectors": ("content/connectors/",),
             "schemas": ("content/schemas/",),
             "mappings": ("content/mappings/",),
+            "policies": ("content/policies/",),
         },
     ),
 )
@@ -176,6 +177,66 @@ def test_bundle_manifest_matches_frozen_contract_and_existing_exports(
                 item.is_file() and item.name != ".gitkeep"
                 for item in export_path.rglob("*")
             )
+
+
+def test_niushop_connector_and_source_readiness_policies_cover_p01_p12() -> None:
+    root = BUNDLES_ROOT / "platforms/ecommerce-niushop/content"
+    connector = json.loads(
+        (root / "connectors/niushop-mysql.manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    freshness = json.loads(
+        (root / "policies/source-freshness.v1.json").read_text(encoding="utf-8")
+    )
+    quality = json.loads(
+        (root / "policies/source-quality.v1.json").read_text(encoding="utf-8")
+    )
+    reconciliation = json.loads(
+        (root / "policies/source-reconciliation.v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert connector["version"] == "0.1.1"
+    assert connector["presets"]["tables"] == [
+        "ns_site",
+        "ns_goods",
+        "ns_goods_sku",
+        "ns_goods_category",
+        "ns_order",
+        "ns_order_goods",
+        "ns_express_delivery_package",
+        "ns_member",
+        "ns_weapp",
+        "ns_config",
+        "ns_goods_evaluate",
+        "ns_pay",
+    ]
+    assert freshness["expectedCronByPipeline"] == {
+        f"P{index:02d}-{suffix}-qyh": f"0 {index + 1} * * *"
+        for index, suffix in enumerate(
+            (
+                "shop",
+                "product",
+                "product-sku",
+                "category",
+                "order",
+                "order-line",
+                "shipment",
+                "customer-lite",
+                "weapp",
+                "system-config",
+                "product-review",
+                "payment",
+            ),
+            start=1,
+        )
+    }
+    assert quality["schemaVersion"] == "aos.source-readiness.quality-policy/v1"
+    assert reconciliation["schemaVersion"] == (
+        "aos.source-readiness.reconciliation-policy/v1"
+    )
 
 
 def test_shared_manifest_schema_remains_the_strict_dto_source_contract() -> None:

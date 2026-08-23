@@ -33,6 +33,7 @@ from aos_api.aip_memory_pipeline_contracts import (
     KnowledgePipelineAlert,
     KnowledgePipelineCheckpointRevision,
     KnowledgePipelinePolicy,
+    KnowledgePipelineOperationalReadinessEnvelope,
     KnowledgePipelineReceipt,
     KnowledgePipelineRun,
     KnowledgePipelineRunEvent,
@@ -109,6 +110,11 @@ class PromoteCandidateRequest(AipContractModel):
     expected_version: int = Field(ge=1)
     required_applicability: list[str] = Field(min_length=1, max_length=64)
     expires_at: datetime | None = None
+
+
+class RevokeMemoryRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    reason_code: str = Field(min_length=1, max_length=120)
 
 
 class MemoryAuthorityItem(AipContractModel):
@@ -372,6 +378,28 @@ def get_memory(
         raise _map_error(exc) from exc
 
 
+@router.post("/memories/{memory_item_id}/revoke", response_model=MemoryAuthorityItem)
+def revoke_memory(
+    memory_item_id: str,
+    body: RevokeMemoryRequest,
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryStore = Depends(get_aip_memory_store),
+) -> MemoryAuthorityItem:
+    _require_role(principal, {"admin", "reviewer"})
+    try:
+        item, revision = store.revoke_memory_item(
+            _scope(principal),
+            memory_item_id,
+            expected_version=body.expected_version,
+            reason_code=body.reason_code,
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+        return MemoryAuthorityItem(item=item, revision=revision)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
 @router.post("/knowledge-queries", response_model=KnowledgeQueryResult)
 def query_knowledge(
     body: KnowledgeQuery,
@@ -441,6 +469,22 @@ def list_pipeline_policies(
 ) -> list[KnowledgePipelinePolicy]:
     _scope(principal)
     return [service.policy_for(kind) for kind in service.policy_kinds()]
+
+
+@router.get(
+    "/pipelines/readiness",
+    response_model=KnowledgePipelineOperationalReadinessEnvelope,
+)
+def get_pipeline_readiness(
+    principal: Principal = Depends(require_principal),
+    service: AipMemoryPipelineService = Depends(get_aip_memory_pipeline_service),
+) -> KnowledgePipelineOperationalReadinessEnvelope:
+    try:
+        return service.operational_readiness(
+            _scope(principal), occurred_at=datetime.now(UTC)
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
 
 
 @router.get("/pipelines/schedules", response_model=list[KnowledgePipelineSchedule])

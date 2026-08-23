@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const sdk = vi.hoisted(() => ({
   candidates: vi.fn(), memories: vi.fn(), candidateEvents: vi.fn(), query: vi.fn(),
   pipelinePolicies: vi.fn(), pipelineSchedules: vi.fn(), pipelineRuns: vi.fn(),
+  pipelineReadiness: vi.fn(),
   transitionPipelineSchedule: vi.fn(), pipelineReceipt: vi.fn(), pipelineCheckpoint: vi.fn(), pipelineAlerts: vi.fn(),
   knowledgeReadiness: vi.fn(),
   agentInstances: vi.fn(), agentProjections: vi.fn(), memoryExposures: vi.fn(), improvementObservations: vi.fn(),
@@ -22,6 +23,17 @@ describe("MemoryGovernancePage", () => {
     host = document.createElement("div"); document.body.appendChild(host);
     Object.values(sdk).forEach((mock) => mock.mockReset());
     sdk.pipelinePolicies.mockResolvedValue([]); sdk.pipelineSchedules.mockResolvedValue([]); sdk.pipelineRuns.mockResolvedValue([]);
+    sdk.pipelineReadiness.mockResolvedValue({
+      tenant: { orgId: "org-org", projectId: "dev-project" },
+      pipelines: ["seed_import", "operational_learning", "network_learning", "competitor_analysis", "professional_database", "customer_feedback", "human_experience"].map((pipelineKind) => ({
+        tenant: { orgId: "org-org", projectId: "dev-project" }, pipelineKind, defaultStatus: "paused",
+        dependencyAllowed: false, dependencyReasonCodes: ["dependency_review_unknown"], adapterRequired: false,
+        adapterRegistered: true, scheduleCounts: [], runCounts: [], alertCount: 0,
+        operationalStatus: "unconfigured", blockerCodes: ["dependency_review_unknown", "schedule_not_registered", "successful_receipt_missing"],
+        observedAt: "2026-08-13T00:00:00Z",
+      })),
+      observedAt: "2026-08-13T00:00:00Z",
+    });
     sdk.knowledgeReadiness.mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, package: { status: "authority_unavailable", blocker: "knowledge_package_installation_authority_unavailable" }, sources: [], sourceBlockers: ["knowledge_source_missing"], search: { referenceCount: 0, providerConfigured: false, capabilities: [{ lane: "fulltext", status: "unbuilt", reasonCode: "capability_not_registered", version: 1, observedAt: "2026-08-13T00:00:00Z" }, { lane: "vector", status: "degraded", reasonCode: "degraded_vector_unavailable", version: 1, observedAt: "2026-08-13T00:00:00Z" }, { lane: "rerank", status: "unbuilt", reasonCode: "capability_not_registered", version: 1, observedAt: "2026-08-13T00:00:00Z" }], blockers: ["trusted_search_provider_unavailable", "search_reference_missing"] }, eval: { status: "authority_unavailable", blocker: "gold_set_registry_authority_unavailable" }, observedAt: "2026-08-13T00:00:00Z" });
     sdk.agentInstances.mockResolvedValue([]); sdk.agentProjections.mockResolvedValue([]); sdk.memoryExposures.mockResolvedValue([]); sdk.improvementObservations.mockResolvedValue([]);
   });
@@ -37,8 +49,8 @@ describe("MemoryGovernancePage", () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><MemoryGovernancePage /></MemoryRouter>));
     await act(async () => undefined);
-    expect(host.textContent).toContain("当前租户没有待治理或历史 Candidate");
-    expect(host.textContent).not.toContain("示例 Candidate");
+    expect(host.textContent).toContain("当前租户没有待治理或历史知识候选");
+    expect(host.textContent).not.toContain("示例知识候选");
     await act(async () => root.unmount());
   });
 
@@ -47,7 +59,7 @@ describe("MemoryGovernancePage", () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><MemoryGovernancePage /></MemoryRouter>));
     await act(async () => undefined);
-    expect(host.textContent).toContain("Memory authority 读取失败");
+    expect(host.textContent).toContain("记忆权威读取失败");
     expect(sdk.query).not.toHaveBeenCalled();
     await act(async () => root.unmount());
   });
@@ -62,6 +74,8 @@ describe("MemoryGovernancePage", () => {
     await act(async () => tab.click());
     expect(host.textContent).toContain("种子知识导入");
     expect(host.textContent).toContain("未注册 Schedule");
+    expect(host.textContent).toContain("未配置");
+    expect(host.textContent).toContain("dependency_review_unknown");
     expect((Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "等待权威配置") as HTMLButtonElement).disabled).toBe(true);
     await act(async () => root.unmount());
   });

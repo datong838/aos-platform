@@ -267,3 +267,77 @@ def test_loader_rejects_unknown_unschematized_workshop(tmp_path: Path) -> None:
 
     with pytest.raises(ManifestInvalidError):
         _load(root)
+
+
+def test_loader_recognizes_strict_analyst_auxiliary_asset_without_projection(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "allowed"
+    analyst_asset = {
+        "schemaVersion": 1,
+        "bundleRef": "bundle://aos/solution.example@1.0.0",
+        "templates": [
+            {
+                "templateId": "ecommerce.analyst.data-advisor.orders",
+                "revision": 1,
+                "roleId": "ecommerce.data-advisor",
+                "roleName": "数据参谋",
+                "queryKind": "semantic",
+                "defaultObjectType": "Order",
+                "defaultPrompt": "",
+                "requiredObjectTypes": ["Order"],
+                "requiredLogicIds": ["D01"],
+                "sourceDataTypes": ["order"],
+                "purpose": "读取真实订单事实",
+                "policy": "canonical-read-only",
+            }
+        ],
+    }
+    _make_bundle(root, modules={"analyst-templates.json": analyst_asset})
+
+    loaded = _load(root)
+
+    assert loaded.workshop_modules == []
+    assert loaded.legacy_workshops == []
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda payload: payload.update(
+            bundleRef="bundle://aos/solution.wrong@1.0.0"
+        ),
+        lambda payload: payload.update(unexpected=True),
+        lambda payload: payload["templates"][0].update(policy="write-enabled"),
+        lambda payload: payload["templates"][0].update(requiredObjectTypes=[]),
+    ],
+)
+def test_loader_rejects_drifted_analyst_auxiliary_asset(
+    tmp_path: Path, mutate
+) -> None:
+    root = tmp_path / "allowed"
+    analyst_asset = {
+        "schemaVersion": 1,
+        "bundleRef": "bundle://aos/solution.example@1.0.0",
+        "templates": [
+            {
+                "templateId": "ecommerce.analyst.data-advisor.orders",
+                "revision": 1,
+                "roleId": "ecommerce.data-advisor",
+                "roleName": "数据参谋",
+                "queryKind": "semantic",
+                "defaultObjectType": "Order",
+                "defaultPrompt": "",
+                "requiredObjectTypes": ["Order"],
+                "requiredLogicIds": ["D01"],
+                "sourceDataTypes": ["order"],
+                "purpose": "读取真实订单事实",
+                "policy": "canonical-read-only",
+            }
+        ],
+    }
+    mutate(analyst_asset)
+    _make_bundle(root, modules={"analyst-templates.json": analyst_asset})
+
+    with pytest.raises(ManifestInvalidError):
+        _load(root)

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "deliveryId": "aip-r19-fde-s1-s3-20260822",
+  "branch": "w1-aip",
+  "commit": "b4941e372edabeb709c6e607eaea4895267a4cb2",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "negativeCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project"
+  },
+  "status": "CODE_GREEN",
+  "capabilityScope": [
+    "fde.s1.requirement",
+    "fde.s2.auth-draft",
+    "fde.s3.capability-probe",
+    "canonical-task-plan-run-checkpoint"
+  ],
+  "verification": {
+    "targetedAndCumulativeTests": "50 passed",
+    "fullAipRegression": "1230 passed, 106 warnings",
+    "compileall": "GREEN",
+    "diffCheck": "GREEN",
+    "openapi": {
+      "paths": 2543,
+      "schemas": 1974,
+      "uniqueOperationPairs": 4311
+    },
+    "runtimePreview": {
+      "primaryHttpStatus": 200,
+      "canaryHttpStatus": 200,
+      "onlineVerification": "not_started",
+      "externalCallByPreview": false
+    }
+  },
+  "warnings": [
+    "Full API startup emitted existing JDBC/bootstrap/cron initialization logs; only the R19 Preview route is asserted read-only.",
+    "Data Owner Lease remains ACTIVE and covers the master wave ledger."
+  ],
+  "forbiddenEffectsObserved": {
+    "providerInvocation": false,
+    "pipelineExecutionByR19": false,
+    "secretPayloadRead": false,
+    "migration": false
+  }
+}

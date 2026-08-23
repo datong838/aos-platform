@@ -1,0 +1,133 @@
+{
+  "blockers": {
+    "knowledgePipelines": "EXTERNAL_DATA_GATED",
+    "scenarioStatuses": [
+      "code_control_draft_real_tenant_evidence_blocked"
+    ],
+    "staticRuntimeReadiness": {
+      "agents": "blocked",
+      "capabilities": "blocked",
+      "logics": "blocked"
+    },
+    "unverifiedHarnessRuleAuthorityIds": [
+      "DY-01",
+      "DY-02",
+      "DY-03",
+      "DY-04",
+      "DY-05",
+      "KS-01",
+      "KS-02",
+      "KS-03",
+      "SPH-01",
+      "SPH-02",
+      "SPH-03",
+      "XHS-01",
+      "XHS-02",
+      "XHS-03"
+    ]
+  },
+  "checkedAt": "2026-08-22T12:00:00+08:00",
+  "dimensions": [
+    {
+      "actual": 6,
+      "expected": 6,
+      "id": "agents",
+      "operationalStatus": "BLOCKED",
+      "structuralStatus": "CODE_GREEN"
+    },
+    {
+      "actual": 37,
+      "expected": 37,
+      "id": "logics",
+      "operationalStatus": "BLOCKED",
+      "structuralStatus": "CODE_GREEN"
+    },
+    {
+      "actual": 10,
+      "expected": 10,
+      "id": "capabilities",
+      "operationalStatus": "BLOCKED",
+      "structuralStatus": "CODE_GREEN"
+    },
+    {
+      "actual": 7,
+      "expected": 7,
+      "id": "knowledgePipelines",
+      "operationalStatus": "BLOCKED_EXTERNAL",
+      "reason": "R16 evidence records unconfigured schedules and external-data gate",
+      "structuralStatus": "CODE_GREEN"
+    },
+    {
+      "actual": 26,
+      "expected": 26,
+      "id": "reflectionRules",
+      "operationalStatus": "CODE_CONTROL_ONLY",
+      "ruleSetHash": "93f43641ca9f57d852b02015d05c77e84de0dc46e79a0d02bcd7d23e4ed3a4eb",
+      "ruleSetRef": "registry://aip/fde/reflection/1.0.0",
+      "structuralStatus": "CODE_GREEN"
+    },
+    {
+      "actual": 14,
+      "expected": 14,
+      "id": "platformHarnesses",
+      "operationalStatus": "BLOCKED_EXTERNAL",
+      "structuralStatus": "CODE_GREEN",
+      "unverifiedRuleAuthorityCount": 14
+    },
+    {
+      "actual": 9,
+      "declaredStatuses": [
+        "code_control_draft_real_tenant_evidence_blocked"
+      ],
+      "expected": 9,
+      "id": "scenarios",
+      "operationalStatus": "BLOCKED_EXTERNAL",
+      "structuralStatus": "CODE_GREEN"
+    }
+  ],
+  "referenceErrors": {
+    "harnessCapabilityRefs": [],
+    "harnessLogicRefs": [],
+    "logicAgentRefs": [],
+    "logicCapabilityRefs": [],
+    "scenarioLogicRefs": []
+  },
+  "schemaVersion": "aip.r33.coverage-matrix.v1",
+  "scope": {
+    "branch": "w1-aip",
+    "mode": "STATIC_READ_ONLY",
+    "negativeCanary": "dev-org/dev-project",
+    "tenant": "org-org/dev-project"
+  },
+  "sourceRefs": {
+    "agents": {
+      "path": "bundles/solutions/ecommerce-growth/content/agents/ecommerce-six-coworkers.json",
+      "sha256": "ae351d4265f3c6757c17e6742dc32e7c7f0697d2a9676d379ab3cb5085192ba3"
+    },
+    "capabilities": {
+      "path": "bundles/solutions/ecommerce-growth/content/agents/ecommerce-capability-catalog.json",
+      "sha256": "0d33aac853f9f7cac835ea97cd8409388a9c4afe22ddec3b4a8eb668c72acf5a"
+    },
+    "harnesses": {
+      "path": "bundles/solutions/ecommerce-growth/content/harness/platform-harnesses.v1.json",
+      "sha256": "154dc19b826e2777e4f2cbc3d3ed8b9ffd797f2edca49a539bcb7155ddf34448"
+    },
+    "logics": {
+      "path": "bundles/solutions/ecommerce-growth/content/logic/ecommerce-37-logic-catalog.json",
+      "sha256": "2ebfba4bc26a308f4d93882eaa5105ae364b857cea667ed769fbb1fcb8e4463b"
+    },
+    "scenarios01to03": {
+      "path": "bundles/solutions/ecommerce-growth/content/growth/sc01-sc03-acceptance.v1.json",
+      "sha256": "5d43b09dcc96f74977053fcbe51068a014b11bd7c20648bd2d93887f3a461269"
+    },
+    "scenarios04to06": {
+      "path": "bundles/solutions/ecommerce-growth/content/growth/sc04-sc06-acceptance.v1.json",
+      "sha256": "d98dc09260c55e445ba616213befb3ad6c10ee0464c7f93f522b5c444f08a15d"
+    },
+    "scenarios07to09": {
+      "path": "bundles/solutions/ecommerce-growth/content/growth/sc07-sc09-acceptance.v1.json",
+      "sha256": "e2e4a1bfc90586b0f75b5926e0acebce1d264b5a910ba02dca579b584f4433b7"
+    }
+  },
+  "verdict": "STRUCTURAL_GREEN_OPERATIONAL_BLOCKED"
+}

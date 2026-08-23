@@ -1,0 +1,4 @@
+interface:
+  display_name: "Headless Playwright"
+  short_description: "无头浏览器批处理：任意网页截图/PDF/提取/批量巡检"
+  default_prompt: "使用 $headless-playwright 以无头模式批量截图/生成 PDF/提取内容/跑巡检检查，不占用用户浏览器、不需要可见窗口。"

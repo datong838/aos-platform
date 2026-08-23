@@ -19,6 +19,7 @@ from aos_api.aip_memory_pipeline_contracts import (
     KnowledgePipelineDependencyResult,
     KnowledgePipelineDependencySnapshot,
     KnowledgePipelineDependencyStatus,
+    KnowledgePipelineActivitySnapshot,
     KnowledgePipelineInputReceipt,
     KnowledgePipelineKind,
     KnowledgePipelineRunStatus,
@@ -27,6 +28,9 @@ from aos_api.aip_memory_pipeline_contracts import (
     StartKnowledgePipelineRunRequest,
     TrustedKnowledgeAdapterDefinition,
     TrustedKnowledgeCandidateDraft,
+    KnowledgePipelineReceipt,
+    KnowledgePipelineSchedule,
+    KnowledgePipelineStatusCount,
 )
 from aos_api.aip_memory_pipeline_service import (
     AipMemoryPipelinePolicyBlocked,
@@ -145,6 +149,12 @@ class FakePipelineStore:
     def get_run(self, _scope, _pipeline_run_id):
         return self.run
 
+    def summarize_activity(self, _scope):
+        return {
+            kind: KnowledgePipelineActivitySnapshot(pipeline_kind=kind)
+            for kind in KnowledgePipelineKind
+        }
+
 
 @dataclass
 class FakeMemoryStore:
@@ -205,6 +215,71 @@ def test_policy_matrix_freezes_all_seven_independent_defaults() -> None:
     assert policies[KnowledgePipelineKind.PROFESSIONAL_DATABASE].allowed_triggers == [KnowledgePipelineTrigger.SCHEDULED, KnowledgePipelineTrigger.VERSION_EVENT]
     assert policies[KnowledgePipelineKind.CUSTOMER_FEEDBACK].allowed_source_kinds == [KnowledgeSourceKind.CUSTOMER_AGGREGATE]
     assert policies[KnowledgePipelineKind.HUMAN_EXPERIENCE].allowed_triggers == [KnowledgePipelineTrigger.MANUAL]
+
+
+def test_operational_readiness_returns_all_seven_and_fails_closed_without_authorities() -> None:
+    service = AipMemoryPipelineService(
+        pipeline_store=FakePipelineStore(),
+        memory_store=FakeMemoryStore(),
+        dependency_resolver=lambda *_args: None,
+        receipt_resolver=lambda *_args: None,
+        license_resolver=lambda *_args: LicensePolicyDecision.UNKNOWN,
+    )
+
+    result = service.operational_readiness(SCOPE, occurred_at=NOW)
+
+    assert result.tenant.org_id == "org-org"
+    assert [item.pipeline_kind for item in result.pipelines] == list(KnowledgePipelineKind)
+    assert all(item.operational_status.value == "unconfigured" for item in result.pipelines)
+    assert all("dependency_review_unknown" in item.blocker_codes for item in result.pipelines)
+    assert all("schedule_not_registered" in item.blocker_codes for item in result.pipelines)
+
+
+def test_operational_readiness_only_marks_active_successful_pipeline_ready() -> None:
+    store = FakePipelineStore()
+    receipt = KnowledgePipelineReceipt(
+        tenant=TenantContext(org_id=SCOPE.org_id, project_id=SCOPE.project_id),
+        receipt_id="receipt-1",
+        pipeline_run_id="run-1",
+        status="succeeded",
+        input_hash=HASH_A,
+        output_hash=HASH_B,
+        candidate_refs=[],
+        checkpoint_before_version=0,
+        checkpoint_after_version=0,
+        produced_count=0,
+        failed_count=0,
+        error_codes=[],
+        receipt_hash=HASH_A,
+        created_at=NOW,
+    )
+    store.summarize_activity = lambda _scope: {
+        kind: (
+            KnowledgePipelineActivitySnapshot(
+                pipeline_kind=kind,
+                schedule_counts=[KnowledgePipelineStatusCount(status="active", count=1)],
+                last_receipt=receipt,
+            )
+            if kind is KnowledgePipelineKind.SEED_IMPORT
+            else KnowledgePipelineActivitySnapshot(pipeline_kind=kind)
+        )
+        for kind in KnowledgePipelineKind
+    }
+    service = AipMemoryPipelineService(
+        pipeline_store=store,
+        memory_store=FakeMemoryStore(),
+        dependency_resolver=lambda _scope, kind: dependency_snapshot(kind),
+        receipt_resolver=lambda *_args: None,
+        license_resolver=lambda *_args: LicensePolicyDecision.ALLOWED,
+    )
+
+    result = service.operational_readiness(SCOPE, occurred_at=NOW)
+
+    seed = result.pipelines[0]
+    assert seed.operational_status.value == "ready"
+    assert seed.blocker_codes == []
+    assert result.pipelines[2].operational_status.value == "unconfigured"
+    assert "trusted_adapter_not_registered" in result.pipelines[2].blocker_codes
 
 
 def test_schedule_creation_requires_policy_trigger_and_exact_default_status() -> None:

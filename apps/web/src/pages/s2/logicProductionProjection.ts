@@ -34,5 +34,5 @@ export function projectProductionProfiles(
 
 export function productionProjectionEmptyMessage(stageCount: number, planCount: number): string | null {
   if (stageCount > 0 || planCount > 0) return null;
-  return "尚无 StageTemplate / ResponsibilityPlan；画布不伪造可引用 Profile。请先在生产契约登记权威表。";
+  return "尚无阶段模板或职责计划；画布不伪造可引用的生产流程。请先在生产契约中登记权威记录。";
 }

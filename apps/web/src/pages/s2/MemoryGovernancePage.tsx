@@ -6,6 +6,7 @@ import {
   type KnowledgePipelineAlert,
   type KnowledgePipelineCheckpoint,
   type KnowledgePipelinePolicy,
+  type KnowledgePipelineOperationalReadinessEnvelope,
   type KnowledgePipelineReceipt,
   type KnowledgePipelineRun,
   type KnowledgePipelineSchedule,
@@ -34,6 +35,7 @@ const statusLabels: Record<string, string> = {
   queued: "排队中", running: "运行中", paused: "已暂停", succeeded: "已成功", partial: "部分成功",
   failed: "已失败", cancelled: "已取消", unknown: "状态未知", disabled: "已停用",
   complete: "完整", degraded: "降级回源", blocked: "已阻断",
+  ready: "运行就绪", unconfigured: "未配置",
 };
 
 const pipelineKindLabels: Record<string, string> = {
@@ -44,6 +46,15 @@ const pipelineKindLabels: Record<string, string> = {
   professional_database: "专业数据库接入",
   customer_feedback: "客户反馈学习",
   human_experience: "人工经验沉淀",
+};
+
+const viewLabels: Record<View, string> = {
+  candidates: "知识候选",
+  memories: "正式记忆",
+  agents: "数字同事记忆",
+  query: "知识检索",
+  pipelines: "知识管道",
+  readiness: "冷启动与检索",
 };
 
 export function memoryStatusLabel(status: string): string {
@@ -79,6 +90,7 @@ export function MemoryGovernancePage() {
   const [pipelinePolicies, setPipelinePolicies] = useState<KnowledgePipelinePolicy[]>([]);
   const [pipelineSchedules, setPipelineSchedules] = useState<KnowledgePipelineSchedule[]>([]);
   const [pipelineRuns, setPipelineRuns] = useState<KnowledgePipelineRun[]>([]);
+  const [pipelineReadiness, setPipelineReadiness] = useState<KnowledgePipelineOperationalReadinessEnvelope | null>(null);
   const [pipelineLoadState, setPipelineLoadState] = useState<LoadState>("loading");
   const [pipelineError, setPipelineError] = useState("");
   const [busyScheduleId, setBusyScheduleId] = useState("");
@@ -112,19 +124,22 @@ export function MemoryGovernancePage() {
     setPipelineLoadState("loading");
     setPipelineError("");
     try {
-      const [policies, schedules, runs] = await Promise.all([
+      const [policies, schedules, runs, operational] = await Promise.all([
         aipMemorySdk.pipelinePolicies(),
         aipMemorySdk.pipelineSchedules(),
         aipMemorySdk.pipelineRuns(),
+        aipMemorySdk.pipelineReadiness(),
       ]);
       setPipelinePolicies(policies);
       setPipelineSchedules(schedules);
       setPipelineRuns(runs);
+      setPipelineReadiness(operational);
       setPipelineLoadState("loaded");
     } catch (caught) {
       setPipelinePolicies([]);
       setPipelineSchedules([]);
       setPipelineRuns([]);
+      setPipelineReadiness(null);
       setPipelineError(String((caught as Error).message || caught));
       setPipelineLoadState("error");
     }
@@ -224,18 +239,18 @@ export function MemoryGovernancePage() {
   }
 
   return (
-    <PageChrome title="记忆与知识治理" lede="Candidate → 审批证据 → 正式 Memory → 带 Citation 的 Knowledge Query；全部来自权威链，不回填示例知识。">
+    <PageChrome title="记忆与知识治理" lede="知识候选 → 审批证据 → 正式记忆 → 带来源引用的知识检索；全部来自权威链，不回填示例知识。">
       <div
         data-testid="memory-ops-stats"
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
       >
         {[
-          { label: "视图", value: view },
+          { label: "当前视图", value: viewLabels[view] },
           { label: "加载", value: loadState === "loaded" ? "就绪" : loadState === "loading" ? "读取中" : "失败" },
           { label: "候选", value: String(candidates.length) },
           { label: "正式记忆", value: String(memories.length) },
-          { label: "Pipeline", value: String(pipelineRuns.length) },
-          { label: "查询态", value: queryState },
+          { label: "管道运行", value: String(pipelineRuns.length) },
+          { label: "查询状态", value: memoryStatusLabel(queryState) },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -246,15 +261,15 @@ export function MemoryGovernancePage() {
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
         {(["candidates", "memories", "agents", "query", "pipelines", "readiness"] as const).map((item) => (
           <button key={item} type="button" className={`btn ${view === item ? "primary" : ""}`} onClick={() => setView(item)} data-testid={`memory-tab-${item}`}>
-            {item === "candidates" ? `知识候选（${candidates.length}）` : item === "memories" ? `正式 Memory（${memories.length}）` : item === "agents" ? "数字同事记忆" : item === "query" ? "Knowledge Query" : item === "pipelines" ? `知识管道（${pipelineSchedules.length}）` : "冷启动与检索"}
+            {item === "candidates" ? `知识候选（${candidates.length}）` : item === "memories" ? `正式记忆（${memories.length}）` : item === "agents" ? "数字同事记忆" : item === "query" ? "知识检索" : item === "pipelines" ? `知识管道（${pipelineSchedules.length}）` : "冷启动与检索"}
           </button>
         ))}
         <button type="button" className="btn" onClick={() => { void reload(); void reloadPipelines(); void reloadReadiness(); }} disabled={loadState === "loading" || pipelineLoadState === "loading" || readinessState === "loading"}>{loadState === "loading" || pipelineLoadState === "loading" || readinessState === "loading" ? "读取中…" : "刷新权威状态"}</button>
         <Link to="/ontology/wiki" className="btn-nav">活知识 Wiki →</Link>
       </div>
 
-      {loadState === "loading" && <div data-testid="memory-loading" className="callout info">正在读取租户隔离的 Memory authority…</div>}
-      {loadState === "error" && <div data-testid="memory-error" className="callout warning">Memory authority 读取失败：{error}</div>}
+      {loadState === "loading" && <div data-testid="memory-loading" className="callout info">正在读取当前组织与工作区的权威记忆…</div>}
+      {loadState === "error" && <div data-testid="memory-error" className="callout warning">记忆权威读取失败：{error}</div>}
       {error && loadState !== "error" && <div className="callout warning">{error}</div>}
 
       {loadState === "loaded" && view === "candidates" && (
@@ -264,7 +279,7 @@ export function MemoryGovernancePage() {
             {!candidates.length ? (
               <div data-testid="memory-candidates-empty" className="callout info">
                 <strong>空态策略：</strong>
-                当前租户没有待治理或历史 Candidate。页面<strong>不</strong>注入静态/演示候选；有真实来源写入后再出现条目，再经审批晋升为正式 Memory。
+                当前租户没有待治理或历史知识候选。页面<strong>不</strong>注入静态或演示候选；有真实来源写入后再出现条目，再经审批晋升为正式记忆。
               </div>
             ) : candidates.map((candidate) => (
               <button key={candidate.candidateId} type="button" className="btn" onClick={() => void inspectCandidate(candidate)} style={{ width: "100%", display: "grid", textAlign: "left", gap: 5, marginBottom: 8, padding: 12 }}>
@@ -276,7 +291,7 @@ export function MemoryGovernancePage() {
           </section>
           <section style={panel}>
             <h2 style={{ marginTop: 0, fontSize: 17 }}>治理证据与事件</h2>
-            {!selectedCandidate ? <div className="muted">选择 Candidate 查看精确 payload hash、来源、新鲜度、适用范围及不可变事件。</div> : <>
+            {!selectedCandidate ? <div className="muted">选择记忆候选项，查看内容摘要、来源、新鲜度、适用范围及不可变事件。</div> : <>
               <dl style={{ display: "grid", gridTemplateColumns: "150px 1fr", gap: "8px 12px", margin: 0 }}>
                 <dt>租户</dt><dd>{selectedCandidate.tenant.orgId} / {selectedCandidate.tenant.projectId}</dd>
                 <dt>Payload</dt><dd>{selectedCandidate.request.payload.artifactId} · {selectedCandidate.request.payload.revision}<br /><code>{selectedCandidate.request.payload.contentHash}</code></dd>
@@ -289,18 +304,18 @@ export function MemoryGovernancePage() {
               {!events.length ? <div className="muted">暂无可见事件，或事件仍在读取。</div> : events.map((event) => <div key={event.eventId} style={{ borderTop: "1px solid var(--aos-border)", padding: "10px 0" }}>
                 <strong>#{event.sequence} {memoryStatusLabel(event.toStatus)}</strong> · {event.actor}<br /><span className="muted">{new Date(event.occurredAt).toLocaleString()} · {event.reasonCodes.join("、") || "无原因码"}</span>
               </div>)}
-              <div className="callout info" style={{ marginTop: 12 }}>批准/晋升必须绑定精确 Eval report、Draft 与 ApprovalEvent；本页不会用不完整表单绕过治理服务。</div>
+              <div className="callout info" style={{ marginTop: 12 }}>批准或晋升必须绑定精确的评测报告、草稿与审批事件；本页不会用不完整表单绕过治理服务。</div>
             </>}
           </section>
         </div>
       )}
 
       {loadState === "loaded" && view === "memories" && <section style={panel}>
-        <h2 style={{ marginTop: 0, fontSize: 17 }}>正式 Memory authority</h2>
+        <h2 style={{ marginTop: 0, fontSize: 17 }}>正式记忆</h2>
         {!memories.length ? (
           <div data-testid="memory-items-empty" className="callout info">
             <strong>空态策略：</strong>
-            当前租户尚无正式 Memory。冷启动或 Candidate 治理晋升完成后才会出现；不以 Wiki 示例或本地 seed 冒充权威记忆。
+            当前租户尚无正式记忆。冷启动或知识候选治理晋升完成后才会出现；不以知识库示例或本地种子数据冒充权威记忆。
           </div>
         ) : <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead><tr><th>主体</th><th>状态 / Scope</th><th>Revision</th><th>来源</th><th>适用范围</th><th>生效时间</th></tr></thead>
@@ -315,21 +330,21 @@ export function MemoryGovernancePage() {
       {loadState === "loaded" && view === "agents" && <AgentMemoryPanel memories={memories} />}
 
       {view === "query" && <section style={panel}>
-        <h2 style={{ marginTop: 0, fontSize: 17 }}>Knowledge Query</h2>
-        <p className="muted">请求只描述业务主体与任务；组织、工作区和最终授权 markings 由认证 Principal 决定。</p>
+        <h2 style={{ marginTop: 0, fontSize: 17 }}>知识检索</h2>
+        <p className="muted">请求只描述业务主体与任务；组织、工作区和最终数据标记权限由当前认证身份决定。</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
           <label>主体类型<input value={subjectType} onChange={(event) => setSubjectType(event.target.value)} aria-label="memory-subject-type" /></label>
           <label>主体 ID<input value={subjectId} onChange={(event) => setSubjectId(event.target.value)} aria-label="memory-subject-id" placeholder="真实 Object ID" /></label>
-          <label>Task ID<input value={taskId} onChange={(event) => setTaskId(event.target.value)} aria-label="memory-task-id" placeholder="权威 Task ID" /></label>
+          <label>任务标识<input value={taskId} onChange={(event) => setTaskId(event.target.value)} aria-label="memory-task-id" placeholder="输入权威任务标识" /></label>
           <label>技能 ID<input value={skillId} onChange={(event) => setSkillId(event.target.value)} aria-label="memory-skill-id" placeholder="例如 content.strategy" /></label>
           <label>请求 markings<input value={markings} onChange={(event) => setMarkings(event.target.value)} aria-label="memory-markings" /></label>
         </div>
         <button type="button" className="btn primary" style={{ marginTop: 14 }} onClick={() => void runKnowledgeQuery()} disabled={queryState === "loading"}>{queryState === "loading" ? "检索中…" : "执行权威检索"}</button>
-        {queryState === "idle" && !queryError && <div data-testid="memory-query-idle" className="callout info" style={{ marginTop: 14 }}>填写真实 Task、Skill 和主体后检索；页面不会在未查询时展示示例结果。</div>}
-        {queryState === "error" && <div data-testid="memory-query-error" className="callout warning" style={{ marginTop: 14 }}>Knowledge Query 失败：{queryError}</div>}
+        {queryState === "idle" && !queryError && <div data-testid="memory-query-idle" className="callout info" style={{ marginTop: 14 }}>填写真实任务、技能和主体后检索；页面不会在未查询时展示示例结果。</div>}
+        {queryState === "error" && <div data-testid="memory-query-error" className="callout warning" style={{ marginTop: 14 }}>知识检索失败：{queryError}</div>}
         {queryError && queryState === "idle" && <div className="callout warning" style={{ marginTop: 14 }}>{queryError}</div>}
         {queryResult && <div data-testid={`memory-query-${queryResult.status}`} className={`callout ${queryResult.status === "complete" ? "info" : "warning"}`} style={{ marginTop: 14 }}>
-          状态：{memoryStatusLabel(queryResult.status)} · {queryResult.citations.length} 条 Citation · {queryResult.assembledTokens} tokens
+          状态：{memoryStatusLabel(queryResult.status)} · {queryResult.citations.length} 条来源引用 · {queryResult.assembledTokens} 个模型用量单位
           {queryResult.blockedReasons.length ? ` · 原因：${queryResult.blockedReasons.join("、")}` : ""}
         </div>}
         {queryResult?.chunks.map((chunk) => <article key={`${chunk.citation.memoryItemId}:${chunk.citation.revision}`} style={{ ...panel, marginTop: 12 }}>
@@ -341,7 +356,7 @@ export function MemoryGovernancePage() {
 
       {view === "pipelines" && <section data-testid="memory-pipelines" style={panel}>
         <h2 style={{ marginTop: 0, fontSize: 17 }}>七条知识管道控制面</h2>
-        <p className="muted">这里只展示 PostgreSQL 权威 Schedule、Run、Receipt、Checkpoint 与 Alert。外部知识必须经可信 Adapter 生成 Candidate，本页不直连外部系统，也不把 provider checkpoint 当作 Memory authority。</p>
+        <p className="muted">这里只展示权威计划、运行、凭证、检查点与告警。外部知识必须经可信适配器生成记忆候选项；本页不直连外部系统，也不把供应商检查点当作正式记忆。</p>
         {pipelineLoadState === "loading" && <div data-testid="pipeline-loading" className="callout info">正在读取知识管道权威状态…</div>}
         {pipelineLoadState === "error" && <div data-testid="pipeline-error" className="callout warning">知识管道读取失败：{pipelineError}</div>}
         {pipelineError && pipelineLoadState !== "error" && <div className="callout warning">{pipelineError}</div>}
@@ -349,10 +364,19 @@ export function MemoryGovernancePage() {
           {!pipelinePolicies.length ? <div className="callout warning">服务端未返回冻结的管道策略；为避免把未知配置当作可运行状态，所有操作已失败关闭。</div> : <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
             {pipelinePolicies.map((policy) => {
               const schedules = pipelineSchedules.filter((item) => item.pipelineKind === policy.pipelineKind);
+              const operational = pipelineReadiness?.pipelines.find((item) => item.pipelineKind === policy.pipelineKind);
               return <article key={policy.pipelineKind} style={{ border: "1px solid var(--aos-border)", borderRadius: 6, padding: 14 }}>
-                <strong>{pipelineKindLabels[policy.pipelineKind] || policy.pipelineKind}</strong>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+                  <strong>{pipelineKindLabels[policy.pipelineKind] || policy.pipelineKind}</strong>
+                  <span className="tag" data-testid={`pipeline-operational-${policy.pipelineKind}`}>{operational ? memoryStatusLabel(operational.operationalStatus) : "权威未返回"}</span>
+                </div>
                 <div className="muted" style={{ marginTop: 5 }}>触发：{policy.allowedTriggers.join(" / ")} · 默认：{memoryStatusLabel(policy.defaultStatus)}</div>
                 <div className="muted">必需依赖：{policy.requiredDependencies.join("、")}</div>
+                {operational && <div data-testid={`pipeline-blockers-${policy.pipelineKind}`} style={{ marginTop: 8 }}>
+                  <div className="muted">Schedule：{operational.scheduleCounts.map(item => `${memoryStatusLabel(item.status)} ${item.count}`).join(" / ") || "0"} · Run：{operational.runCounts.map(item => `${memoryStatusLabel(item.status)} ${item.count}`).join(" / ") || "0"} · Alert：{operational.alertCount}</div>
+                  <div className="muted">Adapter：{operational.adapterRequired ? (operational.adapterRegistered ? "已注册" : "未注册") : "不要求"} · 最近 Receipt：{operational.lastReceipt ? memoryStatusLabel(operational.lastReceipt.status) : "无"}</div>
+                  {!!operational.blockerCodes.length && <div className="callout warning" style={{ marginTop: 8, padding: 8 }}>阻断：{operational.blockerCodes.join("、")}</div>}
+                </div>}
                 {!schedules.length ? <div style={{ marginTop: 10 }}>
                   <span className="tag">未注册 Schedule</span>
                   <button type="button" className="btn" style={{ marginTop: 8, width: "100%" }} disabled title="需管理员提交带精确 revision/hash 的权威 config Artifact">等待权威配置</button>
@@ -369,9 +393,9 @@ export function MemoryGovernancePage() {
             })}
           </div>}
 
-          <h3 style={{ fontSize: 16, marginTop: 22 }}>最近 Run</h3>
-          {!pipelineRuns.length ? <div data-testid="pipeline-runs-empty" className="callout info">当前租户没有权威 Pipeline Run；未以示例运行填充页面。</div> : <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead><tr><th>Run</th><th>Schedule</th><th>状态</th><th>Task / Run</th><th>计划时间</th><th>证据</th></tr></thead>
+          <h3 style={{ fontSize: 16, marginTop: 22 }}>最近运行</h3>
+          {!pipelineRuns.length ? <div data-testid="pipeline-runs-empty" className="callout info">当前组织没有权威知识管道运行；未以示例运行填充页面。</div> : <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead><tr><th>运行</th><th>计划</th><th>状态</th><th>任务 / 运行</th><th>计划时间</th><th>证据</th></tr></thead>
             <tbody>{pipelineRuns.map((run) => <tr key={run.pipelineRunId}>
               <td>{run.pipelineRunId}<br /><span className="muted">attempt {run.attempt} · v{run.version}</span></td>
               <td>{run.scheduleId}</td><td>{memoryStatusLabel(run.status)}</td><td>{run.taskId}<br />{run.runId}</td><td>{new Date(run.scheduledFor).toLocaleString()}</td>

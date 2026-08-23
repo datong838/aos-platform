@@ -32,12 +32,20 @@ import {
   parseToolsInvokeContext,
   toolsInvokeBlocker,
 } from "./toolsInvokeContext";
+import {
+  businessDisplayName,
+  formatBlockers,
+  runtimeModeDisplayName,
+  statusDisplayName,
+  toolDisplayName,
+  toolKindDisplayName,
+} from "../../lib/aipChineseLabels";
 
 const TOOL_CATS = [
-  { id: "action", label: "写回动作", zh: "可 HITL 确认", defaultOn: true },
+  { id: "action", label: "写回动作", zh: "须人工确认", defaultOn: true },
   { id: "query", label: "对象查询", zh: "属性子集查询", defaultOn: true },
-  { id: "function", label: "函数", zh: "已发布 Logic", defaultOn: true },
-  { id: "var", label: "应用变量", zh: "更新 App 变量", defaultOn: false },
+  { id: "function", label: "业务逻辑", zh: "已发布流程", defaultOn: true },
+  { id: "var", label: "应用变量", zh: "更新应用变量", defaultOn: false },
   { id: "cmd", label: "命令", zh: "命令类工具", defaultOn: false },
   { id: "clarify", label: "澄清", zh: "向用户澄清", defaultOn: true },
   { id: "capability", label: "专业能力", zh: "平台代调重能力", defaultOn: true },
@@ -57,16 +65,16 @@ function toolCategory(kind: string): string {
 
 function toolSubtitle(kind: string): string {
   const cat = toolCategory(kind);
-  if (cat === "action") return "HITL: ●确认后执行";
+  if (cat === "action") return "人工确认后执行";
   if (cat === "query") return "属性子集 · 含 Wiki 字段";
-  if (cat === "function") return "或已发布 AIP Logic";
+  if (cat === "function") return "已发布的业务逻辑";
   if (cat === "clarify") return "暂停 · 向用户要澄清";
-  if (cat === "capability") return "写回经 Action · 经平台代调";
+  if (cat === "capability") return "写回经受控业务动作 · 由平台代为调用";
   if (cat === "wiki") return "结构化字段优先";
   return "只读 / 可提案";
 }
 
-/** 80 / 81 · 对齐 aip-tools.html · 三栏 + 策略 radio；W-T1 权威 = AgentInstance Overlay */
+/** 智能体工具配置：三栏目录、实例配置和受控试跑。 */
 export function ToolsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { data, err, reload } = useJsonGet<{
@@ -250,7 +258,7 @@ export function ToolsPage() {
 
   async function saveToolsConfig() {
     if (!activeInstanceId) {
-      setLocalErr("请先选择 AgentInstance；工具配置按 Overlay 分实例保存，不再写入全局 tools/config");
+      setLocalErr("请先选择数字同事实例；工具配置按当前实例单独保存，不再写入全局配置");
       return;
     }
     setSaving(true);
@@ -276,15 +284,15 @@ export function ToolsPage() {
         { items },
       );
       if (written.agent_id && written.agent_id !== activeInstanceId) {
-        throw new Error("Overlay 写回实例错配");
+        throw new Error("实例配置写回目标不一致");
       }
       const reread = await apiGet<{ agent_id?: string; items?: unknown[] }>(
         `/v1/aip/agents/${encodeURIComponent(activeInstanceId)}/tools`,
       );
       if (reread.agent_id && reread.agent_id !== activeInstanceId) {
-        throw new Error("Overlay 回读实例错配");
+        throw new Error("实例配置回读目标不一致");
       }
-      setSaveMsg(`已保存到 Overlay · ${activeInstanceId}`);
+      setSaveMsg(`已保存到当前数字同事实例 · ${currentAgent?.label || "已选实例"}`);
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
     } finally {
@@ -301,7 +309,7 @@ export function ToolsPage() {
       draftObjectId,
     });
     if (!payload) {
-      setLocalErr(invokeBlocker || "缺少 exact 试跑上下文");
+      setLocalErr(invokeBlocker || "缺少精确的试跑业务上下文");
       return;
     }
     try {
@@ -347,17 +355,15 @@ export function ToolsPage() {
     if (selectedCat === "action") {
       return (
         <>
-          <h2 className="bp-tool-detail-title">工具卡 · Action</h2>
-          <p className="bp-tool-detail-meta">
-            Action Type: <code>{selected.id}</code>
-            {selected.name ? ` · ${selected.name}` : ""}
-          </p>
+          <h2 className="bp-tool-detail-title">受控写回动作</h2>
+          <p className="bp-tool-detail-meta">经人工确认和草稿审批后写回业务系统。</p>
+          <details><summary>技术标识（审计用）</summary><code>{selected.id}</code>{selected.name ? ` · ${selected.name}` : ""}</details>
           <p className="error" data-testid="tools-action-draft-gate" style={{ fontSize: "0.8rem" }}>
             {selected.blockedReason ||
-              "Action 写回必须经 HITL→Draft/Approval/Receipt；禁止面板直接写成功（W-T7）"}
+              "写回必须经过人工确认、草稿审批和交付凭证；本面板不能直接写入生产数据。"}
           </p>
           <fieldset className="bp-tool-strategy">
-            <legend>执行策略（偏好，不绕过 Draft 门）</legend>
+            <legend>执行策略（不绕过草稿审批）</legend>
             <label>
               <input
                 type="radio"
@@ -365,7 +371,7 @@ export function ToolsPage() {
                 checked={hitl === "auto"}
                 onChange={() => setHitl("auto")}
               />
-              对话中自动提交（仍须 Draft 权威）
+              对话中自动提交草稿（仍须审批）
             </label>
             <label>
               <input
@@ -374,7 +380,7 @@ export function ToolsPage() {
                 checked={hitl === "form"}
                 onChange={() => setHitl("form")}
               />
-              弹出 Action 表单供人确认
+              弹出写回表单供人确认
             </label>
             <label>
               <input
@@ -383,13 +389,13 @@ export function ToolsPage() {
                 checked={hitl === "draft"}
                 onChange={() => setHitl("draft")}
               />
-              仅生成 Draft（提案台）
+              仅生成草稿（不写生产）
             </label>
           </fieldset>
           <div className="mp-cfg-actions" style={{ marginTop: "0.75rem" }}>
             <InvokeButton toolId={selected.id} />
             <Link to="/aip/drafts" className="btn-nav" data-testid="tools-action-drafts-link">
-              打开 Draft 审批台 →
+              打开草稿审批台 →
             </Link>
           </div>
         </>
@@ -399,16 +405,17 @@ export function ToolsPage() {
     if (selectedCat === "query") {
       return (
         <>
-          <h2 className="bp-tool-detail-title">工具卡 · Object Query</h2>
-          <p className="bp-tool-detail-meta">Object Type · 遍历深度 1 · {selected.id}</p>
+          <h2 className="bp-tool-detail-title">业务对象查询</h2>
+          <p className="bp-tool-detail-meta">只读取当前组织和工作区授权的业务属性。</p>
           <div className="bp-tool-chips">
-            <span className="bp-tool-chip">☑ id</span>
-            <span className="bp-tool-chip">☑ status</span>
-            <span className="bp-tool-chip is-wiki">☑ wiki.risk_level</span>
-            <span className="bp-tool-chip">☐ raw_payload</span>
+            <span className="bp-tool-chip">☑ 对象标识</span>
+            <span className="bp-tool-chip">☑ 业务状态</span>
+            <span className="bp-tool-chip is-wiki">☑ 知识风险等级</span>
+            <span className="bp-tool-chip">☐ 原始载荷</span>
           </div>
+          <details><summary>技术标识（审计用）</summary><code>{selected.id}</code></details>
           <Link to="/ontology/wiki" className="btn-nav">
-            打开 LLM Wiki →
+            打开知识库 →
           </Link>
         </>
       );
@@ -418,24 +425,21 @@ export function ToolsPage() {
       const blocked = Boolean(selected.blocked);
       return (
         <>
-          <h2 className="bp-tool-detail-title">工具卡 · Function</h2>
-          <p className="bp-tool-detail-meta">
-            <code style={{ color: "#6ee7b7" }}>{selected.id}</code>
-            {selected.name ? ` · ${selected.name}` : ""} · 须 published Logic
-          </p>
+          <h2 className="bp-tool-detail-title">{toolDisplayName(selected)}</h2>
+          <p className="bp-tool-detail-meta">已发布的业务逻辑工具；试跑仍受当前对象、权限和运行就绪门控制。</p>
+          <details><summary>技术标识（审计用）</summary><code>{selected.id}</code>{selected.publishedVersion != null ? ` · 发布版本 ${selected.publishedVersion}` : ""}</details>
           {blocked ? (
             <p className="error" data-testid="tools-function-blocked" style={{ fontSize: "0.8rem" }}>
-              {selected.blockedReason || "未挂已发布 Logic，Function 不可用"}
+              {selected.blockedReason || "尚未绑定已发布的业务逻辑，当前不可使用。"}
             </p>
           ) : (
             <p className="muted" style={{ fontSize: "0.75rem" }}>
-              已绑定 published Logic
-              {selected.publishedVersion != null ? ` · v${selected.publishedVersion}` : ""}
+              已绑定发布版本，可继续进行受控试跑。
             </p>
           )}
           <div className="mp-cfg-actions">
             <Link to="/aip/logic" className="btn-nav-accent">
-              打开 Logic →
+              打开业务逻辑编排 →
             </Link>
             <InvokeButton toolId={selected.id} />
           </div>
@@ -446,7 +450,7 @@ export function ToolsPage() {
     if (selectedCat === "clarify") {
       return (
         <>
-          <h2 className="bp-tool-detail-title">工具卡 · Request Clarification</h2>
+          <h2 className="bp-tool-detail-title">信息补充确认</h2>
           <p className="muted" style={{ fontSize: "0.8rem" }}>
             触发：「信息不足时先问，不要猜」
           </p>
@@ -460,16 +464,16 @@ export function ToolsPage() {
     if (selectedCat === "wiki") {
       return (
         <>
-          <h2 className="bp-tool-detail-title">工具卡 · Wiki 字段 Tool</h2>
+          <h2 className="bp-tool-detail-title">知识字段读取</h2>
           <p className="muted" style={{ fontSize: "0.8rem", color: "#fdba74" }}>
             结构化字段优先 · Agent 不扫全文向量库
           </p>
           <div className="bp-tool-chips">
-            <span className="bp-tool-chip is-wiki">wiki.risk_level</span>
-            <span className="bp-tool-chip is-wiki">wiki.specification</span>
+            <span className="bp-tool-chip is-wiki">知识风险等级</span>
+            <span className="bp-tool-chip is-wiki">商品规格知识</span>
           </div>
           <Link to="/ontology/wiki" className="btn-nav">
-            打开 LLM Wiki →
+            打开知识库 →
           </Link>
         </>
       );
@@ -479,11 +483,9 @@ export function ToolsPage() {
       const blocked = Boolean(selected.blocked);
       return (
         <>
-          <h2 className="bp-tool-detail-title">工具卡 · 专业能力</h2>
-          <p className="bp-tool-detail-meta">
-            专业能力：<code style={{ color: "#67e8f9" }}>{selected.capabilityId || selected.id}</code>
-            {selected.nameZh || selected.name ? ` · ${selected.nameZh || selected.name}` : ""}
-          </p>
+          <h2 className="bp-tool-detail-title">{toolDisplayName(selected)}</h2>
+          <p className="bp-tool-detail-meta">由平台代为调用的专业能力；结果回写仍须经过受控动作。</p>
+          <details><summary>技术标识（审计用）</summary><code>{selected.capabilityId || selected.id}</code></details>
           {blocked ? (
             <p className="error" data-testid="tools-capability-blocked" style={{ fontSize: "0.8rem" }}>
               {selected.blockedReason || "专业能力暂不可代调"}
@@ -505,10 +507,9 @@ export function ToolsPage() {
 
     return (
       <>
-        <h2 className="bp-tool-detail-title">工具卡 · {selected.kind}</h2>
-        <p className="bp-tool-detail-meta">
-          id: <code>{selected.id}</code>
-        </p>
+        <h2 className="bp-tool-detail-title">{toolDisplayName(selected)}</h2>
+        <p className="bp-tool-detail-meta">{toolKindDisplayName(selected.kind)}</p>
+        <details><summary>技术标识（审计用）</summary><code>{selected.id}</code></details>
         <InvokeButton toolId={selected.id} />
       </>
     );
@@ -516,8 +517,8 @@ export function ToolsPage() {
 
   return (
     <S2Chrome
-      title="Agent 工具面板"
-      lede="按 AgentInstance Overlay 配置本实例工具集（与 Studio 同一权威）；LLM 只请求，平台按权限代调。全局 tools/config 不再作为完成态。"
+      title="智能体工具配置"
+      lede="为每个数字同事配置可使用的查询、业务逻辑和专业能力；平台按当前组织权限代为调用。"
     >
       <AipOperationalProjectionStrip />
       <div
@@ -528,10 +529,10 @@ export function ToolsPage() {
           { label: "工具总数", value: String((data?.items || []).length) },
           { label: "筛选命中", value: String(tools.length) },
           { label: "分类开", value: String(cats.size) },
-          { label: "模式", value: mode },
-          { label: "HITL", value: hitl },
+          { label: "调用方式", value: runtimeModeDisplayName(mode) },
+          { label: "人工确认", value: runtimeModeDisplayName(hitl) },
           { label: "同事", value: currentAgent ? "已绑" : "未绑" },
-          { label: "默认包", value: packVersion || "—" },
+          { label: "默认工具包", value: packVersion ? businessDisplayName(packVersion, "当前智能体工具包") : "—" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -541,33 +542,33 @@ export function ToolsPage() {
       </div>
       <div data-testid="tools-overlay-authority">
         <BpBanner tone="info">
-          配置权威：AgentInstance Overlay（与 Studio 工具箱同一真源 · W-T8）· 当前{" "}
-          {activeInstanceId || "未选择实例"}
+          配置来源：当前数字同事实例（与智能体配置页使用同一份数据）· 当前{" "}
+          {currentAgent?.label || "未选择数字同事"}
           {overlayLoading ? " · 加载中…" : ""}
         </BpBanner>
       </div>
       <div data-testid="tools-invoke-context" className="card" style={{ padding: 12, marginBottom: 12 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>试跑 exact 上下文（W-T3）</div>
+        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>受控试跑对象</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
           <label className="muted" style={{ fontSize: "0.65rem" }}>
-            objectType
+            业务对象类型
             <input
               aria-label="tools-object-type"
               value={urlInvokeCtx?.objectType || draftObjectType}
               onChange={(e) => setDraftObjectType(e.target.value)}
               disabled={Boolean(urlInvokeCtx)}
-              placeholder="如 WorkOrder"
+              placeholder="如订单、商品或工单"
               style={{ marginLeft: 6, minWidth: 120 }}
             />
           </label>
           <label className="muted" style={{ fontSize: "0.65rem" }}>
-            objectId
+            真实对象标识
             <input
               aria-label="tools-object-id"
               value={urlInvokeCtx?.objectId || draftObjectId}
               onChange={(e) => setDraftObjectId(e.target.value)}
               disabled={Boolean(urlInvokeCtx)}
-              placeholder="真实对象 ID（禁 wo-1001）"
+              placeholder="请输入真实业务对象标识"
               style={{ marginLeft: 6, minWidth: 160 }}
             />
           </label>
@@ -582,7 +583,7 @@ export function ToolsPage() {
             试跑当前工具
           </button>
           <Link to="/aip/assist" className="btn-nav" style={{ fontSize: "0.7rem" }}>
-            从 Assist 带 Task/AgentRun →
+            从智能助手带入任务上下文 →
           </Link>
         </div>
         {invokeBlocker ? (
@@ -597,7 +598,7 @@ export function ToolsPage() {
       </div>
       <BpToolbar>
         <label className="muted" style={{ fontSize: "0.65rem", display: "inline-flex", alignItems: "center", gap: 8 }}>
-          AgentInstance
+          数字同事实例
           <select
             className="bp-tool-select"
             data-testid="tools-instance-select"
@@ -609,7 +610,7 @@ export function ToolsPage() {
             {!agentItems.length ? <option value="">无可用实例</option> : null}
             {agentItems.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.label} · {a.id}
+                {a.label}
               </option>
             ))}
           </select>
@@ -622,8 +623,8 @@ export function ToolsPage() {
             onChange={(e) => setMode(e.target.value)}
             aria-label="tool-mode"
           >
-            <option value="native">Native（并行）</option>
-            <option value="prompted">Prompted（单次一工具）</option>
+            <option value="native">并行调用</option>
+            <option value="prompted">逐项调用</option>
           </select>
         </label>
         <button type="button" className="btn" onClick={() => reload()}>
@@ -636,14 +637,14 @@ export function ToolsPage() {
           ← 成熟度
         </Link>
         <Link to="/aip/logic" className="btn-nav-accent">
-          Logic →
+          业务逻辑编排 →
         </Link>
         <Link
           to={activeInstanceId ? `/aip/studio?instance=${encodeURIComponent(activeInstanceId)}` : "/aip/studio"}
           className="btn-nav"
           data-testid="tools-to-studio-link"
         >
-          Chatbot Studio →
+          智能体配置 →
         </Link>
       </BpToolbar>
       {(err || localErr || agents.err) && <p className="error">{err || localErr || agents.err}</p>}
@@ -675,11 +676,11 @@ export function ToolsPage() {
           </div>
           {currentAgent ? (
             <>
-              <span className="bp-tag bp-tag-ok">{currentAgent.status === "active" || currentAgent.status === "running" ? "运行中" : currentAgent.status ? currentAgent.status : "状态未知（≠可派发）"}</span>
-              <span className="bp-tag bp-tag-warn">L2 · HITL</span>
+              <span className="bp-tag bp-tag-ok">{statusDisplayName(currentAgent.status || "unknown")}</span>
+              <span className="bp-tag bp-tag-warn">需要人工确认</span>
             </>
           ) : (
-            <Link to="/aip/studio" className="bp-tag bp-tag-warn">去 Studio 安装</Link>
+            <Link to="/aip/studio" className="bp-tag bp-tag-warn">前往智能体配置</Link>
           )}
         </div>
         <span className="bp-agent-selector-count">{tools.length} 个工具已启用 / {TOOL_CATS.filter((c) => cats.has(c.id)).length} 类可配</span>
@@ -693,6 +694,7 @@ export function ToolsPage() {
               <label key={c.id} className="bp-tool-cat">
                 <input
                   type="checkbox"
+                  aria-label={`${c.label}（${c.zh}）`}
                   checked={cats.has(c.id)}
                   onChange={() => toggleCat(c.id)}
                 />
@@ -707,6 +709,7 @@ export function ToolsPage() {
               <label key={c.id} className="bp-tool-cat is-wiki">
                 <input
                   type="checkbox"
+                  aria-label={`${c.label}（${c.zh}）`}
                   checked={cats.has(c.id)}
                   onChange={() => toggleCat(c.id)}
                 />
@@ -717,12 +720,12 @@ export function ToolsPage() {
               </label>
             ))}
             <p className="muted" style={{ fontSize: "0.625rem", marginTop: "0.5rem", padding: "0 0.5rem" }}>
-              优先 Wiki 结构化字段 · Query 属性子集
+              优先使用结构化知识字段和授权属性子集
             </p>
             <Link to="/aip/capabilities" className="bp-tool-cat is-capability-entry">
               <span className="bp-tool-cat-text">
-                <span className="bp-tool-cat-label">登记重能力 Adapter →</span>
-                <span className="bp-tool-cat-zh">登记 Adapter · 写回经 Action</span>
+                <span className="bp-tool-cat-label">登记专业能力 →</span>
+                <span className="bp-tool-cat-zh">平台代调 · 写回须人工确认</span>
               </span>
             </Link>
           </>
@@ -730,7 +733,7 @@ export function ToolsPage() {
         enabled={
           <>
             <div className="bp-section-micro">已启用</div>
-            {tools.map((t, i) => {
+            {tools.map((t) => {
               const cat = toolCategory(t.kind);
               const active = selected?.id === t.id;
               return (
@@ -746,7 +749,7 @@ export function ToolsPage() {
                   }}
                 >
                   <div style={{ fontWeight: 500, color: "var(--aos-text)", fontSize: "0.875rem" }}>
-                    {i + 1}. {t.kind} · {t.id}
+                    {toolDisplayName(t)}
                   </div>
                   <div
                     className="muted"
@@ -779,8 +782,8 @@ export function ToolsPage() {
                 </div>
               </div>
               <div className="bp-quality-score-tip">
-                无 EvalSuite / 用例权威前不显示结构·文档·测试假分。请到{" "}
-                <Link to="/aip/evals">Evals</Link> 绑定套件后再投影分数。
+                尚未绑定权威评测套件和真实用例，因此不显示推测分数。请到{" "}
+                <Link to="/aip/evals">评测门控</Link> 完成绑定后查看结果。
               </div>
             </div>
             {renderDetail()}
@@ -807,8 +810,8 @@ export function ToolsPage() {
 
       <div className="bp-tool-foot">
         <span>
-          Logic：执行动作 · 调用函数 · 调用专业能力 · 查询。Studio{" "}
-          <Link to="/aip/studio">试聊</Link>
+          支持受控写回、业务逻辑、专业能力和对象查询。可前往{" "}
+          <Link to="/aip/studio">智能体配置</Link> 进行试聊。
         </span>
         <button
           type="button"
@@ -817,7 +820,7 @@ export function ToolsPage() {
           disabled={saving || !activeInstanceId || overlayLoading}
           onClick={() => void saveToolsConfig()}
         >
-          {saving ? "保存中…" : "保存到本实例 Overlay"}
+          {saving ? "保存中…" : "保存当前实例配置"}
         </button>
       </div>
       {saveMsg && (
@@ -1039,7 +1042,7 @@ export function ProvidersPage() {
     setSaveMsg("");
     try {
       if (!runtimeProjection.isReady) {
-        setMsg("Canonical 模型运行链未全量 ready，兼容默认网关禁止切换");
+        setMsg("权威模型运行链尚未全部就绪，禁止切换兼容默认网关");
         return;
       }
       const opt = (gatewayApi.data?.options || []).find((o) => {
@@ -1380,7 +1383,7 @@ export function ProvidersPage() {
     return (
       <S2Chrome
         title="插件工作室 · 定制与发布"
-        lede="在线填写 Provider manifest，发布后进入可安装目录并自动安装。对齐 20 §3.1 插件契约。"
+        lede="在线填写供应商插件清单；发布后进入可安装目录，并按受控流程完成安装。"
       >
         <BpToolbar>
           <button type="button" className="btn-nav" onClick={backToList}>
@@ -1394,7 +1397,7 @@ export function ProvidersPage() {
         {saveMsg && <p className="bp-prop-ok">{saveMsg}</p>}
         <div className="mp-cfg-panel mp-form-grid">
           <label className="mp-field">
-            <span>插件 id（小写-连字符）</span>
+            <span>插件标识（小写字母与连字符）</span>
             <input value={studioId} onChange={(e) => setStudioId(e.target.value)} aria-label="studio-id" />
           </label>
           <label className="mp-field">
@@ -1414,11 +1417,11 @@ export function ProvidersPage() {
             </select>
           </label>
           <label className="mp-field">
-            <span>模态（逗号分隔 text/image/video）</span>
+            <span>支持内容类型（文字、图片、视频，逗号分隔）</span>
             <input value={studioMods} onChange={(e) => setStudioMods(e.target.value)} />
           </label>
           <label className="mp-field">
-            <span>表单族</span>
+            <span>接口兼容类型</span>
             <select value={studioFamily} onChange={(e) => setStudioFamily(e.target.value)}>
               <option value="openai_compatible">openai_compatible</option>
               <option value="azure">azure</option>
@@ -1430,7 +1433,7 @@ export function ProvidersPage() {
             </select>
           </label>
           <label className="mp-field">
-            <span>默认 Base URL</span>
+            <span>默认服务地址</span>
             <input value={studioBaseUrl} onChange={(e) => setStudioBaseUrl(e.target.value)} />
           </label>
         </div>
@@ -1483,7 +1486,7 @@ export function ProvidersPage() {
             </label>
           </div>
           <p className="muted" style={{ fontSize: "0.75rem", marginTop: "0.75rem" }}>
-            请先在 Vault、AOS Secret backend 或本机 Keychain 中维护密钥，再在此绑定引用。服务端 PUT 未上线前，草稿仅存本机会话。
+            请先在企业密钥库、AOS 安全存储或本机钥匙串中维护密钥，再在此绑定不透明引用。服务端写入能力未就绪前，草稿只保留在当前会话。
           </p>
           <div className="mp-cfg-actions">
             <button type="button" className="btn-primary" onClick={() => void saveCredentials()}>
@@ -1527,12 +1530,12 @@ export function ProvidersPage() {
                   <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
                 </label>
                 <label className="mp-field">
-                  <span>Base URL</span>
+                  <span>服务地址</span>
                   <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} />
                 </label>
                 <div className="mp-field mp-field-span">
                   <span className="muted" style={{ fontSize: "0.75rem" }}>
-                    API Key
+                    接口密钥
                   </span>
                   <div className="mp-cred-summary">
                     <span>{boundLabel}</span>
@@ -1586,7 +1589,7 @@ export function ProvidersPage() {
                 </label>
                 <div className="mp-field mp-field-span">
                   <span className="muted" style={{ fontSize: "0.75rem" }}>
-                    API Key
+                    接口密钥
                   </span>
                   <div className="mp-cred-summary">
                     <span>{boundLabel}</span>
@@ -1609,7 +1612,7 @@ export function ProvidersPage() {
                 </label>
                 <div className="mp-field mp-field-span">
                   <span className="muted" style={{ fontSize: "0.75rem" }}>
-                    API Key
+                    接口密钥
                   </span>
                   <div className="mp-cred-summary">
                     <span>{boundLabel}</span>
@@ -1649,7 +1652,7 @@ export function ProvidersPage() {
                   <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
                 </label>
                 <label className="mp-field">
-                  <span>本机 OpenAI 兼容地址</span>
+                  <span>本机兼容服务地址</span>
                   <input value={localUrl} onChange={(e) => setLocalUrl(e.target.value)} />
                 </label>
                 <label className="mp-field">
@@ -1657,7 +1660,7 @@ export function ProvidersPage() {
                   <input value={modelPath} onChange={(e) => setModelPath(e.target.value)} />
                 </label>
                 <label className="mp-field">
-                  <span>GPU 可见设备</span>
+                  <span>图形处理器设备</span>
                   <input value={gpu} onChange={(e) => setGpu(e.target.value)} />
                 </label>
                 <div className="mp-field mp-check-row">
@@ -1674,13 +1677,13 @@ export function ProvidersPage() {
             )}
             {formKind === "adapter" && (
               <div className="mp-adapter-box">
-                <div className="mp-adapter-title">Model Adapter</div>
+                <div className="mp-adapter-title">模型适配器</div>
                 <label className="mp-field mp-field-span">
                   <span>显示名</span>
                   <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
                 </label>
                 <label className="mp-field mp-field-span">
-                  <span>Artifacts（容器或 Source API）</span>
+                  <span>执行产物来源（容器或数据接口）</span>
                   <input value={artifacts} onChange={(e) => setArtifacts(e.target.value)} />
                 </label>
               </div>
@@ -1728,7 +1731,7 @@ export function ProvidersPage() {
               <BpPropGrid
                 items={[
                   { label: "平台默认网关（只读）", value: data?.sidecar || "—", tone: agnesReady ? "ok" : "muted" },
-                  { label: "endpoint", value: baseUrl || apiEndpoint || "—" },
+                  { label: "服务地址", value: baseUrl || apiEndpoint || "—" },
                   { label: "配置源", value: data?.sidecar?.startsWith("plugin:") ? "插件默认" : agnesReady ? "环境托管" : "本地回退" },
                 ]}
               />
@@ -1742,14 +1745,14 @@ export function ProvidersPage() {
 
   return (
     <S2Chrome
-      title="大模型接入(插件)"
+      title="模型供应商"
       lede="每种供应商对应一个插件：先安装，再填类型化配置；运行时经平台网关，不直连厂商。"
     >
       <BpArchitectureBar activeLayer="L1" />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "10px 0 12px" }}>
         {[
-          ["Canonical Provider", runtimeApi.data?.providers?.length ?? "—"],
-          ["Canonical 路由", `${runtimeProjection.ready}/${runtimeProjection.total}`],
+          ["权威供应商", runtimeApi.data?.providers?.length ?? "—"],
+          ["权威路由", `${runtimeProjection.ready}/${runtimeProjection.total}`],
           ["已安装插件", installedPlugins.length],
           ["目录待装", catalogPlugins.length],
         ].map(([name, count]) => (
@@ -1784,7 +1787,7 @@ export function ProvidersPage() {
             else openConfigure({ type: "adapter" });
           }}
         >
-          Adapter 管理
+          适配器管理
         </button>
         <Link to="/aip/model-router" className="btn-nav">
           路由策略 →
@@ -1797,25 +1800,25 @@ export function ProvidersPage() {
       {saveMsg && <p className="bp-prop-ok">{saveMsg}</p>}
       <BpBanner tone="info">{MODEL_CONFIG_NO_VAULT}</BpBanner>
       <BpBanner tone={runtimeProjection.isReady ? "info" : "warn"}>
-        <strong>Canonical 模型运行权威：</strong>{" "}
+        <strong>权威模型运行状态：</strong>{" "}
         {runtimeApi.err
           ? `读取失败（${runtimeApi.err}），兼容网关只读。`
-          : `${runtimeProjection.ready}/${runtimeProjection.total} 路由 ready。`}
+          : `${runtimeProjection.ready}/${runtimeProjection.total} 条路由已就绪。`}
         {!runtimeProjection.isReady && (
           <>
             {runtimeProjection.blockers.length
-              ? ` 阻断：${runtimeProjection.blockers.join("、")}。`
-              : " 当前没有可核验的 ready resolution。"}
-            {" "}下方旧网关与插件状态仅作兼容诊断，不代表 Provider 可运行。
+              ? ` 阻断：${formatBlockers(runtimeProjection.blockers)}。`
+              : " 当前没有可核验的就绪解析结果。"}
+            {" "}下方旧网关与插件状态仅作兼容诊断，不代表供应商当前可运行。
           </>
         )}
       </BpBanner>
 
       <section className="mp-section">
         <div className="mp-section-head">
-          <h2 className="mp-section-title">兼容默认网关（非 canonical 运行权威）</h2>
+          <h2 className="mp-section-title">兼容默认网关（非权威运行链）</h2>
           <span className="mp-section-hint">
-            仅用于旧网关兼容 · canonical 未全量 ready 时禁止切换
+            仅用于旧网关兼容 · 权威运行链未全部就绪时禁止切换
           </span>
         </div>
         <div className="mp-gateway-bar">
@@ -1896,7 +1899,7 @@ export function ProvidersPage() {
                   </button>
                   <span
                     className="btn-nav"
-                    title="旧网关由环境 / 边车托管；是否可运行必须以 canonical resolution 为准"
+                    title="旧网关由环境或边车托管；是否可运行必须以权威解析结果为准"
                     style={{ opacity: 0.85, cursor: "default" }}
                     data-testid="provider-runtime-hosted-badge"
                   >
@@ -2138,7 +2141,7 @@ export function ModelRouterPage() {
 
   async function saveRoutes() {
     if (confirmedVersion == null || !runtimeProjection.isReady) {
-      setLocalErr("Canonical 模型运行链未全量 ready，兼容路由禁止写入");
+      setLocalErr("权威模型运行链尚未全部就绪，禁止写入兼容路由");
       return;
     }
     setSaving(true);
@@ -2171,7 +2174,7 @@ export function ModelRouterPage() {
     setDrillMsg("");
     setLocalErr(null);
     if (!runtimeProjection.isReady) {
-      setLocalErr("Canonical 模型运行链未全量 ready，禁止熔断演练");
+      setLocalErr("权威模型运行链尚未全部就绪，禁止熔断演练");
       return;
     }
     const routeId = routeRows[0]?.id;
@@ -2218,7 +2221,7 @@ export function ModelRouterPage() {
     setChatAnswer("");
     setChatPayload(null);
     if (!runtimeProjection.isReady) {
-      setChatErr("Canonical 模型运行链未全量 ready，禁止试聊");
+      setChatErr("权威模型运行链尚未全部就绪，禁止试聊");
       return;
     }
     try {
@@ -2397,22 +2400,22 @@ export function ModelRouterPage() {
       )}
 
       <BpBanner tone={runtimeProjection.isReady ? "info" : "warn"}>
-        <strong>Canonical 模型运行权威：</strong>{" "}
+        <strong>权威模型运行状态：</strong>{" "}
         {runtimeApi.err
           ? `读取失败（${runtimeApi.err}）。`
-          : `${runtimeProjection.ready}/${runtimeProjection.total} 路由 ready。`}
+          : `${runtimeProjection.ready}/${runtimeProjection.total} 条路由已就绪。`}
         {!runtimeProjection.isReady && (
           <>
             {runtimeProjection.blockers.length
-              ? ` 阻断：${runtimeProjection.blockers.join("、")}。`
-              : " 当前没有可核验的 ready resolution。"}
+              ? ` 阻断：${formatBlockers(runtimeProjection.blockers)}。`
+              : " 当前没有可核验的就绪解析结果。"}
             {" "}本页旧路由配置只读，禁止保存、演练和试聊；审计导出仍可使用。
           </>
         )}
       </BpBanner>
 
       <p className="mr-hint">
-        本页保留兼容路由快照。只有 canonical resolution 全量 ready 时才允许编辑；插件页的“就绪”不等于运行链 ready。
+        本页保留兼容路由快照。只有权威路由解析结果全部就绪时才允许编辑；插件页的“就绪”不等于完整运行链已经就绪。
       </p>
 
       <div className="mr-rules-card">
@@ -2436,7 +2439,7 @@ export function ModelRouterPage() {
               const tone = egressTone(r.egress);
               return (
                 <tr key={r.id}>
-                  <td>{r.task}</td>
+                  <td>{businessDisplayName(r.task, "业务任务")}</td>
                   {r.span ? (
                     <td className="mr-egress-bad" colSpan={2}>
                       <span className="mr-span-label">熔断降级 → </span>
@@ -2624,7 +2627,7 @@ function ModelRouterPanels({
 
   async function saveCircuitConfig() {
     if (!circuitDraft || !runtimeReady) {
-      setCircuitMsg("Canonical 模型运行链未全量 ready，禁止保存熔断配置");
+      setCircuitMsg("权威模型运行链尚未全部就绪，禁止保存熔断配置");
       return;
     }
     setCircuitSaving(true);
@@ -2642,7 +2645,7 @@ function ModelRouterPanels({
 
   async function runRouteTest() {
     if (!testRouteId || configVersion == null || !runtimeReady) {
-      setTestErr("Canonical 模型运行链未全量 ready，禁止路由测试");
+      setTestErr("权威模型运行链尚未全部就绪，禁止路由测试");
       return;
     }
     setTestLoading(true);
@@ -2688,7 +2691,7 @@ function ModelRouterPanels({
         <div style={{ display: "flex", gap: "0.5rem" }}>
           {tabBtn("weights", "权重分配")}
           {tabBtn("circuit", "熔断器配置")}
-          {tabBtn("fallback", "Fallback 链")}
+          {tabBtn("fallback", "故障回退链")}
           {tabBtn("test", "路由测试")}
         </div>
       </div>
@@ -2705,7 +2708,7 @@ function ModelRouterPanels({
               <div key={rule.id} style={{ marginBottom: "1rem" }}>
                 <div className="flex items-center justify-between mb-1.5">
                   <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#1f2937" }}>
-                    {rule.task}
+                    {businessDisplayName(rule.task, "业务任务")}
                     <span style={{ marginLeft: "0.5rem", fontSize: "0.65rem", color: "#9ca3af" }}>
                       策略: {rule.strategy}
                     </span>
@@ -2940,7 +2943,7 @@ function ModelRouterPanels({
                 }}
               >
                 <span style={{ width: "5rem", color: "#6b7280", flexShrink: 0 }}>
-                  {rule.task}
+                  {businessDisplayName(rule.task, "业务任务")}
                 </span>
                 {chain.map((model, i) => {
                   const isEnd = model === "报错" || model === "拒绝" || model === "拒绝（不出域）";
@@ -3368,7 +3371,7 @@ export function EvalsPage() {
   async function readAuthorityRun() {
     const runId = authorityRunId.trim();
     if (!runId) {
-      setAuthorityError("请输入真实 Eval Run ID");
+      setAuthorityError("请输入真实评测运行标识");
       setAuthorityState("idle");
       return;
     }
@@ -3385,7 +3388,7 @@ export function EvalsPage() {
   }
 
   return (
-    <S2Chrome title="Evals 门控" lede="L4 自动化上线前须通过 Eval；未达标禁止发布为 Function / Automate。">
+    <S2Chrome title="评测门控" lede="自动化业务逻辑上线前必须通过真实评测；未达标时禁止发布或自动执行。">
       <AipOperationalProjectionStrip />
       <div
         data-testid="evals-ops-stats"
@@ -3397,7 +3400,7 @@ export function EvalsPage() {
           { label: "门控", value: gate ? (gate.gate_passed ? "通过" : "未过") : "未跑" },
           { label: "通过率", value: report ? `${Math.round((report.pass_rate || 0) * 100)}%` : "—" },
           { label: "用例", value: report ? `${report.passed}/${report.total}` : "—" },
-          { label: "权威Run", value: authorityState === "loaded" ? "已读" : authorityState === "error" ? "失败" : authorityState === "loading" ? "读取中" : "空" },
+          { label: "权威运行", value: authorityState === "loaded" ? "已读取" : authorityState === "error" ? "失败" : authorityState === "loading" ? "读取中" : "暂无" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -3407,7 +3410,7 @@ export function EvalsPage() {
       </div>
       <BpToolbar>
         <select
-          aria-label="Eval 套件"
+          aria-label="评测套件"
           className="aos-input"
           value={suiteId}
           onChange={(event) => {
@@ -3417,9 +3420,9 @@ export function EvalsPage() {
             setMsg("");
           }}
         >
-          <option value="">选择 Eval 套件</option>
+          <option value="">选择评测套件</option>
           {suites.map((suite) => (
-            <option key={suite.id} value={suite.id}>{suite.name}</option>
+            <option key={suite.id} value={suite.id}>{businessDisplayName(suite.name)}</option>
           ))}
         </select>
         <select
@@ -3433,12 +3436,12 @@ export function EvalsPage() {
             setMsg("");
           }}
         >
-          <option value="">选择已保存 Logic Graph</option>
+          <option value="">选择已保存业务逻辑</option>
           {graphs.map((graph) => (
-            <option key={graph.id} value={graph.id}>{graph.name} · revision {graph.revision}</option>
+            <option key={graph.id} value={graph.id}>{businessDisplayName(graph.name)} · 修订 {graph.revision}</option>
           ))}
         </select>
-        <span className="aos-text">实际执行已保存 Logic revision/hash，不接受独立目标表达式</span>
+        <span className="aos-text">实际执行绑定已保存业务逻辑的精确修订与内容摘要，不接受独立目标表达式</span>
         <button
           type="button"
           className="btn-primary"
@@ -3457,16 +3460,16 @@ export function EvalsPage() {
           ← 成熟度
         </Link>
       </BpToolbar>
-      {suitesApi.loading && <p className="aos-text">正在读取 Eval 套件…</p>}
+      {suitesApi.loading && <p className="aos-text">正在读取评测套件…</p>}
       {!suitesApi.loading && !suitesApi.err && suites.length === 0 && (
-        <p className="error">暂无 Eval 套件，可创建下方基础套件后运行真实评测。</p>
+        <p className="error">暂无评测套件，可创建下方基础套件后运行真实评测。</p>
       )}
       {msg && <p className="aos-text" role="status">{msg}</p>}
       {(suitesApi.err || graphsApi.err || runErr) && <p className="error" role="alert">{runErr || suitesApi.err || graphsApi.err}</p>}
 
       <BpBanner tone="info">
-        <strong>快速开始样例</strong> · 套件“{QUICK_START_EVAL_SUITE.name}” · 用例：输入 x=1，期望 2（exact） · 门控阈值 100%。
-        创建动作会真实写入 `/v1/evals/suites`，不会生成评测报告；运行时必须绑定已保存 Logic 的精确 revision/hash。
+        <strong>快速开始</strong> · 套件“{QUICK_START_EVAL_SUITE.name}” · 用例：输入 x=1，期望 2（精确匹配） · 门控阈值 100%。
+        创建动作会真实保存评测套件，但不会生成评测报告；运行时必须绑定已保存业务逻辑的精确版本。
       </BpBanner>
 
       <BpScoreGrid
@@ -3485,7 +3488,7 @@ export function EvalsPage() {
           },
           {
             value: gate ? (gate.gate_passed ? "门控通过" : "门控阻断") : "未检查",
-            label: "Eval 门控检查",
+            label: "评测门控检查",
             hint: gate ? `阈值 ${(gate.threshold * 100).toFixed(1)}%` : "以 gate-check 回包为准",
             tone: gate?.gate_passed ? "ok" : "bad",
           },
@@ -3506,12 +3509,12 @@ export function EvalsPage() {
 
       <BpBanner tone="warn">
         <span data-testid="evals-chain-banner">
-        <strong>真实门控口径</strong> · 本页不提供手工绿灯。只有 gate-check 返回通过才显示 Eval 门控通过；L4 仍须 Draft 审批与其他发布护栏 ·{" "}
+        <strong>真实门控口径</strong> · 本页不提供手工绿灯。只有服务端门控检查返回通过才显示评测通过；受控自动化仍须草稿审批与其他发布护栏 ·{" "}
         <Link
           to={proposalFromUrl ? `/aip/drafts?proposal=${encodeURIComponent(proposalFromUrl)}` : "/aip/drafts"}
           data-testid="evals-jump-drafts"
         >
-          查看 Draft →
+          查看草稿审批 →
         </Link>
         {proposalFromUrl && (
           <>
@@ -3527,7 +3530,7 @@ export function EvalsPage() {
         {gate?.gate_passed && (
           <>
             {" · "}
-            <Link to="/aip/studio">Chatbot Studio 测试 →</Link>
+            <Link to="/aip/studio">智能体配置试运行 →</Link>
           </>
         )}
         {suiteFromUrl && (
@@ -3537,24 +3540,24 @@ export function EvalsPage() {
       </BpBanner>
 
       <section style={{ border: "1px solid var(--aos-border)", padding: 16, marginTop: 16 }} data-testid="eval-authority-reader">
-        <h3 style={{ marginTop: 0 }}>AIP-4 权威 Eval Run 核查</h3>
-        <p className="aos-text">旧评测执行入口保持兼容；此处只读 AIP-4 不可变 Run 引用，不允许手工修改状态或 revision/hash。</p>
+        <h3 style={{ marginTop: 0 }}>权威评测运行核查</h3>
+        <p className="aos-text">旧评测入口保持兼容；此处只读不可变的评测运行引用，不允许手工修改状态或版本摘要。</p>
         <BpToolbar>
           <input
             aria-label="eval-authority-run-id"
             value={authorityRunId}
             onChange={(event) => setAuthorityRunId(event.target.value)}
-            placeholder="输入真实 eval-run ID"
+            placeholder="输入真实评测运行标识"
           />
           <button type="button" className="btn" onClick={() => void readAuthorityRun()} disabled={authorityState === "loading"}>
-            {authorityState === "loading" ? "读取中…" : "读取权威 Run"}
+            {authorityState === "loading" ? "读取中…" : "读取权威评测运行"}
           </button>
         </BpToolbar>
-        {authorityState === "idle" && !authorityError && <p className="aos-text">尚未选择权威 Eval Run。</p>}
-        {authorityError && <p className="error" role="alert">权威 Eval Run 读取失败：{authorityError}</p>}
+        {authorityState === "idle" && !authorityError && <p className="aos-text">尚未选择权威评测运行。</p>}
+        {authorityError && <p className="error" role="alert">权威评测运行读取失败：{authorityError}</p>}
         {authorityRun && (
           <BpTable
-            columns={["Run", "状态", "Suite revision/hash", "Target revision/hash", "Dataset revision/hash", "Judge revision/hash"]}
+            columns={["运行标识", "状态", "评测套件版本", "目标版本", "数据集版本", "裁判版本"]}
             rows={[ [
               authorityRun.runId,
               authorityRun.status,
@@ -3570,10 +3573,10 @@ export function EvalsPage() {
       <BpLinkRow
         links={[
           { to: "/aip/maturity", label: "成熟度楼梯" },
-          { to: "/aip/logic", label: "Logic 画布" },
+          { to: "/aip/logic", label: "业务逻辑编排" },
           {
             to: proposalFromUrl ? `/aip/drafts?proposal=${encodeURIComponent(proposalFromUrl)}` : "/aip/drafts",
-            label: "Draft 审批台",
+            label: "草稿审批台",
           },
           {
             to: proposalFromUrl
@@ -3646,17 +3649,17 @@ export function DecisionLineagePage() {
   return (
     <S2Chrome
       title="决策谱系"
-      lede="从服务端权威事件还原 TaskRun / Action / Eval / Publication / ResearchJob 因果链；无 ID 时保持空壳，不伪造链路。"
+      lede="从服务端权威事件还原任务运行、受控动作、评测、发布与研究任务之间的因果链；无真实标识时保持空态，不伪造链路。"
     >
       <div
         data-testid="lineage-ops-stats"
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "0 0 12px" }}
       >
         {[
-          { label: "Root类型", value: rootType },
+          { label: "起点类型", value: rootType === "task_run" ? "任务运行" : rootType === "action" ? "受控动作" : rootType === "eval_run" ? "评测运行" : rootType === "publication" ? "发布记录" : rootType === "research_job" ? "研究任务" : "历史决策谱系" },
           { label: "加载态", value: loadState === "loaded" ? "已载" : loadState === "loading" ? "读取中" : loadState === "error" ? "失败" : "空闲" },
           { label: "事件数", value: String(events.length) },
-          { label: "谱系ID", value: lineageId ? lineageId.slice(0, 10) : "—" },
+          { label: "谱系标识", value: lineageId ? "已生成" : "—" },
           { label: "输入", value: rootId.trim() ? "已填" : "待填" },
           { label: "错误", value: localErr ? "有" : "无" },
         ].map((s) => (
@@ -3669,24 +3672,24 @@ export function DecisionLineagePage() {
       {(rootIdFromUrl || chainProposalId) && (
         <BpBanner tone="info">
           <span data-testid="lineage-chain-banner">
-          深链 Root <code>{rootType}/{rootId.trim() || rootIdFromUrl}</code>
-          {chainProposalId ? ` · 样例链 Proposal ${chainProposalId}` : ""}
+          已从关联页面带入查询起点
+          <details><summary>技术标识（审计用）</summary><code>{rootType}/{rootId.trim() || rootIdFromUrl}</code>{chainProposalId ? <> · 提案 <code>{chainProposalId}</code></> : null}</details>
           </span>
         </BpBanner>
       )}
       <BpToolbar>
         <label className="muted">
-          Root 类型{" "}
+          起点类型{" "}
           <select value={rootType} onChange={(event) => setRootType(event.target.value as LineageRootType)} aria-label="lineage-root-type">
-            {LINEAGE_ROOT_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+            {LINEAGE_ROOT_TYPES.map((type) => <option key={type} value={type}>{type === "task_run" ? "任务运行" : type === "action" ? "受控动作" : type === "eval_run" ? "评测运行" : type === "publication" ? "发布记录" : type === "research_job" ? "研究任务" : "历史决策谱系"}</option>)}
           </select>
         </label>
         <label className="muted">
-          Root ID{" "}
+          起点标识{" "}
           <input
             value={rootId}
             onChange={(e) => setRootId(e.target.value)}
-            placeholder="输入真实 run / action / eval / publication ID"
+            placeholder="输入真实业务记录标识"
             aria-label="lineage-root-id"
             style={{ minWidth: "12rem" }}
           />
@@ -3696,8 +3699,8 @@ export function DecisionLineagePage() {
         </button>
       </BpToolbar>
 
-      {loadState === "idle" && !localErr && <BpBanner tone="info">请选择 Root 类型并输入真实 Root ID；页面不会展示示例 Trace 或固定步骤。</BpBanner>}
-      {loadState === "loaded" && events.length === 0 && <BpBanner tone="warn"><span data-testid="lineage-empty">该 Root 暂无权威谱系事件。</span></BpBanner>}
+      {loadState === "idle" && !localErr && <BpBanner tone="info">请选择起点类型并输入真实业务记录标识；页面不会展示示例链路或固定步骤。</BpBanner>}
+      {loadState === "loaded" && events.length === 0 && <BpBanner tone="warn"><span data-testid="lineage-empty">该业务记录暂无权威谱系事件。</span></BpBanner>}
       {localErr && <BpBanner tone="warn"><span data-testid="lineage-error">谱系读取失败：{localErr}</span></BpBanner>}
 
       {events.length > 0 && (
@@ -3712,8 +3715,8 @@ export function DecisionLineagePage() {
         }}
       >
         <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 16 }}>
-          Lineage <span style={{ fontFamily: "monospace", color: "var(--aos-text)" }}>{lineageId}</span>
-          {" · "}{rootType}/{rootId} · {events.length} 个权威事件
+          {events.length} 个权威事件
+          <details><summary>谱系技术标识（审计用）</summary><code>{lineageId}</code> · {rootType}/{rootId}</details>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -3770,12 +3773,12 @@ export function DecisionLineagePage() {
             }}
             data-testid="lineage-jump-observability"
           >
-            exact 可观测证据 →
+            查看精确可观测证据 →
           </Link>
         ) : (
           <span
             data-testid="lineage-observability-blocked"
-            title="请先成功读取真实谱系；禁止根据 Root ID 猜测 lineageId"
+            title="请先成功读取真实谱系；禁止根据业务记录标识猜测谱系标识"
             style={{ padding: "6px 12px", fontSize: 12, border: "1px solid var(--aos-border)", color: "var(--aos-muted)" }}
           >
             可观测证据（需先读取谱系）
@@ -3806,7 +3809,7 @@ export function DecisionLineagePage() {
           }}
           data-testid="lineage-jump-evals"
         >
-          Evals 门控
+          评测门控
         </Link>
         <Link
           to={chainProposalId ? `/aip/drafts?proposal=${encodeURIComponent(chainProposalId)}` : "/aip/drafts"}
@@ -3820,7 +3823,7 @@ export function DecisionLineagePage() {
           }}
           data-testid="lineage-jump-drafts"
         >
-          Draft 审批台 →
+          草稿审批台 →
         </Link>
       </div>
     </S2Chrome>
@@ -4321,7 +4324,7 @@ export function LegacyProviderDetailPage() {
                     </td>
                     <td>
                       {l.trace_id ? (
-                        <span title="仅有 trace_id 不足以定位 canonical Lineage；请从决策谱系进入可观测性">{l.trace_id.slice(0, 8)}</span>
+                        <span title="仅有追踪标识不足以定位权威决策谱系；请从决策谱系进入可观测性">{l.trace_id.slice(0, 8)}</span>
                       ) : "—"}
                     </td>
                   </tr>

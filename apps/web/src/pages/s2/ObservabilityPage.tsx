@@ -108,7 +108,7 @@ export function ObservabilityPage() {
   const load = useCallback(async (requestedLineageId?: string) => {
     const target = (requestedLineageId ?? lineageId).trim();
     if (!target) {
-      setError("请输入真实 Lineage ID");
+      setError("请输入真实谱系标识");
       setLoadState("idle");
       return;
     }
@@ -158,16 +158,16 @@ export function ObservabilityPage() {
   }
 
   return (
-    <PageChrome title="AIP 可观测性" lede="按 Lineage 查询权威 Telemetry Span 与 Usage Receipt；不推算趋势，不回填演示数据。">
+    <PageChrome title="运行可观测性" lede="按真实决策谱系查询调用轨迹与用量凭证；不推算趋势，不回填演示数据。">
       <div
         data-testid="observability-ops-stats"
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
       >
         {[
           { label: "加载态", value: loadState === "loaded" ? "已载" : loadState === "loading" ? "读取中" : loadState === "error" ? "失败" : "空闲" },
-          { label: "视图", value: view === "overview" ? "概览" : view === "spans" ? "Spans" : "Usage" },
-          { label: "Spans", value: String(spans.length) },
-          { label: "Usage", value: String(receipts.length) },
+          { label: "视图", value: view === "overview" ? "概览" : view === "spans" ? "调用轨迹" : "用量凭证" },
+          { label: "调用轨迹", value: String(spans.length) },
+          { label: "用量凭证", value: String(receipts.length) },
           { label: "筛选命中", value: String(filteredSpans.length) },
           { label: "输入", value: lineageId.trim() ? "已填" : "待填" },
         ].map((s) => (
@@ -179,7 +179,7 @@ export function ObservabilityPage() {
       </div>
       <div className="bp5-card" style={{ ...cardStyle, display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap" }}>
         <label style={{ display: "grid", gap: 6, minWidth: 320 }}>
-          <span className="muted">Lineage ID</span>
+          <span className="muted">谱系标识</span>
           <input
             aria-label="observability-lineage-id"
             value={lineageId}
@@ -198,7 +198,7 @@ export function ObservabilityPage() {
           data-testid="observability-export"
           title={
             loadState === "loaded"
-              ? "导出当前已读取的 Span / Usage JSON"
+              ? "导出当前已读取的调用轨迹与用量凭证 JSON"
               : "请先读取权威证据后再导出；空闲/失败态不提供演示文件"
           }
         >
@@ -219,27 +219,27 @@ export function ObservabilityPage() {
       <div style={{ display: "flex", gap: 8, margin: "16px 0" }}>
         {(["overview", "spans", "usage"] as const).map((item) => (
           <button key={item} type="button" className={`btn ${view === item ? "primary" : ""}`} onClick={() => setView(item)} data-testid={`obs-tab-${item}`}>
-            {item === "overview" ? "概览" : item === "spans" ? "Spans" : "Usage Receipts"}
+            {item === "overview" ? "概览" : item === "spans" ? "调用轨迹" : "用量凭证"}
           </button>
         ))}
       </div>
 
-      {loadState === "idle" && !error && <div data-testid="observability-idle" className="callout info">请输入真实 Lineage ID。页面不会显示固定 Trace、合成趋势或推算 Token。</div>}
-      {loadState === "loaded" && spans.length === 0 && receipts.length === 0 && <div data-testid="observability-empty" className="callout warning">该 Lineage 暂无权威 Span 或 Usage Receipt。</div>}
+      {loadState === "idle" && !error && <div data-testid="observability-idle" className="callout info">请输入真实谱系标识。页面不会显示固定调用链、合成趋势或推算用量。</div>}
+      {loadState === "loaded" && spans.length === 0 && receipts.length === 0 && <div data-testid="observability-empty" className="callout warning">该决策谱系暂无权威运行片段或用量凭证。</div>}
       {error && <div data-testid="observability-error" className="callout warning">权威可观测性读取失败：{error}</div>}
 
       {loadState === "loaded" && (
         <div data-testid="observability-evidence-status" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 12, marginBottom: 14 }}>
           <div style={cardStyle}>
-            <strong>Telemetry Span</strong>
+            <strong>运行片段</strong>
             <div className={spans.length ? "callout success" : "callout warning"} style={{ marginTop: 10 }}>
               {missingAuthorityReason("span", spans.length) ?? `已写入 ${spans.length} 条权威 Span。`}
             </div>
           </div>
           <div style={cardStyle}>
-            <strong>Usage Receipt</strong>
+            <strong>用量凭证</strong>
             <div className={receipts.length ? "callout success" : "callout warning"} style={{ marginTop: 10 }}>
-              {missingAuthorityReason("usage", receipts.length) ?? `已写入 ${receipts.length} 条权威 Usage Receipt。`}
+              {missingAuthorityReason("usage", receipts.length) ?? `已写入 ${receipts.length} 条权威用量凭证。`}
             </div>
           </div>
         </div>
@@ -251,7 +251,7 @@ export function ObservabilityPage() {
             {[
               ["Span", summary.spanCount],
               ["错误 Span", summary.errorSpanCount],
-              ["Usage Receipt", summary.usageReceiptCount],
+              ["用量凭证", summary.usageReceiptCount],
               ["实测", summary.measuredCount],
               ["估算", summary.estimatedCount],
               ["未知", summary.unknownCount],
@@ -264,12 +264,12 @@ export function ObservabilityPage() {
       {loadState === "loaded" && view === "spans" && (
         <section style={cardStyle}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 10 }}>
-            <strong>Telemetry Spans（{filteredSpans.length}/{spans.length}）</strong>
+            <strong>调用遥测轨迹（{filteredSpans.length}/{spans.length}）</strong>
             <input aria-label="span-filter" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="过滤 trace / span / provider" />
           </div>
-          {spans.length === 0 ? <div className="muted">暂无权威 Span。</div> : (
+          {spans.length === 0 ? <div className="muted">暂无权威运行片段。</div> : (
             <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr><th style={thStyle}>名称</th><th style={thStyle}>Provider</th><th style={thStyle}>Trace / Span</th><th style={thStyle}>类型 / 状态</th><th style={thStyle}>时长</th><th style={thStyle}>质量</th><th style={thStyle}>观测时间</th></tr></thead>
+              <thead><tr><th style={thStyle}>名称</th><th style={thStyle}>供应商</th><th style={thStyle}>链路 / 片段标识</th><th style={thStyle}>类型 / 状态</th><th style={thStyle}>时长</th><th style={thStyle}>质量</th><th style={thStyle}>观测时间</th></tr></thead>
               <tbody>{filteredSpans.map((span) => <tr key={span.spanRecordId}>
                 <td style={tdStyle}>{span.name}</td><td style={tdStyle}>{span.provider}</td>
                 <td style={{ ...tdStyle, fontFamily: "monospace" }}>{span.traceId}<br />{span.spanId}</td>
@@ -283,10 +283,10 @@ export function ObservabilityPage() {
 
       {loadState === "loaded" && view === "usage" && (
         <section style={cardStyle}>
-          <strong>Usage Receipts（{receipts.length}）</strong>
-          {receipts.length === 0 ? <div className="muted" style={{ marginTop: 10 }}>暂无权威 Usage Receipt。</div> : (
+          <strong>用量凭证（{receipts.length}）</strong>
+          {receipts.length === 0 ? <div className="muted" style={{ marginTop: 10 }}>暂无权威用量凭证。</div> : (
             <div style={{ overflowX: "auto", marginTop: 10 }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr><th style={thStyle}>类型</th><th style={thStyle}>数量</th><th style={thStyle}>Provider</th><th style={thStyle}>Receipt</th><th style={thStyle}>质量</th><th style={thStyle}>观测时间</th></tr></thead>
+              <thead><tr><th style={thStyle}>类型</th><th style={thStyle}>数量</th><th style={thStyle}>供应商</th><th style={thStyle}>用量凭证</th><th style={thStyle}>质量</th><th style={thStyle}>观测时间</th></tr></thead>
               <tbody>{receipts.map((receipt) => <tr key={receipt.receiptId}>
                 <td style={tdStyle}>{receipt.usageKind}</td><td style={tdStyle}>{formatUsageQuantity(receipt)}</td><td style={tdStyle}>{receipt.provider}</td>
                 <td style={{ ...tdStyle, fontFamily: "monospace" }}>{receipt.receiptId}<br />{receipt.providerReceiptId}</td>

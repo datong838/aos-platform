@@ -2,9 +2,9 @@
   "id": "niushop-mysql",
   "name": "Niushop MySQL",
   "nameZh": "Niushop 微商城",
-  "description": "Niushop 微商城专属连接器 · 预设 8 表映射 + PII 排除",
+  "description": "Niushop 微商城专属连接器 · 预设 12 表映射 + PII 排除",
   "kind": "source",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "aos",
   "runtime": "live",
   "extends": "jdbc-mysql",
@@ -40,7 +40,11 @@
       "ns_order",
       "ns_order_goods",
       "ns_express_delivery_package",
-      "ns_member"
+      "ns_member",
+      "ns_weapp",
+      "ns_config",
+      "ns_goods_evaluate",
+      "ns_pay"
     ],
     "piiExclusion": [
       "mobile",

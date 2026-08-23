@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "aip.r33.deferred-and-blocked.v1",
+  "checkedAt": "2026-08-22T23:20:00+08:00",
+  "sourceCommit": "d52eb16b90fc3e2b96fcc7b34f31c09b4d646c5b",
+  "items": [
+    {
+      "id": "R32-SERIAL-INTEGRATION",
+      "classification": "BLOCKED_EXTERNAL",
+      "owner": "m1 serialized integration owner",
+      "fact": "R32 isolated merge rehearsal is GREEN, but the real m1 merge, cumulative rerun and Authority/01/06/Prime CAS have not consumed the current R33 source commit.",
+      "releaseCondition": "Obtain a clean serialized m1 window, merge the approved AIP delivery, run cumulative gates and complete one legal CAS/readback."
+    },
+    {
+      "id": "DATA-LEASE",
+      "classification": "BLOCKED_EXTERNAL",
+      "owner": "codex-data-readiness",
+      "fact": "The data-source-readiness-exact-authority-20260821 Lease is still ACTIVE with no released_at even though its lease_expires_at is in the past; expiry is not treated as release.",
+      "releaseCondition": "The lease owner or the established takeover protocol records an explicit completion/release consistent with the final receipt."
+    },
+    {
+      "id": "SOURCE-READINESS",
+      "classification": "BLOCKED_EXTERNAL",
+      "owner": "Data/Adapter",
+      "fact": "The live org-org/dev-project read-only probe is 10/12 READY; P02-product-qyh and P04-category-qyh have latestRunStatus=failed and latestRunErrorCode=PIPELINE_EXECUTOR_FAILED.",
+      "releaseCondition": "P02 and P04 produce new attributable successful runs and a new same-cutoff canonical P01-P12 EvidencePack; historical 12/12 receipts are not reused."
+    },
+    {
+      "id": "RUNNABLE-SIX-COLLEAGUE",
+      "classification": "BLOCKED_EXTERNAL",
+      "owner": "AIP runtime operation",
+      "fact": "The real tenant has 6 installed Agent instances but runnableCount=0; fresh Provider Health, SkillBinding readiness and CapabilityBinding readiness are all 0 at the audit cutoff.",
+      "releaseCondition": "Re-establish fresh exact Health and Binding authority at a new authorized runtime cutoff without replaying a sealed pilot."
+    },
+    {
+      "id": "MEMORY-WIKI-COLD-START",
+      "classification": "DEFERRED_AUTHORIZED",
+      "owner": "AIP knowledge operation",
+      "fact": "The real tenant has no Memory item, pipeline run, pipeline schedule or Wiki page at the audit cutoff.",
+      "releaseCondition": "Import approved real knowledge through the canonical OKF/Wiki/Draft gates and prove tenant-scoped retrieval and governance."
+    },
+    {
+      "id": "AIP-PAGE-RUNTIME-INTEGRATIONS",
+      "classification": "BLOCKED_EXTERNAL",
+      "owner": "shared integration owners",
+      "fact": "The shared Workshop module catalog fails on 24/25 AIP routes; Analyst query templates, Agent Marketplace catalog and Memory knowledge-pipeline authority return explicit Not Found states.",
+      "releaseCondition": "Canonical owners publish compatible endpoints and the 25-page browser matrix is rerun with real org-org/dev-project responses."
+    },
+    {
+      "id": "W2-BASELINE",
+      "classification": "BLOCKED_EXTERNAL",
+      "owner": "m1 and Workshop serialized integration",
+      "fact": "m1@c308707 is not an ancestor of w2-workshop@a79db51, so the final three-line baseline is not aligned.",
+      "releaseCondition": "After m1 serial integration, Workshop safely absorbs the new m1 baseline and reruns its owned gates."
+    }
+  ],
+  "mustNotDo": [
+    "Do not mark an expired Lease as released.",
+    "Do not reuse the historical 12/12 SourceReadiness cutoff.",
+    "Do not forge Provider Health, Binding readiness, Memory/Wiki content or a runnable AgentRun.",
+    "Do not edit authority.json, 01/06 or Prime outside the m1 CAS stage.",
+    "Do not read or overwrite the w2-workshop uncommitted workspace."
+  ],
+  "verdict": "R33_PRESEALED_BLOCKED_BY_R32_AND_LIVE_OPERATIONAL_GATES"
+}

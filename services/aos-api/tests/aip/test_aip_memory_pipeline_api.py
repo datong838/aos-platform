@@ -10,6 +10,8 @@ from aos_api.aip_memory_pipeline_contracts import (
     KnowledgePipelineCheckpointRevision,
     KnowledgePipelineKind,
     KnowledgePipelinePolicy,
+    KnowledgePipelineOperationalReadinessEnvelope,
+    KnowledgePipelineOperationalReadiness,
     KnowledgePipelineReceipt,
     KnowledgePipelineRun,
     KnowledgePipelineRunStatus,
@@ -193,6 +195,35 @@ class FakeService:
         self.start_call = (scope, body, kwargs)
         return pipeline_run()
 
+    def operational_readiness(self, scope, *, occurred_at):
+        return KnowledgePipelineOperationalReadinessEnvelope(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            pipelines=[
+                KnowledgePipelineOperationalReadiness(
+                    tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+                    pipeline_kind=kind,
+                    default_status="paused" if kind.value not in {"network_learning", "competitor_analysis", "professional_database"} else "disabled",
+                    dependency_allowed=False,
+                    dependency_reason_codes=["dependency_review_unknown"],
+                    adapter_required=kind.value in {"network_learning", "competitor_analysis", "professional_database"},
+                    adapter_registered=kind.value not in {"network_learning", "competitor_analysis", "professional_database"},
+                    schedule_counts=[],
+                    run_counts=[],
+                    alert_count=0,
+                    operational_status="unconfigured",
+                    blocker_codes=["dependency_review_unknown", "schedule_not_registered", "successful_receipt_missing"],
+                    observed_at=occurred_at,
+                )
+                for kind in self.policy_kinds_all()
+            ],
+            observed_at=occurred_at,
+        )
+
+    @staticmethod
+    def policy_kinds_all():
+        from aos_api.aip_memory_pipeline_contracts import KnowledgePipelineKind
+        return list(KnowledgePipelineKind)
+
 
 @pytest.fixture()
 def pipeline_api(client):
@@ -257,6 +288,10 @@ def test_read_endpoints_use_authenticated_tenant_and_return_strict_authority(pip
     client, store, _service = pipeline_api
 
     assert client.get("/v1/aip/memory-authority/pipelines/policies").status_code == 200
+    readiness = client.get("/v1/aip/memory-authority/pipelines/readiness")
+    assert readiness.status_code == 200
+    assert len(readiness.json()["pipelines"]) == 7
+    assert readiness.json()["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
     assert client.get("/v1/aip/memory-authority/pipelines/schedules").json()[0]["scheduleId"] == "seed-1"
     assert client.get("/v1/aip/memory-authority/pipelines/schedules/seed-1/events").json() == []
     assert client.get("/v1/aip/memory-authority/pipelines/schedules/seed-1/checkpoint").json() == {"checkpoint": None}

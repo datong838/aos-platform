@@ -71,6 +71,15 @@ export const CAPABILITY_COLORS: Record<Capability, { bg: string; fg: string }> =
   "function-calling": { bg: "#F1F5F9", fg: "#475569" },
 };
 
+const CAPABILITY_LABELS: Record<Capability, string> = {
+  chat: "对话生成",
+  code: "代码生成",
+  vision: "图像理解",
+  embedding: "语义向量",
+  reasoning: "复杂推理",
+  "function-calling": "工具调用",
+};
+
 // ── Mock catalog data ──────────────────────────────────────────
 
 export const CATALOG_MODELS: CatalogModel[] = [
@@ -556,20 +565,20 @@ export function ModelCatalogPage() {
   }
 
   return (
-    <PageChrome title="模型目录" lede="目录浏览、筛选与已注册模型；Live 接权威 API，失败时不回落本地演示目录">
+    <PageChrome title="模型目录" lede="浏览、筛选并注册当前组织可用的真实模型；读取失败时不回落本地演示目录。">
       <div className="mc-wrap">
         {sourceMode === "error" && (
           <div className="w2-a6a7-demo-banner" role="alert">
             <span className="w2-a6a7-demo-badge">不可用</span>
             <span className="w2-a6a7-demo-text">
-              模型目录 API 读取失败，已停止展示本地 MOCK{loadError ? ` · ${loadError}` : ""}
+              模型目录读取失败，已停止展示本地模拟数据{loadError ? ` · ${loadError}` : ""}
             </span>
           </div>
         )}
         {sourceMode === "live" && (
           <div className="w2-a6a7-live-banner" role="status">
-            <span className="w2-a6a7-live-badge">Live</span>
-            <span className="w2-a6a7-demo-text">目录/已注册已接 `/v1/aip/model-catalog` · 密表筛选壳</span>
+            <span className="w2-a6a7-live-badge">真实数据</span>
+            <span className="w2-a6a7-demo-text">模型目录和已注册列表均来自当前组织的权威服务</span>
           </div>
         )}
         {registerMsg && (
@@ -604,7 +613,7 @@ export function ModelCatalogPage() {
         <div className="mc-tabs">
           {([
             { id: "catalog", label: `目录浏览 (${catalogStats.total})` },
-            { id: "settings", label: "AIP 设置" },
+            { id: "settings", label: "平台设置" },
             { id: "enablement", label: "模型启用" },
             { id: "registered", label: `已注册 (${catalogStats.registered})` },
           ] as const).map((t) => (
@@ -652,7 +661,7 @@ export function ModelCatalogPage() {
                 className="mc-filter-select"
               >
                 <option value="all">所有能力</option>
-                {allCapabilities.map((c) => <option key={c} value={c}>{c}</option>)}
+                {allCapabilities.map((c) => <option key={c} value={c}>{CAPABILITY_LABELS[c]}</option>)}
               </select>
               <select
                 value={catalogFilter.priceTier}
@@ -750,7 +759,7 @@ export function ModelCatalogPage() {
                           const c = CAPABILITY_COLORS[cap];
                           return (
                             <span key={cap} className="mc-cap-tag" style={{ background: c.bg, color: c.fg }}>
-                              {cap}
+                              {CAPABILITY_LABELS[cap]}
                             </span>
                           );
                         })}
@@ -760,6 +769,7 @@ export function ModelCatalogPage() {
                         <label className="mc-compare-label">
                           <input
                             type="checkbox"
+                            aria-label={`将 ${m.name} 加入模型对比`}
                             checked={isSelected}
                             onChange={() => toggleCompare(m.id)}
                             disabled={!isSelected && compareSet.size >= 3}
@@ -799,7 +809,7 @@ export function ModelCatalogPage() {
                 >
                   <div className="mc-modal-header">
                     <h3 className="mc-modal-title">模型对比</h3>
-                    <button type="button" onClick={() => setShowCompare(false)} className="mc-modal-close">×</button>
+                    <button type="button" aria-label="关闭模型对比" onClick={() => setShowCompare(false)} className="mc-modal-close">×</button>
                   </div>
                   <table className="mc-compare-table">
                     <thead>
@@ -867,6 +877,7 @@ export function ModelCatalogPage() {
                       </svg>
                       <input
                         type="search"
+                        aria-label="搜索组织"
                         placeholder="搜索组织..."
                         value={orgSearch}
                         onChange={(e) => setOrgSearch(e.target.value)}
@@ -878,6 +889,7 @@ export function ModelCatalogPage() {
                         <label key={name} className="mc-org-item">
                           <input
                             type="checkbox"
+                            aria-label={`组织 ${name} 启用状态`}
                             checked={checked}
                             disabled
                             onChange={() => setOrgs((prev) => ({ ...prev, [name]: !prev[name] }))}

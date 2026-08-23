@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Header
 
 from aos_api.aip_analyst_contracts import (
     AnalystQueryRequest,
+    AnalystRoleQueryTemplateList,
     CreateQueryJobRequest,
     QueryJobCommand,
     QueryJobListResponse,
@@ -20,6 +21,7 @@ from aos_api.aip_analyst_canonical_adapters import (
     CanonicalSemanticReadAdapter,
 )
 from aos_api.aip_analyst_query_store import AipAnalystQueryStore
+from aos_api.aip_analyst_templates import AnalystTemplateCatalog
 from aos_api.aip_memory_search import AipMemoryKnowledgeSearch
 from aos_api.routers.aip_memory_authority import get_aip_memory_search_service
 from aos_api.auth import Principal, require_principal
@@ -48,6 +50,18 @@ def get_aip_analyst_read_adapters(
 
 def get_aip_analyst_query_store() -> AipAnalystQueryStore:
     return AipAnalystQueryStore()
+
+
+def get_aip_analyst_template_catalog() -> AnalystTemplateCatalog:
+    return AnalystTemplateCatalog()
+
+
+@router.get("/query-templates", response_model=AnalystRoleQueryTemplateList)
+def list_query_templates(
+    principal: Principal = Depends(require_principal),
+    catalog: AnalystTemplateCatalog = Depends(get_aip_analyst_template_catalog),
+) -> AnalystRoleQueryTemplateList:
+    return catalog.list(TenantScope(principal.org_id, principal.project_id))
 
 
 @router.post("/query", response_model=QueryResultRevision)
@@ -189,4 +203,9 @@ def reconcile_query_job(
     return _command("reconcile", query_id, body, principal, store, idempotency_key)
 
 
-__all__ = ["get_aip_analyst_query_store", "get_aip_analyst_read_adapters", "router"]
+__all__ = [
+    "get_aip_analyst_query_store",
+    "get_aip_analyst_read_adapters",
+    "get_aip_analyst_template_catalog",
+    "router",
+]

@@ -61,10 +61,37 @@ const CAPABILITY_NAMES: Record<string, string> = {
 };
 
 const RISK_NAMES: Record<string, string> = {
+  r0: "只读",
+  r1: "低风险",
+  r2: "需人工审批",
+  r3: "高风险",
+  r4: "禁止自动执行",
   low: "低",
   medium: "中",
   high: "高",
   critical: "严重",
+};
+
+const ACTION_NAMES: Record<string, string> = {
+  closeworkorder: "关闭工单",
+  close_work_order: "关闭工单",
+  send_notice: "发送通知",
+  cancelorder: "取消订单",
+  cancel_order: "取消订单",
+  publish_content: "发布内容",
+  create_refund: "发起退款",
+  updatewikicard: "更新知识卡片",
+};
+
+const OBJECT_TYPE_NAMES: Record<string, string> = {
+  order: "订单",
+  workorder: "工单",
+  contentdraft: "内容草稿",
+  customerlite: "客户",
+  product: "商品",
+  productsku: "商品规格",
+  payment: "支付",
+  shipment: "发货",
 };
 
 const DEFINITION_READINESS_NAMES: Record<string, string> = {
@@ -100,6 +127,11 @@ const RESPONSIBILITY_NAMES: Record<string, string> = {
 };
 
 const BLOCKER_NAMES: Record<string, string> = {
+  roles_not_fully_runnable: "数字同事尚未全部可派发",
+  capabilities_not_fully_runnable: "当前方案所需专业能力尚未全部可派发",
+  tools_not_fully_runnable: "当前方案所需工具尚未全部可派发",
+  routes_not_fully_runnable: "模型路由尚未全部可派发",
+  eval_gates_not_fully_passed: "评测门尚未全部通过",
   capability_binding_readiness_stale: "能力绑定就绪快照已过期，请刷新",
   skill_binding_readiness_stale: "技能绑定就绪快照已过期，请刷新",
   skill_binding_unavailable: "技能绑定不可用",
@@ -115,6 +147,8 @@ const BLOCKER_NAMES: Record<string, string> = {
   CAPABILITY_BINDING_NOT_ACTIVE: "能力绑定未激活",
   MODEL_ROUTE_BLOCKED: "模型路由被阻断",
   PROVIDER_HEALTH_UNAVAILABLE: "供应商健康检查不可用",
+  price_unit_mismatch: "计价单位与用量凭证不一致",
+  pricing_unit_mismatch: "计价单位与用量凭证不一致",
 };
 
 const BINDING_STATUS_NAMES: Record<string, string> = {
@@ -160,7 +194,7 @@ export function blockerDisplayName(code: string): string {
     const name = LOGIC_NAMES[logicKey(id)];
     return name ? `技能尚未发布：${name}` : "技能尚未发布";
   }
-  return raw;
+  return "存在尚未归类的运行阻断";
 }
 
 export function bindingStatusDisplayName(status: string): string {
@@ -173,6 +207,34 @@ export function instanceStatusDisplayName(status: string): string {
 
 export function riskDisplayName(risk: string): string {
   return RISK_NAMES[String(risk || "").toLowerCase()] || risk;
+}
+
+export function actionDisplayName(actionTypeId: string): string {
+  const key = String(actionTypeId || "").trim().toLowerCase();
+  return ACTION_NAMES[key] || "受控业务动作";
+}
+
+export function objectTypeDisplayName(objectType: string): string {
+  const key = String(objectType || "").trim().toLowerCase();
+  return OBJECT_TYPE_NAMES[key] || objectType || "业务对象";
+}
+
+/** Only changes the business-facing title; the original authority ID stays untouched. */
+export function businessDisplayName(value: string, fallback = "未命名业务能力"): string {
+  const exactNames: Record<string, string> = {
+    "aip.skill-publication.approval": "技能发布审批",
+    "ecommerce-standard": "电商标准生产流程",
+    "w-t2-v1": "当前智能体默认工具包",
+    "w-j3 sample chain: closeworkorder after eval gate": "评测通过后的工单关闭申请",
+    "电商增长方案包（d3：w03 客户与私域运营台 + l05 分润异常检测）": "电商增长与客户运营方案包",
+  };
+  const raw = String(value || "").trim();
+  if (exactNames[raw.toLowerCase()]) return exactNames[raw.toLowerCase()];
+  const clean = String(value || "")
+    .replace(/^\s*(?:(?:AIP-[A-Z0-9]+)|(?:[DCGSPAVI]\d+)|(?:W-?[A-Z]?\d+)|(?:L\d+))\s*[·:：—-]?\s*/i, "")
+    .replace(/(?:隔离\s*)?\bdry[- ]?run\b/gi, "隔离试运行")
+    .trim();
+  return clean || fallback;
 }
 
 export function definitionReadinessDisplayName(readiness: string): string {
@@ -195,6 +257,108 @@ const TEMPLATE_NAMES: Record<string, string> = {
 export function templateDisplayName(templateId: string): string {
   const raw = String(templateId || "").trim();
   return TEMPLATE_NAMES[raw] || raw;
+}
+
+const TOOL_KIND_NAMES: Record<string, string> = {
+  action: "受控写回动作",
+  query: "业务对象查询",
+  "object query": "业务对象查询",
+  function: "业务逻辑工具",
+  logic: "业务逻辑工具",
+  clarify: "信息补充确认",
+  "request clarification": "信息补充确认",
+  capability: "专业能力",
+  wiki: "知识字段读取",
+  command: "受控命令",
+  variable: "应用变量",
+};
+
+const RUNTIME_MODE_NAMES: Record<string, string> = {
+  native: "并行调用",
+  prompted: "逐项调用",
+  auto: "自动提交确认",
+  form: "表单人工确认",
+  draft: "仅生成草稿",
+};
+
+const CONTRACT_SECTION_NAMES: Record<string, string> = {
+  "task brief": "任务简报",
+  "evidence bundle": "证据包",
+  "eval contract": "评测契约",
+  "responsibility plan": "职责计划",
+  "stage template": "阶段模板",
+  "artifact relation": "产物关系",
+  "review issue": "评审问题",
+  "impact preview": "影响预览",
+  "production context": "生产上下文",
+  "start decision": "启动决策",
+};
+
+const STATUS_NAMES: Record<string, string> = {
+  running: "运行中",
+  active: "已启用",
+  ready: "就绪",
+  available: "可使用",
+  blocked: "已阻断",
+  stale: "已过期",
+  unknown: "状态未知",
+  draft: "草稿",
+  frozen: "已冻结",
+  published: "已发布",
+  evaluated: "已评测",
+  approved: "已批准",
+  rejected: "已驳回",
+  open: "待处理",
+  resolved: "已解决",
+  passed: "已通过",
+  healthy: "健康",
+  failed: "失败",
+  idle: "未运行",
+  complete: "完整",
+  partial: "部分",
+};
+
+export function toolKindDisplayName(kind: string): string {
+  const key = String(kind || "").trim().toLowerCase();
+  return TOOL_KIND_NAMES[key] || "业务工具";
+}
+
+export function toolDisplayName(input: {
+  id: string;
+  kind: string;
+  name?: string;
+  nameZh?: string;
+}): string {
+  const chineseName = String(input.nameZh || "").trim();
+  if (chineseName) {
+    return chineseName
+      .replace("关闭/写回（HITL）", "关闭或写回（需人工确认）")
+      .replace("Echo（演示）", "连通性校验");
+  }
+  const logicName = logicDisplayName(input.id);
+  if (logicName && logicName !== input.id) return logicName;
+  const name = String(input.name || "").trim();
+  if (name && /[\u3400-\u9fff]/.test(name)) {
+    return name
+      .replace("关闭/写回（HITL）", "关闭或写回（需人工确认）")
+      .replace("Echo（演示）", "连通性校验");
+  }
+  return toolKindDisplayName(input.kind);
+}
+
+export function runtimeModeDisplayName(mode: string): string {
+  const key = String(mode || "").trim().toLowerCase();
+  return RUNTIME_MODE_NAMES[key] || "按策略调用";
+}
+
+export function contractSectionDisplayName(section: string): string {
+  const key = String(section || "").trim().toLowerCase();
+  return CONTRACT_SECTION_NAMES[key] || section;
+}
+
+export function statusDisplayName(status: string): string {
+  const key = String(status || "").trim().toLowerCase();
+  return STATUS_NAMES[key] || status;
 }
 
 export function formatBlockers(codes: string[]): string {

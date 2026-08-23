@@ -309,3 +309,75 @@ def test_promotion_is_atomic_and_item_survives_store_recreation(chain) -> None:
             actor="promoter",
             occurred_at=NOW + timedelta(minutes=3),
         )
+
+
+def test_memory_revocation_is_cas_idempotent_audited_and_tenant_scoped(chain) -> None:
+    store = chain["store"]
+    candidate = create_candidate(chain)
+    approved = store.transition_candidate(
+        PRIMARY,
+        candidate.candidate_id,
+        to_status=MemoryCandidateStatus.APPROVED,
+        expected_version=1,
+        actor="approver",
+        occurred_at=NOW + timedelta(minutes=1),
+        governance=governance(),
+    )
+    _promoted, item, revision = store.promote_candidate(
+        PRIMARY,
+        approved.candidate_id,
+        memory_item_id=chain["item_id"],
+        expected_version=2,
+        actor="promoter",
+        occurred_at=NOW + timedelta(minutes=2),
+    )
+
+    revoked, retained_revision = store.revoke_memory_item(
+        PRIMARY,
+        item.memory_item_id,
+        expected_version=1,
+        reason_code="source_withdrawn",
+        actor="reviewer",
+        occurred_at=NOW + timedelta(minutes=3),
+    )
+    assert revoked.status.value == "revoked"
+    assert revoked.version == 2
+    assert retained_revision == revision
+
+    replay = store.revoke_memory_item(
+        PRIMARY,
+        item.memory_item_id,
+        expected_version=1,
+        reason_code="source_withdrawn",
+        actor="reviewer",
+        occurred_at=NOW + timedelta(minutes=4),
+    )
+    assert replay == (revoked, revision)
+    with pytest.raises(AipMemoryConflict, match="another command"):
+        store.revoke_memory_item(
+            PRIMARY,
+            item.memory_item_id,
+            expected_version=1,
+            reason_code="different_reason",
+            actor="reviewer",
+            occurred_at=NOW + timedelta(minutes=5),
+        )
+    with pytest.raises(AipMemoryNotFound):
+        store.revoke_memory_item(
+            CANARY,
+            item.memory_item_id,
+            expected_version=1,
+            reason_code="source_withdrawn",
+            actor="reviewer",
+            occurred_at=NOW + timedelta(minutes=5),
+        )
+
+    with connect(PRIMARY) as conn:
+        evidence = conn.execute(
+            """SELECT evidence_type,subject_ref,payload FROM aip_evidence
+               WHERE org_id=%s AND project_id=%s AND source_ref=%s""",
+            (*PRIMARY.key, item.memory_item_id),
+        ).fetchone()
+    assert evidence["evidence_type"] == "memory_revoke"
+    assert evidence["subject_ref"]["resourceId"] == item.memory_item_id
+    assert evidence["payload"]["reasonCode"] == "source_withdrawn"

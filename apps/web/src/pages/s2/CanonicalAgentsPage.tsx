@@ -5,6 +5,7 @@ import {
   type AgentInstanceListResponse,
   type AgentRuntimeReadinessResponse,
 } from "../../api/aipAgentControl";
+import { aipMarketplaceImport, type MarketplaceAgentReadiness } from "../../api/aipMarketplaceImport";
 import { PageChrome } from "../../components/PageChrome";
 import { formatBlockers, instanceStatusDisplayName, responsibilityDisplayName } from "../../lib/aipChineseLabels";
 
@@ -13,6 +14,7 @@ type DetailTab = "overview" | "tools" | "try" | "publish";
 export function CanonicalAgentsPage() {
   const [data, setData] = useState<AgentInstanceListResponse | null>(null);
   const [runtime, setRuntime] = useState<AgentRuntimeReadinessResponse | null>(null);
+  const [repairs, setRepairs] = useState<Map<string, MarketplaceAgentReadiness>>(new Map());
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -20,12 +22,14 @@ export function CanonicalAgentsPage() {
 
   const load = useCallback(async () => {
     try {
-      const [instances, readiness] = await Promise.all([
+      const [instances, readiness, marketplace] = await Promise.all([
         aipAgentControl.listInstances(),
         aipAgentControl.runtimeReadiness(),
+        aipMarketplaceImport.listMarketplace().catch(() => null),
       ]);
       setData(instances);
       setRuntime(readiness);
+      setRepairs(new Map((marketplace?.items || []).flatMap((item) => item.agents).map((item) => [item.templateId, item])));
       setError("");
       setSelectedId((prev) => {
         if (prev && instances.items.some((item) => item.instanceId === prev)) return prev;
@@ -34,6 +38,7 @@ export function CanonicalAgentsPage() {
     } catch (e) {
       setData(null);
       setRuntime(null);
+      setRepairs(new Map());
       setError(String((e as Error).message || e));
     }
   }, []);
@@ -62,6 +67,7 @@ export function CanonicalAgentsPage() {
 
   const selected = filtered.find((item) => item.instanceId === selectedId) || filtered[0] || null;
   const catalogItem = selected ? catalogByTemplate.get(selected.template.assetId) : undefined;
+  const repair = selected ? repairs.get(selected.template.assetId) : undefined;
   const runnable = catalogItem?.runtimeReadiness === "runnable";
 
   return (
@@ -206,8 +212,8 @@ export function CanonicalAgentsPage() {
                               : "已安装≠可派发：缺少完整能力/技能绑定与依赖快照"}
                       </p>
                       <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-                        <Link className="btn" to="/aip/agent-registry">去目录重评就绪</Link>
-                        <Link className="btn" to="/aip/studio">Studio</Link>
+                        <Link className="btn" to={repair?.repairHref || "/aip/agent-registry"}>{repair?.repairLabel || "去目录重评就绪"}</Link>
+                        <Link className="btn" to="/aip/studio">智能体配置</Link>
                       </div>
                     </div>
                   )}

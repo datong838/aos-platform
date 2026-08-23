@@ -221,6 +221,24 @@ def test_schedule_hash_is_server_owned_idempotent_scoped_and_restart_safe(
         )
 
 
+def test_activity_summary_is_unpaginated_and_tenant_scoped(authority_chain) -> None:
+    store = AipMemoryPipelineStore()
+    before = store.summarize_activity(PRIMARY)
+    before_paused = next(
+        (item.count for item in before["seed_import"].schedule_counts if item.status == "paused"),
+        0,
+    )
+    created = create_schedule(store, authority_chain)
+
+    primary = store.summarize_activity(PRIMARY)
+    canary = store.summarize_activity(CANARY)
+
+    seed = primary[created.pipeline_kind]
+    assert next(item.count for item in seed.schedule_counts if item.status == "paused") == before_paused + 1
+    assert seed.run_counts == []
+    assert sum(item.count for snapshot in canary.values() for item in snapshot.schedule_counts) == 0
+
+
 def test_schedule_transition_is_cas_audited_append_only_and_atomic(authority_chain) -> None:
     store = AipMemoryPipelineStore()
     schedule = create_schedule(store, authority_chain)

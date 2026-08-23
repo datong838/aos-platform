@@ -1,0 +1,57 @@
+{
+  "wave": "R17",
+  "verifiedAt": "2026-08-22T06:09:45+08:00",
+  "branch": "w1-aip",
+  "baselineCommit": "7f9ebf8c08df752ef0dbb4714b193c4d724868e8",
+  "positiveTenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "roleTemplates": 6,
+    "readyRoleTemplates": 6,
+    "objectTypes": 15,
+    "query": {
+      "role": "data_advisor",
+      "kind": "semantic",
+      "objectType": "Order",
+      "status": "complete",
+      "rowCount": 50,
+      "confidenceStatus": "not_applicable",
+      "confidenceBasis": "deterministic_canonical_read",
+      "lineagePolicy": "exact_only_no_trace_substitution"
+    }
+  },
+  "negativeCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project",
+    "roleTemplates": 6,
+    "readyRoleTemplates": 0,
+    "blockedRoleTemplates": 6,
+    "blockerCodes": ["OBJECT_TYPE_NOT_INSTALLED"]
+  },
+  "tests": {
+    "backendTargeted": "29 passed",
+    "backendCumulative": "215 passed",
+    "webTargeted": "27 passed",
+    "webFull": "200 files / 2026 tests passed",
+    "webTypecheck": "GREEN",
+    "openapi": "13 passed / deterministic",
+    "diffCheck": "GREEN"
+  },
+  "browserEvidence": [
+    "browser-org-org-six-roles-fixed.png",
+    "browser-org-org-result-evidence-fixed.png"
+  ],
+  "harness": {
+    "apiPort": 8017,
+    "webPort": 1420,
+    "r17EndpointBehavior": "read_only",
+    "startupSideEffects": "existing application lifespan seed and cron hooks observed; no R17 endpoint write was performed",
+    "shutdown": "clean"
+  },
+  "knownNonBlockingBaselineDrift": [
+    "AgentRegistry persistent fixture provenance constraint",
+    "Skill Publish persistent database pollution",
+    "D03 skill route historical expected revision r3 versus current r4",
+    "D03 pilot historical expected approval V6 versus current V8"
+  ]
+}

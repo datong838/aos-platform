@@ -10,6 +10,7 @@ from aos_api.aip_analyst_contracts import (
     AnalystQueryStatus,
     MetricQueryRequest,
     QueryBlocker,
+    QueryConfidence,
     QueryResultRevision,
 )
 from aos_api.aip_contracts import ResourceRef, TenantContext
@@ -107,3 +108,31 @@ def test_result_rows_must_match_columns_and_source_cutoff() -> None:
             content_hash=HASH,
             created_at=NOW,
         )
+
+
+def test_query_confidence_never_invents_an_unmeasured_score() -> None:
+    with pytest.raises(ValidationError):
+        QueryConfidence(
+            status="unknown",
+            score=0.9,
+            basis=["not_measured"],
+        )
+    with pytest.raises(ValidationError):
+        QueryConfidence(status="measured", basis=["missing_score"])
+
+
+def test_legacy_result_gets_explicit_unknown_confidence() -> None:
+    result = QueryResultRevision(
+        tenant=TenantContext(org_id="org-org", project_id="dev-project"),
+        query_id="qry-legacy",
+        revision=1,
+        kind="semantic",
+        status="blocked",
+        blockers=[QueryBlocker(code="LEGACY_BLOCKED", message="legacy")],
+        cutoff_at=NOW,
+        content_hash=HASH,
+        created_at=NOW,
+    )
+    assert result.confidence.status.value == "unknown"
+    assert result.confidence.score is None
+    assert result.confidence.basis == ["legacy_result_without_confidence"]

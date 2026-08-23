@@ -1,0 +1,76 @@
+{
+  "capturedAt": "2026-08-22T20:38:00+08:00",
+  "browser": "Codex in-app browser",
+  "baseUrl": "http://127.0.0.1:5183",
+  "viewport": {
+    "width": 1280,
+    "height": 1000
+  },
+  "tenant": "org-org/dev-project",
+  "routeCount": 25,
+  "routes": [
+    "01-aip-assist",
+    "02-aip-studio",
+    "03-aip-analyst",
+    "04-aip-logic",
+    "05-aip-tools",
+    "06-aip-maturity",
+    "07-aip-production-contracts",
+    "08-aip-capabilities",
+    "09-aip-agent-registry",
+    "10-aip-agent-marketplace",
+    "11-aip-agents",
+    "12-aip-skill-publish",
+    "13-aip-agent-import",
+    "14-aip-capability-import",
+    "15-aip-evals",
+    "16-aip-drafts",
+    "17-aip-lineage",
+    "18-aip-observability",
+    "19-aip-memory-governance",
+    "20-aip-model-catalog",
+    "21-aip-model-providers",
+    "22-aip-model-router",
+    "23-aip-capacity",
+    "24-aip-model-runtime",
+    "25-aip-doc-intelligence"
+  ],
+  "results": {
+    "singleH1": "25/25 GREEN",
+    "noHorizontalOverflow": "25/25 GREEN",
+    "pageOwnedUnlabeledControls": "25/25 GREEN after 4529b8cd803a7fb39f43ddf01bcb902d8e18e48f",
+    "longLoadingRecheck": "7/7 resolved after 2.2 seconds",
+    "console": "no page-level console error observed in the existing 25-route capture",
+    "networkTruth": "failure states retained; no demo or mock fallback"
+  },
+  "honestFailures": [
+    {
+      "route": "/aip/analyst",
+      "status": "FAIL_CLOSED",
+      "message": "六角色模板读取失败：Not Found",
+      "reason": "current m1 backend baseline does not expose the w1 route"
+    },
+    {
+      "route": "/aip/agent-marketplace",
+      "status": "FAIL_CLOSED",
+      "message": "目录读取失败：Not Found",
+      "reason": "current m1 backend baseline does not expose the w1 marketplace route"
+    }
+  ],
+  "crossScopeDebts": [
+    "AppShell global resource search has no readable label",
+    "InstalledModuleNavigation reports directory load failure on every route"
+  ],
+  "remainingAcceptance": [
+    "1440 and 1920 post-fix viewport matrix",
+    "complete keyboard and focus-visible route matrix",
+    "same-cutoff real SourceReadiness 12/12",
+    "legal Data Lease release and m1 serialized CAS"
+  ],
+  "safety": {
+    "writes": false,
+    "providerCalls": false,
+    "pipelineRetries": false,
+    "leaseChanges": false
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "headless-playwright-scripts",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Headless browser batch tooling (playwright-core + system Chrome)",
+  "dependencies": {
+    "playwright-core": "^1.50.0"
+  }
+}

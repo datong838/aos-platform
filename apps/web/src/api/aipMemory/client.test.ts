@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AipClient } from "../aip/client";
 import { AipMemorySdk } from "./client";
-import { parseKnowledgePipelinePolicies, parseKnowledgeQueryResult, parseKnowledgeReadiness, parseMemoryAuthorityItem, parseMemoryCandidate, parseMemoryImprovementObservations, type CreateMemoryAgentProjectionRequest, type MemoryAgentProjection } from "./contracts";
+import { PIPELINE_KINDS, parseKnowledgePipelineOperationalReadiness, parseKnowledgePipelinePolicies, parseKnowledgeQueryResult, parseKnowledgeReadiness, parseMemoryAuthorityItem, parseMemoryCandidate, parseMemoryImprovementObservations, type CreateMemoryAgentProjectionRequest, type MemoryAgentProjection } from "./contracts";
 
 const tenant = { orgId: "org-org", projectId: "dev-project" };
 const ref = (resourceType: string, resourceId: string, revision?: string) => ({ resourceType, resourceId, ...(revision ? { revision } : {}), authority: "postgresql" });
@@ -79,6 +79,24 @@ describe("AipMemorySdk", () => {
     expect(() => parseKnowledgePipelinePolicies([{ ...policy, pipelineKind: "future_pipeline" }])).toThrow("未知");
     expect(() => parseMemoryCandidate({ ...candidate, request: { ...request, subject: { resourceType: "Product", resourceId: "p1" } } })).toThrow("authority");
     expect(() => parseMemoryCandidate({ ...candidate, request: { ...request, payload: { ...artifact("payload-1"), contentHash: "bad" } } })).toThrow("sha256");
+  });
+
+  it("七管道 operational readiness 通过唯一 SDK 且结构漂移失败关闭", async () => {
+    const pipeline = (pipelineKind: typeof PIPELINE_KINDS[number]) => ({
+      tenant, pipelineKind, defaultStatus: "paused", dependencyAllowed: false,
+      dependencyReasonCodes: ["dependency_review_unknown"], adapterRequired: false,
+      adapterRegistered: true, scheduleCounts: [], runCounts: [], lastRun: null,
+      lastReceipt: null, lastCheckpoint: null, alertCount: 0,
+      operationalStatus: "unconfigured", blockerCodes: ["schedule_not_registered"],
+      observedAt: "2026-08-13T00:00:00Z",
+    });
+    const readiness = { tenant, pipelines: PIPELINE_KINDS.map(pipeline), observedAt: "2026-08-13T00:00:00Z" };
+    const request = vi.fn().mockResolvedValue(readiness);
+    const sdk = new AipMemorySdk({ request } as unknown as AipClient);
+    await expect(sdk.pipelineReadiness()).resolves.toMatchObject({ tenant, pipelines: expect.any(Array) });
+    expect(request).toHaveBeenCalledWith("getMemoryPipelineReadiness");
+    expect(() => parseKnowledgePipelineOperationalReadiness({ ...readiness, pipelines: readiness.pipelines.slice(0, 6) })).toThrow("唯一七管道");
+    expect(() => parseKnowledgePipelineOperationalReadiness({ ...readiness, pipelines: readiness.pipelines.map((item, index) => index ? item : { ...item, operationalStatus: "ready" }) })).toThrow("ready pipeline");
   });
 
   it("知识就绪度通过唯一 client 严格读取并保留权威缺口", async () => {

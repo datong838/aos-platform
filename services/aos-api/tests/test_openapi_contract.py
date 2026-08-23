@@ -83,8 +83,8 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2536
-    assert len(schema.get("components", {}).get("schemas", {})) == 1942
+    assert len(schema["paths"]) == 2544
+    assert len(schema.get("components", {}).get("schemas", {})) == 1974
 
 
 def test_source_readiness_contract_is_principal_scoped_and_read_only() -> None:
@@ -148,6 +148,14 @@ def test_core_cross_layer_operation_shapes_are_frozen() -> None:
     schema = json.loads(OPENAPI_PATH.read_bytes())
     expected = {
         ("/v1/aip/chat", "post"): ("aip_chat_v1_aip_chat_post", True),
+        ("/v1/aip/analyst/query-templates", "get"): (
+            "list_query_templates_v1_aip_analyst_query_templates_get",
+            False,
+        ),
+        ("/v1/aip/memory-authority/pipelines/readiness", "get"): (
+            "get_pipeline_readiness_v1_aip_memory_authority_pipelines_readiness_get",
+            False,
+        ),
         ("/v1/modules", "get"): ("list_modules_v1_modules_get", False),
         ("/v1/ontology/object-types", "get"): (
             "list_object_types_v1_ontology_object_types_get",

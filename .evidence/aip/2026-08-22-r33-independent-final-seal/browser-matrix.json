@@ -1,0 +1,170 @@
+{
+  "schemaVersion": "aip.r33.browser-matrix.v1",
+  "observedAt": "2026-08-22T23:05:02+08:00",
+  "sourceCommit": "739f9819db4eb70d3a47451430e08ead2d93d51f",
+  "browser": "Codex in-app browser",
+  "baseUrl": "http://127.0.0.1:5183",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "displayName": "栖月汇商贸有限公司",
+    "workspaceName": "默认工作区"
+  },
+  "routes": [
+    "/aip/assist",
+    "/aip/studio",
+    "/aip/analyst",
+    "/aip/logic/ecommerce.logic.C08",
+    "/aip/tools",
+    "/aip/maturity",
+    "/aip/production-contracts",
+    "/aip/capabilities",
+    "/aip/agent-registry",
+    "/aip/agent-marketplace",
+    "/aip/agents",
+    "/aip/skill-publish",
+    "/aip/agent-import",
+    "/aip/capability-import",
+    "/aip/evals",
+    "/aip/drafts",
+    "/aip/lineage",
+    "/aip/observability",
+    "/aip/memory-governance",
+    "/aip/model-catalog",
+    "/aip/model-providers",
+    "/aip/model-router",
+    "/aip/capacity",
+    "/aip/model-runtime",
+    "/aip/doc-intelligence"
+  ],
+  "viewportMatrix": [
+    {
+      "width": 1280,
+      "height": 720,
+      "rendered": 25,
+      "horizontalOverflow": 0,
+      "duplicateIdPages": 0,
+      "blankPages": 0,
+      "tenantProjectionMismatch": 0
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "rendered": 25,
+      "horizontalOverflow": 0,
+      "duplicateIdPages": 0,
+      "blankPages": 0,
+      "tenantProjectionMismatch": 0
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "rendered": 25,
+      "horizontalOverflow": 0,
+      "duplicateIdPages": 0,
+      "blankPages": 0,
+      "tenantProjectionMismatch": 0
+    }
+  ],
+  "accessibilityScan": {
+    "pages": 25,
+    "missingMainLandmark": 0,
+    "missingHeading": 0,
+    "unnamedFocusableControlPages": 0,
+    "imagesMissingAltPages": 0
+  },
+  "representativeInteractions": [
+    {
+      "route": "/aip/assist",
+      "checks": [
+        "context collapse and expand by click and Enter",
+        "focus mode enter and exit by click and Enter",
+        "message input and send remain disabled without exact Task/TaskRun/AgentRun refs"
+      ],
+      "result": "PASS_FAIL_CLOSED"
+    },
+    {
+      "route": "/aip/logic/ecommerce.logic.C08",
+      "checks": [
+        "edit, run history and automation tabs switch without mutation",
+        "save and safe dry-run remain disabled until their explicit prerequisites are met"
+      ],
+      "result": "PASS_FAIL_CLOSED"
+    },
+    {
+      "route": "/aip/model-catalog",
+      "checks": [
+        "catalog search filters three exact Agnes models",
+        "capability select persists vision filter",
+        "comparison checkbox toggles locally without server mutation"
+      ],
+      "result": "PASS"
+    },
+    {
+      "route": "/aip/agent-marketplace",
+      "checks": [
+        "read-only refresh remains enabled",
+        "missing current backend route remains an explicit Not Found alert",
+        "no sample package is injected"
+      ],
+      "result": "PASS_FAIL_CLOSED"
+    },
+    {
+      "route": "/aip/memory-governance",
+      "checks": [
+        "authority refresh is read-only",
+        "knowledge pipeline tab exposes the missing backend route as Not Found",
+        "no static candidate, memory or pipeline is injected"
+      ],
+      "result": "PASS_FAIL_CLOSED"
+    }
+  ],
+  "runtimeBlockers": [
+    {
+      "id": "R33-BROWSER-EXT-01",
+      "scope": "shared Workshop module navigation",
+      "observation": "24 of 25 routes display the shared sidebar message `目录读取失败，重试`; the running integration baseline returns an unavailable module directory",
+      "owner": "m1/Workshop integration",
+      "classification": "BLOCKED_EXTERNAL",
+      "aipFallback": "none"
+    },
+    {
+      "id": "R33-BROWSER-EXT-02",
+      "scope": "/aip/analyst",
+      "observation": "query-template authority returns Not Found and the page reports `六角色模板读取失败`",
+      "owner": "m1 serialized integration",
+      "classification": "BLOCKED_EXTERNAL",
+      "aipFallback": "none"
+    },
+    {
+      "id": "R33-BROWSER-EXT-03",
+      "scope": "/aip/agent-marketplace",
+      "observation": "marketplace catalog authority returns Not Found and the page preserves the explicit failure state",
+      "owner": "m1 serialized integration",
+      "classification": "BLOCKED_EXTERNAL",
+      "aipFallback": "none"
+    },
+    {
+      "id": "R33-BROWSER-EXT-04",
+      "scope": "/aip/memory-governance",
+      "observation": "knowledge-pipeline authority returns Not Found after selecting the pipeline view",
+      "owner": "m1 serialized integration",
+      "classification": "BLOCKED_EXTERNAL",
+      "aipFallback": "none"
+    }
+  ],
+  "visualReview": {
+    "systemStyle": "AOS dark shell, shared spacing, typography, border and semantic status tokens are consistent",
+    "representativePages": [
+      "/aip/assist",
+      "/aip/model-catalog",
+      "/aip/memory-governance"
+    ],
+    "result": "VISUAL_GREEN"
+  },
+  "console": {
+    "pageLevelErrorsObserved": 0,
+    "note": "React Router and API warning logs are not promoted to success evidence"
+  },
+  "verdict": "VISUAL_LAYOUT_A11Y_GREEN_RUNTIME_INTEGRATION_BLOCKED"
+}

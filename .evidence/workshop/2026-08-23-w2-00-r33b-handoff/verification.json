@@ -1,0 +1,47 @@
+{
+  "schema": "aos.workshop.handoff-verification/v1",
+  "taskId": "W2-00-R33B-HANDOFF-CONSUME-20260823",
+  "authorityRevision": "AOS-000153",
+  "sourceDeliveryReceipt": {
+    "taskId": "AIP_R33H_P02_HEALTH_CLOSURE",
+    "sha256": "908c27fcafd70a64f3f403f99d3978d59a9040036409d6a74e75250155e07eea"
+  },
+  "git": {
+    "branch": "w2-workshop",
+    "preMergeHead": "a79db5163cbcc6ed75d1b0b6a6312903cbf44aec",
+    "planCommit": "ee6e47e",
+    "mergedM1Revision": "eb0a63cc0c264f93eb116b22982ea409078a4f24",
+    "mergeConflict": false
+  },
+  "verification": [
+    {
+      "kind": "backend-focused-and-cumulative",
+      "result": "PASS",
+      "summary": "30 passed; canonical SourceReadiness, HTTP contract, Workshop facade/API and module contracts"
+    },
+    {
+      "kind": "web-focused-and-cumulative",
+      "result": "PASS",
+      "summary": "4 files, 24 tests passed; strict parser/client, blocked-state panel and Workshop host"
+    },
+    {
+      "kind": "web-production-build",
+      "result": "PASS",
+      "summary": "tsc and vite build completed; 317 modules transformed"
+    },
+    {
+      "kind": "built-in-browser",
+      "result": "BLOCKED",
+      "summary": "browser runtime returned 'Browser is not available: iab'; browser list was empty"
+    }
+  ],
+  "safety": {
+    "realBusinessDataMutated": false,
+    "providerSideEffect": false,
+    "migrationRun": false,
+    "releaseRun": false,
+    "pilotReplay": false,
+    "w1WorkspaceRead": false
+  },
+  "result": "CODE_CONTROL_GREEN_BROWSER_ACCEPTANCE_BLOCKED"
+}

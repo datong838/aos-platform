@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "wave": "R15",
+  "status": "CODE_CONTROL_GREEN_OPERATIONAL_APPLY_LATER",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "negativeCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project"
+  },
+  "baseCommit": "c308707",
+  "source": {
+    "path": "bundles/solutions/ecommerce-growth/content/knowledge/internal/qyh-customer-service-escalation-v1.md",
+    "contentHash": "ce163d2c870a65b51420d39d5327ba86decb961946b463b0b8b4a26188006572",
+    "licenseId": "aos-internal-owned-v1",
+    "usagePolicy": "workspace_retrieval"
+  },
+  "verification": {
+    "cumulativePytest": "67 passed, 7 warnings",
+    "pythonCompile": "GREEN",
+    "openapiDeterminism": "GREEN",
+    "diffCheck": "GREEN",
+    "unauthorizedApply": {
+      "result": "R15_APPLY_BLOCKED",
+      "exitCode": 3,
+      "databaseWrite": false
+    }
+  },
+  "operationalApply": {
+    "status": "later",
+    "reason": "No unique R15 task and database-write Lease; active Data Lease excludes aos-platform-w1-aip and database-writes."
+  },
+  "browser": {
+    "status": "not_applicable",
+    "reason": "No UI file changed in R15."
+  }
+}

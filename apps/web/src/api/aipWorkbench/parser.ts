@@ -3,6 +3,7 @@ import type {
   AssistEvent,
   AssistSubject,
   AssistThread,
+  AnalystRoleQueryTemplateList,
   Blocker,
   QueryColumn,
   QueryResultRevision,
@@ -36,6 +37,10 @@ function nullableString(value: unknown, label: string): string | null {
 }
 function integer(value: unknown, label: string, min = 1): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value < min) throw new Error(`${label} 非法`);
+  return value;
+}
+function number(value: unknown, label: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${label} 非数字`);
   return value;
 }
 function boolean(value: unknown, label: string): boolean {
@@ -99,7 +104,7 @@ function subject(raw: Record<string, unknown>, label: string): AssistSubject {
 }
 export function parseQueryResult(value: unknown, expectedTenant?: Tenant): QueryResultRevision {
   const raw = object(value, "QueryResultRevision");
-  exact(raw, "QueryResultRevision", ["tenant", "queryId", "revision", "kind", "status", "columns", "rows", "sourceRefs", "lineageRefs", "blockers", "uncertainties", "cutoffAt", "contentHash", "createdAt"]);
+  exact(raw, "QueryResultRevision", ["tenant", "queryId", "revision", "kind", "status", "columns", "rows", "sourceRefs", "lineageRefs", "blockers", "uncertainties", "confidence", "cutoffAt", "contentHash", "createdAt"]);
   const scope = tenant(raw.tenant); assertTenant(scope, expectedTenant);
   const columns: QueryColumn[] = array(raw.columns, "columns").map((value, index) => {
     const item = object(value, `columns[${index}]`); exact(item, `columns[${index}]`, ["key", "label", "valueType", "marking"]);
@@ -113,6 +118,14 @@ export function parseQueryResult(value: unknown, expectedTenant?: Tenant): Query
     const item = object(value, `sourceRefs[${index}]`); exact(item, `sourceRefs[${index}]`, ["ref", "contentHash", "cutoffAt", "freshness", "markings"]);
     return { ref: parseResourceRef(item.ref), contentHash: sha(item.contentHash, "source.contentHash"), cutoffAt: iso(item.cutoffAt, "source.cutoffAt"), freshness: enumeration(item.freshness, "source.freshness", ["fresh", "stale", "unknown"] as const), markings: array(item.markings, "source.markings").map((x) => string(x, "marking")) };
   });
+  const confidenceRaw = object(raw.confidence, "confidence");
+  exact(confidenceRaw, "confidence", ["status", "score", "basis"]);
+  const confidenceStatus = enumeration(confidenceRaw.status, "confidence.status", ["measured", "not_applicable", "unknown"] as const);
+  const confidenceScore = confidenceRaw.score === null ? null : number(confidenceRaw.score, "confidence.score");
+  const confidenceBasis = array(confidenceRaw.basis, "confidence.basis").map((x) => string(x, "confidence.basis"));
+  if (!confidenceBasis.length) throw new Error("confidence.basis 不得为空");
+  if (confidenceStatus === "measured" && (confidenceScore === null || confidenceScore < 0 || confidenceScore > 1)) throw new Error("measured confidence.score 非法");
+  if (confidenceStatus !== "measured" && confidenceScore !== null) throw new Error("未测量 confidence 不得包含 score");
   const result: QueryResultRevision = {
     tenant: scope, queryId: string(raw.queryId, "queryId"), revision: integer(raw.revision, "revision"),
     kind: enumeration(raw.kind, "kind", ["semantic", "knowledge", "metric"] as const),
@@ -120,6 +133,7 @@ export function parseQueryResult(value: unknown, expectedTenant?: Tenant): Query
     columns, rows, sourceRefs: sources, lineageRefs: refs(raw.lineageRefs, "lineageRefs"),
     blockers: array(raw.blockers, "blockers").map((item, index) => blocker(item, `blockers[${index}]`)),
     uncertainties: array(raw.uncertainties, "uncertainties").map((x) => string(x, "uncertainty")),
+    confidence: { status: confidenceStatus, score: confidenceScore, basis: confidenceBasis },
     cutoffAt: iso(raw.cutoffAt, "cutoffAt"), contentHash: sha(raw.contentHash, "contentHash"), createdAt: iso(raw.createdAt, "createdAt"),
   };
   if (result.status === "blocked" && (result.rows.length || result.columns.length || result.sourceRefs.length || !result.blockers.length)) throw new Error("blocked Result revision 载荷非法");
@@ -127,6 +141,37 @@ export function parseQueryResult(value: unknown, expectedTenant?: Tenant): Query
   if (!["blocked", "empty"].includes(result.status) && (!result.sourceRefs.length || result.blockers.length)) throw new Error("Result revision 来源或 blocker 非法");
   if (["degraded", "partial"].includes(result.status) && !result.uncertainties.length) throw new Error("partial/degraded 必须声明不确定性");
   return result;
+}
+
+export function parseAnalystRoleQueryTemplates(value: unknown, expectedTenant?: Tenant): AnalystRoleQueryTemplateList {
+  const raw = object(value, "AnalystRoleQueryTemplateList");
+  exact(raw, "AnalystRoleQueryTemplateList", ["tenant", "bundleRef", "contentHash", "items", "count"]);
+  const scope = tenant(raw.tenant); assertTenant(scope, expectedTenant);
+  const items = array(raw.items, "items").map((value, index) => {
+    const item = object(value, `items[${index}]`);
+    exact(item, `items[${index}]`, ["templateId", "revision", "roleId", "roleName", "queryKind", "defaultObjectType", "defaultPrompt", "requiredObjectTypes", "requiredLogicIds", "sourceDataTypes", "purpose", "policy", "readiness", "blockers"]);
+    const readiness = enumeration(item.readiness, "template.readiness", ["ready", "blocked"] as const);
+    const blockers = array(item.blockers, "template.blockers").map((entry, blockerIndex) => blocker(entry, `items[${index}].blockers[${blockerIndex}]`));
+    if (readiness === "ready" && blockers.length) throw new Error("ready template 不得包含 blocker");
+    if (readiness === "blocked" && !blockers.length) throw new Error("blocked template 必须包含 blocker");
+    const queryKind = enumeration(item.queryKind, "template.queryKind", ["semantic", "knowledge", "metric"] as const);
+    const defaultObjectType = item.defaultObjectType === null ? null : string(item.defaultObjectType, "template.defaultObjectType");
+    if (queryKind === "semantic" && defaultObjectType === null) throw new Error("semantic template 缺少默认 Object Type");
+    return {
+      templateId: string(item.templateId, "template.templateId"), revision: integer(item.revision, "template.revision"),
+      roleId: string(item.roleId, "template.roleId"), roleName: string(item.roleName, "template.roleName"), queryKind,
+      defaultObjectType, defaultPrompt: text(item.defaultPrompt, "template.defaultPrompt"),
+      requiredObjectTypes: array(item.requiredObjectTypes, "template.requiredObjectTypes").map((x) => string(x, "requiredObjectType")),
+      requiredLogicIds: array(item.requiredLogicIds, "template.requiredLogicIds").map((x) => string(x, "requiredLogicId")),
+      sourceDataTypes: array(item.sourceDataTypes, "template.sourceDataTypes").map((x) => string(x, "sourceDataType")),
+      purpose: string(item.purpose, "template.purpose"), policy: enumeration(item.policy, "template.policy", ["canonical-read-only"] as const),
+      readiness, blockers,
+    };
+  });
+  const count = integer(raw.count, "count");
+  if (count !== 6 || items.length !== 6) throw new Error("六角色模板数量漂移");
+  if (new Set(items.map((item) => item.roleId)).size !== 6 || new Set(items.map((item) => item.templateId)).size !== 6) throw new Error("六角色模板身份漂移");
+  return { tenant: scope, bundleRef: parseResourceRef(raw.bundleRef, "bundleRef"), contentHash: sha(raw.contentHash, "contentHash"), items, count: 6 };
 }
 export function parseAssistThread(value: unknown, expectedTenant?: Tenant): AssistThread {
   const raw = object(value, "AssistThread"); exact(raw, "AssistThread", ["tenant", "threadId", "subject", "status", "version", "createdBy", "createdAt"]);

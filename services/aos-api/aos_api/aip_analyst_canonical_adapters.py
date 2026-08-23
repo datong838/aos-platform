@@ -12,6 +12,8 @@ from aos_api.aip_analyst_contracts import (
     AnalystQueryStatus,
     KnowledgeQueryRequest,
     QueryColumn,
+    QueryConfidence,
+    QueryConfidenceStatus,
     QueryFilter,
     QueryRow,
     QuerySort,
@@ -317,6 +319,10 @@ class CanonicalSemanticReadAdapter:
             source_refs=sources,
             lineage_refs=[],
             uncertainties=[],
+            confidence=QueryConfidence(
+                status=QueryConfidenceStatus.NOT_APPLICABLE,
+                basis=["deterministic_canonical_read"],
+            ),
         )
 
     @staticmethod
@@ -414,6 +420,27 @@ class CanonicalKnowledgeReadAdapter:
         uncertainties = list(result.blocked_reasons)
         if result.status == "degraded" and not uncertainties:
             uncertainties = ["knowledge_search_degraded"]
+        citation_confidences = [
+            getattr(match.citation, "confidence", None) for match in result.matches
+        ]
+        measured_confidences = [
+            float(value)
+            for value in citation_confidences
+            if isinstance(value, (int, float)) and 0 <= float(value) <= 1
+        ]
+        confidence = (
+            QueryConfidence(
+                status=QueryConfidenceStatus.MEASURED,
+                score=min(measured_confidences),
+                basis=["minimum_governed_knowledge_citation_confidence"],
+            )
+            if citation_confidences
+            and len(measured_confidences) == len(citation_confidences)
+            else QueryConfidence(
+                status=QueryConfidenceStatus.UNKNOWN,
+                basis=["knowledge_citation_confidence_unavailable"],
+            )
+        )
         return AdapterResult(
             status=(
                 AnalystQueryStatus.DEGRADED
@@ -431,6 +458,7 @@ class CanonicalKnowledgeReadAdapter:
             source_refs=sources,
             lineage_refs=[],
             uncertainties=uncertainties,
+            confidence=confidence,
         )
 
 

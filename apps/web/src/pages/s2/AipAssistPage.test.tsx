@@ -81,14 +81,14 @@ describe("AipAssistPage exact subject", () => {
       newKey: vi.fn(() => "stable-cancel-key"),
     };
     await act(async () => root.render(<MemoryRouter><AipAssistPage client={client} /></MemoryRouter>));
-    const cancel = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "取消 TaskRun")!;
+    const cancel = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "取消任务运行")!;
     await act(async () => cancel.click());
     expect(host.textContent).toContain("timeout");
     await act(async () => cancel.click());
     expect(client.cancelTaskRun).toHaveBeenNthCalledWith(1, "run-1", { expectedRunVersion: 2, expectedTaskVersion: 1, reason: "AIP Assist 用户取消" }, "stable-cancel-key");
     expect(client.cancelTaskRun).toHaveBeenNthCalledWith(2, "run-1", { expectedRunVersion: 2, expectedTaskVersion: 1, reason: "AIP Assist 用户取消" }, "stable-cancel-key");
     expect(client.newKey).toHaveBeenCalledTimes(1);
-    expect(host.textContent).toContain("TaskRun cancelled · r3");
+    expect(host.textContent).toContain("任务运行已取消 · 版本 3");
   });
 
   it("prevents duplicate Turn submission inside the same event loop", async () => {
@@ -114,9 +114,9 @@ describe("AipAssistPage exact subject", () => {
     window.history.replaceState({}, "", `/?${invalid.toString()}`);
     const client = { createThread: vi.fn(), streamTurn: vi.fn(), cancelTaskRun: vi.fn(), newKey: vi.fn(() => "key") };
     await act(async () => root.render(<MemoryRouter><AipAssistPage client={client} /></MemoryRouter>));
-    const cancel = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "取消 TaskRun")!;
+    const cancel = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "取消任务运行")!;
     expect(cancel.disabled).toBe(true);
-    expect(cancel.title).toContain("正整数");
+    expect(cancel.title).toContain("版本不可用于并发安全校验");
     expect(client.cancelTaskRun).not.toHaveBeenCalled();
   });
 
