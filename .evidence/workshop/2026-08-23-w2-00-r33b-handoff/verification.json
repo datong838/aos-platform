@@ -31,8 +31,8 @@
     },
     {
       "kind": "built-in-browser",
-      "result": "BLOCKED",
-      "summary": "browser runtime returned 'Browser is not available: iab'; browser list was empty"
+      "result": "PASS",
+      "summary": "Codex in-app browser opened /workshop/operations from this w2 worktree; org-org/dev-project showed canonical P01-P12 all ready (12 sources, 0 blockers, same checkedAt/cutoffAt 2026-08-23T10:52:00.164536Z) with no console errors; dev-org/dev-project showed no installed Workshop/module and did not expose the real tenant view"
     }
   ],
   "safety": {
@@ -43,5 +43,5 @@
     "pilotReplay": false,
     "w1WorkspaceRead": false
   },
-  "result": "CODE_CONTROL_GREEN_BROWSER_ACCEPTANCE_BLOCKED"
+  "result": "R33B_HANDOFF_CONSUMED_BROWSER_GREEN_AT_EVIDENCE_CUTOFF"
 }
