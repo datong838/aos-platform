@@ -66,15 +66,15 @@ function contractBusinessText(value: string): string {
     return "将两个已封存的试运行产物登记为同类变体，供评审台对照。";
   }
   return raw
-    .replaceAll("content.review", "内容审核")
-    .replaceAll("CapabilityBinding", "能力绑定")
-    .replaceAll("ResponsibilityPlanRevision", "职责计划修订")
-    .replaceAll("readiness", "就绪状态")
-    .replaceAll("operational", "可运行")
-    .replaceAll("frozen", "已冻结")
-    .replaceAll("Bundle exact ref", "证据包精确引用")
-    .replaceAll("impact", "影响")
-    .replaceAll("unknown", "未知");
+    .replace(/content\.review/g, "内容审核")
+    .replace(/CapabilityBinding/g, "能力绑定")
+    .replace(/ResponsibilityPlanRevision/g, "职责计划修订")
+    .replace(/readiness/g, "就绪状态")
+    .replace(/operational/g, "可运行")
+    .replace(/frozen/g, "已冻结")
+    .replace(/Bundle exact ref/g, "证据包精确引用")
+    .replace(/impact/g, "影响")
+    .replace(/unknown/g, "未知");
 }
 
 export function ProductionContractsPage() {
