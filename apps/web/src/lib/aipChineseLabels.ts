@@ -127,6 +127,11 @@ const RESPONSIBILITY_NAMES: Record<string, string> = {
 };
 
 const BLOCKER_NAMES: Record<string, string> = {
+  roles_not_fully_runnable: "数字同事尚未全部可派发",
+  capabilities_not_fully_runnable: "当前方案所需专业能力尚未全部可派发",
+  tools_not_fully_runnable: "当前方案所需工具尚未全部可派发",
+  routes_not_fully_runnable: "模型路由尚未全部可派发",
+  eval_gates_not_fully_passed: "评测门尚未全部通过",
   capability_binding_readiness_stale: "能力绑定就绪快照已过期，请刷新",
   skill_binding_readiness_stale: "技能绑定就绪快照已过期，请刷新",
   skill_binding_unavailable: "技能绑定不可用",
