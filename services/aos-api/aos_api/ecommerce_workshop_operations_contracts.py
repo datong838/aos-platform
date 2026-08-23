@@ -118,8 +118,9 @@ class WorkshopOperationsViewEnvelope(AipContractModel):
     def _canonical_shape(self) -> WorkshopOperationsViewEnvelope:
         if [item.slice_id for item in self.slices] != list(OperationsSliceId):
             raise ValueError("Operations slices must use canonical order and identity")
-        if self.page.count != 0:
-            raise ValueError("W2-01A shell cannot claim business rows")
+        attached = sum(item.count_ledger.attached for item in self.slices)
+        if self.page.count != attached:
+            raise ValueError("Operations page count must equal attached slice rows")
         if self.page.has_more or self.page.next_cursor is not None:
             raise ValueError("W2-01A shell cannot expose a synthetic cursor")
         return self

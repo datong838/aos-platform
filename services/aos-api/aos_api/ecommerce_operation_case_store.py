@@ -9,6 +9,8 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from typing import Any
 
+import psycopg
+
 from aos_api.db import connect as db_connect
 from aos_api.ecommerce_operation_case_contracts import (
     AggregationPolicyRevision,
@@ -37,6 +39,10 @@ class OperationAuthorityConflict(OperationAuthorityStoreError):
 
 class OperationAuthorityIdempotencyConflict(OperationAuthorityStoreError):
     code = "ECOMMERCE_OPERATION_AUTHORITY_IDEMPOTENCY_CONFLICT"
+
+
+class OperationAuthorityReadError(OperationAuthorityStoreError):
+    code = "ECOMMERCE_OPERATION_AUTHORITY_READ_FAILED"
 
 
 def canonical_hash(value: Any) -> str:
@@ -117,6 +123,38 @@ class OperationAuthorityStore:
             self._receipt(conn, scope, operation, key, request_hash, result, actor)
             conn.commit()
             return result
+
+    def list_cases(
+        self,
+        scope: TenantScope,
+        *,
+        limit: int = 50,
+    ) -> list[OperationCaseRevision]:
+        if not 1 <= limit <= 50:
+            raise ValueError("operation case limit must be between 1 and 50")
+        try:
+            with self._connect_factory(scope) as conn:
+                conn.execute(
+                    "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+                )
+                rows = conn.execute(
+                    "SELECT revision.payload FROM ecommerce_operation_case_head head "
+                    "JOIN ecommerce_operation_case_revision revision "
+                    "ON revision.org_id=head.org_id AND revision.project_id=head.project_id "
+                    "AND revision.case_id=head.case_id "
+                    "AND revision.revision=head.current_revision "
+                    "WHERE head.org_id=%s AND head.project_id=%s "
+                    "ORDER BY revision.created_at DESC,revision.case_id LIMIT %s",
+                    (*scope.key, limit),
+                ).fetchall()
+                return [
+                    OperationCaseRevision.model_validate(self._load(row["payload"]))
+                    for row in rows
+                ]
+        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:
+            raise OperationAuthorityReadError(
+                "canonical operation case read failed closed"
+            ) from exc
 
     def create_case(
         self,
@@ -452,5 +490,6 @@ class OperationAuthorityStore:
 __all__ = [
     "OperationAuthorityConflict",
     "OperationAuthorityIdempotencyConflict",
+    "OperationAuthorityReadError",
     "OperationAuthorityStore",
 ]

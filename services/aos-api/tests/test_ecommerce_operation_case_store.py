@@ -29,6 +29,9 @@ class Cursor:
     def fetchone(self):
         return self.row
 
+    def fetchall(self):
+        return self.row
+
 
 class Connection:
     def __init__(self, rows=()):
@@ -184,3 +187,15 @@ def test_publish_sla_policy_uses_versioned_head() -> None:
     sql = "\n".join(call[0] for call in connection.calls)
     assert "INSERT INTO ecommerce_operation_sla_policy_head" in sql
     assert "INSERT INTO ecommerce_operation_sla_policy_revision" in sql
+
+
+def test_list_cases_is_bounded_read_only_and_tenant_scoped() -> None:
+    payload = operation_case().model_dump(mode="json", by_alias=True)
+    connection = Connection(rows=[[{"payload": payload}]])
+    store = OperationAuthorityStore(factory(connection))
+    items = store.list_cases(SCOPE, limit=1)
+    assert [item.case_id for item in items] == ["case-1"]
+    sql = "\n".join(call[0] for call in connection.calls)
+    assert "REPEATABLE READ READ ONLY" in sql
+    assert "WHERE head.org_id=%s AND head.project_id=%s" in sql
+    assert connection.calls[-1][1] == ("org-org", "dev-project", 1)

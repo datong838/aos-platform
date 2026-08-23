@@ -12,6 +12,8 @@ from aos_api.ecommerce_workshop_operations_contracts import (
     OperationsSliceId,
     WorkshopOperationsViewEnvelope,
 )
+from aos_api.ecommerce_operation_case_contracts import OperationCaseRevision
+from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
 
 
 NOW = datetime(2026, 8, 24, 4, 30, tzinfo=UTC)
@@ -95,3 +97,40 @@ def test_exact_authority_ref_requires_sha256_and_positive_revision() -> None:
     ]
     with pytest.raises(ValidationError):
         WorkshopOperationsViewEnvelope.model_validate(ready)
+
+
+def test_operation_case_slice_consumes_exact_w3_12a_authority() -> None:
+    case = OperationCaseRevision.model_validate(
+        {
+            "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+            "caseId": "case-1",
+            "revision": 1,
+            "version": 1,
+            "status": "open",
+            "aggregationPolicyRef": {
+                "resourceId": "policy-1",
+                "revision": 1,
+                "contentHash": "a" * 64,
+            },
+            "memberRefs": [],
+            "contentHash": "b" * 64,
+            "actor": "user:operator",
+            "createdAt": NOW,
+        }
+    )
+
+    class CaseStore:
+        def list_cases(self, scope, *, limit=50):
+            assert scope.key == ("org-org", "dev-project")
+            assert limit == 50
+            return [case]
+
+    envelope = EcommerceWorkshopOperations(
+        clock=lambda: NOW,
+        case_store=CaseStore(),  # type: ignore[arg-type]
+    ).read(org_id="org-org", project_id="dev-project")
+    operation_cases = envelope.slices[-1]
+    assert operation_cases.status.value == "ready"
+    assert operation_cases.count_ledger.attached == 1
+    assert operation_cases.authority_refs[1].resource_id == "case-1"
+    assert envelope.page.count == 1
