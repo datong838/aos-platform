@@ -59,6 +59,12 @@ def test_operations_shell_is_tenant_bound_and_structurally_blocked() -> None:
         "operationCases",
     ]
     assert all(item["status"] == "blocked" for item in body["slices"])
+    inventory = body["slices"][2]
+    aftersales = body["slices"][5]
+    assert inventory["authorityRefs"][0]["resourceType"] == "ProductSku"
+    assert aftersales["authorityRefs"][0]["resourceType"] == "AfterSalesEvent"
+    assert inventory["blockers"][0]["code"] == "INVENTORY_READER_NOT_WIRED"
+    assert aftersales["blockers"][0]["code"] == "AFTERSALE_EVENTS_READER_NOT_WIRED"
     assert catalog.calls == [
         {
             "module_id": "ecommerce.operations",

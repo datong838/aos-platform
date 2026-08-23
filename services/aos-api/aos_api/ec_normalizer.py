@@ -261,6 +261,8 @@ def to_product_sku(row: dict[str, Any]) -> dict[str, Any]:
         "barcode": _str(row.get("sku_no"), ""),
         "price": _money(row.get("price")),
         "currency": CURRENCY,
+        "stock": _str(row.get("stock"), "0"),
+        "stockAlarm": _str(row.get("goods_stock_alarm"), "0"),
     }
     return o
 

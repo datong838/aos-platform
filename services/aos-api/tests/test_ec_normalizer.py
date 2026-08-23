@@ -180,6 +180,8 @@ def test_to_product_sku_maps_sku_id_and_price():
     assert out["properties"]["barcode"] == "SKU001"
     assert out["properties"]["price"] == "99.50"
     assert out["properties"]["currency"] == "CNY"
+    assert out["properties"]["stock"] == "100"
+    assert out["properties"]["stockAlarm"] == "10"
     # raw 字段保留（供 apply_derived_metrics 读取 stock/goods_stock_alarm）
     assert out["stock"] == 100
     assert out["goods_stock_alarm"] == 10

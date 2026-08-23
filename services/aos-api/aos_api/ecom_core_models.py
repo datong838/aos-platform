@@ -110,7 +110,7 @@ OPTIONAL_PROPERTIES: dict[str, frozenset[str]] = {
         {"costPrice", "goodsClassName", "isDelete", "marketPrice", "price", "saleNum", "state", "stock", "unit"}
     ),
     "ProductReview": frozenset(),
-    "ProductSku": frozenset(),
+    "ProductSku": frozenset({"stock", "stockAlarm"}),
     "Shipment": frozenset(),
     "Shop": frozenset(),
     "SystemConfig": frozenset(),

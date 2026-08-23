@@ -77,6 +77,22 @@ def test_missing_required_field_is_rejected() -> None:
         record("Order", "o-1", properties=props)
 
 
+def test_product_sku_accepts_canonical_inventory_semantics() -> None:
+    item = record(
+        "ProductSku",
+        "sku-1",
+        properties={
+            **VALID_PROPERTIES["ProductSku"],
+            "stock": "100",
+            "stockAlarm": "10",
+            "stock_health": "ok",
+        },
+    )
+    assert item.properties["stock"] == "100"
+    assert item.properties["stockAlarm"] == "10"
+    assert item.properties["stock_health"] == "ok"
+
+
 def test_tombstone_does_not_require_full_business_payload() -> None:
     item = record("Order", "o-1", is_deleted=True, properties={})
     assert item.is_deleted is True

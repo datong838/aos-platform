@@ -6,7 +6,12 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 
 from aos_api.aip_contracts import TenantContext
+from aos_api.ecommerce_data_authority import EcommerceDataAuthority
+from aos_api.ecommerce_data_authority_contracts import (
+    EcommerceDataAuthorityDescriptor,
+)
 from aos_api.ecommerce_workshop_operations_contracts import (
+    OperationsAuthorityRef,
     OperationsBlocker,
     OperationsCountLedger,
     OperationsPageInfo,
@@ -27,7 +32,7 @@ _DEPENDENCIES = {
     ),
     OperationsSliceId.INVENTORY: (
         "data.inventory-authority",
-        "INVENTORY_AUTHORITY_NOT_READY",
+        "INVENTORY_READER_NOT_WIRED",
     ),
     OperationsSliceId.SHIPMENTS: (
         "ecommerce.shipments",
@@ -39,7 +44,7 @@ _DEPENDENCIES = {
     ),
     OperationsSliceId.AFTERSALE_EVENTS: (
         "data.aftersale-event-authority",
-        "AFTERSALE_EVENTS_AUTHORITY_NOT_READY",
+        "AFTERSALE_EVENTS_READER_NOT_WIRED",
     ),
     OperationsSliceId.OPERATION_CASES: (
         "workshop.w3-12a-operation-case-authority",
@@ -51,22 +56,36 @@ _DEPENDENCIES = {
 class EcommerceWorkshopOperations:
     """Expose the honest seven-slice shape without inventing business facts."""
 
-    def __init__(self, *, clock: Clock | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        clock: Clock | None = None,
+        data_authority: EcommerceDataAuthority | None = None,
+    ) -> None:
         self._clock = clock or (lambda: datetime.now(UTC))
+        self._data_authority = data_authority or EcommerceDataAuthority()
 
     def read(self, *, org_id: str, project_id: str) -> WorkshopOperationsViewEnvelope:
         evaluated_at = self._clock()
         if evaluated_at.utcoffset() is None:
             raise ValueError("Operations clock must return a timezone-aware timestamp")
+        authorities = {
+            item.authority_id: item
+            for item in self._data_authority.read_all(
+                org_id=org_id,
+                project_id=project_id,
+            )
+        }
         slices = []
         for slice_id in OperationsSliceId:
             dependency, code = _DEPENDENCIES[slice_id]
+            authority_refs = self._authority_refs(slice_id, authorities)
             slices.append(
                 OperationsSliceReadiness(
                     slice_id=slice_id,
                     status=OperationsSliceStatus.BLOCKED,
                     data_cutoff=evaluated_at,
-                    authority_refs=[],
+                    authority_refs=authority_refs,
                     blockers=[
                         OperationsBlocker(
                             code=code,
@@ -97,6 +116,28 @@ class EcommerceWorkshopOperations:
                 next_cursor=None,
             ),
         )
+
+    @staticmethod
+    def _authority_refs(
+        slice_id: OperationsSliceId,
+        authorities: dict[str, EcommerceDataAuthorityDescriptor],
+    ) -> list[OperationsAuthorityRef]:
+        authority_id = {
+            OperationsSliceId.INVENTORY: "inventory.product-sku",
+            OperationsSliceId.AFTERSALE_EVENTS: "aftersale.event",
+        }.get(slice_id)
+        if authority_id is None:
+            return []
+        authority = authorities[authority_id]
+        return [
+            OperationsAuthorityRef(
+                resource_type=authority.resource_type,
+                resource_id=authority.authority_id,
+                revision=authority.semantic_revision,
+                content_hash=authority.content_hash,
+                receipt_id=authority.receipt_id,
+            )
+        ]
 
 
 __all__ = ["EcommerceWorkshopOperations"]
