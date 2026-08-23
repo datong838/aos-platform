@@ -231,6 +231,7 @@ export function validateAssistStream(events: AssistEvent[]): AssistEvent[] {
   events.forEach((event, index) => {
     if (event.sequence !== index + 1 || event.threadId !== threadId || event.turnId !== turnId) throw new Error("Assist SSE 序列漂移");
   });
-  if (events.length < 2 || !["blocked", "done", "error"].includes(events.at(-1)?.eventType ?? "")) throw new Error("Assist SSE 缺少合法终态");
+  const terminalEvent = events[events.length - 1];
+  if (events.length < 2 || !["blocked", "done", "error"].includes(terminalEvent?.eventType ?? "")) throw new Error("Assist SSE 缺少合法终态");
   return events;
 }
