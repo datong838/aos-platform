@@ -5,7 +5,7 @@ import type { ResponsibilityPlanRevision, StageTemplateRevision } from "../../ap
 describe("logicProductionProjection", () => {
   it("aggregates stage/plan profiles without inventing rows", () => {
     expect(projectProductionProfiles([], [])).toEqual([]);
-    expect(productionProjectionEmptyMessage(0, 0)).toContain("尚无 StageTemplate");
+    expect(productionProjectionEmptyMessage(0, 0)).toContain("尚无阶段模板或职责计划");
     const stages = [
       { profile: "ecommerce-standard", readiness: "ready" },
       { profile: "media-full", readiness: "blocked" },

@@ -126,7 +126,7 @@ describe("AIP 权威可观测性", () => {
     expect(evidenceMocks.spans).toHaveBeenCalledWith("lin-1");
     expect(evidenceMocks.usage).toHaveBeenCalledWith("lin-1");
     expect(host.textContent).toContain("当前权威 Lineage 尚未写入 Telemetry Span");
-    expect(host.textContent).toContain("已写入 1 条权威 Usage Receipt");
+    expect(host.textContent).toContain("已写入 1 条权威用量凭证");
     expect(host.querySelector<HTMLAnchorElement>("[data-testid='observability-back-lineage']")?.getAttribute("href"))
       .toBe("/aip/lineage?rootType=task_run&rootId=run-1");
     expect(host.querySelector<HTMLButtonElement>("[data-testid='observability-export']")?.disabled).toBe(false);

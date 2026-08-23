@@ -149,27 +149,27 @@ export function CanonicalTaskRunPanel({ graphId, graphRevision, graphName, sdk =
 
   const status = timeline ? visibleStatus(timeline) : null;
   return (
-    <section className="canonical-task-run" aria-label="权威 TaskRun 运行面板">
+    <section className="canonical-task-run" aria-label="权威任务运行面板">
       <header>
         <div>
-          <span className="canonical-task-run__eyebrow">PostgreSQL authority · Task / Plan / Run</span>
+          <span className="canonical-task-run__eyebrow">服务端权威记录 · 任务 / 执行计划 / 运行实例</span>
           <h3>权威任务运行</h3>
-          <p>绑定 {graphName} · revision {graphRevision}；刷新后从服务端恢复，不使用本地完成状态。</p>
+          <p>绑定 {graphName} · 修订 {graphRevision}；刷新后从服务端恢复，不使用本地完成状态。</p>
         </div>
         <div className="canonical-task-run__actions">
           <button type="button" disabled={busy || loading} onClick={() => void load(timeline?.run.id)}>刷新 / 对账</button>
           <button type="button" disabled={busy || loading} onClick={() => void createApprovedRun()}>
-            {timeline ? "新建一次权威运行" : "创建 Task、计划并批准"}
+            {timeline ? "新建一次权威运行" : "创建任务、执行计划并批准"}
           </button>
         </div>
       </header>
 
-      {loading && <p role="status" className="canonical-task-run__notice">正在读取服务端 TaskRun…</p>}
+      {loading && <p role="status" className="canonical-task-run__notice">正在读取服务端任务运行记录…</p>}
       {receipt && <p role="status" className="canonical-task-run__notice is-success">{receipt}</p>}
       {error && <p role="alert" className="canonical-task-run__notice is-error">{error}</p>}
 
       {!loading && !timeline && !error && (
-        <div className="canonical-task-run__empty">当前 Logic Graph 尚无权威 TaskRun。Dry-Run 记录不会冒充生产任务运行。</div>
+        <div className="canonical-task-run__empty">当前业务逻辑尚无权威任务运行记录。安全试跑记录不会冒充生产任务运行。</div>
       )}
 
       {timeline && status && (
@@ -177,45 +177,45 @@ export function CanonicalTaskRunPanel({ graphId, graphRevision, graphName, sdk =
           <div className="canonical-task-run__status-row">
             <span className={`canonical-task-run__status is-${status}`}>{STATUS_LABELS[status]}</span>
             <code>{timeline.run.id}</code>
-            <span>Task {timeline.task.id}</span>
-            <span>Plan r{timeline.plan.revision}</span>
-            <span>Run v{timeline.run.version} / Task v{timeline.task.version}</span>
+            <span>任务 {timeline.task.id}</span>
+            <span>执行计划修订 {timeline.plan.revision}</span>
+            <span>运行版本 {timeline.run.version} / 任务版本 {timeline.task.version}</span>
           </div>
 
           {status === "unknown" && (
             <div className="canonical-task-run__unknown" role="alert">
-              外部动作结果不确定：仅允许刷新/对账，禁止自动重复动作。待后续 reconcile 写入权威观察结果。
+              外部动作结果不确定：仅允许刷新和对账，禁止自动重复动作。等待后续对账写入权威观察结果。
             </div>
           )}
 
-          <div className="canonical-task-run__controls" aria-label="TaskRun 控制">
+          <div className="canonical-task-run__controls" aria-label="任务运行控制">
             <button type="button" disabled={busy || status !== "queued"} onClick={() => void control("start")}>启动</button>
             <button type="button" disabled={busy || status !== "running"} onClick={() => void control("pause")}>暂停</button>
             <button type="button" disabled={busy || status !== "paused"} onClick={() => void control("resume")}>恢复</button>
             <button type="button" disabled={busy || !["queued", "running", "paused"].includes(status)} onClick={() => void control("cancel")}>取消</button>
             <button type="button" disabled={busy || status !== "succeeded"} onClick={() => void control("rollback")}>回滚</button>
             <a href={`/aip/drafts?taskId=${encodeURIComponent(timeline.task.id)}&runId=${encodeURIComponent(timeline.run.id)}`}>
-              查看本次受控 Action
+              查看本次受控业务动作
             </a>
           </div>
 
           <div className="canonical-task-run__facts">
-            <div><strong>Task 状态</strong><span>{timeline.task.status}</span></div>
-            <div><strong>Run 状态</strong><span>{timeline.run.status}</span></div>
-            <div><strong>Plan hash</strong><code>{timeline.plan.contentHash}</code></div>
-            <div><strong>最后 Checkpoint</strong><span>{timeline.run.lastCheckpointId ?? "尚无"}</span></div>
+            <div><strong>任务状态</strong><span>{timeline.task.status}</span></div>
+            <div><strong>运行状态</strong><span>{timeline.run.status}</span></div>
+            <div><strong>执行计划摘要</strong><code>{timeline.plan.contentHash}</code></div>
+            <div><strong>最后检查点</strong><span>{timeline.run.lastCheckpointId ?? "尚无"}</span></div>
           </div>
 
           <div className="canonical-task-run__evidence-grid">
-            <EvidenceCollection title="StepRun" items={timeline.steps} fields={[["步骤", "stepKey", "step_key"], ["状态", "status", "status"], ["尝试", "attempt", "attempt"]]} />
-            <EvidenceCollection title="Checkpoint" items={timeline.checkpoints} fields={[["序号", "sequence", "sequence"], ["状态 hash", "stateHash", "state_hash"], ["时间", "createdAt", "created_at"]]} />
-            <EvidenceCollection title="Artifact" items={timeline.artifacts} fields={[["类型", "type", "type"], ["内容 hash", "contentHash", "content_hash"], ["时间", "createdAt", "created_at"]]} />
-            <EvidenceCollection title="Evidence" items={timeline.evidence} fields={[["类型", "type", "type"], ["来源", "source", "source"], ["时间", "createdAt", "created_at"]]} />
+            <EvidenceCollection title="步骤运行" items={timeline.steps} fields={[["步骤", "stepKey", "step_key"], ["状态", "status", "status"], ["尝试", "attempt", "attempt"]]} />
+            <EvidenceCollection title="检查点" items={timeline.checkpoints} fields={[["序号", "sequence", "sequence"], ["状态摘要", "stateHash", "state_hash"], ["时间", "createdAt", "created_at"]]} />
+            <EvidenceCollection title="运行产物" items={timeline.artifacts} fields={[["类型", "type", "type"], ["内容摘要", "contentHash", "content_hash"], ["时间", "createdAt", "created_at"]]} />
+            <EvidenceCollection title="运行证据" items={timeline.evidence} fields={[["类型", "type", "type"], ["来源", "source", "source"], ["时间", "createdAt", "created_at"]]} />
           </div>
 
           {history.length > 1 && (
             <details className="canonical-task-run__history">
-              <summary>当前 Logic Graph 的历史运行（{history.length}）</summary>
+              <summary>当前业务逻辑的历史运行（{history.length}）</summary>
               <ol>{history.map((run) => (
                 <li key={run.id}>
                   <button type="button" disabled={busy || run.id === timeline.run.id} onClick={() => void load(run.id)}>

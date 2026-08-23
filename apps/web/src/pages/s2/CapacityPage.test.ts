@@ -229,6 +229,6 @@ describe("CapacityPage · exact runtime authority", () => {
   });
   it("容量表来自 exact pool，不使用静态供应商模型", () => {
     const limits = rateLimitsFromRuntimePools([{ poolId: "pool-1", revision: 1, contentHash: "a".repeat(64), routeRef: { assetType: "ModelRouteRevision", assetId: "route-1", revision: 1, contentHash: "a".repeat(64) }, modelRef: { assetType: "RegisteredModelRevision", assetId: "agnes-text", revision: 1, contentHash: "a".repeat(64) }, providerRef: { assetType: "ProviderInstanceRevision", assetId: "agnes-provider", revision: 1, contentHash: "a".repeat(64) }, maxConcurrency: 2, maxTokenUnits: 8, tokenUnitPerReservation: 1, leaseSeconds: 60, activeReservations: 1, reservedTokenUnits: 1, lifecycle: "active" }]);
-    expect(limits).toEqual([{ model: "agnes-text", provider: "agnes-provider", tokensPerMin: "8 token units / lease", requestsPerMin: "1/2 active concurrency" }]);
+    expect(limits).toEqual([{ model: "agnes-text", provider: "agnes-provider", tokensPerMin: "每次租约 8 个模型用量单位", requestsPerMin: "当前并发 1/2" }]);
   });
 });

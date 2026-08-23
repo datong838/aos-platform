@@ -38,7 +38,7 @@ describe("DecisionLineagePage authority interaction", () => {
 
   it("初始状态不展示固定 Trace 或六段示例", async () => {
     await act(async () => root.render(<MemoryRouter><DecisionLineagePage /></MemoryRouter>));
-    expect(host.textContent).toContain("不会展示示例 Trace 或固定步骤");
+    expect(host.textContent).toContain("不会展示示例链路或固定步骤");
     expect(host.textContent).not.toContain("tr-8f3a2c91");
     expect(host.textContent).not.toContain("维修派单 Buddy");
     expect(evidenceMocks.lineage).not.toHaveBeenCalled();

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import { Link } from "react-router-dom";
 import { apiGet } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
+import { businessDisplayName, objectTypeDisplayName, statusDisplayName } from "../../lib/aipChineseLabels";
 import {
   listAnalystRoleQueryTemplates,
   queryAnalyst,
@@ -45,7 +46,7 @@ export async function defaultListLogicGraphs(): Promise<LogicGraphOption[]> {
     ))
     .map((item) => ({
       id: String(item.id).trim(),
-      name: String(item.name || item.id).trim(),
+      name: businessDisplayName(String(item.name || item.id).trim()),
       revision: Number(item.revision),
       graphHash: String(item.graph_hash).trim(),
     }));
@@ -139,24 +140,26 @@ function Evidence({ result, logicMount }: { result: QueryResultRevision | null; 
   return (
     <div style={{ display: "grid", gap: 12, fontSize: 13 }}>
       <section data-testid="analyst-logic-mount-evidence">
-        <strong>Logic 挂载</strong>
+        <strong>业务逻辑挂载</strong>
         {logicMount ? (
           <div style={smallCard}>
-            LogicGraph/{logicMount.id}@{logicMount.revision}
-            <br />
-            hash {logicMount.graphHash.slice(0, 16)}…
-            <br />
-            挂载≠已执行；不冒充 TaskGraph materialize。
+            {businessDisplayName(logicMount.name)} · 修订 {logicMount.revision}
+            <br />挂载不等于已执行；不会冒充任务图已生成。
+            <details style={{ marginTop: 6 }}>
+              <summary>技术标识（审计用）</summary>
+              <code>LogicGraph/{logicMount.id}@{logicMount.revision}</code>
+              <br /><code>{logicMount.graphHash.slice(0, 16)}…</code>
+            </details>
           </div>
         ) : (
-          <p style={muted}>未挂载已保存 Logic；经营参谋链保持 blocked，不注入演示图。</p>
+          <p style={muted}>未挂载已保存业务逻辑；经营参谋链保持阻断，不注入演示图。</p>
         )}
       </section>
       {!result && <p style={muted}>运行受治理查询后显示来源、血缘、截点与不确定性。</p>}
       {result && (
         <>
-          <Fact label="结果修订" value={`${result.queryId} · r${result.revision}`} />
-          <Fact label="状态" value={result.status} />
+          <Fact label="结果修订" value={`修订 ${result.revision}`} />
+          <Fact label="状态" value={statusDisplayName(result.status)} />
           <Fact label="截点" value={new Date(result.cutoffAt).toLocaleString()} />
           <Fact
             label="置信度"
@@ -164,26 +167,24 @@ function Evidence({ result, logicMount }: { result: QueryResultRevision | null; 
               ? `${Math.round((result.confidence.score || 0) * 100)}% · ${result.confidence.basis.join("、")}`
               : `${result.confidence.status} · ${result.confidence.basis.join("、")}`}
           />
-          <Fact label="内容哈希" value={result.contentHash.slice(0, 16)} />
+          <details><summary>结果技术标识（审计用）</summary><code>{result.queryId}</code><br /><code>{result.contentHash.slice(0, 16)}…</code></details>
           <section>
             <strong>来源</strong>
             {result.sourceRefs.length ? result.sourceRefs.map((source) => (
               <div key={`${source.ref.resourceId}:${source.ref.revision}`} style={smallCard}>
-                {source.ref.resourceType}/{source.ref.resourceId}@{source.ref.revision}
-                <br />
-                {source.freshness} · {new Date(source.cutoffAt).toLocaleString()}
+                数据新鲜度：{statusDisplayName(source.freshness)} · {new Date(source.cutoffAt).toLocaleString()}
+                <details><summary>来源技术标识（审计用）</summary><code>{source.ref.resourceType}/{source.ref.resourceId}@{source.ref.revision}</code></details>
               </div>
-            )) : <p style={muted}>无来源（blocked 允许）</p>}
+            )) : <p style={muted}>无来源（阻断状态允许）</p>}
           </section>
           <section>
             <strong>血缘</strong>
             {result.lineageRefs.length ? result.lineageRefs.map((ref) => (
               <div key={`${ref.resourceType}:${ref.resourceId}:${ref.revision}`} style={smallCard}>
-                {ref.resourceType}/{ref.resourceId}@{ref.revision}
-                <br />
-                authority {ref.authority}
+                已记录权威血缘
+                <details><summary>血缘技术标识（审计用）</summary><code>{ref.resourceType}/{ref.resourceId}@{ref.revision}</code><br /><code>{ref.authority}</code></details>
               </div>
-            )) : <p style={muted}>当前查询未返回 lineage ref；不以 trace 或本地路径代替。</p>}
+            )) : <p style={muted}>当前查询未返回权威血缘引用；不以追踪标识或本地路径代替。</p>}
           </section>
           {result.uncertainties.length > 0 && (
             <section>
@@ -357,7 +358,7 @@ export function AipAnalystPage({
   const templateDisabled = templateBlockingReason(selectedTemplate);
   const objectTypeDrift = kind === "semantic" && objectTypesReady && objectType
     && !objectTypes.some((item) => item.id === objectType)
-    ? `模板要求的 Object Type 未出现在当前租户目录：${objectType}`
+    ? `模板要求的业务对象类型未出现在当前租户目录：${objectTypeDisplayName(objectType)}`
     : null;
   const disabled = queryDisabled || templateDisabled || objectTypeDrift;
 
@@ -413,7 +414,7 @@ export function AipAnalystPage({
   }
 
   return (
-    <PageChrome title="AIP 分析师" lede="受治理语义 / 知识 / 指标查询；单一结果 revision，不生成演示数据">
+    <PageChrome title="AIP 分析师" lede="受治理的语义、知识和指标查询；结果绑定单一修订，不生成演示数据">
       <div data-testid="analyst-ops-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}>
         {[
           { label: "查询类型", value: kind === "semantic" ? "语义" : kind === "knowledge" ? "知识" : "指标" },
@@ -422,7 +423,7 @@ export function AipAnalystPage({
           { label: "行数", value: result ? String(result.rows.length) : "—" },
           { label: "对象类型", value: objectTypesReady ? String(objectTypes.length) : "…" },
           { label: "六角色模板", value: !roleTemplatesReady ? "…" : `${roleTemplates.filter((item) => item.readiness === "ready").length}/6` },
-          { label: "Logic挂载", value: !logicReady ? "…" : logicMount ? "已挂" : "未挂" },
+          { label: "业务逻辑", value: !logicReady ? "…" : logicMount ? "已挂载" : "未挂载" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -436,7 +437,7 @@ export function AipAnalystPage({
             <strong>六数字同事治理工作面</strong>
             <div style={muted}>模板来自已版本化电商方案包；选择角色只装配查询，不代表 Agent 已执行。</div>
           </div>
-          <div style={{ ...muted, fontSize: 12 }}>catalog {roleTemplateHash ? `${roleTemplateHash.slice(0, 12)}…` : "—"}</div>
+          <details style={{ ...muted, fontSize: 12 }}><summary>模板目录技术标识（审计用）</summary><code>{roleTemplateHash ? `${roleTemplateHash.slice(0, 12)}…` : "—"}</code></details>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10 }}>
           {roleTemplates.map((template) => (
@@ -453,7 +454,7 @@ export function AipAnalystPage({
                 <span style={{ color: template.readiness === "ready" ? "#047857" : "#b45309" }}>{template.readiness === "ready" ? "可查询" : "有阻断"}</span>
               </span>
               <span style={{ ...muted, fontSize: 12 }}>{template.purpose}</span>
-              <span style={{ ...muted, fontSize: 12 }}>{template.defaultObjectType} · {template.requiredLogicIds.length} Logic</span>
+              <span style={{ ...muted, fontSize: 12 }}>{objectTypeDisplayName(template.defaultObjectType || "")} · {template.requiredLogicIds.length} 项业务逻辑</span>
             </button>
           ))}
           {roleTemplatesReady && roleTemplates.length === 0 && <div style={warning}>六角色模板未返回；未注入本地模板。</div>}
@@ -476,7 +477,7 @@ export function AipAnalystPage({
             </select>
           </label>
           {kind === "semantic" && (
-            <label style={label}>Object Type
+            <label style={label}>业务对象类型
               <select
                 value={objectType}
                 onChange={(e) => { useCustomQuery(); setObjectType(e.target.value); }}
@@ -487,7 +488,7 @@ export function AipAnalystPage({
               >
                 {objectTypes.length === 0 ? <option value="">暂无已安装类型</option> : null}
                 {objectTypes.map((item) => (
-                  <option key={item.id} value={item.id}>{item.name} · {item.id}</option>
+                  <option key={item.id} value={item.id}>{item.name}</option>
                 ))}
               </select>
             </label>
@@ -498,8 +499,8 @@ export function AipAnalystPage({
             </label>
           )}
           <section data-testid="analyst-logic-mount" style={{ marginBottom: 16 }}>
-            <h4 style={{ margin: "0 0 8px", fontSize: 14 }}>Logic 挂载点</h4>
-            <label style={label}>已保存 Logic Graph
+            <h4 style={{ margin: "0 0 8px", fontSize: 14 }}>业务逻辑挂载点</h4>
+            <label style={label}>已保存业务逻辑
               <select
                 value={logicMountId}
                 onChange={(e) => onLogicMountChange(e.target.value)}
@@ -508,36 +509,40 @@ export function AipAnalystPage({
                 data-testid="analyst-logic-mount-select"
                 disabled={!logicReady || logicGraphs.length === 0}
               >
-                {logicGraphs.length === 0 ? <option value="">暂无已保存 Logic</option> : null}
+                {logicGraphs.length === 0 ? <option value="">暂无已保存业务逻辑</option> : null}
                 {logicGraphs.map((graph) => (
                   <option key={graph.id} value={graph.id}>
-                    {graph.name} · r{graph.revision}
+                    {businessDisplayName(graph.name)} · 修订 {graph.revision}
                   </option>
                 ))}
               </select>
             </label>
             {logicReady && logicGraphs.length === 0 && (
               <p style={warning} data-testid="analyst-logic-mount-blocked">
-                当前租户暂无已保存 Logic；经营参谋挂载保持 blocked，不注入演示图。
+                当前租户暂无已保存业务逻辑；经营参谋挂载保持阻断，不注入演示图。
               </p>
             )}
             {logicError && (
               <p style={warning} role="alert" data-testid="analyst-logic-mount-error">
-                Logic 列表读取失败：{logicError}。未注入演示挂载。
+                业务逻辑列表读取失败：{logicError}。未注入演示挂载。
               </p>
             )}
             {logicMount && (
               <div style={{ ...smallCard, fontSize: 12 }} data-testid="analyst-logic-mount-exact">
-                exact {logicMount.id}@r{logicMount.revision}
-                <br />
-                {logicMount.graphHash.slice(0, 24)}…
+                精确修订 {logicMount.revision}
+                <details style={{ marginTop: 6 }}>
+                  <summary>技术标识（审计用）</summary>
+                  <code>{logicMount.id}@r{logicMount.revision}</code>
+                  <br />
+                  <code>{logicMount.graphHash.slice(0, 24)}…</code>
+                </details>
                 <div style={{ marginTop: 8 }}>
                   <Link
                     to={`/aip/logic?graph=${encodeURIComponent(logicMount.id)}`}
                     data-testid="analyst-jump-logic"
                     style={{ color: "#2563eb" }}
                   >
-                    打开 Logic 画布 →
+                    打开业务逻辑画布 →
                   </Link>
                 </div>
               </div>
@@ -547,8 +552,8 @@ export function AipAnalystPage({
             {busy ? "查询中…" : "运行真实查询"}
           </button>
           {disabled && <p style={warning} data-testid="analyst-run-blocked">{disabled}</p>}
-          {objectTypesError && <p style={warning} role="alert" data-testid="analyst-object-types-error">Object Type 读取失败：{objectTypesError}。未注入演示类型。</p>}
-          <p style={muted}>不接受任意 SQL；Object Type / Logic 均来自权威 API；租户由登录 Principal 决定。</p>
+          {objectTypesError && <p style={warning} role="alert" data-testid="analyst-object-types-error">业务对象类型读取失败：{objectTypesError}。未注入演示类型。</p>}
+          <p style={muted}>不接受任意 SQL；业务对象类型与业务逻辑均来自权威接口；租户由当前登录身份决定。</p>
         </aside>
         <main style={panel}>
           {error && <div role="alert" style={warning}>请求失败：{error}。未生成本地结果。</div>}
@@ -556,11 +561,11 @@ export function AipAnalystPage({
             <div>
               {(["table", "chart", "map", "raw"] as View[]).map((item) => (
                 <button type="button" key={item} onClick={() => setView(item)} style={view === item ? primary : undefined}>
-                  {({ table: "表格", chart: "图表", map: "地图", raw: "Raw" } as const)[item]}
+                  {({ table: "表格", chart: "图表", map: "地图", raw: "原始结果" } as const)[item]}
                 </button>
               ))}
             </div>
-            {result && <strong data-testid="analyst-result-meta">{result.status} · {result.rows.length} 行 · r{result.revision}</strong>}
+            {result && <strong data-testid="analyst-result-meta">{statusDisplayName(result.status)} · {result.rows.length} 行 · 修订 {result.revision}</strong>}
           </div>
           {result ? <ResultBody result={result} view={view} /> : <Empty title="尚未运行查询" text="选择治理查询类型后读取真实 authority；服务不可用时保持失败关闭。" />}
         </main>

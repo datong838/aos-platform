@@ -5,7 +5,7 @@ import type { AipOperationalProjection } from "../api/aipOperationalProjection";
 import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 import { AipOperationalProjectionStrip } from "../components/aip/AipOperationalProjectionStrip";
-import { templateDisplayName } from "../lib/aipChineseLabels";
+import { templateDisplayName, toolKindDisplayName } from "../lib/aipChineseLabels";
 import { NavIcon } from "../shell/icons";
 
 type AgentItem = {
@@ -78,7 +78,13 @@ export function mapApiAgentToStudio(agent: ApiAgent): AgentItem {
     name: String(agent.overlay?.displayName || agent.name || id || "未命名智能体"),
     category,
     level,
-    levelLabel: `${level} · API`,
+    levelLabel: ({
+      L0: "基础配置",
+      L1: "临时分析",
+      L2: "任务专用",
+      L3: "智能协作",
+      L4: "受控自动化",
+    } as Record<string, string>)[level] || "任务专用",
     status,
     toolCount: 0,
     iconBg: "var(--aos-indigo-bg)",
@@ -126,8 +132,8 @@ export function validateGuardrailsResponse(
 export const STUDIO_GUARDRAIL_CATALOG = [
   { id: "no_fs_write", name: "禁止写文件系统" },
   { id: "no_fork", name: "禁止进程分叉" },
-  { id: "token_limit", name: "强制 Token 上限" },
-  { id: "auto_draft", name: "外呼默认进 Draft" },
+  { id: "token_limit", name: "限制单次输出长度" },
+  { id: "auto_draft", name: "外部写操作默认进入草稿审批" },
 ] as const;
 
 const STUDIO_TABS = [
@@ -140,7 +146,7 @@ const STUDIO_TABS = [
 
 export const STUDIO_DEFAULT_QUERY = "";
 export const STUDIO_UNASSESSED_COPY =
-  "须 exact EvalRun 达到阈值且 Draft 审批通过后方可申请 L4 上线。当前 Agent 未在本页绑定 exact EvalRun，状态为“未评测”；本页不推测分数。";
+  "须使用本次配置完成正式评测并通过草稿审批，方可申请受控自动化。当前智能体尚未绑定可核验的评测结果，状态为“未评测”；本页不推测分数。";
 
 export type StudioModelRouteGate = { ready: boolean; label: string; reason: string };
 
@@ -151,7 +157,7 @@ export function studioModelRouteGate(
   const modelId = defaultModel.trim();
   const isMock = /(^|[-_])(mock|fallback)([-_]|$)/i.test(modelId) || /^mock/i.test(modelId);
   if (!projection) {
-    return { ready: false, label: "未就绪（等待 canonical 运行投影）", reason: "真实模型路由状态尚未可用" };
+    return { ready: false, label: "未就绪（等待权威运行状态）", reason: "真实模型路由状态尚未可用" };
   }
   if (!modelId || modelId === "—" || isMock || projection.routes.runnable < 1) {
     return {
@@ -166,7 +172,7 @@ export function studioModelRouteGate(
 
 function statusBadge(status: AgentItem["status"]) {
   if (status === "running") return { label: "运行中", bg: "var(--aos-green-bg)", color: "var(--aos-green-700)" };
-  if (status === "draft") return { label: "Draft", bg: "var(--aos-amber-bg)", color: "var(--aos-amber-700)" };
+  if (status === "draft") return { label: "草稿", bg: "var(--aos-amber-bg)", color: "var(--aos-amber-700)" };
   return { label: "已停用", bg: "var(--aos-gray-100)", color: "var(--aos-text-secondary)" };
 }
 
@@ -466,7 +472,7 @@ export function StudioPage() {
   }
 
   return (
-    <PageChrome title="对话机器人 Studio" lede="配置壳：提示词 · 工具 · 本体/Wiki 上下文；L4 须 Evals 绿且 Draft 默认，不伪造发布通过。">
+    <PageChrome title="智能体配置" lede="配置智能体指令、工具、本体与知识上下文；只有正式评测和草稿审批均通过后，才允许受控自动化。">
       <AipOperationalProjectionStrip onProjection={setOperationalProjection} />
       <div
         data-testid="studio-ops-stats"
@@ -475,10 +481,10 @@ export function StudioPage() {
         {[
           { label: "智能体数", value: String(agents.length) },
           { label: "当前", value: activeAgent?.name ? activeAgent.name.slice(0, 10) : "未选" },
-          { label: "状态", value: activeAgent?.status || "—" },
-          { label: "工具开", value: String(enabledTools.length) },
-          { label: "页签", value: tab },
-          { label: "加载", value: loadState === "live" ? "Live" : loadState === "error" ? "Error" : "…" },
+          { label: "状态", value: activeAgent ? statusBadge(activeAgent.status).label : "—" },
+          { label: "已启用工具", value: String(enabledTools.length) },
+          { label: "当前配置", value: STUDIO_TABS.find((item) => item.id === tab)?.label || "—" },
+          { label: "数据状态", value: loadState === "live" ? "已加载" : loadState === "error" ? "加载失败" : "加载中" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -514,7 +520,7 @@ export function StudioPage() {
             <button
               type="button"
               data-testid="studio-btn-new-agent"
-              title="打开组织安装向导（SolutionPack）；不解封自由创建 Agent API"
+              title="打开组织级数字同事安装向导；不开放无治理的自由创建入口"
               onClick={() => { setInstallOpen((open) => !open); setInstallMsg(null); }}
               style={{
                 marginTop: 8,
@@ -553,7 +559,7 @@ export function StudioPage() {
                 }}
               >
                 <p style={{ margin: "0 0 8px" }}>
-                  权威入口是电商六数字同事 SolutionPack 组织安装，不是自由创建 Agent。
+                  权威入口是电商六数字同事组织安装包，不是自由创建智能体。
                 </p>
                 <button
                   type="button"
@@ -573,7 +579,7 @@ export function StudioPage() {
             )}
           </div>
 
-          {loadState === "error" && <p role="alert" style={{ padding: 12 }}>Agent 列表加载失败：{resourceError}</p>}
+          {loadState === "error" && <p role="alert" style={{ padding: 12 }}>智能体列表加载失败：{resourceError}</p>}
           {loadState === "live" && agents.length === 0 && <p data-testid="studio-agents-empty" style={{ padding: 12 }}>暂无智能体</p>}
 
           {agents.map((a) => {
@@ -665,7 +671,7 @@ export function StudioPage() {
                   {displayAgent.name}
                 </h2>
                 <p style={{ fontSize: 13, color: "var(--aos-text-secondary)", margin: "4px 0 0", lineHeight: 1.5 }}>
-                  配置壳：提示词 · 工具 · 本体/Wiki 上下文 · L4 须 Evals 绿 + Draft 默认
+                  配置智能体指令、工具、本体与知识上下文；自动化能力须通过正式评测和草稿审批
                 </p>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -735,7 +741,7 @@ export function StudioPage() {
                 }}
               >
                 <label style={{ display: "block", fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 8, fontWeight: 500 }}>
-                  系统提示词 (System Prompt) <span style={{ color: "var(--aos-red)" }}>*</span>
+                  系统指令 <span style={{ color: "var(--aos-red)" }}>*</span>
                 </label>
                 <textarea
                   value={systemPrompt}
@@ -766,7 +772,7 @@ export function StudioPage() {
                       fontSize: 10,
                     }}
                   >
-                    /Order.status
+                    订单状态字段
                   </span>
                   <span
                     style={{
@@ -777,7 +783,7 @@ export function StudioPage() {
                       fontSize: 10,
                     }}
                   >
-                    /Wiki.sla
+                    服务时效知识
                   </span>
                   <span
                     style={{
@@ -865,7 +871,7 @@ export function StudioPage() {
                           <div>
                             <span style={{ fontSize: 13, color: "var(--aos-text)", fontWeight: 500 }}>{t.name}</span>
                             <span style={{ marginLeft: 8, fontSize: 10, color: isWarn ? "var(--aos-amber-700)" : "var(--aos-text-secondary)" }}>
-                              {t.category}
+                              {toolKindDisplayName(t.category)}
                             </span>
                           </div>
                         </div>
@@ -924,7 +930,7 @@ export function StudioPage() {
                 </div>
                 <div style={{ paddingTop: 12, marginTop: 12, borderTop: "1px solid var(--aos-gray-100)" }}>
                   <p data-testid="studio-overlay-authority" style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 8 }}>
-                    工具权威：AgentInstance Overlay（与 `/aip/tools` 同一真源 · W-T8）
+                    工具配置来自当前智能体实例，与“智能体工具配置”页面使用同一权威数据源。
                   </p>
                   <Link
                     to={activeId ? `/aip/tools?instance=${encodeURIComponent(activeId)}` : "/aip/tools"}
@@ -968,7 +974,7 @@ export function StudioPage() {
               >
                 <h3 style={{ margin: "0 0 8px", fontSize: 14 }}>运行护栏</h3>
                 <p style={{ margin: "0 0 16px", fontSize: 12, color: "var(--aos-text-secondary)" }}>
-                  租户作用域版本化配置；空初值表示尚未写入 overlay，默认勾选推荐项。
+                  组织与工作区范围内的版本化配置；空初值表示尚未保存，页面默认勾选推荐项。
                 </p>
                 <div style={{ display: "grid", gap: 10 }}>
                   {STUDIO_GUARDRAIL_CATALOG.map((item) => (
@@ -1146,7 +1152,7 @@ export function StudioPage() {
                 }}
               >
                 <h2 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-amber-700)", margin: "0 0 8px" }}>
-                  L4 门控状态
+                  受控自动化门控
                 </h2>
                 <p style={{ fontSize: 12, color: "var(--aos-amber-700)", margin: "0 0 12px", lineHeight: 1.6 }}>
                   {STUDIO_UNASSESSED_COPY}
@@ -1163,7 +1169,7 @@ export function StudioPage() {
                   }}
                 >
                   <input type="checkbox" disabled style={{ width: 14, height: 14 }} />
-                  启用无人值守写回（L4）
+                  启用无人值守写回
                 </label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
                   <Link
@@ -1179,7 +1185,7 @@ export function StudioPage() {
                       fontWeight: 500,
                     }}
                   >
-                    去跑 Evals →
+                    前往评测门控 →
                   </Link>
                   <Link
                     to="/aip/drafts"
@@ -1194,7 +1200,7 @@ export function StudioPage() {
                       fontWeight: 500,
                     }}
                   >
-                    Draft 审批台 →
+                    前往草稿审批台 →
                   </Link>
                   <Link
                     to="/aip/maturity"

@@ -213,7 +213,7 @@ export function CanonicalAgentsPage() {
                       </p>
                       <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
                         <Link className="btn" to={repair?.repairHref || "/aip/agent-registry"}>{repair?.repairLabel || "去目录重评就绪"}</Link>
-                        <Link className="btn" to="/aip/studio">Studio</Link>
+                        <Link className="btn" to="/aip/studio">智能体配置</Link>
                       </div>
                     </div>
                   )}

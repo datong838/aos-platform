@@ -93,8 +93,7 @@ export function SkillPublishPage() {
     setBusy(true);
     setNote("");
     try {
-      // F2：完整 exact refs 须由运维从 Eval/路由权威填入；首波 UI 先 fail-closed 提示，避免半参假发。
-      setNote("发布需齐备 Eval 放行决策、模型路由、运行策略与 LogicRevision exact。请在「评测」确认门绿后，用受控脚本或后续表单补齐 refs 再发。当前已接通 POST /v1/aip/skills/publish-evaluated。");
+      setNote("发布需齐备正式评测放行、模型路由、运行策略与业务逻辑精确版本。请先在“评测门控”确认通过；缺少任一权威引用时，本页将保持关闭，不会伪造发布成功。");
       setBindStep(1);
     } finally {
       setBusy(false);
@@ -102,7 +101,7 @@ export function SkillPublishPage() {
   }
 
   return (
-    <PageChrome title="技能发布" lede="evaluated → published · Receipt/幂等 · 可内嵌绑定向导">
+    <PageChrome title="技能发布" lede="把已通过评测的技能提交发布，并继续完成智能体绑定；缺少证据时失败关闭。">
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14, alignItems: "center" }}>
         <button className="btn" type="button" onClick={() => void load()}>刷新</button>
         <label>
@@ -122,8 +121,8 @@ export function SkillPublishPage() {
       {allItems.length > 0 ? (
         <div className="notice" style={{ padding: 12, marginBottom: 12 }} role="status" data-testid="skill-publish-batch-stats">
           首批发布对账：已发布技能 <strong>{batchStats.published}</strong> 个 ·
-          仍待 Logic 权威进库 <strong>{batchStats.waitingLogic}</strong> 个 ·
-          列表共 {batchStats.total} 条修订。缺 Logic 图时保持 fail-closed，不在此页伪造发布。
+          仍待业务逻辑进入权威存储 <strong>{batchStats.waitingLogic}</strong> 个 ·
+          列表共 {batchStats.total} 条修订。缺少业务逻辑时保持关闭，不在此页伪造发布。
         </div>
       ) : null}
       {!data ? (
@@ -178,7 +177,7 @@ export function SkillPublishPage() {
                     className="btn primary"
                     type="button"
                     disabled={busy || selected.lifecycle !== "evaluated"}
-                    title={selected.lifecycle !== "evaluated" ? "仅「仅已评测」可发布" : "准备发布（须齐备 exact refs）"}
+                    title={selected.lifecycle !== "evaluated" ? "仅已通过评测的技能可以发布" : "准备发布（须齐备精确权威引用）"}
                     onClick={() => void tryPublish()}
                   >
                     {selected.lifecycle === "published" ? "已发布" : busy ? "处理中…" : "发布此修订"}
@@ -190,8 +189,8 @@ export function SkillPublishPage() {
                 <div style={{ marginTop: 20, borderTop: "1px solid var(--aos-border,#e5e7eb)", paddingTop: 14 }}>
                   <h3 style={{ marginTop: 0 }}>绑定向导（发布后）</h3>
                   <ol style={{ color: "var(--aos-text-secondary)", paddingLeft: 18 }}>
-                    <li style={{ opacity: bindStep >= 0 ? 1 : 0.5 }}>确认技能修订已 published</li>
-                    <li style={{ opacity: bindStep >= 1 ? 1 : 0.5 }}>在目录为对应同事创建/激活 SkillBinding</li>
+                    <li style={{ opacity: bindStep >= 0 ? 1 : 0.5 }}>确认技能修订已经发布</li>
+                    <li style={{ opacity: bindStep >= 1 ? 1 : 0.5 }}>在目录为对应数字同事创建或激活技能绑定</li>
                     <li style={{ opacity: bindStep >= 1 ? 1 : 0.5 }}>目录「刷新」重评就绪快照</li>
                   </ol>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -200,7 +199,7 @@ export function SkillPublishPage() {
                       我已完成绑定
                     </button>
                   </div>
-                  {bindStep >= 2 && <p style={{ color: "var(--aos-green-700)" }}>请回目录确认可运行态；本页不写入演示 Binding。</p>}
+                  {bindStep >= 2 && <p style={{ color: "var(--aos-green-700)" }}>请回目录确认可运行状态；本页不写入演示绑定。</p>}
                 </div>
               </>
             )}

@@ -28,8 +28,8 @@ export function MaturityPage() {
   async function simBreaker() {
     try {
       const result = await apiPost<{ open?: boolean; mode?: string }>("/v1/aip/circuit/trip", { failureRate: 0.06 });
-      if (!isBreakerTripConfirmed(result)) throw new Error("服务端未确认熔断为 L3");
-      setToast("服务端已确认熔断 · 失败率>5% → 降级 L3");
+      if (!isBreakerTripConfirmed(result)) throw new Error("服务端未确认降级到智能协作模式");
+      setToast("服务端已确认熔断 · 失败率超过 5% → 降级为智能协作模式");
       evals.reload();
     } catch (e) {
       setToast(String((e as Error).message || e));
@@ -45,32 +45,31 @@ export function MaturityPage() {
     return preferred.overlay?.displayName || preferred.name || preferred.instanceId || preferred.id || null;
   }, [agents.data]);
 
-  const levelLabel = level === 1 ? "临时分析" : level === 2 ? "任务 Agent" : level === 3 ? "Agentic 应用" : "自动化 Agent";
+  const levelLabel = level === 1 ? "临时分析" : level === 2 ? "任务智能体" : level === 3 ? "智能协作应用" : "自动化智能体";
 
   return (
     <S2Chrome
-      title="Agent 成熟度楼梯"
-      lede="先 Threads，再固化 Agent，再嵌应用，最后才自动化；楼梯预览不伪造 L4 真门控。"
+      title="智能体成熟度楼梯"
+      lede="先完成临时分析，再固化任务智能体、嵌入业务应用，最后才进入受控自动化；页面预览不冒充真实上线门控。"
     >
       <AipOperationalProjectionStrip />
       <div style={{ marginBottom: 12, fontSize: 13 }}>
         <Link to="/aip/memory-governance?view=candidates" data-testid="maturity-memory-bridge">
-          Memory Candidate 治理 →
+          知识候选治理 →
         </Link>
         <span style={{ color: "var(--aos-text-secondary)", margin: "0 8px" }}>·</span>
-        <Link to="/aip/memory-governance?view=readiness">Knowledge 就绪门 →</Link>
+        <Link to="/aip/memory-governance?view=readiness">知识就绪门 →</Link>
       </div>
       <div
         data-testid="maturity-ops-stats"
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
       >
         {[
-          { label: "当前层", value: `L${level}` },
-          { label: "层名", value: levelLabel },
-          { label: "Eval", value: green ? "绿" : "未跑" },
-          { label: "Draft", value: String(drafts.data?.count ?? drafts.data?.items?.length ?? 0) },
+          { label: "当前成熟度", value: levelLabel },
+          { label: "评测", value: green ? "通过" : "未运行" },
+          { label: "审批草稿", value: String(drafts.data?.count ?? drafts.data?.items?.length ?? 0) },
           { label: "同事数", value: String(agents.data?.items?.length ?? 0) },
-          { label: "L4 门", value: evals.data?.l4Allowed === true ? "允许" : "未开" },
+          { label: "自动化门控", value: evals.data?.l4Allowed === true ? "允许申请" : "尚未开放" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -105,13 +104,13 @@ export function MaturityPage() {
         </div>
         <div>
           <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 2 }}>判定层</div>
-          <div style={{ color: "var(--aos-amber-700)", fontWeight: 500 }}>◆ L{level} {levelLabel}</div>
+          <div style={{ color: "var(--aos-amber-700)", fontWeight: 500 }}>◆ {levelLabel}</div>
         </div>
         <div style={{ fontSize: 12, color: "var(--aos-muted)", lineHeight: 1.6 }}>
           <div>
-            Eval <span style={{ color: green ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>{green ? "● 绿" : "○ 未跑"}</span>
+            评测 <span style={{ color: green ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>{green ? "● 通过" : "○ 未运行"}</span>
             {" · "}
-            Draft <span style={{ color: "var(--aos-green-700)" }}>审批台 {drafts.data?.count ?? drafts.data?.items?.length ?? "—"} 项</span>
+            草稿 <span style={{ color: "var(--aos-green-700)" }}>审批台 {drafts.data?.count ?? drafts.data?.items?.length ?? "—"} 项</span>
           </div>
           <div>
             执行范围 <span style={{ color: "var(--aos-text)" }}>● 用户范围</span>
@@ -126,16 +125,16 @@ export function MaturityPage() {
         steps={[
           {
             level: 1,
-            label: "L1",
+            label: "探索",
             title: "临时分析",
-            desc: "AIP Threads · 拖文档即问即答",
+            desc: "临时对话 · 拖入文档即可分析问答",
             foot: <span style={{ fontSize: 11, color: "var(--aos-indigo-600)" }}>沙箱 / 售前</span>,
           },
           {
             level: 2,
-            label: "L2",
-            title: "任务专用 Agent",
-            desc: "Chatbot Studio · Prompt · 工具 · Ontology/Wiki",
+            label: "专用",
+            title: "任务专用智能体",
+            desc: "智能体配置 · 指令 · 工具 · 本体与知识库",
             foot: (
               <Link to="/aip/tools" style={{ fontSize: 11, color: "var(--aos-amber-700)", textDecoration: "none" }}>
                 打开工具面板 →
@@ -144,9 +143,9 @@ export function MaturityPage() {
           },
           {
             level: 3,
-            label: "L3",
-            title: "Agentic 应用",
-            desc: "工作台 / OSDK · Agent 组件 · 变量绑定",
+            label: "协作",
+            title: "智能协作应用",
+            desc: "工作台 · 智能体组件 · 业务变量绑定",
             foot: (
               <Link to="/workshop" style={{ fontSize: 11, color: "var(--aos-blue-600)", textDecoration: "none" }}>
                 打开工作台 →
@@ -155,9 +154,9 @@ export function MaturityPage() {
           },
           {
             level: 4,
-            label: "L4 · 须门控",
-            title: "自动化 Agent",
-            desc: "发布为 Function · Automate · 须 Eval + Draft · 失败率>5% 熔断降 L3",
+            label: "自动化 · 须门控",
+            title: "自动化智能体",
+            desc: "发布为受控业务能力 · 须通过评测与草稿审批 · 失败率超过阈值自动降级",
             tone: "rose",
             foot: (
               <span
@@ -190,15 +189,15 @@ export function MaturityPage() {
         <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 12px" }}>下一推荐</h2>
         <p style={{ fontSize: 14, color: "var(--aos-text-secondary)", margin: "0 0 12px" }}>
           {level < 3
-            ? "挂 Workshop Agent 组件 → 升 L3；勿直接开 L4。"
+            ? "嵌入工作台智能体组件后进入智能协作应用阶段；不要越级开启自动化。"
             : level === 3
-              ? "Eval 绿 + Draft 流程稳定后再申请 L4。"
-              : "L4 须 Evals 门控 + 熔断护栏；完整运行时规划中。"}
+              ? "评测通过且草稿审批流程稳定后，再申请受控自动化。"
+              : "受控自动化必须通过评测门控并启用熔断护栏；完整运行时仍按权威状态开放。"}
         </p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: toast ? 8 : 0 }}>
           <button
             type="button"
-            onClick={() => { setLevel(3); setToast("仅切换本页 L3 阶段预览，不修改服务端成熟度"); }}
+            onClick={() => { setLevel(3); setToast("仅切换本页智能协作阶段预览，不修改服务端成熟度"); }}
             style={{
               padding: "6px 12px",
               fontSize: 12,
@@ -210,11 +209,11 @@ export function MaturityPage() {
               cursor: "pointer",
             }}
           >
-            预览 L3 阶段
+            预览智能协作阶段
           </button>
           <button
             type="button"
-            onClick={() => setToast(`L4 条件：Eval ${green ? "已绿" : "未绿"} · Draft 审批台 ${drafts.data?.count ?? drafts.data?.items?.length ?? "未知"} 项 · 必须启用熔断护栏`)}
+            onClick={() => setToast(`自动化申请条件：评测${green ? "已通过" : "未通过"} · 草稿审批台 ${drafts.data?.count ?? drafts.data?.items?.length ?? "未知"} 项 · 必须启用熔断护栏`)}
             style={{
               padding: "6px 12px",
               fontSize: 12,
@@ -225,7 +224,7 @@ export function MaturityPage() {
               cursor: "pointer",
             }}
           >
-            查看 L4 申请条件
+            查看自动化申请条件
           </button>
           <Link
             to="/aip/logic"
@@ -240,7 +239,7 @@ export function MaturityPage() {
               textDecoration: "none",
             }}
           >
-            并行：Logic 画布（可 Automate）
+            打开业务逻辑编排
           </Link>
         </div>
         {toast && <p style={{ fontSize: 11, color: "var(--aos-muted)", margin: "4px 0 0" }}>{toast}</p>}
@@ -256,7 +255,7 @@ export function MaturityPage() {
           }}
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 8 }}>
-            <span style={{ color: "var(--aos-red)", fontWeight: 500, fontSize: 12 }}>L4 熔断护栏</span>
+            <span style={{ color: "var(--aos-red)", fontWeight: 500, fontSize: 12 }}>自动化熔断护栏</span>
             <span
               style={{
                 fontSize: 11,
@@ -266,7 +265,7 @@ export function MaturityPage() {
                 color: "var(--aos-red)",
               }}
             >
-              失败率&gt;5% 自动降 L3
+              失败率超过 5% 时自动降级为智能协作
             </span>
             <span
               style={{
@@ -281,7 +280,7 @@ export function MaturityPage() {
             </span>
           </div>
           <p style={{ fontSize: 12, color: "var(--aos-muted)", margin: "0 0 12px" }}>
-            上线前须 Eval 绿 + Draft 默认暂存；冷模型预热完成前禁止全量自动化。
+            上线前须评测通过且写操作默认进入草稿审批；模型预热完成前禁止全量自动化。
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             <Link
@@ -295,7 +294,7 @@ export function MaturityPage() {
                 textDecoration: "none",
               }}
             >
-              Evals 门控
+              评测门控
             </Link>
             <Link
               to="/aip/model-router"

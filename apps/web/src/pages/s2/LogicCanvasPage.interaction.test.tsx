@@ -300,10 +300,10 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     root = createRoot(host);
     graphApi.listLogicGraphs.mockResolvedValueOnce({ items: [], count: 0 });
     await renderPage();
-    expect(host.textContent).toContain("尚无已保存 Logic Graph");
+    expect(host.textContent).toContain("尚无已保存业务逻辑");
     expect(host.textContent).not.toContain("节点 4 · 连接 3");
 
-    await act(async () => button("新建 Logic 草稿").click());
+    await act(async () => button("新建业务逻辑草稿").click());
     await flush();
     expect(host.textContent).toContain("未保存模板");
     expect(host.textContent).toContain("节点 4 · 连接 3");
@@ -345,7 +345,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     expect(currentSearch).toBe("?tab=automation");
     expect(host.querySelector('[role="tabpanel"]')?.id).toBe("logic-panel-automation");
     expect(host.textContent).toContain("tabs@2");
-    expect(host.textContent).toContain("Uses 真源尚未接入");
+    expect(host.textContent).toContain("当前组织的自动化使用关系尚未接入权威数据源");
     expect(host.textContent).not.toContain("已登记 Uses0");
 
     await act(async () => button("自动化").dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true })));
@@ -489,7 +489,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
 
   it("安全试跑按钮始终可见，并按未保存、loading、dirty、saving、Inputs 与 running 严格门禁", async () => {
     await renderPage();
-    await act(async () => button("新建 Logic 草稿").click());
+    await act(async () => button("新建业务逻辑草稿").click());
     await flush();
     expect(button("安全试跑").disabled).toBe(true);
     expect(host.textContent).toContain("请先保存 Logic Graph");
@@ -503,9 +503,9 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     loadingGraph.resolve(cleanGraph);
     await flush();
     expect(button("安全试跑").disabled).toBe(true);
-    expect(host.textContent).toContain("请先显式应用 Dry-Run Inputs");
+    expect(host.textContent).toContain("请先显式应用安全试跑输入");
 
-    await act(async () => button("应用 Inputs").click());
+    await act(async () => button("应用试跑输入").click());
     expect(button("安全试跑").disabled).toBe(false);
     expect(host.textContent).toContain("已满足可信试跑门禁");
 
@@ -540,13 +540,13 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     expect(host.textContent).toContain("安全试跑正在运行");
     expect(button("保存").disabled).toBe(true);
     expect(button("刷新").disabled).toBe(true);
-    expect(button("应用 Inputs").disabled).toBe(true);
+    expect(button("应用试跑输入").disabled).toBe(true);
     expect(button("添加 汇聚").disabled).toBe(true);
-    expect(host.querySelector<HTMLInputElement>('input[aria-label="Logic 名称"]')?.disabled).toBe(true);
-    expect(host.querySelector<HTMLInputElement>('input[aria-label="Logic 描述"]')?.disabled).toBe(true);
-    expect(host.querySelector<HTMLTextAreaElement>('textarea[aria-label="Dry-Run Inputs JSON"]')?.disabled).toBe(true);
+    expect(host.querySelector<HTMLInputElement>('input[aria-label="业务逻辑名称"]')?.disabled).toBe(true);
+    expect(host.querySelector<HTMLInputElement>('input[aria-label="业务逻辑描述"]')?.disabled).toBe(true);
+    expect(host.querySelector<HTMLTextAreaElement>('textarea[aria-label="安全试跑输入 JSON"]')?.disabled).toBe(true);
     expect(host.querySelector<HTMLInputElement>('input[aria-label="Block 标签"]')?.disabled).toBe(true);
-    expect(host.textContent).not.toContain("Dry-Run Inputs 已显式应用；未写入 Logic Graph");
+    expect(host.textContent).not.toContain("安全试跑输入已显式应用；未写入业务逻辑图");
     expect(runApi.dryRunLogicGraph).toHaveBeenCalledTimes(1);
     runningRequest.resolve(dryRunResult({ ...cleanGraph, revision: 4, graph_hash: "f".repeat(64), nodes: [...cleanGraph.nodes, {
       id: "saved-handoff",
@@ -569,14 +569,14 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     runApi.dryRunLogicGraph.mockResolvedValue(result);
     await renderPage("trusted");
 
-    const editor = host.querySelector<HTMLTextAreaElement>('textarea[aria-label="Dry-Run Inputs JSON"]')!;
+    const editor = host.querySelector<HTMLTextAreaElement>('textarea[aria-label="安全试跑输入 JSON"]')!;
     await act(async () => setNativeTextarea(editor, "[]"));
-    await act(async () => button("应用 Inputs").click());
-    expect(host.textContent).toContain("Inputs 必须是 JSON 对象");
+    await act(async () => button("应用试跑输入").click());
+    expect(host.textContent).toContain("试跑输入必须是 JSON 对象");
     expect(button("安全试跑").disabled).toBe(true);
 
     await act(async () => setNativeTextarea(editor, '{"objectId":"wo-7"}'));
-    await act(async () => button("应用 Inputs").click());
+    await act(async () => button("应用试跑输入").click());
     expect(host.textContent).not.toContain("未保存更改");
     expect(button("安全试跑").disabled).toBe(false);
     await act(async () => button("安全试跑").click());
@@ -602,7 +602,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     const loaded = graphSnapshot("failure", 5, "仍在画布");
     graphApi.getLogicGraph.mockResolvedValue(loaded);
     await renderPage("failure");
-    await act(async () => button("应用 Inputs").click());
+    await act(async () => button("应用试跑输入").click());
 
     runApi.dryRunLogicGraph.mockRejectedValueOnce(Object.assign(new Error("revision 已变化"), { status: 409 }));
     await act(async () => button("安全试跑").click());
@@ -727,7 +727,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     expect(host.querySelectorAll('[data-run-state="executed"]')).toHaveLength(4);
     expect(host.textContent).not.toContain("未保存更改");
 
-    await act(async () => button("应用 Inputs").click());
+    await act(async () => button("应用试跑输入").click());
     await act(async () => button("安全试跑").click());
     expect(host.querySelectorAll("[data-run-state]")).toHaveLength(0);
     nextRun.resolve({ ...allExecuted, run_id: "run-states-new" });

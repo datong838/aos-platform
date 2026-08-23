@@ -176,10 +176,10 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "agents",
     path: "/aip/studio",
-    label: "对话机器人",
+    label: "智能体配置",
     icon: "chat",
     status: "live",
-    crumbs: ["AIP", "对话机器人"],
+    crumbs: ["AIP", "智能体配置"],
   },
   {
     id: "aip-analyst",
@@ -193,18 +193,18 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "aip-logic",
     path: "/aip/logic",
-    label: "AIP 逻辑画布",
+    label: "业务逻辑编排",
     icon: "workflow",
     status: "live",
-    crumbs: ["AIP", "逻辑画布"],
+    crumbs: ["AIP", "业务逻辑编排"],
   },
   {
     id: "aip-tools",
     path: "/aip/tools",
-    label: "Agent 工具面板",
+    label: "智能体工具配置",
     icon: "wrench",
     status: "live",
-    crumbs: ["AIP", "Agent 工具面板"],
+    crumbs: ["AIP", "智能体工具配置"],
   },
   {
     id: "aip-maturity",
@@ -283,18 +283,18 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "aip-evals",
     path: "/aip/evals",
-    label: "Evals 门控",
+    label: "评测门控",
     icon: "check",
     status: "live",
-    crumbs: ["AIP", "Evals 门控"],
+    crumbs: ["AIP", "评测门控"],
   },
   {
     id: "aip-draft-inbox",
     path: "/aip/drafts",
-    label: "Draft 审批台",
+    label: "草稿审批台",
     icon: "inbox",
     status: "live",
-    crumbs: ["AIP", "Draft 审批台"],
+    crumbs: ["AIP", "草稿审批台"],
   },
   {
     id: "aip-decision-lineage",

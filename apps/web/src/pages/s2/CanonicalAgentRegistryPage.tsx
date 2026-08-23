@@ -212,7 +212,7 @@ export function CanonicalAgentRegistryPage() {
               <strong>只读预检通过</strong><br />
               模板 {item.template.templateId}@{item.template.revision}<br />
               实例 {item.instance?.instanceId || "未安装"}<br />
-              canonical 技能 {activeSkillIds.size}/{item.skills.length} · 唯一专业能力 {activeCapabilityIds.size}/{requiredCapabilityIds.length}<br />
+              权威技能 {activeSkillIds.size}/{item.skills.length} · 唯一专业能力 {activeCapabilityIds.size}/{requiredCapabilityIds.length}<br />
               权威截止 {new Date(data.evaluatedAt).toLocaleString()} · 最早到期 {earliestExpiry ? new Date(earliestExpiry).toLocaleString() : "未提供"}<br />
               本操作未触发 Provider、AgentRun 或生产 Action。
             </div>}

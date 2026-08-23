@@ -34,6 +34,14 @@ COUNT_TABLES = (
     "wiki_page",
 )
 
+REQUIRED_OPERATIONAL_GATES = (
+    "negativeCanaryIsolated",
+    "sourceReadiness12of12",
+    "sixAgentsRunnable",
+)
+
+OPERATIONAL_BLOCKED_EXIT_CODE = 3
+
 
 def _value(value: Any) -> str:
     return str(getattr(value, "value", value))
@@ -128,6 +136,7 @@ def _database_counts(scope: Any) -> dict[str, Any]:
             scope.key,
         ).fetchone()
     return {
+        "observedAt": datetime.now(UTC).isoformat(),
         "tableCounts": counts,
         "freshProviderHealthCount": int(fresh_health["count"]),
         "freshSkillBindingCount": int(fresh_skill_bindings["count"]),
@@ -157,6 +166,80 @@ def classify_gates(*, positive: dict[str, Any], negative: dict[str, Any]) -> dic
             and positive["agentRuntime"]["stats"]["runnableCount"] == 6
         ),
     }
+
+
+def classify_verdict(gates: dict[str, bool]) -> str:
+    """Promote only an exact all-green operational gate set."""
+    if all(gates.get(name) is True for name in REQUIRED_OPERATIONAL_GATES):
+        return "OPERATIONAL_GREEN"
+    return "CODE_API_GREEN_OPERATIONAL_BLOCKED"
+
+
+def operational_gate_exit_code(*, verdict: str, require_operational_green: bool) -> int:
+    """Keep evidence collection compatible while offering an explicit strict gate."""
+    if require_operational_green and verdict != "OPERATIONAL_GREEN":
+        return OPERATIONAL_BLOCKED_EXIT_CODE
+    return 0
+
+
+def snapshot_consistency() -> dict[str, Any]:
+    """Describe the real transaction boundary without claiming cross-source atomicity."""
+    return {
+        "atomicAcrossAuthorities": False,
+        "atomicAcrossTenants": False,
+        "sourceReadiness": "SERVICE_SCOPED_READ_ONLY_SNAPSHOT",
+        "agentRuntime": "INDEPENDENT_READ_ONLY_EVALUATION",
+        "authorityCounts": "TENANT_SCOPED_REPEATABLE_READ",
+        "decisionRule": "FAIL_CLOSED_CURRENT_OBSERVATIONS",
+    }
+
+
+def route_blockers(*, gates: dict[str, bool], positive: dict[str, Any]) -> list[dict[str, Any]]:
+    """Route failed gates to their owner without attempting the remediation."""
+    blockers: list[dict[str, Any]] = []
+    if not gates.get("negativeCanaryIsolated", False):
+        blockers.append(
+            {
+                "gate": "negativeCanaryIsolated",
+                "owner": "AIP_SECURITY",
+                "reasonCodes": ["NEGATIVE_CANARY_ISOLATION_FAILED"],
+                "nextAction": "AIP_SECURITY_REVIEW_REQUIRED",
+            }
+        )
+    if not gates.get("sourceReadiness12of12", False):
+        reason_codes: set[str] = set()
+        for failure in positive["sourceReadiness"].get("failures", []):
+            for value in (
+                failure.get("latestRunErrorCode"),
+                *failure.get("reasons", []),
+                *failure.get("blockers", []),
+            ):
+                if isinstance(value, str) and value:
+                    reason_codes.add(value)
+        blockers.append(
+            {
+                "gate": "sourceReadiness12of12",
+                "owner": "DATA_ADAPTER",
+                "reasonCodes": sorted(reason_codes) or ["SOURCE_READINESS_NOT_12_OF_12"],
+                "nextAction": "DELIVER_FRESH_12_OF_12_SOURCE_READINESS",
+            }
+        )
+    if not gates.get("sixAgentsRunnable", False):
+        reason_codes = {
+            code
+            for role in positive["agentRuntime"].get("blockedRoles", [])
+            for code in role.get("blockerCodes", [])
+            if isinstance(code, str) and code
+        }
+        blockers.append(
+            {
+                "gate": "sixAgentsRunnable",
+                "owner": "PROVIDER_RUNTIME_AND_AIP",
+                "reasonCodes": sorted(reason_codes) or ["SIX_AGENTS_NOT_RUNNABLE"],
+                "nextAction": "DELIVER_FRESH_3_OF_3_HEALTH_THEN_REFRESH_READINESS",
+            }
+        )
+    return blockers
 
 
 def build_snapshot(*, checked_at: str) -> dict[str, Any]:
@@ -191,11 +274,13 @@ def build_snapshot(*, checked_at: str) -> dict[str, Any]:
     return {
         "schemaVersion": "aip.r33.authority-snapshot.v1",
         "checkedAt": checked_at,
-        "mode": "REPEATABLE_READ_READ_ONLY_SECRET_FREE",
+        "mode": "MULTI_AUTHORITY_READ_ONLY_SECRET_FREE",
+        "consistency": snapshot_consistency(),
         "positiveTenant": "org-org/dev-project",
         "negativeCanary": "dev-org/dev-project",
-        "verdict": "CODE_API_GREEN_OPERATIONAL_BLOCKED",
+        "verdict": classify_verdict(gates),
         "gates": gates,
+        "blockers": route_blockers(gates=gates, positive=positive),
         "tenants": tenants,
         "forbiddenData": {
             "secretPayloadRead": False,
@@ -211,6 +296,11 @@ def main() -> int:
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--checked-at", default=datetime.now(UTC).isoformat())
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--require-operational-green",
+        action="store_true",
+        help="exit 3 after writing the snapshot when the operational verdict is not GREEN",
+    )
     args = parser.parse_args()
     repo_root = args.repo_root.resolve()
     sys.path.insert(0, str(repo_root / "services" / "aos-api"))
@@ -223,7 +313,10 @@ def main() -> int:
         encoding="utf-8",
     )
     print(json.dumps({"verdict": snapshot["verdict"], "gates": snapshot["gates"]}, ensure_ascii=False))
-    return 0
+    return operational_gate_exit_code(
+        verdict=snapshot["verdict"],
+        require_operational_green=args.require_operational_green,
+    )
 
 
 if __name__ == "__main__":

@@ -101,7 +101,7 @@ describe("AipAnalystPage governed query", () => {
     await act(async () => { await Promise.resolve(); await Promise.resolve(); });
     const run = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "运行真实查询")!;
     await act(async () => run.click());
-    expect(host.textContent).toContain("r3");
+    expect(host.textContent).toContain("修订 3");
     await act(async () => run.click());
     expect(host.textContent).toContain("请求失败：authority unavailable");
     expect(host.textContent).not.toContain("r3");
@@ -126,7 +126,7 @@ describe("AipAnalystPage governed query", () => {
     expect(host.querySelector('[data-testid="analyst-jump-logic"]')?.getAttribute("href")).toContain("/aip/logic?graph=ecommerce.logic.A02");
     await act(async () => root.render(<MemoryRouter><AipAnalystPage listObjectTypes={listObjectTypes} listLogicGraphs={emptyLogic} listRoleTemplates={listRoleTemplates} /></MemoryRouter>));
     await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-    expect(host.textContent).toContain("当前租户暂无已保存 Logic；经营参谋挂载保持 blocked");
+    expect(host.textContent).toContain("当前租户暂无已保存业务逻辑；经营参谋挂载保持阻断");
   });
 
   it("renders six role templates and selects a role without inventing readiness", async () => {
