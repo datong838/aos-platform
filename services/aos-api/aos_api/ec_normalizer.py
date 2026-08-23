@@ -136,6 +136,17 @@ def _ts(row: dict[str, Any], *fields: str) -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _iso_ts(row: dict[str, Any], *fields: str, fallback: datetime) -> str:
+    """返回源业务时间的 UTC ISO 文本；无有效源时间时使用显式 fallback。"""
+    for field in fields:
+        value = row.get(field)
+        if isinstance(value, (int, float)) and value > 0:
+            return datetime.fromtimestamp(float(value), tz=timezone.utc).strftime(
+                "%Y-%m-%dT%H:%M:%SZ"
+            )
+    return fallback.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _money(v: Any) -> str:
     """金额兜底：None/空/非法 → '0'；合法则转字符串（避免 float 进 Money 校验）。"""
     if v is None:
@@ -167,6 +178,8 @@ def _base(row: dict[str, Any], ot: str, pk: Any, when: datetime) -> dict[str, An
     保留：所有 raw ns_xxx 字段（供 apply_derived_metrics._get_field 从顶层读取派生指标源字段）
     """
     out = dict(row)
+    # executor 内部观测字段只参与版本计算，不进入 Dataset/Object 公共载荷。
+    out.pop("_aos_observed_at", None)
     out["ot"] = ot
     out["source_pk"] = _str(pk)
     out["source_updated_at"] = when
@@ -204,9 +217,16 @@ def to_category(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def to_product(row: dict[str, Any]) -> dict[str, Any]:
-    o = _base(row, "Product", row.get("goods_id"), _ts(row, "modify_time", "create_time"))
+    source_business_time = _ts(row, "modify_time", "create_time")
+    observed_at = (
+        _ts(row, "_aos_observed_at")
+        if row.get("_aos_observed_at") not in (None, "")
+        else source_business_time
+    )
+    o = _base(row, "Product", row.get("goods_id"), observed_at)
     # UX7: P02 Canonical Schema v2 只做真实源字段的 additive enrichment。
-    # source_updated_at 保持源 modify_time/create_time，不用伪时间绕过一致性门。
+    # P02 SNAPSHOT 使用稳定的运行观测截面作为权威版本；源业务时间分别
+    # 保留在 createdAt/updatedAt/sourceModifiedAt，避免把观测时间冒充源修改时间。
     o["schema_version"] = 2
     o["properties"] = {
         "shopId": _str(row.get("site_id"), "1"),
@@ -222,6 +242,13 @@ def to_product(row: dict[str, Any]) -> dict[str, Any]:
         "unit": _str(row.get("unit")),
         "state": _str(row.get("goods_state"), "1"),
         "isDelete": _str(row.get("is_delete"), "0"),
+        "createdAt": _iso_ts(row, "create_time", fallback=source_business_time),
+        "updatedAt": _iso_ts(
+            row, "modify_time", "create_time", fallback=source_business_time
+        ),
+        "sourceModifiedAt": _iso_ts(
+            row, "modify_time", "create_time", fallback=source_business_time
+        ),
     }
     return o
 

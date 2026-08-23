@@ -1333,6 +1333,7 @@ class PipelineEngine:
                         deadline=deadline,
                         scope=scope,
                         run_id=run_id,
+                        run_started_at=started_at,
                     ))
                 )
             except Exception as exc:

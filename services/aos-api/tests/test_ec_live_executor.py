@@ -69,9 +69,9 @@ def test_live_executor_receives_scope():
         captured["scope"] = kwargs.get("scope")
         return {"output_ref": "dataset://catalog/scope-check", "rows_read": 0, "rows_written": 0}
 
+    eng.register_executor("ec-live-v1", _wrapping_executor)
     from aos_api.ec_pipeline_resolvers import dataset_resolver
 
-    eng.register_executor("ec-live-v1", _wrapping_executor)
     eng.register_evidence_resolver("dataset", dataset_resolver)
 
     pl = eng.create_pipeline(
@@ -82,6 +82,70 @@ def test_live_executor_receives_scope():
 
     assert captured.get("scope") is not None
     assert captured["scope"].org_id == TEST_SCOPE.org_id
+
+
+def test_live_executor_receives_stable_run_started_at():
+    eng = get_engine()
+    captured = {}
+
+    def _wrapping_executor(**kwargs):
+        captured["run_started_at"] = kwargs.get("run_started_at")
+        return {"output_ref": "dataset://catalog/run-start-check", "rows_read": 0, "rows_written": 0}
+
+    eng.register_executor("ec-live-v1", _wrapping_executor)
+    eng.register_evidence_resolver("dataset", lambda _ref: True)
+    pl = eng.create_pipeline(
+        TEST_SCOPE, name="p", executor_id="ec-live-v1", execution_mode="live"
+    )
+    sc = eng.create_schedule(TEST_SCOPE, name="s", pipeline_id=pl.id)
+    before = time.time()
+    run = eng.run_schedule(TEST_SCOPE, sc.id)
+    after = time.time()
+
+    assert run.status == "succeeded"
+    assert before <= captured["run_started_at"] <= after
+
+
+def test_p02_snapshot_observation_is_scoped_and_stable():
+    from types import SimpleNamespace
+    from aos_api.ec_live_executor import _stamp_snapshot_observation
+
+    rows = [{"goods_id": 1}, {"goods_id": 2}]
+    pipeline = SimpleNamespace(id="P02-product-qyh", write_mode="UPSERT")
+    _stamp_snapshot_observation(
+        pipeline=pipeline,
+        rows=rows,
+        run_started_at=1700005000.25,
+    )
+    assert [row["_aos_observed_at"] for row in rows] == [1700005000.25, 1700005000.25]
+
+    snapshot_rows = [{"goods_id": 3}]
+    _stamp_snapshot_observation(
+        pipeline=SimpleNamespace(id="P02-product-qyh", write_mode="SNAPSHOT"),
+        rows=snapshot_rows,
+        run_started_at=1700005000.25,
+    )
+    assert snapshot_rows[0]["_aos_observed_at"] == 1700005000.25
+
+    other = [{"order_id": 1}]
+    _stamp_snapshot_observation(
+        pipeline=SimpleNamespace(id="P05-order-qyh", write_mode="SNAPSHOT"),
+        rows=other,
+        run_started_at=1700005000.25,
+    )
+    assert "_aos_observed_at" not in other[0]
+
+
+def test_p02_snapshot_observation_fails_closed_without_stable_run_time():
+    from types import SimpleNamespace
+    from aos_api.ec_live_executor import _stamp_snapshot_observation
+
+    with pytest.raises(RuntimeError, match="stable run_started_at"):
+        _stamp_snapshot_observation(
+            pipeline=SimpleNamespace(id="P02-product-qyh", write_mode="SNAPSHOT"),
+            rows=[{"goods_id": 1}],
+            run_started_at=None,
+        )
 
 
 def test_live_executor_output_ref_verifiable_by_resolver():

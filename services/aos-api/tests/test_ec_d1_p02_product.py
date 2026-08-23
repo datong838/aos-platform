@@ -280,8 +280,8 @@ class TestP02ExecutorChain:
         result, calls = self._run(rows)
 
         assert result["rows_read"] == 2
-        # 2 objects + 1 + 3 links = 6
-        assert result["rows_written"] == 6
+        # 2 objects + 1 + 3 inCategory + 2 sellsProduct links = 8
+        assert result["rows_written"] == 8
 
         assert len(calls) == 1
         _, _, output_rows = calls[0]
@@ -300,8 +300,8 @@ class TestP02ExecutorChain:
         r1, _ = self._run(batch1)
         batch2 = [_make_product_row(goods_id="g-1", when=NOW)]
         r2, _ = self._run(batch2)
-        # 两次都是 1 obj + 1 link = 2
-        assert r1["rows_written"] == r2["rows_written"] == 2
+        # 两次都是 1 obj + 1 inCategory + 1 sellsProduct = 3
+        assert r1["rows_written"] == r2["rows_written"] == 3
 
     def test_tc03_replay_idempotent(self):
         """3. 重跑: 相同 max cursor 时 rows_written 不变。"""
