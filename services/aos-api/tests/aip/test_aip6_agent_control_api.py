@@ -223,12 +223,16 @@ def test_canonical_catalog_install_replay_and_tenant_canary(client):
     assert len(projection_body["snapshotHash"]) == 64
     assert projection_body["snapshotHash"] != canary_projection_body["snapshotHash"]
     assert projection_body["roles"]["definition"] == 6
+    assert projection_body["capabilities"]["definition"] == 7
+    assert projection_body["tools"]["definition"] == 0
     assert canary_projection_body["roles"] == {
         "definition": 6,
         "bound": 0,
         "enabled": 0,
         "runnable": 0,
     }
+    assert canary_projection_body["capabilities"]["definition"] == 7
+    assert canary_projection_body["tools"]["definition"] == 0
     for body in (projection_body, canary_projection_body):
         for key in ("roles", "capabilities", "tools", "evalGates", "routes"):
             counts = body[key]

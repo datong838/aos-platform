@@ -31,6 +31,8 @@ describe("aipChineseLabels", () => {
     expect(capabilityDisplayName("strategy.plan")).toBe("策略规划");
     expect(responsibilityDisplayName("service.escalation")).toBe("售后服务与升级");
     expect(blockerDisplayName("skill_binding_readiness_stale")).toContain("技能绑定");
+    expect(blockerDisplayName("capabilities_not_fully_runnable")).toBe("当前方案所需专业能力尚未全部可派发");
+    expect(blockerDisplayName("tools_not_fully_runnable")).toBe("当前方案所需工具尚未全部可派发");
     expect(blockerDisplayName("skill_revision_not_published:C01")).toContain("热点竞品");
     expect(formatBlockers(["capability_binding_readiness_stale", "skill_binding_readiness_stale"])).toContain("；");
   });

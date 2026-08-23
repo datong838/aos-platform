@@ -229,7 +229,7 @@ def _build_operational_projection(
         and _fresh(item.readiness_expires_at, generated_at)
     }
     capability_counts = OperationalStageCounts(
-        definition=runtime.catalog.stats.capability_definition_count,
+        definition=len(catalog_capability_ids),
         bound=len(bound_capability_ids),
         enabled=len(enabled_capability_ids),
         runnable=len(runnable_capability_ids),
@@ -278,7 +278,7 @@ def _build_operational_projection(
     enabled_tool_ids = (dependency_enabled_ids | overlay_enabled_ids) & bound_tool_ids
     runnable_tool_ids = (dependency_runnable_ids | overlay_runnable_ids) & enabled_tool_ids
     tool_counts = OperationalStageCounts(
-        definition=len(tool_definition_ids),
+        definition=len(bound_tool_ids),
         bound=len(bound_tool_ids),
         enabled=len(enabled_tool_ids),
         runnable=len(runnable_tool_ids),
