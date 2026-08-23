@@ -60,6 +60,8 @@ except Exception:  # pragma: no cover
 async def lifespan(_app: FastAPI):
     cron_stop = asyncio.Event()
     cron_task: asyncio.Task[None] | None = None
+    provider_health_stop = asyncio.Event()
+    provider_health_task: asyncio.Task[None] | None = None
     # Migration mode owns its failure policy. Keep it outside the best-effort
     # bootstrap boundary so managed-mode failures can stop application startup.
     migration_mode = run_migrations()
@@ -281,12 +283,55 @@ async def lifespan(_app: FastAPI):
         log.info("startup_qyh_real_cron_worker_started interval_seconds=15")
     else:
         log.info("startup_qyh_real_cron_worker_disabled explicit=true")
+
+    from aos_api.aip_provider_health_maintenance import (
+        AipTextProviderHealthMaintainer,
+        maintenance_enabled,
+        maintenance_interval_seconds,
+    )
+
+    async def _provider_health_loop() -> None:
+        maintainer = AipTextProviderHealthMaintainer()
+        interval = maintenance_interval_seconds()
+        while not provider_health_stop.is_set():
+            try:
+                result = await asyncio.to_thread(maintainer.run_once)
+                log.info(
+                    "aip_text_provider_health_tick status=%s stage=%s "
+                    "observation_id=%s expires_at=%s",
+                    result.get("status"),
+                    result.get("stage"),
+                    result.get("observationId"),
+                    result.get("expiresAt"),
+                )
+            except Exception:
+                log.exception("aip_text_provider_health_tick_failed_closed")
+            try:
+                await asyncio.wait_for(provider_health_stop.wait(), timeout=interval)
+            except TimeoutError:
+                continue
+
+    if maintenance_enabled():
+        provider_health_task = asyncio.create_task(
+            _provider_health_loop(), name="aip-text-provider-health-maintenance"
+        )
+        log.info(
+            "startup_aip_text_provider_health_maintenance interval_seconds=%d",
+            maintenance_interval_seconds(),
+        )
+    else:
+        log.info("startup_aip_text_provider_health_maintenance_disabled")
     yield
     cron_stop.set()
+    provider_health_stop.set()
     if cron_task is not None:
         cron_task.cancel()
         with suppress(asyncio.CancelledError):
             await cron_task
+    if provider_health_task is not None:
+        provider_health_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await provider_health_task
     # ── shutdown：清理 JDBC 缓存（SSH 隧道 + DB 连接）──
     try:
         from aos_api.jdbc_connector_runtime import jdbc_runtime_shutdown
