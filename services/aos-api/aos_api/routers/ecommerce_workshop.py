@@ -19,6 +19,10 @@ from aos_api.ecommerce_workshop_contracts import (
     EcommerceWorkshopModuleListResponse,
     EcommerceWorkshopModuleReadinessResponse,
 )
+from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
+from aos_api.ecommerce_workshop_operations_contracts import (
+    WorkshopOperationsViewEnvelope,
+)
 from aos_api.ecommerce_workshop_source_readiness import (
     EcommerceWorkshopSourceReadiness,
     SourceReadinessTenantMismatchError,
@@ -87,6 +91,11 @@ def get_ecommerce_workshop_source_readiness() -> EcommerceWorkshopSourceReadines
     return EcommerceWorkshopSourceReadiness(build_source_readiness_service())
 
 
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_operations() -> EcommerceWorkshopOperations:
+    return EcommerceWorkshopOperations()
+
+
 CatalogDependency = Annotated[
     EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)
 ]
@@ -96,6 +105,10 @@ TaskCockpitDependency = Annotated[
 SourceReadinessDependency = Annotated[
     EcommerceWorkshopSourceReadiness,
     Depends(get_ecommerce_workshop_source_readiness),
+]
+OperationsDependency = Annotated[
+    EcommerceWorkshopOperations,
+    Depends(get_ecommerce_workshop_operations),
 ]
 
 
@@ -142,6 +155,20 @@ def _require_task_cockpit_installation(
     _invoke(
         lambda: catalog.get_readiness(
             module_id="ecommerce.task-cockpit",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+
+
+def _require_operations_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.operations",
             org_id=principal.org_id,
             project_id=principal.project_id,
             roles=principal.roles,
@@ -240,6 +267,26 @@ def get_ecommerce_workshop_source_readiness_envelope(
             message="SourceReadiness dependency failed closed",
             status_code=500,
         ) from exc
+
+
+@router.get(
+    "/views/operations",
+    response_model=WorkshopOperationsViewEnvelope,
+    operation_id="ecommerceWorkshopOperationsViewGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_operations_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    operations: OperationsDependency,
+) -> WorkshopOperationsViewEnvelope:
+    _reject_query_parameters(request)
+    _require_operations_installation(principal=principal, catalog=catalog)
+    return operations.read(
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+    )
 
 
 @router.get(

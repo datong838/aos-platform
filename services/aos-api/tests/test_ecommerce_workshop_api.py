@@ -305,6 +305,10 @@ def test_openapi_freezes_w1_and_w2_core_operations_and_no_writes() -> None:
             "/v1/ecommerce-workshop/source-readiness",
             "get",
         ),
+        "ecommerceWorkshopOperationsViewGet": (
+            "/v1/ecommerce-workshop/views/operations",
+            "get",
+        ),
         "ecommerceWorkshopTaskCockpitCoreGet": (
             "/v1/ecommerce-workshop/views/task-cockpit",
             "get",
