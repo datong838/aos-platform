@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AipAssistPage, subjectFromSearch } from "./AipAssistPage";
+import { AipAssistPage, recentTaskBusinessTitle, subjectFromSearch } from "./AipAssistPage";
 import type { AssistEvent, AssistThread } from "../../api/aipWorkbench";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -44,6 +44,20 @@ describe("AipAssistPage exact subject", () => {
     expect(host.textContent).toContain("新品内容策划");
     expect(host.textContent).toContain("仍需从真实运行流程补齐任务运行和智能体运行引用");
     expect((host.querySelector("input[aria-label='向当前智能体运行提问']") as HTMLInputElement).disabled).toBe(true);
+  });
+
+  it("hides internal wave identifiers from recent task business titles", async () => {
+    expect(recentTaskBusinessTitle("R2-4J D03 数据参谋 v6 单次真实 Provider 验收"))
+      .toBe("数据参谋 单次真实 模型服务 验收");
+    window.history.replaceState({}, "", "/aip/assist");
+    const client = {
+      createThread: vi.fn(), streamTurn: vi.fn(), cancelTaskRun: vi.fn(), newKey: vi.fn(() => "key"),
+      listRecentTasks: vi.fn().mockResolvedValue([{ id: "task-9", title: "R2-4J D03 数据参谋 v6 单次真实 Provider 验收", status: "approved", version: 4, updatedAt: "2026-08-23T08:00:00Z" }]),
+    };
+    await act(async () => root.render(<MemoryRouter><AipAssistPage client={client} /></MemoryRouter>));
+    await act(async () => undefined);
+    expect(host.textContent).toContain("数据参谋 单次真实 模型服务 验收");
+    expect(host.textContent).not.toMatch(/R2-4J|D03|\bv6\b|Provider/);
   });
 
   it("uses the exact TaskRun ref for the lineage deep link and never guesses a lineageId", async () => {
