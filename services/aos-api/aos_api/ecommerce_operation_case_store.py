@@ -12,8 +12,14 @@ from typing import Any
 from aos_api.db import connect as db_connect
 from aos_api.ecommerce_operation_case_contracts import (
     AggregationPolicyRevision,
+    AutomationKillDecisionRevision,
+    CaseMembershipDecisionRevision,
     ExactAuthorityRevisionRef,
+    OperationCaseEvent,
     OperationCaseRevision,
+    OperationEventClassificationDecisionRevision,
+    SlaClockDecision,
+    SlaPolicyRevision,
 )
 from aos_api.tenant_scope import TenantScope
 
@@ -166,6 +172,225 @@ class OperationAuthorityStore:
                 ),
             )
             result = self._ref(item.case_id, 1, item.content_hash)
+            self._receipt(conn, scope, operation, key, request_hash, result, actor)
+            conn.commit()
+            return result
+
+    def publish_sla_policy(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        item: SlaPolicyRevision,
+        *,
+        expected_version: int,
+    ) -> ExactAuthorityRevisionRef:
+        self._require_scope(scope, item.tenant.org_id, item.tenant.project_id)
+        self._require_actor(actor, item.actor)
+        payload = item.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(
+            {"expectedVersion": expected_version, "revision": payload}
+        )
+        operation = "operation_sla_policy.publish"
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, operation, key, request_hash)
+            if replay is not None:
+                return ExactAuthorityRevisionRef.model_validate(replay)
+            head = conn.execute(
+                "SELECT current_revision,version FROM ecommerce_operation_sla_policy_head "
+                "WHERE org_id=%s AND project_id=%s AND policy_id=%s FOR UPDATE",
+                (*scope.key, item.policy_id),
+            ).fetchone()
+            version = int(head["version"]) if head else 0
+            if version != expected_version:
+                raise OperationAuthorityConflict("stale SLA policy version")
+            if item.revision != version + 1 or item.version != version + 1:
+                raise OperationAuthorityConflict("SLA policy revision/version must advance once")
+            if head:
+                conn.execute(
+                    "UPDATE ecommerce_operation_sla_policy_head "
+                    "SET current_revision=%s,version=version+1,updated_at=NOW() "
+                    "WHERE org_id=%s AND project_id=%s AND policy_id=%s",
+                    (item.revision, *scope.key, item.policy_id),
+                )
+            else:
+                conn.execute(
+                    "INSERT INTO ecommerce_operation_sla_policy_head"
+                    "(org_id,project_id,policy_id,current_revision,version) "
+                    "VALUES(%s,%s,%s,%s,1)",
+                    (*scope.key, item.policy_id, item.revision),
+                )
+            conn.execute(
+                "INSERT INTO ecommerce_operation_sla_policy_revision"
+                "(org_id,project_id,policy_id,revision,content_hash,payload,created_by,"
+                "created_at) VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s,%s)",
+                (
+                    *scope.key,
+                    item.policy_id,
+                    item.revision,
+                    item.content_hash,
+                    self._json(payload),
+                    actor,
+                    item.created_at,
+                ),
+            )
+            result = self._ref(item.policy_id, item.revision, item.content_hash)
+            self._receipt(conn, scope, operation, key, request_hash, result, actor)
+            conn.commit()
+            return result
+
+    def append_classification(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        item: OperationEventClassificationDecisionRevision,
+    ) -> ExactAuthorityRevisionRef:
+        self._require_scope(
+            scope, item.original_ref.tenant.org_id, item.original_ref.tenant.project_id
+        )
+        return self._append_decision(
+            scope,
+            actor,
+            key,
+            item,
+            table="ecommerce_operation_classification_decision_revision",
+            identity=item.decision_id,
+            operation="operation_classification.append",
+        )
+
+    def append_membership(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        item: CaseMembershipDecisionRevision,
+    ) -> ExactAuthorityRevisionRef:
+        for original in item.moved_originals:
+            self._require_scope(
+                scope, original.tenant.org_id, original.tenant.project_id
+            )
+        return self._append_decision(
+            scope,
+            actor,
+            key,
+            item,
+            table="ecommerce_operation_membership_decision_revision",
+            identity=item.decision_id,
+            operation="operation_membership.append",
+        )
+
+    def append_sla_clock(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        item: SlaClockDecision,
+    ) -> ExactAuthorityRevisionRef:
+        return self._append_decision(
+            scope,
+            actor,
+            key,
+            item,
+            table="ecommerce_operation_sla_clock_decision",
+            identity=item.decision_id,
+            operation="operation_sla_clock.append",
+        )
+
+    def append_kill(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        item: AutomationKillDecisionRevision,
+    ) -> ExactAuthorityRevisionRef:
+        return self._append_decision(
+            scope,
+            actor,
+            key,
+            item,
+            table="ecommerce_operation_kill_decision_revision",
+            identity=item.decision_id,
+            operation="operation_kill.append",
+        )
+
+    def append_case_event(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        item: OperationCaseEvent,
+    ) -> ExactAuthorityRevisionRef:
+        self._require_scope(scope, item.tenant.org_id, item.tenant.project_id)
+        self._require_actor(actor, item.actor)
+        if item.original_ref is not None:
+            self._require_scope(
+                scope,
+                item.original_ref.tenant.org_id,
+                item.original_ref.tenant.project_id,
+            )
+        payload = item.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        operation = "operation_case_event.append"
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, operation, key, request_hash)
+            if replay is not None:
+                return ExactAuthorityRevisionRef.model_validate(replay)
+            conn.execute(
+                "INSERT INTO ecommerce_operation_case_event"
+                "(org_id,project_id,event_id,revision,content_hash,payload,created_by,"
+                "created_at,case_id,sequence) VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s)",
+                (
+                    *scope.key,
+                    item.event_id,
+                    item.revision,
+                    item.content_hash,
+                    self._json(payload),
+                    actor,
+                    item.created_at,
+                    item.case_ref.resource_id,
+                    item.sequence,
+                ),
+            )
+            result = self._ref(item.event_id, item.revision, item.content_hash)
+            self._receipt(conn, scope, operation, key, request_hash, result, actor)
+            conn.commit()
+            return result
+
+    def _append_decision(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        item: Any,
+        *,
+        table: str,
+        identity: str,
+        operation: str,
+    ) -> ExactAuthorityRevisionRef:
+        self._require_scope(scope, item.tenant.org_id, item.tenant.project_id)
+        self._require_actor(actor, item.actor)
+        payload = item.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, operation, key, request_hash)
+            if replay is not None:
+                return ExactAuthorityRevisionRef.model_validate(replay)
+            conn.execute(
+                f"INSERT INTO {table}"
+                "(org_id,project_id,decision_id,revision,content_hash,payload,"
+                "created_by,created_at) VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s,%s)",
+                (
+                    *scope.key,
+                    identity,
+                    item.revision,
+                    item.content_hash,
+                    self._json(payload),
+                    actor,
+                    item.created_at,
+                ),
+            )
+            result = self._ref(identity, item.revision, item.content_hash)
             self._receipt(conn, scope, operation, key, request_hash, result, actor)
             conn.commit()
             return result

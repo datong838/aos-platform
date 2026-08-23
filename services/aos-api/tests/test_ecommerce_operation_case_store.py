@@ -5,7 +5,9 @@ import pytest
 
 from aos_api.ecommerce_operation_case_contracts import (
     AggregationPolicyRevision,
+    AutomationKillDecisionRevision,
     OperationCaseRevision,
+    SlaPolicyRevision,
 )
 from aos_api.ecommerce_operation_case_store import (
     OperationAuthorityConflict,
@@ -130,3 +132,55 @@ def test_case_rejects_cross_tenant_original_before_database_access() -> None:
     with pytest.raises(OperationAuthorityConflict, match="tenant"):
         store.create_case(SCOPE, "user:operator", "key-3", operation_case(original_org="dev-org"))
     assert connection.calls == []
+
+
+def test_append_kill_is_receipt_first_and_append_only() -> None:
+    item = AutomationKillDecisionRevision.model_validate(
+        {
+            "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+            "decisionId": "kill-1",
+            "revision": 1,
+            "state": "active",
+            "scopeHash": HASH,
+            "checkpoints": ["proposal", "lease", "executor"],
+            "reason": "contain automation",
+            "contentHash": HASH,
+            "actor": "user:operator",
+            "createdAt": NOW,
+        }
+    )
+    connection = Connection(rows=[None])
+    store = OperationAuthorityStore(factory(connection))
+    ref = store.append_kill(SCOPE, "user:operator", "kill-key", item)
+    assert ref.resource_id == "kill-1"
+    sql = "\n".join(call[0] for call in connection.calls)
+    assert "INSERT INTO ecommerce_operation_kill_decision_revision" in sql
+    assert "UPDATE ecommerce_operation_kill_decision_revision" not in sql
+    assert "INSERT INTO ecommerce_operation_authority_receipt" in sql
+
+
+def test_publish_sla_policy_uses_versioned_head() -> None:
+    item = SlaPolicyRevision.model_validate(
+        {
+            "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+            "policyId": "sla-1",
+            "revision": 1,
+            "version": 1,
+            "lifecycle": "active",
+            "responseSeconds": 300,
+            "resolutionSeconds": 3600,
+            "effectiveFrom": NOW,
+            "contentHash": HASH,
+            "actor": "user:operator",
+            "createdAt": NOW,
+        }
+    )
+    connection = Connection(rows=[None, None])
+    store = OperationAuthorityStore(factory(connection))
+    ref = store.publish_sla_policy(
+        SCOPE, "user:operator", "sla-key", item, expected_version=0
+    )
+    assert ref.resource_id == "sla-1"
+    sql = "\n".join(call[0] for call in connection.calls)
+    assert "INSERT INTO ecommerce_operation_sla_policy_head" in sql
+    assert "INSERT INTO ecommerce_operation_sla_policy_revision" in sql
