@@ -41,7 +41,22 @@ const impactLabels: Record<string,string>={objectScope:"对象范围",channelSco
 
 function Blockers({ items }: { items: ContractBlocker[] }) {
   if (!items.length) return null;
-  return <ul aria-label="阻断原因" style={{ margin: "8px 0 0", paddingLeft: 20 }}>{items.map(item => <li key={`${item.code}:${item.message}`}><span>{contractBusinessText(item.message)}</span><details><summary>技术状态码（审计用）</summary><code>{item.code}</code></details></li>)}</ul>;
+  return <ul aria-label="阻断原因" style={{ margin: "8px 0 0", paddingLeft: 20 }}>{items.map(item => {
+    const action = blockerAction(item.code);
+    return <li key={`${item.code}:${item.message}`} style={{ marginBottom: 10 }}>
+      <strong>{contractBusinessText(item.message)}</strong><br />
+      <small>处理负责人：{action.owner} · 证据到期：当前记录未提供</small><br />
+      <a href={action.href}>{action.label} →</a>
+      <details><summary>技术状态码（审计用）</summary><code>{item.code}</code></details>
+    </li>;
+  })}</ul>;
+}
+function blockerAction(code: string): { owner: string; href: string; label: string } {
+  if (/ROUTE|PROVIDER|MODEL|HEALTH|CAPACITY|PRICE/i.test(code)) return { owner: "模型与路由负责人", href: "/aip/model-runtime", label: "检查模型运行准备" };
+  if (/BINDING|CAPABILITY|SKILL/i.test(code)) return { owner: "AIP 智能体运行平台", href: "/aip/agent-registry", label: "刷新智能体运行准备" };
+  if (/EVAL|RELEASE|PUBLICATION/i.test(code)) return { owner: "评测与发布负责人", href: "/aip/evals", label: "检查评测与发布状态" };
+  if (/EVIDENCE|BUNDLE|SOURCE/i.test(code)) return { owner: "数据与证据负责人", href: "/aip/observability", label: "检查证据与可观测信息" };
+  return { owner: "AIP 上线审批负责人", href: "/aip/production-contracts", label: "刷新上线执行审批" };
 }
 function Quality({name,item}:{name:string;item:ImpactDimension}){return <div style={{padding:"8px 10px",border:"1px solid var(--aos-border)",borderRadius:6}}><strong>{impactLabels[name]??name}</strong><div>{item.quality==="unknown"?"未知（不以 0 代替）":label[item.quality]??item.quality}</div><small>{item.sourceRefs.length} 条来源{item.cutoffAt?` · 截止 ${new Date(item.cutoffAt).toLocaleString()}`:""}</small></div>}
 
@@ -149,9 +164,9 @@ export function ProductionContractsPage() {
   };
   const startProduction=()=>{if(!selectedPreview||!selectedProductionContext||!selectedActionProposal||startDisabledReason)return;const proposal=selectedActionProposal.proposal;void run("production:start",()=>aipProductionContracts.startProduction({taskId:selectedPreview.taskId,expectedTaskVersion:Number(startTaskVersion),productionContextRef:{resourceType:"ProductionContextRevision",resourceId:selectedProductionContext.contextId,revision:selectedProductionContext.revision,contentHash:selectedProductionContext.contentHash},planRef:selectedPreview.planRef,previewRef:{resourceType:"ImpactPreviewRevision",resourceId:selectedPreview.previewId,revision:selectedPreview.revision,contentHash:selectedPreview.contentHash},actionProposalRef:{proposalId:proposal.id,version:proposal.version,proposalHash:proposal.proposalHash},logicGraphId:logicGraphId.trim(),logicRevision:Number(logicRevision),logicGraphHash:logicGraphHash.trim()},`w2-ui-production-start-${crypto.randomUUID()}`));};
 
-  return <PageChrome title="生产契约" lede="统一查看任务目标、证据、评测、职责、阶段、产物关系和评审；冻结只表示内容不可变，不代表已经启动运行。">
-    {error && <div role="alert" className="notice bad">生产契约读取或操作失败：{error}</div>}
-    {loading ? <div role="status" className="card">正在读取生产契约权威记录…</div> : null}
+  return <PageChrome title="上线执行审批" lede="统一查看任务目标、证据、评测、职责、阶段、产物关系和评审；审批资料冻结只表示内容不可变，不代表已经启动运行。">
+    {error && <div role="alert" className="notice bad">上线执行审批读取或操作失败：{error}</div>}
+    {loading ? <div role="status" className="card">正在读取上线执行审批权威记录…</div> : null}
     {!loading && state ? <>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 16 }}>
         {[
@@ -203,7 +218,7 @@ export function ProductionContractsPage() {
       <section className="card" style={{ padding:18,marginTop:16 }} aria-label="影响预览与启动组合门">
         <h2 style={{marginTop:0}}>影响预览与启动组合门</h2>
         <p>影响预览只呈现权威评估；未知项不会显示为零。只有已冻结且就绪的精确修订才能提交，成功也只代表创建任务运行记录，不代表智能体或模型已经运行。</p>
-        {state.previews.count===0?<div className="notice">当前组织尚无影响预览。请从真实任务、执行计划与冻结的生产契约创建；本页不生成样例费用或运行状态。</div>:state.previews.items.map(item=>{const canFreeze=item.lifecycle==="draft"&&item.readiness==="ready"&&!item.blockers.length;return <article key={`${item.previewId}@${item.revision}`} style={itemStyle}>
+        {state.previews.count===0?<div className="notice">当前组织尚无影响预览。请从真实任务、执行计划与冻结的上线审批资料创建；本页不生成样例费用或运行状态。</div>:state.previews.items.map(item=>{const canFreeze=item.lifecycle==="draft"&&item.readiness==="ready"&&!item.blockers.length;return <article key={`${item.previewId}@${item.revision}`} style={itemStyle}>
           <div style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><strong>任务影响评估</strong><span>{label[item.lifecycle]??item.lifecycle} · {label[item.readiness]??item.readiness}</span></div>
           <p>有效期至 {new Date(item.expiresAt).toLocaleString()}</p><details><summary>技术标识（审计用）</summary>影响预览 <code>{item.previewId}@{item.revision}</code> · 任务 <code>{item.taskId}</code></details>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:8}}>{Object.entries(item.impact).map(([name,dimension])=><Quality key={name} name={name} item={dimension}/>)}</div>

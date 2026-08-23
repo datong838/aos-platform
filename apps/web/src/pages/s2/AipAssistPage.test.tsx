@@ -31,6 +31,21 @@ describe("AipAssistPage exact subject", () => {
   });
   it("does not invent a default AgentRun", () => { const value = params(); value.delete("agentRunAuthority"); expect(subjectFromSearch(value)).toBeNull(); });
 
+  it("使用任务协作助手业务名称，并只把真实近期任务作为上游入口", async () => {
+    window.history.replaceState({}, "", "/aip/assist");
+    const client = {
+      createThread: vi.fn(), streamTurn: vi.fn(), cancelTaskRun: vi.fn(), newKey: vi.fn(() => "key"),
+      listRecentTasks: vi.fn().mockResolvedValue([{ id: "task-9", title: "新品内容策划", status: "approved", version: 4, updatedAt: "2026-08-23T08:00:00Z" }]),
+    };
+    await act(async () => root.render(<MemoryRouter><AipAssistPage client={client} /></MemoryRouter>));
+    await act(async () => undefined);
+    expect(host.textContent).toContain("任务协作助手");
+    expect(host.textContent).toContain("选择最近真实任务");
+    expect(host.textContent).toContain("新品内容策划");
+    expect(host.textContent).toContain("仍需从真实运行流程补齐任务运行和智能体运行引用");
+    expect((host.querySelector("input[aria-label='向当前智能体运行提问']") as HTMLInputElement).disabled).toBe(true);
+  });
+
   it("uses the exact TaskRun ref for the lineage deep link and never guesses a lineageId", async () => {
     const client = { createThread: vi.fn(), streamTurn: vi.fn(), cancelTaskRun: vi.fn(), newKey: vi.fn(() => "key") };
     await act(async () => root.render(<MemoryRouter><AipAssistPage client={client} /></MemoryRouter>));

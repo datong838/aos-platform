@@ -168,10 +168,10 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "aip-assist",
     path: "/aip/assist",
-    label: "AIP 助手",
+    label: "任务协作助手",
     icon: "chat",
     status: "live",
-    crumbs: ["AIP", "AIP 助手"],
+    crumbs: ["AIP", "任务协作助手"],
   },
   {
     id: "agents",
@@ -218,10 +218,10 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "aip-production-contracts",
     path: "/aip/production-contracts",
-    label: "生产契约",
+    label: "上线执行审批",
     icon: "table",
     status: "live",
-    crumbs: ["AIP", "生产契约"],
+    crumbs: ["AIP", "上线执行审批"],
   },
   {
     id: "aip-capabilities",

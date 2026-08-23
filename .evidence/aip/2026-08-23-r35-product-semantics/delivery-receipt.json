@@ -1,0 +1,55 @@
+{
+  "receiptType": "AIP_R35_PRODUCT_SEMANTICS",
+  "status": "CODE_UI_GREEN_M1_CAS_PENDING",
+  "branch": "w1-aip",
+  "baseCommit": "a4d91d4",
+  "tenantEvidence": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "note": "R35 is display-only and creates no tenant data or readiness fact"
+  },
+  "scope": [
+    "apps/web/src/components/aip/AipReadinessActionCard.tsx",
+    "apps/web/src/components/aip/AipReadinessActionCard.test.tsx",
+    "apps/web/src/lib/aipChineseLabels.ts",
+    "apps/web/src/navigation/items.ts",
+    "apps/web/src/pages/s2/AgentMarketplacePage.tsx",
+    "apps/web/src/pages/s2/AipAssistPage.tsx",
+    "apps/web/src/pages/s2/AipAssistPage.test.tsx",
+    "apps/web/src/pages/s2/CanonicalAgentRegistryPage.tsx",
+    "apps/web/src/pages/s2/CanonicalAgentsPage.test.tsx",
+    "apps/web/src/pages/s2/CapacityPage.tsx",
+    "apps/web/src/pages/s2/CapacityPage.test.ts",
+    "apps/web/src/pages/s2/LogicCanvasPage.tsx",
+    "apps/web/src/pages/s2/ModelRuntimePage.tsx",
+    "apps/web/src/pages/s2/ProductionContractsPage.tsx",
+    "apps/web/src/pages/s2/logicProductionProjection.ts",
+    "apps/web/src/styles/50-s2-overrides.css"
+  ],
+  "validation": {
+    "ontologySdk": "7/7 passed",
+    "web": "204 files / 2004 tests passed",
+    "desktop": "9 files / 40 tests passed",
+    "typecheck": "GREEN",
+    "productionBuild": "GREEN",
+    "browserRoutes": [
+      "/aip/production-contracts",
+      "/aip/assist",
+      "/aip/agent-registry",
+      "/aip/agent-marketplace",
+      "/aip/model-runtime",
+      "/aip/capacity",
+      "/aip/logic"
+    ],
+    "browserConsole": "no business errors; React Router v7 future-flag warnings only"
+  },
+  "safety": {
+    "apiChanged": false,
+    "databaseChanged": false,
+    "providerCalled": false,
+    "pipelineRun": false,
+    "bindingRefreshed": false,
+    "operationalGreenClaimed": false
+  },
+  "nextGate": "M1_SERIAL_CAS_THEN_W2_00_RECEIPT_AND_W2_01_DOMAIN_AUTHORITY_RECHECK"
+}

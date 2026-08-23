@@ -970,7 +970,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         {" · "}
         <Link to="/aip/evals">评测门控</Link>
         {" · "}
-        <Link to="/aip/production-contracts">生产契约</Link>
+        <Link to="/aip/production-contracts">上线执行审批</Link>
         {" "}完成发布与启动；安全试跑不写生产。
       </div>
       <div
@@ -998,20 +998,20 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       <div
         className="notice"
         role="region"
-        aria-label="生产契约只读投影"
+        aria-label="上线执行审批只读投影"
         data-testid="logic-production-projection"
         style={{ padding: 12, marginBottom: 12, border: "1px solid var(--aos-border)" }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <strong>可被引用的生产流程（只读）</strong>
           <Link to="/aip/production-contracts" data-testid="logic-projection-jump-contracts" style={{ fontSize: 12 }}>
-            打开生产契约 →
+            打开上线执行审批 →
           </Link>
         </div>
         <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--aos-muted)" }}>
           来自阶段模板和职责计划权威表；空表不伪造生产流程，画布不可由此旁路启动生产。
         </p>
-        {projectionState === "loading" && <p style={{ marginTop: 8, fontSize: 12 }} data-testid="logic-projection-loading">正在读取生产契约…</p>}
+        {projectionState === "loading" && <p style={{ marginTop: 8, fontSize: 12 }} data-testid="logic-projection-loading">正在读取上线执行审批…</p>}
         {projectionError && (
           <p role="alert" style={{ marginTop: 8, fontSize: 12, color: "var(--aos-amber-700)" }} data-testid="logic-projection-error">
             投影读取失败：{projectionError}。未注入演示生产流程。
@@ -1305,7 +1305,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <Link to="/aip/drafts" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-drafts">草稿审批台 →</Link>
               <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-evals">评测门控 →</Link>
-              <Link to="/aip/production-contracts" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-contracts">生产契约 →</Link>
+              <Link to="/aip/production-contracts" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-contracts">上线执行审批 →</Link>
             </div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, margin: "14px 0" }}>
@@ -1327,7 +1327,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
             </div>
           )}
           <div className="notice" style={{ padding: 12 }} role="status" data-testid="automation-empty">
-            当前组织的自动化使用关系尚未接入权威数据源。请依次完成草稿审批、正式评测和生产契约门控；本页不把未知计数显示为 0，也不伪造触发成功。
+            当前组织的自动化使用关系尚未接入权威数据源。请依次完成草稿审批、正式评测和上线执行审批门控；本页不把未知计数显示为 0，也不伪造触发成功。
           </div>
           <button type="button" className="btn" disabled title="缺少权威使用关系前，禁止绑定演示自动化" style={{ marginTop: 12 }}>
             绑定自动化（禁用）

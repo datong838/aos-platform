@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { aipMarketplaceImport, type MarketplaceCatalog } from "../../api/aipMarketplaceImport";
 import { PageChrome } from "../../components/PageChrome";
+import { AipReadinessActionCard } from "../../components/aip/AipReadinessActionCard";
 import { businessDisplayName, formatBlockers } from "../../lib/aipChineseLabels";
 
 export function AgentMarketplacePage() {
@@ -12,6 +13,7 @@ export function AgentMarketplacePage() {
     catch (value) { setCatalog(null); setError(String((value as Error).message || value)); }
   }, []);
   useEffect(() => { void load(); }, [load]);
+  const blockerCodes = catalog ? Array.from(new Set(catalog.items.flatMap((item) => item.agents.flatMap((agent) => agent.blockers)))) : [];
 
   return (
     <PageChrome title="智能体市场" lede="真实版本包只读发现 · 安装、审批与绑定保持权威分离">
@@ -27,7 +29,14 @@ export function AgentMarketplacePage() {
       {error ? <div className="notice bad" role="alert">目录读取失败：{error}。当前运行基线尚未提供目录时，请由平台集成人员完成权威版本接入；本页不会用演示资产替代。</div> : null}
       {!catalog && !error ? <div className="card" role="status">正在读取组织市场目录…</div> : catalog?.count === 0 ? (
         <div className="card"><h3>暂无可发现资产包</h3><p>目录返回为空；没有用演示包填充。</p></div>
-      ) : catalog ? catalog.items.map((item) => (
+      ) : catalog ? <>{blockerCodes.length ? <AipReadinessActionCard
+        status="方案包已安装，但运行准备尚未完成"
+        owner="AIP 智能体运行平台 / 模型供应商"
+        reasons={[formatBlockers(blockerCodes)]}
+        actionLabel="进入智能体目录刷新运行准备"
+        actionHref="/aip/agent-registry"
+        technicalCodes={blockerCodes}
+      /> : null}{catalog.items.map((item) => (
         <section className="card" key={`${item.packageId}@${item.version}`} style={{ padding: 18, marginBottom: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
             <div>
@@ -48,8 +57,7 @@ export function AgentMarketplacePage() {
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                   <strong>{businessDisplayName(agent.displayName, "未命名智能体")}</strong><span>{agent.runtimeReadiness === "runnable" ? "可派发" : agent.installed ? "已安装·受阻" : "未安装"}</span>
                 </div>
-                <p style={{ minHeight: 38, color: "var(--aos-text-secondary)", fontSize: 13 }}>{agent.blockers.length ? formatBlockers(agent.blockers) : "运行门已满足"}</p>
-                <Link to={agent.repairHref}>{agent.repairLabel} →</Link>
+                <p style={{ minHeight: 38, color: "var(--aos-text-secondary)", fontSize: 13 }}>{agent.blockers.length ? "当前不可派发；请按页面上方处理指引完成运行准备。" : "运行准备已完成"}</p>
               </article>
             ))}
           </div>
@@ -57,7 +65,7 @@ export function AgentMarketplacePage() {
             安装授权：{item.installAuthorized ? "已授权" : "未授权（需进入智能体目录完成审批与绑定）"}
           </p>
         </section>
-      )) : null}
+      ))}</> : null}
     </PageChrome>
   );
 }

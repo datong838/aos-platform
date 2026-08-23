@@ -69,7 +69,7 @@ describe("CanonicalAgentsPage", () => {
     await act(async () => undefined);
     expect(host.textContent).toContain("内容官");
     expect(host.textContent).toContain("待配置");
-    expect(host.textContent).toContain("技能绑定就绪快照已过期");
+    expect(host.textContent).toContain("技能绑定状态需要刷新");
     expect(host.textContent).toContain("概览");
     expect(host.textContent).toContain("工具箱");
     expect(host.textContent).not.toContain("MOCK_AGENTS");
