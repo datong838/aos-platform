@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { aipAgentControl, type AgentRuntimeReadinessResponse } from "../../api/aipAgentControl";
 import { PageChrome } from "../../components/PageChrome";
 import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
+import { AipReadinessActionCard } from "../../components/aip/AipReadinessActionCard";
 import {
   agentReadinessLadderSummary,
   bindingStatusDisplayName,
@@ -85,6 +86,15 @@ export function CanonicalAgentRegistryPage() {
     }
   }
   const stale = useMemo(() => data ? runtimeSnapshotStale(data.evaluatedAt) : false, [data]);
+  const readinessSummary = useMemo(() => {
+    if (!data) return null;
+    const codes = Array.from(new Set(data.catalog.items.flatMap((item) => item.blockers)));
+    const expiries = [...data.skillBindings, ...data.capabilityBindings]
+      .map((binding) => binding.readinessExpiresAt)
+      .filter((value): value is string => Boolean(value));
+    const expiresAt = expiries.length ? expiries.reduce((earliest, value) => Date.parse(value) < Date.parse(earliest) ? value : earliest) : null;
+    return { codes, expiresAt };
+  }, [data]);
   return <PageChrome title="智能体目录" lede="绑定真相台 · 安装、技能与专业能力就绪（非市场发现壳）">
     <AipOperationalProjectionStrip />
     {error && <div role="alert" className="notice bad">运行就绪度读取失败：{error}</div>}
@@ -119,6 +129,20 @@ export function CanonicalAgentRegistryPage() {
           <Link to="/aip/logic">逻辑画布</Link>
         </nav>
       </section>
+      {(stale || readinessSummary?.codes.length) ? <AipReadinessActionCard
+        status={stale ? "运行准备快照已过期" : "部分智能体暂不可派发"}
+        owner="AIP 智能体运行平台 / 模型供应商"
+        reasons={[
+          ...(stale ? ["目录运行快照已超过 15 分钟，需要重新核验当前依赖"] : []),
+          ...(readinessSummary?.codes.length ? [formatBlockers(readinessSummary.codes)] : []),
+        ]}
+        observedAt={data.evaluatedAt}
+        expiresAt={readinessSummary?.expiresAt}
+        actionLabel={refreshing ? "正在刷新…" : "刷新运行准备"}
+        onAction={() => void refresh()}
+        actionDisabled={refreshing || busy}
+        technicalCodes={readinessSummary?.codes}
+      /> : null}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(360px,1fr))",gap:14}}>
         {data.catalog.items.map(item => {
           const instanceId = item.instance?.instanceId;
@@ -189,7 +213,7 @@ export function CanonicalAgentRegistryPage() {
               })}</ul>
             </details>
             <div style={{marginTop:10,padding:10,background:ladder.dispatchable ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-amber-bg)",color:ladder.dispatchable ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>
-              {ladder.dispatchable ? "可派发（runnable）" : (item.blockers.length ? formatBlockers(item.blockers) : "缺少完整能力/技能绑定与依赖快照")}
+              {ladder.dispatchable ? "可派发" : "当前不可派发；请按页面上方“刷新运行准备”完成重评。"}
             </div>
             <button
               className="btn"

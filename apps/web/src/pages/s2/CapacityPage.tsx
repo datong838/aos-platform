@@ -228,7 +228,7 @@ export function rateLimitsFromRuntimePools(pools: RuntimeCapacityPoolSummary[]):
 export function authoritativeCostLabel(cost: ModelRuntimeCostOverview | null): string {
   if (!cost || cost.usage.state === "unobserved") return "未观测";
   const totals = Object.entries(cost.usage.costTotals);
-  if (!totals.length) return cost.usage.state === "unknown" ? "未知" : "无可归集成本";
+  if (!totals.length) return cost.usage.state === "unknown" ? "未知" : "尚无实际模型调用记录";
   return totals.map(([currency, amount]) => `${currency} ${amount.toFixed(2)}`).join(" · ");
 }
 
