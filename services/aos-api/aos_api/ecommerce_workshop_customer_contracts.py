@@ -74,7 +74,7 @@ class CustomerProjection(AipContractModel):
 
     @model_validator(mode="after")
     def _purpose_scoped(self) -> CustomerProjection:
-        if self.disclosure == "allowed" and (self.freshness != "fresh" or self.quality != "pass" or self.consent != "granted" or self.retention != "active" or self.blockers):
+        if self.disclosure == "allowed" and (self.freshness != "fresh" or self.quality != "pass" or self.consent != "granted" or self.retention != "active" or not self.original_refs or self.blockers):
             raise ValueError("allowed disclosure requires fresh quality consent and retention evidence")
         if self.disclosure != "allowed" and not self.blockers:
             raise ValueError("non-allowed disclosure requires blockers")
