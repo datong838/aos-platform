@@ -1,0 +1,159 @@
+"""Strict read-only contracts for the ecommerce media-studio view."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from enum import StrEnum
+from typing import Literal
+
+from pydantic import Field, field_validator, model_validator
+
+from aos_api.aip_contracts import AipContractModel, TenantContext
+
+
+MEDIA_STUDIO_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v1"
+
+
+class MediaStudioSliceId(StrEnum):
+    CONTEXT = "context"
+    EXECUTION = "execution"
+    DELIVERY = "delivery"
+
+
+class MediaReadinessAxis(StrEnum):
+    MODULE = "module"
+    CAPABILITY = "capability"
+    ASSIGNEE = "assignee"
+    PROVIDER = "provider"
+    BUDGET = "budget"
+    PUBLICATION = "publication"
+
+
+class MediaReadinessStatus(StrEnum):
+    READY = "ready"
+    BLOCKED = "blocked"
+    TARGET = "target"
+    NOT_APPLICABLE = "not_applicable"
+
+
+class MediaExactRef(AipContractModel):
+    resource_type: str = Field(min_length=1, max_length=120)
+    resource_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    receipt_id: str = Field(min_length=1, max_length=200)
+
+
+class MediaBlocker(AipContractModel):
+    code: str = Field(pattern=r"^[A-Z][A-Z0-9_]{1,119}$")
+    dependency: str = Field(min_length=1, max_length=160)
+    required_action: str = Field(min_length=1, max_length=500)
+
+
+class MediaAxisReadiness(AipContractModel):
+    axis: MediaReadinessAxis
+    status: MediaReadinessStatus
+    exact_ref: MediaExactRef | None = None
+    target_contract_ref: str | None = Field(default=None, min_length=1, max_length=240)
+    gaps: list[str] = Field(default_factory=list, max_length=20)
+    blockers: list[MediaBlocker] = Field(default_factory=list, max_length=20)
+
+    @model_validator(mode="after")
+    def _honest_status(self) -> MediaAxisReadiness:
+        if self.status is MediaReadinessStatus.READY:
+            if self.exact_ref is None or self.target_contract_ref or self.gaps or self.blockers:
+                raise ValueError("ready media axis requires one exact ref and no target gaps")
+        elif self.status is MediaReadinessStatus.TARGET:
+            if self.exact_ref is not None or not self.target_contract_ref or not self.gaps or not self.blockers:
+                raise ValueError("target media axis requires target contract, gaps and blockers")
+        elif self.status is MediaReadinessStatus.BLOCKED:
+            if self.exact_ref is not None or not self.blockers:
+                raise ValueError("blocked media axis requires blockers and no exact ref")
+        elif self.exact_ref is not None or self.blockers:
+            raise ValueError("not-applicable media axis cannot attach authority or blockers")
+        return self
+
+
+class MediaCountLedger(AipContractModel):
+    denominator: int = Field(ge=0)
+    ready: int = Field(ge=0)
+    target: int = Field(ge=0)
+    blocked: int = Field(ge=0)
+    unknown: int = Field(ge=0)
+    conflict: int = Field(ge=0)
+    not_applicable: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _conserves_denominator(self) -> MediaCountLedger:
+        if self.denominator != self.ready + self.target + self.blocked + self.unknown + self.conflict + self.not_applicable:
+            raise ValueError("media denominator must equal all disjoint partitions")
+        return self
+
+
+class MediaStudioSlice(AipContractModel):
+    slice_id: MediaStudioSliceId
+    status: Literal["ready", "blocked"]
+    data_cutoff: datetime
+    readiness_axes: list[MediaAxisReadiness] = Field(min_length=6, max_length=6)
+    authority_refs: list[MediaExactRef] = Field(default_factory=list, max_length=100)
+    blockers: list[MediaBlocker] = Field(default_factory=list, max_length=20)
+    count_ledger: MediaCountLedger
+
+    @field_validator("data_cutoff")
+    @classmethod
+    def _aware_cutoff(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("media cutoff requires timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _canonical_and_fail_closed(self) -> MediaStudioSlice:
+        if [item.axis for item in self.readiness_axes] != list(MediaReadinessAxis):
+            raise ValueError("media readiness axes require canonical order")
+        identities = [(item.resource_type, item.resource_id, item.revision, item.content_hash, item.receipt_id) for item in self.authority_refs]
+        if len(identities) != len(set(identities)):
+            raise ValueError("media exact refs must be unique")
+        if self.status == "ready" and (self.blockers or any(item.status in {MediaReadinessStatus.BLOCKED, MediaReadinessStatus.TARGET} for item in self.readiness_axes)):
+            raise ValueError("ready media slice cannot hide blocked or target axes")
+        if self.status == "blocked" and not self.blockers:
+            raise ValueError("blocked media slice requires blockers")
+        if self.count_ledger.ready != len(self.authority_refs):
+            raise ValueError("ready count must equal attached exact refs")
+        return self
+
+
+class MediaPageInfo(AipContractModel):
+    limit: Literal[100] = 100
+    count: int = Field(ge=0, le=300)
+    has_more: Literal[False] = False
+    next_cursor: None = None
+
+
+class WorkshopMediaStudioViewEnvelope(AipContractModel):
+    schema_version: Literal[MEDIA_STUDIO_SCHEMA_VERSION] = MEDIA_STUDIO_SCHEMA_VERSION
+    tenant: TenantContext
+    evaluated_at: datetime
+    data_cutoff: datetime
+    readiness: Literal["degraded"] = "degraded"
+    slices: list[MediaStudioSlice] = Field(min_length=3, max_length=3)
+    page: MediaPageInfo
+
+    @field_validator("evaluated_at", "data_cutoff")
+    @classmethod
+    def _aware_time(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("media timestamps require timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _canonical_shape(self) -> WorkshopMediaStudioViewEnvelope:
+        if [item.slice_id for item in self.slices] != list(MediaStudioSliceId):
+            raise ValueError("media slices require canonical order")
+        if any(item.data_cutoff != self.data_cutoff for item in self.slices):
+            raise ValueError("media slices require one cutoff")
+        if self.page.count != sum(len(item.authority_refs) for item in self.slices):
+            raise ValueError("media page count must equal exact refs")
+        return self
+
+
+__all__ = ["MEDIA_STUDIO_SCHEMA_VERSION", "MediaAxisReadiness", "MediaBlocker", "MediaCountLedger", "MediaExactRef", "MediaPageInfo", "MediaReadinessAxis", "MediaReadinessStatus", "MediaStudioSlice", "MediaStudioSliceId", "WorkshopMediaStudioViewEnvelope"]

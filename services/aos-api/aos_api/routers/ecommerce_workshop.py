@@ -29,6 +29,10 @@ from aos_api.ecommerce_workshop_creator_growth import EcommerceWorkshopCreatorGr
 from aos_api.ecommerce_workshop_creator_growth_contracts import (
     WorkshopCreatorGrowthViewEnvelope,
 )
+from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
+from aos_api.ecommerce_workshop_media_studio_contracts import (
+    WorkshopMediaStudioViewEnvelope,
+)
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
 from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
 from aos_api.ecommerce_operation_command_contracts import (
@@ -146,6 +150,11 @@ def get_ecommerce_workshop_creator_growth() -> EcommerceWorkshopCreatorGrowth:
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_media_studio() -> EcommerceWorkshopMediaStudio:
+    return EcommerceWorkshopMediaStudio()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_operation_commands() -> EcommerceOperationCommands:
     return EcommerceOperationCommands()
 
@@ -185,6 +194,10 @@ ContentCampaignDependency = Annotated[
 CreatorGrowthDependency = Annotated[
     EcommerceWorkshopCreatorGrowth,
     Depends(get_ecommerce_workshop_creator_growth),
+]
+MediaStudioDependency = Annotated[
+    EcommerceWorkshopMediaStudio,
+    Depends(get_ecommerce_workshop_media_studio),
 ]
 OperationCommandsDependency = Annotated[
     EcommerceOperationCommands,
@@ -306,6 +319,20 @@ def _require_creator_growth_installation(
     _invoke(
         lambda: catalog.get_readiness(
             module_id="ecommerce.creator-growth",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+
+
+def _require_media_studio_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.media-studio",
             org_id=principal.org_id,
             project_id=principal.project_id,
             roles=principal.roles,
@@ -461,6 +488,26 @@ def get_ecommerce_workshop_creator_growth_view(
     _reject_query_parameters(request)
     _require_creator_growth_installation(principal=principal, catalog=catalog)
     return creator_growth.read(
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+    )
+
+
+@router.get(
+    "/views/media-studio",
+    response_model=WorkshopMediaStudioViewEnvelope,
+    operation_id="ecommerceWorkshopMediaStudioViewGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_media_studio_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    media_studio: MediaStudioDependency,
+) -> WorkshopMediaStudioViewEnvelope:
+    _reject_query_parameters(request)
+    _require_media_studio_installation(principal=principal, catalog=catalog)
+    return media_studio.read(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
