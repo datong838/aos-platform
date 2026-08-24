@@ -12,6 +12,8 @@ from aos_api.ecommerce_workshop_creator_growth_contracts import (
     CreatorWorkflowPhase,
     WorkshopCreatorGrowthViewEnvelope,
 )
+from aos_api.ecommerce_workshop_creator_growth_authorities import CreatorCandidateRevision
+from aos_api.ecommerce_workshop_creator_growth_store import CreatorAuthorityObservation, CreatorAuthorityReadError
 
 
 NOW = datetime(2026, 8, 24, 16, 0, tzinfo=UTC)
@@ -85,3 +87,25 @@ def test_contract_rejects_duplicate_blocker_identity() -> None:
     body["slices"][0]["blockers"].append(body["slices"][0]["blockers"][0])
     with pytest.raises(ValidationError):
         WorkshopCreatorGrowthViewEnvelope.model_validate(body)
+
+
+class Store:
+    def __init__(self, fail=None): self.fail = fail
+    def list_candidates(self, scope, **kwargs):
+        if self.fail == "candidate": raise CreatorAuthorityReadError("failed")
+        item = CreatorCandidateRevision.model_validate({"tenant": {"orgId": scope.org_id, "projectId": scope.project_id}, "candidateId": "c1", "revision": 1, "identityRef": {"resourceType": "CreatorIdentityRevision", "resourceId": "i1", "revision": 1, "contentHash": "a" * 64}, "profileEvidenceRefs": [{"resourceType": "ProfileEvidenceRevision", "resourceId": "e1", "revision": 1, "contentHash": "a" * 64}], "piiRefs": ["vault://creator/c1/contact"], "contentHash": "a" * 64, "observedAt": NOW})
+        return [CreatorAuthorityObservation(authority=item, receipt_id="receipt-c1")]
+    def list_outreach_batches(self, *args, **kwargs): return []
+    def list_contracts(self, *args, **kwargs): return []
+    def list_deliveries(self, *args, **kwargs): return []
+    def list_relationships(self, *args, **kwargs): return []
+
+
+def test_bounded_reader_distinguishes_ready_empty_and_blocked() -> None:
+    body = EcommerceWorkshopCreatorGrowth(store=Store(), clock=lambda: NOW).read(org_id="org-org", project_id="dev-project")
+    assert body.slices[0].status.value == "ready" and body.slices[0].authority_refs[0].receipt_id == "receipt-c1"
+    assert all(item.status.value == "ready" for item in body.slices[1:])
+    assert body.page.count == 1
+    failed = EcommerceWorkshopCreatorGrowth(store=Store(fail="candidate"), clock=lambda: NOW).read(org_id="org-org", project_id="dev-project")
+    assert failed.slices[0].status.value == "blocked"
+    assert all(item.status.value == "ready" for item in failed.slices[1:])

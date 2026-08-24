@@ -94,6 +94,18 @@ class EcommerceWorkshopCreatorGrowthStore:
     def list_match_decisions(self, scope: TenantScope, *, cutoff: datetime, limit: int = 100) -> list[CreatorAuthorityObservation[CreatorMatchDecision]]:
         return self._list(scope, "ecommerce_creator_match_decision", CreatorMatchDecision, cutoff, limit)
 
+    def list_outreach_batches(self, scope: TenantScope, *, cutoff: datetime, limit: int = 100) -> list[CreatorAuthorityObservation[OutreachBatchRevision]]:
+        return self._list(scope, "ecommerce_creator_outreach_batch_revision", OutreachBatchRevision, cutoff, limit)
+
+    def list_contracts(self, scope: TenantScope, *, cutoff: datetime, limit: int = 100) -> list[CreatorAuthorityObservation[CreatorContractRevision]]:
+        return self._list(scope, "ecommerce_creator_contract_revision", CreatorContractRevision, cutoff, limit)
+
+    def list_deliveries(self, scope: TenantScope, *, cutoff: datetime, limit: int = 100) -> list[CreatorAuthorityObservation[CreatorDeliveryRevision]]:
+        return self._list(scope, "ecommerce_creator_delivery_revision", CreatorDeliveryRevision, cutoff, limit)
+
+    def list_relationships(self, scope: TenantScope, *, cutoff: datetime, limit: int = 100) -> list[CreatorAuthorityObservation[CreatorRelationshipRevision]]:
+        return self._list(scope, "ecommerce_creator_relationship_revision", CreatorRelationshipRevision, cutoff, limit)
+
     def _append(self, scope: TenantScope, table: str, identity_column: str, identity: str, item: AuthorityT, receipt_id: str) -> None:
         tenant = item.tenant
         if (tenant.org_id, tenant.project_id) != scope.key:
