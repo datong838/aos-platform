@@ -6,6 +6,7 @@ import hashlib
 import json
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
@@ -55,6 +56,17 @@ class AipResearchJobBlocked(AipResearchJobError):
 
 class AipResearchJobPersistenceError(AipResearchJobError):
     code = "AIP_RESEARCH_JOB_PERSISTENCE_ERROR"
+
+
+@dataclass(frozen=True)
+class ResearchJobProjectionFacts:
+    """Existing append-only facts used only by the unified read projection."""
+
+    partial_refs: list[ResourceRef]
+    receipt_refs: list[ResourceRef]
+    updated_at: datetime
+    deadline: datetime
+    owner: str
 
 
 _ALLOWED = {
@@ -659,6 +671,76 @@ class AipResearchJobStore:
                 tenant=_tenant(scope), items=items, count=len(items)
             )
 
+    def projection_facts(
+        self, scope: TenantScope, job_id: str
+    ) -> ResearchJobProjectionFacts:
+        """Read existing receipts without creating a fourth async-job authority."""
+        with self._connect(scope) as conn:
+            job = self._job(conn, scope, job_id)
+            artifacts = conn.execute(
+                """SELECT r.artifact_id,r.content_hash,r.created_at
+                   FROM aip_research_artifact_receipt r
+                   WHERE r.org_id=%s AND r.project_id=%s AND r.job_id=%s
+                   ORDER BY r.created_at,r.artifact_receipt_id""",
+                (*scope.key, job_id),
+            ).fetchall()
+            receipts = conn.execute(
+                """SELECT resource_type,resource_id,revision,created_at FROM (
+                     SELECT 'aip.research_submission_receipt'::text AS resource_type,
+                            submission_receipt_id AS resource_id,source_hash AS revision,created_at
+                     FROM aip_research_submission_receipt
+                     WHERE org_id=%s AND project_id=%s AND job_id=%s
+                     UNION ALL
+                     SELECT 'aip.research_event_receipt',event_receipt_id,payload_hash,created_at
+                     FROM aip_research_event_receipt
+                     WHERE org_id=%s AND project_id=%s AND job_id=%s
+                     UNION ALL
+                     SELECT 'aip.research_artifact_receipt',artifact_receipt_id,source_hash,created_at
+                     FROM aip_research_artifact_receipt
+                     WHERE org_id=%s AND project_id=%s AND job_id=%s
+                     UNION ALL
+                     SELECT 'aip.research_delivery_receipt',receipt_id,source_hash,created_at
+                     FROM aip_research_delivery_receipt
+                     WHERE org_id=%s AND project_id=%s AND job_id=%s
+                     UNION ALL
+                     SELECT 'aip.research_command_receipt',receipt_id,request_hash,created_at
+                     FROM aip_research_job_command_receipt
+                     WHERE org_id=%s AND project_id=%s AND job_id=%s
+                   ) facts ORDER BY created_at,resource_type,resource_id""",
+                (*scope.key, job_id) * 5,
+            ).fetchall()
+            updated_at = max(
+                [job["created_at"], *[row["created_at"] for row in receipts]],
+            )
+            manifest = job["manifest"]
+            if isinstance(manifest, str):
+                manifest = json.loads(manifest)
+            return ResearchJobProjectionFacts(
+                partial_refs=[
+                    ResourceRef(
+                        resource_type="aip.artifact",
+                        resource_id=row["artifact_id"],
+                        revision=row["content_hash"],
+                        authority="aos.artifact",
+                    )
+                    for row in artifacts
+                ],
+                receipt_refs=[
+                    ResourceRef(
+                        resource_type=row["resource_type"],
+                        resource_id=row["resource_id"],
+                        revision=row["revision"],
+                        authority="aos.research_job",
+                    )
+                    for row in receipts
+                ],
+                updated_at=updated_at,
+                deadline=datetime.fromisoformat(
+                    str(manifest["deadline"]).replace("Z", "+00:00")
+                ),
+                owner=job["created_by"],
+            )
+
     def cancel_job(
         self,
         scope: TenantScope,
@@ -1244,4 +1326,5 @@ __all__ = [
     "AipResearchJobNotFound",
     "AipResearchJobPersistenceError",
     "AipResearchJobStore",
+    "ResearchJobProjectionFacts",
 ]

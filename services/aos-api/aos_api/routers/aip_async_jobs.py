@@ -1,4 +1,4 @@
-"""Read-only AsyncJobProjection API (ResearchJob + QueryJob)."""
+"""Read-only AsyncJobProjection API over the existing source authorities."""
 
 # ruff: noqa: B008
 from __future__ import annotations
@@ -21,5 +21,7 @@ def list_async_jobs(
     principal: Principal = Depends(require_principal),
 ) -> AsyncJobProjectionResponse:
     return list_async_job_projection(
-        TenantScope(principal.org_id, principal.project_id), limit=limit
+        TenantScope(principal.org_id, principal.project_id),
+        limit=limit,
+        roles=principal.roles,
     )

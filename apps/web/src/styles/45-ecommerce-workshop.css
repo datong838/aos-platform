@@ -768,6 +768,42 @@
 .analyst-metrics article b { display: block; margin-top: 10px; font-size: 22px; }
 .analyst-metrics article p,
 .analyst-metrics article small { overflow-wrap: anywhere; color: var(--aos-text-secondary); }
+.async-job-drawer { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-blue); background: var(--aos-surface); }
+.async-job-drawer > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.async-job-drawer > header small { color: var(--aos-blue); font-weight: 700; }
+.async-job-drawer h2,
+.async-job-drawer h3,
+.async-job-drawer h4,
+.async-job-drawer p { margin: 0; }
+.async-job-drawer > p { color: var(--aos-text-secondary); }
+.async-job-state { display: grid; gap: 4px; padding: 16px; border: 1px dashed var(--aos-border); color: var(--aos-text-secondary); }
+.async-job-state.is-failed { border-color: var(--aos-red); color: var(--aos-red); }
+.async-job-layout { display: grid; grid-template-columns: minmax(210px, .72fr) minmax(0, 2fr); gap: 10px; min-width: 0; }
+.async-job-layout > nav { display: grid; align-content: start; gap: 6px; }
+.async-job-layout > nav button { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; min-width: 0; cursor: pointer; border: 1px solid var(--aos-border); padding: 10px; background: var(--aos-surface-hover); color: var(--aos-text); text-align: left; }
+.async-job-layout > nav button[aria-current="true"] { border-color: var(--aos-blue); box-shadow: inset 3px 0 var(--aos-blue); }
+.async-job-layout > nav span { grid-column: 1 / -1; color: var(--aos-text-tertiary); font-size: 11px; }
+.async-job-layout > nav strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.async-job-layout > nav em { color: var(--aos-blue); font-size: 11px; font-style: normal; }
+.async-job-detail { display: grid; gap: 12px; min-width: 0; padding: 13px; border: 1px solid var(--aos-border); background: color-mix(in srgb, var(--aos-blue) 4%, var(--aos-surface)); }
+.async-job-detail > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.async-job-detail > header small { color: var(--aos-text-tertiary); }
+.async-job-detail > header strong { border: 1px solid var(--aos-border); border-radius: 999px; padding: 4px 9px; color: var(--aos-blue); }
+.async-job-detail > header strong.is-unknown,
+.async-job-detail > header strong.is-failed,
+.async-job-detail > header strong.is-blocked { color: var(--aos-red); }
+.async-job-detail dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; margin: 0; }
+.async-job-detail dl div { min-width: 0; padding: 8px; background: var(--aos-surface); }
+.async-job-detail dt { color: var(--aos-text-tertiary); font-size: 10px; }
+.async-job-detail dd { margin: 3px 0 0; overflow-wrap: anywhere; font-size: 12px; }
+.async-job-detail section { display: grid; gap: 7px; }
+.async-job-detail section p,
+.async-job-detail section li { color: var(--aos-text-secondary); font-size: 12px; }
+.async-job-detail section ul { margin: 0; padding-left: 18px; }
+.async-job-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.async-job-controls button { display: grid; gap: 3px; border: 1px solid var(--aos-border); padding: 9px; text-align: left; }
+.async-job-controls small { color: var(--aos-text-tertiary); }
+@media (max-width: 900px) { .async-job-layout { grid-template-columns: 1fr; } .async-job-detail dl { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .price-governance-page,
 .price-governance-read-model { display: grid; gap: 12px; min-width: 0; }
