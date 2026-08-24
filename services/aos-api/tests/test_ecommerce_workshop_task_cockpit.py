@@ -134,7 +134,7 @@ def test_core_read_is_degraded_read_only_and_uses_stable_keyset_cursor() -> None
     assert first.page.count == 1
     assert first.page.has_more is True
     assert first.page.next_cursor
-    assert len(first.blockers) == 3
+    assert len(first.blockers) == 2
     assert first.items[0].run is not None
 
     second = cockpit.read_core(
@@ -562,8 +562,9 @@ def _asset_ref(identifier: str) -> dict[str, Any]:
 
 
 class ResponsibilityConnection:
-    def __init__(self, *, responsibility: dict[str, Any] | None = None):
+    def __init__(self, *, responsibility: dict[str, Any] | None = None, resolutions: list[dict[str, Any]] | None = None):
         self.responsibility = _responsibility_row() if responsibility is None else responsibility
+        self.resolutions = [] if resolutions is None else resolutions
         self.calls: list[tuple[str, tuple[Any, ...] | None]] = []
 
     def execute(self, sql: str, params: tuple[Any, ...] | None = None):
@@ -580,6 +581,8 @@ class ResponsibilityConnection:
 
     def fetchall(self):
         sql = self.calls[-1][0]
+        if "FROM aip_assignee_resolution_receipt" in sql:
+            return self.resolutions
         if "FROM aip_handoff_envelope" in sql:
             return [{
                 "handoff_id": "handoff-1",
@@ -607,8 +610,8 @@ class ResponsibilityConnection:
         raise AssertionError(f"unexpected fetchall query: {sql}")
 
 
-def _responsibility_cockpit(*, responsibility: dict[str, Any] | None = None):
-    connection = ResponsibilityConnection(responsibility=responsibility)
+def _responsibility_cockpit(*, responsibility: dict[str, Any] | None = None, resolutions: list[dict[str, Any]] | None = None):
+    connection = ResponsibilityConnection(responsibility=responsibility, resolutions=resolutions)
 
     @contextmanager
     def connect():
@@ -634,6 +637,60 @@ def test_responsibility_handoffs_read_exact_minimal_canonical_timeline() -> None
     assert "REPEATABLE READ READ ONLY" in sql
     assert "SET LOCAL ROLE AOS_RUNTIME" in sql
     assert "INSERT " not in sql and "UPDATE " not in sql and "DELETE " not in sql
+
+
+def _resolution_row(*, status: str = "resolved", created_at: datetime = NOW) -> dict[str, Any]:
+    return {
+        "receipt_id": f"receipt-{status}",
+        "subject_id": "responsibility-plan:responsibility-1@4/slot:researcher",
+        "kind": "agent_instance",
+        "resource_id": "agent-research",
+        "version": 2,
+        "status": status,
+        "blocker_codes": [] if status == "resolved" else ["AGENT_INSTANCE_MISSING"],
+        "content_hash": "9" * 64,
+        "created_at": created_at,
+        "actor": "must-not-leak",
+        "resolved_ref": "must-not-leak",
+    }
+
+
+def test_responsibility_handoffs_exposes_exact_resolution_observation_without_private_fields() -> None:
+    cockpit, _ = _responsibility_cockpit(resolutions=[_resolution_row()])
+    result = cockpit.read_responsibility_handoffs(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    )
+    assignee = result.slots[0].assignee
+    assert assignee.operational_readiness == "resolved_at_observation"
+    assert assignee.resolution_receipts[0].status == "resolved"
+    payload = result.model_dump(mode="json", by_alias=True)
+    assert "must-not-leak" not in str(payload)
+    assert "actor" not in str(payload)
+    assert "resolvedRef" not in str(payload)
+
+
+def test_responsibility_handoffs_fails_closed_on_resolution_assignee_drift() -> None:
+    receipt = _resolution_row()
+    receipt["resource_id"] = "agent-other"
+    cockpit, _ = _responsibility_cockpit(resolutions=[receipt])
+    with pytest.raises(ApiError) as captured:
+        cockpit.read_responsibility_handoffs(
+            org_id="org-org", project_id="dev-project", run_id="run-1"
+        )
+    assert captured.value.code == "TASK_COCKPIT_RESPONSIBILITY_HANDOFF_DRIFTED"
+
+
+def test_responsibility_handoffs_fails_closed_on_same_time_resolution_conflict() -> None:
+    blocked = _resolution_row(status="blocked")
+    blocked["receipt_id"] = "receipt-blocked"
+    resolved = _resolution_row(status="resolved")
+    resolved["receipt_id"] = "receipt-resolved"
+    cockpit, _ = _responsibility_cockpit(resolutions=[blocked, resolved])
+    with pytest.raises(ApiError) as captured:
+        cockpit.read_responsibility_handoffs(
+            org_id="org-org", project_id="dev-project", run_id="run-1"
+        )
+    assert captured.value.code == "TASK_COCKPIT_RESPONSIBILITY_HANDOFF_DRIFTED"
 
 
 def test_responsibility_handoffs_fail_closed_on_exact_hash_drift() -> None:

@@ -102,7 +102,7 @@ class TaskCockpitCoreEnvelope(AipContractModel):
         TaskCockpitStateConsistency.CURRENT_STATE_PER_PAGE
     )
     readiness: Literal[TaskCockpitReadiness.DEGRADED] = TaskCockpitReadiness.DEGRADED
-    blockers: list[TaskCockpitBlocker] = Field(min_length=3, max_length=20)
+    blockers: list[TaskCockpitBlocker] = Field(min_length=1, max_length=20)
     items: list[TaskCockpitTaskSummary] = Field(max_length=100)
     page: TaskCockpitPageInfo
 
@@ -285,6 +285,38 @@ class TaskCockpitProductionContextEnvelope(AipContractModel):
         return self
 
 
+class TaskCockpitAssigneeResolutionReceipt(AipContractModel):
+    receipt_id: str = Field(min_length=1, max_length=200)
+    subject_id: str = Field(min_length=1, max_length=240)
+    kind: Literal[
+        "agent_instance",
+        "human_principal",
+        "tool_binding",
+        "provider_capability_binding",
+    ]
+    resource_id: str = Field(min_length=1, max_length=200)
+    version: int = Field(ge=1)
+    status: Literal["resolved", "blocked"]
+    blocker_codes: list[str] = Field(default_factory=list, max_length=128)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_at: datetime
+
+    @field_validator("created_at")
+    @classmethod
+    def _resolution_time_is_aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _status_matches_blockers(self) -> TaskCockpitAssigneeResolutionReceipt:
+        if len(self.blocker_codes) != len(set(self.blocker_codes)):
+            raise ValueError("assignee resolution blocker codes must be unique")
+        if (self.status == "resolved") == bool(self.blocker_codes):
+            raise ValueError("assignee resolution status and blockers drifted")
+        return self
+
+
 class TaskCockpitStructuralAssignee(AipContractModel):
     kind: Literal[
         "agent_instance",
@@ -294,7 +326,47 @@ class TaskCockpitStructuralAssignee(AipContractModel):
     ]
     resource_id: str = Field(min_length=1, max_length=200)
     version: int = Field(ge=1)
-    operational_readiness: Literal["unverified"] = "unverified"
+    operational_readiness: Literal[
+        "unverified", "resolved_at_observation", "blocked_at_observation"
+    ] = "unverified"
+    resolution_receipts: list[TaskCockpitAssigneeResolutionReceipt] = Field(
+        default_factory=list, max_length=128
+    )
+
+    @model_validator(mode="after")
+    def _resolution_timeline_is_exact(self) -> TaskCockpitStructuralAssignee:
+        expected = (self.kind, self.resource_id, self.version)
+        if any(
+            (item.kind, item.resource_id, item.version) != expected
+            for item in self.resolution_receipts
+        ):
+            raise ValueError("assignee resolution exact reference drifted")
+        ordered = sorted(
+            self.resolution_receipts,
+            key=lambda item: (item.created_at, item.receipt_id),
+        )
+        if ordered != self.resolution_receipts:
+            raise ValueError("assignee resolution timeline must be canonical")
+        if len({item.receipt_id for item in ordered}) != len(ordered):
+            raise ValueError("assignee resolution receipt identities must be unique")
+        if not ordered:
+            if self.operational_readiness != "unverified":
+                raise ValueError("missing receipt must remain unverified")
+            return self
+        latest_at = ordered[-1].created_at
+        latest_statuses = {
+            item.status for item in ordered if item.created_at == latest_at
+        }
+        if len(latest_statuses) != 1:
+            raise ValueError("assignee resolution latest observation conflicts")
+        expected_readiness = (
+            "resolved_at_observation"
+            if ordered[-1].status == "resolved"
+            else "blocked_at_observation"
+        )
+        if self.operational_readiness != expected_readiness:
+            raise ValueError("assignee operational readiness mapping drifted")
+        return self
 
 
 class TaskCockpitResponsibilitySlot(AipContractModel):
@@ -388,6 +460,16 @@ class TaskCockpitResponsibilityHandoffEnvelope(AipContractModel):
         required = self.compiled_required_slot_ids
         if len(required) != len(set(required)) or not set(required).issubset(slot_ids):
             raise ValueError("compiled required slots must be unique and covered")
+        for slot in self.slots:
+            expected_subject = (
+                f"responsibility-plan:{self.responsibility_plan_ref.resource_id}"
+                f"@{self.responsibility_plan_ref.revision}/slot:{slot.slot_id}"
+            )
+            if any(
+                receipt.subject_id != expected_subject
+                for receipt in slot.assignee.resolution_receipts
+            ):
+                raise ValueError("assignee resolution subject identity drifted")
         handoff_ids = [item.handoff_id for item in self.handoffs]
         if len(handoff_ids) != len(set(handoff_ids)):
             raise ValueError("handoff identities must be unique")
@@ -743,6 +825,7 @@ __all__ = [
     "TaskCockpitActionReceipt",
     "TaskCockpitApprovalReviewEnvelope",
     "TaskCockpitActionReceiptEnvelope",
+    "TaskCockpitAssigneeResolutionReceipt",
     "TaskCockpitResponsibilityHandoffEnvelope",
     "TaskCockpitResponsibilitySlot",
     "TaskCockpitStructuralAssignee",

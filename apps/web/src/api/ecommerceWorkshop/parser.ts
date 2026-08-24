@@ -300,7 +300,7 @@ function assertUnique(items: readonly string[], label: string): void { if (new S
 export function parseTaskCockpitCore(value: unknown): TaskCockpitCoreResponse {
   const raw = record(value, "taskCockpit.core"); exact(raw, ["schemaVersion", "tenant", "evaluatedAt", "taskCutoff", "stateConsistency", "readiness", "blockers", "items", "page"], "taskCockpit.core");
   const base = parseTaskCockpitBase(raw, "taskCockpit.core"); if (raw.readiness !== "degraded") throw new TypeError("taskCockpit.core.readiness 漂移");
-  if (!Array.isArray(raw.blockers) || raw.blockers.length < 3 || raw.blockers.length > 20) throw new TypeError("taskCockpit.core.blockers 数量非法"); const blockers = raw.blockers.map(parseTaskCockpitBlocker); assertUnique(blockers.map((item) => item.code), "taskCockpit.core.blockers");
+  if (!Array.isArray(raw.blockers) || raw.blockers.length < 1 || raw.blockers.length > 20) throw new TypeError("taskCockpit.core.blockers 数量非法"); const blockers = raw.blockers.map(parseTaskCockpitBlocker); assertUnique(blockers.map((item) => item.code), "taskCockpit.core.blockers");
   if (!Array.isArray(raw.items)) throw new TypeError("taskCockpit.core.items 必须是数组"); const items = raw.items.map(parseTaskCockpitTask); assertUnique(items.map((item) => item.taskId), "taskCockpit.core.items");
   const page = parseTaskCockpitPage(raw.page); if (page.count !== items.length) throw new TypeError("taskCockpit.core.page count 不一致");
   return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, ...base, taskCutoff: timestamp(raw.taskCutoff, "taskCockpit.core.taskCutoff"), stateConsistency: "current_state_per_page", readiness: "degraded", blockers, items, page };
@@ -358,18 +358,45 @@ function taskCockpitStringList(value: unknown, label: string): string[] {
   assertUnique(result, label);
   return result;
 }
-function parseTaskCockpitResponsibilitySlot(value: unknown): TaskCockpitResponsibilitySlot {
+function parseTaskCockpitResponsibilitySlot(value: unknown, responsibilityPlanRef: TaskCockpitExactRevisionRef): TaskCockpitResponsibilitySlot {
   const raw = record(value, "taskCockpit.responsibility.slot");
   exact(raw, ["slotId", "responsibilityType", "requiredCapabilityIds", "returnStage", "assignee"], "taskCockpit.responsibility.slot");
   const assignee = record(raw.assignee, "taskCockpit.responsibility.slot.assignee");
-  exact(assignee, ["kind", "resourceId", "version", "operationalReadiness"], "taskCockpit.responsibility.slot.assignee");
-  if (assignee.operationalReadiness !== "unverified") throw new TypeError("taskCockpit.responsibility assignee readiness 越权");
+  exact(assignee, ["kind", "resourceId", "version", "operationalReadiness", "resolutionReceipts"], "taskCockpit.responsibility.slot.assignee");
+  const kind = enumValue(assignee.kind, ["agent_instance", "human_principal", "tool_binding", "provider_capability_binding"] as const, "taskCockpit.responsibility.slot.assignee.kind");
+  const resourceId = boundedText(assignee.resourceId, "taskCockpit.responsibility.slot.assignee.resourceId", 200);
+  const version = integer(assignee.version, "taskCockpit.responsibility.slot.assignee.version", 1);
+  const operationalReadiness = enumValue(assignee.operationalReadiness, ["unverified", "resolved_at_observation", "blocked_at_observation"] as const, "taskCockpit.responsibility.slot.assignee.operationalReadiness");
+  if (!Array.isArray(assignee.resolutionReceipts)) throw new TypeError("taskCockpit.responsibility resolutionReceipts 必须是数组");
+  const slotId = boundedText(raw.slotId, "taskCockpit.responsibility.slot.slotId", 160);
+  const expectedSubject = `responsibility-plan:${responsibilityPlanRef.resourceId}@${responsibilityPlanRef.revision}/slot:${slotId}`;
+  const resolutionReceipts = assignee.resolutionReceipts.map((value, index) => {
+    const receipt = record(value, `taskCockpit.responsibility.resolutionReceipts[${index}]`);
+    exact(receipt, ["receiptId", "subjectId", "kind", "resourceId", "version", "status", "blockerCodes", "contentHash", "createdAt"], `taskCockpit.responsibility.resolutionReceipts[${index}]`);
+    const receiptKind = enumValue(receipt.kind, ["agent_instance", "human_principal", "tool_binding", "provider_capability_binding"] as const, "taskCockpit.responsibility.resolution.kind");
+    const receiptStatus = enumValue(receipt.status, ["resolved", "blocked"] as const, "taskCockpit.responsibility.resolution.status");
+    const blockerCodes = taskCockpitStringList(receipt.blockerCodes, "taskCockpit.responsibility.resolution.blockerCodes");
+    const contentHash = boundedText(receipt.contentHash, "taskCockpit.responsibility.resolution.contentHash", 64);
+    if (!RAW_SHA256.test(contentHash)) throw new TypeError("taskCockpit.responsibility resolution contentHash 不是 SHA-256");
+    const subjectId = boundedText(receipt.subjectId, "taskCockpit.responsibility.resolution.subjectId", 240);
+    const receiptResourceId = boundedText(receipt.resourceId, "taskCockpit.responsibility.resolution.resourceId", 200);
+    const receiptVersion = integer(receipt.version, "taskCockpit.responsibility.resolution.version", 1);
+    if (subjectId !== expectedSubject || receiptKind !== kind || receiptResourceId !== resourceId || receiptVersion !== version) throw new TypeError("taskCockpit.responsibility resolution exact ref 漂移");
+    if ((receiptStatus === "resolved") === (blockerCodes.length > 0)) throw new TypeError("taskCockpit.responsibility resolution status/blockers 漂移");
+    return { receiptId: boundedText(receipt.receiptId, "taskCockpit.responsibility.resolution.receiptId", 200), subjectId, kind: receiptKind, resourceId: receiptResourceId, version: receiptVersion, status: receiptStatus, blockerCodes, contentHash, createdAt: timestamp(receipt.createdAt, "taskCockpit.responsibility.resolution.createdAt") };
+  });
+  assertUnique(resolutionReceipts.map((item) => item.receiptId), "taskCockpit.responsibility.resolutionReceipts");
+  if (resolutionReceipts.some((item, index) => index > 0 && (Date.parse(item.createdAt) < Date.parse(resolutionReceipts[index - 1].createdAt) || (item.createdAt === resolutionReceipts[index - 1].createdAt && item.receiptId < resolutionReceipts[index - 1].receiptId)))) throw new TypeError("taskCockpit.responsibility resolution timeline 漂移");
+  const latestAt = resolutionReceipts.at(-1)?.createdAt;
+  const latestStatuses = new Set(resolutionReceipts.filter((item) => item.createdAt === latestAt).map((item) => item.status));
+  const expectedReadiness = resolutionReceipts.length === 0 ? "unverified" : resolutionReceipts.at(-1)?.status === "resolved" ? "resolved_at_observation" : "blocked_at_observation";
+  if (latestStatuses.size > 1 || operationalReadiness !== expectedReadiness) throw new TypeError("taskCockpit.responsibility assignee readiness 映射漂移");
   return {
-    slotId: boundedText(raw.slotId, "taskCockpit.responsibility.slot.slotId", 160),
+    slotId,
     responsibilityType: boundedText(raw.responsibilityType, "taskCockpit.responsibility.slot.responsibilityType", 160),
     requiredCapabilityIds: taskCockpitStringList(raw.requiredCapabilityIds, "taskCockpit.responsibility.slot.requiredCapabilityIds"),
     returnStage: boundedText(raw.returnStage, "taskCockpit.responsibility.slot.returnStage", 160),
-    assignee: { kind: enumValue(assignee.kind, ["agent_instance", "human_principal", "tool_binding", "provider_capability_binding"] as const, "taskCockpit.responsibility.slot.assignee.kind"), resourceId: boundedText(assignee.resourceId, "taskCockpit.responsibility.slot.assignee.resourceId", 200), version: integer(assignee.version, "taskCockpit.responsibility.slot.assignee.version", 1), operationalReadiness: "unverified" },
+    assignee: { kind, resourceId, version, operationalReadiness, resolutionReceipts },
   };
 }
 function parseTaskCockpitHandoffDecision(value: unknown): TaskCockpitHandoffDecision {
@@ -393,11 +420,12 @@ export function parseTaskCockpitResponsibilityHandoffs(value: unknown): TaskCock
   exact(raw, ["schemaVersion", "tenant", "runId", "taskId", "evaluatedAt", "responsibilityPlanRef", "profile", "lifecycle", "compilationReadiness", "compiledRequiredSlotIds", "slots", "handoffs"], "taskCockpit.responsibilityHandoffs");
   if (raw.schemaVersion !== TASK_COCKPIT_SCHEMA_VERSION || raw.compilationReadiness !== "ready_at_compile") throw new TypeError("taskCockpit.responsibilityHandoffs contract 漂移");
   if (!Array.isArray(raw.slots) || raw.slots.length === 0 || !Array.isArray(raw.handoffs)) throw new TypeError("taskCockpit.responsibilityHandoffs collection 非法");
-  const slots = raw.slots.map(parseTaskCockpitResponsibilitySlot); assertUnique(slots.map((item) => item.slotId), "taskCockpit.responsibilityHandoffs.slots");
+  const responsibilityPlanRef = parseTaskCockpitExactRef(raw.responsibilityPlanRef, "ResponsibilityPlanRevision", "taskCockpit.responsibilityHandoffs.responsibilityPlanRef");
+  const slots = raw.slots.map((item) => parseTaskCockpitResponsibilitySlot(item, responsibilityPlanRef)); assertUnique(slots.map((item) => item.slotId), "taskCockpit.responsibilityHandoffs.slots");
   const compiledRequiredSlotIds = taskCockpitStringList(raw.compiledRequiredSlotIds, "taskCockpit.responsibilityHandoffs.compiledRequiredSlotIds");
   if (compiledRequiredSlotIds.some((slotId) => !slots.some((slot) => slot.slotId === slotId))) throw new TypeError("taskCockpit.responsibilityHandoffs required slot 未覆盖");
   const handoffs = raw.handoffs.map(parseTaskCockpitHandoff); assertUnique(handoffs.map((item) => item.handoffId), "taskCockpit.responsibilityHandoffs.handoffs");
-  return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, tenant: parseTenant(raw.tenant), runId: boundedText(raw.runId, "taskCockpit.responsibilityHandoffs.runId", 200), taskId: boundedText(raw.taskId, "taskCockpit.responsibilityHandoffs.taskId", 200), evaluatedAt: timestamp(raw.evaluatedAt, "taskCockpit.responsibilityHandoffs.evaluatedAt"), responsibilityPlanRef: parseTaskCockpitExactRef(raw.responsibilityPlanRef, "ResponsibilityPlanRevision", "taskCockpit.responsibilityHandoffs.responsibilityPlanRef"), profile: boundedText(raw.profile, "taskCockpit.responsibilityHandoffs.profile", 80), lifecycle: enumValue(raw.lifecycle, ["draft", "frozen", "withdrawn", "superseded"] as const, "taskCockpit.responsibilityHandoffs.lifecycle"), compilationReadiness: "ready_at_compile", compiledRequiredSlotIds, slots, handoffs };
+  return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, tenant: parseTenant(raw.tenant), runId: boundedText(raw.runId, "taskCockpit.responsibilityHandoffs.runId", 200), taskId: boundedText(raw.taskId, "taskCockpit.responsibilityHandoffs.taskId", 200), evaluatedAt: timestamp(raw.evaluatedAt, "taskCockpit.responsibilityHandoffs.evaluatedAt"), responsibilityPlanRef, profile: boundedText(raw.profile, "taskCockpit.responsibilityHandoffs.profile", 80), lifecycle: enumValue(raw.lifecycle, ["draft", "frozen", "withdrawn", "superseded"] as const, "taskCockpit.responsibilityHandoffs.lifecycle"), compilationReadiness: "ready_at_compile", compiledRequiredSlotIds, slots, handoffs };
 }
 
 function parseTaskCockpitApprovalNavigation(value: unknown, expectedType: "PlanRevision" | "ActionProposalRevision", label: string): TaskCockpitApprovalNavigation {

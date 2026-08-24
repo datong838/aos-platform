@@ -32,6 +32,7 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitActionExecution,
     TaskCockpitActionReceipt,
     TaskCockpitActionReceiptEnvelope,
+    TaskCockpitAssigneeResolutionReceipt,
     TaskCockpitPageInfo,
     TaskCockpitPlanApproval,
     TaskCockpitProductionContextEnvelope,
@@ -67,15 +68,6 @@ _BLOCKERS = (
         requiredAction=(
             "展开具备 canonical productionContract 的 Run 读取 exact Stage mapping；"
             "缺失或漂移时保持失败关闭"
-        ),
-    ),
-    TaskCockpitBlocker(
-        code="TASK_COCKPIT_ASSIGNEE_OPERATIONAL_READINESS_UNAVAILABLE",
-        severity=TaskCockpitBlockerSeverity.WARNING,
-        dependency="aip.assignee-operational-readiness",
-        requiredAction=(
-            "Responsibility/Handoff、Approval 与 ReviewIssue 已按 Run 精确读取；"
-            "继续接入 assignee operational readiness exact reader"
         ),
     ),
     TaskCockpitBlocker(
@@ -661,6 +653,31 @@ class EcommerceWorkshopTaskCockpit:
                         production.responsibility_plan_ref.revision,
                     ),
                 ).fetchone()
+                raw_slots = (
+                    responsibility_row.get("slots", [])
+                    if isinstance(responsibility_row, dict)
+                    else responsibility_row["slots"] if responsibility_row is not None else []
+                )
+                subject_ids = [
+                    (
+                        f"responsibility-plan:{production.responsibility_plan_ref.resource_id}"
+                        f"@{production.responsibility_plan_ref.revision}/slot:{item.get('slotId')}"
+                    )
+                    for item in raw_slots
+                    if isinstance(item, dict) and isinstance(item.get("slotId"), str)
+                ]
+                resolution_rows = (
+                    conn.execute(
+                        """SELECT receipt_id,subject_id,kind,resource_id,version,status,
+                                  blocker_codes,content_hash,created_at
+                             FROM aip_assignee_resolution_receipt
+                            WHERE org_id=%s AND project_id=%s AND subject_id=ANY(%s)
+                            ORDER BY subject_id ASC,created_at ASC,receipt_id ASC""",
+                        (scope.org_id, scope.project_id, subject_ids),
+                    ).fetchall()
+                    if subject_ids
+                    else []
+                )
                 handoff_rows = conn.execute(
                     """SELECT handoff_id,task_ref,task_run_ref,sender_instance_ref,
                               receiver_instance_ref,status,version,expires_at,consumed_at,created_at
@@ -687,6 +704,7 @@ class EcommerceWorkshopTaskCockpit:
                 scope=scope,
                 production=production,
                 responsibility_row=responsibility_row,
+                resolution_rows=resolution_rows,
                 handoff_rows=handoff_rows,
                 decision_rows=decision_rows,
                 evaluated_at=evaluated_at,
@@ -1234,6 +1252,7 @@ class EcommerceWorkshopTaskCockpit:
         scope: TenantScope,
         production: TaskCockpitProductionContextEnvelope,
         responsibility_row: Any,
+        resolution_rows: list[Any],
         handoff_rows: list[Any],
         decision_rows: list[Any],
         evaluated_at: datetime,
@@ -1285,6 +1304,20 @@ class EcommerceWorkshopTaskCockpit:
             )
         )
         try:
+            receipts_by_subject: dict[str, list[TaskCockpitAssigneeResolutionReceipt]] = {}
+            for row in resolution_rows:
+                receipt = TaskCockpitAssigneeResolutionReceipt(
+                    receiptId=row["receipt_id"],
+                    subjectId=row["subject_id"],
+                    kind=row["kind"],
+                    resourceId=row["resource_id"],
+                    version=row["version"],
+                    status=row["status"],
+                    blockerCodes=row["blocker_codes"],
+                    contentHash=row["content_hash"],
+                    createdAt=row["created_at"],
+                )
+                receipts_by_subject.setdefault(receipt.subject_id, []).append(receipt)
             slots = [
                 TaskCockpitResponsibilitySlot(
                     slotId=item["slotId"],
@@ -1295,13 +1328,32 @@ class EcommerceWorkshopTaskCockpit:
                         kind=item["assignee"]["kind"],
                         resourceId=item["assignee"]["resourceId"],
                         version=item["assignee"]["version"],
-                        operationalReadiness="unverified",
+                        operationalReadiness=(
+                            "resolved_at_observation"
+                            if receipts_by_subject.get(
+                                f"responsibility-plan:{ref.resource_id}@{ref.revision}/slot:{item['slotId']}"
+                            )
+                            and receipts_by_subject[
+                                f"responsibility-plan:{ref.resource_id}@{ref.revision}/slot:{item['slotId']}"
+                            ][-1].status == "resolved"
+                            else "blocked_at_observation"
+                            if receipts_by_subject.get(
+                                f"responsibility-plan:{ref.resource_id}@{ref.revision}/slot:{item['slotId']}"
+                            )
+                            else "unverified"
+                        ),
+                        resolutionReceipts=receipts_by_subject.pop(
+                            f"responsibility-plan:{ref.resource_id}@{ref.revision}/slot:{item['slotId']}",
+                            [],
+                        ),
                     ),
                 )
                 for item in raw_slots
             ]
         except (TypeError, ValueError) as exc:
             raise drift("responsibility slot values are invalid") from exc
+        if receipts_by_subject:
+            raise drift("assignee resolution references an unknown responsibility slot")
 
         decisions_by_handoff: dict[str, list[TaskCockpitHandoffDecision]] = {}
         try:
