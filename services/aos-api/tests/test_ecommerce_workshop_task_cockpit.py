@@ -23,6 +23,7 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitCheckpointPageEnvelope,
     TaskCockpitCoreEnvelope,
     TaskCockpitProductionContextEnvelope,
+    TaskCockpitResponsibilityHandoffEnvelope,
     TaskCockpitStepPageEnvelope,
 )
 from aos_api.errors import ApiError, register_exception_handlers
@@ -532,6 +533,130 @@ def test_production_context_missing_run_is_not_empty_context() -> None:
     assert captured.value.code == "TASK_COCKPIT_RUN_NOT_FOUND"
 
 
+def _responsibility_row() -> dict[str, Any]:
+    return {
+        "plan_id": "responsibility-1",
+        "revision": 4,
+        "profile": "ecommerce.task-cockpit",
+        "slots": [
+            {
+                "slotId": "researcher",
+                "responsibilityType": "research",
+                "requiredCapabilityIds": ["ecommerce.research"],
+                "inputSchemaRef": {"resourceType": "Schema", "resourceId": "input-1", "revision": "1", "authority": "postgresql"},
+                "outputSchemaRef": {"resourceType": "Schema", "resourceId": "output-1", "revision": "1", "authority": "postgresql"},
+                "gateRefs": [],
+                "returnStage": "research",
+                "assignee": {"kind": "agent_instance", "resourceId": "agent-research", "version": 2},
+            }
+        ],
+        "content_hash": "c" * 64,
+        "lifecycle": "frozen",
+    }
+
+
+def _asset_ref(identifier: str) -> dict[str, Any]:
+    return {"assetType": "AgentInstance", "assetId": identifier, "revision": 2, "contentHash": "d" * 64}
+
+
+class ResponsibilityConnection:
+    def __init__(self, *, responsibility: dict[str, Any] | None = None):
+        self.responsibility = _responsibility_row() if responsibility is None else responsibility
+        self.calls: list[tuple[str, tuple[Any, ...] | None]] = []
+
+    def execute(self, sql: str, params: tuple[Any, ...] | None = None):
+        self.calls.append((" ".join(sql.split()), params))
+        return self
+
+    def fetchone(self):
+        sql = self.calls[-1][0]
+        if "FROM aip_task_run run" in sql:
+            return _production_row()
+        if "FROM aip_responsibility_plan_revision" in sql:
+            return self.responsibility
+        raise AssertionError(f"unexpected fetchone query: {sql}")
+
+    def fetchall(self):
+        sql = self.calls[-1][0]
+        if "FROM aip_handoff_envelope" in sql:
+            return [{
+                "handoff_id": "handoff-1",
+                "task_ref": {"resourceType": "Task", "resourceId": "task-1", "revision": "1", "authority": "postgresql"},
+                "task_run_ref": {"resourceType": "TaskRun", "resourceId": "run-1", "revision": "1", "authority": "postgresql"},
+                "sender_instance_ref": _asset_ref("agent-sender"),
+                "receiver_instance_ref": _asset_ref("agent-receiver"),
+                "status": "consumed",
+                "version": 2,
+                "expires_at": NOW + timedelta(hours=1),
+                "consumed_at": NOW - timedelta(minutes=1),
+                "created_at": NOW - timedelta(minutes=2),
+            }]
+        if "FROM aip_handoff_decision_revision decision" in sql:
+            return [{
+                "decision_id": "decision-1",
+                "handoff_id": "handoff-1",
+                "revision": 1,
+                "decision": "accepted",
+                "reason_code": None,
+                "gap_codes": [],
+                "content_hash": "e" * 64,
+                "created_at": NOW,
+            }]
+        raise AssertionError(f"unexpected fetchall query: {sql}")
+
+
+def _responsibility_cockpit(*, responsibility: dict[str, Any] | None = None):
+    connection = ResponsibilityConnection(responsibility=responsibility)
+
+    @contextmanager
+    def connect():
+        yield connection
+
+    return EcommerceWorkshopTaskCockpit(connect_factory=connect, clock=lambda: NOW), connection
+
+
+def test_responsibility_handoffs_read_exact_minimal_canonical_timeline() -> None:
+    cockpit, connection = _responsibility_cockpit()
+    result = cockpit.read_responsibility_handoffs(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    )
+    assert result.responsibility_plan_ref.resource_id == "responsibility-1"
+    assert result.compilation_readiness == "ready_at_compile"
+    assert result.compiled_required_slot_ids == ["researcher"]
+    assert result.slots[0].assignee.operational_readiness == "unverified"
+    assert result.handoffs[0].decisions[0].decision == "accepted"
+    payload = result.model_dump(mode="json", by_alias=True)
+    assert "bearerToken" not in str(payload)
+    assert "context" not in str(payload)
+    sql = " ".join(call[0] for call in connection.calls).upper()
+    assert "REPEATABLE READ READ ONLY" in sql
+    assert "SET LOCAL ROLE AOS_RUNTIME" in sql
+    assert "INSERT " not in sql and "UPDATE " not in sql and "DELETE " not in sql
+
+
+def test_responsibility_handoffs_fail_closed_on_exact_hash_drift() -> None:
+    row = _responsibility_row()
+    row["content_hash"] = "f" * 64
+    cockpit, _ = _responsibility_cockpit(responsibility=row)
+    with pytest.raises(ApiError) as captured:
+        cockpit.read_responsibility_handoffs(
+            org_id="org-org", project_id="dev-project", run_id="run-1"
+        )
+    assert captured.value.code == "TASK_COCKPIT_RESPONSIBILITY_HANDOFF_DRIFTED"
+    assert captured.value.status_code == 409
+
+
+def test_responsibility_handoff_contract_rejects_uncovered_compiled_slot() -> None:
+    cockpit, _ = _responsibility_cockpit()
+    result = cockpit.read_responsibility_handoffs(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    )
+    payload = result.model_dump(mode="json", by_alias=True)
+    payload["compiledRequiredSlotIds"] = ["missing"]
+    with pytest.raises(ValidationError):
+        TaskCockpitResponsibilityHandoffEnvelope.model_validate(payload)
+
+
 def test_contract_rejects_unknown_fields_naive_times_and_count_drift() -> None:
     base = {
         "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
@@ -682,6 +807,13 @@ class FakeCockpit:
             }
         )
 
+    def read_responsibility_handoffs(self, **kwargs):
+        self.detail_calls.append(("responsibility-handoffs", kwargs))
+        if self.fail:
+            raise TaskCockpitPersistenceError("sensitive database detail")
+        cockpit, _ = _responsibility_cockpit()
+        return cockpit.read_responsibility_handoffs(**kwargs)
+
 
 class FakeCatalog:
     def __init__(self, *, installed: bool = True):
@@ -791,12 +923,16 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
         production = client.get(
             "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/production-context"
         )
+        responsibility = client.get(
+            "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/responsibility-handoffs"
+        )
         injected = client.get(
             "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/steps?orgId=dev-org"
         )
     assert steps.status_code == 200
     assert checkpoints.status_code == 200
     assert production.status_code == 200
+    assert responsibility.status_code == 200
     assert injected.status_code == 400
     assert cockpit.detail_calls == [
         (
@@ -827,5 +963,13 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
                 "run_id": "run-1",
             },
         ),
+        (
+            "responsibility-handoffs",
+            {
+                "org_id": "org-org",
+                "project_id": "dev-project",
+                "run_id": "run-1",
+            },
+        ),
     ]
-    assert len(catalog.calls) == 3
+    assert len(catalog.calls) == 4

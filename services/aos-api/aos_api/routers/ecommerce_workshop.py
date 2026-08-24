@@ -60,6 +60,7 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitCheckpointPageEnvelope,
     TaskCockpitCoreEnvelope,
     TaskCockpitProductionContextEnvelope,
+    TaskCockpitResponsibilityHandoffEnvelope,
     TaskCockpitStepPageEnvelope,
 )
 from aos_api.errors import ApiError, ErrorBody
@@ -576,6 +577,35 @@ def get_ecommerce_workshop_task_cockpit_run_production_context(
     _require_task_cockpit_installation(principal=principal, catalog=catalog)
     try:
         return cockpit.read_production_context(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            run_id=run_id,
+        )
+    except TaskCockpitPersistenceError as exc:
+        raise ApiError(
+            code="TASK_COCKPIT_DEPENDENCY_UNAVAILABLE",
+            message="Task Cockpit read dependency is unavailable",
+            status_code=503,
+        ) from exc
+
+
+@router.get(
+    "/views/task-cockpit/runs/{run_id}/responsibility-handoffs",
+    response_model=TaskCockpitResponsibilityHandoffEnvelope,
+    operation_id="ecommerceWorkshopTaskCockpitRunResponsibilityHandoffsGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_task_cockpit_run_responsibility_handoffs(
+    request: Request,
+    run_id: RunIdPath,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    cockpit: TaskCockpitDependency,
+) -> TaskCockpitResponsibilityHandoffEnvelope:
+    _reject_unknown_query_parameters(request, allowed=frozenset())
+    _require_task_cockpit_installation(principal=principal, catalog=catalog)
+    try:
+        return cockpit.read_responsibility_handoffs(
             org_id=principal.org_id,
             project_id=principal.project_id,
             run_id=run_id,

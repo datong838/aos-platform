@@ -32,6 +32,10 @@ import {
   type TaskCockpitCoreResponse,
   type TaskCockpitPage,
   type TaskCockpitProductionContextResponse,
+  type TaskCockpitResponsibilityHandoffResponse,
+  type TaskCockpitResponsibilitySlot,
+  type TaskCockpitHandoff,
+  type TaskCockpitHandoffDecision,
   type TaskCockpitRun,
   type TaskCockpitExactRevisionRef,
   type TaskCockpitStageCompilation,
@@ -336,6 +340,54 @@ export function parseTaskCockpitProductionContext(value: unknown): TaskCockpitPr
   const partition = [...applicableStageIds, ...notApplicableStageIds];
   if (partition.length !== stages.length || new Set(partition).size !== stages.length || stages.some((stage) => !partition.includes(stage.stageId) || (stage.applicabilityResult === "applicable") !== applicableStageIds.includes(stage.stageId))) throw new TypeError("taskCockpit.productionContext stage partition 漂移");
   return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, tenant: parseTenant(raw.tenant), runId: boundedText(raw.runId, "taskCockpit.productionContext.runId", 200), taskId: boundedText(raw.taskId, "taskCockpit.productionContext.taskId", 200), evaluatedAt: timestamp(raw.evaluatedAt, "taskCockpit.productionContext.evaluatedAt"), planRef: parseTaskCockpitExactRef(raw.planRef, "PlanRevision", "taskCockpit.productionContext.planRef"), stageTemplateRef: parseTaskCockpitExactRef(raw.stageTemplateRef, "StageTemplateRevision", "taskCockpit.productionContext.stageTemplateRef"), responsibilityPlanRef: parseTaskCockpitExactRef(raw.responsibilityPlanRef, "ResponsibilityPlanRevision", "taskCockpit.productionContext.responsibilityPlanRef"), compilerVersion: "w2c.v1", stages, applicableStageIds, notApplicableStageIds };
+}
+
+function taskCockpitStringList(value: unknown, label: string): string[] {
+  if (!Array.isArray(value)) throw new TypeError(`${label} 必须是数组`);
+  const result = value.map((item, index) => boundedText(item, `${label}[${index}]`, 200));
+  assertUnique(result, label);
+  return result;
+}
+function parseTaskCockpitResponsibilitySlot(value: unknown): TaskCockpitResponsibilitySlot {
+  const raw = record(value, "taskCockpit.responsibility.slot");
+  exact(raw, ["slotId", "responsibilityType", "requiredCapabilityIds", "returnStage", "assignee"], "taskCockpit.responsibility.slot");
+  const assignee = record(raw.assignee, "taskCockpit.responsibility.slot.assignee");
+  exact(assignee, ["kind", "resourceId", "version", "operationalReadiness"], "taskCockpit.responsibility.slot.assignee");
+  if (assignee.operationalReadiness !== "unverified") throw new TypeError("taskCockpit.responsibility assignee readiness 越权");
+  return {
+    slotId: boundedText(raw.slotId, "taskCockpit.responsibility.slot.slotId", 160),
+    responsibilityType: boundedText(raw.responsibilityType, "taskCockpit.responsibility.slot.responsibilityType", 160),
+    requiredCapabilityIds: taskCockpitStringList(raw.requiredCapabilityIds, "taskCockpit.responsibility.slot.requiredCapabilityIds"),
+    returnStage: boundedText(raw.returnStage, "taskCockpit.responsibility.slot.returnStage", 160),
+    assignee: { kind: enumValue(assignee.kind, ["agent_instance", "human_principal", "tool_binding", "provider_capability_binding"] as const, "taskCockpit.responsibility.slot.assignee.kind"), resourceId: boundedText(assignee.resourceId, "taskCockpit.responsibility.slot.assignee.resourceId", 200), version: integer(assignee.version, "taskCockpit.responsibility.slot.assignee.version", 1), operationalReadiness: "unverified" },
+  };
+}
+function parseTaskCockpitHandoffDecision(value: unknown): TaskCockpitHandoffDecision {
+  const raw = record(value, "taskCockpit.handoff.decision");
+  exact(raw, ["decisionId", "revision", "decision", "reasonCode", "gapCodes", "contentHash", "createdAt"], "taskCockpit.handoff.decision");
+  const contentHash = boundedText(raw.contentHash, "taskCockpit.handoff.decision.contentHash", 64);
+  if (!RAW_SHA256.test(contentHash)) throw new TypeError("taskCockpit.handoff.decision.contentHash 不是 SHA-256");
+  return { decisionId: boundedText(raw.decisionId, "taskCockpit.handoff.decision.decisionId", 200), revision: integer(raw.revision, "taskCockpit.handoff.decision.revision", 1), decision: enumValue(raw.decision, ["accepted", "rejected", "request_more", "returned"] as const, "taskCockpit.handoff.decision.decision"), reasonCode: nullable(raw.reasonCode, (item) => boundedText(item, "taskCockpit.handoff.decision.reasonCode", 120)), gapCodes: taskCockpitStringList(raw.gapCodes, "taskCockpit.handoff.decision.gapCodes"), contentHash, createdAt: timestamp(raw.createdAt, "taskCockpit.handoff.decision.createdAt") };
+}
+function parseTaskCockpitHandoff(value: unknown): TaskCockpitHandoff {
+  const raw = record(value, "taskCockpit.handoff");
+  exact(raw, ["handoffId", "status", "version", "senderInstanceRef", "receiverInstanceRef", "expiresAt", "consumedAt", "createdAt", "decisions"], "taskCockpit.handoff");
+  if (!Array.isArray(raw.decisions)) throw new TypeError("taskCockpit.handoff.decisions 必须是数组");
+  const decisions = raw.decisions.map(parseTaskCockpitHandoffDecision);
+  assertUnique(decisions.map((item) => item.decisionId), "taskCockpit.handoff.decisions");
+  if (decisions.some((item, index) => item.revision !== index + 1)) throw new TypeError("taskCockpit.handoff decision timeline 漂移");
+  return { handoffId: boundedText(raw.handoffId, "taskCockpit.handoff.handoffId", 200), status: enumValue(raw.status, ["issued", "consumed", "expired", "revoked"] as const, "taskCockpit.handoff.status"), version: integer(raw.version, "taskCockpit.handoff.version", 1), senderInstanceRef: parseTaskCockpitExactRef(raw.senderInstanceRef, "AgentInstance", "taskCockpit.handoff.senderInstanceRef"), receiverInstanceRef: parseTaskCockpitExactRef(raw.receiverInstanceRef, "AgentInstance", "taskCockpit.handoff.receiverInstanceRef"), expiresAt: timestamp(raw.expiresAt, "taskCockpit.handoff.expiresAt"), consumedAt: nullable(raw.consumedAt, (item) => timestamp(item, "taskCockpit.handoff.consumedAt")), createdAt: timestamp(raw.createdAt, "taskCockpit.handoff.createdAt"), decisions };
+}
+export function parseTaskCockpitResponsibilityHandoffs(value: unknown): TaskCockpitResponsibilityHandoffResponse {
+  const raw = record(value, "taskCockpit.responsibilityHandoffs");
+  exact(raw, ["schemaVersion", "tenant", "runId", "taskId", "evaluatedAt", "responsibilityPlanRef", "profile", "lifecycle", "compilationReadiness", "compiledRequiredSlotIds", "slots", "handoffs"], "taskCockpit.responsibilityHandoffs");
+  if (raw.schemaVersion !== TASK_COCKPIT_SCHEMA_VERSION || raw.compilationReadiness !== "ready_at_compile") throw new TypeError("taskCockpit.responsibilityHandoffs contract 漂移");
+  if (!Array.isArray(raw.slots) || raw.slots.length === 0 || !Array.isArray(raw.handoffs)) throw new TypeError("taskCockpit.responsibilityHandoffs collection 非法");
+  const slots = raw.slots.map(parseTaskCockpitResponsibilitySlot); assertUnique(slots.map((item) => item.slotId), "taskCockpit.responsibilityHandoffs.slots");
+  const compiledRequiredSlotIds = taskCockpitStringList(raw.compiledRequiredSlotIds, "taskCockpit.responsibilityHandoffs.compiledRequiredSlotIds");
+  if (compiledRequiredSlotIds.some((slotId) => !slots.some((slot) => slot.slotId === slotId))) throw new TypeError("taskCockpit.responsibilityHandoffs required slot 未覆盖");
+  const handoffs = raw.handoffs.map(parseTaskCockpitHandoff); assertUnique(handoffs.map((item) => item.handoffId), "taskCockpit.responsibilityHandoffs.handoffs");
+  return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, tenant: parseTenant(raw.tenant), runId: boundedText(raw.runId, "taskCockpit.responsibilityHandoffs.runId", 200), taskId: boundedText(raw.taskId, "taskCockpit.responsibilityHandoffs.taskId", 200), evaluatedAt: timestamp(raw.evaluatedAt, "taskCockpit.responsibilityHandoffs.evaluatedAt"), responsibilityPlanRef: parseTaskCockpitExactRef(raw.responsibilityPlanRef, "ResponsibilityPlanRevision", "taskCockpit.responsibilityHandoffs.responsibilityPlanRef"), profile: boundedText(raw.profile, "taskCockpit.responsibilityHandoffs.profile", 80), lifecycle: enumValue(raw.lifecycle, ["draft", "frozen", "withdrawn", "superseded"] as const, "taskCockpit.responsibilityHandoffs.lifecycle"), compilationReadiness: "ready_at_compile", compiledRequiredSlotIds, slots, handoffs };
 }
 
 const OPERATIONS_SLICE_IDS = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"] as const satisfies readonly OperationsSliceId[];

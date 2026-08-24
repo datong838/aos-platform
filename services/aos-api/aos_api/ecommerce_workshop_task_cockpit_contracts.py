@@ -285,6 +285,115 @@ class TaskCockpitProductionContextEnvelope(AipContractModel):
         return self
 
 
+class TaskCockpitStructuralAssignee(AipContractModel):
+    kind: Literal[
+        "agent_instance",
+        "human_principal",
+        "tool_binding",
+        "provider_capability_binding",
+    ]
+    resource_id: str = Field(min_length=1, max_length=200)
+    version: int = Field(ge=1)
+    operational_readiness: Literal["unverified"] = "unverified"
+
+
+class TaskCockpitResponsibilitySlot(AipContractModel):
+    slot_id: str = Field(min_length=1, max_length=160)
+    responsibility_type: str = Field(min_length=1, max_length=160)
+    required_capability_ids: list[str] = Field(min_length=1, max_length=128)
+    return_stage: str = Field(min_length=1, max_length=160)
+    assignee: TaskCockpitStructuralAssignee
+
+    @model_validator(mode="after")
+    def _unique_capabilities(self) -> TaskCockpitResponsibilitySlot:
+        if len(self.required_capability_ids) != len(set(self.required_capability_ids)):
+            raise ValueError("required capability identities must be unique")
+        return self
+
+
+class TaskCockpitHandoffDecision(AipContractModel):
+    decision_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    decision: Literal["accepted", "rejected", "request_more", "returned"]
+    reason_code: str | None = Field(default=None, max_length=120)
+    gap_codes: list[str] = Field(default_factory=list, max_length=128)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_at: datetime
+
+    @field_validator("created_at")
+    @classmethod
+    def _decision_time_is_aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+
+class TaskCockpitHandoffSummary(AipContractModel):
+    handoff_id: str = Field(min_length=1, max_length=200)
+    status: Literal["issued", "consumed", "expired", "revoked"]
+    version: int = Field(ge=1)
+    sender_instance_ref: ExactRevisionRef
+    receiver_instance_ref: ExactRevisionRef
+    expires_at: datetime
+    consumed_at: datetime | None = None
+    created_at: datetime
+    decisions: list[TaskCockpitHandoffDecision] = Field(default_factory=list, max_length=128)
+
+    @field_validator("expires_at", "consumed_at", "created_at")
+    @classmethod
+    def _handoff_time_is_aware(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _decision_timeline_is_canonical(self) -> TaskCockpitHandoffSummary:
+        revisions = [item.revision for item in self.decisions]
+        if revisions != list(range(1, len(revisions) + 1)):
+            raise ValueError("handoff decision revisions must be contiguous")
+        identities = [item.decision_id for item in self.decisions]
+        if len(identities) != len(set(identities)):
+            raise ValueError("handoff decision identities must be unique")
+        return self
+
+
+class TaskCockpitResponsibilityHandoffEnvelope(AipContractModel):
+    schema_version: Literal[TASK_COCKPIT_SCHEMA_VERSION] = TASK_COCKPIT_SCHEMA_VERSION
+    tenant: TenantContext
+    run_id: str = Field(min_length=1, max_length=200)
+    task_id: str = Field(min_length=1, max_length=200)
+    evaluated_at: datetime
+    responsibility_plan_ref: ExactRevisionRef
+    profile: str = Field(min_length=1, max_length=80)
+    lifecycle: Literal["draft", "frozen", "withdrawn", "superseded"]
+    compilation_readiness: Literal["ready_at_compile"] = "ready_at_compile"
+    compiled_required_slot_ids: list[str] = Field(min_length=1, max_length=200)
+    slots: list[TaskCockpitResponsibilitySlot] = Field(min_length=1, max_length=200)
+    handoffs: list[TaskCockpitHandoffSummary] = Field(default_factory=list, max_length=200)
+
+    @field_validator("evaluated_at")
+    @classmethod
+    def _responsibility_time_is_aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _canonical_responsibility_and_handoffs(self) -> TaskCockpitResponsibilityHandoffEnvelope:
+        if self.responsibility_plan_ref.resource_type != "ResponsibilityPlanRevision":
+            raise ValueError("responsibilityPlanRef must reference ResponsibilityPlanRevision")
+        slot_ids = [item.slot_id for item in self.slots]
+        if len(slot_ids) != len(set(slot_ids)):
+            raise ValueError("responsibility slot identities must be unique")
+        required = self.compiled_required_slot_ids
+        if len(required) != len(set(required)) or not set(required).issubset(slot_ids):
+            raise ValueError("compiled required slots must be unique and covered")
+        handoff_ids = [item.handoff_id for item in self.handoffs]
+        if len(handoff_ids) != len(set(handoff_ids)):
+            raise ValueError("handoff identities must be unique")
+        return self
+
+
 __all__ = [
     "TASK_COCKPIT_SCHEMA_VERSION",
     "TaskCockpitBlocker",
@@ -294,6 +403,11 @@ __all__ = [
     "TaskCockpitCoreEnvelope",
     "TaskCockpitPageInfo",
     "TaskCockpitProductionContextEnvelope",
+    "TaskCockpitResponsibilityHandoffEnvelope",
+    "TaskCockpitResponsibilitySlot",
+    "TaskCockpitStructuralAssignee",
+    "TaskCockpitHandoffDecision",
+    "TaskCockpitHandoffSummary",
     "TaskCockpitReadiness",
     "TaskCockpitRunSummary",
     "TaskCockpitStateConsistency",

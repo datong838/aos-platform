@@ -26,6 +26,11 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitCoreEnvelope,
     TaskCockpitPageInfo,
     TaskCockpitProductionContextEnvelope,
+    TaskCockpitResponsibilityHandoffEnvelope,
+    TaskCockpitResponsibilitySlot,
+    TaskCockpitStructuralAssignee,
+    TaskCockpitHandoffDecision,
+    TaskCockpitHandoffSummary,
     TaskCockpitReadiness,
     TaskCockpitRunSummary,
     TaskCockpitStateConsistency,
@@ -53,12 +58,12 @@ _BLOCKERS = (
         ),
     ),
     TaskCockpitBlocker(
-        code="TASK_COCKPIT_RESPONSIBILITY_HANDOFF_UNAVAILABLE",
+        code="TASK_COCKPIT_ASSIGNEE_APPROVAL_REVIEW_UNAVAILABLE",
         severity=TaskCockpitBlockerSeverity.WARNING,
-        dependency="aip.responsibility-handoff-readers",
+        dependency="aip.assignee-approval-review-readers",
         requiredAction=(
-            "接入 Responsibility、assignee readiness、Handoff、Approval "
-            "与 ReviewIssue exact readers"
+            "Responsibility/Handoff 已按 Run 精确读取；继续接入 "
+            "assignee operational readiness、Approval 与 ReviewIssue exact readers"
         ),
     ),
     TaskCockpitBlocker(
@@ -599,6 +604,88 @@ class EcommerceWorkshopTaskCockpit:
                 "failed to read Task Cockpit production context"
             ) from exc
 
+    def read_responsibility_handoffs(
+        self,
+        *,
+        org_id: str,
+        project_id: str,
+        run_id: str,
+    ) -> TaskCockpitResponsibilityHandoffEnvelope:
+        scope = TenantScope(org_id, project_id)
+        self._validate_detail_request(run_id=run_id, limit=1)
+        evaluated_at = self._aware_now()
+        try:
+            with self._connect_factory() as conn:
+                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+                apply_transaction_scope(conn, scope)
+                run_row = conn.execute(
+                    """SELECT run.task_id,run.run_id,run.plan_revision_id,
+                              plan.revision AS plan_revision,plan.content_hash AS plan_content_hash,
+                              plan.steps,plan.risk
+                         FROM aip_task_run run
+                         JOIN aip_plan_revision plan
+                           ON plan.org_id=run.org_id AND plan.project_id=run.project_id
+                          AND plan.plan_revision_id=run.plan_revision_id
+                        WHERE run.org_id=%s AND run.project_id=%s AND run.run_id=%s""",
+                    (scope.org_id, scope.project_id, run_id),
+                ).fetchone()
+                if run_row is None:
+                    raise ApiError(
+                        code="TASK_COCKPIT_RUN_NOT_FOUND",
+                        message="Task Cockpit Run was not found",
+                        status_code=404,
+                    )
+                production = self._production_context(
+                    scope=scope, row=run_row, evaluated_at=evaluated_at
+                )
+                responsibility_row = conn.execute(
+                    """SELECT plan_id,revision,profile,slots,content_hash,lifecycle
+                         FROM aip_responsibility_plan_revision
+                        WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s""",
+                    (
+                        scope.org_id,
+                        scope.project_id,
+                        production.responsibility_plan_ref.resource_id,
+                        production.responsibility_plan_ref.revision,
+                    ),
+                ).fetchone()
+                handoff_rows = conn.execute(
+                    """SELECT handoff_id,task_ref,task_run_ref,sender_instance_ref,
+                              receiver_instance_ref,status,version,expires_at,consumed_at,created_at
+                         FROM aip_handoff_envelope
+                        WHERE org_id=%s AND project_id=%s AND task_run_id=%s
+                        ORDER BY created_at ASC,handoff_id ASC""",
+                    (scope.org_id, scope.project_id, run_id),
+                ).fetchall()
+                decision_rows = conn.execute(
+                    """SELECT decision.decision_id,decision.handoff_id,decision.revision,
+                              decision.decision,decision.reason_code,decision.gap_codes,
+                              decision.content_hash,decision.created_at
+                         FROM aip_handoff_decision_revision decision
+                         JOIN aip_handoff_envelope envelope
+                           ON envelope.org_id=decision.org_id
+                          AND envelope.project_id=decision.project_id
+                          AND envelope.handoff_id=decision.handoff_id
+                        WHERE decision.org_id=%s AND decision.project_id=%s
+                          AND envelope.task_run_id=%s
+                        ORDER BY decision.handoff_id ASC,decision.revision ASC""",
+                    (scope.org_id, scope.project_id, run_id),
+                ).fetchall()
+            return self._responsibility_handoff_context(
+                scope=scope,
+                production=production,
+                responsibility_row=responsibility_row,
+                handoff_rows=handoff_rows,
+                decision_rows=decision_rows,
+                evaluated_at=evaluated_at,
+            )
+        except ApiError:
+            raise
+        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:
+            raise TaskCockpitPersistenceError(
+                "failed to read Task Cockpit responsibility and handoffs"
+            ) from exc
+
     @staticmethod
     def _validate_detail_request(*, run_id: str, limit: int) -> None:
         if not run_id or run_id != run_id.strip() or len(run_id) > 200:
@@ -920,6 +1007,160 @@ class EcommerceWorkshopTaskCockpit:
             )
         except (TypeError, ValueError) as exc:
             raise drift("production context envelope is invalid") from exc
+
+    @staticmethod
+    def _responsibility_handoff_context(
+        *,
+        scope: TenantScope,
+        production: TaskCockpitProductionContextEnvelope,
+        responsibility_row: Any,
+        handoff_rows: list[Any],
+        decision_rows: list[Any],
+        evaluated_at: datetime,
+    ) -> TaskCockpitResponsibilityHandoffEnvelope:
+        def drift(reason: str) -> ApiError:
+            return ApiError(
+                code="TASK_COCKPIT_RESPONSIBILITY_HANDOFF_DRIFTED",
+                message=f"Task Cockpit responsibility or handoff drifted: {reason}",
+                status_code=409,
+            )
+
+        ref = production.responsibility_plan_ref
+        if responsibility_row is None:
+            raise drift("responsibility plan is unavailable")
+        if (
+            str(responsibility_row["plan_id"]) != ref.resource_id
+            or int(responsibility_row["revision"]) != ref.revision
+            or str(responsibility_row["content_hash"]) != ref.content_hash
+            or responsibility_row["lifecycle"] != "frozen"
+        ):
+            raise drift("responsibility plan exact revision is not frozen")
+        raw_slots = responsibility_row["slots"]
+        expected_slot_keys = {
+            "slotId",
+            "responsibilityType",
+            "requiredCapabilityIds",
+            "inputSchemaRef",
+            "outputSchemaRef",
+            "gateRefs",
+            "returnStage",
+            "assignee",
+        }
+        expected_assignee_keys = {"kind", "resourceId", "version"}
+        if not isinstance(raw_slots, list) or not raw_slots:
+            raise drift("responsibility slots are unavailable")
+        if any(
+            not isinstance(item, dict)
+            or set(item) != expected_slot_keys
+            or not isinstance(item.get("assignee"), dict)
+            or set(item["assignee"]) != expected_assignee_keys
+            for item in raw_slots
+        ):
+            raise drift("responsibility slot shape is invalid")
+        required_slot_ids = list(
+            dict.fromkeys(
+                slot_id
+                for stage in production.stages
+                for slot_id in stage.required_slot_ids
+            )
+        )
+        try:
+            slots = [
+                TaskCockpitResponsibilitySlot(
+                    slotId=item["slotId"],
+                    responsibilityType=item["responsibilityType"],
+                    requiredCapabilityIds=item["requiredCapabilityIds"],
+                    returnStage=item["returnStage"],
+                    assignee=TaskCockpitStructuralAssignee(
+                        kind=item["assignee"]["kind"],
+                        resourceId=item["assignee"]["resourceId"],
+                        version=item["assignee"]["version"],
+                        operationalReadiness="unverified",
+                    ),
+                )
+                for item in raw_slots
+            ]
+        except (TypeError, ValueError) as exc:
+            raise drift("responsibility slot values are invalid") from exc
+
+        decisions_by_handoff: dict[str, list[TaskCockpitHandoffDecision]] = {}
+        try:
+            for row in decision_rows:
+                handoff_id = str(row["handoff_id"])
+                decisions_by_handoff.setdefault(handoff_id, []).append(
+                    TaskCockpitHandoffDecision(
+                        decisionId=row["decision_id"],
+                        revision=row["revision"],
+                        decision=row["decision"],
+                        reasonCode=row["reason_code"],
+                        gapCodes=row["gap_codes"],
+                        contentHash=row["content_hash"],
+                        createdAt=row["created_at"],
+                    )
+                )
+            handoffs: list[TaskCockpitHandoffSummary] = []
+            for row in handoff_rows:
+                task_ref = row["task_ref"]
+                run_ref = row["task_run_ref"]
+                if (
+                    not isinstance(task_ref, dict)
+                    or task_ref.get("resourceType") != "Task"
+                    or task_ref.get("resourceId") != production.task_id
+                    or not isinstance(run_ref, dict)
+                    or run_ref.get("resourceType") != "TaskRun"
+                    or run_ref.get("resourceId") != production.run_id
+                ):
+                    raise drift("handoff task or run exact reference changed")
+                sender = row["sender_instance_ref"]
+                receiver = row["receiver_instance_ref"]
+                if not isinstance(sender, dict) or not isinstance(receiver, dict):
+                    raise drift("handoff instance exact reference is unavailable")
+                handoff_id = str(row["handoff_id"])
+                handoffs.append(
+                    TaskCockpitHandoffSummary(
+                        handoffId=handoff_id,
+                        status=row["status"],
+                        version=row["version"],
+                        senderInstanceRef={
+                            "resourceType": sender.get("assetType"),
+                            "resourceId": sender.get("assetId"),
+                            "revision": sender.get("revision"),
+                            "contentHash": sender.get("contentHash"),
+                        },
+                        receiverInstanceRef={
+                            "resourceType": receiver.get("assetType"),
+                            "resourceId": receiver.get("assetId"),
+                            "revision": receiver.get("revision"),
+                            "contentHash": receiver.get("contentHash"),
+                        },
+                        expiresAt=row["expires_at"],
+                        consumedAt=row["consumed_at"],
+                        createdAt=row["created_at"],
+                        decisions=decisions_by_handoff.pop(handoff_id, []),
+                    )
+                )
+        except ApiError:
+            raise
+        except (TypeError, ValueError) as exc:
+            raise drift("handoff or decision values are invalid") from exc
+        if decisions_by_handoff:
+            raise drift("handoff decision references an unknown envelope")
+        try:
+            return TaskCockpitResponsibilityHandoffEnvelope(
+                tenant={"orgId": scope.org_id, "projectId": scope.project_id},
+                runId=production.run_id,
+                taskId=production.task_id,
+                evaluatedAt=evaluated_at,
+                responsibilityPlanRef=ref,
+                profile=responsibility_row["profile"],
+                lifecycle=responsibility_row["lifecycle"],
+                compilationReadiness="ready_at_compile",
+                compiledRequiredSlotIds=required_slot_ids,
+                slots=slots,
+                handoffs=handoffs,
+            )
+        except (TypeError, ValueError) as exc:
+            raise drift("responsibility or handoff envelope is invalid") from exc
 
     @staticmethod
     def _read_rows(

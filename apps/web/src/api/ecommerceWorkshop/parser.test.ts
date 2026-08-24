@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitSteps } from "./parser";
+import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSteps } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -146,7 +146,7 @@ const run = { runId: "run-1", planRevisionId: "plan-1", status: "running", versi
 const task = { taskId: "task-1", taskType: "daily", title: "每日巡检", status: "executing", priority: 50, version: 1, currentPlanRevisionId: "plan-1", createdAt: "2026-08-15T08:00:00Z", updatedAt: "2026-08-15T09:01:00Z", run };
 const cockpitCore = { ...cockpitBase, taskCutoff: "2026-08-15T10:00:00Z", readiness: "degraded", blockers: [
   { code: "TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED", severity: "warning", dependency: "stage", requiredAction: "按 Run 展开" },
-  { code: "TASK_COCKPIT_RESPONSIBILITY_HANDOFF_UNAVAILABLE", severity: "warning", dependency: "responsibility", requiredAction: "等待 reader" },
+  { code: "TASK_COCKPIT_ASSIGNEE_APPROVAL_REVIEW_UNAVAILABLE", severity: "warning", dependency: "aip.assignee-approval-review-readers", requiredAction: "等待 W2-02C exact reader" },
   { code: "TASK_COCKPIT_BUSINESS_CONTEXT_BLOCKED", severity: "blocking", dependency: "business", requiredAction: "等待 W2-00" },
 ], items: [task], page };
 const step = { stepRunId: "step-1", stepKey: "collect", attempt: 1, status: "running", tokenCount: 12, costAmount: "0.0100", hasInputRefs: true, hasOutputRefs: false, hasError: false, createdAt: "2026-08-15T09:00:00Z", updatedAt: "2026-08-15T09:01:00Z" };
@@ -155,6 +155,7 @@ const steps = { ...cockpitBase, runId: "run-1", membershipCutoff: "2026-08-15T10
 const checkpoints = { ...cockpitBase, runId: "run-1", membershipCutoff: "2026-08-15T10:00:00Z", items: [checkpoint], page };
 const rawHash = "a".repeat(64);
 const productionContext = { schemaVersion: cockpitBase.schemaVersion, tenant: cockpitBase.tenant, runId: "run-1", taskId: "task-1", evaluatedAt: cockpitBase.evaluatedAt, planRef: { resourceType: "PlanRevision", resourceId: "plan-1", revision: 2, contentHash: rawHash }, stageTemplateRef: { resourceType: "StageTemplateRevision", resourceId: "template-1", revision: 1, contentHash: rawHash }, responsibilityPlanRef: { resourceType: "ResponsibilityPlanRevision", resourceId: "responsibility-1", revision: 1, contentHash: rawHash }, compilerVersion: "w2c.v1", stages: [{ stageId: "collect", title: "采集", dependsOn: [], requiredSlotIds: ["collector"], applicabilityResult: "applicable", evaluatedProfile: "standard" }], applicableStageIds: ["collect"], notApplicableStageIds: [] };
+const responsibilityHandoffs = { schemaVersion: cockpitBase.schemaVersion, tenant: cockpitBase.tenant, runId: "run-1", taskId: "task-1", evaluatedAt: cockpitBase.evaluatedAt, responsibilityPlanRef: productionContext.responsibilityPlanRef, profile: "standard", lifecycle: "frozen", compilationReadiness: "ready_at_compile", compiledRequiredSlotIds: ["collector"], slots: [{ slotId: "collector", responsibilityType: "collection", requiredCapabilityIds: ["ecommerce.collect"], returnStage: "collect", assignee: { kind: "agent_instance", resourceId: "agent-collector", version: 2, operationalReadiness: "unverified" } }], handoffs: [{ handoffId: "handoff-1", status: "consumed", version: 2, senderInstanceRef: { resourceType: "AgentInstance", resourceId: "agent-collector", revision: 2, contentHash: rawHash }, receiverInstanceRef: { resourceType: "AgentInstance", resourceId: "agent-review", revision: 1, contentHash: rawHash }, expiresAt: "2026-08-15T11:00:00Z", consumedAt: "2026-08-15T10:30:00Z", createdAt: "2026-08-15T10:00:00Z", decisions: [{ decisionId: "decision-1", revision: 1, decision: "accepted", reasonCode: null, gapCodes: [], contentHash: rawHash, createdAt: "2026-08-15T10:30:00Z" }] }] };
 
 describe("task cockpit strict parser", () => {
   it("保留 Task/Run/Step/Checkpoint、decimal 与 current-state 语义", () => {
@@ -162,6 +163,7 @@ describe("task cockpit strict parser", () => {
     expect(parseTaskCockpitSteps(steps).items[0]).toMatchObject({ costAmount: "0.0100", hasInputRefs: true });
     expect(parseTaskCockpitCheckpoints(checkpoints).items[0]).toMatchObject({ checkpointId: "checkpoint-1", artifactCount: 0 });
     expect(parseTaskCockpitProductionContext(productionContext)).toMatchObject({ compilerVersion: "w2c.v1", stages: [{ stageId: "collect", applicabilityResult: "applicable" }] });
+    expect(parseTaskCockpitResponsibilityHandoffs(responsibilityHandoffs)).toMatchObject({ profile: "standard", slots: [{ assignee: { operationalReadiness: "unverified" } }], handoffs: [{ status: "consumed", decisions: [{ revision: 1 }] }] });
   });
   it("拒绝 extra、未知状态、坏 decimal、重复 identity 和 count/cursor 漂移", () => {
     expect(() => parseTaskCockpitCore({ ...cockpitCore, extra: true })).toThrow("字段漂移");
@@ -172,6 +174,10 @@ describe("task cockpit strict parser", () => {
     expect(() => parseTaskCockpitCore({ ...cockpitCore, blockers: cockpitCore.blockers.slice(0, 2) })).toThrow("数量");
     expect(() => parseTaskCockpitProductionContext({ ...productionContext, stageTemplateRef: { ...productionContext.stageTemplateRef, resourceType: "BundleRevision" } })).toThrow("resourceType 漂移");
     expect(() => parseTaskCockpitProductionContext({ ...productionContext, applicableStageIds: [], notApplicableStageIds: [] })).toThrow("partition 漂移");
+    expect(() => parseTaskCockpitResponsibilityHandoffs({ ...responsibilityHandoffs, slots: [{ ...responsibilityHandoffs.slots[0], assignee: { ...responsibilityHandoffs.slots[0].assignee, operationalReadiness: "available" } }] })).toThrow("readiness 越权");
+    expect(() => parseTaskCockpitResponsibilityHandoffs({ ...responsibilityHandoffs, handoffs: [{ ...responsibilityHandoffs.handoffs[0], decisions: [{ ...responsibilityHandoffs.handoffs[0].decisions[0], revision: 2 }] }] })).toThrow("timeline 漂移");
+    expect(() => parseTaskCockpitResponsibilityHandoffs({ ...responsibilityHandoffs, compiledRequiredSlotIds: ["reviewer"] })).toThrow("覆盖");
+    expect(() => parseTaskCockpitResponsibilityHandoffs({ ...responsibilityHandoffs, responsibilityPlanRef: { ...responsibilityHandoffs.responsibilityPlanRef, contentHash: "bad" } })).toThrow("SHA-256");
   });
   it("只把 canonical 200 空页识别为空", () => {
     expect(parseTaskCockpitSteps({ ...steps, items: [], page: { limit: 20, count: 0, hasMore: false, nextCursor: null } }).items).toEqual([]);

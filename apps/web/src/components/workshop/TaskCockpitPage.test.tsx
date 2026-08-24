@@ -2,19 +2,20 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { EcommerceWorkshopClientError, type TaskCockpitCoreResponse, type TaskCockpitProductionContextResponse } from "../../api/ecommerceWorkshop";
+import { EcommerceWorkshopClientError, type TaskCockpitCoreResponse, type TaskCockpitProductionContextResponse, type TaskCockpitResponsibilityHandoffResponse } from "../../api/ecommerceWorkshop";
 import { TaskCockpitPage } from "./TaskCockpitPage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const blockers = [
   { code: "TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED", severity: "warning" as const, dependency: "stage", requiredAction: "按 Run 展开" },
-  { code: "TASK_COCKPIT_RESPONSIBILITY_HANDOFF_UNAVAILABLE", severity: "warning" as const, dependency: "responsibility", requiredAction: "等待 reader" },
+  { code: "TASK_COCKPIT_ASSIGNEE_APPROVAL_REVIEW_UNAVAILABLE", severity: "warning" as const, dependency: "aip.assignee-approval-review-readers", requiredAction: "等待 W2-02C exact reader" },
   { code: "TASK_COCKPIT_BUSINESS_CONTEXT_BLOCKED", severity: "blocking" as const, dependency: "business", requiredAction: "等待 W2-00" },
 ];
 const core = (title = "每日巡检"): TaskCockpitCoreResponse => ({ schemaVersion: "aos.ecommerce-workshop.task-cockpit/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-15T10:00:00Z", taskCutoff: "2026-08-15T10:00:00Z", stateConsistency: "current_state_per_page", readiness: "degraded", blockers, items: [{ taskId: `task-${title}`, taskType: "daily", title, status: "executing", priority: 50, version: 1, currentPlanRevisionId: "plan-1", createdAt: "2026-08-15T08:00:00Z", updatedAt: "2026-08-15T09:01:00Z", run: { runId: "run-1", planRevisionId: "plan-1", status: "running", version: 1, startedAt: null, finishedAt: null, createdAt: "2026-08-15T09:00:00Z", updatedAt: "2026-08-15T09:01:00Z" } }], page: { limit: 20, count: 1, hasMore: false, nextCursor: null } });
 const detailBase = { schemaVersion: "aos.ecommerce-workshop.task-cockpit/v1" as const, tenant: { orgId: "org-org", projectId: "dev-project" }, runId: "run-1", evaluatedAt: "2026-08-15T10:00:00Z", membershipCutoff: "2026-08-15T10:00:00Z", stateConsistency: "current_state_per_page" as const, items: [], page: { limit: 20, count: 0, hasMore: false, nextCursor: null } };
 const productionContext: TaskCockpitProductionContextResponse = { schemaVersion: "aos.ecommerce-workshop.task-cockpit/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, runId: "run-1", taskId: "task-1", evaluatedAt: "2026-08-15T10:00:00Z", planRef: { resourceType: "PlanRevision", resourceId: "plan-1", revision: 2, contentHash: "a".repeat(64) }, stageTemplateRef: { resourceType: "StageTemplateRevision", resourceId: "template-1", revision: 1, contentHash: "b".repeat(64) }, responsibilityPlanRef: { resourceType: "ResponsibilityPlanRevision", resourceId: "responsibility-1", revision: 1, contentHash: "c".repeat(64) }, compilerVersion: "w2c.v1", stages: [{ stageId: "collect", title: "采集", dependsOn: [], requiredSlotIds: ["collector"], applicabilityResult: "applicable", evaluatedProfile: "standard" }], applicableStageIds: ["collect"], notApplicableStageIds: [] };
-const unreadDetails = { listTaskCockpitRunSteps: vi.fn(), listTaskCockpitRunCheckpoints: vi.fn(), getTaskCockpitRunProductionContext: vi.fn() };
+const responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse = { schemaVersion: "aos.ecommerce-workshop.task-cockpit/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, runId: "run-1", taskId: "task-1", evaluatedAt: "2026-08-15T10:00:00Z", responsibilityPlanRef: { resourceType: "ResponsibilityPlanRevision", resourceId: "responsibility-1", revision: 1, contentHash: "c".repeat(64) }, profile: "standard", lifecycle: "frozen", compilationReadiness: "ready_at_compile", compiledRequiredSlotIds: ["collector"], slots: [{ slotId: "collector", responsibilityType: "collection", requiredCapabilityIds: ["ecommerce.collect"], returnStage: "collect", assignee: { kind: "agent_instance", resourceId: "agent-collector", version: 2, operationalReadiness: "unverified" } }], handoffs: [{ handoffId: "handoff-1", status: "consumed", version: 2, senderInstanceRef: { resourceType: "AgentInstance", resourceId: "agent-collector", revision: 2, contentHash: "d".repeat(64) }, receiverInstanceRef: { resourceType: "AgentInstance", resourceId: "agent-review", revision: 1, contentHash: "e".repeat(64) }, expiresAt: "2026-08-15T11:00:00Z", consumedAt: "2026-08-15T10:30:00Z", createdAt: "2026-08-15T10:00:00Z", decisions: [{ decisionId: "decision-1", revision: 1, decision: "accepted", reasonCode: null, gapCodes: [], contentHash: "f".repeat(64), createdAt: "2026-08-15T10:30:00Z" }] }] };
+const unreadDetails = { listTaskCockpitRunSteps: vi.fn(), listTaskCockpitRunCheckpoints: vi.fn(), getTaskCockpitRunProductionContext: vi.fn(), getTaskCockpitRunResponsibilityHandoffs: vi.fn() };
 
 describe("TaskCockpitPage", () => {
   let host: HTMLDivElement; let root: Root;
@@ -46,13 +47,14 @@ describe("TaskCockpitPage", () => {
   });
 
   it("显式展开 Run 后诚实显示 Step/Checkpoint 空权威集合", async () => {
-    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), listTaskCockpitRunSteps: vi.fn().mockResolvedValue(detailBase), listTaskCockpitRunCheckpoints: vi.fn().mockResolvedValue(detailBase), getTaskCockpitRunProductionContext: vi.fn().mockResolvedValue(productionContext) };
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), listTaskCockpitRunSteps: vi.fn().mockResolvedValue(detailBase), listTaskCockpitRunCheckpoints: vi.fn().mockResolvedValue(detailBase), getTaskCockpitRunProductionContext: vi.fn().mockResolvedValue(productionContext), getTaskCockpitRunResponsibilityHandoffs: vi.fn().mockResolvedValue(responsibilityHandoffs) };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
     const button = [...host.querySelectorAll("button")].find((item) => item.textContent === "查看运行明细")!;
     await act(async () => button.click());
     expect(button.getAttribute("aria-expanded")).toBe("true");
     expect(host.textContent).toContain("当前权威 Step 集合为空"); expect(host.textContent).toContain("当前权威 Checkpoint 集合为空");
     expect(host.textContent).toContain("Stage 编排 · w2c.v1"); expect(host.textContent).toContain("采集collect适用");
+    expect(host.textContent).toContain("职责与交接 · standard"); expect(host.textContent).toContain("运行就绪未验证"); expect(host.textContent).toContain("agent-collector → agent-review");
     expect(client.listTaskCockpitRunSteps).toHaveBeenCalledWith("run-1", { limit: 20 });
   });
 
@@ -86,7 +88,7 @@ describe("TaskCockpitPage", () => {
   });
 
   it("明细任一读取失败都显示失败，不把另一集合冒充完整", async () => {
-    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), listTaskCockpitRunSteps: vi.fn().mockResolvedValue(detailBase), listTaskCockpitRunCheckpoints: vi.fn().mockRejectedValue(new Error("offline")), getTaskCockpitRunProductionContext: vi.fn().mockResolvedValue(productionContext) };
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), listTaskCockpitRunSteps: vi.fn().mockResolvedValue(detailBase), listTaskCockpitRunCheckpoints: vi.fn().mockRejectedValue(new Error("offline")), getTaskCockpitRunProductionContext: vi.fn().mockResolvedValue(productionContext), getTaskCockpitRunResponsibilityHandoffs: vi.fn().mockResolvedValue(responsibilityHandoffs) };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
     const button = [...host.querySelectorAll("button")].find((item) => item.textContent === "查看运行明细")!;
     await act(async () => button.click());

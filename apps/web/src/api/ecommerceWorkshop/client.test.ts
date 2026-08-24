@@ -9,12 +9,13 @@ const cockpitBase = { schemaVersion: "aos.ecommerce-workshop.task-cockpit/v1", t
 const emptyPage = { limit: 20, count: 0, hasMore: false, nextCursor: null };
 const blockers = [
   { code: "TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED", severity: "warning", dependency: "stage", requiredAction: "按 Run 展开" },
-  { code: "TASK_COCKPIT_RESPONSIBILITY_HANDOFF_UNAVAILABLE", severity: "warning", dependency: "responsibility", requiredAction: "等待 reader" },
+  { code: "TASK_COCKPIT_ASSIGNEE_APPROVAL_REVIEW_UNAVAILABLE", severity: "warning", dependency: "aip.assignee-approval-review-readers", requiredAction: "等待 W2-02C exact reader" },
   { code: "TASK_COCKPIT_BUSINESS_CONTEXT_BLOCKED", severity: "blocking", dependency: "business", requiredAction: "等待 W2-00" },
 ];
 const core = { ...cockpitBase, taskCutoff: "2026-08-15T10:00:00Z", readiness: "degraded", blockers, items: [], page: emptyPage };
 const details = { ...cockpitBase, runId: "run-1", membershipCutoff: "2026-08-15T10:00:00Z", items: [], page: emptyPage };
 const productionContext = { schemaVersion: cockpitBase.schemaVersion, tenant: cockpitBase.tenant, runId: "run:1", taskId: "task-1", evaluatedAt: cockpitBase.evaluatedAt, planRef: { resourceType: "PlanRevision", resourceId: "plan-1", revision: 2, contentHash: "a".repeat(64) }, stageTemplateRef: { resourceType: "StageTemplateRevision", resourceId: "template-1", revision: 1, contentHash: "b".repeat(64) }, responsibilityPlanRef: { resourceType: "ResponsibilityPlanRevision", resourceId: "responsibility-1", revision: 1, contentHash: "c".repeat(64) }, compilerVersion: "w2c.v1", stages: [{ stageId: "collect", title: "采集", dependsOn: [], requiredSlotIds: ["collector"], applicabilityResult: "applicable", evaluatedProfile: "standard" }], applicableStageIds: ["collect"], notApplicableStageIds: [] };
+const responsibilityHandoffs = { schemaVersion: cockpitBase.schemaVersion, tenant: cockpitBase.tenant, runId: "run:1", taskId: "task-1", evaluatedAt: cockpitBase.evaluatedAt, responsibilityPlanRef: productionContext.responsibilityPlanRef, profile: "standard", lifecycle: "frozen", compilationReadiness: "ready_at_compile", compiledRequiredSlotIds: ["collector"], slots: [{ slotId: "collector", responsibilityType: "collection", requiredCapabilityIds: ["ecommerce.collect"], returnStage: "collect", assignee: { kind: "agent_instance", resourceId: "agent-collector", version: 2, operationalReadiness: "unverified" } }], handoffs: [{ handoffId: "handoff-1", status: "consumed", version: 2, senderInstanceRef: { resourceType: "AgentInstance", resourceId: "agent-collector", revision: 2, contentHash: "d".repeat(64) }, receiverInstanceRef: { resourceType: "AgentInstance", resourceId: "agent-review", revision: 1, contentHash: "e".repeat(64) }, expiresAt: "2026-08-15T11:00:00Z", consumedAt: "2026-08-15T10:30:00Z", createdAt: "2026-08-15T10:00:00Z", decisions: [{ decisionId: "decision-1", revision: 1, decision: "accepted", reasonCode: null, gapCodes: [], contentHash: "f".repeat(64), createdAt: "2026-08-15T10:30:00Z" }] }] };
 const sourcePipelines = ["P01-shop-qyh", "P02-product-qyh", "P03-product-sku-qyh", "P04-category-qyh", "P05-order-qyh", "P06-order-line-qyh", "P07-shipment-qyh", "P08-customer-lite-qyh", "P09-weapp-qyh", "P10-system-config-qyh", "P11-product-review-qyh", "P12-payment-qyh"];
 const sourceCheckedAt = "2026-08-21T14:00:00Z";
 const sourceBlockers = ["FRESHNESS_POLICY_REF_MISSING", "QUALITY_POLICY_REF_MISSING", "QUERY_CAPABILITY_REF_MISSING", "RECONCILIATION_POLICY_REF_MISSING", "SOURCE_CONFIG_EXACT_REF_MISSING"];
@@ -84,17 +85,19 @@ describe("EcommerceWorkshopClient", () => {
     const drift = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(ok({ ...sourceReadiness, status: "ready" })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
     await expect(drift.getSourceReadiness()).rejects.toBeInstanceOf(TypeError);
   });
-  it("只发四条 Task Cockpit canonical GET 并规范编码 query", async () => {
-    const fetch = vi.fn().mockResolvedValueOnce(ok(core)).mockResolvedValueOnce(ok(details)).mockResolvedValueOnce(ok(details)).mockResolvedValueOnce(ok(productionContext));
+  it("只发五条 Task Cockpit canonical GET 并规范编码 query", async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(ok(core)).mockResolvedValueOnce(ok(details)).mockResolvedValueOnce(ok(details)).mockResolvedValueOnce(ok(productionContext)).mockResolvedValueOnce(ok(responsibilityHandoffs));
     const client = new EcommerceWorkshopClient({ fetch, getBaseUrl: () => "http://api.test/", getAuthHeaders: () => ({ Authorization: "Bearer test" }) });
     await client.getTaskCockpitCore({ status: "cancelled", limit: 20, cursor: "cursor+/=" });
     await client.listTaskCockpitRunSteps("run:1", { limit: 20 });
     await client.listTaskCockpitRunCheckpoints("run:1");
     await expect(client.getTaskCockpitRunProductionContext("run:1")).resolves.toMatchObject({ compilerVersion: "w2c.v1", stages: [{ stageId: "collect" }] });
+    await expect(client.getTaskCockpitRunResponsibilityHandoffs("run:1")).resolves.toMatchObject({ profile: "standard", handoffs: [{ status: "consumed" }] });
     expect(fetch).toHaveBeenNthCalledWith(1, "http://api.test/v1/ecommerce-workshop/views/task-cockpit?status=cancelled&limit=20&cursor=cursor%2B%2F%3D", expect.objectContaining({ method: "GET", headers: expect.objectContaining({ Authorization: "Bearer test" }) }));
     expect(fetch).toHaveBeenNthCalledWith(2, "http://api.test/v1/ecommerce-workshop/views/task-cockpit/runs/run%3A1/steps?limit=20", expect.objectContaining({ method: "GET" }));
     expect(fetch).toHaveBeenNthCalledWith(3, "http://api.test/v1/ecommerce-workshop/views/task-cockpit/runs/run%3A1/checkpoints", expect.objectContaining({ method: "GET" }));
     expect(fetch).toHaveBeenNthCalledWith(4, "http://api.test/v1/ecommerce-workshop/views/task-cockpit/runs/run%3A1/production-context", expect.objectContaining({ method: "GET" }));
+    expect(fetch).toHaveBeenNthCalledWith(5, "http://api.test/v1/ecommerce-workshop/views/task-cockpit/runs/run%3A1/responsibility-handoffs", expect.objectContaining({ method: "GET" }));
   });
   it("409 stale cursor 与参数错误失败关闭，不伪装为空页", async () => {
     const stale = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(new Response(JSON.stringify({ code: "TASK_COCKPIT_CURSOR_STALE", message: "refresh", details: null, traceId: "trace-2" }), { status: 409 })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
