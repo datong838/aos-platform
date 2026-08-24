@@ -4,6 +4,7 @@ import type {
   AgentInstanceListResponse,
   AgentInstallResponse,
   AgentRuntimeReadinessResponse,
+  AgentRun,
   AssetRef,
   BindingHealth,
   BindingReadiness,
@@ -13,6 +14,9 @@ import type {
   OperationalBindingDependencies,
   ResourceRef,
   SkillBinding,
+  HandoffDecision,
+  HandoffDecisionListResponse,
+  HandoffEnvelope,
   Tenant,
 } from "./contracts";
 
@@ -100,6 +104,12 @@ function resourceRef(value: unknown, label: string): ResourceRef {
     revision: raw.revision as string | null,
     authority: str(raw.authority, `${label}.authority`),
   };
+}
+function exactResourceRef(value: unknown, label: string, expectedType: string): ResourceRef {
+  const result = resourceRef(value, label);
+  if (result.resourceType !== expectedType) throw new Error(`${label}.resourceType 必须为 ${expectedType}`);
+  if (result.revision === null || !result.revision.trim()) throw new Error(`${label}.revision 必须为 exact revision`);
+  return result;
 }
 
 function dependencies(value: unknown, label: string): OperationalBindingDependencies {
@@ -190,7 +200,7 @@ export function parseAgentCatalog(value: unknown, expectedTenant?: Tenant): Agen
       const skill = obj(value, `items[${index}].skills[${skillIndex}]`);
       const skillRequired = ["skillId", "revision", "canonicalLogicId", "lifecycle", "inputSchema", "outputSchema", "toolAllowlist", "requiredCapabilities", "riskLevel", "evalPackRef", "memoryPolicyRef", "handoffPolicyRef", "sourceRef", "sourceLicense", "parentRef", "publicationTenant", "releaseGateRef", "publicationRef", "modelRouteRef", "runtimePolicyRef", "contentHash", "createdBy", "createdAt"] as const;
       exact(skill, `items[${index}].skills[${skillIndex}]`, [...skillRequired, "logicRevisionRef"], skillRequired);
-      return { skillId: str(skill.skillId, "skillId"), revision: integer(skill.revision, "skill.revision", 1), canonicalLogicId: str(skill.canonicalLogicId, "canonicalLogicId"), lifecycle: enumeration(skill.lifecycle, "skill.lifecycle", ["evaluated", "published"] as const), requiredCapabilities: strings(skill.requiredCapabilities, "requiredCapabilities"), riskLevel: str(skill.riskLevel, "riskLevel") };
+      return { skillId: str(skill.skillId, "skillId"), revision: integer(skill.revision, "skill.revision", 1), canonicalLogicId: str(skill.canonicalLogicId, "canonicalLogicId"), lifecycle: enumeration(skill.lifecycle, "skill.lifecycle", ["evaluated", "published"] as const), requiredCapabilities: strings(skill.requiredCapabilities, "requiredCapabilities"), riskLevel: str(skill.riskLevel, "riskLevel"), contentHash: sha256(skill.contentHash, "skill.contentHash"), logicRevisionRef: nullableRef(skill.logicRevisionRef, "skill.logicRevisionRef", "LogicRevision") };
     });
     return {
       template: { templateId: str(template.templateId, "templateId"), revision: integer(template.revision, "revision", 1), displayName: str(template.displayName, "displayName"), roleKey: str(template.roleKey, "roleKey"), lifecycle: enumeration(template.lifecycle, "lifecycle", ["published"] as const), sourceRef: resourceRef(template.sourceRef, "sourceRef"), sourceLicense: str(template.sourceLicense, "sourceLicense"), manifest: { logicIds: strings(manifest.logicIds, "logicIds"), responsibility: str(manifest.responsibility, "responsibility"), runtimeReadiness: str(manifest.runtimeReadiness, "runtimeReadiness"), blockers: strings(manifest.blockers, "blockers") }, contentHash: sha256(template.contentHash, "contentHash") },
@@ -241,4 +251,73 @@ export function parseInstall(value: unknown, expectedTenant?: Tenant): AgentInst
   const solutionPackVersion = str(raw.solutionPackVersion, "solutionPackVersion"); if (!/^\d+\.\d+\.\d+$/.test(solutionPackVersion)) throw new Error("solutionPackVersion 非法");
   const runnableCount = integer(raw.runnableCount, "runnableCount"); if (runnableCount !== 0) throw new Error("runnableCount 必须为 0");
   return { tenant: scope, solutionPackId: "solution.ecommerce.growth", solutionPackVersion, status: enumeration(raw.status, "status", ["installed", "partial"] as const), createdCount: integer(raw.createdCount, "createdCount"), existingCount: integer(raw.existingCount, "existingCount"), runnableCount: 0, items: array(raw.items, "items").map((value, index) => { const item = obj(value, `items[${index}]`); exact(item, `items[${index}]`, ["instance", "disposition", "receipt"], ["instance", "disposition"]); return { instance: parseAgentInstance(item.instance, scope), disposition: enumeration(item.disposition, "disposition", ["created", "existing"] as const) }; }) };
+}
+
+export function parseAgentRun(value: unknown, expectedTenant: Tenant): AgentRun {
+  const raw = obj(value, "AgentRun");
+  exact(raw, "AgentRun", ["tenant", "agentRunId", "taskId", "taskRunId", "instanceId", "instanceVersion", "skillBindingId", "request", "status", "version", "createdAt", "updatedAt"]);
+  const scope = tenant(raw.tenant, "AgentRun.tenant"); sameTenant(scope, expectedTenant, "AgentRun");
+  const request = obj(raw.request, "AgentRun.request");
+  exact(request, "AgentRun.request", ["taskRef", "planRef", "agentInstance", "skill", "logic", "modelRoute", "policy", "inputRefs"]);
+  const policy = ref(request.policy, "AgentRun.request.policy");
+  if (!["PolicyRevision", "RuntimePolicyRevision"].includes(policy.assetType)) throw new Error("AgentRun.request.policy.assetType 非法");
+  return {
+    tenant: scope,
+    agentRunId: str(raw.agentRunId, "AgentRun.agentRunId"), taskId: str(raw.taskId, "AgentRun.taskId"), taskRunId: str(raw.taskRunId, "AgentRun.taskRunId"),
+    instanceId: str(raw.instanceId, "AgentRun.instanceId"), instanceVersion: integer(raw.instanceVersion, "AgentRun.instanceVersion", 1), skillBindingId: str(raw.skillBindingId, "AgentRun.skillBindingId"),
+    request: {
+      taskRef: exactResourceRef(request.taskRef, "AgentRun.request.taskRef", "Task"), planRef: exactResourceRef(request.planRef, "AgentRun.request.planRef", "PlanRevision"),
+      agentInstance: ref(request.agentInstance, "AgentRun.request.agentInstance", "AgentInstance"), skill: ref(request.skill, "AgentRun.request.skill", "SkillTemplate"), logic: ref(request.logic, "AgentRun.request.logic", "LogicRevision"),
+      modelRoute: ref(request.modelRoute, "AgentRun.request.modelRoute", "ModelRouteRevision"), policy,
+      inputRefs: array(request.inputRefs, "AgentRun.request.inputRefs").map((item, index) => resourceRef(item, `AgentRun.request.inputRefs[${index}]`)),
+    },
+    status: enumeration(raw.status, "AgentRun.status", ["queued", "running", "paused", "succeeded", "failed", "cancelled", "unknown"] as const),
+    version: integer(raw.version, "AgentRun.version", 1), createdAt: iso(raw.createdAt, "AgentRun.createdAt"), updatedAt: iso(raw.updatedAt, "AgentRun.updatedAt"),
+  };
+}
+
+export function parseHandoff(value: unknown, expectedTenant: Tenant): HandoffEnvelope {
+  const raw = obj(value, "HandoffEnvelope"); exact(raw, "HandoffEnvelope", ["tenant", "handoffId", "envelope", "status", "version", "consumedAt", "createdAt"]);
+  const scope = tenant(raw.tenant, "HandoffEnvelope.tenant"); sameTenant(scope, expectedTenant, "HandoffEnvelope");
+  const envelope = obj(raw.envelope, "HandoffEnvelope.envelope");
+  exact(envelope, "HandoffEnvelope.envelope", ["taskRef", "runRef", "senderInstance", "receiverInstance", "objectRefs", "artifactRefs", "evidenceRefs", "context", "allowedContextFields", "markings", "expiresAt"]);
+  const context = obj(envelope.context, "HandoffEnvelope.envelope.context");
+  const allowedContextFields = strings(envelope.allowedContextFields, "HandoffEnvelope.envelope.allowedContextFields");
+  if (Object.keys(context).some((key) => !allowedContextFields.includes(key))) throw new Error("HandoffEnvelope.envelope.context 超出 allowlist");
+  const senderInstance = ref(envelope.senderInstance, "HandoffEnvelope.envelope.senderInstance", "AgentInstance");
+  const receiverInstance = ref(envelope.receiverInstance, "HandoffEnvelope.envelope.receiverInstance", "AgentInstance");
+  if (senderInstance.assetId === receiverInstance.assetId) throw new Error("HandoffEnvelope sender 与 receiver 必须不同");
+  return {
+    tenant: scope, handoffId: str(raw.handoffId, "HandoffEnvelope.handoffId"),
+    envelope: {
+      taskRef: exactResourceRef(envelope.taskRef, "HandoffEnvelope.envelope.taskRef", "Task"), runRef: exactResourceRef(envelope.runRef, "HandoffEnvelope.envelope.runRef", "TaskRun"),
+      senderInstance, receiverInstance,
+      objectRefs: array(envelope.objectRefs, "HandoffEnvelope.envelope.objectRefs").map((item, index) => resourceRef(item, `objectRefs[${index}]`)), artifactRefs: array(envelope.artifactRefs, "HandoffEnvelope.envelope.artifactRefs").map((item, index) => resourceRef(item, `artifactRefs[${index}]`)), evidenceRefs: array(envelope.evidenceRefs, "HandoffEnvelope.envelope.evidenceRefs").map((item, index) => resourceRef(item, `evidenceRefs[${index}]`)),
+      context, allowedContextFields, markings: strings(envelope.markings, "HandoffEnvelope.envelope.markings"), expiresAt: iso(envelope.expiresAt, "HandoffEnvelope.envelope.expiresAt"),
+    },
+    status: enumeration(raw.status, "HandoffEnvelope.status", ["issued", "consumed", "revoked", "expired"] as const), version: integer(raw.version, "HandoffEnvelope.version", 1), consumedAt: nullableIso(raw.consumedAt, "HandoffEnvelope.consumedAt"), createdAt: iso(raw.createdAt, "HandoffEnvelope.createdAt"),
+  };
+}
+
+function parseHandoffDecision(value: unknown, expectedTenant: Tenant, expectedHandoffId: string, label: string): HandoffDecision {
+  const raw = obj(value, label); exact(raw, label, ["tenant", "decisionId", "handoffId", "revision", "envelopeRef", "decision", "reasonCode", "gapCodes", "returnRefs", "correlationRef", "receiverInstance", "contentHash", "createdBy", "createdAt"]);
+  const scope = tenant(raw.tenant, `${label}.tenant`); sameTenant(scope, expectedTenant, label);
+  const handoffId = str(raw.handoffId, `${label}.handoffId`); if (handoffId !== expectedHandoffId) throw new Error(`${label}.handoffId 漂移`);
+  const decision = enumeration(raw.decision, `${label}.decision`, ["accepted", "rejected", "request_more", "returned"] as const);
+  const reasonCode = raw.reasonCode === null ? null : str(raw.reasonCode, `${label}.reasonCode`);
+  const gapCodes = strings(raw.gapCodes, `${label}.gapCodes`);
+  const returnRefs = array(raw.returnRefs, `${label}.returnRefs`).map((item, index) => resourceRef(item, `${label}.returnRefs[${index}]`));
+  if (decision === "request_more" && gapCodes.length === 0) throw new Error(`${label}.request_more 必须提供 gapCodes`);
+  if (decision === "returned" && returnRefs.length === 0) throw new Error(`${label}.returned 必须提供 returnRefs`);
+  if (decision === "rejected" && !reasonCode) throw new Error(`${label}.rejected 必须提供 reasonCode`);
+  return { tenant: scope, decisionId: str(raw.decisionId, `${label}.decisionId`), handoffId, revision: integer(raw.revision, `${label}.revision`, 1), envelopeRef: exactResourceRef(raw.envelopeRef, `${label}.envelopeRef`, "HandoffEnvelope"), decision, reasonCode, gapCodes, returnRefs, correlationRef: raw.correlationRef === null ? null : resourceRef(raw.correlationRef, `${label}.correlationRef`), receiverInstance: ref(raw.receiverInstance, `${label}.receiverInstance`, "AgentInstance"), contentHash: sha256(raw.contentHash, `${label}.contentHash`), createdBy: str(raw.createdBy, `${label}.createdBy`), createdAt: iso(raw.createdAt, `${label}.createdAt`) };
+}
+
+export function parseHandoffDecisions(value: unknown, expectedTenant: Tenant): HandoffDecisionListResponse {
+  const raw = obj(value, "HandoffDecisionListResponse"); exact(raw, "HandoffDecisionListResponse", ["tenant", "handoffId", "items", "count", "headVersion"]);
+  const scope = tenant(raw.tenant); sameTenant(scope, expectedTenant, "HandoffDecisionListResponse"); const handoffId = str(raw.handoffId, "handoffId");
+  const items = array(raw.items, "items").map((item, index) => parseHandoffDecision(item, scope, handoffId, `items[${index}]`));
+  const count = integer(raw.count, "count"); if (count !== items.length) throw new Error("count 与 items 数量不一致");
+  const identities = new Set(items.map((item) => item.decisionId)); if (identities.size !== items.length) throw new Error("decisionId 必须唯一");
+  return { tenant: scope, handoffId, items, count, headVersion: integer(raw.headVersion, "headVersion") };
 }

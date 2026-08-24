@@ -1,0 +1,43 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w3-01-readonly-agent-runtime-sdk-20260824",
+  "baseRevision": "AOS-000210",
+  "result": "GREEN_READ_ONLY_NO_EXTERNAL_EFFECT",
+  "scope": [
+    "canonical AgentRun, HandoffEnvelope and HandoffDecision read contracts",
+    "strict tenant and exact-ref parsers",
+    "stateless Skill to Logic to digital-colleague readiness projection"
+  ],
+  "negativeBoundaries": [
+    "no AgentRun command",
+    "no Handoff issue, consume or decision command",
+    "no database migration",
+    "no provider call or business-data write",
+    "no second Workshop store or BFF authority"
+  ],
+  "verification": {
+    "red": "missing parseAgentRun, parseHandoff and Workshop agentReadiness module observed before implementation",
+    "focused": "3 files, 16 tests passed",
+    "workshopWeb": "11 files, 58 tests passed",
+    "fullWeb": "220 files, 2058 tests passed",
+    "typescript": "GREEN",
+    "productionBuild": "GREEN",
+    "diffCheck": "GREEN",
+    "browser": {
+      "surface": "Codex built-in browser",
+      "routes": [
+        "/workshop",
+        "/workshop/task-cockpit"
+      ],
+      "consoleErrors": 0,
+      "result": "existing pages render without regression; degraded and VISUAL_FIXTURE_ONLY remain explicit"
+    }
+  },
+  "consistencyReview": [
+    "SkillTemplate and LogicRevision remain distinct exact refs",
+    "AgentInstance and SkillBinding are the only digital-colleague binding authority",
+    "Workshop projection preserves canonical blockers and fails closed for missing or stale binding",
+    "Handoff envelope and decision lifecycles remain separate"
+  ],
+  "observedAt": "2026-08-24T21:19:06+08:00"
+}

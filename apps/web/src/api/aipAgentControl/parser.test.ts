@@ -4,6 +4,9 @@ import {
   parseAgentInstances,
   parseCapabilities,
   parseInstall,
+  parseAgentRun,
+  parseHandoff,
+  parseHandoffDecisions,
   parseRuntimeReadiness,
 } from "./parser";
 
@@ -97,5 +100,27 @@ describe("aipAgentControl strict parser", () => {
     expect(parseInstall(payload).solutionPackVersion).toBe("1.3.0");
     expect(() => parseInstall({...payload,solutionPackVersion:"latest"})).toThrow("solutionPackVersion 非法");
     expect(() => parseInstall({...payload,runnableCount:1})).toThrow("runnableCount 必须为 0");
+  });
+
+  it("保留 AgentRun 的 Skill → Logic → 数字同事 exact refs", () => {
+    const tenant = {orgId:"org-org",projectId:"dev-project"};
+    const resource = (resourceType:string,resourceId:string) => ({resourceType,resourceId,revision:"1",authority:"aip"});
+    const asset = (assetType:string,assetId:string) => ({assetType,assetId,revision:1,contentHash:hash});
+    const parsed = parseAgentRun({tenant,agentRunId:"agent-run-1",taskId:"task-1",taskRunId:"run-1",instanceId:"agent-1",instanceVersion:2,skillBindingId:"binding-1",request:{taskRef:resource("Task","task-1"),planRef:resource("PlanRevision","plan-1"),agentInstance:asset("AgentInstance","agent-1"),skill:asset("SkillTemplate","skill-1"),logic:asset("LogicRevision","logic-1"),modelRoute:asset("ModelRouteRevision","route-1"),policy:asset("RuntimePolicyRevision","policy-1"),inputRefs:[]},status:"running",version:3,createdAt:"2026-08-24T10:00:00Z",updatedAt:"2026-08-24T10:01:00Z"},tenant);
+    expect(parsed.request.skill.assetType).toBe("SkillTemplate");
+    expect(parsed.request.logic.assetType).toBe("LogicRevision");
+    expect(parsed.instanceVersion).toBe(2);
+    expect(() => parseAgentRun({...parsed,tenant:{orgId:"dev-org",projectId:"dev-project"}},tenant)).toThrow("tenant echo 不一致");
+  });
+
+  it("严格解析 Handoff 与独立 Decision，并拒绝数量漂移", () => {
+    const tenant = {orgId:"org-org",projectId:"dev-project"};
+    const resource = (resourceType:string,resourceId:string) => ({resourceType,resourceId,revision:"1",authority:"aip"});
+    const asset = (assetType:string,assetId:string) => ({assetType,assetId,revision:1,contentHash:hash});
+    const handoff = {tenant,handoffId:"handoff-1",envelope:{taskRef:resource("Task","task-1"),runRef:resource("TaskRun","run-1"),senderInstance:asset("AgentInstance","agent-1"),receiverInstance:asset("AgentInstance","agent-2"),objectRefs:[],artifactRefs:[],evidenceRefs:[],context:{summary:"safe"},allowedContextFields:["summary"],markings:["internal"],expiresAt:"2026-08-24T11:00:00Z"},status:"consumed",version:2,consumedAt:"2026-08-24T10:30:00Z",createdAt:"2026-08-24T10:00:00Z"};
+    expect(parseHandoff(handoff,tenant).status).toBe("consumed");
+    const decision = {tenant,decisionId:"decision-1",handoffId:"handoff-1",revision:1,envelopeRef:resource("HandoffEnvelope","handoff-1"),decision:"accepted",reasonCode:null,gapCodes:[],returnRefs:[],correlationRef:null,receiverInstance:asset("AgentInstance","agent-2"),contentHash:hash,createdBy:"reviewer",createdAt:"2026-08-24T10:31:00Z"};
+    expect(parseHandoffDecisions({tenant,handoffId:"handoff-1",items:[decision],count:1,headVersion:1},tenant).items[0].decision).toBe("accepted");
+    expect(() => parseHandoffDecisions({tenant,handoffId:"handoff-1",items:[decision],count:0,headVersion:1},tenant)).toThrow("count 与 items 数量不一致");
   });
 });

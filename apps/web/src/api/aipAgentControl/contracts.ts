@@ -32,6 +32,8 @@ export type SkillTemplate = {
   lifecycle: "evaluated" | "published";
   requiredCapabilities: string[];
   riskLevel: string;
+  contentHash: string;
+  logicRevisionRef: AssetRef | null;
 };
 
 export type AgentCatalogItem = {
@@ -137,4 +139,77 @@ export type AgentRuntimeReadinessResponse = {
     activeSkillBindingCount: number;
   };
   evaluatedAt: string;
+};
+
+export type AgentRunRequest = {
+  taskRef: ResourceRef;
+  planRef: ResourceRef;
+  agentInstance: AssetRef;
+  skill: AssetRef;
+  logic: AssetRef;
+  modelRoute: AssetRef;
+  policy: AssetRef;
+  inputRefs: ResourceRef[];
+};
+
+export type AgentRun = {
+  tenant: Tenant;
+  agentRunId: string;
+  taskId: string;
+  taskRunId: string;
+  instanceId: string;
+  instanceVersion: number;
+  skillBindingId: string;
+  request: AgentRunRequest;
+  status: "queued" | "running" | "paused" | "succeeded" | "failed" | "cancelled" | "unknown";
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HandoffEnvelope = {
+  tenant: Tenant;
+  handoffId: string;
+  envelope: {
+    taskRef: ResourceRef;
+    runRef: ResourceRef;
+    senderInstance: AssetRef;
+    receiverInstance: AssetRef;
+    objectRefs: ResourceRef[];
+    artifactRefs: ResourceRef[];
+    evidenceRefs: ResourceRef[];
+    context: Record<string, unknown>;
+    allowedContextFields: string[];
+    markings: string[];
+    expiresAt: string;
+  };
+  status: "issued" | "consumed" | "revoked" | "expired";
+  version: number;
+  consumedAt: string | null;
+  createdAt: string;
+};
+
+export type HandoffDecision = {
+  tenant: Tenant;
+  decisionId: string;
+  handoffId: string;
+  revision: number;
+  envelopeRef: ResourceRef;
+  decision: "accepted" | "rejected" | "request_more" | "returned";
+  reasonCode: string | null;
+  gapCodes: string[];
+  returnRefs: ResourceRef[];
+  correlationRef: ResourceRef | null;
+  receiverInstance: AssetRef;
+  contentHash: string;
+  createdBy: string;
+  createdAt: string;
+};
+
+export type HandoffDecisionListResponse = {
+  tenant: Tenant;
+  handoffId: string;
+  items: HandoffDecision[];
+  count: number;
+  headVersion: number;
 };
