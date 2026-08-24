@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -74,6 +75,21 @@ def _seed() -> tuple[CreateImpactPreviewRequest, str]:
     stage_id = f"stage-{suffix}"
     template_id = f"template-{suffix}"
     instance_id = f"agent-{suffix}"
+    def exact(resource_type: str, resource_id: str, content_hash: str) -> dict[str, object]:
+        return {
+            "resourceType": resource_type,
+            "resourceId": resource_id,
+            "revision": 1,
+            "contentHash": content_hash,
+        }
+
+    def schema(resource_id: str) -> dict[str, object]:
+        return {
+            "resourceType": "Schema",
+            "resourceId": resource_id,
+            "revision": "1",
+            "authority": "aip",
+        }
     task_store = AipTaskStore()
     task = task_store.create_task(
         SCOPE,
@@ -127,8 +143,19 @@ def _seed() -> tuple[CreateImpactPreviewRequest, str]:
             (org_id,project_id,contract_id,revision,suite_ref,artifact_schema_ref,
              severity_thresholds,gate_policy,return_mapping,override_policy,
              content_hash,lifecycle,created_by)
-            VALUES(%s,%s,%s,1,'{}','{}','{}','{}','{}','{}',%s,'frozen','test')""",
-            (*SCOPE.key, eval_id, HASHES["eval"]),
+            VALUES(%s,%s,%s,1,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+             %s::jsonb,%s,'frozen','test')""",
+            (
+                *SCOPE.key,
+                eval_id,
+                json.dumps(exact("EvalSuiteRevision", f"suite-{suffix}", "6" * 64)),
+                json.dumps(schema(f"artifact-{suffix}")),
+                json.dumps({"critical": 1.0}),
+                json.dumps({"mode": "all"}),
+                json.dumps({"critical": "draft"}),
+                json.dumps({"allowed": False}),
+                HASHES["eval"],
+            ),
         )
         conn.execute(
             """INSERT INTO aip_responsibility_plan_head
@@ -139,8 +166,31 @@ def _seed() -> tuple[CreateImpactPreviewRequest, str]:
             """INSERT INTO aip_responsibility_plan_revision
             (org_id,project_id,plan_id,revision,profile,template_ref,slots,
              merge_decisions,content_hash,lifecycle,created_by)
-            VALUES(%s,%s,%s,1,'ecommerce','{}','[{}]','[]',%s,'frozen','test')""",
-            (*SCOPE.key, responsibility_id, HASHES["resp"]),
+            VALUES(%s,%s,%s,1,'ecommerce',%s::jsonb,%s::jsonb,'[]',%s,'frozen','test')""",
+            (
+                *SCOPE.key,
+                responsibility_id,
+                json.dumps(exact("ResponsibilityTemplateRevision", f"responsibility-template-{suffix}", "7" * 64)),
+                json.dumps(
+                    [
+                        {
+                            "slotId": "production.execute",
+                            "responsibilityType": "production_execution",
+                            "requiredCapabilityIds": ["capability.production.execute"],
+                            "inputSchemaRef": schema(f"production-input-{suffix}"),
+                            "outputSchemaRef": schema(f"production-output-{suffix}"),
+                            "gateRefs": [],
+                            "returnStage": "prepare",
+                            "assignee": {
+                                "kind": "agent_instance",
+                                "resourceId": instance_id,
+                                "version": 1,
+                            },
+                        }
+                    ]
+                ),
+                HASHES["resp"],
+            ),
         )
         conn.execute(
             """INSERT INTO aip_stage_template_head

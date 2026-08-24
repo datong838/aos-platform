@@ -150,6 +150,10 @@ def test_eval_contract_api_dependency_drift_and_idempotency_header(client) -> No
 
 
 def test_responsibility_plan_api_fails_closed_without_installed_template(client) -> None:
+    before = client.get(
+        "/v1/aip/production-contracts/responsibility-plans", headers=_headers()
+    )
+    assert before.status_code == 200
     response = client.post(
         "/v1/aip/production-contracts/responsibility-plans",
         headers=_headers(f"plan-{uuid.uuid4().hex}"),
@@ -162,7 +166,7 @@ def test_responsibility_plan_api_fails_closed_without_installed_template(client)
         "/v1/aip/production-contracts/responsibility-plans", headers=_headers()
     )
     assert listing.status_code == 200
-    assert listing.json()["count"] == 0
+    assert listing.json()["count"] == before.json()["count"]
 
 
 def test_w2b_openapi_contains_all_canonical_routes(client) -> None:
