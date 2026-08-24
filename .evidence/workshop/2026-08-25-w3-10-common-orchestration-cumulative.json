@@ -1,0 +1,70 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "task_id": "workshop-w3-10-common-orchestration-cumulative-20260825",
+  "work_item": "W3-10",
+  "base_revision": "AOS-000221",
+  "branch": "m1",
+  "candidate_commit": "e3089af5a5eb65d22c0a8c389fa470d0d73bdcd5",
+  "recorded_at": "2026-08-25T02:23:02+08:00",
+  "result": "CUMULATIVE_CODE_BROWSER_GREEN_NEXT_WAVE_ALLOWED_NO_RELEASE",
+  "release_identity": {
+    "id": "w3-common-orchestration-e3089af5",
+    "schema_hash": "sha256:4a47b6ce0558019e47a0a2c149874d801fecd978d8831802495b1b573a1841a3",
+    "openapi_hash": "sha256:0ea1ed43855efba0e6adf308e44a507475d73c220128fceace42817c28ec5648",
+    "web_build_hash": "sha256:75fa3f5d9cb15d3067f5622cde0d825d82755ed6b091ecf00032feca2b32c6be",
+    "migration_head": "w3_017",
+    "cutoff": "2026-08-25T02:23:02+08:00"
+  },
+  "verification": {
+    "gate_focused": "35 passed",
+    "backend_cumulative": "105 passed; 2 subtests passed",
+    "openapi_contract": "13 passed; deterministic exporter check PASS",
+    "frontend_cumulative": "221 files; 2084 tests passed",
+    "web_build": "TypeScript and Vite production build GREEN",
+    "migration": "single head w3_017; w3_016 to w3_017 offline SQL generated; live apply false",
+    "browser": {
+      "surface": "Codex built-in browser",
+      "url": "http://localhost:5173/aip/production-contracts",
+      "api": "http://127.0.0.1:8080 current m1 runtime",
+      "tenant": "org-org/dev-project",
+      "viewports": [
+        "1280x720 GREEN no horizontal overflow",
+        "1440x900 GREEN no horizontal overflow",
+        "1920x1000 GREEN no horizontal overflow"
+      ],
+      "keyboard_focus": "GREEN; search control keyboard focus remained visibly exposed",
+      "authority": "task brief, evidence, eval, responsibility, stage, artifact, review, preview and start-gate authority visible",
+      "fail_closed": "unknown remained unknown; blocked responsibility and closed start gate were visible",
+      "network": "49 observed /v1 responses; all status 200",
+      "console_errors": 0,
+      "commands_invoked": 0
+    }
+  },
+  "consistency_review": {
+    "atomic_skill_to_logic_to_coworker_to_workshop": "preserved",
+    "second_authority_created": false,
+    "unknown_coerced_to_zero": false,
+    "cross_release_receipt_splice": false,
+    "synthetic_positive_evidence": false,
+    "decision": "GREEN"
+  },
+  "side_effects": {
+    "live_migration_applied": false,
+    "release_performed": false,
+    "provider_called": false,
+    "agent_run_started": false,
+    "action_executed": false,
+    "approval_decided": false,
+    "handoff_issued": false,
+    "takeover_executed": false,
+    "business_data_mutated": false,
+    "offline_queue_flushed": false
+  },
+  "artifacts": [
+    ".evidence/workshop/2026-08-25-w3-10-common-orchestration-manifest.json",
+    ".evidence/workshop/2026-08-25-w3-10-common-orchestration-decision.json",
+    "scripts/workshop/w3_10_common_orchestration_gate.py",
+    "scripts/workshop/tests/test_w3_10_common_orchestration_gate.py"
+  ],
+  "next": "W3-11 content and campaign authority implementation"
+}

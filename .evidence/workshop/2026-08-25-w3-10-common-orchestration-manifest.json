@@ -1,0 +1,195 @@
+{
+  "schema": "aos-workshop-w3-common-orchestration-gate/v1",
+  "release": {
+    "id": "w3-common-orchestration-e3089af5",
+    "gitCommit": "e3089af5a5eb65d22c0a8c389fa470d0d73bdcd5",
+    "schemaHash": "sha256:4a47b6ce0558019e47a0a2c149874d801fecd978d8831802495b1b573a1841a3",
+    "openapiHash": "sha256:0ea1ed43855efba0e6adf308e44a507475d73c220128fceace42817c28ec5648",
+    "webBuildHash": "sha256:75fa3f5d9cb15d3067f5622cde0d825d82755ed6b091ecf00032feca2b32c6be",
+    "migrationHead": "w3_017",
+    "cutoff": "2026-08-25T02:23:02+08:00"
+  },
+  "receiptRefs": [
+    {
+      "taskId": "W3-01",
+      "status": "green",
+      "commit": "0337370e96ec603cd0fc1c69c920057ba2bfc8cf",
+      "isAncestor": true,
+      "evidenceRef": ".evidence/workshop/2026-08-24-w3-01-readonly-agent-runtime-sdk.json"
+    },
+    {
+      "taskId": "W3-02",
+      "status": "green",
+      "commit": "878806f6202da40bbb04d4a30d19d59e16122447",
+      "isAncestor": true,
+      "evidenceRef": ".evidence/workshop/2026-08-24-w3-02-production-profiles-exact-resolver.json"
+    },
+    {
+      "taskId": "W3-03",
+      "status": "green",
+      "commit": "a9f72e14970168d0d5105c5fce33a8db4241e31b",
+      "isAncestor": true,
+      "evidenceRef": ".evidence/workshop/2026-08-24-w3-03-prepare-aggregate.json"
+    },
+    {
+      "taskId": "W3-04",
+      "status": "green",
+      "commit": "49bd7629e43aa9fe6f7a4329781e8c4a0fd78d51",
+      "isAncestor": true,
+      "evidenceRef": ".evidence/workshop/2026-08-24-w3-04-production-context-freeze.json"
+    },
+    {
+      "taskId": "W3-05",
+      "status": "green",
+      "commit": "461f2dccb67d01525d9ca9a29a5297979c0264eb",
+      "isAncestor": true,
+      "evidenceRef": ".evidence/workshop/2026-08-24-w3-05-strict-sdk-ui-context.json"
+    },
+    {
+      "taskId": "W3-06",
+      "status": "green",
+      "commit": "02899ba96f0e99858dd2a21f16914bdc0d748063",
+      "isAncestor": true,
+      "evidenceRef": ".evidence/workshop/2026-08-25-w3-06-module-handoff-command.json"
+    },
+    {
+      "taskId": "W3-07",
+      "status": "green",
+      "commit": "2871891cba53f8d47552a238e026c68ed94ab9f4",
+      "isAncestor": true,
+      "evidenceRef": ".evidence/workshop/2026-08-25-w3-07-responsibility-assignment.json"
+    },
+    {
+      "taskId": "W3-08",
+      "status": "green",
+      "commit": "879d81551bc06fc74c6f3c7c386acaf51041a5ba",
+      "isAncestor": true,
+      "evidenceRef": ".evidence/workshop/2026-08-25-w3-08-dispatch-control.json"
+    },
+    {
+      "taskId": "W3-09",
+      "status": "green",
+      "commit": "c44579058bff3dcde2e91f759e0d272ddcd7c286",
+      "isAncestor": true,
+      "evidenceRef": ".evidence/workshop/2026-08-25-w3-09-common-production-ui.json"
+    }
+  ],
+  "axes": {
+    "contract": {
+      "releaseId": "w3-common-orchestration-e3089af5",
+      "cutoff": "2026-08-25T02:23:02+08:00",
+      "status": "green",
+      "evidenceKind": "local_candidate_runtime",
+      "evidenceRefs": [
+        "packages/contracts/openapi/v1.generated.json",
+        "packages/contracts/openapi/v1.inventory.json",
+        "W3 cumulative backend:105 passed+2 subtests"
+      ],
+      "schemaHash": "sha256:4a47b6ce0558019e47a0a2c149874d801fecd978d8831802495b1b573a1841a3",
+      "openapiHash": "sha256:0ea1ed43855efba0e6adf308e44a507475d73c220128fceace42817c28ec5648",
+      "exactRefs": true,
+      "errorsVisible": true
+    },
+    "store": {
+      "releaseId": "w3-common-orchestration-e3089af5",
+      "cutoff": "2026-08-25T02:23:02+08:00",
+      "status": "green",
+      "evidenceKind": "local_candidate_runtime",
+      "evidenceRefs": [
+        "alembic:w3_017-single-head",
+        "offline-sql:w3_016-to-w3_017",
+        "formal-http-restart-readback:org-org/dev-project"
+      ],
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "migrationHead": "w3_017",
+      "rls": true,
+      "cas": true,
+      "idempotency": true,
+      "restartReadback": true,
+      "liveMigrationApplied": false
+    },
+    "apiSdk": {
+      "releaseId": "w3-common-orchestration-e3089af5",
+      "cutoff": "2026-08-25T02:23:02+08:00",
+      "status": "green",
+      "evidenceKind": "local_candidate_runtime",
+      "evidenceRefs": [
+        "scripts/export_openapi.py --check:PASS",
+        "builtin-browser:tab-21:49-v1-responses-all-200",
+        "formal-http:http://127.0.0.1:8080"
+      ],
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "openapiHash": "sha256:0ea1ed43855efba0e6adf308e44a507475d73c220128fceace42817c28ec5648",
+      "strictSdk": true,
+      "canonicalOperations": true,
+      "failClosedErrors": true,
+      "formalHttp": true
+    },
+    "web": {
+      "releaseId": "w3-common-orchestration-e3089af5",
+      "cutoff": "2026-08-25T02:23:02+08:00",
+      "status": "green",
+      "evidenceKind": "local_candidate_runtime",
+      "evidenceRefs": [
+        "Web cumulative:221 files/2084 tests",
+        "TypeScript+Vite production build:GREEN",
+        "apps/web/dist canonical file hash"
+      ],
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "webBuildHash": "sha256:75fa3f5d9cb15d3067f5622cde0d825d82755ed6b091ecf00032feca2b32c6be",
+      "publicPackageUnique": true,
+      "typedIntents": true,
+      "nineStates": true,
+      "contributionLineage": true
+    },
+    "browser": {
+      "releaseId": "w3-common-orchestration-e3089af5",
+      "cutoff": "2026-08-25T02:23:02+08:00",
+      "status": "green",
+      "evidenceKind": "local_candidate_runtime",
+      "evidenceRefs": [
+        "builtin-browser:tab-21:formal-http-current-m1-runtime",
+        "builtin-browser:tab-21:network-49-v1-responses-all-200",
+        "builtin-browser:tab-21:console-errors-zero"
+      ],
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "viewports": [
+        {
+          "width": 1280,
+          "status": "green",
+          "evidenceRef": "builtin-browser:tab-21:1280x720:no-overflow-authority-fail-closed"
+        },
+        {
+          "width": 1440,
+          "status": "green",
+          "evidenceRef": "builtin-browser:tab-21:1440x900:no-overflow-authority-fail-closed"
+        },
+        {
+          "width": 1920,
+          "status": "green",
+          "evidenceRef": "builtin-browser:tab-21:1920x1000:no-overflow-authority-fail-closed"
+        }
+      ],
+      "formalHttp": true,
+      "keyboard": true,
+      "visibleFocus": true,
+      "noHorizontalOverflow": true,
+      "networkObserved": true,
+      "consoleObserved": true,
+      "authorityVisible": true,
+      "commandsInvoked": 0
+    }
+  }
+}

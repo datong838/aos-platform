@@ -1,0 +1,33 @@
+{
+  "action": "NEXT_WAVE_ALLOWED",
+  "axes": {
+    "apiSdk": {
+      "reasons": [],
+      "status": "GREEN"
+    },
+    "browser": {
+      "reasons": [],
+      "status": "GREEN"
+    },
+    "contract": {
+      "reasons": [],
+      "status": "GREEN"
+    },
+    "store": {
+      "reasons": [],
+      "status": "GREEN"
+    },
+    "web": {
+      "reasons": [],
+      "status": "GREEN"
+    }
+  },
+  "receiptGate": {
+    "reasons": [],
+    "status": "GREEN"
+  },
+  "releaseId": "w3-common-orchestration-e3089af5",
+  "schema": "aos-workshop-w3-common-orchestration-decision/v1",
+  "sideEffectsPerformed": [],
+  "status": "GREEN"
+}
