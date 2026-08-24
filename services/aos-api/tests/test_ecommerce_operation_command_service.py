@@ -24,6 +24,7 @@ from aos_api.ecommerce_operation_command_execution_contracts import (
     ChangeOperationMembershipCommandRequest,
     ClassifyOperationCommandRequest,
     CreateOperationCaseCommandRequest,
+    KillOperationAutomationCommandRequest,
     ManageOperationSlaCommandRequest,
     OperationCommandGovernanceRef,
 )
@@ -168,6 +169,27 @@ def sla_request() -> ManageOperationSlaCommandRequest:
     )
 
 
+def kill_request() -> KillOperationAutomationCommandRequest:
+    return KillOperationAutomationCommandRequest.model_validate(
+        {
+            "governance": governance().model_dump(mode="json", by_alias=True),
+            "expectedVersion": 0,
+            "revision": {
+                "tenant": SCOPE,
+                "decisionId": "kill-1",
+                "revision": 1,
+                "state": "active",
+                "scopeHash": HASH,
+                "checkpoints": ["proposal", "lease", "executor"],
+                "reason": "bounded automation stop",
+                "contentHash": HASH,
+                "actor": "user:executor",
+                "createdAt": NOW,
+            },
+        }
+    )
+
+
 class FakeActionControl:
     def __init__(self) -> None:
         self.execute_calls: list[tuple[str, str]] = []
@@ -267,6 +289,24 @@ def test_membership_rejects_cross_tenant_original_before_action_control() -> Non
         service.change_membership(principal(), "command-key-b2b-tenant", request)
 
     assert control.execute_calls == []
+
+
+def test_automation_kill_reuses_exact_governance_chain() -> None:
+    request = kill_request()
+    service, control = service_for("automation-kill", request)
+
+    result = service.automation_kill(principal(), "command-key-kill", request)
+
+    assert result.command_id == "automationKill"
+    assert control.execute_calls == [("lease-1", PROPOSAL_HASH)]
+
+
+def test_automation_kill_requires_all_unique_checkpoints() -> None:
+    payload = kill_request().model_dump(mode="json", by_alias=True)
+    payload["revision"]["checkpoints"] = ["proposal", "lease"]
+
+    with pytest.raises(ValueError, match="proposal, lease and executor"):
+        KillOperationAutomationCommandRequest.model_validate(payload)
 
 
 @pytest.mark.parametrize(
@@ -377,6 +417,9 @@ class FakeCanonicalAuthorityStore:
 
     def append_sla_clock(self, scope, actor, key, revision):
         self.appended.append(("sla", scope.key, actor, key, revision.decision_id))
+
+    def append_kill(self, scope, actor, key, revision):
+        self.appended.append(("kill", scope.key, actor, key, revision.decision_id))
 
     def get_receipt(self, scope, *, operation, idempotency_key):
         return OperationAuthorityReceipt(
@@ -510,6 +553,12 @@ def test_canonical_control_consumes_existing_action_chain_and_embeds_operation_r
             "membership",
         ),
         (sla_request, "ecommerce.operation.manage-sla", "manage_sla", "sla"),
+        (
+            kill_request,
+            "ecommerce.operation.automation-kill",
+            "automation_kill",
+            "kill",
+        ),
     ],
 )
 def test_membership_and_sla_canonical_adapters_embed_exact_operation_receipt(

@@ -20,6 +20,7 @@ from aos_api.aip_action_store import (
 from aos_api.aip_contracts import ApprovalDecision, TenantContext
 from aos_api.auth import Principal
 from aos_api.ecommerce_operation_case_contracts import (
+    AutomationKillDecisionRevision,
     CaseMembershipDecisionRevision,
     OperationAuthorityReceipt,
     OperationCaseRevision,
@@ -34,6 +35,7 @@ from aos_api.ecommerce_operation_command_execution_contracts import (
     ChangeOperationMembershipCommandRequest,
     ClassifyOperationCommandRequest,
     CreateOperationCaseCommandRequest,
+    KillOperationAutomationCommandRequest,
     ManageOperationSlaCommandRequest,
     OperationCommandExecutionEnvelope,
 )
@@ -114,6 +116,14 @@ class _InternalOperationAdapter:
                     self._scope, self._actor, self._key, revision
                 )
                 operation = "operation_sla_clock.append"
+            elif self._command_id == "automationKill":
+                revision = AutomationKillDecisionRevision.model_validate(
+                    revision_payload
+                )
+                self._authority_store.append_kill(
+                    self._scope, self._actor, self._key, revision
+                )
+                operation = "operation_kill.append"
             else:
                 return AdapterOutcome(
                     "failed", payload={"errorCode": "ECOMMERCE_OPERATION_COMMAND_UNKNOWN"}
@@ -358,6 +368,22 @@ class EcommerceOperationCommandService:
             request=request,
             command_id="manageSla",
             action_type_id="ecommerce.operation.manage-sla",
+        )
+
+    def automation_kill(
+        self,
+        principal: Principal,
+        idempotency_key: str,
+        request: KillOperationAutomationCommandRequest,
+    ) -> OperationCommandExecutionEnvelope:
+        self._require_idempotency_key(idempotency_key)
+        self._require_revision_scope(principal, request.revision)
+        return self._execute(
+            principal=principal,
+            idempotency_key=idempotency_key,
+            request=request,
+            command_id="automationKill",
+            action_type_id="ecommerce.operation.automation-kill",
         )
 
     def _execute(

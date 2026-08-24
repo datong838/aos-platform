@@ -28,6 +28,7 @@ from aos_api.ecommerce_operation_command_execution_contracts import (
     ChangeOperationMembershipCommandRequest,
     ClassifyOperationCommandRequest,
     CreateOperationCaseCommandRequest,
+    KillOperationAutomationCommandRequest,
     ManageOperationSlaCommandRequest,
     OperationCommandExecutionEnvelope,
 )
@@ -449,6 +450,28 @@ def manage_ecommerce_operation_sla(
     _require_operations_installation(principal=principal, catalog=catalog)
     try:
         return service.manage_sla(
+            principal, _operation_command_idempotency(idempotency_key), body
+        )
+    except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:
+        raise _map_operation_command_error(exc) from exc
+
+
+@router.post(
+    "/commands/operations/automation-kill",
+    response_model=OperationCommandExecutionEnvelope,
+    operation_id="ecommerceWorkshopOperationAutomationKillPost",
+    responses=_ERRORS,
+)
+def kill_ecommerce_operation_automation(
+    body: KillOperationAutomationCommandRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: OperationCommandServiceDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> OperationCommandExecutionEnvelope:
+    _require_operations_installation(principal=principal, catalog=catalog)
+    try:
+        return service.automation_kill(
             principal, _operation_command_idempotency(idempotency_key), body
         )
     except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:

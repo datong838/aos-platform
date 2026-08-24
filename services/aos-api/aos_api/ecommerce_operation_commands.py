@@ -21,11 +21,6 @@ _REQUEST_GOVERNANCE_BLOCKER = OperationCommandBlocker(
     dependency="request-scoped canonical action governance",
     required_action="提交同租户 exact Proposal、有效 Approval、active ExecutionLease 与幂等键",
 )
-_GOVERNANCE_BLOCKER = OperationCommandBlocker(
-    code="PROPOSAL_APPROVAL_LEASE_NOT_BOUND",
-    dependency="canonical action governance",
-    required_action="绑定 exact Proposal、Approval、ExecutionLease 与 Receipt 后重新核验",
-)
 _EXTERNAL_BLOCKER = OperationCommandBlocker(
     code="EXTERNAL_ACTION_GATE_NOT_BOUND",
     dependency="refund action authority",
@@ -85,7 +80,7 @@ class EcommerceOperationCommands:
                     status=OperationCommandStatus.BLOCKED,
                     risk=OperationCommandRisk.HIGH,
                     side_effect=OperationCommandSideEffect.INTERNAL_AUTHORITY,
-                    blockers=[_GOVERNANCE_BLOCKER],
+                    blockers=[_REQUEST_GOVERNANCE_BLOCKER],
                 ),
                 OperationCommandDescriptor(
                     command_id=OperationCommandId.REFUND,

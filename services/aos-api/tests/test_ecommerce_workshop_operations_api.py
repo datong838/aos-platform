@@ -217,6 +217,10 @@ class FakeOperationCommandService:
         self.calls.append((principal, idempotency_key, body))
         return self._response(principal, idempotency_key, body, "manageSla")
 
+    def automation_kill(self, principal, idempotency_key, body):
+        self.calls.append((principal, idempotency_key, body))
+        return self._response(principal, idempotency_key, body, "automationKill")
+
     @staticmethod
     def _response(principal, idempotency_key, body, command_id):
         return OperationCommandExecutionEnvelope.model_validate(
@@ -325,6 +329,25 @@ def _sla_payload() -> dict:
     }
 
 
+def _kill_payload() -> dict:
+    return {
+        "governance": _classification_payload()["governance"],
+        "expectedVersion": 0,
+        "revision": {
+            "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+            "decisionId": "kill-1",
+            "revision": 1,
+            "state": "active",
+            "scopeHash": "a" * 64,
+            "checkpoints": ["proposal", "lease", "executor"],
+            "reason": "bounded automation stop",
+            "contentHash": "a" * 64,
+            "actor": "user:test",
+            "createdAt": "2026-08-24T00:00:00Z",
+        },
+    }
+
+
 def test_classify_command_requires_idempotency_and_rejects_body_scope_injection() -> None:
     service = FakeOperationCommandService()
     payload = _classification_payload()
@@ -385,7 +408,25 @@ def test_membership_and_sla_commands_are_explicit_strict_posts(
     assert service.calls[0][0].org_id == "org-org"
 
 
-def test_openapi_exposes_four_explicit_internal_command_posts() -> None:
+def test_automation_kill_is_explicit_strict_post_and_requires_idempotency() -> None:
+    service = FakeOperationCommandService()
+    payload = _kill_payload()
+    with _client(command_service=service) as client:
+        missing_key = client.post(
+            "/v1/ecommerce-workshop/commands/operations/automation-kill", json=payload
+        )
+        response = client.post(
+            "/v1/ecommerce-workshop/commands/operations/automation-kill",
+            headers={"Idempotency-Key": "command-key-kill"},
+            json=payload,
+        )
+
+    assert missing_key.status_code == 400
+    assert response.status_code == 200
+    assert response.json()["commandId"] == "automationKill"
+
+
+def test_openapi_exposes_five_explicit_internal_command_posts() -> None:
     with _client() as client:
         document = client.get("/openapi.json").json()
 
@@ -393,9 +434,11 @@ def test_openapi_exposes_four_explicit_internal_command_posts() -> None:
     create_case = document["paths"]["/v1/ecommerce-workshop/commands/operations/create-case"]
     membership = document["paths"]["/v1/ecommerce-workshop/commands/operations/change-membership"]
     sla = document["paths"]["/v1/ecommerce-workshop/commands/operations/manage-sla"]
+    kill = document["paths"]["/v1/ecommerce-workshop/commands/operations/automation-kill"]
     assert set(classify) == {"post"}
     assert set(create_case) == {"post"}
     assert classify["post"]["operationId"] == "ecommerceWorkshopOperationClassifyPost"
     assert create_case["post"]["operationId"] == "ecommerceWorkshopOperationCreateCasePost"
     assert membership["post"]["operationId"] == "ecommerceWorkshopOperationChangeMembershipPost"
     assert sla["post"]["operationId"] == "ecommerceWorkshopOperationManageSlaPost"
+    assert kill["post"]["operationId"] == "ecommerceWorkshopOperationAutomationKillPost"
