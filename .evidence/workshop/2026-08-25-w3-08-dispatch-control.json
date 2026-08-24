@@ -1,0 +1,41 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "task_id": "workshop-w3-08-dispatch-priority-approval-navigation-20260825",
+  "base_revision": "AOS-000219",
+  "branch": "m1",
+  "base_commit": "2871891cba53f8d47552a238e026c68ed94ab9f4",
+  "recorded_at": "2026-08-25T01:29:24+08:00",
+  "result": "CODE_CONTROL_BROWSER_GREEN_NO_RELEASE_NO_MIGRATION_APPLIED_NO_EXTERNAL_EFFECT",
+  "implemented": [
+    "immutable dispatch intent and separate maker-checker confirmation receipt",
+    "canonical command descriptors for module handoff responsibility successor and runtime takeover",
+    "creation-time and confirmation-time exact Task TaskRun StepRun responsibility plan lease provider-outcome and fence validation",
+    "append-only task priority decision with same-transaction Task version CAS",
+    "tenant-scoped append-only PostgreSQL tables with FORCE RLS and fail-closed downgrade",
+    "strict Task Cockpit dispatch observation with canonical approval destination and disabled mutation controls"
+  ],
+  "verification": {
+    "backend_focused_and_cumulative": "60 passed and 2 subtests passed",
+    "frontend_focused": "37 passed",
+    "frontend_cumulative": "220 files / 2068 tests passed",
+    "web_build": "GREEN",
+    "migration_graph": "w3_017 single head",
+    "migration_sql": "w3_016:w3_017 offline SQL GREEN",
+    "browser": "built-in browser at 1280px; /workshop/cockpit preserves explicit aos-api unavailable and read failure states; no horizontal overflow; no command clicked"
+  },
+  "side_effects": {
+    "migration_applied": false,
+    "release_performed": false,
+    "provider_called": false,
+    "agent_run_started": false,
+    "action_executed": false,
+    "approval_decided": false,
+    "handoff_issued": false,
+    "business_data_mutated": false
+  },
+  "residual_risks": [
+    "new tables and routes are not operational until an authorized migration apply and release gate completes",
+    "browser runtime API was unavailable, so canonical data rendering is covered by strict component tests while browser evidence covers visual fail-closed behavior",
+    "confirmation returns only a canonical-command-required receipt and intentionally does not execute the downstream command"
+  ]
+}

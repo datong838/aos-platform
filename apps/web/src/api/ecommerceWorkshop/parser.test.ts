@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseContentCampaignView, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseModuleHandoffCompile, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseResponsibilityAssignmentObservation, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSkillContributions, parseTaskCockpitSteps, parseWorkshopSharedContext } from "./parser";
+import { parseContentCampaignView, parseDispatchControlObservation, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseModuleHandoffCompile, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseResponsibilityAssignmentObservation, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSkillContributions, parseTaskCockpitSteps, parseWorkshopSharedContext } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -29,6 +29,21 @@ describe("ecommerceWorkshop strict parser", () => {
     expect(() => parseEcommerceWorkshopModuleList({ ...list, items: [{ ...module, readiness: "available" }] })).toThrow("不一致");
     expect(() => parseEcommerceWorkshopModuleList({ ...list, count: 2 })).toThrow("count");
     expect(() => parseEcommerceWorkshopModuleList({ ...list, items: [{ ...module, requiredObjects: ["Z", "A"] }] })).toThrow("排序");
+  });
+});
+
+const dispatchTaskRef = { resourceType: "Task", resourceId: "task-1", version: 4 };
+const dispatchPolicyRef = { resourceType: "PolicyRevision", resourceId: "dispatch-policy-1", revision: 1, contentHash: "d".repeat(64) };
+const dispatchCommand = { commandKind: "responsibility_successor", routeIdentity: "aip.responsibility.successor", routePath: "/v1/aip/responsibility-assignments/successors", requiredPermission: "aip.responsibility.write" };
+const dispatchIntent = { tenant: list.tenant, intentId: "intent-1", revision: 1, taskRef: { ...dispatchTaskRef, version: 3 }, taskRunRef: null, stepRunRef: null, responsibilityPlanRef: { resourceType: "ResponsibilityPlanRevision", resourceId: "responsibility-1", revision: 1, contentHash: "c".repeat(64) }, command: dispatchCommand, sourceIdentity: "agent-old", targetIdentity: "agent-new", sourceSlotId: "operator", targetSlotId: null, expectedFence: null, reasonCode: "OPERATOR_REASSIGNED", policyRef: dispatchPolicyRef, diff: { identity: { from: "agent-old", to: "agent-new" } }, impact: {}, readiness: "ready", blockers: [], maker: "user:maker", createdAt: "2026-08-25T01:00:00Z", contentHash: "a".repeat(64) };
+const dispatchObservation = { tenant: list.tenant, taskRef: dispatchTaskRef, dispatchIntents: [dispatchIntent], confirmations: [{ tenant: list.tenant, confirmationId: "confirmation-1", intentId: "intent-1", intentRevision: 1, intentContentHash: "a".repeat(64), command: dispatchCommand, invocationState: "canonical_command_required", checker: "user:checker", createdAt: "2026-08-25T01:05:00Z", contentHash: "b".repeat(64) }], priorityDecisions: [{ tenant: list.tenant, decisionId: "priority-1", revision: 1, taskRefBefore: { ...dispatchTaskRef, version: 3 }, taskRefAfter: dispatchTaskRef, oldPriority: 50, newPriority: 80, reasonCode: "SLA_ESCALATION", policyRef: dispatchPolicyRef, actor: "user:operator", createdAt: "2026-08-25T01:10:00Z", contentHash: "e".repeat(64) }], evaluatedAt: "2026-08-25T01:11:00Z" };
+
+describe("dispatch control strict parser", () => {
+  it("保留 Intent/Confirmation/Priority 三条独立 lineage", () => expect(parseDispatchControlObservation(dispatchObservation)).toMatchObject({ taskRef: { version: 4 }, dispatchIntents: [{ readiness: "ready" }], confirmations: [{ invocationState: "canonical_command_required" }], priorityDecisions: [{ oldPriority: 50, newPriority: 80 }] }));
+  it("拒绝伪 ready、客户端命令路径与 Task CAS lineage 漂移", () => {
+    expect(() => parseDispatchControlObservation({ ...dispatchObservation, dispatchIntents: [{ ...dispatchIntent, readiness: "ready", blockers: [{ code: "DRIFT", dependency: "Task", requiredAction: "refresh" }] }] })).toThrow("readiness/blockers");
+    expect(() => parseDispatchControlObservation({ ...dispatchObservation, dispatchIntents: [{ ...dispatchIntent, command: { ...dispatchCommand, routePath: "/v1/aip/tasks/task-1" } }] })).toThrow("canonical command");
+    expect(() => parseDispatchControlObservation({ ...dispatchObservation, priorityDecisions: [{ ...dispatchObservation.priorityDecisions[0], taskRefAfter: { ...dispatchTaskRef, version: 5 } }] })).toThrow("CAS lineage");
   });
 });
 

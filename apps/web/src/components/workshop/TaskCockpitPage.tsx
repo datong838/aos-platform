@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   EcommerceWorkshopClientError,
   ecommerceWorkshopClient,
+  type DispatchControlObservation,
   type TaskCockpitActionReceiptResponse,
   type TaskCockpitApprovalReviewResponse,
   type TaskCockpitCheckpointPageResponse,
@@ -19,12 +20,13 @@ import { useSourceReadinessSnapshot } from "./SourceReadinessContext";
 import { aipAgentControl, type IssuedHandoff } from "../../api/aipAgentControl";
 import type { ModuleHandoffCompileResponse, TaskCockpitTask, TaskCockpitRun } from "../../api/ecommerceWorkshop";
 
-type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getResponsibilityAssignmentObservation">>;
+type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getResponsibilityAssignmentObservation" | "getDispatchControlObservation">>;
 type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
 type SkillContributionState = { phase: "loading" | "ready" | "failed"; response: TaskCockpitSkillContributionResponse | null };
 type AssignmentObservationState = { phase: "loading" | "ready" | "failed"; response: ResponsibilityAssignmentObservation | null };
-type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null; skillContributions: SkillContributionState; assignmentObservation: AssignmentObservationState } | null;
+type DispatchObservationState = { phase: "loading" | "ready" | "failed"; response: DispatchControlObservation | null };
+type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null; skillContributions: SkillContributionState; assignmentObservation: AssignmentObservationState; dispatchObservation: DispatchObservationState } | null;
 const TASK_STATUSES: readonly { value: "" | TaskCockpitTaskStatus; label: string }[] = [
   { value: "", label: "全部状态" }, { value: "pending", label: "待规划" }, { value: "planning", label: "规划中" }, { value: "awaiting_approval", label: "待审批" }, { value: "approved", label: "已批准" }, { value: "executing", label: "执行中" }, { value: "paused", label: "已暂停" }, { value: "completed", label: "已完成" }, { value: "failed", label: "失败" }, { value: "cancelled", label: "已取消" }, { value: "rolled_back", label: "已回滚" },
 ];
@@ -154,10 +156,10 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
 
-  const toggleDetails = (runId: string) => {
+  const toggleDetails = (taskId: string, runId: string) => {
     if (detail?.runId === runId) { detailRequest.current += 1; setDetail(null); return; }
     const requestId = ++detailRequest.current;
-    setDetail({ runId, phase: "loading", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null, skillContributions: { phase: "loading", response: null }, assignmentObservation: { phase: "loading", response: null } });
+    setDetail({ runId, phase: "loading", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null, skillContributions: { phase: "loading", response: null }, assignmentObservation: { phase: "loading", response: null }, dispatchObservation: { phase: "loading", response: null } });
     void Promise.all([client.listTaskCockpitRunSteps(runId, { limit: 20 }), client.listTaskCockpitRunCheckpoints(runId, { limit: 20 }), client.getTaskCockpitRunProductionContext(runId), client.getTaskCockpitRunResponsibilityHandoffs(runId), client.getTaskCockpitRunApprovalReview(runId), client.getTaskCockpitRunActionReceipts(runId)]).then(
       ([steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview, actionReceipts]) => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, phase: "ready", steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview, actionReceipts } : current); },
       () => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, phase: "failed", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null } : current); },
@@ -173,6 +175,14 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
       );
     } else {
       setDetail((current) => current?.runId === runId ? { ...current, assignmentObservation: { phase: "failed", response: null } } : current);
+    }
+    if (client.getDispatchControlObservation) {
+      void client.getDispatchControlObservation(taskId).then(
+        (next) => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, dispatchObservation: { phase: "ready", response: next } } : current); },
+        () => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, dispatchObservation: { phase: "failed", response: null } } : current); },
+      );
+    } else {
+      setDetail((current) => current?.runId === runId ? { ...current, dispatchObservation: { phase: "failed", response: null } } : current);
     }
   };
 
@@ -230,7 +240,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
             <div className="task-cockpit-card-heading"><div><p>{task.taskType} · {task.taskId}</p><h3>{task.title}</h3></div><span>{task.status}</span></div>
             <div className="task-cockpit-progress" aria-label={`优先级 ${task.priority}`}><span style={{ width: `${Math.max(4, Math.min(100, task.priority))}%` }} /></div>
             <dl><div><dt>优先级</dt><dd>{task.priority}</dd></div><div><dt>Task 版本</dt><dd>v{task.version}</dd></div><div><dt>最近更新</dt><dd>{formatTime(task.updatedAt)}</dd></div><div><dt>Run</dt><dd>{task.run ? `${task.run.status} · v${task.run.version}` : "尚无 Run"}</dd></div></dl>
-            {task.run ? <button type="button" aria-expanded={isOpen} aria-controls={detailId} onClick={() => toggleDetails(task.run!.runId)}>{isOpen ? "收起运行明细" : "查看运行明细"}</button> : null}
+            {task.run ? <button type="button" aria-expanded={isOpen} aria-controls={detailId} onClick={() => toggleDetails(task.taskId, task.run!.runId)}>{isOpen ? "收起运行明细" : "查看运行明细"}</button> : null}
             {isOpen ? <div id={detailId} className="task-cockpit-run-detail">
               {detail?.phase === "loading" ? <div role="status">正在读取 Stage、职责交接、审批复核、Step 与 Checkpoint…</div> : null}
               {detail?.phase === "failed" ? <div role="alert">运行明细读取失败；未使用空集合代替。</div> : null}
@@ -261,6 +271,16 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
                     <div><h4>ReviewIssue 归因</h4>{detail.approvalReview.reviewIssues.length ? <ul>{detail.approvalReview.reviewIssues.map((issue) => <li key={issue.issueId}><strong>{issue.severity} · {issue.status}</strong><span>{issue.issueId} · v{issue.version} · {issue.returnStage}</span><small>{issue.artifactId} · evidence {issue.evidenceCount} · {issue.events.map((event) => `${event.sequence}:${event.eventType}`).join(" → ")}</small><em>{issue.lineageReadiness === "attempt_exact" && issue.returnLineage ? `${issue.returnLineage.stepRunId} · attempt ${issue.returnLineage.attempt}` : "attempt 未解析；保持失败关闭"}</em></li>)}</ul> : <p>当前 Run 无 canonical ReviewIssue。</p>}</div>
                   </div>
                 </section>
+                <section className={`task-cockpit-dispatch-control is-${detail.dispatchObservation.phase}`} aria-label="派发意图 优先级与审批导航控制面">
+                  <div className="task-cockpit-production-refs"><strong>派发、优先级与审批导航 · canonical 只读</strong><span>{detail.dispatchObservation.phase === "ready" && detail.dispatchObservation.response ? `${detail.dispatchObservation.response.dispatchIntents.length} 个 Intent · ${detail.dispatchObservation.response.priorityDecisions.length} 个 Priority Decision` : "独立 authority 未就绪"}</span><span>审批打开不等于批准；确认不等于下游命令已执行</span></div>
+                  {detail.dispatchObservation.phase === "loading" ? <p>正在读取独立 Dispatch authority；不以空集合代替。</p> : null}
+                  {detail.dispatchObservation.phase === "failed" ? <p role="alert">Dispatch authority 读取失败；派发与改优先级按钮保持禁用。</p> : null}
+                  {detail.dispatchObservation.phase === "ready" && detail.dispatchObservation.response ? <>
+                    <dl><div><dt>当前 Task exact version</dt><dd>v{detail.dispatchObservation.response.taskRef.version}</dd></div><div><dt>已确认 Intent</dt><dd>{detail.dispatchObservation.response.confirmations.length}</dd></div><div><dt>最新业务优先级决定</dt><dd>{detail.dispatchObservation.response.priorityDecisions.at(-1) ? `${detail.dispatchObservation.response.priorityDecisions.at(-1)!.oldPriority} → ${detail.dispatchObservation.response.priorityDecisions.at(-1)!.newPriority}` : "无"}</dd></div><div><dt>审批目的页</dt><dd>{detail.approvalReview.planApproval.navigation.commandReadiness === "destination_reauthorization_required" ? "需目的页重新鉴权" : "只读定位"}</dd></div></dl>
+                    {detail.dispatchObservation.response.dispatchIntents.length ? <ul>{detail.dispatchObservation.response.dispatchIntents.map((intent) => <li className={`is-${intent.readiness}`} key={intent.intentId}><strong>{intent.command.commandKind}</strong><span>{intent.sourceIdentity} → {intent.targetIdentity}</span><small>{intent.intentId} · r{intent.revision} · {intent.reasonCode}</small><em>{intent.readiness === "ready" ? "建议已冻结；确认后仍须调用 canonical command 并回读 Receipt" : `阻断：${intent.blockers.map((blocker) => blocker.code).join("、")}`}</em></li>)}</ul> : <p>当前 Task 无 immutable DispatchIntent；没有从页面状态推导派发成功。</p>}
+                    <div className="task-cockpit-assignment-actions"><button type="button" disabled>新建派发建议</button><small>本页只消费 canonical Intent；创建需完整 exact refs、权限与 policy。</small><button type="button" disabled>调整业务优先级</button><small>禁止用拖拽或个人排序偏好直接修改 Task priority。</small></div>
+                  </> : null}
+                </section>
                 <section className="task-cockpit-action-receipts" aria-label="本 Run 的 Action 回执与对账证据">
                   <div className="task-cockpit-production-refs"><strong>Action 回执与对账</strong><span>{detail.actionReceipts.proposalCount} 个 Proposal · {detail.actionReceipts.receiptCount} 个 Receipt</span><span>{detail.actionReceipts.reconcileRequiredCount} 个 unknown 待对账 · {detail.actionReceipts.reconciledReceiptCount} 个已追加对账回执</span></div>
                   <p className="task-cockpit-approval-boundary">unknown 不等于失败；禁止重复执行。只有新的 immutable reconcile Receipt 才能关闭待对账状态。</p>
@@ -287,7 +307,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
                     {detail.assignmentObservation.phase === "ready" && detail.assignmentObservation.response?.takeoverRequests.some((request) => request.safetyState === "provider_outcome_unknown") ? <p role="alert">Provider outcome unknown：必须先追加对账证据，禁止接管或重放。</p> : null}
                     <div className="task-cockpit-assignment-actions"><button type="button" disabled aria-describedby={`reassign-blocker-${task.taskId}`}>生成改派后继</button><small id={`reassign-blocker-${task.taskId}`}>TASK_RUN_EXISTS_USE_TAKEOVER：当前 Run 已存在。</small><button type="button" disabled aria-describedby={`takeover-blocker-${task.taskId}`}>申请人工接管</button><small id={`takeover-blocker-${task.taskId}`}>命令入口尚未取得 exact Step、Resolution Receipt、maker-checker 与安全点重验，不执行副作用。</small></div>
                   </div>
-                  <ModuleHandoffCommandPanel task={task} run={task.run!} responsibility={detail.responsibilityHandoffs} workshopClient={client} commandClient={handoffClient} onRefresh={() => toggleDetails(task.run!.runId)} />
+                  <ModuleHandoffCommandPanel task={task} run={task.run!} responsibility={detail.responsibilityHandoffs} workshopClient={client} commandClient={handoffClient} onRefresh={() => toggleDetails(task.taskId, task.run!.runId)} />
                 </section>
                 <table><caption>Step（{detail.steps.page.count} 项，当前页）</caption><thead><tr><th scope="col">步骤</th><th scope="col">尝试</th><th scope="col">状态</th><th scope="col">输入/输出/错误</th></tr></thead><tbody>{detail.steps.items.length ? detail.steps.items.map((step) => <tr key={step.stepRunId}><th scope="row">{step.stepKey}</th><td>{step.attempt}</td><td>{step.status}</td><td>{step.hasInputRefs ? "有" : "无"}/{step.hasOutputRefs ? "有" : "无"}/{step.hasError ? "有" : "无"}</td></tr>) : <tr><td colSpan={4}>当前权威 Step 集合为空</td></tr>}</tbody></table>
                 <table><caption>Checkpoint（{detail.checkpoints.page.count} 项，当前页）</caption><thead><tr><th scope="col">序号</th><th scope="col">步骤</th><th scope="col">状态哈希</th><th scope="col">产物数</th></tr></thead><tbody>{detail.checkpoints.items.length ? detail.checkpoints.items.map((checkpoint) => <tr key={checkpoint.checkpointId}><th scope="row">{checkpoint.sequence}</th><td>{checkpoint.stepKey ?? "未绑定步骤"}</td><td>{checkpoint.stateHash}</td><td>{checkpoint.artifactCount}</td></tr>) : <tr><td colSpan={4}>当前权威 Checkpoint 集合为空</td></tr>}</tbody></table>

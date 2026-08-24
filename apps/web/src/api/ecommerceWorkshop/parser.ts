@@ -54,6 +54,9 @@ import {
   type TaskCockpitProductionContextResponse,
   type TaskCockpitResponsibilityHandoffResponse,
   type ResponsibilityAssignmentObservation,
+  type DispatchControlObservation,
+  type DispatchRuntimeRef,
+  type DispatchCommandTarget,
   type ResponsibilityAssignmentLease,
   type ResponsibilityAssigneeRef,
   type ResponsibilityRuntimeRef,
@@ -396,10 +399,10 @@ export function parseTaskCockpitCheckpoints(value: unknown): TaskCockpitCheckpoi
   return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, ...base, runId: boundedText(raw.runId, "taskCockpit.checkpoints.runId", 200), membershipCutoff: timestamp(raw.membershipCutoff, "taskCockpit.checkpoints.membershipCutoff"), stateConsistency: "current_state_per_page", items, page };
 }
 
-function parseTaskCockpitExactRef(value: unknown, expectedType: string, label: string): TaskCockpitExactRevisionRef {
+function parseTaskCockpitExactRef(value: unknown, expectedType: string | undefined, label: string): TaskCockpitExactRevisionRef {
   const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "contentHash"], label);
   const resourceType = boundedText(raw.resourceType, `${label}.resourceType`, 80);
-  if (resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
+  if (expectedType && resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
   const contentHash = boundedText(raw.contentHash, `${label}.contentHash`, 64);
   if (!RAW_SHA256.test(contentHash)) throw new TypeError(`${label}.contentHash 不是 SHA-256`);
   return { resourceType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), revision: integer(raw.revision, `${label}.revision`, 1), contentHash };
@@ -510,7 +513,7 @@ export function parseTaskCockpitResponsibilityHandoffs(value: unknown): TaskCock
 
 function parseResponsibilityRuntimeRef(value: unknown, expectedType: "TaskRun" | "StepRun", label: string): ResponsibilityRuntimeRef {
   const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "version"], label);
-  if (raw.resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
+  if (expectedType && raw.resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
   return { resourceType: expectedType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), version: integer(raw.version, `${label}.version`, 1) };
 }
 function parseResponsibilityAssignee(value: unknown, label: string): ResponsibilityAssigneeRef {
@@ -546,6 +549,37 @@ export function parseResponsibilityAssignmentObservation(value: unknown): Respon
   const assignmentLeases = raw.assignmentLeases.map((value, index) => parseResponsibilityAssignmentLease(value, runRef, `responsibilityAssignment.assignmentLeases[${index}]`));
   assertUnique(takeoverRequests.map((item) => item.requestId), "responsibilityAssignment.takeoverRequests"); assertUnique(takeoverDecisions.map((item) => item.decisionId), "responsibilityAssignment.takeoverDecisions"); assertUnique(assignmentLeases.map((item) => item.leaseId), "responsibilityAssignment.assignmentLeases");
   return { tenant: parseTenant(raw.tenant), runRef, takeoverRequests, takeoverDecisions, assignmentLeases, evaluatedAt: timestamp(raw.evaluatedAt, "responsibilityAssignment.evaluatedAt") };
+}
+
+function parseDispatchRuntimeRef(value: unknown, expected: DispatchRuntimeRef["resourceType"], label: string): DispatchRuntimeRef {
+  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "version"], label);
+  if (raw.resourceType !== expected) throw new TypeError(`${label}.resourceType 漂移`);
+  return { resourceType: expected, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), version: integer(raw.version, `${label}.version`, 1) };
+}
+function parseDispatchCommand(value: unknown, label: string): DispatchCommandTarget {
+  const raw = record(value, label); exact(raw, ["commandKind", "routeIdentity", "routePath", "requiredPermission"], label);
+  const commandKind = enumValue(raw.commandKind, ["module_handoff", "responsibility_successor", "runtime_takeover"] as const, `${label}.commandKind`);
+  const identities = { module_handoff: "aip.module-handoff.issue", responsibility_successor: "aip.responsibility.successor", runtime_takeover: "aip.responsibility.takeover" } as const;
+  const paths = { module_handoff: "/v1/aip/handoffs", responsibility_successor: "/v1/aip/responsibility-assignments/successors", runtime_takeover: "/v1/aip/responsibility-assignments/takeovers" } as const;
+  const routeIdentity = enumValue(raw.routeIdentity, ["aip.module-handoff.issue", "aip.responsibility.successor", "aip.responsibility.takeover"] as const, `${label}.routeIdentity`);
+  const routePath = boundedText(raw.routePath, `${label}.routePath`, 300);
+  if (routeIdentity !== identities[commandKind] || routePath !== paths[commandKind]) throw new TypeError(`${label} canonical command 漂移`);
+  return { commandKind, routeIdentity, routePath, requiredPermission: boundedText(raw.requiredPermission, `${label}.requiredPermission`, 160) };
+}
+function parseDispatchBlocker(value: unknown, label: string) {
+  const raw = record(value, label); exact(raw, ["code", "dependency", "requiredAction"], label);
+  return { code: boundedText(raw.code, `${label}.code`, 120), dependency: boundedText(raw.dependency, `${label}.dependency`, 200), requiredAction: boundedText(raw.requiredAction, `${label}.requiredAction`, 500) };
+}
+export function parseDispatchControlObservation(value: unknown): DispatchControlObservation {
+  const raw = record(value, "dispatchControl.observation"); exact(raw, ["tenant", "taskRef", "dispatchIntents", "confirmations", "priorityDecisions", "evaluatedAt"], "dispatchControl.observation");
+  if (!Array.isArray(raw.dispatchIntents) || !Array.isArray(raw.confirmations) || !Array.isArray(raw.priorityDecisions)) throw new TypeError("dispatchControl collections 非法");
+  const taskRef = parseDispatchRuntimeRef(raw.taskRef, "Task", "dispatchControl.taskRef");
+  const dispatchIntents = raw.dispatchIntents.map((value, index) => { const label = `dispatchControl.dispatchIntents[${index}]`; const item = record(value, label); exact(item, ["tenant", "intentId", "revision", "taskRef", "taskRunRef", "stepRunRef", "responsibilityPlanRef", "command", "sourceIdentity", "targetIdentity", "sourceSlotId", "targetSlotId", "expectedFence", "reasonCode", "policyRef", "diff", "impact", "readiness", "blockers", "maker", "createdAt", "contentHash"], label); if (!Array.isArray(item.blockers)) throw new TypeError(`${label}.blockers 非法`); const blockers = item.blockers.map((blocker, blockerIndex) => parseDispatchBlocker(blocker, `${label}.blockers[${blockerIndex}]`)); const readiness = enumValue(item.readiness, ["ready", "blocked"] as const, `${label}.readiness`); if ((readiness === "ready") !== (blockers.length === 0)) throw new TypeError(`${label}.readiness/blockers 漂移`); const contentHash = boundedText(item.contentHash, `${label}.contentHash`, 64); if (!RAW_SHA256.test(contentHash)) throw new TypeError(`${label}.contentHash 非 SHA-256`); const intentTaskRef = parseDispatchRuntimeRef(item.taskRef, "Task", `${label}.taskRef`); if (intentTaskRef.resourceId !== taskRef.resourceId) throw new TypeError(`${label}.taskRef membership 漂移`); return { tenant: parseTenant(item.tenant), intentId: boundedText(item.intentId, `${label}.intentId`, 200), revision: integer(item.revision, `${label}.revision`, 1), taskRef: intentTaskRef, taskRunRef: nullable(item.taskRunRef, (ref) => parseDispatchRuntimeRef(ref, "TaskRun", `${label}.taskRunRef`)), stepRunRef: nullable(item.stepRunRef, (ref) => parseDispatchRuntimeRef(ref, "StepRun", `${label}.stepRunRef`)), responsibilityPlanRef: nullable(item.responsibilityPlanRef, (ref) => parseTaskCockpitExactRef(ref, "ResponsibilityPlanRevision", `${label}.responsibilityPlanRef`)), command: parseDispatchCommand(item.command, `${label}.command`), sourceIdentity: boundedText(item.sourceIdentity, `${label}.sourceIdentity`, 200), targetIdentity: boundedText(item.targetIdentity, `${label}.targetIdentity`, 200), sourceSlotId: nullable(item.sourceSlotId, (text) => boundedText(text, `${label}.sourceSlotId`, 160)), targetSlotId: nullable(item.targetSlotId, (text) => boundedText(text, `${label}.targetSlotId`, 160)), expectedFence: nullable(item.expectedFence, (number) => integer(number, `${label}.expectedFence`, 0)), reasonCode: boundedText(item.reasonCode, `${label}.reasonCode`, 120), policyRef: parseTaskCockpitExactRef(item.policyRef, undefined, `${label}.policyRef`), diff: record(item.diff, `${label}.diff`), impact: record(item.impact, `${label}.impact`), readiness, blockers, maker: boundedText(item.maker, `${label}.maker`, 200), createdAt: timestamp(item.createdAt, `${label}.createdAt`), contentHash }; });
+  assertUnique(dispatchIntents.map((item) => item.intentId), "dispatchControl.dispatchIntents"); const intents = new Map(dispatchIntents.map((item) => [item.intentId, item]));
+  const confirmations = raw.confirmations.map((value, index) => { const label = `dispatchControl.confirmations[${index}]`; const item = record(value, label); exact(item, ["tenant", "confirmationId", "intentId", "intentRevision", "intentContentHash", "command", "invocationState", "checker", "createdAt", "contentHash"], label); const intentId = boundedText(item.intentId, `${label}.intentId`, 200); const intent = intents.get(intentId); const intentRevision = integer(item.intentRevision, `${label}.intentRevision`, 1); const intentContentHash = boundedText(item.intentContentHash, `${label}.intentContentHash`, 64); if (!intent || intent.revision !== intentRevision || intent.contentHash !== intentContentHash || item.invocationState !== "canonical_command_required") throw new TypeError(`${label} intent lineage 漂移`); const contentHash = boundedText(item.contentHash, `${label}.contentHash`, 64); if (!RAW_SHA256.test(contentHash)) throw new TypeError(`${label}.contentHash 非 SHA-256`); return { tenant: parseTenant(item.tenant), confirmationId: boundedText(item.confirmationId, `${label}.confirmationId`, 200), intentId, intentRevision, intentContentHash, command: parseDispatchCommand(item.command, `${label}.command`), invocationState: "canonical_command_required" as const, checker: boundedText(item.checker, `${label}.checker`, 200), createdAt: timestamp(item.createdAt, `${label}.createdAt`), contentHash }; });
+  const priorityDecisions = raw.priorityDecisions.map((value, index) => { const label = `dispatchControl.priorityDecisions[${index}]`; const item = record(value, label); exact(item, ["tenant", "decisionId", "revision", "taskRefBefore", "taskRefAfter", "oldPriority", "newPriority", "reasonCode", "policyRef", "actor", "createdAt", "contentHash"], label); const before = parseDispatchRuntimeRef(item.taskRefBefore, "Task", `${label}.taskRefBefore`); const after = parseDispatchRuntimeRef(item.taskRefAfter, "Task", `${label}.taskRefAfter`); if (before.resourceId !== taskRef.resourceId || after.resourceId !== taskRef.resourceId || after.version !== before.version + 1) throw new TypeError(`${label}.Task CAS lineage 漂移`); const oldPriority = integer(item.oldPriority, `${label}.oldPriority`, 0); const newPriority = integer(item.newPriority, `${label}.newPriority`, 0); if (oldPriority > 100 || newPriority > 100 || oldPriority === newPriority) throw new TypeError(`${label}.priority 漂移`); const contentHash = boundedText(item.contentHash, `${label}.contentHash`, 64); if (!RAW_SHA256.test(contentHash)) throw new TypeError(`${label}.contentHash 非 SHA-256`); return { tenant: parseTenant(item.tenant), decisionId: boundedText(item.decisionId, `${label}.decisionId`, 200), revision: integer(item.revision, `${label}.revision`, 1), taskRefBefore: before, taskRefAfter: after, oldPriority, newPriority, reasonCode: boundedText(item.reasonCode, `${label}.reasonCode`, 120), policyRef: parseTaskCockpitExactRef(item.policyRef, undefined, `${label}.policyRef`), actor: boundedText(item.actor, `${label}.actor`, 200), createdAt: timestamp(item.createdAt, `${label}.createdAt`), contentHash }; });
+  assertUnique(confirmations.map((item) => item.confirmationId), "dispatchControl.confirmations"); assertUnique(priorityDecisions.map((item) => item.decisionId), "dispatchControl.priorityDecisions");
+  return { tenant: parseTenant(raw.tenant), taskRef, dispatchIntents, confirmations, priorityDecisions, evaluatedAt: timestamp(raw.evaluatedAt, "dispatchControl.evaluatedAt") };
 }
 
 function parseCompileResourceRef(value: unknown, label: string, expectedType?: string) {

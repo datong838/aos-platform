@@ -3135,93 +3135,105 @@
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_memory_authority",
+      "module": "aos_api.routers.aip_responsibility_assignment",
       "attribute": "router",
       "order": 522
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_production_contracts",
+      "module": "aos_api.routers.aip_dispatch_control",
       "attribute": "router",
       "order": 523
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_model_runtime",
+      "module": "aos_api.routers.aip_memory_authority",
       "attribute": "router",
       "order": 524
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_bindings",
+      "module": "aos_api.routers.aip_production_contracts",
       "attribute": "router",
       "order": 525
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_memory_improvement",
+      "module": "aos_api.routers.aip_model_runtime",
       "attribute": "router",
       "order": 526
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_content_runtime",
+      "module": "aos_api.routers.aip_bindings",
       "attribute": "router",
       "order": 527
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_content_drafts",
+      "module": "aos_api.routers.aip_memory_improvement",
       "attribute": "router",
       "order": 528
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_budgets",
+      "module": "aos_api.routers.aip_content_runtime",
       "attribute": "router",
       "order": 529
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_runtime_guard_policies",
+      "module": "aos_api.routers.aip_content_drafts",
       "attribute": "router",
       "order": 530
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_model_governance_policies",
+      "module": "aos_api.routers.aip_budgets",
       "attribute": "router",
       "order": 531
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_agent_runs",
+      "module": "aos_api.routers.aip_runtime_guard_policies",
       "attribute": "router",
       "order": 532
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_handoffs",
+      "module": "aos_api.routers.aip_model_governance_policies",
       "attribute": "router",
       "order": 533
     },
     {
-      "domain": "data",
-      "module": "aos_api.routers.source_readiness",
+      "domain": "aip",
+      "module": "aos_api.routers.aip_agent_runs",
       "attribute": "router",
       "order": 534
     },
     {
       "domain": "aip",
-      "module": "aos_api.routers.aip_evidence_disclosure",
+      "module": "aos_api.routers.aip_handoffs",
       "attribute": "router",
       "order": 535
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.source_readiness",
+      "attribute": "router",
+      "order": 536
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_evidence_disclosure",
+      "attribute": "router",
+      "order": 537
     },
     {
       "domain": "aip",
       "module": "aos_api.routers.aip_fde",
       "attribute": "router",
-      "order": 536
+      "order": 538
     }
   ]
 }

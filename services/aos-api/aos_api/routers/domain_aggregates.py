@@ -324,6 +324,7 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.routers.aip_effect_authority', 'router'),
         ('aos_api.routers.aip_assignee_authority', 'router'),
         ('aos_api.routers.aip_responsibility_assignment', 'router'),
+        ('aos_api.routers.aip_dispatch_control', 'router'),
         ('aos_api.routers.aip_memory_authority', 'router'),
         ('aos_api.routers.aip_production_contracts', 'router'),
         ('aos_api.routers.aip_model_runtime', 'router'),
