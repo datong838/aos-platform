@@ -36,6 +36,9 @@ class WorkshopSharedContext(AipContractModel):
     primary_ref: WorkshopSharedRef | None = None
     related_refs: list[WorkshopSharedRef] = Field(default_factory=list, max_length=100)
     purpose: str | None = Field(default=None, min_length=1, max_length=160)
+    permission_decision_ref: WorkshopSharedRef | None = None
+    disclosure_policy_ref: WorkshopSharedRef | None = None
+    markings: list[str] = Field(default_factory=list, max_length=20)
     disclosure: Literal["allowed", "blocked", "unknown"]
     evaluated_at: datetime
     data_cutoff: datetime | None = None
@@ -55,16 +58,18 @@ class WorkshopSharedContext(AipContractModel):
 
     @model_validator(mode="after")
     def _honest(self) -> WorkshopSharedContext:
-        ready_fields = (self.source_module_id, self.source_view_id, self.source_route, self.primary_ref, self.purpose, self.data_cutoff)
-        if self.status == "ready" and (not all(ready_fields) or self.disclosure != "allowed" or self.freshness != "fresh" or self.readiness != "ready" or self.blockers or self.expires_at <= self.evaluated_at):
+        ready_fields = (self.source_module_id, self.source_view_id, self.source_route, self.primary_ref, self.purpose, self.permission_decision_ref, self.disclosure_policy_ref, self.data_cutoff)
+        if self.status == "ready" and (not all(ready_fields) or not self.markings or self.disclosure != "allowed" or self.freshness != "fresh" or self.readiness != "ready" or self.blockers or self.expires_at <= self.evaluated_at):
             raise ValueError("ready shared context requires exact fresh disclosed authority")
         if self.status != "ready" and not self.blockers:
             raise ValueError("non-ready shared context requires blockers")
-        if self.status in {"forbidden", "expired", "unknown"} and any((self.source_module_id, self.source_view_id, self.source_route, self.primary_ref, self.related_refs, self.lineage_refs, self.filter_summary)):
+        if self.status in {"forbidden", "expired", "unknown"} and any((self.source_module_id, self.source_view_id, self.source_route, self.primary_ref, self.related_refs, self.lineage_refs, self.permission_decision_ref, self.disclosure_policy_ref, self.markings, self.filter_summary)):
             raise ValueError("non-disclosing shared context cannot reveal target facts")
         identities = [(item.authority, item.resource_type, item.resource_id, item.revision, item.content_hash) for item in [*self.related_refs, *self.lineage_refs]]
         if len(identities) != len(set(identities)):
             raise ValueError("shared context refs must be unique")
+        if len(self.markings) != len(set(self.markings)) or any(not item.strip() or len(item) > 120 for item in self.markings):
+            raise ValueError("shared context markings must be unique bounded labels")
         return self
 
 
