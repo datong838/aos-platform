@@ -81,9 +81,10 @@ def _revision(table: str, identity: str, *, extra: str = "") -> None:
         f"""CREATE TABLE {table} (
         org_id TEXT NOT NULL, project_id TEXT NOT NULL, {identity} TEXT NOT NULL,
         revision BIGINT NOT NULL, parent_revision BIGINT,
-        content_hash TEXT NOT NULL, authority_data JSONB NOT NULL,
+        content_hash TEXT NOT NULL, receipt_id TEXT NOT NULL, authority_data JSONB NOT NULL,
         created_by TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(){extra},
         PRIMARY KEY(org_id,project_id,{identity},revision),
+        UNIQUE(org_id,project_id,receipt_id),
         CHECK(revision>=1),
         CHECK((revision=1 AND parent_revision IS NULL)
           OR (revision>1 AND parent_revision=revision-1)),

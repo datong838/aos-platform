@@ -77,8 +77,10 @@ class ContentCampaignSlice(AipContractModel):
         if self.count_ledger.attached != len(self.items):
             raise ValueError("attached must equal item count")
         if self.status is ContentCampaignSliceStatus.READY:
-            if not self.authority_refs or self.blockers:
-                raise ValueError("ready slices require authorityRefs and no blockers")
+            if self.blockers:
+                raise ValueError("ready slices cannot have blockers")
+            if self.count_ledger.eligible > 0 and not self.authority_refs:
+                raise ValueError("non-empty ready slices require authorityRefs")
         else:
             if not self.blockers:
                 raise ValueError("blocked slices require at least one blocker")

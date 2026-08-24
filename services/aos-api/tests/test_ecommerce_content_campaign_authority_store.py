@@ -263,6 +263,7 @@ def test_bounded_readers_are_repeatable_read_tenant_scoped(
                 {
                     "org_id": "org-org",
                     "project_id": "dev-project",
+                    "receipt_id": "receipt-1",
                     "authority_data": payload,
                 }
             ]
@@ -271,7 +272,8 @@ def test_bounded_readers_are_repeatable_read_tenant_scoped(
     store = EcommerceContentCampaignAuthorityStore(factory(connection))
     rows = getattr(store, method)(SCOPE, cutoff=NOW, limit=1)
     assert len(rows) == 1
-    assert identity in str(rows[0].model_dump())
+    assert identity in str(rows[0].revision.model_dump())
+    assert rows[0].receipt_id == "receipt-1"
     assert "REPEATABLE READ READ ONLY" in connection.calls[0][0]
     assert connection.calls[1][1] == ("org-org", "dev-project", NOW, 1)
 
@@ -283,6 +285,7 @@ def test_reader_fails_closed_on_row_tenant_drift() -> None:
                 {
                     "org_id": "dev-org",
                     "project_id": "dev-project",
+                    "receipt_id": "receipt-1",
                     "authority_data": campaign().model_dump(
                         mode="json", by_alias=True
                     ),

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
@@ -14,15 +15,110 @@ from aos_api.ecommerce_workshop_content_campaign_contracts import (
     ContentCampaignSliceId,
     WorkshopContentCampaignViewEnvelope,
 )
+from aos_api.ecommerce_content_campaign_authority_store import (
+    ContentCampaignAuthorityObservation,
+    ContentCampaignAuthorityReadError,
+)
 
 
 NOW = datetime(2026, 8, 24, 13, 0, tzinfo=UTC)
+
+
+class _EmptyStore:
+    def list_campaigns(self, scope, *, cutoff, limit):
+        return []
+
+    def list_calendar_entries(self, scope, *, cutoff, limit):
+        return []
+
+    def list_intents(self, scope, *, cutoff, limit):
+        return []
+
+
+class _ObservedStore(_EmptyStore):
+    @staticmethod
+    def _observation(identity: str, receipt_id: str):
+        return ContentCampaignAuthorityObservation(
+            revision=SimpleNamespace(
+                campaign_id=identity,
+                entry_id=identity,
+                intent_id=identity,
+                revision=1,
+                content_hash="a" * 64,
+            ),
+            receipt_id=receipt_id,
+        )
+
+    def list_campaigns(self, scope, *, cutoff, limit):
+        return [self._observation("campaign-1", "ccar-campaign-1")]
+
+    def list_calendar_entries(self, scope, *, cutoff, limit):
+        return [self._observation("entry-1", "ccar-entry-1")]
+
+    def list_intents(self, scope, *, cutoff, limit):
+        return [self._observation("intent-1", "ccar-intent-1")]
+
+
+class _CalendarFailureStore(_ObservedStore):
+    def list_calendar_entries(self, scope, *, cutoff, limit):
+        raise ContentCampaignAuthorityReadError("calendar unavailable")
 
 
 def _body() -> dict[str, object]:
     return EcommerceWorkshopContentCampaign(clock=lambda: NOW).read(
         org_id="org-org", project_id="dev-project"
     ).model_dump(by_alias=True)
+
+
+def _body_with_store(store) -> dict[str, object]:
+    return EcommerceWorkshopContentCampaign(clock=lambda: NOW, store=store).read(
+        org_id="org-org", project_id="dev-project"
+    ).model_dump(by_alias=True)
+
+
+def test_trusted_empty_authorities_are_ready_without_synthetic_refs() -> None:
+    body = _body_with_store(_EmptyStore())
+    assert [item["status"] for item in body["slices"]] == ["ready"] * 3
+    assert [item["authorityRefs"] for item in body["slices"]] == [[], [], []]
+    assert [item["countLedger"]["eligible"] for item in body["slices"]] == [0, 0, 0]
+    assert body["page"]["count"] == 0
+
+
+def test_observed_authorities_expose_exact_revision_hash_and_receipt() -> None:
+    body = _body_with_store(_ObservedStore())
+    items = [item["items"][0] for item in body["slices"]]
+    assert [item["resourceType"] for item in items] == [
+        "CampaignRevision",
+        "CalendarEntryRevision",
+        "MasterContentIntentRevision",
+    ]
+    assert [item["resourceId"] for item in items] == [
+        "campaign-1",
+        "entry-1",
+        "intent-1",
+    ]
+    assert [item["receiptId"] for item in items] == [
+        "ccar-campaign-1",
+        "ccar-entry-1",
+        "ccar-intent-1",
+    ]
+    assert all(item["revision"] == 1 for item in items)
+    assert all(item["contentHash"] == "sha256:" + "a" * 64 for item in items)
+    assert body["page"]["count"] == 3
+
+
+def test_one_reader_failure_blocks_only_its_slice() -> None:
+    body = _body_with_store(_CalendarFailureStore())
+    assert [item["status"] for item in body["slices"]] == [
+        "ready",
+        "blocked",
+        "ready",
+    ]
+    assert body["slices"][1]["items"] == []
+    assert body["slices"][1]["blockers"][0]["code"] == (
+        "CANONICAL_CALENDAR_ENTRY_AUTHORITY_NOT_AVAILABLE"
+    )
+    assert body["page"]["count"] == 2
 
 
 def test_shell_is_tenant_bound_canonical_and_honestly_blocked() -> None:

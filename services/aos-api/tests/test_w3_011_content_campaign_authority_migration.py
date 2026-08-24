@@ -43,6 +43,10 @@ def test_migration_extends_current_single_head_and_freezes_tenant_security() -> 
         assert f"trg_{table}_truncate_guard" in sql
     assert "resolved_start<resolved_end" in sql
     assert "UNIQUE(org_id,project_id,operation,idempotency_key)" in sql
+    # Four revision tables link the exact authority Receipt; the Receipt table
+    # itself owns the fifth non-null receipt_id declaration.
+    assert sql.count("receipt_id TEXT NOT NULL") == 5
+    assert sql.count("UNIQUE(org_id,project_id,receipt_id)") == 4
 
 
 def test_downgrade_rejects_nonempty_canonical_history_before_reverse_drop() -> None:

@@ -8,7 +8,8 @@ import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import datetime
-from typing import Any, TypeVar
+from dataclasses import dataclass
+from typing import Any, Generic, TypeVar
 
 import psycopg
 
@@ -28,6 +29,16 @@ ConnectFactory = Callable[..., AbstractContextManager[Any]]
 RevisionT = TypeVar(
     "RevisionT", CampaignRevision, CalendarEntryRevision, MasterContentIntentRevision
 )
+
+
+@dataclass(frozen=True)
+class ContentCampaignAuthorityObservation(Generic[RevisionT]):
+    revision: RevisionT
+    receipt_id: str
+
+    def __post_init__(self) -> None:
+        if not self.receipt_id.strip():
+            raise ValueError("authority observation requires receiptId")
 
 
 class ContentCampaignAuthorityStoreError(RuntimeError):
@@ -168,15 +179,17 @@ class EcommerceContentCampaignAuthorityStore:
             replay = self._replay(conn, scope, operation, key, request_hash)
             if replay is not None:
                 return ContentCampaignExactRef.model_validate(replay)
+            receipt_id = self._new_receipt_id()
             conn.execute(
                 "INSERT INTO ecommerce_content_calendar_decision_revision"
-                "(org_id,project_id,decision_id,revision,parent_revision,content_hash,"
+                "(org_id,project_id,decision_id,revision,parent_revision,content_hash,receipt_id,"
                 "authority_data,created_by,created_at,entry_id) "
-                "VALUES(%s,%s,%s,1,NULL,%s,%s::jsonb,%s,%s,%s)",
+                "VALUES(%s,%s,%s,1,NULL,%s,%s,%s::jsonb,%s,%s,%s)",
                 (
                     *scope.key,
                     item.decision_id,
                     item.content_hash,
+                    receipt_id,
                     self._json(payload),
                     actor,
                     item.created_at,
@@ -189,13 +202,22 @@ class EcommerceContentCampaignAuthorityStore:
                 item.revision,
                 item.content_hash,
             )
-            self._receipt(conn, scope, operation, key, request_hash, result, actor)
+            self._receipt(
+                conn,
+                scope,
+                operation,
+                key,
+                request_hash,
+                result,
+                actor,
+                receipt_id=receipt_id,
+            )
             conn.commit()
             return result
 
     def list_campaigns(
         self, scope: TenantScope, *, cutoff: datetime, limit: int = 100
-    ) -> list[CampaignRevision]:
+    ) -> list[ContentCampaignAuthorityObservation[CampaignRevision]]:
         return self._list_current(
             scope,
             cutoff=cutoff,
@@ -208,7 +230,7 @@ class EcommerceContentCampaignAuthorityStore:
 
     def list_calendar_entries(
         self, scope: TenantScope, *, cutoff: datetime, limit: int = 100
-    ) -> list[CalendarEntryRevision]:
+    ) -> list[ContentCampaignAuthorityObservation[CalendarEntryRevision]]:
         return self._list_current(
             scope,
             cutoff=cutoff,
@@ -221,7 +243,7 @@ class EcommerceContentCampaignAuthorityStore:
 
     def list_intents(
         self, scope: TenantScope, *, cutoff: datetime, limit: int = 100
-    ) -> list[MasterContentIntentRevision]:
+    ) -> list[ContentCampaignAuthorityObservation[MasterContentIntentRevision]]:
         return self._list_current(
             scope,
             cutoff=cutoff,
@@ -329,17 +351,19 @@ class EcommerceContentCampaignAuthorityStore:
                 column_suffix = "," + extra_columns[0]
                 value_suffix = "," + ",".join("%s" for _ in extra_columns[1])
                 extra_values = extra_columns[1]
+            receipt_id = self._new_receipt_id()
             conn.execute(
                 f"INSERT INTO {revision_table}"
                 f"(org_id,project_id,{identity_column},revision,parent_revision,"
-                f"content_hash,authority_data,created_by,created_at{column_suffix}) "
-                f"VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s{value_suffix})",
+                f"content_hash,receipt_id,authority_data,created_by,created_at{column_suffix}) "
+                f"VALUES(%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s{value_suffix})",
                 (
                     *scope.key,
                     identity,
                     item.revision,
                     parent_revision,
                     item.content_hash,
+                    receipt_id,
                     self._json(payload),
                     actor,
                     item.created_at,
@@ -349,7 +373,16 @@ class EcommerceContentCampaignAuthorityStore:
             result = self._ref(
                 resource_type, identity, item.revision, item.content_hash
             )
-            self._receipt(conn, scope, operation, key, request_hash, result, actor)
+            self._receipt(
+                conn,
+                scope,
+                operation,
+                key,
+                request_hash,
+                result,
+                actor,
+                receipt_id=receipt_id,
+            )
             conn.commit()
             return result
 
@@ -363,7 +396,7 @@ class EcommerceContentCampaignAuthorityStore:
         head_table: str,
         revision_table: str,
         identity_column: str,
-    ) -> list[RevisionT]:
+    ) -> list[ContentCampaignAuthorityObservation[RevisionT]]:
         if cutoff.utcoffset() is None:
             raise ValueError("authority cutoff requires a timezone")
         if not 1 <= limit <= 100:
@@ -375,7 +408,7 @@ class EcommerceContentCampaignAuthorityStore:
                 )
                 rows = conn.execute(
                     f"SELECT revision.org_id,revision.project_id,"
-                    f"revision.authority_data FROM {head_table} head "
+                    f"revision.receipt_id,revision.authority_data FROM {head_table} head "
                     f"JOIN {revision_table} revision "
                     "ON revision.org_id=head.org_id "
                     "AND revision.project_id=head.project_id "
@@ -395,7 +428,12 @@ class EcommerceContentCampaignAuthorityStore:
                 self._require_item_scope(
                     scope, item.tenant.org_id, item.tenant.project_id
                 )
-                items.append(item)
+                items.append(
+                    ContentCampaignAuthorityObservation(
+                        revision=item,
+                        receipt_id=row["receipt_id"],
+                    )
+                )
             return items
         except ContentCampaignAuthorityConflict as exc:
             raise ContentCampaignAuthorityReadError(str(exc)) from exc
@@ -482,6 +520,8 @@ class EcommerceContentCampaignAuthorityStore:
         request_hash: str,
         result: ContentCampaignExactRef,
         actor: str,
+        *,
+        receipt_id: str,
     ) -> None:
         conn.execute(
             "INSERT INTO ecommerce_content_campaign_authority_receipt"
@@ -489,7 +529,7 @@ class EcommerceContentCampaignAuthorityStore:
             "result_ref,created_by) VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb,%s)",
             (
                 *scope.key,
-                f"ccar-{uuid.uuid4().hex}",
+                receipt_id,
                 operation,
                 key,
                 request_hash,
@@ -498,11 +538,16 @@ class EcommerceContentCampaignAuthorityStore:
             ),
         )
 
+    @staticmethod
+    def _new_receipt_id() -> str:
+        return f"ccar-{uuid.uuid4().hex}"
+
 
 __all__ = [
     "ContentCampaignAuthorityConflict",
     "ContentCampaignAuthorityIdempotencyConflict",
     "ContentCampaignAuthorityReadError",
+    "ContentCampaignAuthorityObservation",
     "ContentCampaignAuthorityStoreError",
     "EcommerceContentCampaignAuthorityStore",
     "canonical_hash",
