@@ -29,6 +29,13 @@ from aos_api.ecommerce_workshop_prepare_service import (
     PrepareDependencyBlocked,
     PrepareError,
 )
+from aos_api.ecommerce_workshop_evidence_build_service import (
+    EcommerceWorkshopEvidenceBuildService,
+    WorkshopEvidenceBuildBlocked,
+    WorkshopEvidenceBuildError,
+    WorkshopEvidenceBuildRequest,
+    WorkshopEvidenceBuildResponse,
+)
 from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
 from aos_api.ecommerce_workshop_analyst_contracts import WorkshopAnalystViewEnvelope
 from aos_api.ecommerce_workshop_content_campaign import (
@@ -169,6 +176,11 @@ def get_ecommerce_workshop_prepare_service() -> EcommerceWorkshopPrepareService:
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_evidence_build_service() -> EcommerceWorkshopEvidenceBuildService:
+    return EcommerceWorkshopEvidenceBuildService()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_content_campaign() -> EcommerceWorkshopContentCampaign:
     return EcommerceWorkshopContentCampaign()
 
@@ -240,6 +252,10 @@ PrepareServiceDependency = Annotated[
     EcommerceWorkshopPrepareService,
     Depends(get_ecommerce_workshop_prepare_service),
 ]
+EvidenceBuildServiceDependency = Annotated[
+    EcommerceWorkshopEvidenceBuildService,
+    Depends(get_ecommerce_workshop_evidence_build_service),
+]
 ContentCampaignDependency = Annotated[
     EcommerceWorkshopContentCampaign,
     Depends(get_ecommerce_workshop_content_campaign),
@@ -310,6 +326,12 @@ def _map_prepare_error(exc: PrepareError) -> ApiError:
     if isinstance(exc, PrepareDependencyBlocked):
         return ApiError(code=exc.code, message=str(exc), status_code=422)
     return ApiError(code=exc.code, message="Workshop prepare failed closed", status_code=503)
+
+
+def _map_evidence_build_error(exc: WorkshopEvidenceBuildError) -> ApiError:
+    if isinstance(exc, WorkshopEvidenceBuildBlocked):
+        return ApiError(code=exc.code, message=str(exc), status_code=422)
+    return ApiError(code=exc.code, message="Workshop evidence build failed closed", status_code=503)
 
 
 def _map_operation_command_error(exc: Exception) -> ApiError:
@@ -561,6 +583,33 @@ def prepare_ecommerce_workshop_module(
         )
     except PrepareError as exc:
         raise _map_prepare_error(exc) from exc
+
+
+@router.post(
+    "/modules/{module_id}/commands/build-evidence",
+    response_model=WorkshopEvidenceBuildResponse,
+    operation_id="ecommerceWorkshopBuildEvidence",
+    responses=_ERRORS,
+)
+def build_ecommerce_workshop_evidence(
+    request: Request,
+    module_id: ModuleIdPath,
+    body: WorkshopEvidenceBuildRequest,
+    principal: PrincipalDependency,
+    service: EvidenceBuildServiceDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> WorkshopEvidenceBuildResponse:
+    _reject_query_parameters(request)
+    try:
+        return service.build(
+            TenantScope(principal.org_id, principal.project_id),
+            actor=principal.subject,
+            module_id=module_id,
+            idempotency_key=_prepare_idempotency(idempotency_key),
+            body=body,
+        )
+    except WorkshopEvidenceBuildError as exc:
+        raise _map_evidence_build_error(exc) from exc
 
 
 @router.get(

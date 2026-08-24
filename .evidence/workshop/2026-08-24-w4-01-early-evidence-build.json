@@ -1,0 +1,58 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w4-01-early-evidence-build-20260824",
+  "baseRevision": "AOS-000213",
+  "result": "GREEN_CODE_CONTROL_NO_RELEASE_MIGRATION_NOT_LIVE_APPLIED",
+  "scope": [
+    "base Evidence append-only and exact revoke authority",
+    "server-owned revoked-source rejection during EvidenceBundle build",
+    "canonical preparation plus installed ProductionProfile to EvidenceBundle bridge",
+    "restore existing Disclosure router through deterministic domain manifest"
+  ],
+  "verification": {
+    "focusedEvidenceMigrationServiceAndRevoke": "8 passed",
+    "workshopW3W4AipAdjacentCumulative": "169 passed; 2 subtests passed",
+    "openapi": "2569 paths; 2120 schemas; 4337 operations",
+    "routerManifest": "537 entries; AIP 86; deterministic aggregate GREEN",
+    "alembicHeads": "w4_001 (head)",
+    "pythonCompile": "GREEN",
+    "diffCheck": "GREEN",
+    "browser": {
+      "surface": "Codex built-in browser",
+      "route": "/workshop",
+      "viewportWidth": 1280,
+      "documentScrollWidth": 1280,
+      "h1Count": 1,
+      "activeInstallationCount": 0,
+      "enabledEvidenceOrBundlePublishActionCount": 0,
+      "result": "API and catalog failure remained explicit; no W4-01 capability was presented as released or executable"
+    }
+  },
+  "sideEffectConservation": {
+    "providerInvocationCount": 0,
+    "providerFee": 0,
+    "taskRunCreatedCount": 0,
+    "agentRunCreatedCount": 0,
+    "actionOrHandoffCreatedCount": 0,
+    "approvalOrExecutionLeaseCreatedCount": 0,
+    "externalBusinessMutationCount": 0,
+    "liveMigrationAppliedCount": 0
+  },
+  "consistencyReview": [
+    "required facts are loaded from the exact installed ProductionProfile and never accepted from the Workshop request",
+    "preparation, module, profile, Brief and Evidence exact refs are revalidated before build",
+    "base Evidence remains immutable and revocation is an append-only tenant-scoped event",
+    "revoked Evidence causes a new build to fail closed with EVIDENCE_REVOKED",
+    "legacy W2-A and W-L10 tests preserve immutable Evidence rows instead of weakening database permissions",
+    "existing AIP FDE routes remain present after deterministic router regeneration"
+  ],
+  "negativeBoundaries": [
+    "no live database migration",
+    "no real tenant business-data mutation",
+    "no ProductionProfile or EvidenceBundle publish, signature or install",
+    "no Provider call, Run, Action, Handoff, Approval or Lease",
+    "no release authorization"
+  ],
+  "nextTask": "W3-04_FOUR_REF_PRODUCTION_CONTEXT_FREEZE",
+  "observedAt": "2026-08-24T23:04:23+08:00"
+}

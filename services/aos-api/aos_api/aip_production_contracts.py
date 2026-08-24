@@ -834,6 +834,21 @@ class RevokeEvidenceBundleRequest(AipContractModel):
     reason: str = Field(min_length=1, max_length=500)
 
 
+class RevokeEvidenceRequest(AipContractModel):
+    expected_revision: int = Field(default=1, ge=1, le=1)
+    expected_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    reason: str = Field(min_length=1, max_length=500)
+
+
+class EvidenceRevocation(AipContractModel):
+    tenant: TenantContext
+    event_id: str
+    evidence_ref: ExactRevisionRef
+    reason: str
+    actor: str
+    occurred_at: datetime
+
+
 class ResolveEvidenceDisclosureRequest(AipContractModel):
     evidence_ref: ExactRevisionRef
     purpose: str = Field(min_length=1, max_length=200)

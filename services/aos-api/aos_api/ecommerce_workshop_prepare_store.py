@@ -162,6 +162,29 @@ class EcommerceWorkshopPrepareStore:
         except Exception as exc:
             raise PreparationStoreError("preparation result persistence failed") from exc
 
+    def get(self, scope: TenantScope, preparation_id: str) -> PreparationRecord:
+        try:
+            with self._connect_factory(scope) as conn:
+                row = conn.execute(
+                    """SELECT intent.*, result.result_body
+                       FROM aip_workshop_preparation_intent intent
+                       LEFT JOIN aip_workshop_preparation_result result
+                         ON result.org_id=intent.org_id
+                        AND result.project_id=intent.project_id
+                        AND result.preparation_id=intent.preparation_id
+                        AND result.revision=1
+                      WHERE intent.org_id=%s AND intent.project_id=%s
+                        AND intent.preparation_id=%s""",
+                    (*scope.key, preparation_id),
+                ).fetchone()
+            if row is None:
+                raise PreparationNotFound("preparation not found")
+            return self._record(row)
+        except PreparationStoreError:
+            raise
+        except Exception as exc:
+            raise PreparationStoreError("preparation read failed") from exc
+
     @staticmethod
     def _record(row: Any) -> PreparationRecord:
         result = row.get("result_body") if hasattr(row, "get") else None

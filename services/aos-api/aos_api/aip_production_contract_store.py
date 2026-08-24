@@ -19,12 +19,13 @@ from aos_api.aip_production_contracts import (
     CreateStageTemplateRequest, DisclosureLevel, DisclosureStatus,
     EvalContractListResponse, EvalContractRevision, EvalContractDiff,
     EvalContractDiffChange, EvidenceBundleListResponse,
-    EvidenceBundleRevision, EvidenceDisclosureDecision, ExactArtifactRef,
+    EvidenceBundleRevision, EvidenceDisclosureDecision, EvidenceRevocation,
+    ExactArtifactRef,
     ExactRevisionRef, FreezeProductionContextRequest, Freshness,
     ImpactPreviewListResponse, ImpactPreviewRevision,
     CreateImpactPreviewRequest, ProductionContextListResponse,
     ProductionContextRevision, ResolveEvidenceDisclosureRequest,
-    RevokeEvidenceBundleRequest, ReviseImpactPreviewRequest,
+    RevokeEvidenceBundleRequest, RevokeEvidenceRequest, ReviseImpactPreviewRequest,
     ResolveReviewIssueRequest, ResponsibilityPlanListResponse,
     ResponsibilityPlanRevision, ReturnDecision, ReturnDecisionListResponse,
     ReturnReviewIssueRequest,
@@ -1727,14 +1728,25 @@ class AipProductionContractStore:
                     "W2-A bundles only accept Evidence refs"
                 )
             row = conn.execute(
-                """SELECT evidence_id,content_hash,payload,freshness_at FROM aip_evidence
-                   WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
+                """SELECT evidence_id,content_hash,payload,freshness_at,
+                          EXISTS(
+                            SELECT 1 FROM aip_evidence_revoke_event revoked
+                             WHERE revoked.org_id=aip_evidence.org_id
+                               AND revoked.project_id=aip_evidence.project_id
+                               AND revoked.evidence_id=aip_evidence.evidence_id
+                               AND revoked.revision=1
+                               AND revoked.content_hash=aip_evidence.content_hash
+                          ) AS revoked
+                     FROM aip_evidence
+                    WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
                 (*scope.key, item.resource_id),
             ).fetchone()
             if not row or row["content_hash"] != item.content_hash:
                 raise ProductionContractDependencyBlocked(
                     "evidence exact ref missing or drifted"
                 )
+            if bool(row["revoked"]):
+                raise ProductionContractDependencyBlocked("EVIDENCE_REVOKED")
             for fact_id in self._evidence_fact_ids(row["payload"]):
                 provided.add(fact_id)
                 providers.setdefault(fact_id, []).append(row["evidence_id"])
@@ -1911,6 +1923,94 @@ class AipProductionContractStore:
             return self.get_evidence_bundle(
                 scope, bundle_id, body.expected_revision, conn=conn
             )
+
+    def revoke_evidence(
+        self,
+        scope: TenantScope,
+        actor: str,
+        evidence_id: str,
+        key: str,
+        body: RevokeEvidenceRequest,
+    ) -> EvidenceRevocation:
+        request_hash = canonical_hash(
+            {"evidenceId": evidence_id, **body.model_dump(mode="json", by_alias=True)}
+        )
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "evidence.revoke", key, request_hash)
+            if replay:
+                row = conn.execute(
+                    """SELECT * FROM aip_evidence_revoke_event
+                       WHERE org_id=%s AND project_id=%s AND event_id=%s""",
+                    (*scope.key, replay["resourceId"]),
+                ).fetchone()
+                if row is None:
+                    raise ProductionContractDependencyBlocked(
+                        "evidence revoke receipt drifted"
+                    )
+                return self._evidence_revocation(scope, row)
+            evidence = conn.execute(
+                """SELECT evidence_id,content_hash FROM aip_evidence
+                   WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
+                (*scope.key, evidence_id),
+            ).fetchone()
+            if evidence is None:
+                raise ProductionContractNotFound("evidence not found")
+            if evidence["content_hash"] != body.expected_content_hash:
+                raise ProductionContractDependencyBlocked("EVIDENCE_HASH_DRIFTED")
+            existing = conn.execute(
+                """SELECT * FROM aip_evidence_revoke_event
+                   WHERE org_id=%s AND project_id=%s AND evidence_id=%s
+                     AND revision=1 AND content_hash=%s""",
+                (*scope.key, evidence_id, body.expected_content_hash),
+            ).fetchone()
+            if existing is None:
+                event_id = f"evidence-revoke-{uuid.uuid4().hex[:20]}"
+                existing = conn.execute(
+                    """INSERT INTO aip_evidence_revoke_event(
+                       org_id,project_id,event_id,evidence_id,revision,content_hash,
+                       reason,actor)
+                       VALUES(%s,%s,%s,%s,1,%s,%s,%s) RETURNING *""",
+                    (
+                        *scope.key,
+                        event_id,
+                        evidence_id,
+                        body.expected_content_hash,
+                        body.reason,
+                        actor,
+                    ),
+                ).fetchone()
+            self._receipt(
+                conn,
+                scope,
+                "evidence.revoke",
+                key,
+                request_hash,
+                {
+                    "resourceType": "EvidenceRevocation",
+                    "resourceId": existing["event_id"],
+                    "revision": 1,
+                    "contentHash": body.expected_content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self._evidence_revocation(scope, existing)
+
+    @staticmethod
+    def _evidence_revocation(scope: TenantScope, row: Any) -> EvidenceRevocation:
+        return EvidenceRevocation(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            event_id=row["event_id"],
+            evidence_ref=ExactRevisionRef(
+                resource_type="Evidence",
+                resource_id=row["evidence_id"],
+                revision=int(row["revision"]),
+                content_hash=row["content_hash"],
+            ),
+            reason=row["reason"],
+            actor=row["actor"],
+            occurred_at=row["occurred_at"],
+        )
 
     def resolve_evidence_disclosure(
         self,

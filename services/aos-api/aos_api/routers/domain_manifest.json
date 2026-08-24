@@ -3210,6 +3210,18 @@
       "module": "aos_api.routers.source_readiness",
       "attribute": "router",
       "order": 534
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_evidence_disclosure",
+      "attribute": "router",
+      "order": 535
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_fde",
+      "attribute": "router",
+      "order": 536
     }
   ]
 }

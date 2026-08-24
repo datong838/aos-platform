@@ -78,10 +78,8 @@ def cleanup():
                 "DELETE FROM aip_task_brief_head WHERE org_id=%s AND project_id=%s AND task_id=%s",
                 (*ORG.key, task_id),
             )
-        c.execute(
-            "DELETE FROM aip_evidence WHERE org_id=%s AND project_id=%s AND created_by=%s AND source_ref='w-l10-api'",
-            (*ORG.key, EVIDENCE_ACTOR),
-        )
+        # W4-01 makes base Evidence append-only. Every test uses a unique
+        # evidence id, so retain the immutable source row during cleanup.
         for task_id in ids:
             c.execute(
                 "DELETE FROM aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s",
@@ -231,6 +229,75 @@ def test_revoke_marks_bundle_and_blocks_disclosure(client):
         )
         assert fetched.status_code == 200
         assert fetched.json()["decisionHash"] == body["decisionHash"]
+    finally:
+        cleanup()
+
+
+def test_source_evidence_revoke_is_exact_idempotent_and_blocks_new_bundle(client):
+    cleanup()
+    try:
+        frozen, evidence_id, evidence_hash, _ = _frozen_brief_and_evidence(
+            client,
+            marking=["public"],
+            evidence_payload={"factIds": ["order_snapshot"], "marking": ["public"]},
+        )
+        revoke_key = f"evidence-revoke-{uuid.uuid4().hex}"
+        revoke_payload = {
+            "expectedRevision": 1,
+            "expectedContentHash": evidence_hash,
+            "reason": "canonical source invalidated",
+        }
+        revoked = client.post(
+            f"/v1/aip/production-contracts/evidence/{evidence_id}/revoke",
+            headers=headers(key=revoke_key),
+            json=revoke_payload,
+        )
+        assert revoked.status_code == 200, revoked.text
+        body = revoked.json()
+        assert body["evidenceRef"] == {
+            "resourceType": "Evidence",
+            "resourceId": evidence_id,
+            "revision": 1,
+            "contentHash": evidence_hash,
+        }
+        assert body["reason"] == "canonical source invalidated"
+        replay = client.post(
+            f"/v1/aip/production-contracts/evidence/{evidence_id}/revoke",
+            headers=headers(key=revoke_key),
+            json=revoke_payload,
+        )
+        assert replay.status_code == 200
+        assert replay.json()["eventId"] == body["eventId"]
+        assert (
+            client.post(
+                f"/v1/aip/production-contracts/evidence/{evidence_id}/revoke",
+                headers=headers(org="dev-org", key=f"canary-{uuid.uuid4().hex}"),
+                json=revoke_payload,
+            ).status_code
+            == 404
+        )
+
+        rebuilt = client.post(
+            "/v1/aip/production-contracts/evidence-bundles/build",
+            headers=headers(key=f"rebuilt-{uuid.uuid4().hex}"),
+            json={
+                "briefRef": {
+                    "resourceType": "TaskBriefRevision",
+                    "resourceId": frozen["briefId"],
+                    "revision": frozen["revision"],
+                    "contentHash": frozen["contentHash"],
+                },
+                "subjectRefs": [],
+                "cutoffAt": (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(),
+                "itemRefs": [body["evidenceRef"]],
+                "requiredFactIds": ["order_snapshot"],
+                "marking": ["public"],
+                "licenseSummary": {"source": "w4-01-source-revoke"},
+            },
+        )
+        assert rebuilt.status_code == 422, rebuilt.text
+        assert rebuilt.json()["code"] == "AIP_DEPENDENCY_BLOCKED"
+        assert rebuilt.json()["message"] == "EVIDENCE_REVOKED"
     finally:
         cleanup()
 

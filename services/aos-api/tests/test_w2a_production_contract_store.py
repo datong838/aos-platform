@@ -35,7 +35,9 @@ def cleanup() -> None:
         conn.execute("DELETE FROM aip_task_brief_revision WHERE org_id=%s AND project_id=%s AND created_by=%s", (*ORG.key, ACTOR))
         for task_id in task_ids:
             conn.execute("DELETE FROM aip_task_brief_head WHERE org_id=%s AND project_id=%s AND task_id=%s", (*ORG.key, task_id))
-        conn.execute("DELETE FROM aip_evidence WHERE org_id=%s AND project_id=%s AND created_by=%s AND source_ref='real-order'", (*ORG.key, ACTOR))
+        # Base Evidence is append-only from W4-01 onward. Test rows use unique
+        # identifiers, so cleanup must preserve them instead of bypassing the
+        # production immutability contract.
         for task_id in task_ids:
             conn.execute("DELETE FROM aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s", (*ORG.key, task_id))
         conn.commit()
