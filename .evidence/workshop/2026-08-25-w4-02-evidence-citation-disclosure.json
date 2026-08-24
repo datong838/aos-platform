@@ -1,0 +1,60 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "task_id": "workshop-w4-02-evidence-citation-disclosure-20260825",
+  "wave": "S4/W4-02",
+  "base_authority_revision": "AOS-000226",
+  "recorded_at": "2026-08-25T04:14:17+08:00",
+  "code_commit": "f37102333e6eed0874a429b3e9083f1153880b09",
+  "outcome": "W4_02_EVIDENCE_DISCLOSURE_CODE_BROWSER_GREEN_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "implementation": {
+    "server": [
+      "Evidence 专用 exact-ref 与受控 purpose 枚举",
+      "L1/L2/L3 purpose-level、marking、license、applicability、freshness、revoke 失败关闭",
+      "历史 allowed 决策读取时重新执行当前策略并拒绝过期 scoped ref",
+      "Citation、RedactionReceipt 与 decision hash 对齐"
+    ],
+    "workshop": [
+      "严格 Evidence disclosure SDK 与解析不变量",
+      "EvidenceBundleDrawer 逐条、逐层、显式申请；不预取、不批量升级、不下载 L3 正文",
+      "ProductionContractsPage 只从真实 Bundle exact refs 打开抽屉，贡献归因未知时不推断"
+    ]
+  },
+  "verification": {
+    "backend_focused": "5 passed, 7 known warnings",
+    "backend_cumulative": "27 passed, 18 known warnings",
+    "web_targeted": "37 passed",
+    "web_cumulative": "221 files, 2088 tests passed",
+    "typescript_and_production_build": "passed",
+    "python_compileall": "passed",
+    "openapi_inventory": "deterministic and current; 2580 paths, 2155 schemas",
+    "diff_check": "passed",
+    "formatter_note": "black is not installed in the repository virtual environment; no dependency was installed"
+  },
+  "browser_acceptance": {
+    "tool": "Codex built-in browser",
+    "tenant": "org-org/dev-project",
+    "route": "/aip/production-contracts",
+    "viewports": [
+      "1280x720",
+      "1440x900",
+      "1920x1080"
+    ],
+    "results": [
+      "page and main container have no horizontal overflow",
+      "refresh authority control has visible keyboard focus",
+      "console errors: 0",
+      "real authority returned zero EvidenceBundle rows, so the page kept an honest empty state and rendered zero disclosure buttons"
+    ],
+    "bounded_limitation": "The live tenant had no EvidenceBundle. Drawer interaction was therefore not fabricated in browser; strict SDK, component, and page integration tests cover allowed, blocked, stale, unknown, exact citation, and no-escalation behavior."
+  },
+  "safety": {
+    "real_business_data_mutated": false,
+    "live_migration_executed": false,
+    "release_or_provider_call": false,
+    "action_or_approval_executed": false,
+    "offline_queue_flushed": false,
+    "protected_untracked_scope_touched": false,
+    "release_status": "RED_NO_RELEASE"
+  },
+  "next_task": "W4-03"
+}
