@@ -1,0 +1,59 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w5-01-adapter-capability-contract-suite-20260825",
+  "wave": "W5-01",
+  "authorityBaseRevision": "AOS-000235",
+  "branch": "m1",
+  "outcome": "W5_01_ADAPTER_CAPABILITY_CONTRACT_SUITE_CODE_CONTROL_GREEN_NO_PRODUCTION_PUBLICATION_NO_EXTERNAL_EFFECT",
+  "implementation": {
+    "contracts": [
+      "immutable canonical-hash AdapterCapabilityRevision",
+      "typed exact revision refs",
+      "opaque AuthorizedAccountContext",
+      "strict AdapterInvocationEnvelope with recursive sensitive-field rejection",
+      "DryValidationReceipt and NormalizedUsageCandidate"
+    ],
+    "conformance": [
+      "deterministic sandbox and side-effect-free preflight",
+      "adapter and capability exact-ref drift checks",
+      "tenant/account/provider/purpose/marking checks",
+      "dry-validation fingerprint and readiness checks",
+      "provider status normalization and same-key idempotency replay",
+      "unknown reconciliation without automatic resend",
+      "usage provider-request binding"
+    ],
+    "compatibility": "legacy ActionAdapter execute/reconcile and name-based registry remain unchanged; conformant exact registry is additive and in-memory only"
+  },
+  "verification": {
+    "focused": "19 passed, 7 known warnings",
+    "actionCumulative": "84 passed, 7 known warnings",
+    "pythonCompileall": "passed",
+    "diffCheck": "passed",
+    "browserAcceptance": "not applicable because W5-01 adds no page or HTTP route"
+  },
+  "designConsistency": [
+    "Adapter remains a controlled runtime access asset below Atomic Skill and does not become a second Skill, Logic, Agent or Workshop authority",
+    "Workshop will consume exact contract, readiness and Receipt blockers rather than provider-specific branches",
+    "the code-control GREEN result does not imply production publication, account readiness or Action authorization"
+  ],
+  "sideEffectConservation": {
+    "providerInvocationCount": 0,
+    "realAccountResolutionCount": 0,
+    "taskRunCreatedCount": 0,
+    "agentRunCreatedCount": 0,
+    "actionOrHandoffCreatedCount": 0,
+    "approvalOrExecutionLeaseCreatedCount": 0,
+    "externalBusinessMutationCount": 0,
+    "liveMigrationAppliedCount": 0,
+    "releaseCount": 0
+  },
+  "remainingBlockers": [
+    "PRODUCTION_ADAPTER_PUBLICATION_AUTHORITY_UNAVAILABLE",
+    "AUTHORIZED_ACCOUNT_RESOLVER_UNAVAILABLE",
+    "ACTION_EXACT_JOINT_BINDING_INCOMPLETE",
+    "ACTION_BUDGET_POLICY_UNAVAILABLE",
+    "CANARY_EXPLICIT_AUTHORIZATION_REQUIRED"
+  ],
+  "nextTask": "W5-02_IMPACT_PREVIEW_EXACT_BINDING",
+  "recordedAt": "2026-08-25T07:30:00+08:00"
+}
