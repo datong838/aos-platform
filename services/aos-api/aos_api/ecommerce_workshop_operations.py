@@ -7,6 +7,10 @@ from datetime import UTC, datetime
 import hashlib
 
 from aos_api.aip_contracts import TenantContext
+from aos_api.ecommerce_aftersale_event_reader import (
+    EcommerceAftersaleEventReader,
+    EcommerceAftersaleEventReaderError,
+)
 from aos_api.ecommerce_data_authority import EcommerceDataAuthority
 from aos_api.ecommerce_data_authority_contracts import (
     EcommerceDataAuthorityDescriptor,
@@ -83,6 +87,7 @@ _READ_FAILED_CODES = {
     OperationsSliceId.INVENTORY: "INVENTORY_READ_FAILED_CLOSED",
     OperationsSliceId.SHIPMENTS: "SHIPMENTS_READ_FAILED_CLOSED",
     OperationsSliceId.PAYMENTS: "PAYMENTS_READ_FAILED_CLOSED",
+    OperationsSliceId.AFTERSALE_EVENTS: "AFTERSALE_EVENTS_READ_FAILED_CLOSED",
 }
 
 
@@ -97,12 +102,14 @@ class EcommerceWorkshopOperations:
         case_store: OperationAuthorityStore | None = None,
         object_reader: EcommerceOperationsObjectReader | None = None,
         inventory_reader: EcommerceInventoryReader | None = None,
+        aftersale_reader: EcommerceAftersaleEventReader | None = None,
     ) -> None:
         self._clock = clock or (lambda: datetime.now(UTC))
         self._data_authority = data_authority or EcommerceDataAuthority()
         self._case_store = case_store or OperationAuthorityStore()
         self._object_reader = object_reader or EcommerceOperationsObjectReader()
         self._inventory_reader = inventory_reader or EcommerceInventoryReader()
+        self._aftersale_reader = aftersale_reader or EcommerceAftersaleEventReader()
 
     def read(self, *, org_id: str, project_id: str) -> WorkshopOperationsViewEnvelope:
         evaluated_at = self._clock()
@@ -139,6 +146,17 @@ class EcommerceWorkshopOperations:
         except EcommerceInventoryReaderError:
             inventory = None
             inventory_error = True
+        aftersale_error = False
+        try:
+            aftersale_events = self._aftersale_reader.read(
+                org_id=org_id,
+                project_id=project_id,
+                cutoff=evaluated_at,
+                limit=50,
+            )
+        except EcommerceAftersaleEventReaderError:
+            aftersale_events = []
+            aftersale_error = True
         case_error: OperationAuthorityReadError | None = None
         try:
             operation_cases = self._case_store.list_cases(
@@ -172,6 +190,19 @@ class EcommerceWorkshopOperations:
                         evaluated_at=evaluated_at,
                         authority_refs=authority_refs,
                         count=len(inventory.items) if inventory is not None else 0,
+                    )
+                )
+                continue
+            if (
+                slice_id is OperationsSliceId.AFTERSALE_EVENTS
+                and not aftersale_error
+            ):
+                slices.append(
+                    self._ready_slice(
+                        slice_id=slice_id,
+                        evaluated_at=evaluated_at,
+                        authority_refs=authority_refs,
+                        count=len(aftersale_events),
                     )
                 )
                 continue

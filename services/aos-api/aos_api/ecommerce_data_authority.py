@@ -14,7 +14,8 @@ from aos_api.ecommerce_data_authority_contracts import (
 )
 
 
-_RECEIPT_ID = "d0-inventory-aftersales-authority-code-20260824"
+_INVENTORY_RECEIPT_ID = "d0-inventory-aftersales-authority-code-20260824"
+_AFTERSALE_RECEIPT_ID = "d0-aftersale-canonical-reader-code-20260824"
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,7 @@ class _SemanticAuthority:
     resource_type: str
     semantic_revision: int
     persistence_state: AuthorityPersistenceState
+    receipt_id: str
     fields: tuple[EcommerceAuthorityField, ...]
 
 
@@ -32,6 +34,7 @@ _AUTHORITIES = (
         resource_type="ProductSku",
         semantic_revision=1,
         persistence_state=AuthorityPersistenceState.EXISTING_ORIGINAL,
+        receipt_id=_INVENTORY_RECEIPT_ID,
         fields=(
             EcommerceAuthorityField(
                 name="stock", value_type="integer_string", required=False
@@ -50,8 +53,9 @@ _AUTHORITIES = (
     _SemanticAuthority(
         authority_id="aftersale.event",
         resource_type="AfterSalesEvent",
-        semantic_revision=1,
-        persistence_state=AuthorityPersistenceState.CONTRACT_ONLY,
+        semantic_revision=2,
+        persistence_state=AuthorityPersistenceState.EXISTING_ORIGINAL,
+        receipt_id=_AFTERSALE_RECEIPT_ID,
         fields=(
             EcommerceAuthorityField(name="eventId", value_type="string", required=True),
             EcommerceAuthorityField(name="orderRef", value_type="exact_ref", required=True),
@@ -98,7 +102,7 @@ class EcommerceDataAuthority:
                     resource_type=authority.resource_type,
                     semantic_revision=authority.semantic_revision,
                     persistence_state=authority.persistence_state,
-                    receipt_id=_RECEIPT_ID,
+                    receipt_id=authority.receipt_id,
                     fields=fields,
                     content_hash=content_hash,
                     scope_binding_hash=authority_scope_binding_hash(

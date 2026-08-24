@@ -169,19 +169,28 @@ def test_transaction_and_inventory_slices_are_ready_from_bounded_readers() -> No
         def list_cases(self, scope, *, limit=50):
             return []
 
+    class AftersaleReader:
+        def read(self, *, cutoff, limit, **scope):
+            assert cutoff == NOW
+            assert limit == 50
+            assert scope == {"org_id": "org-org", "project_id": "dev-project"}
+            return [object()]
+
     object_reader = ObjectReader()
     envelope = EcommerceWorkshopOperations(
         clock=lambda: NOW,
         object_reader=object_reader,  # type: ignore[arg-type]
         inventory_reader=InventoryReader(),  # type: ignore[arg-type]
+        aftersale_reader=AftersaleReader(),  # type: ignore[arg-type]
         case_store=EmptyCaseStore(),  # type: ignore[arg-type]
     ).read(org_id="org-org", project_id="dev-project")
 
     assert [item.status.value for item in envelope.slices[:5]] == ["ready"] * 5
     assert [item.count_ledger.attached for item in envelope.slices[:5]] == [1] * 5
-    assert envelope.slices[5].status.value == "blocked"
+    assert envelope.slices[5].status.value == "ready"
+    assert envelope.slices[5].count_ledger.attached == 1
     assert envelope.slices[6].status.value == "ready"
-    assert envelope.page.count == 5
+    assert envelope.page.count == 6
     assert [call[0] for call in object_reader.calls] == [
         "Order",
         "OrderLine",
@@ -205,13 +214,55 @@ def test_one_transaction_reader_failure_blocks_only_its_slice() -> None:
         def list_cases(self, scope, *, limit=50):
             return []
 
+    class AftersaleReader:
+        def read(self, **kwargs):
+            return []
+
     envelope = EcommerceWorkshopOperations(
         clock=lambda: NOW,
         object_reader=ObjectReader(),  # type: ignore[arg-type]
         inventory_reader=InventoryReader(),  # type: ignore[arg-type]
+        aftersale_reader=AftersaleReader(),  # type: ignore[arg-type]
         case_store=EmptyCaseStore(),  # type: ignore[arg-type]
     ).read(org_id="org-org", project_id="dev-project")
 
     assert envelope.slices[4].status.value == "blocked"
     assert envelope.slices[4].blockers[0].code == "PAYMENTS_READ_FAILED_CLOSED"
     assert all(item.status.value == "ready" for item in envelope.slices[:4])
+
+
+def test_aftersale_reader_failure_blocks_only_aftersale_slice() -> None:
+    class ObjectReader:
+        def read(self, **kwargs):
+            return []
+
+    class InventoryReader:
+        def read(self, **kwargs):
+            return SimpleNamespace(items=[])
+
+    class AftersaleReader:
+        def read(self, **kwargs):
+            from aos_api.ecommerce_aftersale_event_reader import (
+                EcommerceAftersaleEventReaderError,
+            )
+
+            raise EcommerceAftersaleEventReaderError("failed closed")
+
+    class EmptyCaseStore:
+        def list_cases(self, scope, *, limit=50):
+            return []
+
+    envelope = EcommerceWorkshopOperations(
+        clock=lambda: NOW,
+        object_reader=ObjectReader(),  # type: ignore[arg-type]
+        inventory_reader=InventoryReader(),  # type: ignore[arg-type]
+        aftersale_reader=AftersaleReader(),  # type: ignore[arg-type]
+        case_store=EmptyCaseStore(),  # type: ignore[arg-type]
+    ).read(org_id="org-org", project_id="dev-project")
+
+    assert envelope.slices[5].status.value == "blocked"
+    assert envelope.slices[5].blockers[0].code == (
+        "AFTERSALE_EVENTS_READ_FAILED_CLOSED"
+    )
+    assert all(item.status.value == "ready" for item in envelope.slices[:5])
+    assert envelope.slices[6].status.value == "ready"

@@ -61,9 +61,14 @@ def test_operations_shell_is_tenant_bound_and_structurally_blocked() -> None:
         def list_cases(self, scope, *, limit=50):
             return []
 
+    class AftersaleReader:
+        def read(self, **kwargs):
+            return []
+
     operations = EcommerceWorkshopOperations(
         object_reader=ObjectReader(),  # type: ignore[arg-type]
         inventory_reader=InventoryReader(),  # type: ignore[arg-type]
+        aftersale_reader=AftersaleReader(),  # type: ignore[arg-type]
         case_store=CaseStore(),  # type: ignore[arg-type]
     )
     catalog = FakeCatalog()
@@ -89,7 +94,7 @@ def test_operations_shell_is_tenant_bound_and_structurally_blocked() -> None:
         "ready",
         "ready",
         "ready",
-        "blocked",
+        "ready",
         "ready",
     ]
     inventory = body["slices"][2]
@@ -98,7 +103,10 @@ def test_operations_shell_is_tenant_bound_and_structurally_blocked() -> None:
     assert aftersales["authorityRefs"][0]["resourceType"] == "AfterSalesEvent"
     assert inventory["blockers"] == []
     assert inventory["authorityRefs"][0]["receiptId"].startswith("d0-")
-    assert aftersales["blockers"][0]["code"] == "AFTERSALE_EVENTS_READER_NOT_WIRED"
+    assert aftersales["blockers"] == []
+    assert aftersales["authorityRefs"][0]["receiptId"] == (
+        "d0-aftersale-canonical-reader-code-20260824"
+    )
     assert catalog.calls == [
         {
             "module_id": "ecommerce.operations",

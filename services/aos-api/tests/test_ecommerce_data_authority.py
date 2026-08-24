@@ -38,7 +38,9 @@ def test_d0_descriptors_freeze_exact_semantics_without_business_payload() -> Non
         | OPTIONAL_PROPERTIES["ProductSku"]
         | DERIVED_PROPERTIES["ProductSku"]
     )
-    assert aftersales.persistence_state == "contract_only"
+    assert aftersales.semantic_revision == 2
+    assert aftersales.persistence_state == "existing_original"
+    assert aftersales.receipt_id == "d0-aftersale-canonical-reader-code-20260824"
     assert all(
         forbidden not in field.name.lower()
         for field in aftersales.fields
