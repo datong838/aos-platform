@@ -19,7 +19,9 @@ from test_w2d_store import SCOPE, HASHES, _seed
 
 def test_freeze_production_context_cas_and_rejects_drifted_bundle() -> None:
     preview_body, _ = _seed()
-    store = AipProductionContractStore()
+    store = AipProductionContractStore(
+        production_profile_resolver=lambda scope, ref: True
+    )
     key = f"ctx-{uuid.uuid4().hex}"
     req = FreezeProductionContextRequest(
         task_id=preview_body.task_id,
@@ -77,5 +79,73 @@ def test_freeze_rejects_revoked_bundle() -> None:
                 evidence_bundle_ref=preview_body.evidence_bundle_ref,
                 eval_contract_ref=preview_body.eval_contract_ref,
                 responsibility_plan_ref=preview_body.responsibility_plan_ref,
+            ),
+        )
+
+
+def test_freeze_retains_exact_production_profile_provenance() -> None:
+    preview_body, _ = _seed()
+    store = AipProductionContractStore(
+        production_profile_resolver=lambda scope, ref: True
+    )
+    profile_ref = ExactRevisionRef(
+        resource_type="ProductionProfileRevision",
+        resource_id=(
+            "bundle://aos/solution.ecommerce.growth@1.4.0/"
+            "content/production-profiles/ecommerce.content-campaign.json"
+        ),
+        revision=7,
+        content_hash="9" * 64,
+    )
+    result = store.freeze_production_context(
+        SCOPE,
+        "test:w3-04",
+        f"ctx-profile-{uuid.uuid4().hex}",
+        FreezeProductionContextRequest(
+            task_id=preview_body.task_id,
+            brief_ref=preview_body.brief_ref,
+            evidence_bundle_ref=preview_body.evidence_bundle_ref,
+            eval_contract_ref=preview_body.eval_contract_ref,
+            responsibility_plan_ref=preview_body.responsibility_plan_ref,
+            production_profile_ref=profile_ref,
+        ),
+    )
+    assert result.production_profile_ref == profile_ref
+    assert result.dependency_snapshot[-1] == {
+        "resourceType": "ProductionProfileRevision",
+        "resourceId": profile_ref.resource_id,
+        "expectedRevision": profile_ref.revision,
+        "expectedHash": profile_ref.content_hash,
+        "authority": "active-installation",
+        "resolved": True,
+    }
+
+
+def test_freeze_rejects_unresolved_production_profile() -> None:
+    preview_body, _ = _seed()
+    profile_ref = ExactRevisionRef(
+        resource_type="ProductionProfileRevision",
+        resource_id="bundle://aos/example@1.0.0/profile.json",
+        revision=1,
+        content_hash="8" * 64,
+    )
+    store = AipProductionContractStore(
+        production_profile_resolver=lambda scope, ref: False
+    )
+    with pytest.raises(
+        ProductionContractDependencyBlocked,
+        match="PRODUCTION_PROFILE_MISSING_OR_DRIFTED",
+    ):
+        store.freeze_production_context(
+            SCOPE,
+            "test:w3-04",
+            f"ctx-profile-blocked-{uuid.uuid4().hex}",
+            FreezeProductionContextRequest(
+                task_id=preview_body.task_id,
+                brief_ref=preview_body.brief_ref,
+                evidence_bundle_ref=preview_body.evidence_bundle_ref,
+                eval_contract_ref=preview_body.eval_contract_ref,
+                responsibility_plan_ref=preview_body.responsibility_plan_ref,
+                production_profile_ref=profile_ref,
             ),
         )

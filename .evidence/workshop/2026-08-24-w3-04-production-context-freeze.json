@@ -1,0 +1,59 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w3-04-production-context-freeze-20260824",
+  "baseRevision": "AOS-000214",
+  "result": "GREEN_CODE_CONTROL_NO_RELEASE_MIGRATION_NOT_LIVE_APPLIED",
+  "scope": [
+    "retain exact ProductionProfileRevision provenance on ProductionContext",
+    "resolve Profile only through the tenant active installation",
+    "server-owned PreparationReceipt exact ref and Brief lineage validation",
+    "Workshop ecommerceWorkshopFreeze typed adapter over the canonical L0 authority"
+  ],
+  "verification": {
+    "focusedContractsStoreServiceApiMigration": "34 passed; 2 subtests passed",
+    "workshopW3W4AipAdjacentCumulative": "176 passed; 2 subtests passed",
+    "openapi": "2570 paths; 2123 schemas; 4338 operations",
+    "routerManifest": "deterministic runtime inventory GREEN",
+    "alembicHeads": "w3_014 (head)",
+    "openapiDeterminism": "GREEN",
+    "pythonCompile": "GREEN",
+    "diffCheck": "GREEN",
+    "browser": {
+      "surface": "Codex built-in browser",
+      "route": "/workshop",
+      "viewportWidth": 1280,
+      "documentScrollWidth": 1280,
+      "h1Count": 1,
+      "activeInstallationCount": 0,
+      "enabledFreezeOrEvidenceOrProductionActionCount": 0,
+      "result": "aos-api failure remained explicit; no W3-04 command was presented as released or executable"
+    }
+  },
+  "sideEffectConservation": {
+    "providerInvocationCount": 0,
+    "providerFee": 0,
+    "taskRunCreatedCount": 0,
+    "agentRunCreatedCount": 0,
+    "actionOrHandoffCreatedCount": 0,
+    "approvalOrExecutionLeaseCreatedCount": 0,
+    "externalBusinessMutationCount": 0,
+    "liveMigrationAppliedCount": 0
+  },
+  "consistencyReview": [
+    "the L0 ProductionContext remains the single four-contract freeze authority",
+    "productionProfileRef is additive and nullable for historical Context compatibility",
+    "new Profile refs fail closed unless the active tenant installation resolves the exact artifact",
+    "Workshop derives taskId, frozen Brief and PreparationReceipt from canonical server reads",
+    "EvidenceBundle must preserve the prepared Brief resource and content hash",
+    "ready ProductionContext only permits the next compile intent and does not authorize start"
+  ],
+  "negativeBoundaries": [
+    "no live database migration",
+    "no real tenant business-data mutation",
+    "no Profile, Bundle, Logic or Module publication or installation",
+    "no Provider call, Run, Action, Handoff, Approval or execution Lease",
+    "no release authorization"
+  ],
+  "nextTask": "W3-05_STAGED_COMPILE_PREVIEW_APPROVAL_START",
+  "observedAt": "2026-08-24T23:29:16+08:00"
+}

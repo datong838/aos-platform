@@ -45,11 +45,15 @@ from aos_api.aip_task_store import (
     AipTaskVersionConflict,
 )
 from aos_api.db import connect as db_connect
+from aos_api.aip_responsibility_template_authority import (
+    InstalledProductionProfileResolver,
+)
 from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
 ResponsibilityTemplateResolver = Callable[[TenantScope, ExactRevisionRef], bool]
 StageTemplateSourceResolver = Callable[[TenantScope, ExactRevisionRef], bool]
+ProductionProfileResolver = Callable[[TenantScope, ExactRevisionRef], bool]
 
 
 class ProductionContractError(RuntimeError):
@@ -113,11 +117,15 @@ class AipProductionContractStore:
         *,
         responsibility_template_resolver: ResponsibilityTemplateResolver | None = None,
         stage_template_source_resolver: StageTemplateSourceResolver | None = None,
+        production_profile_resolver: ProductionProfileResolver | None = None,
         task_store: AipTaskStore | None = None,
     ) -> None:
         self._connect_factory = connect_factory or db_connect
         self._responsibility_template_resolver = responsibility_template_resolver
         self._stage_template_source_resolver = stage_template_source_resolver
+        self._production_profile_resolver = (
+            production_profile_resolver or InstalledProductionProfileResolver().resolve
+        )
         self._task_store = task_store or AipTaskStore(self._connect_factory)
 
     def create_eval_contract(self, scope: TenantScope, actor: str, key: str,
@@ -2148,6 +2156,28 @@ class AipProductionContractStore:
             self._assert_context_responsibility(
                 conn, scope, body.responsibility_plan_ref, snapshot, blockers
             )
+            if body.production_profile_ref is not None:
+                profile_resolved = self._production_profile_resolver(
+                    scope, body.production_profile_ref
+                )
+                snapshot.append(
+                    {
+                        "resourceType": body.production_profile_ref.resource_type,
+                        "resourceId": body.production_profile_ref.resource_id,
+                        "expectedRevision": body.production_profile_ref.revision,
+                        "expectedHash": body.production_profile_ref.content_hash,
+                        "authority": "active-installation",
+                        "resolved": profile_resolved,
+                    }
+                )
+                if not profile_resolved:
+                    blockers.append(
+                        ContractBlocker(
+                            code="PRODUCTION_PROFILE_MISSING_OR_DRIFTED",
+                            message="ProductionProfile exact ref 未由 active installation 解析",
+                            resource_ref=body.production_profile_ref,
+                        )
+                    )
             if blockers:
                 raise ProductionContractDependencyBlocked(
                     blockers[0].code + ":" + blockers[0].message
@@ -2161,6 +2191,7 @@ class AipProductionContractStore:
                     "evidenceBundleRef": payload["evidenceBundleRef"],
                     "evalContractRef": payload["evalContractRef"],
                     "responsibilityPlanRef": payload["responsibilityPlanRef"],
+                    "productionProfileRef": payload.get("productionProfileRef"),
                     "preparationRef": payload.get("preparationRef"),
                     "profile": body.profile,
                     "dependencySnapshotHash": dependency_snapshot_hash,
@@ -2170,10 +2201,10 @@ class AipProductionContractStore:
                 """INSERT INTO aip_production_context_revision
                    (org_id,project_id,context_id,revision,task_id,brief_ref,
                     evidence_bundle_ref,eval_contract_ref,responsibility_plan_ref,
-                    preparation_ref,profile,dependency_snapshot,dependency_snapshot_hash,
+                    production_profile_ref,preparation_ref,profile,dependency_snapshot,dependency_snapshot_hash,
                     content_hash,lifecycle,readiness,blockers,created_by)
                    VALUES(%s,%s,%s,1,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
-                          %s::jsonb,%s,%s::jsonb,%s,%s,'frozen','ready','[]'::jsonb,%s)""",
+                          %s::jsonb,%s::jsonb,%s,%s::jsonb,%s,%s,'frozen','ready','[]'::jsonb,%s)""",
                 (
                     *scope.key,
                     context_id,
@@ -2182,6 +2213,9 @@ class AipProductionContractStore:
                     self._json(payload["evidenceBundleRef"]),
                     self._json(payload["evalContractRef"]),
                     self._json(payload["responsibilityPlanRef"]),
+                    None
+                    if body.production_profile_ref is None
+                    else self._json(payload["productionProfileRef"]),
                     None
                     if body.preparation_ref is None
                     else self._json(payload["preparationRef"]),
@@ -2265,6 +2299,11 @@ class AipProductionContractStore:
             ),
             responsibility_plan_ref=ExactRevisionRef.model_validate(
                 self._load(row["responsibility_plan_ref"])
+            ),
+            production_profile_ref=None
+            if self._load(row["production_profile_ref"]) is None
+            else ExactRevisionRef.model_validate(
+                self._load(row["production_profile_ref"])
             ),
             preparation_ref=None
             if preparation is None

@@ -309,6 +309,10 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/modules/{module_id}/commands/build-evidence",
             "post",
         ),
+        "ecommerceWorkshopFreeze": (
+            "/v1/ecommerce-workshop/modules/{module_id}/commands/freeze",
+            "post",
+        ),
         "ecommerceWorkshopSourceReadinessGet": (
             "/v1/ecommerce-workshop/source-readiness",
             "get",

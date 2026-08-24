@@ -36,6 +36,16 @@ from aos_api.ecommerce_workshop_evidence_build_service import (
     WorkshopEvidenceBuildRequest,
     WorkshopEvidenceBuildResponse,
 )
+from aos_api.ecommerce_workshop_freeze_contracts import (
+    WorkshopFreezeRequest,
+    WorkshopFreezeResponse,
+)
+from aos_api.ecommerce_workshop_freeze_service import (
+    EcommerceWorkshopFreezeService,
+    WorkshopFreezeBlocked,
+    WorkshopFreezeConflict,
+    WorkshopFreezeError,
+)
 from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
 from aos_api.ecommerce_workshop_analyst_contracts import WorkshopAnalystViewEnvelope
 from aos_api.ecommerce_workshop_content_campaign import (
@@ -181,6 +191,11 @@ def get_ecommerce_workshop_evidence_build_service() -> EcommerceWorkshopEvidence
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_freeze_service() -> EcommerceWorkshopFreezeService:
+    return EcommerceWorkshopFreezeService()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_content_campaign() -> EcommerceWorkshopContentCampaign:
     return EcommerceWorkshopContentCampaign()
 
@@ -255,6 +270,10 @@ PrepareServiceDependency = Annotated[
 EvidenceBuildServiceDependency = Annotated[
     EcommerceWorkshopEvidenceBuildService,
     Depends(get_ecommerce_workshop_evidence_build_service),
+]
+FreezeServiceDependency = Annotated[
+    EcommerceWorkshopFreezeService,
+    Depends(get_ecommerce_workshop_freeze_service),
 ]
 ContentCampaignDependency = Annotated[
     EcommerceWorkshopContentCampaign,
@@ -332,6 +351,14 @@ def _map_evidence_build_error(exc: WorkshopEvidenceBuildError) -> ApiError:
     if isinstance(exc, WorkshopEvidenceBuildBlocked):
         return ApiError(code=exc.code, message=str(exc), status_code=422)
     return ApiError(code=exc.code, message="Workshop evidence build failed closed", status_code=503)
+
+
+def _map_freeze_error(exc: WorkshopFreezeError) -> ApiError:
+    if isinstance(exc, WorkshopFreezeConflict):
+        return ApiError(code=exc.code, message=str(exc), status_code=409)
+    if isinstance(exc, WorkshopFreezeBlocked):
+        return ApiError(code=exc.code, message=str(exc), status_code=422)
+    return ApiError(code=exc.code, message="Workshop freeze failed closed", status_code=503)
 
 
 def _map_operation_command_error(exc: Exception) -> ApiError:
@@ -610,6 +637,33 @@ def build_ecommerce_workshop_evidence(
         )
     except WorkshopEvidenceBuildError as exc:
         raise _map_evidence_build_error(exc) from exc
+
+
+@router.post(
+    "/modules/{module_id}/commands/freeze",
+    response_model=WorkshopFreezeResponse,
+    operation_id="ecommerceWorkshopFreeze",
+    responses=_ERRORS,
+)
+def freeze_ecommerce_workshop_production_context(
+    request: Request,
+    module_id: ModuleIdPath,
+    body: WorkshopFreezeRequest,
+    principal: PrincipalDependency,
+    service: FreezeServiceDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> WorkshopFreezeResponse:
+    _reject_query_parameters(request)
+    try:
+        return service.freeze(
+            TenantScope(principal.org_id, principal.project_id),
+            actor=principal.subject,
+            module_id=module_id,
+            idempotency_key=_prepare_idempotency(idempotency_key),
+            body=body,
+        )
+    except WorkshopFreezeError as exc:
+        raise _map_freeze_error(exc) from exc
 
 
 @router.get(

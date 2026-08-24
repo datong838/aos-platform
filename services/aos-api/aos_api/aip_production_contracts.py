@@ -688,6 +688,7 @@ class FreezeProductionContextRequest(AipContractModel):
     evidence_bundle_ref: ExactRevisionRef
     eval_contract_ref: ExactRevisionRef
     responsibility_plan_ref: ExactRevisionRef
+    production_profile_ref: ExactRevisionRef | None = None
     profile: str = Field(default="default", min_length=1, max_length=120)
     preparation_ref: ExactRevisionRef | None = None
 
@@ -708,6 +709,13 @@ class FreezeProductionContextRequest(AipContractModel):
             and self.preparation_ref.resource_type != "PreparationReceipt"
         ):
             raise ValueError("preparationRef must reference PreparationReceipt")
+        if (
+            self.production_profile_ref is not None
+            and self.production_profile_ref.resource_type != "ProductionProfileRevision"
+        ):
+            raise ValueError(
+                "productionProfileRef must reference ProductionProfileRevision"
+            )
         return self
 
 
@@ -720,6 +728,7 @@ class ProductionContextRevision(AipContractModel):
     evidence_bundle_ref: ExactRevisionRef
     eval_contract_ref: ExactRevisionRef
     responsibility_plan_ref: ExactRevisionRef
+    production_profile_ref: ExactRevisionRef | None = None
     preparation_ref: ExactRevisionRef | None
     profile: str
     dependency_snapshot: list[dict[str, Any]]
