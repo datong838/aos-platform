@@ -1,0 +1,62 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w4-08-cross-capability-cumulative-gate-20260825",
+  "wave": "W4-08",
+  "authorityBaseRevision": "AOS-000233",
+  "branch": "m1",
+  "outcome": "W4_08_CROSS_CAPABILITY_CUMULATIVE_CODE_BROWSER_GREEN_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "implementation": {
+    "productCodeChanged": false,
+    "testBaselineCommit": "3462edebaeb193e5a3a7f14f35d3f73ccecf6edf",
+    "remediation": "W4-07 added four read-only async-job runtime routes but the deterministic runtime manifest baseline remained at 4362/2580. The cumulative gate corrected only the expected runtime count, hash and OpenAPI path count to 4366/2583.",
+    "authorityConservation": [
+      "Evidence, Eval, Review, Memory, SavedExploration, ResearchJob, QueryJob and KnowledgePipelineRun remain separately authoritative",
+      "Workshop consumes Atomic Skill, LogicRevision and AgentInstance refs only when exact server facts exist",
+      "no aggregate write Store, duplicate Skill/Logic/Agent authority or command state machine was introduced"
+    ]
+  },
+  "prerequisites": [
+    {"wave": "W4-01", "taskId": "workshop-w4-01-early-evidence-build-20260824", "commits": ["6caff2d", "21ec9dc"], "evidence": ".evidence/workshop/2026-08-24-w4-01-early-evidence-build.json"},
+    {"wave": "W4-02", "taskId": "workshop-w4-02-evidence-citation-disclosure-20260825", "commit": "f37102333e6eed0874a429b3e9083f1153880b09", "evidence": ".evidence/workshop/2026-08-25-w4-02-evidence-citation-disclosure.json"},
+    {"wave": "W4-03", "taskId": "workshop-w4-03-eval-exact-binding-diff-run-20260825", "commit": "b6678dd0bc3824e34ae2c9878f56d3126e58e267", "evidence": ".evidence/workshop/2026-08-25-w4-03-eval-contract-lineage.json"},
+    {"wave": "W4-04", "taskId": "workshop-w4-04-review-return-attempt-lineage-20260825", "commit": "f7ba330f333f2ea86c0977425cab31d1e9a87b81", "evidence": ".evidence/workshop/2026-08-25-w4-04-review-return-lineage.json"},
+    {"wave": "W4-05", "taskId": "workshop-w4-05-knowledge-memory-governance-20260825", "commit": "70b9a19b143588e6d8915b06106e4ee70464ec81", "evidence": ".evidence/workshop/2026-08-25-w4-05-knowledge-memory-governance.json"},
+    {"wave": "W4-06", "taskId": "workshop-w4-06-saved-exploration-lifecycle-20260825", "commit": "515d20b6415e8e22f535069bbe47216bdbb29cba", "evidence": ".evidence/workshop/2026-08-25-w4-06-saved-exploration-lifecycle.json"},
+    {"wave": "W4-07", "taskId": "workshop-w4-07-query-research-job-lifecycle-20260825", "commit": "fe0a8da0642ba1a57373099d09e093e087f954c0", "evidence": ".evidence/workshop/2026-08-25-w4-07-query-research-job-lifecycle.json"}
+  ],
+  "verification": {
+    "backendFocusedCumulative": "53 passed, 7 known warnings",
+    "webFocusedCumulative": "11 files, 98 tests passed",
+    "webFull": "223 files, 2102 tests passed",
+    "webBuild": "TypeScript and Vite production build passed",
+    "openapiAndRouter": "21 passed, 2 subtests passed; runtime 4366 routes; 2583 OpenAPI paths; deterministic sha256 e4ff3c0d49cb7794123724094df85ec2034975b1f4e4481409d52a18b919b547",
+    "pythonCompileall": "passed",
+    "alembicHeads": "single head w4_003",
+    "diffCheck": "passed"
+  },
+  "browser": {
+    "surface": "Codex built-in browser",
+    "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+    "origin": "http://127.0.0.1:5175",
+    "fixtureBoundary": "local deterministic fixture validates UI state, refresh/deep-link and fail-closed behavior only; it is not production operational evidence",
+    "journeys": [
+      {"route": "/aip/production-contracts", "result": "unavailable authority remained explicit Not Found; no fabricated Evidence or Eval facts"},
+      {"route": "/workshop/task-cockpit", "result": "visual fixture stayed degraded, SourceReadiness blocked and missing run detail failed closed rather than producing empty success"},
+      {"route": "/aip/memory-governance?skillId=skill.demo&logicRevisionRef=logic.demo%401&agentInstanceId=agent.demo", "result": "authority Not Found stayed failed with zero candidate, memory and pipeline rows; no example knowledge was injected"},
+      {"route": "/workshop/graph?shareRef=opaque_share_ref_1234567890", "result": "active exact share restored revision 3 before and after refresh; payload hash drift removed the shared exploration and displayed an exact-ref mismatch"},
+      {"route": "/workshop/analyst", "result": "ResearchJob partial projection displayed exact authority and Receipt counts; strict drift removed the job and displayed read failure without auto-retry, task creation or Provider invocation"}
+    ]
+  },
+  "sideEffectConservation": {
+    "providerInvocationCount": 0,
+    "taskRunCreatedCount": 0,
+    "agentRunCreatedCount": 0,
+    "actionOrHandoffCreatedCount": 0,
+    "approvalOrExecutionLeaseCreatedCount": 0,
+    "externalBusinessMutationCount": 0,
+    "liveMigrationAppliedCount": 0,
+    "releaseCount": 0
+  },
+  "nextTask": "W5-01_ACTION_RISK_MATRIX_AND_CONTROLLED_ACTION_ENTRY",
+  "recordedAt": "2026-08-25T06:55:00+08:00"
+}
