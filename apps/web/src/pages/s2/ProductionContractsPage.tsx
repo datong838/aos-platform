@@ -19,6 +19,7 @@ import {
 import { aipActionsSdk, type ActionProposalList } from "../../api/aipActions";
 import { apiGet } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
+import { BlockerList as ProductionBlockerList } from "../../components/workshop/production";
 import { actionDisplayName, businessDisplayName, capabilityDisplayName, contractSectionDisplayName, statusDisplayName } from "../../lib/aipChineseLabels";
 
 type AuthorityState = {
@@ -42,15 +43,10 @@ const impactLabels: Record<string,string>={objectScope:"对象范围",channelSco
 
 function Blockers({ items }: { items: ContractBlocker[] }) {
   if (!items.length) return null;
-  return <ul aria-label="阻断原因" style={{ margin: "8px 0 0", paddingLeft: 20 }}>{items.map(item => {
+  return <ProductionBlockerList items={items.map(item => {
     const action = blockerAction(item.code);
-    return <li key={`${item.code}:${item.message}`} style={{ marginBottom: 10 }}>
-      <strong>{contractBusinessText(item.message)}</strong><br />
-      <small>处理负责人：{action.owner} · 证据到期：当前记录未提供</small><br />
-      <a href={action.href}>{action.label} →</a>
-      <details><summary>技术状态码（审计用）</summary><code>{item.code}</code></details>
-    </li>;
-  })}</ul>;
+    return { code: item.code, message: contractBusinessText(item.message), owner: action.owner, requiredAction: action.label, cutoffAt: null, href: action.href };
+  })} />;
 }
 function blockerAction(code: string): { owner: string; href: string; label: string } {
   if (/ROUTE|PROVIDER|MODEL|HEALTH|CAPACITY|PRICE/i.test(code)) return { owner: "模型与路由负责人", href: "/aip/model-runtime", label: "检查模型运行准备" };

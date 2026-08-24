@@ -1,0 +1,6 @@
+import { IntentButton, ProductionFrame } from "./primitives";
+import type { ProductionComponentBase, ProductionExactRef, ProductionStage } from "./types";
+
+type Intent = "inspect" | "pause" | "return";
+export type StageTimelineProps = ProductionComponentBase<Intent> & { planRef: ProductionExactRef; stages: ProductionStage[] };
+export function StageTimeline(props: StageTimelineProps) { return <ProductionFrame model={props}><ol className="production-timeline" aria-label="生产阶段时间线">{props.stages.map((stage) => <li key={stage.stageId}><strong>{stage.title}</strong><span>{stage.state} · {stage.assignee ?? "assignee unknown"}</span></li>)}</ol><table className="production-sr-table"><caption>生产阶段时间线文本替代</caption><thead><tr><th>阶段</th><th>状态</th><th>执行者</th></tr></thead><tbody>{props.stages.map((stage) => <tr key={stage.stageId}><th scope="row">{stage.title}</th><td>{stage.state}</td><td>{stage.assignee ?? "unknown"}</td></tr>)}</tbody></table><div className="production-actions">{(["inspect", "pause", "return"] as const).map((kind) => <IntentButton key={kind} kind={kind} subjectRef={props.planRef} allowed={props.allowedIntents?.includes(kind) ?? false} onIntent={props.onIntent}>{kind === "inspect" ? "查看阶段" : kind === "pause" ? "暂停意图" : "退回意图"}</IntentButton>)}</div></ProductionFrame>; }

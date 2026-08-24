@@ -1,0 +1,40 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "task_id": "workshop-w3-09-common-production-ui-20260825",
+  "base_revision": "AOS-000220",
+  "branch": "m1",
+  "base_commit": "879d815",
+  "recorded_at": "2026-08-25T01:43:00+08:00",
+  "result": "CODE_BROWSER_GREEN_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "implemented": [
+    "single public workshop production package with nine named components and five shared authority primitives",
+    "nine distinct UI states with unknown never coerced to zero and focusable blocked commands",
+    "atomic Skill to Logic to coworker to Workshop contribution lineage on every component frame",
+    "typed intent callbacks with zero SDK Store idempotency key or browser persistence ownership",
+    "Drawer and Dialog initial focus focus loop Escape close and trigger focus return",
+    "Timeline and Diff accessible table or text alternatives plus responsive and reduced-motion styles",
+    "ProductionContractsPage reuses the common BlockerList without moving page orchestration into components"
+  ],
+  "verification": {
+    "frontend_focused": "24 passed",
+    "frontend_cumulative": "221 files / 2084 tests passed",
+    "web_build": "GREEN",
+    "forbidden_component_dependencies": "0 SDK client localStorage sessionStorage randomUUID references",
+    "browser": "built-in browser at 1280x720; /aip/production-contracts has one H1 and one main, explicit API unavailable failure state, no horizontal overflow, no command clicked"
+  },
+  "side_effects": {
+    "migration_applied": false,
+    "release_performed": false,
+    "provider_called": false,
+    "agent_run_started": false,
+    "action_executed": false,
+    "approval_decided": false,
+    "handoff_issued": false,
+    "business_data_mutated": false
+  },
+  "residual_risks": [
+    "the built-in browser viewport is fixed at 1280 in this environment; responsive 1440 and 1920 behavior is covered by CSS and build but is not claimed as a live browser matrix",
+    "runtime API was unavailable, so positive canonical DTO rendering and interaction are covered by component tests while browser evidence covers visual fail-closed behavior",
+    "typed intent callbacks remain disabled unless a page orchestrator receives server command readiness"
+  ]
+}
