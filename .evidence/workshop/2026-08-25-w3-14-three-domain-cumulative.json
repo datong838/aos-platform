@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "aos.workshop.cumulative-evidence/v1",
+  "taskId": "workshop-w3-14-three-domain-cumulative-gate-20260825",
+  "wave": "W3-14",
+  "baseRevision": "AOS-000225",
+  "outcome": "CUMULATIVE_CODE_BROWSER_GREEN_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "releaseIdentity": {
+    "id": "w3:85803d6b797a9cb601bf48559f1b00cc954e0f728fb6fe8f4810a04cf747b33a",
+    "gitCommit": "99716c56e9d3741cb2a4d12f267113b9792a4eb2",
+    "appRevision": "m1@99716c5",
+    "schemaHash": "sha256:75e3ef15ef7aa42da48951e304705a22bde393e6aebfeffdcb94a16055872ec5",
+    "openapiHash": "sha256:91bd691f3137ba58395004e43519090f39c0f7d179271a6f0c31b3c66a686835",
+    "sdkHash": "sha256:1b65758d69b45a1df13c45461dfaea6684c598e8c78b9cbeb1ed08c4cc303cb8",
+    "webBuildHash": "sha256:013d1ae1f1cb56a2eea643a57357cdccee6820a83d19e6abbeaf7575906a2bd9",
+    "bundleHash": "sha256:1ee27017eaddf026a888d688d33adb3a77921fb5e441f8bd73c2267deab18589",
+    "migrationHead": "w3_018",
+    "routeHash": "sha256:3ba404517ff40a7c56c6ffbfde94bdf8e52cbc9dfc1e00c17c9548dc9f698c90",
+    "cutoff": "2026-08-25T03:35:00+08:00"
+  },
+  "deliveryReceipts": {
+    "W3-10": "workshop-w3-10-common-orchestration-cumulative-20260825.json",
+    "W3-11": "workshop-w3-11-content-campaign-authority-20260825.json",
+    "W3-12": "workshop-w3-12-unified-operations-authority-20260825.json",
+    "W3-13": "workshop-w3-13-analyst-authority-20260825.json"
+  },
+  "ancestry": {
+    "W3-10": "e3089af5a5eb65d22c0a8c389fa470d0d73bdcd5 ancestor of release HEAD",
+    "W3-11": "b501febbd14f87e8a09145a95affa7c30607a24a ancestor of release HEAD",
+    "W3-12": "86785e29566a6d8b157afcab6ca3aef2c87dc60c ancestor of release HEAD",
+    "W3-13": "7138b83 ancestor of release HEAD"
+  },
+  "authorityOwners": {
+    "publicOrchestration": "aip.canonical",
+    "contentCampaign": "workshop.content_campaign",
+    "unifiedOperations": "workshop.operation_case",
+    "analyst": "workshop.analyst"
+  },
+  "gateEvaluation": {
+    "implementation": "aos_api.ecommerce_w3_cumulative_gate.evaluate_w3_cumulative_gate",
+    "result": "CUMULATIVE_CODE_BROWSER_GREEN_NO_RELEASE",
+    "axisCount": 7,
+    "receiptCount": 4,
+    "nextWaveAllowed": true,
+    "operationalReleaseGreen": false,
+    "focusedTests": "9 passed"
+  },
+  "axes": {
+    "contract": {
+      "status": "GREEN",
+      "evidence": "W3 current-HEAD cumulative 133 passed; strict Campaign, OperationCase and Analyst contracts plus canonical public orchestration; second authority owner rejected"
+    },
+    "store": {
+      "status": "GREEN",
+      "evidence": "tenant-bound CAS/idempotency/append-only store tests and w3_011/w3_012/w3_018 static RLS guards; no live migration applied"
+    },
+    "apiSdk": {
+      "status": "GREEN",
+      "evidence": "OpenAPI deterministic exporter PASS plus 13 contract tests; ecommerceWorkshop strict client included in exact sdkHash"
+    },
+    "web": {
+      "status": "GREEN",
+      "evidence": "Web full suite 775 suites and 2084 tests passed; TypeScript and Vite production build PASS"
+    },
+    "browser": {
+      "status": "GREEN",
+      "evidence": "built-in browser local formal HTTP: content-campaign, cockpit, operations and analyst at 1280x720, 1440x900 and 1920x1080; main/body overflow false; refresh recovery and visible keyboard outline; console error count 0"
+    },
+    "securityTenant": {
+      "status": "GREEN",
+      "evidence": "org-org/dev-project remains the positive tenant; dev-org/dev-project remains isolation-only; cross-tenant store tests and cumulative tenant-role rejection pass; browser did not switch tenant"
+    },
+    "recoveryReplay": {
+      "status": "GREEN",
+      "evidence": "CAS/idempotency, duplicate/unknown/cross-release/partial-release rejection, original-successor lineage and refresh recovery pass; no automatic replay or queue flush"
+    }
+  },
+  "verification": {
+    "backendFocused": "9 passed",
+    "backendW3Cumulative": "133 passed",
+    "webFull": "775 suites; 2084 tests passed",
+    "typescript": "PASS",
+    "viteBuild": "PASS",
+    "openapi": "deterministic exporter PASS; contract 13 passed",
+    "compileall": "PASS",
+    "alembic": "single head w3_018",
+    "diffCheck": "PASS",
+    "ruff": "NOT_RUN_TOOL_UNAVAILABLE"
+  },
+  "browser": {
+    "surface": "Codex built-in browser",
+    "tenant": "org-org/dev-project",
+    "routes": [
+      "/workshop/content-campaign",
+      "/workshop/cockpit",
+      "/workshop/operations",
+      "/workshop/analyst"
+    ],
+    "viewports": [
+      "1280x720 all four routes body/main overflow false",
+      "1440x900 all four routes body/main overflow false",
+      "1920x1080 all four routes body/main overflow false"
+    ],
+    "refreshRecovery": "all four route headings recovered after reload",
+    "keyboard": "menu control retained a visible 2px or greater focus outline on all four routes",
+    "consoleErrors": 0,
+    "writeActionsInvoked": 0,
+    "offlineQueue": "existing pending write count 1 observed and intentionally not flushed"
+  },
+  "runtimeTruth": {
+    "sourceReadiness": "current local page reports failed/stale sources",
+    "domainReaders": "content Campaign, OperationCase and Analyst positive authority read paths remain blocked/unknown at current data cutoff",
+    "interpretation": "the EvidencePack proves code/browser/security/recovery fail-closed behavior only; it is not operational or release GREEN"
+  },
+  "sideEffects": {
+    "liveMigrationApplied": false,
+    "releasePerformed": false,
+    "providerCalled": false,
+    "agentRunStarted": false,
+    "taskCreated": false,
+    "actionExecuted": false,
+    "approvalDecided": false,
+    "handoffIssued": false,
+    "businessDataMutated": false,
+    "offlineQueueFlushed": false
+  },
+  "nextTask": "S4/W4-02"
+}
