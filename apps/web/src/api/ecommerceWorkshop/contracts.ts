@@ -183,6 +183,18 @@ export type OperationsSlice = { sliceId: OperationsSliceId; status: OperationsSl
 export type OperationsPage = { limit: number; count: number; hasMore: boolean; nextCursor: string | null };
 export type OperationsViewResponse = { schemaVersion: typeof OPERATIONS_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: OperationsSlice[]; page: OperationsPage };
 
+export const CONTENT_CAMPAIGN_SCHEMA_VERSION = "aos.ecommerce-workshop.content-campaign-view/v1" as const;
+export type ContentCampaignSliceId = "plan" | "calendar" | "content";
+export type ContentCampaignAuthorityRef = { resourceType: string; resourceId: string; revision: number; contentHash: string; receiptId: string };
+export type ContentCampaignArtifactRef = { artifactId: string; contentHash: string };
+export type ContentVariantProjection = ContentCampaignAuthorityRef & { resourceType: "ContentVariant"; revision: 1; intentRef: ContentCampaignAuthorityRef; masterArtifactRef: ContentCampaignArtifactRef; variantArtifactRef: ContentCampaignArtifactRef; relationId: string; relationType: "variant_of" };
+export type ContentCampaignItem = ContentCampaignAuthorityRef | ContentVariantProjection;
+export type ContentCampaignBlocker = { code: string; dependency: string; requiredAction: string };
+export type ContentCampaignCountLedger = { eligible: number; attached: number; unmatched: number; conflicted: number };
+export type ContentCampaignSlice = { sliceId: ContentCampaignSliceId; status: "ready" | "blocked"; dataCutoff: string; authorityRefs: ContentCampaignAuthorityRef[]; items: ContentCampaignItem[]; blockers: ContentCampaignBlocker[]; countLedger: ContentCampaignCountLedger };
+export type ContentCampaignPage = { limit: number; count: number; hasMore: false; nextCursor: null };
+export type ContentCampaignViewResponse = { schemaVersion: typeof CONTENT_CAMPAIGN_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: ContentCampaignSlice[]; page: ContentCampaignPage };
+
 export const OPERATION_COMMAND_READINESS_SCHEMA_VERSION = "aos.ecommerce-workshop.operation-command-readiness/v1" as const;
 export type OperationCommandId = "classify" | "createCase" | "changeMembership" | "manageSla" | "automationKill" | "refund";
 export type OperationCommandBlocker = { code: string; dependency: string; requiredAction: string };

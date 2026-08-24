@@ -64,4 +64,13 @@ describe("EcommerceWorkshopHost task cockpit", () => {
     expect(host.textContent).toContain("只读分诊");
     expect(host.textContent).toContain("动作建议 · 失败关闭");
   });
+
+  it("Content Campaign authority 未验证时仍挂载正式只读三栏且保留阻断", async () => {
+    const contentModule = moduleWithReadiness("unknown"); Object.assign(contentModule, { moduleId: "ecommerce.content-campaign", displayName: "内容与活动工作台", menuLabel: "内容与活动工作台", route: "/workshop/content-campaign" });
+    const catalog = { listModules: vi.fn().mockResolvedValue(workshopCatalogFixture({ items: [contentModule] })) };
+    const cutoff = "2026-08-24T13:00:00Z";
+    vi.spyOn(ecommerceWorkshopClient, "getContentCampaignView").mockResolvedValue({ schemaVersion: "aos.ecommerce-workshop.content-campaign-view/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: cutoff, dataCutoff: cutoff, readiness: "degraded", slices: (["plan", "calendar", "content"] as const).map((sliceId) => ({ sliceId, status: "blocked", dataCutoff: cutoff, authorityRefs: [], items: [], blockers: [{ code: `CANONICAL_${sliceId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`, dependency: `ecommerce.${sliceId}`, requiredAction: "接入 exact authority" }], countLedger: { eligible: 0, attached: 0, unmatched: 0, conflicted: 0 } })), page: { limit: 100, count: 0, hasMore: false, nextCursor: null } });
+    await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/content-campaign"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
+    expect(host.querySelectorAll("h1")).toHaveLength(1); expect(host.textContent).toContain("内容与活动工作台"); expect(host.textContent).toContain("就绪状态待验证"); expect(host.querySelectorAll(".content-campaign-slice")).toHaveLength(3); expect(host.textContent).toContain("无写入口");
+  });
 });

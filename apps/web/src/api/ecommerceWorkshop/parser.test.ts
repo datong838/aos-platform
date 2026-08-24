@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSteps } from "./parser";
+import { parseContentCampaignView, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSteps } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -93,6 +93,20 @@ describe("operations view strict parser", () => {
     expect(() => parseOperationsView({ ...operations, page: { ...operations.page, hasMore: true, nextCursor: "synthetic" } })).toThrow("cursor");
     expect(() => parseOperationsView({ ...operations, tenant: { orgId: "dev-org", projectId: "dev-project" } }, { orgId: "org-org", projectId: "dev-project" })).toThrow("tenant 漂移");
   });
+});
+
+const campaignCutoff = "2026-08-24T13:00:00Z";
+const campaignRef = (resourceType: string, resourceId: string, value = "e") => ({ resourceType, resourceId, revision: 1, contentHash: hash(value), receiptId: `receipt-${resourceId}` });
+const contentVariant = { ...campaignRef("ContentVariant", "variant-1", "f"), intentRef: campaignRef("MasterContentIntentRevision", "intent-1"), masterArtifactRef: { artifactId: "master-1", contentHash: hash("a") }, variantArtifactRef: { artifactId: "variant-1", contentHash: hash("f") }, relationId: "relation-1", relationType: "variant_of" };
+const campaignSlices = [
+  { sliceId: "plan", status: "ready", dataCutoff: campaignCutoff, authorityRefs: [campaignRef("CampaignRevision", "campaign-1")], items: [campaignRef("CampaignRevision", "campaign-1")], blockers: [], countLedger: { eligible: 1, attached: 1, unmatched: 0, conflicted: 0 } },
+  { sliceId: "calendar", status: "ready", dataCutoff: campaignCutoff, authorityRefs: [], items: [], blockers: [], countLedger: { eligible: 0, attached: 0, unmatched: 0, conflicted: 0 } },
+  { sliceId: "content", status: "ready", dataCutoff: campaignCutoff, authorityRefs: [campaignRef("MasterContentIntentRevision", "intent-1")], items: [campaignRef("MasterContentIntentRevision", "intent-1"), contentVariant], blockers: [], countLedger: { eligible: 2, attached: 2, unmatched: 0, conflicted: 0 } },
+];
+const contentCampaign = { schemaVersion: "aos.ecommerce-workshop.content-campaign-view/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: campaignCutoff, dataCutoff: campaignCutoff, readiness: "degraded", slices: campaignSlices, page: { limit: 100, count: 3, hasMore: false, nextCursor: null } };
+describe("content campaign strict parser", () => {
+  it("保留 canonical 三切片、可信空与 ContentVariant exact lineage", () => { const parsed = parseContentCampaignView(contentCampaign); expect(parsed.slices.map((item) => item.sliceId)).toEqual(["plan", "calendar", "content"]); expect(parsed.slices[1]).toMatchObject({ status: "ready", items: [], countLedger: { eligible: 0 } }); expect(parsed.slices[2].items[1]).toMatchObject({ resourceType: "ContentVariant", relationType: "variant_of" }); });
+  it("拒绝 extra、错序、伪 ready、重复 identity、数量、lineage、cursor 与 tenant 漂移", () => { expect(() => parseContentCampaignView({ ...contentCampaign, extra: true })).toThrow("字段漂移"); expect(() => parseContentCampaignView({ ...contentCampaign, slices: [...campaignSlices].reverse() })).toThrow("canonical order"); expect(() => parseContentCampaignView({ ...contentCampaign, slices: [{ ...campaignSlices[0], authorityRefs: [] }, ...campaignSlices.slice(1)] })).toThrow("伪 ready"); expect(() => parseContentCampaignView({ ...contentCampaign, slices: [{ ...campaignSlices[0], authorityRefs: [campaignSlices[0].authorityRefs[0], campaignSlices[0].authorityRefs[0]] }, ...campaignSlices.slice(1)] })).toThrow("identity 重复"); expect(() => parseContentCampaignView({ ...contentCampaign, page: { ...contentCampaign.page, count: 2 } })).toThrow("count"); const badVariant = { ...contentVariant, resourceId: "other" }; expect(() => parseContentCampaignView({ ...contentCampaign, slices: [...campaignSlices.slice(0, 2), { ...campaignSlices[2], items: [campaignSlices[2].items[0], badVariant] }] })).toThrow("lineage"); expect(() => parseContentCampaignView({ ...contentCampaign, page: { ...contentCampaign.page, hasMore: true, nextCursor: "x" } })).toThrow("cursor"); expect(() => parseContentCampaignView(contentCampaign, { orgId: "dev-org", projectId: "dev-project" })).toThrow("tenant 漂移"); });
 });
 
 const sourcePipelines = ["P01-shop-qyh", "P02-product-qyh", "P03-product-sku-qyh", "P04-category-qyh", "P05-order-qyh", "P06-order-line-qyh", "P07-shipment-qyh", "P08-customer-lite-qyh", "P09-weapp-qyh", "P10-system-config-qyh", "P11-product-review-qyh", "P12-payment-qyh"];
