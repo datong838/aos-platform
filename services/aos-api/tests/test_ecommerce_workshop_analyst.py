@@ -15,15 +15,17 @@ HASH = "sha256:" + "a" * 64
 
 
 class FakeReader:
-    def __init__(self, *, drift: AnalystViewId | None = None) -> None:
+    def __init__(self, *, drift: AnalystViewId | None = None, revision_drift: AnalystViewId | None = None) -> None:
         self.drift = drift
+        self.revision_drift = revision_drift
         self.calls = []
 
     def read_view(self, scope, *, view_id, cutoff, limit):
         self.calls.append((scope, view_id, cutoff, limit))
         observed_scope = TenantScope(org_id="dev-org", project_id="dev-project") if view_id is self.drift else scope
         ref = AnalystExactRef(resourceType="MetricAuthority", resourceId=f"{view_id.value}-1", revision=1, contentHash=HASH, receiptId=f"receipt-{view_id.value}-1")
-        return AnalystViewObservation(scope=observed_scope, resource_revision=3, data_cutoff=cutoff, readiness_axes=tuple(AnalystAxisReadiness(axis=axis, status="ready", exactRef=ref) for axis in AnalystReadinessAxis), authority_refs=(ref,))
+        resource_revision = 4 if view_id is self.revision_drift else 3
+        return AnalystViewObservation(scope=observed_scope, resource_revision=resource_revision, data_cutoff=cutoff, readiness_axes=tuple(AnalystAxisReadiness(axis=axis, status="ready", exactRef=ref) for axis in AnalystReadinessAxis), authority_refs=(ref,))
 
 
 def test_analyst_shell_is_canonical_blocked_and_never_invents_zero() -> None:
@@ -64,3 +66,11 @@ def test_one_reader_tenant_drift_blocks_only_its_view() -> None:
     view = EcommerceWorkshopAnalyst(reader=FakeReader(drift=AnalystViewId.DIAGNOSIS), clock=lambda: datetime(2026, 8, 24, tzinfo=UTC)).read(org_id="org-org", project_id="dev-project")
     assert [item.status for item in view.views].count("blocked") == 1
     assert view.views[2].authority_refs == []
+
+
+def test_cross_view_resource_revision_drift_fails_closed_without_normalizing() -> None:
+    view = EcommerceWorkshopAnalyst(reader=FakeReader(revision_drift=AnalystViewId.QUALITY), clock=lambda: datetime(2026, 8, 24, tzinfo=UTC)).read(org_id="org-org", project_id="dev-project")
+    assert view.resource_revision == 1
+    assert all(item.status == "blocked" for item in view.views)
+    assert all(item.metrics == [] and item.authority_refs == [] for item in view.views)
+    assert all(item.blockers[0].code == "ANALYST_SHARED_RESOURCE_REVISION_CONFLICT" for item in view.views)

@@ -44,6 +44,11 @@ class EcommerceWorkshopAnalyst:
             if trusted:
                 revision = max(revision, observation.resource_revision)
             views.append(AnalystViewSlice(view_id=view_id, status="ready" if trusted else "blocked", resource_revision=observation.resource_revision if trusted else revision, data_cutoff=cutoff, readiness_axes=axes, metrics=metrics, authority_refs=refs, blockers=[] if trusted else [blocker], count_ledger=AnalystCountLedger(denominator=len(metrics), **counts)))
+        trusted_revisions = {item.resource_revision for item in views if item.status == "ready"}
+        if len(trusted_revisions) > 1:
+            conflict = AnalystBlocker(code="ANALYST_SHARED_RESOURCE_REVISION_CONFLICT", dependency="workshop.analyst.resource-revision", required_action="re-read all seven canonical views at one exact resource revision and cutoff")
+            blocked_views = [AnalystViewSlice(view_id=item.view_id, status="blocked", resource_revision=1, data_cutoff=cutoff, readiness_axes=[AnalystAxisReadiness(axis=axis, status="blocked", blockers=[conflict]) for axis in AnalystReadinessAxis], metrics=[], authority_refs=[], blockers=[conflict], count_ledger=AnalystCountLedger(denominator=0, ready=0, unknown=0, blocked=0, conflict=0)) for item in views]
+            return WorkshopAnalystViewEnvelope(tenant=TenantContext(org_id=org_id, project_id=project_id), resource_revision=1, evaluated_at=cutoff, data_cutoff=cutoff, views=blocked_views, page=AnalystPageInfo(count=0))
         final_revision = max(item.resource_revision for item in views)
         normalized = [item.model_copy(update={"resource_revision": final_revision}) for item in views]
         return WorkshopAnalystViewEnvelope(tenant=TenantContext(org_id=org_id, project_id=project_id), resource_revision=final_revision, evaluated_at=cutoff, data_cutoff=cutoff, views=normalized, page=AnalystPageInfo(count=sum(len(item.metrics) for item in normalized)))
