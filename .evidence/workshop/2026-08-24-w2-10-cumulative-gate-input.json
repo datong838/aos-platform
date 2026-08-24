@@ -1,0 +1,2429 @@
+{
+  "schema": "aos-workshop-w2-cumulative-gate/v1",
+  "release": {
+    "id": "m1-0d8c564-w2-s2",
+    "gitCommit": "0d8c56451afc44318111c3b04ef552df584a12d7",
+    "bundleRevision": "sha256:29d861844839ca59627ed34211a79816d0654c11c164bf7811892b8bc0f79d3d",
+    "installationRevision": "active-installation-projection@AOS-000208",
+    "apiRevision": "sha256:f7037e2f7ae04dc6adc196e8a904627816dcefc68c0065d84f3a8689db896441",
+    "schemaRevision": "ecommerce-workshop-strict-contracts@m1-afc8438",
+    "cutoff": "2026-08-24T19:18:00+08:00"
+  },
+  "receiptRefs": [
+    {
+      "taskId": "W2-00",
+      "status": "green",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "evidenceRef": "docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/data-source-readiness-exact-authority-20260821.json"
+    },
+    {
+      "taskId": "W2-01",
+      "status": "green",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "evidenceRef": "docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/w2-01b-operations-strict-web-code-20260824.json"
+    },
+    {
+      "taskId": "W2-02",
+      "status": "green",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "evidenceRef": "docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/w2-02f-source-readiness-business-context-read-model-20260824.json"
+    },
+    {
+      "taskId": "W2-03",
+      "status": "green",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "evidenceRef": "docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/w2-03f-content-campaign-strict-web-visual-20260824.json"
+    },
+    {
+      "taskId": "W2-04",
+      "status": "green",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "evidenceRef": "docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/w2-04f-creator-growth-strict-web-visual-20260824.json"
+    },
+    {
+      "taskId": "W2-05",
+      "status": "green",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "evidenceRef": "docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/w2-05c-media-studio-strict-web-visual-20260824.json"
+    },
+    {
+      "taskId": "W2-06",
+      "status": "green",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "evidenceRef": "docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/w2-06c-analyst-strict-web-visual-20260824.json"
+    },
+    {
+      "taskId": "W2-07",
+      "status": "green",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "evidenceRef": "docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/w2-07c-price-governance-strict-web-visual-20260824.json"
+    },
+    {
+      "taskId": "W2-08",
+      "status": "green",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "evidenceRef": "docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/w2-08c-customer-strict-web-visual-20260824.json"
+    },
+    {
+      "taskId": "W2-09",
+      "status": "green",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "evidenceRef": "docs/palantier/AOS项目开发上下文/memory/receipts/deliveries/w2-09c-shared-context-web-integration-20260824.json"
+    }
+  ],
+  "axes": {
+    "source_data_green": {
+      "evidenceKind": "read_only_probe",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "cutoff": "2026-08-24T19:18:00+08:00",
+      "pipelines": [
+        {
+          "id": "P01",
+          "status": "failed",
+          "latestRunRef": "meta_schedule_run:2026-08-23T18:00:00.108860+00:00",
+          "freshness": "red",
+          "quality": "red",
+          "reconciliation": "red",
+          "sourceCount": 1,
+          "canonicalCount": 1,
+          "queryCount": 1,
+          "matched": 1,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        },
+        {
+          "id": "P02",
+          "status": "failed",
+          "latestRunRef": "meta_schedule_run:2026-08-23T19:00:08.199659+00:00",
+          "freshness": "red",
+          "quality": "red",
+          "reconciliation": "red",
+          "sourceCount": 57,
+          "canonicalCount": 57,
+          "queryCount": 57,
+          "matched": 57,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        },
+        {
+          "id": "P03",
+          "status": "failed",
+          "latestRunRef": "meta_schedule_run:2026-08-23T20:00:10.481045+00:00",
+          "freshness": "red",
+          "quality": "red",
+          "reconciliation": "red",
+          "sourceCount": 62,
+          "canonicalCount": 62,
+          "queryCount": 62,
+          "matched": 62,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        },
+        {
+          "id": "P04",
+          "status": "succeeded",
+          "latestRunRef": "meta_schedule_run:2026-08-23T21:00:03.752386+00:00",
+          "freshness": "green",
+          "quality": "green",
+          "reconciliation": "green",
+          "sourceCount": 11,
+          "canonicalCount": 11,
+          "queryCount": 11,
+          "matched": 11,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        },
+        {
+          "id": "P05",
+          "status": "succeeded",
+          "latestRunRef": "meta_schedule_run:2026-08-22T22:00:00.625705+00:00",
+          "freshness": "green",
+          "quality": "green",
+          "reconciliation": "green",
+          "sourceCount": 121,
+          "canonicalCount": 121,
+          "queryCount": 121,
+          "matched": 121,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        },
+        {
+          "id": "P06",
+          "status": "succeeded",
+          "latestRunRef": "meta_schedule_run:2026-08-22T23:00:07.276819+00:00",
+          "freshness": "green",
+          "quality": "green",
+          "reconciliation": "green",
+          "sourceCount": 231,
+          "canonicalCount": 231,
+          "queryCount": 231,
+          "matched": 231,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        },
+        {
+          "id": "P07",
+          "status": "succeeded",
+          "latestRunRef": "meta_schedule_run:2026-08-23T00:00:00.904428+00:00",
+          "freshness": "green",
+          "quality": "green",
+          "reconciliation": "green",
+          "sourceCount": 19,
+          "canonicalCount": 19,
+          "queryCount": 19,
+          "matched": 19,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        },
+        {
+          "id": "P08",
+          "status": "succeeded",
+          "latestRunRef": "meta_schedule_run:2026-08-23T01:00:08.698883+00:00",
+          "freshness": "green",
+          "quality": "green",
+          "reconciliation": "green",
+          "sourceCount": 53,
+          "canonicalCount": 53,
+          "queryCount": 53,
+          "matched": 53,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        },
+        {
+          "id": "P09",
+          "status": "succeeded",
+          "latestRunRef": "meta_schedule_run:2026-08-23T02:00:01.537051+00:00",
+          "freshness": "green",
+          "quality": "green",
+          "reconciliation": "green",
+          "sourceCount": 3,
+          "canonicalCount": 3,
+          "queryCount": 3,
+          "matched": 3,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        },
+        {
+          "id": "P10",
+          "status": "succeeded",
+          "latestRunRef": "meta_schedule_run:2026-08-23T03:00:08.100119+00:00",
+          "freshness": "green",
+          "quality": "green",
+          "reconciliation": "green",
+          "sourceCount": 39,
+          "canonicalCount": 39,
+          "queryCount": 39,
+          "matched": 39,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        },
+        {
+          "id": "P11",
+          "status": "succeeded",
+          "latestRunRef": "meta_schedule_run:2026-08-23T04:00:14.757100+00:00",
+          "freshness": "green",
+          "quality": "green",
+          "reconciliation": "green",
+          "sourceCount": 5,
+          "canonicalCount": 5,
+          "queryCount": 5,
+          "matched": 5,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        },
+        {
+          "id": "P12",
+          "status": "succeeded",
+          "latestRunRef": "meta_schedule_run:2026-08-23T05:00:06.578761+00:00",
+          "freshness": "green",
+          "quality": "green",
+          "reconciliation": "green",
+          "sourceCount": 207,
+          "canonicalCount": 207,
+          "queryCount": 207,
+          "matched": 207,
+          "unmatched": 0,
+          "ambiguous": 0,
+          "excluded": 0,
+          "unknown": 0,
+          "deduplicated": 0
+        }
+      ]
+    },
+    "eight_view_contract_green": {
+      "evidenceKind": "contract_test",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "cutoff": "2026-08-24T19:18:00+08:00",
+      "modules": [
+        {
+          "id": "ecommerce.operations",
+          "status": "green",
+          "evidenceRefs": [
+            "m1:strict-contract:ecommerce.operations"
+          ]
+        },
+        {
+          "id": "ecommerce.task-cockpit",
+          "status": "green",
+          "evidenceRefs": [
+            "m1:strict-contract:ecommerce.task-cockpit"
+          ]
+        },
+        {
+          "id": "ecommerce.content-campaign",
+          "status": "green",
+          "evidenceRefs": [
+            "m1:strict-contract:ecommerce.content-campaign"
+          ]
+        },
+        {
+          "id": "ecommerce.creator-growth",
+          "status": "green",
+          "evidenceRefs": [
+            "m1:strict-contract:ecommerce.creator-growth"
+          ]
+        },
+        {
+          "id": "ecommerce.media-studio",
+          "status": "green",
+          "evidenceRefs": [
+            "m1:strict-contract:ecommerce.media-studio"
+          ]
+        },
+        {
+          "id": "ecommerce.analyst",
+          "status": "green",
+          "evidenceRefs": [
+            "m1:strict-contract:ecommerce.analyst"
+          ]
+        },
+        {
+          "id": "ecommerce.price-governance",
+          "status": "green",
+          "evidenceRefs": [
+            "m1:strict-contract:ecommerce.price-governance"
+          ]
+        },
+        {
+          "id": "ecommerce.customer",
+          "status": "green",
+          "evidenceRefs": [
+            "m1:strict-contract:ecommerce.customer"
+          ]
+        }
+      ]
+    },
+    "eight_view_runtime_green": {
+      "evidenceKind": "test_only",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "cutoff": "2026-08-24T19:18:00+08:00",
+      "modules": [
+        {
+          "id": "ecommerce.operations",
+          "status": "green",
+          "evidenceRefs": [
+            "pytest-or-vitest:ecommerce.operations"
+          ]
+        },
+        {
+          "id": "ecommerce.task-cockpit",
+          "status": "green",
+          "evidenceRefs": [
+            "pytest-or-vitest:ecommerce.task-cockpit"
+          ]
+        },
+        {
+          "id": "ecommerce.content-campaign",
+          "status": "green",
+          "evidenceRefs": [
+            "pytest-or-vitest:ecommerce.content-campaign"
+          ]
+        },
+        {
+          "id": "ecommerce.creator-growth",
+          "status": "green",
+          "evidenceRefs": [
+            "pytest-or-vitest:ecommerce.creator-growth"
+          ]
+        },
+        {
+          "id": "ecommerce.media-studio",
+          "status": "green",
+          "evidenceRefs": [
+            "pytest-or-vitest:ecommerce.media-studio"
+          ]
+        },
+        {
+          "id": "ecommerce.analyst",
+          "status": "green",
+          "evidenceRefs": [
+            "pytest-or-vitest:ecommerce.analyst"
+          ]
+        },
+        {
+          "id": "ecommerce.price-governance",
+          "status": "green",
+          "evidenceRefs": [
+            "pytest-or-vitest:ecommerce.price-governance"
+          ]
+        },
+        {
+          "id": "ecommerce.customer",
+          "status": "green",
+          "evidenceRefs": [
+            "pytest-or-vitest:ecommerce.customer"
+          ]
+        }
+      ]
+    },
+    "shared_context_timeline_navigation_green": {
+      "evidenceKind": "fixture",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "cutoff": "2026-08-24T19:18:00+08:00",
+      "status": "green",
+      "refreshRestored": true,
+      "historyRestored": false,
+      "timelineStable": true,
+      "targetsServerResolved": true,
+      "evidenceRefs": [
+        "w2-09c-shared-context-web-integration-20260824.json"
+      ]
+    },
+    "browser_positive_green": {
+      "evidenceKind": "fixture",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "cutoff": "2026-08-24T19:18:00+08:00",
+      "cells": [
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1280,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1280,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1280,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1280,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1280,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1280,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1280,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1280,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1280,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.operations:1280:ready"
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1440,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1440,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1440,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1440,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1440,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1440,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1440,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1440,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1440,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.operations:1440:ready"
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1920,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1920,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1920,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1920,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1920,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1920,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1920,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1920,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.operations",
+          "width": 1920,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.operations:1920:ready"
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1280,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1280,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1280,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1280,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1280,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1280,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1280,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1280,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1280,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.task-cockpit:1280:ready"
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1440,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1440,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1440,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1440,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1440,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1440,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1440,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1440,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1440,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.task-cockpit:1440:ready"
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1920,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1920,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1920,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1920,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1920,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1920,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1920,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1920,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.task-cockpit",
+          "width": 1920,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.task-cockpit:1920:ready"
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1280,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1280,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1280,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1280,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1280,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1280,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1280,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1280,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1280,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.content-campaign:1280:ready"
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1440,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1440,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1440,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1440,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1440,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1440,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1440,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1440,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1440,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.content-campaign:1440:ready"
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1920,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1920,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1920,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1920,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1920,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1920,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1920,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1920,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.content-campaign",
+          "width": 1920,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.content-campaign:1920:ready"
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1280,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1280,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1280,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1280,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1280,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1280,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1280,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1280,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1280,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.creator-growth:1280:ready"
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1440,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1440,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1440,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1440,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1440,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1440,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1440,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1440,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1440,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.creator-growth:1440:ready"
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1920,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1920,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1920,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1920,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1920,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1920,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1920,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1920,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.creator-growth",
+          "width": 1920,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.creator-growth:1920:ready"
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1280,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1280,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1280,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1280,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1280,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1280,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1280,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1280,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1280,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.media-studio:1280:ready"
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1440,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1440,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1440,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1440,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1440,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1440,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1440,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1440,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1440,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.media-studio:1440:ready"
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1920,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1920,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1920,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1920,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1920,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1920,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1920,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1920,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.media-studio",
+          "width": 1920,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.media-studio:1920:ready"
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1280,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1280,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1280,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1280,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1280,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1280,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1280,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1280,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1280,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.analyst:1280:ready"
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1440,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1440,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1440,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1440,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1440,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1440,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1440,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1440,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1440,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.analyst:1440:ready"
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1920,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1920,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1920,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1920,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1920,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1920,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1920,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1920,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.analyst",
+          "width": 1920,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.analyst:1920:ready"
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1280,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1280,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1280,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1280,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1280,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1280,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1280,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1280,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1280,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.price-governance:1280:ready"
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1440,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1440,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1440,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1440,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1440,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1440,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1440,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1440,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1440,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.price-governance:1440:ready"
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1920,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1920,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1920,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1920,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1920,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1920,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1920,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1920,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.price-governance",
+          "width": 1920,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.price-governance:1920:ready"
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1280,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1280,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1280,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1280,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1280,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1280,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1280,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1280,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1280,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.customer:1280:ready"
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1440,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1440,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1440,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1440,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1440,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1440,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1440,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1440,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1440,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.customer:1440:ready"
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1920,
+          "state": "loading",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1920,
+          "state": "empty",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1920,
+          "state": "forbidden",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1920,
+          "state": "stale",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1920,
+          "state": "partial",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1920,
+          "state": "failed",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1920,
+          "state": "unknown",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1920,
+          "state": "blocked",
+          "status": "not_applicable",
+          "reason": "formal operational state evidence not captured in the visual fixture",
+          "contractRef": "91-W2-10-八页浏览器矩阵与真实数据对账累计门预检ADR.md",
+          "evidenceRef": ""
+        },
+        {
+          "moduleId": "ecommerce.customer",
+          "width": 1920,
+          "state": "ready",
+          "status": "green",
+          "reason": "",
+          "contractRef": "",
+          "evidenceRef": "built-in-browser-fixture:h1=1:main=1:aria-current-page=1:ecommerce.customer:1920:ready"
+        }
+      ],
+      "keyboard": true,
+      "visibleFocus": true,
+      "refresh": true,
+      "deepLink": true,
+      "history": false,
+      "zoom200": false,
+      "reducedMotion": false,
+      "textAlternative": true,
+      "networkClean": true,
+      "consoleClean": true
+    },
+    "security_isolation_green": {
+      "evidenceKind": "read_only_probe",
+      "releaseId": "m1-0d8c564-w2-s2",
+      "cutoff": "2026-08-24T19:18:00+08:00",
+      "positiveTenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "canaryTenant": {
+        "orgId": "dev-org",
+        "projectId": "dev-project"
+      },
+      "canarySourceCount": 0,
+      "canaryProjectionCount": 0,
+      "piiScan": "clean",
+      "secretScan": "clean",
+      "writeRequests": 0,
+      "evidenceRefs": [
+        "scripts/long-task-watchdog/w2_data_fact_probe.py@2026-08-24T19:18:00+08:00",
+        "strict-contract-and-parser-tests@m1-afc8438"
+      ]
+    }
+  }
+}
