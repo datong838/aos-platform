@@ -8,5 +8,6 @@ export * from "./TaskCockpitPage";
 export * from "./ContentCampaignPage";
 export * from "./CreatorGrowthPage";
 export * from "./MediaStudioPage";
+export * from "./AnalystPage";
 export * from "./SourceReadinessContext";
 export * from "./SourceReadinessPanel";

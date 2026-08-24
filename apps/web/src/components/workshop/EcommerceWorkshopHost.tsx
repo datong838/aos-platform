@@ -11,6 +11,7 @@ import { OperationsPage } from "./OperationsPage";
 import { ContentCampaignPage } from "./ContentCampaignPage";
 import { CreatorGrowthPage } from "./CreatorGrowthPage";
 import { MediaStudioPage } from "./MediaStudioPage";
+import { AnalystPage } from "./AnalystPage";
 
 function HostState({
   state,
@@ -43,7 +44,7 @@ export function EcommerceWorkshopHost() {
     return <Navigate to={match.module.route} replace />;
   }
   if (match) {
-    const exposesReadOnly = match.module.moduleId === "ecommerce.task-cockpit" || match.module.moduleId === "ecommerce.operations" || match.module.moduleId === "ecommerce.content-campaign" || match.module.moduleId === "ecommerce.creator-growth" || match.module.moduleId === "ecommerce.media-studio";
+    const exposesReadOnly = match.module.moduleId === "ecommerce.task-cockpit" || match.module.moduleId === "ecommerce.operations" || match.module.moduleId === "ecommerce.content-campaign" || match.module.moduleId === "ecommerce.creator-growth" || match.module.moduleId === "ecommerce.media-studio" || match.module.moduleId === "ecommerce.analyst";
     return (
       <EcommerceWorkshopShell
         module={match.module}
@@ -51,7 +52,7 @@ export function EcommerceWorkshopHost() {
         catalogStale={catalog.phase === "stale"}
         exposeReadOnlyWhenUnverified={exposesReadOnly}
       >
-        {match.module.moduleId === "ecommerce.task-cockpit" ? <TaskCockpitPage /> : match.module.moduleId === "ecommerce.operations" ? <OperationsPage /> : match.module.moduleId === "ecommerce.content-campaign" ? <ContentCampaignPage /> : match.module.moduleId === "ecommerce.creator-growth" ? <CreatorGrowthPage /> : match.module.moduleId === "ecommerce.media-studio" ? <MediaStudioPage /> : undefined}
+        {match.module.moduleId === "ecommerce.task-cockpit" ? <TaskCockpitPage /> : match.module.moduleId === "ecommerce.operations" ? <OperationsPage /> : match.module.moduleId === "ecommerce.content-campaign" ? <ContentCampaignPage /> : match.module.moduleId === "ecommerce.creator-growth" ? <CreatorGrowthPage /> : match.module.moduleId === "ecommerce.media-studio" ? <MediaStudioPage /> : match.module.moduleId === "ecommerce.analyst" ? <AnalystPage /> : undefined}
       </EcommerceWorkshopShell>
     );
   }

@@ -215,6 +215,18 @@ export type MediaCountLedger = { denominator: number; ready: number; target: num
 export type MediaStudioSlice = { sliceId: MediaStudioSliceId; status: "ready" | "blocked"; dataCutoff: string; readinessAxes: MediaAxisReadiness[]; authorityRefs: MediaExactRef[]; blockers: MediaBlocker[]; countLedger: MediaCountLedger };
 export type MediaStudioViewResponse = { schemaVersion: typeof MEDIA_STUDIO_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: MediaStudioSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
 
+export const ANALYST_SCHEMA_VERSION = "aos.ecommerce-workshop.analyst-view/v1" as const;
+export type AnalystViewId = "overview" | "drivers" | "diagnosis" | "plan" | "effects" | "evidence" | "quality";
+export type AnalystReadinessAxis = "metric_query" | "model" | "eval" | "plan_materialization" | "professional_handoff";
+export type AnalystReadinessStatus = "ready" | "blocked" | "unknown" | "not_applicable";
+export type AnalystExactRef = { resourceType: string; resourceId: string; revision: number; contentHash: string; receiptId: string };
+export type AnalystBlocker = { code: string; dependency: string; requiredAction: string };
+export type AnalystAxisReadiness = { axis: AnalystReadinessAxis; status: AnalystReadinessStatus; exactRef: AnalystExactRef | null; blockers: AnalystBlocker[] };
+export type AnalystMetricValue = { metricId: string; status: "ready" | "unknown" | "blocked" | "conflict"; definitionRef: AnalystExactRef | null; observationRef: AnalystExactRef | null; value: number | null; unit: string | null; grain: string | null; window: string | null; timezone: string | null; cohortFilter: string | null; numerator: number | null; denominator: number | null; sourceRunRef: AnalystExactRef | null; qualityRef: AnalystExactRef | null; reconciliationRef: AnalystExactRef | null; lineageId: string | null; blockers: AnalystBlocker[] };
+export type AnalystCountLedger = { denominator: number; ready: number; unknown: number; blocked: number; conflict: number };
+export type AnalystViewSlice = { viewId: AnalystViewId; status: "ready" | "blocked"; resourceRevision: number; dataCutoff: string; readinessAxes: AnalystAxisReadiness[]; metrics: AnalystMetricValue[]; authorityRefs: AnalystExactRef[]; blockers: AnalystBlocker[]; countLedger: AnalystCountLedger };
+export type AnalystViewResponse = { schemaVersion: typeof ANALYST_SCHEMA_VERSION; tenant: WorkshopTenant; resourceRevision: number; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; views: AnalystViewSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
+
 export const OPERATION_COMMAND_READINESS_SCHEMA_VERSION = "aos.ecommerce-workshop.operation-command-readiness/v1" as const;
 export type OperationCommandId = "classify" | "createCase" | "changeMembership" | "manageSla" | "automationKill" | "refund";
 export type OperationCommandBlocker = { code: string; dependency: string; requiredAction: string };
