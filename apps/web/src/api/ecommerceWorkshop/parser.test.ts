@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseContentCampaignView, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSteps } from "./parser";
+import { parseContentCampaignView, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSteps, parseWorkshopSharedContext } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -29,6 +29,21 @@ describe("ecommerceWorkshop strict parser", () => {
     expect(() => parseEcommerceWorkshopModuleList({ ...list, items: [{ ...module, readiness: "available" }] })).toThrow("不一致");
     expect(() => parseEcommerceWorkshopModuleList({ ...list, count: 2 })).toThrow("count");
     expect(() => parseEcommerceWorkshopModuleList({ ...list, items: [{ ...module, requiredObjects: ["Z", "A"] }] })).toThrow("排序");
+  });
+});
+
+const sharedToken = `ctx_${"a".repeat(40)}`;
+const sharedRef = { authority: "task-authority", resourceType: "TaskRevision", resourceId: "task-1", revision: 3, contentHash: hash("a"), receiptId: "receipt-1" };
+const sharedContext = { schemaVersion: "aos.ecommerce-workshop.shared-context/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, context: { contextId: sharedToken, status: "ready", sourceModuleId: "ecommerce.task-cockpit", sourceViewId: "task", sourceRoute: "/workshop/task-cockpit", primaryRef: sharedRef, relatedRefs: [], purpose: "review", permissionDecisionRef: { ...sharedRef, resourceId: "permission-1" }, disclosurePolicyRef: { ...sharedRef, resourceId: "policy-1" }, markings: ["public"], disclosure: "allowed", evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", expiresAt: "2026-08-24T09:00:00Z", freshness: "fresh", readiness: "ready", filterSummary: null, lineageRefs: [], blockers: [] }, timeline: [{ eventKey: "event-1", eventType: "task", sourceRef: sharedRef, authoritySequence: 1, occurredAt: "2026-08-24T08:00:00Z", recordedAt: "2026-08-24T08:00:00Z", actorKind: "system", safeSummary: "任务已接受", status: "accepted", reasonCode: null, causationRef: null, correlationRef: null, attempt: null, receiptRef: null, originalRefs: [], late: false, duplicate: false, superseded: false, unknown: false, reconciled: false, stale: false }], navigationTargets: [{ targetId: "target_abcdefghijklmnop", status: "available", moduleId: "ecommerce.customer", viewId: "customer", route: "/workshop/customer", subjectRef: sharedRef, filterSummary: "同一任务", focusAnchor: null, scrollAnchor: null, blockers: [] }], page: { limit: 100, count: 1, hasMore: false, nextCursor: null } };
+
+describe("shared context strict parser", () => {
+  it("保留 exact context、稳定 timeline 与服务端 resolved target", () => expect(parseWorkshopSharedContext(sharedContext, sharedToken)).toMatchObject({ context: { status: "ready", purpose: "review" }, timeline: [{ eventKey: "event-1" }], navigationTargets: [{ route: "/workshop/customer" }] }));
+  it("拒绝 token、extra、伪 ready、顺序与 non-ready disclosure 漂移", () => {
+    expect(() => parseWorkshopSharedContext(sharedContext, "bad")).toThrow("token");
+    expect(() => parseWorkshopSharedContext({ ...sharedContext, extra: true }, sharedToken)).toThrow("字段漂移");
+    expect(() => parseWorkshopSharedContext({ ...sharedContext, context: { ...sharedContext.context, permissionDecisionRef: null } }, sharedToken)).toThrow("伪 ready");
+    expect(() => parseWorkshopSharedContext({ ...sharedContext, timeline: [{ ...sharedContext.timeline[0], eventKey: "z", authoritySequence: 2 }, sharedContext.timeline[0]], page: { ...sharedContext.page, count: 2 } }, sharedToken)).toThrow("order");
+    expect(() => parseWorkshopSharedContext({ ...sharedContext, context: { ...sharedContext.context, status: "forbidden", blockers: [{ code: "CONTEXT_FORBIDDEN", dependency: "permission", requiredAction: "reauthorize" }] } }, sharedToken)).toThrow("泄露");
   });
 });
 

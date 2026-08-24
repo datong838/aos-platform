@@ -28,6 +28,9 @@ const operations = { schemaVersion: "aos.ecommerce-workshop.operations-view/v1",
 const commandIds = ["classify", "createCase", "changeMembership", "manageSla", "automationKill", "refund"] as const;
 const commandReadiness = { schemaVersion: "aos.ecommerce-workshop.operation-command-readiness/v1", tenant: envelope.tenant, evaluatedAt: "2026-08-24T08:00:00Z", commands: commandIds.map((commandId, index) => ({ commandId, label: `命令${index}`, status: "blocked", risk: index > 3 ? "high" : "controlled", sideEffect: index === 5 ? "external" : "internalAuthority", blockers: [{ code: "OPERATION_COMMAND_HANDLER_NOT_BOUND", dependency: "W3-12B2", requiredAction: "完成 exact command gate" }] })) };
 const commandObservation = { schemaVersion: "aos.ecommerce-workshop.operation-command-observation/v1", tenant: envelope.tenant, proposalId: "proposal:1", leaseId: "lease:1", commandId: "classify", status: "applied", proposalHash: "a".repeat(64), receiptId: "receipt-1", requestFingerprint: "b".repeat(64), operationReceiptId: "operation-receipt-1", replayAllowed: false };
+const contextToken = `ctx_${"a".repeat(40)}`;
+const contextRef = { authority: "task-authority", resourceType: "TaskRevision", resourceId: "task-1", revision: 3, contentHash: hash("a"), receiptId: "receipt-1" };
+const sharedContextResponse = { schemaVersion: "aos.ecommerce-workshop.shared-context/v1", tenant: envelope.tenant, context: { contextId: contextToken, status: "ready", sourceModuleId: "ecommerce.task-cockpit", sourceViewId: "task", sourceRoute: "/workshop/task-cockpit", primaryRef: contextRef, relatedRefs: [], purpose: "review", permissionDecisionRef: { ...contextRef, resourceId: "permission-1" }, disclosurePolicyRef: { ...contextRef, resourceId: "policy-1" }, markings: ["public"], disclosure: "allowed", evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", expiresAt: "2026-08-24T09:00:00Z", freshness: "fresh", readiness: "ready", filterSummary: null, lineageRefs: [], blockers: [] }, timeline: [], navigationTargets: [], page: { limit: 100, count: 0, hasMore: false, nextCursor: null } };
 
 describe("EcommerceWorkshopClient", () => {
   it("只发两个 canonical GET，并沿用会话鉴权头", async () => {
@@ -61,6 +64,12 @@ describe("EcommerceWorkshopClient", () => {
     expect(parsed.slices).toHaveLength(7);
     expect(parsed.slices[0]).toMatchObject({ sliceId: "orders" });
     expect(fetch).toHaveBeenCalledWith("http://api.test/v1/ecommerce-workshop/views/operations", expect.objectContaining({ method: "GET", headers: expect.objectContaining({ Authorization: "Bearer test" }) }));
+  });
+  it("只用 opaque context token 读取共享上下文", async () => {
+    const fetch = vi.fn().mockResolvedValue(ok(sharedContextResponse)); const client = new EcommerceWorkshopClient({ fetch, getBaseUrl: () => "http://api.test", getAuthHeaders: () => ({ Authorization: "Bearer test" }) });
+    await expect(client.getSharedContext(contextToken)).resolves.toMatchObject({ context: { contextId: contextToken } });
+    expect(fetch).toHaveBeenCalledWith(`http://api.test/v1/ecommerce-workshop/contexts/${contextToken}`, expect.objectContaining({ method: "GET" }));
+    await expect(client.getSharedContext("bad/token")).rejects.toBeInstanceOf(TypeError);
   });
   it("只发 canonical Operations command-readiness GET 并严格解析", async () => {
     const fetch = vi.fn().mockResolvedValue(ok(commandReadiness));

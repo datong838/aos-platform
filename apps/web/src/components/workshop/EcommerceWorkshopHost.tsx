@@ -14,6 +14,7 @@ import { MediaStudioPage } from "./MediaStudioPage";
 import { AnalystPage } from "./AnalystPage";
 import { PriceGovernancePage } from "./PriceGovernancePage";
 import { CustomerPage } from "./CustomerPage";
+import { EcommerceWorkshopSharedContext } from "./EcommerceWorkshopSharedContext";
 
 function HostState({
   state,
@@ -39,6 +40,7 @@ function HostState({
 
 export function EcommerceWorkshopHost() {
   const location = useLocation();
+  const contextId = new URLSearchParams(location.search).get("context");
   const catalog = useEcommerceWorkshopCatalog();
   const match = findInstalledWorkshopRoute(catalog.modules, location.pathname);
 
@@ -54,6 +56,7 @@ export function EcommerceWorkshopHost() {
         catalogStale={catalog.phase === "stale"}
         exposeReadOnlyWhenUnverified={exposesReadOnly}
       >
+        <EcommerceWorkshopSharedContext contextId={contextId} currentRoute={location.pathname} />
         {match.module.moduleId === "ecommerce.task-cockpit" ? <TaskCockpitPage /> : match.module.moduleId === "ecommerce.operations" ? <OperationsPage /> : match.module.moduleId === "ecommerce.content-campaign" ? <ContentCampaignPage /> : match.module.moduleId === "ecommerce.creator-growth" ? <CreatorGrowthPage /> : match.module.moduleId === "ecommerce.media-studio" ? <MediaStudioPage /> : match.module.moduleId === "ecommerce.analyst" ? <AnalystPage /> : match.module.moduleId === "ecommerce.price-governance" ? <PriceGovernancePage /> : match.module.moduleId === "ecommerce.customer" ? <CustomerPage /> : undefined}
       </EcommerceWorkshopShell>
     );

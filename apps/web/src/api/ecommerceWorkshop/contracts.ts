@@ -274,3 +274,32 @@ export type OperationCommandObservationResponse = {
   operationReceiptId: string | null;
   replayAllowed: false;
 };
+
+export const SHARED_CONTEXT_SCHEMA_VERSION = "aos.ecommerce-workshop.shared-context/v1" as const;
+export type WorkshopSharedRef = { authority: string; resourceType: string; resourceId: string; revision: number; contentHash: string; receiptId: string | null };
+export type WorkshopSharedBlocker = { code: string; dependency: string; requiredAction: string };
+export type WorkshopSharedContext = {
+  contextId: string;
+  status: "ready" | "blocked" | "expired" | "forbidden" | "stale" | "unknown";
+  sourceModuleId: string | null;
+  sourceViewId: string | null;
+  sourceRoute: string | null;
+  primaryRef: WorkshopSharedRef | null;
+  relatedRefs: WorkshopSharedRef[];
+  purpose: string | null;
+  permissionDecisionRef: WorkshopSharedRef | null;
+  disclosurePolicyRef: WorkshopSharedRef | null;
+  markings: string[];
+  disclosure: "allowed" | "blocked" | "unknown";
+  evaluatedAt: string;
+  dataCutoff: string | null;
+  expiresAt: string;
+  freshness: "fresh" | "stale" | "unknown";
+  readiness: "ready" | "blocked" | "unknown";
+  filterSummary: string | null;
+  lineageRefs: WorkshopSharedRef[];
+  blockers: WorkshopSharedBlocker[];
+};
+export type WorkshopTimelineEvent = { eventKey: string; eventType: "task" | "handoff" | "action" | "evidence" | "receipt" | "usage" | "effect"; sourceRef: WorkshopSharedRef; authoritySequence: number; occurredAt: string; recordedAt: string; actorKind: "system" | "human" | "agent"; safeSummary: string; status: string; reasonCode: string | null; causationRef: string | null; correlationRef: string | null; attempt: number | null; receiptRef: WorkshopSharedRef | null; originalRefs: WorkshopSharedRef[]; late: boolean; duplicate: boolean; superseded: boolean; unknown: boolean; reconciled: boolean; stale: boolean };
+export type WorkshopNavigationTarget = { targetId: string; status: "available" | "forbidden" | "expired" | "uninstalled" | "disabled" | "stale" | "unresolved"; moduleId: string | null; viewId: string | null; route: string | null; subjectRef: WorkshopSharedRef | null; filterSummary: string | null; focusAnchor: string | null; scrollAnchor: string | null; blockers: WorkshopSharedBlocker[] };
+export type WorkshopSharedContextResponse = { schemaVersion: typeof SHARED_CONTEXT_SCHEMA_VERSION; tenant: WorkshopTenant; context: WorkshopSharedContext; timeline: WorkshopTimelineEvent[]; navigationTargets: WorkshopNavigationTarget[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
