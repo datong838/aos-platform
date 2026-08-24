@@ -25,6 +25,10 @@ from aos_api.ecommerce_workshop_content_campaign import (
 from aos_api.ecommerce_workshop_content_campaign_contracts import (
     WorkshopContentCampaignViewEnvelope,
 )
+from aos_api.ecommerce_workshop_creator_growth import EcommerceWorkshopCreatorGrowth
+from aos_api.ecommerce_workshop_creator_growth_contracts import (
+    WorkshopCreatorGrowthViewEnvelope,
+)
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
 from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
 from aos_api.ecommerce_operation_command_contracts import (
@@ -137,6 +141,11 @@ def get_ecommerce_workshop_content_campaign() -> EcommerceWorkshopContentCampaig
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_creator_growth() -> EcommerceWorkshopCreatorGrowth:
+    return EcommerceWorkshopCreatorGrowth()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_operation_commands() -> EcommerceOperationCommands:
     return EcommerceOperationCommands()
 
@@ -172,6 +181,10 @@ OperationsDependency = Annotated[
 ContentCampaignDependency = Annotated[
     EcommerceWorkshopContentCampaign,
     Depends(get_ecommerce_workshop_content_campaign),
+]
+CreatorGrowthDependency = Annotated[
+    EcommerceWorkshopCreatorGrowth,
+    Depends(get_ecommerce_workshop_creator_growth),
 ]
 OperationCommandsDependency = Annotated[
     EcommerceOperationCommands,
@@ -279,6 +292,20 @@ def _require_content_campaign_installation(
     _invoke(
         lambda: catalog.get_readiness(
             module_id="ecommerce.content-campaign",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+
+
+def _require_creator_growth_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.creator-growth",
             org_id=principal.org_id,
             project_id=principal.project_id,
             roles=principal.roles,
@@ -414,6 +441,26 @@ def get_ecommerce_workshop_content_campaign_view(
     _reject_query_parameters(request)
     _require_content_campaign_installation(principal=principal, catalog=catalog)
     return content_campaign.read(
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+    )
+
+
+@router.get(
+    "/views/creator-growth",
+    response_model=WorkshopCreatorGrowthViewEnvelope,
+    operation_id="ecommerceWorkshopCreatorGrowthViewGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_creator_growth_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    creator_growth: CreatorGrowthDependency,
+) -> WorkshopCreatorGrowthViewEnvelope:
+    _reject_query_parameters(request)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    return creator_growth.read(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
