@@ -394,6 +394,218 @@ class TaskCockpitResponsibilityHandoffEnvelope(AipContractModel):
         return self
 
 
+class TaskCockpitApprovalNavigationTarget(AipContractModel):
+    route_identity: Literal["aip.task-plan", "aip.action-drafts"]
+    route_path: str = Field(pattern=r"^/aip/(studio|drafts)\?")
+    target_ref: ExactRevisionRef
+    command_readiness: Literal[
+        "read_only_fact", "destination_reauthorization_required"
+    ]
+    required_permission: str = Field(min_length=1, max_length=160)
+    blocker_codes: list[str] = Field(default_factory=list, max_length=32)
+    return_focus_token: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def _navigation_kind_matches_target(self) -> TaskCockpitApprovalNavigationTarget:
+        expected = {
+            "aip.task-plan": "PlanRevision",
+            "aip.action-drafts": "ActionProposalRevision",
+        }[self.route_identity]
+        if self.target_ref.resource_type != expected:
+            raise ValueError("approval navigation target type drifted")
+        if len(self.blocker_codes) != len(set(self.blocker_codes)):
+            raise ValueError("approval navigation blocker codes must be unique")
+        return self
+
+
+class TaskCockpitPlanApproval(AipContractModel):
+    plan_ref: ExactRevisionRef
+    approval_status: Literal["draft", "approved", "superseded", "rejected"]
+    approved_by: str | None = Field(default=None, max_length=200)
+    approved_at: datetime | None = None
+    navigation: TaskCockpitApprovalNavigationTarget
+
+    @field_validator("approved_at")
+    @classmethod
+    def _plan_approval_time_is_aware(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _plan_approval_is_consistent(self) -> TaskCockpitPlanApproval:
+        if self.plan_ref.resource_type != "PlanRevision":
+            raise ValueError("planRef must reference PlanRevision")
+        decided = self.approval_status == "approved"
+        if decided != (self.approved_by is not None and self.approved_at is not None):
+            raise ValueError("approved Plan requires exact actor and timestamp")
+        if self.navigation.target_ref != self.plan_ref:
+            raise ValueError("Plan approval navigation target drifted")
+        return self
+
+
+class TaskCockpitApprovalDecision(AipContractModel):
+    approval_event_id: str = Field(min_length=1, max_length=200)
+    proposal_version: int = Field(ge=1)
+    proposal_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    decision: Literal["approved", "rejected"]
+    actor_id: str = Field(min_length=1, max_length=200)
+    expires_at: datetime | None = None
+    created_at: datetime
+
+    @field_validator("expires_at", "created_at")
+    @classmethod
+    def _approval_decision_time_is_aware(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+
+class TaskCockpitActionApproval(AipContractModel):
+    proposal_ref: ExactRevisionRef
+    action_type_id: str = Field(min_length=1, max_length=200)
+    status: Literal[
+        "proposed", "drafted", "approved", "rejected", "expired", "leased",
+        "executing", "applied", "failed", "unknown", "reconciled", "compensated",
+    ]
+    expires_at: datetime
+    decisions: list[TaskCockpitApprovalDecision] = Field(default_factory=list, max_length=128)
+    navigation: TaskCockpitApprovalNavigationTarget
+
+    @field_validator("expires_at")
+    @classmethod
+    def _proposal_expiry_is_aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _action_approval_is_consistent(self) -> TaskCockpitActionApproval:
+        if self.proposal_ref.resource_type != "ActionProposalRevision":
+            raise ValueError("proposalRef must reference ActionProposalRevision")
+        if self.navigation.target_ref != self.proposal_ref:
+            raise ValueError("Action approval navigation target drifted")
+        ids = [item.approval_event_id for item in self.decisions]
+        if len(ids) != len(set(ids)):
+            raise ValueError("approval event identities must be unique")
+        if any(
+            item.proposal_version != self.proposal_ref.revision
+            or item.proposal_hash != self.proposal_ref.content_hash
+            for item in self.decisions
+        ):
+            raise ValueError("ApprovalEvent exact proposal reference drifted")
+        return self
+
+
+class TaskCockpitReviewIssueEvent(AipContractModel):
+    event_id: str = Field(min_length=1, max_length=200)
+    sequence: int = Field(ge=1)
+    event_type: Literal["opened", "resolved", "returned", "superseded"]
+    issue_version: int = Field(ge=1)
+    payload_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    actor: str = Field(min_length=1, max_length=200)
+    created_at: datetime
+
+    @field_validator("created_at")
+    @classmethod
+    def _issue_event_time_is_aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+
+class TaskCockpitReviewReturnLineage(AipContractModel):
+    decision_id: str = Field(min_length=1, max_length=200)
+    issue_version: int = Field(ge=1)
+    run_id: str = Field(min_length=1, max_length=200)
+    step_key: str = Field(min_length=1, max_length=200)
+    step_run_id: str = Field(min_length=1, max_length=200)
+    attempt: int = Field(ge=1)
+    decision_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_at: datetime
+
+    @field_validator("created_at")
+    @classmethod
+    def _return_time_is_aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+
+class TaskCockpitReviewIssue(AipContractModel):
+    issue_id: str = Field(min_length=1, max_length=200)
+    version: int = Field(ge=1)
+    status: Literal["open", "resolved", "returned", "superseded"]
+    severity: Literal["info", "warning", "error", "critical"]
+    rule_ref: ExactRevisionRef
+    artifact_id: str = Field(min_length=1, max_length=200)
+    artifact_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    eval_report_ref: ExactRevisionRef
+    return_stage: str = Field(min_length=1, max_length=160)
+    evidence_count: int = Field(ge=0)
+    lineage_readiness: Literal["attempt_exact", "attempt_unresolved"]
+    return_lineage: TaskCockpitReviewReturnLineage | None = None
+    events: list[TaskCockpitReviewIssueEvent] = Field(min_length=1, max_length=128)
+
+    @model_validator(mode="after")
+    def _review_issue_timeline_is_consistent(self) -> TaskCockpitReviewIssue:
+        if self.eval_report_ref.resource_type != "EvalReportRevision":
+            raise ValueError("evalReportRef must reference EvalReportRevision")
+        sequences = [item.sequence for item in self.events]
+        if sequences != list(range(1, len(sequences) + 1)):
+            raise ValueError("ReviewIssue event sequence must be contiguous")
+        if len({item.event_id for item in self.events}) != len(self.events):
+            raise ValueError("ReviewIssue event identities must be unique")
+        if self.events[-1].issue_version != self.version:
+            raise ValueError("ReviewIssue latest event version drifted")
+        exact = self.return_lineage is not None
+        if exact != (self.lineage_readiness == "attempt_exact"):
+            raise ValueError("ReviewIssue attempt readiness drifted")
+        if self.status == "returned" and self.return_lineage is None:
+            raise ValueError("returned ReviewIssue requires exact return lineage")
+        if self.return_lineage is not None and self.return_lineage.step_key != self.return_stage:
+            raise ValueError("ReviewIssue return stage drifted")
+        return self
+
+
+class TaskCockpitApprovalReviewEnvelope(AipContractModel):
+    schema_version: Literal[TASK_COCKPIT_SCHEMA_VERSION] = TASK_COCKPIT_SCHEMA_VERSION
+    tenant: TenantContext
+    run_id: str = Field(min_length=1, max_length=200)
+    task_id: str = Field(min_length=1, max_length=200)
+    evaluated_at: datetime
+    plan_approval: TaskCockpitPlanApproval
+    action_approvals: list[TaskCockpitActionApproval] = Field(default_factory=list, max_length=200)
+    review_issues: list[TaskCockpitReviewIssue] = Field(default_factory=list, max_length=200)
+    action_approval_count: int = Field(ge=0)
+    review_issue_count: int = Field(ge=0)
+    unresolved_attempt_count: int = Field(ge=0)
+
+    @field_validator("evaluated_at")
+    @classmethod
+    def _approval_review_time_is_aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _counts_are_conserved(self) -> TaskCockpitApprovalReviewEnvelope:
+        if self.action_approval_count != len(self.action_approvals):
+            raise ValueError("Action approval count drifted")
+        if self.review_issue_count != len(self.review_issues):
+            raise ValueError("ReviewIssue count drifted")
+        unresolved = sum(
+            item.lineage_readiness == "attempt_unresolved" for item in self.review_issues
+        )
+        if self.unresolved_attempt_count != unresolved:
+            raise ValueError("ReviewIssue unresolved attempt count drifted")
+        if len({item.proposal_ref.resource_id for item in self.action_approvals}) != len(self.action_approvals):
+            raise ValueError("Action proposal identities must be unique")
+        if len({item.issue_id for item in self.review_issues}) != len(self.review_issues):
+            raise ValueError("ReviewIssue identities must be unique")
+        return self
+
+
 __all__ = [
     "TASK_COCKPIT_SCHEMA_VERSION",
     "TaskCockpitBlocker",
@@ -403,6 +615,7 @@ __all__ = [
     "TaskCockpitCoreEnvelope",
     "TaskCockpitPageInfo",
     "TaskCockpitProductionContextEnvelope",
+    "TaskCockpitApprovalReviewEnvelope",
     "TaskCockpitResponsibilityHandoffEnvelope",
     "TaskCockpitResponsibilitySlot",
     "TaskCockpitStructuralAssignee",

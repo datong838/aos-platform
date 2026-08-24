@@ -11,6 +11,7 @@ from contextlib import AbstractContextManager
 from datetime import UTC, datetime
 from functools import partial
 from typing import Any
+from urllib.parse import urlencode
 
 import psycopg
 
@@ -24,7 +25,12 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitCheckpointPageEnvelope,
     TaskCockpitCheckpointSummary,
     TaskCockpitCoreEnvelope,
+    TaskCockpitActionApproval,
+    TaskCockpitApprovalDecision,
+    TaskCockpitApprovalNavigationTarget,
+    TaskCockpitApprovalReviewEnvelope,
     TaskCockpitPageInfo,
+    TaskCockpitPlanApproval,
     TaskCockpitProductionContextEnvelope,
     TaskCockpitResponsibilityHandoffEnvelope,
     TaskCockpitResponsibilitySlot,
@@ -32,6 +38,9 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitHandoffDecision,
     TaskCockpitHandoffSummary,
     TaskCockpitReadiness,
+    TaskCockpitReviewIssue,
+    TaskCockpitReviewIssueEvent,
+    TaskCockpitReviewReturnLineage,
     TaskCockpitRunSummary,
     TaskCockpitStateConsistency,
     TaskCockpitStepPageEnvelope,
@@ -58,12 +67,12 @@ _BLOCKERS = (
         ),
     ),
     TaskCockpitBlocker(
-        code="TASK_COCKPIT_ASSIGNEE_APPROVAL_REVIEW_UNAVAILABLE",
+        code="TASK_COCKPIT_ASSIGNEE_OPERATIONAL_READINESS_UNAVAILABLE",
         severity=TaskCockpitBlockerSeverity.WARNING,
-        dependency="aip.assignee-approval-review-readers",
+        dependency="aip.assignee-operational-readiness",
         requiredAction=(
-            "Responsibility/Handoff 已按 Run 精确读取；继续接入 "
-            "assignee operational readiness、Approval 与 ReviewIssue exact readers"
+            "Responsibility/Handoff、Approval 与 ReviewIssue 已按 Run 精确读取；"
+            "继续接入 assignee operational readiness exact reader"
         ),
     ),
     TaskCockpitBlocker(
@@ -686,6 +695,136 @@ class EcommerceWorkshopTaskCockpit:
                 "failed to read Task Cockpit responsibility and handoffs"
             ) from exc
 
+    def read_approval_review_issues(
+        self,
+        *,
+        org_id: str,
+        project_id: str,
+        run_id: str,
+    ) -> TaskCockpitApprovalReviewEnvelope:
+        scope = TenantScope(org_id, project_id)
+        self._validate_detail_request(run_id=run_id, limit=1)
+        evaluated_at = self._aware_now()
+        try:
+            with self._connect_factory() as conn:
+                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+                apply_transaction_scope(conn, scope)
+                run_row = conn.execute(
+                    """SELECT run.run_id,run.task_id,run.plan_revision_id,
+                              plan.revision AS plan_revision,plan.content_hash AS plan_content_hash,
+                              plan.approval_status,plan.approved_by,plan.approved_at
+                         FROM aip_task_run run
+                         JOIN aip_plan_revision plan
+                           ON plan.org_id=run.org_id AND plan.project_id=run.project_id
+                          AND plan.plan_revision_id=run.plan_revision_id
+                        WHERE run.org_id=%s AND run.project_id=%s AND run.run_id=%s""",
+                    (*scope.key, run_id),
+                ).fetchone()
+                if run_row is None:
+                    raise ApiError(
+                        code="TASK_COCKPIT_RUN_NOT_FOUND",
+                        message="Task Cockpit Run was not found",
+                        status_code=404,
+                    )
+                proposal_rows = conn.execute(
+                    """SELECT proposal_id,action_type_id,status,expires_at,version,
+                              proposal_hash,created_at
+                         FROM aip_action_proposal
+                        WHERE org_id=%s AND project_id=%s AND run_id=%s
+                        ORDER BY created_at ASC,proposal_id ASC""",
+                    (*scope.key, run_id),
+                ).fetchall()
+                approval_rows = conn.execute(
+                    """SELECT approval.approval_event_id,approval.proposal_id,
+                              approval.proposal_version,approval.proposal_hash,
+                              approval.decision,approval.actor_id,approval.expires_at,
+                              approval.created_at
+                         FROM aip_action_approval_event approval
+                         JOIN aip_action_proposal proposal
+                           ON proposal.org_id=approval.org_id
+                          AND proposal.project_id=approval.project_id
+                          AND proposal.proposal_id=approval.proposal_id
+                        WHERE approval.org_id=%s AND approval.project_id=%s
+                          AND proposal.run_id=%s
+                        ORDER BY approval.proposal_id ASC,approval.created_at ASC,
+                                 approval.approval_event_id ASC""",
+                    (*scope.key, run_id),
+                ).fetchall()
+                issue_rows = conn.execute(
+                    """SELECT issue.issue_id,issue.rule_ref,issue.severity,
+                              issue.artifact_id,issue.artifact_hash,
+                              artifact.content_hash AS canonical_artifact_hash,
+                              issue.eval_report_id,issue.eval_report_revision,
+                              issue.eval_report_hash,issue.evidence_refs,
+                              issue.return_stage,issue.status,issue.version,
+                              issue.created_at
+                         FROM aip_review_issue issue
+                         JOIN aip_artifact artifact
+                           ON artifact.org_id=issue.org_id
+                          AND artifact.project_id=issue.project_id
+                          AND artifact.artifact_id=issue.artifact_id
+                        WHERE issue.org_id=%s AND issue.project_id=%s
+                          AND artifact.run_id=%s
+                        ORDER BY issue.created_at ASC,issue.issue_id ASC""",
+                    (*scope.key, run_id),
+                ).fetchall()
+                issue_event_rows = conn.execute(
+                    """SELECT event.event_id,event.issue_id,event.sequence,event.event_type,
+                              event.issue_version,event.payload_hash,event.actor,event.created_at
+                         FROM aip_review_issue_event event
+                         JOIN aip_review_issue issue
+                           ON issue.org_id=event.org_id AND issue.project_id=event.project_id
+                          AND issue.issue_id=event.issue_id
+                         JOIN aip_artifact artifact
+                           ON artifact.org_id=issue.org_id
+                          AND artifact.project_id=issue.project_id
+                          AND artifact.artifact_id=issue.artifact_id
+                        WHERE event.org_id=%s AND event.project_id=%s
+                          AND artifact.run_id=%s
+                        ORDER BY event.issue_id ASC,event.sequence ASC""",
+                    (*scope.key, run_id),
+                ).fetchall()
+                return_rows = conn.execute(
+                    """SELECT decision.decision_id,decision.issue_id,decision.issue_version,
+                              decision.run_id,decision.step_key,decision.step_run_id,
+                              decision.attempt,decision.decision_hash,decision.created_at,
+                              step.run_id AS step_run_run_id,step.step_key AS step_run_step_key,
+                              step.attempt AS step_run_attempt
+                         FROM aip_return_decision decision
+                         JOIN aip_review_issue issue
+                           ON issue.org_id=decision.org_id
+                          AND issue.project_id=decision.project_id
+                          AND issue.issue_id=decision.issue_id
+                         JOIN aip_artifact artifact
+                           ON artifact.org_id=issue.org_id
+                          AND artifact.project_id=issue.project_id
+                          AND artifact.artifact_id=issue.artifact_id
+                         JOIN aip_step_run step
+                           ON step.org_id=decision.org_id
+                          AND step.project_id=decision.project_id
+                          AND step.step_run_id=decision.step_run_id
+                        WHERE decision.org_id=%s AND decision.project_id=%s
+                          AND artifact.run_id=%s
+                        ORDER BY decision.issue_id ASC,decision.created_at ASC""",
+                    (*scope.key, run_id),
+                ).fetchall()
+            return self._approval_review_context(
+                scope=scope,
+                run_row=run_row,
+                proposal_rows=proposal_rows,
+                approval_rows=approval_rows,
+                issue_rows=issue_rows,
+                issue_event_rows=issue_event_rows,
+                return_rows=return_rows,
+                evaluated_at=evaluated_at,
+            )
+        except ApiError:
+            raise
+        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:
+            raise TaskCockpitPersistenceError(
+                "failed to read Task Cockpit approvals and review issues"
+            ) from exc
+
     @staticmethod
     def _validate_detail_request(*, run_id: str, limit: int) -> None:
         if not run_id or run_id != run_id.strip() or len(run_id) > 200:
@@ -1161,6 +1300,203 @@ class EcommerceWorkshopTaskCockpit:
             )
         except (TypeError, ValueError) as exc:
             raise drift("responsibility or handoff envelope is invalid") from exc
+
+    @staticmethod
+    def _approval_review_context(
+        *,
+        scope: TenantScope,
+        run_row: Any,
+        proposal_rows: list[Any],
+        approval_rows: list[Any],
+        issue_rows: list[Any],
+        issue_event_rows: list[Any],
+        return_rows: list[Any],
+        evaluated_at: datetime,
+    ) -> TaskCockpitApprovalReviewEnvelope:
+        def drift(reason: str) -> ApiError:
+            return ApiError(
+                code="TASK_COCKPIT_APPROVAL_REVIEW_DRIFTED",
+                message=f"Task Cockpit approval or ReviewIssue drifted: {reason}",
+                status_code=409,
+            )
+
+        task_id = str(run_row["task_id"])
+        run_id = str(run_row["run_id"])
+        plan_ref = ExactRevisionRef(
+            resourceType="PlanRevision",
+            resourceId=str(run_row["plan_revision_id"]),
+            revision=int(run_row["plan_revision"]),
+            contentHash=str(run_row["plan_content_hash"]),
+        )
+
+        def navigation(
+            *, route_identity: str, route_path: str, target_ref: ExactRevisionRef,
+            readiness: str, permission: str, blockers: list[str],
+        ) -> TaskCockpitApprovalNavigationTarget:
+            token = _checksum({
+                "orgId": scope.org_id,
+                "projectId": scope.project_id,
+                "runId": run_id,
+                "routeIdentity": route_identity,
+                "target": target_ref.model_dump(mode="json", by_alias=True),
+            })
+            return TaskCockpitApprovalNavigationTarget(
+                routeIdentity=route_identity,
+                routePath=route_path,
+                targetRef=target_ref,
+                commandReadiness=readiness,
+                requiredPermission=permission,
+                blockerCodes=blockers,
+                returnFocusToken=token,
+            )
+
+        try:
+            plan_approval = TaskCockpitPlanApproval(
+                planRef=plan_ref,
+                approvalStatus=run_row["approval_status"],
+                approvedBy=run_row["approved_by"],
+                approvedAt=run_row["approved_at"],
+                navigation=navigation(
+                    route_identity="aip.task-plan",
+                    route_path="/aip/studio?" + urlencode(
+                        {"taskId": task_id, "runId": run_id}
+                    ),
+                    target_ref=plan_ref,
+                    readiness="read_only_fact",
+                    permission="aip.task.plan.read",
+                    blockers=["RUN_ALREADY_MATERIALIZED_NO_APPROVAL_COMMAND"],
+                ),
+            )
+        except (TypeError, ValueError) as exc:
+            raise drift("Plan approval exact reference is invalid") from exc
+
+        approvals_by_proposal: dict[str, list[TaskCockpitApprovalDecision]] = {}
+        try:
+            for row in approval_rows:
+                approvals_by_proposal.setdefault(str(row["proposal_id"]), []).append(
+                    TaskCockpitApprovalDecision(
+                        approvalEventId=row["approval_event_id"],
+                        proposalVersion=row["proposal_version"],
+                        proposalHash=row["proposal_hash"],
+                        decision=row["decision"],
+                        actorId=row["actor_id"],
+                        expiresAt=row["expires_at"],
+                        createdAt=row["created_at"],
+                    )
+                )
+            action_approvals: list[TaskCockpitActionApproval] = []
+            for row in proposal_rows:
+                proposal_id = str(row["proposal_id"])
+                proposal_ref = ExactRevisionRef(
+                    resourceType="ActionProposalRevision",
+                    resourceId=proposal_id,
+                    revision=int(row["version"]),
+                    contentHash=str(row["proposal_hash"]),
+                )
+                action_approvals.append(
+                    TaskCockpitActionApproval(
+                        proposalRef=proposal_ref,
+                        actionTypeId=row["action_type_id"],
+                        status=row["status"],
+                        expiresAt=row["expires_at"],
+                        decisions=approvals_by_proposal.pop(proposal_id, []),
+                        navigation=navigation(
+                            route_identity="aip.action-drafts",
+                            route_path="/aip/drafts?" + urlencode(
+                                {
+                                    "taskId": task_id,
+                                    "runId": run_id,
+                                    "proposalId": proposal_id,
+                                }
+                            ),
+                            target_ref=proposal_ref,
+                            readiness="destination_reauthorization_required",
+                            permission="aip.action.approval.decide",
+                            blockers=["DESTINATION_REAUTHORIZATION_REQUIRED"],
+                        ),
+                    )
+                )
+        except (TypeError, ValueError) as exc:
+            raise drift("Action approval exact timeline is invalid") from exc
+        if approvals_by_proposal:
+            raise drift("ApprovalEvent references an unknown run-scoped Proposal")
+
+        events_by_issue: dict[str, list[TaskCockpitReviewIssueEvent]] = {}
+        returns_by_issue: dict[str, TaskCockpitReviewReturnLineage] = {}
+        try:
+            for row in issue_event_rows:
+                issue_id = str(row["issue_id"])
+                events_by_issue.setdefault(issue_id, []).append(
+                    TaskCockpitReviewIssueEvent(
+                        eventId=row["event_id"], sequence=row["sequence"],
+                        eventType=row["event_type"], issueVersion=row["issue_version"],
+                        payloadHash=row["payload_hash"], actor=row["actor"],
+                        createdAt=row["created_at"],
+                    )
+                )
+            for row in return_rows:
+                issue_id = str(row["issue_id"])
+                if issue_id in returns_by_issue:
+                    raise drift("ReviewIssue has more than one ReturnDecision")
+                if (
+                    str(row["run_id"]) != run_id
+                    or str(row["step_run_run_id"]) != run_id
+                    or str(row["step_key"]) != str(row["step_run_step_key"])
+                    or int(row["attempt"]) != int(row["step_run_attempt"])
+                ):
+                    raise drift("ReturnDecision StepRun exact lineage changed")
+                returns_by_issue[issue_id] = TaskCockpitReviewReturnLineage(
+                    decisionId=row["decision_id"], issueVersion=row["issue_version"],
+                    runId=row["run_id"], stepKey=row["step_key"],
+                    stepRunId=row["step_run_id"], attempt=row["attempt"],
+                    decisionHash=row["decision_hash"], createdAt=row["created_at"],
+                )
+            review_issues: list[TaskCockpitReviewIssue] = []
+            for row in issue_rows:
+                issue_id = str(row["issue_id"])
+                if row["artifact_hash"] != row["canonical_artifact_hash"]:
+                    raise drift("ReviewIssue Artifact hash changed")
+                lineage = returns_by_issue.pop(issue_id, None)
+                evidence_refs = row["evidence_refs"]
+                if not isinstance(evidence_refs, list):
+                    raise drift("ReviewIssue evidenceRefs shape changed")
+                review_issues.append(
+                    TaskCockpitReviewIssue(
+                        issueId=issue_id, version=row["version"], status=row["status"],
+                        severity=row["severity"], ruleRef=row["rule_ref"],
+                        artifactId=row["artifact_id"], artifactHash=row["artifact_hash"],
+                        evalReportRef={
+                            "resourceType": "EvalReportRevision",
+                            "resourceId": row["eval_report_id"],
+                            "revision": row["eval_report_revision"],
+                            "contentHash": row["eval_report_hash"],
+                        },
+                        returnStage=row["return_stage"], evidenceCount=len(evidence_refs),
+                        lineageReadiness=("attempt_exact" if lineage else "attempt_unresolved"),
+                        returnLineage=lineage,
+                        events=events_by_issue.pop(issue_id, []),
+                    )
+                )
+        except ApiError:
+            raise
+        except (TypeError, ValueError) as exc:
+            raise drift("ReviewIssue exact timeline is invalid") from exc
+        if events_by_issue or returns_by_issue:
+            raise drift("ReviewIssue event or ReturnDecision references an unknown issue")
+        try:
+            return TaskCockpitApprovalReviewEnvelope(
+                tenant={"orgId": scope.org_id, "projectId": scope.project_id},
+                runId=run_id, taskId=task_id, evaluatedAt=evaluated_at,
+                planApproval=plan_approval, actionApprovals=action_approvals,
+                reviewIssues=review_issues,
+                actionApprovalCount=len(action_approvals),
+                reviewIssueCount=len(review_issues),
+                unresolvedAttemptCount=sum(
+                    item.lineage_readiness == "attempt_unresolved" for item in review_issues
+                ),
+            )
+        except (TypeError, ValueError) as exc:
+            raise drift("approval and ReviewIssue envelope is invalid") from exc
 
     @staticmethod
     def _read_rows(

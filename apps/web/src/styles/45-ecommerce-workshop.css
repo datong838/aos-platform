@@ -422,7 +422,18 @@
 .task-cockpit-responsibility-grid li small { color: var(--aos-text-secondary); overflow-wrap: anywhere; }
 .task-cockpit-responsibility-grid li em { color: var(--aos-amber-700); font-size: 11px; font-style: normal; }
 .task-cockpit-responsibility-grid p { margin: 0; color: var(--aos-text-secondary); }
+.task-cockpit-approval-review { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--aos-border); background: color-mix(in srgb, var(--aos-surface) 94%, var(--aos-amber-50, #fffbeb)); }
+.task-cockpit-approval-boundary { margin: 0; padding: 8px 10px; border-left: 3px solid var(--aos-amber-600, #d97706); color: var(--aos-text-secondary); background: var(--aos-surface); font-size: 12px; }
+.task-cockpit-approval-review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.task-cockpit-approval-review-grid h4 { margin: 0 0 8px; font-size: 12px; color: var(--aos-text-secondary); }
+.task-cockpit-approval-review-grid ul { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.task-cockpit-approval-review-grid li { display: grid; gap: 3px; min-width: 0; padding: 9px 10px; border-left: 3px solid var(--aos-amber-600, #d97706); background: var(--aos-surface); }
+.task-cockpit-approval-review-grid li span,
+.task-cockpit-approval-review-grid li small { color: var(--aos-text-secondary); overflow-wrap: anywhere; }
+.task-cockpit-approval-review-grid li em { color: var(--aos-amber-700); font-size: 11px; font-style: normal; }
+.task-cockpit-approval-review-grid p { margin: 0; color: var(--aos-text-secondary); }
 @media (max-width: 720px) { .task-cockpit-responsibility-grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .task-cockpit-approval-review-grid { grid-template-columns: 1fr; } }
 .task-cockpit-run-detail table { width: 100%; border-collapse: collapse; min-width: 560px; }
 .task-cockpit-run-detail caption { text-align: left; font-weight: 600; margin-bottom: 6px; }
 .task-cockpit-run-detail th,

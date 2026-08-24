@@ -20,6 +20,7 @@ from aos_api.ecommerce_workshop_task_cockpit import (
     _decode_cursor,
 )
 from aos_api.ecommerce_workshop_task_cockpit_contracts import (
+    TaskCockpitApprovalReviewEnvelope,
     TaskCockpitCheckpointPageEnvelope,
     TaskCockpitCoreEnvelope,
     TaskCockpitProductionContextEnvelope,
@@ -657,6 +658,143 @@ def test_responsibility_handoff_contract_rejects_uncovered_compiled_slot() -> No
         TaskCockpitResponsibilityHandoffEnvelope.model_validate(payload)
 
 
+class ApprovalReviewConnection:
+    def __init__(self, *, drift_return: bool = False):
+        self.drift_return = drift_return
+        self.calls: list[tuple[str, tuple[Any, ...] | None]] = []
+
+    def execute(self, sql: str, params: tuple[Any, ...] | None = None):
+        self.calls.append((" ".join(sql.split()), params))
+        return self
+
+    def fetchone(self):
+        sql = self.calls[-1][0]
+        if "FROM aip_task_run run" in sql:
+            return {
+                "run_id": "run-1", "task_id": "task-1",
+                "plan_revision_id": "plan-1", "plan_revision": 2,
+                "plan_content_hash": "a" * 64, "approval_status": "approved",
+                "approved_by": "checker-1", "approved_at": NOW - timedelta(hours=1),
+            }
+        raise AssertionError(f"unexpected fetchone query: {sql}")
+
+    def fetchall(self):
+        sql = self.calls[-1][0]
+        if "FROM aip_action_proposal" in sql and "approval" not in sql.lower():
+            return [{
+                "proposal_id": "proposal-1", "action_type_id": "ecommerce.review",
+                "status": "approved", "expires_at": NOW + timedelta(hours=1),
+                "version": 2, "proposal_hash": "b" * 64,
+                "created_at": NOW - timedelta(minutes=20),
+            }]
+        if "FROM aip_action_approval_event approval" in sql:
+            return [{
+                "approval_event_id": "approval-1", "proposal_id": "proposal-1",
+                "proposal_version": 2, "proposal_hash": "b" * 64,
+                "decision": "approved", "actor_id": "checker-2",
+                "expires_at": NOW + timedelta(minutes=30),
+                "created_at": NOW - timedelta(minutes=10),
+            }]
+        if "FROM aip_review_issue issue" in sql and "SELECT issue.issue_id" in sql:
+            return [
+                {
+                    "issue_id": "issue-open", "rule_ref": {
+                        "resourceType": "EvalRuleRevision", "resourceId": "rule-1",
+                        "revision": 1, "contentHash": "c" * 64,
+                    }, "severity": "warning", "artifact_id": "artifact-1",
+                    "artifact_hash": "d" * 64, "canonical_artifact_hash": "d" * 64,
+                    "eval_report_id": "report-1", "eval_report_revision": 1,
+                    "eval_report_hash": "e" * 64, "evidence_refs": [],
+                    "return_stage": "research", "status": "open", "version": 1,
+                    "created_at": NOW - timedelta(minutes=8),
+                },
+                {
+                    "issue_id": "issue-returned", "rule_ref": {
+                        "resourceType": "EvalRuleRevision", "resourceId": "rule-2",
+                        "revision": 1, "contentHash": "f" * 64,
+                    }, "severity": "error", "artifact_id": "artifact-2",
+                    "artifact_hash": "1" * 64, "canonical_artifact_hash": "1" * 64,
+                    "eval_report_id": "report-2", "eval_report_revision": 2,
+                    "eval_report_hash": "2" * 64,
+                    "evidence_refs": [{"resourceType": "Evidence", "resourceId": "e-1"}],
+                    "return_stage": "review", "status": "returned", "version": 2,
+                    "created_at": NOW - timedelta(minutes=6),
+                },
+            ]
+        if "FROM aip_review_issue_event event" in sql:
+            return [
+                {"event_id": "event-open", "issue_id": "issue-open", "sequence": 1,
+                 "event_type": "opened", "issue_version": 1, "payload_hash": "3" * 64,
+                 "actor": "eval-service", "created_at": NOW - timedelta(minutes=8)},
+                {"event_id": "event-return-open", "issue_id": "issue-returned", "sequence": 1,
+                 "event_type": "opened", "issue_version": 1, "payload_hash": "4" * 64,
+                 "actor": "eval-service", "created_at": NOW - timedelta(minutes=6)},
+                {"event_id": "event-returned", "issue_id": "issue-returned", "sequence": 2,
+                 "event_type": "returned", "issue_version": 2, "payload_hash": "5" * 64,
+                 "actor": "reviewer", "created_at": NOW - timedelta(minutes=4)},
+            ]
+        if "FROM aip_return_decision decision" in sql:
+            return [{
+                "decision_id": "return-1", "issue_id": "issue-returned",
+                "issue_version": 1, "run_id": "run-1", "step_key": "review",
+                "step_run_id": "step-run-2", "attempt": 2,
+                "decision_hash": "6" * 64, "created_at": NOW - timedelta(minutes=4),
+                "step_run_run_id": "run-other" if self.drift_return else "run-1",
+                "step_run_step_key": "review", "step_run_attempt": 2,
+            }]
+        raise AssertionError(f"unexpected fetchall query: {sql}")
+
+
+def _approval_review_cockpit(*, drift_return: bool = False):
+    connection = ApprovalReviewConnection(drift_return=drift_return)
+
+    @contextmanager
+    def connect():
+        yield connection
+
+    return EcommerceWorkshopTaskCockpit(connect_factory=connect, clock=lambda: NOW), connection
+
+
+def test_approval_review_reads_exact_facts_and_preserves_unresolved_attempt() -> None:
+    cockpit, connection = _approval_review_cockpit()
+    result = cockpit.read_approval_review_issues(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    )
+    assert result.plan_approval.approval_status == "approved"
+    assert result.plan_approval.navigation.command_readiness == "read_only_fact"
+    assert result.action_approvals[0].decisions[0].decision == "approved"
+    assert result.action_approvals[0].navigation.command_readiness == "destination_reauthorization_required"
+    assert result.review_issue_count == 2
+    assert result.unresolved_attempt_count == 1
+    assert result.review_issues[0].lineage_readiness == "attempt_unresolved"
+    assert result.review_issues[1].return_lineage is not None
+    assert result.review_issues[1].return_lineage.attempt == 2
+    assert len(result.plan_approval.navigation.return_focus_token) == 64
+    sql = " ".join(call[0] for call in connection.calls).upper()
+    assert "REPEATABLE READ READ ONLY" in sql
+    assert "SET LOCAL ROLE AOS_RUNTIME" in sql
+    assert "INSERT " not in sql and "UPDATE " not in sql and "DELETE " not in sql
+
+
+def test_approval_review_fails_closed_on_return_step_run_drift() -> None:
+    cockpit, _ = _approval_review_cockpit(drift_return=True)
+    with pytest.raises(ApiError) as captured:
+        cockpit.read_approval_review_issues(
+            org_id="org-org", project_id="dev-project", run_id="run-1"
+        )
+    assert captured.value.code == "TASK_COCKPIT_APPROVAL_REVIEW_DRIFTED"
+
+
+def test_approval_review_contract_rejects_count_drift() -> None:
+    cockpit, _ = _approval_review_cockpit()
+    payload = cockpit.read_approval_review_issues(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    ).model_dump(mode="json", by_alias=True)
+    payload["reviewIssueCount"] = 1
+    with pytest.raises(ValidationError):
+        TaskCockpitApprovalReviewEnvelope.model_validate(payload)
+
+
 def test_contract_rejects_unknown_fields_naive_times_and_count_drift() -> None:
     base = {
         "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
@@ -814,6 +952,13 @@ class FakeCockpit:
         cockpit, _ = _responsibility_cockpit()
         return cockpit.read_responsibility_handoffs(**kwargs)
 
+    def read_approval_review_issues(self, **kwargs):
+        self.detail_calls.append(("approval-review-issues", kwargs))
+        if self.fail:
+            raise TaskCockpitPersistenceError("sensitive database detail")
+        cockpit, _ = _approval_review_cockpit()
+        return cockpit.read_approval_review_issues(**kwargs)
+
 
 class FakeCatalog:
     def __init__(self, *, installed: bool = True):
@@ -926,6 +1071,9 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
         responsibility = client.get(
             "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/responsibility-handoffs"
         )
+        approval_review = client.get(
+            "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/approval-review-issues"
+        )
         injected = client.get(
             "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/steps?orgId=dev-org"
         )
@@ -933,6 +1081,7 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
     assert checkpoints.status_code == 200
     assert production.status_code == 200
     assert responsibility.status_code == 200
+    assert approval_review.status_code == 200
     assert injected.status_code == 400
     assert cockpit.detail_calls == [
         (
@@ -971,5 +1120,13 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
                 "run_id": "run-1",
             },
         ),
+        (
+            "approval-review-issues",
+            {
+                "org_id": "org-org",
+                "project_id": "dev-project",
+                "run_id": "run-1",
+            },
+        ),
     ]
-    assert len(catalog.calls) == 4
+    assert len(catalog.calls) == 5
