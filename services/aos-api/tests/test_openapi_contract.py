@@ -83,8 +83,8 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2558
-    assert len(schema.get("components", {}).get("schemas", {})) == 2046
+    assert len(schema["paths"]) == 2561
+    assert len(schema.get("components", {}).get("schemas", {})) == 2078
 
 
 def test_source_readiness_contract_is_principal_scoped_and_read_only() -> None:
