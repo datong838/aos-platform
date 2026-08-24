@@ -21,6 +21,11 @@ _INTERNAL_BLOCKER = OperationCommandBlocker(
     dependency="W3-12B2",
     required_action="接入 expectedVersion、幂等 Receipt 与内部 authority command handler",
 )
+_REQUEST_GOVERNANCE_BLOCKER = OperationCommandBlocker(
+    code="EXACT_ACTION_CHAIN_REQUIRED",
+    dependency="request-scoped canonical action governance",
+    required_action="提交同租户 exact Proposal、有效 Approval、active ExecutionLease 与幂等键",
+)
 _GOVERNANCE_BLOCKER = OperationCommandBlocker(
     code="PROPOSAL_APPROVAL_LEASE_NOT_BOUND",
     dependency="canonical action governance",
@@ -41,14 +46,30 @@ class EcommerceOperationCommands:
     ) -> OperationCommandReadinessEnvelope:
         tenant = TenantContext(org_id=org_id, project_id=project_id)
         definitions = (
-            (OperationCommandId.CLASSIFY, "分类事件", OperationCommandRisk.CONTROLLED),
-            (OperationCommandId.CREATE_CASE, "创建运营工单", OperationCommandRisk.CONTROLLED),
+            (
+                OperationCommandId.CLASSIFY,
+                "分类事件",
+                OperationCommandRisk.CONTROLLED,
+                _REQUEST_GOVERNANCE_BLOCKER,
+            ),
+            (
+                OperationCommandId.CREATE_CASE,
+                "创建运营工单",
+                OperationCommandRisk.CONTROLLED,
+                _REQUEST_GOVERNANCE_BLOCKER,
+            ),
             (
                 OperationCommandId.CHANGE_MEMBERSHIP,
                 "调整工单成员",
                 OperationCommandRisk.CONTROLLED,
+                _INTERNAL_BLOCKER,
             ),
-            (OperationCommandId.MANAGE_SLA, "管理 SLA", OperationCommandRisk.CONTROLLED),
+            (
+                OperationCommandId.MANAGE_SLA,
+                "管理 SLA",
+                OperationCommandRisk.CONTROLLED,
+                _INTERNAL_BLOCKER,
+            ),
         )
         commands = [
             OperationCommandDescriptor(
@@ -57,9 +78,9 @@ class EcommerceOperationCommands:
                 status=OperationCommandStatus.BLOCKED,
                 risk=risk,
                 side_effect=OperationCommandSideEffect.INTERNAL_AUTHORITY,
-                blockers=[_INTERNAL_BLOCKER],
+                blockers=[blocker],
             )
-            for command_id, label, risk in definitions
+            for command_id, label, risk, blocker in definitions
         ]
         commands.extend(
             [

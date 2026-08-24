@@ -19,6 +19,7 @@ from aos_api.ecommerce_operation_case_contracts import (
     ExactAuthorityRevisionRef,
     OperationCaseEvent,
     OperationCaseRevision,
+    OperationAuthorityReceipt,
     OperationEventClassificationDecisionRevision,
     SlaClockDecision,
     SlaPolicyRevision,
@@ -213,6 +214,48 @@ class OperationAuthorityStore:
             self._receipt(conn, scope, operation, key, request_hash, result, actor)
             conn.commit()
             return result
+
+    def get_receipt(
+        self,
+        scope: TenantScope,
+        *,
+        operation: str,
+        idempotency_key: str,
+    ) -> OperationAuthorityReceipt:
+        """Read the exact immutable Receipt created by a successful command."""
+        try:
+            with self._connect_factory(scope) as conn:
+                conn.execute(
+                    "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+                )
+                row = conn.execute(
+                    "SELECT receipt_id,operation,idempotency_key,request_hash,"
+                    "result_ref,created_by,created_at "
+                    "FROM ecommerce_operation_authority_receipt "
+                    "WHERE org_id=%s AND project_id=%s AND operation=%s "
+                    "AND idempotency_key=%s",
+                    (*scope.key, operation, idempotency_key),
+                ).fetchone()
+            if row is None:
+                raise OperationAuthorityReadError(
+                    "operation authority Receipt is unavailable"
+                )
+            return OperationAuthorityReceipt(
+                tenant={"orgId": scope.org_id, "projectId": scope.project_id},
+                receipt_id=row["receipt_id"],
+                operation=row["operation"],
+                idempotency_key=row["idempotency_key"],
+                request_hash=row["request_hash"],
+                result_ref=self._load(row["result_ref"]),
+                created_by=row["created_by"],
+                created_at=row["created_at"],
+            )
+        except OperationAuthorityReadError:
+            raise
+        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:
+            raise OperationAuthorityReadError(
+                "operation authority Receipt read failed closed"
+            ) from exc
 
     def publish_sla_policy(
         self,

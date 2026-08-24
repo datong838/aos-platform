@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -11,6 +13,9 @@ from aos_api.errors import register_exception_handlers
 from aos_api.routers import ecommerce_workshop
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
 from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
+from aos_api.ecommerce_operation_command_execution_contracts import (
+    OperationCommandExecutionEnvelope,
+)
 
 
 class FakeCatalog:
@@ -29,6 +34,7 @@ def _client(
     catalog: FakeCatalog | None = None,
     operations: EcommerceWorkshopOperations | None = None,
     commands: EcommerceOperationCommands | None = None,
+    command_service: object | None = None,
 ) -> TestClient:
     app = FastAPI()
     register_exception_handlers(app)
@@ -51,6 +57,10 @@ def _client(
         app.dependency_overrides[
             ecommerce_workshop.get_ecommerce_operation_commands
         ] = lambda: commands
+    if command_service is not None:
+        app.dependency_overrides[
+            ecommerce_workshop.get_ecommerce_operation_command_service
+        ] = lambda: command_service
     return TestClient(app, raise_server_exceptions=False)
 
 
@@ -188,3 +198,101 @@ def test_openapi_exposes_only_operation_command_readiness_get() -> None:
     assert surface["get"]["operationId"] == (
         "ecommerceWorkshopOperationCommandReadinessGet"
     )
+
+
+class FakeOperationCommandService:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def classify(self, principal, idempotency_key, body):
+        self.calls.append((principal, idempotency_key, body))
+        return OperationCommandExecutionEnvelope.model_validate(
+            {
+                "tenant": {"orgId": principal.org_id, "projectId": principal.project_id},
+                "commandId": "classify",
+                "status": "applied",
+                "proposalId": body.governance.proposal_id,
+                "leaseId": body.governance.lease_id,
+                "operationReceipt": {
+                    "tenant": {"orgId": principal.org_id, "projectId": principal.project_id},
+                    "receiptId": "op-receipt-1",
+                    "operation": "operation_classification.append",
+                    "idempotencyKey": idempotency_key,
+                    "requestHash": "a" * 64,
+                    "resultRef": {"resourceId": "classification-1", "revision": 1, "contentHash": "a" * 64},
+                    "createdBy": principal.subject,
+                    "createdAt": datetime(2026, 8, 24, tzinfo=UTC),
+                },
+            }
+        )
+
+
+def _classification_payload() -> dict:
+    return {
+        "governance": {
+            "proposalId": "proposal-1",
+            "proposalVersion": 2,
+            "proposalHash": "b" * 64,
+            "approvalEventIds": ["approval-1"],
+            "leaseId": "lease-1",
+        },
+        "expectedVersion": 0,
+        "revision": {
+            "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+            "decisionId": "classification-1",
+            "revision": 1,
+            "originalRef": {
+                "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+                "resourceType": "Order",
+                "resourceId": "order-1",
+                "contentHash": "a" * 64,
+                "sourceUpdatedAt": "2026-08-24T00:00:00Z",
+            },
+            "classifierRef": {"resourceId": "classifier-1", "revision": 1, "contentHash": "a" * 64},
+            "aggregationPolicyRef": {"resourceId": "policy-1", "revision": 1, "contentHash": "a" * 64},
+            "classification": "fulfillment-risk",
+            "confidence": 0.9,
+            "reason": "exact source evidence",
+            "contentHash": "a" * 64,
+            "actor": "user:test",
+            "createdAt": "2026-08-24T00:00:00Z",
+        },
+    }
+
+
+def test_classify_command_requires_idempotency_and_rejects_body_scope_injection() -> None:
+    service = FakeOperationCommandService()
+    payload = _classification_payload()
+    with _client(command_service=service) as client:
+        missing_key = client.post(
+            "/v1/ecommerce-workshop/commands/operations/classify", json=payload
+        )
+        injected = client.post(
+            "/v1/ecommerce-workshop/commands/operations/classify",
+            headers={"Idempotency-Key": "command-key-1"},
+            json={**payload, "orgId": "dev-org"},
+        )
+        response = client.post(
+            "/v1/ecommerce-workshop/commands/operations/classify",
+            headers={"Idempotency-Key": "command-key-1"},
+            json=payload,
+        )
+
+    assert missing_key.status_code == 400
+    assert injected.status_code == 400
+    assert response.status_code == 200
+    assert response.json()["operationReceipt"]["receiptId"] == "op-receipt-1"
+    assert service.calls[0][0].org_id == "org-org"
+    assert service.calls[0][1] == "command-key-1"
+
+
+def test_openapi_exposes_two_explicit_internal_command_posts() -> None:
+    with _client() as client:
+        document = client.get("/openapi.json").json()
+
+    classify = document["paths"]["/v1/ecommerce-workshop/commands/operations/classify"]
+    create_case = document["paths"]["/v1/ecommerce-workshop/commands/operations/create-case"]
+    assert set(classify) == {"post"}
+    assert set(create_case) == {"post"}
+    assert classify["post"]["operationId"] == "ecommerceWorkshopOperationClassifyPost"
+    assert create_case["post"]["operationId"] == "ecommerceWorkshopOperationCreateCasePost"

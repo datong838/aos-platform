@@ -6,7 +6,7 @@ from collections.abc import Callable
 from functools import lru_cache
 from typing import Annotated, TypeVar
 
-from fastapi import APIRouter, Depends, Path, Query, Request, Security
+from fastapi import APIRouter, Depends, Header, Path, Query, Request, Security
 from fastapi.security import HTTPBearer
 
 from aos_api.asset_registry.errors import AssetRegistryError
@@ -23,6 +23,17 @@ from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
 from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
 from aos_api.ecommerce_operation_command_contracts import (
     OperationCommandReadinessEnvelope,
+)
+from aos_api.ecommerce_operation_command_execution_contracts import (
+    ClassifyOperationCommandRequest,
+    CreateOperationCaseCommandRequest,
+    OperationCommandExecutionEnvelope,
+)
+from aos_api.ecommerce_operation_command_service import (
+    CanonicalOperationActionControl,
+    EcommerceOperationCommandService,
+    OperationCommandConflict,
+    OperationCommandDependencyUnavailable,
 )
 from aos_api.ecommerce_workshop_operations_contracts import (
     WorkshopOperationsViewEnvelope,
@@ -105,6 +116,13 @@ def get_ecommerce_operation_commands() -> EcommerceOperationCommands:
     return EcommerceOperationCommands()
 
 
+@lru_cache(maxsize=1)
+def get_ecommerce_operation_command_service() -> EcommerceOperationCommandService:
+    return EcommerceOperationCommandService(
+        action_control=CanonicalOperationActionControl()
+    )
+
+
 CatalogDependency = Annotated[
     EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)
 ]
@@ -123,6 +141,31 @@ OperationCommandsDependency = Annotated[
     EcommerceOperationCommands,
     Depends(get_ecommerce_operation_commands),
 ]
+OperationCommandServiceDependency = Annotated[
+    EcommerceOperationCommandService,
+    Depends(get_ecommerce_operation_command_service),
+]
+
+
+def _operation_command_idempotency(value: str) -> str:
+    cleaned = value.strip()
+    if not cleaned or len(cleaned) > 200:
+        raise ApiError(
+            code="ECOMMERCE_OPERATION_COMMAND_INVALID_ARGUMENT",
+            message="Idempotency-Key must be 1..200 characters",
+            status_code=400,
+        )
+    return cleaned
+
+
+def _map_operation_command_error(exc: Exception) -> ApiError:
+    if isinstance(exc, OperationCommandConflict):
+        return ApiError(code=exc.code, message=str(exc), status_code=409)
+    return ApiError(
+        code=getattr(exc, "code", "ECOMMERCE_OPERATION_COMMAND_ERROR"),
+        message=str(exc) or "operation command failed closed",
+        status_code=503,
+    )
 
 
 def _reject_query_parameters(request: Request) -> None:
@@ -320,6 +363,50 @@ def get_ecommerce_operation_command_readiness(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
+
+
+@router.post(
+    "/commands/operations/classify",
+    response_model=OperationCommandExecutionEnvelope,
+    operation_id="ecommerceWorkshopOperationClassifyPost",
+    responses=_ERRORS,
+)
+def classify_ecommerce_operation_event(
+    body: ClassifyOperationCommandRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: OperationCommandServiceDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> OperationCommandExecutionEnvelope:
+    _require_operations_installation(principal=principal, catalog=catalog)
+    try:
+        return service.classify(
+            principal, _operation_command_idempotency(idempotency_key), body
+        )
+    except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:
+        raise _map_operation_command_error(exc) from exc
+
+
+@router.post(
+    "/commands/operations/create-case",
+    response_model=OperationCommandExecutionEnvelope,
+    operation_id="ecommerceWorkshopOperationCreateCasePost",
+    responses=_ERRORS,
+)
+def create_ecommerce_operation_case(
+    body: CreateOperationCaseCommandRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: OperationCommandServiceDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> OperationCommandExecutionEnvelope:
+    _require_operations_installation(principal=principal, catalog=catalog)
+    try:
+        return service.create_case(
+            principal, _operation_command_idempotency(idempotency_key), body
+        )
+    except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:
+        raise _map_operation_command_error(exc) from exc
 
 
 @router.get(

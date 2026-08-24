@@ -199,3 +199,39 @@ def test_list_cases_is_bounded_read_only_and_tenant_scoped() -> None:
     assert "REPEATABLE READ READ ONLY" in sql
     assert "WHERE head.org_id=%s AND head.project_id=%s" in sql
     assert connection.calls[-1][1] == ("org-org", "dev-project", 1)
+
+
+def test_get_receipt_returns_exact_tenant_bound_immutable_receipt() -> None:
+    connection = Connection(
+        rows=[
+            {
+                "receipt_id": "op-receipt-1",
+                "operation": "operation_case.create",
+                "idempotency_key": "case-key",
+                "request_hash": HASH,
+                "result_ref": {
+                    "resourceId": "case-1",
+                    "revision": 1,
+                    "contentHash": HASH,
+                },
+                "created_by": "user:operator",
+                "created_at": NOW,
+            },
+        ]
+    )
+    store = OperationAuthorityStore(factory(connection))
+    receipt = store.get_receipt(
+        SCOPE,
+        operation="operation_case.create",
+        idempotency_key="case-key",
+    )
+
+    assert receipt.receipt_id == "op-receipt-1"
+    assert receipt.tenant.org_id == "org-org"
+    assert "REPEATABLE READ READ ONLY" in connection.calls[0][0]
+    assert connection.calls[1][1] == (
+        "org-org",
+        "dev-project",
+        "operation_case.create",
+        "case-key",
+    )
