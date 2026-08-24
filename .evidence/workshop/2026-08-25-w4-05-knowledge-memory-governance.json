@@ -1,0 +1,58 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "taskId": "workshop-w4-05-knowledge-memory-governance-20260825",
+  "wave": "W4-05",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "authorityBaseRevision": "AOS-000229",
+  "gitCommit": "70b9a19b143588e6d8915b06106e4ee70464ec81",
+  "outcome": "W4_05_GOVERNED_MEMORY_ASSEMBLY_CODE_BROWSER_GREEN_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "scope": {
+    "implemented": [
+      "Search provider readiness is confirmed only by the tenant fulltext capability authority",
+      "Web SDK rejects provider/capability contradictions",
+      "Knowledge governance deep links preserve exact Subject, Task and Skill context",
+      "Workshop renders atomic Skill to Logic to coworker to module contribution context"
+    ],
+    "preservedBlockers": [
+      "knowledge_package_installation_authority_unavailable",
+      "gold_set_registry_authority_unavailable",
+      "real tenant positive Candidate, Memory and Citation samples may be absent"
+    ],
+    "forbiddenEffects": [
+      "no pipeline execution",
+      "no candidate submission or promotion",
+      "no live migration",
+      "no release",
+      "no real business mutation"
+    ]
+  },
+  "tests": {
+    "backendTargeted": "21 passed",
+    "backendCumulative": "73 passed",
+    "webTargeted": "23 passed",
+    "webCumulative": "221 files / 2093 tests passed",
+    "webBuild": "TypeScript and production build passed",
+    "openapi": "deterministic/current; 13 tests passed",
+    "compileall": "passed",
+    "diffCheck": "passed"
+  },
+  "browser": {
+    "client": "Codex built-in browser",
+    "route": "/aip/memory-governance?view=query&subjectType=Product&subjectId=p-1&taskId=task-1&skillId=extract-memory-candidate&logicId=review-to-memory&coworkerId=content-officer&moduleId=content",
+    "observations": [
+      "exact contribution context rendered and survived reload",
+      "Subject, Task and Skill fields were prefilled from the deep link",
+      "a contradictory fixture readiness payload was rejected fail-closed",
+      "no query, governance command, pipeline command or write action was invoked"
+    ],
+    "runtimeBoundary": "Browser transport used the local read-only Workshop fixture; it is UI acceptance evidence, not production operational readiness."
+  },
+  "fileHashes": {
+    "services/aos-api/aos_api/aip_memory_readiness.py": "sha256:13fbd18e2dac283fff548889ab7835eba9ed0847807e5a341711a839503deb68",
+    "apps/web/src/api/aipMemory/contracts.ts": "sha256:d0c344008adc05ecbc194533c0cdd101d7de8f3970848eaa3123c181d16e3973",
+    "apps/web/src/pages/s2/MemoryGovernancePage.tsx": "sha256:a86a439222ba4d040c612535cbec33f6766d514db607275586c27caad42c6a45"
+  }
+}
