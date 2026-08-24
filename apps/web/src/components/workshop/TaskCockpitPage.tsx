@@ -9,6 +9,7 @@ import {
   type TaskCockpitCoreResponse,
   type TaskCockpitProductionContextResponse,
   type TaskCockpitResponsibilityHandoffResponse,
+  type ResponsibilityAssignmentObservation,
   type TaskCockpitSkillContributionResponse,
   type TaskCockpitStepPageResponse,
   type TaskCockpitTaskStatus,
@@ -18,11 +19,12 @@ import { useSourceReadinessSnapshot } from "./SourceReadinessContext";
 import { aipAgentControl, type IssuedHandoff } from "../../api/aipAgentControl";
 import type { ModuleHandoffCompileResponse, TaskCockpitTask, TaskCockpitRun } from "../../api/ecommerceWorkshop";
 
-type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions">;
+type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getResponsibilityAssignmentObservation">>;
 type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
 type SkillContributionState = { phase: "loading" | "ready" | "failed"; response: TaskCockpitSkillContributionResponse | null };
-type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null; skillContributions: SkillContributionState } | null;
+type AssignmentObservationState = { phase: "loading" | "ready" | "failed"; response: ResponsibilityAssignmentObservation | null };
+type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null; skillContributions: SkillContributionState; assignmentObservation: AssignmentObservationState } | null;
 const TASK_STATUSES: readonly { value: "" | TaskCockpitTaskStatus; label: string }[] = [
   { value: "", label: "全部状态" }, { value: "pending", label: "待规划" }, { value: "planning", label: "规划中" }, { value: "awaiting_approval", label: "待审批" }, { value: "approved", label: "已批准" }, { value: "executing", label: "执行中" }, { value: "paused", label: "已暂停" }, { value: "completed", label: "已完成" }, { value: "failed", label: "失败" }, { value: "cancelled", label: "已取消" }, { value: "rolled_back", label: "已回滚" },
 ];
@@ -155,7 +157,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
   const toggleDetails = (runId: string) => {
     if (detail?.runId === runId) { detailRequest.current += 1; setDetail(null); return; }
     const requestId = ++detailRequest.current;
-    setDetail({ runId, phase: "loading", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null, skillContributions: { phase: "loading", response: null } });
+    setDetail({ runId, phase: "loading", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null, skillContributions: { phase: "loading", response: null }, assignmentObservation: { phase: "loading", response: null } });
     void Promise.all([client.listTaskCockpitRunSteps(runId, { limit: 20 }), client.listTaskCockpitRunCheckpoints(runId, { limit: 20 }), client.getTaskCockpitRunProductionContext(runId), client.getTaskCockpitRunResponsibilityHandoffs(runId), client.getTaskCockpitRunApprovalReview(runId), client.getTaskCockpitRunActionReceipts(runId)]).then(
       ([steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview, actionReceipts]) => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, phase: "ready", steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview, actionReceipts } : current); },
       () => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, phase: "failed", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null } : current); },
@@ -164,6 +166,14 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
       (next) => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, skillContributions: { phase: "ready", response: next } } : current); },
       () => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, skillContributions: { phase: "failed", response: null } } : current); },
     );
+    if (client.getResponsibilityAssignmentObservation) {
+      void client.getResponsibilityAssignmentObservation(runId).then(
+        (next) => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, assignmentObservation: { phase: "ready", response: next } } : current); },
+        () => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, assignmentObservation: { phase: "failed", response: null } } : current); },
+      );
+    } else {
+      setDetail((current) => current?.runId === runId ? { ...current, assignmentObservation: { phase: "failed", response: null } } : current);
+    }
   };
 
   const content = response ? (() => {
@@ -265,6 +275,17 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
                       return <li className={`is-${slot.assignee.operationalReadiness}`} key={slot.slotId}><strong>{slot.responsibilityType}</strong><span>{slot.slotId} → {slot.assignee.resourceId} · v{slot.assignee.version}</span><small>所需能力：{slot.requiredCapabilityIds.join("、")} · 返回阶段：{slot.returnStage}</small><em>{readinessLabel}{latestReceipt ? ` · ${formatTime(latestReceipt.createdAt)}` : " · 无 exact Receipt"}</em>{latestReceipt?.blockerCodes.length ? <small>阻断：{latestReceipt.blockerCodes.join("、")}</small> : null}</li>;
                     })}</ul></div>
                     <div><h4>交接决定链</h4>{detail.responsibilityHandoffs.handoffs.length ? <ul>{detail.responsibilityHandoffs.handoffs.map((handoff) => <li key={handoff.handoffId}><strong>{handoff.senderInstanceRef.resourceId} → {handoff.receiverInstanceRef.resourceId}</strong><span>{handoff.handoffId} · {handoff.status} · v{handoff.version}</span><small>{handoff.decisions.length ? handoff.decisions.map((decision) => `r${decision.revision} ${decision.decision}`).join(" → ") : "尚无业务决定；consumed 不等于 accepted"}</small></li>)}</ul> : <p>当前 Run 无 canonical Handoff；未使用示例交接填充。</p>}</div>
+                  </div>
+                  <div className={`task-cockpit-assignment-control is-${detail.assignmentObservation.phase}`} aria-label="职责覆盖 Readiness 改派与人工接管四轴">
+                    <h4>职责控制四轴</h4>
+                    <dl>
+                      <div><dt>结构覆盖</dt><dd>{detail.responsibilityHandoffs.compiledRequiredSlotIds.length} / {detail.responsibilityHandoffs.compiledRequiredSlotIds.length} 必需槽位已覆盖</dd></div>
+                      <div><dt>当前可执行</dt><dd>{detail.responsibilityHandoffs.slots.every((slot) => slot.assignee.operationalReadiness === "resolved_at_observation") ? "仅观测时已解析；当前时刻仍须重验" : "未证实；保持失败关闭"}</dd></div>
+                      <div><dt>启动前改派</dt><dd>TaskRun 已存在；禁止改写 frozen Plan，必须使用运行中接管</dd></div>
+                      <div><dt>运行中接管</dt><dd>{detail.assignmentObservation.phase === "ready" && detail.assignmentObservation.response ? `${detail.assignmentObservation.response.takeoverRequests.length} 个请求 · ${detail.assignmentObservation.response.takeoverDecisions.length} 个决定 · ${detail.assignmentObservation.response.assignmentLeases.length} 个当前 Lease` : detail.assignmentObservation.phase === "loading" ? "正在读取独立 authority" : "独立 authority 不可用；不解释为空"}</dd></div>
+                    </dl>
+                    {detail.assignmentObservation.phase === "ready" && detail.assignmentObservation.response?.takeoverRequests.some((request) => request.safetyState === "provider_outcome_unknown") ? <p role="alert">Provider outcome unknown：必须先追加对账证据，禁止接管或重放。</p> : null}
+                    <div className="task-cockpit-assignment-actions"><button type="button" disabled aria-describedby={`reassign-blocker-${task.taskId}`}>生成改派后继</button><small id={`reassign-blocker-${task.taskId}`}>TASK_RUN_EXISTS_USE_TAKEOVER：当前 Run 已存在。</small><button type="button" disabled aria-describedby={`takeover-blocker-${task.taskId}`}>申请人工接管</button><small id={`takeover-blocker-${task.taskId}`}>命令入口尚未取得 exact Step、Resolution Receipt、maker-checker 与安全点重验，不执行副作用。</small></div>
                   </div>
                   <ModuleHandoffCommandPanel task={task} run={task.run!} responsibility={detail.responsibilityHandoffs} workshopClient={client} commandClient={handoffClient} onRefresh={() => toggleDetails(task.run!.runId)} />
                 </section>

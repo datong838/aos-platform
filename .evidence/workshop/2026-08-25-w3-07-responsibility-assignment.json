@@ -1,0 +1,44 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "task_id": "workshop-w3-07-responsibility-readiness-reassign-takeover-20260825",
+  "base_revision": "AOS-000218",
+  "branch": "m1",
+  "base_commit": "02899ba96f0e99858dd2a21f16914bdc0d748063",
+  "recorded_at": "2026-08-25T01:00:19+08:00",
+  "result": "CODE_CONTROL_BROWSER_GREEN_NO_RELEASE_NO_MIGRATION_APPLIED_NO_EXTERNAL_EFFECT",
+  "implemented": [
+    "immutable frozen ResponsibilityPlan successor with expected-version CAS and TaskRun boundary",
+    "maker-checker takeover request and decision with decision-time StepRun safety revalidation",
+    "monotonic assignment lease fence and exact current-fence assertion",
+    "tenant-scoped append-only authority tables with RLS FORCE and fail-closed downgrade",
+    "strict run observation separating requests decisions and current leases",
+    "Task Cockpit four-axis projection separating structural coverage observed readiness pre-run reassign and runtime takeover"
+  ],
+  "verification": {
+    "backend_focused": "11 passed",
+    "backend_cumulative": "54 passed",
+    "frontend_focused": "47 passed",
+    "frontend_cumulative": "220 files / 2068 tests passed",
+    "web_build": "GREEN",
+    "python_compile": "GREEN",
+    "openapi_routes": 5,
+    "migration_graph": "w3_016 single head",
+    "migration_sql": "w3_015:w3_016 offline SQL GREEN; full-history offline generation remains blocked by pre-existing 228asset0 migration incompatibility",
+    "browser": "built-in browser at 1280px; /workshop/cockpit preserves explicit aos-api unavailable and read failure states; no horizontal overflow; no command clicked"
+  },
+  "side_effects": {
+    "migration_applied": false,
+    "release_performed": false,
+    "provider_called": false,
+    "agent_run_started": false,
+    "action_executed": false,
+    "approval_decided": false,
+    "handoff_issued": false,
+    "business_data_mutated": false
+  },
+  "residual_risks": [
+    "new tables are not operational until an authorized migration apply and release gate completes",
+    "browser runtime API was unavailable, so canonical data rendering is covered by strict component tests while browser evidence covers visual fail-closed behavior",
+    "current executability still requires a fresh exact AssigneeResolution observation; an old resolved receipt is not treated as standing readiness"
+  ]
+}

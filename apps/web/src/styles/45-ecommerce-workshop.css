@@ -443,6 +443,15 @@
 .task-cockpit-responsibility-grid li small { color: var(--aos-text-secondary); overflow-wrap: anywhere; }
 .task-cockpit-responsibility-grid li em { color: var(--aos-amber-700); font-size: 11px; font-style: normal; }
 .task-cockpit-responsibility-grid p { margin: 0; color: var(--aos-text-secondary); }
+.task-cockpit-assignment-control { display: grid; gap: 10px; margin-top: 12px; padding: 12px; border: 1px solid var(--aos-border-subtle); background: var(--aos-surface); }
+.task-cockpit-assignment-control h4 { margin: 0; font-size: 12px; color: var(--aos-text-secondary); }
+.task-cockpit-assignment-control dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.task-cockpit-assignment-control dl > div { display: grid; gap: 4px; min-width: 0; padding: 8px; background: var(--aos-surface-muted); }
+.task-cockpit-assignment-control dt { color: var(--aos-text-secondary); font-size: 11px; }
+.task-cockpit-assignment-control dd { margin: 0; overflow-wrap: anywhere; font-size: 12px; }
+.task-cockpit-assignment-control p { margin: 0; color: var(--aos-red-700, #b91c1c); }
+.task-cockpit-assignment-actions { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 10px; align-items: center; }
+.task-cockpit-assignment-actions small { color: var(--aos-text-secondary); }
 .task-cockpit-handoff-command { display: grid; gap: 10px; padding: 12px; border: 1px solid color-mix(in srgb, var(--aos-indigo-600, #4f46e5) 30%, var(--aos-border)); background: var(--aos-surface); }
 .task-cockpit-handoff-command-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
 .task-cockpit-handoff-command-grid label { display: grid; gap: 4px; color: var(--aos-text-secondary); font-size: 11px; }
@@ -487,7 +496,7 @@
 .task-cockpit-skill-contributions li span,
 .task-cockpit-skill-contributions li small { color: var(--aos-text-secondary); overflow-wrap: anywhere; }
 .task-cockpit-skill-contributions li em { color: var(--aos-amber-700); font-size: 11px; font-style: normal; overflow-wrap: anywhere; }
-@media (max-width: 720px) { .task-cockpit-responsibility-grid, .task-cockpit-handoff-command-grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .task-cockpit-responsibility-grid, .task-cockpit-handoff-command-grid, .task-cockpit-assignment-control dl { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .task-cockpit-approval-review-grid { grid-template-columns: 1fr; } }
 .task-cockpit-run-detail table { width: 100%; border-collapse: collapse; min-width: 560px; }
 .task-cockpit-run-detail caption { text-align: left; font-weight: 600; margin-bottom: 6px; }

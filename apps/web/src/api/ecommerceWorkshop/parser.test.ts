@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseContentCampaignView, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseModuleHandoffCompile, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSkillContributions, parseTaskCockpitSteps, parseWorkshopSharedContext } from "./parser";
+import { parseContentCampaignView, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseModuleHandoffCompile, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseResponsibilityAssignmentObservation, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSkillContributions, parseTaskCockpitSteps, parseWorkshopSharedContext } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -236,6 +236,14 @@ describe("task cockpit strict parser", () => {
   });
   it("只把 canonical 200 空页识别为空", () => {
     expect(parseTaskCockpitSteps({ ...steps, items: [], page: { limit: 20, count: 0, hasMore: false, nextCursor: null } }).items).toEqual([]);
+  });
+});
+
+describe("responsibility assignment strict parser", () => {
+  it("分开保留接管请求、决定和当前 Lease，并拒绝 run 漂移", () => {
+    const observation = { tenant: { orgId: "org-org", projectId: "dev-project" }, runRef: { resourceType: "TaskRun", resourceId: "run-1", version: 4 }, takeoverRequests: [], takeoverDecisions: [], assignmentLeases: [], evaluatedAt: "2026-08-25T01:00:00Z" };
+    expect(parseResponsibilityAssignmentObservation(observation)).toMatchObject({ runRef: { resourceId: "run-1", version: 4 }, takeoverRequests: [], assignmentLeases: [] });
+    expect(() => parseResponsibilityAssignmentObservation({ ...observation, runRef: { ...observation.runRef, resourceType: "StepRun" } })).toThrow("resourceType 漂移");
   });
 });
 

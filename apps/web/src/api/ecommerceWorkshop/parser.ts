@@ -53,6 +53,10 @@ import {
   type TaskCockpitPage,
   type TaskCockpitProductionContextResponse,
   type TaskCockpitResponsibilityHandoffResponse,
+  type ResponsibilityAssignmentObservation,
+  type ResponsibilityAssignmentLease,
+  type ResponsibilityAssigneeRef,
+  type ResponsibilityRuntimeRef,
   type ModuleHandoffCompileResponse,
   type TaskCockpitResponsibilitySlot,
   type TaskCockpitReviewIssue,
@@ -502,6 +506,46 @@ export function parseTaskCockpitResponsibilityHandoffs(value: unknown): TaskCock
   if (compiledRequiredSlotIds.some((slotId) => !slots.some((slot) => slot.slotId === slotId))) throw new TypeError("taskCockpit.responsibilityHandoffs required slot 未覆盖");
   const handoffs = raw.handoffs.map(parseTaskCockpitHandoff); assertUnique(handoffs.map((item) => item.handoffId), "taskCockpit.responsibilityHandoffs.handoffs");
   return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, tenant: parseTenant(raw.tenant), runId: boundedText(raw.runId, "taskCockpit.responsibilityHandoffs.runId", 200), taskId: boundedText(raw.taskId, "taskCockpit.responsibilityHandoffs.taskId", 200), evaluatedAt: timestamp(raw.evaluatedAt, "taskCockpit.responsibilityHandoffs.evaluatedAt"), responsibilityPlanRef, profile: boundedText(raw.profile, "taskCockpit.responsibilityHandoffs.profile", 80), lifecycle: enumValue(raw.lifecycle, ["draft", "frozen", "withdrawn", "superseded"] as const, "taskCockpit.responsibilityHandoffs.lifecycle"), compilationReadiness: "ready_at_compile", compiledRequiredSlotIds, slots, handoffs };
+}
+
+function parseResponsibilityRuntimeRef(value: unknown, expectedType: "TaskRun" | "StepRun", label: string): ResponsibilityRuntimeRef {
+  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "version"], label);
+  if (raw.resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
+  return { resourceType: expectedType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), version: integer(raw.version, `${label}.version`, 1) };
+}
+function parseResponsibilityAssignee(value: unknown, label: string): ResponsibilityAssigneeRef {
+  const raw = record(value, label); exact(raw, ["kind", "resourceId", "version"], label);
+  return { kind: enumValue(raw.kind, ["agent_instance", "human_principal", "tool_binding", "provider_capability_binding"] as const, `${label}.kind`), resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), version: integer(raw.version, `${label}.version`, 1) };
+}
+function parseResponsibilityAssignmentLease(value: unknown, runRef: ResponsibilityRuntimeRef, label: string): ResponsibilityAssignmentLease {
+  const raw = record(value, label); exact(raw, ["leaseId", "taskRunRef", "stepRunRef", "attempt", "owner", "fence", "expiresAt"], label);
+  const taskRunRef = parseResponsibilityRuntimeRef(raw.taskRunRef, "TaskRun", `${label}.taskRunRef`);
+  if (taskRunRef.resourceId !== runRef.resourceId || taskRunRef.version !== runRef.version) throw new TypeError(`${label}.taskRunRef 漂移`);
+  const stepRunRef = parseResponsibilityRuntimeRef(raw.stepRunRef, "StepRun", `${label}.stepRunRef`);
+  const attempt = integer(raw.attempt, `${label}.attempt`, 1);
+  if (stepRunRef.version !== attempt) throw new TypeError(`${label}.StepRun attempt 漂移`);
+  return { leaseId: boundedText(raw.leaseId, `${label}.leaseId`, 200), taskRunRef, stepRunRef, attempt, owner: parseResponsibilityAssignee(raw.owner, `${label}.owner`), fence: integer(raw.fence, `${label}.fence`, 1), expiresAt: timestamp(raw.expiresAt, `${label}.expiresAt`) };
+}
+export function parseResponsibilityAssignmentObservation(value: unknown): ResponsibilityAssignmentObservation {
+  const raw = record(value, "responsibilityAssignment.observation");
+  exact(raw, ["tenant", "runRef", "takeoverRequests", "takeoverDecisions", "assignmentLeases", "evaluatedAt"], "responsibilityAssignment.observation");
+  const runRef = parseResponsibilityRuntimeRef(raw.runRef, "TaskRun", "responsibilityAssignment.runRef");
+  if (!Array.isArray(raw.takeoverRequests) || !Array.isArray(raw.takeoverDecisions) || !Array.isArray(raw.assignmentLeases)) throw new TypeError("responsibilityAssignment collections 非法");
+  const takeoverRequests = raw.takeoverRequests.map((value, index) => {
+    const label = `responsibilityAssignment.takeoverRequests[${index}]`; const item = record(value, label);
+    exact(item, ["tenant", "requestId", "taskRunRef", "stepRunRef", "attempt", "sourceOwner", "targetOwner", "resolutionReceiptId", "expectedFence", "reasonCode", "safetyState", "status", "blockers", "maker", "createdAt", "contentHash"], label);
+    const taskRunRef = parseResponsibilityRuntimeRef(item.taskRunRef, "TaskRun", `${label}.taskRunRef`); if (taskRunRef.resourceId !== runRef.resourceId || taskRunRef.version !== runRef.version) throw new TypeError(`${label}.taskRunRef 漂移`);
+    const stepRunRef = parseResponsibilityRuntimeRef(item.stepRunRef, "StepRun", `${label}.stepRunRef`); const attempt = integer(item.attempt, `${label}.attempt`, 1); if (stepRunRef.version !== attempt) throw new TypeError(`${label}.attempt 漂移`);
+    if (!Array.isArray(item.blockers)) throw new TypeError(`${label}.blockers 非法`);
+    const blockers = item.blockers.map((value, blockerIndex) => { const blocker = record(value, `${label}.blockers[${blockerIndex}]`); exact(blocker, ["code", "dependency", "requiredAction"], `${label}.blockers[${blockerIndex}]`); return { code: boundedText(blocker.code, `${label}.blocker.code`, 120), dependency: boundedText(blocker.dependency, `${label}.blocker.dependency`, 200), requiredAction: boundedText(blocker.requiredAction, `${label}.blocker.requiredAction`, 500) }; });
+    const status = enumValue(item.status, ["pending", "blocked"] as const, `${label}.status`); if ((status === "pending") !== (blockers.length === 0)) throw new TypeError(`${label}.status/blockers 漂移`);
+    const contentHash = boundedText(item.contentHash, `${label}.contentHash`, 64); if (!RAW_SHA256.test(contentHash)) throw new TypeError(`${label}.contentHash 不是 SHA-256`);
+    return { tenant: parseTenant(item.tenant), requestId: boundedText(item.requestId, `${label}.requestId`, 200), taskRunRef, stepRunRef, attempt, sourceOwner: parseResponsibilityAssignee(item.sourceOwner, `${label}.sourceOwner`), targetOwner: parseResponsibilityAssignee(item.targetOwner, `${label}.targetOwner`), resolutionReceiptId: boundedText(item.resolutionReceiptId, `${label}.resolutionReceiptId`, 200), expectedFence: integer(item.expectedFence, `${label}.expectedFence`, 0), reasonCode: boundedText(item.reasonCode, `${label}.reasonCode`, 120), safetyState: enumValue(item.safetyState, ["safe_checkpoint", "active_lease", "provider_outcome_unknown", "step_terminal"] as const, `${label}.safetyState`), status, blockers, maker: boundedText(item.maker, `${label}.maker`, 200), createdAt: timestamp(item.createdAt, `${label}.createdAt`), contentHash };
+  });
+  const takeoverDecisions = raw.takeoverDecisions.map((value, index) => { const label = `responsibilityAssignment.takeoverDecisions[${index}]`; const item = record(value, label); exact(item, ["tenant", "decisionId", "requestId", "revision", "decision", "reasonCode", "checker", "assignmentLease", "createdAt", "contentHash"], label); const decision = enumValue(item.decision, ["approved", "rejected"] as const, `${label}.decision`); const assignmentLease = item.assignmentLease === null ? null : parseResponsibilityAssignmentLease(item.assignmentLease, runRef, `${label}.assignmentLease`); if ((decision === "approved") !== (assignmentLease !== null)) throw new TypeError(`${label}.decision/lease 漂移`); const contentHash = boundedText(item.contentHash, `${label}.contentHash`, 64); if (!RAW_SHA256.test(contentHash)) throw new TypeError(`${label}.contentHash 不是 SHA-256`); return { tenant: parseTenant(item.tenant), decisionId: boundedText(item.decisionId, `${label}.decisionId`, 200), requestId: boundedText(item.requestId, `${label}.requestId`, 200), revision: integer(item.revision, `${label}.revision`, 1), decision, reasonCode: boundedText(item.reasonCode, `${label}.reasonCode`, 120), checker: boundedText(item.checker, `${label}.checker`, 200), assignmentLease, createdAt: timestamp(item.createdAt, `${label}.createdAt`), contentHash }; });
+  const assignmentLeases = raw.assignmentLeases.map((value, index) => parseResponsibilityAssignmentLease(value, runRef, `responsibilityAssignment.assignmentLeases[${index}]`));
+  assertUnique(takeoverRequests.map((item) => item.requestId), "responsibilityAssignment.takeoverRequests"); assertUnique(takeoverDecisions.map((item) => item.decisionId), "responsibilityAssignment.takeoverDecisions"); assertUnique(assignmentLeases.map((item) => item.leaseId), "responsibilityAssignment.assignmentLeases");
+  return { tenant: parseTenant(raw.tenant), runRef, takeoverRequests, takeoverDecisions, assignmentLeases, evaluatedAt: timestamp(raw.evaluatedAt, "responsibilityAssignment.evaluatedAt") };
 }
 
 function parseCompileResourceRef(value: unknown, label: string, expectedType?: string) {
