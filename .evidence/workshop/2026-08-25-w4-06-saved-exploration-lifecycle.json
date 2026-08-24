@@ -1,0 +1,62 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "taskId": "workshop-w4-06-saved-exploration-lifecycle-20260825",
+  "wave": "W4-06",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "authorityBaseRevision": "AOS-000231",
+  "gitCommit": "515d20b6415e8e22f535069bbe47216bdbb29cba",
+  "outcome": "W4_06_SAVED_EXPLORATION_LIFECYCLE_CODE_BROWSER_GREEN_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "scope": {
+    "implemented": [
+      "PostgreSQL remains the sole SavedExploration authority and the legacy in-memory compatibility entry remains fail-closed",
+      "share grants enforce exploration_read purpose, principal markings, expiry, revoke and exact asset revision/hash",
+      "a principal-scoped composite GET resolves a private exploration only after current grant verification",
+      "the Web client performs authoritative no-snapshot permission reads and strictly validates the grant and exploration envelope",
+      "the Object Explorer consumes only a safe opaque shareRef and restores the exact exploration after server authorization"
+    ],
+    "preservedBlockers": [
+      "live migration application remains independently gated",
+      "production share grant creation and revocation were not exercised",
+      "local fixture browser acceptance is not production operational readiness"
+    ],
+    "forbiddenEffects": [
+      "no live migration",
+      "no real share grant mutation",
+      "no provider or action execution",
+      "no release",
+      "no real business mutation"
+    ]
+  },
+  "tests": {
+    "backendTargetedAndCumulative": "32 passed",
+    "webTargeted": "17 passed",
+    "webCumulative": "221 files / 2096 tests passed",
+    "webBuild": "TypeScript noEmit and production build passed",
+    "openapi": "deterministic/current; 13 contract tests passed; 2583 paths / 2163 schemas",
+    "compileall": "passed",
+    "diffCheck": "passed"
+  },
+  "browser": {
+    "client": "Codex built-in browser",
+    "positiveRoute": "/workshop/graph?shareRef=<redacted-active-fixture-ref>",
+    "negativeRoute": "/workshop/graph?shareRef=<redacted-drift-fixture-ref>",
+    "observations": [
+      "an active grant restored the exact private exploration and retained it after reload",
+      "a mismatched exact reference failed closed with a visible share-unavailable message",
+      "the rejected response did not leak the exploration query",
+      "no share creation, revocation, write or external effect was invoked"
+    ],
+    "runtimeBoundary": "Browser transport used a local deterministic fixture; opaque reference values are intentionally omitted and this is UI acceptance evidence only."
+  },
+  "fileHashes": {
+    "services/aos-api/aos_api/ontology_exploration_share.py": "sha256:6ab4deb82a6c7b9566c3226c9aef32d208322abeeeb81a3d7873659b32204890",
+    "services/aos-api/aos_api/routers/oe_enhancements.py": "sha256:8b34f318df7a4c8c9ec208bd6b36f29e7cd171dd2ad407c9f9b4bf8c1f101022",
+    "apps/web/src/api/client.ts": "sha256:7a29b0c02ea08c736fc8c2586297a2cbd9ea32e821570406f557adc6017ad8af",
+    "apps/web/src/api/ontologyExplorationAssets.ts": "sha256:e6d5e9add05f4c2a0ea8242600fe02cca17bd05ebc507adff9e121c29310ee53",
+    "apps/web/src/pages/s2/workshop.tsx": "sha256:fa1a9b338ecb329adc90489356f9bd967e82721626c450731e1752db1939668e",
+    "packages/contracts/openapi/v1.generated.json": "sha256:b1f03bc0d84e15094067a1a0a5e525631a928e9a50a505c9dce433b100d9c6f3"
+  }
+}
