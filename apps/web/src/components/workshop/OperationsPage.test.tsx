@@ -30,6 +30,13 @@ describe("OperationsPage", () => {
     expect(host.textContent).not.toContain("王女士");
     expect(host.textContent).not.toContain("一键采纳");
     expect(host.textContent).toContain("请求级命令证据");
+    expect(host.querySelector('[aria-label="专业贡献归因路径"]')).not.toBeNull();
+    expect(host.textContent).toContain("原子 Skill");
+    expect(host.textContent).toContain("Logic 编排");
+    expect(host.textContent).toContain("数字同事");
+    expect(host.textContent).toContain("工作台贡献");
+    expect(host.textContent).toContain("保持 unknown");
+    expect(host.textContent).toContain("以 AfterSalesEvent exact authority 支撑售后事件分类");
     const inputs = host.querySelectorAll<HTMLInputElement>(".operations-observation-form input");
     const setInput = (input: HTMLInputElement, value: string) => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); };
     await act(async () => { setInput(inputs[0], "proposal-1"); setInput(inputs[1], "lease-1"); });
