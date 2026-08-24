@@ -1,0 +1,37 @@
+{
+  "schema": "aos.workshop.delivery-evidence/v1",
+  "taskId": "workshop-w4-04-review-return-attempt-lineage-20260825",
+  "baseRevision": "AOS-000228",
+  "branch": "m1",
+  "baseCommit": "f7ba330f333f2ea86c0977425cab31d1e9a87b81",
+  "capturedAt": "2026-08-25T05:23:29+08:00",
+  "outcome": "W4_04_REVIEW_RETURN_LINEAGE_CODE_BROWSER_GREEN_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "implementation": [
+    "immutable tenant-scoped ReviewRuleRevision authority and exact rule validation",
+    "canonical ReviewIssue event payload with hash verification and explicit legacy_unavailable compatibility",
+    "exact resolution reference validation for Artifact Evidence EvalReportRevision and ReturnDecision",
+    "server-owned Plan DAG impact decisions with transitive invalidate and unaffected reuse",
+    "explicit create versus control review roles",
+    "Task Cockpit read-only event and impact lineage projection"
+  ],
+  "verification": {
+    "backendFocused": "35 passed",
+    "backendCumulative": "61 passed",
+    "openapi": "13 passed; 2582 paths; 2162 schemas; deterministic check passed",
+    "web": "221 files / 2091 tests; desktop 9 files / 40 tests; build passed",
+    "static": "compileall passed; git diff --check passed; Alembic single head w4_003",
+    "browser": "built-in browser, org-org/dev-project display, /workshop/cockpit read-only route, no horizontal overflow at effective 1280 viewport; canonical live page remained read-only and did not trigger command, migration, release, Provider, Action, Approval or business mutation",
+    "featureDisplay": "strict parser and TaskCockpitPage component tests cover exact payload readability and server-provided invalidate/reuse rendering; the live tenant had no visible W4-04 ReviewIssue in the current page, so no operational lineage or migration claim is made"
+  },
+  "safety": {
+    "liveMigrationApplied": false,
+    "releasePerformed": false,
+    "providerCalled": false,
+    "agentRunStarted": false,
+    "actionExecuted": false,
+    "approvalCreated": false,
+    "handoffIssued": false,
+    "businessDataMutated": false
+  },
+  "nextTask": "W4-05"
+}
