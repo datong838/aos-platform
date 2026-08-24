@@ -1,0 +1,47 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w3-06-module-handoff-command-20260825",
+  "baseRevision": "AOS-000217",
+  "result": "CODE_CONTROL_BROWSER_GREEN_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "scope": [
+    "single ModuleHandoffCompiler produces the canonical issue command without durable writes",
+    "canonical issue consume and Decision command SDK remains separate from the Workshop compiler",
+    "Task Cockpit displays transport and domain Decision as different states",
+    "atomic Skill Logic responsibility and assignee lineage remains visible through the existing Task Cockpit contribution chain"
+  ],
+  "verification": {
+    "backendFocusedAndCumulative": "43 passed",
+    "frontendFocused": "4 files passed; 49 tests passed",
+    "cumulativeWeb": "220 files passed; 2066 tests passed",
+    "productionBuild": "TypeScript and Vite build passed",
+    "pythonCompile": "GREEN",
+    "diffCheck": "GREEN",
+    "browser": {
+      "surface": "Codex built-in browser",
+      "route": "/workshop/cockpit",
+      "viewportWidth": 1280,
+      "documentScrollWidth": 1280,
+      "observedState": "aos-api unavailable remained explicit; the page did not fabricate an empty catalog or enable a handoff command",
+      "commandClicks": 0
+    }
+  },
+  "sideEffectConservation": {
+    "handoffIssuedCount": 0,
+    "bearerTokenMintedCount": 0,
+    "handoffConsumedCount": 0,
+    "decisionCreatedCount": 0,
+    "agentRunCreatedCount": 0,
+    "providerInvocationCount": 0,
+    "externalBusinessMutationCount": 0,
+    "liveMigrationAppliedCount": 0,
+    "releasePerformedCount": 0
+  },
+  "knownBoundary": [
+    "compile ready still requires current exact active and operationally ready AgentInstance facts",
+    "browser acceptance observed the truthful dependency-unavailable branch because local aos-api was not running",
+    "consumed does not mean accepted and accepted does not mean AgentRun started or completed",
+    "request_more requires a newly authorized envelope and a new bearer token"
+  ],
+  "nextTask": "W3_07_RESPONSIBILITY_READINESS_REASSIGN_TAKEOVER",
+  "observedAt": "2026-08-25T00:36:00+08:00"
+}

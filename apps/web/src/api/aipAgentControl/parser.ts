@@ -17,6 +17,9 @@ import type {
   HandoffDecision,
   HandoffDecisionListResponse,
   HandoffEnvelope,
+  IssuedHandoff,
+  DecidedHandoff,
+  RegistryReceipt,
   Tenant,
 } from "./contracts";
 
@@ -299,6 +302,24 @@ export function parseHandoff(value: unknown, expectedTenant: Tenant): HandoffEnv
   };
 }
 
+function parseRegistryReceipt(value: unknown, expectedTenant: Tenant, operation: string, label: string): RegistryReceipt {
+  const raw = obj(value, label); exact(raw, label, ["tenant", "receiptId", "operation", "idempotencyKey", "requestHash", "resourceRef", "resultRef", "status", "createdBy", "createdAt"]);
+  const scope = tenant(raw.tenant, `${label}.tenant`); sameTenant(scope, expectedTenant, label);
+  const parsedOperation = str(raw.operation, `${label}.operation`); if (parsedOperation !== operation) throw new Error(`${label}.operation 漂移`);
+  const status = enumeration(raw.status, `${label}.status`, ["applied"] as const);
+  return { tenant: scope, receiptId: str(raw.receiptId, `${label}.receiptId`), operation: parsedOperation, idempotencyKey: str(raw.idempotencyKey, `${label}.idempotencyKey`), requestHash: sha256(raw.requestHash, `${label}.requestHash`), resourceRef: resourceRef(raw.resourceRef, `${label}.resourceRef`), resultRef: resourceRef(raw.resultRef, `${label}.resultRef`), status, createdBy: str(raw.createdBy, `${label}.createdBy`), createdAt: iso(raw.createdAt, `${label}.createdAt`) };
+}
+
+export function parseIssuedHandoff(value: unknown, expectedTenant: Tenant): IssuedHandoff {
+  const raw = obj(value, "IssuedHandoff"); exact(raw, "IssuedHandoff", ["handoff", "bearerToken", "receipt"]);
+  const handoff = parseHandoff(raw.handoff, expectedTenant);
+  const bearerToken = raw.bearerToken === null ? null : str(raw.bearerToken, "IssuedHandoff.bearerToken");
+  if (bearerToken !== null && bearerToken.length < 32) throw new Error("IssuedHandoff.bearerToken 太短");
+  const receipt = parseRegistryReceipt(raw.receipt, expectedTenant, "handoff.issue", "IssuedHandoff.receipt");
+  if (receipt.resultRef.resourceType !== "HandoffEnvelope" || receipt.resultRef.resourceId !== handoff.handoffId) throw new Error("IssuedHandoff receipt resultRef 漂移");
+  return { handoff, bearerToken, receipt };
+}
+
 function parseHandoffDecision(value: unknown, expectedTenant: Tenant, expectedHandoffId: string, label: string): HandoffDecision {
   const raw = obj(value, label); exact(raw, label, ["tenant", "decisionId", "handoffId", "revision", "envelopeRef", "decision", "reasonCode", "gapCodes", "returnRefs", "correlationRef", "receiverInstance", "contentHash", "createdBy", "createdAt"]);
   const scope = tenant(raw.tenant, `${label}.tenant`); sameTenant(scope, expectedTenant, label);
@@ -320,4 +341,12 @@ export function parseHandoffDecisions(value: unknown, expectedTenant: Tenant): H
   const count = integer(raw.count, "count"); if (count !== items.length) throw new Error("count 与 items 数量不一致");
   const identities = new Set(items.map((item) => item.decisionId)); if (identities.size !== items.length) throw new Error("decisionId 必须唯一");
   return { tenant: scope, handoffId, items, count, headVersion: integer(raw.headVersion, "headVersion") };
+}
+
+export function parseDecidedHandoff(value: unknown, expectedTenant: Tenant, expectedHandoffId: string): DecidedHandoff {
+  const raw = obj(value, "DecidedHandoff"); exact(raw, "DecidedHandoff", ["decision", "receipt"]);
+  const decision = parseHandoffDecision(raw.decision, expectedTenant, expectedHandoffId, "DecidedHandoff.decision");
+  const receipt = parseRegistryReceipt(raw.receipt, expectedTenant, "handoff.decision", "DecidedHandoff.receipt");
+  if (receipt.resultRef.resourceType !== "HandoffDecisionRevision" || receipt.resultRef.resourceId !== decision.decisionId) throw new Error("DecidedHandoff receipt resultRef 漂移");
+  return { decision, receipt };
 }

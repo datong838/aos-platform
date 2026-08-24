@@ -46,6 +46,15 @@ from aos_api.ecommerce_workshop_freeze_service import (
     WorkshopFreezeConflict,
     WorkshopFreezeError,
 )
+from aos_api.ecommerce_workshop_handoff_contracts import (
+    ModuleHandoffCompileRequest,
+    ModuleHandoffCompileResponse,
+)
+from aos_api.ecommerce_workshop_handoff_service import (
+    ModuleHandoffCompiler,
+    ModuleHandoffCompilerDrift,
+    ModuleHandoffCompilerError,
+)
 from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
 from aos_api.ecommerce_workshop_analyst_contracts import WorkshopAnalystViewEnvelope
 from aos_api.ecommerce_workshop_content_campaign import (
@@ -171,6 +180,14 @@ def get_ecommerce_workshop_task_cockpit() -> EcommerceWorkshopTaskCockpit:
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_handoff_compiler() -> ModuleHandoffCompiler:
+    return ModuleHandoffCompiler(
+        cockpit=get_ecommerce_workshop_task_cockpit(),
+        catalog=get_ecommerce_workshop_catalog(),
+    )
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_source_readiness() -> EcommerceWorkshopSourceReadiness:
     return EcommerceWorkshopSourceReadiness(build_source_readiness_service())
 
@@ -254,6 +271,9 @@ CatalogDependency = Annotated[
 ]
 TaskCockpitDependency = Annotated[
     EcommerceWorkshopTaskCockpit, Depends(get_ecommerce_workshop_task_cockpit)
+]
+HandoffCompilerDependency = Annotated[
+    ModuleHandoffCompiler, Depends(get_ecommerce_workshop_handoff_compiler)
 ]
 SourceReadinessDependency = Annotated[
     EcommerceWorkshopSourceReadiness,
@@ -1115,6 +1135,47 @@ def get_ecommerce_workshop_task_cockpit_run_responsibility_handoffs(
         raise ApiError(
             code="TASK_COCKPIT_DEPENDENCY_UNAVAILABLE",
             message="Task Cockpit read dependency is unavailable",
+            status_code=503,
+        ) from exc
+
+
+@router.post(
+    "/views/task-cockpit/runs/{run_id}/handoffs/compile",
+    response_model=ModuleHandoffCompileResponse,
+    operation_id="ecommerceWorkshopTaskCockpitRunHandoffCompile",
+    responses=_ERRORS,
+)
+def compile_ecommerce_workshop_task_cockpit_run_handoff(
+    request: Request,
+    run_id: RunIdPath,
+    body: ModuleHandoffCompileRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    compiler: HandoffCompilerDependency,
+) -> ModuleHandoffCompileResponse:
+    _reject_unknown_query_parameters(request, allowed=frozenset())
+    _require_task_cockpit_installation(principal=principal, catalog=catalog)
+    try:
+        return compiler.compile(
+            TenantScope(principal.org_id, principal.project_id),
+            run_id,
+            body,
+            roles=principal.roles,
+            principal_markings=principal.markings,
+        )
+    except AssetRegistryError as exc:
+        raise ApiError(
+            code=exc.code.value,
+            message=str(exc),
+            status_code=exc.http_status,
+            details=exc.details,
+        ) from exc
+    except ModuleHandoffCompilerDrift as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=409) from exc
+    except ModuleHandoffCompilerError as exc:
+        raise ApiError(
+            code=exc.code,
+            message="Workshop Handoff compilation failed closed",
             status_code=503,
         ) from exc
 

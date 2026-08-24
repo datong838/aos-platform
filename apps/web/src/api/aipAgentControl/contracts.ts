@@ -189,6 +189,35 @@ export type HandoffEnvelope = {
   createdAt: string;
 };
 
+export type RegistryReceipt = {
+  tenant: Tenant;
+  receiptId: string;
+  operation: string;
+  idempotencyKey: string;
+  requestHash: string;
+  resourceRef: ResourceRef;
+  resultRef: ResourceRef;
+  status: "applied";
+  createdBy: string;
+  createdAt: string;
+};
+
+export type IssueHandoffInput = {
+  handoffId: string;
+  envelope: HandoffEnvelope["envelope"];
+};
+
+export type IssuedHandoff = {
+  handoff: HandoffEnvelope;
+  bearerToken: string | null;
+  receipt: RegistryReceipt;
+};
+
+export type ConsumeHandoffInput = {
+  bearerToken: string;
+  receiverInstance: AssetRef;
+};
+
 export type HandoffDecision = {
   tenant: Tenant;
   decisionId: string;
@@ -213,3 +242,15 @@ export type HandoffDecisionListResponse = {
   count: number;
   headVersion: number;
 };
+
+export type CreateHandoffDecisionInput = {
+  decision: HandoffDecision["decision"];
+  expectedHeadVersion: number;
+  reasonCode: string | null;
+  gapCodes: string[];
+  returnRefs: ResourceRef[];
+  correlationRef: ResourceRef | null;
+  receiverInstance: AssetRef;
+};
+
+export type DecidedHandoff = { decision: HandoffDecision; receipt: RegistryReceipt };

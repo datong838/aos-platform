@@ -15,8 +15,11 @@ import {
 } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { useSourceReadinessSnapshot } from "./SourceReadinessContext";
+import { aipAgentControl, type IssuedHandoff } from "../../api/aipAgentControl";
+import type { ModuleHandoffCompileResponse, TaskCockpitTask, TaskCockpitRun } from "../../api/ecommerceWorkshop";
 
-type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions">;
+type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions">;
+type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
 type SkillContributionState = { phase: "loading" | "ready" | "failed"; response: TaskCockpitSkillContributionResponse | null };
 type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null; skillContributions: SkillContributionState } | null;
@@ -60,7 +63,62 @@ function TaskCockpitBusinessContext() {
   </section>;
 }
 
-export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?: CockpitClient }) {
+function ModuleHandoffCommandPanel({ task, run, responsibility, workshopClient, commandClient, onRefresh }: { task: TaskCockpitTask; run: TaskCockpitRun; responsibility: TaskCockpitResponsibilityHandoffResponse; workshopClient: CockpitClient; commandClient: HandoffCommandClient; onRefresh: () => void }) {
+  const slots = responsibility.slots.filter((slot) => slot.assignee.kind === "agent_instance");
+  const [sourceModuleId, setSourceModuleId] = useState("ecommerce.content-campaign");
+  const [targetModuleId, setTargetModuleId] = useState("ecommerce.media-studio");
+  const [sourceSlotId, setSourceSlotId] = useState(slots[0]?.slotId ?? "");
+  const [targetSlotId, setTargetSlotId] = useState(slots[1]?.slotId ?? "");
+  const [purpose, setPurpose] = useState("跨模块受控协作");
+  const [requestedOutcome, setRequestedOutcome] = useState("返回可审计的业务决定");
+  const [phase, setPhase] = useState<"idle" | "compiling" | "compiled" | "issuing" | "issued" | "consuming" | "consumed" | "deciding" | "decided" | "failed">("idle");
+  const [compiled, setCompiled] = useState<ModuleHandoffCompileResponse | null>(null);
+  const [issued, setIssued] = useState<IssuedHandoff | null>(null);
+  const [ephemeralToken, setEphemeralToken] = useState<string | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
+  const commandId = () => `${run.runId}-${Date.now()}-${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
+  const compile = () => {
+    setPhase("compiling"); setFailure(null); setCompiled(null); setIssued(null); setEphemeralToken(null);
+    const handoffId = `handoff-${commandId()}`.slice(0, 200);
+    void workshopClient.compileTaskCockpitRunHandoff(run.runId, { handoffId, taskRef: { resourceType: "Task", resourceId: task.taskId, revision: String(task.version), authority: "postgresql" }, runRef: { resourceType: "TaskRun", resourceId: run.runId, revision: String(run.version), authority: "postgresql" }, sourceModuleId, targetModuleId, sourceSlotId, targetSlotId, purpose, requestedOutcome, objectRefs: [], artifactRefs: [], evidenceRefs: [], context: {}, allowedContextFields: [], markings: ["public"], expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(), correlationRef: null }).then((result) => { setCompiled(result); setPhase("compiled"); }, (error: unknown) => { setFailure(error instanceof Error ? error.message : "编译失败"); setPhase("failed"); });
+  };
+  const issue = () => {
+    if (!compiled?.issueCommand) return;
+    setPhase("issuing"); setFailure(null);
+    void commandClient.issueHandoff(compiled.issueCommand, `issue-${commandId()}`.slice(0, 200)).then((result) => { setIssued(result); setEphemeralToken(result.bearerToken); setPhase("issued"); }, (error: unknown) => { setFailure(error instanceof Error ? error.message : "签发失败"); setPhase("failed"); });
+  };
+  const consume = () => {
+    if (!issued || !ephemeralToken || !compiled?.issueCommand) return;
+    setPhase("consuming"); setFailure(null);
+    void commandClient.consumeHandoff(issued.handoff.handoffId, { bearerToken: ephemeralToken, receiverInstance: compiled.issueCommand.envelope.receiverInstance }).then(() => { setEphemeralToken(null); setPhase("consumed"); }, (error: unknown) => { setFailure(error instanceof Error ? error.message : "接收失败"); setPhase("failed"); });
+  };
+  const accept = () => {
+    if (!issued || !compiled?.issueCommand) return;
+    setPhase("deciding"); setFailure(null);
+    void commandClient.listHandoffDecisions(issued.handoff.handoffId).then((timeline) => commandClient.createHandoffDecision(issued.handoff.handoffId, { decision: "accepted", expectedHeadVersion: timeline.headVersion, reasonCode: null, gapCodes: [], returnRefs: [], correlationRef: null, receiverInstance: compiled.issueCommand!.envelope.receiverInstance }, `decision-${commandId()}`.slice(0, 200))).then(() => { setPhase("decided"); onRefresh(); }, (error: unknown) => { setFailure(error instanceof Error ? error.message : "决定失败"); setPhase("failed"); });
+  };
+  const invalid = !sourceModuleId || !targetModuleId || sourceModuleId === targetModuleId || !sourceSlotId || !targetSlotId || sourceSlotId === targetSlotId || !purpose.trim() || !requestedOutcome.trim();
+  return <div className="task-cockpit-handoff-command" aria-label="模块交接受控命令">
+    <div className="task-cockpit-production-refs"><strong>模块交接 · 显式受控命令</strong><span>compile → issue → consume → decision</span><span>不会自动启动 AgentRun</span></div>
+    <p className="task-cockpit-approval-boundary">编译零副作用；签发后 bearer 仅保存在当前页面内存，成功接收即清除。consumed 仍不等于 accepted。</p>
+    <div className="task-cockpit-handoff-command-grid">
+      <label>来源模块<input value={sourceModuleId} onChange={(event) => setSourceModuleId(event.target.value)} /></label>
+      <label>目标模块<input value={targetModuleId} onChange={(event) => setTargetModuleId(event.target.value)} /></label>
+      <label>来源职责<select value={sourceSlotId} onChange={(event) => setSourceSlotId(event.target.value)}>{slots.map((slot) => <option value={slot.slotId} key={slot.slotId}>{slot.slotId}</option>)}</select></label>
+      <label>目标职责<select value={targetSlotId} onChange={(event) => setTargetSlotId(event.target.value)}>{slots.map((slot) => <option value={slot.slotId} key={slot.slotId}>{slot.slotId}</option>)}</select></label>
+      <label>目的<input value={purpose} onChange={(event) => setPurpose(event.target.value)} /></label>
+      <label>期望结果<input value={requestedOutcome} onChange={(event) => setRequestedOutcome(event.target.value)} /></label>
+    </div>
+    <div className="task-cockpit-handoff-actions"><button type="button" disabled={invalid || phase === "compiling"} onClick={compile}>编译交接</button>{compiled?.readiness === "ready" ? <button type="button" disabled={phase === "issuing" || Boolean(issued)} onClick={issue}>确认签发</button> : null}{issued && ephemeralToken ? <button type="button" disabled={phase === "consuming"} onClick={consume}>安全接收</button> : null}{issued && phase === "consumed" ? <button type="button" onClick={accept}>接受交接</button> : null}</div>
+    {compiled?.readiness === "blocked" ? <p role="status">编译阻断：{compiled.blockers.map((item) => `${item.code} · ${item.requiredAction}`).join("；")}</p> : null}
+    {compiled?.readiness === "ready" && !issued ? <p role="status">编译完成：零副作用；需再次确认才会签发 canonical Handoff。</p> : null}
+    {issued ? <p role="status">{issued.handoff.handoffId} · {phase}{ephemeralToken ? " · 一次性凭证尚未接收" : " · 页面未保留凭证"}</p> : null}
+    {phase === "decided" ? <p role="status">accepted Decision 已追加；未启动或完成下游任务。</p> : null}
+    {failure ? <p role="alert">{failure}</p> : null}
+  </div>;
+}
+
+export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClient = aipAgentControl }: { client?: CockpitClient; handoffClient?: HandoffCommandClient }) {
   const [phase, setPhase] = useState<CorePhase>("loading");
   const [response, setResponse] = useState<TaskCockpitCoreResponse | null>(null);
   const [status, setStatus] = useState<"" | TaskCockpitTaskStatus>("");
@@ -133,10 +191,10 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
       <section className="task-cockpit-command-blocked" aria-labelledby="task-cockpit-command-title">
         <span className="task-cockpit-command-icon" aria-hidden="true">✦</span>
         <div>
-          <h2 id="task-cockpit-command-title">任务指令尚未开放</h2>
-          <p>当前只读展示 Task、latest Run、Step 与 Checkpoint；等待生产启动、职责和审批 authority 后再接入命令。</p>
+          <h2 id="task-cockpit-command-title">通用任务指令仍失败关闭</h2>
+          <p>Task、Run、Step 与 Checkpoint 保持只读；仅在 Run 明细内开放经过 compiler 与 canonical authority 的模块交接命令。</p>
         </div>
-        <span className="task-cockpit-readonly-badge">只读模式</span>
+        <span className="task-cockpit-readonly-badge">受控交接</span>
       </section>
 
       <div className="task-cockpit-board">
@@ -208,6 +266,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
                     })}</ul></div>
                     <div><h4>交接决定链</h4>{detail.responsibilityHandoffs.handoffs.length ? <ul>{detail.responsibilityHandoffs.handoffs.map((handoff) => <li key={handoff.handoffId}><strong>{handoff.senderInstanceRef.resourceId} → {handoff.receiverInstanceRef.resourceId}</strong><span>{handoff.handoffId} · {handoff.status} · v{handoff.version}</span><small>{handoff.decisions.length ? handoff.decisions.map((decision) => `r${decision.revision} ${decision.decision}`).join(" → ") : "尚无业务决定；consumed 不等于 accepted"}</small></li>)}</ul> : <p>当前 Run 无 canonical Handoff；未使用示例交接填充。</p>}</div>
                   </div>
+                  <ModuleHandoffCommandPanel task={task} run={task.run!} responsibility={detail.responsibilityHandoffs} workshopClient={client} commandClient={handoffClient} onRefresh={() => toggleDetails(task.run!.runId)} />
                 </section>
                 <table><caption>Step（{detail.steps.page.count} 项，当前页）</caption><thead><tr><th scope="col">步骤</th><th scope="col">尝试</th><th scope="col">状态</th><th scope="col">输入/输出/错误</th></tr></thead><tbody>{detail.steps.items.length ? detail.steps.items.map((step) => <tr key={step.stepRunId}><th scope="row">{step.stepKey}</th><td>{step.attempt}</td><td>{step.status}</td><td>{step.hasInputRefs ? "有" : "无"}/{step.hasOutputRefs ? "有" : "无"}/{step.hasError ? "有" : "无"}</td></tr>) : <tr><td colSpan={4}>当前权威 Step 集合为空</td></tr>}</tbody></table>
                 <table><caption>Checkpoint（{detail.checkpoints.page.count} 项，当前页）</caption><thead><tr><th scope="col">序号</th><th scope="col">步骤</th><th scope="col">状态哈希</th><th scope="col">产物数</th></tr></thead><tbody>{detail.checkpoints.items.length ? detail.checkpoints.items.map((checkpoint) => <tr key={checkpoint.checkpointId}><th scope="row">{checkpoint.sequence}</th><td>{checkpoint.stepKey ?? "未绑定步骤"}</td><td>{checkpoint.stateHash}</td><td>{checkpoint.artifactCount}</td></tr>) : <tr><td colSpan={4}>当前权威 Checkpoint 集合为空</td></tr>}</tbody></table>

@@ -53,6 +53,7 @@ import {
   type TaskCockpitPage,
   type TaskCockpitProductionContextResponse,
   type TaskCockpitResponsibilityHandoffResponse,
+  type ModuleHandoffCompileResponse,
   type TaskCockpitResponsibilitySlot,
   type TaskCockpitReviewIssue,
   type TaskCockpitReviewIssueEvent,
@@ -501,6 +502,39 @@ export function parseTaskCockpitResponsibilityHandoffs(value: unknown): TaskCock
   if (compiledRequiredSlotIds.some((slotId) => !slots.some((slot) => slot.slotId === slotId))) throw new TypeError("taskCockpit.responsibilityHandoffs required slot 未覆盖");
   const handoffs = raw.handoffs.map(parseTaskCockpitHandoff); assertUnique(handoffs.map((item) => item.handoffId), "taskCockpit.responsibilityHandoffs.handoffs");
   return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, tenant: parseTenant(raw.tenant), runId: boundedText(raw.runId, "taskCockpit.responsibilityHandoffs.runId", 200), taskId: boundedText(raw.taskId, "taskCockpit.responsibilityHandoffs.taskId", 200), evaluatedAt: timestamp(raw.evaluatedAt, "taskCockpit.responsibilityHandoffs.evaluatedAt"), responsibilityPlanRef, profile: boundedText(raw.profile, "taskCockpit.responsibilityHandoffs.profile", 80), lifecycle: enumValue(raw.lifecycle, ["draft", "frozen", "withdrawn", "superseded"] as const, "taskCockpit.responsibilityHandoffs.lifecycle"), compilationReadiness: "ready_at_compile", compiledRequiredSlotIds, slots, handoffs };
+}
+
+function parseCompileResourceRef(value: unknown, label: string, expectedType?: string) {
+  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "authority"], label);
+  const resourceType = boundedText(raw.resourceType, `${label}.resourceType`, 160); if (expectedType && resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
+  return { resourceType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 300), revision: nullable(raw.revision, (item) => boundedText(item, `${label}.revision`, 160)), authority: boundedText(raw.authority, `${label}.authority`, 160) };
+}
+function parseCompileAssetRef(value: unknown, label: string) {
+  const raw = record(value, label); exact(raw, ["assetType", "assetId", "revision", "contentHash"], label);
+  if (raw.assetType !== "AgentInstance") throw new TypeError(`${label}.assetType 漂移`);
+  const contentHash = boundedText(raw.contentHash, `${label}.contentHash`, 64); if (!RAW_SHA256.test(contentHash)) throw new TypeError(`${label}.contentHash 不是 SHA-256`);
+  return { assetType: "AgentInstance", assetId: boundedText(raw.assetId, `${label}.assetId`, 200), revision: integer(raw.revision, `${label}.revision`, 1), contentHash };
+}
+function parseCompileIssueCommand(value: unknown) {
+  const raw = record(value, "moduleHandoff.issueCommand"); exact(raw, ["handoffId", "envelope"], "moduleHandoff.issueCommand");
+  const envelope = record(raw.envelope, "moduleHandoff.issueCommand.envelope"); exact(envelope, ["taskRef", "runRef", "senderInstance", "receiverInstance", "objectRefs", "artifactRefs", "evidenceRefs", "context", "allowedContextFields", "markings", "expiresAt"], "moduleHandoff.issueCommand.envelope");
+  const context = record(envelope.context, "moduleHandoff.issueCommand.context");
+  const allowedContextFields = taskCockpitStringList(envelope.allowedContextFields, "moduleHandoff.issueCommand.allowedContextFields");
+  if (Object.keys(context).some((key) => !allowedContextFields.includes(key))) throw new TypeError("moduleHandoff issue context 超出 allowlist");
+  const refs = (rawRefs: unknown, label: string) => { if (!Array.isArray(rawRefs)) throw new TypeError(`${label} 必须是数组`); return rawRefs.map((item, index) => parseCompileResourceRef(item, `${label}[${index}]`)); };
+  return { handoffId: boundedText(raw.handoffId, "moduleHandoff.issueCommand.handoffId", 200), envelope: { taskRef: parseCompileResourceRef(envelope.taskRef, "moduleHandoff.issueCommand.taskRef", "Task"), runRef: parseCompileResourceRef(envelope.runRef, "moduleHandoff.issueCommand.runRef", "TaskRun"), senderInstance: parseCompileAssetRef(envelope.senderInstance, "moduleHandoff.issueCommand.senderInstance"), receiverInstance: parseCompileAssetRef(envelope.receiverInstance, "moduleHandoff.issueCommand.receiverInstance"), objectRefs: refs(envelope.objectRefs, "moduleHandoff.issueCommand.objectRefs"), artifactRefs: refs(envelope.artifactRefs, "moduleHandoff.issueCommand.artifactRefs"), evidenceRefs: refs(envelope.evidenceRefs, "moduleHandoff.issueCommand.evidenceRefs"), context, allowedContextFields, markings: taskCockpitStringList(envelope.markings, "moduleHandoff.issueCommand.markings"), expiresAt: timestamp(envelope.expiresAt, "moduleHandoff.issueCommand.expiresAt") } };
+}
+export function parseModuleHandoffCompile(value: unknown): ModuleHandoffCompileResponse {
+  const raw = record(value, "moduleHandoff.compile"); exact(raw, ["schemaVersion", "tenant", "runId", "taskId", "evaluatedAt", "responsibilityPlanRef", "sourceModuleId", "targetModuleId", "sourceSlotId", "targetSlotId", "readiness", "blockers", "issueCommand", "sideEffects"], "moduleHandoff.compile");
+  if (raw.schemaVersion !== "aos.ecommerce-workshop.module-handoff-compile/v1") throw new TypeError("moduleHandoff schemaVersion 漂移");
+  if (!Array.isArray(raw.blockers)) throw new TypeError("moduleHandoff blockers 必须是数组");
+  const blockers = raw.blockers.map((item, index) => { const blocker = record(item, `moduleHandoff.blockers[${index}]`); exact(blocker, ["code", "dependency", "requiredAction"], `moduleHandoff.blockers[${index}]`); return { code: boundedText(blocker.code, "moduleHandoff.blocker.code", 120), dependency: boundedText(blocker.dependency, "moduleHandoff.blocker.dependency", 160), requiredAction: boundedText(blocker.requiredAction, "moduleHandoff.blocker.requiredAction", 500) }; });
+  const readiness = enumValue(raw.readiness, ["ready", "blocked"] as const, "moduleHandoff.readiness");
+  const issueCommand = raw.issueCommand === null ? null : parseCompileIssueCommand(raw.issueCommand);
+  if ((readiness === "ready") !== (issueCommand !== null && blockers.length === 0)) throw new TypeError("moduleHandoff readiness/command 漂移");
+  const sideEffects = record(raw.sideEffects, "moduleHandoff.sideEffects"); exact(sideEffects, ["handoffsIssued", "tokensMinted", "decisionsCreated", "agentRunsStarted"], "moduleHandoff.sideEffects");
+  if (Object.values(sideEffects).some((item) => item !== 0)) throw new TypeError("moduleHandoff compile 产生了副作用");
+  return { schemaVersion: "aos.ecommerce-workshop.module-handoff-compile/v1", tenant: parseTenant(raw.tenant), runId: boundedText(raw.runId, "moduleHandoff.runId", 200), taskId: boundedText(raw.taskId, "moduleHandoff.taskId", 200), evaluatedAt: timestamp(raw.evaluatedAt, "moduleHandoff.evaluatedAt"), responsibilityPlanRef: parseTaskCockpitExactRef(raw.responsibilityPlanRef, "ResponsibilityPlanRevision", "moduleHandoff.responsibilityPlanRef"), sourceModuleId: boundedText(raw.sourceModuleId, "moduleHandoff.sourceModuleId", 160), targetModuleId: boundedText(raw.targetModuleId, "moduleHandoff.targetModuleId", 160), sourceSlotId: boundedText(raw.sourceSlotId, "moduleHandoff.sourceSlotId", 160), targetSlotId: boundedText(raw.targetSlotId, "moduleHandoff.targetSlotId", 160), readiness, blockers, issueCommand, sideEffects: { handoffsIssued: 0, tokensMinted: 0, decisionsCreated: 0, agentRunsStarted: 0 } };
 }
 
 function parseTaskCockpitApprovalNavigation(value: unknown, expectedType: "PlanRevision" | "ActionProposalRevision", label: string): TaskCockpitApprovalNavigation {

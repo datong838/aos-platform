@@ -443,6 +443,13 @@
 .task-cockpit-responsibility-grid li small { color: var(--aos-text-secondary); overflow-wrap: anywhere; }
 .task-cockpit-responsibility-grid li em { color: var(--aos-amber-700); font-size: 11px; font-style: normal; }
 .task-cockpit-responsibility-grid p { margin: 0; color: var(--aos-text-secondary); }
+.task-cockpit-handoff-command { display: grid; gap: 10px; padding: 12px; border: 1px solid color-mix(in srgb, var(--aos-indigo-600, #4f46e5) 30%, var(--aos-border)); background: var(--aos-surface); }
+.task-cockpit-handoff-command-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+.task-cockpit-handoff-command-grid label { display: grid; gap: 4px; color: var(--aos-text-secondary); font-size: 11px; }
+.task-cockpit-handoff-command-grid input,
+.task-cockpit-handoff-command-grid select { min-width: 0; padding: 7px 8px; border: 1px solid var(--aos-border); border-radius: 6px; background: var(--aos-surface); color: var(--aos-text-primary); }
+.task-cockpit-handoff-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.task-cockpit-handoff-command > p { margin: 0; color: var(--aos-text-secondary); overflow-wrap: anywhere; }
 .task-cockpit-approval-review { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--aos-border); background: color-mix(in srgb, var(--aos-surface) 94%, var(--aos-amber-50, #fffbeb)); }
 .task-cockpit-approval-boundary { margin: 0; padding: 8px 10px; border-left: 3px solid var(--aos-amber-600, #d97706); color: var(--aos-text-secondary); background: var(--aos-surface); font-size: 12px; }
 .task-cockpit-approval-review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -480,7 +487,7 @@
 .task-cockpit-skill-contributions li span,
 .task-cockpit-skill-contributions li small { color: var(--aos-text-secondary); overflow-wrap: anywhere; }
 .task-cockpit-skill-contributions li em { color: var(--aos-amber-700); font-size: 11px; font-style: normal; overflow-wrap: anywhere; }
-@media (max-width: 720px) { .task-cockpit-responsibility-grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .task-cockpit-responsibility-grid, .task-cockpit-handoff-command-grid { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .task-cockpit-approval-review-grid { grid-template-columns: 1fr; } }
 .task-cockpit-run-detail table { width: 100%; border-collapse: collapse; min-width: 560px; }
 .task-cockpit-run-detail caption { text-align: left; font-weight: 600; margin-bottom: 6px; }
