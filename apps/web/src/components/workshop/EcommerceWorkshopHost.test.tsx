@@ -37,4 +37,18 @@ describe("EcommerceWorkshopHost task cockpit", () => {
     await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/cockpit"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
     expect(host.textContent).toContain("就绪状态待验证"); expect(host.textContent).toContain("当前只读范围"); expect(host.textContent).toContain("当前权威 Task 集合为空"); expect(host.querySelectorAll("h1")).toHaveLength(1);
   });
+
+  it("Operations authority 未验证时仍挂载只读分诊，并保留 Shell 阻断", async () => {
+    const operationsModule = moduleWithReadiness("unknown"); Object.assign(operationsModule, { moduleId: "ecommerce.operations", displayName: "统一运营驾驶舱", menuLabel: "统一运营驾驶舱", route: "/workshop/operations" });
+    const catalog = { listModules: vi.fn().mockResolvedValue(workshopCatalogFixture({ items: [operationsModule] })) };
+    vi.spyOn(ecommerceWorkshopClient, "getSourceReadiness").mockRejectedValue(new Error("source readiness outside host assertion"));
+    const ids = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"] as const;
+    vi.spyOn(ecommerceWorkshopClient, "getOperationsView").mockResolvedValue({ schemaVersion: "aos.ecommerce-workshop.operations-view/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: ids.map((sliceId) => ({ sliceId, status: "ready", dataCutoff: "2026-08-24T08:00:00Z", authorityRefs: [{ resourceType: "ReadAuthority", resourceId: sliceId, revision: 1, contentHash: `sha256:${"a".repeat(64)}`, receiptId: "receipt-1" }], blockers: [], countLedger: { sourceTotal: 0, attached: 0, unmatched: 0, conflicted: 0 } })), page: { limit: 50, count: 0, hasMore: false, nextCursor: null } });
+    await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/operations"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
+    expect(host.querySelectorAll("h1")).toHaveLength(1);
+    expect(host.textContent).toContain("统一运营驾驶舱");
+    expect(host.textContent).toContain("就绪状态待验证");
+    expect(host.textContent).toContain("统一待办 · 权威切片");
+    expect(host.textContent).toContain("只读分诊");
+  });
 });

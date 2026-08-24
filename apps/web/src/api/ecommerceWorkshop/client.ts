@@ -1,7 +1,7 @@
 import { getApiBase } from "../apiBase";
 import { tenantAuthHeaders } from "../tenant";
-import type { EcommerceWorkshopApiErrorBody, EcommerceWorkshopModuleListResponse, EcommerceWorkshopModuleReadinessResponse, SourceReadinessEnvelope, TaskCockpitCheckpointPageResponse, TaskCockpitCoreQuery, TaskCockpitCoreResponse, TaskCockpitRunDetailQuery, TaskCockpitStepPageResponse } from "./contracts";
-import { parseEcommerceWorkshopApiError, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
+import type { EcommerceWorkshopApiErrorBody, EcommerceWorkshopModuleListResponse, EcommerceWorkshopModuleReadinessResponse, OperationsViewResponse, SourceReadinessEnvelope, TaskCockpitCheckpointPageResponse, TaskCockpitCoreQuery, TaskCockpitCoreResponse, TaskCockpitRunDetailQuery, TaskCockpitStepPageResponse } from "./contracts";
+import { parseEcommerceWorkshopApiError, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
 
 type FetchImplementation = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 export type EcommerceWorkshopClientOptions = { fetch?: FetchImplementation; getBaseUrl?: () => string; getAuthHeaders?: () => Record<string, string> };
@@ -31,6 +31,7 @@ export class EcommerceWorkshopClient {
   async listModules(): Promise<EcommerceWorkshopModuleListResponse> { return parseEcommerceWorkshopModuleList(await this.get("ecommerceWorkshopModulesList", "/v1/ecommerce-workshop/modules")); }
   async getModuleReadiness(moduleId: string): Promise<EcommerceWorkshopModuleReadinessResponse> { if (!MODULE_ID.test(moduleId)) throw new TypeError("moduleId 无效"); return parseEcommerceWorkshopModuleReadiness(await this.get("ecommerceWorkshopModuleReadinessGet", `/v1/ecommerce-workshop/modules/${encodeURIComponent(moduleId)}/readiness`)); }
   async getSourceReadiness(): Promise<SourceReadinessEnvelope> { return parseSourceReadinessEnvelope(await this.get("ecommerceWorkshopSourceReadinessGet", "/v1/ecommerce-workshop/source-readiness")); }
+  async getOperationsView(): Promise<OperationsViewResponse> { return parseOperationsView(await this.get("ecommerceWorkshopOperationsViewGet", "/v1/ecommerce-workshop/views/operations")); }
   async getTaskCockpitCore(query: TaskCockpitCoreQuery = {}): Promise<TaskCockpitCoreResponse> { return parseTaskCockpitCore(await this.get("ecommerceWorkshopTaskCockpitCoreGet", `/v1/ecommerce-workshop/views/task-cockpit${queryString(query)}`)); }
   async listTaskCockpitRunSteps(runId: string, query: TaskCockpitRunDetailQuery = {}): Promise<TaskCockpitStepPageResponse> { if (!RUN_ID.test(runId)) throw new TypeError("runId 无效"); return parseTaskCockpitSteps(await this.get("ecommerceWorkshopTaskCockpitRunStepsList", `/v1/ecommerce-workshop/views/task-cockpit/runs/${encodeURIComponent(runId)}/steps${queryString(query)}`)); }
   async listTaskCockpitRunCheckpoints(runId: string, query: TaskCockpitRunDetailQuery = {}): Promise<TaskCockpitCheckpointPageResponse> { if (!RUN_ID.test(runId)) throw new TypeError("runId 无效"); return parseTaskCockpitCheckpoints(await this.get("ecommerceWorkshopTaskCockpitRunCheckpointsList", `/v1/ecommerce-workshop/views/task-cockpit/runs/${encodeURIComponent(runId)}/checkpoints${queryString(query)}`)); }

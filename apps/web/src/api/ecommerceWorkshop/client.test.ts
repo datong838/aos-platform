@@ -18,6 +18,8 @@ const sourcePipelines = ["P01-shop-qyh", "P02-product-qyh", "P03-product-sku-qyh
 const sourceCheckedAt = "2026-08-21T14:00:00Z";
 const sourceBlockers = ["FRESHNESS_POLICY_REF_MISSING", "QUALITY_POLICY_REF_MISSING", "QUERY_CAPABILITY_REF_MISSING", "RECONCILIATION_POLICY_REF_MISSING", "SOURCE_CONFIG_EXACT_REF_MISSING"];
 const sourceReadiness = { schemaVersion: "aos.source-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, checkedAt: sourceCheckedAt, cutoffAt: sourceCheckedAt, status: "blocked", receiptRef: null, sources: sourcePipelines.map((pipelineId) => ({ schemaVersion: "aos.source-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, sourceId: "niushop-qyh", pipelineId, objectType: "Object", status: "blocked", checkedAt: sourceCheckedAt, observedAt: sourceCheckedAt, sourceEventAt: null, projectedAt: sourceCheckedAt, dataCutoff: sourceCheckedAt, freshnessExpiresAt: null, sourceConfigRef: null, mappingRef: null, schemaRef: null, maskingPolicyRef: null, freshnessPolicyRef: null, qualityPolicyRef: null, reconciliationPolicyRef: null, queryCapabilityRef: null, latestRun: { runId: "run-1", status: "succeeded", scheduledFor: sourceCheckedAt, startedAt: sourceCheckedAt, finishedAt: sourceCheckedAt, rowsWritten: 1, errorCode: null }, counts: { sourceTotal: 1, sourceActive: 1, sourceDeleted: 0, projectionTotal: 1, unexplainedDelta: 0 }, quality: { status: "unknown", ruleRef: null, summary: null }, reconciliation: { status: "unknown", ruleRef: null, summary: null }, reasons: sourceBlockers, blockers: sourceBlockers })) };
+const operationIds = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"];
+const operations = { schemaVersion: "aos.ecommerce-workshop.operations-view/v1", tenant: envelope.tenant, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: operationIds.map((sliceId) => ({ sliceId, status: "ready", dataCutoff: "2026-08-24T08:00:00Z", authorityRefs: [{ resourceType: "ReadAuthority", resourceId: sliceId, revision: 1, contentHash: hash("d"), receiptId: "receipt-1" }], blockers: [], countLedger: { sourceTotal: 0, attached: 0, unmatched: 0, conflicted: 0 } })), page: { limit: 50, count: 0, hasMore: false, nextCursor: null } };
 
 describe("EcommerceWorkshopClient", () => {
   it("只发两个 canonical GET，并沿用会话鉴权头", async () => {
@@ -43,6 +45,14 @@ describe("EcommerceWorkshopClient", () => {
     expect(result.sources).toHaveLength(12);
     expect(result.sources[0].pipelineId).toBe("P01-shop-qyh");
     expect(fetch).toHaveBeenCalledWith("http://api.test/v1/ecommerce-workshop/source-readiness", expect.objectContaining({ method: "GET", headers: expect.objectContaining({ Authorization: "Bearer test" }) }));
+  });
+  it("只发 canonical Operations GET 且不接受 scope 查询注入", async () => {
+    const fetch = vi.fn().mockResolvedValue(ok(operations));
+    const client = new EcommerceWorkshopClient({ fetch, getBaseUrl: () => "http://api.test", getAuthHeaders: () => ({ Authorization: "Bearer test" }) });
+    const parsed = await client.getOperationsView();
+    expect(parsed.slices).toHaveLength(7);
+    expect(parsed.slices[0]).toMatchObject({ sliceId: "orders" });
+    expect(fetch).toHaveBeenCalledWith("http://api.test/v1/ecommerce-workshop/views/operations", expect.objectContaining({ method: "GET", headers: expect.objectContaining({ Authorization: "Bearer test" }) }));
   });
   it("SourceReadiness 的 forbidden、network、non-JSON 与 parser drift 均失败关闭", async () => {
     const denied = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(new Response(JSON.stringify({ code: "FORBIDDEN", message: "denied", details: null, traceId: "trace-3" }), { status: 403 })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });

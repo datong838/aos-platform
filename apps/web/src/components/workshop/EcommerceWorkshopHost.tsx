@@ -7,6 +7,7 @@ import {
 } from "./EcommerceWorkshopCatalogContext";
 import { EcommerceWorkshopShell } from "./EcommerceWorkshopShell";
 import { TaskCockpitPage } from "./TaskCockpitPage";
+import { OperationsPage } from "./OperationsPage";
 
 function HostState({
   state,
@@ -39,14 +40,15 @@ export function EcommerceWorkshopHost() {
     return <Navigate to={match.module.route} replace />;
   }
   if (match) {
+    const exposesReadOnly = match.module.moduleId === "ecommerce.task-cockpit" || match.module.moduleId === "ecommerce.operations";
     return (
       <EcommerceWorkshopShell
         module={match.module}
         dataCutoff={catalog.response?.dataCutoff ?? null}
         catalogStale={catalog.phase === "stale"}
-        exposeReadOnlyWhenUnverified={match.module.moduleId === "ecommerce.task-cockpit"}
+        exposeReadOnlyWhenUnverified={exposesReadOnly}
       >
-        {match.module.moduleId === "ecommerce.task-cockpit" ? <TaskCockpitPage /> : undefined}
+        {match.module.moduleId === "ecommerce.task-cockpit" ? <TaskCockpitPage /> : match.module.moduleId === "ecommerce.operations" ? <OperationsPage /> : undefined}
       </EcommerceWorkshopShell>
     );
   }

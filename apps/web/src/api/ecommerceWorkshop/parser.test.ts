@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
+import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -29,6 +29,27 @@ describe("ecommerceWorkshop strict parser", () => {
     expect(() => parseEcommerceWorkshopModuleList({ ...list, items: [{ ...module, readiness: "available" }] })).toThrow("不一致");
     expect(() => parseEcommerceWorkshopModuleList({ ...list, count: 2 })).toThrow("count");
     expect(() => parseEcommerceWorkshopModuleList({ ...list, items: [{ ...module, requiredObjects: ["Z", "A"] }] })).toThrow("排序");
+  });
+});
+
+const operationSliceIds = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"];
+const operationSlice = (sliceId: string, status = "ready") => ({ sliceId, status, dataCutoff: "2026-08-24T08:00:00Z", authorityRefs: status === "ready" ? [{ resourceType: "ReadAuthority", resourceId: `${sliceId}.v1`, revision: 1, contentHash: hash("d"), receiptId: "receipt-1" }] : [], blockers: status === "blocked" ? [{ code: "DEPENDENCY_NOT_READY", dependency: `ecommerce.${sliceId}`, requiredAction: "接入 exact authority" }] : [], countLedger: { sourceTotal: status === "ready" ? 1 : 0, attached: status === "ready" ? 1 : 0, unmatched: 0, conflicted: 0 } });
+const operations = { schemaVersion: "aos.ecommerce-workshop.operations-view/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: operationSliceIds.map((id) => operationSlice(id)), page: { limit: 50, count: 7, hasMore: false, nextCursor: null } };
+
+describe("operations view strict parser", () => {
+  it("保留 ordered 七切片、exact authority 与数量守恒", () => {
+    const parsed = parseOperationsView(operations);
+    expect(parsed).toMatchObject({ page: { count: 7 } });
+    expect(parsed.slices).toHaveLength(7);
+    expect(parsed.slices[0]).toMatchObject({ sliceId: "orders", status: "ready" });
+  });
+  it("拒绝 extra、错序、伪 ready、count 和 tenant 漂移", () => {
+    expect(() => parseOperationsView({ ...operations, extra: true })).toThrow("字段漂移");
+    expect(() => parseOperationsView({ ...operations, slices: [...operations.slices].reverse() })).toThrow("canonical order");
+    expect(() => parseOperationsView({ ...operations, slices: [{ ...operations.slices[0], authorityRefs: [] }, ...operations.slices.slice(1)] })).toThrow("伪 ready");
+    expect(() => parseOperationsView({ ...operations, page: { ...operations.page, count: 6 } })).toThrow("count");
+    expect(() => parseOperationsView({ ...operations, page: { ...operations.page, hasMore: true, nextCursor: "synthetic" } })).toThrow("cursor");
+    expect(() => parseOperationsView({ ...operations, tenant: { orgId: "dev-org", projectId: "dev-project" } }, { orgId: "org-org", projectId: "dev-project" })).toThrow("tenant 漂移");
   });
 });
 

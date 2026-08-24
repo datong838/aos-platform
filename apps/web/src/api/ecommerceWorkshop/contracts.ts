@@ -152,3 +152,13 @@ export type TaskCockpitStepPageResponse = { schemaVersion: typeof TASK_COCKPIT_S
 export type TaskCockpitCheckpointPageResponse = { schemaVersion: typeof TASK_COCKPIT_SCHEMA_VERSION; tenant: WorkshopTenant; runId: string; evaluatedAt: string; membershipCutoff: string; stateConsistency: "current_state_per_page"; items: TaskCockpitCheckpoint[]; page: TaskCockpitPage };
 export type TaskCockpitCoreQuery = { status?: TaskCockpitTaskStatus; limit?: number; cursor?: string };
 export type TaskCockpitRunDetailQuery = { limit?: number; cursor?: string };
+
+export const OPERATIONS_SCHEMA_VERSION = "aos.ecommerce-workshop.operations-view/v1" as const;
+export type OperationsSliceId = "orders" | "orderLines" | "inventory" | "shipments" | "payments" | "aftersaleEvents" | "operationCases";
+export type OperationsSliceStatus = "ready" | "blocked";
+export type OperationsAuthorityRef = { resourceType: string; resourceId: string; revision: number; contentHash: string; receiptId: string };
+export type OperationsBlocker = { code: string; dependency: string; requiredAction: string };
+export type OperationsCountLedger = { sourceTotal: number; attached: number; unmatched: number; conflicted: number };
+export type OperationsSlice = { sliceId: OperationsSliceId; status: OperationsSliceStatus; dataCutoff: string; authorityRefs: OperationsAuthorityRef[]; blockers: OperationsBlocker[]; countLedger: OperationsCountLedger };
+export type OperationsPage = { limit: number; count: number; hasMore: boolean; nextCursor: string | null };
+export type OperationsViewResponse = { schemaVersion: typeof OPERATIONS_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: OperationsSlice[]; page: OperationsPage };

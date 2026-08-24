@@ -2,6 +2,7 @@ import {
   ECOMMERCE_WORKSHOP_SCHEMA_VERSION,
   SOURCE_READINESS_SCHEMA_VERSION,
   TASK_COCKPIT_SCHEMA_VERSION,
+  OPERATIONS_SCHEMA_VERSION,
   type EcommerceWorkshopApiErrorBody,
   type EcommerceWorkshopModule,
   type EcommerceWorkshopModuleListResponse,
@@ -32,6 +33,13 @@ import {
   type TaskCockpitStep,
   type TaskCockpitStepPageResponse,
   type TaskCockpitTask,
+  type OperationsAuthorityRef,
+  type OperationsBlocker,
+  type OperationsCountLedger,
+  type OperationsPage,
+  type OperationsSlice,
+  type OperationsSliceId,
+  type OperationsViewResponse,
 } from "./contracts";
 
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
@@ -280,4 +288,82 @@ export function parseTaskCockpitCheckpoints(value: unknown): TaskCockpitCheckpoi
   const raw = record(value, "taskCockpit.checkpoints"); exact(raw, ["schemaVersion", "tenant", "runId", "evaluatedAt", "membershipCutoff", "stateConsistency", "items", "page"], "taskCockpit.checkpoints"); const base = parseTaskCockpitBase(raw, "taskCockpit.checkpoints");
   if (!Array.isArray(raw.items)) throw new TypeError("taskCockpit.checkpoints.items 必须是数组"); const items = raw.items.map(parseTaskCockpitCheckpoint); assertUnique(items.map((item) => item.checkpointId), "taskCockpit.checkpoints.items"); const page = parseTaskCockpitPage(raw.page); if (page.count !== items.length) throw new TypeError("taskCockpit.checkpoints.page count 不一致");
   return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, ...base, runId: boundedText(raw.runId, "taskCockpit.checkpoints.runId", 200), membershipCutoff: timestamp(raw.membershipCutoff, "taskCockpit.checkpoints.membershipCutoff"), stateConsistency: "current_state_per_page", items, page };
+}
+
+const OPERATIONS_SLICE_IDS = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"] as const satisfies readonly OperationsSliceId[];
+
+function parseOperationsAuthorityRef(value: unknown): OperationsAuthorityRef {
+  const raw = record(value, "operations.authorityRef");
+  exact(raw, ["resourceType", "resourceId", "revision", "contentHash", "receiptId"], "operations.authorityRef");
+  return {
+    resourceType: boundedText(raw.resourceType, "operations.authorityRef.resourceType", 120),
+    resourceId: boundedText(raw.resourceId, "operations.authorityRef.resourceId", 240),
+    revision: integer(raw.revision, "operations.authorityRef.revision", 1),
+    contentHash: hash(raw.contentHash, "operations.authorityRef.contentHash"),
+    receiptId: boundedText(raw.receiptId, "operations.authorityRef.receiptId", 240),
+  };
+}
+
+function parseOperationsBlocker(value: unknown): OperationsBlocker {
+  const raw = record(value, "operations.blocker");
+  exact(raw, ["code", "dependency", "requiredAction"], "operations.blocker");
+  const code = boundedText(raw.code, "operations.blocker.code", 120);
+  if (!REASON.test(code)) throw new TypeError("operations.blocker.code 非法");
+  return { code, dependency: boundedText(raw.dependency, "operations.blocker.dependency", 240), requiredAction: boundedText(raw.requiredAction, "operations.blocker.requiredAction", 1000) };
+}
+
+function parseOperationsCountLedger(value: unknown): OperationsCountLedger {
+  const raw = record(value, "operations.countLedger");
+  exact(raw, ["sourceTotal", "attached", "unmatched", "conflicted"], "operations.countLedger");
+  const result = {
+    sourceTotal: integer(raw.sourceTotal, "operations.countLedger.sourceTotal"),
+    attached: integer(raw.attached, "operations.countLedger.attached"),
+    unmatched: integer(raw.unmatched, "operations.countLedger.unmatched"),
+    conflicted: integer(raw.conflicted, "operations.countLedger.conflicted"),
+  };
+  if (result.sourceTotal !== result.attached + result.unmatched + result.conflicted) throw new TypeError("operations.countLedger 数量不守恒");
+  return result;
+}
+
+function parseOperationsSlice(value: unknown, expectedId: OperationsSliceId, expectedCutoff: string): OperationsSlice {
+  const raw = record(value, `operations.slices.${expectedId}`);
+  exact(raw, ["sliceId", "status", "dataCutoff", "authorityRefs", "blockers", "countLedger"], `operations.slices.${expectedId}`);
+  const sliceId = enumValue<OperationsSliceId>(raw.sliceId, OPERATIONS_SLICE_IDS, "operations.sliceId");
+  if (sliceId !== expectedId) throw new TypeError("operations.slices canonical order 漂移");
+  const status = enumValue(raw.status, ["ready", "blocked"] as const, `operations.${sliceId}.status`);
+  const dataCutoff = timestamp(raw.dataCutoff, `operations.${sliceId}.dataCutoff`);
+  if (dataCutoff !== expectedCutoff) throw new TypeError(`operations.${sliceId}.dataCutoff 漂移`);
+  if (!Array.isArray(raw.authorityRefs) || !Array.isArray(raw.blockers)) throw new TypeError(`operations.${sliceId} refs/blockers 必须是数组`);
+  const authorityRefs = raw.authorityRefs.map(parseOperationsAuthorityRef);
+  const blockers = raw.blockers.map(parseOperationsBlocker);
+  assertUnique(authorityRefs.map((item) => `${item.resourceType}:${item.resourceId}:${item.revision}:${item.contentHash}:${item.receiptId}`), `operations.${sliceId}.authorityRefs`);
+  assertUnique(blockers.map((item) => item.code), `operations.${sliceId}.blockers`);
+  if (status === "ready" && (authorityRefs.length === 0 || blockers.length !== 0)) throw new TypeError(`operations.${sliceId} 伪 ready`);
+  if (status === "blocked" && blockers.length === 0) throw new TypeError(`operations.${sliceId} 伪 blocked`);
+  return { sliceId, status, dataCutoff, authorityRefs, blockers, countLedger: parseOperationsCountLedger(raw.countLedger) };
+}
+
+function parseOperationsPage(value: unknown): OperationsPage {
+  const raw = record(value, "operations.page");
+  exact(raw, ["limit", "count", "hasMore", "nextCursor"], "operations.page");
+  const result = { limit: integer(raw.limit, "operations.page.limit", 1), count: integer(raw.count, "operations.page.count"), hasMore: bool(raw.hasMore, "operations.page.hasMore"), nextCursor: raw.nextCursor === null ? null : boundedText(raw.nextCursor, "operations.page.nextCursor", 4096) };
+  if (result.limit > 100 || result.hasMore !== (result.nextCursor !== null) || result.hasMore || result.nextCursor !== null) throw new TypeError("operations.page cursor 漂移");
+  return result;
+}
+
+export function parseOperationsView(value: unknown, expectedTenant?: WorkshopTenant): OperationsViewResponse {
+  const raw = record(value, "operations");
+  exact(raw, ["schemaVersion", "tenant", "evaluatedAt", "dataCutoff", "readiness", "slices", "page"], "operations");
+  if (raw.schemaVersion !== OPERATIONS_SCHEMA_VERSION) throw new TypeError("operations.schemaVersion 漂移");
+  if (raw.readiness !== "degraded") throw new TypeError("operations.readiness 漂移");
+  const tenant = parseTenant(raw.tenant);
+  if (expectedTenant && (tenant.orgId !== expectedTenant.orgId || tenant.projectId !== expectedTenant.projectId)) throw new TypeError("operations.tenant 漂移");
+  const dataCutoff = timestamp(raw.dataCutoff, "operations.dataCutoff");
+  if (!Array.isArray(raw.slices) || raw.slices.length !== OPERATIONS_SLICE_IDS.length) throw new TypeError("operations.slices 必须是 canonical order 七切片");
+  const rawSlices = raw.slices;
+  const slices = OPERATIONS_SLICE_IDS.map((sliceId, index) => parseOperationsSlice(rawSlices[index], sliceId, dataCutoff));
+  const page = parseOperationsPage(raw.page);
+  const attached = slices.reduce((total, slice) => total + slice.countLedger.attached, 0);
+  if (page.count !== attached) throw new TypeError("operations.page count 不一致");
+  return { schemaVersion: OPERATIONS_SCHEMA_VERSION, tenant, evaluatedAt: timestamp(raw.evaluatedAt, "operations.evaluatedAt"), dataCutoff, readiness: "degraded", slices, page };
 }
