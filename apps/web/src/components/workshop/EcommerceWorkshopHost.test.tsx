@@ -3,13 +3,21 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ecommerceWorkshopClient } from "../../api/ecommerceWorkshop";
+import { ecommerceWorkshopClient, type SourceReadinessEnvelope } from "../../api/ecommerceWorkshop";
 import { setTenant } from "../../api/tenant";
 import { EcommerceWorkshopCatalogProvider } from "./EcommerceWorkshopCatalogContext";
 import { EcommerceWorkshopHost } from "./EcommerceWorkshopHost";
 import { moduleWithReadiness, workshopCatalogFixture } from "./workshopTestFixtures";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+const sourcePipelines = ["P01-shop-qyh", "P02-product-qyh", "P03-product-sku-qyh", "P04-category-qyh", "P05-order-qyh", "P06-order-line-qyh", "P07-shipment-qyh", "P08-customer-lite-qyh", "P09-weapp-qyh", "P10-system-config-qyh", "P11-product-review-qyh", "P12-payment-qyh"];
+const sourceCutoff = "2026-08-21T14:00:00Z";
+const sourceBlocker = "SOURCE_CONFIG_EXACT_REF_MISSING";
+const sourceReadiness: SourceReadinessEnvelope = {
+  schemaVersion: "aos.source-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, checkedAt: sourceCutoff, cutoffAt: sourceCutoff, status: "blocked", receiptRef: null,
+  sources: sourcePipelines.map((pipelineId) => ({ schemaVersion: "aos.source-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, sourceId: "niushop-qyh", pipelineId, objectType: "Object", status: "blocked", checkedAt: sourceCutoff, observedAt: sourceCutoff, sourceEventAt: null, projectedAt: sourceCutoff, dataCutoff: sourceCutoff, freshnessExpiresAt: null, sourceConfigRef: null, mappingRef: null, schemaRef: null, maskingPolicyRef: null, freshnessPolicyRef: null, qualityPolicyRef: null, reconciliationPolicyRef: null, queryCapabilityRef: null, latestRun: { runId: "run-1", status: "succeeded", scheduledFor: sourceCutoff, startedAt: sourceCutoff, finishedAt: sourceCutoff, rowsWritten: 1, errorCode: null }, counts: { sourceTotal: 1, sourceActive: 1, sourceDeleted: 0, projectionTotal: 1, unexplainedDelta: 0 }, quality: { status: "unknown", ruleRef: null, summary: null }, reconciliation: { status: "unknown", ruleRef: null, summary: null }, reasons: [sourceBlocker], blockers: [sourceBlocker] })),
+};
 
 describe("EcommerceWorkshopHost task cockpit", () => {
   let host: HTMLDivElement; let root: Root;
@@ -19,12 +27,14 @@ describe("EcommerceWorkshopHost task cockpit", () => {
   it("只在 canonical task-cockpit Module 中挂载 partial read page，并保持 Shell 唯一 H1", async () => {
     const taskModule = moduleWithReadiness("degraded"); Object.assign(taskModule, { moduleId: "ecommerce.task-cockpit", displayName: "日常任务总控大屏", menuLabel: "日常任务总控大屏", route: "/workshop/cockpit" });
     const catalog = { listModules: vi.fn().mockResolvedValue(workshopCatalogFixture({ items: [taskModule] })) };
-    vi.spyOn(ecommerceWorkshopClient, "getSourceReadiness").mockRejectedValue(new Error("source readiness outside host assertion"));
+    const sourceSpy = vi.spyOn(ecommerceWorkshopClient, "getSourceReadiness").mockResolvedValue(sourceReadiness);
     vi.spyOn(ecommerceWorkshopClient, "getTaskCockpitCore").mockResolvedValue({ schemaVersion: "aos.ecommerce-workshop.task-cockpit/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-15T10:00:00Z", taskCutoff: "2026-08-15T10:00:00Z", stateConsistency: "current_state_per_page", readiness: "degraded", blockers: [
-      { code: "TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED", severity: "warning", dependency: "stage", requiredAction: "按 Run 展开" }, { code: "TASK_COCKPIT_BUSINESS_CONTEXT_BLOCKED", severity: "blocking", dependency: "business", requiredAction: "等待 W2-00" },
+      { code: "TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED", severity: "warning", dependency: "stage", requiredAction: "按 Run 展开" }, { code: "TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT", severity: "warning", dependency: "business-context:ecommerce.source-readiness", requiredAction: "按独立 cutoff 展示" },
     ], items: [], page: { limit: 20, count: 0, hasMore: false, nextCursor: null } });
     await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/cockpit"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
     expect(host.querySelectorAll("h1")).toHaveLength(1); expect(host.textContent).toContain("日常任务总控大屏"); expect(host.textContent).toContain("数据源就绪度"); expect(host.textContent).toContain("当前只读范围"); expect(host.textContent).toContain("当前权威 Task 集合为空");
+    expect(host.textContent).toContain("业务上下文 · 独立 SourceReadiness 快照"); expect(host.textContent).toContain("0 / 12"); expect(host.textContent).toContain("无 exact EvidencePack Receipt");
+    expect(sourceSpy).toHaveBeenCalledTimes(1);
   });
 
   it("Module authority 未验证时仍暴露只读视图，并同时保留 unknown 阻断", async () => {
@@ -32,7 +42,7 @@ describe("EcommerceWorkshopHost task cockpit", () => {
     const catalog = { listModules: vi.fn().mockResolvedValue(workshopCatalogFixture({ items: [taskModule] })) };
     vi.spyOn(ecommerceWorkshopClient, "getSourceReadiness").mockRejectedValue(new Error("source readiness outside host assertion"));
     vi.spyOn(ecommerceWorkshopClient, "getTaskCockpitCore").mockResolvedValue({ schemaVersion: "aos.ecommerce-workshop.task-cockpit/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-15T10:00:00Z", taskCutoff: "2026-08-15T10:00:00Z", stateConsistency: "current_state_per_page", readiness: "degraded", blockers: [
-      { code: "TASK_COCKPIT_BUSINESS_CONTEXT_BLOCKED", severity: "blocking", dependency: "business", requiredAction: "等待 W2-00" },
+      { code: "TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT", severity: "warning", dependency: "business-context:ecommerce.source-readiness", requiredAction: "按独立 cutoff 展示" },
     ], items: [], page: { limit: 20, count: 0, hasMore: false, nextCursor: null } });
     await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/cockpit"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
     expect(host.textContent).toContain("就绪状态待验证"); expect(host.textContent).toContain("当前只读范围"); expect(host.textContent).toContain("当前权威 Task 集合为空"); expect(host.querySelectorAll("h1")).toHaveLength(1);

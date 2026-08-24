@@ -71,11 +71,12 @@ _BLOCKERS = (
         ),
     ),
     TaskCockpitBlocker(
-        code="TASK_COCKPIT_BUSINESS_CONTEXT_BLOCKED",
+        code="TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT",
         severity=TaskCockpitBlockerSeverity.WARNING,
-        dependency="ecommerce.source-readiness",
+        dependency="business-context:ecommerce.source-readiness",
         requiredAction=(
-            "等待 W2-00 SourceReadinessEnvelope 后再启用业务上下文 enrichment"
+            "由 Shell 单次读取 canonical SourceReadinessEnvelope 并按其独立 cutoff 展示；"
+            "禁止与 Task cutoff 混算"
         ),
     ),
 )

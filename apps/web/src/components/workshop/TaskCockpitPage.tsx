@@ -13,6 +13,7 @@ import {
   type TaskCockpitTaskStatus,
 } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
+import { useSourceReadinessSnapshot } from "./SourceReadinessContext";
 
 type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts">;
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
@@ -36,6 +37,25 @@ function formatTime(value: string | null): string { return value ? new Date(valu
 function blockerMatches(dependency: string, tokens: readonly string[]): boolean {
   const normalized = dependency.toLowerCase();
   return tokens.some((token) => normalized.includes(token));
+}
+
+function TaskCockpitBusinessContext() {
+  const snapshot = useSourceReadinessSnapshot();
+  if (!snapshot) {
+    return <section className="task-cockpit-business-context is-failed" aria-label="业务上下文独立快照"><strong>业务上下文未装配</strong><p>未取得 Shell 的 canonical SourceReadiness 快照；不以空值代替。</p></section>;
+  }
+  if (snapshot.phase !== "ready" || !snapshot.response) {
+    const label = snapshot.phase === "loading" ? "正在读取业务上下文" : snapshot.phase === "forbidden" ? "业务上下文无访问权限" : "业务上下文读取失败";
+    return <section className={`task-cockpit-business-context is-${snapshot.phase}`} aria-label="业务上下文独立快照"><strong>{label}</strong><p>SourceReadiness 有独立 cutoff；不与 Task cutoff 混算，也不把未知状态解释为空。</p>{snapshot.phase === "failed" ? <button type="button" onClick={snapshot.reload}>重新读取 SourceReadiness</button> : null}</section>;
+  }
+  const response = snapshot.response;
+  const readyCount = response.sources.filter((source) => source.status === "ready").length;
+  const blockers = [...new Set(response.sources.flatMap((source) => source.blockers))].sort();
+  return <section className={`task-cockpit-business-context is-${response.status}`} aria-label="业务上下文独立快照">
+    <div><p className="ecommerce-workshop-eyebrow">业务上下文 · 独立 SourceReadiness 快照</p><strong>{response.status}</strong></div>
+    <dl><div><dt>就绪源</dt><dd>{readyCount} / {response.sources.length}</dd></div><div><dt>检查时间</dt><dd>{formatTime(response.checkedAt)}</dd></div><div><dt>数据 cutoff</dt><dd>{formatTime(response.cutoffAt)}</dd></div><div><dt>EvidencePack</dt><dd>{response.receiptRef ? `${response.receiptRef.resourceId} · r${response.receiptRef.revision}` : "无 exact EvidencePack Receipt"}</dd></div></dl>
+    <p>{blockers.length ? `当前 blocker：${blockers.join(" · ")}` : "当前响应未声明 blocker；仍以 exact Receipt 和独立 cutoff 为准。"}</p>
+  </section>;
 }
 
 export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?: CockpitClient }) {
@@ -101,6 +121,8 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
         <div className={warningCount ? "is-warning" : "is-clear"}><span>待接入</span><strong>{warningCount}</strong><small>warning blocker</small></div>
         <div className="task-cockpit-metric-cutoff"><span>评估时间</span><strong>{formatTime(response.evaluatedAt)}</strong><small>成员截止 {formatTime(response.taskCutoff)}</small></div>
       </section>
+
+      <TaskCockpitBusinessContext />
 
       <section className="task-cockpit-command-blocked" aria-labelledby="task-cockpit-command-title">
         <span className="task-cockpit-command-icon" aria-hidden="true">✦</span>
@@ -182,7 +204,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
           <div className="task-cockpit-lane-state">
             <span aria-hidden="true">◇</span>
             <strong>Stage 按 Run 精确展开</strong>
-            <p>仅在 Run 携带 canonical productionContract 时展示；业务上下文与策划职责仍失败关闭。</p>
+            <p>仅在 Run 携带 canonical productionContract 时展示；业务上下文见独立 SourceReadiness 快照，不与 Task cutoff 混算。</p>
           </div>
           {planningBlockers.map((blocker) => <div className="task-cockpit-lane-blocker" key={blocker.code}><span>{blocker.dependency}</span><p>{blocker.requiredAction}</p></div>)}
         </aside>

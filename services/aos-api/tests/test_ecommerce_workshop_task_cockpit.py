@@ -135,6 +135,11 @@ def test_core_read_is_degraded_read_only_and_uses_stable_keyset_cursor() -> None
     assert first.page.has_more is True
     assert first.page.next_cursor
     assert len(first.blockers) == 2
+    assert {blocker.code for blocker in first.blockers} == {
+        "TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED",
+        "TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT",
+    }
+    assert all(blocker.severity.value == "warning" for blocker in first.blockers)
     assert first.items[0].run is not None
 
     second = cockpit.read_core(

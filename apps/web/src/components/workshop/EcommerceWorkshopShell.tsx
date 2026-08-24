@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { EcommerceWorkshopModule } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { CapabilityBlocker } from "./CapabilityBlocker";
+import { SourceReadinessProvider } from "./SourceReadinessContext";
 import { SourceReadinessPanel } from "./SourceReadinessPanel";
 
 export const WORKSHOP_FOCUS_EVENT = "aos-workshop-focus-mode";
@@ -55,6 +56,7 @@ export function EcommerceWorkshopShell({
   );
 
   return (
+    <SourceReadinessProvider>
     <div className={`ecommerce-workshop-shell${focusMode ? " is-focus" : ""}`}>
       <a className="ecommerce-workshop-skip-link" href="#ecommerce-workshop-main">
         跳到模块主内容
@@ -120,5 +122,6 @@ export function EcommerceWorkshopShell({
         <CapabilityBlocker readiness={module.readiness} blockers={module.blockers} />
       </section>
     </div>
+    </SourceReadinessProvider>
   );
 }

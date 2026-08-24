@@ -9,7 +9,7 @@ const cockpitBase = { schemaVersion: "aos.ecommerce-workshop.task-cockpit/v1", t
 const emptyPage = { limit: 20, count: 0, hasMore: false, nextCursor: null };
 const blockers = [
   { code: "TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED", severity: "warning", dependency: "stage", requiredAction: "按 Run 展开" },
-  { code: "TASK_COCKPIT_BUSINESS_CONTEXT_BLOCKED", severity: "blocking", dependency: "business", requiredAction: "等待 W2-00" },
+  { code: "TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT", severity: "warning", dependency: "business-context:ecommerce.source-readiness", requiredAction: "按独立 cutoff 展示" },
 ];
 const core = { ...cockpitBase, taskCutoff: "2026-08-15T10:00:00Z", readiness: "degraded", blockers, items: [], page: emptyPage };
 const details = { ...cockpitBase, runId: "run-1", membershipCutoff: "2026-08-15T10:00:00Z", items: [], page: emptyPage };

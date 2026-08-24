@@ -5,4 +5,5 @@ export * from "./EcommerceWorkshopHost";
 export * from "./EcommerceWorkshopShell";
 export * from "./InstalledModuleNavigation";
 export * from "./TaskCockpitPage";
+export * from "./SourceReadinessContext";
 export * from "./SourceReadinessPanel";

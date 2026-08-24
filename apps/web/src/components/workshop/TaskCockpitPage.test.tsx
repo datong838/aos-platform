@@ -8,7 +8,7 @@ import { TaskCockpitPage } from "./TaskCockpitPage";
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const blockers = [
   { code: "TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED", severity: "warning" as const, dependency: "stage", requiredAction: "按 Run 展开" },
-  { code: "TASK_COCKPIT_BUSINESS_CONTEXT_BLOCKED", severity: "blocking" as const, dependency: "business", requiredAction: "等待 W2-00" },
+  { code: "TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT", severity: "warning" as const, dependency: "business-context:ecommerce.source-readiness", requiredAction: "按独立 cutoff 展示" },
 ];
 const core = (title = "每日巡检"): TaskCockpitCoreResponse => ({ schemaVersion: "aos.ecommerce-workshop.task-cockpit/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-15T10:00:00Z", taskCutoff: "2026-08-15T10:00:00Z", stateConsistency: "current_state_per_page", readiness: "degraded", blockers, items: [{ taskId: `task-${title}`, taskType: "daily", title, status: "executing", priority: 50, version: 1, currentPlanRevisionId: "plan-1", createdAt: "2026-08-15T08:00:00Z", updatedAt: "2026-08-15T09:01:00Z", run: { runId: "run-1", planRevisionId: "plan-1", status: "running", version: 1, startedAt: null, finishedAt: null, createdAt: "2026-08-15T09:00:00Z", updatedAt: "2026-08-15T09:01:00Z" } }], page: { limit: 20, count: 1, hasMore: false, nextCursor: null } });
 const detailBase = { schemaVersion: "aos.ecommerce-workshop.task-cockpit/v1" as const, tenant: { orgId: "org-org", projectId: "dev-project" }, runId: "run-1", evaluatedAt: "2026-08-15T10:00:00Z", membershipCutoff: "2026-08-15T10:00:00Z", stateConsistency: "current_state_per_page" as const, items: [], page: { limit: 20, count: 0, hasMore: false, nextCursor: null } };
@@ -28,6 +28,7 @@ describe("TaskCockpitPage", () => {
     await act(async () => root.render(<TaskCockpitPage client={client} />));
     expect(host.querySelectorAll("h1")).toHaveLength(0);
     expect(host.textContent).toContain("当前任务权威指标"); expect(host.textContent).toContain("每日巡检"); expect(host.textContent).toContain("TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED");
+    expect(host.textContent).toContain("业务上下文未装配");
     expect(host.textContent).not.toMatch(/派发|暂停任务|取消任务|批准任务/);
     expect(host.querySelector(".task-cockpit-command-blocked input")).toBeNull();
     expect([...host.querySelectorAll("button")].some((item) => item.textContent === "下达")).toBe(false);

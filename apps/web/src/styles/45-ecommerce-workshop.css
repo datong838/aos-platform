@@ -253,6 +253,27 @@
 .task-cockpit-metrics .is-warning strong { color: var(--aos-amber); }
 .task-cockpit-metrics .is-clear strong { color: var(--aos-green); }
 .task-cockpit-metric-cutoff strong { font-size: 14px; }
+.task-cockpit-business-context {
+  display: grid;
+  grid-template-columns: minmax(170px, .7fr) minmax(560px, 2.6fr);
+  gap: 10px 20px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid var(--aos-border);
+  border-left: 4px solid var(--aos-amber);
+  background: var(--aos-surface);
+}
+.task-cockpit-business-context > div > p,
+.task-cockpit-business-context > p { margin: 0; }
+.task-cockpit-business-context > div > strong { font-size: 20px; }
+.task-cockpit-business-context > dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.task-cockpit-business-context > dl > div { min-width: 0; }
+.task-cockpit-business-context dt { color: var(--aos-text-tertiary); font-size: 11px; }
+.task-cockpit-business-context dd { margin: 3px 0 0; overflow-wrap: anywhere; }
+.task-cockpit-business-context > p { grid-column: 1 / -1; color: var(--aos-text-secondary); overflow-wrap: anywhere; }
+.task-cockpit-business-context.is-ready { border-left-color: var(--aos-green); }
+.task-cockpit-business-context.is-failed,
+.task-cockpit-business-context.is-forbidden { border-left-color: var(--aos-red); }
 .task-cockpit-command-blocked {
   display: flex;
   align-items: center;
@@ -602,6 +623,9 @@
   .ecommerce-workshop-context-refs,
   .ecommerce-workshop-blockers ul { grid-template-columns: 1fr; }
   .task-cockpit-toolbar { align-items: stretch; flex-direction: column; }
+  .task-cockpit-business-context { grid-template-columns: 1fr; }
+  .task-cockpit-business-context > dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .task-cockpit-business-context > p { grid-column: auto; }
   .task-cockpit-scope dl,
   .task-cockpit-card dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .task-cockpit-board { grid-template-columns: 1fr; }
