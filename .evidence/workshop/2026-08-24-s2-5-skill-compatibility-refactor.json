@@ -1,0 +1,104 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "taskId": "workshop-s2-5-skill-compatibility-refactor-20260824",
+  "wave": "S2.5",
+  "baseline": {
+    "gitCommit": "9be744ed4fabbf73fa582fd2a6aa9398e4560469",
+    "authorityRevision": "AOS-000209"
+  },
+  "decision": {
+    "implementationStatus": "CODE_AND_BROWSER_GREEN",
+    "releaseStatus": "RED",
+    "releaseAction": "NO_RELEASE",
+    "nextWave": "S3_PAUSED_FOR_USER_CHECKPOINT"
+  },
+  "compatibilityMap": {
+    "path": "bundles/solutions/ecommerce-growth/content/logic/ecommerce-37-skill-compatibility-map.json",
+    "mode": "retain_exact_legacy",
+    "publicationStatus": "planned_not_published",
+    "legacyEntries": 37,
+    "classificationCounts": {
+      "KEEP_ATOMIC": 2,
+      "MERGE": 10,
+      "MOVE_TO_CHANNEL": 1,
+      "MOVE_TO_DOMAIN": 2,
+      "MOVE_TO_TOOL": 1,
+      "SPLIT": 21
+    },
+    "publishedSolutionPackCounts": {
+      "agents": 6,
+      "evaluatedSkills": 37,
+      "capabilities": 10
+    },
+    "identityMigrationPerformed": false,
+    "newSkillPublicationPerformed": false
+  },
+  "taskCockpitSlice": {
+    "endpoint": "GET /v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/skill-contributions",
+    "authority": [
+      "AgentRun",
+      "SkillBinding",
+      "SkillTemplateRevision",
+      "AgentInstance",
+      "AgentTemplateRevision"
+    ],
+    "commands": [],
+    "emptyState": "NO_CANONICAL_AGENT_RUN_CONTRIBUTION",
+    "failurePolicy": "FAIL_CLOSED_AND_PRESERVE_EXISTING_TASK_COCKPIT_DETAILS"
+  },
+  "verification": {
+    "focusedBackend": "43 passed",
+    "workshopApiCumulative": "123 passed",
+    "w2Evaluator": "16 passed",
+    "focusedWeb": "41 passed",
+    "workshopWebCumulative": "54 passed",
+    "fullWeb": "218 files / 2052 tests passed",
+    "typescript": "passed",
+    "webBuild": "passed",
+    "pythonCompileAll": "passed",
+    "openapiDeterministicCheck": "passed",
+    "diffCheck": "passed"
+  },
+  "browserAcceptance": {
+    "route": "/workshop/task-cockpit",
+    "fixtureKind": "NON_OPERATIONAL_VISUAL_FIXTURE",
+    "viewports": [1280, 1440, 1920],
+    "horizontalOverflow": false,
+    "commandButtons": 0,
+    "newConsoleErrors": 0,
+    "negativePath": {
+      "skillContributionFailureVisible": true,
+      "existingStageVisible": true,
+      "existingResponsibilityVisible": true,
+      "existingApprovalVisible": true,
+      "existingReceiptVisible": true,
+      "existingStepVisible": true,
+      "existingCheckpointVisible": true
+    }
+  },
+  "s2CumulativeDecision": {
+    "evidenceRef": ".evidence/workshop/2026-08-24-s2-5-w2-cumulative-gate-decision.json",
+    "status": "RED",
+    "action": "NO_RELEASE",
+    "greenAxes": [
+      "eight_view_contract_green",
+      "security_isolation_green"
+    ],
+    "redAxes": [
+      "source_data_green",
+      "eight_view_runtime_green",
+      "shared_context_timeline_navigation_green",
+      "browser_positive_green"
+    ],
+    "receiptGate": "GREEN"
+  },
+  "boundaries": {
+    "realTenant": "org-org/dev-project",
+    "isolationCanary": "dev-org/dev-project",
+    "databaseMigrationPerformed": false,
+    "realBusinessDataWritePerformed": false,
+    "providerInvocationPerformed": false,
+    "externalActionPerformed": false,
+    "sideEffectsPerformed": []
+  }
+}

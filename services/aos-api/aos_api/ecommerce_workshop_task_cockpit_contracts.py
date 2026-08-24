@@ -11,6 +11,7 @@ from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_contracts import (
     AipContractModel,
+    ResourceRef,
     StepRunStatus,
     TaskRunStatus,
     TenantContext,
@@ -237,6 +238,140 @@ class TaskCockpitStageCompilationItem(AipContractModel):
                 raise ValueError(f"{label} must contain unique non-blank values")
         if self.stage_id in self.depends_on:
             raise ValueError("stage cannot depend on itself")
+        return self
+
+
+class TaskCockpitSkillContributionReadiness(AipContractModel):
+    status: Literal[
+        "available", "degraded", "disabled", "blocked", "unknown", "stale"
+    ]
+    freshness: Literal["fresh", "stale", "unverified"]
+    reason_codes: list[str] = Field(default_factory=list, max_length=128)
+    binding_status: Literal["provisioning", "active", "suspended", "revoked"]
+    last_verified_at: datetime | None = None
+    expires_at: datetime | None = None
+
+    @field_validator("last_verified_at", "expires_at")
+    @classmethod
+    def _aware_time(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _freshness_is_honest(self) -> TaskCockpitSkillContributionReadiness:
+        if len(self.reason_codes) != len(set(self.reason_codes)):
+            raise ValueError("Skill contribution reason codes must be unique")
+        if self.freshness == "fresh" and (
+            self.last_verified_at is None or self.expires_at is None
+        ):
+            raise ValueError("fresh readiness requires an exact verification window")
+        if self.status == "available" and (
+            self.freshness != "fresh" or self.binding_status != "active"
+        ):
+            raise ValueError("available readiness requires fresh active Binding evidence")
+        if self.status == "stale" and self.freshness != "stale":
+            raise ValueError("stale readiness must expose stale freshness")
+        return self
+
+
+class TaskCockpitSkillRunProjection(AipContractModel):
+    status: Literal[
+        "queued", "running", "paused", "succeeded", "failed", "cancelled", "unknown"
+    ]
+    started_at: datetime | None = None
+    updated_at: datetime
+    waiting_for: list[str] = Field(default_factory=list, max_length=128)
+
+    @field_validator("started_at", "updated_at")
+    @classmethod
+    def _aware_time(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+
+class TaskCockpitSkillContribution(AipContractModel):
+    contribution_id: str = Field(min_length=1, max_length=200)
+    task_run_ref: ResourceRef
+    agent_run_ref: ResourceRef
+    module_id: Literal["ecommerce.task-cockpit"] = "ecommerce.task-cockpit"
+    role_ref: ExactRevisionRef
+    assignee_ref: ExactRevisionRef
+    skill_revision_ref: ExactRevisionRef
+    binding_ref: ResourceRef
+    logic_revision_ref: ExactRevisionRef
+    display_name: str = Field(min_length=1, max_length=240)
+    purpose: str = Field(min_length=1, max_length=500)
+    responsibility: str = Field(min_length=1, max_length=160)
+    readiness: TaskCockpitSkillContributionReadiness
+    run_projection: TaskCockpitSkillRunProjection
+    input_refs: list[ResourceRef] = Field(default_factory=list, max_length=200)
+    output_artifact_refs: list[ResourceRef] = Field(default_factory=list, max_length=200)
+    assumptions: list[str] = Field(default_factory=list, max_length=64)
+    uncertainties: list[str] = Field(default_factory=list, max_length=64)
+    conflicts: list[str] = Field(default_factory=list, max_length=64)
+    missing_inputs: list[str] = Field(default_factory=list, max_length=64)
+    allowed_commands: list[str] = Field(default_factory=list, max_length=16)
+
+    @model_validator(mode="after")
+    def _canonical_refs_and_read_only(self) -> TaskCockpitSkillContribution:
+        expected = {
+            "task_run_ref": "TaskRun",
+            "agent_run_ref": "AgentRun",
+            "binding_ref": "SkillBinding",
+            "role_ref": "AgentTemplate",
+            "assignee_ref": "AgentInstance",
+            "skill_revision_ref": "SkillTemplate",
+            "logic_revision_ref": "LogicRevision",
+        }
+        for field_name, resource_type in expected.items():
+            if getattr(self, field_name).resource_type != resource_type:
+                raise ValueError(f"{field_name} must reference {resource_type}")
+        if self.allowed_commands:
+            raise ValueError("S2.5 Skill contribution pilot is strictly read-only")
+        for field_name in (
+            "assumptions",
+            "uncertainties",
+            "conflicts",
+            "missing_inputs",
+        ):
+            values = getattr(self, field_name)
+            if len(values) != len(set(values)) or any(not item.strip() for item in values):
+                raise ValueError(f"{field_name} must contain unique non-blank values")
+        return self
+
+
+class TaskCockpitSkillContributionEnvelope(AipContractModel):
+    schema_version: Literal[TASK_COCKPIT_SCHEMA_VERSION] = TASK_COCKPIT_SCHEMA_VERSION
+    tenant: TenantContext
+    run_id: str = Field(min_length=1, max_length=200)
+    task_id: str = Field(min_length=1, max_length=200)
+    evaluated_at: datetime
+    projection_status: Literal["ready", "blocked"]
+    blocker_codes: list[str] = Field(default_factory=list, max_length=128)
+    items: list[TaskCockpitSkillContribution] = Field(default_factory=list, max_length=200)
+
+    @field_validator("evaluated_at")
+    @classmethod
+    def _aware_time(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _status_matches_items(self) -> TaskCockpitSkillContributionEnvelope:
+        if len(self.blocker_codes) != len(set(self.blocker_codes)):
+            raise ValueError("Skill contribution blockers must be unique")
+        if self.projection_status == "ready" and self.blocker_codes:
+            raise ValueError("ready Skill contribution projection cannot have blockers")
+        if self.projection_status == "blocked" and not self.blocker_codes:
+            raise ValueError("blocked Skill contribution projection requires blockers")
+        identities = [item.contribution_id for item in self.items]
+        if len(identities) != len(set(identities)):
+            raise ValueError("Skill contribution identities must be unique")
+        if any(item.task_run_ref.resource_id != self.run_id for item in self.items):
+            raise ValueError("Skill contribution TaskRun reference drifted")
         return self
 
 

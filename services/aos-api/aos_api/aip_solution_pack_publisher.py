@@ -48,6 +48,21 @@ LOGIC_IDS = (
     *(f"P{i:02d}" for i in range(1, 6)),
     *(f"A{i:02d}" for i in range(1, 7)),
 )
+COMPATIBILITY_CLASSIFICATIONS = frozenset(
+    {
+        "KEEP_ATOMIC",
+        "SPLIT",
+        "MERGE",
+        "MOVE_TO_TOOL",
+        "MOVE_TO_DOMAIN",
+        "MOVE_TO_CHANNEL",
+        "MOVE_TO_OVERLAY",
+        "DEPRECATE",
+    }
+)
+COMPATIBILITY_MAP_PATH = Path(
+    "content/logic/ecommerce-37-skill-compatibility-map.json"
+)
 SOLUTION_PACK_ID = "solution.ecommerce.growth"
 SOLUTION_PACK_VERSION = "1.3.0"
 AIP_DEFINITION_SOURCE_VERSION = "1.2.0"
@@ -96,6 +111,10 @@ class AipSolutionPackPublisher:
 
         agent_document = self._json(root / "content/agents/ecommerce-six-coworkers.json")
         logic_document = self._json(root / "content/logic/ecommerce-37-logic-catalog.json")
+        compatibility_path = root / COMPATIBILITY_MAP_PATH
+        compatibility_document = (
+            self._json(compatibility_path) if compatibility_path.is_file() else None
+        )
         capability_document = self._json(root / "content/agents/ecommerce-capability-catalog.json")
         schema_path = root / "content/schemas/aip6-contribution-schemas.json"
         policy_path = root / "content/policies/aip6-runtime-policies.json"
@@ -108,6 +127,8 @@ class AipSolutionPackPublisher:
         logics = self._list(logic_document, "logics")
         capabilities = self._list(capability_document, "capabilities")
         self._validate(agents, logics, capabilities, manifest)
+        if compatibility_document is not None:
+            self._validate_compatibility_map(compatibility_document, logics)
         self._validate_analyst_templates(analyst_templates, agents)
         schema_names = schema_document.get("schemas")
         if (
@@ -356,6 +377,64 @@ class AipSolutionPackPublisher:
             required_types = item.get("requiredObjectTypes") or ()
             if item.get("defaultObjectType") not in required_types:
                 raise AipSolutionPackInvalid("analyst template default type drifted")
+
+    @classmethod
+    def _validate_compatibility_map(
+        cls,
+        document: dict[str, Any],
+        logics: list[dict[str, Any]],
+    ) -> None:
+        expected_document_keys = {
+            "schemaVersion",
+            "sourceCatalog",
+            "compatibilityMode",
+            "publicationStatus",
+            "entries",
+        }
+        if set(document) != expected_document_keys:
+            raise AipSolutionPackInvalid("Skill compatibility map fields drifted")
+        if (
+            document["schemaVersion"] != 1
+            or document["sourceCatalog"] != "ecommerce-37-logic-catalog.json"
+            or document["compatibilityMode"] != "retain_exact_legacy"
+            or document["publicationStatus"] != "planned_not_published"
+        ):
+            raise AipSolutionPackInvalid("Skill compatibility map identity drifted")
+        entries = document["entries"]
+        expected_entry_keys = {
+            "legacyLogicId",
+            "legacyLogicRef",
+            "legacySkillRef",
+            "classification",
+            "targetCandidates",
+        }
+        if not isinstance(entries, list) or len(entries) != len(LOGIC_IDS):
+            raise AipSolutionPackInvalid(
+                "Skill compatibility map must cover exactly 37 legacy entries"
+            )
+        if any(not isinstance(item, dict) or set(item) != expected_entry_keys for item in entries):
+            raise AipSolutionPackInvalid("Skill compatibility entry fields drifted")
+        logic_ids = [item["id"] for item in logics]
+        mapped_ids = [item["legacyLogicId"] for item in entries]
+        if mapped_ids != logic_ids or len(set(mapped_ids)) != len(mapped_ids):
+            raise AipSolutionPackInvalid(
+                "Skill compatibility map does not preserve legacy Logic order and identity"
+            )
+        for item in entries:
+            logic_id = item["legacyLogicId"]
+            candidates = item["targetCandidates"]
+            if (
+                item["legacyLogicRef"] != f"ecommerce.logic.{logic_id}"
+                or item["legacySkillRef"] != f"ecommerce.skill.{logic_id}"
+                or item["classification"] not in COMPATIBILITY_CLASSIFICATIONS
+                or not isinstance(candidates, list)
+                or not candidates
+                or len(candidates) != len(set(candidates))
+                or any(not isinstance(value, str) or not value.strip() for value in candidates)
+            ):
+                raise AipSolutionPackInvalid(
+                    f"Skill compatibility entry for {logic_id} is invalid"
+                )
 
     @staticmethod
     def _require_keys(

@@ -1,0 +1,60 @@
+{
+  "action": "NO_RELEASE",
+  "axes": {
+    "browser_positive_green": {
+      "reasons": [
+        "HISTORY_NOT_GREEN",
+        "NON_OPERATIONAL_POSITIVE_EVIDENCE",
+        "REDUCEDMOTION_NOT_GREEN",
+        "ZOOM200_NOT_GREEN"
+      ],
+      "status": "RED"
+    },
+    "eight_view_contract_green": {
+      "reasons": [],
+      "status": "GREEN"
+    },
+    "eight_view_runtime_green": {
+      "reasons": [
+        "NON_OPERATIONAL_POSITIVE_EVIDENCE"
+      ],
+      "status": "RED"
+    },
+    "security_isolation_green": {
+      "reasons": [],
+      "status": "GREEN"
+    },
+    "shared_context_timeline_navigation_green": {
+      "reasons": [
+        "HISTORYRESTORED_NOT_GREEN",
+        "NON_OPERATIONAL_POSITIVE_EVIDENCE"
+      ],
+      "status": "RED"
+    },
+    "source_data_green": {
+      "reasons": [
+        "FRESHNESS_NOT_GREEN:P01",
+        "FRESHNESS_NOT_GREEN:P02",
+        "FRESHNESS_NOT_GREEN:P03",
+        "LATEST_RUN_NOT_SUCCEEDED:P01",
+        "LATEST_RUN_NOT_SUCCEEDED:P02",
+        "LATEST_RUN_NOT_SUCCEEDED:P03",
+        "QUALITY_NOT_GREEN:P01",
+        "QUALITY_NOT_GREEN:P02",
+        "QUALITY_NOT_GREEN:P03",
+        "RECONCILIATION_NOT_GREEN:P01",
+        "RECONCILIATION_NOT_GREEN:P02",
+        "RECONCILIATION_NOT_GREEN:P03"
+      ],
+      "status": "RED"
+    }
+  },
+  "receiptGate": {
+    "reasons": [],
+    "status": "GREEN"
+  },
+  "releaseId": "m1-0d8c564-w2-s2",
+  "schema": "aos-workshop-w2-cumulative-gate-decision/v1",
+  "sideEffectsPerformed": [],
+  "status": "RED"
+}

@@ -26,6 +26,7 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitCoreEnvelope,
     TaskCockpitProductionContextEnvelope,
     TaskCockpitResponsibilityHandoffEnvelope,
+    TaskCockpitSkillContributionEnvelope,
     TaskCockpitStepPageEnvelope,
 )
 from aos_api.errors import ApiError, register_exception_handlers
@@ -538,6 +539,174 @@ def test_production_context_missing_run_is_not_empty_context() -> None:
             org_id="dev-org", project_id="dev-project", run_id="run-missing"
         )
     assert captured.value.code == "TASK_COCKPIT_RUN_NOT_FOUND"
+
+
+def _skill_contribution_row() -> dict[str, Any]:
+    skill = {
+        "assetType": "SkillTemplate",
+        "assetId": "ecommerce.skill.D01",
+        "revision": 1,
+        "contentHash": "a" * 64,
+    }
+    logic = {
+        "assetType": "LogicRevision",
+        "assetId": "ecommerce.logic.D01",
+        "revision": 2,
+        "contentHash": "b" * 64,
+    }
+    return {
+        "agent_run_id": "agent-run-1",
+        "task_id": "task-1",
+        "task_run_id": "run-1",
+        "task_run_ref": {
+            "resourceType": "TaskRun",
+            "resourceId": "run-1",
+            "revision": None,
+            "authority": "aip-task-runtime",
+        },
+        "instance_id": "agent-instance-1",
+        "instance_version": 3,
+        "instance_ref": {
+            "assetType": "AgentInstance",
+            "assetId": "agent-instance-1",
+            "revision": 3,
+            "contentHash": "c" * 64,
+        },
+        "skill_binding_id": "binding-1",
+        "skill_ref": skill,
+        "logic_ref": logic,
+        "input_refs": [
+            {
+                "resourceType": "EvidenceBundle",
+                "resourceId": "evidence-1",
+                "revision": "1",
+                "authority": "aip-evidence",
+            }
+        ],
+        "run_status": "running",
+        "run_version": 2,
+        "run_created_at": NOW - timedelta(minutes=10),
+        "run_updated_at": NOW - timedelta(minutes=1),
+        "skill_id": "ecommerce.skill.D01",
+        "skill_revision": 1,
+        "binding_status": "active",
+        "binding_version": 4,
+        "readiness": "available",
+        "readiness_reasons": [],
+        "last_evaluated_at": NOW - timedelta(minutes=2),
+        "readiness_expires_at": NOW + timedelta(minutes=10),
+        "skill_content_hash": "a" * 64,
+        "canonical_logic_id": "ecommerce.logic.D01",
+        "logic_revision_ref": logic,
+        "template_id": "ecommerce.data_advisor",
+        "template_revision": 1,
+        "template_content_hash": "d" * 64,
+        "role_display_name": "数据参谋",
+        "role_key": "data_advisor",
+    }
+
+
+class SkillContributionConnection:
+    def __init__(self, rows: list[dict[str, Any]], attempts: list[dict[str, Any]] | None = None):
+        self.rows = rows
+        self.attempts = attempts or []
+        self.calls: list[tuple[str, tuple[Any, ...] | None]] = []
+
+    def execute(self, sql: str, params: tuple[Any, ...] | None = None):
+        self.calls.append((" ".join(sql.split()), params))
+        return self
+
+    def fetchone(self):
+        if "SELECT 1 FROM aip_task_run" in self.calls[-1][0]:
+            return {"present": 1, "task_id": "task-1"}
+        raise AssertionError(f"unexpected fetchone query: {self.calls[-1][0]}")
+
+    def fetchall(self):
+        if "FROM aip_agent_run_execution_attempt" in self.calls[-1][0]:
+            return self.attempts
+        if "FROM aip_agent_run agent" in self.calls[-1][0]:
+            return self.rows
+        raise AssertionError(f"unexpected fetchall query: {self.calls[-1][0]}")
+
+
+def _skill_contribution_cockpit(
+    rows: list[dict[str, Any]], attempts: list[dict[str, Any]] | None = None
+):
+    connection = SkillContributionConnection(rows, attempts)
+
+    @contextmanager
+    def connect():
+        yield connection
+
+    return EcommerceWorkshopTaskCockpit(connect_factory=connect, clock=lambda: NOW), connection
+
+
+def test_skill_contribution_projects_exact_canonical_agent_run_and_readiness() -> None:
+    cockpit, connection = _skill_contribution_cockpit(
+        [_skill_contribution_row()],
+        attempts=[
+            {
+                "agent_run_id": "agent-run-1",
+                "output_artifact_ref": {
+                    "resourceType": "Artifact",
+                    "resourceId": "artifact-1",
+                    "revision": "1",
+                    "authority": "aip-artifact",
+                },
+            }
+        ],
+    )
+
+    result = cockpit.read_skill_contributions(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    )
+
+    assert result.projection_status == "ready"
+    assert result.blocker_codes == []
+    assert len(result.items) == 1
+    contribution = result.items[0]
+    assert contribution.skill_revision_ref.resource_id == "ecommerce.skill.D01"
+    assert contribution.logic_revision_ref.resource_id == "ecommerce.logic.D01"
+    assert contribution.role_ref.resource_id == "ecommerce.data_advisor"
+    assert contribution.readiness.status == "available"
+    assert contribution.readiness.freshness == "fresh"
+    assert contribution.allowed_commands == []
+    assert contribution.output_artifact_refs[0].resource_id == "artifact-1"
+    sql = " ".join(call[0] for call in connection.calls).upper()
+    assert "REPEATABLE READ READ ONLY" in sql
+    assert "SET LOCAL ROLE AOS_RUNTIME" in sql
+    assert not any(token in sql for token in ("INSERT ", "UPDATE ", "DELETE "))
+
+
+def test_skill_contribution_empty_and_stale_states_fail_closed_without_fabrication() -> None:
+    empty, _ = _skill_contribution_cockpit([])
+    empty_result = empty.read_skill_contributions(
+        org_id="dev-org", project_id="dev-project", run_id="run-1"
+    )
+    assert empty_result.projection_status == "blocked"
+    assert empty_result.blocker_codes == ["NO_CANONICAL_AGENT_RUN_CONTRIBUTION"]
+    assert empty_result.items == []
+
+    row = _skill_contribution_row()
+    row["readiness_expires_at"] = NOW - timedelta(seconds=1)
+    stale, _ = _skill_contribution_cockpit([row])
+    stale_result = stale.read_skill_contributions(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    )
+    assert stale_result.items[0].readiness.status == "stale"
+    assert "SKILL_BINDING_READINESS_STALE" in stale_result.items[0].readiness.reason_codes
+
+
+def test_skill_contribution_rejects_exact_skill_drift() -> None:
+    row = _skill_contribution_row()
+    row["skill_content_hash"] = "e" * 64
+    cockpit, _ = _skill_contribution_cockpit([row])
+    with pytest.raises(ApiError) as captured:
+        cockpit.read_skill_contributions(
+            org_id="org-org", project_id="dev-project", run_id="run-1"
+        )
+    assert captured.value.code == "TASK_COCKPIT_SKILL_CONTRIBUTION_DRIFTED"
+    assert captured.value.status_code == 409
 
 
 def _responsibility_row() -> dict[str, Any]:
@@ -1094,6 +1263,22 @@ class FakeCockpit:
             }
         )
 
+    def read_skill_contributions(self, **kwargs):
+        self.detail_calls.append(("skill-contributions", kwargs))
+        if self.fail:
+            raise TaskCockpitPersistenceError("sensitive database detail")
+        return TaskCockpitSkillContributionEnvelope.model_validate(
+            {
+                "tenant": {"orgId": kwargs["org_id"], "projectId": kwargs["project_id"]},
+                "runId": kwargs["run_id"],
+                "taskId": "task-1",
+                "evaluatedAt": NOW,
+                "projectionStatus": "blocked",
+                "blockerCodes": ["NO_CANONICAL_AGENT_RUN_CONTRIBUTION"],
+                "items": [],
+            }
+        )
+
     def read_responsibility_handoffs(self, **kwargs):
         self.detail_calls.append(("responsibility-handoffs", kwargs))
         if self.fail:
@@ -1224,6 +1409,9 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
         production = client.get(
             "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/production-context"
         )
+        contributions = client.get(
+            "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/skill-contributions"
+        )
         responsibility = client.get(
             "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/responsibility-handoffs"
         )
@@ -1239,6 +1427,7 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
     assert steps.status_code == 200
     assert checkpoints.status_code == 200
     assert production.status_code == 200
+    assert contributions.status_code == 200
     assert responsibility.status_code == 200
     assert approval_review.status_code == 200
     assert action_receipts.status_code == 200
@@ -1273,6 +1462,14 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
             },
         ),
         (
+            "skill-contributions",
+            {
+                "org_id": "org-org",
+                "project_id": "dev-project",
+                "run_id": "run-1",
+            },
+        ),
+        (
             "responsibility-handoffs",
             {
                 "org_id": "org-org",
@@ -1297,4 +1494,4 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
             },
         ),
     ]
-    assert len(catalog.calls) == 6
+    assert len(catalog.calls) == 7

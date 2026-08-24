@@ -60,6 +60,11 @@ import {
   type TaskCockpitHandoff,
   type TaskCockpitHandoffDecision,
   type TaskCockpitRun,
+  type TaskCockpitResourceRef,
+  type TaskCockpitSkillContribution,
+  type TaskCockpitSkillContributionReadiness,
+  type TaskCockpitSkillContributionResponse,
+  type TaskCockpitSkillRunProjection,
   type TaskCockpitExactRevisionRef,
   type TaskCockpitStageCompilation,
   type TaskCockpitStep,
@@ -564,6 +569,51 @@ export function parseTaskCockpitActionReceipts(value: unknown): TaskCockpitActio
   const executions = raw.executions.map(parseTaskCockpitActionExecution); assertUnique(executions.map((item) => item.proposalRef.resourceId), "taskCockpit.actionReceipts.executions"); const receipts = executions.flatMap((item) => item.receipts); const proposalCount = integer(raw.proposalCount, "taskCockpit.actionReceipts.proposalCount"); const receiptCount = integer(raw.receiptCount, "taskCockpit.actionReceipts.receiptCount"); const unknownReceiptCount = integer(raw.unknownReceiptCount, "taskCockpit.actionReceipts.unknownReceiptCount"); const reconcileRequiredCount = integer(raw.reconcileRequiredCount, "taskCockpit.actionReceipts.reconcileRequiredCount"); const reconciledReceiptCount = integer(raw.reconciledReceiptCount, "taskCockpit.actionReceipts.reconciledReceiptCount");
   if (proposalCount !== executions.length || receiptCount !== receipts.length || unknownReceiptCount !== receipts.filter((item) => item.receiptKind === "initial" && item.status === "unknown").length || reconcileRequiredCount !== executions.filter((item) => item.reconciliationState === "required").length || reconciledReceiptCount !== receipts.filter((item) => item.receiptKind === "reconcile").length) throw new TypeError("taskCockpit.actionReceipts count ledger 漂移");
   return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, tenant: parseTenant(raw.tenant), runId: boundedText(raw.runId, "taskCockpit.actionReceipts.runId", 200), taskId: boundedText(raw.taskId, "taskCockpit.actionReceipts.taskId", 200), evaluatedAt: timestamp(raw.evaluatedAt, "taskCockpit.actionReceipts.evaluatedAt"), executions, proposalCount, receiptCount, unknownReceiptCount, reconcileRequiredCount, reconciledReceiptCount };
+}
+
+function parseTaskCockpitResourceRef(value: unknown, expectedType: string | null, label: string): TaskCockpitResourceRef {
+  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "authority"], label);
+  const resourceType = boundedText(raw.resourceType, `${label}.resourceType`, 80);
+  if (expectedType !== null && resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
+  return { resourceType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), revision: nullable(raw.revision, (item) => boundedText(item, `${label}.revision`, 200)), authority: boundedText(raw.authority, `${label}.authority`, 200) };
+}
+function parseTaskCockpitContributionReadiness(value: unknown): TaskCockpitSkillContributionReadiness {
+  const raw = record(value, "taskCockpit.skillContribution.readiness"); exact(raw, ["status", "freshness", "reasonCodes", "bindingStatus", "lastVerifiedAt", "expiresAt"], "taskCockpit.skillContribution.readiness");
+  const status = enumValue(raw.status, ["available", "degraded", "disabled", "blocked", "unknown", "stale"] as const, "taskCockpit.skillContribution.readiness.status");
+  const freshness = enumValue(raw.freshness, ["fresh", "stale", "unverified"] as const, "taskCockpit.skillContribution.readiness.freshness");
+  const bindingStatus = enumValue(raw.bindingStatus, ["provisioning", "active", "suspended", "revoked"] as const, "taskCockpit.skillContribution.readiness.bindingStatus");
+  const reasonCodes = taskCockpitStringList(raw.reasonCodes, "taskCockpit.skillContribution.readiness.reasonCodes");
+  const lastVerifiedAt = nullable(raw.lastVerifiedAt, (item) => timestamp(item, "taskCockpit.skillContribution.readiness.lastVerifiedAt"));
+  const expiresAt = nullable(raw.expiresAt, (item) => timestamp(item, "taskCockpit.skillContribution.readiness.expiresAt"));
+  if (freshness === "fresh" && (!lastVerifiedAt || !expiresAt)) throw new TypeError("taskCockpit.skillContribution fresh 缺少 exact 有效窗");
+  if (status === "available" && (freshness !== "fresh" || bindingStatus !== "active")) throw new TypeError("taskCockpit.skillContribution 伪 available");
+  if (status === "stale" && freshness !== "stale") throw new TypeError("taskCockpit.skillContribution stale 漂移");
+  return { status, freshness, reasonCodes, bindingStatus, lastVerifiedAt, expiresAt };
+}
+function parseTaskCockpitSkillRunProjection(value: unknown): TaskCockpitSkillRunProjection {
+  const raw = record(value, "taskCockpit.skillContribution.runProjection"); exact(raw, ["status", "startedAt", "updatedAt", "waitingFor"], "taskCockpit.skillContribution.runProjection");
+  return { status: enumValue(raw.status, ["queued", "running", "paused", "succeeded", "failed", "cancelled", "unknown"] as const, "taskCockpit.skillContribution.runProjection.status"), startedAt: nullable(raw.startedAt, (item) => timestamp(item, "taskCockpit.skillContribution.runProjection.startedAt")), updatedAt: timestamp(raw.updatedAt, "taskCockpit.skillContribution.runProjection.updatedAt"), waitingFor: taskCockpitStringList(raw.waitingFor, "taskCockpit.skillContribution.runProjection.waitingFor") };
+}
+function parseTaskCockpitSkillContribution(value: unknown): TaskCockpitSkillContribution {
+  const raw = record(value, "taskCockpit.skillContribution.item"); exact(raw, ["contributionId", "taskRunRef", "agentRunRef", "moduleId", "roleRef", "assigneeRef", "skillRevisionRef", "bindingRef", "logicRevisionRef", "displayName", "purpose", "responsibility", "readiness", "runProjection", "inputRefs", "outputArtifactRefs", "assumptions", "uncertainties", "conflicts", "missingInputs", "allowedCommands"], "taskCockpit.skillContribution.item");
+  if (raw.moduleId !== "ecommerce.task-cockpit") throw new TypeError("taskCockpit.skillContribution module 漂移");
+  const parseRefs = (item: unknown, expectedType: string | null, label: string) => { if (!Array.isArray(item)) throw new TypeError(`${label} 必须是数组`); return item.map((entry, index) => parseTaskCockpitResourceRef(entry, expectedType, `${label}[${index}]`)); };
+  const allowedCommands = taskCockpitStringList(raw.allowedCommands, "taskCockpit.skillContribution.allowedCommands");
+  if (allowedCommands.length) throw new TypeError("taskCockpit.skillContribution S2.5 只能只读");
+  const assumptions = taskCockpitStringList(raw.assumptions, "taskCockpit.skillContribution.assumptions");
+  const uncertainties = taskCockpitStringList(raw.uncertainties, "taskCockpit.skillContribution.uncertainties");
+  const conflicts = taskCockpitStringList(raw.conflicts, "taskCockpit.skillContribution.conflicts");
+  const missingInputs = taskCockpitStringList(raw.missingInputs, "taskCockpit.skillContribution.missingInputs");
+  return { contributionId: boundedText(raw.contributionId, "taskCockpit.skillContribution.contributionId", 200), taskRunRef: parseTaskCockpitResourceRef(raw.taskRunRef, "TaskRun", "taskCockpit.skillContribution.taskRunRef"), agentRunRef: parseTaskCockpitResourceRef(raw.agentRunRef, "AgentRun", "taskCockpit.skillContribution.agentRunRef"), moduleId: "ecommerce.task-cockpit", roleRef: parseTaskCockpitExactRef(raw.roleRef, "AgentTemplate", "taskCockpit.skillContribution.roleRef"), assigneeRef: parseTaskCockpitExactRef(raw.assigneeRef, "AgentInstance", "taskCockpit.skillContribution.assigneeRef"), skillRevisionRef: parseTaskCockpitExactRef(raw.skillRevisionRef, "SkillTemplate", "taskCockpit.skillContribution.skillRevisionRef"), bindingRef: parseTaskCockpitResourceRef(raw.bindingRef, "SkillBinding", "taskCockpit.skillContribution.bindingRef"), logicRevisionRef: parseTaskCockpitExactRef(raw.logicRevisionRef, "LogicRevision", "taskCockpit.skillContribution.logicRevisionRef"), displayName: boundedText(raw.displayName, "taskCockpit.skillContribution.displayName", 240), purpose: boundedText(raw.purpose, "taskCockpit.skillContribution.purpose", 500), responsibility: boundedText(raw.responsibility, "taskCockpit.skillContribution.responsibility", 160), readiness: parseTaskCockpitContributionReadiness(raw.readiness), runProjection: parseTaskCockpitSkillRunProjection(raw.runProjection), inputRefs: parseRefs(raw.inputRefs, null, "taskCockpit.skillContribution.inputRefs"), outputArtifactRefs: parseRefs(raw.outputArtifactRefs, null, "taskCockpit.skillContribution.outputArtifactRefs"), assumptions, uncertainties, conflicts, missingInputs, allowedCommands: [] };
+}
+export function parseTaskCockpitSkillContributions(value: unknown): TaskCockpitSkillContributionResponse {
+  const raw = record(value, "taskCockpit.skillContributions"); exact(raw, ["schemaVersion", "tenant", "runId", "taskId", "evaluatedAt", "projectionStatus", "blockerCodes", "items"], "taskCockpit.skillContributions");
+  if (raw.schemaVersion !== TASK_COCKPIT_SCHEMA_VERSION || !Array.isArray(raw.items)) throw new TypeError("taskCockpit.skillContributions contract 漂移");
+  const runId = boundedText(raw.runId, "taskCockpit.skillContributions.runId", 200); const items = raw.items.map(parseTaskCockpitSkillContribution); assertUnique(items.map((item) => item.contributionId), "taskCockpit.skillContributions.items");
+  if (items.some((item) => item.taskRunRef.resourceId !== runId)) throw new TypeError("taskCockpit.skillContributions TaskRun ref 漂移");
+  const projectionStatus = enumValue(raw.projectionStatus, ["ready", "blocked"] as const, "taskCockpit.skillContributions.projectionStatus"); const blockerCodes = taskCockpitStringList(raw.blockerCodes, "taskCockpit.skillContributions.blockerCodes");
+  if ((projectionStatus === "ready" && blockerCodes.length) || (projectionStatus === "blocked" && !blockerCodes.length)) throw new TypeError("taskCockpit.skillContributions status/blockers 漂移");
+  return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, tenant: parseTenant(raw.tenant), runId, taskId: boundedText(raw.taskId, "taskCockpit.skillContributions.taskId", 200), evaluatedAt: timestamp(raw.evaluatedAt, "taskCockpit.skillContributions.evaluatedAt"), projectionStatus, blockerCodes, items };
 }
 
 const OPERATIONS_SLICE_IDS = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"] as const satisfies readonly OperationsSliceId[];

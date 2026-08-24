@@ -85,6 +85,7 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitCoreEnvelope,
     TaskCockpitProductionContextEnvelope,
     TaskCockpitResponsibilityHandoffEnvelope,
+    TaskCockpitSkillContributionEnvelope,
     TaskCockpitStepPageEnvelope,
 )
 from aos_api.errors import ApiError, ErrorBody
@@ -879,6 +880,35 @@ def get_ecommerce_workshop_task_cockpit_run_production_context(
     _require_task_cockpit_installation(principal=principal, catalog=catalog)
     try:
         return cockpit.read_production_context(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            run_id=run_id,
+        )
+    except TaskCockpitPersistenceError as exc:
+        raise ApiError(
+            code="TASK_COCKPIT_DEPENDENCY_UNAVAILABLE",
+            message="Task Cockpit read dependency is unavailable",
+            status_code=503,
+        ) from exc
+
+
+@router.get(
+    "/views/task-cockpit/runs/{run_id}/skill-contributions",
+    response_model=TaskCockpitSkillContributionEnvelope,
+    operation_id="ecommerceWorkshopTaskCockpitRunSkillContributionsGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_task_cockpit_run_skill_contributions(
+    request: Request,
+    run_id: RunIdPath,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    cockpit: TaskCockpitDependency,
+) -> TaskCockpitSkillContributionEnvelope:
+    _reject_unknown_query_parameters(request, allowed=frozenset())
+    _require_task_cockpit_installation(principal=principal, catalog=catalog)
+    try:
+        return cockpit.read_skill_contributions(
             org_id=principal.org_id,
             project_id=principal.project_id,
             run_id=run_id,

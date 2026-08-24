@@ -15,7 +15,7 @@ from urllib.parse import urlencode
 
 import psycopg
 
-from aos_api.aip_contracts import StepRunStatus, TaskRunStatus
+from aos_api.aip_contracts import ResourceRef, StepRunStatus, TaskRunStatus
 from aos_api.db import connect
 from aos_api.aip_production_contracts import ExactRevisionRef
 from aos_api.ecommerce_workshop_task_cockpit_contracts import (
@@ -46,6 +46,10 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitReviewIssueEvent,
     TaskCockpitReviewReturnLineage,
     TaskCockpitRunSummary,
+    TaskCockpitSkillContribution,
+    TaskCockpitSkillContributionEnvelope,
+    TaskCockpitSkillContributionReadiness,
+    TaskCockpitSkillRunProjection,
     TaskCockpitStateConsistency,
     TaskCockpitStepPageEnvelope,
     TaskCockpitStageCompilationItem,
@@ -609,6 +613,108 @@ class EcommerceWorkshopTaskCockpit:
                 "failed to read Task Cockpit production context"
             ) from exc
 
+    def read_skill_contributions(
+        self,
+        *,
+        org_id: str,
+        project_id: str,
+        run_id: str,
+    ) -> TaskCockpitSkillContributionEnvelope:
+        scope = TenantScope(org_id, project_id)
+        self._validate_detail_request(run_id=run_id, limit=1)
+        evaluated_at = self._aware_now()
+        try:
+            with self._connect_factory() as conn:
+                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+                apply_transaction_scope(conn, scope)
+                run_row = self._require_run(conn, scope=scope, run_id=run_id)
+                rows = conn.execute(
+                    """SELECT agent.agent_run_id,agent.task_id,agent.task_run_id,
+                              agent.task_run_ref,agent.instance_id,agent.instance_version,
+                              agent.instance_ref,agent.skill_binding_id,agent.skill_ref,
+                              agent.logic_ref,agent.input_refs,agent.status AS run_status,
+                              agent.version AS run_version,
+                              agent.created_at AS run_created_at,
+                              agent.updated_at AS run_updated_at,
+                              binding.skill_id,binding.skill_revision,
+                              binding.status AS binding_status,binding.version AS binding_version,
+                              binding.readiness,binding.readiness_reasons,
+                              binding.last_evaluated_at,binding.readiness_expires_at,
+                              skill.content_hash AS skill_content_hash,
+                              skill.canonical_logic_id,skill.logic_revision_ref,
+                              instance.template_id,instance.template_revision,
+                              template.content_hash AS template_content_hash,
+                              template.display_name AS role_display_name,
+                              template.role_key
+                         FROM aip_agent_run agent
+                         LEFT JOIN aip_skill_binding binding
+                           ON binding.org_id=agent.org_id
+                          AND binding.project_id=agent.project_id
+                          AND binding.binding_id=agent.skill_binding_id
+                         LEFT JOIN aip_skill_template_revision skill
+                           ON skill.skill_id=binding.skill_id
+                          AND skill.revision=binding.skill_revision
+                         LEFT JOIN aip_agent_instance instance
+                           ON instance.org_id=agent.org_id
+                          AND instance.project_id=agent.project_id
+                          AND instance.instance_id=agent.instance_id
+                         LEFT JOIN aip_agent_template_revision template
+                           ON template.template_id=instance.template_id
+                          AND template.revision=instance.template_revision
+                        WHERE agent.org_id=%s AND agent.project_id=%s
+                          AND agent.task_run_id=%s
+                        ORDER BY agent.created_at ASC,agent.agent_run_id ASC""",
+                    (*scope.key, run_id),
+                ).fetchall()
+                agent_run_ids = [str(row["agent_run_id"]) for row in rows]
+                attempt_rows = (
+                    conn.execute(
+                        """SELECT agent_run_id,output_artifact_ref
+                             FROM aip_agent_run_execution_attempt
+                            WHERE org_id=%s AND project_id=%s
+                              AND agent_run_id=ANY(%s)
+                              AND output_artifact_ref IS NOT NULL
+                            ORDER BY agent_run_id ASC,attempt ASC""",
+                        (*scope.key, agent_run_ids),
+                    ).fetchall()
+                    if agent_run_ids
+                    else []
+                )
+            outputs: dict[str, list[ResourceRef]] = {}
+            for row in attempt_rows:
+                outputs.setdefault(str(row["agent_run_id"]), []).append(
+                    ResourceRef.model_validate(row["output_artifact_ref"])
+                )
+            items = [
+                self._skill_contribution(
+                    row=row,
+                    evaluated_at=evaluated_at,
+                    outputs=outputs.pop(str(row["agent_run_id"]), []),
+                )
+                for row in rows
+            ]
+            if outputs:
+                raise self._skill_contribution_drift(
+                    "output Artifact references an unknown AgentRun"
+                )
+            return TaskCockpitSkillContributionEnvelope(
+                tenant={"orgId": scope.org_id, "projectId": scope.project_id},
+                runId=run_id,
+                taskId=str(run_row["task_id"]),
+                evaluatedAt=evaluated_at,
+                projectionStatus="ready" if items else "blocked",
+                blockerCodes=(
+                    [] if items else ["NO_CANONICAL_AGENT_RUN_CONTRIBUTION"]
+                ),
+                items=items,
+            )
+        except ApiError:
+            raise
+        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:
+            raise TaskCockpitPersistenceError(
+                "failed to read Task Cockpit Skill contribution projection"
+            ) from exc
+
     def read_responsibility_handoffs(
         self,
         *,
@@ -986,7 +1092,7 @@ class EcommerceWorkshopTaskCockpit:
         return row["snapshot_hash"]
 
     @staticmethod
-    def _require_run(conn: Any, *, scope: TenantScope, run_id: str) -> None:
+    def _require_run(conn: Any, *, scope: TenantScope, run_id: str) -> Any:
         row = conn.execute(
             """SELECT 1 FROM aip_task_run
                 WHERE org_id=%s AND project_id=%s AND run_id=%s""",
@@ -998,6 +1104,7 @@ class EcommerceWorkshopTaskCockpit:
                 message="Task Cockpit Run was not found",
                 status_code=404,
             )
+        return row
 
     @staticmethod
     def _read_step_snapshot_hash(
@@ -1135,6 +1242,168 @@ class EcommerceWorkshopTaskCockpit:
             stateHash=str(row["state_hash"]),
             artifactCount=int(row["artifact_count"]),
             createdAt=row["created_at"],
+        )
+
+    @staticmethod
+    def _skill_contribution_drift(reason: str) -> ApiError:
+        return ApiError(
+            code="TASK_COCKPIT_SKILL_CONTRIBUTION_DRIFTED",
+            message=f"Task Cockpit Skill contribution drifted: {reason}",
+            status_code=409,
+        )
+
+    @classmethod
+    def _skill_contribution(
+        cls,
+        *,
+        row: Any,
+        evaluated_at: datetime,
+        outputs: list[ResourceRef],
+    ) -> TaskCockpitSkillContribution:
+        def exact_asset(value: object, expected_type: str) -> ExactRevisionRef:
+            if not isinstance(value, dict) or set(value) != {
+                "assetType",
+                "assetId",
+                "revision",
+                "contentHash",
+            }:
+                raise cls._skill_contribution_drift(
+                    f"{expected_type} exact reference shape is invalid"
+                )
+            if value["assetType"] != expected_type:
+                raise cls._skill_contribution_drift(
+                    f"{expected_type} exact reference kind changed"
+                )
+            return ExactRevisionRef(
+                resourceType=value["assetType"],
+                resourceId=value["assetId"],
+                revision=value["revision"],
+                contentHash=value["contentHash"],
+            )
+
+        required = {
+            "skill_id",
+            "skill_revision",
+            "binding_status",
+            "binding_version",
+            "readiness",
+            "readiness_reasons",
+            "skill_content_hash",
+            "canonical_logic_id",
+            "logic_revision_ref",
+            "template_id",
+            "template_revision",
+            "template_content_hash",
+            "role_display_name",
+            "role_key",
+        }
+        if any(row.get(key) is None for key in required):
+            raise cls._skill_contribution_drift(
+                "AgentRun dependency join is incomplete"
+            )
+        task_run_ref = ResourceRef.model_validate(row["task_run_ref"])
+        if (
+            task_run_ref.resource_type != "TaskRun"
+            or task_run_ref.resource_id != str(row["task_run_id"])
+        ):
+            raise cls._skill_contribution_drift("TaskRun exact identity changed")
+        skill_ref = exact_asset(row["skill_ref"], "SkillTemplate")
+        logic_ref = exact_asset(row["logic_ref"], "LogicRevision")
+        instance_ref = exact_asset(row["instance_ref"], "AgentInstance")
+        canonical_logic_ref = exact_asset(
+            row["logic_revision_ref"], "LogicRevision"
+        )
+        if (
+            skill_ref.resource_id != str(row["skill_id"])
+            or skill_ref.revision != int(row["skill_revision"])
+            or skill_ref.content_hash != str(row["skill_content_hash"])
+            or logic_ref != canonical_logic_ref
+            or logic_ref.resource_id != str(row["canonical_logic_id"])
+            or instance_ref.resource_id != str(row["instance_id"])
+            or instance_ref.revision != int(row["instance_version"])
+        ):
+            raise cls._skill_contribution_drift(
+                "AgentRun, Binding, Skill, Logic or AgentInstance exact reference drifted"
+            )
+        role_ref = ExactRevisionRef(
+            resourceType="AgentTemplate",
+            resourceId=str(row["template_id"]),
+            revision=int(row["template_revision"]),
+            contentHash=str(row["template_content_hash"]),
+        )
+        try:
+            input_refs = [ResourceRef.model_validate(value) for value in row["input_refs"]]
+            reason_codes = [str(value) for value in row["readiness_reasons"]]
+        except (TypeError, ValueError) as exc:
+            raise cls._skill_contribution_drift(
+                "AgentRun input or Binding readiness shape is invalid"
+            ) from exc
+        last_verified_at = row["last_evaluated_at"]
+        expires_at = row["readiness_expires_at"]
+        if last_verified_at is None or expires_at is None:
+            freshness = "unverified"
+            status = "unknown"
+            reason_codes.append("SKILL_BINDING_FRESHNESS_UNVERIFIED")
+        elif expires_at <= evaluated_at:
+            freshness = "stale"
+            status = "stale"
+            reason_codes.append("SKILL_BINDING_READINESS_STALE")
+        else:
+            freshness = "fresh"
+            status = str(row["readiness"])
+        if row["binding_status"] != "active":
+            status = "blocked" if status != "stale" else status
+            reason_codes.append("SKILL_BINDING_NOT_ACTIVE")
+        reason_codes = list(dict.fromkeys(reason_codes))
+        waiting_for = [] if status == "available" else reason_codes
+        uncertainties = (
+            []
+            if freshness == "fresh"
+            else ["运行就绪证据缺少新鲜有效期"]
+        )
+        return TaskCockpitSkillContribution(
+            contributionId=str(row["agent_run_id"]),
+            taskRunRef=task_run_ref,
+            agentRunRef=ResourceRef(
+                resourceType="AgentRun",
+                resourceId=str(row["agent_run_id"]),
+                revision=str(row.get("run_version", 1)),
+                authority="aip-agent-run",
+            ),
+            roleRef=role_ref,
+            assigneeRef=instance_ref,
+            skillRevisionRef=skill_ref,
+            bindingRef=ResourceRef(
+                resourceType="SkillBinding",
+                resourceId=str(row["skill_binding_id"]),
+                revision=str(row["binding_version"]),
+                authority="aip-skill-registry",
+            ),
+            logicRevisionRef=logic_ref,
+            displayName=f"{row['role_display_name']} · 专业贡献",
+            purpose=f"使用 {skill_ref.resource_id} 完成受控专业步骤",
+            responsibility=str(row["role_key"]),
+            readiness=TaskCockpitSkillContributionReadiness(
+                status=status,
+                freshness=freshness,
+                reasonCodes=reason_codes,
+                bindingStatus=row["binding_status"],
+                lastVerifiedAt=last_verified_at,
+                expiresAt=expires_at,
+            ),
+            runProjection=TaskCockpitSkillRunProjection(
+                status=row["run_status"],
+                startedAt=None,
+                updatedAt=row["run_updated_at"],
+                waitingFor=waiting_for,
+            ),
+            inputRefs=input_refs,
+            outputArtifactRefs=outputs,
+            assumptions=[],
+            uncertainties=uncertainties,
+            conflicts=[],
+            missingInputs=[],
+            allowedCommands=[],
         )
 
     @staticmethod

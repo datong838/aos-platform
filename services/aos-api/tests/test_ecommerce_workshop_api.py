@@ -381,6 +381,10 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/production-context",
             "get",
         ),
+        "ecommerceWorkshopTaskCockpitRunSkillContributionsGet": (
+            "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/skill-contributions",
+            "get",
+        ),
         "ecommerceWorkshopTaskCockpitRunResponsibilityHandoffsGet": (
             "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/responsibility-handoffs",
             "get",

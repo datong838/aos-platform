@@ -9,15 +9,17 @@ import {
   type TaskCockpitCoreResponse,
   type TaskCockpitProductionContextResponse,
   type TaskCockpitResponsibilityHandoffResponse,
+  type TaskCockpitSkillContributionResponse,
   type TaskCockpitStepPageResponse,
   type TaskCockpitTaskStatus,
 } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { useSourceReadinessSnapshot } from "./SourceReadinessContext";
 
-type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts">;
+type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions">;
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
-type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null } | null;
+type SkillContributionState = { phase: "loading" | "ready" | "failed"; response: TaskCockpitSkillContributionResponse | null };
+type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null; skillContributions: SkillContributionState } | null;
 const TASK_STATUSES: readonly { value: "" | TaskCockpitTaskStatus; label: string }[] = [
   { value: "", label: "全部状态" }, { value: "pending", label: "待规划" }, { value: "planning", label: "规划中" }, { value: "awaiting_approval", label: "待审批" }, { value: "approved", label: "已批准" }, { value: "executing", label: "执行中" }, { value: "paused", label: "已暂停" }, { value: "completed", label: "已完成" }, { value: "failed", label: "失败" }, { value: "cancelled", label: "已取消" }, { value: "rolled_back", label: "已回滚" },
 ];
@@ -95,10 +97,14 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
   const toggleDetails = (runId: string) => {
     if (detail?.runId === runId) { detailRequest.current += 1; setDetail(null); return; }
     const requestId = ++detailRequest.current;
-    setDetail({ runId, phase: "loading", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null });
+    setDetail({ runId, phase: "loading", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null, skillContributions: { phase: "loading", response: null } });
     void Promise.all([client.listTaskCockpitRunSteps(runId, { limit: 20 }), client.listTaskCockpitRunCheckpoints(runId, { limit: 20 }), client.getTaskCockpitRunProductionContext(runId), client.getTaskCockpitRunResponsibilityHandoffs(runId), client.getTaskCockpitRunApprovalReview(runId), client.getTaskCockpitRunActionReceipts(runId)]).then(
-      ([steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview, actionReceipts]) => { if (requestId === detailRequest.current) setDetail({ runId, phase: "ready", steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview, actionReceipts }); },
-      () => { if (requestId === detailRequest.current) setDetail({ runId, phase: "failed", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null }); },
+      ([steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview, actionReceipts]) => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, phase: "ready", steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview, actionReceipts } : current); },
+      () => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, phase: "failed", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null } : current); },
+    );
+    void client.getTaskCockpitRunSkillContributions(runId).then(
+      (next) => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, skillContributions: { phase: "ready", response: next } } : current); },
+      () => { if (requestId === detailRequest.current) setDetail((current) => current?.runId === runId ? { ...current, skillContributions: { phase: "failed", response: null } } : current); },
     );
   };
 
@@ -160,6 +166,20 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
             {isOpen ? <div id={detailId} className="task-cockpit-run-detail">
               {detail?.phase === "loading" ? <div role="status">正在读取 Stage、职责交接、审批复核、Step 与 Checkpoint…</div> : null}
               {detail?.phase === "failed" ? <div role="alert">运行明细读取失败；未使用空集合代替。</div> : null}
+              {detail?.skillContributions.phase === "loading" ? <section className="task-cockpit-skill-contributions is-loading" aria-label="本 Run 的专业 Skill 贡献"><strong>正在独立读取专业 Skill 贡献…</strong><p>该读取不阻塞原有运行明细。</p></section> : null}
+              {detail?.skillContributions.phase === "failed" ? <section className="task-cockpit-skill-contributions is-failed" aria-label="本 Run 的专业 Skill 贡献" role="alert"><strong>专业 Skill 贡献读取失败</strong><p>原有 Stage、职责、审批、回执、Step 与 Checkpoint 保持可用；未用空集合掩盖失败。</p></section> : null}
+              {detail?.skillContributions.phase === "ready" && detail.skillContributions.response ? <section className={`task-cockpit-skill-contributions is-${detail.skillContributions.response.projectionStatus}`} aria-label="本 Run 的专业 Skill 贡献">
+                <div className="task-cockpit-production-refs"><strong>专业 Skill 贡献 · 只读</strong><span>{detail.skillContributions.response.items.length} 项 canonical AgentRun</span><span>评估于 {formatTime(detail.skillContributions.response.evaluatedAt)}</span></div>
+                {detail.skillContributions.response.blockerCodes.length ? <p className="task-cockpit-approval-boundary">失败关闭：{detail.skillContributions.response.blockerCodes.join("、")}</p> : null}
+                {detail.skillContributions.response.items.length ? <ul>{detail.skillContributions.response.items.map((contribution) => <li className={`is-${contribution.readiness.status}`} key={contribution.contributionId}>
+                  <div><strong>{contribution.displayName}</strong><span>{contribution.runProjection.status} · {contribution.readiness.status}/{contribution.readiness.freshness}</span></div>
+                  <p>{contribution.purpose}</p>
+                  <small>角色 {contribution.roleRef.resourceId} · 实例 {contribution.assigneeRef.resourceId} · Skill {contribution.skillRevisionRef.resourceId}@{contribution.skillRevisionRef.revision}</small>
+                  <small>Logic {contribution.logicRevisionRef.resourceId}@{contribution.logicRevisionRef.revision} · Binding {contribution.bindingRef.resourceId}@{contribution.bindingRef.revision ?? "未版本化"}</small>
+                  <small>输入 {contribution.inputRefs.length} · 输出产物 {contribution.outputArtifactRefs.length} · 允许命令 {contribution.allowedCommands.length}</small>
+                  {contribution.readiness.reasonCodes.length ? <em>等待：{contribution.readiness.reasonCodes.join("、")}</em> : <em>Binding 新鲜有效；仍仅展示贡献，不开放命令。</em>}
+                </li>)}</ul> : <p>当前 Run 无 canonical AgentRun 贡献；没有制造六数字同事或示例 Skill。</p>}
+              </section> : null}
               {detail?.phase === "ready" && detail.steps && detail.checkpoints && detail.productionContext && detail.responsibilityHandoffs && detail.approvalReview && detail.actionReceipts ? <>
                 <section className="task-cockpit-production-context" aria-label="本 Run 的精确 Stage 编排">
                   <div className="task-cockpit-production-refs"><strong>Stage 编排 · {detail.productionContext.compilerVersion}</strong><span>Plan {detail.productionContext.planRef.resourceId} · v{detail.productionContext.planRef.revision}</span><span>模板 {detail.productionContext.stageTemplateRef.resourceId} · 职责 {detail.productionContext.responsibilityPlanRef.resourceId}</span></div>

@@ -464,6 +464,22 @@
 .task-cockpit-action-receipts ol { display: grid; gap: 4px; margin: 4px 0 0; padding: 0; list-style: none; }
 .task-cockpit-action-receipts ol li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; padding-top: 4px; border-top: 1px solid var(--aos-border); }
 .task-cockpit-action-receipts p { margin: 0; color: var(--aos-text-secondary); }
+.task-cockpit-skill-contributions { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-indigo-600, #4f46e5); background: color-mix(in srgb, var(--aos-surface) 94%, var(--aos-indigo-50)); }
+.task-cockpit-skill-contributions.is-blocked,
+.task-cockpit-skill-contributions.is-failed { border-left-color: var(--aos-amber-600, #d97706); }
+.task-cockpit-skill-contributions > p { margin: 0; color: var(--aos-text-secondary); }
+.task-cockpit-skill-contributions > ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.task-cockpit-skill-contributions > ul > li { display: grid; gap: 4px; min-width: 0; padding: 10px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-green-600, #16a34a); background: var(--aos-surface); }
+.task-cockpit-skill-contributions > ul > li.is-stale,
+.task-cockpit-skill-contributions > ul > li.is-unknown,
+.task-cockpit-skill-contributions > ul > li.is-degraded { border-left-color: var(--aos-amber-600, #d97706); }
+.task-cockpit-skill-contributions > ul > li.is-blocked,
+.task-cockpit-skill-contributions > ul > li.is-disabled { border-left-color: var(--aos-red); }
+.task-cockpit-skill-contributions li > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; }
+.task-cockpit-skill-contributions li p { margin: 0; }
+.task-cockpit-skill-contributions li span,
+.task-cockpit-skill-contributions li small { color: var(--aos-text-secondary); overflow-wrap: anywhere; }
+.task-cockpit-skill-contributions li em { color: var(--aos-amber-700); font-size: 11px; font-style: normal; overflow-wrap: anywhere; }
 @media (max-width: 720px) { .task-cockpit-responsibility-grid { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .task-cockpit-approval-review-grid { grid-template-columns: 1fr; } }
 .task-cockpit-run-detail table { width: 100%; border-collapse: collapse; min-width: 560px; }

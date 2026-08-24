@@ -13,6 +13,7 @@ from aos_api.aip_solution_pack_publisher import (
     AIP_DEFINITION_SOURCE_VERSION,
     AGENT_LOGIC_COUNTS,
     CAPABILITY_IDS,
+    COMPATIBILITY_CLASSIFICATIONS,
     SOLUTION_PACK_ID,
     SOLUTION_PACK_VERSION,
     AipSolutionPackInvalid,
@@ -33,6 +34,9 @@ def test_ecommerce_solution_pack_contains_exact_w0a_catalog_and_keeps_d3_assets(
     manifest = yaml.safe_load((BUNDLE / "bundle.yaml").read_text(encoding="utf-8"))
     agents = load("content/agents/ecommerce-six-coworkers.json")["agents"]
     logics = load("content/logic/ecommerce-37-logic-catalog.json")["logics"]
+    compatibility = load(
+        "content/logic/ecommerce-37-skill-compatibility-map.json"
+    )
     capabilities = load("content/agents/ecommerce-capability-catalog.json")[
         "capabilities"
     ]
@@ -41,6 +45,14 @@ def test_ecommerce_solution_pack_contains_exact_w0a_catalog_and_keeps_d3_assets(
     assert tuple(manifest["spec"]["capabilities"]["provides"]) == CAPABILITY_IDS
     assert {item["id"] for item in agents} == set(AGENT_LOGIC_COUNTS)
     assert len(logics) == 37 == len({item["id"] for item in logics})
+    assert compatibility["compatibilityMode"] == "retain_exact_legacy"
+    assert compatibility["publicationStatus"] == "planned_not_published"
+    assert [item["legacyLogicId"] for item in compatibility["entries"]] == [
+        item["id"] for item in logics
+    ]
+    assert {
+        item["classification"] for item in compatibility["entries"]
+    } <= COMPATIBILITY_CLASSIFICATIONS
     assert tuple(item["id"] for item in capabilities) == CAPABILITY_IDS
     assert sum(len(item["logicIds"]) for item in agents) == 37
     assert "title.generate" in {
@@ -140,6 +152,41 @@ def test_solution_pack_rejects_crosswalk_drift_before_any_publication(tmp_path):
 
     with pytest.raises(AipSolutionPackInvalid, match="unknown capability"):
         AipSolutionPackPublisher().publish(candidate, actor="pytest-invalid")
+
+
+def test_solution_pack_rejects_compatibility_identity_drift_before_publication(
+    tmp_path,
+):
+    candidate = tmp_path / "ecommerce-growth"
+    shutil.copytree(BUNDLE, candidate)
+    path = candidate / "content/logic/ecommerce-37-skill-compatibility-map.json"
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["entries"][0]["legacySkillRef"] = "ecommerce.skill.renamed"
+    path.write_text(
+        json.dumps(document, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AipSolutionPackInvalid, match="entry for D01"):
+        AipSolutionPackPublisher().publish(candidate, actor="pytest-compat-drift")
+
+
+def test_legacy_release_without_s2_5_map_keeps_6_37_10_publication_contract(
+    tmp_path,
+):
+    candidate = tmp_path / "ecommerce-growth"
+    shutil.copytree(BUNDLE, candidate)
+    (candidate / "content/logic/ecommerce-37-skill-compatibility-map.json").unlink()
+
+    result = AipSolutionPackPublisher().publish(
+        candidate, actor="pytest-legacy-release-compatibility"
+    )
+
+    assert (result.agent_count, result.skill_count, result.capability_count) == (
+        6,
+        37,
+        10,
+    )
 
 
 def test_solution_pack_rejects_analyst_template_role_drift(tmp_path):
