@@ -37,6 +37,8 @@ from aos_api.ecommerce_workshop_media_studio_contracts import (
 )
 from aos_api.ecommerce_workshop_price_governance import EcommerceWorkshopPriceGovernance
 from aos_api.ecommerce_workshop_price_governance_contracts import WorkshopPriceGovernanceViewEnvelope
+from aos_api.ecommerce_workshop_customer import EcommerceWorkshopCustomer
+from aos_api.ecommerce_workshop_customer_contracts import WorkshopCustomerViewEnvelope
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
 from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
 from aos_api.ecommerce_operation_command_contracts import (
@@ -169,6 +171,11 @@ def get_ecommerce_workshop_price_governance() -> EcommerceWorkshopPriceGovernanc
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_customer() -> EcommerceWorkshopCustomer:
+    return EcommerceWorkshopCustomer()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_operation_commands() -> EcommerceOperationCommands:
     return EcommerceOperationCommands()
 
@@ -220,6 +227,10 @@ AnalystDependency = Annotated[
 PriceGovernanceDependency = Annotated[
     EcommerceWorkshopPriceGovernance,
     Depends(get_ecommerce_workshop_price_governance),
+]
+CustomerDependency = Annotated[
+    EcommerceWorkshopCustomer,
+    Depends(get_ecommerce_workshop_customer),
 ]
 OperationCommandsDependency = Annotated[
     EcommerceOperationCommands,
@@ -383,6 +394,20 @@ def _require_price_governance_installation(
     _invoke(
         lambda: catalog.get_readiness(
             module_id="ecommerce.price-governance",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+
+
+def _require_customer_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.customer",
             org_id=principal.org_id,
             project_id=principal.project_id,
             roles=principal.roles,
@@ -595,6 +620,23 @@ def get_ecommerce_workshop_price_governance_view(
     _reject_query_parameters(request)
     _require_price_governance_installation(principal=principal, catalog=catalog)
     return price_governance.read(org_id=principal.org_id, project_id=principal.project_id)
+
+
+@router.get(
+    "/views/customer",
+    response_model=WorkshopCustomerViewEnvelope,
+    operation_id="ecommerceWorkshopCustomerViewGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_customer_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    customer: CustomerDependency,
+) -> WorkshopCustomerViewEnvelope:
+    _reject_query_parameters(request)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    return customer.read(org_id=principal.org_id, project_id=principal.project_id)
 
 
 @router.get(
