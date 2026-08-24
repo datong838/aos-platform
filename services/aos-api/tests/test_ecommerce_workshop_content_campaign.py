@@ -18,6 +18,7 @@ from aos_api.ecommerce_workshop_content_campaign_contracts import (
 from aos_api.ecommerce_content_campaign_authority_store import (
     ContentCampaignAuthorityObservation,
     ContentCampaignAuthorityReadError,
+    ContentVariantAuthorityObservation,
 )
 
 
@@ -34,6 +35,9 @@ class _EmptyStore:
     def list_intents(self, scope, *, cutoff, limit):
         return []
 
+    def list_content_variants(self, scope, *, cutoff, limit):
+        return []
+
 
 class _ObservedStore(_EmptyStore):
     @staticmethod
@@ -45,6 +49,7 @@ class _ObservedStore(_EmptyStore):
                 intent_id=identity,
                 revision=1,
                 content_hash="a" * 64,
+                master_artifact_ref=None,
             ),
             receipt_id=receipt_id,
         )
@@ -62,6 +67,32 @@ class _ObservedStore(_EmptyStore):
 class _CalendarFailureStore(_ObservedStore):
     def list_calendar_entries(self, scope, *, cutoff, limit):
         raise ContentCampaignAuthorityReadError("calendar unavailable")
+
+
+class _VariantStore(_ObservedStore):
+    def list_intents(self, scope, *, cutoff, limit):
+        observation = self._observation("intent-1", "ccar-intent-1")
+        observation.revision.master_artifact_ref = SimpleNamespace(
+            resource_id="master-1", content_hash="b" * 64
+        )
+        return [observation]
+
+    def list_content_variants(self, scope, *, cutoff, limit):
+        return [
+            ContentVariantAuthorityObservation(
+                relation_id="relation-1",
+                master_artifact_id="master-1",
+                master_content_hash="b" * 64,
+                variant_artifact_id="variant-1",
+                variant_content_hash="c" * 64,
+                receipt_id="w2r-relation-1",
+            )
+        ]
+
+
+class _OrphanVariantStore(_VariantStore):
+    def list_intents(self, scope, *, cutoff, limit):
+        return _ObservedStore.list_intents(self, scope, cutoff=cutoff, limit=limit)
 
 
 def _body() -> dict[str, object]:
@@ -118,6 +149,43 @@ def test_one_reader_failure_blocks_only_its_slice() -> None:
     assert body["slices"][1]["blockers"][0]["code"] == (
         "CANONICAL_CALENDAR_ENTRY_AUTHORITY_NOT_AVAILABLE"
     )
+    assert body["page"]["count"] == 2
+
+
+def test_content_slice_projects_variant_from_exact_relation_lineage() -> None:
+    body = _body_with_store(_VariantStore())
+    content = body["slices"][2]
+    assert content["status"] == "ready"
+    assert content["countLedger"]["eligible"] == 2
+    variant = content["items"][1]
+    assert variant == {
+        "resourceType": "ContentVariant",
+        "resourceId": "variant-1",
+        "revision": 1,
+        "contentHash": "sha256:" + "c" * 64,
+        "receiptId": "w2r-relation-1",
+        "intentRef": content["items"][0],
+        "masterArtifactRef": {
+            "artifactId": "master-1",
+            "contentHash": "sha256:" + "b" * 64,
+        },
+        "variantArtifactRef": {
+            "artifactId": "variant-1",
+            "contentHash": "sha256:" + "c" * 64,
+        },
+        "relationId": "relation-1",
+        "relationType": "variant_of",
+    }
+
+
+def test_orphan_variant_blocks_only_content_slice() -> None:
+    body = _body_with_store(_OrphanVariantStore())
+    assert [item["status"] for item in body["slices"]] == [
+        "ready",
+        "ready",
+        "blocked",
+    ]
+    assert body["slices"][2]["items"] == []
     assert body["page"]["count"] == 2
 
 

@@ -37,6 +37,36 @@ class ContentCampaignAuthorityRef(AipContractModel):
     receipt_id: str = Field(min_length=1, max_length=200)
 
 
+class ContentCampaignArtifactRef(AipContractModel):
+    artifact_id: str = Field(min_length=1, max_length=200)
+    content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+
+
+class ContentVariantProjection(AipContractModel):
+    resource_type: Literal["ContentVariant"] = "ContentVariant"
+    resource_id: str = Field(min_length=1, max_length=200)
+    revision: Literal[1] = 1
+    content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    receipt_id: str = Field(min_length=1, max_length=200)
+    intent_ref: ContentCampaignAuthorityRef
+    master_artifact_ref: ContentCampaignArtifactRef
+    variant_artifact_ref: ContentCampaignArtifactRef
+    relation_id: str = Field(min_length=1, max_length=200)
+    relation_type: Literal["variant_of"] = "variant_of"
+
+    @model_validator(mode="after")
+    def _exact_lineage(self) -> ContentVariantProjection:
+        if self.resource_id != self.variant_artifact_ref.artifact_id:
+            raise ValueError("ContentVariant resourceId must equal variant artifactId")
+        if self.content_hash != self.variant_artifact_ref.content_hash:
+            raise ValueError("ContentVariant contentHash must equal variant artifact hash")
+        if self.intent_ref.resource_type != "MasterContentIntentRevision":
+            raise ValueError("ContentVariant intentRef must target MasterContentIntentRevision")
+        if self.master_artifact_ref.artifact_id == self.variant_artifact_ref.artifact_id:
+            raise ValueError("ContentVariant master and variant artifacts must differ")
+        return self
+
+
 class ContentCampaignBlocker(AipContractModel):
     code: str = Field(pattern=r"^[A-Z][A-Z0-9_]{1,119}$")
     dependency: str = Field(min_length=1, max_length=160)
@@ -61,7 +91,9 @@ class ContentCampaignSlice(AipContractModel):
     status: ContentCampaignSliceStatus
     data_cutoff: datetime
     authority_refs: list[ContentCampaignAuthorityRef] = Field(max_length=20)
-    items: list[ContentCampaignAuthorityRef] = Field(max_length=100)
+    items: list[ContentCampaignAuthorityRef | ContentVariantProjection] = Field(
+        max_length=100
+    )
     blockers: list[ContentCampaignBlocker] = Field(max_length=20)
     count_ledger: ContentCampaignCountLedger
 
@@ -137,6 +169,7 @@ class WorkshopContentCampaignViewEnvelope(AipContractModel):
 __all__ = [
     "CONTENT_CAMPAIGN_SCHEMA_VERSION",
     "ContentCampaignAuthorityRef",
+    "ContentCampaignArtifactRef",
     "ContentCampaignBlocker",
     "ContentCampaignCountLedger",
     "ContentCampaignPageInfo",
@@ -144,5 +177,6 @@ __all__ = [
     "ContentCampaignSlice",
     "ContentCampaignSliceId",
     "ContentCampaignSliceStatus",
+    "ContentVariantProjection",
     "WorkshopContentCampaignViewEnvelope",
 ]

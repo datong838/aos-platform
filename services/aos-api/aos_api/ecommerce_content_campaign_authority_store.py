@@ -41,6 +41,35 @@ class ContentCampaignAuthorityObservation(Generic[RevisionT]):
             raise ValueError("authority observation requires receiptId")
 
 
+@dataclass(frozen=True)
+class ContentVariantAuthorityObservation:
+    relation_id: str
+    master_artifact_id: str
+    master_content_hash: str
+    variant_artifact_id: str
+    variant_content_hash: str
+    receipt_id: str
+
+    def __post_init__(self) -> None:
+        values = (
+            self.relation_id,
+            self.master_artifact_id,
+            self.master_content_hash,
+            self.variant_artifact_id,
+            self.variant_content_hash,
+            self.receipt_id,
+        )
+        if any(not value.strip() for value in values):
+            raise ValueError("ContentVariant observation requires exact lineage")
+        if self.master_artifact_id == self.variant_artifact_id:
+            raise ValueError("ContentVariant cannot reference itself")
+        for content_hash in (self.master_content_hash, self.variant_content_hash):
+            if len(content_hash) != 64 or any(
+                char not in "0123456789abcdef" for char in content_hash
+            ):
+                raise ValueError("ContentVariant requires sha256 artifact hashes")
+
+
 class ContentCampaignAuthorityStoreError(RuntimeError):
     code = "CONTENT_CAMPAIGN_AUTHORITY_ERROR"
 
@@ -253,6 +282,73 @@ class EcommerceContentCampaignAuthorityStore:
             revision_table="ecommerce_master_content_intent_revision",
             identity_column="intent_id",
         )
+
+    def list_content_variants(
+        self, scope: TenantScope, *, cutoff: datetime, limit: int = 100
+    ) -> list[ContentVariantAuthorityObservation]:
+        if cutoff.utcoffset() is None:
+            raise ValueError("ContentVariant cutoff requires a timezone")
+        if not 1 <= limit <= 100:
+            raise ValueError("ContentVariant read limit must be between 1 and 100")
+        try:
+            with self._connect_factory(scope) as conn:
+                conn.execute(
+                    "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+                )
+                rows = conn.execute(
+                    "SELECT relation.org_id,relation.project_id,relation.relation_id,"
+                    "relation.relation_type,relation.from_artifact_id,"
+                    "relation.from_content_hash,relation.to_artifact_id,"
+                    "relation.to_content_hash,variant.content_hash AS variant_current_hash,"
+                    "master.content_hash AS master_current_hash,receipt.receipt_id "
+                    "FROM aip_artifact_relation relation "
+                    "LEFT JOIN aip_artifact variant ON variant.org_id=relation.org_id "
+                    "AND variant.project_id=relation.project_id "
+                    "AND variant.artifact_id=relation.from_artifact_id "
+                    "LEFT JOIN aip_artifact master ON master.org_id=relation.org_id "
+                    "AND master.project_id=relation.project_id "
+                    "AND master.artifact_id=relation.to_artifact_id "
+                    "LEFT JOIN aip_production_contract_receipt receipt "
+                    "ON receipt.org_id=relation.org_id "
+                    "AND receipt.project_id=relation.project_id "
+                    "AND receipt.operation='artifact_relation.create' "
+                    "AND receipt.result_ref->>'resourceType'='ArtifactRelation' "
+                    "AND receipt.result_ref->>'resourceId'=relation.relation_id "
+                    "WHERE relation.org_id=%s AND relation.project_id=%s "
+                    "AND relation.relation_type='variant_of' "
+                    "AND relation.created_at<=%s "
+                    "ORDER BY relation.created_at DESC,relation.relation_id LIMIT %s",
+                    (*scope.key, cutoff, limit),
+                ).fetchall()
+            seen: set[str] = set()
+            observations = []
+            for row in rows:
+                if (row["org_id"], row["project_id"]) != scope.key:
+                    raise ValueError("ContentVariant tenant scope drift")
+                if row["relation_type"] != "variant_of":
+                    raise ValueError("ContentVariant relation type drift")
+                if row["relation_id"] in seen:
+                    raise ValueError("ContentVariant relation has duplicate Receipts")
+                seen.add(row["relation_id"])
+                if row["variant_current_hash"] != row["from_content_hash"]:
+                    raise ValueError("ContentVariant artifact hash drift")
+                if row["master_current_hash"] != row["to_content_hash"]:
+                    raise ValueError("ContentVariant master hash drift")
+                observations.append(
+                    ContentVariantAuthorityObservation(
+                        relation_id=row["relation_id"],
+                        master_artifact_id=row["to_artifact_id"],
+                        master_content_hash=row["to_content_hash"],
+                        variant_artifact_id=row["from_artifact_id"],
+                        variant_content_hash=row["from_content_hash"],
+                        receipt_id=row["receipt_id"],
+                    )
+                )
+            return observations
+        except (psycopg.Error, AttributeError, KeyError, TypeError, ValueError) as exc:
+            raise ContentCampaignAuthorityReadError(
+                "ContentVariant authority read failed closed"
+            ) from exc
 
     def get_receipt(
         self, scope: TenantScope, *, operation: str, idempotency_key: str
@@ -548,6 +644,7 @@ __all__ = [
     "ContentCampaignAuthorityIdempotencyConflict",
     "ContentCampaignAuthorityReadError",
     "ContentCampaignAuthorityObservation",
+    "ContentVariantAuthorityObservation",
     "ContentCampaignAuthorityStoreError",
     "EcommerceContentCampaignAuthorityStore",
     "canonical_hash",

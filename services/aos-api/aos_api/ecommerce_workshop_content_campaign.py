@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from aos_api.aip_contracts import TenantContext
 from aos_api.ecommerce_workshop_content_campaign_contracts import (
     ContentCampaignAuthorityRef,
+    ContentCampaignArtifactRef,
     ContentCampaignBlocker,
     ContentCampaignCountLedger,
     ContentCampaignPageInfo,
@@ -15,6 +16,7 @@ from aos_api.ecommerce_workshop_content_campaign_contracts import (
     ContentCampaignSliceId,
     ContentCampaignSliceStatus,
     WorkshopContentCampaignViewEnvelope,
+    ContentVariantProjection,
 )
 from aos_api.ecommerce_content_campaign_authority_store import (
     ContentCampaignAuthorityObservation,
@@ -84,17 +86,23 @@ class EcommerceWorkshopContentCampaign:
                     self._item_ref(resource_type, observation)
                     for observation in observations
                 ]
+                items = list(refs)
+                if slice_id is ContentCampaignSliceId.CONTENT:
+                    variants = self._store.list_content_variants(
+                        scope, cutoff=evaluated_at, limit=100
+                    )
+                    items.extend(self._variant_items(observations, variants))
                 slices.append(
                     ContentCampaignSlice(
                         slice_id=slice_id,
                         status=ContentCampaignSliceStatus.READY,
                         data_cutoff=evaluated_at,
                         authority_refs=refs[:20],
-                        items=refs,
+                        items=items,
                         blockers=[],
                         count_ledger=ContentCampaignCountLedger(
-                            eligible=len(refs),
-                            attached=len(refs),
+                            eligible=len(items),
+                            attached=len(items),
                             unmatched=0,
                             conflicted=0,
                         ),
@@ -161,6 +169,45 @@ class EcommerceWorkshopContentCampaign:
             content_hash="sha256:" + revision.content_hash,
             receipt_id=observation.receipt_id,
         )
+
+    @classmethod
+    def _variant_items(cls, intent_observations, variant_observations):
+        items = []
+        for variant in variant_observations:
+            matches = [
+                intent
+                for intent in intent_observations
+                if intent.revision.master_artifact_ref is not None
+                and intent.revision.master_artifact_ref.resource_id
+                == variant.master_artifact_id
+                and intent.revision.master_artifact_ref.content_hash
+                == variant.master_content_hash
+            ]
+            if len(matches) != 1:
+                raise ContentCampaignAuthorityReadError(
+                    "ContentVariant requires exactly one matching MasterContentIntent"
+                )
+            intent_ref = cls._item_ref(
+                "MasterContentIntentRevision", matches[0]
+            )
+            items.append(
+                ContentVariantProjection(
+                    resource_id=variant.variant_artifact_id,
+                    content_hash="sha256:" + variant.variant_content_hash,
+                    receipt_id=variant.receipt_id,
+                    intent_ref=intent_ref,
+                    master_artifact_ref=ContentCampaignArtifactRef(
+                        artifact_id=variant.master_artifact_id,
+                        content_hash="sha256:" + variant.master_content_hash,
+                    ),
+                    variant_artifact_ref=ContentCampaignArtifactRef(
+                        artifact_id=variant.variant_artifact_id,
+                        content_hash="sha256:" + variant.variant_content_hash,
+                    ),
+                    relation_id=variant.relation_id,
+                )
+            )
+        return items
 
 
 __all__ = ["EcommerceWorkshopContentCampaign"]

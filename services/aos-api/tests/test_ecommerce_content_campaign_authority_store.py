@@ -296,3 +296,61 @@ def test_reader_fails_closed_on_row_tenant_drift() -> None:
     store = EcommerceContentCampaignAuthorityStore(factory(connection))
     with pytest.raises(ContentCampaignAuthorityReadError):
         store.list_campaigns(SCOPE, cutoff=NOW)
+
+
+def variant_row(**updates):
+    row = {
+        "org_id": "org-org",
+        "project_id": "dev-project",
+        "relation_id": "relation-1",
+        "relation_type": "variant_of",
+        "from_artifact_id": "variant-1",
+        "from_content_hash": "b" * 64,
+        "to_artifact_id": "master-1",
+        "to_content_hash": "c" * 64,
+        "variant_current_hash": "b" * 64,
+        "master_current_hash": "c" * 64,
+        "receipt_id": "w2r-relation-1",
+    }
+    row.update(updates)
+    return row
+
+
+def test_variant_reader_uses_exact_relation_artifacts_and_receipt() -> None:
+    connection = Connection(rows=[[variant_row()]])
+    observations = EcommerceContentCampaignAuthorityStore(
+        factory(connection)
+    ).list_content_variants(SCOPE, cutoff=NOW, limit=1)
+    assert len(observations) == 1
+    assert observations[0].variant_artifact_id == "variant-1"
+    assert observations[0].master_artifact_id == "master-1"
+    assert observations[0].receipt_id == "w2r-relation-1"
+    assert "REPEATABLE READ READ ONLY" in connection.calls[0][0]
+    assert "receipt.operation='artifact_relation.create'" in connection.calls[1][0]
+    assert connection.calls[1][1] == ("org-org", "dev-project", NOW, 1)
+
+
+@pytest.mark.parametrize(
+    "updates",
+    [
+        {"org_id": "dev-org"},
+        {"receipt_id": None},
+        {"variant_current_hash": "d" * 64},
+        {"master_current_hash": None},
+        {"relation_type": "derived_from"},
+    ],
+)
+def test_variant_reader_fails_closed_on_tenant_receipt_or_hash_drift(updates) -> None:
+    connection = Connection(rows=[[variant_row(**updates)]])
+    with pytest.raises(ContentCampaignAuthorityReadError):
+        EcommerceContentCampaignAuthorityStore(factory(connection)).list_content_variants(
+            SCOPE, cutoff=NOW
+        )
+
+
+def test_variant_reader_rejects_duplicate_relation_receipts() -> None:
+    connection = Connection(rows=[[variant_row(), variant_row()]])
+    with pytest.raises(ContentCampaignAuthorityReadError, match="failed closed"):
+        EcommerceContentCampaignAuthorityStore(factory(connection)).list_content_variants(
+            SCOPE, cutoff=NOW
+        )
