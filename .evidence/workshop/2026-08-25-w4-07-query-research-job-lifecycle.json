@@ -1,0 +1,63 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "taskId": "workshop-w4-07-query-research-job-lifecycle-20260825",
+  "wave": "W4-07",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "authorityBaseRevision": "AOS-000232",
+  "gitCommit": "fe0a8da797b71ee4da2775792be454080a4a1a2e",
+  "outcome": "W4_07_ASYNC_JOB_PROJECTION_CODE_BROWSER_GREEN_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "scope": {
+    "implemented": [
+      "ResearchJob, QueryJob and KnowledgePipelineRun remain three independent source authorities behind one read-only projection",
+      "ResearchJob projection facts reuse existing artifact, submission, event, delivery and command receipts without adding a fourth store",
+      "the projection preserves raw and display status, partial refs, exact related receipts, current-run checkpoint, ownership, blockers and role-derived permissions",
+      "the Web SDK performs authoritative no-snapshot reads and rejects tenant, field-set, authority-type, status and count drift",
+      "the Workshop Analyst view exposes a read-only job drawer without copying or invoking source command state machines"
+    ],
+    "preservedBlockers": [
+      "ResearchJob resumability remains unsupported without a trustworthy Provider checkpoint",
+      "KnowledgePipeline commands remain owned by the pipeline authority and are not exposed by the unified view",
+      "missing exact Task revisions stay null instead of being inferred from a bare task or run id",
+      "local fixture browser acceptance is not production operational readiness"
+    ],
+    "forbiddenEffects": [
+      "no live migration",
+      "no real Provider submit, cancel, retry or reconcile",
+      "no real QueryJob or KnowledgePipeline command",
+      "no release",
+      "no real business mutation"
+    ]
+  },
+  "tests": {
+    "backendTargetedAndCumulative": "24 passed; final W-L17 focused rerun 5 passed",
+    "webTargeted": "9 passed",
+    "webCumulative": "223 files / 2102 tests passed",
+    "webBuild": "TypeScript noEmit and production build passed",
+    "openapi": "deterministic/current; 2583 paths / 2165 schemas",
+    "compileall": "passed",
+    "diffCheck": "passed"
+  },
+  "browser": {
+    "client": "Codex built-in browser",
+    "route": "/workshop/analyst",
+    "observations": [
+      "the positive tenant fixture rendered a running ResearchJob as partial with one receipt, one partial artifact, source authority and owner",
+      "cancel was disclosed as source-authority-capable while cancel, retry and reconcile controls remained disabled in the unified read-only view",
+      "an injected unexpected authority field was rejected and the drawer changed to visible fail-closed state",
+      "the rejected response caused no automatic retry, task creation, Provider call or command submission",
+      "the focused screenshot showed the drawer aligned with the existing Analyst visual hierarchy without overflow"
+    ],
+    "runtimeBoundary": "Browser transport used a local deterministic fixture; this is UI acceptance evidence only and does not assert operational or release readiness."
+  },
+  "fileHashes": {
+    "services/aos-api/aos_api/aip_async_job_projection.py": "sha256:a0d65514973e3323afcca5d33bf6a81658cc946d4221197d81e71887aa32ee98",
+    "services/aos-api/aos_api/aip_research_job_store.py": "sha256:be9a2cb8e6fb5b22009c7cbe1234b41e31116040e883f063879a2d55aaed127c",
+    "apps/web/src/api/aipAsyncJobs.ts": "sha256:943040fb32984c7a7cf03744118816a3edaecfa54ff00fa2156726f80418ce15",
+    "apps/web/src/components/workshop/AsyncJobDrawer.tsx": "sha256:0efb8745f23af9eae2e90fdadb848765373c950223a1d17e37f371be4b3c398b",
+    "apps/web/src/components/workshop/AnalystPage.tsx": "sha256:f43b3b5489c9c73ff6aaea76247eac946f7678b5edea7b5fc30b7b9086b5c992",
+    "packages/contracts/openapi/v1.generated.json": "sha256:842c5a361b26b4261483111b9522f96618ebf1cafe323dd3c65fde8b09c2e725"
+  }
+}
