@@ -29,6 +29,12 @@ from aos_api.aip_eval_contracts import (
     EvalSuiteRevision,
     JudgeRevisionRef,
 )
+from aos_api.aip_production_contracts import (
+    BriefLifecycle,
+    ContractReadiness,
+    EvalContractRevision,
+    ExactRevisionRef,
+)
 from aos_api.aip_eval_pack_registry import AipEvalPackRegistry, compute_eval_suite_hash
 from aos_api.aip_eval_runner import (
     AipEvalRunner,
@@ -78,6 +84,8 @@ def runtime():
             conn.execute("INSERT INTO twa_workspace VALUES ('org-a','project-a'),('org-b','project-b')")
             for statement in tables:
                 conn.execute(statement)
+            conn.execute("ALTER TABLE aip_eval_run ADD COLUMN eval_contract_ref JSONB")
+            conn.execute("ALTER TABLE aip_eval_report_revision ADD COLUMN eval_contract_ref JSONB")
             conn.commit()
     except Exception as exc:  # noqa: BLE001
         pytest.skip(f"PG unavailable: {exc}")
@@ -218,3 +226,77 @@ def test_report_is_tenant_scoped(runtime) -> None:
     )
     with pytest.raises(AipEvalAuthorityNotFound):
         runner.get_report(OTHER, report.report_id)
+
+
+def _contract(*, content_hash: str = H1, readiness: ContractReadiness = ContractReadiness.READY):
+    suite = _suite()
+    return EvalContractRevision(
+        tenant={"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
+        contract_id="eval-contract-1", revision=2, version=2,
+        suite_ref=ExactRevisionRef(resource_type="EvalSuiteRevision", resource_id=suite.suite_id, revision=suite.revision, content_hash=suite.content_hash),
+        publication_ref=ExactRevisionRef(resource_type="PublicationEvent", resource_id="publication-event-1", revision=1, content_hash=H2),
+        release_gate_ref=ExactRevisionRef(resource_type="ReleaseGateDecision", resource_id="gate-1", revision=1, content_hash=H3),
+        artifact_schema_ref={"resourceType":"Schema","resourceId":"artifact","revision":"1","authority":"aip"},
+        severity_thresholds={"critical": 1.0}, gate_policy={"mode":"all"},
+        return_mapping={"failed":"review"}, override_policy={"allowed":False},
+        content_hash=content_hash, lifecycle=BriefLifecycle.FROZEN,
+        readiness=readiness, blockers=[], created_by="user:dev", created_at=NOW,
+    )
+
+
+def test_runner_binds_exact_eval_contract_to_run_and_report(runtime) -> None:
+    runner, scoped = runtime
+    contract = _contract()
+
+    class Contracts:
+        def get_eval_contract(self, scope, contract_id, revision):
+            assert scope == SCOPE and contract_id == contract.contract_id and revision == 2
+            return contract
+
+    runner._contracts = Contracts()
+    report = runner.run_by_contract(
+        SCOPE, contract_id=contract.contract_id, contract_revision=2,
+        contract_content_hash=contract.content_hash, idempotency_key="contract-once",
+        actor="user:dev", resolve_artifact=_resolver, execute_target=_target,
+        execute_judge=_judge,
+    )
+    assert report.eval_contract_ref is not None
+    assert report.eval_contract_ref.resource_id == contract.contract_id
+    assert runner.get_report(SCOPE, report.report_id).eval_contract_ref == report.eval_contract_ref
+    with scoped() as conn:
+        run = conn.execute("SELECT eval_contract_ref FROM aip_eval_run WHERE run_id=%s", (report.run_id,)).fetchone()
+    assert run["eval_contract_ref"]["contentHash"] == contract.content_hash
+
+    with pytest.raises(AipEvalAuthorityConflict, match="idempotency key was reused"):
+        runner.run_by_contract(
+            SCOPE, contract_id=contract.contract_id, contract_revision=2,
+            contract_content_hash=contract.content_hash, idempotency_key="contract-once",
+            actor="user:dev", resolve_artifact=_resolver, execute_target=_target,
+            execute_judge=_judge,
+        )
+    with scoped() as conn:
+        replay_count = conn.execute(
+            "SELECT count(*) AS n FROM aip_eval_run WHERE idempotency_key='contract-once'"
+        ).fetchone()
+    assert replay_count["n"] == 1
+
+
+def test_runner_rejects_eval_contract_hash_drift_before_creating_run(runtime) -> None:
+    runner, scoped = runtime
+    contract = _contract()
+
+    class Contracts:
+        def get_eval_contract(self, *_args):
+            return contract
+
+    runner._contracts = Contracts()
+    with pytest.raises(AipEvalAuthorityConflict, match="content hash drifted"):
+        runner.run_by_contract(
+            SCOPE, contract_id=contract.contract_id, contract_revision=2,
+            contract_content_hash=H4, idempotency_key="contract-drift",
+            actor="user:dev", resolve_artifact=_resolver, execute_target=_target,
+            execute_judge=_judge,
+        )
+    with scoped() as conn:
+        count = conn.execute("SELECT count(*) AS n FROM aip_eval_run WHERE idempotency_key='contract-drift'").fetchone()
+    assert count["n"] == 0

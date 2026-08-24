@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContractList, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecisionList, parseResponsibilityPlanList, parseReviewIssueList, parseStageCompilation, parseStageTemplateList } from "./parser";
+import { parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContractDiff, parseEvalContractList, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecisionList, parseResponsibilityPlanList, parseReviewIssueList, parseStageCompilation, parseStageTemplateList } from "./parser";
 const hash="a".repeat(64), tenant={orgId:"org-org",projectId:"dev-project"};
 describe("W2-A production contract parser",()=>{
   it("parses exact authority lists",()=>{
@@ -12,6 +12,15 @@ describe("W2-A production contract parser",()=>{
   it("fails closed on count/hash drift",()=>{
     expect(()=>parseBriefList({tenant,count:1,items:[]})).toThrow("不一致");
     expect(()=>parseBriefList({tenant,count:1,items:[{tenant,briefId:"b",taskId:"t",revision:1,version:1,briefType:"x",schemaRef:{resourceType:"S",resourceId:"s",revision:"1",authority:"a"},spec:{},contentHash:"bad",lifecycle:"draft",createdBy:"u",createdAt:"now"}]})).toThrow("SHA-256");
+  });
+});
+
+describe("W4-03 EvalContract Diff parser",()=>{
+  it("严格解析服务端语义差异并校验数量",()=>{
+    const value={tenant,contractId:"eval-1",fromRevision:1,toRevision:2,fromContentHash:hash,toContentHash:"b".repeat(64),changes:[{field:"gate_policy",label:"门禁策略",before:{mode:"any"},after:{mode:"all"},impact:"旧批准不可继承"}],changeCount:1,summary:"共 1 项语义变更"};
+    expect(parseEvalContractDiff(value).changes[0].label).toBe("门禁策略");
+    expect(()=>parseEvalContractDiff({...value,changeCount:2})).toThrow("changeCount");
+    expect(()=>parseEvalContractDiff({...value,toRevision:1})).toThrow("修订必须不同");
   });
 });
 describe("W2-B production contract parser",()=>{

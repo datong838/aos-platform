@@ -22,6 +22,7 @@ from aos_api.aip_eval_contracts import (
     AssetRevisionRef,
     AssetType,
     EvalCaseResultEvidence,
+    EvalContractRevisionRef,
     EvalReportRevision,
     EvalRunAuthorityRecord,
     EvalRunEvent,
@@ -29,6 +30,10 @@ from aos_api.aip_eval_contracts import (
     JudgeRevisionRef,
 )
 from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
+from aos_api.aip_production_contract_store import (
+    AipProductionContractStore,
+    ProductionContractError,
+)
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
 
@@ -70,10 +75,50 @@ def compute_eval_report_hash(report: EvalReportRevision) -> str:
 
 
 class AipEvalRunner:
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(
+        self,
+        connect_factory: ConnectFactory | None = None,
+        *,
+        production_contract_store: AipProductionContractStore | None = None,
+    ) -> None:
         self._connect_factory = connect_factory or db_connect
         self._authority = AipEvalAuthorityStore(connect_factory=self._connect_factory)
         self._registry = AipEvalPackRegistry(connect_factory=self._connect_factory)
+        self._contracts = production_contract_store or AipProductionContractStore(
+            connect_factory=self._connect_factory
+        )
+
+    def run_by_contract(
+        self,
+        scope: TenantScope,
+        *,
+        contract_id: str,
+        contract_revision: int,
+        contract_content_hash: str,
+        idempotency_key: str,
+        actor: str,
+        resolve_artifact: ArtifactResolver,
+        execute_target: TargetExecutor,
+        execute_judge: JudgeExecutor,
+    ) -> EvalReportRevision:
+        """Resolve the suite only from one frozen, ready exact EvalContract revision."""
+        ref = EvalContractRevisionRef(
+            resource_id=contract_id,
+            revision=contract_revision,
+            content_hash=contract_content_hash,
+        )
+        contract = self._resolve_contract(scope, ref)
+        return self.run(
+            scope,
+            suite_id=contract.suite_ref.resource_id,
+            suite_revision=contract.suite_ref.revision,
+            idempotency_key=idempotency_key,
+            actor=actor,
+            resolve_artifact=resolve_artifact,
+            execute_target=execute_target,
+            execute_judge=execute_judge,
+            eval_contract_ref=ref,
+        )
 
     def run(
         self,
@@ -86,8 +131,19 @@ class AipEvalRunner:
         resolve_artifact: ArtifactResolver,
         execute_target: TargetExecutor,
         execute_judge: JudgeExecutor,
+        eval_contract_ref: EvalContractRevisionRef | None = None,
     ) -> EvalReportRevision:
         suite = self._registry.get_suite_revision(scope, suite_id, suite_revision)
+        if eval_contract_ref is not None:
+            contract = self._resolve_contract(scope, eval_contract_ref)
+            if (
+                contract.suite_ref.resource_id != suite.suite_id
+                or contract.suite_ref.revision != suite.revision
+                or contract.suite_ref.content_hash != suite.content_hash
+            ):
+                raise AipEvalAuthorityConflict(
+                    "eval contract suite exact reference does not match resolved suite"
+                )
         self._assert_target_not_withdrawn(scope, suite.target)
         tenant = TenantContext(org_id=scope.org_id, project_id=scope.project_id)
         now = datetime.now(UTC)
@@ -102,6 +158,7 @@ class AipEvalRunner:
             tenant=tenant,
             run_id=run_id,
             suite_ref=suite_ref,
+            eval_contract_ref=eval_contract_ref,
             target=suite.target,
             dataset=suite.dataset,
             judge=suite.judge,
@@ -154,6 +211,7 @@ class AipEvalRunner:
                 content_hash="0" * 64,
                 run_id=run_id,
                 suite_ref=suite_ref,
+                eval_contract_ref=eval_contract_ref,
                 target=suite.target,
                 dataset=suite.dataset,
                 judge=suite.judge,
@@ -199,23 +257,40 @@ class AipEvalRunner:
     def _append_report(self, scope: TenantScope, report: EvalReportRevision) -> None:
         try:
             with self._connect(scope) as conn:
-                row = conn.execute(
-                    """INSERT INTO aip_eval_report_revision (
+                if report.eval_contract_ref is None:
+                    statement = """INSERT INTO aip_eval_report_revision (
                        org_id,project_id,report_id,revision,content_hash,run_id,
                        suite_ref,target_ref,dataset_ref,judge_ref,results,passed,
                        failed,total,pass_rate,gate_passed,created_at
                        ) VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,
                                  %s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,%s)
-                       ON CONFLICT (org_id,project_id,run_id) DO NOTHING RETURNING report_id""",
-                    (
+                       ON CONFLICT (org_id,project_id,run_id) DO NOTHING RETURNING report_id"""
+                    params = (
                         scope.org_id, scope.project_id, report.report_id, report.revision,
                         report.content_hash, report.run_id, self._json(report.suite_ref),
                         self._json(report.target), self._json(report.dataset),
                         self._json(report.judge), self._json(report.results), report.passed,
                         report.failed, report.total, report.pass_rate, report.gate_passed,
                         report.created_at,
-                    ),
-                ).fetchone()
+                    )
+                else:
+                    statement = """INSERT INTO aip_eval_report_revision (
+                       org_id,project_id,report_id,revision,content_hash,run_id,
+                       eval_contract_ref,suite_ref,target_ref,dataset_ref,judge_ref,results,
+                       passed,failed,total,pass_rate,gate_passed,created_at
+                       ) VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,
+                                 %s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,%s)
+                       ON CONFLICT (org_id,project_id,run_id) DO NOTHING RETURNING report_id"""
+                    params = (
+                        scope.org_id, scope.project_id, report.report_id, report.revision,
+                        report.content_hash, report.run_id,
+                        self._json(report.eval_contract_ref), self._json(report.suite_ref),
+                        self._json(report.target), self._json(report.dataset),
+                        self._json(report.judge), self._json(report.results), report.passed,
+                        report.failed, report.total, report.pass_rate, report.gate_passed,
+                        report.created_at,
+                    )
+                row = conn.execute(statement, params).fetchone()
                 if row is None:
                     raise AipEvalAuthorityConflict("eval run already has a report")
                 conn.commit()
@@ -248,6 +323,28 @@ class AipEvalRunner:
             raise AipEvalAuthorityConflict(
                 "eval target publication is withdrawn; a new revision is required"
             )
+
+    def _resolve_contract(
+        self, scope: TenantScope, ref: EvalContractRevisionRef
+    ):
+        try:
+            contract = self._contracts.get_eval_contract(
+                scope, ref.resource_id, ref.revision
+            )
+        except ProductionContractError as exc:
+            raise AipEvalAuthorityConflict(
+                "eval contract exact reference is unavailable"
+            ) from exc
+        if contract.content_hash != ref.content_hash:
+            raise AipEvalAuthorityConflict("eval contract exact content hash drifted")
+        if contract.lifecycle.value != "frozen":
+            raise AipEvalAuthorityConflict("eval contract is not frozen")
+        if contract.readiness.value != "ready" or contract.blockers:
+            codes = ",".join(blocker.code for blocker in contract.blockers)
+            raise AipEvalAuthorityConflict(
+                f"eval contract is not ready:{codes or 'UNKNOWN'}"
+            )
+        return contract
 
     @staticmethod
     def _resolve_exact(resolver: ArtifactResolver, ref: ArtifactRef | None) -> Any:
@@ -298,6 +395,11 @@ class AipEvalRunner:
             tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
             report_id=row["report_id"], revision=row["revision"], content_hash=row["content_hash"],
             run_id=row["run_id"], suite_ref=row["suite_ref"], target=row["target_ref"],
+            eval_contract_ref=(
+                row["eval_contract_ref"]
+                if "eval_contract_ref" in row.keys() and row["eval_contract_ref"] is not None
+                else None
+            ),
             dataset=row["dataset_ref"], judge=row["judge_ref"], results=row["results"],
             passed=row["passed"], failed=row["failed"], total=row["total"],
             pass_rate=row["pass_rate"], gate_passed=row["gate_passed"], created_at=row["created_at"],

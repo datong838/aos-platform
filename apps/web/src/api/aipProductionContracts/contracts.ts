@@ -88,6 +88,18 @@ export type EvalContractRevision = CreateEvalContractInput & {
 };
 
 export type EvalContractListResponse = { tenant: Tenant; items: EvalContractRevision[]; count: number };
+export type EvalContractDiffChange = { field: string; label: string; before: unknown; after: unknown; impact: string };
+export type EvalContractDiff = {
+  tenant: Tenant;
+  contractId: string;
+  fromRevision: number;
+  toRevision: number;
+  fromContentHash: string;
+  toContentHash: string;
+  changes: EvalContractDiffChange[];
+  changeCount: number;
+  summary: string;
+};
 
 export type AssigneeRef = { kind: AssigneeKind; resourceId: string; version: number };
 export type ResponsibilitySlot = {

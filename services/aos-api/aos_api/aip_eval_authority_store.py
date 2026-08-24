@@ -15,6 +15,7 @@ from aos_api.aip_eval_contracts import (
     AssetType,
     CapabilityReceipt,
     DatasetRevisionRef,
+    EvalContractRevisionRef,
     EvalRunAuthorityRecord,
     EvalRunEvent,
     EvalRunStatus,
@@ -172,8 +173,8 @@ class AipEvalAuthorityStore:
             raise ValueError("initial eval event must be sequence 1: null -> queued")
         try:
             with self._connect(scope) as conn:
-                row = conn.execute(
-                    """INSERT INTO aip_eval_run (
+                if record.eval_contract_ref is None:
+                    statement = """INSERT INTO aip_eval_run (
                        org_id,project_id,run_id,suite_id,suite_revision,suite_hash,
                        target_ref,dataset_ref,judge_ref,status,idempotency_key,version,
                        created_by,created_at,started_at,finished_at
@@ -181,9 +182,21 @@ class AipEvalAuthorityStore:
                        %s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,
                        %s,%s,%s,%s)
                        ON CONFLICT (org_id,project_id,idempotency_key) DO NOTHING
-                       RETURNING *""",
-                    self._run_insert_params(scope, record),
-                ).fetchone()
+                       RETURNING *"""
+                    params = self._run_insert_params(scope, record)
+                else:
+                    statement = """INSERT INTO aip_eval_run (
+                       org_id,project_id,run_id,suite_id,suite_revision,suite_hash,
+                       eval_contract_ref,target_ref,dataset_ref,judge_ref,status,
+                       idempotency_key,version,created_by,created_at,started_at,finished_at
+                       ) VALUES (
+                       %s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+                       %s,%s,%s,%s,%s,%s,%s)
+                       ON CONFLICT (org_id,project_id,idempotency_key) DO NOTHING
+                       RETURNING *"""
+                    base = self._run_insert_params(scope, record)
+                    params = (*base[:6], self._json(record.eval_contract_ref), *base[6:])
+                row = conn.execute(statement, params).fetchone()
                 if row is None:
                     row = self._run_by_idempotency(conn, scope, record.idempotency_key)
                     replay_event = self._run_event_by_sequence(
@@ -1385,6 +1398,11 @@ class AipEvalAuthorityStore:
                 asset_id=row["suite_id"],
                 revision=str(row["suite_revision"]),
                 content_hash=row["suite_hash"],
+            ),
+            eval_contract_ref=(
+                EvalContractRevisionRef.model_validate(row["eval_contract_ref"])
+                if "eval_contract_ref" in row.keys() and row["eval_contract_ref"] is not None
+                else None
             ),
             target=row["target_ref"],
             dataset=row["dataset_ref"],

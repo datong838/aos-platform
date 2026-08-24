@@ -24,6 +24,13 @@ describe("W2-C production contract SDK",()=>{
       "/v1/aip/production-contracts/review-issues",
     ]);
   });
+  it("读取服务端 EvalContract Diff，不在前端重算",async()=>{
+    transport.apiGet.mockResolvedValue({tenant,contractId:"eval 1",fromRevision:1,toRevision:2,fromContentHash:hash,toContentHash:"b".repeat(64),changes:[],changeCount:0,summary:"无语义差异"});
+    const result=await aipProductionContracts.diffEvalContract("eval 1",1,2);
+    expect(result.changeCount).toBe(0);
+    expect(transport.apiGet).toHaveBeenCalledWith("/v1/aip/production-contracts/eval-contracts/eval%201/diff?fromRevision=1&toRevision=2");
+    await expect(aipProductionContracts.diffEvalContract("eval-1",1,1)).rejects.toThrow("修订必须不同");
+  });
   it("编译只 POST canonical Plan 请求并携带幂等键",async()=>{
     const input={taskId:"task-1",expectedTaskVersion:2,templateRevision:1,templateContentHash:hash,responsibilityPlanRef:exact("ResponsibilityPlanRevision","plan-1"),productionContextRef:exact("ProductionContextRevision","context-1"),profile:"standard"};
     transport.apiPost.mockResolvedValue({tenant,taskId:"task-1",templateRef:exact("StageTemplateRevision","stage-1"),responsibilityPlanRef:input.responsibilityPlanRef,productionContextRef:input.productionContextRef,planRef:exact("PlanRevision","plan-revision-1"),compilerVersion:"w2c.v1",applicableStageIds:["analysis"],notApplicableStageIds:[],createdAt:"2026-08-14T00:00:00Z"});

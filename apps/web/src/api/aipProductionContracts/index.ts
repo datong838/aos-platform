@@ -1,6 +1,7 @@
 import { apiGet, apiPost } from "../client";
 import type { CompileStageTemplateInput, CreateArtifactRelationInput, CreateEvalContractInput, CreateImpactPreviewInput, CreateResponsibilityPlanInput, CreateReviewIssueInput, CreateStageTemplateInput, CreateTaskBriefInput, ProductionStartInput, ResolveReviewIssueInput, ReturnReviewIssueInput, ReviseEvalContractInput, ReviseImpactPreviewInput, ReviseResponsibilityPlanInput, ReviseStageTemplateInput } from "./contracts";
 import { parseArtifactRelation, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContract, parseEvalContractList, parseImpactPreview, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecision, parseProductionStartDecisionList, parseResponsibilityPlan, parseResponsibilityPlanList, parseReturnDecision, parseReviewIssue, parseReviewIssueList, parseStageCompilation, parseStageTemplate, parseStageTemplateList, parseTaskBrief } from "./parser";
+import { parseEvalContractDiff } from "./parser";
 
 const ROOT="/v1/aip/production-contracts";
 function keyHeaders(key:string){if(!key.trim())throw new Error("Idempotency-Key 不能为空");return{"Idempotency-Key":key};}
@@ -20,6 +21,7 @@ export const aipProductionContracts={
   async freezeBrief(briefId:string,expectedVersion:number,key:string){return parseTaskBrief(await apiPost<unknown>(`${ROOT}/task-briefs/${encodeURIComponent(briefId)}/freeze`,{expectedVersion},keyHeaders(key)));},
   async listEvalContracts(){return parseEvalContractList(await apiGet<unknown>(`${ROOT}/eval-contracts`));},
   async getEvalContract(contractId:string,revision?:number){return parseEvalContract(await apiGet<unknown>(`${ROOT}/eval-contracts/${encodeURIComponent(contractId)}${revision?`?revision=${revision}`:""}`));},
+  async diffEvalContract(contractId:string,fromRevision:number,toRevision:number){if(fromRevision<1||toRevision<1||fromRevision===toRevision)throw new Error("Diff 修订必须不同且大于 0");return parseEvalContractDiff(await apiGet<unknown>(`${ROOT}/eval-contracts/${encodeURIComponent(contractId)}/diff?fromRevision=${fromRevision}&toRevision=${toRevision}`));},
   async createEvalContract(input:CreateEvalContractInput,key:string){return parseEvalContract(await apiPost<unknown>(`${ROOT}/eval-contracts`,input,keyHeaders(key)));},
   async reviseEvalContract(contractId:string,input:ReviseEvalContractInput,key:string){return parseEvalContract(await apiPost<unknown>(`${ROOT}/eval-contracts/${encodeURIComponent(contractId)}/revisions`,input,keyHeaders(key)));},
   async freezeEvalContract(contractId:string,expectedVersion:number,key:string){return parseEvalContract(await apiPost<unknown>(`${ROOT}/eval-contracts/${encodeURIComponent(contractId)}/freeze`,{expectedVersion},keyHeaders(key)));},

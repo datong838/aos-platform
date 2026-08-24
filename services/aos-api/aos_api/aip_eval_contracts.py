@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
@@ -273,12 +274,22 @@ class EvalRunRecord(AipContractModel):
     version: int = Field(ge=1)
 
 
+class EvalContractRevisionRef(AipContractModel):
+    """Exact control-plane reference binding an Eval run to one contract revision."""
+
+    resource_type: Literal["EvalContractRevision"] = "EvalContractRevision"
+    resource_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=SHA256_PATTERN)
+
+
 class EvalRunAuthorityRecord(AipContractModel):
     """Durable run snapshot; large Suite definitions remain separate assets."""
 
     tenant: TenantContext
     run_id: str = Field(min_length=1, max_length=200)
     suite_ref: AssetRevisionRef
+    eval_contract_ref: EvalContractRevisionRef | None = None
     target: AssetRevisionRef
     dataset: DatasetRevisionRef
     judge: JudgeRevisionRef
@@ -326,6 +337,7 @@ class EvalReportRevision(AipContractModel):
     content_hash: str = Field(pattern=SHA256_PATTERN)
     run_id: str = Field(min_length=1, max_length=200)
     suite_ref: AssetRevisionRef
+    eval_contract_ref: EvalContractRevisionRef | None = None
     target: AssetRevisionRef
     dataset: DatasetRevisionRef
     judge: JudgeRevisionRef
