@@ -2,6 +2,11 @@ from __future__ import annotations
 
 import uuid
 
+import pytest
+
+from aos_api.auth import Principal
+from aos_api.errors import ApiError
+from aos_api.routers.aip_production_contracts import _require_production_start_role
 from test_w2d_start_gate import _runtime_counts, _seed_start_candidate
 from test_w2d_store import _seed
 
@@ -54,6 +59,9 @@ def test_w2d_start_api_returns_machine_readable_blocked_without_runtime(client) 
     assert response.status_code == 200, response.text
     decision = response.json()
     assert decision["status"] == "blocked"
+    assert decision["productionContextRef"] == request.production_context_ref.model_dump(
+        mode="json", by_alias=True
+    )
     assert decision["taskRunRef"] is None
     assert decision["blockers"]
     assert _runtime_counts(request.task_id) == before
@@ -101,3 +109,25 @@ def test_w2d_mutation_requires_idempotency_key_and_openapi_is_frozen(client) -> 
         "/v1/aip/production-contracts/production-start-decisions/{decision_id}",
     }
     assert required <= set(paths)
+
+
+def test_w3_05_start_requires_explicit_production_role() -> None:
+    viewer = Principal(
+        subject="viewer:w3-05",
+        org_id="dev-org",
+        project_id="dev-project",
+        roles=["developer"],
+    )
+    with pytest.raises(ApiError) as exc_info:
+        _require_production_start_role(viewer)
+    assert exc_info.value.code == "AIP_PRODUCTION_START_ROLE_REQUIRED"
+    assert exc_info.value.status_code == 403
+
+    _require_production_start_role(
+        Principal(
+            subject="operator:w3-05",
+            org_id="dev-org",
+            project_id="dev-project",
+            roles=["PrOdUcTiOn_OpErAtOr"],
+        )
+    )

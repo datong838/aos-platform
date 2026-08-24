@@ -355,12 +355,15 @@ class CompileStageTemplateRequest(AipContractModel):
     template_revision: int = Field(ge=1)
     template_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     responsibility_plan_ref: ExactRevisionRef
+    production_context_ref: ExactRevisionRef
     profile: str = Field(min_length=1, max_length=80)
 
     @model_validator(mode="after")
     def _responsibility_ref_type(self) -> CompileStageTemplateRequest:
         if self.responsibility_plan_ref.resource_type != "ResponsibilityPlanRevision":
             raise ValueError("responsibilityPlanRef must reference ResponsibilityPlanRevision")
+        if self.production_context_ref.resource_type != "ProductionContextRevision":
+            raise ValueError("productionContextRef must reference ProductionContextRevision")
         return self
 
 
@@ -369,6 +372,7 @@ class StageCompilationResult(AipContractModel):
     task_id: str
     template_ref: ExactRevisionRef
     responsibility_plan_ref: ExactRevisionRef
+    production_context_ref: ExactRevisionRef
     plan_ref: ExactRevisionRef
     compiler_version: str
     applicable_stage_ids: list[str]
@@ -527,6 +531,7 @@ class ImpactAssessment(AipContractModel):
 class CreateImpactPreviewRequest(AipContractModel):
     task_id: str = Field(min_length=1, max_length=200)
     plan_ref: ExactRevisionRef
+    production_context_ref: ExactRevisionRef | None = None
     brief_ref: ExactRevisionRef
     evidence_bundle_ref: ExactRevisionRef
     eval_contract_ref: ExactRevisionRef
@@ -557,6 +562,13 @@ class CreateImpactPreviewRequest(AipContractModel):
         for ref, resource_type, label in expected:
             if ref.resource_type != resource_type:
                 raise ValueError(f"{label} must reference {resource_type}")
+        if (
+            self.production_context_ref is not None
+            and self.production_context_ref.resource_type != "ProductionContextRevision"
+        ):
+            raise ValueError(
+                "productionContextRef must reference ProductionContextRevision"
+            )
         if (self.model_route_ref is None) is not (self.runtime_policy_ref is None):
             raise ValueError("modelRouteRef and runtimePolicyRef must be supplied together")
         if self.model_route_ref and self.model_route_ref.resource_type != "ModelRouteRevision":
@@ -654,6 +666,7 @@ class ProductionStartDecision(AipContractModel):
     decision_id: str = Field(min_length=1, max_length=200)
     status: ProductionStartDecisionStatus
     task_id: str = Field(min_length=1, max_length=200)
+    production_context_ref: ExactRevisionRef | None = None
     plan_ref: ExactRevisionRef
     preview_ref: ExactRevisionRef
     action_proposal_ref: ActionProposalExactRef

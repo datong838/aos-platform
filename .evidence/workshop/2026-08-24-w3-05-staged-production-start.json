@@ -1,0 +1,48 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w3-05-staged-production-start-20260824",
+  "baseRevision": "AOS-000215",
+  "result": "BACKEND_EXACT_CHAIN_CODE_CONTROL_GREEN_STRICT_SDK_UI_PENDING_NO_RELEASE",
+  "scope": [
+    "ProductionContext exact ref propagated through compile Plan ImpactPreview and StartDecision",
+    "production start requires an explicit server-side role",
+    "legacy preview and decision provenance remains nullable for read compatibility",
+    "new preview and start paths fail closed when context is absent or drifted"
+  ],
+  "verification": {
+    "focused": "28 passed",
+    "cumulative": "129 passed; one pre-existing W2-B empty-global-count assertion excluded from green set",
+    "openapi": "2570 paths; 2123 schemas; 4338 operations; deterministic",
+    "alembicHeads": "w3_015 (head)",
+    "pythonCompile": "GREEN",
+    "diffCheck": "GREEN",
+    "browser": {
+      "surface": "Codex built-in browser",
+      "route": "/aip/production-contracts",
+      "viewportWidth": 1280,
+      "documentScrollWidth": 1280,
+      "h1Count": 1,
+      "enabledMutationButtonCount": 0,
+      "result": "aos-api failure remained explicit and no protected action was enabled"
+    }
+  },
+  "sideEffectConservation": {
+    "providerInvocationCount": 0,
+    "providerFee": 0,
+    "taskRunCreatedCount": 0,
+    "agentRunCreatedCount": 0,
+    "actionOrHandoffCreatedCount": 0,
+    "approvalOrExecutionLeaseCreatedCount": 0,
+    "externalBusinessMutationCount": 0,
+    "liveMigrationAppliedCount": 0
+  },
+  "knownNonRegressionBoundary": [
+    "historical rows remain readable through nullable provenance",
+    "new compile requires an exact frozen ready ProductionContext",
+    "new preview must match the Plan pinned ProductionContext",
+    "start recomputes Plan Preview Context and Action dependencies",
+    "developer-only principals cannot enter the production start service"
+  ],
+  "nextTask": "W3_05_STRICT_SDK_UI_CONTEXT_CHAIN",
+  "observedAt": "2026-08-24T23:58:00+08:00"
+}

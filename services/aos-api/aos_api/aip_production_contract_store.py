@@ -940,6 +940,31 @@ class AipProductionContractStore:
                 raise ProductionContractDependencyBlocked("RESPONSIBILITY_PLAN_NOT_READY")
             if plan.profile != body.profile:
                 raise ProductionContractDependencyBlocked("RESPONSIBILITY_PROFILE_MISMATCH")
+            context = self.get_production_context(
+                scope,
+                body.production_context_ref.resource_id,
+                body.production_context_ref.revision,
+                conn=conn,
+            )
+            if context.content_hash != body.production_context_ref.content_hash:
+                raise ProductionContractDependencyBlocked("PRODUCTION_CONTEXT_DRIFTED")
+            if (
+                context.lifecycle is not BriefLifecycle.FROZEN
+                or context.readiness is not ContractReadiness.READY
+            ):
+                raise ProductionContractDependencyBlocked("PRODUCTION_CONTEXT_NOT_READY")
+            if context.task_id != body.task_id:
+                raise ProductionContractDependencyBlocked(
+                    "PRODUCTION_CONTEXT_TASK_MISMATCH"
+                )
+            if context.profile != body.profile:
+                raise ProductionContractDependencyBlocked(
+                    "PRODUCTION_CONTEXT_PROFILE_MISMATCH"
+                )
+            if context.responsibility_plan_ref != body.responsibility_plan_ref:
+                raise ProductionContractDependencyBlocked(
+                    "PRODUCTION_CONTEXT_RESPONSIBILITY_PLAN_MISMATCH"
+                )
 
             slot_ids = {slot.slot_id for slot in plan.slots}
             missing_slots = sorted(
@@ -998,6 +1023,9 @@ class AipProductionContractStore:
                 "responsibilityPlanRef": body.responsibility_plan_ref.model_dump(
                     mode="json", by_alias=True
                 ),
+                "productionContextRef": body.production_context_ref.model_dump(
+                    mode="json", by_alias=True
+                ),
                 "stageCompilation": stage_compilation,
                 "productionStartGateRequired": True,
                 "productionStartGateRef": None,
@@ -1038,6 +1066,7 @@ class AipProductionContractStore:
                 content_hash=template.content_hash,
             ),
             responsibility_plan_ref=body.responsibility_plan_ref,
+            production_context_ref=body.production_context_ref,
             plan_ref=ExactRevisionRef(
                 resource_type="PlanRevision",
                 resource_id=canonical_plan.id,
@@ -2963,8 +2992,10 @@ class AipProductionContractStore:
         ).fetchone()
         if not task:
             raise ProductionContractDependencyBlocked("TASK_MISSING")
+        if body.production_context_ref is None:
+            raise ProductionContractDependencyBlocked("PRODUCTION_CONTEXT_REQUIRED")
         plan = conn.execute(
-            """SELECT task_id,revision,content_hash FROM aip_plan_revision
+            """SELECT task_id,revision,content_hash,risk FROM aip_plan_revision
             WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s""",
             (*scope.key, body.plan_ref.resource_id),
         ).fetchone()
@@ -2975,6 +3006,21 @@ class AipProductionContractStore:
             or plan["content_hash"] != body.plan_ref.content_hash
         ):
             raise ProductionContractDependencyBlocked("PLAN_EXACT_REF_DRIFTED")
+        risk = self._load(plan["risk"])
+        production_contract = (
+            risk.get("productionContract") if isinstance(risk, dict) else None
+        )
+        pinned_context = (
+            production_contract.get("productionContextRef")
+            if isinstance(production_contract, dict)
+            else None
+        )
+        if pinned_context != body.production_context_ref.model_dump(
+            mode="json", by_alias=True
+        ):
+            raise ProductionContractDependencyBlocked(
+                "PLAN_PRODUCTION_CONTEXT_MISMATCH"
+            )
 
     def _preview_dependency_state(
         self,
@@ -2984,7 +3030,7 @@ class AipProductionContractStore:
     ) -> tuple[list[dict[str, Any]], list[ContractBlocker], ContractReadiness]:
         snapshot: list[dict[str, Any]] = []
         blockers: list[ContractBlocker] = []
-        exact_specs = (
+        exact_specs = [
             (body.plan_ref, "aip_plan_revision", "plan_revision_id", False),
             (body.brief_ref, "aip_task_brief_revision", "brief_id", True),
             (
@@ -3006,7 +3052,23 @@ class AipProductionContractStore:
                 "template_id",
                 True,
             ),
-        )
+        ]
+        if body.production_context_ref is None:
+            blockers.append(
+                ContractBlocker(
+                    code="PRODUCTION_CONTEXT_REQUIRED",
+                    message="ImpactPreview 缺少 ProductionContext exact ref",
+                )
+            )
+        else:
+            exact_specs.append(
+                (
+                    body.production_context_ref,
+                    "aip_production_context_revision",
+                    "context_id",
+                    True,
+                )
+            )
         for ref, table, id_column, require_frozen in exact_specs:
             self._snapshot_exact(
                 conn,
@@ -3018,6 +3080,43 @@ class AipProductionContractStore:
                 blockers,
                 require_frozen=require_frozen,
             )
+        if body.production_context_ref is not None:
+            context_row = conn.execute(
+                """SELECT * FROM aip_production_context_revision
+                   WHERE org_id=%s AND project_id=%s AND context_id=%s AND revision=%s""",
+                (
+                    *scope.key,
+                    body.production_context_ref.resource_id,
+                    body.production_context_ref.revision,
+                ),
+            ).fetchone()
+            if context_row is not None:
+                if context_row["readiness"] != "ready":
+                    blockers.append(
+                        ContractBlocker(
+                            code="PRODUCTION_CONTEXT_NOT_READY",
+                            message="ProductionContext 未 ready",
+                            resource_ref=body.production_context_ref,
+                        )
+                    )
+                context_pairs = (
+                    ("brief_ref", body.brief_ref),
+                    ("evidence_bundle_ref", body.evidence_bundle_ref),
+                    ("eval_contract_ref", body.eval_contract_ref),
+                    ("responsibility_plan_ref", body.responsibility_plan_ref),
+                )
+                if context_row["task_id"] != body.task_id or any(
+                    self._load(context_row[column])
+                    != ref.model_dump(mode="json", by_alias=True)
+                    for column, ref in context_pairs
+                ):
+                    blockers.append(
+                        ContractBlocker(
+                            code="PRODUCTION_CONTEXT_PREVIEW_CONTRACT_MISMATCH",
+                            message="ProductionContext 与 ImpactPreview 合同链不一致",
+                            resource_ref=body.production_context_ref,
+                        )
+                    )
         # W-L13: EvalContract dynamic Publication/ReleaseGate readiness enters snapshot + blockers
         # Skip incomplete fixture rows that lack exact Publication binding (W2-D seeds).
         eval_row = conn.execute(
@@ -3281,13 +3380,13 @@ class AipProductionContractStore:
         blocker_payload = [item.model_dump(mode="json", by_alias=True) for item in blockers]
         return conn.execute(
             """INSERT INTO aip_impact_preview_revision
-            (org_id,project_id,preview_id,revision,task_id,plan_ref,brief_ref,
+            (org_id,project_id,preview_id,revision,task_id,plan_ref,production_context_ref,brief_ref,
              evidence_bundle_ref,eval_contract_ref,responsibility_plan_ref,stage_template_ref,
              model_route_ref,runtime_policy_ref,binding_refs,capability_ref,account_ref,
              impact,expires_at,content_hash,dependency_snapshot_hash,dependency_snapshot,
              lifecycle,readiness,blockers,frozen_by,frozen_at,created_by)
             VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
-             %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,
+             %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,
              %s,%s,%s::jsonb,%s,%s,%s::jsonb,%s,
              CASE WHEN %s::text IS NULL THEN NULL ELSE NOW() END,%s) RETURNING *""",
             (
@@ -3296,6 +3395,7 @@ class AipProductionContractStore:
                 revision,
                 body.task_id,
                 self._json(payload["planRef"]),
+                self._json(payload.get("productionContextRef")),
                 self._json(payload["briefRef"]),
                 self._json(payload["evidenceBundleRef"]),
                 self._json(payload["evalContractRef"]),
@@ -3324,6 +3424,7 @@ class AipProductionContractStore:
         return CreateImpactPreviewRequest(
             task_id=row["task_id"],
             plan_ref=self._load(row["plan_ref"]),
+            production_context_ref=self._load(row["production_context_ref"]),
             brief_ref=self._load(row["brief_ref"]),
             evidence_bundle_ref=self._load(row["evidence_bundle_ref"]),
             eval_contract_ref=self._load(row["eval_contract_ref"]),

@@ -18,7 +18,6 @@ from aos_api.aip_production_contract_store import (
 from aos_api.aip_production_contracts import (
     ActionProposalExactRef,
     ExactRevisionRef,
-    FreezeProductionContextRequest,
     ProductionStartDecisionStatus,
     ProductionStartRequest,
 )
@@ -45,30 +44,14 @@ def _seed_start_candidate() -> tuple[ProductionStartRequest, AipActionStore]:
         preview.version,
         f"freeze-{uuid.uuid4().hex}",
     )
-    context = contracts.freeze_production_context(
-        SCOPE,
-        "maker:w2d-start",
-        f"ctx-{uuid.uuid4().hex}",
-        FreezeProductionContextRequest(
-            task_id=preview_body.task_id,
-            brief_ref=preview_body.brief_ref,
-            evidence_bundle_ref=preview_body.evidence_bundle_ref,
-            eval_contract_ref=preview_body.eval_contract_ref,
-            responsibility_plan_ref=preview_body.responsibility_plan_ref,
-        ),
-    )
     preview_ref = ExactRevisionRef(
         resource_type="ImpactPreviewRevision",
         resource_id=preview.preview_id,
         revision=preview.revision,
         content_hash=preview.content_hash,
     )
-    context_ref = ExactRevisionRef(
-        resource_type="ProductionContextRevision",
-        resource_id=context.context_id,
-        revision=context.revision,
-        content_hash=context.content_hash,
-    )
+    assert preview_body.production_context_ref is not None
+    context_ref = preview_body.production_context_ref
     action_store = AipActionStore()
     action_id = f"send_w2d_start_{uuid.uuid4().hex}"
     proposal = action_store.create_proposal(
@@ -299,5 +282,26 @@ def test_action_binding_hash_mismatch_blocks_start_without_runtime() -> None:
     )
     assert decision.status is ProductionStartDecisionStatus.BLOCKED
     assert "ACTION_BINDING_HASH_MISMATCH" in {item.code for item in decision.blockers}
+    assert decision.task_run_ref is None
+    assert _runtime_counts(request.task_id) == before
+
+
+def test_w3_05_context_drift_is_visible_in_plan_preview_and_decision() -> None:
+    request, _ = _seed_start_candidate()
+    before = _runtime_counts(request.task_id)
+    drifted_context = request.production_context_ref.model_copy(
+        update={"content_hash": "0" * 64}
+    )
+    decision = AipProductionStartService().start(
+        SCOPE,
+        "operator:w3-05",
+        f"context-drift-{uuid.uuid4().hex}",
+        request.model_copy(update={"production_context_ref": drifted_context}),
+    )
+    codes = {item.code for item in decision.blockers}
+    assert decision.status is ProductionStartDecisionStatus.STALE
+    assert "PLAN_PRODUCTION_CONTEXT_MISMATCH" in codes
+    assert "PRODUCTION_CONTEXT_EXACT_REF_MISSING_OR_DRIFTED" in codes
+    assert decision.production_context_ref == drifted_context
     assert decision.task_run_ref is None
     assert _runtime_counts(request.task_id) == before

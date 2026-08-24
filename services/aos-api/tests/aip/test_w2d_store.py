@@ -16,6 +16,7 @@ from aos_api.aip_production_contracts import (
     ContractReadiness,
     CreateImpactPreviewRequest,
     ExactRevisionRef,
+    FreezeProductionContextRequest,
     ImpactAssessment,
     ImpactDimension,
     ImpactQuality,
@@ -79,23 +80,6 @@ def _seed() -> tuple[CreateImpactPreviewRequest, str]:
         "test:w2d",
         f"task-{suffix}",
         CreateTaskRequest(title="W2-D impact preview"),
-    )
-    plan = task_store.create_plan(
-        SCOPE,
-        "test:w2d",
-        task.id,
-        f"plan-{suffix}",
-        CreatePlanRevisionRequest(
-            expected_task_version=task.version,
-            steps=[PlanStep(step_key="start", title="受控启动")],
-            risk={
-                "productionContract": {
-                    "compilerVersion": "w2c.v1",
-                    "productionStartGateRequired": True,
-                    "productionStartGateRef": None,
-                }
-            },
-        ),
     )
     with connect() as conn:
         conn.execute(
@@ -185,9 +169,53 @@ def _seed() -> tuple[CreateImpactPreviewRequest, str]:
             (*SCOPE.key, instance_id, template_id),
         )
         conn.commit()
+    store = AipProductionContractStore()
+    context = store.freeze_production_context(
+        SCOPE,
+        "test:w2d",
+        f"context-{suffix}",
+        FreezeProductionContextRequest(
+            task_id=task.id,
+            brief_ref=_exact("TaskBriefRevision", brief_id, HASHES["brief"]),
+            evidence_bundle_ref=_exact(
+                "EvidenceBundleRevision", bundle_id, HASHES["bundle"]
+            ),
+            eval_contract_ref=_exact(
+                "EvalContractRevision", eval_id, HASHES["eval"]
+            ),
+            responsibility_plan_ref=_exact(
+                "ResponsibilityPlanRevision", responsibility_id, HASHES["resp"]
+            ),
+            profile="ecommerce",
+        ),
+    )
+    context_ref = _exact(
+        "ProductionContextRevision", context.context_id, context.content_hash
+    )
+    plan = task_store.create_plan(
+        SCOPE,
+        "test:w2d",
+        task.id,
+        f"plan-{suffix}",
+        CreatePlanRevisionRequest(
+            expected_task_version=task.version,
+            steps=[PlanStep(step_key="start", title="受控启动")],
+            risk={
+                "productionContract": {
+                    "compilerVersion": "w2c.v1",
+                    "productionContextRef": context_ref.model_dump(
+                        mode="json", by_alias=True
+                    ),
+                    "productionStartGateRequired": True,
+                    "productionStartGateRef": None,
+                }
+            },
+        ),
+    )
     request = CreateImpactPreviewRequest(
         task_id=task.id,
         plan_ref=_exact("PlanRevision", plan.id, plan.content_hash),
+        production_context_ref=context_ref,
         brief_ref=_exact("TaskBriefRevision", brief_id, HASHES["brief"]),
         evidence_bundle_ref=_exact(
             "EvidenceBundleRevision", bundle_id, HASHES["bundle"]

@@ -106,16 +106,21 @@ class AipProductionStartService:
             ]
             row = conn.execute(
                 """INSERT INTO aip_production_start_decision
-                   (org_id,project_id,decision_id,status,task_id,plan_ref,preview_ref,
+                   (org_id,project_id,decision_id,status,task_id,production_context_ref,plan_ref,preview_ref,
                     action_proposal_ref,dependency_snapshot_hash,blockers,task_run_ref,
                     idempotency_key,request_hash,created_by)
-                   VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,
+                   VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,
                           %s::jsonb,%s,%s,%s) RETURNING *""",
                 (
                     *scope.key,
                     decision_id,
                     status.value,
                     body.task_id,
+                    self._json(
+                        body.production_context_ref.model_dump(
+                            mode="json", by_alias=True
+                        )
+                    ),
                     self._json(body.plan_ref.model_dump(mode="json", by_alias=True)),
                     self._json(body.preview_ref.model_dump(mode="json", by_alias=True)),
                     self._json(
@@ -221,6 +226,19 @@ class AipProductionStartService:
             and production_contract.get("productionStartGateRef") is None
         ):
             blockers.append(ContractBlocker(code="PLAN_NOT_W2C_PRODUCTION_DRAFT", message="PlanRevision 不是受 W2-D 保护的 W2-C 生产草案", resource_ref=body.plan_ref))
+        expected_context = body.production_context_ref.model_dump(
+            mode="json", by_alias=True
+        )
+        if not isinstance(production_contract, dict) or production_contract.get(
+            "productionContextRef"
+        ) != expected_context:
+            blockers.append(
+                ContractBlocker(
+                    code="PLAN_PRODUCTION_CONTEXT_MISMATCH",
+                    message="PlanRevision 未绑定本次 ProductionContext exact ref",
+                    resource_ref=body.production_context_ref,
+                )
+            )
         return plan
 
     def _check_preview(
@@ -322,6 +340,15 @@ class AipProductionStartService:
             )
         if preview is None:
             return
+        preview_context_ref = self._contracts._load(preview["production_context_ref"])
+        if preview_context_ref != ref.model_dump(mode="json", by_alias=True):
+            blockers.append(
+                ContractBlocker(
+                    code="PRODUCTION_CONTEXT_PREVIEW_EXACT_REF_MISMATCH",
+                    message="ProductionContext 与 Preview exact ref 不一致",
+                    resource_ref=ref,
+                )
+            )
         pairs = (
             ("brief_ref", "brief_ref"),
             ("evidence_bundle_ref", "evidence_bundle_ref"),
@@ -549,6 +576,7 @@ class AipProductionStartService:
             decision_id=row["decision_id"],
             status=row["status"],
             task_id=row["task_id"],
+            production_context_ref=load(row["production_context_ref"]),
             plan_ref=load(row["plan_ref"]),
             preview_ref=load(row["preview_ref"]),
             action_proposal_ref=load(row["action_proposal_ref"]),

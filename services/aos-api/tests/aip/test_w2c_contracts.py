@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
@@ -343,6 +344,18 @@ def test_stage_compiler_preserves_not_applicable_stage_in_canonical_plan() -> No
         def get_responsibility_plan(self, *args, **kwargs):  # type: ignore[no-untyped-def]
             return responsibility
 
+        def get_production_context(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            return SimpleNamespace(
+                content_hash=HASH_B,
+                lifecycle=BriefLifecycle.FROZEN,
+                readiness=ContractReadiness.READY,
+                task_id=task.id,
+                profile="ecommerce-standard",
+                responsibility_plan_ref=_exact(
+                    "ResponsibilityPlanRevision", responsibility.plan_id, HASH_C
+                ),
+            )
+
     store = CompilerStore(
         stage_template_source_resolver=lambda _scope, _ref: True,
         task_store=task_store,
@@ -354,6 +367,7 @@ def test_stage_compiler_preserves_not_applicable_stage_in_canonical_plan() -> No
         SCOPE, ACTOR, draft.template_id, draft.version, _key("stage-freeze")
     )
     compile_key = _key("stage-compile")
+    context_ref = _exact("ProductionContextRevision", "context-w2c", HASH_B)
     request = CompileStageTemplateRequest(
         task_id=task.id,
         expected_task_version=task.version,
@@ -362,6 +376,7 @@ def test_stage_compiler_preserves_not_applicable_stage_in_canonical_plan() -> No
         responsibility_plan_ref=_exact(
             "ResponsibilityPlanRevision", responsibility.plan_id, HASH_C
         ),
+        production_context_ref=context_ref,
         profile="ecommerce-standard",
     )
     result = store.compile_stage_template(
@@ -372,6 +387,7 @@ def test_stage_compiler_preserves_not_applicable_stage_in_canonical_plan() -> No
     )
 
     assert replay.plan_ref == result.plan_ref
+    assert result.production_context_ref == context_ref
     assert result.applicable_stage_ids == ["draft"]
     assert result.not_applicable_stage_ids == ["livestream"]
     with connect(SCOPE) as conn:
@@ -387,6 +403,9 @@ def test_stage_compiler_preserves_not_applicable_stage_in_canonical_plan() -> No
         "not_applicable",
     ]
     assert row["risk"]["productionContract"]["productionStartGateRequired"] is True
+    assert row["risk"]["productionContract"]["productionContextRef"] == (
+        context_ref.model_dump(mode="json", by_alias=True)
+    )
 
 
 def test_review_return_appends_one_queued_attempt_and_preserves_old_attempt() -> None:

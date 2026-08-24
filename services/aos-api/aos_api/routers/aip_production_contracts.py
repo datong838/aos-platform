@@ -48,6 +48,9 @@ _STORE = AipProductionContractStore(
     stage_template_source_resolver=resolve_stage_template_source,
 )
 _START_SERVICE = AipProductionStartService(contract_store=_STORE)
+_PRODUCTION_START_ROLES = frozenset(
+    {"admin", "operator", "executor", "aip_executor", "production_operator"}
+)
 
 
 class FreezeBriefRequest(AipContractModel):
@@ -74,6 +77,16 @@ def _key(value: str) -> str:
     if not cleaned or len(cleaned) > 120:
         raise ApiError(code="AIP_INVALID_ARGUMENT", message="Idempotency-Key must be 1..120 characters", status_code=400)
     return cleaned
+
+
+def _require_production_start_role(principal: Principal) -> None:
+    roles = {role.lower() for role in principal.roles}
+    if not roles.intersection(_PRODUCTION_START_ROLES):
+        raise ApiError(
+            code="AIP_PRODUCTION_START_ROLE_REQUIRED",
+            message="production start role required",
+            status_code=403,
+        )
 
 
 def _map(exc: ProductionContractError) -> ApiError:
@@ -133,6 +146,7 @@ def get_production_context(context_id:str,revision:int=Query(default=1,ge=1),pri
 
 @router.post("/production-runs/start", response_model=ProductionStartDecision)
 def start_production_run(body: ProductionStartRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), service: AipProductionStartService = Depends(get_start_service)):
+    _require_production_start_role(principal)
     try: return service.start(_scope(principal), principal.subject, _key(idempotency_key), body)
     except ProductionContractError as exc: raise _map(exc) from exc
 
