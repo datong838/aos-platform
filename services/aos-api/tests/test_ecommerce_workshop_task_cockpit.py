@@ -22,6 +22,7 @@ from aos_api.ecommerce_workshop_task_cockpit import (
 from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitCheckpointPageEnvelope,
     TaskCockpitCoreEnvelope,
+    TaskCockpitProductionContextEnvelope,
     TaskCockpitStepPageEnvelope,
 )
 from aos_api.errors import ApiError, register_exception_handlers
@@ -417,6 +418,120 @@ def test_step_cursor_fails_stale_when_current_step_state_changes() -> None:
     assert captured.value.code == "TASK_COCKPIT_CURSOR_STALE"
 
 
+def _production_row() -> dict[str, Any]:
+    stage = {
+        "stageId": "research",
+        "title": "事实调研",
+        "dependsOn": [],
+        "applicability": {"kind": "always", "profiles": []},
+        "requiredSlotIds": ["researcher"],
+        "inputSchemaRef": {"type": "schema", "id": "input", "version": "1"},
+        "outputSchemaRef": {"type": "schema", "id": "output", "version": "1"},
+        "gateRefs": [],
+        "checkpointPolicy": {},
+        "retryPolicy": {},
+        "compensationPolicy": {},
+        "applicabilityResult": "applicable",
+        "evaluatedProfile": "ecommerce.task-cockpit",
+    }
+    return {
+        "task_id": "task-1",
+        "run_id": "run-1",
+        "plan_revision_id": "plan-1",
+        "plan_revision": 2,
+        "plan_content_hash": "a" * 64,
+        "steps": [{"stepKey": "research", "title": "事实调研", "inputRefs": []}],
+        "risk": {
+            "productionContract": {
+                "compilerVersion": "w2c.v1",
+                "stageTemplateRef": {
+                    "resourceType": "StageTemplateRevision",
+                    "resourceId": "template-1",
+                    "revision": 3,
+                    "contentHash": "b" * 64,
+                },
+                "responsibilityPlanRef": {
+                    "resourceType": "ResponsibilityPlanRevision",
+                    "resourceId": "responsibility-1",
+                    "revision": 4,
+                    "contentHash": "c" * 64,
+                },
+                "stageCompilation": [stage],
+                "productionStartGateRequired": True,
+                "productionStartGateRef": None,
+            }
+        },
+    }
+
+
+class ProductionConnection:
+    def __init__(self, row: dict[str, Any] | None):
+        self.row = row
+        self.calls: list[tuple[str, tuple[Any, ...] | None]] = []
+
+    def execute(self, sql: str, params: tuple[Any, ...] | None = None):
+        self.calls.append((" ".join(sql.split()), params))
+        return self
+
+    def fetchone(self):
+        return self.row
+
+
+def _production_cockpit(row: dict[str, Any] | None):
+    connection = ProductionConnection(row)
+
+    @contextmanager
+    def connect():
+        yield connection
+
+    return EcommerceWorkshopTaskCockpit(connect_factory=connect, clock=lambda: NOW), connection
+
+
+def test_production_context_reads_exact_canonical_stage_mapping() -> None:
+    cockpit, connection = _production_cockpit(_production_row())
+    result = cockpit.read_production_context(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    )
+    assert result.plan_ref.resource_id == "plan-1"
+    assert result.stage_template_ref.resource_id == "template-1"
+    assert result.responsibility_plan_ref.resource_id == "responsibility-1"
+    assert result.applicable_stage_ids == ["research"]
+    assert result.not_applicable_stage_ids == []
+    assert result.stages[0].required_slot_ids == ["researcher"]
+    sql = " ".join(call[0] for call in connection.calls).upper()
+    assert "REPEATABLE READ READ ONLY" in sql
+    assert "SET LOCAL ROLE AOS_RUNTIME" in sql
+    assert "INSERT " not in sql and "UPDATE " not in sql and "DELETE " not in sql
+    assert connection.calls[-1][1] == ("org-org", "dev-project", "run-1")
+
+
+@pytest.mark.parametrize("drift", ["missing_contract", "step_mismatch", "wrong_ref"])
+def test_production_context_fails_closed_on_canonical_drift(drift: str) -> None:
+    row = _production_row()
+    if drift == "missing_contract":
+        row["risk"] = {}
+    elif drift == "step_mismatch":
+        row["steps"][0]["stepKey"] = "invented-stage"
+    else:
+        row["risk"]["productionContract"]["stageTemplateRef"]["resourceType"] = "BundleRevision"
+    cockpit, _ = _production_cockpit(row)
+    with pytest.raises(ApiError) as captured:
+        cockpit.read_production_context(
+            org_id="org-org", project_id="dev-project", run_id="run-1"
+        )
+    assert captured.value.code == "TASK_COCKPIT_PRODUCTION_CONTEXT_DRIFTED"
+    assert captured.value.status_code == 409
+
+
+def test_production_context_missing_run_is_not_empty_context() -> None:
+    cockpit, _ = _production_cockpit(None)
+    with pytest.raises(ApiError) as captured:
+        cockpit.read_production_context(
+            org_id="dev-org", project_id="dev-project", run_id="run-missing"
+        )
+    assert captured.value.code == "TASK_COCKPIT_RUN_NOT_FOUND"
+
+
 def test_contract_rejects_unknown_fields_naive_times_and_count_drift() -> None:
     base = {
         "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
@@ -534,6 +649,39 @@ class FakeCockpit:
             }
         )
 
+    def read_production_context(self, **kwargs):
+        self.detail_calls.append(("production-context", kwargs))
+        if self.fail:
+            raise TaskCockpitPersistenceError("sensitive database detail")
+        row = _production_row()
+        return TaskCockpitProductionContextEnvelope.model_validate(
+            {
+                "tenant": {"orgId": kwargs["org_id"], "projectId": kwargs["project_id"]},
+                "runId": kwargs["run_id"],
+                "taskId": row["task_id"],
+                "evaluatedAt": NOW,
+                "planRef": {
+                    "resourceType": "PlanRevision",
+                    "resourceId": row["plan_revision_id"],
+                    "revision": row["plan_revision"],
+                    "contentHash": row["plan_content_hash"],
+                },
+                "stageTemplateRef": row["risk"]["productionContract"]["stageTemplateRef"],
+                "responsibilityPlanRef": row["risk"]["productionContract"]["responsibilityPlanRef"],
+                "compilerVersion": "w2c.v1",
+                "stages": [{
+                    "stageId": "research",
+                    "title": "事实调研",
+                    "dependsOn": [],
+                    "requiredSlotIds": ["researcher"],
+                    "applicabilityResult": "applicable",
+                    "evaluatedProfile": "ecommerce.task-cockpit",
+                }],
+                "applicableStageIds": ["research"],
+                "notApplicableStageIds": [],
+            }
+        )
+
 
 class FakeCatalog:
     def __init__(self, *, installed: bool = True):
@@ -640,11 +788,15 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
         checkpoints = client.get(
             "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/checkpoints"
         )
+        production = client.get(
+            "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/production-context"
+        )
         injected = client.get(
             "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/steps?orgId=dev-org"
         )
     assert steps.status_code == 200
     assert checkpoints.status_code == 200
+    assert production.status_code == 200
     assert injected.status_code == 400
     assert cockpit.detail_calls == [
         (
@@ -667,5 +819,13 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
                 "cursor": None,
             },
         ),
+        (
+            "production-context",
+            {
+                "org_id": "org-org",
+                "project_id": "dev-project",
+                "run_id": "run-1",
+            },
+        ),
     ]
-    assert len(catalog.calls) == 2
+    assert len(catalog.calls) == 3

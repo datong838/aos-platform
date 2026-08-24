@@ -31,7 +31,10 @@ import {
   type TaskCockpitCheckpointPageResponse,
   type TaskCockpitCoreResponse,
   type TaskCockpitPage,
+  type TaskCockpitProductionContextResponse,
   type TaskCockpitRun,
+  type TaskCockpitExactRevisionRef,
+  type TaskCockpitStageCompilation,
   type TaskCockpitStep,
   type TaskCockpitStepPageResponse,
   type TaskCockpitTask,
@@ -297,6 +300,42 @@ export function parseTaskCockpitCheckpoints(value: unknown): TaskCockpitCheckpoi
   const raw = record(value, "taskCockpit.checkpoints"); exact(raw, ["schemaVersion", "tenant", "runId", "evaluatedAt", "membershipCutoff", "stateConsistency", "items", "page"], "taskCockpit.checkpoints"); const base = parseTaskCockpitBase(raw, "taskCockpit.checkpoints");
   if (!Array.isArray(raw.items)) throw new TypeError("taskCockpit.checkpoints.items 必须是数组"); const items = raw.items.map(parseTaskCockpitCheckpoint); assertUnique(items.map((item) => item.checkpointId), "taskCockpit.checkpoints.items"); const page = parseTaskCockpitPage(raw.page); if (page.count !== items.length) throw new TypeError("taskCockpit.checkpoints.page count 不一致");
   return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, ...base, runId: boundedText(raw.runId, "taskCockpit.checkpoints.runId", 200), membershipCutoff: timestamp(raw.membershipCutoff, "taskCockpit.checkpoints.membershipCutoff"), stateConsistency: "current_state_per_page", items, page };
+}
+
+function parseTaskCockpitExactRef(value: unknown, expectedType: string, label: string): TaskCockpitExactRevisionRef {
+  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "contentHash"], label);
+  const resourceType = boundedText(raw.resourceType, `${label}.resourceType`, 80);
+  if (resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
+  const contentHash = boundedText(raw.contentHash, `${label}.contentHash`, 64);
+  if (!RAW_SHA256.test(contentHash)) throw new TypeError(`${label}.contentHash 不是 SHA-256`);
+  return { resourceType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), revision: integer(raw.revision, `${label}.revision`, 1), contentHash };
+}
+function parseTaskCockpitStage(value: unknown): TaskCockpitStageCompilation {
+  const raw = record(value, "taskCockpit.productionContext.stage");
+  exact(raw, ["stageId", "title", "dependsOn", "requiredSlotIds", "applicabilityResult", "evaluatedProfile"], "taskCockpit.productionContext.stage");
+  const uniqueList = (item: unknown, label: string): string[] => {
+    if (!Array.isArray(item)) throw new TypeError(`${label} 必须是数组`);
+    const result = item.map((entry, index) => boundedText(entry, `${label}[${index}]`, 200));
+    if (new Set(result).size !== result.length) throw new TypeError(`${label} identity 重复`);
+    return result;
+  };
+  const stageId = boundedText(raw.stageId, "taskCockpit.productionContext.stage.stageId", 200);
+  const dependsOn = uniqueList(raw.dependsOn, "taskCockpit.productionContext.stage.dependsOn");
+  if (dependsOn.includes(stageId)) throw new TypeError("taskCockpit.productionContext.stage 自依赖");
+  return { stageId, title: boundedText(raw.title, "taskCockpit.productionContext.stage.title", 500), dependsOn, requiredSlotIds: uniqueList(raw.requiredSlotIds, "taskCockpit.productionContext.stage.requiredSlotIds"), applicabilityResult: enumValue(raw.applicabilityResult, ["applicable", "not_applicable"] as const, "taskCockpit.productionContext.stage.applicabilityResult"), evaluatedProfile: boundedText(raw.evaluatedProfile, "taskCockpit.productionContext.stage.evaluatedProfile", 160) };
+}
+export function parseTaskCockpitProductionContext(value: unknown): TaskCockpitProductionContextResponse {
+  const raw = record(value, "taskCockpit.productionContext");
+  exact(raw, ["schemaVersion", "tenant", "runId", "taskId", "evaluatedAt", "planRef", "stageTemplateRef", "responsibilityPlanRef", "compilerVersion", "stages", "applicableStageIds", "notApplicableStageIds"], "taskCockpit.productionContext");
+  if (raw.schemaVersion !== TASK_COCKPIT_SCHEMA_VERSION || raw.compilerVersion !== "w2c.v1") throw new TypeError("taskCockpit.productionContext contract 漂移");
+  if (!Array.isArray(raw.stages) || raw.stages.length === 0) throw new TypeError("taskCockpit.productionContext.stages 必须为非空数组");
+  const stages = raw.stages.map(parseTaskCockpitStage); assertUnique(stages.map((item) => item.stageId), "taskCockpit.productionContext.stages");
+  const parsePartition = (item: unknown, label: string): string[] => { if (!Array.isArray(item)) throw new TypeError(`${label} 必须是数组`); const result = item.map((entry, index) => boundedText(entry, `${label}[${index}]`, 200)); assertUnique(result, label); return result; };
+  const applicableStageIds = parsePartition(raw.applicableStageIds, "taskCockpit.productionContext.applicableStageIds");
+  const notApplicableStageIds = parsePartition(raw.notApplicableStageIds, "taskCockpit.productionContext.notApplicableStageIds");
+  const partition = [...applicableStageIds, ...notApplicableStageIds];
+  if (partition.length !== stages.length || new Set(partition).size !== stages.length || stages.some((stage) => !partition.includes(stage.stageId) || (stage.applicabilityResult === "applicable") !== applicableStageIds.includes(stage.stageId))) throw new TypeError("taskCockpit.productionContext stage partition 漂移");
+  return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, tenant: parseTenant(raw.tenant), runId: boundedText(raw.runId, "taskCockpit.productionContext.runId", 200), taskId: boundedText(raw.taskId, "taskCockpit.productionContext.taskId", 200), evaluatedAt: timestamp(raw.evaluatedAt, "taskCockpit.productionContext.evaluatedAt"), planRef: parseTaskCockpitExactRef(raw.planRef, "PlanRevision", "taskCockpit.productionContext.planRef"), stageTemplateRef: parseTaskCockpitExactRef(raw.stageTemplateRef, "StageTemplateRevision", "taskCockpit.productionContext.stageTemplateRef"), responsibilityPlanRef: parseTaskCockpitExactRef(raw.responsibilityPlanRef, "ResponsibilityPlanRevision", "taskCockpit.productionContext.responsibilityPlanRef"), compilerVersion: "w2c.v1", stages, applicableStageIds, notApplicableStageIds };
 }
 
 const OPERATIONS_SLICE_IDS = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"] as const satisfies readonly OperationsSliceId[];

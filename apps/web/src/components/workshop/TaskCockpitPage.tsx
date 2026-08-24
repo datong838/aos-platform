@@ -5,14 +5,15 @@ import {
   ecommerceWorkshopClient,
   type TaskCockpitCheckpointPageResponse,
   type TaskCockpitCoreResponse,
+  type TaskCockpitProductionContextResponse,
   type TaskCockpitStepPageResponse,
   type TaskCockpitTaskStatus,
 } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 
-type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints">;
+type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext">;
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
-type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null } | null;
+type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null } | null;
 const TASK_STATUSES: readonly { value: "" | TaskCockpitTaskStatus; label: string }[] = [
   { value: "", label: "全部状态" }, { value: "pending", label: "待规划" }, { value: "planning", label: "规划中" }, { value: "awaiting_approval", label: "待审批" }, { value: "approved", label: "已批准" }, { value: "executing", label: "执行中" }, { value: "paused", label: "已暂停" }, { value: "completed", label: "已完成" }, { value: "failed", label: "失败" }, { value: "cancelled", label: "已取消" }, { value: "rolled_back", label: "已回滚" },
 ];
@@ -71,10 +72,10 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
   const toggleDetails = (runId: string) => {
     if (detail?.runId === runId) { detailRequest.current += 1; setDetail(null); return; }
     const requestId = ++detailRequest.current;
-    setDetail({ runId, phase: "loading", steps: null, checkpoints: null });
-    void Promise.all([client.listTaskCockpitRunSteps(runId, { limit: 20 }), client.listTaskCockpitRunCheckpoints(runId, { limit: 20 })]).then(
-      ([steps, checkpoints]) => { if (requestId === detailRequest.current) setDetail({ runId, phase: "ready", steps, checkpoints }); },
-      () => { if (requestId === detailRequest.current) setDetail({ runId, phase: "failed", steps: null, checkpoints: null }); },
+    setDetail({ runId, phase: "loading", steps: null, checkpoints: null, productionContext: null });
+    void Promise.all([client.listTaskCockpitRunSteps(runId, { limit: 20 }), client.listTaskCockpitRunCheckpoints(runId, { limit: 20 }), client.getTaskCockpitRunProductionContext(runId)]).then(
+      ([steps, checkpoints, productionContext]) => { if (requestId === detailRequest.current) setDetail({ runId, phase: "ready", steps, checkpoints, productionContext }); },
+      () => { if (requestId === detailRequest.current) setDetail({ runId, phase: "failed", steps: null, checkpoints: null, productionContext: null }); },
     );
   };
 
@@ -132,9 +133,13 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
             <dl><div><dt>优先级</dt><dd>{task.priority}</dd></div><div><dt>Task 版本</dt><dd>v{task.version}</dd></div><div><dt>最近更新</dt><dd>{formatTime(task.updatedAt)}</dd></div><div><dt>Run</dt><dd>{task.run ? `${task.run.status} · v${task.run.version}` : "尚无 Run"}</dd></div></dl>
             {task.run ? <button type="button" aria-expanded={isOpen} aria-controls={detailId} onClick={() => toggleDetails(task.run!.runId)}>{isOpen ? "收起运行明细" : "查看运行明细"}</button> : null}
             {isOpen ? <div id={detailId} className="task-cockpit-run-detail">
-              {detail?.phase === "loading" ? <div role="status">正在读取 Step 与 Checkpoint…</div> : null}
+              {detail?.phase === "loading" ? <div role="status">正在读取 Stage、Step 与 Checkpoint…</div> : null}
               {detail?.phase === "failed" ? <div role="alert">运行明细读取失败；未使用空集合代替。</div> : null}
-              {detail?.phase === "ready" && detail.steps && detail.checkpoints ? <>
+              {detail?.phase === "ready" && detail.steps && detail.checkpoints && detail.productionContext ? <>
+                <section className="task-cockpit-production-context" aria-label="本 Run 的精确 Stage 编排">
+                  <div className="task-cockpit-production-refs"><strong>Stage 编排 · {detail.productionContext.compilerVersion}</strong><span>Plan {detail.productionContext.planRef.resourceId} · v{detail.productionContext.planRef.revision}</span><span>模板 {detail.productionContext.stageTemplateRef.resourceId} · 职责 {detail.productionContext.responsibilityPlanRef.resourceId}</span></div>
+                  <ol>{detail.productionContext.stages.map((stage) => <li className={`is-${stage.applicabilityResult}`} key={stage.stageId}><div><strong>{stage.title}</strong><span>{stage.stageId}</span></div><span>{stage.applicabilityResult === "applicable" ? "适用" : "不适用"}</span><small>依赖：{stage.dependsOn.length ? stage.dependsOn.join("、") : "无"} · 必需槽位：{stage.requiredSlotIds.length ? stage.requiredSlotIds.join("、") : "无"}</small></li>)}</ol>
+                </section>
                 <table><caption>Step（{detail.steps.page.count} 项，当前页）</caption><thead><tr><th scope="col">步骤</th><th scope="col">尝试</th><th scope="col">状态</th><th scope="col">输入/输出/错误</th></tr></thead><tbody>{detail.steps.items.length ? detail.steps.items.map((step) => <tr key={step.stepRunId}><th scope="row">{step.stepKey}</th><td>{step.attempt}</td><td>{step.status}</td><td>{step.hasInputRefs ? "有" : "无"}/{step.hasOutputRefs ? "有" : "无"}/{step.hasError ? "有" : "无"}</td></tr>) : <tr><td colSpan={4}>当前权威 Step 集合为空</td></tr>}</tbody></table>
                 <table><caption>Checkpoint（{detail.checkpoints.page.count} 项，当前页）</caption><thead><tr><th scope="col">序号</th><th scope="col">步骤</th><th scope="col">状态哈希</th><th scope="col">产物数</th></tr></thead><tbody>{detail.checkpoints.items.length ? detail.checkpoints.items.map((checkpoint) => <tr key={checkpoint.checkpointId}><th scope="row">{checkpoint.sequence}</th><td>{checkpoint.stepKey ?? "未绑定步骤"}</td><td>{checkpoint.stateHash}</td><td>{checkpoint.artifactCount}</td></tr>) : <tr><td colSpan={4}>当前权威 Checkpoint 集合为空</td></tr>}</tbody></table>
                 {detail.steps.page.hasMore || detail.checkpoints.page.hasMore ? <p role="status">运行明细仍有后续页；本子波不截断冒充完整集合。</p> : null}
@@ -149,8 +154,8 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
           <h2 id="task-cockpit-planning-title">策划组</h2>
           <div className="task-cockpit-lane-state">
             <span aria-hidden="true">◇</span>
-            <strong>阶段视图未接入</strong>
-            <p>Stage、业务上下文与策划职责仍按服务端 blocker 失败关闭。</p>
+            <strong>Stage 按 Run 精确展开</strong>
+            <p>仅在 Run 携带 canonical productionContract 时展示；业务上下文与策划职责仍失败关闭。</p>
           </div>
           {planningBlockers.map((blocker) => <div className="task-cockpit-lane-blocker" key={blocker.code}><span>{blocker.dependency}</span><p>{blocker.requiredAction}</p></div>)}
         </aside>

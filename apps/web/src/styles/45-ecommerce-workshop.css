@@ -403,6 +403,16 @@
 .task-cockpit-progress span { display: block; height: 100%; border-radius: inherit; background: var(--aos-accent); }
 .task-cockpit-card > button { margin-top: 14px; }
 .task-cockpit-run-detail { display: grid; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--aos-border); overflow-x: auto; }
+.task-cockpit-production-context { display: grid; gap: 10px; min-width: 560px; }
+.task-cockpit-production-refs { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.task-cockpit-production-refs span { color: var(--aos-text-tertiary); font-size: 11px; overflow-wrap: anywhere; }
+.task-cockpit-production-context ol { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.task-cockpit-production-context li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 9px 10px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-green); background: var(--aos-surface); }
+.task-cockpit-production-context li.is-not_applicable { border-left-color: var(--aos-text-tertiary); }
+.task-cockpit-production-context li div span { display: block; color: var(--aos-text-tertiary); font-size: 11px; overflow-wrap: anywhere; }
+.task-cockpit-production-context li > span { color: var(--aos-green); }
+.task-cockpit-production-context li.is-not_applicable > span { color: var(--aos-text-tertiary); }
+.task-cockpit-production-context li small { grid-column: 1 / -1; color: var(--aos-text-secondary); overflow-wrap: anywhere; }
 .task-cockpit-run-detail table { width: 100%; border-collapse: collapse; min-width: 560px; }
 .task-cockpit-run-detail caption { text-align: left; font-weight: 600; margin-bottom: 6px; }
 .task-cockpit-run-detail th,
@@ -539,7 +549,7 @@
 .p-app.is-workshop-focus > .p-nav-global,
 .p-app.is-workshop-focus .aside { display: none; }
 
-@media (max-width: 1439px) {
+@media (max-width: 1679px) {
   .ecommerce-workshop-context-refs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .task-cockpit-blockers ul { grid-template-columns: 1fr; }
   .task-cockpit-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -554,7 +564,7 @@
   .operations-board { grid-template-columns: minmax(220px, .8fr) minmax(390px, 1.6fr) minmax(245px, 1fr); }
 }
 
-@media (max-width: 1279px) {
+@media (max-width: 1359px) {
   .ecommerce-workshop-context-header { align-items: stretch; flex-direction: column; }
   .ecommerce-workshop-context-actions { justify-content: space-between; }
   .ecommerce-workshop-context-refs,

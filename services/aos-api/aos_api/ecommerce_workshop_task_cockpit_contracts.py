@@ -15,6 +15,7 @@ from aos_api.aip_contracts import (
     TaskRunStatus,
     TenantContext,
 )
+from aos_api.aip_production_contracts import ExactRevisionRef
 from aos_api.public_contracts import TaskStatus
 
 
@@ -218,6 +219,72 @@ class TaskCockpitCheckpointPageEnvelope(AipContractModel):
         return self
 
 
+class TaskCockpitStageCompilationItem(AipContractModel):
+    stage_id: str = Field(min_length=1, max_length=160)
+    title: str = Field(min_length=1, max_length=240)
+    depends_on: list[str] = Field(default_factory=list, max_length=200)
+    required_slot_ids: list[str] = Field(min_length=1, max_length=200)
+    applicability_result: Literal["applicable", "not_applicable"]
+    evaluated_profile: str = Field(min_length=1, max_length=80)
+
+    @model_validator(mode="after")
+    def _unique_refs(self) -> TaskCockpitStageCompilationItem:
+        for label, values in (
+            ("dependsOn", self.depends_on),
+            ("requiredSlotIds", self.required_slot_ids),
+        ):
+            if len(values) != len(set(values)) or any(not item.strip() for item in values):
+                raise ValueError(f"{label} must contain unique non-blank values")
+        if self.stage_id in self.depends_on:
+            raise ValueError("stage cannot depend on itself")
+        return self
+
+
+class TaskCockpitProductionContextEnvelope(AipContractModel):
+    schema_version: Literal[TASK_COCKPIT_SCHEMA_VERSION] = TASK_COCKPIT_SCHEMA_VERSION
+    tenant: TenantContext
+    run_id: str = Field(min_length=1, max_length=200)
+    task_id: str = Field(min_length=1, max_length=200)
+    evaluated_at: datetime
+    plan_ref: ExactRevisionRef
+    stage_template_ref: ExactRevisionRef
+    responsibility_plan_ref: ExactRevisionRef
+    compiler_version: Literal["w2c.v1"]
+    stages: list[TaskCockpitStageCompilationItem] = Field(min_length=1, max_length=200)
+    applicable_stage_ids: list[str] = Field(default_factory=list, max_length=200)
+    not_applicable_stage_ids: list[str] = Field(default_factory=list, max_length=200)
+
+    @field_validator("evaluated_at")
+    @classmethod
+    def _aware_time(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _exact_stage_partition(self) -> TaskCockpitProductionContextEnvelope:
+        if self.plan_ref.resource_type != "PlanRevision":
+            raise ValueError("planRef must reference PlanRevision")
+        if self.stage_template_ref.resource_type != "StageTemplateRevision":
+            raise ValueError("stageTemplateRef must reference StageTemplateRevision")
+        if self.responsibility_plan_ref.resource_type != "ResponsibilityPlanRevision":
+            raise ValueError("responsibilityPlanRef must reference ResponsibilityPlanRevision")
+        stage_ids = [item.stage_id for item in self.stages]
+        if len(stage_ids) != len(set(stage_ids)):
+            raise ValueError("stage compilation identities must be unique")
+        applicable = self.applicable_stage_ids
+        not_applicable = self.not_applicable_stage_ids
+        if len(applicable) != len(set(applicable)) or len(not_applicable) != len(set(not_applicable)):
+            raise ValueError("stage applicability identities must be unique")
+        if set(applicable) & set(not_applicable) or set(stage_ids) != set(applicable) | set(not_applicable):
+            raise ValueError("stage applicability must partition the exact compilation")
+        for item in self.stages:
+            expected = "applicable" if item.stage_id in applicable else "not_applicable"
+            if item.applicability_result != expected:
+                raise ValueError("stage applicability result drifted")
+        return self
+
+
 __all__ = [
     "TASK_COCKPIT_SCHEMA_VERSION",
     "TaskCockpitBlocker",
@@ -226,10 +293,12 @@ __all__ = [
     "TaskCockpitCheckpointSummary",
     "TaskCockpitCoreEnvelope",
     "TaskCockpitPageInfo",
+    "TaskCockpitProductionContextEnvelope",
     "TaskCockpitReadiness",
     "TaskCockpitRunSummary",
     "TaskCockpitStateConsistency",
     "TaskCockpitStepPageEnvelope",
     "TaskCockpitStepSummary",
+    "TaskCockpitStageCompilationItem",
     "TaskCockpitTaskSummary",
 ]

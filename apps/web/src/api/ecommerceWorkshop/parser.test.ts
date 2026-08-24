@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
+import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitSteps } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -145,7 +145,7 @@ const page = { limit: 20, count: 1, hasMore: false, nextCursor: null };
 const run = { runId: "run-1", planRevisionId: "plan-1", status: "running", version: 1, startedAt: null, finishedAt: null, createdAt: "2026-08-15T09:00:00Z", updatedAt: "2026-08-15T09:01:00Z" };
 const task = { taskId: "task-1", taskType: "daily", title: "每日巡检", status: "executing", priority: 50, version: 1, currentPlanRevisionId: "plan-1", createdAt: "2026-08-15T08:00:00Z", updatedAt: "2026-08-15T09:01:00Z", run };
 const cockpitCore = { ...cockpitBase, taskCutoff: "2026-08-15T10:00:00Z", readiness: "degraded", blockers: [
-  { code: "TASK_COCKPIT_STAGE_MAPPING_UNAVAILABLE", severity: "warning", dependency: "stage", requiredAction: "等待映射" },
+  { code: "TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED", severity: "warning", dependency: "stage", requiredAction: "按 Run 展开" },
   { code: "TASK_COCKPIT_RESPONSIBILITY_HANDOFF_UNAVAILABLE", severity: "warning", dependency: "responsibility", requiredAction: "等待 reader" },
   { code: "TASK_COCKPIT_BUSINESS_CONTEXT_BLOCKED", severity: "blocking", dependency: "business", requiredAction: "等待 W2-00" },
 ], items: [task], page };
@@ -153,12 +153,15 @@ const step = { stepRunId: "step-1", stepKey: "collect", attempt: 1, status: "run
 const checkpoint = { checkpointId: "checkpoint-1", sequence: 1, schemaVersion: 1, stepKey: "collect", stateHash: "state-1", artifactCount: 0, createdAt: "2026-08-15T09:02:00Z" };
 const steps = { ...cockpitBase, runId: "run-1", membershipCutoff: "2026-08-15T10:00:00Z", items: [step], page };
 const checkpoints = { ...cockpitBase, runId: "run-1", membershipCutoff: "2026-08-15T10:00:00Z", items: [checkpoint], page };
+const rawHash = "a".repeat(64);
+const productionContext = { schemaVersion: cockpitBase.schemaVersion, tenant: cockpitBase.tenant, runId: "run-1", taskId: "task-1", evaluatedAt: cockpitBase.evaluatedAt, planRef: { resourceType: "PlanRevision", resourceId: "plan-1", revision: 2, contentHash: rawHash }, stageTemplateRef: { resourceType: "StageTemplateRevision", resourceId: "template-1", revision: 1, contentHash: rawHash }, responsibilityPlanRef: { resourceType: "ResponsibilityPlanRevision", resourceId: "responsibility-1", revision: 1, contentHash: rawHash }, compilerVersion: "w2c.v1", stages: [{ stageId: "collect", title: "采集", dependsOn: [], requiredSlotIds: ["collector"], applicabilityResult: "applicable", evaluatedProfile: "standard" }], applicableStageIds: ["collect"], notApplicableStageIds: [] };
 
 describe("task cockpit strict parser", () => {
   it("保留 Task/Run/Step/Checkpoint、decimal 与 current-state 语义", () => {
     expect(parseTaskCockpitCore(cockpitCore)).toMatchObject({ readiness: "degraded", items: [{ run: { runId: "run-1" } }] });
     expect(parseTaskCockpitSteps(steps).items[0]).toMatchObject({ costAmount: "0.0100", hasInputRefs: true });
     expect(parseTaskCockpitCheckpoints(checkpoints).items[0]).toMatchObject({ checkpointId: "checkpoint-1", artifactCount: 0 });
+    expect(parseTaskCockpitProductionContext(productionContext)).toMatchObject({ compilerVersion: "w2c.v1", stages: [{ stageId: "collect", applicabilityResult: "applicable" }] });
   });
   it("拒绝 extra、未知状态、坏 decimal、重复 identity 和 count/cursor 漂移", () => {
     expect(() => parseTaskCockpitCore({ ...cockpitCore, extra: true })).toThrow("字段漂移");
@@ -167,6 +170,8 @@ describe("task cockpit strict parser", () => {
     expect(() => parseTaskCockpitSteps({ ...steps, items: [step, step], page: { ...page, count: 2 } })).toThrow("identity");
     expect(() => parseTaskCockpitCheckpoints({ ...checkpoints, page: { ...page, hasMore: true } })).toThrow("cursor");
     expect(() => parseTaskCockpitCore({ ...cockpitCore, blockers: cockpitCore.blockers.slice(0, 2) })).toThrow("数量");
+    expect(() => parseTaskCockpitProductionContext({ ...productionContext, stageTemplateRef: { ...productionContext.stageTemplateRef, resourceType: "BundleRevision" } })).toThrow("resourceType 漂移");
+    expect(() => parseTaskCockpitProductionContext({ ...productionContext, applicableStageIds: [], notApplicableStageIds: [] })).toThrow("partition 漂移");
   });
   it("只把 canonical 200 空页识别为空", () => {
     expect(parseTaskCockpitSteps({ ...steps, items: [], page: { limit: 20, count: 0, hasMore: false, nextCursor: null } }).items).toEqual([]);

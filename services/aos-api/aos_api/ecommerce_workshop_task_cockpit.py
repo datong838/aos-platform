@@ -16,6 +16,7 @@ import psycopg
 
 from aos_api.aip_contracts import StepRunStatus, TaskRunStatus
 from aos_api.db import connect
+from aos_api.aip_production_contracts import ExactRevisionRef
 from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TASK_COCKPIT_SCHEMA_VERSION,
     TaskCockpitBlocker,
@@ -24,10 +25,12 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitCheckpointSummary,
     TaskCockpitCoreEnvelope,
     TaskCockpitPageInfo,
+    TaskCockpitProductionContextEnvelope,
     TaskCockpitReadiness,
     TaskCockpitRunSummary,
     TaskCockpitStateConsistency,
     TaskCockpitStepPageEnvelope,
+    TaskCockpitStageCompilationItem,
     TaskCockpitStepSummary,
     TaskCockpitTaskSummary,
 )
@@ -41,11 +44,12 @@ Clock = Callable[[], datetime]
 _CURSOR_VERSION = 1
 _BLOCKERS = (
     TaskCockpitBlocker(
-        code="TASK_COCKPIT_STAGE_MAPPING_UNAVAILABLE",
+        code="TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED",
         severity=TaskCockpitBlockerSeverity.WARNING,
         dependency="aip.production.stage-compilation",
         requiredAction=(
-            "接入签名 StageTemplate 到 PlanStep/StepRun 的 exact compilation mapping"
+            "展开具备 canonical productionContract 的 Run 读取 exact Stage mapping；"
+            "缺失或漂移时保持失败关闭"
         ),
     ),
     TaskCockpitBlocker(
@@ -556,6 +560,45 @@ class EcommerceWorkshopTaskCockpit:
             ),
         )
 
+    def read_production_context(
+        self,
+        *,
+        org_id: str,
+        project_id: str,
+        run_id: str,
+    ) -> TaskCockpitProductionContextEnvelope:
+        scope = TenantScope(org_id, project_id)
+        self._validate_detail_request(run_id=run_id, limit=1)
+        evaluated_at = self._aware_now()
+        try:
+            with self._connect_factory() as conn:
+                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+                apply_transaction_scope(conn, scope)
+                row = conn.execute(
+                    """SELECT run.task_id,run.run_id,run.plan_revision_id,
+                              plan.revision AS plan_revision,plan.content_hash AS plan_content_hash,
+                              plan.steps,plan.risk
+                         FROM aip_task_run run
+                         JOIN aip_plan_revision plan
+                           ON plan.org_id=run.org_id AND plan.project_id=run.project_id
+                          AND plan.plan_revision_id=run.plan_revision_id
+                        WHERE run.org_id=%s AND run.project_id=%s AND run.run_id=%s""",
+                    (scope.org_id, scope.project_id, run_id),
+                ).fetchone()
+            if row is None:
+                raise ApiError(
+                    code="TASK_COCKPIT_RUN_NOT_FOUND",
+                    message="Task Cockpit Run was not found",
+                    status_code=404,
+                )
+            return self._production_context(scope=scope, row=row, evaluated_at=evaluated_at)
+        except ApiError:
+            raise
+        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:
+            raise TaskCockpitPersistenceError(
+                "failed to read Task Cockpit production context"
+            ) from exc
+
     @staticmethod
     def _validate_detail_request(*, run_id: str, limit: int) -> None:
         if not run_id or run_id != run_id.strip() or len(run_id) > 200:
@@ -767,6 +810,116 @@ class EcommerceWorkshopTaskCockpit:
             artifactCount=int(row["artifact_count"]),
             createdAt=row["created_at"],
         )
+
+    @staticmethod
+    def _production_context(
+        *,
+        scope: TenantScope,
+        row: Any,
+        evaluated_at: datetime,
+    ) -> TaskCockpitProductionContextEnvelope:
+        def drift(reason: str) -> ApiError:
+            return ApiError(
+                code="TASK_COCKPIT_PRODUCTION_CONTEXT_DRIFTED",
+                message=f"Task Cockpit production context drifted: {reason}",
+                status_code=409,
+            )
+
+        risk = row["risk"]
+        steps = row["steps"]
+        if not isinstance(risk, dict) or set(risk) != {"productionContract"}:
+            raise drift("productionContract is unavailable")
+        production = risk["productionContract"]
+        expected_production_keys = {
+            "compilerVersion",
+            "stageTemplateRef",
+            "responsibilityPlanRef",
+            "stageCompilation",
+            "productionStartGateRequired",
+            "productionStartGateRef",
+        }
+        if not isinstance(production, dict) or set(production) != expected_production_keys:
+            raise drift("productionContract shape is invalid")
+        if (
+            production["compilerVersion"] != "w2c.v1"
+            or production["productionStartGateRequired"] is not True
+        ):
+            raise drift("compiler or start gate semantics changed")
+        if not isinstance(steps, list) or not steps:
+            raise drift("canonical Plan steps are unavailable")
+        raw_stages = production["stageCompilation"]
+        if not isinstance(raw_stages, list) or not raw_stages:
+            raise drift("stage compilation is unavailable")
+        expected_stage_keys = {
+            "stageId",
+            "title",
+            "dependsOn",
+            "applicability",
+            "requiredSlotIds",
+            "inputSchemaRef",
+            "outputSchemaRef",
+            "gateRefs",
+            "checkpointPolicy",
+            "retryPolicy",
+            "compensationPolicy",
+            "applicabilityResult",
+            "evaluatedProfile",
+        }
+        expected_step_keys = {"stepKey", "title", "inputRefs"}
+        if any(not isinstance(item, dict) or set(item) != expected_stage_keys for item in raw_stages):
+            raise drift("stage compilation item shape is invalid")
+        if any(not isinstance(item, dict) or set(item) != expected_step_keys for item in steps):
+            raise drift("canonical Plan step shape is invalid")
+        stage_ids = [item["stageId"] for item in raw_stages]
+        step_ids = [item["stepKey"] for item in steps]
+        if stage_ids != step_ids or any(
+            stage["title"] != step["title"]
+            for stage, step in zip(raw_stages, steps, strict=True)
+        ):
+            raise drift("Stage compilation and Plan steps do not match")
+        try:
+            template_ref = ExactRevisionRef.model_validate(production["stageTemplateRef"])
+            responsibility_ref = ExactRevisionRef.model_validate(
+                production["responsibilityPlanRef"]
+            )
+            stages = [
+                TaskCockpitStageCompilationItem(
+                    stageId=item["stageId"],
+                    title=item["title"],
+                    dependsOn=item["dependsOn"],
+                    requiredSlotIds=item["requiredSlotIds"],
+                    applicabilityResult=item["applicabilityResult"],
+                    evaluatedProfile=item["evaluatedProfile"],
+                )
+                for item in raw_stages
+            ]
+        except (TypeError, ValueError) as exc:
+            raise drift("exact refs or stage values are invalid") from exc
+        applicable = [item.stage_id for item in stages if item.applicability_result == "applicable"]
+        not_applicable = [
+            item.stage_id for item in stages if item.applicability_result == "not_applicable"
+        ]
+        try:
+            return TaskCockpitProductionContextEnvelope(
+                tenant={"orgId": scope.org_id, "projectId": scope.project_id},
+                runId=str(row["run_id"]),
+                taskId=str(row["task_id"]),
+                evaluatedAt=evaluated_at,
+                planRef={
+                    "resourceType": "PlanRevision",
+                    "resourceId": str(row["plan_revision_id"]),
+                    "revision": int(row["plan_revision"]),
+                    "contentHash": str(row["plan_content_hash"]),
+                },
+                stageTemplateRef=template_ref,
+                responsibilityPlanRef=responsibility_ref,
+                compilerVersion="w2c.v1",
+                stages=stages,
+                applicableStageIds=applicable,
+                notApplicableStageIds=not_applicable,
+            )
+        except (TypeError, ValueError) as exc:
+            raise drift("production context envelope is invalid") from exc
 
     @staticmethod
     def _read_rows(
