@@ -370,3 +370,248 @@ def test_marking_gate_hides_secret_bundle_and_gates_l2_l3(client):
         assert "L3_REQUIRES_SECRET_MARKING" in l3.json()["reasons"]
     finally:
         cleanup()
+
+
+def test_l2_citation_is_exact_and_license_purpose_is_rechecked(client):
+    cleanup()
+    try:
+        _, evidence_id, evidence_hash, bundle = _frozen_brief_and_evidence(
+            client,
+            marking=["public"],
+            evidence_payload={
+                "factIds": ["order_snapshot"],
+                "marking": ["public"],
+                "excerpt": "订单事实最小引用片段",
+                "sourceLocator": {"table": "orders", "row": "order-1"},
+                "license": {"status": "allowed", "allowedPurposes": ["excerpt"]},
+                "applicability": {"status": "applicable"},
+                "freshUntil": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            },
+        )
+        response = client.post(
+            "/v1/aip/evidence/disclosures/resolve",
+            headers=headers(key=f"l2-exact-{uuid.uuid4().hex}"),
+            json={
+                "evidenceRef": {
+                    "resourceType": "Evidence",
+                    "resourceId": evidence_id,
+                    "revision": 1,
+                    "contentHash": evidence_hash,
+                },
+                "purpose": "excerpt",
+                "requestedLevel": "l2",
+            },
+        )
+        assert response.status_code == 201, response.text
+        body = response.json()
+        assert body["status"] == "allowed"
+        assert body["displayPayload"]["excerpt"] == "订单事实最小引用片段"
+        assert body["citation"]["evidenceRef"]["contentHash"] == evidence_hash
+        assert body["citation"]["locator"] == {"table": "orders", "row": "order-1"}
+        assert body["citation"]["excerptHash"] == body["displayPayload"]["excerptHash"]
+        assert body["citation"]["auditRef"]["resourceId"] == body["decisionId"]
+        assert body["redactionReceipt"]["bodyReturned"] is True
+        assert client.get(
+            f"/v1/aip/evidence/disclosures/{body['decisionId']}", headers=headers()
+        ).status_code == 200
+
+        with connect(ORG) as conn:
+            conn.execute(
+                """UPDATE aip_evidence_disclosure_decision SET expires_at=%s
+                   WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                (
+                    datetime.now(timezone.utc) - timedelta(seconds=1),
+                    *ORG.key,
+                    body["decisionId"],
+                ),
+            )
+            conn.commit()
+        expired_read = client.get(
+            f"/v1/aip/evidence/disclosures/{body['decisionId']}", headers=headers()
+        )
+        assert expired_read.status_code == 422
+        assert expired_read.json()["message"] == "EVIDENCE_DISCLOSURE_NO_LONGER_ALLOWED"
+        with connect(ORG) as conn:
+            conn.execute(
+                """UPDATE aip_evidence_disclosure_decision SET expires_at=NULL
+                   WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                (*ORG.key, body["decisionId"]),
+            )
+            conn.commit()
+
+        denied = client.post(
+            "/v1/aip/evidence/disclosures/resolve",
+            headers=headers(key=f"purpose-denied-{uuid.uuid4().hex}"),
+            json={
+                "evidenceRef": {
+                    "resourceType": "Evidence",
+                    "resourceId": evidence_id,
+                    "revision": 1,
+                    "contentHash": evidence_hash,
+                },
+                "purpose": "summary",
+                "requestedLevel": "l2",
+            },
+        )
+        assert denied.status_code == 201
+        assert denied.json()["status"] == "blocked"
+        assert "PURPOSE_LEVEL_DENIED" in denied.json()["reasons"]
+        assert "LICENSE_PURPOSE_DENIED" in denied.json()["reasons"]
+        assert denied.json()["displayPayload"] == {}
+        assert denied.json()["redactionReceipt"]["bodyReturned"] is False
+
+        revoked = client.post(
+            f"/v1/aip/production-contracts/evidence-bundles/{bundle['bundleId']}/revoke",
+            headers=headers(key=f"revoke-after-disclosure-{uuid.uuid4().hex}"),
+            json={
+                "expectedRevision": bundle["revision"],
+                "expectedContentHash": bundle["contentHash"],
+                "reason": "license boundary changed",
+            },
+        )
+        assert revoked.status_code == 200
+        historical_read = client.get(
+            f"/v1/aip/evidence/disclosures/{body['decisionId']}", headers=headers()
+        )
+        assert historical_read.status_code == 422
+        assert historical_read.json()["message"] == "EVIDENCE_DISCLOSURE_NO_LONGER_ALLOWED"
+    finally:
+        cleanup()
+
+
+def test_license_stale_tamper_and_cross_tenant_decision_fail_closed(client):
+    cleanup()
+    try:
+        _, denied_id, denied_hash, _ = _frozen_brief_and_evidence(
+            client,
+            marking=["public"],
+            evidence_payload={
+                "factIds": ["order_snapshot"],
+                "marking": ["public"],
+                "license": {"status": "denied", "allowedPurposes": []},
+            },
+        )
+        denied = client.post(
+            "/v1/aip/evidence/disclosures/resolve",
+            headers=headers(key=f"license-denied-{uuid.uuid4().hex}"),
+            json={
+                "evidenceRef": {
+                    "resourceType": "Evidence",
+                    "resourceId": denied_id,
+                    "revision": 1,
+                    "contentHash": denied_hash,
+                },
+                "purpose": "summary",
+                "requestedLevel": "l1",
+            },
+        )
+        assert denied.status_code == 201
+        assert denied.json()["status"] == "blocked"
+        assert "LICENSE_DENIED" in denied.json()["reasons"]
+        assert denied.json()["displayPayload"] == {}
+
+        _, stale_id, stale_hash, _ = _frozen_brief_and_evidence(
+            client,
+            marking=["public"],
+            evidence_payload={
+                "factIds": ["order_snapshot"],
+                "marking": ["public"],
+                "license": {"status": "allowed", "allowedPurposes": ["summary"]},
+                "freshUntil": (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat(),
+            },
+        )
+        stale = client.post(
+            "/v1/aip/evidence/disclosures/resolve",
+            headers=headers(key=f"stale-{uuid.uuid4().hex}"),
+            json={
+                "evidenceRef": {
+                    "resourceType": "Evidence",
+                    "resourceId": stale_id,
+                    "revision": 1,
+                    "contentHash": stale_hash,
+                },
+                "purpose": "summary",
+                "requestedLevel": "l1",
+            },
+        )
+        assert stale.status_code == 201
+        assert stale.json()["status"] == "stale"
+        assert stale.json()["displayPayload"] == {}
+
+        tampered = client.post(
+            "/v1/aip/evidence/disclosures/resolve",
+            headers=headers(key=f"tampered-{uuid.uuid4().hex}"),
+            json={
+                "evidenceRef": {
+                    "resourceType": "Evidence",
+                    "resourceId": stale_id,
+                    "revision": 1,
+                    "contentHash": "f" * 64,
+                },
+                "purpose": "summary",
+                "requestedLevel": "l1",
+            },
+        )
+        assert tampered.status_code == 201
+        assert tampered.json()["status"] == "blocked"
+        assert "EVIDENCE_EXACT_REF_MISSING_OR_DRIFTED" in tampered.json()["reasons"]
+        assert tampered.json()["displayPayload"] == {}
+        decision_id = tampered.json()["decisionId"]
+
+        wrong_revision = client.post(
+            "/v1/aip/evidence/disclosures/resolve",
+            headers=headers(key=f"wrong-revision-{uuid.uuid4().hex}"),
+            json={
+                "evidenceRef": {
+                    "resourceType": "Evidence",
+                    "resourceId": stale_id,
+                    "revision": 2,
+                    "contentHash": stale_hash,
+                },
+                "purpose": "summary",
+                "requestedLevel": "l1",
+            },
+        )
+        assert wrong_revision.status_code == 201
+        assert wrong_revision.json()["status"] == "blocked"
+        assert "EVIDENCE_EXACT_REF_MISSING_OR_DRIFTED" in wrong_revision.json()["reasons"]
+        assert wrong_revision.json()["displayPayload"] == {}
+
+        wrong_type = client.post(
+            "/v1/aip/evidence/disclosures/resolve",
+            headers=headers(key=f"wrong-type-{uuid.uuid4().hex}"),
+            json={
+                "evidenceRef": {
+                    "resourceType": "EvidenceBundleRevision",
+                    "resourceId": stale_id,
+                    "revision": 1,
+                    "contentHash": stale_hash,
+                },
+                "purpose": "summary",
+                "requestedLevel": "l1",
+            },
+        )
+        assert wrong_type.status_code == 400
+
+        assert client.get(
+            f"/v1/aip/evidence/disclosures/{decision_id}",
+            headers=headers(org="dev-org"),
+        ).status_code == 404
+
+        invalid_purpose = client.post(
+            "/v1/aip/evidence/disclosures/resolve",
+            headers=headers(key=f"invalid-purpose-{uuid.uuid4().hex}"),
+            json={
+                "evidenceRef": {
+                    "resourceType": "Evidence",
+                    "resourceId": stale_id,
+                    "revision": 1,
+                    "contentHash": stale_hash,
+                },
+                "purpose": "free-form-client-purpose",
+                "requestedLevel": "l1",
+            },
+        )
+        assert invalid_purpose.status_code == 400
+    finally:
+        cleanup()

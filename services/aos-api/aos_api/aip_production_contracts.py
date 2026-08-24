@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Literal
 from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_contracts import AipContractModel, ResourceRef, TenantContext
@@ -34,6 +34,15 @@ class DisclosureLevel(StrEnum):
     L1 = "l1"
     L2 = "l2"
     L3 = "l3"
+
+
+class DisclosurePurpose(StrEnum):
+    SUMMARY = "summary"
+    PREVIEW = "preview"
+    EXCERPT = "excerpt"
+    REVIEW = "review"
+    SOURCE = "source"
+    AUDIT = "audit"
 
 
 class DisclosureStatus(StrEnum):
@@ -101,6 +110,10 @@ class ExactRevisionRef(AipContractModel):
     resource_id: str = Field(min_length=1, max_length=200)
     revision: int = Field(ge=1)
     content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class EvidenceExactRevisionRef(ExactRevisionRef):
+    resource_type: Literal["Evidence"] = "Evidence"
 
 
 class ContractBlocker(AipContractModel):
@@ -872,18 +885,11 @@ class EvidenceRevocation(AipContractModel):
 
 
 class ResolveEvidenceDisclosureRequest(AipContractModel):
-    evidence_ref: ExactRevisionRef
-    purpose: str = Field(min_length=1, max_length=200)
+    evidence_ref: EvidenceExactRevisionRef
+    purpose: DisclosurePurpose
     requested_level: DisclosureLevel
     task_id: str | None = Field(default=None, max_length=200)
     subject_ref: ResourceRef | None = None
-
-    @model_validator(mode="after")
-    def _evidence_kind(self) -> ResolveEvidenceDisclosureRequest:
-        if self.evidence_ref.resource_type != "Evidence":
-            raise ValueError("evidenceRef must reference Evidence")
-        return self
-
 
 class EvidenceDisclosureDecision(AipContractModel):
     tenant: TenantContext

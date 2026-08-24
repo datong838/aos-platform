@@ -12,6 +12,42 @@ export type EvidenceQuality = "measured" | "estimated" | "unknown";
 export type TelemetrySpanKind = "internal" | "server" | "client" | "producer" | "consumer" | "model" | "tool";
 export type TelemetrySpanStatus = "unset" | "ok" | "error";
 export type UsageKind = "input_token" | "output_token" | "cached_token" | "cost" | "latency" | "tool_unit";
+export type EvidenceDisclosureLevel = "l1" | "l2" | "l3";
+export type EvidenceDisclosurePurpose = "summary" | "preview" | "excerpt" | "review" | "source" | "audit";
+export type EvidenceDisclosureStatus = "allowed" | "blocked" | "stale" | "unknown";
+
+export type EvidenceExactRef = {
+  resourceType: "Evidence";
+  resourceId: string;
+  revision: number;
+  contentHash: string;
+};
+
+export type ResolveEvidenceDisclosureInput = {
+  evidenceRef: EvidenceExactRef;
+  purpose: EvidenceDisclosurePurpose;
+  requestedLevel: EvidenceDisclosureLevel;
+  taskId?: string;
+  subjectRef?: { resourceType: string; resourceId: string; revision: string | null; authority: string };
+};
+
+export type EvidenceDisclosureDecision = {
+  tenant: { orgId: string; projectId: string };
+  decisionId: string;
+  evidenceRef: EvidenceExactRef;
+  purpose: EvidenceDisclosurePurpose;
+  requestedLevel: EvidenceDisclosureLevel;
+  grantedLevel: EvidenceDisclosureLevel | null;
+  status: EvidenceDisclosureStatus;
+  reasons: string[];
+  citation: Record<string, unknown>;
+  displayPayload: Record<string, unknown>;
+  redactionReceipt: Record<string, unknown>;
+  decisionHash: string;
+  expiresAt: string | null;
+  createdBy: string;
+  createdAt: string;
+};
 
 export type LineageEvent = {
   eventId: string;
@@ -180,6 +216,65 @@ function judgeRevisionRef(value: unknown, label: string): JudgeRevisionRef {
     revision: positiveInt(item.revision, `${label}.revision`),
     contentHash: hash(item.contentHash, `${label}.contentHash`),
     modelRoute: item.modelRoute === null || item.modelRoute === undefined ? null : assetRevisionRef(item.modelRoute, `${label}.modelRoute`),
+  };
+}
+
+function exactEvidenceRef(value: unknown, label: string): EvidenceExactRef {
+  const item = record(value, label);
+  if (stringValue(item.resourceType, `${label}.resourceType`) !== "Evidence") throw new TypeError(`${label} 不是 Evidence`);
+  return {
+    resourceType: "Evidence",
+    resourceId: stringValue(item.resourceId, `${label}.resourceId`),
+    revision: positiveInt(item.revision, `${label}.revision`),
+    contentHash: hash(item.contentHash, `${label}.contentHash`),
+  };
+}
+
+export function parseEvidenceDisclosureDecision(value: unknown, expectedDecisionId?: string): EvidenceDisclosureDecision {
+  const item = record(value, "EvidenceDisclosureDecision");
+  const tenant = record(item.tenant, "EvidenceDisclosureDecision.tenant");
+  const decisionId = stringValue(item.decisionId, "EvidenceDisclosureDecision.decisionId");
+  if (expectedDecisionId && decisionId !== expectedDecisionId) throw new TypeError("EvidenceDisclosureDecision.decisionId 与请求不匹配");
+  const requestedLevel = enumValue(item.requestedLevel, ["l1", "l2", "l3"] as const, "EvidenceDisclosureDecision.requestedLevel");
+  const grantedLevel = item.grantedLevel === null ? null : enumValue(item.grantedLevel, ["l1", "l2", "l3"] as const, "EvidenceDisclosureDecision.grantedLevel");
+  const status = enumValue(item.status, ["allowed", "blocked", "stale", "unknown"] as const, "EvidenceDisclosureDecision.status");
+  const reasons = Array.isArray(item.reasons) ? item.reasons.map((reason, index) => stringValue(reason, `EvidenceDisclosureDecision.reasons[${index}]`)) : (() => { throw new TypeError("EvidenceDisclosureDecision.reasons 无效"); })();
+  const citation = record(item.citation, "EvidenceDisclosureDecision.citation");
+  const displayPayload = record(item.displayPayload, "EvidenceDisclosureDecision.displayPayload");
+  const redactionReceipt = record(item.redactionReceipt, "EvidenceDisclosureDecision.redactionReceipt");
+  const auditRef = record(citation.auditRef, "EvidenceDisclosureDecision.citation.auditRef");
+  if (auditRef.resourceType !== "EvidenceDisclosureDecision" || auditRef.resourceId !== decisionId || auditRef.revision !== 1) throw new TypeError("EvidenceDisclosureDecision auditRef 不匹配");
+  if (status === "allowed") {
+    if (grantedLevel !== requestedLevel || displayPayload.layer !== requestedLevel || reasons.length) throw new TypeError("EvidenceDisclosureDecision allow 语义不一致");
+  } else if (grantedLevel !== null || Object.keys(displayPayload).length || !reasons.length) {
+    throw new TypeError("EvidenceDisclosureDecision fail-closed 语义不一致");
+  }
+  if (redactionReceipt.bodyReturned !== (status === "allowed")) throw new TypeError("EvidenceDisclosureDecision redaction receipt 不一致");
+  if (requestedLevel === "l2" && status === "allowed") {
+    const excerptHash = hash(displayPayload.excerptHash, "EvidenceDisclosureDecision.displayPayload.excerptHash");
+    if (citation.excerptHash !== excerptHash || typeof displayPayload.excerpt !== "string" || !displayPayload.locator) throw new TypeError("EvidenceDisclosureDecision L2 citation 不对齐");
+  }
+  const expiresAt = nullableString(item.expiresAt, "EvidenceDisclosureDecision.expiresAt");
+  if (requestedLevel === "l3" && status === "allowed") {
+    const scoped = record(displayPayload.scopedSourceRef, "EvidenceDisclosureDecision.displayPayload.scopedSourceRef");
+    if (scoped.resourceId !== decisionId || !expiresAt) throw new TypeError("EvidenceDisclosureDecision L3 scoped ref 不一致");
+  }
+  return {
+    tenant: { orgId: stringValue(tenant.orgId, "EvidenceDisclosureDecision.tenant.orgId"), projectId: stringValue(tenant.projectId, "EvidenceDisclosureDecision.tenant.projectId") },
+    decisionId,
+    evidenceRef: exactEvidenceRef(item.evidenceRef, "EvidenceDisclosureDecision.evidenceRef"),
+    purpose: enumValue(item.purpose, ["summary", "preview", "excerpt", "review", "source", "audit"] as const, "EvidenceDisclosureDecision.purpose"),
+    requestedLevel,
+    grantedLevel,
+    status,
+    reasons,
+    citation,
+    displayPayload,
+    redactionReceipt,
+    decisionHash: hash(item.decisionHash, "EvidenceDisclosureDecision.decisionHash"),
+    expiresAt,
+    createdBy: stringValue(item.createdBy, "EvidenceDisclosureDecision.createdBy"),
+    createdAt: stringValue(item.createdAt, "EvidenceDisclosureDecision.createdAt"),
   };
 }
 

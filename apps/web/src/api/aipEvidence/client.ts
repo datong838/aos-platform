@@ -4,12 +4,15 @@ import {
   parseEvalRunAuthority,
   parseTelemetrySpans,
   parseUsageReceipts,
+  parseEvidenceDisclosureDecision,
   type LineageEvent,
   type LineageRootType,
   type TelemetrySpan,
   type UsageReceipt,
   type EvalRunAuthority,
   type AuthorityEvidenceChain,
+  type EvidenceDisclosureDecision,
+  type ResolveEvidenceDisclosureInput,
 } from "./contracts";
 
 export class AipEvidenceSdk {
@@ -52,6 +55,21 @@ export class AipEvidenceSdk {
     return parseEvalRunAuthority(await this.client.request("getEvalAuthorityRun", {
       params: { run_id: runId },
     }), runId);
+  }
+
+  async resolveDisclosure(input: ResolveEvidenceDisclosureInput, idempotencyKey: string): Promise<EvidenceDisclosureDecision> {
+    if (!idempotencyKey.trim() || idempotencyKey !== idempotencyKey.trim()) throw new TypeError("Idempotency-Key 无效");
+    return parseEvidenceDisclosureDecision(await this.client.request("resolveEvidenceDisclosure", {
+      body: input,
+      headers: { "Idempotency-Key": idempotencyKey },
+    }));
+  }
+
+  async getDisclosure(decisionId: string): Promise<EvidenceDisclosureDecision> {
+    if (!decisionId.trim() || decisionId !== decisionId.trim()) throw new TypeError("disclosure decision id 无效");
+    return parseEvidenceDisclosureDecision(await this.client.request("getEvidenceDisclosure", {
+      params: { decision_id: decisionId },
+    }), decisionId);
   }
 }
 

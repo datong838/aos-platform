@@ -2066,7 +2066,11 @@ class AipProductionContractStore:
             )
             if replay:
                 return self.get_evidence_disclosure(
-                    scope, replay["resourceId"], conn=conn
+                    scope,
+                    replay["resourceId"],
+                    conn=conn,
+                    markings=markings or [],
+                    enforce_current_policy=True,
                 )
             decision = self._evaluate_disclosure(
                 conn, scope, actor, body, markings=markings or []
@@ -2119,6 +2123,8 @@ class AipProductionContractStore:
         decision_id: str,
         *,
         conn: Any | None = None,
+        markings: list[str] | None = None,
+        enforce_current_policy: bool = False,
     ) -> EvidenceDisclosureDecision:
         def read(c: Any) -> EvidenceDisclosureDecision:
             row = c.execute(
@@ -2128,7 +2134,7 @@ class AipProductionContractStore:
             ).fetchone()
             if row is None:
                 raise ProductionContractNotFound("disclosure decision not found")
-            return EvidenceDisclosureDecision(
+            decision = EvidenceDisclosureDecision(
                 tenant=self._tenant(scope),
                 decision_id=row["decision_id"],
                 evidence_ref=ExactRevisionRef(
@@ -2150,6 +2156,32 @@ class AipProductionContractStore:
                 created_by=row["actor"],
                 created_at=row["created_at"],
             )
+            if enforce_current_policy and decision.status is DisclosureStatus.ALLOWED:
+                if (
+                    decision.expires_at is not None
+                    and decision.expires_at <= datetime.now(timezone.utc)
+                ):
+                    raise ProductionContractDependencyBlocked(
+                        "EVIDENCE_DISCLOSURE_NO_LONGER_ALLOWED"
+                    )
+                current = self._evaluate_disclosure(
+                    c,
+                    scope,
+                    decision.created_by,
+                    ResolveEvidenceDisclosureRequest(
+                        evidence_ref=decision.evidence_ref.model_dump(
+                            mode="json", by_alias=True
+                        ),
+                        purpose=decision.purpose,
+                        requested_level=decision.requested_level,
+                    ),
+                    markings=markings or [],
+                )
+                if current.status is not DisclosureStatus.ALLOWED:
+                    raise ProductionContractDependencyBlocked(
+                        "EVIDENCE_DISCLOSURE_NO_LONGER_ALLOWED"
+                    )
+            return decision
 
         if conn is not None:
             return read(conn)
@@ -2564,13 +2596,19 @@ class AipProductionContractStore:
         *,
         markings: list[str],
     ) -> EvidenceDisclosureDecision:
+        decision_id = f"disclosure-{uuid.uuid4().hex[:20]}"
         reasons: list[str] = []
         row = conn.execute(
             """SELECT * FROM aip_evidence
                WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
             (*scope.key, body.evidence_ref.resource_id),
         ).fetchone()
-        if row is None or row["content_hash"] != body.evidence_ref.content_hash:
+        exact_mismatch = row is not None and (
+            body.evidence_ref.resource_type != "Evidence"
+            or body.evidence_ref.revision != 1
+            or row["content_hash"] != body.evidence_ref.content_hash
+        )
+        if row is None or exact_mismatch:
             reasons.append("EVIDENCE_EXACT_REF_MISSING_OR_DRIFTED")
         revoked_bundle = None
         if row is not None:
@@ -2603,8 +2641,12 @@ class AipProductionContractStore:
             if revoked_bundle is not None:
                 reasons.append("EVIDENCE_BUNDLE_REVOKED")
         required_markings = ["public"]
+        payload: dict[str, Any] = {}
         if row is not None:
-            payload = self._load(row["payload"]) if row["payload"] is not None else {}
+            loaded_payload = (
+                self._load(row["payload"]) if row["payload"] is not None else {}
+            )
+            payload = loaded_payload if isinstance(loaded_payload, dict) else {}
             if isinstance(payload, dict) and isinstance(payload.get("marking"), list):
                 required_markings = [
                     str(item).strip() for item in payload["marking"] if str(item).strip()
@@ -2619,17 +2661,106 @@ class AipProductionContractStore:
             markings or []
         ):
             reasons.append("L3_REQUIRES_SECRET_MARKING")
-        status = DisclosureStatus.BLOCKED if reasons else DisclosureStatus.ALLOWED
+
+        purpose_max_level = {
+            "summary": DisclosureLevel.L1,
+            "preview": DisclosureLevel.L1,
+            "excerpt": DisclosureLevel.L2,
+            "review": DisclosureLevel.L2,
+            "source": DisclosureLevel.L3,
+            "audit": DisclosureLevel.L3,
+        }
+        level_rank = {DisclosureLevel.L1: 1, DisclosureLevel.L2: 2, DisclosureLevel.L3: 3}
+        allowed_level = purpose_max_level.get(body.purpose.value)
+        if allowed_level is None or level_rank[body.requested_level] > level_rank[allowed_level]:
+            reasons.append("PURPOSE_LEVEL_DENIED")
+
+        license_payload = payload.get("license")
+        license_status = "internal_controlled" if row is not None and row["source_type"] == "database" else "unknown"
+        if isinstance(license_payload, dict):
+            raw_license_status = str(license_payload.get("status") or "unknown").strip().lower()
+            license_status = raw_license_status if raw_license_status in {"allowed", "denied", "unknown"} else "unknown"
+            allowed_purposes = license_payload.get("allowedPurposes")
+            if license_status == "denied":
+                reasons.append("LICENSE_DENIED")
+            elif license_status == "unknown":
+                reasons.append("LICENSE_UNKNOWN")
+            elif isinstance(allowed_purposes, list) and body.purpose.value not in {
+                str(value).strip() for value in allowed_purposes
+            }:
+                reasons.append("LICENSE_PURPOSE_DENIED")
+        elif license_status == "unknown":
+            reasons.append("LICENSE_UNKNOWN")
+
+        applicability_payload = payload.get("applicability")
+        applicability_status = "applicable"
+        if isinstance(applicability_payload, dict):
+            raw_applicability = str(applicability_payload.get("status") or "unknown").strip().lower()
+            applicability_status = raw_applicability if raw_applicability in {"applicable", "not_applicable", "unknown"} else "unknown"
+            if applicability_status == "not_applicable":
+                reasons.append("EVIDENCE_NOT_APPLICABLE")
+            elif applicability_status == "unknown":
+                reasons.append("EVIDENCE_APPLICABILITY_UNKNOWN")
+
+        stale = False
+        freshness_unknown = False
+        fresh_until = payload.get("freshUntil")
+        if fresh_until is not None:
+            try:
+                fresh_until_at = datetime.fromisoformat(str(fresh_until).replace("Z", "+00:00"))
+                if fresh_until_at.tzinfo is None:
+                    fresh_until_at = fresh_until_at.replace(tzinfo=timezone.utc)
+                stale = fresh_until_at <= datetime.now(timezone.utc)
+            except ValueError:
+                freshness_unknown = True
+        elif row is not None and row["freshness_at"] is None:
+            freshness_unknown = True
+        if stale:
+            reasons.append("EVIDENCE_STALE")
+        elif freshness_unknown:
+            reasons.append("EVIDENCE_FRESHNESS_UNKNOWN")
+
+        if row is None:
+            status = DisclosureStatus.UNKNOWN
+        elif exact_mismatch:
+            status = DisclosureStatus.BLOCKED
+        elif stale:
+            status = DisclosureStatus.STALE
+        elif any(reason in {"LICENSE_UNKNOWN", "EVIDENCE_APPLICABILITY_UNKNOWN", "EVIDENCE_FRESHNESS_UNKNOWN"} for reason in reasons):
+            status = DisclosureStatus.UNKNOWN
+        else:
+            status = DisclosureStatus.BLOCKED if reasons else DisclosureStatus.ALLOWED
         granted = None if reasons else body.requested_level
         display: dict[str, Any] = {}
         citation: dict[str, Any] = {
             "evidenceId": body.evidence_ref.resource_id,
             "contentHashPrefix": body.evidence_ref.content_hash[:12],
-            "purpose": body.purpose,
+            "purpose": body.purpose.value,
+            "auditRef": {
+                "resourceType": "EvidenceDisclosureDecision",
+                "resourceId": decision_id,
+                "revision": 1,
+            },
         }
         expires_at = None
         if status is DisclosureStatus.ALLOWED and row is not None:
-            payload = self._load(row["payload"]) if row["payload"] is not None else {}
+            captured_at = payload.get("capturedAt") or (
+                row["observed_at"].isoformat() if row["observed_at"] else None
+            )
+            source_locator = payload.get("sourceLocator") or {
+                "sourceRef": row["source_ref"]
+            }
+            citation.update(
+                {
+                    "evidenceRef": body.evidence_ref.model_dump(mode="json", by_alias=True),
+                    "sourceType": row["source_type"],
+                    "observedAt": row["observed_at"].isoformat() if row["observed_at"] else None,
+                    "capturedAt": captured_at,
+                    "applicability": applicability_status,
+                    "marking": required_markings,
+                    "licenseStatus": license_status,
+                }
+            )
             if body.requested_level is DisclosureLevel.L1:
                 display = {
                     "layer": "l1",
@@ -2641,17 +2772,33 @@ class AipProductionContractStore:
                     "freshnessAt": row["freshness_at"].isoformat()
                     if row["freshness_at"]
                     else None,
+                    "capturedAt": captured_at,
+                    "applicability": applicability_status,
                     "marking": required_markings,
+                    "licenseStatus": license_status,
                     "contentHashPrefix": row["content_hash"][:12],
                     "revoked": False,
                 }
             elif body.requested_level is DisclosureLevel.L2:
-                raw = json.dumps(payload or {}, ensure_ascii=False)
+                explicit_excerpt = payload.get("excerpt")
+                if isinstance(explicit_excerpt, str) and explicit_excerpt.strip():
+                    raw = explicit_excerpt.strip()
+                else:
+                    safe_payload = {
+                        key: payload[key]
+                        for key in ("factIds", "summary", "applicability")
+                        if key in payload
+                    }
+                    raw = json.dumps(safe_payload, ensure_ascii=False, sort_keys=True)
+                excerpt = raw[:200]
+                excerpt_hash = canonical_hash({"excerpt": excerpt})
                 display = {
                     "layer": "l2",
-                    "excerpt": raw[:200],
-                    "locator": {"path": "$.payload", "offset": 0, "length": min(200, len(raw))},
+                    "excerpt": excerpt,
+                    "locator": source_locator,
+                    "excerptHash": excerpt_hash,
                 }
+                citation.update({"locator": source_locator, "excerptHash": excerpt_hash})
             else:
                 expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
                 display = {
@@ -2662,7 +2809,6 @@ class AipProductionContractStore:
                         "authority": "aip-evidence-disclosure",
                     },
                 }
-        decision_id = f"disclosure-{uuid.uuid4().hex[:20]}"
         if (
             status is DisclosureStatus.ALLOWED
             and body.requested_level is DisclosureLevel.L3
@@ -2673,23 +2819,28 @@ class AipProductionContractStore:
             "policy": "minimum-disclosure",
             "requestedLevel": body.requested_level.value,
             "grantedLevel": granted.value if granted else None,
+            "auditRef": citation["auditRef"],
+            "bodyReturned": status is DisclosureStatus.ALLOWED,
         }
         decision_hash = canonical_hash(
             {
                 "decisionId": decision_id,
                 "evidenceRef": body.evidence_ref.model_dump(mode="json", by_alias=True),
-                "purpose": body.purpose,
+                "purpose": body.purpose.value,
                 "status": status.value,
                 "grantedLevel": granted.value if granted else None,
                 "reasons": reasons,
+                "citation": citation,
                 "displayPayload": display,
+                "redactionReceipt": redaction,
+                "expiresAt": expires_at.isoformat() if expires_at else None,
             }
         )
         return EvidenceDisclosureDecision(
             tenant=self._tenant(scope),
             decision_id=decision_id,
             evidence_ref=body.evidence_ref,
-            purpose=body.purpose,
+            purpose=body.purpose.value,
             requested_level=body.requested_level,
             granted_level=granted,
             status=status,

@@ -102,4 +102,31 @@ describe("W3-09 common production UI", () => {
     expect(captions).toContain("评价契约修订差异的文本替代");
     expect(host.textContent).toContain("unknown");
   });
+
+  it("Evidence Drawer 不预取正文，逐层调用服务端并对拒绝保持零正文", async () => {
+    const evidenceRef = ref("Evidence", "evidence-1");
+    const decision = (level: "l1" | "l2", status: "allowed" | "blocked") => ({
+      tenant: { orgId: "org-org", projectId: "dev-project" }, decisionId: `decision-${level}`,
+      evidenceRef: { ...evidenceRef, resourceType: "Evidence" as const }, purpose: level === "l1" ? "summary" as const : "excerpt" as const,
+      requestedLevel: level, grantedLevel: status === "allowed" ? level : null, status,
+      reasons: status === "blocked" ? ["MARKING_ACCESS_DENIED"] : [],
+      citation: {}, displayPayload: status === "allowed" ? { layer: level, sourceType: "database", capturedAt: "2026-08-25T01:00:00Z", freshnessAt: "2026-08-25T01:00:00Z", applicability: "applicable", marking: ["public"], licenseStatus: "internal_controlled" } : {},
+      redactionReceipt: { bodyReturned: status === "allowed" }, decisionHash: "b".repeat(64), expiresAt: null, createdBy: "user:dev", createdAt: "2026-08-25T01:00:00Z",
+    });
+    const resolveDisclosure = vi.fn().mockResolvedValueOnce(decision("l1", "allowed")).mockResolvedValueOnce(decision("l2", "blocked"));
+    act(() => root.render(<EvidenceBundleDrawer {...base("证据包")} bundleRef={ref("EvidenceBundleRevision", "bundle-1")} evidenceRefs={[evidenceRef]} open onClose={() => undefined} disclosureSdk={{ resolveDisclosure }} />));
+    expect(resolveDisclosure).not.toHaveBeenCalled();
+    const button = (label: string) => [...host.querySelectorAll("button")].find((item) => item.textContent === label) as HTMLButtonElement;
+    expect(button("查看最小引用片段").disabled).toBe(true);
+    await act(async () => { button("查看安全摘要").click(); });
+    expect(resolveDisclosure).toHaveBeenNthCalledWith(1, expect.objectContaining({ purpose: "summary", requestedLevel: "l1" }), expect.stringContaining("workshop-disclosure-"));
+    expect(host.textContent).toContain("已授权 · L1");
+    expect(button("查看最小引用片段").disabled).toBe(false);
+    await act(async () => { button("查看最小引用片段").click(); });
+    expect(resolveDisclosure).toHaveBeenNthCalledWith(2, expect.objectContaining({ purpose: "excerpt", requestedLevel: "l2" }), expect.stringContaining("workshop-disclosure-"));
+    expect(host.textContent).toContain("服务端未返回正文");
+    expect(host.textContent).toContain("MARKING_ACCESS_DENIED");
+    expect(host.textContent).not.toContain("最小片段");
+    expect(button("申请短期来源引用").disabled).toBe(true);
+  });
 });

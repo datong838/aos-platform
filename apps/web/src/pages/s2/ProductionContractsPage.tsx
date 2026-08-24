@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   aipProductionContracts,
   type ContractBlocker,
@@ -19,7 +19,7 @@ import {
 import { aipActionsSdk, type ActionProposalList } from "../../api/aipActions";
 import { apiGet } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
-import { BlockerList as ProductionBlockerList } from "../../components/workshop/production";
+import { BlockerList as ProductionBlockerList, EvidenceBundleDrawer } from "../../components/workshop/production";
 import { actionDisplayName, businessDisplayName, capabilityDisplayName, contractSectionDisplayName, statusDisplayName } from "../../lib/aipChineseLabels";
 
 type AuthorityState = {
@@ -96,6 +96,8 @@ export function ProductionContractsPage() {
   const [logicRevision,setLogicRevision]=useState("1");
   const [logicGraphHash,setLogicGraphHash]=useState("");
   const [publishedLogic,setPublishedLogic]=useState<Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null}>>([]);
+  const [evidenceDrawerBundleId, setEvidenceDrawerBundleId] = useState("");
+  const evidenceDrawerTriggerRef = useRef<HTMLElement | null>(null);
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -130,6 +132,7 @@ export function ProductionContractsPage() {
   const freezeStage = (id: string, version: number) => run(`stage:${id}`, () => aipProductionContracts.freezeStageTemplate(id, version, `w2-ui-stage-freeze-${crypto.randomUUID()}`));
 
   const selectedTemplate = state?.stages.items.find(item => item.templateId === templateId);
+  const evidenceDrawerBundle = state?.bundles.items.find(item => item.bundleId === evidenceDrawerBundleId);
   const selectedPlan = state?.plans.items.find(item => item.planId === planId);
   const selectedCompileProductionContext=state?.contexts.items.find(item=>item.contextId===compileProductionContextId);
   const selectedPlanRef=selectedPlan?{resourceType:"ResponsibilityPlanRevision",resourceId:selectedPlan.planId,revision:selectedPlan.revision,contentHash:selectedPlan.contentHash}:null;
@@ -199,7 +202,7 @@ export function ProductionContractsPage() {
           {state.briefs.count === 0 ? <div className="notice">当前组织尚无任务简报。请从真实任务进入创建流程；本页不生成演示任务。</div> : state.briefs.items.map(item => <article key={item.briefId} style={itemStyle}><div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><strong>{businessDisplayName(item.briefType)}</strong><span>{label[item.lifecycle] ?? statusDisplayName(item.lifecycle)}</span></div><p>关联真实任务 · 修订 {item.revision}</p><details><summary>技术标识（审计用）</summary><code>{item.briefId}@{item.revision}</code> · 任务 <code>{item.taskId}</code><br/><small>版本 {item.version} · 内容摘要 {item.contentHash.slice(0, 12)}…</small></details>{item.lifecycle === "draft" ? <button className="btn" disabled={busy === `brief:${item.briefId}`} onClick={() => void freezeBrief(item.briefId, item.version)} style={{ marginTop: 10 }}>{busy === `brief:${item.briefId}` ? "冻结中…" : "冻结当前修订"}</button> : null}</article>)}
         </div>
         <div className="card" style={{ padding: 18 }}><h2 style={{ marginTop: 0 }}>{contractSectionDisplayName("Evidence Bundle")}</h2>
-          {state.bundles.count === 0 ? <div className="notice">当前组织尚无证据包。证据包只能引用已授权事实，不能复制受限正文或用摘要冒充事实。</div> : state.bundles.items.map(item => <article key={`${item.bundleId}@${item.revision}`} style={itemStyle}><div style={{ display: "flex", justifyContent: "space-between" }}><strong>{item.itemRefs.length} 条授权证据</strong><span>{statusDisplayName(item.freshness)}</span></div><p>覆盖情况：{label[item.coverage] ?? statusDisplayName(item.coverage)}</p><details><summary>技术标识（审计用）</summary><code>{item.bundleId}@{item.revision}</code><br/><small>任务简报 {item.briefRef.resourceId}@{item.briefRef.revision}</small></details></article>)}
+          {state.bundles.count === 0 ? <div className="notice">当前组织尚无证据包。证据包只能引用已授权事实，不能复制受限正文或用摘要冒充事实。</div> : state.bundles.items.map(item => <article key={`${item.bundleId}@${item.revision}`} style={itemStyle}><div style={{ display: "flex", justifyContent: "space-between" }}><strong>{item.itemRefs.length} 条授权证据</strong><span>{statusDisplayName(item.freshness)}</span></div><p>覆盖情况：{label[item.coverage] ?? statusDisplayName(item.coverage)}</p><details><summary>技术标识（审计用）</summary><code>{item.bundleId}@{item.revision}</code><br/><small>任务简报 {item.briefRef.resourceId}@{item.briefRef.revision}</small></details><button className="btn" type="button" style={{ marginTop: 10 }} onClick={(event) => { evidenceDrawerTriggerRef.current = event.currentTarget; setEvidenceDrawerBundleId(item.bundleId); }}>查看受控证据披露</button></article>)}
         </div>
         <div className="card" style={{ padding: 18 }}><h2 style={{ marginTop: 0 }}>{contractSectionDisplayName("Eval Contract")}</h2>
           {state.evals.count === 0 ? <div className="notice">当前组织尚无评测契约。必须绑定真实评测套件、发布事件和发布门决策后才能就绪。</div> : state.evals.items.map(item => { const canFreeze = item.lifecycle === "draft" && item.readiness === "ready" && item.blockers.length === 0; return <article key={item.contractId} style={itemStyle}><div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><strong>评测阈值 {Object.keys(item.severityThresholds).length} 项</strong><span>{label[item.readiness] ?? statusDisplayName(item.readiness)}</span></div><p>{label[item.lifecycle] ?? statusDisplayName(item.lifecycle)}</p><details><summary>技术标识（审计用）</summary><code>{item.contractId}@{item.revision}</code><br/>评测套件 <code>{item.suiteRef.resourceId}@{item.suiteRef.revision}</code><br/><small>版本 {item.version}</small></details><Blockers items={item.blockers} />{item.lifecycle === "draft" ? <button className="btn" disabled={!canFreeze || busy === `eval:${item.contractId}`} title={canFreeze ? "冻结当前就绪修订" : "存在阻断或状态未就绪，禁止冻结"} onClick={() => void freezeEval(item.contractId, item.version)} style={{ marginTop: 10 }}>{busy === `eval:${item.contractId}` ? "冻结中…" : "冻结评测契约"}</button> : null}</article>; })}
@@ -268,6 +271,17 @@ export function ProductionContractsPage() {
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}><button className="btn" disabled={!canReviewCommand || Boolean(busy)} title={busy ? "正在提交处置，请稍候" : canReviewCommand ? "将当前问题标记为已解决并写入审计事件" : "请选择待处置问题并填写处置原因"} onClick={resolveReview}>标记已解决</button><button className="btn primary" disabled={!canReviewCommand || !reviewRunId.trim() || Boolean(busy)} title="只向真实运行任务的目标阶段追加排队中的尝试" onClick={returnReview}>退回目标阶段</button></div>
       </section>
       <div className="notice" style={{ marginTop: 16 }}>影响预览与启动组合门已接入权威数据源；即使启动决策通过，也只创建任务运行记录。智能体运行、模型路由、供应商、绑定与容量仍由独立服务端门禁控制。</div>
+      {evidenceDrawerBundle ? <EvidenceBundleDrawer
+        title="受控证据披露"
+        state={evidenceDrawerBundle.revoked ? "blocked" : evidenceDrawerBundle.freshness === "fresh" ? "ready" : evidenceDrawerBundle.freshness}
+        lineage={{ atomicSkillRef: null, logicRef: null, coworker: null, workshopContribution: "按服务端决策逐层展示证据，不推断未返回的贡献归因" }}
+        blockers={evidenceDrawerBundle.revoked ? [{ code: "EVIDENCE_BUNDLE_REVOKED", message: evidenceDrawerBundle.revokeReason || "证据包已撤销", owner: "数据与证据负责人", requiredAction: "创建引用当前有效证据的新修订", cutoffAt: null }] : []}
+        bundleRef={{ resourceType: "EvidenceBundleRevision", resourceId: evidenceDrawerBundle.bundleId, revision: evidenceDrawerBundle.revision, contentHash: evidenceDrawerBundle.contentHash }}
+        evidenceRefs={evidenceDrawerBundle.itemRefs}
+        open
+        onClose={() => setEvidenceDrawerBundleId("")}
+        returnFocusRef={evidenceDrawerTriggerRef}
+      /> : null}
     </> : null}
   </PageChrome>;
 }

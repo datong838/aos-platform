@@ -43,6 +43,11 @@ def get_disclosure(
     store: AipProductionContractStore = Depends(get_store),
 ):
     try:
-        return store.get_evidence_disclosure(_scope(principal), decision_id)
+        return store.get_evidence_disclosure(
+            _scope(principal),
+            decision_id,
+            markings=principal.markings,
+            enforce_current_policy=True,
+        )
     except ProductionContractError as exc:
         raise _map(exc) from exc

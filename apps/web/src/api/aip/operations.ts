@@ -34,6 +34,8 @@ export const AIP_OPERATIONS = {
   listTelemetrySpans: { method: "GET", path: "/v1/aip/telemetry-authority/lineages/{lineage_id}/spans", mutation: false },
   listUsageReceipts: { method: "GET", path: "/v1/aip/telemetry-authority/lineages/{lineage_id}/usage-receipts", mutation: false },
   getEvalAuthorityRun: { method: "GET", path: "/v1/aip/eval-authority/runs/{run_id}", mutation: false },
+  resolveEvidenceDisclosure: { method: "POST", path: "/v1/aip/evidence/disclosures/resolve", mutation: true },
+  getEvidenceDisclosure: { method: "GET", path: "/v1/aip/evidence/disclosures/{decision_id}", mutation: false },
   listLogicPublications: { method: "GET", path: "/v1/aip/logic/graphs/{graph_id}/publications", mutation: false },
   getLogicPublication: { method: "GET", path: "/v1/aip/logic/graphs/{graph_id}/publications/{publication_id}", mutation: false },
   publishLogicGraph: { method: "POST", path: "/v1/aip/logic/graphs/{graph_id}/publish", mutation: true },

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { AipClient } from "../aip/client";
 import { AipEvidenceSdk } from "./client";
-import { parseLineageEvents, parseTelemetrySpans, parseUsageReceipts } from "./contracts";
+import { parseEvidenceDisclosureDecision, parseLineageEvents, parseTelemetrySpans, parseUsageReceipts } from "./contracts";
 
 const event = {
   eventId: "evt-1",
@@ -47,6 +47,17 @@ const evalRun = {
   judge: { judgeId: "judge-1", revision: 2, contentHash: "6".repeat(64), modelRoute: null },
   status: "succeeded", idempotencyKey: "eval-once", createdBy: "user-1", createdAt: "2026-08-12T01:00:00Z",
   startedAt: "2026-08-12T01:00:01Z", finishedAt: "2026-08-12T01:00:02Z", version: 3,
+};
+
+const disclosure = {
+  tenant: { orgId: "org-org", projectId: "dev-project" },
+  decisionId: "disclosure-1",
+  evidenceRef: { resourceType: "Evidence", resourceId: "evidence-1", revision: 1, contentHash: "7".repeat(64) },
+  purpose: "summary", requestedLevel: "l1", grantedLevel: "l1", status: "allowed", reasons: [],
+  citation: { auditRef: { resourceType: "EvidenceDisclosureDecision", resourceId: "disclosure-1", revision: 1 }, evidenceId: "evidence-1" },
+  displayPayload: { layer: "l1", sourceType: "database", freshnessAt: "2026-08-25T01:00:00Z", marking: ["public"], licenseStatus: "internal_controlled" },
+  redactionReceipt: { bodyReturned: true }, decisionHash: "8".repeat(64), expiresAt: null,
+  createdBy: "user:dev", createdAt: "2026-08-25T01:00:01Z",
 };
 
 describe("AipEvidenceSdk", () => {
@@ -138,5 +149,32 @@ describe("AipEvidenceSdk", () => {
       const sdk = new AipEvidenceSdk({ request: vi.fn().mockResolvedValue(malformed) } as unknown as AipClient);
       await expect(sdk.evalRun("eval-run-1")).rejects.toThrow();
     }
+  });
+
+  it("通过唯一 AIP client 解析 Disclosure 且自动提交幂等键", async () => {
+    const request = vi.fn().mockResolvedValue(disclosure);
+    const sdk = new AipEvidenceSdk({ request } as unknown as AipClient);
+    await expect(sdk.resolveDisclosure({
+      evidenceRef: disclosure.evidenceRef as { resourceType: "Evidence"; resourceId: string; revision: number; contentHash: string },
+      purpose: "summary",
+      requestedLevel: "l1",
+    }, "disclosure-once")).resolves.toMatchObject({ decisionId: "disclosure-1", status: "allowed" });
+    expect(request).toHaveBeenCalledWith("resolveEvidenceDisclosure", {
+      body: expect.objectContaining({ purpose: "summary", requestedLevel: "l1" }),
+      headers: { "Idempotency-Key": "disclosure-once" },
+    });
+    request.mockClear();
+    await expect(sdk.getDisclosure("disclosure-1")).resolves.toMatchObject({ evidenceRef: { resourceId: "evidence-1" } });
+    expect(request).toHaveBeenCalledWith("getEvidenceDisclosure", { params: { decision_id: "disclosure-1" } });
+  });
+
+  it("Disclosure 的审计引用、L2 对齐和失败关闭零正文均严格校验", () => {
+    expect(() => parseEvidenceDisclosureDecision({ ...disclosure, status: "blocked", grantedLevel: null, reasons: ["DENIED"] })).toThrow("fail-closed");
+    expect(() => parseEvidenceDisclosureDecision({ ...disclosure, citation: { auditRef: { resourceType: "EvidenceDisclosureDecision", resourceId: "other", revision: 1 } } })).toThrow("auditRef");
+    const blocked = { ...disclosure, status: "blocked", grantedLevel: null, reasons: ["MARKING_ACCESS_DENIED"], displayPayload: {}, redactionReceipt: { bodyReturned: false } };
+    expect(parseEvidenceDisclosureDecision(blocked)).toMatchObject({ status: "blocked", displayPayload: {} });
+    const l2 = { ...disclosure, purpose: "excerpt", requestedLevel: "l2", grantedLevel: "l2", displayPayload: { layer: "l2", excerpt: "最小片段", locator: { row: "1" }, excerptHash: "9".repeat(64) }, citation: { ...disclosure.citation, excerptHash: "9".repeat(64) } };
+    expect(parseEvidenceDisclosureDecision(l2)).toMatchObject({ grantedLevel: "l2" });
+    expect(() => parseEvidenceDisclosureDecision({ ...l2, citation: { ...l2.citation, excerptHash: "a".repeat(64) } })).toThrow("L2 citation");
   });
 });
