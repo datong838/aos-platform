@@ -2,11 +2,17 @@ import { useEffect, useRef, useState } from "react";
 
 import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type ContentCampaignItem, type ContentCampaignSlice, type ContentCampaignSliceId, type ContentCampaignViewResponse } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
+import { ContributionLineage } from "./production";
 
 type Client = Pick<typeof ecommerceWorkshopClient, "getContentCampaignView">;
 type Phase = "loading" | "ready" | "empty" | "forbidden" | "failed";
 const LABELS: Record<ContentCampaignSliceId, string> = { plan: "活动计划", calendar: "内容日历", content: "主内容与变体" };
 const DESCRIPTIONS: Record<ContentCampaignSliceId, string> = { plan: "CampaignRevision", calendar: "CalendarEntryRevision", content: "MasterContentIntentRevision · ContentVariant" };
+const CONTRIBUTIONS: Record<ContentCampaignSliceId, string> = {
+  plan: "以 CampaignRevision 为内容与活动规划的领域事实输入",
+  calendar: "以 CalendarEntryRevision 表达排期意图；不等同于发布",
+  content: "以 MasterContentIntent 与 Artifact lineage 重建 ContentVariant",
+};
 const stateFor = (phase: Phase): AsyncState => phase === "ready" || phase === "empty" ? "ready" : phase;
 const formatTime = (value: string) => new Date(value).toLocaleString("zh-CN", { hour12: false });
 const short = (value: string) => value.length > 34 ? `${value.slice(0, 15)}…${value.slice(-12)}` : value;
@@ -37,7 +43,7 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
     <div className="content-campaign-board">
       <aside className="content-campaign-nav"><header><h2>主视图</h2><span>{3 - ready} 项阻断</span></header>{response.slices.map((item) => <button type="button" key={item.sliceId} className={`content-campaign-slice is-${item.status}${item.sliceId === slice.sliceId ? " is-selected" : ""}`} aria-pressed={item.sliceId === slice.sliceId} onClick={() => setSelected(item.sliceId)}><strong>{LABELS[item.sliceId]}</strong><small>{DESCRIPTIONS[item.sliceId]}</small><span>{item.countLedger.attached} / {item.countLedger.eligible}</span></button>)}</aside>
       <section className="content-campaign-detail" aria-label="内容与活动详情"><header><div><span>{slice.sliceId}</span><h2>{LABELS[slice.sliceId]}</h2></div><strong className={`content-campaign-status is-${slice.status}`}>{slice.status === "ready" ? "权威读取可用" : "失败关闭"}</strong></header><section className="content-campaign-ledger"><div><span>可评估</span><strong>{slice.countLedger.eligible}</strong></div><div><span>已挂接</span><strong>{slice.countLedger.attached}</strong></div><div><span>未匹配</span><strong>{slice.countLedger.unmatched}</strong></div><div><span>冲突</span><strong>{slice.countLedger.conflicted}</strong></div></section><section className="content-campaign-items" aria-label={`${LABELS[slice.sliceId]} exact facts`}>{slice.items.length ? slice.items.map((item) => <ItemCard item={item} key={`${item.resourceType}:${item.resourceId}:${item.revision}`} />) : <p>当前没有合格的已挂接事实；可信空与阻断由右侧证据区分。</p>}</section></section>
-      <aside className="content-campaign-evidence"><header><h2>证据链 · 边界</h2><span>{slice.blockers.length} blocker</span></header>{slice.blockers.length ? <ul>{slice.blockers.map((blocker) => <li key={blocker.code}><strong>{blocker.code}</strong><span>{blocker.dependency}</span><p>{blocker.requiredAction}</p></li>)}</ul> : <div className="content-campaign-evidence-clear"><strong>{slice.items.length ? "当前读取链闭合" : "可信空集合"}</strong><p>只证明当前 cutoff 的 canonical reader 结果，不授权内容生产、排期或发布。</p></div>}<section><h3>决策摘要</h3><p>{slice.status === "blocked" ? "依赖证据不完整，切片失败关闭。" : "exact authority 与数量账本可读取。"}</p></section><section><h3>关键假设和不确定性</h3><p>页面不展示正文、prompt、Provider、客户 PII，也不把代码 GREEN 推断为运营 GREEN。</p></section></aside>
+      <aside className="content-campaign-evidence"><header><h2>证据链 · 边界</h2><span>{slice.blockers.length} blocker</span></header>{slice.blockers.length ? <ul>{slice.blockers.map((blocker) => <li key={blocker.code}><strong>{blocker.code}</strong><span>{blocker.dependency}</span><p>{blocker.requiredAction}</p></li>)}</ul> : <div className="content-campaign-evidence-clear"><strong>{slice.items.length ? "当前读取链闭合" : "可信空集合"}</strong><p>只证明当前 cutoff 的 canonical reader 结果，不授权内容生产、排期或发布。</p></div>}<section><h3>专业贡献归因</h3><ContributionLineage value={{ atomicSkillRef: null, logicRef: null, coworker: null, workshopContribution: CONTRIBUTIONS[slice.sliceId] }} /><p>当前 View 没有 exact AgentRun、SkillBinding 或 LogicRevision；保持 unknown，不制造数字同事运行事实。</p></section><section><h3>决策摘要</h3><p>{slice.status === "blocked" ? "依赖证据不完整，切片失败关闭。" : "exact authority 与数量账本可读取。"}</p></section><section><h3>关键假设和不确定性</h3><p>页面不展示正文、prompt、Provider、客户 PII，也不把代码 GREEN 推断为运营 GREEN。</p></section></aside>
     </div><footer className="content-campaign-footnote"><span>租户 {response.tenant.orgId}/{response.tenant.projectId}</span><span>评估 {formatTime(response.evaluatedAt)}</span><span>无后续页：是</span></footer>
   </div> : null;
   return <section className="content-campaign-page" aria-label="内容与活动工作台只读视图"><div className="content-campaign-toolbar"><span>Content Campaign v1 · canonical read model</span><button type="button" onClick={load}>重新读取</button></div><AsyncStateBoundary state={stateFor(phase)} dataCutoff={response?.dataCutoff} action={phase === "failed" ? <button type="button" onClick={load}>重新读取</button> : undefined}>{content}</AsyncStateBoundary></section>;
