@@ -601,6 +601,15 @@
 
 .content-campaign-page,
 .content-campaign-read-model { display: grid; gap: 12px; min-width: 0; }
+.creator-growth-page,
+.creator-growth-read-model { display: grid; gap: 12px; min-width: 0; }
+.creator-growth-axis { display: grid; grid-template-columns: minmax(260px, 1.4fr) minmax(260px, 1.4fr) repeat(2, minmax(110px, .6fr)); border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.creator-growth-axis > div { min-width: 0; padding: 12px 14px; border-right: 1px solid var(--aos-border); }
+.creator-growth-axis > div:last-child { border-right: 0; }
+.creator-growth-axis span { display: block; color: var(--aos-text-tertiary); font-size: 11px; }
+.creator-growth-axis strong { display: block; margin-top: 5px; overflow-wrap: anywhere; }
+.creator-growth-phases { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; margin-top: 14px; background: var(--aos-border); border: 1px solid var(--aos-border); }
+.creator-growth-phases span { min-width: 0; padding: 8px 5px; text-align: center; overflow-wrap: anywhere; background: var(--aos-surface); color: var(--aos-text-secondary); font-size: 10px; }
 .content-campaign-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; border: 1px solid var(--aos-border); background: var(--aos-surface); color: var(--aos-text-secondary); }
 .content-campaign-toolbar button { cursor: pointer; border: 1px solid var(--aos-border); padding: 7px 11px; background: var(--aos-surface); color: var(--aos-text); }
 .content-campaign-metrics { display: grid; grid-template-columns: repeat(5, minmax(105px, 1fr)) minmax(220px, 1.5fr); border: 1px solid var(--aos-border); background: var(--aos-surface); }
@@ -676,6 +685,7 @@
 .p-app.is-workshop-focus .aside { display: none; }
 
 @media (max-width: 1679px) {
+  .creator-growth-axis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ecommerce-workshop-context-refs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .task-cockpit-blockers ul { grid-template-columns: 1fr; }
   .task-cockpit-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -695,6 +705,7 @@
 }
 
 @media (max-width: 1359px) {
+  .creator-growth-axis { grid-template-columns: 1fr; }
   .ecommerce-workshop-context-header { align-items: stretch; flex-direction: column; }
   .ecommerce-workshop-context-actions { justify-content: space-between; }
   .ecommerce-workshop-context-refs,

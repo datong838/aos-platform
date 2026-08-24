@@ -6,5 +6,6 @@ export * from "./EcommerceWorkshopShell";
 export * from "./InstalledModuleNavigation";
 export * from "./TaskCockpitPage";
 export * from "./ContentCampaignPage";
+export * from "./CreatorGrowthPage";
 export * from "./SourceReadinessContext";
 export * from "./SourceReadinessPanel";

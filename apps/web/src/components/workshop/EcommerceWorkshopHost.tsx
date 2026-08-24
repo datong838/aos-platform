@@ -9,6 +9,7 @@ import { EcommerceWorkshopShell } from "./EcommerceWorkshopShell";
 import { TaskCockpitPage } from "./TaskCockpitPage";
 import { OperationsPage } from "./OperationsPage";
 import { ContentCampaignPage } from "./ContentCampaignPage";
+import { CreatorGrowthPage } from "./CreatorGrowthPage";
 
 function HostState({
   state,
@@ -41,7 +42,7 @@ export function EcommerceWorkshopHost() {
     return <Navigate to={match.module.route} replace />;
   }
   if (match) {
-    const exposesReadOnly = match.module.moduleId === "ecommerce.task-cockpit" || match.module.moduleId === "ecommerce.operations" || match.module.moduleId === "ecommerce.content-campaign";
+    const exposesReadOnly = match.module.moduleId === "ecommerce.task-cockpit" || match.module.moduleId === "ecommerce.operations" || match.module.moduleId === "ecommerce.content-campaign" || match.module.moduleId === "ecommerce.creator-growth";
     return (
       <EcommerceWorkshopShell
         module={match.module}
@@ -49,7 +50,7 @@ export function EcommerceWorkshopHost() {
         catalogStale={catalog.phase === "stale"}
         exposeReadOnlyWhenUnverified={exposesReadOnly}
       >
-        {match.module.moduleId === "ecommerce.task-cockpit" ? <TaskCockpitPage /> : match.module.moduleId === "ecommerce.operations" ? <OperationsPage /> : match.module.moduleId === "ecommerce.content-campaign" ? <ContentCampaignPage /> : undefined}
+        {match.module.moduleId === "ecommerce.task-cockpit" ? <TaskCockpitPage /> : match.module.moduleId === "ecommerce.operations" ? <OperationsPage /> : match.module.moduleId === "ecommerce.content-campaign" ? <ContentCampaignPage /> : match.module.moduleId === "ecommerce.creator-growth" ? <CreatorGrowthPage /> : undefined}
       </EcommerceWorkshopShell>
     );
   }

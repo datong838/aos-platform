@@ -195,6 +195,15 @@ export type ContentCampaignSlice = { sliceId: ContentCampaignSliceId; status: "r
 export type ContentCampaignPage = { limit: number; count: number; hasMore: false; nextCursor: null };
 export type ContentCampaignViewResponse = { schemaVersion: typeof CONTENT_CAMPAIGN_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: ContentCampaignSlice[]; page: ContentCampaignPage };
 
+export const CREATOR_GROWTH_SCHEMA_VERSION = "aos.ecommerce-workshop.creator-growth-view/v1" as const;
+export type CreatorBusinessStage = "candidate" | "outreach" | "contract" | "delivery" | "relationship";
+export type CreatorWorkflowPhase = "discovery" | "evidence" | "matching" | "batch_prepare" | "start";
+export type CreatorGrowthRef = { resourceType: string; resourceId: string; revision: number; contentHash: string; receiptId: string; workflowPhase: CreatorWorkflowPhase; businessStage: CreatorBusinessStage; piiRefs: string[] };
+export type CreatorGrowthBlocker = { code: string; dependency: string; requiredAction: string };
+export type CreatorGrowthLedger = { input: number; eligible: number; excluded: number; needsReview: number; unknown: number; deduplicated: number };
+export type CreatorGrowthSlice = { businessStage: CreatorBusinessStage; workflowPhases: CreatorWorkflowPhase[]; status: "ready" | "blocked"; dataCutoff: string; authorityRefs: CreatorGrowthRef[]; blockers: CreatorGrowthBlocker[]; countLedger: CreatorGrowthLedger };
+export type CreatorGrowthViewResponse = { schemaVersion: typeof CREATOR_GROWTH_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: CreatorGrowthSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
+
 export const OPERATION_COMMAND_READINESS_SCHEMA_VERSION = "aos.ecommerce-workshop.operation-command-readiness/v1" as const;
 export type OperationCommandId = "classify" | "createCase" | "changeMembership" | "manageSla" | "automationKill" | "refund";
 export type OperationCommandBlocker = { code: string; dependency: string; requiredAction: string };
