@@ -7,5 +7,6 @@ export * from "./InstalledModuleNavigation";
 export * from "./TaskCockpitPage";
 export * from "./ContentCampaignPage";
 export * from "./CreatorGrowthPage";
+export * from "./MediaStudioPage";
 export * from "./SourceReadinessContext";
 export * from "./SourceReadinessPanel";

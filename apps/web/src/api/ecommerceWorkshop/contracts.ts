@@ -204,6 +204,17 @@ export type CreatorGrowthLedger = { input: number; eligible: number; excluded: n
 export type CreatorGrowthSlice = { businessStage: CreatorBusinessStage; workflowPhases: CreatorWorkflowPhase[]; status: "ready" | "blocked"; dataCutoff: string; authorityRefs: CreatorGrowthRef[]; blockers: CreatorGrowthBlocker[]; countLedger: CreatorGrowthLedger };
 export type CreatorGrowthViewResponse = { schemaVersion: typeof CREATOR_GROWTH_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: CreatorGrowthSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
 
+export const MEDIA_STUDIO_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v1" as const;
+export type MediaStudioSliceId = "context" | "execution" | "delivery";
+export type MediaReadinessAxis = "module" | "capability" | "assignee" | "provider" | "budget" | "publication";
+export type MediaReadinessStatus = "ready" | "blocked" | "target" | "unknown" | "conflict" | "not_applicable";
+export type MediaExactRef = { resourceType: string; resourceId: string; revision: number; contentHash: string; receiptId: string };
+export type MediaBlocker = { code: string; dependency: string; requiredAction: string };
+export type MediaAxisReadiness = { axis: MediaReadinessAxis; status: MediaReadinessStatus; exactRef: MediaExactRef | null; targetContractRef: string | null; gaps: string[]; blockers: MediaBlocker[] };
+export type MediaCountLedger = { denominator: number; ready: number; target: number; blocked: number; unknown: number; conflict: number; notApplicable: number };
+export type MediaStudioSlice = { sliceId: MediaStudioSliceId; status: "ready" | "blocked"; dataCutoff: string; readinessAxes: MediaAxisReadiness[]; authorityRefs: MediaExactRef[]; blockers: MediaBlocker[]; countLedger: MediaCountLedger };
+export type MediaStudioViewResponse = { schemaVersion: typeof MEDIA_STUDIO_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: MediaStudioSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
+
 export const OPERATION_COMMAND_READINESS_SCHEMA_VERSION = "aos.ecommerce-workshop.operation-command-readiness/v1" as const;
 export type OperationCommandId = "classify" | "createCase" | "changeMembership" | "manageSla" | "automationKill" | "refund";
 export type OperationCommandBlocker = { code: string; dependency: string; requiredAction: string };
