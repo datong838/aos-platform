@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
-import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type OperationsSlice, type OperationsSliceId, type OperationsViewResponse } from "../../api/ecommerceWorkshop";
+import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type OperationCommandReadinessResponse, type OperationsSlice, type OperationsSliceId, type OperationsViewResponse } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 
-type OperationsClient = Pick<typeof ecommerceWorkshopClient, "getOperationsView">;
+type OperationsClient = Pick<typeof ecommerceWorkshopClient, "getOperationsView" | "getOperationCommandReadiness">;
 type Phase = "loading" | "ready" | "empty" | "forbidden" | "failed";
 const LABELS: Record<OperationsSliceId, string> = { orders: "订单", orderLines: "订单明细", inventory: "库存", shipments: "履约", payments: "支付", aftersaleEvents: "售后事件", operationCases: "运营工单" };
 
@@ -24,15 +24,16 @@ function SliceDetail({ slice }: { slice: OperationsSlice }) {
 export function OperationsPage({ client = ecommerceWorkshopClient }: { client?: OperationsClient }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [response, setResponse] = useState<OperationsViewResponse | null>(null);
+  const [commandReadiness, setCommandReadiness] = useState<OperationCommandReadinessResponse | null>(null);
   const [selected, setSelected] = useState<OperationsSliceId>("orders");
   const request = useRef(0);
   const load = () => {
-    const id = ++request.current; setPhase("loading"); setResponse(null);
-    void client.getOperationsView().then((next) => { if (id !== request.current) return; setResponse(next); setSelected(next.slices.find((item) => item.status === "blocked")?.sliceId ?? next.slices[0]?.sliceId ?? "orders"); setPhase(next.page.count === 0 ? "empty" : "ready"); }, (error: unknown) => { if (id === request.current) setPhase(phaseFor(error)); });
+    const id = ++request.current; setPhase("loading"); setResponse(null); setCommandReadiness(null);
+    void Promise.all([client.getOperationsView(), client.getOperationCommandReadiness()]).then(([next, nextCommands]) => { if (id !== request.current) return; if (next.tenant.orgId !== nextCommands.tenant.orgId || next.tenant.projectId !== nextCommands.tenant.projectId) throw new TypeError("operations command readiness tenant 漂移"); setResponse(next); setCommandReadiness(nextCommands); setSelected(next.slices.find((item) => item.status === "blocked")?.sliceId ?? next.slices[0]?.sliceId ?? "orders"); setPhase(next.page.count === 0 ? "empty" : "ready"); }, (error: unknown) => { if (id === request.current) setPhase(phaseFor(error)); });
   };
   useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
   const slice = response?.slices.find((item) => item.sliceId === selected) ?? response?.slices[0];
-  const content = response && slice ? (() => {
+  const content = response && commandReadiness && slice ? (() => {
     const ready = response.slices.filter((item) => item.status === "ready").length;
     const blocked = response.slices.length - ready;
     const totals = response.slices.reduce((value, item) => ({ source: value.source + item.countLedger.sourceTotal, attached: value.attached + item.countLedger.attached, unmatched: value.unmatched + item.countLedger.unmatched, conflicted: value.conflicted + item.countLedger.conflicted }), { source: 0, attached: 0, unmatched: 0, conflicted: 0 });
@@ -42,7 +43,7 @@ export function OperationsPage({ client = ecommerceWorkshopClient }: { client?: 
       <div className="operations-board">
         <aside className="operations-inbox"><header><h2>统一待办 · 权威切片</h2><span>{blocked} 项阻断</span></header>{response.slices.map((item) => <button type="button" className={`operations-slice-card is-${item.status}${item.sliceId === slice.sliceId ? " is-selected" : ""}`} aria-pressed={item.sliceId === slice.sliceId} key={item.sliceId} onClick={() => setSelected(item.sliceId)}><span><strong>{LABELS[item.sliceId]}</strong><small>{item.sliceId}</small></span><b>{item.countLedger.attached}</b><em>{item.status === "ready" ? "可读" : "阻断"}</em></button>)}</aside>
         <main className="operations-detail"><SliceDetail slice={slice} /></main>
-        <aside className="operations-evidence"><header><h2>证据链 · 边界</h2><span>{slice.blockers.length} blocker</span></header>{slice.blockers.length ? <ul>{slice.blockers.map((blocker) => <li key={blocker.code}><strong>{blocker.code}</strong><span>{blocker.dependency}</span><p>{blocker.requiredAction}</p></li>)}</ul> : <div className="operations-evidence-clear"><strong>当前读取链闭合</strong><p>只证明该切片在当前截止面可读取；不授权任何外部副作用。</p></div>}<section><h3>不可推断</h3><p>页面 GREEN 不等于发布、迁移、Provider 或真实业务动作 GREEN。</p></section></aside>
+        <aside className="operations-evidence"><header><h2>证据链 · 边界</h2><span>{slice.blockers.length} blocker</span></header>{slice.blockers.length ? <ul>{slice.blockers.map((blocker) => <li key={blocker.code}><strong>{blocker.code}</strong><span>{blocker.dependency}</span><p>{blocker.requiredAction}</p></li>)}</ul> : <div className="operations-evidence-clear"><strong>当前读取链闭合</strong><p>只证明该切片在当前截止面可读取；不授权任何外部副作用。</p></div>}<section className="operations-command-drawer" aria-label="统一运营动作建议"><header><div><small>服务端命令就绪</small><h3>动作建议 · 失败关闭</h3></div><span>0 / {commandReadiness.commands.length} 可执行</span></header><p>对照视觉稿保留动作区层级，但客户、金额、建议和执行授权缺失时不生成示例事实。</p><div>{commandReadiness.commands.map((command) => <button type="button" className={`operations-command is-${command.risk}`} disabled key={command.commandId} title={command.blockers.map((blocker) => blocker.requiredAction).join("；")}><span><strong>{command.label}</strong><small>{command.sideEffect === "external" ? "外部副作用" : "内部 authority"}</small></span><em>{command.blockers[0]?.code ?? "BLOCKED"}</em></button>)}</div></section><section><h3>不可推断</h3><p>页面 GREEN 不等于发布、迁移、Provider 或真实业务动作 GREEN。</p></section></aside>
       </div>
       <footer className="operations-footnote"><span>租户 {response.tenant.orgId}/{response.tenant.projectId}</span><span>来源 {totals.source}</span><span>已挂接 {totals.attached}</span><span>未匹配 {totals.unmatched}</span><span>冲突 {totals.conflicted}</span><span>无后续页：{response.page.hasMore ? "否" : "是"}</span></footer>
     </div>;

@@ -44,11 +44,14 @@ describe("EcommerceWorkshopHost task cockpit", () => {
     vi.spyOn(ecommerceWorkshopClient, "getSourceReadiness").mockRejectedValue(new Error("source readiness outside host assertion"));
     const ids = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"] as const;
     vi.spyOn(ecommerceWorkshopClient, "getOperationsView").mockResolvedValue({ schemaVersion: "aos.ecommerce-workshop.operations-view/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: ids.map((sliceId) => ({ sliceId, status: "ready", dataCutoff: "2026-08-24T08:00:00Z", authorityRefs: [{ resourceType: "ReadAuthority", resourceId: sliceId, revision: 1, contentHash: `sha256:${"a".repeat(64)}`, receiptId: "receipt-1" }], blockers: [], countLedger: { sourceTotal: 0, attached: 0, unmatched: 0, conflicted: 0 } })), page: { limit: 50, count: 0, hasMore: false, nextCursor: null } });
+    const commandIds = ["classify", "createCase", "changeMembership", "manageSla", "automationKill", "refund"] as const;
+    vi.spyOn(ecommerceWorkshopClient, "getOperationCommandReadiness").mockResolvedValue({ schemaVersion: "aos.ecommerce-workshop.operation-command-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", commands: commandIds.map((commandId, index) => ({ commandId, label: `命令${index}`, status: "blocked", risk: index > 3 ? "high" : "controlled", sideEffect: index === 5 ? "external" : "internalAuthority", blockers: [{ code: "OPERATION_COMMAND_HANDLER_NOT_BOUND", dependency: "W3-12B2", requiredAction: "完成 exact command gate" }] })) });
     await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/operations"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
     expect(host.querySelectorAll("h1")).toHaveLength(1);
     expect(host.textContent).toContain("统一运营驾驶舱");
     expect(host.textContent).toContain("就绪状态待验证");
     expect(host.textContent).toContain("统一待办 · 权威切片");
     expect(host.textContent).toContain("只读分诊");
+    expect(host.textContent).toContain("动作建议 · 失败关闭");
   });
 });

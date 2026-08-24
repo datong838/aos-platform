@@ -3,6 +3,7 @@ import {
   SOURCE_READINESS_SCHEMA_VERSION,
   TASK_COCKPIT_SCHEMA_VERSION,
   OPERATIONS_SCHEMA_VERSION,
+  OPERATION_COMMAND_READINESS_SCHEMA_VERSION,
   type EcommerceWorkshopApiErrorBody,
   type EcommerceWorkshopModule,
   type EcommerceWorkshopModuleListResponse,
@@ -40,6 +41,10 @@ import {
   type OperationsSlice,
   type OperationsSliceId,
   type OperationsViewResponse,
+  type OperationCommandBlocker,
+  type OperationCommandDescriptor,
+  type OperationCommandId,
+  type OperationCommandReadinessResponse,
 } from "./contracts";
 
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
@@ -366,4 +371,40 @@ export function parseOperationsView(value: unknown, expectedTenant?: WorkshopTen
   const attached = slices.reduce((total, slice) => total + slice.countLedger.attached, 0);
   if (page.count !== attached) throw new TypeError("operations.page count 不一致");
   return { schemaVersion: OPERATIONS_SCHEMA_VERSION, tenant, evaluatedAt: timestamp(raw.evaluatedAt, "operations.evaluatedAt"), dataCutoff, readiness: "degraded", slices, page };
+}
+
+const OPERATION_COMMAND_IDS = ["classify", "createCase", "changeMembership", "manageSla", "automationKill", "refund"] as const satisfies readonly OperationCommandId[];
+
+function parseOperationCommandBlocker(value: unknown): OperationCommandBlocker {
+  const raw = record(value, "operationCommand.blocker");
+  exact(raw, ["code", "dependency", "requiredAction"], "operationCommand.blocker");
+  const code = boundedText(raw.code, "operationCommand.blocker.code", 120);
+  if (!REASON.test(code)) throw new TypeError("operationCommand.blocker.code 非法");
+  return { code, dependency: boundedText(raw.dependency, "operationCommand.blocker.dependency", 160), requiredAction: boundedText(raw.requiredAction, "operationCommand.blocker.requiredAction", 500) };
+}
+
+function parseOperationCommand(value: unknown, expectedId: OperationCommandId): OperationCommandDescriptor {
+  const raw = record(value, `operationCommand.${expectedId}`);
+  exact(raw, ["commandId", "label", "status", "risk", "sideEffect", "blockers"], `operationCommand.${expectedId}`);
+  const commandId = enumValue(raw.commandId, OPERATION_COMMAND_IDS, "operationCommand.commandId");
+  if (commandId !== expectedId) throw new TypeError("operationCommand canonical order 漂移");
+  const status = enumValue(raw.status, ["ready", "blocked"] as const, `operationCommand.${commandId}.status`);
+  if (!Array.isArray(raw.blockers)) throw new TypeError(`operationCommand.${commandId}.blockers 必须是数组`);
+  const blockers = raw.blockers.map(parseOperationCommandBlocker);
+  assertUnique(blockers.map((item) => item.code), `operationCommand.${commandId}.blockers`);
+  if (status === "ready" && blockers.length) throw new TypeError(`operationCommand.${commandId} 伪 ready`);
+  if (status === "blocked" && blockers.length === 0) throw new TypeError(`operationCommand.${commandId} 伪 blocked`);
+  return { commandId, label: boundedText(raw.label, `operationCommand.${commandId}.label`, 80), status, risk: enumValue(raw.risk, ["controlled", "high"] as const, `operationCommand.${commandId}.risk`), sideEffect: enumValue(raw.sideEffect, ["internalAuthority", "external"] as const, `operationCommand.${commandId}.sideEffect`), blockers };
+}
+
+export function parseOperationCommandReadiness(value: unknown, expectedTenant?: WorkshopTenant): OperationCommandReadinessResponse {
+  const raw = record(value, "operationCommandReadiness");
+  exact(raw, ["schemaVersion", "tenant", "evaluatedAt", "commands"], "operationCommandReadiness");
+  if (raw.schemaVersion !== OPERATION_COMMAND_READINESS_SCHEMA_VERSION) throw new TypeError("operationCommandReadiness.schemaVersion 漂移");
+  const tenant = parseTenant(raw.tenant);
+  if (expectedTenant && (tenant.orgId !== expectedTenant.orgId || tenant.projectId !== expectedTenant.projectId)) throw new TypeError("operationCommandReadiness.tenant 漂移");
+  if (!Array.isArray(raw.commands) || raw.commands.length !== OPERATION_COMMAND_IDS.length) throw new TypeError("operationCommandReadiness.commands 必须是 canonical order 六命令");
+  const rawCommands = raw.commands;
+  const commands = OPERATION_COMMAND_IDS.map((commandId, index) => parseOperationCommand(rawCommands[index], commandId));
+  return { schemaVersion: OPERATION_COMMAND_READINESS_SCHEMA_VERSION, tenant, evaluatedAt: timestamp(raw.evaluatedAt, "operationCommandReadiness.evaluatedAt"), commands };
 }

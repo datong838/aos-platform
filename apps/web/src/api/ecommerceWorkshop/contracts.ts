@@ -162,3 +162,9 @@ export type OperationsCountLedger = { sourceTotal: number; attached: number; unm
 export type OperationsSlice = { sliceId: OperationsSliceId; status: OperationsSliceStatus; dataCutoff: string; authorityRefs: OperationsAuthorityRef[]; blockers: OperationsBlocker[]; countLedger: OperationsCountLedger };
 export type OperationsPage = { limit: number; count: number; hasMore: boolean; nextCursor: string | null };
 export type OperationsViewResponse = { schemaVersion: typeof OPERATIONS_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: OperationsSlice[]; page: OperationsPage };
+
+export const OPERATION_COMMAND_READINESS_SCHEMA_VERSION = "aos.ecommerce-workshop.operation-command-readiness/v1" as const;
+export type OperationCommandId = "classify" | "createCase" | "changeMembership" | "manageSla" | "automationKill" | "refund";
+export type OperationCommandBlocker = { code: string; dependency: string; requiredAction: string };
+export type OperationCommandDescriptor = { commandId: OperationCommandId; label: string; status: "ready" | "blocked"; risk: "controlled" | "high"; sideEffect: "internalAuthority" | "external"; blockers: OperationCommandBlocker[] };
+export type OperationCommandReadinessResponse = { schemaVersion: typeof OPERATION_COMMAND_READINESS_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; commands: OperationCommandDescriptor[] };

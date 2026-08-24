@@ -20,6 +20,10 @@ from aos_api.ecommerce_workshop_contracts import (
     EcommerceWorkshopModuleReadinessResponse,
 )
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
+from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
+from aos_api.ecommerce_operation_command_contracts import (
+    OperationCommandReadinessEnvelope,
+)
 from aos_api.ecommerce_workshop_operations_contracts import (
     WorkshopOperationsViewEnvelope,
 )
@@ -96,6 +100,11 @@ def get_ecommerce_workshop_operations() -> EcommerceWorkshopOperations:
     return EcommerceWorkshopOperations()
 
 
+@lru_cache(maxsize=1)
+def get_ecommerce_operation_commands() -> EcommerceOperationCommands:
+    return EcommerceOperationCommands()
+
+
 CatalogDependency = Annotated[
     EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)
 ]
@@ -109,6 +118,10 @@ SourceReadinessDependency = Annotated[
 OperationsDependency = Annotated[
     EcommerceWorkshopOperations,
     Depends(get_ecommerce_workshop_operations),
+]
+OperationCommandsDependency = Annotated[
+    EcommerceOperationCommands,
+    Depends(get_ecommerce_operation_commands),
 ]
 
 
@@ -284,6 +297,26 @@ def get_ecommerce_workshop_operations_view(
     _reject_query_parameters(request)
     _require_operations_installation(principal=principal, catalog=catalog)
     return operations.read(
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+    )
+
+
+@router.get(
+    "/commands/operations/readiness",
+    response_model=OperationCommandReadinessEnvelope,
+    operation_id="ecommerceWorkshopOperationCommandReadinessGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_operation_command_readiness(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    commands: OperationCommandsDependency,
+) -> OperationCommandReadinessEnvelope:
+    _reject_query_parameters(request)
+    _require_operations_installation(principal=principal, catalog=catalog)
+    return commands.read_readiness(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )

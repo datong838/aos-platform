@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
+import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -35,6 +35,18 @@ describe("ecommerceWorkshop strict parser", () => {
 const operationSliceIds = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"];
 const operationSlice = (sliceId: string, status = "ready") => ({ sliceId, status, dataCutoff: "2026-08-24T08:00:00Z", authorityRefs: status === "ready" ? [{ resourceType: "ReadAuthority", resourceId: `${sliceId}.v1`, revision: 1, contentHash: hash("d"), receiptId: "receipt-1" }] : [], blockers: status === "blocked" ? [{ code: "DEPENDENCY_NOT_READY", dependency: `ecommerce.${sliceId}`, requiredAction: "接入 exact authority" }] : [], countLedger: { sourceTotal: status === "ready" ? 1 : 0, attached: status === "ready" ? 1 : 0, unmatched: 0, conflicted: 0 } });
 const operations = { schemaVersion: "aos.ecommerce-workshop.operations-view/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: operationSliceIds.map((id) => operationSlice(id)), page: { limit: 50, count: 7, hasMore: false, nextCursor: null } };
+const commandIds = ["classify", "createCase", "changeMembership", "manageSla", "automationKill", "refund"] as const;
+const commandReadiness = { schemaVersion: "aos.ecommerce-workshop.operation-command-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", commands: commandIds.map((commandId, index) => ({ commandId, label: `命令${index + 1}`, status: "blocked", risk: index > 3 ? "high" : "controlled", sideEffect: index === 5 ? "external" : "internalAuthority", blockers: [{ code: index === 5 ? "EXTERNAL_ACTION_GATE_NOT_BOUND" : "OPERATION_COMMAND_HANDLER_NOT_BOUND", dependency: "W3-12B2", requiredAction: "完成 exact command gate" }] })) };
+
+describe("operation command readiness strict parser", () => {
+  it("接受 canonical blocked 命令并拒绝 false-ready、顺序、extra 与 tenant 漂移", () => {
+    expect(parseOperationCommandReadiness(commandReadiness).commands).toHaveLength(6);
+    expect(() => parseOperationCommandReadiness({ ...commandReadiness, extra: true })).toThrow("字段漂移");
+    expect(() => parseOperationCommandReadiness({ ...commandReadiness, commands: [...commandReadiness.commands].reverse() })).toThrow("canonical order");
+    expect(() => parseOperationCommandReadiness({ ...commandReadiness, commands: [{ ...commandReadiness.commands[0], status: "ready" }, ...commandReadiness.commands.slice(1)] })).toThrow("伪 ready");
+    expect(() => parseOperationCommandReadiness({ ...commandReadiness, tenant: { orgId: "dev-org", projectId: "dev-project" } }, { orgId: "org-org", projectId: "dev-project" })).toThrow("tenant 漂移");
+  });
+});
 
 describe("operations view strict parser", () => {
   it("保留 ordered 七切片、exact authority 与数量守恒", () => {

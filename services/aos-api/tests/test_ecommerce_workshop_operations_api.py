@@ -10,6 +10,7 @@ from aos_api.asset_registry.errors import AssetNotFoundError
 from aos_api.errors import register_exception_handlers
 from aos_api.routers import ecommerce_workshop
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
+from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
 
 
 class FakeCatalog:
@@ -27,6 +28,7 @@ class FakeCatalog:
 def _client(
     catalog: FakeCatalog | None = None,
     operations: EcommerceWorkshopOperations | None = None,
+    commands: EcommerceOperationCommands | None = None,
 ) -> TestClient:
     app = FastAPI()
     register_exception_handlers(app)
@@ -45,6 +47,10 @@ def _client(
         app.dependency_overrides[
             ecommerce_workshop.get_ecommerce_workshop_operations
         ] = lambda: operations
+    if commands is not None:
+        app.dependency_overrides[
+            ecommerce_workshop.get_ecommerce_operation_commands
+        ] = lambda: commands
     return TestClient(app, raise_server_exceptions=False)
 
 
@@ -145,3 +151,40 @@ def test_openapi_exposes_only_the_operations_get_surface() -> None:
     surface = document["paths"]["/v1/ecommerce-workshop/views/operations"]
     assert set(surface) == {"get"}
     assert surface["get"]["operationId"] == "ecommerceWorkshopOperationsViewGet"
+
+
+def test_operation_command_readiness_is_get_only_and_scope_safe() -> None:
+    catalog = FakeCatalog()
+    with _client(catalog, commands=EcommerceOperationCommands()) as client:
+        response = client.get(
+            "/v1/ecommerce-workshop/commands/operations/readiness"
+        )
+        injected = client.get(
+            "/v1/ecommerce-workshop/commands/operations/readiness?orgId=dev-org"
+        )
+        posted = client.post(
+            "/v1/ecommerce-workshop/commands/operations/readiness"
+        )
+
+    assert response.status_code == 200
+    assert response.json()["tenant"] == {
+        "orgId": "org-org",
+        "projectId": "dev-project",
+    }
+    assert len(response.json()["commands"]) == 6
+    assert injected.status_code == 400
+    assert posted.status_code == 405
+    assert catalog.calls[0]["org_id"] == "org-org"
+
+
+def test_openapi_exposes_only_operation_command_readiness_get() -> None:
+    with _client() as client:
+        document = client.get("/openapi.json").json()
+
+    surface = document["paths"][
+        "/v1/ecommerce-workshop/commands/operations/readiness"
+    ]
+    assert set(surface) == {"get"}
+    assert surface["get"]["operationId"] == (
+        "ecommerceWorkshopOperationCommandReadinessGet"
+    )

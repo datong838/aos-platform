@@ -503,6 +503,19 @@
 .operations-evidence > section h3,
 .operations-evidence > section p { margin: 0; }
 .operations-evidence > section p { margin-top: 6px; color: var(--aos-text-secondary); }
+.operations-command-drawer > header { align-items: center; }
+.operations-command-drawer > header small { color: var(--aos-text-tertiary); }
+.operations-command-drawer > header h3 { margin-top: 2px; }
+.operations-command-drawer > header > span { white-space: nowrap; color: var(--aos-red); font-size: 11px; }
+.operations-command-drawer > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 11px; }
+.operations-command { display: grid; gap: 6px; min-width: 0; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-amber); padding: 9px; text-align: left; color: var(--aos-text-secondary); background: var(--aos-surface-hover); opacity: 1; }
+.operations-command.is-high { border-left-color: var(--aos-red); }
+.operations-command span,
+.operations-command strong,
+.operations-command small,
+.operations-command em { display: block; min-width: 0; overflow-wrap: anywhere; }
+.operations-command small { margin-top: 3px; color: var(--aos-text-tertiary); }
+.operations-command em { color: var(--aos-red); font-size: 10px; font-style: normal; }
 .operations-footnote { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 10px 14px; border: 1px solid var(--aos-border); background: var(--aos-surface); color: var(--aos-text-secondary); font-size: 12px; }
 
 .p-app.is-workshop-focus > .p-nav-global,
@@ -549,4 +562,5 @@
   .operations-inbox { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .operations-inbox header { grid-column: 1 / -1; }
   .operations-ledger { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .operations-command-drawer > div { grid-template-columns: 1fr; }
 }
