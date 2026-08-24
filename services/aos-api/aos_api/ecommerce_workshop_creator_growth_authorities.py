@@ -23,6 +23,19 @@ class MatchDisposition(StrEnum):
     NEEDS_REVIEW = "needs_review"
 
 
+class OutreachBatchLifecycle(StrEnum):
+    PREPARED = "prepared"
+    FROZEN = "frozen"
+
+
+class OutreachStartOutcome(StrEnum):
+    ACCEPTED = "accepted"
+    APPLIED = "applied"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+    SKIPPED = "skipped"
+
+
 class CreatorCandidateRevision(AipContractModel):
     tenant: TenantContext
     candidate_id: str = Field(min_length=1, max_length=200)
@@ -104,10 +117,89 @@ class CreatorMatchDecision(AipContractModel):
         return self
 
 
+class OutreachItemRevision(AipContractModel):
+    tenant: TenantContext
+    item_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    candidate_ref: CreatorExactRef
+    match_decision_ref: CreatorExactRef
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def _accepted_match_only(self) -> OutreachItemRevision:
+        if self.candidate_ref.resource_type != "CreatorCandidateRevision":
+            raise ValueError("candidateRef must reference CreatorCandidateRevision")
+        if self.match_decision_ref.resource_type != "CreatorMatchDecision":
+            raise ValueError("matchDecisionRef must reference CreatorMatchDecision")
+        return self
+
+
+class OutreachBatchRevision(AipContractModel):
+    tenant: TenantContext
+    batch_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    lifecycle: OutreachBatchLifecycle
+    item_refs: list[CreatorExactRef] = Field(min_length=1, max_length=100)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    prepared_at: datetime
+
+    @field_validator("prepared_at")
+    @classmethod
+    def _aware_time(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("batch preparedAt must include a timezone")
+        return value
+
+    @field_validator("item_refs")
+    @classmethod
+    def _unique_items(cls, value: list[CreatorExactRef]) -> list[CreatorExactRef]:
+        identities = [(item.resource_id, item.revision) for item in value]
+        if len(identities) != len(set(identities)):
+            raise ValueError("itemRefs must be unique")
+        if any(item.resource_type != "OutreachItemRevision" for item in value):
+            raise ValueError("itemRefs must reference OutreachItemRevision")
+        return value
+
+
+class OutreachStartLedger(AipContractModel):
+    tenant: TenantContext
+    ledger_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    batch_ref: CreatorExactRef
+    input: int = Field(ge=0)
+    accepted: int = Field(ge=0)
+    applied: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    unknown: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    recorded_at: datetime
+
+    @field_validator("recorded_at")
+    @classmethod
+    def _aware_time(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("start ledger recordedAt must include a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _conserved(self) -> OutreachStartLedger:
+        if self.batch_ref.resource_type != "OutreachBatchRevision":
+            raise ValueError("batchRef must reference OutreachBatchRevision")
+        if self.input != self.accepted + self.applied + self.failed + self.unknown + self.skipped:
+            raise ValueError("start ledger outcomes must conserve input")
+        return self
+
+
 __all__ = [
     "CreatorCandidateRevision",
     "CreatorExactRef",
     "CreatorMatchDecision",
     "CreatorMatchObservation",
     "MatchDisposition",
+    "OutreachBatchLifecycle",
+    "OutreachBatchRevision",
+    "OutreachItemRevision",
+    "OutreachStartLedger",
+    "OutreachStartOutcome",
 ]

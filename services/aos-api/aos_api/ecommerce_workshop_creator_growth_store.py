@@ -16,12 +16,15 @@ from aos_api.ecommerce_workshop_creator_growth_authorities import (
     CreatorCandidateRevision,
     CreatorMatchDecision,
     CreatorMatchObservation,
+    OutreachBatchRevision,
+    OutreachItemRevision,
+    OutreachStartLedger,
 )
 from aos_api.tenant_scope import TenantScope
 
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
-AuthorityT = TypeVar("AuthorityT", CreatorCandidateRevision, CreatorMatchObservation, CreatorMatchDecision)
+AuthorityT = TypeVar("AuthorityT", CreatorCandidateRevision, CreatorMatchObservation, CreatorMatchDecision, OutreachItemRevision, OutreachBatchRevision, OutreachStartLedger)
 
 
 @dataclass(frozen=True)
@@ -56,6 +59,15 @@ class EcommerceWorkshopCreatorGrowthStore:
 
     def append_match_decision(self, scope: TenantScope, item: CreatorMatchDecision, receipt_id: str) -> None:
         self._append(scope, "ecommerce_creator_match_decision", "decision_id", item.decision_id, item, receipt_id)
+
+    def append_outreach_item(self, scope: TenantScope, item: OutreachItemRevision, receipt_id: str) -> None:
+        self._append(scope, "ecommerce_creator_outreach_item_revision", "item_id", item.item_id, item, receipt_id)
+
+    def append_outreach_batch(self, scope: TenantScope, item: OutreachBatchRevision, receipt_id: str) -> None:
+        self._append(scope, "ecommerce_creator_outreach_batch_revision", "batch_id", item.batch_id, item, receipt_id)
+
+    def append_start_ledger(self, scope: TenantScope, item: OutreachStartLedger, receipt_id: str) -> None:
+        self._append(scope, "ecommerce_creator_outreach_start_ledger", "ledger_id", item.ledger_id, item, receipt_id)
 
     def list_candidates(self, scope: TenantScope, *, cutoff: datetime, limit: int = 100) -> list[CreatorAuthorityObservation[CreatorCandidateRevision]]:
         return self._list(scope, "ecommerce_creator_candidate_revision", CreatorCandidateRevision, cutoff, limit)
@@ -103,7 +115,7 @@ class EcommerceWorkshopCreatorGrowthStore:
 
     @staticmethod
     def _time(item: AuthorityT) -> datetime:
-        return getattr(item, "observed_at", getattr(item, "decided_at", None))
+        return next((value for value in (getattr(item, "observed_at", None), getattr(item, "decided_at", None), getattr(item, "prepared_at", None), getattr(item, "recorded_at", None)) if value is not None), None)
 
 
 __all__ = ["CreatorAuthorityObservation", "CreatorAuthorityReadError", "EcommerceWorkshopCreatorGrowthStore"]
