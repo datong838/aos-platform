@@ -1,0 +1,62 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "task_id": "workshop-w3-12-unified-operations-authority-20260825",
+  "work_item": "W3-12",
+  "base_revision": "AOS-000223",
+  "branch": "m1",
+  "candidate_commit": "86785e29566a6d8b157afcab6ca3aef2c87dc60c",
+  "recorded_at": "2026-08-25T02:54:17+08:00",
+  "result": "CODE_BROWSER_GREEN_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "implementation_audit": {
+    "authority": "OperationCase, CaseEvent, ClassificationDecision, AggregationPolicy, Membership, SLA and Kill strict contracts plus tenant-bound append-only Store are present",
+    "commands": "classify, createCase, changeMembership, manageSla and automationKill reuse canonical Action Proposal, Approval, ExecutionLease and Receipt verification",
+    "observation": "request-level exact Proposal and Lease observation preserves unknown and forbids automatic replay",
+    "workshop_surface": "seven-slice canonical read view and all command suggestions remain failure closed",
+    "new_change": "public ContributionLineage exposes atomic Skill to Logic to coworker to Workshop contribution without reclassifying domain authority"
+  },
+  "verification": {
+    "backend_focused": "65 passed",
+    "backend_cumulative": "218 passed",
+    "frontend_cumulative": "221 files; 2084 tests passed",
+    "openapi": "deterministic exporter check PASS",
+    "web_build": "TypeScript and Vite production build GREEN",
+    "browser": {
+      "surface": "Codex built-in browser",
+      "url": "http://localhost:5173/workshop/operations",
+      "api": "http://127.0.0.1:8080 current m1 runtime",
+      "tenant": "org-org/dev-project",
+      "viewports": [
+        "1280x720 GREEN no horizontal overflow",
+        "1440x900 GREEN no horizontal overflow",
+        "1920x1080 GREEN no horizontal overflow"
+      ],
+      "content": "seven canonical slices, count conservation, structured blockers, six disabled command suggestions, request observation and ContributionLineage visible",
+      "interaction": "OperationCase slice selection and visible keyboard focus GREEN; no refund, kill, approve, publish, adopt or replay control",
+      "runtime_facts": "four readable slices, three fail-closed slices, source 169 equals attached 169 at current cutoff; not interpreted as operational authority",
+      "console_errors": 0,
+      "commands_invoked": 0
+    }
+  },
+  "consistency_review": {
+    "atomic_skill_to_logic_to_coworker_to_workshop": "preserved",
+    "domain_authority_misclassified_as_skill": false,
+    "l0_originals_duplicated": false,
+    "second_case_authority_created": false,
+    "unknown_auto_replayed": false,
+    "external_refund_or_kill_executed": false,
+    "decision": "GREEN"
+  },
+  "side_effects": {
+    "live_migration_applied": false,
+    "release_performed": false,
+    "provider_called": false,
+    "agent_run_started": false,
+    "action_executed": false,
+    "approval_decided": false,
+    "handoff_issued": false,
+    "takeover_executed": false,
+    "business_data_mutated": false,
+    "offline_queue_flushed": false
+  },
+  "next": "W3-13 analyst authority closure audit"
+}
