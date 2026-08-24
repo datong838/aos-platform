@@ -543,6 +543,39 @@ class MutableAuthorityRef(AipContractModel):
     version: int = Field(ge=1)
 
 
+class ExternalActionPreviewBinding(AipContractModel):
+    """Exact W5 dependencies that must move as one external-Action envelope."""
+
+    purpose: str = Field(min_length=1, max_length=500)
+    action_type_ref: ExactRevisionRef
+    capability_ref: ExactRevisionRef
+    capability_binding_ref: ExactRevisionRef
+    account_ref: ExactRevisionRef
+    adapter_capability_ref: ExactRevisionRef
+    risk_policy_ref: ExactRevisionRef
+    action_budget_policy_ref: ExactRevisionRef
+    kill_policy_ref: ExactRevisionRef
+    dry_validation_receipt_ref: ExactRevisionRef
+
+    @model_validator(mode="after")
+    def _external_ref_types(self) -> "ExternalActionPreviewBinding":
+        expected = {
+            "action_type_ref": "ActionTypeRevision",
+            "capability_ref": "CapabilityRevision",
+            "capability_binding_ref": "CapabilityBindingRevision",
+            "account_ref": "AccountBindingRevision",
+            "adapter_capability_ref": "AdapterCapabilityRevision",
+            "risk_policy_ref": "RiskPolicyRevision",
+            "action_budget_policy_ref": "ActionBudgetPolicyRevision",
+            "kill_policy_ref": "KillPolicyRevision",
+            "dry_validation_receipt_ref": "DryValidationReceiptRevision",
+        }
+        for field_name, resource_type in expected.items():
+            if getattr(self, field_name).resource_type != resource_type:
+                raise ValueError(f"{field_name} must reference {resource_type}")
+        return self
+
+
 class ActionProposalExactRef(AipContractModel):
     proposal_id: str = Field(min_length=1, max_length=200)
     version: int = Field(ge=1)
@@ -596,6 +629,7 @@ class CreateImpactPreviewRequest(AipContractModel):
     binding_refs: list[MutableAuthorityRef] = Field(default_factory=list, max_length=256)
     capability_ref: ExactRevisionRef | None = None
     account_ref: MutableAuthorityRef | None = None
+    external_action_binding: ExternalActionPreviewBinding | None = None
     impact: ImpactAssessment
     expires_at: datetime
 
@@ -645,6 +679,26 @@ class CreateImpactPreviewRequest(AipContractModel):
             "ShopAccountBinding",
         }:
             raise ValueError("accountRef must reference a controlled account binding")
+        if self.external_action_binding is not None:
+            external = self.external_action_binding
+            if self.capability_ref != external.capability_ref:
+                raise ValueError("externalActionBinding capabilityRef must match preview capabilityRef")
+            if self.account_ref is None:
+                raise ValueError("externalActionBinding requires preview accountRef")
+            if (
+                self.account_ref.resource_id != external.account_ref.resource_id
+                or self.account_ref.version != external.account_ref.revision
+            ):
+                raise ValueError("externalActionBinding accountRef must match preview accountRef")
+            if not any(
+                ref.resource_type == "CapabilityBinding"
+                and ref.resource_id == external.capability_binding_ref.resource_id
+                and ref.version == external.capability_binding_ref.revision
+                for ref in self.binding_refs
+            ):
+                raise ValueError(
+                    "externalActionBinding capabilityBindingRef must match preview bindingRefs"
+                )
         if self.expires_at.tzinfo is None:
             raise ValueError("expiresAt must include timezone information")
         return self

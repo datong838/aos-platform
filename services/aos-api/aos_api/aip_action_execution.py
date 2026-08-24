@@ -291,6 +291,9 @@ class AipActionExecutionService:
 
     def _append_initial_receipt(self, scope: TenantScope, proposal: Any, lease_id: str, outcome: AdapterOutcome) -> None:
         fingerprint = canonical_hash({"proposalId": proposal["proposal_id"], "proposalHash": proposal["proposal_hash"], "payload": proposal["payload"]})
+        receipt_payload = dict(outcome.payload)
+        if proposal["action_binding_hash"]:
+            receipt_payload["actionBindingHash"] = proposal["action_binding_hash"]
         with connect(scope) as conn:
             conn.execute(
                 """INSERT INTO aip_action_receipt
@@ -298,7 +301,7 @@ class AipActionExecutionService:
                     request_fingerprint,evidence_refs,payload,receipt_kind)
                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'[]'::jsonb,%s::jsonb,'initial')
                    ON CONFLICT (org_id,project_id,lease_id) WHERE receipt_kind='initial' DO NOTHING""",
-                (*scope.key, f"receipt-{uuid.uuid4().hex[:20]}", proposal["proposal_id"], lease_id, outcome.status, outcome.provider_request_id, fingerprint, self._store._json(outcome.payload)),
+                (*scope.key, f"receipt-{uuid.uuid4().hex[:20]}", proposal["proposal_id"], lease_id, outcome.status, outcome.provider_request_id, fingerprint, self._store._json(receipt_payload)),
             )
             projected_status = "executing" if outcome.status == "accepted" else outcome.status
             conn.execute("UPDATE aip_action_proposal SET status=%s,version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND proposal_id=%s", (projected_status, *scope.key, proposal["proposal_id"]))

@@ -32,6 +32,23 @@ from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
 
+W5_EXTERNAL_ACTION_FAMILIES = frozenset(
+    {
+        "order.remark",
+        "price.alert",
+        "creator.invite",
+        "customer.service-message",
+        "content.publish",
+        "campaign.schedule",
+        "bulk.contact",
+        "creator.contract",
+        "price.update",
+        "inventory.update",
+        "order.fulfill",
+        "refund.payment",
+    }
+)
+
 
 class AipActionStoreError(RuntimeError):
     code = "AIP_ACTION_STORE_ERROR"
@@ -110,6 +127,11 @@ class AipActionStore:
                     raise AipActionIdempotencyConflict("idempotency key reused for different proposal")
                 return self._bundle(conn, scope, replay["proposal_id"])
             self._validate_task_run(conn, scope, body.task_id, body.run_id)
+            if (
+                body.action_type_id in W5_EXTERNAL_ACTION_FAMILIES
+                and body.impact_preview_ref is None
+            ):
+                raise AipActionTransitionBlocked("EXTERNAL_ACTION_PREVIEW_REQUIRED")
             action_binding_hash = None
             if body.impact_preview_ref is not None:
                 self.assert_bound_impact_preview_current(
@@ -131,12 +153,33 @@ class AipActionStore:
                 binding_refs = preview_row["binding_refs"]
                 capability_ref = preview_row["capability_ref"]
                 account_ref = preview_row["account_ref"]
+                external_action_binding = preview_row["external_action_binding"]
                 if isinstance(binding_refs, str):
                     binding_refs = json.loads(binding_refs)
                 if isinstance(capability_ref, str):
                     capability_ref = json.loads(capability_ref)
                 if isinstance(account_ref, str):
                     account_ref = json.loads(account_ref)
+                if isinstance(external_action_binding, str):
+                    external_action_binding = json.loads(external_action_binding)
+                if body.action_type_id in W5_EXTERNAL_ACTION_FAMILIES:
+                    if not isinstance(external_action_binding, dict):
+                        raise AipActionTransitionBlocked(
+                            "EXTERNAL_ACTION_BINDING_REQUIRED"
+                        )
+                    action_type_ref = external_action_binding.get("actionTypeRef") or {}
+                    if (
+                        action_type_ref.get("resourceId") != body.action_type_id
+                        or action_type_ref.get("contentHash")
+                        != action_snapshot["revisionHash"]
+                    ):
+                        raise AipActionTransitionBlocked(
+                            "EXTERNAL_ACTION_TYPE_REVISION_DRIFTED"
+                        )
+                    if external_action_binding.get("purpose") != body.purpose:
+                        raise AipActionTransitionBlocked(
+                            "EXTERNAL_ACTION_PURPOSE_DRIFTED"
+                        )
                 action_binding_hash = compute_action_binding_hash(
                     org_id=scope.org_id,
                     project_id=scope.project_id,
@@ -147,6 +190,7 @@ class AipActionStore:
                     binding_refs=binding_refs,
                     capability_ref=capability_ref,
                     account_ref=account_ref,
+                    external_action_binding=external_action_binding,
                     expires_at=preview_row["expires_at"],
                 )
             stable = {
@@ -177,10 +221,10 @@ class AipActionStore:
                    org_id,project_id,proposal_id,action_type_id,action_type_revision_hash,
                    action_type_snapshot,task_id,run_id,object_ref,purpose,client_risk_hint,risk_level,
                    policy_snapshot,payload,diff,evidence_refs,impact_preview_id,
-                   impact_preview_revision,impact_preview_hash,proposal_hash,status,expires_at,
+                   impact_preview_revision,impact_preview_hash,action_binding_hash,proposal_hash,status,expires_at,
                    idempotency_key,request_hash,version,created_by,created_at,updated_at)
                    VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s::jsonb,%s,%s,%s,%s::jsonb,
-                           %s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,%s,'drafted',%s,%s,%s,1,%s,NOW(),NOW())""",
+                           %s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,'drafted',%s,%s,%s,1,%s,NOW(),NOW())""",
                 (*scope.key, proposal_id, body.action_type_id, action_snapshot["revisionHash"],
                  self._json(action_snapshot), body.task_id, body.run_id, self._json(stable["objectRef"]),
                  body.purpose, body.risk_hint.value if body.risk_hint else None, risk.level.value,
@@ -189,7 +233,7 @@ class AipActionStore:
                  body.impact_preview_ref.resource_id if body.impact_preview_ref else None,
                  body.impact_preview_ref.revision if body.impact_preview_ref else None,
                  body.impact_preview_ref.content_hash if body.impact_preview_ref else None,
-                 proposal_hash, expires_at, idempotency_key,
+                 action_binding_hash, proposal_hash, expires_at, idempotency_key,
                  request_hash, actor_id),
             )
             conn.execute(
@@ -336,6 +380,7 @@ class AipActionStore:
                     "contentHash": row["impact_preview_hash"],
                 }
             ),
+            action_binding_hash=row["action_binding_hash"],
             proposal_hash=row["proposal_hash"], status=ActionProposalStatus(row["status"]),
             expires_at=row["expires_at"], version=row["version"], created_by=actor(row["created_by"]),
             created_at=row["created_at"], updated_at=row["updated_at"],
@@ -372,6 +417,7 @@ class AipActionStore:
         from aos_api.aip_production_contract_store import (
             AipProductionContractStore,
             ProductionContractDependencyBlocked,
+            compute_action_binding_hash,
         )
         from aos_api.aip_production_contracts import ExactRevisionRef
 
@@ -387,9 +433,47 @@ class AipActionStore:
                 content_hash=proposal_or_ref["impact_preview_hash"],
             )
         try:
-            AipProductionContractStore().assert_frozen_preview_current(conn, scope, ref)
+            preview_row = AipProductionContractStore().assert_frozen_preview_current(
+                conn, scope, ref
+            )
         except ProductionContractDependencyBlocked as exc:
             raise AipActionTransitionBlocked(str(exc)) from exc
+        if not isinstance(proposal_or_ref, ExactRevisionRef):
+            external_action_binding = preview_row["external_action_binding"]
+            binding_refs = preview_row["binding_refs"]
+            capability_ref = preview_row["capability_ref"]
+            account_ref = preview_row["account_ref"]
+            for name, value in (
+                ("external_action_binding", external_action_binding),
+                ("binding_refs", binding_refs),
+                ("capability_ref", capability_ref),
+                ("account_ref", account_ref),
+            ):
+                if isinstance(value, str):
+                    parsed = json.loads(value)
+                    if name == "external_action_binding":
+                        external_action_binding = parsed
+                    elif name == "binding_refs":
+                        binding_refs = parsed
+                    elif name == "capability_ref":
+                        capability_ref = parsed
+                    else:
+                        account_ref = parsed
+            expected_binding_hash = compute_action_binding_hash(
+                org_id=scope.org_id,
+                project_id=scope.project_id,
+                preview_id=preview_row["preview_id"],
+                revision=int(preview_row["revision"]),
+                content_hash=preview_row["content_hash"],
+                dependency_snapshot_hash=preview_row["dependency_snapshot_hash"],
+                binding_refs=binding_refs,
+                capability_ref=capability_ref,
+                account_ref=account_ref,
+                external_action_binding=external_action_binding,
+                expires_at=preview_row["expires_at"],
+            )
+            if proposal_or_ref["action_binding_hash"] != expected_binding_hash:
+                raise AipActionTransitionBlocked("ACTION_BINDING_HASH_DRIFTED")
 
     @staticmethod
     def _json(value: Any) -> str:

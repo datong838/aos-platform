@@ -94,6 +94,7 @@ def compute_action_binding_hash(
     binding_refs: Any,
     capability_ref: Any,
     account_ref: Any,
+    external_action_binding: Any,
     expires_at: Any,
 ) -> str:
     """W-L18: server-owned Preview↔Action joint binding hash (ADR 42 §4 subset)."""
@@ -107,6 +108,7 @@ def compute_action_binding_hash(
             "bindingRefs": binding_refs,
             "capabilityRef": capability_ref,
             "accountRef": account_ref,
+            "externalActionBinding": external_action_binding,
             "expiresAt": expires_at,
         }
     )
@@ -3615,6 +3617,43 @@ class AipProductionContractStore:
                     message="受控账号 authority 尚未接入 W2-D",
                 )
             )
+        if body.external_action_binding is not None:
+            external = body.external_action_binding
+            unavailable_refs = (
+                (external.action_type_ref, "ACTION_TYPE_REVISION_AUTHORITY_UNAVAILABLE"),
+                (
+                    external.capability_binding_ref,
+                    "CAPABILITY_BINDING_REVISION_AUTHORITY_UNAVAILABLE",
+                ),
+                (
+                    external.adapter_capability_ref,
+                    "ADAPTER_CAPABILITY_REVISION_AUTHORITY_UNAVAILABLE",
+                ),
+                (external.risk_policy_ref, "RISK_POLICY_AUTHORITY_UNAVAILABLE"),
+                (
+                    external.action_budget_policy_ref,
+                    "ACTION_BUDGET_POLICY_AUTHORITY_UNAVAILABLE",
+                ),
+                (external.kill_policy_ref, "KILL_POLICY_AUTHORITY_UNAVAILABLE"),
+                (
+                    external.dry_validation_receipt_ref,
+                    "DRY_VALIDATION_RECEIPT_AUTHORITY_UNAVAILABLE",
+                ),
+            )
+            for ref, code in unavailable_refs:
+                snapshot.append(
+                    {
+                        **ref.model_dump(mode="json", by_alias=True),
+                        "status": "authority_unavailable",
+                    }
+                )
+                blockers.append(
+                    ContractBlocker(
+                        code=code,
+                        message=f"{ref.resource_type} authority 尚未接入 ImpactPreview",
+                        resource_ref=ref,
+                    )
+                )
         impact = body.impact.model_dump(mode="json", by_alias=True)
         if any(item["quality"] == "unknown" for item in impact.values()):
             blockers.append(
@@ -3713,10 +3752,11 @@ class AipProductionContractStore:
             (org_id,project_id,preview_id,revision,task_id,plan_ref,production_context_ref,brief_ref,
              evidence_bundle_ref,eval_contract_ref,responsibility_plan_ref,stage_template_ref,
              model_route_ref,runtime_policy_ref,binding_refs,capability_ref,account_ref,
+             external_action_binding,
              impact,expires_at,content_hash,dependency_snapshot_hash,dependency_snapshot,
              lifecycle,readiness,blockers,frozen_by,frozen_at,created_by)
             VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
-             %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,
+             %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,
              %s,%s,%s::jsonb,%s,%s,%s::jsonb,%s,
              CASE WHEN %s::text IS NULL THEN NULL ELSE NOW() END,%s) RETURNING *""",
             (
@@ -3736,6 +3776,11 @@ class AipProductionContractStore:
                 self._json(payload["bindingRefs"]),
                 self._json(payload.get("capabilityRef")),
                 self._json(payload.get("accountRef")),
+                (
+                    self._json(payload["externalActionBinding"])
+                    if payload.get("externalActionBinding") is not None
+                    else None
+                ),
                 self._json(payload["impact"]),
                 body.expires_at,
                 content_hash,
@@ -3765,6 +3810,7 @@ class AipProductionContractStore:
             binding_refs=self._load(row["binding_refs"]),
             capability_ref=self._load(row["capability_ref"]),
             account_ref=self._load(row["account_ref"]),
+            external_action_binding=self._load(row["external_action_binding"]),
             impact=self._load(row["impact"]),
             expires_at=row["expires_at"],
         )
@@ -3783,6 +3829,7 @@ class AipProductionContractStore:
             binding_refs=self._load(row["binding_refs"]),
             capability_ref=self._load(row["capability_ref"]),
             account_ref=self._load(row["account_ref"]),
+            external_action_binding=self._load(row["external_action_binding"]),
             expires_at=row["expires_at"],
         )
         return ImpactPreviewRevision(

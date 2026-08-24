@@ -64,6 +64,7 @@ class ActionProposalSnapshot(ActionProposal):
     diff: dict[str, Any] = Field(default_factory=dict)
     evidence_refs: list[ResourceRef] = Field(default_factory=list)
     impact_preview_ref: ExactRevisionRef | None = None
+    action_binding_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
 
 class ActionDraftBundle(AipContractModel):

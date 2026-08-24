@@ -428,7 +428,23 @@ class AipProductionStartService:
             draft_snapshot = draft["snapshot"] if draft is not None else None
             if isinstance(draft_snapshot, str):
                 draft_snapshot = json.loads(draft_snapshot)
-            pinned = (draft_snapshot or {}).get("actionBindingHash") if isinstance(draft_snapshot, dict) else None
+            draft_binding_hash = (
+                (draft_snapshot or {}).get("actionBindingHash")
+                if isinstance(draft_snapshot, dict)
+                else None
+            )
+            pinned = row["action_binding_hash"] or draft_binding_hash
+            if (
+                row["action_binding_hash"] is not None
+                and draft_binding_hash is not None
+                and row["action_binding_hash"] != draft_binding_hash
+            ):
+                blockers.append(
+                    ContractBlocker(
+                        code="ACTION_BINDING_HASH_MISMATCH",
+                        message="ActionProposal 与 Draft 快照的 actionBindingHash 不一致",
+                    )
+                )
             if not isinstance(pinned, str) or len(pinned) != 64:
                 blockers.append(
                     ContractBlocker(
@@ -440,12 +456,15 @@ class AipProductionStartService:
                 binding_refs = preview["binding_refs"]
                 capability_ref = preview["capability_ref"]
                 account_ref = preview["account_ref"]
+                external_action_binding = preview["external_action_binding"]
                 if isinstance(binding_refs, str):
                     binding_refs = json.loads(binding_refs)
                 if isinstance(capability_ref, str):
                     capability_ref = json.loads(capability_ref)
                 if isinstance(account_ref, str):
                     account_ref = json.loads(account_ref)
+                if isinstance(external_action_binding, str):
+                    external_action_binding = json.loads(external_action_binding)
                 expected = compute_action_binding_hash(
                     org_id=scope.org_id,
                     project_id=scope.project_id,
@@ -456,6 +475,7 @@ class AipProductionStartService:
                     binding_refs=binding_refs,
                     capability_ref=capability_ref,
                     account_ref=account_ref,
+                    external_action_binding=external_action_binding,
                     expires_at=preview["expires_at"],
                 )
                 snapshot.append(

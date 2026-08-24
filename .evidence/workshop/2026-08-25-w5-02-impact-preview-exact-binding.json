@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "workshop-delivery-evidence/v1",
+  "taskId": "W5-02",
+  "recordedAt": "2026-08-24T23:57:59Z",
+  "branch": "m1",
+  "baselineCommit": "61854441273dda6adedc314d7d4d18502ecf663c",
+  "authorityRevision": "AOS-000236",
+  "outcome": "W5_02_EXACT_BINDING_CODE_GREEN_INTERNAL_COMPATIBILITY_GREEN_EXTERNAL_AUTHORITIES_BLOCKED_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "scope": {
+    "implemented": [
+      "ExternalActionPreviewBinding exact envelope",
+      "Preview persistence and dependency blockers",
+      "Proposal actionBindingHash persistence and drift checks",
+      "W5 external family mandatory Preview gate",
+      "Receipt binding lineage",
+      "nullable append-only migration asset"
+    ],
+    "excluded": [
+      "real environment migration",
+      "real account or secret resolution",
+      "Approval or ExecutionLease issuance",
+      "Action or Provider invocation",
+      "canary and release"
+    ]
+  },
+  "verification": {
+    "focused": {
+      "result": "28 passed",
+      "files": [
+        "test_w5_02_impact_preview_exact_binding.py",
+        "test_w5_001_impact_action_binding_migration.py",
+        "test_w2d_contracts.py",
+        "test_w2d_store.py",
+        "test_w2d_action_binding.py",
+        "test_w2d_start_gate.py"
+      ]
+    },
+    "cumulative": {
+      "result": "112 passed",
+      "coverage": "AIP Action control/execution/tool exits/ecommerce connectors, W5-01, W5-02, W2-D contracts/store/action/start/API"
+    },
+    "static": {
+      "compileall": "green",
+      "alembicHeads": ["w5_001 (head)"],
+      "diffCheck": "green"
+    },
+    "browser": {
+      "status": "not_applicable",
+      "reason": "No route, component, copy, or page behavior changed in W5-02. Browser smoke is not substituted for backend contract evidence."
+    }
+  },
+  "compatibility": {
+    "internalPreviewWithoutExternalBinding": "green",
+    "legacyActionRegression": "green",
+    "externalActionWithoutExactPreview": "blocked_before_proposal_write"
+  },
+  "knownBlockers": [
+    "ACCOUNT_AUTHORITY_UNAVAILABLE",
+    "ACTION_TYPE_REVISION_AUTHORITY_UNAVAILABLE",
+    "CAPABILITY_BINDING_REVISION_AUTHORITY_UNAVAILABLE",
+    "ADAPTER_CAPABILITY_REVISION_AUTHORITY_UNAVAILABLE",
+    "RISK_POLICY_AUTHORITY_UNAVAILABLE",
+    "ACTION_BUDGET_POLICY_AUTHORITY_UNAVAILABLE",
+    "KILL_POLICY_AUTHORITY_UNAVAILABLE",
+    "DRY_VALIDATION_RECEIPT_AUTHORITY_UNAVAILABLE"
+  ],
+  "nextTask": "W5-03"
+}
