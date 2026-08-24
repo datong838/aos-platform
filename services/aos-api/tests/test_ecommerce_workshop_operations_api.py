@@ -13,6 +13,9 @@ from aos_api.asset_registry.errors import AssetNotFoundError
 from aos_api.errors import register_exception_handlers
 from aos_api.routers import ecommerce_workshop
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
+from aos_api.ecommerce_workshop_content_campaign import (
+    EcommerceWorkshopContentCampaign,
+)
 from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
 from aos_api.ecommerce_operation_command_execution_contracts import (
     OperationCommandExecutionEnvelope,
@@ -38,6 +41,7 @@ def _client(
     commands: EcommerceOperationCommands | None = None,
     command_service: object | None = None,
     observation_service: object | None = None,
+    content_campaign: EcommerceWorkshopContentCampaign | None = None,
 ) -> TestClient:
     app = FastAPI()
     register_exception_handlers(app)
@@ -68,6 +72,10 @@ def _client(
         app.dependency_overrides[
             ecommerce_workshop.get_ecommerce_operation_command_observation_service
         ] = lambda: observation_service
+    if content_campaign is not None:
+        app.dependency_overrides[
+            ecommerce_workshop.get_ecommerce_workshop_content_campaign
+        ] = lambda: content_campaign
     return TestClient(app, raise_server_exceptions=False)
 
 
@@ -168,6 +176,44 @@ def test_openapi_exposes_only_the_operations_get_surface() -> None:
     surface = document["paths"]["/v1/ecommerce-workshop/views/operations"]
     assert set(surface) == {"get"}
     assert surface["get"]["operationId"] == "ecommerceWorkshopOperationsViewGet"
+
+
+def test_content_campaign_shell_is_get_only_tenant_bound_and_scope_safe() -> None:
+    catalog = FakeCatalog()
+    content_campaign = EcommerceWorkshopContentCampaign(
+        clock=lambda: datetime(2026, 8, 24, tzinfo=UTC)
+    )
+    with _client(catalog, content_campaign=content_campaign) as client:
+        response = client.get("/v1/ecommerce-workshop/views/content-campaign")
+        injected = client.get(
+            "/v1/ecommerce-workshop/views/content-campaign?orgId=dev-org"
+        )
+        posted = client.post("/v1/ecommerce-workshop/views/content-campaign")
+        document = client.get("/openapi.json").json()
+
+    assert response.status_code == 200
+    assert response.json()["tenant"] == {
+        "orgId": "org-org",
+        "projectId": "dev-project",
+    }
+    assert injected.status_code == 400
+    assert posted.status_code == 405
+    assert catalog.calls[0]["module_id"] == "ecommerce.content-campaign"
+    surface = document["paths"][
+        "/v1/ecommerce-workshop/views/content-campaign"
+    ]
+    assert set(surface) == {"get"}
+    assert surface["get"]["operationId"] == (
+        "ecommerceWorkshopContentCampaignViewGet"
+    )
+
+
+def test_content_campaign_fails_closed_when_module_is_not_installed() -> None:
+    with _client(FakeCatalog(installed=False)) as client:
+        response = client.get("/v1/ecommerce-workshop/views/content-campaign")
+
+    assert response.status_code == 404
+    assert response.json()["code"] == "NOT_FOUND"
 
 
 def test_operation_command_readiness_is_get_only_and_scope_safe() -> None:

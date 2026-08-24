@@ -19,6 +19,12 @@ from aos_api.ecommerce_workshop_contracts import (
     EcommerceWorkshopModuleListResponse,
     EcommerceWorkshopModuleReadinessResponse,
 )
+from aos_api.ecommerce_workshop_content_campaign import (
+    EcommerceWorkshopContentCampaign,
+)
+from aos_api.ecommerce_workshop_content_campaign_contracts import (
+    WorkshopContentCampaignViewEnvelope,
+)
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
 from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
 from aos_api.ecommerce_operation_command_contracts import (
@@ -126,6 +132,11 @@ def get_ecommerce_workshop_operations() -> EcommerceWorkshopOperations:
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_content_campaign() -> EcommerceWorkshopContentCampaign:
+    return EcommerceWorkshopContentCampaign()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_operation_commands() -> EcommerceOperationCommands:
     return EcommerceOperationCommands()
 
@@ -157,6 +168,10 @@ SourceReadinessDependency = Annotated[
 OperationsDependency = Annotated[
     EcommerceWorkshopOperations,
     Depends(get_ecommerce_workshop_operations),
+]
+ContentCampaignDependency = Annotated[
+    EcommerceWorkshopContentCampaign,
+    Depends(get_ecommerce_workshop_content_campaign),
 ]
 OperationCommandsDependency = Annotated[
     EcommerceOperationCommands,
@@ -250,6 +265,20 @@ def _require_operations_installation(
     _invoke(
         lambda: catalog.get_readiness(
             module_id="ecommerce.operations",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+
+
+def _require_content_campaign_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.content-campaign",
             org_id=principal.org_id,
             project_id=principal.project_id,
             roles=principal.roles,
@@ -365,6 +394,26 @@ def get_ecommerce_workshop_operations_view(
     _reject_query_parameters(request)
     _require_operations_installation(principal=principal, catalog=catalog)
     return operations.read(
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+    )
+
+
+@router.get(
+    "/views/content-campaign",
+    response_model=WorkshopContentCampaignViewEnvelope,
+    operation_id="ecommerceWorkshopContentCampaignViewGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_content_campaign_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    content_campaign: ContentCampaignDependency,
+) -> WorkshopContentCampaignViewEnvelope:
+    _reject_query_parameters(request)
+    _require_content_campaign_installation(principal=principal, catalog=catalog)
+    return content_campaign.read(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
