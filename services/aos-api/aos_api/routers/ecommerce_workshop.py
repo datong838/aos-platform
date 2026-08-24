@@ -39,6 +39,8 @@ from aos_api.ecommerce_workshop_price_governance import EcommerceWorkshopPriceGo
 from aos_api.ecommerce_workshop_price_governance_contracts import WorkshopPriceGovernanceViewEnvelope
 from aos_api.ecommerce_workshop_customer import EcommerceWorkshopCustomer
 from aos_api.ecommerce_workshop_customer_contracts import WorkshopCustomerViewEnvelope
+from aos_api.ecommerce_workshop_shared_context import EcommerceWorkshopSharedContext
+from aos_api.ecommerce_workshop_shared_context_contracts import WorkshopSharedContextEnvelope
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
 from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
 from aos_api.ecommerce_operation_command_contracts import (
@@ -122,6 +124,10 @@ RunIdPath = Annotated[
         pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$",
     ),
 ]
+ContextIdPath = Annotated[
+    str,
+    Path(min_length=32, max_length=128, pattern=r"^[A-Za-z0-9_-]{32,128}$"),
+]
 ResultT = TypeVar("ResultT")
 
 
@@ -173,6 +179,11 @@ def get_ecommerce_workshop_price_governance() -> EcommerceWorkshopPriceGovernanc
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_customer() -> EcommerceWorkshopCustomer:
     return EcommerceWorkshopCustomer()
+
+
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_shared_context() -> EcommerceWorkshopSharedContext:
+    return EcommerceWorkshopSharedContext()
 
 
 @lru_cache(maxsize=1)
@@ -231,6 +242,10 @@ PriceGovernanceDependency = Annotated[
 CustomerDependency = Annotated[
     EcommerceWorkshopCustomer,
     Depends(get_ecommerce_workshop_customer),
+]
+SharedContextDependency = Annotated[
+    EcommerceWorkshopSharedContext,
+    Depends(get_ecommerce_workshop_shared_context),
 ]
 OperationCommandsDependency = Annotated[
     EcommerceOperationCommands,
@@ -637,6 +652,22 @@ def get_ecommerce_workshop_customer_view(
     _reject_query_parameters(request)
     _require_customer_installation(principal=principal, catalog=catalog)
     return customer.read(org_id=principal.org_id, project_id=principal.project_id)
+
+
+@router.get(
+    "/contexts/{context_id}",
+    response_model=WorkshopSharedContextEnvelope,
+    operation_id="ecommerceWorkshopSharedContextGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_shared_context_view(
+    request: Request,
+    context_id: ContextIdPath,
+    principal: PrincipalDependency,
+    shared_context: SharedContextDependency,
+) -> WorkshopSharedContextEnvelope:
+    _reject_query_parameters(request)
+    return shared_context.read(org_id=principal.org_id, project_id=principal.project_id, context_id=context_id)
 
 
 @router.get(
