@@ -174,6 +174,7 @@ export type CompileStageTemplateInput = {
   templateRevision: number;
   templateContentHash: string;
   responsibilityPlanRef: ExactRevisionRef;
+  productionContextRef: ExactRevisionRef;
   profile: string;
 };
 export type StageCompilationResult = {
@@ -181,6 +182,7 @@ export type StageCompilationResult = {
   taskId: string;
   templateRef: ExactRevisionRef;
   responsibilityPlanRef: ExactRevisionRef;
+  productionContextRef: ExactRevisionRef;
   planRef: ExactRevisionRef;
   compilerVersion: string;
   applicableStageIds: string[];
@@ -274,6 +276,7 @@ export type ImpactAssessment = {
 export type CreateImpactPreviewInput = {
   taskId: string;
   planRef: ExactRevisionRef;
+  productionContextRef: ExactRevisionRef | null;
   briefRef: ExactRevisionRef;
   evidenceBundleRef: ExactRevisionRef;
   evalContractRef: ExactRevisionRef;
@@ -315,6 +318,7 @@ export type ProductionContextRevision = {
   evidenceBundleRef: ExactRevisionRef;
   evalContractRef: ExactRevisionRef;
   responsibilityPlanRef: ExactRevisionRef;
+  productionProfileRef: ExactRevisionRef | null;
   preparationRef: ExactRevisionRef | null;
   profile: string;
   dependencySnapshot: Record<string, unknown>[];
@@ -345,6 +349,7 @@ export type ProductionStartDecision = {
   decisionId: string;
   status: ProductionStartStatus;
   taskId: string;
+  productionContextRef: ExactRevisionRef | null;
   planRef: ExactRevisionRef;
   previewRef: ExactRevisionRef;
   actionProposalRef: ActionProposalExactRef;

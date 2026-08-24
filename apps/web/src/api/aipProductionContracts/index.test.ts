@@ -25,8 +25,8 @@ describe("W2-C production contract SDK",()=>{
     ]);
   });
   it("编译只 POST canonical Plan 请求并携带幂等键",async()=>{
-    const input={taskId:"task-1",expectedTaskVersion:2,templateRevision:1,templateContentHash:hash,responsibilityPlanRef:exact("ResponsibilityPlanRevision","plan-1"),profile:"standard"};
-    transport.apiPost.mockResolvedValue({tenant,taskId:"task-1",templateRef:exact("StageTemplateRevision","stage-1"),responsibilityPlanRef:input.responsibilityPlanRef,planRef:exact("PlanRevision","plan-revision-1"),compilerVersion:"w2c.v1",applicableStageIds:["analysis"],notApplicableStageIds:[],createdAt:"2026-08-14T00:00:00Z"});
+    const input={taskId:"task-1",expectedTaskVersion:2,templateRevision:1,templateContentHash:hash,responsibilityPlanRef:exact("ResponsibilityPlanRevision","plan-1"),productionContextRef:exact("ProductionContextRevision","context-1"),profile:"standard"};
+    transport.apiPost.mockResolvedValue({tenant,taskId:"task-1",templateRef:exact("StageTemplateRevision","stage-1"),responsibilityPlanRef:input.responsibilityPlanRef,productionContextRef:input.productionContextRef,planRef:exact("PlanRevision","plan-revision-1"),compilerVersion:"w2c.v1",applicableStageIds:["analysis"],notApplicableStageIds:[],createdAt:"2026-08-14T00:00:00Z"});
     const result=await aipProductionContracts.compileStageTemplate("stage-1",input,"compile-1");
     expect(result.planRef.resourceId).toBe("plan-revision-1");
     expect(transport.apiPost).toHaveBeenCalledWith("/v1/aip/production-contracts/stage-templates/stage-1/compile",input,{"Idempotency-Key":"compile-1"});

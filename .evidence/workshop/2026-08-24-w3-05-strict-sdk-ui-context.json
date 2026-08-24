@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "workshop-w3-05-strict-sdk-ui-context-20260824",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "scope": "W3-05 strict SDK and Workshop UI exact ProductionContext chain",
+  "result": "CODE_CONTROL_GREEN_NO_RELEASE_MIGRATION_NOT_APPLIED_NO_EXTERNAL_EFFECT",
+  "implementation": {
+    "compile": "requires a frozen ready ProductionContext exact revision matching task, profile, and ResponsibilityPlan",
+    "preview": "parses and displays the pinned ProductionContext; legacy missing/null refs remain readable but cannot start",
+    "start": "requires the selected ProductionContext exact ref to equal the Preview-pinned ref",
+    "decision": "shows ProductionContext provenance without claiming AgentRun or provider execution"
+  },
+  "verification": {
+    "focused": "3 files passed; 26 tests passed",
+    "cumulativeWeb": "220 files passed; 2060 tests passed",
+    "productionBuild": "TypeScript and Vite build passed",
+    "browser": {
+      "route": "/aip/production-contracts",
+      "headingCount": 1,
+      "viewportWidth": 1280,
+      "scrollWidth": 1280,
+      "enabledProtectedActions": 0,
+      "observedState": "AIP action-proposal dependency unavailable is shown explicitly; page remains fail-closed"
+    }
+  },
+  "safety": {
+    "providerCalls": 0,
+    "taskRunStarts": 0,
+    "businessWrites": 0,
+    "migrationApplied": false,
+    "releasePerformed": false
+  }
+}

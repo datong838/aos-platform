@@ -5,6 +5,7 @@ import {
   type ArtifactRelationListResponse,
   type EvalContractListResponse,
   type EvidenceBundleListResponse,
+  type ExactRevisionRef,
   type ImpactDimension,
   type ImpactPreviewListResponse,
   type ImpactPreviewRevision,
@@ -59,6 +60,7 @@ function blockerAction(code: string): { owner: string; href: string; label: stri
   return { owner: "AIP 上线审批负责人", href: "/aip/production-contracts", label: "刷新上线执行审批" };
 }
 function Quality({name,item}:{name:string;item:ImpactDimension}){return <div style={{padding:"8px 10px",border:"1px solid var(--aos-border)",borderRadius:6}}><strong>{impactLabels[name]??name}</strong><div>{item.quality==="unknown"?"未知（不以 0 代替）":label[item.quality]??item.quality}</div><small>{item.sourceRefs.length} 条来源{item.cutoffAt?` · 截止 ${new Date(item.cutoffAt).toLocaleString()}`:""}</small></div>}
+function sameExact(left:ExactRevisionRef|null|undefined,right:ExactRevisionRef|null|undefined){return Boolean(left&&right&&left.resourceType===right.resourceType&&left.resourceId===right.resourceId&&left.revision===right.revision&&left.contentHash===right.contentHash);}
 
 function contractBusinessText(value: string): string {
   const raw = String(value || "");
@@ -86,6 +88,7 @@ export function ProductionContractsPage() {
   const [planId, setPlanId] = useState("");
   const [taskId, setTaskId] = useState("");
   const [taskVersion, setTaskVersion] = useState("1");
+  const [compileProductionContextId,setCompileProductionContextId]=useState("");
   const [reviewIssueId, setReviewIssueId] = useState("");
   const [reviewRunId, setReviewRunId] = useState("");
   const [reviewReason, setReviewReason] = useState("");
@@ -132,13 +135,16 @@ export function ProductionContractsPage() {
 
   const selectedTemplate = state?.stages.items.find(item => item.templateId === templateId);
   const selectedPlan = state?.plans.items.find(item => item.planId === planId);
-  const canCompile = Boolean(selectedTemplate && selectedPlan && taskId.trim() && Number.isInteger(Number(taskVersion)) && Number(taskVersion) > 0 && selectedTemplate.lifecycle === "frozen" && selectedTemplate.readiness === "ready" && selectedPlan.lifecycle === "frozen" && selectedPlan.readiness === "ready" && selectedPlan.coverage === "complete" && selectedTemplate.profile === selectedPlan.profile);
+  const selectedCompileProductionContext=state?.contexts.items.find(item=>item.contextId===compileProductionContextId);
+  const selectedPlanRef=selectedPlan?{resourceType:"ResponsibilityPlanRevision",resourceId:selectedPlan.planId,revision:selectedPlan.revision,contentHash:selectedPlan.contentHash}:null;
+  const canCompile = Boolean(selectedTemplate && selectedPlan && selectedCompileProductionContext && taskId.trim() && Number.isInteger(Number(taskVersion)) && Number(taskVersion) > 0 && selectedTemplate.lifecycle === "frozen" && selectedTemplate.readiness === "ready" && selectedPlan.lifecycle === "frozen" && selectedPlan.readiness === "ready" && selectedPlan.coverage === "complete" && selectedTemplate.profile === selectedPlan.profile && selectedCompileProductionContext.lifecycle === "frozen" && selectedCompileProductionContext.readiness === "ready" && selectedCompileProductionContext.blockers.length === 0 && selectedCompileProductionContext.taskId === taskId.trim() && selectedCompileProductionContext.profile === selectedTemplate.profile && sameExact(selectedCompileProductionContext.responsibilityPlanRef,selectedPlanRef));
   const compile = () => {
-    if (!selectedTemplate || !selectedPlan || !canCompile) return;
+    if (!selectedTemplate || !selectedPlan || !selectedCompileProductionContext || !canCompile) return;
     void run("stage:compile", () => aipProductionContracts.compileStageTemplate(selectedTemplate.templateId, {
       taskId: taskId.trim(), expectedTaskVersion: Number(taskVersion), templateRevision: selectedTemplate.revision,
       templateContentHash: selectedTemplate.contentHash, profile: selectedTemplate.profile,
       responsibilityPlanRef: { resourceType: "ResponsibilityPlanRevision", resourceId: selectedPlan.planId, revision: selectedPlan.revision, contentHash: selectedPlan.contentHash },
+      productionContextRef:{resourceType:"ProductionContextRevision",resourceId:selectedCompileProductionContext.contextId,revision:selectedCompileProductionContext.revision,contentHash:selectedCompileProductionContext.contentHash},
     }, `w2-ui-stage-compile-${crypto.randomUUID()}`));
   };
   const selectedReview = state?.reviews.items.find(item => item.issueId === reviewIssueId && item.status === "open");
@@ -153,7 +159,7 @@ export function ProductionContractsPage() {
   });
   const selectedActionProposal=eligibleActionProposals.find(({proposal})=>proposal.id===actionProposalId);
   const positiveInteger=(value:string)=>Number.isInteger(Number(value))&&Number(value)>0;
-  const startDisabledReason=(()=>{if(!selectedPreview)return"请选择影响预览的精确修订";if(!selectedProductionContext)return"请选择生产上下文的精确修订";if(selectedProductionContext.lifecycle!=="frozen"||selectedProductionContext.readiness!=="ready"||selectedProductionContext.blockers.length)return"生产上下文尚未冻结并就绪";if(selectedProductionContext.taskId!==selectedPreview.taskId)return"生产上下文与影响预览不属于同一任务";if(selectedPreview.lifecycle!=="frozen")return"影响预览尚未冻结";if(selectedPreview.readiness!=="ready")return`影响预览当前为${label[selectedPreview.readiness]??selectedPreview.readiness}`;if(selectedPreview.blockers.length)return"影响预览仍有权威阻断";if(new Date(selectedPreview.expiresAt).getTime()<=Date.now())return"影响预览已过期，请刷新并重新评估";if(!positiveInteger(startTaskVersion))return"任务版本必须大于 0";if(eligibleActionProposals.length===0)return"当前影响预览没有同任务、同精确修订、已批准且未过期的执行提案";if(!selectedActionProposal)return"请选择可启动的执行提案精确修订";if(!logicGraphId.trim()||!positiveInteger(logicRevision)||!/^[0-9a-f]{64}$/.test(logicGraphHash.trim()))return"请选择已发布业务逻辑，并确认其精确修订和内容摘要";if(publishedLogic.length===0)return"当前组织尚无已发布业务逻辑；空白或未发布修订不能启动";return"";})();
+  const startDisabledReason=(()=>{if(!selectedPreview)return"请选择影响预览的精确修订";if(!selectedPreview.productionContextRef)return"该历史影响预览未固定生产上下文，禁止启动";if(!selectedProductionContext)return"请选择生产上下文的精确修订";if(!sameExact(selectedPreview.productionContextRef,{resourceType:"ProductionContextRevision",resourceId:selectedProductionContext.contextId,revision:selectedProductionContext.revision,contentHash:selectedProductionContext.contentHash}))return"所选生产上下文与影响预览固定的精确修订不一致";if(selectedProductionContext.lifecycle!=="frozen"||selectedProductionContext.readiness!=="ready"||selectedProductionContext.blockers.length)return"生产上下文尚未冻结并就绪";if(selectedProductionContext.taskId!==selectedPreview.taskId)return"生产上下文与影响预览不属于同一任务";if(selectedPreview.lifecycle!=="frozen")return"影响预览尚未冻结";if(selectedPreview.readiness!=="ready")return`影响预览当前为${label[selectedPreview.readiness]??selectedPreview.readiness}`;if(selectedPreview.blockers.length)return"影响预览仍有权威阻断";if(new Date(selectedPreview.expiresAt).getTime()<=Date.now())return"影响预览已过期，请刷新并重新评估";if(!positiveInteger(startTaskVersion))return"任务版本必须大于 0";if(eligibleActionProposals.length===0)return"当前影响预览没有同任务、同精确修订、已批准且未过期的执行提案";if(!selectedActionProposal)return"请选择可启动的执行提案精确修订";if(!logicGraphId.trim()||!positiveInteger(logicRevision)||!/^[0-9a-f]{64}$/.test(logicGraphHash.trim()))return"请选择已发布业务逻辑，并确认其精确修订和内容摘要";if(publishedLogic.length===0)return"当前组织尚无已发布业务逻辑；空白或未发布修订不能启动";return"";})();
   const freezePreview=(item:ImpactPreviewRevision)=>run(`preview:${item.previewId}`,()=>aipProductionContracts.freezeImpactPreview(item.previewId,item.version,`w2-ui-preview-freeze-${crypto.randomUUID()}`));
   const applyPublishedLogic=(graphId:string)=>{
     const hit=publishedLogic.find(item=>item.id===graphId);
@@ -223,7 +229,7 @@ export function ProductionContractsPage() {
           <p>有效期至 {new Date(item.expiresAt).toLocaleString()}</p><details><summary>技术标识（审计用）</summary>影响预览 <code>{item.previewId}@{item.revision}</code> · 任务 <code>{item.taskId}</code></details>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:8}}>{Object.entries(item.impact).map(([name,dimension])=><Quality key={name} name={name} item={dimension}/>)}</div>
           <Blockers items={item.blockers}/>
-          <details style={{marginTop:10}}><summary>精确引用（审计用）</summary><ul><li>执行计划 <code>{item.planRef.resourceId}@{item.planRef.revision}</code></li><li>任务简报 <code>{item.briefRef.resourceId}@{item.briefRef.revision}</code></li><li>证据包 <code>{item.evidenceBundleRef.resourceId}@{item.evidenceBundleRef.revision}</code></li><li>评测契约 <code>{item.evalContractRef.resourceId}@{item.evalContractRef.revision}</code></li><li>职责计划 <code>{item.responsibilityPlanRef.resourceId}@{item.responsibilityPlanRef.revision}</code></li><li>阶段模板 <code>{item.stageTemplateRef.resourceId}@{item.stageTemplateRef.revision}</code></li><li>依赖快照 <code>{item.dependencySnapshotHash.slice(0,16)}…</code></li><li>动作绑定摘要 <code>{item.actionBindingHash.slice(0,16)}…</code>（服务端只读）</li></ul></details>
+          <details style={{marginTop:10}}><summary>精确引用（审计用）</summary><ul><li>执行计划 <code>{item.planRef.resourceId}@{item.planRef.revision}</code></li><li>{item.productionContextRef?<>生产上下文 <code>{item.productionContextRef.resourceId}@{item.productionContextRef.revision}</code></>:<>历史记录未固定生产上下文；禁止启动</>}</li><li>任务简报 <code>{item.briefRef.resourceId}@{item.briefRef.revision}</code></li><li>证据包 <code>{item.evidenceBundleRef.resourceId}@{item.evidenceBundleRef.revision}</code></li><li>评测契约 <code>{item.evalContractRef.resourceId}@{item.evalContractRef.revision}</code></li><li>职责计划 <code>{item.responsibilityPlanRef.resourceId}@{item.responsibilityPlanRef.revision}</code></li><li>阶段模板 <code>{item.stageTemplateRef.resourceId}@{item.stageTemplateRef.revision}</code></li><li>依赖快照 <code>{item.dependencySnapshotHash.slice(0,16)}…</code></li><li>动作绑定摘要 <code>{item.actionBindingHash.slice(0,16)}…</code>（服务端只读）</li></ul></details>
           {item.lifecycle==="draft"?<button className="btn" disabled={!canFreeze||busy===`preview:${item.previewId}`} title={canFreeze?"冻结当前就绪的影响预览精确修订":"影响预览未就绪或仍有阻断，禁止冻结"} onClick={()=>void freezePreview(item)} style={{marginTop:10}}>{busy===`preview:${item.previewId}`?"冻结中…":"冻结影响预览"}</button>:null}
         </article>})}
         <h3>受控创建任务运行记录</h3>
@@ -243,17 +249,18 @@ export function ProductionContractsPage() {
         {startDisabledReason?<div className="notice" role="status" style={{marginTop:12}}>启动门保持关闭：{startDisabledReason}。可先刷新权威状态；若依赖漂移，请回到对应权威记录修订后创建新的影响预览。</div>:<div className="notice" style={{marginTop:12}}>组合门输入完整；服务端仍会重新核验影响预览、提案、审批、租约、路由、绑定与容量。</div>}
         <button className="btn primary" disabled={Boolean(startDisabledReason)||busy==="production:start"} title={startDisabledReason||"只创建任务运行记录；不启动智能体或模型供应商"} onClick={startProduction} style={{marginTop:12}}>{busy==="production:start"?"组合门核验中…":"通过组合门并创建任务运行记录"}</button>
         <h3>启动决策审计记录</h3>
-        {state.starts.count===0?<div className="notice">当前组织尚无启动决策；这表示没有提交过组合门，不等于运行成功。</div>:state.starts.items.map(item=><article key={item.decisionId} style={itemStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><strong>启动决策</strong><span>{item.status==="started"?"已创建任务运行记录（尚未启动智能体）":label[item.status]??statusDisplayName(item.status)}</span></div><details><summary>技术标识（审计用）</summary>决策 <code>{item.decisionId}</code><br/>任务 <code>{item.taskId}</code> · 影响预览 <code>{item.previewRef.resourceId}@{item.previewRef.revision}</code>{item.taskRunRef?<><br/>任务运行 <code>{item.taskRunRef.resourceId}</code></>:null}</details><Blockers items={item.blockers}/></article>)}
+        {state.starts.count===0?<div className="notice">当前组织尚无启动决策；这表示没有提交过组合门，不等于运行成功。</div>:state.starts.items.map(item=><article key={item.decisionId} style={itemStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><strong>启动决策</strong><span>{item.status==="started"?"已创建任务运行记录（尚未启动智能体）":label[item.status]??statusDisplayName(item.status)}</span></div><details><summary>技术标识（审计用）</summary>决策 <code>{item.decisionId}</code><br/>任务 <code>{item.taskId}</code> · 影响预览 <code>{item.previewRef.resourceId}@{item.previewRef.revision}</code><br/>{item.productionContextRef?<>生产上下文 <code>{item.productionContextRef.resourceId}@{item.productionContextRef.revision}</code></>:<>历史决策未记录生产上下文精确引用</>}{item.taskRunRef?<><br/>任务运行 <code>{item.taskRunRef.resourceId}</code></>:null}</details><Blockers items={item.blockers}/></article>)}
       </section>
       <section className="card" style={{ padding: 18, marginTop: 16 }} aria-label="阶段模板编译命令">
         <h2 style={{ marginTop: 0 }}>从阶段模板编译执行计划草稿</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
           <label>阶段模板<select aria-label="阶段模板修订" value={templateId} onChange={event => setTemplateId(event.target.value)}><option value="">选择已冻结模板</option>{state.stages.items.map(item => <option key={item.templateId} value={item.templateId}>{businessDisplayName(item.profile)} · 修订 {item.revision}</option>)}</select></label>
           <label>职责计划<select aria-label="职责计划修订" value={planId} onChange={event => setPlanId(event.target.value)}><option value="">选择已冻结职责计划</option>{state.plans.items.map(item => <option key={item.planId} value={item.planId}>{businessDisplayName(item.profile)} · 修订 {item.revision}</option>)}</select></label>
+          <label>生产上下文<select aria-label="编译生产上下文修订" value={compileProductionContextId} onChange={event=>setCompileProductionContextId(event.target.value)}><option value="">选择与任务、职责计划一致的精确修订</option>{state.contexts.items.map(item=><option key={`${item.contextId}@${item.revision}`} value={item.contextId}>生产上下文 · 修订 {item.revision} · {label[item.lifecycle]??item.lifecycle}/{label[item.readiness]??item.readiness}</option>)}</select></label>
           <label>真实任务标识<input aria-label="编译真实 Task ID" value={taskId} onChange={event => setTaskId(event.target.value)} placeholder="输入真实任务标识" /></label>
           <label>任务版本<input aria-label="编译 Task version" type="number" min="1" value={taskVersion} onChange={event => setTaskVersion(event.target.value)} /></label>
         </div>
-        <button className="btn primary" disabled={!canCompile || busy === "stage:compile"} title={canCompile ? "只创建执行计划草稿，不启动任务" : "需选择同一业务场景、已冻结且就绪的阶段模板和职责计划，并填写真实任务"} onClick={compile} style={{ marginTop: 12 }}>{busy === "stage:compile" ? "编译中…" : "编译为执行计划草稿"}</button>
+        <button className="btn primary" disabled={!canCompile || busy === "stage:compile"} title={canCompile ? "只创建执行计划草稿，不启动任务" : "需选择同一任务、业务场景与职责计划下已冻结且就绪的生产上下文、阶段模板和职责计划"} onClick={compile} style={{ marginTop: 12 }}>{busy === "stage:compile" ? "编译中…" : "编译为执行计划草稿"}</button>
       </section>
       <section className="card" style={{ padding: 18, marginTop: 16 }} aria-label="评审问题处置命令">
         <h2 style={{ marginTop: 0 }}>评审问题处置</h2>
