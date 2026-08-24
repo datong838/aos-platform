@@ -149,7 +149,7 @@ def test_eval_contract_api_dependency_drift_and_idempotency_header(client) -> No
     assert no_key.json()["code"] == "VALIDATION"
 
 
-def test_responsibility_plan_api_fails_closed_without_template_authority(client) -> None:
+def test_responsibility_plan_api_fails_closed_without_installed_template(client) -> None:
     response = client.post(
         "/v1/aip/production-contracts/responsibility-plans",
         headers=_headers(f"plan-{uuid.uuid4().hex}"),
@@ -157,7 +157,7 @@ def test_responsibility_plan_api_fails_closed_without_template_authority(client)
     )
     assert response.status_code == 422
     assert response.json()["code"] == "AIP_DEPENDENCY_BLOCKED"
-    assert response.json()["message"] == "RESPONSIBILITY_TEMPLATE_AUTHORITY_UNAVAILABLE"
+    assert response.json()["message"] == "RESPONSIBILITY_TEMPLATE_MISSING_OR_DRIFTED"
     listing = client.get(
         "/v1/aip/production-contracts/responsibility-plans", headers=_headers()
     )

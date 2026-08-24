@@ -1,0 +1,81 @@
+{
+  "id": "l03-shipment-overdue",
+  "name": "L03 发货超时",
+  "description": "基于 P05 Order / P07 Shipment 数据底座的发货超时 Logic Graph。输出 ShipmentOverdueDecision（overdue/watch/ok）；overdue_hours=null 时降级为 ok。",
+  "status": "draft",
+  "schema_version": 1,
+  "nodes": [
+    {
+      "id": "order_read",
+      "kind": "input",
+      "label": "读取发货超时上下文",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "schema": {
+          "required": [
+            "order_id",
+            "overdue_hours",
+            "shipment_status"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shipment_check",
+      "kind": "transform",
+      "label": "透传超时小时",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "expression": "overdue_hours"
+      }
+    },
+    {
+      "id": "overdue_calculate",
+      "kind": "branch",
+      "label": "超时计算",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "paths": [
+          {
+            "id": "overdue",
+            "condition": "overdue_hours != null && overdue_hours > 48"
+          },
+          {
+            "id": "watch",
+            "condition": "overdue_hours != null && overdue_hours > 0"
+          },
+          {
+            "id": "ok",
+            "default": true
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-order_read-to-shipment_check",
+      "source_node_id": "order_read",
+      "source_port": "out",
+      "target_node_id": "shipment_check",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 0
+    },
+    {
+      "id": "edge-shipment_check-to-overdue_calculate",
+      "source_node_id": "shipment_check",
+      "source_port": "out",
+      "target_node_id": "overdue_calculate",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 0
+    }
+  ],
+  "entry_node_ids": [
+    "order_read"
+  ]
+}

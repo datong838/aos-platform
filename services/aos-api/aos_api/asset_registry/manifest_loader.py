@@ -437,7 +437,7 @@ class ManifestLoader:
     def _parse_analyst_query_template_asset(
         *, manifest: BundleManifest, payload: dict
     ) -> bool:
-        """Recognize the immutable 1.3.0 Analyst auxiliary asset strictly.
+        """Recognize the version-bound Analyst auxiliary asset strictly.
 
         The historical SolutionPack exported this read-only AIP catalog from its
         Workshop directory.  It is an artifact of the installed bundle, but it

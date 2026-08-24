@@ -1,0 +1,58 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w3-02-production-profiles-exact-resolver-20260824",
+  "baseRevision": "AOS-000211",
+  "result": "GREEN_CODE_CONTROL_AUTHORING_CANDIDATES_NO_RELEASE",
+  "scope": [
+    "tenant-scoped installed production-profile exact resolver",
+    "strict production-profile contract",
+    "eight immutable ecommerce successor profile candidates",
+    "five shared profile schema candidates"
+  ],
+  "candidateBundles": {
+    "domain.ecommerce.core": "1.1.0",
+    "solution.ecommerce.growth": "1.4.0",
+    "solution.ecommerce.operations-base": "1.2.0"
+  },
+  "profileCoverage": {
+    "modules": 8,
+    "typedProfiles": 8,
+    "sharedSchemasAdded": 5,
+    "placeholderProductionRefs": 0,
+    "legacyDryRunRefsUsedAsProduction": 0
+  },
+  "verification": {
+    "resolverAndProfileContracts": "28 passed",
+    "aipRegistryAdjacency": "18 passed",
+    "assetRegistryCumulative": "843 passed, 3 pre-existing baseline failures outside W3-02 diff",
+    "pythonCompile": "GREEN",
+    "ruff": "UNAVAILABLE_IN_LOCAL_TOOLCHAIN",
+    "diffCheck": "GREEN",
+    "historicalAuthorRoots": "ZERO_GIT_DIFF",
+    "browser": {
+      "surface": "Codex built-in browser",
+      "route": "/workshop",
+      "result": "API unavailable was shown as explicit offline/catalog failure with zero active installation; candidate was not presented as installed or operational"
+    }
+  },
+  "knownBaselineFailures": [
+    "existing ecommerce-core knowledge document contains a historical customer-name fixture",
+    "existing ecommerce-growth author root exports omit later-added content paths",
+    "existing ecommerce-growth author root differs from frozen 1.3.0 release by later-added assets"
+  ],
+  "negativeBoundaries": [
+    "no release publish, signature, install, rollback or revoke",
+    "no migration",
+    "no provider call or action execution",
+    "no Brief, Run, Handoff or business-data write",
+    "no change to historical author roots or signed releases"
+  ],
+  "consistencyReview": [
+    "production profile preserves atomic Skill to Logic to digital-colleague binding to Workshop contribution projection",
+    "task-cockpit remains reference-only",
+    "protected review responsibilities cannot be merged away",
+    "resolver requires tenant installation, active revision, composition lock, published signed Registry artifact and exact digest"
+  ],
+  "nextTask": "W3-03_PREPARE_AGGREGATE",
+  "observedAt": "2026-08-24T22:04:59+08:00"
+}

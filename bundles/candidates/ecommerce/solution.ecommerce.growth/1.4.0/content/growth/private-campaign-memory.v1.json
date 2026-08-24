@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "ecommerce.growth.private-campaign-memory.v1",
+  "id": "ecommerce.growth.private-campaign-memory",
+  "status": "draft_only_blocked_until_operational_dependencies_ready",
+  "roles": [
+    {
+      "agentId": "ecommerce.private_domain_manager",
+      "logicIds": ["P01", "P02", "P03", "P04", "P05"],
+      "outputs": ["SegmentDraft.DRAFT", "TouchPlanDraft.DRAFT"]
+    },
+    {
+      "agentId": "ecommerce.campaign_planner",
+      "logicIds": ["A01", "A02", "A03", "A04", "A05", "A06"],
+      "outputs": ["CampaignExperimentDraft.DRAFT"]
+    }
+  ],
+  "immutableExistingAuthorities": ["P02", "A02"],
+  "sourceReadiness": {
+    "authority": "SourceReadinessEvidencePackRevision",
+    "requiredStatus": "ready",
+    "requiredCoverage": "12/12",
+    "freshness": "freshUntil > requestedAt",
+    "cutoffRule": "campaign and attribution share the exact evidence cutoff"
+  },
+  "contactEligibilityOrder": [
+    "explicit_tenant_principal",
+    "purpose_marketing_consent",
+    "channel_allowed",
+    "not_opted_out",
+    "not_suppressed",
+    "not_quiet_hours",
+    "within_frequency_cap",
+    "cooldown_complete",
+    "exact_campaign_and_segment"
+  ],
+  "campaignHardGates": [
+    "budget_within_approved_envelope",
+    "projected_margin_at_or_above_floor",
+    "authoritative_price_ready",
+    "inventory_ready",
+    "fulfillment_ready",
+    "capacity_ready",
+    "experiment_exact_and_frozen",
+    "assignment_uncontaminated",
+    "sample_and_confidence_sufficient",
+    "attribution_observed_or_estimated_with_uncertainty"
+  ],
+  "memory": {
+    "canonicalAuthority": "AIP MemoryCandidate/MemoryItem/Projection/Improvement",
+    "working": "Task/Checkpoint only",
+    "runtimeCandidateLayers": ["episodic", "semantic"],
+    "procedural": "versioned Wiki playbook proposal only",
+    "defaultScope": "agent_private",
+    "teamSharedRequirements": [
+      "exact MemorySharingApprovalRevision",
+      "explicit recipients",
+      "explicit purpose",
+      "PII_MINIMIZED marking",
+      "minimum disclosure"
+    ],
+    "requiredSourceRefs": [
+      "TaskRevision",
+      "ArtifactRevision",
+      "OutcomeRevision",
+      "EvidenceRevision",
+      "EvalReportRevision"
+    ]
+  },
+  "forbiddenData": [
+    "name",
+    "mobile",
+    "phone",
+    "address",
+    "openId",
+    "chatRaw",
+    "chainOfThought",
+    "secretPayload",
+    "fullRetrievalContext"
+  ],
+  "forbiddenActions": [
+    "contact_resolution",
+    "external_message_send",
+    "campaign_launch_or_pause",
+    "production_experiment_assignment",
+    "budget_price_inventory_or_fulfillment_write",
+    "automatic_memory_submit_approve_promote_share_or_retrieve",
+    "logic_or_prompt_mutation",
+    "wiki_write",
+    "database_write",
+    "provider_tool_or_action_call"
+  ]
+}

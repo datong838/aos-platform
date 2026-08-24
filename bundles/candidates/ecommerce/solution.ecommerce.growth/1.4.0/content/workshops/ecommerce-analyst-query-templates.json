@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "bundleRef": "bundle://aos/solution.ecommerce.growth@1.4.0",
+  "templates": [
+    {
+      "templateId": "ecommerce.analyst.data_advisor.orders",
+      "revision": 1,
+      "roleId": "ecommerce.data_advisor",
+      "roleName": "数据参谋",
+      "queryKind": "semantic",
+      "defaultObjectType": "Order",
+      "defaultPrompt": "",
+      "requiredObjectTypes": ["Order", "Payment"],
+      "requiredLogicIds": ["D01", "D02", "D03", "D04", "D05", "D06"],
+      "sourceDataTypes": ["order", "payment"],
+      "purpose": "读取订单与支付事实，识别经营变化；指标权威缺失时保持阻断。",
+      "policy": "canonical-read-only"
+    },
+    {
+      "templateId": "ecommerce.analyst.content_officer.products",
+      "revision": 1,
+      "roleId": "ecommerce.content_officer",
+      "roleName": "内容官",
+      "queryKind": "semantic",
+      "defaultObjectType": "Product",
+      "defaultPrompt": "",
+      "requiredObjectTypes": ["Product", "ProductReview"],
+      "requiredLogicIds": ["C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08"],
+      "sourceDataTypes": ["product", "product_review"],
+      "purpose": "读取真实商品与评价事实，为内容选题和复盘提供证据。",
+      "policy": "canonical-read-only"
+    },
+    {
+      "templateId": "ecommerce.analyst.shopping_advisor.products",
+      "revision": 1,
+      "roleId": "ecommerce.shopping_advisor",
+      "roleName": "导购顾问",
+      "queryKind": "semantic",
+      "defaultObjectType": "Product",
+      "defaultPrompt": "",
+      "requiredObjectTypes": ["Product", "ProductSku"],
+      "requiredLogicIds": ["G01", "G02", "G03", "G04", "G05", "G06"],
+      "sourceDataTypes": ["product", "product_sku"],
+      "purpose": "读取在售商品和 SKU 事实，支撑选品与导购建议。",
+      "policy": "canonical-read-only"
+    },
+    {
+      "templateId": "ecommerce.analyst.customer_service.orders",
+      "revision": 1,
+      "roleId": "ecommerce.customer_service",
+      "roleName": "客服专员",
+      "queryKind": "semantic",
+      "defaultObjectType": "Order",
+      "defaultPrompt": "",
+      "requiredObjectTypes": ["Order", "CustomerLite"],
+      "requiredLogicIds": ["S01", "S02", "S03", "S04", "S05", "S06"],
+      "sourceDataTypes": ["order", "customer_lite"],
+      "purpose": "读取脱敏订单与客户事实，支撑服务诊断和升级判断。",
+      "policy": "canonical-read-only"
+    },
+    {
+      "templateId": "ecommerce.analyst.private_domain_manager.customers",
+      "revision": 1,
+      "roleId": "ecommerce.private_domain_manager",
+      "roleName": "私域管家",
+      "queryKind": "semantic",
+      "defaultObjectType": "CustomerLite",
+      "defaultPrompt": "",
+      "requiredObjectTypes": ["CustomerLite", "Order"],
+      "requiredLogicIds": ["P01", "P02", "P03", "P04", "P05"],
+      "sourceDataTypes": ["customer_lite", "order"],
+      "purpose": "读取脱敏客户与订单事实，支撑关系分层和触达准备。",
+      "policy": "canonical-read-only"
+    },
+    {
+      "templateId": "ecommerce.analyst.campaign_planner.products",
+      "revision": 1,
+      "roleId": "ecommerce.campaign_planner",
+      "roleName": "活动策划师",
+      "queryKind": "semantic",
+      "defaultObjectType": "Product",
+      "defaultPrompt": "",
+      "requiredObjectTypes": ["Product", "Order"],
+      "requiredLogicIds": ["A01", "A02", "A03", "A04", "A05", "A06"],
+      "sourceDataTypes": ["product", "order"],
+      "purpose": "读取商品与订单事实，支撑活动节奏和复盘准备。",
+      "policy": "canonical-read-only"
+    }
+  ]
+}

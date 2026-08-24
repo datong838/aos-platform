@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from aos_api.asset_registry.contracts import WorkshopModuleContribution
 from aos_api.asset_registry.errors import ManifestInvalidError
 from aos_api.asset_registry.manifest_loader import ManifestLoader
+from aos_api.aip_production_profile_contracts import ProductionProfile
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SCHEMA_PATH = (
@@ -141,6 +142,94 @@ def _make_bundle(
 
 def _load(root: Path):
     return ManifestLoader({"fixtures": root}).load("bundle://fixtures/example")
+
+
+def test_ecommerce_source_bundles_publish_eight_typed_non_placeholder_profiles() -> None:
+    candidate_root = REPO_ROOT / "bundles/candidates/ecommerce"
+    growth = ManifestLoader({"candidate": candidate_root}).load(
+        "bundle://candidate/solution.ecommerce.growth/1.4.0"
+    )
+    operations = ManifestLoader({"candidate": candidate_root}).load(
+        "bundle://candidate/solution.ecommerce.operations-base/1.2.0"
+    )
+    modules = [*growth.workshop_modules, *operations.workshop_modules]
+
+    assert len(modules) == 8
+    assert len({item.module_id for item in modules}) == 8
+    for module in modules:
+        assert len(module.eval_pack_refs) == 1
+        assert module.eval_pack_refs == module.production_contract_refs
+        assert module.eval_pack_refs == module.responsibility_template_refs
+        profile_path = (
+            REPO_ROOT
+            / "bundles/candidates/ecommerce"
+            / (
+                "solution.ecommerce.operations-base/1.2.0"
+                if module.module_id == "ecommerce.operations"
+                else "solution.ecommerce.growth/1.4.0"
+            )
+            / module.production_contract_refs[0]
+        )
+        assert "placeholder" not in profile_path.name
+        assert "dry-run" not in profile_path.name
+        profile = ProductionProfile.model_validate(
+            json.loads(profile_path.read_text(encoding="utf-8"))
+        )
+        assert profile.module_id == module.module_id
+        assert profile.contribution_projection.show_atomic_skill_attribution is True
+        assert profile.contribution_projection.show_logic_revision is True
+        assert profile.contribution_projection.show_coworker_binding is True
+
+    schema_root = (
+        REPO_ROOT
+        / "bundles/candidates/ecommerce/domain.ecommerce.core/1.1.0/content/schemas"
+    )
+    schema_ids = {
+        json.loads(path.read_text(encoding="utf-8"))["$id"]
+        for path in schema_root.glob("ecommerce-*.v1.schema.json")
+    }
+    assert schema_ids == {
+        "aos.ecommerce-production-profile/v1",
+        "aos.ecommerce-brief-spec/v1",
+        "aos.ecommerce-evidence-selection/v1",
+        "aos.ecommerce-eval-profile/v1",
+        "aos.ecommerce-responsibility-template/v1",
+    }
+
+    historical_growth = json.loads(
+        (
+            REPO_ROOT
+            / "bundles/solutions/ecommerce-growth/content/workshops/ecommerce.task-cockpit.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert historical_growth["bundleRef"].endswith("@1.3.0")
+    assert historical_growth["productionContractRefs"] == []
+
+    for historical, candidate in (
+        (
+            REPO_ROOT / "bundles/domains/ecommerce-core",
+            candidate_root / "domain.ecommerce.core/1.1.0",
+        ),
+        (
+            REPO_ROOT / "bundles/solutions/ecommerce-growth",
+            candidate_root / "solution.ecommerce.growth/1.4.0",
+        ),
+        (
+            REPO_ROOT / "bundles/solutions/ecommerce-operations-base",
+            candidate_root / "solution.ecommerce.operations-base/1.2.0",
+        ),
+    ):
+        historical_paths = {
+            path.relative_to(historical).as_posix()
+            for path in historical.rglob("*")
+            if path.is_file()
+        }
+        candidate_paths = {
+            path.relative_to(candidate).as_posix()
+            for path in candidate.rglob("*")
+            if path.is_file()
+        }
+        assert historical_paths <= candidate_paths
 
 
 def test_canonical_module_contract_is_strict_and_schema_is_in_sync() -> None:

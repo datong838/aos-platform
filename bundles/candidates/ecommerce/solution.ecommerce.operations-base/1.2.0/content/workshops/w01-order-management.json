@@ -1,0 +1,31 @@
+{
+  "workshop_id": "w01-order-management",
+  "title": "订单与履约运营台",
+  "route": "workshop/orders",
+  "widgets": [
+    {
+      "id": "order-funnel",
+      "title": "状态漏斗",
+      "source_ot": "Order",
+      "aggregator": "computeOrderFunnel"
+    },
+    {
+      "id": "risky-orders",
+      "title": "异常订单表",
+      "source_ot": "Order",
+      "filter": "risk_score > 0.6"
+    },
+    {
+      "id": "sla-queue",
+      "title": "SLA 队列",
+      "source_ot": "Shipment",
+      "filter": "overdue_hours > 0"
+    },
+    {
+      "id": "order-sidebar",
+      "title": "订单侧栏",
+      "source_ot": "Order+OrderLine"
+    }
+  ],
+  "decision_tags": "BLOCKED_PENDING_G2"
+}

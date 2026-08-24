@@ -1,0 +1,104 @@
+{
+  "manifestVersion": "1.0.0",
+  "schemaVersion": "aos.content.platform-harness/v1",
+  "harnesses": [
+    {
+      "harnessId": "DY-01", "platformId": "douyin", "name": "抖音短视频脚本适配", "version": "1.0.0", "logicId": "C05", "outputContract": "DouyinScriptAdaptation.DRAFT", "riskLevel": "medium",
+      "requiredInputs": ["contentDraftRef", "factPackRef", "platformRuleRef"], "requiredCapabilities": ["copy.generate", "platform.adapt"],
+      "allowedModes": ["draft_only"], "forbiddenActions": ["publish", "boost", "comment", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["draft_positive", "rule_stale", "evidence_missing", "prohibited_claim", "prompt_injection"]
+    },
+    {
+      "harnessId": "DY-02", "platformId": "douyin", "name": "抖音完播率预估", "version": "1.0.0", "logicId": "C08", "outputContract": "CompletionRateEstimate.INCONCLUSIVE", "riskLevel": "high",
+      "requiredInputs": ["contentDraftRef", "factPackRef", "platformRuleRef", "metricEvidenceRef"], "requiredCapabilities": ["performance.review"],
+      "allowedModes": ["read_only", "draft_only"], "forbiddenActions": ["publish", "boost", "comment", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["draft_positive", "rule_stale", "evidence_missing", "sample_insufficient", "prompt_injection"]
+    },
+    {
+      "harnessId": "DY-03", "platformId": "douyin", "name": "Dou+投放决策草稿", "version": "1.0.0", "logicId": "C08", "outputContract": "DouPlusDecision.DRAFT", "riskLevel": "critical",
+      "requiredInputs": ["contentDraftRef", "factPackRef", "platformRuleRef", "budgetRef", "metricEvidenceRef"], "requiredCapabilities": ["performance.review"],
+      "allowedModes": ["proposal_only"], "forbiddenActions": ["publish", "boost", "comment", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["proposal_positive", "rule_stale", "budget_missing", "evidence_missing", "prompt_injection"]
+    },
+    {
+      "harnessId": "DY-04", "platformId": "douyin", "name": "精选联盟选品匹配草稿", "version": "1.0.0", "logicId": "C01", "outputContract": "AllianceMatch.DRAFT", "riskLevel": "high",
+      "requiredInputs": ["factPackRef", "platformRuleRef", "creatorEvidenceRef"], "requiredCapabilities": ["material.collect", "performance.review"],
+      "allowedModes": ["read_only", "draft_only"], "forbiddenActions": ["publish", "invite_creator", "set_commission", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["draft_positive", "rule_stale", "creator_evidence_missing", "commission_unknown", "prompt_injection"]
+    },
+    {
+      "harnessId": "DY-05", "platformId": "douyin", "name": "评论区线索识别", "version": "1.0.0", "logicId": "C07", "outputContract": "LeadSignalHandoffDraft.DRAFT", "riskLevel": "high",
+      "requiredInputs": ["interactionSignalRef", "consentPolicyRef", "platformRuleRef"], "requiredCapabilities": ["material.collect", "copy.generate"],
+      "allowedModes": ["read_only", "draft_only"], "forbiddenActions": ["publish", "reply_comment", "private_message", "export_pii", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["draft_positive", "rule_stale", "consent_missing", "pii_raw", "prompt_injection"]
+    },
+    {
+      "harnessId": "KS-01", "platformId": "kuaishou", "name": "快手短视频脚本适配", "version": "1.0.0", "logicId": "C05", "outputContract": "KuaishouScriptAdaptation.DRAFT", "riskLevel": "medium",
+      "requiredInputs": ["contentDraftRef", "factPackRef", "platformRuleRef"], "requiredCapabilities": ["copy.generate", "platform.adapt"],
+      "allowedModes": ["draft_only"], "forbiddenActions": ["publish", "boost", "comment", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["draft_positive", "rule_stale", "evidence_missing", "prohibited_claim", "prompt_injection"]
+    },
+    {
+      "harnessId": "KS-02", "platformId": "kuaishou", "name": "快手直播策略草稿", "version": "1.0.0", "logicId": "C05", "outputContract": "KuaishouLiveStrategy.DRAFT", "riskLevel": "high",
+      "requiredInputs": ["contentDraftRef", "factPackRef", "platformRuleRef", "inventoryEvidenceRef"], "requiredCapabilities": ["platform.adapt"],
+      "allowedModes": ["draft_only"], "forbiddenActions": ["publish", "boost", "comment", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["draft_positive", "rule_stale", "inventory_stale", "human_absent", "prompt_injection"]
+    },
+    {
+      "harnessId": "KS-03", "platformId": "kuaishou", "name": "磁力金牛投放决策草稿", "version": "1.0.0", "logicId": "C08", "outputContract": "JinniuDecision.DRAFT", "riskLevel": "critical",
+      "requiredInputs": ["contentDraftRef", "platformRuleRef", "budgetRef", "metricEvidenceRef"], "requiredCapabilities": ["performance.review"],
+      "allowedModes": ["proposal_only"], "forbiddenActions": ["publish", "boost", "comment", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["proposal_positive", "rule_stale", "budget_missing", "evidence_missing", "prompt_injection"]
+    },
+    {
+      "harnessId": "SPH-01", "platformId": "shipinhao", "name": "视频号内容适配", "version": "1.0.0", "logicId": "C05", "outputContract": "ShipinhaoScriptAdaptation.DRAFT", "riskLevel": "medium",
+      "requiredInputs": ["contentDraftRef", "factPackRef", "platformRuleRef"], "requiredCapabilities": ["copy.generate", "platform.adapt"],
+      "allowedModes": ["draft_only"], "forbiddenActions": ["publish", "mini_program_write", "enterprise_wechat_write", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["draft_positive", "rule_stale", "evidence_missing", "prohibited_claim", "prompt_injection"]
+    },
+    {
+      "harnessId": "SPH-02", "platformId": "shipinhao", "name": "视频号企微小程序联动草稿", "version": "1.0.0", "logicId": "C07", "outputContract": "WechatEcosystemFunnel.DRAFT", "riskLevel": "critical",
+      "requiredInputs": ["contentDraftRef", "consentPolicyRef", "platformRuleRef", "handoffPolicyRef"], "requiredCapabilities": ["platform.adapt", "material.collect"],
+      "allowedModes": ["proposal_only"], "forbiddenActions": ["publish", "mini_program_write", "enterprise_wechat_write", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["proposal_positive", "rule_stale", "consent_missing", "pii_raw", "prompt_injection"]
+    },
+    {
+      "harnessId": "SPH-03", "platformId": "shipinhao", "name": "视频号直播策略草稿", "version": "1.0.0", "logicId": "C05", "outputContract": "ShipinhaoLiveStrategy.DRAFT", "riskLevel": "high",
+      "requiredInputs": ["contentDraftRef", "factPackRef", "platformRuleRef", "inventoryEvidenceRef"], "requiredCapabilities": ["platform.adapt"],
+      "allowedModes": ["draft_only"], "forbiddenActions": ["publish", "mini_program_write", "enterprise_wechat_write", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["draft_positive", "rule_stale", "inventory_stale", "human_absent", "prompt_injection"]
+    },
+    {
+      "harnessId": "XHS-01", "platformId": "xiaohongshu", "name": "小红书笔记SEO", "version": "1.0.0", "logicId": "C05", "outputContract": "XiaohongshuNoteSEO.DRAFT", "riskLevel": "high",
+      "requiredInputs": ["contentDraftRef", "factPackRef", "platformRuleRef", "searchEvidenceRef"], "requiredCapabilities": ["copy.generate", "platform.adapt"],
+      "allowedModes": ["read_only", "draft_only"], "forbiddenActions": ["publish", "boost", "comment", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["draft_positive", "rule_stale", "search_evidence_missing", "prohibited_claim", "prompt_injection"]
+    },
+    {
+      "harnessId": "XHS-02", "platformId": "xiaohongshu", "name": "小红书合集矩阵", "version": "1.0.0", "logicId": "C05", "outputContract": "XiaohongshuMatrixStrategy.DRAFT", "riskLevel": "medium",
+      "requiredInputs": ["contentDraftRef", "factPackRef", "platformRuleRef", "searchEvidenceRef"], "requiredCapabilities": ["copy.generate", "platform.adapt"],
+      "allowedModes": ["draft_only"], "forbiddenActions": ["publish", "boost", "comment", "private_message", "live_push"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["draft_positive", "rule_stale", "search_evidence_missing", "duplicate_matrix", "prompt_injection"]
+    },
+    {
+      "harnessId": "XHS-03", "platformId": "xiaohongshu", "name": "小红书真实体感评估", "version": "1.0.0", "logicId": "C06", "outputContract": "AuthenticityAssessment.INCONCLUSIVE", "riskLevel": "critical",
+      "requiredInputs": ["contentDraftRef", "factPackRef", "platformRuleRef", "experienceEvidenceRef"], "requiredCapabilities": ["content.review"],
+      "allowedModes": ["read_only", "draft_only"], "forbiddenActions": ["publish", "boost", "comment", "private_message", "live_push", "fabricate_experience"],
+      "ruleAuthority": {"sourceStatus": "unverified", "sourceRef": null, "effectiveAt": null, "reviewAt": null, "contentHash": null},
+      "evalCases": ["draft_positive", "rule_stale", "experience_evidence_missing", "fabricated_experience", "prompt_injection"]
+    }
+  ]
+}

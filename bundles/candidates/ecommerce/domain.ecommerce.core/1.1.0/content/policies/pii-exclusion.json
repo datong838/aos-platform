@@ -1,0 +1,45 @@
+{
+  "name": "pii-exclusion",
+  "description": "PII 字段排除清单，Project 节点显式 drop；按 OT 分组，source_ref 对齐 frozen/01 schema fingerprint 与 frozen/02 P08 隐私最小化映射",
+  "source_ref": [
+    "frozen/01-schema-fingerprint.md#2-pii-字段分类汇总",
+    "frozen/02-pipeline-manifest.yaml#p08-customerlite"
+  ],
+  "policy": "drop",
+  "groups": [
+    {
+      "object_type": "CustomerLite",
+      "source_table": "ns_member",
+      "fields": [
+        "mobile",
+        "wx_openid",
+        "nickname",
+        "avatar",
+        "reg_address",
+        "last_login_ip",
+        "password",
+        "pay_password"
+      ]
+    },
+    {
+      "object_type": "Order",
+      "source_table": "ns_order",
+      "fields": [
+        "mobile",
+        "telephone",
+        "address",
+        "full_address",
+        "invoice_full_address",
+        "invoice_email"
+      ]
+    },
+    {
+      "object_type": "OrderLine",
+      "source_table": "ns_order_goods",
+      "fields": [
+        "refund_address",
+        "refund_address_id"
+      ]
+    }
+  ]
+}
