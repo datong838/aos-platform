@@ -1,0 +1,68 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w5-00-action-risk-matrix-freeze-20260825",
+  "wave": "W5-00",
+  "authorityBaseRevision": "AOS-000234",
+  "branch": "m1",
+  "outcome": "W5_00_MATRIX_CONTRACT_FROZEN_GREEN_ALL_EXTERNAL_ROWS_BLOCKED_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "matrixContract": {
+    "jointKey": [
+      "ActionTypeRevisionRef",
+      "CapabilityRevisionRef",
+      "CapabilityBindingRef",
+      "AccountRef",
+      "AdapterRevisionRef",
+      "RiskPolicyRevisionRef",
+      "ActionBudgetPolicyRevisionRef",
+      "KillPolicyRevisionRef",
+      "TenantScope",
+      "purpose",
+      "markings"
+    ],
+    "riskRule": "effective risk is the maximum of action type, capability, account, batch size, sensitivity, reversibility, cost and organization policy",
+    "defaultRule": "R3, R4 and unlisted families are disabled; R2 is candidate-only until every exact operational gate is GREEN",
+    "internalDraftRule": "draft.internal may persist only canonical AOS draft/proposal state and must never impersonate provider completion"
+  },
+  "independentFindings": [
+    "ActionAdapter exposes execute/reconcile only and ACTION_ADAPTERS is an in-process registry, not production revision authority",
+    "ActionTypeRevisionRef binds id/hash/objectType but execution still rereads mutable meta_action_type",
+    "the existing model-governance BudgetPolicyRevision is not Action business-cost reservation and settlement authority",
+    "Proposal and Lease do not yet bind the full exact joint key"
+  ],
+  "stableBlockers": [
+    "ACTION_EXACT_BINDING_INCOMPLETE",
+    "ADAPTER_CAPABILITY_REVISION_UNAVAILABLE",
+    "AUTHORIZED_ACCOUNT_UNAVAILABLE",
+    "ACTION_BUDGET_POLICY_UNAVAILABLE",
+    "ACTION_FAMILY_DISABLED_BY_BASELINE",
+    "CANARY_EXPLICIT_AUTHORIZATION_REQUIRED"
+  ],
+  "verification": {
+    "sourceReview": [
+      "services/aos-api/aos_api/aip_action_adapters.py",
+      "services/aos-api/aos_api/aip_action_execution.py",
+      "services/aos-api/aos_api/aip_action_models.py",
+      "services/aos-api/aos_api/aip_contracts.py"
+    ],
+    "designReview": [
+      "163-AIP通用原子Skill分层与六数字同事组合方案.md",
+      "164-工作台层Skill消费与六数字同事产品落位方案.md"
+    ],
+    "memoryGate": "AOS-000234 GREEN_WITH_WARNINGS; all strong projections CURRENT; can_change_state=true",
+    "actionBaselineTests": "14 passed, 7 known warnings",
+    "productCodeChanged": false,
+    "browserAcceptance": "not applicable: this task freezes a non-visual contract and exposes no page or runtime route"
+  },
+  "sideEffectConservation": {
+    "providerInvocationCount": 0,
+    "taskRunCreatedCount": 0,
+    "agentRunCreatedCount": 0,
+    "actionOrHandoffCreatedCount": 0,
+    "approvalOrExecutionLeaseCreatedCount": 0,
+    "externalBusinessMutationCount": 0,
+    "liveMigrationAppliedCount": 0,
+    "releaseCount": 0
+  },
+  "nextTask": "W5-01_ADAPTER_CAPABILITY_CONTRACT_SUITE",
+  "recordedAt": "2026-08-25T07:12:00+08:00"
+}
