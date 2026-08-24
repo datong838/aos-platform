@@ -14,8 +14,12 @@ import psycopg
 from aos_api.db import connect as db_connect
 from aos_api.ecommerce_workshop_creator_growth_authorities import (
     CreatorCandidateRevision,
+    CreatorContractRevision,
+    CreatorDeliveryRevision,
     CreatorMatchDecision,
     CreatorMatchObservation,
+    CreatorRelationshipRevision,
+    CreatorTermDiffRevision,
     OutreachBatchRevision,
     OutreachItemRevision,
     OutreachStartLedger,
@@ -24,7 +28,7 @@ from aos_api.tenant_scope import TenantScope
 
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
-AuthorityT = TypeVar("AuthorityT", CreatorCandidateRevision, CreatorMatchObservation, CreatorMatchDecision, OutreachItemRevision, OutreachBatchRevision, OutreachStartLedger)
+AuthorityT = TypeVar("AuthorityT", CreatorCandidateRevision, CreatorMatchObservation, CreatorMatchDecision, OutreachItemRevision, OutreachBatchRevision, OutreachStartLedger, CreatorContractRevision, CreatorTermDiffRevision, CreatorDeliveryRevision, CreatorRelationshipRevision)
 
 
 @dataclass(frozen=True)
@@ -68,6 +72,18 @@ class EcommerceWorkshopCreatorGrowthStore:
 
     def append_start_ledger(self, scope: TenantScope, item: OutreachStartLedger, receipt_id: str) -> None:
         self._append(scope, "ecommerce_creator_outreach_start_ledger", "ledger_id", item.ledger_id, item, receipt_id)
+
+    def append_contract(self, scope: TenantScope, item: CreatorContractRevision, receipt_id: str) -> None:
+        self._append(scope, "ecommerce_creator_contract_revision", "contract_id", item.contract_id, item, receipt_id)
+
+    def append_term_diff(self, scope: TenantScope, item: CreatorTermDiffRevision, receipt_id: str) -> None:
+        self._append(scope, "ecommerce_creator_term_diff_revision", "diff_id", item.diff_id, item, receipt_id)
+
+    def append_delivery(self, scope: TenantScope, item: CreatorDeliveryRevision, receipt_id: str) -> None:
+        self._append(scope, "ecommerce_creator_delivery_revision", "delivery_id", item.delivery_id, item, receipt_id)
+
+    def append_relationship(self, scope: TenantScope, item: CreatorRelationshipRevision, receipt_id: str) -> None:
+        self._append(scope, "ecommerce_creator_relationship_revision", "relationship_id", item.relationship_id, item, receipt_id)
 
     def list_candidates(self, scope: TenantScope, *, cutoff: datetime, limit: int = 100) -> list[CreatorAuthorityObservation[CreatorCandidateRevision]]:
         return self._list(scope, "ecommerce_creator_candidate_revision", CreatorCandidateRevision, cutoff, limit)

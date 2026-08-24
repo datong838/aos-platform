@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from aos_api.ecommerce_workshop_creator_growth_authorities import CreatorCandidateRevision, CreatorMatchDecision, CreatorMatchObservation, OutreachBatchRevision, OutreachItemRevision, OutreachStartLedger
+from aos_api.ecommerce_workshop_creator_growth_authorities import CreatorCandidateRevision, CreatorContractRevision, CreatorDeliveryRevision, CreatorMatchDecision, CreatorMatchObservation, CreatorRelationshipRevision, CreatorTermDiffRevision, OutreachBatchRevision, OutreachItemRevision, OutreachStartLedger
 
 NOW = datetime(2026, 8, 24, tzinfo=UTC)
 HASH = "a" * 64
@@ -34,3 +34,14 @@ def test_outreach_prepare_is_exact_and_start_ledger_conserves_outcomes() -> None
     assert ledger.unknown == 1
     with pytest.raises(ValueError, match="conserve"):
         OutreachStartLedger.model_validate({**ledger.model_dump(mode="json", by_alias=True), "input": 6})
+
+
+def test_contract_delivery_relationship_keep_distinct_exact_lineage() -> None:
+    tenant = {"orgId": "org-org", "projectId": "dev-project"}
+    contract = CreatorContractRevision.model_validate({"tenant": tenant, "contractId": "contract-1", "collaborationId": "collab-1", "revision": 1, "lifecycle": "signed", "candidateRef": ref("CreatorCandidateRevision", "c1"), "termDocumentRef": "vault://contracts/contract-1/r1", "contentHash": HASH, "recordedAt": NOW})
+    diff = CreatorTermDiffRevision.model_validate({"tenant": tenant, "diffId": "diff-1", "revision": 1, "fromContractRef": ref("CreatorContractRevision", "contract-1"), "toContractRef": {**ref("CreatorContractRevision", "contract-1"), "revision": 2}, "changedTermKeys": ["commissionRate"], "contentHash": HASH})
+    delivery = CreatorDeliveryRevision.model_validate({"tenant": tenant, "deliveryId": "delivery-1", "collaborationId": "collab-1", "revision": 1, "signedContractRef": ref("CreatorContractRevision", "contract-1"), "outcomeEvidenceRefs": [ref("DeliveryEvidenceRevision", "e1")], "contentHash": HASH, "recordedAt": NOW})
+    relationship = CreatorRelationshipRevision.model_validate({"tenant": tenant, "relationshipId": "relationship-1", "collaborationId": "collab-1", "revision": 1, "maturity": "preliminary", "deliveryRefs": [ref("CreatorDeliveryRevision", "delivery-1")], "assessmentEvidenceRefs": [ref("RelationshipEvidenceRevision", "e2")], "contentHash": HASH, "recordedAt": NOW})
+    assert contract.lifecycle.value == "signed" and diff.changed_term_keys == ["commissionRate"]
+    assert delivery.collaboration_id == relationship.collaboration_id
+    assert relationship.maturity.value == "preliminary"

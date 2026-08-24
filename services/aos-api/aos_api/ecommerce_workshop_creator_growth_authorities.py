@@ -36,6 +36,18 @@ class OutreachStartOutcome(StrEnum):
     SKIPPED = "skipped"
 
 
+class ContractLifecycle(StrEnum):
+    DRAFT = "draft"
+    SIGNED = "signed"
+    TERMINATED = "terminated"
+
+
+class RelationshipMaturity(StrEnum):
+    PRELIMINARY = "preliminary"
+    REPEAT = "repeat"
+    STRATEGIC = "strategic"
+
+
 class CreatorCandidateRevision(AipContractModel):
     tenant: TenantContext
     candidate_id: str = Field(min_length=1, max_length=200)
@@ -191,15 +203,103 @@ class OutreachStartLedger(AipContractModel):
         return self
 
 
+class CreatorContractRevision(AipContractModel):
+    tenant: TenantContext
+    contract_id: str = Field(min_length=1, max_length=200)
+    collaboration_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    lifecycle: ContractLifecycle
+    candidate_ref: CreatorExactRef
+    term_document_ref: str = Field(min_length=1, max_length=500)
+    prior_ref: CreatorExactRef | None = None
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    recorded_at: datetime
+
+    @field_validator("recorded_at")
+    @classmethod
+    def _aware_time(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("contract time must include a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _contract_chain(self) -> CreatorContractRevision:
+        if self.candidate_ref.resource_type != "CreatorCandidateRevision":
+            raise ValueError("candidateRef must reference CreatorCandidateRevision")
+        if (self.revision == 1) != (self.prior_ref is None):
+            raise ValueError("contract revisions after r1 require priorRef")
+        return self
+
+
+class CreatorTermDiffRevision(AipContractModel):
+    tenant: TenantContext
+    diff_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    from_contract_ref: CreatorExactRef
+    to_contract_ref: CreatorExactRef
+    changed_term_keys: list[str] = Field(min_length=1, max_length=50)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def _exact_successor(self) -> CreatorTermDiffRevision:
+        refs = (self.from_contract_ref, self.to_contract_ref)
+        if any(item.resource_type != "CreatorContractRevision" for item in refs):
+            raise ValueError("term diff refs must reference CreatorContractRevision")
+        if self.from_contract_ref.resource_id != self.to_contract_ref.resource_id or self.to_contract_ref.revision != self.from_contract_ref.revision + 1:
+            raise ValueError("term diff must reference one exact contract successor")
+        return self
+
+
+class CreatorDeliveryRevision(AipContractModel):
+    tenant: TenantContext
+    delivery_id: str = Field(min_length=1, max_length=200)
+    collaboration_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    signed_contract_ref: CreatorExactRef
+    outcome_evidence_refs: list[CreatorExactRef] = Field(min_length=1, max_length=50)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    recorded_at: datetime
+
+    @model_validator(mode="after")
+    def _signed_contract_authority(self) -> CreatorDeliveryRevision:
+        if self.signed_contract_ref.resource_type != "CreatorContractRevision":
+            raise ValueError("delivery requires exact CreatorContractRevision")
+        return self
+
+
+class CreatorRelationshipRevision(AipContractModel):
+    tenant: TenantContext
+    relationship_id: str = Field(min_length=1, max_length=200)
+    collaboration_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    maturity: RelationshipMaturity
+    delivery_refs: list[CreatorExactRef] = Field(min_length=1, max_length=100)
+    assessment_evidence_refs: list[CreatorExactRef] = Field(min_length=1, max_length=50)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    recorded_at: datetime
+
+    @model_validator(mode="after")
+    def _delivery_authority(self) -> CreatorRelationshipRevision:
+        if any(item.resource_type != "CreatorDeliveryRevision" for item in self.delivery_refs):
+            raise ValueError("deliveryRefs must reference CreatorDeliveryRevision")
+        return self
+
+
 __all__ = [
     "CreatorCandidateRevision",
     "CreatorExactRef",
     "CreatorMatchDecision",
     "CreatorMatchObservation",
+    "CreatorContractRevision",
+    "CreatorDeliveryRevision",
+    "CreatorRelationshipRevision",
+    "CreatorTermDiffRevision",
+    "ContractLifecycle",
     "MatchDisposition",
     "OutreachBatchLifecycle",
     "OutreachBatchRevision",
     "OutreachItemRevision",
     "OutreachStartLedger",
     "OutreachStartOutcome",
+    "RelationshipMaturity",
 ]
