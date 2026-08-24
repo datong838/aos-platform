@@ -168,3 +168,20 @@ export type OperationCommandId = "classify" | "createCase" | "changeMembership" 
 export type OperationCommandBlocker = { code: string; dependency: string; requiredAction: string };
 export type OperationCommandDescriptor = { commandId: OperationCommandId; label: string; status: "ready" | "blocked"; risk: "controlled" | "high"; sideEffect: "internalAuthority" | "external"; blockers: OperationCommandBlocker[] };
 export type OperationCommandReadinessResponse = { schemaVersion: typeof OPERATION_COMMAND_READINESS_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; commands: OperationCommandDescriptor[] };
+
+export const OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION = "aos.ecommerce-workshop.operation-command-observation/v1" as const;
+export type ObservableOperationCommandId = Exclude<OperationCommandId, "refund">;
+export type OperationCommandObservationStatus = "notStarted" | "accepted" | "applied" | "failed" | "unknown" | "reconciled";
+export type OperationCommandObservationResponse = {
+  schemaVersion: typeof OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION;
+  tenant: WorkshopTenant;
+  proposalId: string;
+  leaseId: string;
+  commandId: ObservableOperationCommandId;
+  status: OperationCommandObservationStatus;
+  proposalHash: string;
+  receiptId: string | null;
+  requestFingerprint: string | null;
+  operationReceiptId: string | null;
+  replayAllowed: false;
+};

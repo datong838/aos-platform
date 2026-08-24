@@ -22,6 +22,7 @@ const operationIds = ["orders", "orderLines", "inventory", "shipments", "payment
 const operations = { schemaVersion: "aos.ecommerce-workshop.operations-view/v1", tenant: envelope.tenant, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: operationIds.map((sliceId) => ({ sliceId, status: "ready", dataCutoff: "2026-08-24T08:00:00Z", authorityRefs: [{ resourceType: "ReadAuthority", resourceId: sliceId, revision: 1, contentHash: hash("d"), receiptId: "receipt-1" }], blockers: [], countLedger: { sourceTotal: 0, attached: 0, unmatched: 0, conflicted: 0 } })), page: { limit: 50, count: 0, hasMore: false, nextCursor: null } };
 const commandIds = ["classify", "createCase", "changeMembership", "manageSla", "automationKill", "refund"] as const;
 const commandReadiness = { schemaVersion: "aos.ecommerce-workshop.operation-command-readiness/v1", tenant: envelope.tenant, evaluatedAt: "2026-08-24T08:00:00Z", commands: commandIds.map((commandId, index) => ({ commandId, label: `命令${index}`, status: "blocked", risk: index > 3 ? "high" : "controlled", sideEffect: index === 5 ? "external" : "internalAuthority", blockers: [{ code: "OPERATION_COMMAND_HANDLER_NOT_BOUND", dependency: "W3-12B2", requiredAction: "完成 exact command gate" }] })) };
+const commandObservation = { schemaVersion: "aos.ecommerce-workshop.operation-command-observation/v1", tenant: envelope.tenant, proposalId: "proposal:1", leaseId: "lease:1", commandId: "classify", status: "applied", proposalHash: "a".repeat(64), receiptId: "receipt-1", requestFingerprint: "b".repeat(64), operationReceiptId: "operation-receipt-1", replayAllowed: false };
 
 describe("EcommerceWorkshopClient", () => {
   it("只发两个 canonical GET，并沿用会话鉴权头", async () => {
@@ -62,6 +63,15 @@ describe("EcommerceWorkshopClient", () => {
     const parsed = await client.getOperationCommandReadiness();
     expect(parsed.commands.map((item) => item.commandId)).toEqual(commandIds);
     expect(fetch).toHaveBeenCalledWith("http://api.test/v1/ecommerce-workshop/commands/operations/readiness", expect.objectContaining({ method: "GET", headers: expect.objectContaining({ Authorization: "Bearer test" }) }));
+  });
+  it("只发 exact proposal/lease observation GET 并拒绝 scope/path 漂移", async () => {
+    const fetch = vi.fn().mockResolvedValue(ok(commandObservation));
+    const client = new EcommerceWorkshopClient({ fetch, getBaseUrl: () => "http://api.test", getAuthHeaders: () => ({ Authorization: "Bearer test" }) });
+    await expect(client.getOperationCommandObservation("proposal:1", "lease:1")).resolves.toMatchObject({ status: "applied", replayAllowed: false });
+    expect(fetch).toHaveBeenCalledWith("http://api.test/v1/ecommerce-workshop/commands/operations/observations/proposal%3A1/leases/lease%3A1", expect.objectContaining({ method: "GET", headers: expect.objectContaining({ Authorization: "Bearer test" }) }));
+    await expect(client.getOperationCommandObservation("bad/proposal", "lease:1")).rejects.toBeInstanceOf(TypeError);
+    const drift = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(ok({ ...commandObservation, leaseId: "lease:2" })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });
+    await expect(drift.getOperationCommandObservation("proposal:1", "lease:1")).rejects.toThrow("leaseId 漂移");
   });
   it("SourceReadiness 的 forbidden、network、non-JSON 与 parser drift 均失败关闭", async () => {
     const denied = new EcommerceWorkshopClient({ fetch: vi.fn().mockResolvedValue(new Response(JSON.stringify({ code: "FORBIDDEN", message: "denied", details: null, traceId: "trace-3" }), { status: 403 })), getBaseUrl: () => "", getAuthHeaders: () => ({}) });

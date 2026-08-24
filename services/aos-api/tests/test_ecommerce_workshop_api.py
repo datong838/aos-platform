@@ -282,7 +282,7 @@ def test_source_readiness_zero_visible_modules_and_tenant_drift_fail_closed() ->
         assert rejected.json()["message"] == "SourceReadiness dependency failed closed"
 
 
-def test_openapi_freezes_w1_and_w2_core_operations_and_no_writes() -> None:
+def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None:
     app = FastAPI()
     app.include_router(ecommerce_workshop.router)
     schema = app.openapi()
@@ -309,6 +309,34 @@ def test_openapi_freezes_w1_and_w2_core_operations_and_no_writes() -> None:
             "/v1/ecommerce-workshop/views/operations",
             "get",
         ),
+        "ecommerceWorkshopOperationCommandReadinessGet": (
+            "/v1/ecommerce-workshop/commands/operations/readiness",
+            "get",
+        ),
+        "ecommerceWorkshopOperationCommandObservationGet": (
+            "/v1/ecommerce-workshop/commands/operations/observations/{proposal_id}/leases/{lease_id}",
+            "get",
+        ),
+        "ecommerceWorkshopOperationClassifyPost": (
+            "/v1/ecommerce-workshop/commands/operations/classify",
+            "post",
+        ),
+        "ecommerceWorkshopOperationCreateCasePost": (
+            "/v1/ecommerce-workshop/commands/operations/create-case",
+            "post",
+        ),
+        "ecommerceWorkshopOperationChangeMembershipPost": (
+            "/v1/ecommerce-workshop/commands/operations/change-membership",
+            "post",
+        ),
+        "ecommerceWorkshopOperationManageSlaPost": (
+            "/v1/ecommerce-workshop/commands/operations/manage-sla",
+            "post",
+        ),
+        "ecommerceWorkshopOperationAutomationKillPost": (
+            "/v1/ecommerce-workshop/commands/operations/automation-kill",
+            "post",
+        ),
         "ecommerceWorkshopTaskCockpitCoreGet": (
             "/v1/ecommerce-workshop/views/task-cockpit",
             "get",
@@ -322,4 +350,5 @@ def test_openapi_freezes_w1_and_w2_core_operations_and_no_writes() -> None:
             "get",
         ),
     }
-    assert all(method == "get" for _, method in operations.values())
+    assert all(method in {"get", "post"} for _, method in operations.values())
+    assert not any("refund" in path for path, _ in operations.values())

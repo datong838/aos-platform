@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
+import { parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -45,6 +45,36 @@ describe("operation command readiness strict parser", () => {
     expect(() => parseOperationCommandReadiness({ ...commandReadiness, commands: [...commandReadiness.commands].reverse() })).toThrow("canonical order");
     expect(() => parseOperationCommandReadiness({ ...commandReadiness, commands: [{ ...commandReadiness.commands[0], status: "ready" }, ...commandReadiness.commands.slice(1)] })).toThrow("伪 ready");
     expect(() => parseOperationCommandReadiness({ ...commandReadiness, tenant: { orgId: "dev-org", projectId: "dev-project" } }, { orgId: "org-org", projectId: "dev-project" })).toThrow("tenant 漂移");
+  });
+});
+
+const commandObservation = {
+  schemaVersion: "aos.ecommerce-workshop.operation-command-observation/v1",
+  tenant: { orgId: "org-org", projectId: "dev-project" },
+  proposalId: "proposal-1",
+  leaseId: "lease-1",
+  commandId: "classify",
+  status: "applied",
+  proposalHash: "a".repeat(64),
+  receiptId: "receipt-1",
+  requestFingerprint: "b".repeat(64),
+  operationReceiptId: "operation-receipt-1",
+  replayAllowed: false,
+};
+
+describe("operation command observation strict parser", () => {
+  it("保留 exact proposal/lease/receipt 证据并固定禁止 replay", () => {
+    expect(parseOperationCommandObservation(commandObservation, commandObservation.tenant, "proposal-1", "lease-1")).toMatchObject({ status: "applied", replayAllowed: false });
+    expect(parseOperationCommandObservation({ ...commandObservation, status: "unknown", receiptId: null, requestFingerprint: null, operationReceiptId: null }).status).toBe("unknown");
+  });
+  it("拒绝 extra、未知状态、坏 hash、伪 replay、tenant 与 path ref 漂移", () => {
+    expect(() => parseOperationCommandObservation({ ...commandObservation, extra: true })).toThrow("字段漂移");
+    expect(() => parseOperationCommandObservation({ ...commandObservation, status: "future" })).toThrow("未知枚举");
+    expect(() => parseOperationCommandObservation({ ...commandObservation, proposalHash: "bad" })).toThrow("SHA-256");
+    expect(() => parseOperationCommandObservation({ ...commandObservation, replayAllowed: true })).toThrow("replay");
+    expect(() => parseOperationCommandObservation(commandObservation, { orgId: "dev-org", projectId: "dev-project" })).toThrow("tenant 漂移");
+    expect(() => parseOperationCommandObservation(commandObservation, commandObservation.tenant, "proposal-2", "lease-1")).toThrow("proposalId 漂移");
+    expect(() => parseOperationCommandObservation(commandObservation, commandObservation.tenant, "proposal-1", "lease-2")).toThrow("leaseId 漂移");
   });
 });
 

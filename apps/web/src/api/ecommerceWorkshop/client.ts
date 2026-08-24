@@ -1,7 +1,7 @@
 import { getApiBase } from "../apiBase";
 import { tenantAuthHeaders } from "../tenant";
-import type { EcommerceWorkshopApiErrorBody, EcommerceWorkshopModuleListResponse, EcommerceWorkshopModuleReadinessResponse, OperationCommandReadinessResponse, OperationsViewResponse, SourceReadinessEnvelope, TaskCockpitCheckpointPageResponse, TaskCockpitCoreQuery, TaskCockpitCoreResponse, TaskCockpitRunDetailQuery, TaskCockpitStepPageResponse } from "./contracts";
-import { parseEcommerceWorkshopApiError, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
+import type { EcommerceWorkshopApiErrorBody, EcommerceWorkshopModuleListResponse, EcommerceWorkshopModuleReadinessResponse, OperationCommandObservationResponse, OperationCommandReadinessResponse, OperationsViewResponse, SourceReadinessEnvelope, TaskCockpitCheckpointPageResponse, TaskCockpitCoreQuery, TaskCockpitCoreResponse, TaskCockpitRunDetailQuery, TaskCockpitStepPageResponse } from "./contracts";
+import { parseEcommerceWorkshopApiError, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseSourceReadinessEnvelope, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitSteps } from "./parser";
 
 type FetchImplementation = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 export type EcommerceWorkshopClientOptions = { fetch?: FetchImplementation; getBaseUrl?: () => string; getAuthHeaders?: () => Record<string, string> };
@@ -13,6 +13,7 @@ export class EcommerceWorkshopClientError extends Error {
 }
 const MODULE_ID = /^ecommerce\.[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
 const RUN_ID = /^[^\s/\\\u0000]{1,200}$/;
+const COMMAND_OBSERVATION_REF = /^[^\s/\\\u0000]{1,300}$/;
 const TASK_STATUSES = new Set(["pending", "planning", "awaiting_approval", "approved", "executing", "paused", "completed", "failed", "cancelled", "rolled_back"]);
 function queryString(query: TaskCockpitRunDetailQuery & { status?: string }): string {
   const parameters = new URLSearchParams();
@@ -33,6 +34,7 @@ export class EcommerceWorkshopClient {
   async getSourceReadiness(): Promise<SourceReadinessEnvelope> { return parseSourceReadinessEnvelope(await this.get("ecommerceWorkshopSourceReadinessGet", "/v1/ecommerce-workshop/source-readiness")); }
   async getOperationsView(): Promise<OperationsViewResponse> { return parseOperationsView(await this.get("ecommerceWorkshopOperationsViewGet", "/v1/ecommerce-workshop/views/operations")); }
   async getOperationCommandReadiness(): Promise<OperationCommandReadinessResponse> { return parseOperationCommandReadiness(await this.get("ecommerceWorkshopOperationCommandReadinessGet", "/v1/ecommerce-workshop/commands/operations/readiness")); }
+  async getOperationCommandObservation(proposalId: string, leaseId: string): Promise<OperationCommandObservationResponse> { if (!COMMAND_OBSERVATION_REF.test(proposalId) || !COMMAND_OBSERVATION_REF.test(leaseId)) throw new TypeError("operation command observation ref 无效"); return parseOperationCommandObservation(await this.get("ecommerceWorkshopOperationCommandObservationGet", `/v1/ecommerce-workshop/commands/operations/observations/${encodeURIComponent(proposalId)}/leases/${encodeURIComponent(leaseId)}`), undefined, proposalId, leaseId); }
   async getTaskCockpitCore(query: TaskCockpitCoreQuery = {}): Promise<TaskCockpitCoreResponse> { return parseTaskCockpitCore(await this.get("ecommerceWorkshopTaskCockpitCoreGet", `/v1/ecommerce-workshop/views/task-cockpit${queryString(query)}`)); }
   async listTaskCockpitRunSteps(runId: string, query: TaskCockpitRunDetailQuery = {}): Promise<TaskCockpitStepPageResponse> { if (!RUN_ID.test(runId)) throw new TypeError("runId 无效"); return parseTaskCockpitSteps(await this.get("ecommerceWorkshopTaskCockpitRunStepsList", `/v1/ecommerce-workshop/views/task-cockpit/runs/${encodeURIComponent(runId)}/steps${queryString(query)}`)); }
   async listTaskCockpitRunCheckpoints(runId: string, query: TaskCockpitRunDetailQuery = {}): Promise<TaskCockpitCheckpointPageResponse> { if (!RUN_ID.test(runId)) throw new TypeError("runId 无效"); return parseTaskCockpitCheckpoints(await this.get("ecommerceWorkshopTaskCockpitRunCheckpointsList", `/v1/ecommerce-workshop/views/task-cockpit/runs/${encodeURIComponent(runId)}/checkpoints${queryString(query)}`)); }

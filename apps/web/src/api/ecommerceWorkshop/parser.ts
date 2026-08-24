@@ -4,6 +4,7 @@ import {
   TASK_COCKPIT_SCHEMA_VERSION,
   OPERATIONS_SCHEMA_VERSION,
   OPERATION_COMMAND_READINESS_SCHEMA_VERSION,
+  OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION,
   type EcommerceWorkshopApiErrorBody,
   type EcommerceWorkshopModule,
   type EcommerceWorkshopModuleListResponse,
@@ -45,6 +46,9 @@ import {
   type OperationCommandDescriptor,
   type OperationCommandId,
   type OperationCommandReadinessResponse,
+  type ObservableOperationCommandId,
+  type OperationCommandObservationResponse,
+  type OperationCommandObservationStatus,
 } from "./contracts";
 
 const SHA256 = /^sha256:[0-9a-f]{64}$/;
@@ -407,4 +411,47 @@ export function parseOperationCommandReadiness(value: unknown, expectedTenant?: 
   const rawCommands = raw.commands;
   const commands = OPERATION_COMMAND_IDS.map((commandId, index) => parseOperationCommand(rawCommands[index], commandId));
   return { schemaVersion: OPERATION_COMMAND_READINESS_SCHEMA_VERSION, tenant, evaluatedAt: timestamp(raw.evaluatedAt, "operationCommandReadiness.evaluatedAt"), commands };
+}
+
+const OBSERVABLE_OPERATION_COMMAND_IDS = ["classify", "createCase", "changeMembership", "manageSla", "automationKill"] as const satisfies readonly ObservableOperationCommandId[];
+
+export function parseOperationCommandObservation(
+  value: unknown,
+  expectedTenant?: WorkshopTenant,
+  expectedProposalId?: string,
+  expectedLeaseId?: string,
+): OperationCommandObservationResponse {
+  const raw = record(value, "operationCommandObservation");
+  exact(raw, ["schemaVersion", "tenant", "proposalId", "leaseId", "commandId", "status", "proposalHash", "receiptId", "requestFingerprint", "operationReceiptId", "replayAllowed"], "operationCommandObservation");
+  if (raw.schemaVersion !== OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION) throw new TypeError("operationCommandObservation.schemaVersion 漂移");
+  const tenant = parseTenant(raw.tenant);
+  if (expectedTenant && (tenant.orgId !== expectedTenant.orgId || tenant.projectId !== expectedTenant.projectId)) throw new TypeError("operationCommandObservation.tenant 漂移");
+  const proposalId = boundedText(raw.proposalId, "operationCommandObservation.proposalId", 300);
+  const leaseId = boundedText(raw.leaseId, "operationCommandObservation.leaseId", 300);
+  if (expectedProposalId !== undefined && proposalId !== expectedProposalId) throw new TypeError("operationCommandObservation.proposalId 漂移");
+  if (expectedLeaseId !== undefined && leaseId !== expectedLeaseId) throw new TypeError("operationCommandObservation.leaseId 漂移");
+  if (raw.replayAllowed !== false) throw new TypeError("operationCommandObservation.replay 必须禁止");
+  const receiptId = nullable(raw.receiptId, (item) => boundedText(item, "operationCommandObservation.receiptId", 300));
+  const requestFingerprint = nullable(raw.requestFingerprint, (item) => {
+    const result = boundedText(item, "operationCommandObservation.requestFingerprint", 64);
+    if (!RAW_SHA256.test(result)) throw new TypeError("operationCommandObservation.requestFingerprint 不是 SHA-256");
+    return result;
+  });
+  const operationReceiptId = nullable(raw.operationReceiptId, (item) => boundedText(item, "operationCommandObservation.operationReceiptId", 300));
+  if ((receiptId === null) !== (requestFingerprint === null) || (receiptId === null && operationReceiptId !== null)) throw new TypeError("operationCommandObservation receipt 链漂移");
+  const proposalHash = boundedText(raw.proposalHash, "operationCommandObservation.proposalHash", 64);
+  if (!RAW_SHA256.test(proposalHash)) throw new TypeError("operationCommandObservation.proposalHash 不是 SHA-256");
+  return {
+    schemaVersion: OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION,
+    tenant,
+    proposalId,
+    leaseId,
+    commandId: enumValue<ObservableOperationCommandId>(raw.commandId, OBSERVABLE_OPERATION_COMMAND_IDS, "operationCommandObservation.commandId"),
+    status: enumValue<OperationCommandObservationStatus>(raw.status, ["notStarted", "accepted", "applied", "failed", "unknown", "reconciled"], "operationCommandObservation.status"),
+    proposalHash,
+    receiptId,
+    requestFingerprint,
+    operationReceiptId,
+    replayAllowed: false,
+  };
 }

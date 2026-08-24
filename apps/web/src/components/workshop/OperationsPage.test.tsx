@@ -10,13 +10,14 @@ const ids = ["orders", "orderLines", "inventory", "shipments", "payments", "afte
 const response = { schemaVersion: "aos.ecommerce-workshop.operations-view/v1" as const, tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded" as const, slices: ids.map((sliceId, index) => ({ sliceId, status: (index === 5 ? "blocked" : "ready") as "ready" | "blocked", dataCutoff: "2026-08-24T08:00:00Z", authorityRefs: index === 5 ? [] : [{ resourceType: "ReadAuthority", resourceId: sliceId, revision: 1, contentHash: `sha256:${"a".repeat(64)}`, receiptId: "receipt-1" }], blockers: index === 5 ? [{ code: "AFTERSALE_EVENTS_READ_FAILED_CLOSED", dependency: "data.aftersale", requiredAction: "检查 canonical reader" }] : [], countLedger: { sourceTotal: index === 5 ? 0 : 1, attached: index === 5 ? 0 : 1, unmatched: 0, conflicted: 0 } })), page: { limit: 50, count: 6, hasMore: false, nextCursor: null } };
 const commandIds = ["classify", "createCase", "changeMembership", "manageSla", "automationKill", "refund"] as const;
 const commands = { schemaVersion: "aos.ecommerce-workshop.operation-command-readiness/v1" as const, tenant: response.tenant, evaluatedAt: "2026-08-24T08:00:00Z", commands: commandIds.map((commandId, index) => ({ commandId, label: ["分类事件", "创建运营工单", "调整工单成员", "管理 SLA", "自动化 Kill", "退款"][index], status: "blocked" as const, risk: (index > 3 ? "high" : "controlled") as "high" | "controlled", sideEffect: (index === 5 ? "external" : "internalAuthority") as "external" | "internalAuthority", blockers: [{ code: index === 5 ? "EXTERNAL_ACTION_GATE_NOT_BOUND" : "OPERATION_COMMAND_HANDLER_NOT_BOUND", dependency: "W3-12B2", requiredAction: "完成 exact command gate" }] })) };
+const observation = { schemaVersion: "aos.ecommerce-workshop.operation-command-observation/v1" as const, tenant: response.tenant, proposalId: "proposal-1", leaseId: "lease-1", commandId: "classify" as const, status: "applied" as const, proposalHash: "a".repeat(64), receiptId: "receipt-1", requestFingerprint: "b".repeat(64), operationReceiptId: "operation-receipt-1", replayAllowed: false as const };
 
 describe("OperationsPage", () => {
   let host: HTMLDivElement; let root: Root;
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
   afterEach(() => { act(() => root.unmount()); host.remove(); vi.restoreAllMocks(); });
   it("按视觉稿三栏呈现七切片，并把 blocked 与合格 0 区分", async () => {
-    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands) };
+    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn().mockResolvedValue(observation) };
     await act(async () => root.render(<OperationsPage client={client} />));
     expect(host.querySelectorAll(".operations-slice-card")).toHaveLength(7);
     expect(host.textContent).toContain("统一待办 · 权威切片");
@@ -28,5 +29,29 @@ describe("OperationsPage", () => {
     expect([...host.querySelectorAll<HTMLButtonElement>(".operations-command")].every((item) => item.disabled)).toBe(true);
     expect(host.textContent).not.toContain("王女士");
     expect(host.textContent).not.toContain("一键采纳");
+    expect(host.textContent).toContain("请求级命令证据");
+    const inputs = host.querySelectorAll<HTMLInputElement>(".operations-observation-form input");
+    const setInput = (input: HTMLInputElement, value: string) => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); };
+    await act(async () => { setInput(inputs[0], "proposal-1"); setInput(inputs[1], "lease-1"); });
+    await act(async () => host.querySelector<HTMLFormElement>(".operations-observation-form")!.requestSubmit());
+    expect(client.getOperationCommandObservation).toHaveBeenCalledWith("proposal-1", "lease-1");
+    expect(host.textContent).toContain("applied");
+    expect(host.textContent).toContain("禁止自动重放");
+    expect(host.textContent).not.toContain("重新执行");
+  });
+  it("unknown 与 observation 读取错误均失败关闭且不生成重放入口", async () => {
+    const unknown = { ...observation, status: "unknown" as const, receiptId: "receipt-unknown", operationReceiptId: null };
+    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn().mockResolvedValueOnce(unknown).mockRejectedValueOnce(new Error("offline")) };
+    await act(async () => root.render(<OperationsPage client={client} />));
+    const inputs = host.querySelectorAll<HTMLInputElement>(".operations-observation-form input");
+    const setInput = (input: HTMLInputElement, value: string) => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); };
+    await act(async () => { setInput(inputs[0], "proposal-1"); setInput(inputs[1], "lease-1"); });
+    await act(async () => host.querySelector<HTMLFormElement>(".operations-observation-form")!.requestSubmit());
+    expect(host.textContent).toContain("结果未知，必须另行对账");
+    expect(host.textContent).toContain("禁止自动重放");
+    await act(async () => host.querySelector<HTMLFormElement>(".operations-observation-form")!.requestSubmit());
+    expect(host.textContent).toContain("OBSERVATION_FAILED_CLOSED");
+    expect(host.textContent).toContain("未执行重放或补偿");
+    expect(host.textContent).not.toContain("重新执行");
   });
 });
