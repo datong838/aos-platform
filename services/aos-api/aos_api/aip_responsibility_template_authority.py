@@ -14,10 +14,17 @@ from pathlib import Path
 from typing import Any
 
 from aos_api.aip_production_contracts import ExactRevisionRef
+from aos_api.aip_production_profile_contracts import ProductionProfile
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
+_PROFILE_RESOURCE_TYPES = {
+    "ProductionProfileRevision",
+    "ResponsibilityTemplateRevision",
+    "EvidenceSelectionProfileRevision",
+    "EvalProfileRevision",
+}
 
 # Stable L0 template definitions published with solution.ecommerce.growth.
 # contentHash = sha256 of canonical JSON (sorted keys, no whitespace).
@@ -65,14 +72,25 @@ def published_template_ref(template_id: str) -> ExactRevisionRef:
 class InstalledProductionProfileResolver:
     """Resolve an exact artifact only through the tenant active installation."""
 
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(
+        self,
+        connect_factory: ConnectFactory | None = None,
+        *,
+        release_root: Path | None = None,
+    ) -> None:
         self._connect_factory = connect_factory or db_connect
+        self._release_root = release_root or (
+            Path(__file__).resolve().parents[3] / "bundles/releases/ecommerce"
+        )
 
     def resolve(self, scope: TenantScope, ref: ExactRevisionRef) -> bool:
-        if ref.resource_type != "ResponsibilityTemplateRevision":
+        if ref.resource_type not in _PROFILE_RESOURCE_TYPES:
             return False
         if not ref.resource_id.startswith("bundle://"):
             return False
+        return any(self._row_matches(row, ref) for row in self._fetch_rows(scope, ref))
+
+    def _fetch_rows(self, scope: TenantScope, ref: ExactRevisionRef) -> list[Any]:
         try:
             with self._connect_factory(scope) as conn:
                 rows = conn.execute(
@@ -88,6 +106,7 @@ class InstalledProductionProfileResolver:
                            version.signature,
                            version.status,
                            artifact.artifact_ref,
+                           artifact.relative_path,
                            artifact.digest AS artifact_digest
                       FROM bundle_installation AS installation
                       JOIN bundle_installation_revision AS active
@@ -120,8 +139,37 @@ class InstalledProductionProfileResolver:
                     ),
                 ).fetchall()
         except Exception:
-            return False
-        return any(self._row_matches(row, ref) for row in rows)
+            return []
+        return list(rows)
+
+    def load_profile(
+        self, scope: TenantScope, ref: ExactRevisionRef
+    ) -> ProductionProfile | None:
+        """Load a verified profile payload from the immutable release mirror."""
+        if ref.resource_type != "ProductionProfileRevision":
+            return None
+        try:
+            row = next(
+                (row for row in self._fetch_rows(scope, ref) if self._row_matches(row, ref)),
+                None,
+            )
+            if row is None:
+                return None
+            relative = Path(str(row["relative_path"]))
+            if relative.is_absolute() or ".." in relative.parts:
+                return None
+            release_root = (
+                self._release_root / str(row["bundle_id"]) / str(row["version"])
+            ).resolve()
+            artifact_path = (release_root / relative).resolve()
+            if release_root not in artifact_path.parents or not artifact_path.is_file():
+                return None
+            raw = artifact_path.read_bytes()
+            if hashlib.sha256(raw).hexdigest() != ref.content_hash:
+                return None
+            return ProductionProfile.model_validate_json(raw)
+        except Exception:
+            return None
 
     @staticmethod
     def _row_matches(row: Any, ref: ExactRevisionRef) -> bool:

@@ -19,6 +19,16 @@ from aos_api.ecommerce_workshop_contracts import (
     EcommerceWorkshopModuleListResponse,
     EcommerceWorkshopModuleReadinessResponse,
 )
+from aos_api.ecommerce_workshop_prepare_contracts import (
+    EcommerceWorkshopPrepareRequest,
+    EcommerceWorkshopPrepareResponse,
+)
+from aos_api.ecommerce_workshop_prepare_service import (
+    EcommerceWorkshopPrepareService,
+    PrepareConflict,
+    PrepareDependencyBlocked,
+    PrepareError,
+)
 from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
 from aos_api.ecommerce_workshop_analyst_contracts import WorkshopAnalystViewEnvelope
 from aos_api.ecommerce_workshop_content_campaign import (
@@ -92,6 +102,7 @@ from aos_api.errors import ApiError, ErrorBody
 from aos_api.public_contracts import TaskStatus
 from aos_api.source_readiness import build_source_readiness_service
 from aos_api.source_readiness_contracts import SourceReadinessEnvelope
+from aos_api.tenant_scope import TenantScope
 
 _bearer = HTTPBearer(auto_error=False)
 router = APIRouter(
@@ -150,6 +161,11 @@ def get_ecommerce_workshop_source_readiness() -> EcommerceWorkshopSourceReadines
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_operations() -> EcommerceWorkshopOperations:
     return EcommerceWorkshopOperations()
+
+
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_prepare_service() -> EcommerceWorkshopPrepareService:
+    return EcommerceWorkshopPrepareService()
 
 
 @lru_cache(maxsize=1)
@@ -220,6 +236,10 @@ OperationsDependency = Annotated[
     EcommerceWorkshopOperations,
     Depends(get_ecommerce_workshop_operations),
 ]
+PrepareServiceDependency = Annotated[
+    EcommerceWorkshopPrepareService,
+    Depends(get_ecommerce_workshop_prepare_service),
+]
 ContentCampaignDependency = Annotated[
     EcommerceWorkshopContentCampaign,
     Depends(get_ecommerce_workshop_content_campaign),
@@ -271,6 +291,25 @@ def _operation_command_idempotency(value: str) -> str:
             status_code=400,
         )
     return cleaned
+
+
+def _prepare_idempotency(value: str) -> str:
+    cleaned = value.strip()
+    if not cleaned or len(cleaned) > 120:
+        raise ApiError(
+            code="WORKSHOP_PREPARE_INVALID_ARGUMENT",
+            message="Idempotency-Key must be 1..120 characters",
+            status_code=400,
+        )
+    return cleaned
+
+
+def _map_prepare_error(exc: PrepareError) -> ApiError:
+    if isinstance(exc, PrepareConflict):
+        return ApiError(code=exc.code, message=str(exc), status_code=409)
+    if isinstance(exc, PrepareDependencyBlocked):
+        return ApiError(code=exc.code, message=str(exc), status_code=422)
+    return ApiError(code=exc.code, message="Workshop prepare failed closed", status_code=503)
 
 
 def _map_operation_command_error(exc: Exception) -> ApiError:
@@ -495,6 +534,33 @@ def get_ecommerce_workshop_module_readiness(
             markings=principal.markings,
         )
     )
+
+
+@router.post(
+    "/modules/{module_id}/commands/prepare",
+    response_model=EcommerceWorkshopPrepareResponse,
+    operation_id="ecommerceWorkshopPrepare",
+    responses=_ERRORS,
+)
+def prepare_ecommerce_workshop_module(
+    request: Request,
+    module_id: ModuleIdPath,
+    body: EcommerceWorkshopPrepareRequest,
+    principal: PrincipalDependency,
+    service: PrepareServiceDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> EcommerceWorkshopPrepareResponse:
+    _reject_query_parameters(request)
+    try:
+        return service.prepare(
+            TenantScope(principal.org_id, principal.project_id),
+            actor=principal.subject,
+            module_id=module_id,
+            idempotency_key=_prepare_idempotency(idempotency_key),
+            body=body,
+        )
+    except PrepareError as exc:
+        raise _map_prepare_error(exc) from exc
 
 
 @router.get(

@@ -1,0 +1,52 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "taskId": "workshop-w3-03-prepare-aggregate-contracts-20260824",
+  "baseRevision": "AOS-000212",
+  "result": "GREEN_CODE_CONTROL_NO_RELEASE_MIGRATION_NOT_APPLIED",
+  "scope": [
+    "strict ecommerceWorkshopPrepare request and response contracts",
+    "tenant-scoped idempotent preparation intent and immutable result authority",
+    "draft TaskBrief create or revise aggregation",
+    "non-authoritative EvidenceBuildRequest and ResponsibilityRecommendation",
+    "Principal-derived tenant router and OpenAPI export"
+  ],
+  "verification": {
+    "focusedPrepareAndStore": "8 passed",
+    "resolverMigrationRouterOpenApi": "35 passed",
+    "workshopCumulative": "145 passed",
+    "alembicHeads": "w3_013 (head)",
+    "pythonCompile": "GREEN",
+    "diffCheck": "GREEN",
+    "browser": {
+      "surface": "Codex built-in browser",
+      "route": "/workshop",
+      "result": "existing Workshop rendered; aos-api unavailability and catalog failure were explicit; active installation remained 0; no W3-03 prepare capability was falsely presented as released or executable"
+    }
+  },
+  "sideEffectConservation": {
+    "providerInvocationCount": 0,
+    "providerFee": 0,
+    "taskRunCreatedCount": 0,
+    "agentRunCreatedCount": 0,
+    "actionOrHandoffCreatedCount": 0,
+    "approvalOrExecutionLeaseCreatedCount": 0,
+    "externalBusinessMutationCount": 0,
+    "liveMigrationAppliedCount": 0
+  },
+  "consistencyReview": [
+    "installed ProductionProfile load uses one Registry query snapshot plus immutable release-mirror digest validation",
+    "draft Brief is never frozen by prepare",
+    "EvidenceBuildRequest records required facts and blockers but never creates EvidenceBundleRevision",
+    "ResponsibilityRecommendation preserves atomic Skill ids and protected independent review but never creates ResponsibilityPlanRevision",
+    "intent identity and request payload are immutable; only pending to complete or unknown status transitions are allowed",
+    "same Idempotency-Key replays the canonical result and a different request hash conflicts"
+  ],
+  "negativeBoundaries": [
+    "no production-profile Bundle release, publish, signature or install",
+    "no live database migration or real tenant data write",
+    "no Evidence build, ResponsibilityPlan freeze, provider call, run, action, handoff, approval, lease or business mutation",
+    "no release authorization"
+  ],
+  "nextTask": "W3-04_FOUR_REF_PRODUCTION_CONTEXT_FREEZE",
+  "observedAt": "2026-08-24T22:33:00+08:00"
+}

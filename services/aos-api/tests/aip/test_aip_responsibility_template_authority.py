@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+import hashlib
+import json
+from pathlib import Path
 from typing import Any
 
 from aos_api.aip_production_contracts import ExactRevisionRef
@@ -52,6 +55,9 @@ def _row(**changes: Any) -> dict[str, Any]:
         "signature": {"algorithm": "Ed25519", "signature": "signed"},
         "status": "published",
         "artifact_ref": ARTIFACT_REF,
+        "relative_path": (
+            "content/production-profiles/ecommerce.content-campaign.json"
+        ),
         "artifact_digest": "sha256:" + ARTIFACT_HASH,
     }
     row.update(changes)
@@ -78,7 +84,7 @@ class _Connection:
         return _Result(self.rows)
 
 
-def _resolver(rows: list[dict[str, Any]]):
+def _resolver(rows: list[dict[str, Any]], *, release_root: Path | None = None):
     connection = _Connection(rows)
 
     @contextmanager
@@ -89,7 +95,13 @@ def _resolver(rows: list[dict[str, Any]]):
         }
         yield connection
 
-    return InstalledProductionProfileResolver(connect_factory=connect), connection
+    return (
+        InstalledProductionProfileResolver(
+            connect_factory=connect,
+            release_root=release_root,
+        ),
+        connection,
+    )
 
 
 def test_exact_active_installed_published_artifact_resolves() -> None:
@@ -149,7 +161,7 @@ def test_non_published_unsigned_or_lock_drift_fails_closed() -> None:
 def test_unknown_resource_type_and_database_failure_fail_closed() -> None:
     resolver, _ = _resolver([_row()])
     wrong_type = ExactRevisionRef(
-        resource_type="EvalProfileRevision",
+        resource_type="EvalSuiteRevision",
         resource_id=ARTIFACT_REF,
         revision=7,
         content_hash=ARTIFACT_HASH,
@@ -164,3 +176,135 @@ def test_unknown_resource_type_and_database_failure_fail_closed() -> None:
 
     broken = InstalledProductionProfileResolver(connect_factory=broken_connect)
     assert broken.resolve(TenantScope("org-org", "dev-project"), _ref()) is False
+
+
+def _production_profile_payload() -> dict[str, object]:
+    return {
+        "schema": "aos.ecommerce-production-profile/v1",
+        "moduleId": "ecommerce.content-campaign",
+        "profileRevision": 1,
+        "brief": {
+            "mode": "owned",
+            "briefType": "campaign-content",
+            "requiredFields": ["objective"],
+            "sourceResponsibilityPreserved": True,
+        },
+        "evidenceSelection": {
+            "requiredFacts": ["audienceEvidence", "brandPolicy"],
+            "requireProvenance": True,
+            "requireFreshness": True,
+            "requireNegativeEvidence": True,
+        },
+        "eval": {
+            "gates": ["fact", "brand", "approval"],
+            "failClosed": True,
+            "sameRevisionRequired": True,
+        },
+        "responsibility": {
+            "slots": [
+                {
+                    "slotId": "content.owner",
+                    "responsibilityType": "maker",
+                    "atomicSkillIds": ["strategy.plan", "copy.generate"],
+                    "protected": False,
+                    "mergeAllowed": True,
+                    "returnStage": "prepare",
+                },
+                {
+                    "slotId": "content.review",
+                    "responsibilityType": "independent_review",
+                    "atomicSkillIds": ["content.review"],
+                    "protected": True,
+                    "mergeAllowed": False,
+                    "returnStage": "prepare",
+                }
+            ],
+            "handoffRequired": True,
+            "reassignmentRequiresCanonicalDecision": True,
+        },
+        "contributionProjection": {
+            "showAtomicSkillAttribution": True,
+            "showLogicRevision": True,
+            "showCoworkerBinding": True,
+            "showBlockers": True,
+        },
+    }
+
+
+def _profile_ref(content_hash: str) -> ExactRevisionRef:
+    return ExactRevisionRef(
+        resource_type="ProductionProfileRevision",
+        resource_id=ARTIFACT_REF,
+        revision=7,
+        content_hash=content_hash,
+    )
+
+
+def test_verified_profile_loads_from_immutable_release_mirror(tmp_path: Path) -> None:
+    raw = json.dumps(
+        _production_profile_payload(),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    digest = hashlib.sha256(raw).hexdigest()
+    relative_path = "content/production-profiles/ecommerce.content-campaign.json"
+    artifact_path = tmp_path / "solution.ecommerce.growth" / "1.4.0" / relative_path
+    artifact_path.parent.mkdir(parents=True)
+    artifact_path.write_bytes(raw)
+    resolver, connection = _resolver(
+        [
+            _row(
+                artifact_digest=f"sha256:{digest}",
+                relative_path=relative_path,
+            )
+        ],
+        release_root=tmp_path,
+    )
+
+    profile = resolver.load_profile(
+        TenantScope("org-org", "dev-project"), _profile_ref(digest)
+    )
+
+    assert profile is not None
+    assert profile.module_id == "ecommerce.content-campaign"
+    assert profile.responsibility.slots[0].atomic_skill_ids == [
+        "strategy.plan",
+        "copy.generate",
+    ]
+    assert connection.params is not None
+
+
+def test_profile_loader_fails_closed_on_mirror_drift_or_path_escape(
+    tmp_path: Path,
+) -> None:
+    raw = json.dumps(
+        _production_profile_payload(), sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    digest = hashlib.sha256(raw).hexdigest()
+    release_path = (
+        tmp_path
+        / "solution.ecommerce.growth"
+        / "1.4.0"
+        / "content/production-profiles/ecommerce.content-campaign.json"
+    )
+    release_path.parent.mkdir(parents=True)
+    release_path.write_bytes(raw + b"\n")
+    scope = TenantScope("org-org", "dev-project")
+
+    resolver, _ = _resolver(
+        [_row(artifact_digest=f"sha256:{digest}")],
+        release_root=tmp_path,
+    )
+    assert resolver.load_profile(scope, _profile_ref(digest)) is None
+
+    escaped, _ = _resolver(
+        [
+            _row(
+                artifact_digest=f"sha256:{digest}",
+                relative_path="../outside.json",
+            )
+        ],
+        release_root=tmp_path,
+    )
+    assert escaped.load_profile(scope, _profile_ref(digest)) is None
