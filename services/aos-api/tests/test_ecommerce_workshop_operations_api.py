@@ -18,6 +18,7 @@ from aos_api.ecommerce_workshop_content_campaign import (
 )
 from aos_api.ecommerce_workshop_creator_growth import EcommerceWorkshopCreatorGrowth
 from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
+from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
 from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
 from aos_api.ecommerce_operation_command_execution_contracts import (
     OperationCommandExecutionEnvelope,
@@ -46,6 +47,7 @@ def _client(
     content_campaign: EcommerceWorkshopContentCampaign | None = None,
     creator_growth: EcommerceWorkshopCreatorGrowth | None = None,
     media_studio: EcommerceWorkshopMediaStudio | None = None,
+    analyst: EcommerceWorkshopAnalyst | None = None,
 ) -> TestClient:
     app = FastAPI()
     register_exception_handlers(app)
@@ -88,6 +90,10 @@ def _client(
         app.dependency_overrides[
             ecommerce_workshop.get_ecommerce_workshop_media_studio
         ] = lambda: media_studio
+    if analyst is not None:
+        app.dependency_overrides[
+            ecommerce_workshop.get_ecommerce_workshop_analyst
+        ] = lambda: analyst
     return TestClient(app, raise_server_exceptions=False)
 
 
@@ -286,6 +292,31 @@ def test_media_studio_shell_is_get_only_tenant_bound_and_scope_safe() -> None:
 def test_media_studio_fails_closed_when_module_is_not_installed() -> None:
     with _client(FakeCatalog(installed=False)) as client:
         response = client.get("/v1/ecommerce-workshop/views/media-studio")
+    assert response.status_code == 404
+    assert response.json()["code"] == "NOT_FOUND"
+
+
+def test_analyst_shell_is_get_only_tenant_bound_and_scope_safe() -> None:
+    catalog = FakeCatalog()
+    analyst = EcommerceWorkshopAnalyst(clock=lambda: datetime(2026, 8, 24, tzinfo=UTC))
+    with _client(catalog, analyst=analyst) as client:
+        response = client.get("/v1/ecommerce-workshop/views/analyst")
+        injected = client.get("/v1/ecommerce-workshop/views/analyst?orgId=dev-org")
+        posted = client.post("/v1/ecommerce-workshop/views/analyst")
+        document = client.get("/openapi.json").json()
+    assert response.status_code == 200
+    assert response.json()["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
+    assert injected.status_code == 400
+    assert posted.status_code == 405
+    assert catalog.calls[0]["module_id"] == "ecommerce.analyst"
+    surface = document["paths"]["/v1/ecommerce-workshop/views/analyst"]
+    assert set(surface) == {"get"}
+    assert surface["get"]["operationId"] == "ecommerceWorkshopAnalystViewGet"
+
+
+def test_analyst_fails_closed_when_module_is_not_installed() -> None:
+    with _client(FakeCatalog(installed=False)) as client:
+        response = client.get("/v1/ecommerce-workshop/views/analyst")
     assert response.status_code == 404
     assert response.json()["code"] == "NOT_FOUND"
 

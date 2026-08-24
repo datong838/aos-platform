@@ -19,6 +19,8 @@ from aos_api.ecommerce_workshop_contracts import (
     EcommerceWorkshopModuleListResponse,
     EcommerceWorkshopModuleReadinessResponse,
 )
+from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
+from aos_api.ecommerce_workshop_analyst_contracts import WorkshopAnalystViewEnvelope
 from aos_api.ecommerce_workshop_content_campaign import (
     EcommerceWorkshopContentCampaign,
 )
@@ -155,6 +157,11 @@ def get_ecommerce_workshop_media_studio() -> EcommerceWorkshopMediaStudio:
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_analyst() -> EcommerceWorkshopAnalyst:
+    return EcommerceWorkshopAnalyst()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_operation_commands() -> EcommerceOperationCommands:
     return EcommerceOperationCommands()
 
@@ -198,6 +205,10 @@ CreatorGrowthDependency = Annotated[
 MediaStudioDependency = Annotated[
     EcommerceWorkshopMediaStudio,
     Depends(get_ecommerce_workshop_media_studio),
+]
+AnalystDependency = Annotated[
+    EcommerceWorkshopAnalyst,
+    Depends(get_ecommerce_workshop_analyst),
 ]
 OperationCommandsDependency = Annotated[
     EcommerceOperationCommands,
@@ -333,6 +344,20 @@ def _require_media_studio_installation(
     _invoke(
         lambda: catalog.get_readiness(
             module_id="ecommerce.media-studio",
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            roles=principal.roles,
+            markings=principal.markings,
+        )
+    )
+
+
+def _require_analyst_installation(
+    *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    _invoke(
+        lambda: catalog.get_readiness(
+            module_id="ecommerce.analyst",
             org_id=principal.org_id,
             project_id=principal.project_id,
             roles=principal.roles,
@@ -511,6 +536,23 @@ def get_ecommerce_workshop_media_studio_view(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
+
+
+@router.get(
+    "/views/analyst",
+    response_model=WorkshopAnalystViewEnvelope,
+    operation_id="ecommerceWorkshopAnalystViewGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_analyst_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    analyst: AnalystDependency,
+) -> WorkshopAnalystViewEnvelope:
+    _reject_query_parameters(request)
+    _require_analyst_installation(principal=principal, catalog=catalog)
+    return analyst.read(org_id=principal.org_id, project_id=principal.project_id)
 
 
 @router.get(
