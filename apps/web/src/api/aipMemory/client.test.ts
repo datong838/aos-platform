@@ -106,6 +106,7 @@ describe("AipMemorySdk", () => {
     await expect(sdk.knowledgeReadiness()).resolves.toMatchObject({ tenant, search: { referenceCount: 0 } });
     expect(request).toHaveBeenCalledWith("getMemoryKnowledgeReadiness");
     expect(() => parseKnowledgeReadiness({ ...readiness, search: { ...readiness.search, capabilities: readiness.search.capabilities.slice(0, 2) } })).toThrow("三 lane");
+    expect(() => parseKnowledgeReadiness({ ...readiness, search: { ...readiness.search, providerConfigured: true } })).toThrow("状态不一致");
     expect(() => parseKnowledgeReadiness({ ...readiness, package: { status: "authority_unavailable", count: 0, blocker: "x" } })).toThrow("结构无效");
   });
 

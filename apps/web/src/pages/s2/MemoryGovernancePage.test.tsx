@@ -15,7 +15,7 @@ const sdk = vi.hoisted(() => ({
 }));
 vi.mock("../../api/aipMemory", () => ({ aipMemorySdk: sdk }));
 
-import { MemoryGovernancePage, authoritySubjectLabel, memoryStatusLabel } from "./MemoryGovernancePage";
+import { MemoryGovernancePage, authoritySubjectLabel, memoryStatusLabel, parseMemoryContributionContext } from "./MemoryGovernancePage";
 
 describe("MemoryGovernancePage", () => {
   let host: HTMLDivElement;
@@ -42,6 +42,25 @@ describe("MemoryGovernancePage", () => {
   it("将权威状态和主体显示成人可读标签", () => {
     expect(memoryStatusLabel("quarantined")).toBe("已隔离");
     expect(authoritySubjectLabel({ resourceType: "Product", resourceId: "p-1" })).toBe("Product · p-1");
+  });
+
+  it("只消费受限长度的 exact 贡献上下文", () => {
+    const context = parseMemoryContributionContext(new URLSearchParams("subjectType=Product&subjectId=p-1&taskId=task-1&skillId=extract-memory-candidate&logicId=review-to-memory&coworkerId=content-officer&moduleId=content"));
+    expect(context).toEqual({ subjectType: "Product", subjectId: "p-1", taskId: "task-1", skillId: "extract-memory-candidate", logicId: "review-to-memory", coworkerId: "content-officer", moduleId: "content" });
+    expect(parseMemoryContributionContext(new URLSearchParams(`skillId=${"x".repeat(201)}`)).skillId).toBe("");
+  });
+
+  it("深链预填 Skill 查询并展示数字同事贡献链", async () => {
+    sdk.candidates.mockResolvedValue([]); sdk.memories.mockResolvedValue([]);
+    const root = createRoot(host);
+    await act(async () => root.render(<MemoryRouter initialEntries={["/aip/memory-governance?view=query&subjectType=Product&subjectId=p-1&taskId=task-1&skillId=extract-memory-candidate&logicId=review-to-memory&coworkerId=content-officer&moduleId=content"]}><MemoryGovernancePage /></MemoryRouter>));
+    await act(async () => undefined);
+    expect((host.querySelector('[aria-label="memory-subject-id"]') as HTMLInputElement).value).toBe("p-1");
+    expect((host.querySelector('[aria-label="memory-skill-id"]') as HTMLInputElement).value).toBe("extract-memory-candidate");
+    expect(host.querySelector('[data-testid="memory-contribution-context"]')?.textContent).toContain("原子 Skill：extract-memory-candidate");
+    expect(host.textContent).toContain("Logic 编排：review-to-memory");
+    expect(host.textContent).toContain("数字同事：content-officer");
+    await act(async () => root.unmount());
   });
 
   it("真实空列表保持空态，不注入静态知识", async () => {

@@ -495,12 +495,15 @@ export function parseKnowledgeReadiness(value: unknown): KnowledgeReadiness {
     return { lane: enumValue(item.lane, ["fulltext", "vector", "rerank"] as const, `capability[${index}].lane`), status, provider, providerRevision, reasonCode, version: integer(item.version, `capability[${index}].version`), observedAt: text(item.observedAt, `capability[${index}].observedAt`) };
   });
   if (capabilities.length !== 3 || new Set(capabilities.map((item) => item.lane)).size !== 3) throw new TypeError("检索 capability 必须包含唯一三 lane");
+  const providerConfigured = booleanValue(search.providerConfigured, "search.providerConfigured");
+  const fulltext = capabilities.find((item) => item.lane === "fulltext");
+  if (providerConfigured !== (fulltext?.status === "ready")) throw new TypeError("search provider 与 fulltext capability 状态不一致");
   return {
     tenant: parseTenant(v.tenant, "readiness.tenant"),
     package: parseAvailability(v.package, "package"),
     sources: v.sources.map((raw, index) => { const item = record(raw, `source[${index}]`); return { provider: text(item.provider, `source[${index}].provider`), providerVersion: text(item.providerVersion, `source[${index}].providerVersion`), licenseId: text(item.licenseId, `source[${index}].licenseId`), usagePolicy: text(item.usagePolicy, `source[${index}].usagePolicy`), revisionCount: integer(item.revisionCount, `source[${index}].revisionCount`), staleCount: nonNegativeInteger(item.staleCount, `source[${index}].staleCount`) }; }),
     sourceBlockers: strings(v.sourceBlockers, "sourceBlockers"),
-    search: { referenceCount: nonNegativeInteger(search.referenceCount, "search.referenceCount"), providerConfigured: booleanValue(search.providerConfigured, "search.providerConfigured"), capabilities, blockers: strings(search.blockers, "search.blockers") },
+    search: { referenceCount: nonNegativeInteger(search.referenceCount, "search.referenceCount"), providerConfigured, capabilities, blockers: strings(search.blockers, "search.blockers") },
     eval: parseAvailability(v.eval, "eval"),
     observedAt: text(v.observedAt, "observedAt"),
   };

@@ -37,6 +37,35 @@ class Conn:
         raise AssertionError(sql)
 
 
+class ReadyIndex:
+    def list_capabilities(self, _scope):
+        now = datetime(2026, 8, 13, tzinfo=UTC)
+        return [
+            SearchCapability(
+                lane=SearchLane.FULLTEXT,
+                status=SearchCapabilityStatus.READY,
+                provider="postgresql-tsvector",
+                provider_revision="1",
+                version=1,
+                observed_at=now,
+            ),
+            SearchCapability(
+                lane=SearchLane.VECTOR,
+                status=SearchCapabilityStatus.DEGRADED,
+                reason_code="degraded_vector_unavailable",
+                version=1,
+                observed_at=now,
+            ),
+            SearchCapability(
+                lane=SearchLane.RERANK,
+                status=SearchCapabilityStatus.UNBUILT,
+                reason_code="rerank_unconfigured",
+                version=1,
+                observed_at=now,
+            ),
+        ]
+
+
 @contextmanager
 def connect(_scope):
     yield Conn()
@@ -60,6 +89,26 @@ def test_readiness_is_tenant_scoped_and_honestly_blocked() -> None:
     payload = view.model_dump(by_alias=True, mode="json")
     assert payload["search"]["capabilities"][0]["reasonCode"] == "capability_not_registered"
     assert "reason_code" not in payload["search"]["capabilities"][0]
+
+
+def test_wired_service_does_not_impersonate_an_unbuilt_search_provider() -> None:
+    view = AipMemoryReadinessService(connect).read(
+        TenantScope("org-org", "dev-project"),
+        search_provider_configured=True,
+        observed_at=datetime(2026, 8, 13, tzinfo=UTC),
+    )
+    assert view.search.provider_configured is False
+    assert "trusted_search_provider_unavailable" in view.search.blockers
+
+
+def test_ready_fulltext_capability_confirms_the_wired_provider() -> None:
+    view = AipMemoryReadinessService(connect, search_index=ReadyIndex()).read(
+        TenantScope("org-org", "dev-project"),
+        search_provider_configured=True,
+        observed_at=datetime(2026, 8, 13, tzinfo=UTC),
+    )
+    assert view.search.provider_configured is True
+    assert "trusted_search_provider_unavailable" not in view.search.blockers
 
 
 def test_authority_state_rejects_contradictory_count_and_blocker() -> None:

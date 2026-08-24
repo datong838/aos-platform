@@ -26,6 +26,33 @@ import { PageChrome } from "../../components/PageChrome";
 type View = "candidates" | "memories" | "agents" | "query" | "pipelines" | "readiness";
 type LoadState = "loading" | "loaded" | "error";
 
+export type MemoryContributionContext = {
+  subjectType: string;
+  subjectId: string;
+  taskId: string;
+  skillId: string;
+  logicId: string;
+  coworkerId: string;
+  moduleId: string;
+};
+
+function exactContextValue(params: URLSearchParams, key: string): string {
+  const value = params.get(key)?.trim() || "";
+  return value.length <= 200 ? value : "";
+}
+
+export function parseMemoryContributionContext(params: URLSearchParams): MemoryContributionContext {
+  return {
+    subjectType: exactContextValue(params, "subjectType") || "Product",
+    subjectId: exactContextValue(params, "subjectId"),
+    taskId: exactContextValue(params, "taskId"),
+    skillId: exactContextValue(params, "skillId"),
+    logicId: exactContextValue(params, "logicId"),
+    coworkerId: exactContextValue(params, "coworkerId"),
+    moduleId: exactContextValue(params, "moduleId"),
+  };
+}
+
 const panel = { border: "1px solid var(--aos-border)", background: "var(--aos-panel)", borderRadius: 6, padding: 18 } as const;
 const blockerText = { overflowWrap: "anywhere" } as const;
 const statusLabels: Record<string, string> = {
@@ -67,6 +94,7 @@ export function authoritySubjectLabel(subject: { resourceType: string; resourceI
 
 export function MemoryGovernancePage() {
   const [searchParams] = useSearchParams();
+  const contributionContext = parseMemoryContributionContext(searchParams);
   const initialView = (searchParams.get("view") as View | null) || "candidates";
   const [view, setView] = useState<View>(
     ["candidates", "memories", "agents", "query", "pipelines", "readiness"].includes(initialView)
@@ -79,10 +107,10 @@ export function MemoryGovernancePage() {
   const [selectedCandidate, setSelectedCandidate] = useState<MemoryCandidate | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [error, setError] = useState("");
-  const [subjectType, setSubjectType] = useState("Product");
-  const [subjectId, setSubjectId] = useState("");
-  const [taskId, setTaskId] = useState("");
-  const [skillId, setSkillId] = useState("");
+  const [subjectType, setSubjectType] = useState(contributionContext.subjectType);
+  const [subjectId, setSubjectId] = useState(contributionContext.subjectId);
+  const [taskId, setTaskId] = useState(contributionContext.taskId);
+  const [skillId, setSkillId] = useState(contributionContext.skillId);
   const [markings, setMarkings] = useState("internal");
   const [queryState, setQueryState] = useState<"idle" | "loading" | "complete" | "degraded" | "blocked" | "error">("idle");
   const [queryResult, setQueryResult] = useState<KnowledgeQueryResult | null>(null);
@@ -332,6 +360,15 @@ export function MemoryGovernancePage() {
       {view === "query" && <section style={panel}>
         <h2 style={{ marginTop: 0, fontSize: 17 }}>知识检索</h2>
         <p className="muted">请求只描述业务主体与任务；组织、工作区和最终数据标记权限由当前认证身份决定。</p>
+        <div data-testid="memory-contribution-context" className="callout info" style={{ marginBottom: 14 }}>
+          <strong>工作台贡献上下文</strong>
+          <div style={{ marginTop: 6, overflowWrap: "anywhere" }}>
+            原子 Skill：{skillId || "待指定"} → Logic 编排：{contributionContext.logicId || "未绑定"} → 数字同事：{contributionContext.coworkerId || "未绑定"} → 工作台模块：{contributionContext.moduleId || "通用治理视图"}
+          </div>
+          <div className="muted" style={{ marginTop: 4 }}>
+            此处只消费精确引用并展示贡献；MemoryCandidate 提交、评测、批准和晋升仍由服务端权威链裁决。
+          </div>
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
           <label>主体类型<input value={subjectType} onChange={(event) => setSubjectType(event.target.value)} aria-label="memory-subject-type" /></label>
           <label>主体 ID<input value={subjectId} onChange={(event) => setSubjectId(event.target.value)} aria-label="memory-subject-id" placeholder="真实 Object ID" /></label>
@@ -424,7 +461,7 @@ export function MemoryGovernancePage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 12, marginTop: 14 }}>
             <article style={panel}><strong>知识包安装权威</strong><p>{readiness.package.status === "available" ? `${readiness.package.count} 个` : "权威映射尚未建立"}</p><span className="muted" style={blockerText}>{readiness.package.blocker || "无阻断"}</span></article>
             <article style={panel}><strong>知识 Source</strong><p>{readiness.sources.length} 组来源策略</p><span className="muted" style={blockerText}>{readiness.sourceBlockers.join("、") || "已读取真实来源"}</span></article>
-            <article style={panel}><strong>检索 Reference</strong><p>{readiness.search.referenceCount} 条</p><span className="muted">provider：{readiness.search.providerConfigured ? "已装配" : "未装配"}</span></article>
+            <article style={panel}><strong>检索 Reference</strong><p>{readiness.search.referenceCount} 条</p><span className="muted">fulltext provider：{readiness.search.providerConfigured ? "capability 已确认" : "未就绪"}</span></article>
             <article style={panel}><strong>检索 Eval</strong><p>{readiness.eval.status === "available" ? `${readiness.eval.count} 条 Gold` : "GoldSet 权威尚未建立"}</p><span className="muted" style={blockerText}>{readiness.eval.blocker || "无阻断"}</span></article>
           </div>
           <h3 style={{ fontSize: 16, marginTop: 22 }}>检索通道</h3>

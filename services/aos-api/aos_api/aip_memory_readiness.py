@@ -146,8 +146,15 @@ class AipMemoryReadinessService:
             )
             for lane in SearchLane
         ]
+        fulltext = next(item for item in lane_items if item.lane is SearchLane.FULLTEXT)
+        trusted_search_provider_ready = (
+            search_provider_configured
+            and fulltext.status is SearchCapabilityStatus.READY
+            and bool(fulltext.provider)
+            and bool(fulltext.provider_revision)
+        )
         search_blockers: list[str] = []
-        if not search_provider_configured:
+        if not trusted_search_provider_ready:
             search_blockers.append("trusted_search_provider_unavailable")
         if reference_count == 0:
             search_blockers.append("search_reference_missing")
@@ -177,7 +184,7 @@ class AipMemoryReadinessService:
             source_blockers=[] if sources else ["knowledge_source_missing"],
             search=KnowledgeSearchReadiness(
                 reference_count=reference_count,
-                provider_configured=search_provider_configured,
+                provider_configured=trusted_search_provider_ready,
                 capabilities=[
                     KnowledgeSearchCapability.from_projection(item) for item in lane_items
                 ],
