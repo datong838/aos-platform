@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "aos.workshop.delivery-evidence/v1",
+  "taskId": "workshop-w3-13-analyst-authority-20260825",
+  "wave": "W3-13",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "codeCommit": "7138b83",
+  "outcome": "CODE_BROWSER_GREEN_NO_RELEASE_NO_EXTERNAL_EFFECT",
+  "implementation": {
+    "contracts": "InsightRevision, DecisionSummaryRevision, GrowthPlanRevision, TaskGraphRevision and EcommerceEffectReviewRevision are strict, tenant-bound and append-only",
+    "store": "expectedVersion CAS, exact ref readback, idempotency Receipt and tenant/actor fail-closed",
+    "materializer": "approved current exact GrowthPlan only; delegates to canonical Task authority and persists TaskGraph only after a complete one-to-one mapping",
+    "migration": "additive w3_018; five authority head/revision pairs, FORCE RLS and append-only guards; not applied to a live database",
+    "workshop": "seven Analyst views now show atomic Skill to Logic to coworker to Workshop contribution lineage; missing exact runtime refs remain unknown"
+  },
+  "verification": {
+    "backendFocused": "15 passed",
+    "backendCumulative": "282 passed",
+    "webFocused": "3 passed",
+    "webCumulative": "221 files; 2084 tests passed",
+    "typescript": "PASS",
+    "viteBuild": "PASS",
+    "openapi": "deterministic exporter PASS; contract 13 passed",
+    "alembic": "w3_018 is the single head",
+    "compileall": "PASS",
+    "diffCheck": "PASS",
+    "ruff": "NOT_RUN_TOOL_UNAVAILABLE; project environment has no ruff executable"
+  },
+  "browser": {
+    "surface": "Codex built-in browser",
+    "url": "http://localhost:5173/workshop/analyst",
+    "tenant": "org-org/dev-project",
+    "viewports": [
+      "1280x720 GREEN document 1280=1280 main 972=972",
+      "1440x900 GREEN document 1440=1440 main 1132=1132",
+      "1920x1080 GREEN document 1920=1920 main 1612=1612"
+    ],
+    "content": "seven tabs, ContributionLineage, Decision summary, assumptions and uncertainty, failed-closed authority blockers and unknown-not-zero are visible",
+    "interaction": "quality tab selection GREEN",
+    "consoleErrors": 0,
+    "writeActionsInvoked": 0,
+    "offlineQueue": "existing pending write count 1 observed and intentionally not flushed"
+  },
+  "safety": {
+    "liveMigrationApplied": false,
+    "canonicalTasksCreated": 0,
+    "providerCalls": 0,
+    "actionsExecuted": 0,
+    "memoryCandidatesPromoted": 0,
+    "businessRowsMutated": 0,
+    "release": false
+  },
+  "review": {
+    "solutionCodeConsistent": true,
+    "atomicSkillLogicCoworkerContributionConsistent": true,
+    "privateReasoningPersistedOrDisplayed": false,
+    "knownBoundary": "The materializer requires an atomic canonical Task adapter; no unsafe per-task adapter is installed, so runtime materialization remains fail-closed until that exact adapter is wired under a later explicit gate."
+  },
+  "nextTask": "W3-14"
+}
