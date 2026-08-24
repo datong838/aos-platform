@@ -898,7 +898,8 @@ class EcommerceWorkshopTaskCockpit:
                 ).fetchall()
                 issue_event_rows = conn.execute(
                     """SELECT event.event_id,event.issue_id,event.sequence,event.event_type,
-                              event.issue_version,event.payload_hash,event.actor,event.created_at
+                              event.issue_version,event.payload_hash,event.payload,
+                              event.actor,event.created_at
                          FROM aip_review_issue_event event
                          JOIN aip_review_issue issue
                            ON issue.org_id=event.org_id AND issue.project_id=event.project_id
@@ -915,7 +916,8 @@ class EcommerceWorkshopTaskCockpit:
                 return_rows = conn.execute(
                     """SELECT decision.decision_id,decision.issue_id,decision.issue_version,
                               decision.run_id,decision.step_key,decision.step_run_id,
-                              decision.attempt,decision.decision_hash,decision.created_at,
+                              decision.attempt,decision.decision_hash,
+                              decision.impact_decisions,decision.created_at,
                               step.run_id AS step_run_run_id,step.step_key AS step_run_step_key,
                               step.attempt AS step_run_attempt
                          FROM aip_return_decision decision
@@ -1829,11 +1831,20 @@ class EcommerceWorkshopTaskCockpit:
         try:
             for row in issue_event_rows:
                 issue_id = str(row["issue_id"])
+                payload = row.get("payload")
+                if payload is not None:
+                    payload_hash = hashlib.sha256(
+                        json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+                    ).hexdigest()
+                    if payload_hash != row["payload_hash"]:
+                        raise drift("ReviewIssue event payload hash changed")
                 events_by_issue.setdefault(issue_id, []).append(
                     TaskCockpitReviewIssueEvent(
                         eventId=row["event_id"], sequence=row["sequence"],
                         eventType=row["event_type"], issueVersion=row["issue_version"],
-                        payloadHash=row["payload_hash"], actor=row["actor"],
+                        payloadHash=row["payload_hash"], payload=payload,
+                        payloadReadiness=("exact" if payload is not None else "legacy_unavailable"),
+                        actor=row["actor"],
                         createdAt=row["created_at"],
                     )
                 )
@@ -1852,7 +1863,10 @@ class EcommerceWorkshopTaskCockpit:
                     decisionId=row["decision_id"], issueVersion=row["issue_version"],
                     runId=row["run_id"], stepKey=row["step_key"],
                     stepRunId=row["step_run_id"], attempt=row["attempt"],
-                    decisionHash=row["decision_hash"], createdAt=row["created_at"],
+                    decisionHash=row["decision_hash"],
+                    impactDecisions=row.get("impact_decisions") or [],
+                    impactReadiness=("exact" if row.get("impact_decisions") else "legacy_unavailable"),
+                    createdAt=row["created_at"],
                 )
             review_issues: list[TaskCockpitReviewIssue] = []
             for row in issue_rows:

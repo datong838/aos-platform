@@ -260,6 +260,8 @@ export type ReturnDecision = {
   attempt: number;
   attemptIdempotencyKey: string;
   reason: string;
+  impactDecisions: { stepKey: string; action: "invalidate" | "reuse"; reason: string }[];
+  impactReadiness: "exact" | "legacy_unavailable";
   decisionHash: string;
   actor: string;
   createdAt: string;

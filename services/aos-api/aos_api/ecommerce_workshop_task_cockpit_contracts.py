@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import Field, field_validator, model_validator
 
@@ -720,6 +720,8 @@ class TaskCockpitReviewIssueEvent(AipContractModel):
     event_type: Literal["opened", "resolved", "returned", "superseded"]
     issue_version: int = Field(ge=1)
     payload_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    payload: dict[str, Any] | None = None
+    payload_readiness: Literal["exact", "legacy_unavailable"]
     actor: str = Field(min_length=1, max_length=200)
     created_at: datetime
 
@@ -730,6 +732,18 @@ class TaskCockpitReviewIssueEvent(AipContractModel):
             raise ValueError("Task Cockpit timestamps require a timezone")
         return value
 
+    @model_validator(mode="after")
+    def _payload_is_consistent(self) -> TaskCockpitReviewIssueEvent:
+        if (self.payload_readiness == "exact") != (self.payload is not None):
+            raise ValueError("ReviewIssue event payload readiness drifted")
+        return self
+
+
+class TaskCockpitReviewImpactDecision(AipContractModel):
+    step_key: str = Field(min_length=1, max_length=160)
+    action: Literal["invalidate", "reuse"]
+    reason: str = Field(min_length=1, max_length=500)
+
 
 class TaskCockpitReviewReturnLineage(AipContractModel):
     decision_id: str = Field(min_length=1, max_length=200)
@@ -739,6 +753,8 @@ class TaskCockpitReviewReturnLineage(AipContractModel):
     step_run_id: str = Field(min_length=1, max_length=200)
     attempt: int = Field(ge=1)
     decision_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    impact_decisions: list[TaskCockpitReviewImpactDecision] = Field(default_factory=list, max_length=500)
+    impact_readiness: Literal["exact", "legacy_unavailable"]
     created_at: datetime
 
     @field_validator("created_at")
@@ -747,6 +763,12 @@ class TaskCockpitReviewReturnLineage(AipContractModel):
         if value.utcoffset() is None:
             raise ValueError("Task Cockpit timestamps require a timezone")
         return value
+
+    @model_validator(mode="after")
+    def _impact_is_consistent(self) -> TaskCockpitReviewReturnLineage:
+        if (self.impact_readiness == "exact") != bool(self.impact_decisions):
+            raise ValueError("ReviewIssue return impact readiness drifted")
+        return self
 
 
 class TaskCockpitReviewIssue(AipContractModel):

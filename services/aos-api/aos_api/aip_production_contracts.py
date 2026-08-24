@@ -92,6 +92,11 @@ class ReviewIssueStatus(StrEnum):
     SUPERSEDED = "superseded"
 
 
+class ReviewImpactAction(StrEnum):
+    INVALIDATE = "invalidate"
+    REUSE = "reuse"
+
+
 class ImpactQuality(StrEnum):
     MEASURED = "measured"
     ESTIMATED = "estimated"
@@ -443,6 +448,28 @@ class CreateReviewIssueRequest(AipContractModel):
         return self
 
 
+class RegisterReviewRuleRevisionRequest(AipContractModel):
+    rule_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    spec: dict[str, Any]
+
+
+class ReviewRuleRevision(AipContractModel):
+    tenant: TenantContext
+    rule_id: str
+    revision: int = Field(ge=1)
+    spec: dict[str, Any]
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class ReviewRuleRevisionListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ReviewRuleRevision]
+    count: int = Field(ge=0)
+
+
 class ReviewIssue(CreateReviewIssueRequest):
     tenant: TenantContext
     issue_id: str
@@ -466,6 +493,12 @@ class ResolveReviewIssueRequest(AipContractModel):
     resolution_refs: list[ExactRevisionRef] = Field(default_factory=list)
 
 
+class ReviewImpactDecision(AipContractModel):
+    step_key: str = Field(min_length=1, max_length=160)
+    action: ReviewImpactAction
+    reason: str = Field(min_length=1, max_length=500)
+
+
 class ReturnReviewIssueRequest(AipContractModel):
     expected_version: int = Field(ge=1)
     run_id: str = Field(min_length=1, max_length=200)
@@ -485,6 +518,14 @@ class ReturnDecision(AipContractModel):
     attempt: int = Field(ge=1)
     attempt_idempotency_key: str
     reason: str
+    impact_decisions: list[ReviewImpactDecision] = Field(default_factory=list, max_length=500)
+    impact_readiness: Literal["exact", "legacy_unavailable"]
+
+    @model_validator(mode="after")
+    def _impact_is_consistent(self) -> ReturnDecision:
+        if (self.impact_readiness == "exact") != bool(self.impact_decisions):
+            raise ValueError("return impact readiness drifted")
+        return self
     decision_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     actor: str
     created_at: datetime

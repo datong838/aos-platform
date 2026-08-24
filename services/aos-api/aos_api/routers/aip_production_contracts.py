@@ -26,7 +26,9 @@ from aos_api.aip_production_contracts import (
     CreateStageTemplateRequest, ResolveReviewIssueRequest, ReturnDecision,
     ReturnDecisionListResponse,
     ReturnReviewIssueRequest, ReviseStageTemplateRequest, ReviewIssue,
-    ReviewIssueListResponse, StageCompilationResult, StageTemplateListResponse,
+    ReviewIssueListResponse, RegisterReviewRuleRevisionRequest,
+    ReviewRuleRevision, ReviewRuleRevisionListResponse,
+    StageCompilationResult, StageTemplateListResponse,
     StageTemplateRevision,
     CreateImpactPreviewRequest, ReviseImpactPreviewRequest,
     ImpactPreviewRevision, ImpactPreviewListResponse,
@@ -50,6 +52,12 @@ _STORE = AipProductionContractStore(
 _START_SERVICE = AipProductionStartService(contract_store=_STORE)
 _PRODUCTION_START_ROLES = frozenset(
     {"admin", "operator", "executor", "aip_executor", "production_operator"}
+)
+_REVIEW_CREATE_ROLES = frozenset(
+    {"admin", "reviewer", "evaluator", "eval_service", "aip_executor"}
+)
+_REVIEW_CONTROL_ROLES = frozenset(
+    {"admin", "reviewer", "approver", "production_operator", "operator"}
 )
 
 
@@ -85,6 +93,16 @@ def _require_production_start_role(principal: Principal) -> None:
         raise ApiError(
             code="AIP_PRODUCTION_START_ROLE_REQUIRED",
             message="production start role required",
+            status_code=403,
+        )
+
+
+def _require_review_role(principal: Principal, *, control: bool = False) -> None:
+    allowed = _REVIEW_CONTROL_ROLES if control else _REVIEW_CREATE_ROLES
+    if not {role.lower() for role in principal.roles}.intersection(allowed):
+        raise ApiError(
+            code="AIP_REVIEW_ROLE_REQUIRED",
+            message="trusted review role required",
             status_code=403,
         )
 
@@ -356,6 +374,7 @@ def list_artifact_relations(principal: Principal = Depends(require_principal), s
 
 @router.post("/review-issues", response_model=ReviewIssue, status_code=201)
 def create_review_issue(body: CreateReviewIssueRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    _require_review_role(principal)
     try: return store.create_review_issue(_scope(principal), principal.subject, _key(idempotency_key), body)
     except ProductionContractError as exc: raise _map(exc) from exc
 
@@ -374,12 +393,14 @@ def get_review_issue(issue_id: str, principal: Principal = Depends(require_princ
 
 @router.post("/review-issues/{issue_id}/resolve", response_model=ReviewIssue)
 def resolve_review_issue(issue_id: str, body: ResolveReviewIssueRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    _require_review_role(principal, control=True)
     try: return store.resolve_review_issue(_scope(principal), principal.subject, issue_id, _key(idempotency_key), body)
     except ProductionContractError as exc: raise _map(exc) from exc
 
 
 @router.post("/review-issues/{issue_id}/return", response_model=ReturnDecision, status_code=201)
 def return_review_issue(issue_id: str, body: ReturnReviewIssueRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    _require_review_role(principal, control=True)
     try: return store.return_review_issue(_scope(principal), principal.subject, issue_id, _key(idempotency_key), body)
     except ProductionContractError as exc: raise _map(exc) from exc
 
@@ -404,5 +425,45 @@ def get_return_decision(
 ):
     try:
         return store.get_return_decision(_scope(principal), decision_id)
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+
+
+@router.post("/review-rules", response_model=ReviewRuleRevision, status_code=201)
+def register_review_rule_revision(
+    body: RegisterReviewRuleRevisionRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    store: AipProductionContractStore = Depends(get_store),
+):
+    _require_review_role(principal)
+    try:
+        return store.register_review_rule_revision(
+            _scope(principal), principal.subject, _key(idempotency_key), body
+        )
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+
+
+@router.get("/review-rules", response_model=ReviewRuleRevisionListResponse)
+def list_review_rule_revisions(
+    principal: Principal = Depends(require_principal),
+    store: AipProductionContractStore = Depends(get_store),
+):
+    try:
+        return store.list_review_rule_revisions(_scope(principal))
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+
+
+@router.get("/review-rules/{rule_id}", response_model=ReviewRuleRevision)
+def get_review_rule_revision(
+    rule_id: str,
+    revision: int = Query(ge=1),
+    principal: Principal = Depends(require_principal),
+    store: AipProductionContractStore = Depends(get_store),
+):
+    try:
+        return store.get_review_rule_revision(_scope(principal), rule_id, revision)
     except ProductionContractError as exc:
         raise _map(exc) from exc

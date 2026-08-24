@@ -7,12 +7,17 @@ from datetime import datetime, timezone
 import pytest
 
 from aos_api.aip_contracts import PlanStep
-from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contract_store import (
+    AipProductionContractStore,
+    ProductionContractDependencyBlocked,
+)
 from aos_api.aip_production_contracts import (
     CreateReviewIssueRequest,
     ExactArtifactRef,
     ExactRevisionRef,
     ReturnReviewIssueRequest,
+    ResolveReviewIssueRequest,
+    RegisterReviewRuleRevisionRequest,
     ReviewSeverity,
 )
 from aos_api.aip_task_models import (
@@ -52,6 +57,13 @@ def _seed_review_authorities() -> dict[str, str]:
     report_id = f"eval-report-l14-{suffix}"
     now = datetime.now(timezone.utc)
     with connect(SCOPE) as conn:
+        conn.execute(
+            """INSERT INTO aip_review_rule_revision
+            (org_id,project_id,rule_id,revision,spec,content_hash,created_by)
+            VALUES(%s,%s,'rule-l14',1,'{"check":"legacy-l14"}'::jsonb,%s,%s)
+            ON CONFLICT DO NOTHING""",
+            (*SCOPE.key, HASH_A, ACTOR),
+        )
         conn.execute(
             """INSERT INTO aip_artifact
             (org_id,project_id,artifact_id,artifact_type,content_hash,created_by)
@@ -174,6 +186,10 @@ def test_return_after_succeeded_keeps_latest_attempt_claimable() -> None:
         ),
     )
     assert decision.attempt == 2
+    assert decision.impact_readiness == "exact"
+    assert [(item.step_key, item.action.value) for item in decision.impact_decisions] == [
+        ("draft", "invalidate")
+    ]
 
     with connect(SCOPE) as conn:
         rows = conn.execute(
@@ -207,3 +223,113 @@ def test_return_after_succeeded_keeps_latest_attempt_claimable() -> None:
     assert listed.items[0].decision_id == decision.decision_id
     got = store.get_return_decision(SCOPE, decision.decision_id)
     assert got.decision_hash == decision.decision_hash
+
+    with connect(SCOPE) as conn:
+        event = conn.execute(
+            """SELECT payload,payload_hash FROM aip_review_issue_event
+            WHERE org_id=%s AND project_id=%s AND issue_id=%s AND sequence=2""",
+            (*SCOPE.key, issue.issue_id),
+        ).fetchone()
+    assert event["payload"]["decisionHash"] == decision.decision_hash
+
+
+def test_return_impact_uses_explicit_transitive_dag_and_rejects_ambiguous_plan() -> None:
+    impact = AipProductionContractStore._review_return_impact(
+        [
+            {"stepKey": "research"},
+            {"stepKey": "draft"},
+            {"stepKey": "review"},
+            {"stepKey": "publish"},
+        ],
+        [
+            {"fromStepKey": "research", "toStepKey": "draft"},
+            {"fromStepKey": "draft", "toStepKey": "review"},
+            {"fromStepKey": "review", "toStepKey": "publish"},
+        ],
+        "draft",
+    )
+    assert [(item.step_key, item.action.value) for item in impact] == [
+        ("research", "reuse"),
+        ("draft", "invalidate"),
+        ("review", "invalidate"),
+        ("publish", "invalidate"),
+    ]
+
+    with pytest.raises(ProductionContractDependencyBlocked, match="RETURN_PLAN_DAG_MISSING"):
+        AipProductionContractStore._review_return_impact(
+            [{"stepKey": "draft"}, {"stepKey": "review"}], [], "draft"
+        )
+    with pytest.raises(ProductionContractDependencyBlocked, match="RETURN_PLAN_DAG_CYCLE"):
+        AipProductionContractStore._review_return_impact(
+            [{"stepKey": "draft"}, {"stepKey": "review"}],
+            [
+                {"fromStepKey": "draft", "toStepKey": "review"},
+                {"fromStepKey": "review", "toStepKey": "draft"},
+            ],
+            "draft",
+        )
+
+
+def test_review_rule_and_resolution_refs_fail_closed() -> None:
+    authority = _seed_review_authorities()
+    store = AipProductionContractStore()
+    with pytest.raises(ProductionContractDependencyBlocked, match="REVIEW_RULE_DRIFTED"):
+        store.create_review_issue(
+            SCOPE, ACTOR, _key("drifted-rule"),
+            CreateReviewIssueRequest(
+                rule_ref=_exact("EvalRuleRevision", "rule-l14", HASH_B),
+                severity=ReviewSeverity.ERROR,
+                artifact_ref=ExactArtifactRef(
+                    artifact_id=authority["artifact"], content_hash=HASH_A
+                ),
+                eval_report_ref=_exact("EvalReportRevision", authority["report"], HASH_B),
+                location={"path": "title"},
+                evidence_refs=[_exact("Evidence", authority["evidence"], HASH_C)],
+                suggested_fix="rule hash 漂移必须阻断",
+                return_stage="draft",
+            ),
+        )
+    issue = store.create_review_issue(
+        SCOPE, ACTOR, _key("valid-rule"),
+        CreateReviewIssueRequest(
+            rule_ref=_exact("EvalRuleRevision", "rule-l14", HASH_A),
+            severity=ReviewSeverity.ERROR,
+            artifact_ref=ExactArtifactRef(
+                artifact_id=authority["artifact"], content_hash=HASH_A
+            ),
+            eval_report_ref=_exact("EvalReportRevision", authority["report"], HASH_B),
+            location={"path": "title"},
+            evidence_refs=[_exact("Evidence", authority["evidence"], HASH_C)],
+            suggested_fix="校验 resolution refs",
+            return_stage="draft",
+        ),
+    )
+    with pytest.raises(ProductionContractDependencyBlocked, match="EVIDENCE_MISSING"):
+        store.resolve_review_issue(
+            SCOPE, ACTOR, issue.issue_id, _key("resolve-missing"),
+            ResolveReviewIssueRequest(
+                expectedVersion=issue.version,
+                reason="不存在的 evidence 不得解决问题",
+                resolutionRefs=[_exact("Evidence", "missing-evidence", HASH_C)],
+            ),
+        )
+
+
+def test_review_rule_revision_is_exact_append_only_authority() -> None:
+    store = AipProductionContractStore()
+    suffix = uuid.uuid4().hex[:12]
+    rule = store.register_review_rule_revision(
+        SCOPE, ACTOR, _key("rule-register"),
+        RegisterReviewRuleRevisionRequest(
+            ruleId=f"rule-w4-04-{suffix}",
+            revision=1,
+            spec={"check": "evidence-required", "severity": "error"},
+        ),
+    )
+    assert rule.content_hash == store.get_review_rule_revision(
+        SCOPE, rule.rule_id, 1
+    ).content_hash
+    assert any(
+        item.rule_id == rule.rule_id
+        for item in store.list_review_rule_revisions(SCOPE).items
+    )

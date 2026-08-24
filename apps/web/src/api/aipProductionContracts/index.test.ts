@@ -40,7 +40,7 @@ describe("W2-C production contract SDK",()=>{
   });
   it("退回 Review 只发送 queued attempt 意图",async()=>{
     const input={expectedVersion:1,runId:"run-1",targetStage:"draft",reason:"修订",attemptIdempotencyKey:"attempt-1"};
-    transport.apiPost.mockResolvedValue({tenant,decisionId:"decision-1",issueId:"issue-1",issueVersion:1,runId:"run-1",stepKey:"draft",stepRunId:"step-run-2",attempt:2,attemptIdempotencyKey:"attempt-1",reason:"修订",decisionHash:hash,actor:"reviewer",createdAt:"2026-08-14T00:00:00Z"});
+    transport.apiPost.mockResolvedValue({tenant,decisionId:"decision-1",issueId:"issue-1",issueVersion:1,runId:"run-1",stepKey:"draft",stepRunId:"step-run-2",attempt:2,attemptIdempotencyKey:"attempt-1",reason:"修订",impactDecisions:[{stepKey:"draft",action:"invalidate",reason:"返工目标"}],impactReadiness:"exact",decisionHash:hash,actor:"reviewer",createdAt:"2026-08-14T00:00:00Z"});
     const result=await aipProductionContracts.returnReviewIssue("issue-1",input,"return-1");
     expect(result.attempt).toBe(2);
     expect(transport.apiPost).toHaveBeenCalledWith("/v1/aip/production-contracts/review-issues/issue-1/return",input,{"Idempotency-Key":"return-1"});

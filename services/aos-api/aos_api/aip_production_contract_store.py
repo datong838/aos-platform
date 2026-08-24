@@ -16,6 +16,8 @@ from aos_api.aip_production_contracts import (
     ContractReadiness, Coverage, CreateArtifactRelationRequest, CreateBriefRequest,
     CreateEvalContractRequest, CreateEvidenceBundleRequest,
     CreateResponsibilityPlanRequest, CreateReviewIssueRequest,
+    RegisterReviewRuleRevisionRequest, ReviewRuleRevision,
+    ReviewRuleRevisionListResponse, ReviewImpactDecision, ReviewImpactAction,
     CreateStageTemplateRequest, DisclosureLevel, DisclosureStatus,
     EvalContractListResponse, EvalContractRevision, EvalContractDiff,
     EvalContractDiffChange, EvidenceBundleListResponse,
@@ -1194,6 +1196,68 @@ class AipProductionContractStore:
                 tenant=self._tenant(scope), items=items, count=len(items)
             )
 
+    def register_review_rule_revision(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: RegisterReviewRuleRevisionRequest,
+    ) -> ReviewRuleRevision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        content_hash = canonical_hash(
+            {"ruleId": body.rule_id, "revision": body.revision, "spec": body.spec}
+        )
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "review_rule.register", key, request_hash)
+            if replay:
+                return self.get_review_rule_revision(
+                    scope, replay["resourceId"], int(replay["revision"]), conn=conn
+                )
+            row = conn.execute(
+                """INSERT INTO aip_review_rule_revision
+                (org_id,project_id,rule_id,revision,spec,content_hash,created_by)
+                VALUES(%s,%s,%s,%s,%s::jsonb,%s,%s) RETURNING *""",
+                (*scope.key, body.rule_id, body.revision, self._json(body.spec), content_hash, actor),
+            ).fetchone()
+            self._receipt(
+                conn, scope, "review_rule.register", key, request_hash,
+                {"resourceType": "EvalRuleRevision", "resourceId": body.rule_id,
+                 "revision": body.revision, "contentHash": content_hash}, actor,
+            )
+            conn.commit()
+            return self._review_rule(scope, row)
+
+    def get_review_rule_revision(
+        self, scope: TenantScope, rule_id: str, revision: int,
+        *, conn: Any | None = None,
+    ) -> ReviewRuleRevision:
+        def read(connection: Any) -> ReviewRuleRevision:
+            row = connection.execute(
+                """SELECT * FROM aip_review_rule_revision
+                WHERE org_id=%s AND project_id=%s AND rule_id=%s AND revision=%s""",
+                (*scope.key, rule_id, revision),
+            ).fetchone()
+            if not row:
+                raise ProductionContractNotFound("review rule revision not found")
+            return self._review_rule(scope, row)
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as connection:
+            return read(connection)
+
+    def list_review_rule_revisions(self, scope: TenantScope) -> ReviewRuleRevisionListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_review_rule_revision
+                WHERE org_id=%s AND project_id=%s
+                ORDER BY created_at DESC,rule_id,revision DESC""", scope.key,
+            ).fetchall()
+            items = [self._review_rule(scope, row) for row in rows]
+            return ReviewRuleRevisionListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
+
     def create_review_issue(
         self,
         scope: TenantScope,
@@ -1210,6 +1274,7 @@ class AipProductionContractStore:
             self._require_artifact(conn, scope, body.artifact_ref)
             self._require_eval_report(conn, scope, body.eval_report_ref)
             self._require_evidence(conn, scope, body.evidence_refs)
+            self._require_review_rule(conn, scope, body.rule_ref)
             issue_id = f"review-issue-{uuid.uuid4().hex[:20]}"
             row = conn.execute(
                 """INSERT INTO aip_review_issue
@@ -1316,6 +1381,7 @@ class AipProductionContractStore:
                 raise ProductionContractConflict("review issue is not open")
             if current.version != body.expected_version:
                 raise ProductionContractConflict("stale review issue version")
+            self._require_resolution_refs(conn, scope, body.resolution_refs)
             row = conn.execute(
                 """UPDATE aip_review_issue SET status='resolved',version=version+1,
                  updated_by=%s,updated_at=NOW()
@@ -1389,7 +1455,7 @@ class AipProductionContractStore:
             if not run or run["status"] != "running" or run["task_status"] != "executing":
                 raise ProductionContractDependencyBlocked("RETURN_TARGET_NOT_RUNNING")
             plan = conn.execute(
-                """SELECT steps FROM aip_plan_revision
+                """SELECT steps,dependencies FROM aip_plan_revision
                 WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s""",
                 (*scope.key, run["plan_revision_id"]),
             ).fetchone()
@@ -1397,6 +1463,9 @@ class AipProductionContractStore:
                 str(item.get("stepKey")) for item in self._load(plan["steps"])
             }:
                 raise ProductionContractDependencyBlocked("RETURN_STAGE_NOT_IN_PLAN")
+            impact_decisions = self._review_return_impact(
+                self._load(plan["steps"]), self._load(plan["dependencies"]), body.target_stage
+            )
             existing_key = conn.execute(
                 """SELECT * FROM aip_return_decision
                 WHERE org_id=%s AND project_id=%s AND attempt_idempotency_key=%s""",
@@ -1473,8 +1542,9 @@ class AipProductionContractStore:
             decision = conn.execute(
                 """INSERT INTO aip_return_decision
                 (org_id,project_id,decision_id,issue_id,issue_version,run_id,step_key,
-                 step_run_id,attempt,attempt_idempotency_key,reason,decision_hash,actor)
-                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *""",
+                 step_run_id,attempt,attempt_idempotency_key,reason,decision_hash,
+                 impact_decisions,actor)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s) RETURNING *""",
                 (
                     *scope.key,
                     decision_id,
@@ -1487,6 +1557,7 @@ class AipProductionContractStore:
                     body.attempt_idempotency_key,
                     body.reason,
                     decision_hash,
+                    self._json([item.model_dump(mode="json", by_alias=True) for item in impact_decisions]),
                     actor,
                 ),
             ).fetchone()
@@ -3037,6 +3108,110 @@ class AipProductionContractStore:
             if row["content_hash"] != ref.content_hash:
                 raise ProductionContractDependencyBlocked("EVIDENCE_DRIFTED")
 
+    @staticmethod
+    def _require_review_rule(conn: Any, scope: TenantScope, ref: ExactRevisionRef) -> None:
+        if ref.resource_type != "EvalRuleRevision":
+            raise ProductionContractDependencyBlocked("REVIEW_RULE_REF_TYPE_INVALID")
+        row = conn.execute(
+            """SELECT content_hash FROM aip_review_rule_revision
+            WHERE org_id=%s AND project_id=%s AND rule_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        if not row:
+            raise ProductionContractDependencyBlocked("REVIEW_RULE_MISSING")
+        if row["content_hash"] != ref.content_hash:
+            raise ProductionContractDependencyBlocked("REVIEW_RULE_DRIFTED")
+
+    def _require_resolution_refs(
+        self, conn: Any, scope: TenantScope, refs: list[ExactRevisionRef]
+    ) -> None:
+        for ref in refs:
+            if ref.resource_type == "Artifact":
+                if ref.revision != 1:
+                    raise ProductionContractDependencyBlocked("RESOLUTION_ARTIFACT_REF_INVALID")
+                self._require_artifact(
+                    conn, scope,
+                    ExactArtifactRef(artifactId=ref.resource_id, contentHash=ref.content_hash),
+                )
+            elif ref.resource_type == "Evidence":
+                self._require_evidence(conn, scope, [ref])
+            elif ref.resource_type == "EvalReportRevision":
+                self._require_eval_report(conn, scope, ref)
+            elif ref.resource_type == "ReturnDecision":
+                if ref.revision != 1:
+                    raise ProductionContractDependencyBlocked("RESOLUTION_DECISION_REF_INVALID")
+                row = conn.execute(
+                    """SELECT decision_hash FROM aip_return_decision
+                    WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                    (*scope.key, ref.resource_id),
+                ).fetchone()
+                if not row:
+                    raise ProductionContractDependencyBlocked("RESOLUTION_DECISION_MISSING")
+                if row["decision_hash"] != ref.content_hash:
+                    raise ProductionContractDependencyBlocked("RESOLUTION_DECISION_DRIFTED")
+            else:
+                raise ProductionContractDependencyBlocked("RESOLUTION_REF_TYPE_UNSUPPORTED")
+
+    @staticmethod
+    def _review_return_impact(
+        raw_steps: Any, raw_dependencies: Any, target_stage: str
+    ) -> list[ReviewImpactDecision]:
+        if not isinstance(raw_steps, list) or not raw_steps:
+            raise ProductionContractDependencyBlocked("RETURN_PLAN_STEPS_INVALID")
+        step_keys = [str(item.get("stepKey", "")) for item in raw_steps if isinstance(item, dict)]
+        if len(step_keys) != len(raw_steps) or any(not key for key in step_keys) or len(set(step_keys)) != len(step_keys):
+            raise ProductionContractDependencyBlocked("RETURN_PLAN_STEPS_INVALID")
+        if not isinstance(raw_dependencies, list):
+            raise ProductionContractDependencyBlocked("RETURN_PLAN_DAG_INVALID")
+        if len(step_keys) > 1 and not raw_dependencies:
+            raise ProductionContractDependencyBlocked("RETURN_PLAN_DAG_MISSING")
+        adjacency: dict[str, set[str]] = {key: set() for key in step_keys}
+        indegree = {key: 0 for key in step_keys}
+        for item in raw_dependencies:
+            if not isinstance(item, dict) or set(item) != {"fromStepKey", "toStepKey"}:
+                raise ProductionContractDependencyBlocked("RETURN_PLAN_DAG_INVALID")
+            source = item["fromStepKey"]
+            target = item["toStepKey"]
+            if source not in adjacency or target not in adjacency or source == target:
+                raise ProductionContractDependencyBlocked("RETURN_PLAN_DAG_INVALID")
+            if target not in adjacency[source]:
+                adjacency[source].add(target)
+                indegree[target] += 1
+        queue = [key for key in step_keys if indegree[key] == 0]
+        visited: list[str] = []
+        while queue:
+            current = queue.pop(0)
+            visited.append(current)
+            for child in sorted(adjacency[current], key=step_keys.index):
+                indegree[child] -= 1
+                if indegree[child] == 0:
+                    queue.append(child)
+        if len(visited) != len(step_keys):
+            raise ProductionContractDependencyBlocked("RETURN_PLAN_DAG_CYCLE")
+        invalidated = {target_stage}
+        frontier = [target_stage]
+        while frontier:
+            current = frontier.pop(0)
+            for child in adjacency[current]:
+                if child not in invalidated:
+                    invalidated.add(child)
+                    frontier.append(child)
+        return [
+            ReviewImpactDecision(
+                stepKey=key,
+                action=(ReviewImpactAction.INVALIDATE if key in invalidated else ReviewImpactAction.REUSE),
+                reason=("返工目标或传递下游依赖" if key in invalidated else "不依赖返工目标，保持精确输入复用"),
+            )
+            for key in step_keys
+        ]
+
+    def _review_rule(self, scope: TenantScope, row: Any) -> ReviewRuleRevision:
+        return ReviewRuleRevision(
+            tenant=self._tenant(scope), ruleId=row["rule_id"], revision=row["revision"],
+            spec=self._load(row["spec"]), contentHash=row["content_hash"],
+            createdBy=row["created_by"], createdAt=row["created_at"],
+        )
+
     def _artifact_relation(self, scope: TenantScope, row: Any) -> ArtifactRelation:
         return ArtifactRelation(
             tenant=self._tenant(scope),
@@ -3069,8 +3244,8 @@ class AipProductionContractStore:
         conn.execute(
             """INSERT INTO aip_review_issue_event
             (org_id,project_id,event_id,issue_id,sequence,event_type,issue_version,
-             payload_hash,actor)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+             payload_hash,payload,actor)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s)""",
             (
                 *scope.key,
                 f"review-event-{uuid.uuid4().hex[:20]}",
@@ -3079,6 +3254,7 @@ class AipProductionContractStore:
                 event_type,
                 issue_version,
                 canonical_hash(payload),
+                self._json(payload),
                 actor,
             ),
         )
@@ -3114,6 +3290,7 @@ class AipProductionContractStore:
         )
 
     def _return_decision(self, scope: TenantScope, row: Any) -> ReturnDecision:
+        raw_impact = self._load(row.get("impact_decisions")) or []
         return ReturnDecision(
             tenant=self._tenant(scope),
             decision_id=row["decision_id"],
@@ -3125,6 +3302,8 @@ class AipProductionContractStore:
             attempt=int(row["attempt"]),
             attempt_idempotency_key=row["attempt_idempotency_key"],
             reason=row["reason"],
+            impactDecisions=[ReviewImpactDecision.model_validate(item) for item in raw_impact],
+            impactReadiness=("exact" if raw_impact else "legacy_unavailable"),
             decision_hash=row["decision_hash"],
             actor=row["actor"],
             created_at=row["created_at"],
