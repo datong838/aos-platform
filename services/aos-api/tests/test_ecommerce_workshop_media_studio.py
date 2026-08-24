@@ -7,11 +7,44 @@ from pydantic import ValidationError
 
 from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
 from aos_api.ecommerce_workshop_media_studio_contracts import (
+    MediaAxisReadiness,
+    MediaBlocker,
     MediaCountLedger,
     MediaExactRef,
     MediaReadinessAxis,
     MediaStudioSliceId,
 )
+from aos_api.ecommerce_workshop_media_studio_reader import MediaStudioSliceObservation
+from aos_api.tenant_scope import TenantScope
+
+
+HASH = "sha256:" + "a" * 64
+
+
+class FakeReader:
+    def __init__(self, *, drift: str | None = None) -> None:
+        self.drift = drift
+        self.calls: list[tuple[str, TenantScope, datetime, int]] = []
+
+    def _read(self, name: str, scope: TenantScope, cutoff: datetime, limit: int) -> MediaStudioSliceObservation:
+        self.calls.append((name, scope, cutoff, limit))
+        if self.drift == name:
+            scope = TenantScope(org_id="dev-org", project_id="dev-project")
+        ref = MediaExactRef(resourceType="CanonicalMediaFact", resourceId=f"{name}-1", revision=1, contentHash=HASH, receiptId=f"receipt-{name}-1")
+        axes = tuple(
+            MediaAxisReadiness(axis=axis, status="ready", exactRef=ref)
+            for axis in MediaReadinessAxis
+        )
+        return MediaStudioSliceObservation(scope=scope, data_cutoff=cutoff, readiness_axes=axes, authority_refs=(ref,))
+
+    def read_context(self, scope, *, cutoff, limit):
+        return self._read("context", scope, cutoff, limit)
+
+    def read_execution(self, scope, *, cutoff, limit):
+        return self._read("execution", scope, cutoff, limit)
+
+    def read_delivery(self, scope, *, cutoff, limit):
+        return self._read("delivery", scope, cutoff, limit)
 
 
 def test_media_studio_shell_is_three_slice_target_only_and_count_safe() -> None:
@@ -51,3 +84,28 @@ def test_media_clock_requires_timezone() -> None:
         EcommerceWorkshopMediaStudio(clock=lambda: datetime(2026, 8, 24)).read(
             org_id="org-org", project_id="dev-project"
         )
+
+
+def test_bounded_reader_returns_exact_refs_and_trusted_ready_slices() -> None:
+    reader = FakeReader()
+    view = EcommerceWorkshopMediaStudio(reader=reader, clock=lambda: datetime(2026, 8, 24, tzinfo=UTC)).read(org_id="org-org", project_id="dev-project")
+
+    assert [item.status for item in view.slices] == ["ready", "ready", "ready"]
+    assert [item.count_ledger.ready for item in view.slices] == [6, 6, 6]
+    assert view.page.count == 3
+    assert [call[3] for call in reader.calls] == [100, 100, 100]
+
+
+def test_one_reader_tenant_drift_blocks_only_its_slice() -> None:
+    view = EcommerceWorkshopMediaStudio(reader=FakeReader(drift="execution"), clock=lambda: datetime(2026, 8, 24, tzinfo=UTC)).read(org_id="org-org", project_id="dev-project")
+
+    assert [item.status for item in view.slices] == ["ready", "blocked", "ready"]
+    assert view.slices[1].authority_refs == []
+    assert view.slices[1].count_ledger.target == 6
+
+
+def test_unknown_axis_stays_blocked_and_out_of_ready() -> None:
+    blocker = MediaBlocker(code="PROVIDER_OUTCOME_UNKNOWN", dependency="provider-reconcile", requiredAction="reconcile original request fingerprint")
+    axis = MediaAxisReadiness(axis="provider", status="unknown", blockers=[blocker])
+    assert axis.status == "unknown"
+    assert axis.exact_ref is None

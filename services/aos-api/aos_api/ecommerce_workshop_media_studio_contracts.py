@@ -33,6 +33,8 @@ class MediaReadinessStatus(StrEnum):
     READY = "ready"
     BLOCKED = "blocked"
     TARGET = "target"
+    UNKNOWN = "unknown"
+    CONFLICT = "conflict"
     NOT_APPLICABLE = "not_applicable"
 
 
@@ -66,9 +68,9 @@ class MediaAxisReadiness(AipContractModel):
         elif self.status is MediaReadinessStatus.TARGET:
             if self.exact_ref is not None or not self.target_contract_ref or not self.gaps or not self.blockers:
                 raise ValueError("target media axis requires target contract, gaps and blockers")
-        elif self.status is MediaReadinessStatus.BLOCKED:
+        elif self.status in {MediaReadinessStatus.BLOCKED, MediaReadinessStatus.UNKNOWN, MediaReadinessStatus.CONFLICT}:
             if self.exact_ref is not None or not self.blockers:
-                raise ValueError("blocked media axis requires blockers and no exact ref")
+                raise ValueError("non-ready media axis requires blockers and no exact ref")
         elif self.exact_ref is not None or self.blockers:
             raise ValueError("not-applicable media axis cannot attach authority or blockers")
         return self
@@ -117,8 +119,16 @@ class MediaStudioSlice(AipContractModel):
             raise ValueError("ready media slice cannot hide blocked or target axes")
         if self.status == "blocked" and not self.blockers:
             raise ValueError("blocked media slice requires blockers")
-        if self.count_ledger.ready != len(self.authority_refs):
-            raise ValueError("ready count must equal attached exact refs")
+        expected = {
+            "ready": sum(item.status is MediaReadinessStatus.READY for item in self.readiness_axes),
+            "target": sum(item.status is MediaReadinessStatus.TARGET for item in self.readiness_axes),
+            "blocked": sum(item.status is MediaReadinessStatus.BLOCKED for item in self.readiness_axes),
+            "unknown": sum(item.status is MediaReadinessStatus.UNKNOWN for item in self.readiness_axes),
+            "conflict": sum(item.status is MediaReadinessStatus.CONFLICT for item in self.readiness_axes),
+            "not_applicable": sum(item.status is MediaReadinessStatus.NOT_APPLICABLE for item in self.readiness_axes),
+        }
+        if any(getattr(self.count_ledger, key) != value for key, value in expected.items()):
+            raise ValueError("media ledger must equal readiness axis partitions")
         return self
 
 
