@@ -240,6 +240,18 @@ export type PriceCountLedger = { input: number; eligible: number; excluded: numb
 export type PriceGovernanceViewSlice = { viewId: PriceGovernanceViewId; status: "ready" | "blocked"; resourceRevision: number; dataCutoff: string; readinessAxes: PriceAxisReadiness[]; observations: PriceObservation[]; authorityRefs: PriceExactRef[]; blockers: PriceBlocker[]; countLedger: PriceCountLedger };
 export type PriceGovernanceViewResponse = { schemaVersion: typeof PRICE_GOVERNANCE_SCHEMA_VERSION; tenant: WorkshopTenant; resourceRevision: number; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; views: PriceGovernanceViewSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
 
+export const CUSTOMER_VIEW_SCHEMA_VERSION = "aos.ecommerce-workshop.customer-view/v1" as const;
+export type CustomerViewId = "customer" | "segment" | "journey" | "dialogue";
+export type CustomerReadinessAxis = "customer_lite" | "consent" | "segment" | "journey" | "dialogue" | "outreach_batch";
+export type CustomerReadinessStatus = "ready" | "blocked" | "unknown" | "not_applicable";
+export type CustomerExactRef = { resourceType: string; resourceId: string; revision: number; contentHash: string; receiptId: string };
+export type CustomerBlocker = { code: string; dependency: string; requiredAction: string };
+export type CustomerAxisReadiness = { axis: CustomerReadinessAxis; status: CustomerReadinessStatus; exactRef: CustomerExactRef | null; blockers: CustomerBlocker[] };
+export type CustomerProjection = { customerRef: CustomerExactRef; purpose: string; disclosure: "allowed" | "blocked" | "unknown"; freshness: "fresh" | "stale" | "unknown"; quality: "pass" | "fail" | "unknown"; consent: "granted" | "withdrawn" | "expired" | "conflict" | "unknown"; retention: "active" | "expired" | "unknown"; kAnonymitySatisfied: boolean | null; originalRefs: CustomerExactRef[]; blockers: CustomerBlocker[] };
+export type CustomerCountLedger = { input: number; eligible: number; excluded: number; unknown: number; deduplicated: number };
+export type CustomerViewSlice = { viewId: CustomerViewId; status: "ready" | "blocked"; resourceRevision: number; dataCutoff: string; readinessAxes: CustomerAxisReadiness[]; items: CustomerProjection[]; authorityRefs: CustomerExactRef[]; blockers: CustomerBlocker[]; countLedger: CustomerCountLedger };
+export type CustomerViewResponse = { schemaVersion: typeof CUSTOMER_VIEW_SCHEMA_VERSION; tenant: WorkshopTenant; resourceRevision: number; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; views: CustomerViewSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
+
 export const OPERATION_COMMAND_READINESS_SCHEMA_VERSION = "aos.ecommerce-workshop.operation-command-readiness/v1" as const;
 export type OperationCommandId = "classify" | "createCase" | "changeMembership" | "manageSla" | "automationKill" | "refund";
 export type OperationCommandBlocker = { code: string; dependency: string; requiredAction: string };

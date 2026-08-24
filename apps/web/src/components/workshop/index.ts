@@ -10,5 +10,6 @@ export * from "./CreatorGrowthPage";
 export * from "./MediaStudioPage";
 export * from "./AnalystPage";
 export * from "./PriceGovernancePage";
+export * from "./CustomerPage";
 export * from "./SourceReadinessContext";
 export * from "./SourceReadinessPanel";

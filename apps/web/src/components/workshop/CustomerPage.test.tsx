@@ -1,0 +1,20 @@
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { CustomerViewResponse } from "../../api/ecommerceWorkshop";
+import { CustomerPage } from "./CustomerPage";
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+const ids = ["customer", "segment", "journey", "dialogue"] as const;
+const axes = ["customer_lite", "consent", "segment", "journey", "dialogue", "outreach_batch"] as const;
+const cutoff = "2026-08-24T08:00:00Z";
+const blocked: CustomerViewResponse = { schemaVersion: "aos.ecommerce-workshop.customer-view/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, resourceRevision: 1, evaluatedAt: cutoff, dataCutoff: cutoff, readiness: "degraded", views: ids.map((viewId) => { const blocker = { code: `CUSTOMER_${viewId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`, dependency: viewId, requiredAction: "attach exact privacy-safe authority" }; return { viewId, status: "blocked", resourceRevision: 1, dataCutoff: cutoff, readinessAxes: axes.map((axis) => ({ axis, status: "blocked", exactRef: null, blockers: [blocker] })), items: [], authorityRefs: [], blockers: [blocker], countLedger: { input: 0, eligible: 0, excluded: 0, unknown: 0, deduplicated: 0 } }; }), page: { limit: 100, count: 0, hasMore: false, nextCursor: null } };
+
+describe("CustomerPage", () => {
+  let host: HTMLDivElement; let root: Root;
+  beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
+  afterEach(() => { act(() => root.unmount()); host.remove(); });
+  it("展示四视图六轴且没有触达写入口", async () => { await act(async () => root.render(<CustomerPage client={{ getCustomerView: vi.fn().mockResolvedValue(blocked) }} />)); expect(host.querySelectorAll('[role="tab"]')).toHaveLength(4); expect(host.querySelectorAll(".customer-readiness article")).toHaveLength(6); expect(host.textContent).toContain("零触达"); expect(host.textContent).toContain("写入口"); expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent).join(" ")).not.toMatch(/导入客户|新建触达|构建分群|编辑旅程|准备批次|冻结批次|开始发送/); });
+  it("切换旅程视图仍只呈现可信空", async () => { await act(async () => root.render(<CustomerPage client={{ getCustomerView: vi.fn().mockResolvedValue(blocked) }} />)); const tab = Array.from(host.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find((item) => item.textContent?.includes("生命周期旅程")); act(() => tab?.click()); expect(host.querySelector('[role="tabpanel"]')?.textContent).toContain("当前没有可披露的客户最小投影"); });
+  it("支持方向键沿四视图循环", async () => { await act(async () => root.render(<CustomerPage client={{ getCustomerView: vi.fn().mockResolvedValue(blocked) }} />)); const tabs = host.querySelectorAll<HTMLButtonElement>('[role="tab"]'); act(() => tabs[0]?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))); expect(host.querySelector('[role="tabpanel"]')?.getAttribute("aria-label")).toBe("客户分群"); expect(tabs[1]?.tabIndex).toBe(0); });
+});

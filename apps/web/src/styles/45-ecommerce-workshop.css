@@ -775,6 +775,41 @@
 .price-observations article dt { color: var(--aos-text-tertiary); font-size: 10px; }
 .price-observations article dd { margin: 3px 0 0; overflow-wrap: anywhere; font-size: 12px; }
 
+.customer-page,
+.customer-read-model { display: grid; gap: 12px; min-width: 0; }
+.customer-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 18px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-accent); background: linear-gradient(120deg, color-mix(in srgb, var(--aos-accent) 8%, var(--aos-surface)), var(--aos-surface)); }
+.customer-hero span { color: var(--aos-accent); font-size: 12px; font-weight: 700; }
+.customer-hero h2 { margin: 5px 0; font-size: 20px; }
+.customer-hero p { margin: 0; color: var(--aos-text-secondary); }
+.customer-hero > strong { white-space: nowrap; border: 1px solid var(--aos-accent); border-radius: 999px; padding: 5px 11px; color: var(--aos-accent); }
+.customer-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.customer-tabs button { display: grid; gap: 4px; min-width: 0; cursor: pointer; border: 1px solid var(--aos-border); padding: 11px; background: var(--aos-surface); color: var(--aos-text); text-align: left; }
+.customer-tabs button span { color: var(--aos-text-tertiary); font-size: 11px; }
+.customer-tabs button[aria-selected="true"] { border-color: var(--aos-accent); box-shadow: inset 0 -3px 0 var(--aos-accent); }
+.customer-tabs button:focus-visible { outline: 2px solid var(--aos-accent); outline-offset: 2px; }
+.customer-panel { display: grid; gap: 12px; min-width: 0; padding: 15px; border: 1px solid var(--aos-border); background: color-mix(in srgb, var(--aos-surface-hover) 45%, var(--aos-surface)); }
+.customer-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.customer-panel > header span { color: var(--aos-text-tertiary); font-size: 11px; }
+.customer-panel h2 { margin: 3px 0 0; }
+.customer-readiness { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.customer-readiness article { display: grid; gap: 4px; min-width: 0; padding: 11px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-amber); background: var(--aos-surface); }
+.customer-readiness article.is-ready { border-left-color: var(--aos-green); }
+.customer-readiness article.is-blocked,
+.customer-readiness article.is-unknown { border-left-color: var(--aos-red); }
+.customer-readiness article span { color: var(--aos-text-tertiary); font-size: 11px; }
+.customer-readiness article p { margin: 0; overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 11px; }
+.customer-items { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.customer-items > p { grid-column: 1 / -1; margin: 0; padding: 22px; border: 1px dashed var(--aos-border); background: var(--aos-surface); color: var(--aos-text-secondary); }
+.customer-items article { min-width: 0; padding: 13px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-red); background: var(--aos-surface); }
+.customer-items article.is-allowed { border-left-color: var(--aos-green); }
+.customer-items article header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.customer-items article header div { display: grid; gap: 3px; min-width: 0; }
+.customer-items article header span { overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 11px; }
+.customer-items article dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin: 12px 0 0; }
+.customer-items article dl div { min-width: 0; padding: 7px; background: var(--aos-surface-hover); }
+.customer-items article dt { color: var(--aos-text-tertiary); font-size: 10px; }
+.customer-items article dd { margin: 3px 0 0; overflow-wrap: anywhere; font-size: 12px; }
+
 .p-app.is-workshop-focus > .p-nav-global,
 .p-app.is-workshop-focus .aside { display: none; }
 
@@ -800,6 +835,7 @@
   .analyst-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .analyst-readiness-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .price-governance-readiness { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .customer-readiness { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 1359px) {
@@ -844,6 +880,7 @@
   .analyst-readiness-grid { grid-template-columns: 1fr; }
   .analyst-metrics { grid-template-columns: 1fr; }
   .price-observations { grid-template-columns: 1fr; }
+  .customer-items { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 720px) {
@@ -854,4 +891,7 @@
   .price-governance-hero { flex-direction: column; }
   .price-governance-tabs,
   .price-governance-readiness { grid-template-columns: 1fr; }
+  .customer-hero { flex-direction: column; }
+  .customer-tabs,
+  .customer-readiness { grid-template-columns: 1fr; }
 }
