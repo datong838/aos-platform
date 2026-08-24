@@ -737,6 +737,44 @@
 .analyst-metrics article p,
 .analyst-metrics article small { overflow-wrap: anywhere; color: var(--aos-text-secondary); }
 
+.price-governance-page,
+.price-governance-read-model { display: grid; gap: 12px; min-width: 0; }
+.price-governance-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 18px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-amber); background: linear-gradient(120deg, color-mix(in srgb, var(--aos-amber) 9%, var(--aos-surface)), var(--aos-surface)); }
+.price-governance-hero span { color: var(--aos-amber); font-size: 12px; font-weight: 700; }
+.price-governance-hero h2 { margin: 5px 0; font-size: 20px; }
+.price-governance-hero p { margin: 0; color: var(--aos-text-secondary); }
+.price-governance-hero > strong { white-space: nowrap; border: 1px solid var(--aos-amber); border-radius: 999px; padding: 5px 11px; color: var(--aos-amber); }
+.price-governance-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.price-governance-tabs button { display: grid; gap: 4px; min-width: 0; cursor: pointer; border: 1px solid var(--aos-border); padding: 11px; background: var(--aos-surface); color: var(--aos-text); text-align: left; }
+.price-governance-tabs button span { color: var(--aos-text-tertiary); font-size: 11px; }
+.price-governance-tabs button[aria-selected="true"] { border-color: var(--aos-amber); box-shadow: inset 0 -3px 0 var(--aos-amber); }
+.price-governance-tabs button:focus-visible { outline: 2px solid var(--aos-accent); outline-offset: 2px; }
+.price-governance-panel { display: grid; gap: 12px; min-width: 0; padding: 15px; border: 1px solid var(--aos-border); background: color-mix(in srgb, var(--aos-surface-hover) 45%, var(--aos-surface)); }
+.price-governance-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.price-governance-panel > header span { color: var(--aos-text-tertiary); font-size: 11px; }
+.price-governance-panel h2 { margin: 3px 0 0; }
+.price-governance-readiness { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.price-governance-readiness article { display: grid; gap: 4px; min-width: 0; padding: 11px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-amber); background: var(--aos-surface); }
+.price-governance-readiness article.is-ready { border-left-color: var(--aos-green); }
+.price-governance-readiness article.is-disabled,
+.price-governance-readiness article.is-blocked,
+.price-governance-readiness article.is-unknown { border-left-color: var(--aos-red); }
+.price-governance-readiness article span { color: var(--aos-text-tertiary); font-size: 11px; }
+.price-governance-readiness article p { margin: 0; overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 11px; }
+.price-observations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.price-observations > p { grid-column: 1 / -1; margin: 0; padding: 22px; border: 1px dashed var(--aos-border); background: var(--aos-surface); color: var(--aos-text-secondary); }
+.price-observations article { min-width: 0; padding: 13px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-amber); background: var(--aos-surface); }
+.price-observations article.is-comparable { border-left-color: var(--aos-green); }
+.price-observations article header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.price-observations article header div { display: grid; gap: 3px; }
+.price-observations article header span,
+.price-observations article small { overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 11px; }
+.price-observations article b { white-space: nowrap; }
+.price-observations article dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin: 12px 0; }
+.price-observations article dl div { min-width: 0; padding: 7px; background: var(--aos-surface-hover); }
+.price-observations article dt { color: var(--aos-text-tertiary); font-size: 10px; }
+.price-observations article dd { margin: 3px 0 0; overflow-wrap: anywhere; font-size: 12px; }
+
 .p-app.is-workshop-focus > .p-nav-global,
 .p-app.is-workshop-focus .aside { display: none; }
 
@@ -761,6 +799,7 @@
   .media-lifecycle { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .analyst-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .analyst-readiness-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .price-governance-readiness { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 1359px) {
@@ -804,6 +843,7 @@
   .media-readiness-grid { grid-template-columns: 1fr; }
   .analyst-readiness-grid { grid-template-columns: 1fr; }
   .analyst-metrics { grid-template-columns: 1fr; }
+  .price-observations { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 720px) {
@@ -811,4 +851,7 @@
   .media-studio-tabs { grid-template-columns: 1fr; }
   .analyst-hero { flex-direction: column; }
   .analyst-tabs { grid-template-columns: 1fr; }
+  .price-governance-hero { flex-direction: column; }
+  .price-governance-tabs,
+  .price-governance-readiness { grid-template-columns: 1fr; }
 }

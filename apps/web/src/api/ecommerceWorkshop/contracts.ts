@@ -227,6 +227,19 @@ export type AnalystCountLedger = { denominator: number; ready: number; unknown: 
 export type AnalystViewSlice = { viewId: AnalystViewId; status: "ready" | "blocked"; resourceRevision: number; dataCutoff: string; readinessAxes: AnalystAxisReadiness[]; metrics: AnalystMetricValue[]; authorityRefs: AnalystExactRef[]; blockers: AnalystBlocker[]; countLedger: AnalystCountLedger };
 export type AnalystViewResponse = { schemaVersion: typeof ANALYST_SCHEMA_VERSION; tenant: WorkshopTenant; resourceRevision: number; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; views: AnalystViewSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
 
+export const PRICE_GOVERNANCE_SCHEMA_VERSION = "aos.ecommerce-workshop.price-governance-view/v1" as const;
+export type PriceGovernanceViewId = "governance" | "competitor" | "schedule";
+export type PriceReadinessAxis = "collection" | "match" | "policy_case" | "notification" | "advice_handoff" | "repricing";
+export type PriceReadinessStatus = "ready" | "blocked" | "unknown" | "not_applicable" | "disabled";
+export type PriceExactRef = { resourceType: string; resourceId: string; revision: number; contentHash: string; receiptId: string };
+export type PriceBlocker = { code: string; dependency: string; requiredAction: string };
+export type PriceAxisReadiness = { axis: PriceReadinessAxis; status: PriceReadinessStatus; exactRef: PriceExactRef | null; blockers: PriceBlocker[] };
+export type PriceQuoteBasis = { basis: "list" | "landed"; skuRef: PriceExactRef; bundleRef: PriceExactRef | null; quantity: number; unit: string; currency: string; tax: "included" | "excluded" | "unknown"; shipping: "included" | "excluded" | "unknown"; promotionCondition: string; effectiveFrom: string; effectiveUntil: string | null };
+export type PriceObservation = { observationRef: PriceExactRef; market: string; amount: number | null; quoteBasis: PriceQuoteBasis; observedAt: string; freshness: "fresh" | "stale" | "unknown"; license: "allowed" | "denied" | "unknown"; comparability: "comparable" | "not_comparable" | "unknown"; matchStatus: "confirmed" | "preliminary" | "not_matched" | "unknown"; originalRefs: PriceExactRef[]; mergedOriginalRefs: PriceExactRef[]; blockers: PriceBlocker[] };
+export type PriceCountLedger = { input: number; eligible: number; excluded: number; needsReview: number; unknown: number; deduplicated: number };
+export type PriceGovernanceViewSlice = { viewId: PriceGovernanceViewId; status: "ready" | "blocked"; resourceRevision: number; dataCutoff: string; readinessAxes: PriceAxisReadiness[]; observations: PriceObservation[]; authorityRefs: PriceExactRef[]; blockers: PriceBlocker[]; countLedger: PriceCountLedger };
+export type PriceGovernanceViewResponse = { schemaVersion: typeof PRICE_GOVERNANCE_SCHEMA_VERSION; tenant: WorkshopTenant; resourceRevision: number; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; views: PriceGovernanceViewSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
+
 export const OPERATION_COMMAND_READINESS_SCHEMA_VERSION = "aos.ecommerce-workshop.operation-command-readiness/v1" as const;
 export type OperationCommandId = "classify" | "createCase" | "changeMembership" | "manageSla" | "automationKill" | "refund";
 export type OperationCommandBlocker = { code: string; dependency: string; requiredAction: string };
