@@ -606,6 +606,130 @@ class TaskCockpitApprovalReviewEnvelope(AipContractModel):
         return self
 
 
+class TaskCockpitActionReceipt(AipContractModel):
+    receipt_id: str = Field(min_length=1, max_length=200)
+    receipt_kind: Literal["initial", "reconcile"]
+    status: Literal["accepted", "applied", "failed", "unknown", "reconciled"]
+    lease_id: str = Field(min_length=1, max_length=200)
+    request_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+    provider_request_present: bool
+    evidence_count: int = Field(ge=0)
+    supersedes_receipt_id: str | None = Field(default=None, max_length=200)
+    resolved_status: Literal["applied", "failed"] | None = None
+    created_at: datetime
+
+    @field_validator("created_at")
+    @classmethod
+    def _receipt_time_is_aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _receipt_kind_is_consistent(self) -> TaskCockpitActionReceipt:
+        if self.receipt_kind == "initial":
+            if self.status == "reconciled" or self.supersedes_receipt_id is not None:
+                raise ValueError("initial ActionReceipt cannot be reconciled or supersede")
+            if self.resolved_status is not None:
+                raise ValueError("initial ActionReceipt cannot carry resolvedStatus")
+        else:
+            if self.status != "reconciled" or self.supersedes_receipt_id is None:
+                raise ValueError("reconcile ActionReceipt must supersede an initial receipt")
+            if self.resolved_status is None:
+                raise ValueError("reconcile ActionReceipt requires terminal resolvedStatus")
+        return self
+
+
+class TaskCockpitActionExecution(AipContractModel):
+    proposal_ref: ExactRevisionRef
+    action_type_id: str = Field(min_length=1, max_length=200)
+    proposal_status: Literal[
+        "proposed", "drafted", "approved", "rejected", "expired", "leased",
+        "executing", "applied", "failed", "unknown", "reconciled", "compensated",
+    ]
+    lease_id: str | None = Field(default=None, max_length=200)
+    attempt: int | None = Field(default=None, ge=1)
+    receipts: list[TaskCockpitActionReceipt] = Field(default_factory=list, max_length=2)
+    reconciliation_state: Literal["not_started", "not_required", "required", "resolved"]
+
+    @model_validator(mode="after")
+    def _receipt_chain_is_consistent(self) -> TaskCockpitActionExecution:
+        if self.proposal_ref.resource_type != "ActionProposalRevision":
+            raise ValueError("proposalRef must reference ActionProposalRevision")
+        if (self.lease_id is None) != (self.attempt is None):
+            raise ValueError("Action lease identity and attempt must appear together")
+        if self.receipts and self.lease_id is None:
+            raise ValueError("Action receipts require an exact lease")
+        if any(item.lease_id != self.lease_id for item in self.receipts):
+            raise ValueError("ActionReceipt lease drifted")
+        if len({item.receipt_id for item in self.receipts}) != len(self.receipts):
+            raise ValueError("ActionReceipt identities must be unique")
+        initial = [item for item in self.receipts if item.receipt_kind == "initial"]
+        reconcile = [item for item in self.receipts if item.receipt_kind == "reconcile"]
+        if len(initial) > 1 or len(reconcile) > 1:
+            raise ValueError("ActionReceipt chain allows at most one initial and one reconcile")
+        if reconcile:
+            if not initial or initial[0].status != "unknown":
+                raise ValueError("reconcile requires an initial unknown ActionReceipt")
+            if reconcile[0].supersedes_receipt_id != initial[0].receipt_id:
+                raise ValueError("reconcile supersedes identity drifted")
+            if reconcile[0].request_fingerprint != initial[0].request_fingerprint:
+                raise ValueError("reconcile request fingerprint drifted")
+        expected = "not_started"
+        if initial:
+            if initial[0].status != "unknown":
+                expected = "not_required"
+            elif reconcile:
+                expected = "resolved"
+            else:
+                expected = "required"
+        if self.reconciliation_state != expected:
+            raise ValueError("Action reconciliation state drifted")
+        return self
+
+
+class TaskCockpitActionReceiptEnvelope(AipContractModel):
+    schema_version: Literal[TASK_COCKPIT_SCHEMA_VERSION] = TASK_COCKPIT_SCHEMA_VERSION
+    tenant: TenantContext
+    run_id: str = Field(min_length=1, max_length=200)
+    task_id: str = Field(min_length=1, max_length=200)
+    evaluated_at: datetime
+    executions: list[TaskCockpitActionExecution] = Field(default_factory=list, max_length=200)
+    proposal_count: int = Field(ge=0)
+    receipt_count: int = Field(ge=0)
+    unknown_receipt_count: int = Field(ge=0)
+    reconcile_required_count: int = Field(ge=0)
+    reconciled_receipt_count: int = Field(ge=0)
+
+    @field_validator("evaluated_at")
+    @classmethod
+    def _action_time_is_aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("Task Cockpit timestamps require a timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _action_counts_are_conserved(self) -> TaskCockpitActionReceiptEnvelope:
+        receipts = [receipt for item in self.executions for receipt in item.receipts]
+        if self.proposal_count != len(self.executions) or self.receipt_count != len(receipts):
+            raise ValueError("Action proposal or receipt count drifted")
+        if self.unknown_receipt_count != sum(
+            item.receipt_kind == "initial" and item.status == "unknown" for item in receipts
+        ):
+            raise ValueError("Action unknown receipt count drifted")
+        if self.reconcile_required_count != sum(
+            item.reconciliation_state == "required" for item in self.executions
+        ):
+            raise ValueError("Action reconcile-required count drifted")
+        if self.reconciled_receipt_count != sum(
+            item.receipt_kind == "reconcile" for item in receipts
+        ):
+            raise ValueError("Action reconciled receipt count drifted")
+        if len({item.proposal_ref.resource_id for item in self.executions}) != len(self.executions):
+            raise ValueError("Action proposal identities must be unique")
+        return self
+
+
 __all__ = [
     "TASK_COCKPIT_SCHEMA_VERSION",
     "TaskCockpitBlocker",
@@ -615,7 +739,10 @@ __all__ = [
     "TaskCockpitCoreEnvelope",
     "TaskCockpitPageInfo",
     "TaskCockpitProductionContextEnvelope",
+    "TaskCockpitActionExecution",
+    "TaskCockpitActionReceipt",
     "TaskCockpitApprovalReviewEnvelope",
+    "TaskCockpitActionReceiptEnvelope",
     "TaskCockpitResponsibilityHandoffEnvelope",
     "TaskCockpitResponsibilitySlot",
     "TaskCockpitStructuralAssignee",

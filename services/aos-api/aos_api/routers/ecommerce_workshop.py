@@ -57,6 +57,7 @@ from aos_api.ecommerce_workshop_task_cockpit import (
     TaskCockpitPersistenceError,
 )
 from aos_api.ecommerce_workshop_task_cockpit_contracts import (
+    TaskCockpitActionReceiptEnvelope,
     TaskCockpitApprovalReviewEnvelope,
     TaskCockpitCheckpointPageEnvelope,
     TaskCockpitCoreEnvelope,
@@ -636,6 +637,35 @@ def get_ecommerce_workshop_task_cockpit_run_approval_review_issues(
     _require_task_cockpit_installation(principal=principal, catalog=catalog)
     try:
         return cockpit.read_approval_review_issues(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+            run_id=run_id,
+        )
+    except TaskCockpitPersistenceError as exc:
+        raise ApiError(
+            code="TASK_COCKPIT_DEPENDENCY_UNAVAILABLE",
+            message="Task Cockpit read dependency is unavailable",
+            status_code=503,
+        ) from exc
+
+
+@router.get(
+    "/views/task-cockpit/runs/{run_id}/action-receipts",
+    response_model=TaskCockpitActionReceiptEnvelope,
+    operation_id="ecommerceWorkshopTaskCockpitRunActionReceiptsGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_task_cockpit_run_action_receipts(
+    request: Request,
+    run_id: RunIdPath,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    cockpit: TaskCockpitDependency,
+) -> TaskCockpitActionReceiptEnvelope:
+    _reject_unknown_query_parameters(request, allowed=frozenset())
+    _require_task_cockpit_installation(principal=principal, catalog=catalog)
+    try:
+        return cockpit.read_action_receipts(
             org_id=principal.org_id,
             project_id=principal.project_id,
             run_id=run_id,

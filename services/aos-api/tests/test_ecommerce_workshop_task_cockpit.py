@@ -20,6 +20,7 @@ from aos_api.ecommerce_workshop_task_cockpit import (
     _decode_cursor,
 )
 from aos_api.ecommerce_workshop_task_cockpit_contracts import (
+    TaskCockpitActionReceiptEnvelope,
     TaskCockpitApprovalReviewEnvelope,
     TaskCockpitCheckpointPageEnvelope,
     TaskCockpitCoreEnvelope,
@@ -795,6 +796,92 @@ def test_approval_review_contract_rejects_count_drift() -> None:
         TaskCockpitApprovalReviewEnvelope.model_validate(payload)
 
 
+class ActionReceiptConnection:
+    def __init__(self, *, drift_fingerprint: bool = False):
+        self.drift_fingerprint = drift_fingerprint
+        self.calls: list[tuple[str, tuple[Any, ...] | None]] = []
+
+    def execute(self, sql: str, params: tuple[Any, ...] | None = None):
+        self.calls.append((" ".join(sql.split()), params))
+        return self
+
+    def fetchone(self):
+        sql = self.calls[-1][0]
+        if "SELECT run_id,task_id FROM aip_task_run" in sql:
+            return {"run_id": "run-1", "task_id": "task-1"}
+        raise AssertionError(f"unexpected fetchone query: {sql}")
+
+    def fetchall(self):
+        sql = self.calls[-1][0]
+        if "FROM aip_action_proposal" in sql and "SELECT proposal_id" in sql:
+            return [
+                {"proposal_id": "proposal-unknown", "task_id": "task-1", "run_id": "run-1", "action_type_id": "ecommerce.notify", "status": "unknown", "version": 4, "proposal_hash": "a" * 64, "created_at": NOW - timedelta(minutes=10)},
+                {"proposal_id": "proposal-resolved", "task_id": "task-1", "run_id": "run-1", "action_type_id": "ecommerce.refund", "status": "reconciled", "version": 5, "proposal_hash": "b" * 64, "created_at": NOW - timedelta(minutes=8)},
+            ]
+        if "FROM aip_action_execution_lease lease" in sql:
+            return [
+                {"lease_id": "lease-unknown", "proposal_id": "proposal-unknown", "proposal_hash": "a" * 64, "attempt": 1, "created_at": NOW - timedelta(minutes=9)},
+                {"lease_id": "lease-resolved", "proposal_id": "proposal-resolved", "proposal_hash": "b" * 64, "attempt": 1, "created_at": NOW - timedelta(minutes=7)},
+            ]
+        if "FROM aip_action_receipt receipt" in sql:
+            return [
+                {"receipt_id": "receipt-unknown", "proposal_id": "proposal-unknown", "lease_id": "lease-unknown", "status": "unknown", "provider_request_id": None, "request_fingerprint": "c" * 64, "evidence_refs": [], "payload": {}, "receipt_kind": "initial", "supersedes_receipt_id": None, "created_at": NOW - timedelta(minutes=8)},
+                {"receipt_id": "receipt-original", "proposal_id": "proposal-resolved", "lease_id": "lease-resolved", "status": "unknown", "provider_request_id": "provider-secret", "request_fingerprint": "d" * 64, "evidence_refs": [{"resourceType": "Evidence", "resourceId": "e-1"}], "payload": {}, "receipt_kind": "initial", "supersedes_receipt_id": None, "created_at": NOW - timedelta(minutes=6)},
+                {"receipt_id": "receipt-reconcile", "proposal_id": "proposal-resolved", "lease_id": "lease-resolved", "status": "reconciled", "provider_request_id": "provider-secret", "request_fingerprint": ("e" if self.drift_fingerprint else "d") * 64, "evidence_refs": [], "payload": {"resolvedStatus": "applied", "provider": {"secret": "not-exposed"}}, "receipt_kind": "reconcile", "supersedes_receipt_id": "receipt-original", "created_at": NOW - timedelta(minutes=4)},
+            ]
+        raise AssertionError(f"unexpected fetchall query: {sql}")
+
+
+def _action_receipt_cockpit(*, drift_fingerprint: bool = False):
+    connection = ActionReceiptConnection(drift_fingerprint=drift_fingerprint)
+
+    @contextmanager
+    def connect():
+        yield connection
+
+    return EcommerceWorkshopTaskCockpit(connect_factory=connect, clock=lambda: NOW), connection
+
+
+def test_action_receipts_preserve_unknown_and_exact_reconcile_chain() -> None:
+    cockpit, connection = _action_receipt_cockpit()
+    result = cockpit.read_action_receipts(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    )
+    assert result.proposal_count == 2
+    assert result.receipt_count == 3
+    assert result.unknown_receipt_count == 2
+    assert result.reconcile_required_count == 1
+    assert result.reconciled_receipt_count == 1
+    assert [item.reconciliation_state for item in result.executions] == ["required", "resolved"]
+    assert result.executions[1].receipts[1].resolved_status == "applied"
+    serialized = result.model_dump_json(by_alias=True)
+    assert "provider-secret" not in serialized
+    assert '"secret"' not in serialized
+    sql = " ".join(call[0] for call in connection.calls).upper()
+    assert "REPEATABLE READ READ ONLY" in sql
+    assert "SET LOCAL ROLE AOS_RUNTIME" in sql
+    assert "INSERT " not in sql and "UPDATE " not in sql and "DELETE " not in sql
+
+
+def test_action_receipts_fail_closed_on_reconcile_fingerprint_drift() -> None:
+    cockpit, _ = _action_receipt_cockpit(drift_fingerprint=True)
+    with pytest.raises(ApiError) as captured:
+        cockpit.read_action_receipts(
+            org_id="org-org", project_id="dev-project", run_id="run-1"
+        )
+    assert captured.value.code == "TASK_COCKPIT_ACTION_RECEIPT_DRIFTED"
+
+
+def test_action_receipt_contract_rejects_count_drift() -> None:
+    cockpit, _ = _action_receipt_cockpit()
+    payload = cockpit.read_action_receipts(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    ).model_dump(mode="json", by_alias=True)
+    payload["reconcileRequiredCount"] = 0
+    with pytest.raises(ValidationError):
+        TaskCockpitActionReceiptEnvelope.model_validate(payload)
+
+
 def test_contract_rejects_unknown_fields_naive_times_and_count_drift() -> None:
     base = {
         "schemaVersion": "aos.ecommerce-workshop.task-cockpit/v1",
@@ -959,6 +1046,13 @@ class FakeCockpit:
         cockpit, _ = _approval_review_cockpit()
         return cockpit.read_approval_review_issues(**kwargs)
 
+    def read_action_receipts(self, **kwargs):
+        self.detail_calls.append(("action-receipts", kwargs))
+        if self.fail:
+            raise TaskCockpitPersistenceError("sensitive database detail")
+        cockpit, _ = _action_receipt_cockpit()
+        return cockpit.read_action_receipts(**kwargs)
+
 
 class FakeCatalog:
     def __init__(self, *, installed: bool = True):
@@ -1074,6 +1168,9 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
         approval_review = client.get(
             "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/approval-review-issues"
         )
+        action_receipts = client.get(
+            "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/action-receipts"
+        )
         injected = client.get(
             "/v1/ecommerce-workshop/views/task-cockpit/runs/run-1/steps?orgId=dev-org"
         )
@@ -1082,6 +1179,7 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
     assert production.status_code == 200
     assert responsibility.status_code == 200
     assert approval_review.status_code == 200
+    assert action_receipts.status_code == 200
     assert injected.status_code == 400
     assert cockpit.detail_calls == [
         (
@@ -1128,5 +1226,13 @@ def test_run_detail_api_uses_principal_scope_and_has_only_safe_get_surfaces() ->
                 "run_id": "run-1",
             },
         ),
+        (
+            "action-receipts",
+            {
+                "org_id": "org-org",
+                "project_id": "dev-project",
+                "run_id": "run-1",
+            },
+        ),
     ]
-    assert len(catalog.calls) == 5
+    assert len(catalog.calls) == 6

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   EcommerceWorkshopClientError,
   ecommerceWorkshopClient,
+  type TaskCockpitActionReceiptResponse,
   type TaskCockpitApprovalReviewResponse,
   type TaskCockpitCheckpointPageResponse,
   type TaskCockpitCoreResponse,
@@ -13,9 +14,9 @@ import {
 } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 
-type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "getTaskCockpitRunApprovalReview">;
+type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts">;
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
-type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null } | null;
+type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null } | null;
 const TASK_STATUSES: readonly { value: "" | TaskCockpitTaskStatus; label: string }[] = [
   { value: "", label: "全部状态" }, { value: "pending", label: "待规划" }, { value: "planning", label: "规划中" }, { value: "awaiting_approval", label: "待审批" }, { value: "approved", label: "已批准" }, { value: "executing", label: "执行中" }, { value: "paused", label: "已暂停" }, { value: "completed", label: "已完成" }, { value: "failed", label: "失败" }, { value: "cancelled", label: "已取消" }, { value: "rolled_back", label: "已回滚" },
 ];
@@ -74,10 +75,10 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
   const toggleDetails = (runId: string) => {
     if (detail?.runId === runId) { detailRequest.current += 1; setDetail(null); return; }
     const requestId = ++detailRequest.current;
-    setDetail({ runId, phase: "loading", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null });
-    void Promise.all([client.listTaskCockpitRunSteps(runId, { limit: 20 }), client.listTaskCockpitRunCheckpoints(runId, { limit: 20 }), client.getTaskCockpitRunProductionContext(runId), client.getTaskCockpitRunResponsibilityHandoffs(runId), client.getTaskCockpitRunApprovalReview(runId)]).then(
-      ([steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview]) => { if (requestId === detailRequest.current) setDetail({ runId, phase: "ready", steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview }); },
-      () => { if (requestId === detailRequest.current) setDetail({ runId, phase: "failed", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null }); },
+    setDetail({ runId, phase: "loading", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null });
+    void Promise.all([client.listTaskCockpitRunSteps(runId, { limit: 20 }), client.listTaskCockpitRunCheckpoints(runId, { limit: 20 }), client.getTaskCockpitRunProductionContext(runId), client.getTaskCockpitRunResponsibilityHandoffs(runId), client.getTaskCockpitRunApprovalReview(runId), client.getTaskCockpitRunActionReceipts(runId)]).then(
+      ([steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview, actionReceipts]) => { if (requestId === detailRequest.current) setDetail({ runId, phase: "ready", steps, checkpoints, productionContext, responsibilityHandoffs, approvalReview, actionReceipts }); },
+      () => { if (requestId === detailRequest.current) setDetail({ runId, phase: "failed", steps: null, checkpoints: null, productionContext: null, responsibilityHandoffs: null, approvalReview: null, actionReceipts: null }); },
     );
   };
 
@@ -137,7 +138,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
             {isOpen ? <div id={detailId} className="task-cockpit-run-detail">
               {detail?.phase === "loading" ? <div role="status">正在读取 Stage、职责交接、审批复核、Step 与 Checkpoint…</div> : null}
               {detail?.phase === "failed" ? <div role="alert">运行明细读取失败；未使用空集合代替。</div> : null}
-              {detail?.phase === "ready" && detail.steps && detail.checkpoints && detail.productionContext && detail.responsibilityHandoffs && detail.approvalReview ? <>
+              {detail?.phase === "ready" && detail.steps && detail.checkpoints && detail.productionContext && detail.responsibilityHandoffs && detail.approvalReview && detail.actionReceipts ? <>
                 <section className="task-cockpit-production-context" aria-label="本 Run 的精确 Stage 编排">
                   <div className="task-cockpit-production-refs"><strong>Stage 编排 · {detail.productionContext.compilerVersion}</strong><span>Plan {detail.productionContext.planRef.resourceId} · v{detail.productionContext.planRef.revision}</span><span>模板 {detail.productionContext.stageTemplateRef.resourceId} · 职责 {detail.productionContext.responsibilityPlanRef.resourceId}</span></div>
                   <ol>{detail.productionContext.stages.map((stage) => <li className={`is-${stage.applicabilityResult}`} key={stage.stageId}><div><strong>{stage.title}</strong><span>{stage.stageId}</span></div><span>{stage.applicabilityResult === "applicable" ? "适用" : "不适用"}</span><small>依赖：{stage.dependsOn.length ? stage.dependsOn.join("、") : "无"} · 必需槽位：{stage.requiredSlotIds.length ? stage.requiredSlotIds.join("、") : "无"}</small></li>)}</ol>
@@ -149,6 +150,11 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient }: { client?:
                     <div><h4>Action 审批证据</h4>{detail.approvalReview.actionApprovals.length ? <ul>{detail.approvalReview.actionApprovals.map((approval) => <li key={approval.proposalRef.resourceId}><strong>{approval.actionTypeId}</strong><span>{approval.proposalRef.resourceId} · v{approval.proposalRef.revision} · {approval.status}</span><small>{approval.decisions.length ? approval.decisions.map((decision) => `${decision.decision} · ${decision.actorId}`).join(" → ") : "尚无 canonical ApprovalEvent"}</small><em>{approval.navigation.commandReadiness === "destination_reauthorization_required" ? "目的页重新鉴权" : "只读事实"}</em></li>)}</ul> : <p>当前 Run 无 canonical Action Proposal。</p>}</div>
                     <div><h4>ReviewIssue 归因</h4>{detail.approvalReview.reviewIssues.length ? <ul>{detail.approvalReview.reviewIssues.map((issue) => <li key={issue.issueId}><strong>{issue.severity} · {issue.status}</strong><span>{issue.issueId} · v{issue.version} · {issue.returnStage}</span><small>{issue.artifactId} · evidence {issue.evidenceCount} · {issue.events.map((event) => `${event.sequence}:${event.eventType}`).join(" → ")}</small><em>{issue.lineageReadiness === "attempt_exact" && issue.returnLineage ? `${issue.returnLineage.stepRunId} · attempt ${issue.returnLineage.attempt}` : "attempt 未解析；保持失败关闭"}</em></li>)}</ul> : <p>当前 Run 无 canonical ReviewIssue。</p>}</div>
                   </div>
+                </section>
+                <section className="task-cockpit-action-receipts" aria-label="本 Run 的 Action 回执与对账证据">
+                  <div className="task-cockpit-production-refs"><strong>Action 回执与对账</strong><span>{detail.actionReceipts.proposalCount} 个 Proposal · {detail.actionReceipts.receiptCount} 个 Receipt</span><span>{detail.actionReceipts.reconcileRequiredCount} 个 unknown 待对账 · {detail.actionReceipts.reconciledReceiptCount} 个已追加对账回执</span></div>
+                  <p className="task-cockpit-approval-boundary">unknown 不等于失败；禁止重复执行。只有新的 immutable reconcile Receipt 才能关闭待对账状态。</p>
+                  {detail.actionReceipts.executions.length ? <ul>{detail.actionReceipts.executions.map((execution) => <li className={`is-${execution.reconciliationState}`} key={execution.proposalRef.resourceId}><strong>{execution.actionTypeId}</strong><span>{execution.proposalRef.resourceId} · v{execution.proposalRef.revision} · {execution.proposalStatus}</span><small>{execution.leaseId ? `attempt ${execution.attempt} · ${execution.receipts.length} 条回执` : "尚无 ExecutionLease/Receipt"}</small><em>{execution.reconciliationState === "required" ? "unknown：仅允许授权 provider 回读对账" : execution.reconciliationState === "resolved" ? `已对账：${execution.receipts.find((receipt) => receipt.receiptKind === "reconcile")?.resolvedStatus ?? "terminal"}` : execution.reconciliationState === "not_required" ? "回执已明确，无需对账" : "尚未执行"}</em>{execution.receipts.length ? <ol>{execution.receipts.map((receipt) => <li key={receipt.receiptId}><span>{receipt.receiptKind} · {receipt.status}</span><small>{receipt.providerRequestPresent ? "provider request ref 已封存" : "provider request ref 缺失"} · evidence {receipt.evidenceCount}</small></li>)}</ol> : null}</li>)}</ul> : <p>当前 Run 无 canonical Action Receipt；没有用示例回执填充。</p>}
                 </section>
                 <section className="task-cockpit-responsibility" aria-label="本 Run 的精确职责与交接">
                   <div className="task-cockpit-production-refs"><strong>职责与交接 · {detail.responsibilityHandoffs.profile}</strong><span>{detail.responsibilityHandoffs.responsibilityPlanRef.resourceId} · v{detail.responsibilityHandoffs.responsibilityPlanRef.revision}</span><span>编译时就绪；运行就绪需独立验证</span></div>

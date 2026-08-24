@@ -29,6 +29,9 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitApprovalDecision,
     TaskCockpitApprovalNavigationTarget,
     TaskCockpitApprovalReviewEnvelope,
+    TaskCockpitActionExecution,
+    TaskCockpitActionReceipt,
+    TaskCockpitActionReceiptEnvelope,
     TaskCockpitPageInfo,
     TaskCockpitPlanApproval,
     TaskCockpitProductionContextEnvelope,
@@ -825,6 +828,84 @@ class EcommerceWorkshopTaskCockpit:
                 "failed to read Task Cockpit approvals and review issues"
             ) from exc
 
+    def read_action_receipts(
+        self,
+        *,
+        org_id: str,
+        project_id: str,
+        run_id: str,
+    ) -> TaskCockpitActionReceiptEnvelope:
+        scope = TenantScope(org_id, project_id)
+        self._validate_detail_request(run_id=run_id, limit=1)
+        evaluated_at = self._aware_now()
+        try:
+            with self._connect_factory() as conn:
+                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+                apply_transaction_scope(conn, scope)
+                run_row = conn.execute(
+                    """SELECT run_id,task_id FROM aip_task_run
+                        WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                    (*scope.key, run_id),
+                ).fetchone()
+                if run_row is None:
+                    raise ApiError(
+                        code="TASK_COCKPIT_RUN_NOT_FOUND",
+                        message="Task Cockpit Run was not found",
+                        status_code=404,
+                    )
+                proposal_rows = conn.execute(
+                    """SELECT proposal_id,task_id,run_id,action_type_id,status,version,
+                              proposal_hash,created_at
+                         FROM aip_action_proposal
+                        WHERE org_id=%s AND project_id=%s AND run_id=%s
+                        ORDER BY created_at ASC,proposal_id ASC""",
+                    (*scope.key, run_id),
+                ).fetchall()
+                lease_rows = conn.execute(
+                    """SELECT lease.lease_id,lease.proposal_id,lease.proposal_hash,
+                              lease.attempt,lease.created_at
+                         FROM aip_action_execution_lease lease
+                         JOIN aip_action_proposal proposal
+                           ON proposal.org_id=lease.org_id
+                          AND proposal.project_id=lease.project_id
+                          AND proposal.proposal_id=lease.proposal_id
+                        WHERE lease.org_id=%s AND lease.project_id=%s
+                          AND proposal.run_id=%s
+                        ORDER BY lease.proposal_id ASC,lease.attempt ASC""",
+                    (*scope.key, run_id),
+                ).fetchall()
+                receipt_rows = conn.execute(
+                    """SELECT receipt.receipt_id,receipt.proposal_id,receipt.lease_id,
+                              receipt.status,receipt.provider_request_id,
+                              receipt.request_fingerprint,receipt.evidence_refs,
+                              receipt.payload,receipt.receipt_kind,
+                              receipt.supersedes_receipt_id,receipt.created_at
+                         FROM aip_action_receipt receipt
+                         JOIN aip_action_proposal proposal
+                           ON proposal.org_id=receipt.org_id
+                          AND proposal.project_id=receipt.project_id
+                          AND proposal.proposal_id=receipt.proposal_id
+                        WHERE receipt.org_id=%s AND receipt.project_id=%s
+                          AND proposal.run_id=%s
+                        ORDER BY receipt.proposal_id ASC,receipt.created_at ASC,
+                                 receipt.receipt_id ASC""",
+                    (*scope.key, run_id),
+                ).fetchall()
+            return self._action_receipt_context(
+                scope=scope,
+                run_row=run_row,
+                proposal_rows=proposal_rows,
+                lease_rows=lease_rows,
+                receipt_rows=receipt_rows,
+                evaluated_at=evaluated_at,
+            )
+        except ApiError:
+            raise
+        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:
+            raise TaskCockpitPersistenceError(
+                "failed to read Task Cockpit Action receipts"
+            ) from exc
+
     @staticmethod
     def _validate_detail_request(*, run_id: str, limit: int) -> None:
         if not run_id or run_id != run_id.strip() or len(run_id) > 200:
@@ -1497,6 +1578,144 @@ class EcommerceWorkshopTaskCockpit:
             )
         except (TypeError, ValueError) as exc:
             raise drift("approval and ReviewIssue envelope is invalid") from exc
+
+    @staticmethod
+    def _action_receipt_context(
+        *,
+        scope: TenantScope,
+        run_row: Any,
+        proposal_rows: list[Any],
+        lease_rows: list[Any],
+        receipt_rows: list[Any],
+        evaluated_at: datetime,
+    ) -> TaskCockpitActionReceiptEnvelope:
+        def drift(reason: str) -> ApiError:
+            return ApiError(
+                code="TASK_COCKPIT_ACTION_RECEIPT_DRIFTED",
+                message=f"Task Cockpit Action receipt drifted: {reason}",
+                status_code=409,
+            )
+
+        run_id = str(run_row["run_id"])
+        task_id = str(run_row["task_id"])
+        proposals = {str(row["proposal_id"]): row for row in proposal_rows}
+        if len(proposals) != len(proposal_rows):
+            raise drift("duplicate ActionProposal identity")
+        if any(
+            str(row["run_id"]) != run_id or str(row["task_id"]) != task_id
+            for row in proposal_rows
+        ):
+            raise drift("ActionProposal Task or Run scope changed")
+
+        leases: dict[str, Any] = {}
+        for row in lease_rows:
+            proposal_id = str(row["proposal_id"])
+            proposal = proposals.get(proposal_id)
+            if proposal is None:
+                raise drift("ExecutionLease references an unknown run-scoped Proposal")
+            if proposal_id in leases or int(row["attempt"]) != 1:
+                raise drift("ActionProposal has a non-canonical execution attempt")
+            if str(row["proposal_hash"]) != str(proposal["proposal_hash"]):
+                raise drift("ExecutionLease proposal hash changed")
+            leases[proposal_id] = row
+
+        receipts_by_proposal: dict[str, list[Any]] = {}
+        for row in receipt_rows:
+            proposal_id = str(row["proposal_id"])
+            lease = leases.get(proposal_id)
+            if lease is None or str(row["lease_id"]) != str(lease["lease_id"]):
+                raise drift("ActionReceipt lease or Proposal reference changed")
+            evidence_refs = row["evidence_refs"]
+            if not isinstance(evidence_refs, list):
+                raise drift("ActionReceipt evidenceRefs shape changed")
+            receipts_by_proposal.setdefault(proposal_id, []).append(row)
+
+        executions: list[TaskCockpitActionExecution] = []
+        try:
+            for proposal_id, proposal in proposals.items():
+                lease = leases.get(proposal_id)
+                raw_receipts = receipts_by_proposal.pop(proposal_id, [])
+                initial = [row for row in raw_receipts if row["receipt_kind"] == "initial"]
+                reconciles = [row for row in raw_receipts if row["receipt_kind"] == "reconcile"]
+                if len(initial) > 1 or len(reconciles) > 1:
+                    raise drift("ActionReceipt chain cardinality changed")
+                if reconciles:
+                    first = initial[0] if initial else None
+                    latest = reconciles[0]
+                    if (
+                        first is None
+                        or first["status"] != "unknown"
+                        or latest["supersedes_receipt_id"] != first["receipt_id"]
+                        or latest["lease_id"] != first["lease_id"]
+                        or latest["request_fingerprint"] != first["request_fingerprint"]
+                        or latest["provider_request_id"] != first["provider_request_id"]
+                    ):
+                        raise drift("Action reconcile chain changed")
+                mapped_receipts: list[TaskCockpitActionReceipt] = []
+                for row in raw_receipts:
+                    payload = row["payload"]
+                    if not isinstance(payload, dict):
+                        raise drift("ActionReceipt payload shape changed")
+                    resolved_status = (
+                        payload.get("resolvedStatus")
+                        if row["receipt_kind"] == "reconcile"
+                        else None
+                    )
+                    mapped_receipts.append(TaskCockpitActionReceipt(
+                        receiptId=row["receipt_id"], receiptKind=row["receipt_kind"],
+                        status=row["status"], leaseId=row["lease_id"],
+                        requestFingerprint=row["request_fingerprint"],
+                        providerRequestPresent=row["provider_request_id"] is not None,
+                        evidenceCount=len(row["evidence_refs"]),
+                        supersedesReceiptId=row["supersedes_receipt_id"],
+                        resolvedStatus=resolved_status, createdAt=row["created_at"],
+                    ))
+                reconciliation_state = "not_started"
+                if initial:
+                    reconciliation_state = (
+                        "not_required" if initial[0]["status"] != "unknown"
+                        else "resolved" if reconciles else "required"
+                    )
+                executions.append(TaskCockpitActionExecution(
+                    proposalRef={
+                        "resourceType": "ActionProposalRevision",
+                        "resourceId": proposal_id,
+                        "revision": proposal["version"],
+                        "contentHash": proposal["proposal_hash"],
+                    },
+                    actionTypeId=proposal["action_type_id"],
+                    proposalStatus=proposal["status"],
+                    leaseId=None if lease is None else lease["lease_id"],
+                    attempt=None if lease is None else lease["attempt"],
+                    receipts=mapped_receipts,
+                    reconciliationState=reconciliation_state,
+                ))
+        except ApiError:
+            raise
+        except (TypeError, ValueError) as exc:
+            raise drift("Action receipt envelope values are invalid") from exc
+        if receipts_by_proposal:
+            raise drift("ActionReceipt references an unknown run-scoped Proposal")
+        receipts = [receipt for item in executions for receipt in item.receipts]
+        try:
+            return TaskCockpitActionReceiptEnvelope(
+                tenant={"orgId": scope.org_id, "projectId": scope.project_id},
+                runId=run_id, taskId=task_id, evaluatedAt=evaluated_at,
+                executions=executions, proposalCount=len(executions),
+                receiptCount=len(receipts),
+                unknownReceiptCount=sum(
+                    item.receipt_kind == "initial" and item.status == "unknown"
+                    for item in receipts
+                ),
+                reconcileRequiredCount=sum(
+                    item.reconciliation_state == "required" for item in executions
+                ),
+                reconciledReceiptCount=sum(
+                    item.receipt_kind == "reconcile" for item in receipts
+                ),
+            )
+        except (TypeError, ValueError) as exc:
+            raise drift("Action receipt envelope is invalid") from exc
 
     @staticmethod
     def _read_rows(

@@ -361,6 +361,10 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/approval-review-issues",
             "get",
         ),
+        "ecommerceWorkshopTaskCockpitRunActionReceiptsGet": (
+            "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/action-receipts",
+            "get",
+        ),
     }
     assert all(method in {"get", "post"} for _, method in operations.values())
     assert not any("refund" in path for path, _ in operations.values())
