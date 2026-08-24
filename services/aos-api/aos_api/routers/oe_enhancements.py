@@ -33,8 +33,10 @@ from aos_api.ontology_exploration_share import (
     CreateShareGrantRequest,
     RevokeShareGrantRequest,
     ShareGrantView,
+    SharedExplorationView,
     create_share_grant,
     resolve_share_grant,
+    resolve_shared_exploration,
     revoke_share_grant,
 )
 from aos_api.ontology_explorer_contracts import GraphQueryDTO, GraphSnapshotDTO
@@ -336,6 +338,7 @@ def create_exploration_share_grant(
             body=body,
             idempotency_key=idempotency_key,
             expected_revision=_expected_revision(if_match),
+            grantor_markings=principal.markings,
         )
     except ApiError:
         raise
@@ -355,7 +358,26 @@ def resolve_exploration_share_grant(
     opaque_ref: str,
     principal: Principal = Depends(require_principal),
 ) -> ShareGrantView:
-    return resolve_share_grant(_scope(principal), opaque_ref)
+    return resolve_share_grant(
+        _scope(principal),
+        opaque_ref,
+        authorized_markings=principal.markings,
+    )
+
+
+@router.get(
+    "/v1/ontology/exploration-share-grants/{opaque_ref}/exploration",
+    response_model=SharedExplorationView,
+)
+def resolve_shared_exploration_asset(
+    opaque_ref: str,
+    principal: Principal = Depends(require_principal),
+) -> SharedExplorationView:
+    return resolve_shared_exploration(
+        _scope(principal),
+        opaque_ref,
+        authorized_markings=principal.markings,
+    )
 
 
 @router.post(

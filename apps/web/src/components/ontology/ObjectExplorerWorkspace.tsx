@@ -263,9 +263,11 @@ export function buildExplorerSearchParams(
   const returnTo = safeReturnTo(current.get("returnTo"));
   const taskRef = safeOpaqueRef(current.get("taskRef"));
   const viewRef = safeOpaqueRef(current.get("viewRef"));
+  const shareRef = safeOpaqueRef(current.get("shareRef"));
   if (returnTo) next.set("returnTo", returnTo);
   if (taskRef) next.set("taskRef", taskRef);
   if (viewRef) next.set("viewRef", viewRef);
+  if (shareRef) next.set("shareRef", shareRef);
   return next;
 }
 

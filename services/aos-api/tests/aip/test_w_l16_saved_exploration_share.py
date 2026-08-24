@@ -14,6 +14,7 @@ from aos_api.ontology_exploration_share import (
     RevokeShareGrantRequest,
     create_share_grant,
     resolve_share_grant,
+    resolve_shared_exploration,
     revoke_share_grant,
 )
 from aos_api.tenant_scope import TenantScope
@@ -107,6 +108,25 @@ def test_share_grant_expiry_fails_closed(monkeypatch: pytest.MonkeyPatch) -> Non
     assert exc.value.code == "SHARE_GRANT_EXPIRED"
 
 
+def test_share_grant_markings_fail_closed() -> None:
+    asset_id, revision, _ = _create_private_exploration()
+    grant = create_share_grant(
+        SCOPE,
+        asset_id=asset_id,
+        actor=ACTOR,
+        body=CreateShareGrantRequest(
+            expiresAt=datetime.now(UTC) + timedelta(hours=1),
+            markings=["restricted"],
+        ),
+        idempotency_key=_id("grant-marking"),
+        expected_revision=revision,
+        grantor_markings=["public", "restricted"],
+    )
+    with pytest.raises(ApiError) as exc:
+        resolve_shared_exploration(SCOPE, grant.opaque_ref, authorized_markings=["public"])
+    assert exc.value.code == "SHARE_GRANT_MARKING_FORBIDDEN"
+
+
 def test_share_grant_http_create_resolve_revoke(client, auth_headers) -> None:
     created = client.post(
         "/v1/ontology/explorations",
@@ -138,6 +158,14 @@ def test_share_grant_http_create_resolve_revoke(client, auth_headers) -> None:
     )
     assert resolved.status_code == 200
     assert resolved.json()["status"] == "active"
+    shared = client.get(
+        f"/v1/ontology/exploration-share-grants/{opaque}/exploration",
+        headers=auth_headers,
+    )
+    assert shared.status_code == 200, shared.text
+    assert shared.json()["grant"]["assetId"] == asset_id
+    assert shared.json()["exploration"]["id"] == asset_id
+    assert shared.json()["exploration"]["payload"]["visibility"] == "private"
     revoked = client.post(
         f"/v1/ontology/exploration-share-grants/{opaque}/revoke",
         headers={**auth_headers, "Idempotency-Key": _id("http-revoke")},
@@ -150,3 +178,8 @@ def test_share_grant_http_create_resolve_revoke(client, auth_headers) -> None:
         headers=auth_headers,
     )
     assert gone.status_code == 410
+    shared_gone = client.get(
+        f"/v1/ontology/exploration-share-grants/{opaque}/exploration",
+        headers=auth_headers,
+    )
+    assert shared_gone.status_code == 410

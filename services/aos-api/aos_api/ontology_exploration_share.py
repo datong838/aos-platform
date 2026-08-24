@@ -26,7 +26,7 @@ class StrictModel(BaseModel):
 class CreateShareGrantRequest(StrictModel):
     expires_at: datetime = Field(alias="expiresAt")
     grantee_scope: GranteeScope = Field(default="link", alias="granteeScope")
-    purpose: str = Field(default="exploration_read", min_length=1, max_length=120)
+    purpose: Literal["exploration_read"] = "exploration_read"
     markings: list[str] = Field(default_factory=list, max_length=32)
 
     @field_validator("expires_at")
@@ -34,6 +34,15 @@ class CreateShareGrantRequest(StrictModel):
     def _aware(cls, value: datetime) -> datetime:
         if value.tzinfo is None:
             raise ValueError("expiresAt must be timezone-aware")
+        return value
+
+    @field_validator("markings")
+    @classmethod
+    def _markings(cls, value: list[str]) -> list[str]:
+        if any(not item.strip() or item != item.strip() for item in value):
+            raise ValueError("markings must be non-blank and trimmed")
+        if len(set(value)) != len(value):
+            raise ValueError("markings must be unique")
         return value
 
 
@@ -60,6 +69,11 @@ class ShareGrantView(StrictModel):
     revoke_reason: str | None = Field(default=None, alias="revokeReason")
     version: int = Field(ge=1)
     blocker: str | None = None
+
+
+class SharedExplorationView(StrictModel):
+    grant: ShareGrantView
+    exploration: dict[str, Any]
 
 
 def _now() -> datetime:
@@ -105,12 +119,19 @@ def create_share_grant(
     body: CreateShareGrantRequest,
     idempotency_key: str,
     expected_revision: int,
+    grantor_markings: list[str] | None = None,
 ) -> ShareGrantView:
     if body.expires_at <= _now():
         raise ApiError(
             code="SHARE_GRANT_EXPIRED_INPUT",
             message="share grant expiry must be in the future",
             status_code=400,
+        )
+    if not set(body.markings).issubset(set(grantor_markings or [])):
+        raise ApiError(
+            code="SHARE_GRANT_MARKING_FORBIDDEN",
+            message="share grant markings exceed the grantor scope",
+            status_code=403,
         )
     current = get_asset(scope, kind="exploration", asset_id=asset_id, actor=actor)
     if current is None:
@@ -313,7 +334,13 @@ def revoke_share_grant(
         return _view(scope, updated, blocker="share_grant_revoked")
 
 
-def resolve_share_grant(scope: TenantScope, opaque_ref: str) -> ShareGrantView:
+def resolve_share_grant(
+    scope: TenantScope,
+    opaque_ref: str,
+    *,
+    authorized_markings: list[str] | None = None,
+    required_purpose: str = "exploration_read",
+) -> ShareGrantView:
     with connect(scope) as conn:
         row = conn.execute(
             """SELECT * FROM ontology_exploration_share_grant
@@ -337,6 +364,18 @@ def resolve_share_grant(scope: TenantScope, opaque_ref: str) -> ShareGrantView:
             code="SHARE_GRANT_EXPIRED",
             message="share grant expired",
             status_code=410,
+        )
+    if row["purpose"] != required_purpose:
+        raise ApiError(
+            code="SHARE_GRANT_PURPOSE_FORBIDDEN",
+            message="share grant purpose is not authorized for this read",
+            status_code=403,
+        )
+    if not set(row["markings"] or []).issubset(set(authorized_markings or [])):
+        raise ApiError(
+            code="SHARE_GRANT_MARKING_FORBIDDEN",
+            message="principal markings do not satisfy the share grant",
+            status_code=403,
         )
     # Re-verify exact exploration revision/hash and not archived
     head = None
@@ -371,3 +410,49 @@ def resolve_share_grant(scope: TenantScope, opaque_ref: str) -> ShareGrantView:
             status_code=409,
         )
     return _view(scope, row)
+
+
+def resolve_shared_exploration(
+    scope: TenantScope,
+    opaque_ref: str,
+    *,
+    authorized_markings: list[str],
+) -> SharedExplorationView:
+    grant = resolve_share_grant(
+        scope,
+        opaque_ref,
+        authorized_markings=authorized_markings,
+        required_purpose="exploration_read",
+    )
+    with connect(scope) as conn:
+        row = conn.execute(
+            """SELECT h.owner_subject,h.archived_at,r.revision,r.payload,r.payload_hash
+               FROM ontology_exploration_asset_head h
+               JOIN ontology_exploration_asset_revision r
+                 ON r.org_id=h.org_id AND r.workspace_id=h.workspace_id
+                AND r.asset_id=h.asset_id AND r.revision=h.active_revision
+               WHERE h.org_id=%s AND h.workspace_id=%s AND h.asset_id=%s""",
+            (*scope.key, grant.asset_id),
+        ).fetchone()
+    if row is None or row["archived_at"] is not None:
+        raise ApiError(
+            code="SHARE_GRANT_ASSET_MISSING",
+            message="shared exploration is unavailable",
+            status_code=410,
+        )
+    if int(row["revision"]) != grant.asset_revision or row["payload_hash"] != grant.asset_payload_hash:
+        raise ApiError(
+            code="SHARE_GRANT_HASH_DRIFTED",
+            message="shared exploration revision drifted",
+            status_code=409,
+        )
+    exploration = {
+        "kind": "exploration",
+        "id": grant.asset_id,
+        "owner": row["owner_subject"],
+        "revision": int(row["revision"]),
+        "payload": dict(row["payload"]),
+        "payloadHash": row["payload_hash"],
+        "archived": False,
+    }
+    return SharedExplorationView(grant=grant, exploration=exploration)

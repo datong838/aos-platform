@@ -200,12 +200,16 @@ describe("O1-UX1 · Object Explorer workspace contracts", () => {
 
   it("preserves only safe in-app deep-link context", () => {
     expect(
-      buildExplorerSearchParams("Order", "1", new URLSearchParams("returnTo=%2Fworkshop%2Forders&taskRef=t-1"))
+      buildExplorerSearchParams("Order", "1", new URLSearchParams("returnTo=%2Fworkshop%2Forders&taskRef=t-1&shareRef=opaque_share_ref_123456"))
         .toString(),
-    ).toBe("type=Order&id=1&returnTo=%2Fworkshop%2Forders&taskRef=t-1");
+    ).toBe("type=Order&id=1&returnTo=%2Fworkshop%2Forders&taskRef=t-1&shareRef=opaque_share_ref_123456");
     expect(
       buildExplorerSearchParams("Order", "1", new URLSearchParams("returnTo=https%3A%2F%2Fevil.example&taskRef=t-1"))
         .toString(),
     ).toBe("type=Order&id=1&taskRef=t-1");
+    expect(
+      buildExplorerSearchParams("Order", "1", new URLSearchParams("shareRef=%3Cscript%3E"))
+        .toString(),
+    ).toBe("type=Order&id=1");
   });
 });

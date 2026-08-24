@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { apiGet, apiPost } from "./client";
-import { createExploration, createObjectSet } from "./ontologyExplorationAssets";
+import { apiGet, apiGetAuthoritative, apiPost } from "./client";
+import { createExploration, createObjectSet, resolveSharedExploration } from "./ontologyExplorationAssets";
 
-vi.mock("./client", () => ({ apiGet: vi.fn(), apiPost: vi.fn() }));
+vi.mock("./client", () => ({ apiGet: vi.fn(), apiGetAuthoritative: vi.fn(), apiPost: vi.fn() }));
 
 const exploration = {
   kind: "exploration" as const,
@@ -21,6 +21,27 @@ const exploration = {
   },
   payloadHash: "a".repeat(64),
   archived: false,
+};
+
+const opaqueRef = "opaque_share_ref_1234567890";
+const grant = {
+  tenant: { orgId: "org-org", projectId: "dev-project" },
+  grantId: "grant-1",
+  opaqueRef,
+  assetId: exploration.id,
+  assetRevision: exploration.revision,
+  assetPayloadHash: exploration.payloadHash,
+  grantorSubject: exploration.owner,
+  granteeScope: "link",
+  purpose: "exploration_read",
+  markings: [],
+  status: "active",
+  issuedAt: "2026-08-25T00:00:00Z",
+  expiresAt: "2099-08-25T00:00:00Z",
+  revokedAt: null,
+  revokeReason: null,
+  version: 1,
+  blocker: null,
 };
 
 describe("O1-UX2 exploration asset client", () => {
@@ -57,5 +78,24 @@ describe("O1-UX2 exploration asset client", () => {
       expect.objectContaining({ objectType: "Order" }),
       expect.objectContaining({ "Idempotency-Key": expect.stringContaining("object-set-") }),
     );
+  });
+
+  it("resolves an active share only through a fresh authoritative read", async () => {
+    vi.mocked(apiGetAuthoritative).mockResolvedValue({ grant, exploration });
+    await expect(resolveSharedExploration(opaqueRef)).resolves.toEqual({ grant, exploration });
+    expect(apiGetAuthoritative).toHaveBeenCalledWith(
+      `/v1/ontology/exploration-share-grants/${opaqueRef}/exploration`,
+    );
+  });
+
+  it("rejects stale, malformed, or drifted shared exploration responses", async () => {
+    vi.mocked(apiGetAuthoritative).mockResolvedValueOnce({ grant: { ...grant, status: "revoked", blocker: "share_grant_revoked" }, exploration });
+    await expect(resolveSharedExploration(opaqueRef)).rejects.toThrow("已失效");
+
+    vi.mocked(apiGetAuthoritative).mockResolvedValueOnce({ grant: { ...grant, unexpected: true }, exploration });
+    await expect(resolveSharedExploration(opaqueRef)).rejects.toThrow("字段合同不一致");
+
+    vi.mocked(apiGetAuthoritative).mockResolvedValueOnce({ grant, exploration: { ...exploration, payloadHash: "b".repeat(64) } });
+    await expect(resolveSharedExploration(opaqueRef)).rejects.toThrow("exact exploration");
   });
 });

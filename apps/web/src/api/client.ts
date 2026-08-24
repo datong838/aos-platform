@@ -18,7 +18,7 @@ export type ApiErrorBody = {
   details?: unknown;
 };
 
-type RequestPolicy = { queueOfflineWrite?: boolean };
+type RequestPolicy = { queueOfflineWrite?: boolean; offlineSnapshot?: boolean };
 
 /** 76 · 网络层错误可读化（避免裸 Failed to fetch） */
 export function formatNetworkError(err: unknown, method: string, path: string): Error {
@@ -99,6 +99,12 @@ async function request<T>(
   }
 
   if (m === "GET" && isOffline()) {
+    if (policy.offlineSnapshot === false) {
+      throw Object.assign(new Error(`当前离线，无法校验权威状态：${path}`), {
+        status: 0,
+        body: { code: "OFFLINE_AUTHORITATIVE_READ_REQUIRED", message: `当前离线，无法校验权威状态：${path}` },
+      });
+    }
     const cached = readOfflineSnapshot<T>(path);
     if (cached != null) {
       console.info("[aos-offline]", { event: "snap_hit", path });
@@ -118,7 +124,7 @@ async function request<T>(
       headers: { ...authHeaders(), ...(init?.headers || {}) },
     });
   } catch (e) {
-    if (m === "GET") {
+    if (m === "GET" && policy.offlineSnapshot !== false) {
       const cached = readOfflineSnapshot<T>(path);
       if (cached != null) {
         applyProbeResult(false);
@@ -132,7 +138,7 @@ async function request<T>(
     throw await parseError(res, method, path);
   }
   const data = (await res.json()) as T;
-  if (m === "GET") {
+  if (m === "GET" && policy.offlineSnapshot !== false) {
     saveOfflineSnapshot(path, data);
   }
   return data;
@@ -140,6 +146,11 @@ async function request<T>(
 
 export async function apiGet<T>(path: string): Promise<T> {
   return request<T>("GET", path);
+}
+
+/** 权限、撤销、到期等状态必须实时回读，禁止离线快照复活旧授权。 */
+export async function apiGetAuthoritative<T>(path: string): Promise<T> {
+  return request<T>("GET", path, undefined, { offlineSnapshot: false });
 }
 
 export async function apiPost<T>(

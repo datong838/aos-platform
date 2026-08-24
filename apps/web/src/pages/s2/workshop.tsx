@@ -6,6 +6,7 @@ import {
   createExploration,
   createObjectSet,
   listExplorations,
+  resolveSharedExploration,
   type ExplorationAsset,
 } from "../../api/ontologyExplorationAssets";
 import { queryAuthoritativeGraph } from "../../api/ontologyGraph";
@@ -164,11 +165,23 @@ export function GraphExplorerPage() {
     try {
       const items = await listExplorations();
       setSavedExplorations(items);
+      const shareRef = searchParams.get("shareRef")?.trim();
+      if (shareRef) {
+        const shared = await resolveSharedExploration(shareRef);
+        setSavedExplorations((current) => current.some((item) => item.id === shared.exploration.id)
+          ? current
+          : [shared.exploration, ...current]);
+        applySavedExploration(shared.exploration, false);
+        setToast(`已按服务端授权恢复 ${shared.exploration.payload.name} · revision ${shared.exploration.revision}`);
+        return;
+      }
       const viewRef = searchParams.get("viewRef")?.trim();
       const referenced = viewRef ? items.find((item) => item.id === viewRef) : undefined;
       if (referenced) applySavedExploration(referenced, false);
     } catch (e) {
-      setErr(String((e as Error).message || e));
+      setErr(searchParams.get("shareRef")
+        ? `分享探索不可用：${String((e as Error).message || e)}`
+        : String((e as Error).message || e));
     }
   }
 
@@ -340,6 +353,7 @@ export function GraphExplorerPage() {
       await refreshExplorations();
       const next = new URLSearchParams(searchParams);
       next.set("viewRef", saved.id);
+      next.delete("shareRef");
       setSearchParams(next, { replace: true });
     } catch (e) {
       setErr(`保存探索失败：${String((e as Error).message || e)}`);
@@ -415,6 +429,7 @@ export function GraphExplorerPage() {
     if (updateUrl) {
       const next = new URLSearchParams(searchParams);
       next.set("viewRef", asset.id);
+      next.delete("shareRef");
       setSearchParams(next, { replace: true });
     }
     setToast(`已从服务端恢复 ${asset.payload.name} · revision ${asset.revision}`);
@@ -435,6 +450,7 @@ export function GraphExplorerPage() {
     next.set("type", nextTypeId);
     next.delete("id");
     next.delete("viewRef");
+    next.delete("shareRef");
     setSearchParams(next, { replace: true });
   }
 
