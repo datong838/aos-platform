@@ -87,7 +87,7 @@ class OperationsSliceReadiness(AipContractModel):
 
 class OperationsPageInfo(AipContractModel):
     limit: int = Field(ge=1, le=100)
-    count: int = Field(ge=0, le=100)
+    count: int = Field(ge=0, le=350)
     has_more: bool
     next_cursor: str | None = Field(default=None, max_length=4096)
 

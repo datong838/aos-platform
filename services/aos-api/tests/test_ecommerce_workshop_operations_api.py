@@ -9,6 +9,7 @@ from aos_api.auth import Principal, require_principal
 from aos_api.asset_registry.errors import AssetNotFoundError
 from aos_api.errors import register_exception_handlers
 from aos_api.routers import ecommerce_workshop
+from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
 
 
 class FakeCatalog:
@@ -23,7 +24,10 @@ class FakeCatalog:
         return object()
 
 
-def _client(catalog: FakeCatalog | None = None) -> TestClient:
+def _client(
+    catalog: FakeCatalog | None = None,
+    operations: EcommerceWorkshopOperations | None = None,
+) -> TestClient:
     app = FastAPI()
     register_exception_handlers(app)
     app.include_router(ecommerce_workshop.router)
@@ -37,12 +41,33 @@ def _client(catalog: FakeCatalog | None = None) -> TestClient:
     app.dependency_overrides[ecommerce_workshop.get_ecommerce_workshop_catalog] = (
         lambda: catalog or FakeCatalog()
     )
+    if operations is not None:
+        app.dependency_overrides[
+            ecommerce_workshop.get_ecommerce_workshop_operations
+        ] = lambda: operations
     return TestClient(app, raise_server_exceptions=False)
 
 
 def test_operations_shell_is_tenant_bound_and_structurally_blocked() -> None:
+    class ObjectReader:
+        def read(self, **kwargs):
+            return []
+
+    class InventoryReader:
+        def read(self, **kwargs):
+            return type("Inventory", (), {"items": []})()
+
+    class CaseStore:
+        def list_cases(self, scope, *, limit=50):
+            return []
+
+    operations = EcommerceWorkshopOperations(
+        object_reader=ObjectReader(),  # type: ignore[arg-type]
+        inventory_reader=InventoryReader(),  # type: ignore[arg-type]
+        case_store=CaseStore(),  # type: ignore[arg-type]
+    )
     catalog = FakeCatalog()
-    with _client(catalog) as client:
+    with _client(catalog, operations) as client:
         response = client.get("/v1/ecommerce-workshop/views/operations")
 
     assert response.status_code == 200
@@ -58,12 +83,21 @@ def test_operations_shell_is_tenant_bound_and_structurally_blocked() -> None:
         "aftersaleEvents",
         "operationCases",
     ]
-    assert all(item["status"] == "blocked" for item in body["slices"])
+    assert [item["status"] for item in body["slices"]] == [
+        "ready",
+        "ready",
+        "ready",
+        "ready",
+        "ready",
+        "blocked",
+        "ready",
+    ]
     inventory = body["slices"][2]
     aftersales = body["slices"][5]
     assert inventory["authorityRefs"][0]["resourceType"] == "ProductSku"
     assert aftersales["authorityRefs"][0]["resourceType"] == "AfterSalesEvent"
-    assert inventory["blockers"][0]["code"] == "INVENTORY_READER_NOT_WIRED"
+    assert inventory["blockers"] == []
+    assert inventory["authorityRefs"][0]["receiptId"].startswith("d0-")
     assert aftersales["blockers"][0]["code"] == "AFTERSALE_EVENTS_READER_NOT_WIRED"
     assert catalog.calls == [
         {
