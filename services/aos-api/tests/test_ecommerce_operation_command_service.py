@@ -21,8 +21,10 @@ from aos_api.aip_contracts import (
 from aos_api.auth import Principal
 from aos_api.ecommerce_operation_case_contracts import OperationAuthorityReceipt
 from aos_api.ecommerce_operation_command_execution_contracts import (
+    ChangeOperationMembershipCommandRequest,
     ClassifyOperationCommandRequest,
     CreateOperationCaseCommandRequest,
+    ManageOperationSlaCommandRequest,
     OperationCommandGovernanceRef,
 )
 from aos_api.ecommerce_operation_command_service import (
@@ -110,6 +112,62 @@ def create_case_request() -> CreateOperationCaseCommandRequest:
     )
 
 
+def membership_request() -> ChangeOperationMembershipCommandRequest:
+    return ChangeOperationMembershipCommandRequest.model_validate(
+        {
+            "governance": governance().model_dump(mode="json", by_alias=True),
+            "expectedVersion": 0,
+            "revision": {
+                "tenant": SCOPE,
+                "decisionId": "membership-1",
+                "revision": 1,
+                "decisionType": "attach",
+                "predecessorCaseRefs": [],
+                "successorCaseRefs": [],
+                "movedOriginals": [
+                    {
+                        "tenant": SCOPE,
+                        "resourceType": "Order",
+                        "resourceId": "order-1",
+                        "contentHash": HASH,
+                        "sourceUpdatedAt": NOW,
+                    }
+                ],
+                "beforeTotal": 1,
+                "afterTotal": 1,
+                "unmatchedCount": 0,
+                "conflictedCount": 0,
+                "reason": "attach exact original",
+                "contentHash": HASH,
+                "actor": "user:executor",
+                "createdAt": NOW,
+            },
+        }
+    )
+
+
+def sla_request() -> ManageOperationSlaCommandRequest:
+    return ManageOperationSlaCommandRequest.model_validate(
+        {
+            "governance": governance().model_dump(mode="json", by_alias=True),
+            "expectedVersion": 0,
+            "revision": {
+                "tenant": SCOPE,
+                "decisionId": "sla-clock-1",
+                "revision": 1,
+                "caseRef": {"resourceId": "case-1", "revision": 1, "contentHash": HASH},
+                "policyRef": {"resourceId": "sla-policy-1", "revision": 1, "contentHash": HASH},
+                "operation": "start",
+                "sourceEventTime": NOW,
+                "reason": "start exact SLA clock",
+                "contentHash": HASH,
+                "actor": "user:executor",
+                "createdAt": NOW,
+            },
+        }
+    )
+
+
 class FakeActionControl:
     def __init__(self) -> None:
         self.execute_calls: list[tuple[str, str]] = []
@@ -180,6 +238,54 @@ def test_create_case_uses_distinct_action_type_and_expected_zero_version() -> No
     assert control.execute_calls == [("lease-1", PROPOSAL_HASH)]
 
 
+@pytest.mark.parametrize(
+    ("command_id", "request_factory", "service_method", "expected_command"),
+    [
+        ("change-membership", membership_request, "change_membership", "changeMembership"),
+        ("manage-sla", sla_request, "manage_sla", "manageSla"),
+    ],
+)
+def test_membership_and_sla_reuse_exact_governance_chain(
+    command_id, request_factory, service_method, expected_command
+) -> None:
+    request = request_factory()
+    service, control = service_for(command_id, request)
+
+    result = getattr(service, service_method)(principal(), "command-key-b2b", request)
+
+    assert result.command_id == expected_command
+    assert control.execute_calls == [("lease-1", PROPOSAL_HASH)]
+
+
+def test_membership_rejects_cross_tenant_original_before_action_control() -> None:
+    payload = membership_request().model_dump(mode="json", by_alias=True)
+    payload["revision"]["movedOriginals"][0]["tenant"]["orgId"] = "dev-org"
+    request = ChangeOperationMembershipCommandRequest.model_validate(payload)
+    service, control = service_for("change-membership", request)
+
+    with pytest.raises(OperationCommandConflict, match="tenant"):
+        service.change_membership(principal(), "command-key-b2b-tenant", request)
+
+    assert control.execute_calls == []
+
+
+@pytest.mark.parametrize(
+    ("request_factory", "request_type"),
+    [
+        (membership_request, ChangeOperationMembershipCommandRequest),
+        (sla_request, ManageOperationSlaCommandRequest),
+    ],
+)
+def test_membership_and_sla_require_exact_next_revision(
+    request_factory, request_type
+) -> None:
+    payload = request_factory().model_dump(mode="json", by_alias=True)
+    payload["expectedVersion"] = 1
+
+    with pytest.raises(ValueError, match="advance expectedVersion once"):
+        request_type.model_validate(payload)
+
+
 def test_cross_tenant_original_is_rejected_before_action_control() -> None:
     request = classification_request(original_org="dev-org")
     service, control = service_for("classify", request)
@@ -210,12 +316,14 @@ def test_body_cannot_inject_tenant_or_actor() -> None:
 
 
 class FakeCanonicalActionStore:
-    def __init__(self, payload: dict) -> None:
+    def __init__(
+        self, payload: dict, action_type_id: str = "ecommerce.operation.classify"
+    ) -> None:
         self.bundle = ActionDraftBundle(
             proposal=ActionProposalSnapshot(
                 id="proposal-1",
                 action_type={
-                    "actionTypeId": "ecommerce.operation.classify",
+                    "actionTypeId": action_type_id,
                     "revisionHash": HASH,
                     "objectType": "OperationEventClassificationDecision",
                 },
@@ -262,7 +370,13 @@ class FakeCanonicalAuthorityStore:
         self.appended = []
 
     def append_classification(self, scope, actor, key, revision):
-        self.appended.append((scope.key, actor, key, revision.decision_id))
+        self.appended.append(("classify", scope.key, actor, key, revision.decision_id))
+
+    def append_membership(self, scope, actor, key, revision):
+        self.appended.append(("membership", scope.key, actor, key, revision.decision_id))
+
+    def append_sla_clock(self, scope, actor, key, revision):
+        self.appended.append(("sla", scope.key, actor, key, revision.decision_id))
 
     def get_receipt(self, scope, *, operation, idempotency_key):
         return OperationAuthorityReceipt(
@@ -278,15 +392,26 @@ class FakeCanonicalAuthorityStore:
 
 
 class FakeCanonicalExecution:
-    def __init__(self, store, registry, payload, *, prior_key: str | None = None) -> None:
+    def __init__(
+        self,
+        store,
+        registry,
+        payload,
+        *,
+        action_type_id: str = "ecommerce.operation.classify",
+        prior_key: str | None = None,
+    ) -> None:
         self.registry = registry
         self.payload = payload
         self.prior_key = prior_key
+        self.action_type_id = action_type_id
         self.execute_count = 0
 
     def get_execution_view(self, principal, proposal_id):
         return ActionExecutionView(
-            proposal=FakeCanonicalActionStore(self.payload).bundle.proposal,
+            proposal=FakeCanonicalActionStore(
+                self.payload, self.action_type_id
+            ).bundle.proposal,
             lease=ExecutionLease(
                 id="lease-1",
                 proposal_id="proposal-1",
@@ -326,10 +451,12 @@ class FakeCanonicalExecution:
 
     def execute(self, principal, lease_id, expected_hash):
         self.execute_count += 1
-        adapter = self.registry.get("ecommerce.operation.classify")
+        adapter = self.registry.get(self.action_type_id)
         outcome = adapter.execute(payload=self.payload, idempotency_key="canonical-key")
         return ActionExecutionView(
-            proposal=FakeCanonicalActionStore(self.payload).bundle.proposal,
+            proposal=FakeCanonicalActionStore(
+                self.payload, self.action_type_id
+            ).bundle.proposal,
             lease=ExecutionLease(
                 id=lease_id,
                 proposal_id="proposal-1",
@@ -369,8 +496,48 @@ def test_canonical_control_consumes_existing_action_chain_and_embeds_operation_r
 
     assert result.operation_receipt.receipt_id == "op-receipt-1"
     assert authority_store.appended == [
-        (("org-org", "dev-project"), "user:executor", "command-key-5", "classification-1")
+        ("classify", ("org-org", "dev-project"), "user:executor", "command-key-5", "classification-1")
     ]
+
+
+@pytest.mark.parametrize(
+    ("request_factory", "action_type_id", "service_method", "append_kind"),
+    [
+        (
+            membership_request,
+            "ecommerce.operation.change-membership",
+            "change_membership",
+            "membership",
+        ),
+        (sla_request, "ecommerce.operation.manage-sla", "manage_sla", "sla"),
+    ],
+)
+def test_membership_and_sla_canonical_adapters_embed_exact_operation_receipt(
+    request_factory, action_type_id, service_method, append_kind
+) -> None:
+    request = request_factory()
+    action_store = FakeCanonicalActionStore(
+        request.canonical_action_payload(), action_type_id
+    )
+    authority_store = FakeCanonicalAuthorityStore()
+    control = CanonicalOperationActionControl(
+        action_store=action_store,  # type: ignore[arg-type]
+        authority_store=authority_store,  # type: ignore[arg-type]
+        execution_factory=lambda store, registry: FakeCanonicalExecution(
+            store,
+            registry,
+            request.canonical_action_payload(),
+            action_type_id=action_type_id,
+        ),
+    )
+    service = EcommerceOperationCommandService(action_control=control, now=lambda: NOW)
+
+    result = getattr(service, service_method)(
+        principal(), "command-key-b2b-canonical", request
+    )
+
+    assert result.operation_receipt.receipt_id == "op-receipt-1"
+    assert authority_store.appended[0][0] == append_kind
 
 
 def test_canonical_control_replays_same_command_key_and_rejects_key_drift() -> None:

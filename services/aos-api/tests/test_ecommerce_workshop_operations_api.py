@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -206,10 +207,22 @@ class FakeOperationCommandService:
 
     def classify(self, principal, idempotency_key, body):
         self.calls.append((principal, idempotency_key, body))
+        return self._response(principal, idempotency_key, body, "classify")
+
+    def change_membership(self, principal, idempotency_key, body):
+        self.calls.append((principal, idempotency_key, body))
+        return self._response(principal, idempotency_key, body, "changeMembership")
+
+    def manage_sla(self, principal, idempotency_key, body):
+        self.calls.append((principal, idempotency_key, body))
+        return self._response(principal, idempotency_key, body, "manageSla")
+
+    @staticmethod
+    def _response(principal, idempotency_key, body, command_id):
         return OperationCommandExecutionEnvelope.model_validate(
             {
                 "tenant": {"orgId": principal.org_id, "projectId": principal.project_id},
-                "commandId": "classify",
+                "commandId": command_id,
                 "status": "applied",
                 "proposalId": body.governance.proposal_id,
                 "leaseId": body.governance.lease_id,
@@ -260,6 +273,58 @@ def _classification_payload() -> dict:
     }
 
 
+def _membership_payload() -> dict:
+    return {
+        "governance": _classification_payload()["governance"],
+        "expectedVersion": 0,
+        "revision": {
+            "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+            "decisionId": "membership-1",
+            "revision": 1,
+            "decisionType": "attach",
+            "predecessorCaseRefs": [],
+            "successorCaseRefs": [],
+            "movedOriginals": [
+                {
+                    "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+                    "resourceType": "Order",
+                    "resourceId": "order-1",
+                    "contentHash": "a" * 64,
+                    "sourceUpdatedAt": "2026-08-24T00:00:00Z",
+                }
+            ],
+            "beforeTotal": 1,
+            "afterTotal": 1,
+            "unmatchedCount": 0,
+            "conflictedCount": 0,
+            "reason": "attach exact original",
+            "contentHash": "a" * 64,
+            "actor": "user:test",
+            "createdAt": "2026-08-24T00:00:00Z",
+        },
+    }
+
+
+def _sla_payload() -> dict:
+    return {
+        "governance": _classification_payload()["governance"],
+        "expectedVersion": 0,
+        "revision": {
+            "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+            "decisionId": "sla-clock-1",
+            "revision": 1,
+            "caseRef": {"resourceId": "case-1", "revision": 1, "contentHash": "a" * 64},
+            "policyRef": {"resourceId": "sla-policy-1", "revision": 1, "contentHash": "a" * 64},
+            "operation": "start",
+            "sourceEventTime": "2026-08-24T00:00:00Z",
+            "reason": "start exact SLA clock",
+            "contentHash": "a" * 64,
+            "actor": "user:test",
+            "createdAt": "2026-08-24T00:00:00Z",
+        },
+    }
+
+
 def test_classify_command_requires_idempotency_and_rejects_body_scope_injection() -> None:
     service = FakeOperationCommandService()
     payload = _classification_payload()
@@ -286,13 +351,51 @@ def test_classify_command_requires_idempotency_and_rejects_body_scope_injection(
     assert service.calls[0][1] == "command-key-1"
 
 
-def test_openapi_exposes_two_explicit_internal_command_posts() -> None:
+@pytest.mark.parametrize(
+    ("path", "payload_factory", "command_id"),
+    [
+        ("change-membership", _membership_payload, "changeMembership"),
+        ("manage-sla", _sla_payload, "manageSla"),
+    ],
+)
+def test_membership_and_sla_commands_are_explicit_strict_posts(
+    path, payload_factory, command_id
+) -> None:
+    service = FakeOperationCommandService()
+    payload = payload_factory()
+    with _client(command_service=service) as client:
+        missing_key = client.post(
+            f"/v1/ecommerce-workshop/commands/operations/{path}", json=payload
+        )
+        injected = client.post(
+            f"/v1/ecommerce-workshop/commands/operations/{path}",
+            headers={"Idempotency-Key": "command-key-b2b"},
+            json={**payload, "actorId": "user:other"},
+        )
+        response = client.post(
+            f"/v1/ecommerce-workshop/commands/operations/{path}",
+            headers={"Idempotency-Key": "command-key-b2b"},
+            json=payload,
+        )
+
+    assert missing_key.status_code == 400
+    assert injected.status_code == 400
+    assert response.status_code == 200
+    assert response.json()["commandId"] == command_id
+    assert service.calls[0][0].org_id == "org-org"
+
+
+def test_openapi_exposes_four_explicit_internal_command_posts() -> None:
     with _client() as client:
         document = client.get("/openapi.json").json()
 
     classify = document["paths"]["/v1/ecommerce-workshop/commands/operations/classify"]
     create_case = document["paths"]["/v1/ecommerce-workshop/commands/operations/create-case"]
+    membership = document["paths"]["/v1/ecommerce-workshop/commands/operations/change-membership"]
+    sla = document["paths"]["/v1/ecommerce-workshop/commands/operations/manage-sla"]
     assert set(classify) == {"post"}
     assert set(create_case) == {"post"}
     assert classify["post"]["operationId"] == "ecommerceWorkshopOperationClassifyPost"
     assert create_case["post"]["operationId"] == "ecommerceWorkshopOperationCreateCasePost"
+    assert membership["post"]["operationId"] == "ecommerceWorkshopOperationChangeMembershipPost"
+    assert sla["post"]["operationId"] == "ecommerceWorkshopOperationManageSlaPost"

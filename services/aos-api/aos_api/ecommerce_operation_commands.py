@@ -16,11 +16,6 @@ from aos_api.ecommerce_operation_command_contracts import (
 )
 
 
-_INTERNAL_BLOCKER = OperationCommandBlocker(
-    code="OPERATION_COMMAND_HANDLER_NOT_BOUND",
-    dependency="W3-12B2",
-    required_action="接入 expectedVersion、幂等 Receipt 与内部 authority command handler",
-)
 _REQUEST_GOVERNANCE_BLOCKER = OperationCommandBlocker(
     code="EXACT_ACTION_CHAIN_REQUIRED",
     dependency="request-scoped canonical action governance",
@@ -62,13 +57,13 @@ class EcommerceOperationCommands:
                 OperationCommandId.CHANGE_MEMBERSHIP,
                 "调整工单成员",
                 OperationCommandRisk.CONTROLLED,
-                _INTERNAL_BLOCKER,
+                _REQUEST_GOVERNANCE_BLOCKER,
             ),
             (
                 OperationCommandId.MANAGE_SLA,
                 "管理 SLA",
                 OperationCommandRisk.CONTROLLED,
-                _INTERNAL_BLOCKER,
+                _REQUEST_GOVERNANCE_BLOCKER,
             ),
         )
         commands = [

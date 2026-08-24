@@ -8,9 +8,11 @@ from pydantic import Field, model_validator
 
 from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.ecommerce_operation_case_contracts import (
+    CaseMembershipDecisionRevision,
     OperationAuthorityReceipt,
     OperationCaseRevision,
     OperationEventClassificationDecisionRevision,
+    SlaClockDecision,
 )
 
 
@@ -72,12 +74,46 @@ class CreateOperationCaseCommandRequest(_InternalOperationCommandRequest):
         }
 
 
+class ChangeOperationMembershipCommandRequest(_InternalOperationCommandRequest):
+    revision: CaseMembershipDecisionRevision
+
+    @model_validator(mode="after")
+    def _append_once(self) -> "ChangeOperationMembershipCommandRequest":
+        if self.revision.revision != self.expected_version + 1:
+            raise ValueError("membership revision must advance expectedVersion once")
+        return self
+
+    def canonical_action_payload(self) -> dict[str, Any]:
+        return {
+            "commandId": "changeMembership",
+            "expectedVersion": self.expected_version,
+            "revision": self.revision.model_dump(mode="json", by_alias=True),
+        }
+
+
+class ManageOperationSlaCommandRequest(_InternalOperationCommandRequest):
+    revision: SlaClockDecision
+
+    @model_validator(mode="after")
+    def _append_once(self) -> "ManageOperationSlaCommandRequest":
+        if self.revision.revision != self.expected_version + 1:
+            raise ValueError("SLA clock revision must advance expectedVersion once")
+        return self
+
+    def canonical_action_payload(self) -> dict[str, Any]:
+        return {
+            "commandId": "manageSla",
+            "expectedVersion": self.expected_version,
+            "revision": self.revision.model_dump(mode="json", by_alias=True),
+        }
+
+
 class OperationCommandExecutionEnvelope(AipContractModel):
     schema_version: Literal[
         "aos.ecommerce-workshop.operation-command-execution/v1"
     ] = "aos.ecommerce-workshop.operation-command-execution/v1"
     tenant: TenantContext
-    command_id: Literal["classify", "createCase"]
+    command_id: Literal["classify", "createCase", "changeMembership", "manageSla"]
     status: Literal["applied"]
     proposal_id: str
     lease_id: str
@@ -85,8 +121,10 @@ class OperationCommandExecutionEnvelope(AipContractModel):
 
 
 __all__ = [
+    "ChangeOperationMembershipCommandRequest",
     "ClassifyOperationCommandRequest",
     "CreateOperationCaseCommandRequest",
+    "ManageOperationSlaCommandRequest",
     "OperationCommandExecutionEnvelope",
     "OperationCommandGovernanceRef",
 ]

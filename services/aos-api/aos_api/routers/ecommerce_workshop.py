@@ -25,8 +25,10 @@ from aos_api.ecommerce_operation_command_contracts import (
     OperationCommandReadinessEnvelope,
 )
 from aos_api.ecommerce_operation_command_execution_contracts import (
+    ChangeOperationMembershipCommandRequest,
     ClassifyOperationCommandRequest,
     CreateOperationCaseCommandRequest,
+    ManageOperationSlaCommandRequest,
     OperationCommandExecutionEnvelope,
 )
 from aos_api.ecommerce_operation_command_service import (
@@ -403,6 +405,50 @@ def create_ecommerce_operation_case(
     _require_operations_installation(principal=principal, catalog=catalog)
     try:
         return service.create_case(
+            principal, _operation_command_idempotency(idempotency_key), body
+        )
+    except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:
+        raise _map_operation_command_error(exc) from exc
+
+
+@router.post(
+    "/commands/operations/change-membership",
+    response_model=OperationCommandExecutionEnvelope,
+    operation_id="ecommerceWorkshopOperationChangeMembershipPost",
+    responses=_ERRORS,
+)
+def change_ecommerce_operation_membership(
+    body: ChangeOperationMembershipCommandRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: OperationCommandServiceDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> OperationCommandExecutionEnvelope:
+    _require_operations_installation(principal=principal, catalog=catalog)
+    try:
+        return service.change_membership(
+            principal, _operation_command_idempotency(idempotency_key), body
+        )
+    except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:
+        raise _map_operation_command_error(exc) from exc
+
+
+@router.post(
+    "/commands/operations/manage-sla",
+    response_model=OperationCommandExecutionEnvelope,
+    operation_id="ecommerceWorkshopOperationManageSlaPost",
+    responses=_ERRORS,
+)
+def manage_ecommerce_operation_sla(
+    body: ManageOperationSlaCommandRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: OperationCommandServiceDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> OperationCommandExecutionEnvelope:
+    _require_operations_installation(principal=principal, catalog=catalog)
+    try:
+        return service.manage_sla(
             principal, _operation_command_idempotency(idempotency_key), body
         )
     except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:

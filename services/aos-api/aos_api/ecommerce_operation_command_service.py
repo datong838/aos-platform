@@ -20,17 +20,21 @@ from aos_api.aip_action_store import (
 from aos_api.aip_contracts import ApprovalDecision, TenantContext
 from aos_api.auth import Principal
 from aos_api.ecommerce_operation_case_contracts import (
+    CaseMembershipDecisionRevision,
     OperationAuthorityReceipt,
     OperationCaseRevision,
     OperationEventClassificationDecisionRevision,
+    SlaClockDecision,
 )
 from aos_api.ecommerce_operation_case_store import (
     OperationAuthorityStore,
     OperationAuthorityStoreError,
 )
 from aos_api.ecommerce_operation_command_execution_contracts import (
+    ChangeOperationMembershipCommandRequest,
     ClassifyOperationCommandRequest,
     CreateOperationCaseCommandRequest,
+    ManageOperationSlaCommandRequest,
     OperationCommandExecutionEnvelope,
 )
 from aos_api.tenant_scope import TenantScope
@@ -96,6 +100,20 @@ class _InternalOperationAdapter:
                     self._scope, self._actor, self._key, revision
                 )
                 operation = "operation_case.create"
+            elif self._command_id == "changeMembership":
+                revision = CaseMembershipDecisionRevision.model_validate(
+                    revision_payload
+                )
+                self._authority_store.append_membership(
+                    self._scope, self._actor, self._key, revision
+                )
+                operation = "operation_membership.append"
+            elif self._command_id == "manageSla":
+                revision = SlaClockDecision.model_validate(revision_payload)
+                self._authority_store.append_sla_clock(
+                    self._scope, self._actor, self._key, revision
+                )
+                operation = "operation_sla_clock.append"
             else:
                 return AdapterOutcome(
                     "failed", payload={"errorCode": "ECOMMERCE_OPERATION_COMMAND_UNKNOWN"}
@@ -304,6 +322,42 @@ class EcommerceOperationCommandService:
             request=request,
             command_id="createCase",
             action_type_id="ecommerce.operation.create-case",
+        )
+
+    def change_membership(
+        self,
+        principal: Principal,
+        idempotency_key: str,
+        request: ChangeOperationMembershipCommandRequest,
+    ) -> OperationCommandExecutionEnvelope:
+        self._require_idempotency_key(idempotency_key)
+        self._require_revision_scope(principal, request.revision)
+        for original in request.revision.moved_originals:
+            self._require_scope(
+                principal, original.tenant.org_id, original.tenant.project_id
+            )
+        return self._execute(
+            principal=principal,
+            idempotency_key=idempotency_key,
+            request=request,
+            command_id="changeMembership",
+            action_type_id="ecommerce.operation.change-membership",
+        )
+
+    def manage_sla(
+        self,
+        principal: Principal,
+        idempotency_key: str,
+        request: ManageOperationSlaCommandRequest,
+    ) -> OperationCommandExecutionEnvelope:
+        self._require_idempotency_key(idempotency_key)
+        self._require_revision_scope(principal, request.revision)
+        return self._execute(
+            principal=principal,
+            idempotency_key=idempotency_key,
+            request=request,
+            command_id="manageSla",
+            action_type_id="ecommerce.operation.manage-sla",
         )
 
     def _execute(
