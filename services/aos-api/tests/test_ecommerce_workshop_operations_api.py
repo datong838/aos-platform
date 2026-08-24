@@ -17,6 +17,7 @@ from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
 from aos_api.ecommerce_operation_command_execution_contracts import (
     OperationCommandExecutionEnvelope,
 )
+from aos_api.ecommerce_operation_command_observation import OperationCommandObservationEnvelope
 
 
 class FakeCatalog:
@@ -36,6 +37,7 @@ def _client(
     operations: EcommerceWorkshopOperations | None = None,
     commands: EcommerceOperationCommands | None = None,
     command_service: object | None = None,
+    observation_service: object | None = None,
 ) -> TestClient:
     app = FastAPI()
     register_exception_handlers(app)
@@ -62,6 +64,10 @@ def _client(
         app.dependency_overrides[
             ecommerce_workshop.get_ecommerce_operation_command_service
         ] = lambda: command_service
+    if observation_service is not None:
+        app.dependency_overrides[
+            ecommerce_workshop.get_ecommerce_operation_command_observation_service
+        ] = lambda: observation_service
     return TestClient(app, raise_server_exceptions=False)
 
 
@@ -442,3 +448,28 @@ def test_openapi_exposes_five_explicit_internal_command_posts() -> None:
     assert membership["post"]["operationId"] == "ecommerceWorkshopOperationChangeMembershipPost"
     assert sla["post"]["operationId"] == "ecommerceWorkshopOperationManageSlaPost"
     assert kill["post"]["operationId"] == "ecommerceWorkshopOperationAutomationKillPost"
+
+
+def test_command_observation_is_exact_read_only_and_rejects_query_scope() -> None:
+    class ObservationService:
+        def read(self, principal, proposal_id, lease_id):
+            return OperationCommandObservationEnvelope(
+                tenant={"orgId": principal.org_id, "projectId": principal.project_id},
+                proposalId=proposal_id,
+                leaseId=lease_id,
+                commandId="classify",
+                status="unknown",
+                proposalHash="a" * 64,
+                receiptId="receipt-1",
+                requestFingerprint="b" * 64,
+            )
+
+    path = "/v1/ecommerce-workshop/commands/operations/observations/proposal-1/leases/lease-1"
+    with _client(observation_service=ObservationService()) as client:
+        injected = client.get(path + "?orgId=dev-org")
+        response = client.get(path)
+
+    assert injected.status_code == 400
+    assert response.status_code == 200
+    assert response.json()["status"] == "unknown"
+    assert response.json()["replayAllowed"] is False

@@ -38,6 +38,13 @@ from aos_api.ecommerce_operation_command_service import (
     OperationCommandConflict,
     OperationCommandDependencyUnavailable,
 )
+from aos_api.ecommerce_operation_command_observation import (
+    EcommerceOperationCommandObservationService,
+    OperationCommandObservationConflict,
+    OperationCommandObservationEnvelope,
+    OperationCommandObservationUnavailable,
+    build_operation_observation_control,
+)
 from aos_api.ecommerce_workshop_operations_contracts import (
     WorkshopOperationsViewEnvelope,
 )
@@ -126,6 +133,13 @@ def get_ecommerce_operation_command_service() -> EcommerceOperationCommandServic
     )
 
 
+@lru_cache(maxsize=1)
+def get_ecommerce_operation_command_observation_service() -> EcommerceOperationCommandObservationService:
+    return EcommerceOperationCommandObservationService(
+        action_control=build_operation_observation_control()
+    )
+
+
 CatalogDependency = Annotated[
     EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)
 ]
@@ -147,6 +161,10 @@ OperationCommandsDependency = Annotated[
 OperationCommandServiceDependency = Annotated[
     EcommerceOperationCommandService,
     Depends(get_ecommerce_operation_command_service),
+]
+OperationCommandObservationDependency = Annotated[
+    EcommerceOperationCommandObservationService,
+    Depends(get_ecommerce_operation_command_observation_service),
 ]
 
 
@@ -366,6 +384,30 @@ def get_ecommerce_operation_command_readiness(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
+
+
+@router.get(
+    "/commands/operations/observations/{proposal_id}/leases/{lease_id}",
+    response_model=OperationCommandObservationEnvelope,
+    operation_id="ecommerceWorkshopOperationCommandObservationGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_operation_command_observation(
+    request: Request,
+    proposal_id: Annotated[str, Path(min_length=1, max_length=300)],
+    lease_id: Annotated[str, Path(min_length=1, max_length=300)],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    observations: OperationCommandObservationDependency,
+) -> OperationCommandObservationEnvelope:
+    _reject_query_parameters(request)
+    _require_operations_installation(principal=principal, catalog=catalog)
+    try:
+        return observations.read(principal, proposal_id, lease_id)
+    except OperationCommandObservationConflict as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=409) from exc
+    except OperationCommandObservationUnavailable as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=503) from exc
 
 
 @router.post(
