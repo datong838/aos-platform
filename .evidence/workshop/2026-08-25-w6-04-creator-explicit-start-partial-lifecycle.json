@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "aos.workshop-evidence/v1",
+  "taskId": "W6-04",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "authorityBase": "AOS-000246",
+  "capturedAt": "2026-08-25T14:20:07+08:00",
+  "outcome": "CODE_CONTRACT_BROWSER_GREEN_OPERATIONAL_GATE_RETAINED_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "implementation": {
+    "start": "frozen-batch-exact-version-hash-cas-four-independent-governance-lanes",
+    "laneBinding": "action-type-impact-adapter-account-budget-approval-policy-exact-refs",
+    "partialReducer": "prepared-accepted-applied-failed-unknown-disputed-count-conservation",
+    "completionRule": "applied-plus-failed-only",
+    "collaborationLineage": "contract-revision-delivery-observation-relationship-maturity-window",
+    "legacyCompatibility": "batches-without-item-exact-refs-remain-readable-and-start-blocked",
+    "externalEffectCount": 0,
+    "providerCallCount": 0
+  },
+  "verification": {
+    "backendW6Cumulative": "61 passed",
+    "openapiContract": "14 passed",
+    "frontendTargeted": "5 passed",
+    "frontendFullCumulative": "2112 passed",
+    "productionBuild": "GREEN / 343 modules",
+    "openapi": "2608 paths / 2228 schemas / 4387 route rows / 4377 unique operations / deterministic",
+    "alembic": "w6_004 unique head; migration not applied",
+    "diffCheck": "GREEN"
+  },
+  "browser": {
+    "tool": "Codex built-in browser",
+    "url": "http://localhost:5173/workshop/creator-growth",
+    "page": "达人邀约与签约驾驶舱",
+    "assertions": [
+      "显式 Start → 独立 Action lane → 合同 → 履约 → 关系卡片可见",
+      "私信、寄样、签约、佣金四类 lane 独立呈现",
+      "仅 applied + failed 计入完成，partial/unknown 不并入完成",
+      "合同、履约、关系 lineage 分项计数可见",
+      "authority 不可用时失败关闭并显示 CREATOR_LIFECYCLE_AUTHORITY_UNAVAILABLE",
+      "生命周期区域 buttonCount 为 0，无批量发送、寄样、签约或改佣金入口"
+    ],
+    "runtimeFacts": {
+      "sourceReadiness": "mixed ready/failed; not promoted",
+      "creatorLifecycleAuthority": "migration not applied; trusted-empty fallback rendered",
+      "release": "not authorized"
+    }
+  },
+  "safety": {
+    "realBusinessDataMutated": false,
+    "migrationApplied": false,
+    "externalProviderCalled": false,
+    "outreachSent": false,
+    "contractSigned": false,
+    "sampleShipped": false,
+    "commissionChanged": false,
+    "releasePerformed": false
+  },
+  "nextTask": "W6-05"
+}

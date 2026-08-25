@@ -311,6 +311,7 @@ class CreatorBatchPreparationRevision(AipContractModel):
     lifecycle: str = Field(pattern=r"^(prepared|frozen|stale)$")
     exact_refs: dict[str, CreatorExactRef]
     skill_refs: list[CreatorExactRef]
+    items: list[PrepareCreatorBatchItem] = Field(default_factory=list, max_length=100)
     item_hashes: list[str]
     ledger: CreatorBatchCountLedger
     external_effect_count: int = Field(default=0, ge=0, le=0)
@@ -449,6 +450,7 @@ class EcommerceWorkshopCreatorPrepareService:
         item = CreatorBatchPreparationRevision(
             tenant=self._tenant(scope), batchId=request.batch_id, revision=1,
             version=1, lifecycle="prepared", exactRefs=exact_refs, skillRefs=request.skill_refs,
+            items=request.items,
             itemHashes=item_hashes,
             ledger=CreatorBatchCountLedger(input=len(request.items), **counts),
             contentHash=content_hash, createdBy=actor, createdAt=at,

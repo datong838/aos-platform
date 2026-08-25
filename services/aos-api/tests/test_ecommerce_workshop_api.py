@@ -357,6 +357,14 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
                 "/v1/ecommerce-workshop/views/creator-growth/contributions",
                 "get",
             ),
+            "ecommerceWorkshopCreatorBatchStart": (
+                "/v1/ecommerce-workshop/creator-growth/batches/{batch_id}/start",
+                "post",
+            ),
+            "ecommerceWorkshopCreatorLifecycleViewGet": (
+                "/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+                "get",
+            ),
         "ecommerceWorkshopMediaStudioViewGet": (
             "/v1/ecommerce-workshop/views/media-studio",
             "get",

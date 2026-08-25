@@ -86,6 +86,15 @@ from aos_api.ecommerce_workshop_creator_prepare import (
     PrepareCreatorBatchRequest,
 )
 from aos_api.ecommerce_workshop_creator_prepare_store import EcommerceWorkshopCreatorPrepareStore
+from aos_api.ecommerce_workshop_creator_lifecycle import (
+    CreatorBatchStartDecisionRevision,
+    CreatorLifecycleBlocked,
+    CreatorLifecycleConflict,
+    CreatorLifecycleView,
+    EcommerceWorkshopCreatorLifecycleService,
+    StartCreatorBatchRequest,
+)
+from aos_api.ecommerce_workshop_creator_lifecycle_store import EcommerceWorkshopCreatorLifecycleStore
 from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
 from aos_api.ecommerce_workshop_media_studio_contracts import (
     WorkshopMediaStudioViewEnvelope,
@@ -247,6 +256,14 @@ def get_ecommerce_workshop_creator_prepare() -> EcommerceWorkshopCreatorPrepareS
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_creator_lifecycle() -> EcommerceWorkshopCreatorLifecycleService:
+    batch_store = EcommerceWorkshopCreatorPrepareStore()
+    return EcommerceWorkshopCreatorLifecycleService(
+        EcommerceWorkshopCreatorLifecycleStore(), batch_store
+    )
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_media_studio() -> EcommerceWorkshopMediaStudio:
     return EcommerceWorkshopMediaStudio()
 
@@ -331,6 +348,10 @@ CreatorPrepareDependency = Annotated[
     EcommerceWorkshopCreatorPrepareService,
     Depends(get_ecommerce_workshop_creator_prepare),
 ]
+CreatorLifecycleDependency = Annotated[
+    EcommerceWorkshopCreatorLifecycleService,
+    Depends(get_ecommerce_workshop_creator_lifecycle),
+]
 MediaStudioDependency = Annotated[
     EcommerceWorkshopMediaStudio,
     Depends(get_ecommerce_workshop_media_studio),
@@ -414,6 +435,14 @@ def _map_creator_prepare_error(exc: CreatorPrepareBlocked) -> ApiError:
         code=exc.code,
         message=str(exc),
         status_code=409 if isinstance(exc, CreatorPrepareConflict) else 422,
+    )
+
+
+def _map_creator_lifecycle_error(exc: CreatorLifecycleBlocked) -> ApiError:
+    return ApiError(
+        code=exc.code,
+        message=str(exc),
+        status_code=409 if isinstance(exc, CreatorLifecycleConflict) else 422,
     )
 
 
@@ -956,6 +985,51 @@ def get_creator_contribution_view(
     _reject_query_parameters(request)
     _require_creator_growth_installation(principal=principal, catalog=catalog)
     return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+
+
+@router.post(
+    "/creator-growth/batches/{batch_id}/start",
+    response_model=CreatorBatchStartDecisionRevision,
+    operation_id="ecommerceWorkshopCreatorBatchStart",
+    status_code=201,
+    responses=_ERRORS,
+)
+def start_creator_batch(
+    batch_id: Annotated[str, Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$")],
+    body: StartCreatorBatchRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CreatorLifecycleDependency,
+) -> CreatorBatchStartDecisionRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    try:
+        return service.start_batch(
+            TenantScope(principal.org_id, principal.project_id),
+            batch_id,
+            body,
+            principal.subject,
+        )
+    except CreatorLifecycleBlocked as exc:
+        raise _map_creator_lifecycle_error(exc) from exc
+
+
+@router.get(
+    "/views/creator-growth/lifecycle",
+    response_model=CreatorLifecycleView,
+    operation_id="ecommerceWorkshopCreatorLifecycleViewGet",
+    responses=_ERRORS,
+)
+def get_creator_lifecycle_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CreatorLifecycleDependency,
+) -> CreatorLifecycleView:
+    _reject_query_parameters(request)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    return service.view(TenantScope(principal.org_id, principal.project_id))
 
 
 @router.get(

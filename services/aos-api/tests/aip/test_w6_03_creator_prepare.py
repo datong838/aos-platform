@@ -167,6 +167,7 @@ def test_batch_prepare_freeze_is_conserved_idempotent_and_has_zero_effects():
     replay = service.prepare_batch(SCOPE, request, "user:maker", now=NOW)
     assert replay.content_hash == prepared.content_hash
     assert prepared.ledger.input == prepared.ledger.eligible == 1
+    assert len(prepared.items) == 1 and prepared.items[0].candidate_ref.resource_id == "candidate-1"
     assert prepared.external_effect_count == prepared.action_proposal_count == prepared.execution_lease_count == 0
     frozen = service.freeze_batch(
         SCOPE, prepared.batch_id,
