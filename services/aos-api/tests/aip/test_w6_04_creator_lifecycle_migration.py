@@ -21,8 +21,10 @@ def test_w6_004_creator_lifecycle_is_append_only_rls_and_single_head():
     assert "ecommerce_creator_relationship_revision" in text
 
 
-def test_w6_004_is_the_only_alembic_head_without_applying_it():
+def test_w6_004_is_ancestor_of_current_single_head_without_applying_it():
     root = Path(__file__).resolve().parents[2]
     config = Config(str(root / "alembic.ini"))
     config.set_main_option("script_location", str(root / "alembic"))
-    assert ScriptDirectory.from_config(config).get_heads() == ["w6_004"]
+    script = ScriptDirectory.from_config(config)
+    assert script.get_heads() == ["w6_005"]
+    assert script.get_revision("w6_005").down_revision == "w6_004"

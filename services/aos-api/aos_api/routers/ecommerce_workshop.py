@@ -101,6 +101,26 @@ from aos_api.ecommerce_workshop_media_studio_contracts import (
 )
 from aos_api.ecommerce_workshop_price_governance import EcommerceWorkshopPriceGovernance
 from aos_api.ecommerce_workshop_price_governance_contracts import WorkshopPriceGovernanceViewEnvelope
+from aos_api.ecommerce_workshop_price_research import (
+    CreatePriceMatchObservationRequest,
+    DecideProductMatchRequest,
+    EcommerceWorkshopPriceResearchService,
+    FreezePriceResearchBatchRequest,
+    MonitoringPolicyRequest,
+    MonitoringPolicyRevision,
+    NormalizePriceObservationRequest,
+    PreparePriceResearchBatchRequest,
+    PriceObservationRevision,
+    PriceResearchBatchRevision,
+    PriceResearchBlocked,
+    PriceResearchConflict,
+    PriceResearchContributionView,
+    PriceResearchProfileRequest,
+    PriceResearchProfileRevision,
+    ProductMatchDecisionRevision,
+    ProductMatchObservation,
+)
+from aos_api.ecommerce_workshop_price_research_store import EcommerceWorkshopPriceResearchStore
 from aos_api.ecommerce_workshop_customer import EcommerceWorkshopCustomer
 from aos_api.ecommerce_workshop_customer_contracts import WorkshopCustomerViewEnvelope
 from aos_api.ecommerce_workshop_shared_context import EcommerceWorkshopSharedContext
@@ -264,6 +284,11 @@ def get_ecommerce_workshop_creator_lifecycle() -> EcommerceWorkshopCreatorLifecy
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_price_research() -> EcommerceWorkshopPriceResearchService:
+    return EcommerceWorkshopPriceResearchService(EcommerceWorkshopPriceResearchStore())
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_media_studio() -> EcommerceWorkshopMediaStudio:
     return EcommerceWorkshopMediaStudio()
 
@@ -364,6 +389,10 @@ PriceGovernanceDependency = Annotated[
     EcommerceWorkshopPriceGovernance,
     Depends(get_ecommerce_workshop_price_governance),
 ]
+PriceResearchDependency = Annotated[
+    EcommerceWorkshopPriceResearchService,
+    Depends(get_ecommerce_workshop_price_research),
+]
 CustomerDependency = Annotated[
     EcommerceWorkshopCustomer,
     Depends(get_ecommerce_workshop_customer),
@@ -443,6 +472,14 @@ def _map_creator_lifecycle_error(exc: CreatorLifecycleBlocked) -> ApiError:
         code=exc.code,
         message=str(exc),
         status_code=409 if isinstance(exc, CreatorLifecycleConflict) else 422,
+    )
+
+
+def _map_price_research_error(exc: PriceResearchBlocked) -> ApiError:
+    return ApiError(
+        code=exc.code,
+        message=str(exc),
+        status_code=409 if isinstance(exc, PriceResearchConflict) else 422,
     )
 
 
@@ -1084,6 +1121,177 @@ def get_ecommerce_workshop_price_governance_view(
     _reject_query_parameters(request)
     _require_price_governance_installation(principal=principal, catalog=catalog)
     return price_governance.read(org_id=principal.org_id, project_id=principal.project_id)
+
+
+@router.post(
+    "/price-governance/research-profiles",
+    response_model=PriceResearchProfileRevision,
+    operation_id="ecommerceWorkshopPriceResearchProfileCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_price_research_profile(
+    body: PriceResearchProfileRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceResearchDependency,
+) -> PriceResearchProfileRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.create_profile(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except PriceResearchBlocked as exc:
+        raise _map_price_research_error(exc) from exc
+
+
+@router.post(
+    "/price-governance/observations/normalize",
+    response_model=PriceObservationRevision,
+    operation_id="ecommerceWorkshopPriceObservationNormalize",
+    status_code=201,
+    responses=_ERRORS,
+)
+def normalize_price_observation(
+    body: NormalizePriceObservationRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceResearchDependency,
+) -> PriceObservationRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.normalize(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except PriceResearchBlocked as exc:
+        raise _map_price_research_error(exc) from exc
+
+
+@router.post(
+    "/price-governance/match-observations",
+    response_model=ProductMatchObservation,
+    operation_id="ecommerceWorkshopPriceMatchObservationCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_price_match_observation(
+    body: CreatePriceMatchObservationRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceResearchDependency,
+) -> ProductMatchObservation:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.observe_match(TenantScope(principal.org_id, principal.project_id), body)
+    except PriceResearchBlocked as exc:
+        raise _map_price_research_error(exc) from exc
+
+
+@router.post(
+    "/price-governance/match-decisions",
+    response_model=ProductMatchDecisionRevision,
+    operation_id="ecommerceWorkshopPriceMatchDecisionCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def decide_price_match(
+    body: DecideProductMatchRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceResearchDependency,
+) -> ProductMatchDecisionRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.decide_match(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except PriceResearchBlocked as exc:
+        raise _map_price_research_error(exc) from exc
+
+
+@router.post(
+    "/price-governance/monitoring-policies",
+    response_model=MonitoringPolicyRevision,
+    operation_id="ecommerceWorkshopPriceMonitoringPolicyCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_price_monitoring_policy(
+    body: MonitoringPolicyRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceResearchDependency,
+) -> MonitoringPolicyRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.create_policy(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except PriceResearchBlocked as exc:
+        raise _map_price_research_error(exc) from exc
+
+
+@router.post(
+    "/price-governance/batches/prepare",
+    response_model=PriceResearchBatchRevision,
+    operation_id="ecommerceWorkshopPriceResearchBatchPrepare",
+    status_code=201,
+    responses=_ERRORS,
+)
+def prepare_price_research_batch(
+    body: PreparePriceResearchBatchRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceResearchDependency,
+) -> PriceResearchBatchRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.prepare_batch(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except PriceResearchBlocked as exc:
+        raise _map_price_research_error(exc) from exc
+
+
+@router.post(
+    "/price-governance/batches/{batch_id}/freeze",
+    response_model=PriceResearchBatchRevision,
+    operation_id="ecommerceWorkshopPriceResearchBatchFreeze",
+    responses=_ERRORS,
+)
+def freeze_price_research_batch(
+    batch_id: Annotated[str, Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$")],
+    body: FreezePriceResearchBatchRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceResearchDependency,
+) -> PriceResearchBatchRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.freeze_batch(TenantScope(principal.org_id, principal.project_id), batch_id, body, principal.subject)
+    except PriceResearchBlocked as exc:
+        raise _map_price_research_error(exc) from exc
+
+
+@router.get(
+    "/views/price-governance/contributions",
+    response_model=PriceResearchContributionView,
+    operation_id="ecommerceWorkshopPriceResearchContributionViewGet",
+    responses=_ERRORS,
+)
+def get_price_research_contribution_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceResearchDependency,
+) -> PriceResearchContributionView:
+    _reject_query_parameters(request)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
 
 
 @router.get(

@@ -278,6 +278,10 @@ export type PriceObservation = { observationRef: PriceExactRef; market: string; 
 export type PriceCountLedger = { input: number; eligible: number; excluded: number; needsReview: number; unknown: number; deduplicated: number };
 export type PriceGovernanceViewSlice = { viewId: PriceGovernanceViewId; status: "ready" | "blocked"; resourceRevision: number; dataCutoff: string; readinessAxes: PriceAxisReadiness[]; observations: PriceObservation[]; authorityRefs: PriceExactRef[]; blockers: PriceBlocker[]; countLedger: PriceCountLedger };
 export type PriceGovernanceViewResponse = { schemaVersion: typeof PRICE_GOVERNANCE_SCHEMA_VERSION; tenant: WorkshopTenant; resourceRevision: number; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; views: PriceGovernanceViewSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
+export const PRICE_RESEARCH_SCHEMA_VERSION = "aos.ecommerce-workshop.price-research/v1" as const;
+export type PriceResearchBatchLedger = PriceCountLedger;
+export type PriceResearchBatchSummary = { batchId: string; revision: number; version: number; lifecycle: "prepared" | "frozen" | "stale"; exactRefs: Record<string, PriceExactRef>; skillRefs: PriceExactRef[]; itemCount: number; itemHashes: string[]; ledger: PriceResearchBatchLedger; providerCallCount: 0; researchJobCount: 0; notificationCount: 0; actionProposalCount: 0; repricingCount: 0; externalEffectCount: 0; priorContentHash: string | null; contentHash: string; createdBy: string; createdAt: string };
+export type PriceResearchContributionViewResponse = { schemaVersion: typeof PRICE_RESEARCH_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; atomicSkillRefs: PriceExactRef[]; logicRef: PriceExactRef | null; primaryColleague: "数据参谋"; collaboratorColleagues: ["活动策划师", "导购顾问"]; latestBatch: PriceResearchBatchSummary | null; blockers: string[]; allowedCommands: ("PREPARE_PRICE_RESEARCH_BATCH" | "FREEZE_PRICE_RESEARCH_BATCH")[]; externalEffectsAllowed: false };
 
 export const CUSTOMER_VIEW_SCHEMA_VERSION = "aos.ecommerce-workshop.customer-view/v1" as const;
 export type CustomerViewId = "customer" | "segment" | "journey" | "dialogue";

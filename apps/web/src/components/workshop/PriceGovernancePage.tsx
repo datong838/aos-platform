@@ -1,22 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 
-import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type PriceGovernanceViewId, type PriceGovernanceViewResponse } from "../../api/ecommerceWorkshop";
+import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type PriceGovernanceViewId, type PriceGovernanceViewResponse, type PriceResearchContributionViewResponse } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 
-type Client = Pick<typeof ecommerceWorkshopClient, "getPriceGovernanceView">;
+type Client = Pick<typeof ecommerceWorkshopClient, "getPriceGovernanceView"> & Partial<Pick<typeof ecommerceWorkshopClient, "getPriceResearchContributionView">>;
 type Phase = "loading" | "ready" | "empty" | "forbidden" | "failed";
 const LABELS: Record<PriceGovernanceViewId, string> = { governance: "价格治理", competitor: "竞品同款", schedule: "调度与复核" };
 const AXIS_LABELS = { collection: "采集证据", match: "同款判定", policy_case: "策略与 Case", notification: "通知就绪", advice_handoff: "建议交接", repricing: "自动调价" } as const;
 const stateFor = (phase: Phase): AsyncState => phase === "ready" || phase === "empty" ? "ready" : phase;
+const unavailableContribution = (next: PriceGovernanceViewResponse): PriceResearchContributionViewResponse => ({ schemaVersion: "aos.ecommerce-workshop.price-research/v1", tenant: next.tenant, evaluatedAt: next.evaluatedAt, atomicSkillRefs: [], logicRef: null, primaryColleague: "数据参谋", collaboratorColleagues: ["活动策划师", "导购顾问"], latestBatch: null, blockers: ["PRICE_RESEARCH_BATCH_NOT_AVAILABLE"], allowedCommands: ["PREPARE_PRICE_RESEARCH_BATCH", "FREEZE_PRICE_RESEARCH_BATCH"], externalEffectsAllowed: false });
 
 export function PriceGovernancePage({ client = ecommerceWorkshopClient }: { client?: Client }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [response, setResponse] = useState<PriceGovernanceViewResponse | null>(null);
+  const [contribution, setContribution] = useState<PriceResearchContributionViewResponse | null>(null);
   const [selected, setSelected] = useState<PriceGovernanceViewId>("governance");
   const request = useRef(0);
   const load = () => {
-    const id = ++request.current; setPhase("loading"); setResponse(null);
-    void client.getPriceGovernanceView().then((next) => { if (id !== request.current) return; setResponse(next); setSelected(next.views.find((item) => item.status === "blocked")?.viewId ?? "governance"); setPhase(next.page.count === 0 && next.views.every((item) => item.status === "ready") ? "empty" : "ready"); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
+    const id = ++request.current; setPhase("loading"); setResponse(null); setContribution(null);
+    void Promise.all([client.getPriceGovernanceView(), client.getPriceResearchContributionView?.().catch(() => null) ?? Promise.resolve(null)]).then(([next, nextContribution]) => { if (id !== request.current) return; setResponse(next); setContribution(nextContribution ?? unavailableContribution(next)); setSelected(next.views.find((item) => item.status === "blocked")?.viewId ?? "governance"); setPhase(next.page.count === 0 && next.views.every((item) => item.status === "ready") ? "empty" : "ready"); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
   };
   useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
   const view = response?.views.find((item) => item.viewId === selected);
@@ -25,6 +27,7 @@ export function PriceGovernancePage({ client = ecommerceWorkshopClient }: { clie
   const content = response && view ? <div className="price-governance-read-model">
     <section className="price-governance-hero"><div><span>价格治理驾驶舱 · exact evidence</span><h2>用统一报价口径审视市场价格，而不是自动改价</h2><p>Observation 与 Match Decision 分离；陈旧、未许可、初步匹配或 original 不可达均不计可比异常。</p></div><strong>只读 · 调价禁用</strong></section>
     <section className="creator-growth-axis"><div><span>只读视图</span><strong>3</strong></div><div><span>可比报价</span><strong>{comparable}/{total}</strong></div><div><span>资源 revision</span><strong>r{response.resourceRevision}</strong></div><div><span>写入口</span><strong>0</strong></div></section>
+    {contribution ? <section className="creator-contribution-card" aria-label="价格治理数字同事贡献"><header><div><span>原子 Skill → Logic → 数字同事</span><h3>{contribution.primaryColleague}主责价格调研</h3></div><strong>{contribution.latestBatch?.lifecycle ?? "未准备"}</strong></header><p>{contribution.atomicSkillRefs.length ? `${contribution.atomicSkillRefs.length} 个原子 Skill 由 ${contribution.logicRef?.resourceId ?? "未知 Logic"} 编排` : "当前未挂接 exact Skill/Logic authority，保持失败关闭。"}</p><div className="creator-contribution-grid"><span>协作：{contribution.collaboratorColleagues.join("、")}</span><span>批次：{contribution.latestBatch ? `${contribution.latestBatch.ledger.eligible}/${contribution.latestBatch.ledger.input} eligible` : "无可信批次"}</span><span>外部效果：0</span><span>ResearchJob：0</span></div><small>{contribution.blockers.length ? contribution.blockers.join(" · ") : "exact contribution chain ready"}</small></section> : null}
     <div className="price-governance-tabs" role="tablist" aria-label="价格治理只读视图">{response.views.map((item, index) => <button type="button" role="tab" aria-selected={selected === item.viewId} tabIndex={selected === item.viewId ? 0 : -1} key={item.viewId} onClick={() => setSelected(item.viewId)} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? response.views.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + response.views.length) % response.views.length; setSelected(response.views[nextIndex]!.viewId); event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("button")[nextIndex]?.focus(); }}><strong>{LABELS[item.viewId]}</strong><span>{item.status}</span></button>)}</div>
     <section className="price-governance-panel" role="tabpanel" aria-label={LABELS[selected]}><header><div><span>{view.viewId}</span><h2>{LABELS[view.viewId]}</h2></div><strong className={`content-campaign-status is-${view.status}`}>{view.status === "ready" ? "同截止面可读" : "失败关闭"}</strong></header>
       <div className="price-governance-readiness">{view.readinessAxes.map((axis) => <article key={axis.axis} className={`is-${axis.status}`}><strong>{AXIS_LABELS[axis.axis]}</strong><span>{axis.status}</span><p>{axis.exactRef ? `${axis.exactRef.resourceType} · r${axis.exactRef.revision}` : axis.axis === "repricing" ? "R4 专业门未开启" : "无 exact authority"}</p></article>)}</div>

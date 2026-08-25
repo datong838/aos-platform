@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "aos.workshop-evidence/v1",
+  "taskId": "W6-05",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "authorityBase": "AOS-000248",
+  "capturedAt": "2026-08-25T14:59:03+08:00",
+  "outcome": "CODE_CONTRACT_BROWSER_GREEN_NO_PROVIDER_NO_RESEARCH_JOB_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "implementation": {
+    "profile": "licensed-source-kind-market-currency-unit-schema-freshness-retention-rate-capacity",
+    "normalizer": "artifact-originals-sequence-schema-facts-quote-basis-comparability",
+    "productMatch": "observation-and-reviewed-decision-separated-preliminary-needs-new-evidence",
+    "monitoringPolicy": "exact-scope-basis-currency-unit-tolerance-freshness-originals-match-confidence-eval",
+    "batch": "prepare-freeze-exact-refs-count-conservation-content-hash-cas",
+    "composition": "five-atomic-skills-to-ecommerce-price-governance-logic-to-data-advisor-primary-to-workshop-contribution",
+    "providerCallCount": 0,
+    "researchJobCount": 0,
+    "notificationCount": 0,
+    "actionProposalCount": 0,
+    "repricingCount": 0,
+    "externalEffectCount": 0
+  },
+  "verification": {
+    "backendW6AndContractCumulative": "56 passed",
+    "frontendTargeted": "2 files / 6 tests passed",
+    "frontendFullCumulative": "227 files / 2115 tests passed",
+    "productionBuild": "GREEN / 343 modules",
+    "openapi": "2616 paths / 2248 schemas / 4395 route rows / 4385 unique operations / deterministic two-clean-process check",
+    "alembic": "w6_005 unique head; migration not applied",
+    "compileall": "GREEN",
+    "diffCheck": "GREEN"
+  },
+  "browser": {
+    "tool": "Codex built-in browser",
+    "url": "http://localhost:5173/workshop/price-governance",
+    "page": "价格治理驾驶舱",
+    "assertions": [
+      "真实租户 org-org/dev-project 可见",
+      "原子 Skill → Logic → 数字同事贡献链可见",
+      "数据参谋主责，活动策划师与导购顾问协作可见",
+      "authority 未部署时批次为 trusted-empty 并显式显示 blocker",
+      "Provider、ResearchJob、external effect 均为 0",
+      "贡献区域无 start、notify 或 reprice 控件",
+      "P01/P03/P07/P09/P11 当前 SourceReadiness 失败事实保持可见且未被提升"
+    ],
+    "runtimeFacts": {
+      "priceResearchAuthority": "migration not applied; contribution fallback is explicit and fail-closed",
+      "sourceReadiness": "mixed failed state retained",
+      "release": "not authorized"
+    }
+  },
+  "sourceSha256": {
+    "services/aos-api/aos_api/ecommerce_workshop_price_research.py": "b92a34c0f242c858f3e8e70c2e7e76d687ed36e517f509f5c25588717f398902",
+    "services/aos-api/aos_api/ecommerce_workshop_price_research_store.py": "4d7b3de594fa324d9a9d7796ec799c25b176b478e7908409151022aef85e222a",
+    "services/aos-api/alembic/versions/w6_005_price_research.py": "6bc813fc9fe8835cbad28fcae5e426c1b0c3d4b54b55380c2fec6c955179de8f",
+    "apps/web/src/components/workshop/PriceGovernancePage.tsx": "597cb6d34594c825af6e8e3b5c88d3b09d658609096a5bb3932d3b4100691114",
+    "packages/contracts/openapi/v1.generated.json": "73daedda06975a5992ef8557ee942255b2fd95fb12f2bdaf0059678d4038b519",
+    "packages/contracts/openapi/v1.inventory.json": "92abf7e3ce3504c02818c5a1ec4d12e267a7b0f6b8e0c9b33ff564ab24464344"
+  },
+  "safety": {
+    "realBusinessDataMutated": false,
+    "migrationApplied": false,
+    "externalProviderCalled": false,
+    "researchJobCreated": false,
+    "notificationSent": false,
+    "actionProposed": false,
+    "priceChanged": false,
+    "releasePerformed": false
+  },
+  "nextTask": "W6-06"
+}
