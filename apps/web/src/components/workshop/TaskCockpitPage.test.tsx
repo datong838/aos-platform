@@ -48,6 +48,15 @@ describe("TaskCockpitPage", () => {
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
   afterEach(() => { act(() => root.unmount()); host.remove(); });
 
+  it("shows the W8-09 operating contract fail closed without exposing control commands", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    expect(host.querySelector('[aria-label="W8-09 运营就绪预检"]')).not.toBeNull();
+    expect(host.textContent).toContain("Unknown backlog");
+    expect(host.textContent).toContain("未知（不以 0 代替）");
+    expect(host.textContent).toContain("全部禁用");
+  });
+
   it("只显示 canonical partial 范围、服务端 blocker 和 Task/Run，不制造命令或 H1", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));

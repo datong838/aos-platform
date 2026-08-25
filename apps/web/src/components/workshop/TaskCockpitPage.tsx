@@ -21,6 +21,7 @@ import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { useSourceReadinessSnapshot } from "./SourceReadinessContext";
 import { aipAgentControl, type IssuedHandoff } from "../../api/aipAgentControl";
 import type { ModuleHandoffCompileResponse, TaskCockpitTask, TaskCockpitRun } from "../../api/ecommerceWorkshop";
+import { WorkshopOperatingReadinessCard } from "./WorkshopOperatingReadinessCard";
 
 type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getResponsibilityAssignmentObservation" | "getDispatchControlObservation" | "getTaskCockpitDispatchScenario" | "getTaskCockpitBatchScenario">>;
 type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
@@ -401,6 +402,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
       <select id="task-cockpit-status" value={status} onChange={(event) => { const next = event.target.value as "" | TaskCockpitTaskStatus; setStatus(next); load(next); }}>{TASK_STATUSES.map((item) => <option key={item.value || "all"} value={item.value}>{item.label}</option>)}</select>
       <button type="button" onClick={() => load(status, undefined, Boolean(response))}>重新读取</button>
     </div>
+    <WorkshopOperatingReadinessCard />
     <AsyncStateBoundary state={stateFor(phase)} dataCutoff={response?.taskCutoff} title={phase === "stale" ? "游标或当前快照已变化" : undefined} description={phase === "stale" ? "保留已标记内容；请重新读取首屏，不会自动重放旧游标。" : undefined} action={phase === "stale" || phase === "failed" ? <button type="button" onClick={() => load(status)}>重新读取首屏</button> : undefined}>{content}</AsyncStateBoundary>
   </section>;
 }
