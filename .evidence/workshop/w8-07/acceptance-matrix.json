@@ -1,0 +1,4107 @@
+{
+  "schemaVersion": "aos.workshop.w8-07-acceptance-matrix/v1",
+  "buildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+  "dimensions": {
+    "modules": 8,
+    "viewports": 3,
+    "states": 10,
+    "cells": 240
+  },
+  "summary": {
+    "passed": 0,
+    "blocked": 240,
+    "notApplicable": 0
+  },
+  "engineeringEvidence": {
+    "targetedTests": 39,
+    "fullWebTests": 2193,
+    "testFiles": 242,
+    "productionBuildModules": 344,
+    "browserRouteViewportChecks": 24
+  },
+  "operationalBoundary": "LOCAL_PRODUCTION_BUILD_HAS_NO_EXACT_CATALOG_OR_INSTALLATION_AUTHORITY",
+  "externalEffectCount": 0,
+  "releaseAllowed": false,
+  "cells": [
+    {
+      "key": "ecommerce.task-cockpit:1280:loading",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1280,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1280:empty",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1280,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1280:forbidden",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1280,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1280:stale",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1280,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1280:partial",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1280,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1280:failed",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1280,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1280:unknown",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1280,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1280:blocked",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1280,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1280:not-installed",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1280,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1280:ready",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1280,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1440:loading",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1440,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1440:empty",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1440,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1440:forbidden",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1440,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1440:stale",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1440,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1440:partial",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1440,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1440:failed",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1440,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1440:unknown",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1440,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1440:blocked",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1440,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1440:not-installed",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1440,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1440:ready",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1440,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1920:loading",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1920,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1920:empty",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1920,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1920:forbidden",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1920,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1920:stale",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1920,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1920:partial",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1920,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1920:failed",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1920,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1920:unknown",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1920,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1920:blocked",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1920,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1920:not-installed",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1920,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.task-cockpit:1920:ready",
+      "moduleId": "ecommerce.task-cockpit",
+      "route": "/workshop/task-cockpit",
+      "viewport": 1920,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1280:loading",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1280,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1280:empty",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1280,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1280:forbidden",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1280,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1280:stale",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1280,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1280:partial",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1280,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1280:failed",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1280,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1280:unknown",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1280,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1280:blocked",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1280,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1280:not-installed",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1280,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1280:ready",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1280,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1440:loading",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1440,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1440:empty",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1440,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1440:forbidden",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1440,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1440:stale",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1440,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1440:partial",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1440,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1440:failed",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1440,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1440:unknown",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1440,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1440:blocked",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1440,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1440:not-installed",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1440,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1440:ready",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1440,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1920:loading",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1920,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1920:empty",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1920,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1920:forbidden",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1920,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1920:stale",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1920,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1920:partial",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1920,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1920:failed",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1920,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1920:unknown",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1920,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1920:blocked",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1920,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1920:not-installed",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1920,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.content-campaign:1920:ready",
+      "moduleId": "ecommerce.content-campaign",
+      "route": "/workshop/content-campaign",
+      "viewport": 1920,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1280:loading",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1280,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1280:empty",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1280,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1280:forbidden",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1280,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1280:stale",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1280,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1280:partial",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1280,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1280:failed",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1280,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1280:unknown",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1280,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1280:blocked",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1280,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1280:not-installed",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1280,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1280:ready",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1280,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1440:loading",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1440,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1440:empty",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1440,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1440:forbidden",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1440,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1440:stale",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1440,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1440:partial",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1440,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1440:failed",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1440,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1440:unknown",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1440,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1440:blocked",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1440,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1440:not-installed",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1440,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1440:ready",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1440,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1920:loading",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1920,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1920:empty",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1920,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1920:forbidden",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1920,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1920:stale",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1920,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1920:partial",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1920,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1920:failed",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1920,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1920:unknown",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1920,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1920:blocked",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1920,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1920:not-installed",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1920,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.operations:1920:ready",
+      "moduleId": "ecommerce.operations",
+      "route": "/workshop/operations",
+      "viewport": 1920,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1280:loading",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1280,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1280:empty",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1280,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1280:forbidden",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1280,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1280:stale",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1280,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1280:partial",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1280,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1280:failed",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1280,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1280:unknown",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1280,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1280:blocked",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1280,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1280:not-installed",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1280,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1280:ready",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1280,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1440:loading",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1440,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1440:empty",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1440,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1440:forbidden",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1440,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1440:stale",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1440,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1440:partial",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1440,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1440:failed",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1440,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1440:unknown",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1440,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1440:blocked",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1440,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1440:not-installed",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1440,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1440:ready",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1440,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1920:loading",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1920,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1920:empty",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1920,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1920:forbidden",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1920,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1920:stale",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1920,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1920:partial",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1920,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1920:failed",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1920,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1920:unknown",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1920,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1920:blocked",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1920,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1920:not-installed",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1920,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.creator-growth:1920:ready",
+      "moduleId": "ecommerce.creator-growth",
+      "route": "/workshop/creator-outreach",
+      "viewport": 1920,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1280:loading",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1280,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1280:empty",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1280,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1280:forbidden",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1280,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1280:stale",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1280,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1280:partial",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1280,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1280:failed",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1280,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1280:unknown",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1280,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1280:blocked",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1280,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1280:not-installed",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1280,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1280:ready",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1280,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1440:loading",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1440,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1440:empty",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1440,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1440:forbidden",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1440,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1440:stale",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1440,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1440:partial",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1440,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1440:failed",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1440,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1440:unknown",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1440,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1440:blocked",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1440,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1440:not-installed",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1440,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1440:ready",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1440,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1920:loading",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1920,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1920:empty",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1920,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1920:forbidden",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1920,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1920:stale",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1920,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1920:partial",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1920,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1920:failed",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1920,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1920:unknown",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1920,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1920:blocked",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1920,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1920:not-installed",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1920,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.media-studio:1920:ready",
+      "moduleId": "ecommerce.media-studio",
+      "route": "/workshop/media-studio",
+      "viewport": 1920,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1280:loading",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1280,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1280:empty",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1280,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1280:forbidden",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1280,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1280:stale",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1280,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1280:partial",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1280,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1280:failed",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1280,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1280:unknown",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1280,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1280:blocked",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1280,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1280:not-installed",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1280,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1280:ready",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1280,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1440:loading",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1440,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1440:empty",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1440,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1440:forbidden",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1440,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1440:stale",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1440,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1440:partial",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1440,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1440:failed",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1440,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1440:unknown",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1440,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1440:blocked",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1440,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1440:not-installed",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1440,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1440:ready",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1440,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1920:loading",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1920,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1920:empty",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1920,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1920:forbidden",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1920,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1920:stale",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1920,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1920:partial",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1920,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1920:failed",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1920,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1920:unknown",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1920,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1920:blocked",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1920,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1920:not-installed",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1920,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.analyst:1920:ready",
+      "moduleId": "ecommerce.analyst",
+      "route": "/workshop/analyst",
+      "viewport": 1920,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1280:loading",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1280,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1280:empty",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1280,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1280:forbidden",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1280,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1280:stale",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1280,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1280:partial",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1280,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1280:failed",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1280,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1280:unknown",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1280,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1280:blocked",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1280,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1280:not-installed",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1280,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1280:ready",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1280,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1440:loading",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1440,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1440:empty",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1440,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1440:forbidden",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1440,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1440:stale",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1440,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1440:partial",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1440,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1440:failed",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1440,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1440:unknown",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1440,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1440:blocked",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1440,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1440:not-installed",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1440,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1440:ready",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1440,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1920:loading",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1920,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1920:empty",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1920,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1920:forbidden",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1920,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1920:stale",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1920,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1920:partial",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1920,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1920:failed",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1920,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1920:unknown",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1920,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1920:blocked",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1920,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1920:not-installed",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1920,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.price-governance:1920:ready",
+      "moduleId": "ecommerce.price-governance",
+      "route": "/workshop/pricing-governance",
+      "viewport": 1920,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1280:loading",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1280,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1280:empty",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1280,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1280:forbidden",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1280,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1280:stale",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1280,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1280:partial",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1280,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1280:failed",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1280,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1280:unknown",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1280,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1280:blocked",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1280,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1280:not-installed",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1280,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1280:ready",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1280,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1440:loading",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1440,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1440:empty",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1440,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1440:forbidden",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1440,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1440:stale",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1440,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1440:partial",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1440,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1440:failed",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1440,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1440:unknown",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1440,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1440:blocked",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1440,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1440:not-installed",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1440,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1440:ready",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1440,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1920:loading",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1920,
+      "state": "loading",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1920:empty",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1920,
+      "state": "empty",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1920:forbidden",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1920,
+      "state": "forbidden",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1920:stale",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1920,
+      "state": "stale",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1920:partial",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1920,
+      "state": "partial",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1920:failed",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1920,
+      "state": "failed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1920:unknown",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1920,
+      "state": "unknown",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1920:blocked",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1920,
+      "state": "blocked",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1920:not-installed",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1920,
+      "state": "not-installed",
+      "disposition": "blocked",
+      "reason": "EXACT_MODULE_INSTALLATION_EVIDENCE_NOT_AVAILABLE",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    },
+    {
+      "key": "ecommerce.customer:1920:ready",
+      "moduleId": "ecommerce.customer",
+      "route": "/workshop/customer",
+      "viewport": 1920,
+      "state": "ready",
+      "disposition": "blocked",
+      "reason": "READY_REQUIRES_PRODUCTION_HTTP",
+      "source": "local-production-build",
+      "productionBuildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "externalEffectCount": 0,
+      "releaseAllowed": false
+    }
+  ]
+}

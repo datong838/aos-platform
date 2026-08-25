@@ -1,0 +1,297 @@
+{
+  "schemaVersion": "aos.workshop.w8-07-browser-route-matrix/v1",
+  "capturedAt": "2026-08-26T06:12:00+08:00",
+  "buildSha": "6b41a32ba5b012a645fd4d1465258e5853d0af04",
+  "source": "local-production-build",
+  "positiveTenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "result": "BROWSER_GEOMETRY_GREEN_RUNTIME_DATA_FAIL_CLOSED",
+  "routes": [
+    {
+      "moduleId": "ecommerce.task-cockpit",
+      "viewport": 1280,
+      "clientWidth": 1280,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/task-cockpit",
+      "overflowX": false,
+      "scrollWidth": 1280,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.content-campaign",
+      "viewport": 1280,
+      "clientWidth": 1280,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/content-campaign",
+      "overflowX": false,
+      "scrollWidth": 1280,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.operations",
+      "viewport": 1280,
+      "clientWidth": 1280,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/operations",
+      "overflowX": false,
+      "scrollWidth": 1280,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.creator-growth",
+      "viewport": 1280,
+      "clientWidth": 1280,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/creator-outreach",
+      "overflowX": false,
+      "scrollWidth": 1280,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.media-studio",
+      "viewport": 1280,
+      "clientWidth": 1280,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/media-studio",
+      "overflowX": false,
+      "scrollWidth": 1280,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.analyst",
+      "viewport": 1280,
+      "clientWidth": 1280,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/analyst",
+      "overflowX": false,
+      "scrollWidth": 1280,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.price-governance",
+      "viewport": 1280,
+      "clientWidth": 1280,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/pricing-governance",
+      "overflowX": false,
+      "scrollWidth": 1280,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.customer",
+      "viewport": 1280,
+      "clientWidth": 1280,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/customer",
+      "overflowX": false,
+      "scrollWidth": 1280,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.task-cockpit",
+      "viewport": 1440,
+      "clientWidth": 1440,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/task-cockpit",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.content-campaign",
+      "viewport": 1440,
+      "clientWidth": 1440,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/content-campaign",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.operations",
+      "viewport": 1440,
+      "clientWidth": 1440,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/operations",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.creator-growth",
+      "viewport": 1440,
+      "clientWidth": 1440,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/creator-outreach",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.media-studio",
+      "viewport": 1440,
+      "clientWidth": 1440,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/media-studio",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.analyst",
+      "viewport": 1440,
+      "clientWidth": 1440,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/analyst",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.price-governance",
+      "viewport": 1440,
+      "clientWidth": 1440,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/pricing-governance",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.customer",
+      "viewport": 1440,
+      "clientWidth": 1440,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/customer",
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.task-cockpit",
+      "viewport": 1920,
+      "clientWidth": 1920,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/task-cockpit",
+      "overflowX": false,
+      "scrollWidth": 1920,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.content-campaign",
+      "viewport": 1920,
+      "clientWidth": 1920,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/content-campaign",
+      "overflowX": false,
+      "scrollWidth": 1920,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.operations",
+      "viewport": 1920,
+      "clientWidth": 1920,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/operations",
+      "overflowX": false,
+      "scrollWidth": 1920,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.creator-growth",
+      "viewport": 1920,
+      "clientWidth": 1920,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/creator-outreach",
+      "overflowX": false,
+      "scrollWidth": 1920,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.media-studio",
+      "viewport": 1920,
+      "clientWidth": 1920,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/media-studio",
+      "overflowX": false,
+      "scrollWidth": 1920,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.analyst",
+      "viewport": 1920,
+      "clientWidth": 1920,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/analyst",
+      "overflowX": false,
+      "scrollWidth": 1920,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.price-governance",
+      "viewport": 1920,
+      "clientWidth": 1920,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/pricing-governance",
+      "overflowX": false,
+      "scrollWidth": 1920,
+      "stateRoles": 3
+    },
+    {
+      "moduleId": "ecommerce.customer",
+      "viewport": 1920,
+      "clientWidth": 1920,
+      "h1": "电商工作台",
+      "h1Count": 1,
+      "href": "/workshop/customer",
+      "overflowX": false,
+      "scrollWidth": 1920,
+      "stateRoles": 3
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "media-studio-1280.png",
+      "bytes": 70326
+    },
+    {
+      "file": "analyst-1440.png",
+      "bytes": 52325
+    },
+    {
+      "file": "customer-1920.png",
+      "bytes": 58121
+    }
+  ],
+  "console": {
+    "uncaughtErrors": 0,
+    "expectedApiUnavailableWarnings": true
+  },
+  "externalEffectCount": 0,
+  "releaseAllowed": false
+}
