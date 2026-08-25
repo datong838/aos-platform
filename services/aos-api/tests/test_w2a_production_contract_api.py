@@ -45,10 +45,9 @@ def cleanup():
             c.execute("DELETE FROM aip_task_brief_revision WHERE org_id=%s AND project_id=%s AND task_id=ANY(%s)",(*ORG.key,ids))
         for task_id in ids:
             c.execute("DELETE FROM aip_task_brief_head WHERE org_id=%s AND project_id=%s AND task_id=%s",(*ORG.key,task_id))
-        c.execute(
-            "DELETE FROM aip_evidence WHERE org_id=%s AND project_id=%s AND created_by=%s AND source_ref='w2a-api-real-order'",
-            (*ORG.key,EVIDENCE_ACTOR),
-        )
+        # Base Evidence is append-only from W4-01 onward. Every API test row has
+        # a unique evidence_id, so preserving it is both isolated and faithful
+        # to the production immutability contract.
         for task_id in ids:
             c.execute("DELETE FROM aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s",(*ORG.key,task_id))
         c.commit()
@@ -65,7 +64,9 @@ def test_brief_api_principal_tenant_idempotency_and_canary(client):
         body=created.json(); assert body["tenant"]=={"orgId":"org-org","projectId":"dev-project"}; assert body["lifecycle"]=="draft"
         listing=client.get("/v1/aip/production-contracts/task-briefs",headers=headers())
         assert listing.status_code==200 and any(item["briefId"]==body["briefId"] for item in listing.json()["items"])
-        assert client.get("/v1/aip/production-contracts/task-briefs",headers=headers("dev-org")).json()["count"]==0
+        canary_listing=client.get("/v1/aip/production-contracts/task-briefs",headers=headers("dev-org"))
+        assert canary_listing.status_code==200,canary_listing.text
+        assert all(item["briefId"]!=body["briefId"] for item in canary_listing.json()["items"])
         assert client.post("/v1/aip/production-contracts/task-briefs",headers=headers(key=key),json=payload).json()["briefId"]==body["briefId"]
         assert client.get(f"/v1/aip/production-contracts/task-briefs/{body['briefId']}",headers=headers("dev-org")).status_code==404
         frozen=client.post(f"/v1/aip/production-contracts/task-briefs/{body['briefId']}/freeze",headers=headers(key=f"freeze-{uuid.uuid4().hex}"),json={"expectedVersion":1})
@@ -127,7 +128,9 @@ def test_evidence_bundle_api_binds_exact_frozen_brief_and_evidence(client):
         assert bundle["missing"]==[{"factId":"customer_profile"}]
         listing=client.get("/v1/aip/production-contracts/evidence-bundles",headers=headers())
         assert listing.status_code==200 and any(item["bundleId"]==bundle["bundleId"] for item in listing.json()["items"])
-        assert client.get("/v1/aip/production-contracts/evidence-bundles",headers=headers("dev-org")).json()["count"]==0
+        canary_listing=client.get("/v1/aip/production-contracts/evidence-bundles",headers=headers("dev-org"))
+        assert canary_listing.status_code==200,canary_listing.text
+        assert all(item["bundleId"]!=bundle["bundleId"] for item in canary_listing.json()["items"])
         assert client.post("/v1/aip/production-contracts/evidence-bundles/build",headers=headers(key=key),json=payload).json()["bundleId"]==bundle["bundleId"]
         assert client.get(f"/v1/aip/production-contracts/evidence-bundles/{bundle['bundleId']}",headers=headers()).status_code==200
         assert client.get(f"/v1/aip/production-contracts/evidence-bundles/{bundle['bundleId']}",headers=headers("dev-org")).status_code==404

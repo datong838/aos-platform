@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "workshop-delivery-evidence/v1",
+  "taskId": "W5-03",
+  "recordedAt": "2026-08-25T00:36:23Z",
+  "branch": "m1",
+  "baselineCommit": "f71c1eaee8e2679f44f1dd24a3631392b926111b",
+  "authorityRevision": "AOS-000237",
+  "outcome": "W5_03_EXPLICIT_DRAFT_EXACT_APPROVAL_LEASE_CODE_GREEN_EXTERNAL_RESERVATION_BLOCKED_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "scope": {
+    "implemented": [
+      "append-only ActionDraftRevision authority with owner and CAS controls",
+      "atomic idempotent Draft submit to immutable Proposal exact source ref",
+      "server-bounded ApprovalEvent expiry and exact policy, slot and eligibility hashes",
+      "ExecutionLease exact action binding and approval-set hashes",
+      "legacy external Proposal entry blocked in favor of explicit Draft submit",
+      "W5 external Lease blocked while ActionBudget reservation authority is unavailable",
+      "nullable additive tenant-RLS migration asset"
+    ],
+    "excluded": [
+      "real environment migration",
+      "real account, secret, approval, lease or reservation issuance",
+      "Action or Provider invocation",
+      "canary and release"
+    ]
+  },
+  "verification": {
+    "focused": {
+      "result": "4 passed",
+      "files": [
+        "test_w5_03_draft_proposal_approval_lease.py"
+      ]
+    },
+    "adjacent": {
+      "result": "32 passed",
+      "coverage": "W5-02, W5-03, AIP Action control/execution and W2-D action/start gates"
+    },
+    "cumulative": {
+      "result": "96 passed",
+      "coverage": "W5-01 through W5-03, AIP Action control/execution, W2-D and W2-A/W2-B production contracts"
+    },
+    "static": {
+      "compileall": "green",
+      "alembicHeads": ["w5_002 (head)"],
+      "diffCheck": "green"
+    },
+    "browser": {
+      "status": "not_applicable",
+      "reason": "No Workshop route, component, copy or page behavior changed in W5-03; browser smoke is not substituted for backend authority evidence."
+    }
+  },
+  "compatibility": {
+    "legacyInternalProposalPath": "green",
+    "appendOnlyEvidenceTests": "green",
+    "crossTenantFixtureOrdering": "green",
+    "externalLegacyProposalEntry": "blocked",
+    "externalOperationalReadiness": "blocked"
+  },
+  "knownBlockers": [
+    "APPROVAL_POLICY_REVISION_AUTHORITY_UNAVAILABLE",
+    "APPROVER_ELIGIBILITY_AUTHORITY_UNAVAILABLE",
+    "ACTION_BUDGET_RESERVATION_AUTHORITY_UNAVAILABLE",
+    "ACCOUNT_ADAPTER_AND_DRY_VALIDATION_AUTHORITIES_UNAVAILABLE"
+  ],
+  "nextTask": "W5-04"
+}

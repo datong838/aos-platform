@@ -9,6 +9,7 @@ from typing import Any
 from aos_api.aip_action_adapters import ActionAdapterRegistry, AdapterOutcome
 from aos_api.aip_action_models import (
     AcquireExecutionLeaseRequest,
+    ActionExecutionLeaseSnapshot,
     ActionExecutionView,
     ActionReceiptSnapshot,
     CreateCompensationRequest,
@@ -22,8 +23,9 @@ from aos_api.aip_action_store import (
     AipActionStoreError,
     AipActionTransitionBlocked,
     canonical_hash,
+    W5_EXTERNAL_ACTION_FAMILIES,
 )
-from aos_api.aip_contracts import ActionReceiptStatus, ExecutionLease, ResourceRef
+from aos_api.aip_contracts import ActionReceiptStatus, ResourceRef
 from aos_api.auth import Principal
 from aos_api.db import connect
 from aos_api.marking import ensure_field_writes, ensure_markings
@@ -87,20 +89,55 @@ class AipActionExecutionService:
             if int(proposal["version"]) != body.expected_proposal_version or proposal["proposal_hash"] != body.expected_proposal_hash:
                 raise AipActionConflict("proposal revision or hash changed before lease")
             self._store.assert_bound_impact_preview_current(conn, scope, proposal)
+            policy = proposal["policy_snapshot"] or {}
+            expected_policy_hash = canonical_hash(policy)
+            if proposal["approval_policy_hash"] not in {None, expected_policy_hash}:
+                raise AipActionTransitionBlocked("APPROVAL_POLICY_HASH_DRIFTED")
+            if proposal["source_draft_id"] is not None and bool(policy.get("draftOnly")):
+                raise AipActionTransitionBlocked("ACTION_DRAFT_ONLY_POLICY")
             if proposal["created_by"] == principal.subject:
                 raise AipActionTransitionBlocked("maker cannot execute own proposal")
             approvals = conn.execute(
-                "SELECT actor_id,expires_at FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND proposal_id=%s AND decision='approved'",
+                """SELECT approval_event_id,actor_id,expires_at,proposal_hash,
+                          action_binding_hash,approval_policy_hash,slot_id,
+                          eligibility_snapshot_hash
+                   FROM aip_action_approval_event
+                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s
+                     AND decision='approved' ORDER BY created_at,approval_event_id""",
                 (*scope.key, proposal_id),
             ).fetchall()
-            minimum = int((proposal["policy_snapshot"] or {}).get("minimumApprovals", 1))
+            minimum = int(policy.get("minimumApprovals", 1))
             valid = [row for row in approvals if row["expires_at"] is None or row["expires_at"] > now]
             if len(valid) < minimum:
                 raise AipActionTransitionBlocked("valid approval quorum is no longer satisfied")
+            if any(
+                row["proposal_hash"] != proposal["proposal_hash"]
+                or row["approval_policy_hash"] not in {None, expected_policy_hash}
+                or row["action_binding_hash"] != proposal["action_binding_hash"]
+                for row in valid
+            ):
+                raise AipActionTransitionBlocked("APPROVAL_SET_BINDING_DRIFTED")
             if principal.subject in {row["actor_id"] for row in valid}:
                 raise AipActionTransitionBlocked("approver cannot execute the same proposal")
-            if proposal["risk_level"] == "R4" or not bool((proposal["policy_snapshot"] or {}).get("executionAllowed", True)):
+            if proposal["risk_level"] == "R4" or not bool(policy.get("executionAllowed", True)):
                 raise AipActionTransitionBlocked("R4 execution is disabled without specialized policy")
+            approval_set_hash = canonical_hash(
+                [
+                    {
+                        "approvalEventId": row["approval_event_id"],
+                        "actorId": row["actor_id"],
+                        "slotId": row["slot_id"],
+                        "eligibilitySnapshotHash": row["eligibility_snapshot_hash"],
+                        "expiresAt": row["expires_at"],
+                    }
+                    for row in valid
+                ]
+            )
+            reservation_ref = None
+            if proposal["action_type_id"] in W5_EXTERNAL_ACTION_FAMILIES:
+                raise AipActionTransitionBlocked(
+                    "ACTION_BUDGET_RESERVATION_AUTHORITY_UNAVAILABLE"
+                )
             current = self._store.action_type_snapshot(scope, proposal["action_type_id"])
             if current["revisionHash"] != proposal["action_type_revision_hash"]:
                 raise AipActionConflict("Action Type revision changed before execution")
@@ -121,9 +158,26 @@ class AipActionExecutionService:
             expires_at = now + timedelta(seconds=body.lease_seconds)
             conn.execute(
                 """INSERT INTO aip_action_execution_lease
-                   (org_id,project_id,lease_id,proposal_id,proposal_hash,attempt,status,owner_id,expires_at)
-                   VALUES (%s,%s,%s,%s,%s,1,'active',%s,%s)""",
-                (*scope.key, lease_id, proposal_id, proposal["proposal_hash"], principal.subject, expires_at),
+                   (org_id,project_id,lease_id,proposal_id,proposal_hash,attempt,status,
+                    owner_id,expires_at,action_binding_hash,approval_set_hash,reservation_ref,
+                    idempotency_key)
+                   VALUES (%s,%s,%s,%s,%s,1,'active',%s,%s,%s,%s,%s::jsonb,%s)""",
+                (
+                    *scope.key,
+                    lease_id,
+                    proposal_id,
+                    proposal["proposal_hash"],
+                    principal.subject,
+                    expires_at,
+                    proposal["action_binding_hash"],
+                    approval_set_hash,
+                    (
+                        self._store._json(reservation_ref)
+                        if reservation_ref is not None
+                        else None
+                    ),
+                    idempotency_key,
+                ),
             )
             conn.execute(
                 "UPDATE aip_action_proposal SET status='leased',version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND proposal_id=%s",
@@ -131,7 +185,21 @@ class AipActionExecutionService:
             )
             self._event(conn, scope, proposal, "leased", principal.subject, {"leaseId": lease_id})
             conn.commit()
-        return self._view(scope, proposal_id, {"lease_id": lease_id, "proposal_id": proposal_id, "proposal_hash": proposal["proposal_hash"], "attempt": 1, "expires_at": expires_at, "created_at": now})
+        return self._view(
+            scope,
+            proposal_id,
+            {
+                "lease_id": lease_id,
+                "proposal_id": proposal_id,
+                "proposal_hash": proposal["proposal_hash"],
+                "attempt": 1,
+                "expires_at": expires_at,
+                "created_at": now,
+                "action_binding_hash": proposal["action_binding_hash"],
+                "approval_set_hash": approval_set_hash,
+                "reservation_ref": reservation_ref,
+            },
+        )
 
     def execute(self, principal: Principal, lease_id: str, expected_hash: str) -> ActionExecutionView:
         self._require_executor(principal)
@@ -348,7 +416,14 @@ class AipActionExecutionService:
         bundle = self._store.get_proposal(scope, proposal_id)
         with connect(scope) as conn:
             receipts = conn.execute("SELECT * FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND proposal_id=%s ORDER BY created_at,receipt_id", (*scope.key, proposal_id)).fetchall()
-        lease_model = None if lease is None else ExecutionLease(id=lease["lease_id"], proposal_id=proposal_id, proposal_hash=lease["proposal_hash"], attempt=lease["attempt"], expires_at=lease["expires_at"], created_at=lease["created_at"])
+        lease_model = None if lease is None else ActionExecutionLeaseSnapshot(
+            id=lease["lease_id"], proposal_id=proposal_id,
+            proposal_hash=lease["proposal_hash"], attempt=lease["attempt"],
+            expires_at=lease["expires_at"], created_at=lease["created_at"],
+            action_binding_hash=lease["action_binding_hash"],
+            approval_set_hash=lease["approval_set_hash"],
+            reservation_ref=lease["reservation_ref"],
+        )
         receipt_models = [ActionReceiptSnapshot(
             id=row["receipt_id"], proposal_id=row["proposal_id"], lease_id=row["lease_id"],
             status=ActionReceiptStatus(row["status"]), provider_request_id=row["provider_request_id"],

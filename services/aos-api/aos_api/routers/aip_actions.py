@@ -6,14 +6,18 @@ from fastapi import APIRouter, Depends, Header, Query, status
 from aos_api.aip_action_models import (
     AcquireExecutionLeaseRequest,
     ActionDraftBundle,
+    ActionDraftRevisionSnapshot,
     ActionExecutionView,
     ActionProposalListResponse,
     ActionProposalTimeline,
     CreateCompensationRequest,
+    CreateActionDraftRequest,
     CreateActionProposalRequest,
     DecideActionProposalRequest,
     ExecuteActionLeaseRequest,
     ReconcileActionReceiptRequest,
+    ReviseActionDraftRequest,
+    SubmitActionDraftRequest,
 )
 from aos_api.aip_action_adapters import ACTION_ADAPTERS
 from aos_api.aip_action_execution import (
@@ -85,6 +89,62 @@ def create_action_proposal(
 ) -> ActionDraftBundle:
     try:
         return service.create_proposal(principal, _idem(idempotency_key), body)
+    except AipActionStoreError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/action-drafts",
+    response_model=ActionDraftRevisionSnapshot,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_action_draft(
+    body: CreateActionDraftRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipActionService = Depends(get_aip_action_service),
+) -> ActionDraftRevisionSnapshot:
+    try:
+        return service.create_draft(principal, _idem(idempotency_key), body)
+    except AipActionStoreError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/action-drafts/{draft_id}/revisions",
+    response_model=ActionDraftRevisionSnapshot,
+)
+def revise_action_draft(
+    draft_id: str,
+    body: ReviseActionDraftRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipActionService = Depends(get_aip_action_service),
+) -> ActionDraftRevisionSnapshot:
+    try:
+        return service.revise_draft(
+            principal, draft_id, _idem(idempotency_key), body
+        )
+    except AipActionStoreError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/action-drafts/{draft_id}/submit",
+    response_model=ActionDraftBundle,
+    status_code=status.HTTP_201_CREATED,
+)
+def submit_action_draft(
+    draft_id: str,
+    body: SubmitActionDraftRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipActionService = Depends(get_aip_action_service),
+) -> ActionDraftBundle:
+    try:
+        return service.submit_draft(
+            principal, draft_id, _idem(idempotency_key), body
+        )
     except AipActionStoreError as exc:
         raise _map_error(exc) from exc
 

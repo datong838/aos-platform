@@ -115,8 +115,14 @@ def _seed() -> tuple[CreateImpactPreviewRequest, str]:
             """INSERT INTO aip_task_brief_revision
             (org_id,project_id,brief_id,revision,task_id,brief_type,schema_ref,spec,
              content_hash,lifecycle,created_by)
-            VALUES(%s,%s,%s,1,%s,'production','{}','{}',%s,'frozen','test')""",
-            (*SCOPE.key, brief_id, task.id, HASHES["brief"]),
+            VALUES(%s,%s,%s,1,%s,'production',%s::jsonb,'{}',%s,'frozen','test')""",
+            (
+                *SCOPE.key,
+                brief_id,
+                task.id,
+                json.dumps(schema("production")),
+                HASHES["brief"],
+            ),
         )
         conn.execute(
             """INSERT INTO aip_evidence_bundle_revision

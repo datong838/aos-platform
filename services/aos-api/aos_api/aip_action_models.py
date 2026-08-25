@@ -58,6 +58,35 @@ class CreateActionProposalRequest(AipContractModel):
         return self.expires_at or datetime.now(timezone.utc) + timedelta(hours=24)
 
 
+class CreateActionDraftRequest(CreateActionProposalRequest):
+    """Editable input for the explicit W5 Draft -> Proposal submit path."""
+
+
+class ReviseActionDraftRequest(CreateActionDraftRequest):
+    expected_revision: int = Field(ge=1)
+    expected_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class SubmitActionDraftRequest(AipContractModel):
+    expected_revision: int = Field(ge=1)
+    expected_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class ActionDraftRevisionSnapshot(AipContractModel):
+    draft_id: str
+    revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    lifecycle: str
+    request: CreateActionDraftRequest
+    action_type_revision_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    risk_level: ActionRiskLevel
+    approval_policy_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    submitted_proposal_id: str | None = None
+    created_by: ActorRef
+    created_at: datetime
+
+
 class ActionProposalSnapshot(ActionProposal):
     client_risk_hint: ActionRiskLevel | None = None
     policy_snapshot: dict[str, Any] = Field(default_factory=dict)
@@ -65,12 +94,23 @@ class ActionProposalSnapshot(ActionProposal):
     evidence_refs: list[ResourceRef] = Field(default_factory=list)
     impact_preview_ref: ExactRevisionRef | None = None
     action_binding_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    approval_policy_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    source_draft_ref: ExactRevisionRef | None = None
 
 
 class ActionDraftBundle(AipContractModel):
     proposal: ActionProposalSnapshot
     draft: DraftSnapshot
-    approvals: list[ApprovalEvent] = Field(default_factory=list)
+    approvals: list["ActionApprovalEventSnapshot"] = Field(default_factory=list)
+
+
+class ActionApprovalEventSnapshot(ApprovalEvent):
+    action_binding_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    approval_policy_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    slot_id: str | None = None
+    eligibility_snapshot_hash: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
 
 
 class ActionProposalListResponse(AipContractModel):
@@ -140,9 +180,15 @@ class ActionReceiptSnapshot(ActionReceipt):
     payload: dict[str, Any] = Field(default_factory=dict)
 
 
+class ActionExecutionLeaseSnapshot(ExecutionLease):
+    action_binding_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    approval_set_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    reservation_ref: ResourceRef | None = None
+
+
 class ActionExecutionView(AipContractModel):
     proposal: ActionProposalSnapshot
-    lease: ExecutionLease | None = None
+    lease: ActionExecutionLeaseSnapshot | None = None
     receipts: list[ActionReceiptSnapshot] = Field(default_factory=list)
 
 
@@ -152,6 +198,9 @@ def actor(actor_id: str) -> ActorRef:
 
 __all__ = [
     "ActionDraftBundle",
+    "ActionDraftRevisionSnapshot",
+    "ActionApprovalEventSnapshot",
+    "ActionExecutionLeaseSnapshot",
     "ActionProposalListResponse",
     "ActionProposalSnapshot",
     "ActionProposalTimeline",
@@ -159,10 +208,13 @@ __all__ = [
     "ActionExecutionView",
     "AcquireExecutionLeaseRequest",
     "CreateCompensationRequest",
+    "CreateActionDraftRequest",
     "ActionTypeRevisionRef",
     "CreateActionProposalRequest",
     "DecideActionProposalRequest",
     "ExecuteActionLeaseRequest",
     "ReconcileActionReceiptRequest",
+    "ReviseActionDraftRequest",
+    "SubmitActionDraftRequest",
     "actor",
 ]

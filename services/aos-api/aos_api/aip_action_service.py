@@ -3,8 +3,12 @@ from __future__ import annotations
 
 from aos_api.aip_action_models import (
     ActionDraftBundle,
+    ActionDraftRevisionSnapshot,
+    CreateActionDraftRequest,
     CreateActionProposalRequest,
     DecideActionProposalRequest,
+    ReviseActionDraftRequest,
+    SubmitActionDraftRequest,
 )
 from aos_api.aip_action_policy import classify_action_risk
 from aos_api.aip_action_store import AipActionStore
@@ -52,6 +56,80 @@ class AipActionService:
             scope, principal.subject, idempotency_key, body, snapshot, risk
         )
 
+    def create_draft(
+        self,
+        principal: Principal,
+        idempotency_key: str,
+        body: CreateActionDraftRequest,
+    ) -> ActionDraftRevisionSnapshot:
+        scope, snapshot, risk = self._prepare_action(principal, body)
+        return self._store.create_action_draft(
+            scope, principal.subject, idempotency_key, body, snapshot, risk
+        )
+
+    def revise_draft(
+        self,
+        principal: Principal,
+        draft_id: str,
+        idempotency_key: str,
+        body: ReviseActionDraftRequest,
+    ) -> ActionDraftRevisionSnapshot:
+        scope, snapshot, risk = self._prepare_action(principal, body)
+        return self._store.revise_action_draft(
+            scope,
+            principal.subject,
+            draft_id,
+            idempotency_key,
+            body,
+            snapshot,
+            risk,
+        )
+
+    def submit_draft(
+        self,
+        principal: Principal,
+        draft_id: str,
+        idempotency_key: str,
+        body: SubmitActionDraftRequest,
+    ) -> ActionDraftBundle:
+        return self._store.submit_action_draft(
+            TenantScope(principal.org_id, principal.project_id),
+            principal.subject,
+            draft_id,
+            idempotency_key,
+            body,
+        )
+
+    def _prepare_action(
+        self,
+        principal: Principal,
+        body: CreateActionDraftRequest | ReviseActionDraftRequest,
+    ):
+        scope = TenantScope(principal.org_id, principal.project_id)
+        ensure_action_schema(scope)
+        snapshot = self._store.action_type_snapshot(scope, body.action_type_id)
+        with connect(scope) as conn:
+            ensure_markings(principal, snapshot.get("requiredMarkings") or [], conn=conn)
+            props_row = conn.execute(
+                "SELECT properties FROM meta_object_type WHERE id=%s",
+                (snapshot["objectType"],),
+            ).fetchone()
+            properties = props_row["properties"] if props_row else None
+            if isinstance(properties, list):
+                ensure_field_writes(principal, body.payload, properties, conn=conn)
+        gate = evaluate_criteria(snapshot.get("submissionCriteria") or [], body.payload)
+        if not gate["ok"]:
+            raise ApiError(
+                code="AIP_INVALID_ARGUMENT",
+                message="Action submission criteria not met",
+                status_code=400,
+                details=gate,
+            )
+        risk = classify_action_risk(
+            body.action_type_id, snapshot, body.payload, body.risk_hint
+        )
+        return scope, snapshot, risk
+
     def decide(
         self,
         principal: Principal,
@@ -73,4 +151,5 @@ class AipActionService:
             proposal_id,
             idempotency_key,
             body,
+            tuple(principal.roles),
         )
