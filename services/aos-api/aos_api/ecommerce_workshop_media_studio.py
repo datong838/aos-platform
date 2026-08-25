@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 
 from aos_api.aip_contracts import TenantContext
 from aos_api.ecommerce_workshop_media_studio_contracts import (
+    MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION,
     MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION,
     MEDIA_STUDIO_SCHEMA_VERSION,
     MediaAxisReadiness,
@@ -22,8 +23,14 @@ from aos_api.ecommerce_workshop_media_studio_contracts import (
     MediaStudioSliceId,
     WorkshopMediaStudioViewEnvelope,
 )
+from aos_api.ecommerce_workshop_media_studio_lifecycle import (
+    EcommerceWorkshopMediaStudioLifecycle,
+    MediaStudioLifecycleConflict,
+    MediaStudioLifecycleError,
+)
 from aos_api.aip_media_finance_store import AipMediaFinanceStore, MediaFinanceError
 from aos_api.aip_media_provider_job_store import AipMediaProviderJobStore, MediaProviderJobError
+from aos_api.aip_production_contract_store import ProductionContractError
 from aos_api.ecommerce_workshop_media_studio_reader import (
     MediaStudioCanonicalReader,
     MediaStudioReadError,
@@ -38,10 +45,11 @@ Clock = Callable[[], datetime]
 class EcommerceWorkshopMediaStudio:
     """Describe current authority gaps without promoting target state."""
 
-    def __init__(self, *, reader: MediaStudioCanonicalReader | None = None, provider_job_store: AipMediaProviderJobStore | None = None, media_finance_store: AipMediaFinanceStore | None = None, clock: Clock | None = None) -> None:
+    def __init__(self, *, reader: MediaStudioCanonicalReader | None = None, provider_job_store: AipMediaProviderJobStore | None = None, media_finance_store: AipMediaFinanceStore | None = None, lifecycle: EcommerceWorkshopMediaStudioLifecycle | None = None, clock: Clock | None = None) -> None:
         self._reader = reader
         self._provider_job_store = provider_job_store
         self._media_finance_store = media_finance_store
+        self._lifecycle = lifecycle
         self._clock = clock or (lambda: datetime.now(UTC))
 
     def read(self, *, org_id: str, project_id: str) -> WorkshopMediaStudioViewEnvelope:
@@ -170,8 +178,31 @@ class EcommerceWorkshopMediaStudio:
                 ]
         except (MediaFinanceError, ValueError, TypeError):
             media_finance = []
+        lifecycle_blockers = [
+            MediaBlocker(
+                code="MEDIA_LIFECYCLE_AUTHORITY_NOT_AVAILABLE",
+                dependency="aip.production-contracts",
+                required_action="provide one tenant-bound production context and canonical lifecycle authorities",
+            )
+        ]
+        lifecycle = None
+        if self._lifecycle is not None:
+            try:
+                lifecycle = self._lifecycle.read(scope, cutoff=cutoff)
+                if lifecycle is not None:
+                    lifecycle_blockers = []
+            except MediaStudioLifecycleConflict:
+                lifecycle_blockers = [
+                    MediaBlocker(
+                        code="MEDIA_PRODUCTION_CONTEXT_SELECTOR_REQUIRED",
+                        dependency="aip.production-contexts",
+                        required_action="select one exact frozen production context",
+                    )
+                ]
+            except (MediaStudioLifecycleError, ProductionContractError, MediaProviderJobError, MediaFinanceError, ValueError, TypeError):
+                lifecycle = None
         return WorkshopMediaStudioViewEnvelope(
-            schema_version=MEDIA_STUDIO_SCHEMA_VERSION if self._media_finance_store is not None else MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION,
+            schema_version=MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION if self._lifecycle is not None else (MEDIA_STUDIO_SCHEMA_VERSION if self._media_finance_store is not None else MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION),
             tenant=TenantContext(org_id=org_id, project_id=project_id),
             evaluated_at=cutoff,
             data_cutoff=cutoff,
@@ -182,6 +213,9 @@ class EcommerceWorkshopMediaStudio:
             media_finance_status="ready" if not finance_blockers else "blocked",
             media_finance=media_finance,
             media_finance_blockers=finance_blockers,
+            lifecycle_status="ready" if lifecycle is not None else "blocked",
+            lifecycle=lifecycle,
+            lifecycle_blockers=lifecycle_blockers,
             page=MediaPageInfo(count=sum(len(item.authority_refs) for item in slices)),
         )
 

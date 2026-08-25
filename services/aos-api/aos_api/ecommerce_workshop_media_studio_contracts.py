@@ -9,11 +9,15 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.ecommerce_workshop_media_studio_lifecycle_contracts import (
+    MediaStudioLifecycleContribution,
+)
 
 
 MEDIA_STUDIO_LEGACY_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v1"
 MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v2"
 MEDIA_STUDIO_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v3"
+MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v4"
 
 
 class MediaStudioSliceId(StrEnum):
@@ -195,7 +199,7 @@ class MediaFinanceContribution(AipContractModel):
 
 
 class WorkshopMediaStudioViewEnvelope(AipContractModel):
-    schema_version: Literal[MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION, MEDIA_STUDIO_SCHEMA_VERSION] = MEDIA_STUDIO_SCHEMA_VERSION
+    schema_version: Literal[MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION, MEDIA_STUDIO_SCHEMA_VERSION, MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION] = MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION
     tenant: TenantContext
     evaluated_at: datetime
     data_cutoff: datetime
@@ -207,6 +211,9 @@ class WorkshopMediaStudioViewEnvelope(AipContractModel):
     media_finance_status: Literal["ready", "blocked"] = "blocked"
     media_finance: list[MediaFinanceContribution] = Field(default_factory=list, max_length=100)
     media_finance_blockers: list[MediaBlocker] = Field(default_factory=lambda: [MediaBlocker(code="MEDIA_FINANCE_LEGACY_VIEW", dependency="media-studio-v3", requiredAction="refresh canonical v3 projection")], max_length=20)
+    lifecycle_status: Literal["ready", "blocked"] = "blocked"
+    lifecycle: MediaStudioLifecycleContribution | None = None
+    lifecycle_blockers: list[MediaBlocker] = Field(default_factory=lambda: [MediaBlocker(code="MEDIA_LIFECYCLE_LEGACY_VIEW", dependency="media-studio-v4", requiredAction="refresh canonical v4 projection")], max_length=20)
     page: MediaPageInfo
 
     @field_validator("evaluated_at", "data_cutoff")
@@ -234,6 +241,12 @@ class WorkshopMediaStudioViewEnvelope(AipContractModel):
             raise ValueError("blocked media finance requires blockers")
         if self.schema_version == MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION and self.media_finance:
             raise ValueError("v2 media view cannot carry v3 finance contributions")
+        if self.lifecycle_status == "ready" and (self.lifecycle is None or self.lifecycle_blockers):
+            raise ValueError("ready media lifecycle requires one contribution and no blockers")
+        if self.lifecycle_status == "blocked" and (self.lifecycle is not None or not self.lifecycle_blockers):
+            raise ValueError("blocked media lifecycle requires blockers and no contribution")
+        if self.schema_version != MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION and self.lifecycle is not None:
+            raise ValueError("legacy media view cannot carry v4 lifecycle contribution")
         return self
 
 

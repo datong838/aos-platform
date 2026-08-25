@@ -96,8 +96,11 @@ from aos_api.ecommerce_workshop_creator_lifecycle import (
 )
 from aos_api.ecommerce_workshop_creator_lifecycle_store import EcommerceWorkshopCreatorLifecycleStore
 from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
+from aos_api.ecommerce_workshop_media_studio_lifecycle import EcommerceWorkshopMediaStudioLifecycle
 from aos_api.aip_media_finance_store import AipMediaFinanceStore
 from aos_api.aip_media_provider_job_store import AipMediaProviderJobStore
+from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_start_service import AipProductionStartService
 from aos_api.ecommerce_workshop_media_studio_contracts import (
     WorkshopMediaStudioViewEnvelope,
 )
@@ -364,7 +367,20 @@ def get_ecommerce_workshop_price_disposition() -> EcommerceWorkshopPriceDisposit
 
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_media_studio() -> EcommerceWorkshopMediaStudio:
-    return EcommerceWorkshopMediaStudio(provider_job_store=AipMediaProviderJobStore(), media_finance_store=AipMediaFinanceStore())
+    production_store = AipProductionContractStore()
+    provider_job_store = AipMediaProviderJobStore()
+    media_finance_store = AipMediaFinanceStore()
+    lifecycle = EcommerceWorkshopMediaStudioLifecycle(
+        production_store=production_store,
+        production_start_service=AipProductionStartService(contract_store=production_store),
+        provider_job_store=provider_job_store,
+        media_finance_store=media_finance_store,
+    )
+    return EcommerceWorkshopMediaStudio(
+        provider_job_store=provider_job_store,
+        media_finance_store=media_finance_store,
+        lifecycle=lifecycle,
+    )
 
 
 @lru_cache(maxsize=1)

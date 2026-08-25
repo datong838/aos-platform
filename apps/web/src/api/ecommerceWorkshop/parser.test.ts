@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseContentCampaignView, parseDispatchControlObservation, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseModuleHandoffCompile, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseResponsibilityAssignmentObservation, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSkillContributions, parseTaskCockpitSteps, parseWorkshopSharedContext } from "./parser";
+import { parseContentCampaignView, parseDispatchControlObservation, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseMediaStudioView, parseModuleHandoffCompile, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseResponsibilityAssignmentObservation, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSkillContributions, parseTaskCockpitSteps, parseWorkshopSharedContext } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -122,6 +122,47 @@ describe("operations view strict parser", () => {
     expect(() => parseOperationsView({ ...operations, page: { ...operations.page, count: 6 } })).toThrow("count");
     expect(() => parseOperationsView({ ...operations, page: { ...operations.page, hasMore: true, nextCursor: "synthetic" } })).toThrow("cursor");
     expect(() => parseOperationsView({ ...operations, tenant: { orgId: "dev-org", projectId: "dev-project" } }, { orgId: "org-org", projectId: "dev-project" })).toThrow("tenant 漂移");
+  });
+});
+
+const mediaSliceIds = ["context", "execution", "delivery"] as const;
+const mediaAxes = ["module", "capability", "assignee", "provider", "budget", "publication"] as const;
+const mediaLifecycleNodeIds = ["prepare", "freeze_confirm", "compile_approve", "start_run", "review_return", "deliver_publish", "reconcile_effect"] as const;
+const mediaResponsibilitySlotIds = ["media.producer", "media.director", "media.screenwriter", "media.art", "media.storyboard", "media.capture", "media.post", "media.review"] as const;
+const lifecycleRef = { resourceType: "ProductionContextRevision", resourceId: "context-1", revision: 2, contentHash: "a".repeat(64) };
+const mediaV4 = {
+  schemaVersion: "aos.ecommerce-workshop.media-studio-view/v4",
+  tenant: { orgId: "org-org", projectId: "dev-project" },
+  evaluatedAt: "2026-08-26T00:00:00Z",
+  dataCutoff: "2026-08-26T00:00:00Z",
+  readiness: "degraded",
+  slices: mediaSliceIds.map((sliceId) => ({ sliceId, status: "blocked", dataCutoff: "2026-08-26T00:00:00Z", readinessAxes: mediaAxes.map((axis) => ({ axis, status: "target", exactRef: null, targetContractRef: `ADR-67#${axis}`, gaps: ["authority unavailable"], blockers: [{ code: "MEDIA_AUTHORITY_NOT_AVAILABLE", dependency: axis, requiredAction: "attach exact authority" }] })), authorityRefs: [], blockers: [{ code: `MEDIA_${sliceId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`, dependency: sliceId, requiredAction: "attach exact authority" }], countLedger: { denominator: 6, ready: 0, target: 6, blocked: 0, unknown: 0, conflict: 0, notApplicable: 0 } })),
+  providerJobsStatus: "blocked", providerJobs: [], providerJobBlockers: [{ code: "MEDIA_PROVIDER_JOB_AUTHORITY_NOT_AVAILABLE", dependency: "provider-job", requiredAction: "attach exact authority" }],
+  mediaFinanceStatus: "ready", mediaFinance: [], mediaFinanceBlockers: [],
+  lifecycleStatus: "ready",
+  lifecycle: {
+    schemaVersion: "aos.ecommerce-workshop.media-studio-lifecycle/v1", contextId: "context-1", contextRevision: 2, contextHash: "a".repeat(64), taskId: "task-1", status: "partial",
+    lifecycle: mediaLifecycleNodeIds.map((nodeId, index) => ({ nodeId, label: nodeId, status: index < 4 ? "active" : index === 4 ? "not_started" : "blocked", authorityRefs: index < 4 ? [lifecycleRef] : [], blockerCodes: index > 4 ? [index === 5 ? "MEDIA_PUBLICATION_NOT_AUTHORIZED" : "MEDIA_EFFECT_REVIEW_NOT_AUTHORIZED"] : [], observedAt: index < 2 ? "2026-08-26T00:00:00Z" : null })),
+    responsibilities: mediaResponsibilitySlotIds.map((slotId) => ({ slotId, label: slotId, responsibilityType: `responsibility:${slotId}`, status: "assigned", requiredCapabilityIds: ["strategy.plan"], assigneeKind: "agent_instance", assigneeId: `agent:${slotId}`, assigneeVersion: 1, resolutionReceiptId: `receipt:${slotId}`, blockerCodes: [] })),
+    stages: [], artifactFamilies: [], reviewIssues: [],
+    commandCapabilities: ["freeze", "start", "pause_resume", "return", "publish", "settle_reconcile"].map((commandId) => ({ commandId, allowed: false, reasonCode: "MEDIA_STUDIO_W7_09_READ_ONLY_NO_EXTERNAL_EFFECT", expectedVersion: 2, requiredExactRefs: [lifecycleRef] })),
+    blockerCodes: ["MEDIA_EFFECT_REVIEW_NOT_AUTHORIZED", "MEDIA_PUBLICATION_NOT_AUTHORIZED"], externalEffectsAllowed: false,
+  },
+  lifecycleBlockers: [], page: { limit: 100, count: 0, hasMore: false, nextCursor: null },
+};
+
+describe("media studio v4 lifecycle strict parser", () => {
+  it("保留单一 frozen context、七节点、八职责和服务端禁用命令", () => {
+    const parsed = parseMediaStudioView(mediaV4, mediaV4.tenant);
+    expect(parsed.schemaVersion).toBe("aos.ecommerce-workshop.media-studio-view/v4");
+    expect(parsed.lifecycle?.lifecycle).toHaveLength(7);
+    expect(parsed.lifecycle?.responsibilities).toHaveLength(8);
+    expect(parsed.lifecycle?.commandCapabilities.every((item) => item.allowed === false)).toBe(true);
+  });
+  it("拒绝 lifecycle 顺序、可执行命令和 selector readiness 漂移", () => {
+    expect(() => parseMediaStudioView({ ...mediaV4, lifecycle: { ...mediaV4.lifecycle, lifecycle: [...mediaV4.lifecycle.lifecycle].reverse() } })).toThrow("canonical order");
+    expect(() => parseMediaStudioView({ ...mediaV4, lifecycle: { ...mediaV4.lifecycle, commandCapabilities: [{ ...mediaV4.lifecycle.commandCapabilities[0], allowed: true }, ...mediaV4.lifecycle.commandCapabilities.slice(1)] } })).toThrow("失败关闭");
+    expect(() => parseMediaStudioView({ ...mediaV4, lifecycleStatus: "blocked", lifecycleBlockers: [{ code: "MEDIA_SELECTOR_REQUIRED", dependency: "context", requiredAction: "select exact context" }] })).toThrow("readiness");
   });
 });
 
