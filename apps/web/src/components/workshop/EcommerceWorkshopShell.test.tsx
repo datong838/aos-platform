@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { EcommerceWorkshopShell, WORKSHOP_FOCUS_EVENT } from "./EcommerceWorkshopShell";
+import { WORKSHOP_ACCEPTANCE_MODULES } from "./workshopAcceptance";
 import { moduleWithReadiness, workshopModuleFixture } from "./workshopTestFixtures";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -31,6 +32,29 @@ describe("EcommerceWorkshopShell", () => {
     expect(host.textContent).toContain("业务视图将在 W2 接入");
     expect(host.textContent).not.toContain("DEPENDENCY_NOT_GREEN");
   });
+
+  for (const module of WORKSHOP_ACCEPTANCE_MODULES) {
+    it(`${module.moduleId} 保留唯一 H1、精确路由与可达主区`, async () => {
+      await act(async () => root.render(
+        <EcommerceWorkshopShell
+          module={workshopModuleFixture({
+            moduleId: module.moduleId,
+            displayName: module.label,
+            menuLabel: module.label,
+            route: module.route,
+          })}
+          dataCutoff="2026-08-14T09:59:00Z"
+        />,
+      ));
+      const heading = host.querySelector("h1");
+      const main = host.querySelector("#ecommerce-workshop-main");
+      expect(host.querySelectorAll("h1")).toHaveLength(1);
+      expect(heading?.textContent).toContain(module.label);
+      expect(main).not.toBeNull();
+      expect(host.querySelector<HTMLAnchorElement>(".ecommerce-workshop-skip-link")?.hash)
+        .toBe("#ecommerce-workshop-main");
+    });
+  }
 
   it("unknown 不伪装业务视图，并完整显示依赖原因", async () => {
     await act(async () => root.render(

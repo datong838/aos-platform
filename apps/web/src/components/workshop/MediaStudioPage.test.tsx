@@ -46,6 +46,20 @@ describe("MediaStudioPage", () => {
     expect(host.querySelector('[role="tabpanel"]')?.textContent).toContain("当前没有可挂接的媒体 authority");
   });
 
+  it("用 roving tabindex 和稳定 controls 支持方向键、Home 与 End", async () => {
+    await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()) }} />); });
+    const tabs = host.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    const panel = host.querySelector<HTMLElement>('[role="tabpanel"]');
+    expect(tabs[0]?.tabIndex).toBe(0);
+    expect(tabs[1]?.tabIndex).toBe(-1);
+    expect(tabs[0]?.getAttribute("aria-controls")).toBe(panel?.id);
+    act(() => tabs[0]?.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true })));
+    expect(tabs[2]?.tabIndex).toBe(0);
+    expect(host.querySelector<HTMLElement>('[role="tabpanel"]')?.getAttribute("aria-labelledby")).toBe(tabs[2]?.id);
+    act(() => tabs[2]?.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true })));
+    expect(tabs[0]?.tabIndex).toBe(0);
+  });
+
   it("展示原子能力到数字同事的 Provider Job 贡献链且不提供写按钮", async () => {
     const payload = response();
     const ref = (resourceType: string, resourceId: string) => ({ resourceType, resourceId, revision: 1, contentHash: "a".repeat(64) });
