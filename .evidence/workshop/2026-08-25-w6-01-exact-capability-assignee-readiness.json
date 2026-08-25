@@ -1,0 +1,39 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "task_id": "workshop-w6-01-exact-capability-assignee-readiness-20260825",
+  "recorded_at": "2026-08-25T12:26:14+08:00",
+  "code_commit": "b128be0",
+  "result": "W6_01_EXACT_CAPABILITY_ASSIGNEE_READINESS_CODE_CONTRACT_BROWSER_DISPOSITION_GREEN",
+  "scope": {
+    "tenant": "org-org/dev-project",
+    "negative_canary": "dev-org/dev-project",
+    "external_effect": false,
+    "release": false
+  },
+  "verification": {
+    "focused_backend": "54 passed",
+    "focused_frontend": "37 passed",
+    "production_build": "GREEN",
+    "openapi_deterministic_check": "GREEN",
+    "alembic_head": "w6_001",
+    "diff_check": "GREEN",
+    "browser": {
+      "tool": "Codex built-in browser",
+      "url": "http://localhost:5173/workshop/task-cockpit",
+      "observation": "active installation does not contain this module; route renders fail-closed module-not-installed state",
+      "positive_detail_path": "not claimed because no canonical active installation exists"
+    },
+    "broad_aip_regression": {
+      "passed": 1628,
+      "failed": 14,
+      "classification": "pre-existing cross-suite migration downgrade, shared-state idempotency and lifespan cron failures outside the W6-01 changed-file surface",
+      "w6_01_focused_regression": false
+    }
+  },
+  "boundaries": [
+    "legacy resolution receipts remain readable but cannot light readiness",
+    "no agent, skill, capability, tool or provider binding was activated",
+    "no real tenant business row or external provider was invoked",
+    "no release or automatic rebinding occurred"
+  ]
+}
