@@ -11,5 +11,6 @@ export * from "./MediaStudioPage";
 export * from "./AnalystPage";
 export * from "./PriceGovernancePage";
 export * from "./CustomerPage";
+export * from "./workshopLifecycleAcceptance";
 export * from "./SourceReadinessContext";
 export * from "./SourceReadinessPanel";

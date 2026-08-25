@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 
 import {
   EcommerceWorkshopHost,
-  isReplacedLegacyWorkshopRoute,
+  resolveLegacyWorkshopRoute,
   useEcommerceWorkshopCatalog,
 } from "../../../components/workshop";
 
@@ -31,11 +31,12 @@ export function EcommerceWorkshopEntryRoute() {
   const isLegacyReadPage =
     location.pathname === "/workshop/orders" ||
     location.pathname === "/workshop/inventory";
+  const legacyResolution = resolveLegacyWorkshopRoute(catalog.modules, location.pathname);
 
   if (
     isLegacyReadPage &&
     catalog.phase !== "loading" &&
-    !isReplacedLegacyWorkshopRoute(catalog.modules, location.pathname)
+    legacyResolution.kind === "preserve"
   ) {
     return (
       <Suspense fallback={<div role="status">正在加载旧只读入口…</div>}>

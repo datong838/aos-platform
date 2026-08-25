@@ -8,6 +8,7 @@ import {
   EcommerceWorkshopCatalogProvider,
   findInstalledWorkshopRoute,
   isReplacedLegacyWorkshopRoute,
+  resolveLegacyWorkshopRoute,
   useEcommerceWorkshopCatalog,
   type EcommerceWorkshopCatalogClient,
 } from "./EcommerceWorkshopCatalogContext";
@@ -151,5 +152,24 @@ describe("Workshop route projection", () => {
   it("只有 active projection 声明的 legacy route 才被替换", () => {
     expect(isReplacedLegacyWorkshopRoute(modules, "/workshop/orders")).toBe(true);
     expect(isReplacedLegacyWorkshopRoute([], "/workshop/orders")).toBe(false);
+  });
+
+  it("active replacement 优先 redirect；无显式 release Receipt 时保留旧入口", () => {
+    const acceptedRetirement = {
+      legacyRoute: "/workshop/orders",
+      canonicalRoute: "/workshop/operations",
+      disposition: "retired" as const,
+      reason: null,
+      decisionRef: "receipt://route-retirement/orders",
+    };
+    expect(resolveLegacyWorkshopRoute(modules, "/workshop/orders", [acceptedRetirement]).kind)
+      .toBe("redirect");
+    expect(resolveLegacyWorkshopRoute([], "/workshop/orders").kind).toBe("preserve");
+    expect(resolveLegacyWorkshopRoute([], "/workshop/orders", [acceptedRetirement]).kind)
+      .toBe("retired");
+    expect(resolveLegacyWorkshopRoute([], "/workshop/orders", [{
+      ...acceptedRetirement,
+      decisionRef: null,
+    }]).kind).toBe("preserve");
   });
 });

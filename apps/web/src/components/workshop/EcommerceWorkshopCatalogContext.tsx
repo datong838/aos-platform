@@ -16,6 +16,7 @@ import {
   type EcommerceWorkshopModuleListResponse,
 } from "../../api/ecommerceWorkshop";
 import { getTenant } from "../../api/tenant";
+import type { WorkshopRouteRetirementDecision } from "./workshopLifecycleAcceptance";
 
 export type EcommerceWorkshopCatalogPhase =
   | "loading"
@@ -210,5 +211,24 @@ export function isReplacedLegacyWorkshopRoute(
   modules: readonly EcommerceWorkshopModule[],
   pathname: string,
 ): boolean {
-  return modules.some((module) => module.legacyRoutes.includes(pathname));
+  return resolveLegacyWorkshopRoute(modules, pathname).kind === "redirect";
+}
+
+export type LegacyWorkshopRouteResolution =
+  | { kind: "redirect"; module: EcommerceWorkshopModule }
+  | { kind: "retired"; decision: WorkshopRouteRetirementDecision }
+  | { kind: "preserve" };
+
+export function resolveLegacyWorkshopRoute(
+  modules: readonly EcommerceWorkshopModule[],
+  pathname: string,
+  retirementDecisions: readonly WorkshopRouteRetirementDecision[] = [],
+): LegacyWorkshopRouteResolution {
+  const replacement = modules.find((module) => module.legacyRoutes.includes(pathname));
+  if (replacement) return { kind: "redirect", module: replacement };
+  const retirement = retirementDecisions.find(
+    (decision) => decision.legacyRoute === pathname && decision.disposition === "retired"
+      && decision.decisionRef !== null,
+  );
+  return retirement ? { kind: "retired", decision: retirement } : { kind: "preserve" };
 }
