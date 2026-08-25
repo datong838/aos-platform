@@ -1,0 +1,37 @@
+{
+  "schema": "aos.workshop-engineering-evidence/v1",
+  "taskId": "workshop-w8-09-slo-alert-unknown-reconcile-usage-runbook-20260826",
+  "codeCommit": "f9f5fd64b9c024bdb8b23b9cf36b3cfbfe985444",
+  "outcome": "ENGINEERING_OPERATING_CONTRACT_BROWSER_GREEN_REAL_BASELINE_AND_DRILLS_BLOCKED_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "tests": {
+    "targeted": { "files": 3, "tests": 21, "status": "green" },
+    "typescript": { "status": "green" },
+    "webCumulative": { "files": 245, "tests": 2218, "status": "green" },
+    "productionBuild": { "modules": 347, "status": "green" }
+  },
+  "browser": {
+    "engine": "codex-in-app-browser",
+    "route": "/workshop/task-cockpit",
+    "viewport": { "width": 1280, "height": 720 },
+    "formalDependencyState": "catalog-fail-closed",
+    "visualFixture": "get-only-explicit-unknown-no-authority",
+    "uniqueH1": true,
+    "uniqueMain": true,
+    "horizontalOverflow": false,
+    "cardButtonCount": 0,
+    "browserErrorLogCount": 0,
+    "screenshots": [
+      { "path": "task-cockpit-catalog-fail-closed.png", "sha256": "2680e4466d02999597e510b139147411696a13a7ebc7d02e17f4dbcb97d90ad3" },
+      { "path": "operating-readiness-visual-fixture.png", "sha256": "c50e86a77c47c2a5946096e8cdf5c5b2a93be12fb14f6a97d6f5ff00c86bb183" }
+    ]
+  },
+  "boundaries": {
+    "realBaseline": false,
+    "approvedNumericTargets": false,
+    "realAlertReceipts": false,
+    "realDrillEvidencePack": false,
+    "providerCalls": 0,
+    "externalEffects": 0,
+    "release": false
+  }
+}
