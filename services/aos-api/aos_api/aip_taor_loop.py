@@ -109,11 +109,11 @@ class CanonicalTaorRunner:
             try:
                 thought = adapter.think(step, dict(context))
                 self.store.record_step_phase(
-                    scope, lease.step_run_id, worker_id, actor, "think", thought
+                    scope, lease.step_run_id, worker_id, lease.fence, actor, "think", thought
                 )
                 action = adapter.act(step, thought)
                 self.store.record_step_phase(
-                    scope, lease.step_run_id, worker_id, actor, "act", action
+                    scope, lease.step_run_id, worker_id, lease.fence, actor, "act", action
                 )
                 verification = adapter.verify(step, action)
                 if verification.get("passed") is not True:
@@ -123,13 +123,13 @@ class CanonicalTaorRunner:
                         "verification": verification,
                     }
                     self.store.record_step_phase(
-                        scope, lease.step_run_id, worker_id, actor, "verify", verification
+                        scope, lease.step_run_id, worker_id, lease.fence, actor, "verify", verification
                     )
                     return self.store.fail_step(
-                        scope, lease.step_run_id, worker_id, actor, error
+                        scope, lease.step_run_id, worker_id, lease.fence, actor, error
                     )
                 self.store.record_step_phase(
-                    scope, lease.step_run_id, worker_id, actor, "verify", verification
+                    scope, lease.step_run_id, worker_id, lease.fence, actor, "verify", verification
                 )
                 observation = adapter.observe(step, action, verification)
                 artifact_ids = self._persist_artifacts(
@@ -140,13 +140,17 @@ class CanonicalTaorRunner:
                     scope,
                     lease.step_run_id,
                     worker_id,
+                    lease.fence,
                     actor,
                     "observe",
                     persisted_observation,
                 )
                 self.store.complete_step(
-                    scope, lease.step_run_id, worker_id, actor
+                    scope, lease.step_run_id, worker_id, lease.fence, actor
                 )
+                paused = self.store.timeline(scope, run_id)
+                if paused.run.status.value == "paused":
+                    return RunControlResult(task=paused.task, run=paused.run)
                 context[f"step:{plan_step.step_key}"] = persisted_observation
             except AipTaskStoreError:
                 raise
@@ -155,6 +159,7 @@ class CanonicalTaorRunner:
                     scope,
                     lease.step_run_id,
                     worker_id,
+                    lease.fence,
                     actor,
                     {
                         "code": "AIP_ADAPTER_FAILED",

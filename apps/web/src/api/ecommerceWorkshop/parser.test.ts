@@ -192,8 +192,8 @@ const cockpitCore = { ...cockpitBase, taskCutoff: "2026-08-15T10:00:00Z", readin
   { code: "TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED", severity: "warning", dependency: "stage", requiredAction: "按 Run 展开" },
   { code: "TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT", severity: "warning", dependency: "business-context:ecommerce.source-readiness", requiredAction: "按独立 cutoff 展示" },
 ], items: [task], page };
-const step = { stepRunId: "step-1", stepKey: "collect", attempt: 1, status: "running", tokenCount: 12, costAmount: "0.0100", hasInputRefs: true, hasOutputRefs: false, hasError: false, createdAt: "2026-08-15T09:00:00Z", updatedAt: "2026-08-15T09:01:00Z" };
-const checkpoint = { checkpointId: "checkpoint-1", sequence: 1, schemaVersion: 1, stepKey: "collect", stateHash: "state-1", artifactCount: 0, createdAt: "2026-08-15T09:02:00Z" };
+const step = { stepRunId: "step-1", stepKey: "collect", attempt: 1, status: "running", tokenCount: 12, costAmount: "0.0100", hasInputRefs: true, hasOutputRefs: false, hasError: false, leaseOwner: "worker-1", leaseExpiresAt: "2026-08-15T09:05:00Z", fence: 2, assignmentLeaseId: "lease-2", inputHash: "a".repeat(64), providerRequestFingerprint: "b".repeat(64), safePoint: false, reconcileRequired: false, createdAt: "2026-08-15T09:00:00Z", updatedAt: "2026-08-15T09:01:00Z" };
+const checkpoint = { checkpointId: "checkpoint-1", sequence: 1, schemaVersion: 2, stepKey: "collect", stateHash: "state-1", artifactCount: 0, attempt: 1, planRevisionId: "plan-1", inputHash: "a".repeat(64), providerRequestFingerprint: "b".repeat(64), dependencySnapshotHash: "c".repeat(64), resumeReadiness: "checkpoint_exact", createdAt: "2026-08-15T09:02:00Z" };
 const steps = { ...cockpitBase, runId: "run-1", membershipCutoff: "2026-08-15T10:00:00Z", items: [step], page };
 const checkpoints = { ...cockpitBase, runId: "run-1", membershipCutoff: "2026-08-15T10:00:00Z", items: [checkpoint], page };
 const rawHash = "a".repeat(64);
@@ -211,8 +211,8 @@ const skillContributions = { schemaVersion: cockpitBase.schemaVersion, tenant: c
 describe("task cockpit strict parser", () => {
   it("保留 Task/Run/Step/Checkpoint、decimal 与 current-state 语义", () => {
     expect(parseTaskCockpitCore(cockpitCore)).toMatchObject({ readiness: "degraded", items: [{ run: { runId: "run-1" } }] });
-    expect(parseTaskCockpitSteps(steps).items[0]).toMatchObject({ costAmount: "0.0100", hasInputRefs: true });
-    expect(parseTaskCockpitCheckpoints(checkpoints).items[0]).toMatchObject({ checkpointId: "checkpoint-1", artifactCount: 0 });
+    expect(parseTaskCockpitSteps(steps).items[0]).toMatchObject({ costAmount: "0.0100", hasInputRefs: true, fence: 2, safePoint: false });
+    expect(parseTaskCockpitCheckpoints(checkpoints).items[0]).toMatchObject({ checkpointId: "checkpoint-1", artifactCount: 0, resumeReadiness: "checkpoint_exact" });
     expect(parseTaskCockpitProductionContext(productionContext)).toMatchObject({ compilerVersion: "w2c.v1", stages: [{ stageId: "collect", applicabilityResult: "applicable" }] });
     expect(parseTaskCockpitResponsibilityHandoffs(responsibilityHandoffs)).toMatchObject({ profile: "standard", slots: [{ assignee: { operationalReadiness: "unverified" } }], handoffs: [{ status: "consumed", decisions: [{ revision: 1 }] }] });
     expect(parseTaskCockpitApprovalReview(approvalReview)).toMatchObject({ planApproval: { approvalStatus: "approved" }, actionApprovals: [{ status: "approved" }], reviewIssues: [{ lineageReadiness: "attempt_unresolved" }] });
@@ -235,6 +235,7 @@ describe("task cockpit strict parser", () => {
     expect(() => parseTaskCockpitSteps({ ...steps, items: [{ ...step, costAmount: "NaN" }] })).toThrow("decimal");
     expect(() => parseTaskCockpitSteps({ ...steps, items: [step, step], page: { ...page, count: 2 } })).toThrow("identity");
     expect(() => parseTaskCockpitCheckpoints({ ...checkpoints, page: { ...page, hasMore: true } })).toThrow("cursor");
+    expect(() => parseTaskCockpitCheckpoints({ ...checkpoints, items: [{ ...checkpoint, inputHash: null }] })).toThrow("resume readiness");
     expect(() => parseTaskCockpitCore({ ...cockpitCore, blockers: [] })).toThrow("数量");
     expect(() => parseTaskCockpitProductionContext({ ...productionContext, stageTemplateRef: { ...productionContext.stageTemplateRef, resourceType: "BundleRevision" } })).toThrow("resourceType 漂移");
     expect(() => parseTaskCockpitProductionContext({ ...productionContext, applicableStageIds: [], notApplicableStageIds: [] })).toThrow("partition 漂移");

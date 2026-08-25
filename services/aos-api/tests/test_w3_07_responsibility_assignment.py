@@ -262,9 +262,10 @@ def test_safe_approval_advances_fence_once_and_records_exact_lease() -> None:
                 "action_ref": None,
                 "verify_ref": None,
             },
-            None,
-            None,
-            decision_insert,
+                None,
+                None,
+                None,
+                decision_insert,
         ]
     )
     receipt = AipResponsibilityAssignmentStore(_factory(conn)).decide_takeover(

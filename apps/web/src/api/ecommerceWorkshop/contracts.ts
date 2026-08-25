@@ -139,14 +139,14 @@ export type SourceReadinessEnvelope = {
 
 export const TASK_COCKPIT_SCHEMA_VERSION = "aos.ecommerce-workshop.task-cockpit/v1" as const;
 export type TaskCockpitTaskStatus = "pending" | "planning" | "awaiting_approval" | "approved" | "executing" | "paused" | "completed" | "failed" | "cancelled" | "rolled_back";
-export type TaskCockpitRunStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled" | "unknown";
+export type TaskCockpitRunStatus = "queued" | "running" | "pausing" | "paused" | "succeeded" | "failed" | "cancelled" | "unknown";
 export type TaskCockpitStepStatus = "queued" | "running" | "succeeded" | "failed" | "skipped" | "unknown";
 export type TaskCockpitPage = { limit: number; count: number; hasMore: boolean; nextCursor: string | null };
 export type TaskCockpitBlocker = { code: string; severity: "warning" | "blocking"; dependency: string; requiredAction: string };
 export type TaskCockpitRun = { runId: string; planRevisionId: string; status: TaskCockpitRunStatus; version: number; startedAt: string | null; finishedAt: string | null; createdAt: string; updatedAt: string };
 export type TaskCockpitTask = { taskId: string; taskType: string; title: string; status: TaskCockpitTaskStatus; priority: number; version: number; currentPlanRevisionId: string | null; createdAt: string; updatedAt: string; run: TaskCockpitRun | null };
-export type TaskCockpitStep = { stepRunId: string; stepKey: string; attempt: number; status: TaskCockpitStepStatus; tokenCount: number; costAmount: string; hasInputRefs: boolean; hasOutputRefs: boolean; hasError: boolean; createdAt: string; updatedAt: string };
-export type TaskCockpitCheckpoint = { checkpointId: string; sequence: number; schemaVersion: number; stepKey: string | null; stateHash: string; artifactCount: number; createdAt: string };
+export type TaskCockpitStep = { stepRunId: string; stepKey: string; attempt: number; status: TaskCockpitStepStatus; tokenCount: number; costAmount: string; hasInputRefs: boolean; hasOutputRefs: boolean; hasError: boolean; leaseOwner: string | null; leaseExpiresAt: string | null; fence: number | null; assignmentLeaseId: string | null; inputHash: string | null; providerRequestFingerprint: string | null; safePoint: boolean; reconcileRequired: boolean; createdAt: string; updatedAt: string };
+export type TaskCockpitCheckpoint = { checkpointId: string; sequence: number; schemaVersion: number; stepKey: string | null; stateHash: string; artifactCount: number; attempt: number | null; planRevisionId: string | null; inputHash: string | null; providerRequestFingerprint: string | null; dependencySnapshotHash: string | null; resumeReadiness: "checkpoint_exact" | "legacy_unverified"; createdAt: string };
 export type TaskCockpitExactRevisionRef = { resourceType: string; resourceId: string; revision: number; contentHash: string };
 export type TaskCockpitStageCompilation = { stageId: string; title: string; dependsOn: string[]; requiredSlotIds: string[]; applicabilityResult: "applicable" | "not_applicable"; evaluatedProfile: string };
 export type TaskCockpitCoreResponse = { schemaVersion: typeof TASK_COCKPIT_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; taskCutoff: string; stateConsistency: "current_state_per_page"; readiness: "degraded"; blockers: TaskCockpitBlocker[]; items: TaskCockpitTask[]; page: TaskCockpitPage };

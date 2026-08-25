@@ -134,13 +134,21 @@ class TaskCockpitStepSummary(AipContractModel):
     has_input_refs: bool
     has_output_refs: bool
     has_error: bool
+    lease_owner: str | None = Field(default=None, max_length=200)
+    lease_expires_at: datetime | None = None
+    fence: int | None = Field(default=None, ge=1)
+    assignment_lease_id: str | None = Field(default=None, max_length=240)
+    input_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    provider_request_fingerprint: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    safe_point: bool
+    reconcile_required: bool
     created_at: datetime
     updated_at: datetime
 
-    @field_validator("created_at", "updated_at")
+    @field_validator("created_at", "updated_at", "lease_expires_at")
     @classmethod
-    def _aware_time(cls, value: datetime) -> datetime:
-        if value.utcoffset() is None:
+    def _aware_time(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.utcoffset() is None:
             raise ValueError("Task Cockpit timestamps require a timezone")
         return value
 
@@ -152,6 +160,12 @@ class TaskCockpitCheckpointSummary(AipContractModel):
     step_key: str | None = Field(default=None, max_length=200)
     state_hash: str = Field(min_length=1, max_length=200)
     artifact_count: int = Field(ge=0)
+    attempt: int | None = Field(default=None, ge=1)
+    plan_revision_id: str | None = Field(default=None, max_length=200)
+    input_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    provider_request_fingerprint: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    dependency_snapshot_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    resume_readiness: Literal["checkpoint_exact", "legacy_unverified"]
     created_at: datetime
 
     @field_validator("created_at")
@@ -160,6 +174,22 @@ class TaskCockpitCheckpointSummary(AipContractModel):
         if value.utcoffset() is None:
             raise ValueError("Task Cockpit timestamps require a timezone")
         return value
+
+    @model_validator(mode="after")
+    def _exact_checkpoint_is_complete(self) -> TaskCockpitCheckpointSummary:
+        exact = all(
+            value is not None
+            for value in (
+                self.attempt,
+                self.plan_revision_id,
+                self.input_hash,
+                self.provider_request_fingerprint,
+                self.dependency_snapshot_hash,
+            )
+        )
+        if (self.resume_readiness == "checkpoint_exact") != exact:
+            raise ValueError("Checkpoint resume readiness drifted")
+        return self
 
 
 class TaskCockpitStepPageEnvelope(AipContractModel):

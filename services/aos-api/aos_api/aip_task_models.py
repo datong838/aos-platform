@@ -87,6 +87,9 @@ class CreateTaskRunRequest(AipContractModel):
 class TaskRunSnapshot(TaskRun):
     logic_graph_id: str | None = None
     logic_revision: int | None = None
+    dependency_snapshot_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    pause_requested_at: datetime | None = None
+    pause_reason: str | None = None
     version: int = Field(ge=1)
     created_by: ActorRef
     created_at: datetime
@@ -139,4 +142,8 @@ class StepLease(AipContractModel):
     step_key: str
     attempt: int
     worker_id: str
+    fence: int = Field(ge=1)
+    assignment_lease_id: str
+    input_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    provider_request_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
     lease_expires_at: datetime

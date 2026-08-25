@@ -181,12 +181,13 @@ def test_expired_lease_after_action_enters_unknown_without_repeating_action(clie
     )
     lease = store.claim_step(SCOPE, run["id"], "one", "worker-a", lease_seconds=30)
     store.record_step_phase(
-        SCOPE, lease.step_run_id, "worker-a", "test-operator", "think", {"ready": True}
+        SCOPE, lease.step_run_id, "worker-a", lease.fence, "test-operator", "think", {"ready": True}
     )
     store.record_step_phase(
         SCOPE,
         lease.step_run_id,
         "worker-a",
+        lease.fence,
         "test-operator",
         "act",
         {"externalExecutionId": "external-1"},

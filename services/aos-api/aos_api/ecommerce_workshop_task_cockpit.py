@@ -1120,8 +1120,9 @@ class EcommerceWorkshopTaskCockpit:
     ) -> str:
         row = conn.execute(
             """SELECT md5(COALESCE(string_agg(
-                         concat_ws(':',step_run_id,attempt,status,token_count,
-                           cost_amount::text,updated_at::text),
+                         concat_ws(':',step_run_id,attempt,status,token_count,cost_amount::text,
+                           COALESCE(fence::text,''),COALESCE(assignment_lease_id,''),
+                           safe_point::text,reconcile_required::text,updated_at::text),
                          '|' ORDER BY step_run_id),'EMPTY')) AS snapshot_hash
                   FROM aip_step_run
                  WHERE org_id=%s AND project_id=%s AND run_id=%s
@@ -1155,7 +1156,9 @@ class EcommerceWorkshopTaskCockpit:
         params.append(limit + 1)
         return conn.execute(
             f"""SELECT step_run_id,step_key,attempt,status,token_count,
-                       cost_amount,created_at,updated_at,
+                       cost_amount,lease_owner,lease_expires_at,fence,assignment_lease_id,
+                       input_hash,provider_request_fingerprint,safe_point,reconcile_required,
+                       created_at,updated_at,
                        jsonb_array_length(input_refs)>0 AS has_input_refs,
                        jsonb_array_length(output_refs)>0 AS has_output_refs,
                        COALESCE(jsonb_typeof(error)<>'null',false) AS has_error
@@ -1178,6 +1181,8 @@ class EcommerceWorkshopTaskCockpit:
             """SELECT md5(COALESCE(string_agg(
                          concat_ws(':',checkpoint_id,sequence,schema_version,
                            COALESCE(step_key,''),state_hash,artifact_refs::text,
+                           COALESCE(attempt::text,''),COALESCE(input_hash,''),
+                           COALESCE(dependency_snapshot_hash,''),
                            created_at::text),
                          '|' ORDER BY checkpoint_id),'EMPTY')) AS snapshot_hash
                   FROM aip_checkpoint
@@ -1211,7 +1216,9 @@ class EcommerceWorkshopTaskCockpit:
             params.extend(boundary)
         params.append(limit + 1)
         return conn.execute(
-            f"""SELECT checkpoint_id,sequence,schema_version,step_key,state_hash,
+            f"""SELECT checkpoint_id,sequence,schema_version,step_key,state_hash,attempt,
+                       plan_revision_id,input_hash,provider_request_fingerprint,
+                       dependency_snapshot_hash,
                        jsonb_array_length(artifact_refs) AS artifact_count,created_at
                   FROM aip_checkpoint
                  WHERE {' AND '.join(clauses)}
@@ -1232,6 +1239,14 @@ class EcommerceWorkshopTaskCockpit:
             hasInputRefs=bool(row["has_input_refs"]),
             hasOutputRefs=bool(row["has_output_refs"]),
             hasError=bool(row["has_error"]),
+            leaseOwner=row.get("lease_owner"),
+            leaseExpiresAt=row.get("lease_expires_at"),
+            fence=None if row.get("fence") is None else int(row["fence"]),
+            assignmentLeaseId=row.get("assignment_lease_id"),
+            inputHash=row.get("input_hash"),
+            providerRequestFingerprint=row.get("provider_request_fingerprint"),
+            safePoint=bool(row.get("safe_point", False)),
+            reconcileRequired=bool(row.get("reconcile_required", False)),
             createdAt=row["created_at"],
             updatedAt=row["updated_at"],
         )
@@ -1245,6 +1260,25 @@ class EcommerceWorkshopTaskCockpit:
             stepKey=row["step_key"],
             stateHash=str(row["state_hash"]),
             artifactCount=int(row["artifact_count"]),
+            attempt=None if row.get("attempt") is None else int(row["attempt"]),
+            planRevisionId=row.get("plan_revision_id"),
+            inputHash=row.get("input_hash"),
+            providerRequestFingerprint=row.get("provider_request_fingerprint"),
+            dependencySnapshotHash=row.get("dependency_snapshot_hash"),
+            resumeReadiness=(
+                "checkpoint_exact"
+                if all(
+                    row.get(name) is not None
+                    for name in (
+                        "attempt",
+                        "plan_revision_id",
+                        "input_hash",
+                        "provider_request_fingerprint",
+                        "dependency_snapshot_hash",
+                    )
+                )
+                else "legacy_unverified"
+            ),
             createdAt=row["created_at"],
         )
 

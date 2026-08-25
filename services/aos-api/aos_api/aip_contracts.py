@@ -105,6 +105,8 @@ class ActorRef(AipContractModel):
 class TaskRunStatus(StrEnum):
     QUEUED = "queued"
     RUNNING = "running"
+    PAUSING = "pausing"
+    PAUSED = "paused"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     CANCELLED = "cancelled"

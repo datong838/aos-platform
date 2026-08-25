@@ -1,0 +1,102 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "taskId": "workshop-w7-04-stage-executor-lease-checkpoint-takeover-20260825",
+  "recordedAt": "2026-08-25T20:17:11+08:00",
+  "baseRevision": "AOS-000258",
+  "result": "W7_04_CANONICAL_EXECUTOR_FENCE_CHECKPOINT_PAUSE_RESUME_TAKEOVER_CODE_CONTRACT_BROWSER_GREEN_SECURITY_SCOPED_GREEN_REPO_BASELINE_RED_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "implementation": {
+    "canonicalAuthority": [
+      "TaskRun",
+      "StepRun",
+      "Checkpoint",
+      "ExecutionAssignmentHead",
+      "TakeoverDecisionRevision",
+      "RunResumeDecisionRevision"
+    ],
+    "executorFence": "claim and approved takeover advance one monotonic assignment fence; heartbeat, TAOR phase, complete and fail reject stale owner, lease or fence",
+    "pauseQuiescence": "running -> pausing while any Step remains active; only the final safe-point checkpoint advances the Run to paused",
+    "resumeDecision": "approved Plan dependency snapshot and latest checkpoint input hash are recomputed; drift appends one invalidation decision and fails closed",
+    "checkpointVersion": 2,
+    "checkpointFacts": [
+      "Plan and Step attempt exact refs",
+      "input hash and dependency snapshot hash",
+      "provider request fingerprint",
+      "artifact, receipt, usage and lineage refs",
+      "checkpoint policy"
+    ],
+    "unknownBoundary": "an expired lease after action enters unknown/reconcile and is never blindly replayed",
+    "skillComposition": "atomic Skill capability revisions -> Logic PlanStep -> digital colleague responsibility assignment -> Workshop executor contribution view"
+  },
+  "verification": {
+    "backend": {
+      "status": "GREEN",
+      "focusedAndCumulativePassed": 85,
+      "warnings": 25,
+      "environmentControl": "AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED=false for the W2C lifespan cumulative group"
+    },
+    "web": {
+      "status": "GREEN",
+      "cumulativeTestFilesPassed": 232,
+      "cumulativeTestsPassed": 2133,
+      "typecheck": "GREEN",
+      "buildModules": 344
+    },
+    "openApiAndDomainRouter": {
+      "status": "GREEN",
+      "paths": 2641,
+      "schemas": 2314,
+      "operations": 4412,
+      "deterministicArtifact": "GREEN"
+    },
+    "alembic": {
+      "status": "GREEN",
+      "heads": ["w7_002"],
+      "realDatabaseApply": false
+    },
+    "security": {
+      "scannerTests": "GREEN",
+      "scopedStatus": "GREEN",
+      "scopedFiles": 33,
+      "scopedCritical": 0,
+      "scopedWarning": 0,
+      "repositoryGateStatus": "RED_EXISTING_BASELINE",
+      "repositoryFiles": 4871,
+      "repositoryCritical": 5,
+      "repositoryWarning": 326
+    },
+    "browser": {
+      "status": "GREEN_CONTROLLED_FIXTURE_ONLY",
+      "route": "/workshop/task-cockpit",
+      "viewports": [768, 1440, 1920],
+      "horizontalOverflow": false,
+      "detailTablesVisible": 2,
+      "ownerFenceSafePointVisible": true,
+      "checkpointExactReadinessVisible": true,
+      "unsafeButtonsDisabled": ["successor", "takeover", "dispatch", "priority"],
+      "legacyDetailFailsClosed": true,
+      "consoleErrors": 0
+    },
+    "syntaxAndArtifacts": {
+      "compileAll": "GREEN",
+      "webBuild": "GREEN",
+      "diffCheck": "GREEN",
+      "ruff": "NOT_INSTALLED_NO_RESULT"
+    }
+  },
+  "review": {
+    "businessLifecycle": "PASS after multi-Step quiescence correction",
+    "technicalSafety": "PASS after checkpoint input hash recomputation correction",
+    "planConsistency": "PASS"
+  },
+  "boundaries": {
+    "realTenantMutation": false,
+    "databaseMigrationApply": false,
+    "providerInvocation": false,
+    "providerRetry": false,
+    "mediaGeneration": false,
+    "externalPublication": false,
+    "bundlePublication": false,
+    "tenantInstallation": false,
+    "release": false
+  }
+}

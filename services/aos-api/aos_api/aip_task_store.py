@@ -588,11 +588,18 @@ class AipTaskStore:
             self._expect_version(task, expected_task_version)
             if run["status"] != "queued" or TaskStatus(task["status"]) is not TaskStatus.APPROVED:
                 raise AipTaskTransitionBlocked("only an approved queued run can start")
+            plan = conn.execute(
+                """SELECT * FROM aip_plan_revision WHERE org_id=%s AND project_id=%s
+                   AND plan_revision_id=%s""",
+                (*scope.key, run["plan_revision_id"]),
+            ).fetchone()
+            dependency_snapshot_hash = self._runtime_dependency_snapshot_hash(run, plan)
             task_status = transition_task_status(TaskStatus.APPROVED, TaskStatus.EXECUTING)
             conn.execute(
-                """UPDATE aip_task_run SET status='running',started_at=NOW(),version=version+1,
+                """UPDATE aip_task_run SET status='running',started_at=NOW(),
+                     dependency_snapshot_hash=%s,version=version+1,
                      updated_at=NOW() WHERE org_id=%s AND project_id=%s AND run_id=%s AND version=%s""",
-                (scope.org_id, scope.project_id, run_id, expected_run_version),
+                (dependency_snapshot_hash, scope.org_id, scope.project_id, run_id, expected_run_version),
             )
             conn.execute(
                 """UPDATE aip_task SET status=%s,version=version+1,updated_at=NOW()
@@ -623,18 +630,38 @@ class AipTaskStore:
         idempotency_key: str,
         reason: str = "",
     ) -> RunControlResult:
-        return self._change_running_task(
-            scope,
-            run_id,
-            expected_run_version=expected_run_version,
-            expected_task_version=expected_task_version,
-            expected_task_status=TaskStatus.EXECUTING,
-            target_task_status=TaskStatus.PAUSED,
-            operation="pause",
-            actor=actor,
-            idempotency_key=idempotency_key,
-            reason=reason,
-        )
+        with self._connect(scope) as conn:
+            run, task = self._locked_run_and_task(conn, scope, run_id)
+            request = self._control_request("pause", expected_run_version, expected_task_version, reason)
+            replay = self._control_replay(conn, scope, run_id, str(task["task_id"]), "pause", idempotency_key, request)
+            if replay is not None:
+                return replay
+            self._expect_run_version(run, expected_run_version)
+            self._expect_version(task, expected_task_version)
+            if run["status"] != "running" or TaskStatus(task["status"]) is not TaskStatus.EXECUTING:
+                raise AipTaskTransitionBlocked("run/task state does not allow pause")
+            active = conn.execute(
+                """SELECT 1 FROM aip_step_run WHERE org_id=%s AND project_id=%s
+                   AND run_id=%s AND status='running' AND lease_expires_at>NOW() LIMIT 1""",
+                (*scope.key, run_id),
+            ).fetchone()
+            run_status = "pausing" if active is not None else "paused"
+            target = transition_task_status(TaskStatus.EXECUTING, TaskStatus.PAUSED)
+            conn.execute(
+                """UPDATE aip_task_run SET status=%s,pause_requested_at=NOW(),pause_reason=%s,
+                   version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s
+                   AND run_id=%s AND version=%s""",
+                (run_status, reason, *scope.key, run_id, expected_run_version),
+            )
+            conn.execute(
+                """UPDATE aip_task SET status=%s,version=version+1,updated_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND task_id=%s AND version=%s""",
+                (target.value, *scope.key, task["task_id"], expected_task_version),
+            )
+            self._record_control_receipt(conn, scope, run_id, actor, "pause", idempotency_key, request)
+            result = self._control_result(conn, scope, run_id, str(task["task_id"]))
+            conn.commit()
+            return result
 
     def resume_run(
         self,
@@ -647,18 +674,120 @@ class AipTaskStore:
         idempotency_key: str,
         reason: str = "",
     ) -> RunControlResult:
-        return self._change_running_task(
-            scope,
-            run_id,
-            expected_run_version=expected_run_version,
-            expected_task_version=expected_task_version,
-            expected_task_status=TaskStatus.PAUSED,
-            target_task_status=TaskStatus.EXECUTING,
-            operation="resume",
-            actor=actor,
-            idempotency_key=idempotency_key,
-            reason=reason,
-        )
+        with self._connect(scope) as conn:
+            run, task = self._locked_run_and_task(conn, scope, run_id)
+            request = self._control_request("resume", expected_run_version, expected_task_version, reason)
+            replay = self._control_replay(conn, scope, run_id, str(task["task_id"]), "resume", idempotency_key, request)
+            if replay is not None:
+                return replay
+            prior_decision = conn.execute(
+                """SELECT decision,request_hash FROM aip_run_resume_decision_revision
+                   WHERE org_id=%s AND project_id=%s AND run_id=%s AND idempotency_key=%s""",
+                (*scope.key, run_id, idempotency_key),
+            ).fetchone()
+            if prior_decision is not None:
+                if prior_decision["request_hash"] != _canonical_hash(request):
+                    raise AipTaskIdempotencyConflict(
+                        "idempotency key was reused for a different resume request"
+                    )
+                if prior_decision["decision"] == "invalidated":
+                    raise AipTaskVersionConflict("resume dependency snapshot drifted")
+                raise AipTaskTransitionBlocked(
+                    "resume decision exists without its canonical control receipt"
+                )
+            self._expect_run_version(run, expected_run_version)
+            self._expect_version(task, expected_task_version)
+            if run["status"] != "paused" or TaskStatus(task["status"]) is not TaskStatus.PAUSED:
+                raise AipTaskTransitionBlocked("only a quiesced paused run can resume")
+            plan = conn.execute(
+                """SELECT * FROM aip_plan_revision WHERE org_id=%s AND project_id=%s
+                   AND plan_revision_id=%s""",
+                (*scope.key, run["plan_revision_id"]),
+            ).fetchone()
+            observed_dependency_hash = self._runtime_dependency_snapshot_hash(run, plan)
+            checkpoint = conn.execute(
+                """SELECT * FROM aip_checkpoint WHERE org_id=%s AND project_id=%s AND run_id=%s
+                   ORDER BY sequence DESC LIMIT 1""",
+                (*scope.key, run_id),
+            ).fetchone()
+            expected_dependency_hash = run["dependency_snapshot_hash"]
+            expected_input_hash = checkpoint["input_hash"] if checkpoint is not None else None
+            observed_input_hash: str | None = None
+            reasons: list[str] = []
+            if expected_dependency_hash is None:
+                reasons.append("LEGACY_DEPENDENCY_SNAPSHOT_MISSING")
+            elif expected_dependency_hash != observed_dependency_hash:
+                reasons.append("DEPENDENCY_SNAPSHOT_DRIFTED")
+            if checkpoint is not None:
+                checkpoint_step_key = checkpoint["step_key"]
+                checkpoint_attempt = checkpoint["attempt"]
+                plan_step = next(
+                    (
+                        item
+                        for item in plan["steps"]
+                        if item.get("stepKey") == checkpoint_step_key
+                    ),
+                    None,
+                )
+                if (
+                    expected_input_hash is None
+                    or checkpoint_attempt is None
+                    or plan_step is None
+                ):
+                    reasons.append("CHECKPOINT_INPUT_SNAPSHOT_MISSING")
+                else:
+                    observed_input_hash = self._step_input_hash(
+                        run, plan, plan_step, int(checkpoint_attempt)
+                    )
+                    if expected_input_hash != observed_input_hash:
+                        reasons.append("CHECKPOINT_INPUT_HASH_DRIFTED")
+            decision = "reuse" if not reasons else "invalidated"
+            decision_payload = {
+                "runId": run_id,
+                "runVersion": expected_run_version,
+                "checkpointId": checkpoint["checkpoint_id"] if checkpoint is not None else None,
+                "decision": decision,
+                "reasonCodes": reasons,
+                "expectedDependencySnapshotHash": expected_dependency_hash,
+                "observedDependencySnapshotHash": observed_dependency_hash,
+                "expectedInputHash": expected_input_hash,
+                "observedInputHash": observed_input_hash,
+                "reason": reason,
+            }
+            request_hash = _canonical_hash(request)
+            content_hash = _canonical_hash(decision_payload)
+            decision_id = f"resume-decision-{content_hash[:20]}"
+            conn.execute(
+                """INSERT INTO aip_run_resume_decision_revision
+                   (org_id,project_id,decision_id,run_id,revision,checkpoint_id,decision,
+                    reason_codes,expected_dependency_snapshot_hash,observed_dependency_snapshot_hash,
+                    expected_input_hash,observed_input_hash,actor,idempotency_key,request_hash,
+                    content_hash,created_at)
+                   VALUES(%s,%s,%s,%s,1,%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s,%s,%s,NOW())""",
+                (*scope.key, decision_id, run_id, decision_payload["checkpointId"], decision,
+                 self._json(reasons), expected_dependency_hash, observed_dependency_hash,
+                 expected_input_hash, observed_input_hash, actor, idempotency_key,
+                 request_hash, content_hash),
+            )
+            if reasons:
+                conn.commit()
+                raise AipTaskVersionConflict("resume dependency snapshot drifted")
+            target = transition_task_status(TaskStatus.PAUSED, TaskStatus.EXECUTING)
+            conn.execute(
+                """UPDATE aip_task_run SET status='running',pause_requested_at=NULL,pause_reason=NULL,
+                   version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s
+                   AND run_id=%s AND version=%s""",
+                (*scope.key, run_id, expected_run_version),
+            )
+            conn.execute(
+                """UPDATE aip_task SET status=%s,version=version+1,updated_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND task_id=%s AND version=%s""",
+                (target.value, *scope.key, task["task_id"], expected_task_version),
+            )
+            self._record_control_receipt(conn, scope, run_id, actor, "resume", idempotency_key, request)
+            result = self._control_result(conn, scope, run_id, str(task["task_id"]))
+            conn.commit()
+            return result
 
     def cancel_run(
         self,
@@ -684,7 +813,7 @@ class AipTaskStore:
             self._expect_run_version(run, expected_run_version)
             self._expect_version(task, expected_task_version)
             current = TaskStatus(task["status"])
-            if run["status"] not in {"queued", "running"}:
+            if run["status"] not in {"queued", "running", "pausing", "paused"}:
                 raise AipTaskTransitionBlocked("terminal run cannot be cancelled")
             try:
                 if current is TaskStatus.PAUSED:
@@ -773,10 +902,11 @@ class AipTaskStore:
             if run["status"] != "running" or TaskStatus(task["status"]) is not TaskStatus.EXECUTING:
                 raise AipTaskTransitionBlocked("run is not claimable")
             plan = conn.execute(
-                "SELECT steps FROM aip_plan_revision WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s",
+                "SELECT * FROM aip_plan_revision WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s",
                 (scope.org_id, scope.project_id, run["plan_revision_id"]),
             ).fetchone()
-            if plan is None or step_key not in {str(step.get("stepKey")) for step in plan["steps"]}:
+            plan_steps = {str(step.get("stepKey")): step for step in plan["steps"]} if plan else {}
+            if plan is None or step_key not in plan_steps:
                 raise AipTaskNotFound("plan step not found in scope")
             row = conn.execute(
                 """SELECT * FROM aip_step_run WHERE org_id=%s AND project_id=%s AND run_id=%s
@@ -785,14 +915,30 @@ class AipTaskStore:
             ).fetchone()
             now = datetime.now(timezone.utc)
             expires = now + timedelta(seconds=lease_seconds)
+            attempt = 1 if row is None else int(row["attempt"])
+            input_hash = self._step_input_hash(run, plan, plan_steps[step_key], attempt)
+            provider_fingerprint = _canonical_hash(
+                {"runId": run_id, "stepKey": step_key, "attempt": attempt, "inputHash": input_hash}
+            )
+            assignment = conn.execute(
+                """SELECT * FROM aip_execution_assignment_head WHERE org_id=%s AND project_id=%s
+                   AND step_run_id=%s AND attempt=%s FOR UPDATE""",
+                (*scope.key, row["step_run_id"], attempt),
+            ).fetchone() if row is not None else None
+            fence = (0 if assignment is None else int(assignment["current_fence"])) + 1
+            assignment_lease_id = f"execution-lease-{uuid.uuid4().hex[:20]}"
             if row is None:
                 step_run_id = f"step-run-{uuid.uuid4().hex[:20]}"
                 row = conn.execute(
                     """INSERT INTO aip_step_run (
                          org_id,project_id,step_run_id,run_id,step_key,attempt,status,
-                         lease_owner,lease_expires_at,heartbeat_at,created_at,updated_at)
-                       VALUES (%s,%s,%s,%s,%s,1,'running',%s,%s,%s,NOW(),NOW()) RETURNING *""",
-                    (scope.org_id, scope.project_id, step_run_id, run_id, step_key, worker_id, expires, now),
+                         lease_owner,lease_expires_at,heartbeat_at,fence,assignment_lease_id,
+                         input_hash,provider_request_fingerprint,safe_point,reconcile_required,
+                         created_at,updated_at)
+                       VALUES (%s,%s,%s,%s,%s,1,'running',%s,%s,%s,%s,%s,%s,%s,FALSE,FALSE,
+                         NOW(),NOW()) RETURNING *""",
+                    (scope.org_id, scope.project_id, step_run_id, run_id, step_key, worker_id,
+                     expires, now, fence, assignment_lease_id, input_hash, provider_fingerprint),
                 ).fetchone()
             else:
                 lease_expires = row["lease_expires_at"]
@@ -800,7 +946,8 @@ class AipTaskStore:
                     raise AipTaskVersionConflict("step already has an active lease")
                 if row["status"] == "running" and row["action_ref"] is not None:
                     conn.execute(
-                        """UPDATE aip_step_run SET status='unknown',error=%s::jsonb,updated_at=NOW()
+                        """UPDATE aip_step_run SET status='unknown',reconcile_required=TRUE,
+                           error=%s::jsonb,updated_at=NOW()
                            WHERE org_id=%s AND project_id=%s AND step_run_id=%s""",
                         (
                             self._json({"code": "AIP_OUTCOME_UNKNOWN", "message": "expired lease after action"}),
@@ -824,10 +971,31 @@ class AipTaskStore:
                     raise AipTaskTransitionBlocked("step is already terminal")
                 row = conn.execute(
                     """UPDATE aip_step_run SET status='running',lease_owner=%s,lease_expires_at=%s,
-                         heartbeat_at=%s,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND step_run_id=%s
+                         heartbeat_at=%s,fence=%s,assignment_lease_id=%s,input_hash=%s,
+                         provider_request_fingerprint=%s,safe_point=FALSE,reconcile_required=FALSE,
+                         updated_at=NOW() WHERE org_id=%s AND project_id=%s AND step_run_id=%s
                        RETURNING *""",
-                    (worker_id, expires, now, scope.org_id, scope.project_id, row["step_run_id"]),
+                    (worker_id, expires, now, fence, assignment_lease_id, input_hash,
+                     provider_fingerprint, scope.org_id, scope.project_id, row["step_run_id"]),
                 ).fetchone()
+            owner = self._json({"kind": "tool_binding", "resourceId": worker_id, "version": 1})
+            if assignment is None:
+                conn.execute(
+                    """INSERT INTO aip_execution_assignment_head
+                       (org_id,project_id,run_id,step_run_id,attempt,owner,current_fence,
+                        lease_id,lease_expires_at,version,updated_at)
+                       VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,1,%s)""",
+                    (*scope.key, run_id, row["step_run_id"], int(row["attempt"]), owner,
+                     fence, assignment_lease_id, expires, now),
+                )
+            else:
+                conn.execute(
+                    """UPDATE aip_execution_assignment_head SET owner=%s::jsonb,current_fence=%s,
+                       lease_id=%s,lease_expires_at=%s,version=version+1,updated_at=%s
+                       WHERE org_id=%s AND project_id=%s AND step_run_id=%s AND attempt=%s""",
+                    (owner, fence, assignment_lease_id, expires, now, *scope.key,
+                     row["step_run_id"], int(row["attempt"])),
+                )
             conn.commit()
             return StepLease(
                 step_run_id=str(row["step_run_id"]),
@@ -835,22 +1003,39 @@ class AipTaskStore:
                 step_key=step_key,
                 attempt=int(row["attempt"]),
                 worker_id=worker_id,
+                fence=fence,
+                assignment_lease_id=assignment_lease_id,
+                input_hash=input_hash,
+                provider_request_fingerprint=provider_fingerprint,
                 lease_expires_at=row["lease_expires_at"],
             )
 
     def heartbeat_step(
-        self, scope: TenantScope, step_run_id: str, worker_id: str, *, lease_seconds: int
+        self, scope: TenantScope, step_run_id: str, worker_id: str, fence: int, *, lease_seconds: int
     ) -> StepLease:
         expires = datetime.now(timezone.utc) + timedelta(seconds=lease_seconds)
         with self._connect(scope) as conn:
             row = conn.execute(
                 """UPDATE aip_step_run SET heartbeat_at=NOW(),lease_expires_at=%s,updated_at=NOW()
                    WHERE org_id=%s AND project_id=%s AND step_run_id=%s AND status='running'
-                     AND lease_owner=%s AND lease_expires_at>NOW() RETURNING *""",
-                (expires, scope.org_id, scope.project_id, step_run_id, worker_id),
+                     AND lease_owner=%s AND fence=%s AND lease_expires_at>NOW()
+                     AND EXISTS (SELECT 1 FROM aip_execution_assignment_head head
+                       WHERE head.org_id=aip_step_run.org_id AND head.project_id=aip_step_run.project_id
+                         AND head.step_run_id=aip_step_run.step_run_id AND head.attempt=aip_step_run.attempt
+                         AND head.current_fence=%s AND head.lease_id=aip_step_run.assignment_lease_id
+                         AND head.lease_expires_at>NOW()) RETURNING *""",
+                (expires, scope.org_id, scope.project_id, step_run_id, worker_id, fence, fence),
             ).fetchone()
             if row is None:
                 raise AipTaskVersionConflict("step lease is missing, expired, or owned by another worker")
+            conn.execute(
+                """UPDATE aip_execution_assignment_head SET lease_expires_at=%s,
+                   version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s
+                   AND step_run_id=%s AND attempt=%s AND current_fence=%s
+                   AND lease_id=%s AND lease_expires_at>NOW()""",
+                (expires, *scope.key, step_run_id, int(row["attempt"]), fence,
+                 row["assignment_lease_id"]),
+            )
             conn.commit()
             return StepLease(
                 step_run_id=step_run_id,
@@ -858,6 +1043,10 @@ class AipTaskStore:
                 step_key=str(row["step_key"]),
                 attempt=int(row["attempt"]),
                 worker_id=worker_id,
+                fence=int(row["fence"]),
+                assignment_lease_id=str(row["assignment_lease_id"]),
+                input_hash=str(row["input_hash"]),
+                provider_request_fingerprint=str(row["provider_request_fingerprint"]),
                 lease_expires_at=row["lease_expires_at"],
             )
 
@@ -866,6 +1055,7 @@ class AipTaskStore:
         scope: TenantScope,
         step_run_id: str,
         worker_id: str,
+        fence: int,
         actor: str,
         phase: str,
         payload: dict[str, Any],
@@ -880,7 +1070,7 @@ class AipTaskStore:
                    AND status='running' AND lease_owner=%s AND lease_expires_at>NOW() FOR UPDATE""",
                 (scope.org_id, scope.project_id, step_run_id, worker_id),
             ).fetchone()
-            if step is None:
+            if step is None or int(step["fence"] or 0) != fence or not self._assignment_fence_current(conn, scope, step, fence):
                 raise AipTaskVersionConflict("step phase write requires an active owned lease")
             evidence_id = self._insert_evidence(
                 conn,
@@ -948,7 +1138,7 @@ class AipTaskStore:
         return artifact_id
 
     def complete_step(
-        self, scope: TenantScope, step_run_id: str, worker_id: str, actor: str
+        self, scope: TenantScope, step_run_id: str, worker_id: str, fence: int, actor: str
     ) -> str:
         with self._connect(scope) as conn:
             step = conn.execute(
@@ -956,7 +1146,7 @@ class AipTaskStore:
                    AND status='running' AND lease_owner=%s AND lease_expires_at>NOW() FOR UPDATE""",
                 (scope.org_id, scope.project_id, step_run_id, worker_id),
             ).fetchone()
-            if step is None:
+            if step is None or int(step["fence"] or 0) != fence or not self._assignment_fence_current(conn, scope, step, fence):
                 raise AipTaskVersionConflict("step completion requires an active owned lease")
             if any(step[name] is None for name in ("think_ref", "action_ref", "verify_ref", "observe_ref")):
                 raise AipTaskTransitionBlocked("all four TAOR evidence phases are required")
@@ -966,13 +1156,48 @@ class AipTaskStore:
                     (scope.org_id, scope.project_id, step["run_id"]),
                 ).fetchone()["seq"]
             )
+            run = conn.execute(
+                """SELECT * FROM aip_task_run WHERE org_id=%s AND project_id=%s AND run_id=%s
+                   FOR UPDATE""",
+                (*scope.key, step["run_id"]),
+            ).fetchone()
+            plan = conn.execute(
+                """SELECT * FROM aip_plan_revision WHERE org_id=%s AND project_id=%s
+                   AND plan_revision_id=%s""",
+                (*scope.key, run["plan_revision_id"]),
+            ).fetchone()
+            plan_step = next(item for item in plan["steps"] if item.get("stepKey") == step["step_key"])
+            dependency_snapshot = self._runtime_dependency_snapshot(run, plan)
+            dependency_hash = _canonical_hash(dependency_snapshot)
+            checkpoint_policy = dict(plan_step.get("checkpointPolicy") or {})
+            artifact_refs = list(step["output_refs"] or [])
+            receipt_refs = [value for value in (step["action_ref"], step["verify_ref"]) if value]
+            lineage = {
+                "taskRunRef": {"resourceType": "TaskRun", "resourceId": step["run_id"], "version": int(run["version"])},
+                "stepRunRef": {"resourceType": "StepRun", "resourceId": step_run_id, "version": int(step["attempt"])},
+                "planRevisionRef": {"resourceType": "PlanRevision", "resourceId": run["plan_revision_id"], "revision": int(plan["revision"]), "contentHash": plan["content_hash"]},
+                "assignment": {"leaseId": step["assignment_lease_id"], "owner": worker_id, "fence": fence},
+            }
             checkpoint_id = f"checkpoint-{uuid.uuid4().hex[:20]}"
-            state = {"stepRunId": step_run_id, "stepKey": step["step_key"], "status": "succeeded"}
+            state = {
+                "stepRunId": step_run_id,
+                "stepKey": step["step_key"],
+                "attempt": int(step["attempt"]),
+                "status": "succeeded",
+                "inputHash": step["input_hash"],
+                "providerRequestFingerprint": step["provider_request_fingerprint"],
+                "dependencySnapshotHash": dependency_hash,
+                "artifactRefs": artifact_refs,
+                "lineage": lineage,
+            }
             conn.execute(
                 """INSERT INTO aip_checkpoint (
                      org_id,project_id,checkpoint_id,run_id,sequence,schema_version,step_key,
-                     state_hash,state_snapshot_ref,artifact_refs,created_by,created_at)
-                   VALUES (%s,%s,%s,%s,%s,1,%s,%s,%s::jsonb,'[]'::jsonb,%s,NOW())""",
+                     state_hash,state_snapshot_ref,artifact_refs,attempt,plan_revision_id,input_hash,
+                     provider_request_fingerprint,dependency_snapshot,dependency_snapshot_hash,
+                     checkpoint_policy,usage_refs,receipt_refs,lineage,created_by,created_at)
+                   VALUES (%s,%s,%s,%s,%s,2,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s,%s,
+                     %s::jsonb,%s,%s::jsonb,'[]'::jsonb,%s::jsonb,%s::jsonb,%s,NOW())""",
                 (
                     scope.org_id,
                     scope.project_id,
@@ -982,17 +1207,39 @@ class AipTaskStore:
                     step["step_key"],
                     _canonical_hash(state),
                     self._json(state),
+                    self._json(artifact_refs),
+                    int(step["attempt"]),
+                    run["plan_revision_id"],
+                    step["input_hash"],
+                    step["provider_request_fingerprint"],
+                    self._json(dependency_snapshot),
+                    dependency_hash,
+                    self._json(checkpoint_policy),
+                    self._json(receipt_refs),
+                    self._json(lineage),
                     actor,
                 ),
             )
             conn.execute(
                 """UPDATE aip_step_run SET status='succeeded',lease_owner=NULL,lease_expires_at=NULL,
-                     heartbeat_at=NULL,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND step_run_id=%s""",
+                     heartbeat_at=NULL,safe_point=TRUE,updated_at=NOW()
+                     WHERE org_id=%s AND project_id=%s AND step_run_id=%s""",
                 (scope.org_id, scope.project_id, step_run_id),
             )
+            remaining_active = conn.execute(
+                """SELECT 1 FROM aip_step_run WHERE org_id=%s AND project_id=%s
+                   AND run_id=%s AND status='running' LIMIT 1""",
+                (*scope.key, step["run_id"]),
+            ).fetchone()
+            run_status = (
+                "paused"
+                if run["status"] == "pausing" and remaining_active is None
+                else run["status"]
+            )
             conn.execute(
-                "UPDATE aip_task_run SET last_checkpoint_id=%s,version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND run_id=%s",
-                (checkpoint_id, scope.org_id, scope.project_id, step["run_id"]),
+                """UPDATE aip_task_run SET last_checkpoint_id=%s,status=%s,version=version+1,
+                   updated_at=NOW() WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                (checkpoint_id, run_status, scope.org_id, scope.project_id, step["run_id"]),
             )
             conn.commit()
             return checkpoint_id
@@ -1038,7 +1285,8 @@ class AipTaskStore:
             return result
 
     def fail_step(
-        self, scope: TenantScope, step_run_id: str, worker_id: str, actor: str, error: dict[str, Any]
+        self, scope: TenantScope, step_run_id: str, worker_id: str, fence: int,
+        actor: str, error: dict[str, Any]
     ) -> RunControlResult:
         with self._connect(scope) as conn:
             step = conn.execute(
@@ -1046,7 +1294,7 @@ class AipTaskStore:
                    AND status='running' AND lease_owner=%s AND lease_expires_at>NOW() FOR UPDATE""",
                 (scope.org_id, scope.project_id, step_run_id, worker_id),
             ).fetchone()
-            if step is None:
+            if step is None or int(step["fence"] or 0) != fence or not self._assignment_fence_current(conn, scope, step, fence):
                 raise AipTaskVersionConflict("step failure requires the owned lease")
             run, task = self._locked_run_and_task(conn, scope, str(step["run_id"]))
             self._insert_evidence(conn, scope, str(step["run_id"]), actor, "taor.failure", error)
@@ -1128,6 +1376,50 @@ class AipTaskStore:
         if task is None:
             raise AipTaskNotFound("task not found in scope")
         return run, task
+
+    @staticmethod
+    def _runtime_dependency_snapshot(run: Any, plan: Any) -> dict[str, Any]:
+        if plan is None:
+            raise AipTaskNotFound("approved plan revision not found in scope")
+        production_contract = dict(plan["risk"] or {}).get("productionContract")
+        return {
+            "runId": str(run["run_id"]),
+            "planRevisionId": str(plan["plan_revision_id"]),
+            "planRevision": int(plan["revision"]),
+            "planContentHash": str(plan["content_hash"]),
+            "steps": list(plan["steps"] or []),
+            "dependencies": list(plan["dependencies"] or []),
+            "productionContract": production_contract if isinstance(production_contract, dict) else None,
+            "logicGraphId": run["logic_graph_id"],
+            "logicRevision": run["logic_revision"],
+        }
+
+    @classmethod
+    def _runtime_dependency_snapshot_hash(cls, run: Any, plan: Any) -> str:
+        return _canonical_hash(cls._runtime_dependency_snapshot(run, plan))
+
+    @classmethod
+    def _step_input_hash(cls, run: Any, plan: Any, plan_step: dict[str, Any], attempt: int) -> str:
+        return _canonical_hash(
+            {
+                "dependencySnapshotHash": cls._runtime_dependency_snapshot_hash(run, plan),
+                "step": plan_step,
+                "attempt": attempt,
+            }
+        )
+
+    @staticmethod
+    def _assignment_fence_current(
+        conn: Any, scope: TenantScope, step: Any, fence: int
+    ) -> bool:
+        row = conn.execute(
+            """SELECT 1 FROM aip_execution_assignment_head WHERE org_id=%s AND project_id=%s
+               AND step_run_id=%s AND attempt=%s AND current_fence=%s AND lease_id=%s
+               AND lease_expires_at>NOW()""",
+            (*scope.key, step["step_run_id"], int(step["attempt"]), fence,
+             step["assignment_lease_id"]),
+        ).fetchone()
+        return row is not None
 
     def _control_result(self, conn: Any, scope: TenantScope, run_id: str, task_id: str) -> RunControlResult:
         run = conn.execute(
@@ -1308,6 +1600,9 @@ class AipTaskStore:
             status=TaskRunStatus(row["status"]),
             logic_graph_id=row["logic_graph_id"],
             logic_revision=row["logic_revision"],
+            dependency_snapshot_hash=row.get("dependency_snapshot_hash"),
+            pause_requested_at=row.get("pause_requested_at"),
+            pause_reason=row.get("pause_reason"),
             started_at=row["started_at"],
             finished_at=row["finished_at"],
             last_checkpoint_id=row["last_checkpoint_id"],

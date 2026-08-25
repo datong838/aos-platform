@@ -477,6 +477,15 @@ class AipResponsibilityAssignmentStore:
                            AND step_run_id=%s AND attempt=%s""",
                         (_json(owner_payload), fence, lease_id, body.lease_expires_at, observed_at, *scope.key, step_ref.resource_id, int(request["attempt"])),
                     )
+                conn.execute(
+                    """UPDATE aip_step_run SET status='running',lease_owner=%s,
+                       lease_expires_at=%s,heartbeat_at=%s,fence=%s,assignment_lease_id=%s,
+                       safe_point=FALSE,updated_at=%s WHERE org_id=%s AND project_id=%s
+                       AND step_run_id=%s AND attempt=%s""",
+                    (target_owner.resource_id, body.lease_expires_at, observed_at, fence,
+                     lease_id, observed_at, *scope.key, step_ref.resource_id,
+                     int(request["attempt"])),
+                )
                 lease = ExecutionAssignmentLease(
                     lease_id=lease_id,
                     task_run_ref=run_ref,

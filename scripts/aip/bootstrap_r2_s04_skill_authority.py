@@ -259,8 +259,8 @@ def _governance_evidence() -> tuple[ExactRevisionRef, ExactRevisionRef]:
                 ("verify", {"logicId": S04_GRAPH_ID, "skillId": SKILL_ID, "scopeExact": True}),
                 ("observe", {"outcome": "approved", "licenseBasis": "internal use; restricted text only"}),
             ):
-                tasks.record_step_phase(SCOPE, lease.step_run_id, ACTOR, ACTOR, phase, payload)
-            tasks.complete_step(SCOPE, lease.step_run_id, ACTOR, ACTOR)
+                tasks.record_step_phase(SCOPE, lease.step_run_id, ACTOR, lease.fence, ACTOR, phase, payload)
+            tasks.complete_step(SCOPE, lease.step_run_id, ACTOR, lease.fence, ACTOR)
         tasks.complete_run(SCOPE, run.id)
     with db_connect(SCOPE) as conn:
         evidence = conn.execute(

@@ -551,8 +551,8 @@ def _seal_task(tasks: AipTaskStore, task_run: Any, response: Any) -> Any:
         ("verify", metadata),
         ("observe", {"outcome": "succeeded", "sensitiveBodiesPersisted": 0}),
     ):
-        tasks.record_step_phase(SCOPE, lease.step_run_id, ACTOR, ACTOR, phase, payload)
-    tasks.complete_step(SCOPE, lease.step_run_id, ACTOR, ACTOR)
+        tasks.record_step_phase(SCOPE, lease.step_run_id, ACTOR, lease.fence, ACTOR, phase, payload)
+    tasks.complete_step(SCOPE, lease.step_run_id, ACTOR, lease.fence, ACTOR)
     return tasks.complete_run(SCOPE, task_run.id).run
 
 
