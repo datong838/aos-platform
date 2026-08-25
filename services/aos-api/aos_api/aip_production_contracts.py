@@ -406,6 +406,13 @@ class CompileStageTemplateRequest(AipContractModel):
     responsibility_plan_ref: ExactRevisionRef
     production_context_ref: ExactRevisionRef
     profile: str = Field(min_length=1, max_length=80)
+    brief_ref: ExactRevisionRef | None = None
+    evidence_bundle_ref: ExactRevisionRef | None = None
+    eval_contract_ref: ExactRevisionRef | None = None
+    profile_recommendation_ref: ExactRevisionRef | None = None
+    profile_confirmation_id: str | None = Field(default=None, min_length=1, max_length=200)
+    merge_policy_ref: ExactRevisionRef | None = None
+    capability_refs: dict[str, ExactRevisionRef] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _responsibility_ref_type(self) -> CompileStageTemplateRequest:
@@ -413,6 +420,37 @@ class CompileStageTemplateRequest(AipContractModel):
             raise ValueError("responsibilityPlanRef must reference ResponsibilityPlanRevision")
         if self.production_context_ref.resource_type != "ProductionContextRevision":
             raise ValueError("productionContextRef must reference ProductionContextRevision")
+        expected_types = (
+            (self.brief_ref, "TaskBriefRevision", "briefRef"),
+            (self.evidence_bundle_ref, "EvidenceBundleRevision", "evidenceBundleRef"),
+            (self.eval_contract_ref, "EvalContractRevision", "evalContractRef"),
+            (
+                self.profile_recommendation_ref,
+                "ProfileRecommendationRevision",
+                "profileRecommendationRef",
+            ),
+            (self.merge_policy_ref, "MergePolicyRevision", "mergePolicyRef"),
+        )
+        for ref, resource_type, label in expected_types:
+            if ref is not None and ref.resource_type != resource_type:
+                raise ValueError(f"{label} must reference {resource_type}")
+        if any(key != ref.resource_id for key, ref in self.capability_refs.items()):
+            raise ValueError("capabilityRefs keys must equal referenced capability IDs")
+        if any(ref.resource_type != "CapabilityRevision" for ref in self.capability_refs.values()):
+            raise ValueError("capabilityRefs must reference CapabilityRevision")
+        governed = self.profile in {"LITE", "STANDARD", "FULL"}
+        governed_refs = (
+            self.brief_ref,
+            self.evidence_bundle_ref,
+            self.eval_contract_ref,
+            self.profile_recommendation_ref,
+            self.profile_confirmation_id,
+            self.merge_policy_ref,
+        )
+        if governed and any(item is None for item in governed_refs):
+            raise ValueError("governed profile compilation requires the complete exact contract set")
+        if governed and not self.capability_refs:
+            raise ValueError("governed profile compilation requires exact capabilityRefs")
         return self
 
 
@@ -424,6 +462,9 @@ class StageCompilationResult(AipContractModel):
     production_context_ref: ExactRevisionRef
     plan_ref: ExactRevisionRef
     compiler_version: str
+    input_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    compilation_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    normalized_stage_ids: list[str]
     applicable_stage_ids: list[str]
     not_applicable_stage_ids: list[str]
     created_at: datetime

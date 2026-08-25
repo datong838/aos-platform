@@ -1,0 +1,106 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "taskId": "workshop-w7-03-stage-template-compiler-taskrun-20260825",
+  "recordedAt": "2026-08-25T19:27:29+08:00",
+  "baseRevision": "AOS-000257",
+  "result": "W7_03_STAGE_TEMPLATE_PLAN_COMPILER_CODE_CONTRACT_BROWSER_GREEN_SECURITY_SCOPED_GREEN_REPO_BASELINE_RED_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "implementation": {
+    "compilerVersion": "w7c.v1",
+    "canonicalAuthority": [
+      "TaskBriefRevision",
+      "EvidenceBundleRevision",
+      "EvalContractRevision",
+      "ResponsibilityPlanRevision",
+      "StageTemplateRevision",
+      "ProfileRecommendationRevision",
+      "ProfileConfirmationReceipt",
+      "MergePolicyRevision",
+      "CapabilityRevision",
+      "ProductionContextRevision",
+      "PlanRevision",
+      "TaskRun"
+    ],
+    "planStepSemantics": [
+      "applicability and canonical skip reason",
+      "exact capability revisions",
+      "responsibility slots and assignee refs",
+      "input and output schema refs",
+      "gate refs",
+      "checkpoint retry compensation policies"
+    ],
+    "determinism": [
+      "stable topological stage order",
+      "inputHash over exact governed dependency snapshot",
+      "compilationHash over inputHash steps and dependencies"
+    ],
+    "startGate": "recomputes inputHash and compilationHash before the existing transactional queued TaskRun path",
+    "skillComposition": "atomic Skill capability revisions -> Logic stage plan -> digital colleague responsibility binding -> Workshop compilation contribution view"
+  },
+  "verification": {
+    "focusedAndCumulativePytest": {
+      "status": "GREEN",
+      "passed": 66,
+      "subtestsPassed": 2,
+      "warnings": 18
+    },
+    "web": {
+      "status": "GREEN",
+      "focusedTestFilesPassed": 3,
+      "focusedTestsPassed": 35,
+      "cumulativeTestFilesPassed": 232,
+      "cumulativeTestsPassed": 2133,
+      "typecheck": "GREEN",
+      "buildModules": 344
+    },
+    "openApiAndDomainRouter": {
+      "status": "GREEN",
+      "paths": 2641,
+      "schemas": 2314,
+      "operations": 4412,
+      "deterministicArtifact": "GREEN"
+    },
+    "alembic": {
+      "status": "GREEN",
+      "heads": ["w7_001"],
+      "realDatabaseApply": false
+    },
+    "security": {
+      "scopedStatus": "GREEN",
+      "scopedFiles": 16,
+      "scopedCritical": 0,
+      "scopedWarning": 0,
+      "repositoryGateStatus": "RED_EXISTING_BASELINE",
+      "repositoryFiles": 4869,
+      "repositoryCritical": 5,
+      "repositoryWarning": 326
+    },
+    "browser": {
+      "status": "GREEN_CONTROLLED_FIXTURE_ONLY",
+      "url": "http://127.0.0.1:5173/aip/production-contracts",
+      "viewports": [768, 1440, 1920],
+      "horizontalOverflow": false,
+      "governedInputLockedVisible": true,
+      "compileDraftButtonEnabled": true,
+      "compileButtonClicked": false,
+      "productionStartButtonDisabled": true,
+      "consoleErrors": 0,
+      "knownWarnings": "fixture misses and React Router future flags only"
+    },
+    "syntaxAndArtifacts": {
+      "compileAll": "GREEN",
+      "diffCheck": "GREEN"
+    }
+  },
+  "boundaries": {
+    "realTenantMutation": false,
+    "databaseMigrationApply": false,
+    "planApproval": false,
+    "taskRunCreation": false,
+    "providerInvocation": false,
+    "mediaGeneration": false,
+    "externalPublication": false,
+    "bundlePublication": false,
+    "tenantInstallation": false,
+    "release": false
+  }
+}

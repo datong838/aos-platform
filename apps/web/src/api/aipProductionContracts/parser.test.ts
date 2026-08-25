@@ -70,8 +70,9 @@ describe("W2-D production contract parser",()=>{
   });
   it("解析并严格校验编译与生产上下文精确链",()=>{
     const contextRef=exact("ProductionContextRevision","context-1");
-    const compilation=parseStageCompilation({tenant,taskId:"task-1",templateRef:exact("StageTemplateRevision","stage-1"),responsibilityPlanRef:exact("ResponsibilityPlanRevision","responsibility-1"),productionContextRef:contextRef,planRef:exact("PlanRevision","plan-1"),compilerVersion:"w3-05.v1",applicableStageIds:["analysis"],notApplicableStageIds:[],createdAt:"2026-08-14T00:00:00Z"});
+    const compilation=parseStageCompilation({tenant,taskId:"task-1",templateRef:exact("StageTemplateRevision","stage-1"),responsibilityPlanRef:exact("ResponsibilityPlanRevision","responsibility-1"),productionContextRef:contextRef,planRef:exact("PlanRevision","plan-1"),compilerVersion:"w7c.v1",inputHash:hash,compilationHash:hash,normalizedStageIds:["analysis"],applicableStageIds:["analysis"],notApplicableStageIds:[],createdAt:"2026-08-14T00:00:00Z"});
     expect(compilation.productionContextRef.resourceId).toBe("context-1");
+    expect(compilation.normalizedStageIds).toEqual(["analysis"]);
     const context=parseProductionContextList({tenant,count:1,items:[{tenant,contextId:"context-1",revision:1,taskId:"task-1",briefRef:exact("TaskBriefRevision","brief-1"),evidenceBundleRef:exact("EvidenceBundleRevision","bundle-1"),evalContractRef:exact("EvalContractRevision","eval-1"),responsibilityPlanRef:exact("ResponsibilityPlanRevision","responsibility-1"),productionProfileRef:exact("ProductionProfileRevision","profile-1"),preparationRef:null,profile:"standard",dependencySnapshot:[],dependencySnapshotHash:hash,contentHash:hash,lifecycle:"frozen",readiness:"ready",blockers:[],createdBy:"user:dev",createdAt:"2026-08-14T00:00:00Z"}]}).items[0];
     expect(context.productionProfileRef?.resourceId).toBe("profile-1");
     expect(()=>parseStageCompilation({...compilation,productionContextRef:exact("PlanRevision","context-1")})).toThrow("ProductionContextRevision");

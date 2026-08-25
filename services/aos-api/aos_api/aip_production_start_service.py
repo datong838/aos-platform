@@ -221,11 +221,55 @@ class AipProductionStartService:
         if plan["approval_status"] != "draft":
             blockers.append(ContractBlocker(code="PLAN_NOT_AWAITING_START", message="PlanRevision 不处于待组合门批准状态", resource_ref=body.plan_ref))
         if not isinstance(production_contract, dict) or not (
-            production_contract.get("compilerVersion") == "w2c.v1"
+            production_contract.get("compilerVersion") in {"w2c.v1", "w7c.v1"}
             and production_contract.get("productionStartGateRequired") is True
             and production_contract.get("productionStartGateRef") is None
         ):
             blockers.append(ContractBlocker(code="PLAN_NOT_W2C_PRODUCTION_DRAFT", message="PlanRevision 不是受 W2-D 保护的 W2-C 生产草案", resource_ref=body.plan_ref))
+        if isinstance(production_contract, dict) and production_contract.get(
+            "compilerVersion"
+        ) == "w7c.v1":
+            input_hash = production_contract.get("inputHash")
+            compilation_hash = production_contract.get("compilationHash")
+            governed = production_contract.get("governedDependencies")
+            expected_input_hash = canonical_hash(
+                {
+                    "compilerVersion": production_contract.get("compilerVersion"),
+                    "templateRef": production_contract.get("stageTemplateRef"),
+                    "responsibilityPlanRef": production_contract.get(
+                        "responsibilityPlanRef"
+                    ),
+                    "productionContextRef": production_contract.get(
+                        "productionContextRef"
+                    ),
+                    "governedDependencies": governed,
+                    "normalizedStageIds": production_contract.get(
+                        "normalizedStageIds"
+                    ),
+                }
+            )
+            expected_compilation_hash = canonical_hash(
+                {
+                    "inputHash": input_hash,
+                    "steps": plan["steps"],
+                    "dependencies": plan["dependencies"],
+                }
+            )
+            if not (
+                isinstance(input_hash, str)
+                and input_hash == expected_input_hash
+                and isinstance(compilation_hash, str)
+                and compilation_hash == expected_compilation_hash
+                and isinstance(governed, list)
+                and len(governed) >= 7
+            ):
+                blockers.append(
+                    ContractBlocker(
+                        code="PLAN_W7_COMPILATION_ENVELOPE_DRIFTED",
+                        message="W7 Plan 编译输入或结构化步骤摘要漂移",
+                        resource_ref=body.plan_ref,
+                    )
+                )
         expected_context = body.production_context_ref.model_dump(
             mode="json", by_alias=True
         )

@@ -115,6 +115,13 @@ def _seed_review_authorities() -> dict[str, str]:
     report_id = f"eval-report-{suffix}"
     now = datetime.now(timezone.utc)
     with connect(SCOPE) as conn:
+        conn.execute(
+            """INSERT INTO aip_review_rule_revision
+            (org_id,project_id,rule_id,revision,spec,content_hash,created_by)
+            VALUES(%s,%s,'rule-w2c',1,'{"check":"w2c-review"}'::jsonb,%s,%s)
+            ON CONFLICT DO NOTHING""",
+            (*SCOPE.key, HASH_A, ACTOR),
+        )
         for artifact_id, digest in zip(
             artifact_ids, (HASH_A, HASH_B, HASH_C), strict=True
         ):

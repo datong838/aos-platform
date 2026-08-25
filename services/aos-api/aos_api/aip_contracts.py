@@ -8,9 +8,9 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 import re
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from aos_api.public_contracts import TaskStatus
 
@@ -43,6 +43,31 @@ class ResourceRef(AipContractModel):
         if not cleaned:
             raise ValueError("resource reference fields must not be empty")
         return cleaned
+
+
+class ExactContractRef(AipContractModel):
+    """Content-addressed revision reference usable by the canonical Task plan."""
+
+    resource_type: str
+    resource_id: str
+    revision: int = Field(ge=1)
+    content_hash: str
+
+    @field_validator("resource_type", "resource_id")
+    @classmethod
+    def _required_identity(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("exact reference identity must not be empty")
+        return cleaned
+
+    @field_validator("content_hash")
+    @classmethod
+    def _sha256(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if not re.fullmatch(r"[0-9a-f]{64}", normalized):
+            raise ValueError("content_hash must be a sha256 hex digest")
+        return normalized
 
 
 class TenantContext(AipContractModel):
@@ -156,6 +181,34 @@ class PlanStep(AipContractModel):
     title: str
     capability_ref: ResourceRef | None = None
     input_refs: list[ResourceRef] = Field(default_factory=list)
+    applicability: Literal["applicable", "not_applicable"] = "applicable"
+    capability_refs: list[ExactContractRef] = Field(default_factory=list)
+    responsibility_slot_ids: list[str] = Field(default_factory=list)
+    assignee_refs: list[ResourceRef] = Field(default_factory=list)
+    input_schema_ref: ResourceRef | None = None
+    output_schema_ref: ResourceRef | None = None
+    gate_refs: list[ExactContractRef] = Field(default_factory=list)
+    checkpoint_policy: dict[str, Any] = Field(default_factory=dict)
+    retry_policy: dict[str, Any] = Field(default_factory=dict)
+    compensation_policy: dict[str, Any] = Field(default_factory=dict)
+    skip_reason: str | None = None
+
+    @model_validator(mode="after")
+    def _structured_stage_contract_is_unambiguous(self) -> PlanStep:
+        for label, values in (
+            ("capabilityRefs", [item.resource_id for item in self.capability_refs]),
+            ("responsibilitySlotIds", self.responsibility_slot_ids),
+            ("assigneeRefs", [item.resource_id for item in self.assignee_refs]),
+            ("gateRefs", [item.resource_id for item in self.gate_refs]),
+        ):
+            if len(values) != len(set(values)):
+                raise ValueError(f"{label} must be unique")
+        if self.applicability == "not_applicable":
+            if not self.skip_reason:
+                raise ValueError("not-applicable PlanStep requires skipReason")
+        elif self.skip_reason is not None:
+            raise ValueError("applicable PlanStep cannot carry skipReason")
+        return self
 
 
 class PlanRevision(AipContractModel):

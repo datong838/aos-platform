@@ -9,7 +9,7 @@ from contextlib import AbstractContextManager
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from aos_api.aip_contracts import PlanStep, ResourceRef, TenantContext
+from aos_api.aip_contracts import ExactContractRef, PlanStep, ResourceRef, TenantContext
 from aos_api.aip_production_contracts import (
     ArtifactRelation, ArtifactRelationListResponse, AssigneeRef, BriefLifecycle,
     BuildEvidenceBundleRequest, CompileStageTemplateRequest, ContractBlocker,
@@ -56,6 +56,7 @@ ConnectFactory = Callable[..., AbstractContextManager[Any]]
 ResponsibilityTemplateResolver = Callable[[TenantScope, ExactRevisionRef], bool]
 StageTemplateSourceResolver = Callable[[TenantScope, ExactRevisionRef], bool]
 ProductionProfileResolver = Callable[[TenantScope, ExactRevisionRef], bool]
+SchemaCompatibilityResolver = Callable[[ResourceRef, ResourceRef], bool]
 
 
 class ProductionContractError(RuntimeError):
@@ -122,6 +123,7 @@ class AipProductionContractStore:
         responsibility_template_resolver: ResponsibilityTemplateResolver | None = None,
         stage_template_source_resolver: StageTemplateSourceResolver | None = None,
         production_profile_resolver: ProductionProfileResolver | None = None,
+        schema_compatibility_resolver: SchemaCompatibilityResolver | None = None,
         task_store: AipTaskStore | None = None,
     ) -> None:
         self._connect_factory = connect_factory or db_connect
@@ -129,6 +131,10 @@ class AipProductionContractStore:
         self._stage_template_source_resolver = stage_template_source_resolver
         self._production_profile_resolver = (
             production_profile_resolver or InstalledProductionProfileResolver().resolve
+        )
+        self._schema_compatibility_resolver = (
+            schema_compatibility_resolver
+            or (lambda output_ref, input_ref: output_ref == input_ref)
         )
         self._task_store = task_store or AipTaskStore(self._connect_factory)
 
@@ -985,7 +991,12 @@ class AipProductionContractStore:
                     "PRODUCTION_CONTEXT_RESPONSIBILITY_PLAN_MISMATCH"
                 )
 
-            slot_ids = {slot.slot_id for slot in plan.slots}
+            governed_snapshot = self._governed_compilation_snapshot(
+                conn, scope, body, plan, context
+            )
+
+            slots_by_id = {slot.slot_id: slot for slot in plan.slots}
+            slot_ids = set(slots_by_id)
             missing_slots = sorted(
                 {
                     slot_id
@@ -998,12 +1009,25 @@ class AipProductionContractStore:
                 raise ProductionContractDependencyBlocked(
                     "STAGE_REQUIRED_SLOT_MISSING:" + ",".join(missing_slots)
                 )
+            ordered_stages = self._normalized_stage_order(template.stages)
+            if body.profile in {"LITE", "STANDARD", "FULL"}:
+                by_stage = {stage.stage_id: stage for stage in ordered_stages}
+                for stage in ordered_stages:
+                    for dependency in stage.depends_on:
+                        if not self._schema_compatibility_resolver(
+                            by_stage[dependency].output_schema_ref,
+                            stage.input_schema_ref,
+                        ):
+                            raise ProductionContractDependencyBlocked(
+                                "STAGE_SCHEMA_INCOMPATIBLE:"
+                                f"{dependency}->{stage.stage_id}"
+                            )
             applicable: list[str] = []
             not_applicable: list[str] = []
             stage_compilation: list[dict[str, Any]] = []
             steps: list[PlanStep] = []
             dependencies: list[dict[str, Any]] = []
-            for stage in template.stages:
+            for stage in ordered_stages:
                 is_applicable = (
                     stage.applicability.kind.value == "always"
                     or body.profile in stage.applicability.profiles
@@ -1018,11 +1042,83 @@ class AipProductionContractStore:
                         "evaluatedProfile": body.profile,
                     }
                 )
+                stage_slots = [slots_by_id[slot_id] for slot_id in stage.required_slot_ids]
+                capability_ids = sorted(
+                    {
+                        capability_id
+                        for slot in stage_slots
+                        for capability_id in slot.required_capability_ids
+                    }
+                )
+                capability_refs: list[ExactContractRef] = []
+                if body.profile in {"LITE", "STANDARD", "FULL"}:
+                    missing_capabilities = [
+                        item for item in capability_ids if item not in body.capability_refs
+                    ]
+                    if missing_capabilities:
+                        raise ProductionContractDependencyBlocked(
+                            "STAGE_CAPABILITY_REF_MISSING:"
+                            + ",".join(missing_capabilities)
+                        )
+                    capability_refs = [
+                        ExactContractRef.model_validate(
+                            body.capability_refs[item].model_dump(
+                                mode="json", by_alias=True
+                            )
+                        )
+                        for item in capability_ids
+                    ]
+                    missing_resolution = [
+                        slot.slot_id
+                        for slot in stage_slots
+                        if slot.assignee_resolution_receipt_id is None
+                    ]
+                    if missing_resolution:
+                        raise ProductionContractDependencyBlocked(
+                            "STAGE_ASSIGNEE_RESOLUTION_MISSING:"
+                            + ",".join(missing_resolution)
+                        )
+                assignee_refs = [
+                    ResourceRef(
+                        resource_type={
+                            "agent_instance": "AgentInstance",
+                            "human_principal": "HumanPrincipal",
+                            "tool_binding": "ToolBinding",
+                            "provider_capability_binding": "ProviderCapabilityBinding",
+                        }[slot.assignee.kind.value],
+                        resource_id=slot.assignee.resource_id,
+                        revision=str(slot.assignee.version),
+                        authority="aip-assignee-directory",
+                    )
+                    for slot in stage_slots
+                ]
                 steps.append(
                     PlanStep(
                         step_key=stage.stage_id,
                         title=stage.title,
                         input_refs=[stage.input_schema_ref],
+                        applicability=(
+                            "applicable" if is_applicable else "not_applicable"
+                        ),
+                        capability_refs=capability_refs,
+                        responsibility_slot_ids=stage.required_slot_ids,
+                        assignee_refs=assignee_refs,
+                        input_schema_ref=stage.input_schema_ref,
+                        output_schema_ref=stage.output_schema_ref,
+                        gate_refs=[
+                            ExactContractRef.model_validate(
+                                item.model_dump(mode="json", by_alias=True)
+                            )
+                            for item in stage.gate_refs
+                        ],
+                        checkpoint_policy=stage.checkpoint_policy,
+                        retry_policy=stage.retry_policy,
+                        compensation_policy=stage.compensation_policy,
+                        skip_reason=(
+                            None
+                            if is_applicable
+                            else f"PROFILE_NOT_APPLICABLE:{body.profile}"
+                        ),
                     )
                 )
                 dependencies.extend(
@@ -1030,9 +1126,39 @@ class AipProductionContractStore:
                     for dependency in stage.depends_on
                 )
 
+        compiler_version = (
+            "w7c.v1" if body.profile in {"LITE", "STANDARD", "FULL"} else "w2c.v1"
+        )
+        input_snapshot = {
+            "compilerVersion": compiler_version,
+            "templateRef": {
+                "resourceType": "StageTemplateRevision",
+                "resourceId": template.template_id,
+                "revision": template.revision,
+                "contentHash": template.content_hash,
+            },
+            "responsibilityPlanRef": body.responsibility_plan_ref.model_dump(
+                mode="json", by_alias=True
+            ),
+            "productionContextRef": body.production_context_ref.model_dump(
+                mode="json", by_alias=True
+            ),
+            "governedDependencies": governed_snapshot,
+            "normalizedStageIds": [stage.stage_id for stage in ordered_stages],
+        }
+        input_hash = canonical_hash(input_snapshot)
+        compilation_hash = canonical_hash(
+            {
+                "inputHash": input_hash,
+                "steps": [step.model_dump(mode="json", by_alias=True) for step in steps],
+                "dependencies": dependencies,
+            }
+        )
         production_risk = {
             "productionContract": {
-                "compilerVersion": "w2c.v1",
+                "compilerVersion": compiler_version,
+                "inputHash": input_hash,
+                "compilationHash": compilation_hash,
                 "stageTemplateRef": {
                     "resourceType": "StageTemplateRevision",
                     "resourceId": template.template_id,
@@ -1046,6 +1172,7 @@ class AipProductionContractStore:
                     mode="json", by_alias=True
                 ),
                 "stageCompilation": stage_compilation,
+                "governedDependencies": governed_snapshot,
                 "productionStartGateRequired": True,
                 "productionStartGateRef": None,
             }
@@ -1092,7 +1219,10 @@ class AipProductionContractStore:
                 revision=canonical_plan.revision,
                 content_hash=canonical_plan.content_hash,
             ),
-            compiler_version="w2c.v1",
+            compiler_version=compiler_version,
+            input_hash=input_hash,
+            compilation_hash=compilation_hash,
+            normalized_stage_ids=[stage.stage_id for stage in ordered_stages],
             applicable_stage_ids=applicable,
             not_applicable_stage_ids=not_applicable,
             created_at=canonical_plan.created_at,
@@ -1112,6 +1242,165 @@ class AipProductionContractStore:
             )
             conn.commit()
         return result
+
+    @staticmethod
+    def _normalized_stage_order(stages: list[StageDefinition]) -> list[StageDefinition]:
+        by_id = {stage.stage_id: stage for stage in stages}
+        if len(by_id) != len(stages):
+            raise ProductionContractDependencyBlocked("STAGE_ID_DUPLICATED")
+        unknown = sorted(
+            {
+                dependency
+                for stage in stages
+                for dependency in stage.depends_on
+                if dependency not in by_id
+            }
+        )
+        if unknown:
+            raise ProductionContractDependencyBlocked(
+                "STAGE_DEPENDENCY_UNKNOWN:" + ",".join(unknown)
+            )
+        indegree = {stage_id: 0 for stage_id in by_id}
+        outgoing = {stage_id: [] for stage_id in by_id}
+        for stage in stages:
+            for dependency in stage.depends_on:
+                indegree[stage.stage_id] += 1
+                outgoing[dependency].append(stage.stage_id)
+        ready = sorted(stage_id for stage_id, count in indegree.items() if count == 0)
+        ordered: list[StageDefinition] = []
+        while ready:
+            stage_id = ready.pop(0)
+            ordered.append(by_id[stage_id])
+            for target in sorted(outgoing[stage_id]):
+                indegree[target] -= 1
+                if indegree[target] == 0:
+                    ready.append(target)
+                    ready.sort()
+        if len(ordered) != len(stages):
+            raise ProductionContractDependencyBlocked("STAGE_DEPENDENCY_CYCLE")
+        return ordered
+
+    def _governed_compilation_snapshot(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        body: CompileStageTemplateRequest,
+        plan: ResponsibilityPlanRevision,
+        context: ProductionContextRevision,
+    ) -> list[dict[str, Any]]:
+        if body.profile not in {"LITE", "STANDARD", "FULL"}:
+            return []
+        assert body.brief_ref is not None
+        assert body.evidence_bundle_ref is not None
+        assert body.eval_contract_ref is not None
+        assert body.profile_recommendation_ref is not None
+        assert body.profile_confirmation_id is not None
+        assert body.merge_policy_ref is not None
+        expected_plan = (
+            (plan.profile_recommendation_ref, body.profile_recommendation_ref),
+            (plan.merge_policy_ref, body.merge_policy_ref),
+        )
+        if any(left != right for left, right in expected_plan) or (
+            plan.profile_confirmation_id != body.profile_confirmation_id
+        ):
+            raise ProductionContractDependencyBlocked(
+                "PROFILE_GOVERNANCE_PLAN_MISMATCH"
+            )
+        expected_context = (
+            (context.brief_ref, body.brief_ref),
+            (context.evidence_bundle_ref, body.evidence_bundle_ref),
+            (context.eval_contract_ref, body.eval_contract_ref),
+        )
+        if any(left != right for left, right in expected_context):
+            raise ProductionContractDependencyBlocked(
+                "PROFILE_GOVERNANCE_CONTEXT_MISMATCH"
+            )
+        confirmation = conn.execute(
+            """SELECT * FROM aip_profile_confirmation_receipt
+               WHERE org_id=%s AND project_id=%s AND confirmation_id=%s""",
+            (*scope.key, body.profile_confirmation_id),
+        ).fetchone()
+        if confirmation is None:
+            raise ProductionContractDependencyBlocked(
+                "PROFILE_CONFIRMATION_NOT_FOUND"
+            )
+        recommendation = conn.execute(
+            """SELECT * FROM aip_profile_recommendation_revision
+               WHERE org_id=%s AND project_id=%s AND recommendation_id=%s
+                 AND revision=%s""",
+            (
+                *scope.key,
+                body.profile_recommendation_ref.resource_id,
+                body.profile_recommendation_ref.revision,
+            ),
+        ).fetchone()
+        if recommendation is None:
+            raise ProductionContractDependencyBlocked(
+                "PROFILE_RECOMMENDATION_NOT_FOUND"
+            )
+        policy = conn.execute(
+            """SELECT * FROM aip_merge_policy_revision
+               WHERE org_id=%s AND project_id=%s AND policy_id=%s AND revision=%s""",
+            (
+                *scope.key,
+                body.merge_policy_ref.resource_id,
+                body.merge_policy_ref.revision,
+            ),
+        ).fetchone()
+        if policy is None:
+            raise ProductionContractDependencyBlocked("MERGE_POLICY_NOT_FOUND")
+        confirmation_policy = self._load(confirmation["policy_ref"])
+        selected_template = self._load(confirmation["selected_template_ref"])
+        if not (
+            confirmation["recommendation_id"]
+            == body.profile_recommendation_ref.resource_id
+            and int(confirmation["recommendation_revision"])
+            == body.profile_recommendation_ref.revision
+            and confirmation["recommendation_hash"]
+            == body.profile_recommendation_ref.content_hash
+            and confirmation["selected_profile"] == body.profile
+            and confirmation_policy
+            == body.merge_policy_ref.model_dump(mode="json", by_alias=True)
+            and selected_template
+            == plan.template_ref.model_dump(mode="json", by_alias=True)
+        ):
+            raise ProductionContractDependencyBlocked(
+                "PROFILE_CONFIRMATION_DRIFTED"
+            )
+        now = datetime.now(timezone.utc)
+        if not (
+            recommendation["content_hash"]
+            == body.profile_recommendation_ref.content_hash
+            and recommendation["readiness"] == "ready"
+            and recommendation["expires_at"] > now
+        ):
+            raise ProductionContractDependencyBlocked(
+                "PROFILE_RECOMMENDATION_DRIFTED_OR_EXPIRED"
+            )
+        if not (
+            policy["content_hash"] == body.merge_policy_ref.content_hash
+            and policy["expires_at"] > now
+        ):
+            raise ProductionContractDependencyBlocked(
+                "MERGE_POLICY_DRIFTED_OR_EXPIRED"
+            )
+        return [
+            body.brief_ref.model_dump(mode="json", by_alias=True),
+            body.evidence_bundle_ref.model_dump(mode="json", by_alias=True),
+            body.eval_contract_ref.model_dump(mode="json", by_alias=True),
+            body.profile_recommendation_ref.model_dump(mode="json", by_alias=True),
+            {
+                "resourceType": "ProfileConfirmationReceipt",
+                "resourceId": body.profile_confirmation_id,
+                "revision": 1,
+                "contentHash": confirmation["content_hash"],
+            },
+            body.merge_policy_ref.model_dump(mode="json", by_alias=True),
+            *[
+                item.model_dump(mode="json", by_alias=True)
+                for _, item in sorted(body.capability_refs.items())
+            ],
+        ]
 
     def create_artifact_relation(
         self,

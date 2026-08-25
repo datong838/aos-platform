@@ -403,11 +403,47 @@ class AipTaskStore:
             raise AipTaskTransitionBlocked("task is not awaiting production start")
         production_contract = dict(plan["risk"] or {}).get("productionContract")
         if not isinstance(production_contract, dict) or not (
-            production_contract.get("compilerVersion") == "w2c.v1"
+            production_contract.get("compilerVersion") in {"w2c.v1", "w7c.v1"}
             and production_contract.get("productionStartGateRequired") is True
             and production_contract.get("productionStartGateRef") is None
         ):
             raise AipTaskTransitionBlocked("plan is not a sealed W2-C production draft")
+        if production_contract.get("compilerVersion") == "w7c.v1":
+            input_hash = production_contract.get("inputHash")
+            governed = production_contract.get("governedDependencies")
+            expected_input_hash = _canonical_hash(
+                {
+                    "compilerVersion": production_contract.get("compilerVersion"),
+                    "templateRef": production_contract.get("stageTemplateRef"),
+                    "responsibilityPlanRef": production_contract.get(
+                        "responsibilityPlanRef"
+                    ),
+                    "productionContextRef": production_contract.get(
+                        "productionContextRef"
+                    ),
+                    "governedDependencies": governed,
+                    "normalizedStageIds": production_contract.get(
+                        "normalizedStageIds"
+                    ),
+                }
+            )
+            expected = _canonical_hash(
+                {
+                    "inputHash": input_hash,
+                    "steps": plan["steps"],
+                    "dependencies": plan["dependencies"],
+                }
+            )
+            if not (
+                isinstance(input_hash, str)
+                and input_hash == expected_input_hash
+                and production_contract.get("compilationHash") == expected
+                and isinstance(governed, list)
+                and len(governed) >= 7
+            ):
+                raise AipTaskTransitionBlocked(
+                    "W7 production plan compilation envelope drifted"
+                )
         run_key = f"w2d-start:{decision_id}"
         request_hash = _canonical_hash(
             {

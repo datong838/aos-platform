@@ -271,6 +271,13 @@ export type CompileStageTemplateInput = {
   responsibilityPlanRef: ExactRevisionRef;
   productionContextRef: ExactRevisionRef;
   profile: string;
+  briefRef?: ExactRevisionRef | null;
+  evidenceBundleRef?: ExactRevisionRef | null;
+  evalContractRef?: ExactRevisionRef | null;
+  profileRecommendationRef?: ExactRevisionRef | null;
+  profileConfirmationId?: string | null;
+  mergePolicyRef?: ExactRevisionRef | null;
+  capabilityRefs?: Record<string, ExactRevisionRef>;
 };
 export type StageCompilationResult = {
   tenant: Tenant;
@@ -280,6 +287,9 @@ export type StageCompilationResult = {
   productionContextRef: ExactRevisionRef;
   planRef: ExactRevisionRef;
   compilerVersion: string;
+  inputHash: string;
+  compilationHash: string;
+  normalizedStageIds: string[];
   applicableStageIds: string[];
   notApplicableStageIds: string[];
   createdAt: string;

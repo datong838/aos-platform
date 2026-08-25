@@ -19,8 +19,10 @@ import {
   type ResponsibilityPlanListResponse,
   type ReviewIssueListResponse,
   type StageTemplateListResponse,
+  type StageCompilationResult,
   type TaskBriefListResponse,
 } from "../../api/aipProductionContracts";
+import { aipAgentControl, type CapabilityCatalogResponse } from "../../api/aipAgentControl";
 import { aipActionsSdk, type ActionProposalList } from "../../api/aipActions";
 import { apiGet } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
@@ -41,6 +43,7 @@ type AuthorityState = {
   actionProposals: ActionProposalList;
   profileRecommendations: ProfileRecommendationListResponse;
   profileConfirmations: ProfileConfirmationListResponse;
+  capabilities: CapabilityCatalogResponse;
 };
 
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 16 } as const;
@@ -109,11 +112,12 @@ export function ProductionContractsPage() {
   const [publishedLogic,setPublishedLogic]=useState<Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null}>>([]);
   const [evidenceDrawerBundleId, setEvidenceDrawerBundleId] = useState("");
   const [evalDiff,setEvalDiff]=useState<EvalContractDiff|null>(null);
+  const [lastCompilation,setLastCompilation]=useState<StageCompilationResult|null>(null);
   const evidenceDrawerTriggerRef = useRef<HTMLElement | null>(null);
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, actionProposals, logicList] = await Promise.all([
+      const [briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, capabilities, actionProposals, logicList] = await Promise.all([
         aipProductionContracts.listBriefs(), aipProductionContracts.listBundles(),
         aipProductionContracts.listEvalContracts(), aipProductionContracts.listResponsibilityPlans(),
         aipProductionContracts.listStageTemplates(), aipProductionContracts.listArtifactRelations(),
@@ -121,11 +125,12 @@ export function ProductionContractsPage() {
         aipProductionContracts.listProductionStartDecisions(),
         aipProductionContracts.listProfileRecommendations(),
         aipProductionContracts.listProfileConfirmations(),
+        aipAgentControl.listCapabilities(),
         aipActionsSdk.list(500),
         apiGet<{items?:Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>}>("/v1/aip/logic/graphs").catch(()=>({items:[] as Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>})),
       ]);
       setPublishedLogic((logicList.items||[]).filter(item=>item.persisted!==false && Number(item.published_version||0)>0 && /^[0-9a-f]{64}$/.test(item.graph_hash)));
-      setState({ briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, actionProposals });
+      setState({ briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, capabilities, actionProposals });
       setError("");
     } catch (e) {
       setState(null);
@@ -152,15 +157,27 @@ export function ProductionContractsPage() {
   const selectedPlan = state?.plans.items.find(item => item.planId === planId);
   const selectedCompileProductionContext=state?.contexts.items.find(item=>item.contextId===compileProductionContextId);
   const selectedPlanRef=selectedPlan?{resourceType:"ResponsibilityPlanRevision",resourceId:selectedPlan.planId,revision:selectedPlan.revision,contentHash:selectedPlan.contentHash}:null;
-  const canCompile = Boolean(selectedTemplate && selectedPlan && selectedCompileProductionContext && taskId.trim() && Number.isInteger(Number(taskVersion)) && Number(taskVersion) > 0 && selectedTemplate.lifecycle === "frozen" && selectedTemplate.readiness === "ready" && selectedPlan.lifecycle === "frozen" && selectedPlan.readiness === "ready" && selectedPlan.coverage === "complete" && selectedTemplate.profile === selectedPlan.profile && selectedCompileProductionContext.lifecycle === "frozen" && selectedCompileProductionContext.readiness === "ready" && selectedCompileProductionContext.blockers.length === 0 && selectedCompileProductionContext.taskId === taskId.trim() && selectedCompileProductionContext.profile === selectedTemplate.profile && sameExact(selectedCompileProductionContext.responsibilityPlanRef,selectedPlanRef));
+  const governedCompile=["LITE","STANDARD","FULL"].includes(selectedTemplate?.profile??"");
+  const selectedRecommendation=selectedPlan?.profileRecommendationRef?state?.profileRecommendations.items.find(item=>sameExact(selectedPlan.profileRecommendationRef,item?{resourceType:"ProfileRecommendationRevision",resourceId:item.recommendationId,revision:item.revision,contentHash:item.contentHash}:null)):undefined;
+  const selectedConfirmation=selectedPlan?.profileConfirmationId?state?.profileConfirmations.items.find(item=>item.confirmationId===selectedPlan.profileConfirmationId):undefined;
+  const requiredCapabilityIds=[...new Set(selectedPlan?.slots.flatMap(item=>item.requiredCapabilityIds)??[])].sort();
+  const selectedCapabilities=requiredCapabilityIds.map(capabilityId=>state?.capabilities.items.find(item=>item.capabilityId===capabilityId&&item.lifecycle==="published"&&item.readiness==="available"));
+  const capabilityRefs=Object.fromEntries(selectedCapabilities.filter((item):item is NonNullable<typeof item>=>Boolean(item)).map(item=>[item.capabilityId,{resourceType:"CapabilityRevision",resourceId:item.capabilityId,revision:item.revision,contentHash:item.contentHash}]));
+  const governedCompileDisabledReason=(()=>{if(!governedCompile)return"";if(!selectedRecommendation)return"缺少职责计划锁定的档位建议精确修订";if(!selectedPlan?.mergePolicyRef)return"缺少职责计划锁定的合并策略精确修订";if(!selectedConfirmation)return"缺少职责计划锁定的人工确认";if(selectedConfirmation.recommendationId!==selectedRecommendation.recommendationId||selectedConfirmation.recommendationRevision!==selectedRecommendation.revision||selectedConfirmation.recommendationHash!==selectedRecommendation.contentHash)return"人工确认与档位建议精确修订不一致";if(selectedConfirmation.selectedProfile!==selectedTemplate?.profile)return"人工确认档位与阶段模板不一致";if(!sameExact(selectedConfirmation.policyRef,selectedPlan.mergePolicyRef))return"人工确认与合并策略精确修订不一致";if(requiredCapabilityIds.length===0)return"职责计划未声明原子 Capability";if(selectedCapabilities.some(item=>!item))return`缺少可用 Capability 精确修订：${requiredCapabilityIds.filter((_,index)=>!selectedCapabilities[index]).join("、")}`;return"";})();
+  const canCompile = Boolean(selectedTemplate && selectedPlan && selectedCompileProductionContext && taskId.trim() && Number.isInteger(Number(taskVersion)) && Number(taskVersion) > 0 && selectedTemplate.lifecycle === "frozen" && selectedTemplate.readiness === "ready" && selectedPlan.lifecycle === "frozen" && selectedPlan.readiness === "ready" && selectedPlan.coverage === "complete" && selectedTemplate.profile === selectedPlan.profile && selectedCompileProductionContext.lifecycle === "frozen" && selectedCompileProductionContext.readiness === "ready" && selectedCompileProductionContext.blockers.length === 0 && selectedCompileProductionContext.taskId === taskId.trim() && selectedCompileProductionContext.profile === selectedTemplate.profile && sameExact(selectedCompileProductionContext.responsibilityPlanRef,selectedPlanRef) && !governedCompileDisabledReason);
   const compile = () => {
     if (!selectedTemplate || !selectedPlan || !selectedCompileProductionContext || !canCompile) return;
-    void run("stage:compile", () => aipProductionContracts.compileStageTemplate(selectedTemplate.templateId, {
+    void run("stage:compile", async () => {
+      const result=await aipProductionContracts.compileStageTemplate(selectedTemplate.templateId, {
       taskId: taskId.trim(), expectedTaskVersion: Number(taskVersion), templateRevision: selectedTemplate.revision,
       templateContentHash: selectedTemplate.contentHash, profile: selectedTemplate.profile,
       responsibilityPlanRef: { resourceType: "ResponsibilityPlanRevision", resourceId: selectedPlan.planId, revision: selectedPlan.revision, contentHash: selectedPlan.contentHash },
       productionContextRef:{resourceType:"ProductionContextRevision",resourceId:selectedCompileProductionContext.contextId,revision:selectedCompileProductionContext.revision,contentHash:selectedCompileProductionContext.contentHash},
-    }, `w2-ui-stage-compile-${crypto.randomUUID()}`));
+      ...(governedCompile?{briefRef:selectedCompileProductionContext.briefRef,evidenceBundleRef:selectedCompileProductionContext.evidenceBundleRef,evalContractRef:selectedCompileProductionContext.evalContractRef,profileRecommendationRef:selectedPlan.profileRecommendationRef,profileConfirmationId:selectedPlan.profileConfirmationId,mergePolicyRef:selectedPlan.mergePolicyRef,capabilityRefs}:{}),
+      }, `w7-ui-stage-compile-${crypto.randomUUID()}`);
+      setLastCompilation(result);
+      return result;
+    });
   };
   const selectedReview = state?.reviews.items.find(item => item.issueId === reviewIssueId && item.status === "open");
   const canReviewCommand = Boolean(selectedReview && reviewReason.trim());
@@ -297,7 +314,9 @@ export function ProductionContractsPage() {
           <label>真实任务标识<input aria-label="编译真实 Task ID" value={taskId} onChange={event => setTaskId(event.target.value)} placeholder="输入真实任务标识" /></label>
           <label>任务版本<input aria-label="编译 Task version" type="number" min="1" value={taskVersion} onChange={event => setTaskVersion(event.target.value)} /></label>
         </div>
-        <button className="btn primary" disabled={!canCompile || busy === "stage:compile"} title={canCompile ? "只创建执行计划草稿，不启动任务" : "需选择同一任务、业务场景与职责计划下已冻结且就绪的生产上下文、阶段模板和职责计划"} onClick={compile} style={{ marginTop: 12 }}>{busy === "stage:compile" ? "编译中…" : "编译为执行计划草稿"}</button>
+        {governedCompile?(governedCompileDisabledReason?<div className="notice" role="status" style={{marginTop:12}} data-testid="governed-compile-blocked">受治理编译门保持关闭：{governedCompileDisabledReason}。</div>:<div className="notice" style={{marginTop:12}} data-testid="governed-compile-ready">受治理编译输入已锁定：档位建议、人工确认、合并策略与 {requiredCapabilityIds.length} 项原子 Capability 精确修订；服务端仍会独立复核。</div>):null}
+        <button className="btn primary" disabled={!canCompile || busy === "stage:compile"} title={canCompile ? "只创建执行计划草稿，不启动任务" : governedCompileDisabledReason||"需选择同一任务、业务场景与职责计划下已冻结且就绪的生产上下文、阶段模板和职责计划"} onClick={compile} style={{ marginTop: 12 }}>{busy === "stage:compile" ? "编译中…" : "编译为执行计划草稿"}</button>
+        {lastCompilation?<div className="notice" role="status" style={{marginTop:12}} data-testid="stage-compilation-result"><strong>执行计划草稿已编译，未创建任务运行。</strong><br/>规范化阶段 {lastCompilation.normalizedStageIds.length} 项 · 适用 {lastCompilation.applicableStageIds.length} 项 · 跳过 {lastCompilation.notApplicableStageIds.length} 项<details><summary>技术摘要（审计用）</summary>输入 <code>{lastCompilation.inputHash}</code><br/>编译 <code>{lastCompilation.compilationHash}</code><br/>Plan <code>{lastCompilation.planRef.resourceId}@{lastCompilation.planRef.revision}</code></details></div>:null}
       </section>
       <section className="card" style={{ padding: 18, marginTop: 16 }} aria-label="评审问题处置命令">
         <h2 style={{ marginTop: 0 }}>评审问题处置</h2>

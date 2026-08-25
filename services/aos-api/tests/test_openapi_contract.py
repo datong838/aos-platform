@@ -84,7 +84,7 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
     assert len(schema["paths"]) == 2641
-    assert len(schema.get("components", {}).get("schemas", {})) == 2313
+    assert len(schema.get("components", {}).get("schemas", {})) == 2314
 
 
 def test_source_readiness_contract_is_principal_scoped_and_read_only() -> None:
