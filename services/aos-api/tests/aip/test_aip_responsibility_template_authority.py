@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from aos_api.aip_production_contracts import ExactRevisionRef
 from aos_api.aip_responsibility_template_authority import InstalledProductionProfileResolver
 from aos_api.tenant_scope import TenantScope
@@ -308,3 +310,122 @@ def test_profile_loader_fails_closed_on_mirror_drift_or_path_escape(
         release_root=tmp_path,
     )
     assert escaped.load_profile(scope, _profile_ref(digest)) is None
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "resource_type", "loader_name", "expected_profile"),
+    [
+        (
+            "content/media-production-templates/standard.responsibility.json",
+            "ResponsibilityTemplateRevision",
+            "load_media_responsibility_template",
+            "STANDARD",
+        ),
+        (
+            "content/media-production-templates/full.stage.json",
+            "StageTemplateRevision",
+            "load_media_stage_template",
+            "FULL",
+        ),
+    ],
+)
+def test_signed_installation_loads_exact_media_templates(
+    tmp_path: Path,
+    relative_path: str,
+    resource_type: str,
+    loader_name: str,
+    expected_profile: str,
+) -> None:
+    source = (
+        Path(__file__).resolve().parents[4]
+        / "bundles/candidates/ecommerce/solution.ecommerce.growth/1.4.0"
+        / relative_path
+    )
+    raw = source.read_bytes()
+    digest = hashlib.sha256(raw).hexdigest()
+    artifact_ref = (
+        "bundle://aos/solution.ecommerce.growth@1.4.0/" + relative_path
+    )
+    artifact_path = (
+        tmp_path / "solution.ecommerce.growth" / "1.4.0" / relative_path
+    )
+    artifact_path.parent.mkdir(parents=True)
+    artifact_path.write_bytes(raw)
+    resolver, _ = _resolver(
+        [
+            _row(
+                artifact_ref=artifact_ref,
+                relative_path=relative_path,
+                artifact_digest=f"sha256:{digest}",
+            )
+        ],
+        release_root=tmp_path,
+    )
+    ref = ExactRevisionRef(
+        resourceType=resource_type,
+        resourceId=artifact_ref,
+        revision=7,
+        contentHash=digest,
+    )
+
+    loaded = getattr(resolver, loader_name)(
+        TenantScope("org-org", "dev-project"), ref
+    )
+
+    assert loaded is not None
+    assert loaded.profile.value == expected_profile
+
+
+def test_media_template_load_fails_closed_when_unsigned_revoked_or_drifted(
+    tmp_path: Path,
+) -> None:
+    relative_path = "content/media-production-templates/lite.stage.json"
+    source = (
+        Path(__file__).resolve().parents[4]
+        / "bundles/candidates/ecommerce/solution.ecommerce.growth/1.4.0"
+        / relative_path
+    )
+    raw = source.read_bytes()
+    digest = hashlib.sha256(raw).hexdigest()
+    artifact_ref = (
+        "bundle://aos/solution.ecommerce.growth@1.4.0/" + relative_path
+    )
+    artifact_path = (
+        tmp_path / "solution.ecommerce.growth" / "1.4.0" / relative_path
+    )
+    artifact_path.parent.mkdir(parents=True)
+    artifact_path.write_bytes(raw)
+    ref = ExactRevisionRef(
+        resourceType="StageTemplateRevision",
+        resourceId=artifact_ref,
+        revision=7,
+        contentHash=digest,
+    )
+    scope = TenantScope("org-org", "dev-project")
+
+    for row in (
+        _row(
+            artifact_ref=artifact_ref,
+            relative_path=relative_path,
+            artifact_digest=f"sha256:{digest}",
+            signature=None,
+        ),
+        _row(
+            artifact_ref=artifact_ref,
+            relative_path=relative_path,
+            artifact_digest=f"sha256:{digest}",
+            status="revoked",
+        ),
+        _row(
+            artifact_ref=artifact_ref,
+            relative_path=relative_path,
+            artifact_digest="sha256:" + "0" * 64,
+        ),
+    ):
+        resolver, _ = _resolver([row], release_root=tmp_path)
+        assert resolver.load_media_stage_template(scope, ref) is None
+
+    resolver, _ = _resolver([], release_root=tmp_path)
+    assert resolver.load_media_stage_template(
+        TenantScope("dev-org", "dev-project"), ref
+    ) is None

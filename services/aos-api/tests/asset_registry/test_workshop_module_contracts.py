@@ -158,8 +158,21 @@ def test_ecommerce_source_bundles_publish_eight_typed_non_placeholder_profiles()
     assert len({item.module_id for item in modules}) == 8
     for module in modules:
         assert len(module.eval_pack_refs) == 1
-        assert module.eval_pack_refs == module.production_contract_refs
-        assert module.eval_pack_refs == module.responsibility_template_refs
+        if module.module_id == "ecommerce.media-studio":
+            assert module.production_contract_refs == [
+                "content/production-profiles/ecommerce.media-studio.json",
+                "content/media-production-templates/lite.stage.json",
+                "content/media-production-templates/standard.stage.json",
+                "content/media-production-templates/full.stage.json",
+            ]
+            assert module.responsibility_template_refs == [
+                "content/media-production-templates/lite.responsibility.json",
+                "content/media-production-templates/standard.responsibility.json",
+                "content/media-production-templates/full.responsibility.json",
+            ]
+        else:
+            assert module.eval_pack_refs == module.production_contract_refs
+            assert module.eval_pack_refs == module.responsibility_template_refs
         profile_path = (
             REPO_ROOT
             / "bundles/candidates/ecommerce"

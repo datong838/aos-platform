@@ -28,6 +28,7 @@ spec:
     schemas:
       - content/schemas/
       - content/production-profiles/
+      - content/media-production-templates/
   capabilities:
     provides:
       - material.collect

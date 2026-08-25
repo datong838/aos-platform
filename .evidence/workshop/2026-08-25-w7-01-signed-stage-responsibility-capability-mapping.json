@@ -1,0 +1,89 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "taskId": "workshop-w7-01-signed-stage-responsibility-capability-mapping-20260825",
+  "recordedAt": "2026-08-25T18:13:35+08:00",
+  "baseRevision": "AOS-000254",
+  "result": "W7_01_SIGNED_INSTALLABLE_MEDIA_TEMPLATES_CODE_CONTRACT_BROWSER_GREEN_OPERATIONAL_PUBLICATION_GATE_RETAINED_NO_RELEASE",
+  "implementation": {
+    "profiles": ["LITE", "STANDARD", "FULL"],
+    "responsibilitySlotCount": 8,
+    "canonicalCapabilityCount": 10,
+    "liveCapabilityProfile": "FULL",
+    "governanceResponsibilities": [
+      "external_publication_approval",
+      "receipt_reconciliation"
+    ],
+    "authority": "published signed Bundle plus exact tenant active installation composition lock and artifact digest",
+    "candidateOnly": true
+  },
+  "verification": {
+    "focusedAndAdjacentPytest": {
+      "status": "GREEN",
+      "passed": 43,
+      "warnings": 7
+    },
+    "openApiAndDomainRouter": {
+      "status": "GREEN",
+      "passed": 22,
+      "subtestsPassed": 2,
+      "warnings": 7
+    },
+    "web": {
+      "status": "GREEN",
+      "testFilesPassed": 232,
+      "testsPassed": 2130,
+      "buildModules": 344
+    },
+    "alembic": {
+      "status": "GREEN",
+      "heads": ["w6_009"]
+    },
+    "security": {
+      "status": "GREEN",
+      "scannerTestsPassed": 9,
+      "scopedFiles": 13,
+      "critical": 0,
+      "warning": 0
+    },
+    "browser": {
+      "status": "GREEN_CONTROLLED_FIXTURE_ONLY",
+      "url": "http://127.0.0.1:5174/workshop/media-studio",
+      "viewports": [1280, 1440, 1920],
+      "horizontalOverflow": false,
+      "moduleDegradedVisible": true,
+      "visualFixtureOnlyVisible": true,
+      "noWriteEntryVisible": true,
+      "tabsChecked": [
+        "职责与执行",
+        "交付与复盘",
+        "生产上下文"
+      ],
+      "consoleErrors": 0
+    },
+    "syntaxAndArtifacts": {
+      "compileAll": "GREEN",
+      "jsonFilesValidated": 6,
+      "diffCheck": "GREEN"
+    }
+  },
+  "knownNonRegressionBaselineGaps": [
+    {
+      "test": "test_w2c_contracts.py::test_review_return...",
+      "finding": "isolated legacy fixture does not create aip_review_rule_revision required by the existing production store"
+    },
+    {
+      "test": "test_m5_ecommerce_bundle_contracts source 1.3 export prefix check",
+      "finding": "legacy 1.3 candidate contains pre-existing unexported content directories; W7-01 changes only the 1.4 candidate"
+    }
+  ],
+  "boundaries": {
+    "realTenantMutation": false,
+    "databaseMigrationApply": false,
+    "providerInvocation": false,
+    "mediaGeneration": false,
+    "externalPublication": false,
+    "bundlePublication": false,
+    "tenantInstallation": false,
+    "release": false
+  }
+}

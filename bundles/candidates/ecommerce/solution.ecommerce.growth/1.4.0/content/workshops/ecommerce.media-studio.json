@@ -48,8 +48,17 @@
   },
   "viewRefs": [],
   "evalPackRefs": ["content/production-profiles/ecommerce.media-studio.json"],
-  "productionContractRefs": ["content/production-profiles/ecommerce.media-studio.json"],
-  "responsibilityTemplateRefs": ["content/production-profiles/ecommerce.media-studio.json"],
+  "productionContractRefs": [
+    "content/production-profiles/ecommerce.media-studio.json",
+    "content/media-production-templates/lite.stage.json",
+    "content/media-production-templates/standard.stage.json",
+    "content/media-production-templates/full.stage.json"
+  ],
+  "responsibilityTemplateRefs": [
+    "content/media-production-templates/lite.responsibility.json",
+    "content/media-production-templates/standard.responsibility.json",
+    "content/media-production-templates/full.responsibility.json"
+  ],
   "impactCalculatorRefs": [],
   "legacyAssetRefs": [],
   "legacyRedirects": ["/s2/media-studio"],

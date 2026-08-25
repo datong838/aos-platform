@@ -1,8 +1,8 @@
-"""Installed Bundle authority for exact ResponsibilityTemplateRevision refs.
+"""Installed Bundle authority for exact production-template revision refs.
 
 The Registry and the tenant's active installation remain the only lifecycle
-authorities.  This module only verifies that an exact signed Bundle artifact is
-present in the active composition lock; it never returns or stores its payload.
+authorities. This module verifies exact signed Bundle artifacts against the
+active composition lock before loading typed payloads from the immutable mirror.
 """
 from __future__ import annotations
 
@@ -13,6 +13,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+from aos_api.aip_media_production_templates import (
+    MediaResponsibilityTemplate,
+    MediaStageTemplate,
+)
 from aos_api.aip_production_contracts import ExactRevisionRef
 from aos_api.aip_production_profile_contracts import ProductionProfile
 from aos_api.db import connect as db_connect
@@ -22,6 +26,7 @@ ConnectFactory = Callable[..., AbstractContextManager[Any]]
 _PROFILE_RESOURCE_TYPES = {
     "ProductionProfileRevision",
     "ResponsibilityTemplateRevision",
+    "StageTemplateRevision",
     "EvidenceSelectionProfileRevision",
     "EvalProfileRevision",
 }
@@ -149,27 +154,63 @@ class InstalledProductionProfileResolver:
         if ref.resource_type != "ProductionProfileRevision":
             return None
         try:
-            row = next(
-                (row for row in self._fetch_rows(scope, ref) if self._row_matches(row, ref)),
-                None,
-            )
-            if row is None:
-                return None
-            relative = Path(str(row["relative_path"]))
-            if relative.is_absolute() or ".." in relative.parts:
-                return None
-            release_root = (
-                self._release_root / str(row["bundle_id"]) / str(row["version"])
-            ).resolve()
-            artifact_path = (release_root / relative).resolve()
-            if release_root not in artifact_path.parents or not artifact_path.is_file():
-                return None
-            raw = artifact_path.read_bytes()
-            if hashlib.sha256(raw).hexdigest() != ref.content_hash:
+            raw = self._load_verified_bytes(scope, ref)
+            if raw is None:
                 return None
             return ProductionProfile.model_validate_json(raw)
         except Exception:
             return None
+
+    def load_media_responsibility_template(
+        self, scope: TenantScope, ref: ExactRevisionRef
+    ) -> MediaResponsibilityTemplate | None:
+        """Load an exact media responsibility template from a signed installation."""
+        if ref.resource_type != "ResponsibilityTemplateRevision":
+            return None
+        try:
+            raw = self._load_verified_bytes(scope, ref)
+            return (
+                MediaResponsibilityTemplate.model_validate_json(raw)
+                if raw is not None
+                else None
+            )
+        except Exception:
+            return None
+
+    def load_media_stage_template(
+        self, scope: TenantScope, ref: ExactRevisionRef
+    ) -> MediaStageTemplate | None:
+        """Load an exact media stage template from a signed installation."""
+        if ref.resource_type != "StageTemplateRevision":
+            return None
+        try:
+            raw = self._load_verified_bytes(scope, ref)
+            return MediaStageTemplate.model_validate_json(raw) if raw is not None else None
+        except Exception:
+            return None
+
+    def _load_verified_bytes(
+        self, scope: TenantScope, ref: ExactRevisionRef
+    ) -> bytes | None:
+        row = next(
+            (row for row in self._fetch_rows(scope, ref) if self._row_matches(row, ref)),
+            None,
+        )
+        if row is None:
+            return None
+        relative = Path(str(row["relative_path"]))
+        if relative.is_absolute() or ".." in relative.parts:
+            return None
+        release_root = (
+            self._release_root / str(row["bundle_id"]) / str(row["version"])
+        ).resolve()
+        artifact_path = (release_root / relative).resolve()
+        if release_root not in artifact_path.parents or not artifact_path.is_file():
+            return None
+        raw = artifact_path.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != ref.content_hash:
+            return None
+        return raw
 
     @staticmethod
     def _row_matches(row: Any, ref: ExactRevisionRef) -> bool:
