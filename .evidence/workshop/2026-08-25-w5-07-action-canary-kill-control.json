@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "workshop-delivery-evidence/v1",
+  "taskId": "W5-07",
+  "recordedAt": "2026-08-25T03:11:02Z",
+  "branch": "m1",
+  "baselineCommit": "ad26cd4ef6d8a48a7638aa26c5feac635a65ba1e",
+  "authorityRevision": "AOS-000241",
+  "outcome": "W5_07_CANONICAL_KILL_POLICY_CANARY_PLAN_SIMULATION_CODE_GREEN_NO_REAL_CANARY_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "scope": {
+    "implemented": [
+      "append-only tenant-scoped KillPolicyRevision with mutable CAS head and idempotent command receipt",
+      "maker-checker approval and reset-as-new-revision without mutating prior Kill facts",
+      "layered effective policy evaluation across platform, org, project, account, adapter, capability and Action type",
+      "expiry-aware exact revision matching and strictest-policy-wins decision",
+      "canonical execution preflight that blocks before Attempt, outbox, Provider call or usage mutation",
+      "bounded exact-scope CanaryPlanRevision with maker-checker decision but deliberately no execute route",
+      "simulation-only Kill drill receipt that blocks synthetic new dispatch and retains in-flight requests for reconcile without claiming cancellation"
+    ],
+    "excluded": [
+      "real org-org Canary traffic",
+      "real Provider call or external Action",
+      "secret publication or account installation activation",
+      "live environment migration",
+      "automatic in-flight cancellation",
+      "release"
+    ]
+  },
+  "verification": {
+    "focused": {
+      "result": "9 passed",
+      "coverage": "CAS, idempotency, maker-checker, exact layering, expiry, reset revision, pre-Attempt block, bounded Canary and simulation-only in-flight reconcile"
+    },
+    "cumulative": {
+      "result": "69 passed",
+      "coverage": "W5-01 through W5-07 and deterministic OpenAPI"
+    },
+    "openapi": {
+      "result": "14 passed within cumulative suite",
+      "deterministicCheck": "green in two clean processes",
+      "routeRows": 4374,
+      "uniqueOperationPairs": 4364,
+      "realCanaryExecuteRoute": false
+    },
+    "static": {
+      "compileall": "green",
+      "alembicHeads": ["w5_006 (head)"],
+      "zeroFactDowngradeUpgradeRoundTrip": "green",
+      "diffCheck": "green"
+    },
+    "browser": {
+      "status": "not_applicable",
+      "reason": "No Workshop page, component, navigation, copy or visual behavior changed in W5-07."
+    }
+  },
+  "compatibility": {
+    "legacyGuardrailAndEnvironmentKillRetained": true,
+    "priorActionProposalApprovalLeaseAndReceiptContractsChanged": false,
+    "resetMutatesPriorRevision": false,
+    "inflightClaimedCancelled": false,
+    "externalOperationalReadiness": "blocked"
+  },
+  "sourceSha256": {
+    "services/aos-api/alembic/versions/w5_006_action_canary_kill_control.py": "b57cf8b00fc8c00c08102b914331e66ccdb623d54fb8cdc174e318ac118dc703",
+    "services/aos-api/aos_api/aip_action_canary_models.py": "c257cad97c226998f28998596fec6e6c6e27bf06375828a6846d895a73f4d7b9",
+    "services/aos-api/aos_api/aip_action_canary_service.py": "862f7edacd7db47e19dcfdfce405cde9fe18131fa13c7e851d30b3d4af2759c5",
+    "services/aos-api/aos_api/routers/aip_action_canary.py": "e7a05a6cfb1180728e909e7f1e0570e7dedb65270fbdbbd4b13f99ed642f4e12",
+    "services/aos-api/aos_api/aip_action_execution.py": "2b21dbe79812e545b6db8a3dcde3a8873c674f3adf0886ba84fbb1fc66ca7173",
+    "packages/contracts/openapi/v1.generated.json": "98d1b8af42cb2fa9a2aa361b8643c5422a991b8c3be018c26fbb6486e0d1bca0",
+    "packages/contracts/openapi/v1.inventory.json": "163db78adafd52fd04561455d04e54562bf57c76ced136383887c28732ac3d2e"
+  },
+  "safety": {
+    "disposableTestDatabaseUsed": true,
+    "manualSharedDatabaseProbeRemovedAndVerified": true,
+    "realTenantBusinessDataRetained": false,
+    "realSecretResolved": false,
+    "realProviderCalled": false,
+    "externalEffect": false,
+    "liveMigrationExecuted": false,
+    "releaseExecuted": false
+  },
+  "knownBlockers": [
+    "NO_REAL_CANARY_TRAFFIC_AUTHORITY",
+    "NO_ACTIVE_EXACT_ACCOUNT_INSTALLATION_FOR_EXTERNAL_ACTION",
+    "NO_EXTERNAL_EFFECT_OR_RELEASE_AUTHORITY"
+  ],
+  "nextTask": "W5-08"
+}

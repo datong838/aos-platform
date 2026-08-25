@@ -83,8 +83,8 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2589
-    assert len(schema.get("components", {}).get("schemas", {})) == 2178
+    assert len(schema["paths"]) == 2595
+    assert len(schema.get("components", {}).get("schemas", {})) == 2188
 
 
 def test_source_readiness_contract_is_principal_scoped_and_read_only() -> None:
@@ -130,6 +130,24 @@ def test_inventory_preserves_route_rows_and_known_duplicates() -> None:
     )
     assert all(row["operationId"] for row in inventory["routes"])
     assert set(summary["domains"]) == set(exporter.DOMAIN_ORDER)
+
+
+def test_w5_07_exposes_control_contracts_but_no_real_canary_execute() -> None:
+    schema = json.loads(OPENAPI_PATH.read_bytes())
+    paths = schema["paths"]
+    expected = {
+        "/v1/aip/action-kill-policies",
+        "/v1/aip/action-kill-policies/{policy_id}/revisions/{revision}/decision",
+        "/v1/aip/action-kill-policies/effective",
+        "/v1/aip/action-canary-plans",
+        "/v1/aip/action-canary-plans/{plan_id}/revisions/{revision}/decision",
+        "/v1/aip/action-kill-drills/simulations",
+    }
+    assert expected.issubset(paths)
+    assert not any(
+        path.startswith("/v1/aip/action-canary-plans/") and path.endswith("/execute")
+        for path in paths
+    )
 
 
 def test_export_check_runs_two_clean_processes_without_drift() -> None:

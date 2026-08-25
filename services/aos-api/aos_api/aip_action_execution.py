@@ -28,6 +28,8 @@ from aos_api.aip_action_models import (
     ManualReconcileCaseSnapshot,
     SubmitActionDraftRequest,
 )
+from aos_api.aip_action_canary_models import EvaluateKillPolicyRequest
+from aos_api.aip_action_canary_service import AipActionCanaryService
 from aos_api.aip_action_store import (
     AipActionConflict,
     AipActionIdempotencyConflict,
@@ -322,6 +324,21 @@ class AipActionExecutionService:
             self._store.assert_bound_impact_preview_current(conn, scope, proposal)
             binding = self._binding_context(conn, scope, proposal)
             adapter, binding = self._resolve_adapter(proposal, binding)
+            kill_decision = AipActionCanaryService.evaluate_in_connection(
+                conn,
+                scope,
+                EvaluateKillPolicyRequest(
+                    actionTypeId=proposal["action_type_id"],
+                    accountBindingRef=binding.get("accountBindingRef"),
+                    adapterRevisionRef=binding.get("adapterRevisionRef"),
+                    capabilityBindingRef=binding.get("capabilityBindingRef"),
+                ),
+            )
+            if kill_decision.blocked:
+                raise AipActionTransitionBlocked(
+                    "canonical Action kill policy is enabled: "
+                    + ",".join(kill_decision.reason_codes)
+                )
             self._assert_no_kill_switch(conn, scope, proposal["action_type_id"])
             attempt_id = f"attempt-{canonical_hash({'scope': scope.key, 'leaseId': lease_id})[:20]}"
             outbox_id = f"dispatch-{attempt_id.removeprefix('attempt-')}"
