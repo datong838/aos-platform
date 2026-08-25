@@ -1,0 +1,40 @@
+{
+  "schema": "aos.workshop-engineering-evidence/v1",
+  "taskId": "workshop-w8-10-backup-projection-rebuild-rls-disaster-recovery-20260826",
+  "codeCommit": "d7eed3fee0915733d40cd1872493bdf486fdb844",
+  "outcome": "ENGINEERING_DR_CONTRACT_BROWSER_GREEN_REAL_RESTORE_AND_DRILLS_BLOCKED_NO_DATA_OPERATION_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "tests": {
+    "targeted": { "files": 3, "tests": 23, "status": "green" },
+    "typescript": { "status": "green" },
+    "webCumulative": { "files": 247, "tests": 2228, "status": "green" },
+    "productionBuild": { "modules": 349, "status": "green" }
+  },
+  "browser": {
+    "engine": "codex-in-app-browser",
+    "route": "/workshop/task-cockpit",
+    "viewport": { "width": 1280, "height": 720 },
+    "formalDependencyState": "catalog-fail-closed",
+    "visualFixture": "get-only-explicit-unknown-no-authority",
+    "uniqueH1": true,
+    "uniqueMain": true,
+    "horizontalOverflow": false,
+    "cardButtonCount": 0,
+    "enabledDataOperationButtonCount": 0,
+    "blockerCount": 34,
+    "screenshots": [
+      { "path": "task-cockpit-catalog-fail-closed.jpg", "sha256": "a42ea3f7651912f5d84399f0bc85826d8ab617900a15dbbd84f9e01941aa1c04" },
+      { "path": "dr-readiness-visual-fixture.jpg", "sha256": "7f7b9f14c9027bc91b5dd214df9cce090291b967ee00d2e56cbc8c32bba5c88d" }
+    ]
+  },
+  "boundaries": {
+    "realBackupRead": false,
+    "realRestore": false,
+    "projectionRebuild": false,
+    "rlsMutation": false,
+    "realDrTarget": false,
+    "realDrillEvidencePack": false,
+    "providerCalls": 0,
+    "externalEffects": 0,
+    "release": false
+  }
+}
