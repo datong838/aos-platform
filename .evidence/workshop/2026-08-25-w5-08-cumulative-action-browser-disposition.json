@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "workshop-delivery-evidence/v1",
+  "taskId": "W5-08",
+  "recordedAt": "2026-08-25T03:35:00Z",
+  "branch": "m1",
+  "baselineCommit": "8636806",
+  "implementationCommit": "2f05451",
+  "authorityRevision": "AOS-000242",
+  "outcome": "W5_08_CUMULATIVE_CODE_BROWSER_DISPOSITION_GREEN_OPERATIONAL_EXTERNAL_ACTION_RELEASE_BLOCKED_NO_REAL_CANARY_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "scope": {
+    "implemented": [
+      "canonical read-only ActionBoundaryPanel consuming Proposal, Approval, Lease and Receipt without a second Action authority",
+      "separate professional artifact, Action result and EffectReview axes",
+      "unknown remains reconcile-only and never implies Action or Effect success",
+      "generic EffectReview ResourceRef without contentHash cannot close the exact Effect axis",
+      "163/164 contribution chain is visible on the canonical Draft Inbox"
+    ],
+    "excluded": [
+      "real org-org Canary traffic",
+      "real Provider call or callback",
+      "real tenant business data mutation",
+      "production Adapter or Secret activation",
+      "external EffectReview operational evidence",
+      "release"
+    ]
+  },
+  "verification": {
+    "focusedWeb": "2 files / 9 tests passed",
+    "relatedWeb": "7 files / 63 tests passed",
+    "fullWeb": "224 files / 2106 tests passed",
+    "backendCumulative": "69 passed with 7 pre-existing warnings",
+    "productionBuild": "343 modules transformed; TypeScript and Vite GREEN",
+    "static": {
+      "compileall": "green",
+      "alembicHeads": ["w5_006 (head)"],
+      "openapi": "14 tests included in backend cumulative suite",
+      "diffCheck": "green"
+    },
+    "browser": {
+      "surface": "Codex in-app browser",
+      "url": "http://127.0.0.1:4173/aip/drafts",
+      "tenant": "org-org/dev-project",
+      "artifact": "production build served through Vite preview and real HTTP",
+      "viewports": ["1280x800", "1440x900", "1920x1080"],
+      "horizontalOverflow": false,
+      "consoleErrorCount": 0,
+      "keyboard": "search control received focus; no state-changing browser command invoked",
+      "observedState": "Action service returned Not Found; page showed explicit failure, zero proposals and no execute control",
+      "positiveJourney": "not claimed because no real canonical Proposal existed and fixtures were deliberately not injected"
+    }
+  },
+  "sourceSha256": {
+    "apps/web/src/components/aip/ActionBoundaryPanel.tsx": "ef009f6c1c0f726fab476d5757da392a952af4e0cf0e5e28eca262b27126779c",
+    "apps/web/src/components/aip/ActionBoundaryPanel.test.tsx": "14403f4265d6a994a6bb1b2c86e5c796860cbd92ed33cc29d87bf7be5d824476",
+    "apps/web/src/pages/CanonicalDraftInboxPage.tsx": "83d1c49e73e7dac98d1a39e1bb790ecca373225fd01a4380b260cd1c1125333e",
+    "apps/web/src/pages/CanonicalDraftInboxPage.test.tsx": "a6ecda197f7af547385f2a68486b9cbfc25f4296f274f3ee0072f85e1bdf05c8"
+  },
+  "safety": {
+    "secondActionAuthorityCreated": false,
+    "fixtureInjectedIntoBrowser": false,
+    "realTenantBusinessDataMutated": false,
+    "realSecretResolved": false,
+    "realProviderCalled": false,
+    "externalEffect": false,
+    "liveMigrationExecuted": false,
+    "releaseExecuted": false
+  },
+  "knownBlockers": [
+    "NO_REAL_CANARY_TRAFFIC_AUTHORITY",
+    "NO_ACTIVE_EXACT_ACCOUNT_INSTALLATION_FOR_EXTERNAL_ACTION",
+    "NO_EXACT_EFFECT_REVIEW_HASH_IN_ACTION_RECEIPT",
+    "NO_EXTERNAL_EFFECT_OR_RELEASE_AUTHORITY"
+  ],
+  "nextTask": "W6-01"
+}
