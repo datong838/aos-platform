@@ -62,6 +62,8 @@ from aos_api.ecommerce_workshop_dispatch_scenario import EcommerceWorkshopDispat
 from aos_api.ecommerce_workshop_dispatch_scenario_contracts import DispatchScenarioContribution
 from aos_api.ecommerce_workshop_learning_scenario import EcommerceWorkshopLearningScenario
 from aos_api.ecommerce_workshop_learning_scenario_contracts import LearningScenarioContribution
+from aos_api.ecommerce_workshop_full_video_scenario import EcommerceWorkshopFullVideoScenario
+from aos_api.ecommerce_workshop_full_video_scenario_contracts import FullVideoScenarioContribution
 from aos_api.ecommerce_workshop_analyst_contracts import WorkshopAnalystViewEnvelope
 from aos_api.ecommerce_workshop_content_campaign import (
     EcommerceWorkshopContentCampaign,
@@ -418,6 +420,11 @@ def get_ecommerce_workshop_learning_scenario() -> EcommerceWorkshopLearningScena
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_full_video_scenario() -> EcommerceWorkshopFullVideoScenario:
+    return EcommerceWorkshopFullVideoScenario()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_price_governance() -> EcommerceWorkshopPriceGovernance:
     return EcommerceWorkshopPriceGovernance(remedy_scenario=EcommerceWorkshopRemedyScenario())
 
@@ -527,6 +534,10 @@ AnalystDependency = Annotated[
 LearningScenarioDependency = Annotated[
     EcommerceWorkshopLearningScenario,
     Depends(get_ecommerce_workshop_learning_scenario),
+]
+FullVideoScenarioDependency = Annotated[
+    EcommerceWorkshopFullVideoScenario,
+    Depends(get_ecommerce_workshop_full_video_scenario),
 ]
 PriceGovernanceDependency = Annotated[
     EcommerceWorkshopPriceGovernance,
@@ -1288,6 +1299,26 @@ def get_ecommerce_workshop_media_studio_view(
     return media_studio.read(
         org_id=principal.org_id,
         project_id=principal.project_id,
+    )
+
+
+@router.get(
+    "/views/media-studio/full-production-scenario",
+    response_model=FullVideoScenarioContribution,
+    operation_id="ecommerceWorkshopMediaStudioFullProductionScenarioGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_media_studio_full_production_scenario(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    scenario: FullVideoScenarioDependency,
+) -> FullVideoScenarioContribution:
+    _reject_unknown_query_parameters(request, allowed=frozenset())
+    _require_media_studio_installation(principal=principal, catalog=catalog)
+    return scenario.read(
+        scope=TenantScope(principal.org_id, principal.project_id),
+        cutoff=datetime.now(UTC),
     )
 
 

@@ -4,6 +4,7 @@ import {
   TASK_COCKPIT_SCHEMA_VERSION,
   DISPATCH_SCENARIO_SCHEMA_VERSION,
   LEARNING_SCENARIO_SCHEMA_VERSION,
+  FULL_VIDEO_SCENARIO_SCHEMA_VERSION,
   OPERATIONS_SCHEMA_VERSION,
   OPERATION_COMMAND_READINESS_SCHEMA_VERSION,
   OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION,
@@ -117,6 +118,18 @@ import {
   type LearningScenarioRoleBinding,
   type LearningScenarioStage,
   type LearningScenarioStageId,
+  type FullVideoBlocker,
+  type FullVideoComposition,
+  type FullVideoExactRef,
+  type FullVideoFaultId,
+  type FullVideoFaultRecovery,
+  type FullVideoLedger,
+  type FullVideoResponsibility,
+  type FullVideoResponsibilityId,
+  type FullVideoRoleBinding,
+  type FullVideoScenarioContribution,
+  type FullVideoStage,
+  type FullVideoStageId,
   type OperationsAuthorityRef,
   type OperationsBlocker,
   type OperationsCountLedger,
@@ -562,6 +575,50 @@ export function parseLearningScenario(value: unknown): LearningScenarioContribut
   if (rootEffectReviewRef && stages[0].status === "ready") { const ids = new Set(stages[0].exactRefs.map((ref) => `${ref.resourceType}:${ref.resourceId}:${ref.revision}:${ref.contentHash}`)); if (!ids.has(`${rootEffectReviewRef.resourceType}:${rootEffectReviewRef.resourceId}:${rootEffectReviewRef.revision}:${rootEffectReviewRef.contentHash}`)) throw new TypeError("learningScenario root stage 漂移"); }
   const commandsRaw = record(raw.commands, "learningScenario.commands"); exact(commandsRaw, ["submitCandidate", "approveCandidate", "promoteCandidate", "publishWiki", "revokeKnowledge"], "learningScenario.commands"); if (Object.values(commandsRaw).some((item) => item !== false)) throw new TypeError("learningScenario command 必须失败关闭");
   const blockers = raw.blockers.map(parseLearningScenarioBlocker); return { schemaVersion: LEARNING_SCENARIO_SCHEMA_VERSION, status: "blocked", rootEffectReviewRef, maturityPolicyRef, learningBindingHash, composition, evaluatedAt: timestamp(raw.evaluatedAt, "learningScenario.evaluatedAt"), stages, ledger, outcomeAxes, blockers, commands: { submitCandidate: false, approveCandidate: false, promoteCandidate: false, publishWiki: false, revokeKnowledge: false }, externalEffectsAllowed: false };
+}
+
+const FULL_VIDEO_STAGE_IDS = ["brief_profile", "compile_start", "script_art", "storyboard_capture", "post_review", "publish_delivery", "settlement_effect"] as const satisfies readonly FullVideoStageId[];
+const FULL_VIDEO_RESPONSIBILITY_IDS = ["media.producer", "media.director", "media.screenwriter", "media.art", "media.storyboard", "media.capture", "media.post", "media.review"] as const satisfies readonly FullVideoResponsibilityId[];
+const FULL_VIDEO_FAULT_IDS = ["crash_before_submit", "crash_after_submit_before_receipt", "lease_fence_loss", "webhook_ordering", "timeout_cancel_late_result", "checkpoint_drift", "capacity_budget_race", "restart_partition", "malicious_artifact"] as const satisfies readonly FullVideoFaultId[];
+function parseFullVideoRef(value: unknown, expectedType: string | null, label: string): FullVideoExactRef {
+  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "contentHash"], label);
+  const resourceType = boundedText(raw.resourceType, `${label}.resourceType`, 120); if (expectedType && resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
+  return { resourceType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), revision: integer(raw.revision, `${label}.revision`, 1), contentHash: hash(raw.contentHash, `${label}.contentHash`) };
+}
+function parseFullVideoBlocker(value: unknown): FullVideoBlocker {
+  const raw = record(value, "fullVideo.blocker"); exact(raw, ["code", "dependency", "requiredAction"], "fullVideo.blocker");
+  const code = boundedText(raw.code, "fullVideo.blocker.code", 120); if (!REASON.test(code)) throw new TypeError("fullVideo.blocker.code 非法");
+  return { code, dependency: boundedText(raw.dependency, "fullVideo.blocker.dependency", 180), requiredAction: boundedText(raw.requiredAction, "fullVideo.blocker.requiredAction", 500) };
+}
+function parseFullVideoRoleBinding(value: unknown, label: string): FullVideoRoleBinding {
+  const raw = record(value, label); exact(raw, ["roleRef", "assigneeRef", "skillBindingRef"], label);
+  return { roleRef: parseFullVideoRef(raw.roleRef, "AgentTemplate", `${label}.roleRef`), assigneeRef: parseFullVideoRef(raw.assigneeRef, "AgentInstance", `${label}.assigneeRef`), skillBindingRef: parseFullVideoRef(raw.skillBindingRef, "SkillBinding", `${label}.skillBindingRef`) };
+}
+function parseFullVideoComposition(value: unknown): FullVideoComposition {
+  const raw = record(value, "fullVideo.composition"); exact(raw, ["atomicSkillRefs", "logicRevisionRef", "roleBindings"], "fullVideo.composition");
+  if (!Array.isArray(raw.atomicSkillRefs) || !raw.atomicSkillRefs.length || !Array.isArray(raw.roleBindings) || !raw.roleBindings.length) throw new TypeError("fullVideo.composition 不完整");
+  const atomicSkillRefs = raw.atomicSkillRefs.map((item, index) => parseFullVideoRef(item, "SkillRevision", `fullVideo.atomicSkillRefs[${index}]`));
+  const roleBindings = raw.roleBindings.map((item, index) => parseFullVideoRoleBinding(item, `fullVideo.roleBindings[${index}]`));
+  assertUnique(atomicSkillRefs.map((item) => `${item.resourceId}:${item.revision}:${item.contentHash}`), "fullVideo.atomicSkillRefs"); assertUnique(roleBindings.map((item) => item.skillBindingRef.resourceId), "fullVideo.roleBindings");
+  return { atomicSkillRefs, logicRevisionRef: parseFullVideoRef(raw.logicRevisionRef, "LogicRevision", "fullVideo.logicRevisionRef"), roleBindings };
+}
+export function parseFullVideoScenario(value: unknown): FullVideoScenarioContribution {
+  const raw = record(value, "fullVideo"); exact(raw, ["schemaVersion", "status", "rootBriefRef", "taskRunRef", "fullProductionBindingHash", "composition", "evaluatedAt", "responsibilities", "stages", "faultRecovery", "ledger", "blockers", "commands", "externalEffectsAllowed", "releaseAllowed"], "fullVideo");
+  if (raw.schemaVersion !== FULL_VIDEO_SCENARIO_SCHEMA_VERSION || raw.status !== "blocked" || raw.externalEffectsAllowed !== false || raw.releaseAllowed !== false) throw new TypeError("fullVideo 边界漂移");
+  if (!Array.isArray(raw.responsibilities) || raw.responsibilities.length !== 8 || !Array.isArray(raw.stages) || raw.stages.length !== 7 || !Array.isArray(raw.faultRecovery) || raw.faultRecovery.length !== 9 || !Array.isArray(raw.blockers) || !raw.blockers.length) throw new TypeError("fullVideo 数量漂移");
+  const responsibilityValues = raw.responsibilities; const stageValues = raw.stages; const faultValues = raw.faultRecovery;
+  const responsibilities = FULL_VIDEO_RESPONSIBILITY_IDS.map((responsibilityId, index): FullVideoResponsibility => { const item = record(responsibilityValues[index], `fullVideo.${responsibilityId}`); exact(item, ["responsibilityId", "label", "status", "assigneeRef", "skillBindingRef", "independentReviewRequired", "blocker"], `fullVideo.${responsibilityId}`); if (item.responsibilityId !== responsibilityId || typeof item.independentReviewRequired !== "boolean") throw new TypeError("fullVideo responsibility 漂移"); const status = enumValue(item.status, ["assigned", "blocked", "unknown"] as const, "fullVideo.responsibility.status"); const assigneeRef = item.assigneeRef === null ? null : parseFullVideoRef(item.assigneeRef, "AgentInstance", `fullVideo.${responsibilityId}.assigneeRef`); const skillBindingRef = item.skillBindingRef === null ? null : parseFullVideoRef(item.skillBindingRef, "SkillBinding", `fullVideo.${responsibilityId}.skillBindingRef`); const blocker = item.blocker === null ? null : parseFullVideoBlocker(item.blocker); if ((status === "assigned" && (!assigneeRef || !skillBindingRef || blocker)) || (status !== "assigned" && (assigneeRef || skillBindingRef || !blocker))) throw new TypeError("fullVideo responsibility 伪状态"); return { responsibilityId, label: boundedText(item.label, `fullVideo.${responsibilityId}.label`, 100), status, assigneeRef, skillBindingRef, independentReviewRequired: item.independentReviewRequired, blocker }; });
+  const stages = FULL_VIDEO_STAGE_IDS.map((stageId, index): FullVideoStage => { const item = record(stageValues[index], `fullVideo.${stageId}`); exact(item, ["stageId", "status", "exactRefs", "contribution", "blocker"], `fullVideo.${stageId}`); if (item.stageId !== stageId || !Array.isArray(item.exactRefs)) throw new TypeError("fullVideo stage 漂移"); const status = enumValue(item.status, ["ready", "blocked", "unknown"] as const, "fullVideo.stage.status"); const exactRefs = item.exactRefs.map((entry, refIndex) => parseFullVideoRef(entry, null, `fullVideo.${stageId}.exactRefs[${refIndex}]`)); const blocker = item.blocker === null ? null : parseFullVideoBlocker(item.blocker); if ((status === "ready" && (!exactRefs.length || blocker)) || (status !== "ready" && (exactRefs.length || !blocker))) throw new TypeError("fullVideo stage 伪状态"); assertUnique(exactRefs.map((ref) => `${ref.resourceType}:${ref.resourceId}:${ref.revision}:${ref.contentHash}`), `fullVideo.${stageId}.exactRefs`); return { stageId, status, exactRefs, contribution: boundedText(item.contribution, `fullVideo.${stageId}.contribution`, 500), blocker }; });
+  const faultRecovery = FULL_VIDEO_FAULT_IDS.map((faultId, index): FullVideoFaultRecovery => { const item = record(faultValues[index], `fullVideo.${faultId}`); exact(item, ["faultId", "status", "recoveryDecision", "authorityRefs", "blocker", "automaticRetryAllowed"], `fullVideo.${faultId}`); if (item.faultId !== faultId || item.automaticRetryAllowed !== false || !Array.isArray(item.authorityRefs)) throw new TypeError("fullVideo fault 漂移"); const status = enumValue(item.status, ["ready", "blocked", "unknown"] as const, "fullVideo.fault.status"); const authorityRefs = item.authorityRefs.map((entry, refIndex) => parseFullVideoRef(entry, null, `fullVideo.${faultId}.authorityRefs[${refIndex}]`)); const blocker = item.blocker === null ? null : parseFullVideoBlocker(item.blocker); if ((status === "ready" && (!authorityRefs.length || blocker)) || (status !== "ready" && (authorityRefs.length || !blocker))) throw new TypeError("fullVideo fault 伪状态"); return { faultId, status, recoveryDecision: boundedText(item.recoveryDecision, `fullVideo.${faultId}.recoveryDecision`, 500), authorityRefs, blocker, automaticRetryAllowed: false }; });
+  const ledgerRaw = record(raw.ledger, "fullVideo.ledger"); exact(ledgerRaw, ["responsibilitiesExpected", "responsibilitiesObserved", "stagesExpected", "stagesObserved", "attemptsExpected", "attemptsObserved", "artifactsExpected", "artifactsObserved", "mediaGatesExpected", "mediaGatesObserved", "faultCasesExpected", "faultCasesObserved", "usageBucketsExpected", "usageBucketsObserved"], "fullVideo.ledger");
+  const ledger: FullVideoLedger = { responsibilitiesExpected: 8, responsibilitiesObserved: integer(ledgerRaw.responsibilitiesObserved, "fullVideo.responsibilitiesObserved"), stagesExpected: 7, stagesObserved: integer(ledgerRaw.stagesObserved, "fullVideo.stagesObserved"), attemptsExpected: integer(ledgerRaw.attemptsExpected, "fullVideo.attemptsExpected"), attemptsObserved: integer(ledgerRaw.attemptsObserved, "fullVideo.attemptsObserved"), artifactsExpected: integer(ledgerRaw.artifactsExpected, "fullVideo.artifactsExpected"), artifactsObserved: integer(ledgerRaw.artifactsObserved, "fullVideo.artifactsObserved"), mediaGatesExpected: 4, mediaGatesObserved: integer(ledgerRaw.mediaGatesObserved, "fullVideo.mediaGatesObserved"), faultCasesExpected: 9, faultCasesObserved: integer(ledgerRaw.faultCasesObserved, "fullVideo.faultCasesObserved"), usageBucketsExpected: integer(ledgerRaw.usageBucketsExpected, "fullVideo.usageBucketsExpected"), usageBucketsObserved: integer(ledgerRaw.usageBucketsObserved, "fullVideo.usageBucketsObserved") };
+  if (ledgerRaw.responsibilitiesExpected !== 8 || ledgerRaw.stagesExpected !== 7 || ledgerRaw.mediaGatesExpected !== 4 || ledgerRaw.faultCasesExpected !== 9 || ledger.responsibilitiesObserved !== responsibilities.filter((item) => item.status === "assigned").length || ledger.stagesObserved !== stages.filter((item) => item.status === "ready").length || ledger.faultCasesObserved !== faultRecovery.filter((item) => item.status === "ready").length || ledger.attemptsObserved > ledger.attemptsExpected || ledger.artifactsObserved > ledger.artifactsExpected || ledger.mediaGatesObserved > 4 || ledger.usageBucketsObserved > ledger.usageBucketsExpected) throw new TypeError("fullVideo ledger 不守恒");
+  const roots = [raw.rootBriefRef, raw.taskRunRef, raw.fullProductionBindingHash, raw.composition]; const hasRoots = roots.every((item) => item !== null); if (!hasRoots && !roots.every((item) => item === null)) throw new TypeError("fullVideo roots 漂移");
+  const rootBriefRef = raw.rootBriefRef === null ? null : parseFullVideoRef(raw.rootBriefRef, "MediaProductionBriefRevision", "fullVideo.rootBriefRef"); const taskRunRef = raw.taskRunRef === null ? null : parseFullVideoRef(raw.taskRunRef, "TaskRun", "fullVideo.taskRunRef"); const fullProductionBindingHash = raw.fullProductionBindingHash === null ? null : rawHash(raw.fullProductionBindingHash, "fullVideo.fullProductionBindingHash"); const composition = raw.composition === null ? null : parseFullVideoComposition(raw.composition);
+  if (rootBriefRef && taskRunRef) { const briefIds = new Set(stages[0].exactRefs.map((ref) => `${ref.resourceType}:${ref.resourceId}:${ref.revision}:${ref.contentHash}`)); const runIds = new Set(stages[1].exactRefs.map((ref) => `${ref.resourceType}:${ref.resourceId}:${ref.revision}:${ref.contentHash}`)); if (!briefIds.has(`${rootBriefRef.resourceType}:${rootBriefRef.resourceId}:${rootBriefRef.revision}:${rootBriefRef.contentHash}`) || !runIds.has(`${taskRunRef.resourceType}:${taskRunRef.resourceId}:${taskRunRef.revision}:${taskRunRef.contentHash}`)) throw new TypeError("fullVideo root stage 漂移"); }
+  const commandsRaw = record(raw.commands, "fullVideo.commands"); exact(commandsRaw, ["prepare", "start", "resume", "takeover", "cancel", "reconcile", "publish", "settle"], "fullVideo.commands"); if (Object.values(commandsRaw).some((item) => item !== false)) throw new TypeError("fullVideo command 必须失败关闭");
+  if (stages.every((item) => item.status === "ready") && faultRecovery.every((item) => item.status === "ready")) throw new TypeError("fullVideo 不得伪造 operational ready");
+  return { schemaVersion: FULL_VIDEO_SCENARIO_SCHEMA_VERSION, status: "blocked", rootBriefRef, taskRunRef, fullProductionBindingHash, composition, evaluatedAt: timestamp(raw.evaluatedAt, "fullVideo.evaluatedAt"), responsibilities, stages, faultRecovery, ledger, blockers: raw.blockers.map(parseFullVideoBlocker), commands: { prepare: false, start: false, resume: false, takeover: false, cancel: false, reconcile: false, publish: false, settle: false }, externalEffectsAllowed: false, releaseAllowed: false };
 }
 
 export function parseTaskCockpitCore(value: unknown): TaskCockpitCoreResponse {

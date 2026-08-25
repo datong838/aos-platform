@@ -1,10 +1,20 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { MediaStudioViewResponse } from "../../api/ecommerceWorkshop";
+import type { FullVideoScenarioContribution, MediaStudioViewResponse } from "../../api/ecommerceWorkshop";
 import { MediaStudioPage } from "./MediaStudioPage";
 
 const response = (): MediaStudioViewResponse => ({ schemaVersion: "aos.ecommerce-workshop.media-studio-view/v3", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: ["context", "execution", "delivery"].map((sliceId) => ({ sliceId: sliceId as "context" | "execution" | "delivery", status: "blocked", dataCutoff: "2026-08-24T08:00:00Z", readinessAxes: ["module", "capability", "assignee", "provider", "budget", "publication"].map((axis) => ({ axis: axis as "module", status: "target", exactRef: null, targetContractRef: `ADR-86#${axis}`, gaps: ["missing authority"], blockers: [{ code: "MEDIA_AUTHORITY_NOT_AVAILABLE", dependency: axis, requiredAction: "attach exact ref" }] })), authorityRefs: [], blockers: [{ code: `MEDIA_${sliceId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`, dependency: sliceId, requiredAction: "attach exact refs" }], countLedger: { denominator: 6, ready: 0, target: 6, blocked: 0, unknown: 0, conflict: 0, notApplicable: 0 } })), providerJobsStatus: "blocked", providerJobs: [], providerJobBlockers: [{ code: "MEDIA_PROVIDER_JOB_AUTHORITY_NOT_AVAILABLE", dependency: "aip.media-provider-jobs", requiredAction: "install authority" }], mediaFinanceStatus: "ready", mediaFinance: [], mediaFinanceBlockers: [], lifecycleStatus: "blocked", lifecycle: null, lifecycleBlockers: [{ code: "MEDIA_LIFECYCLE_LEGACY_VIEW", dependency: "media-studio-v4", requiredAction: "refresh canonical v4 projection" }], publishStatus: "blocked", publishContributions: [], publishBlockers: [{ code: "MEDIA_PUBLISH_LEGACY_VIEW", dependency: "media-studio-v5", requiredAction: "refresh canonical v5 projection" }], page: { limit: 100, count: 0, hasMore: false, nextCursor: null } });
+
+const fullVideoScenario = (): FullVideoScenarioContribution => {
+  const contentHash = `sha256:${"a".repeat(64)}`; const ref = (resourceType: string, resourceId: string) => ({ resourceType, resourceId, revision: 1, contentHash });
+  const blocker = { code: "FULL_VIDEO_EXTERNAL_GATE_REQUIRED", dependency: "workshop.full-video", requiredAction: "append exact current evidence" };
+  const stageIds = ["brief_profile", "compile_start", "script_art", "storyboard_capture", "post_review", "publish_delivery", "settlement_effect"] as const;
+  const responsibilityIds = ["media.producer", "media.director", "media.screenwriter", "media.art", "media.storyboard", "media.capture", "media.post", "media.review"] as const;
+  const faultIds = ["crash_before_submit", "crash_after_submit_before_receipt", "lease_fence_loss", "webhook_ordering", "timeout_cancel_late_result", "checkpoint_drift", "capacity_budget_race", "restart_partition", "malicious_artifact"] as const;
+  const brief = ref("MediaProductionBriefRevision", "brief-full-1"); const run = ref("TaskRun", "run-full-1");
+  return { schemaVersion: "aos.ecommerce-workshop.full-video-scenario/v1", status: "blocked", rootBriefRef: brief, taskRunRef: run, fullProductionBindingHash: "b".repeat(64), composition: { atomicSkillRefs: [ref("SkillRevision", "media-script"), ref("SkillRevision", "media-review")], logicRevisionRef: ref("LogicRevision", "full-short-video-production"), roleBindings: [{ roleRef: ref("AgentTemplate", "content-officer"), assigneeRef: ref("AgentInstance", "content-officer-1"), skillBindingRef: ref("SkillBinding", "media-script-binding") }] }, evaluatedAt: "2026-08-26T06:00:00Z", responsibilities: responsibilityIds.map((responsibilityId, index) => ({ responsibilityId, label: responsibilityId, status: "assigned", assigneeRef: ref("AgentInstance", `assignee-${index % 3}`), skillBindingRef: ref("SkillBinding", `binding-${index}`), independentReviewRequired: responsibilityId === "media.review", blocker: null })), stages: stageIds.map((stageId, index) => index < 5 ? { stageId, status: "ready", exactRefs: [index === 0 ? brief : index === 1 ? run : ref("ArtifactRevision", `artifact-${index}`)], contribution: `stage ${stageId}`, blocker: null } : { stageId, status: "blocked", exactRefs: [], contribution: "external gate blocked", blocker }), faultRecovery: faultIds.map((faultId, index) => index < 8 ? { faultId, status: "ready", recoveryDecision: `durable ${faultId}`, authorityRefs: [ref("RecoveryDecisionReceipt", `recovery-${index}`)], blocker: null, automaticRetryAllowed: false } : { faultId, status: "unknown", recoveryDecision: "quarantine evidence required", authorityRefs: [], blocker, automaticRetryAllowed: false }), ledger: { responsibilitiesExpected: 8, responsibilitiesObserved: 8, stagesExpected: 7, stagesObserved: 5, attemptsExpected: 5, attemptsObserved: 5, artifactsExpected: 6, artifactsObserved: 6, mediaGatesExpected: 4, mediaGatesObserved: 4, faultCasesExpected: 9, faultCasesObserved: 8, usageBucketsExpected: 2, usageBucketsObserved: 2 }, blockers: [blocker], commands: { prepare: false, start: false, resume: false, takeover: false, cancel: false, reconcile: false, publish: false, settle: false }, externalEffectsAllowed: false, releaseAllowed: false };
+};
 
 describe("MediaStudioPage", () => {
   let host: HTMLDivElement;
@@ -110,6 +120,18 @@ describe("MediaStudioPage", () => {
     expect(host.querySelectorAll('[aria-label="W7媒体累计十一栏验收门"] .media-command-grid article')).toHaveLength(11);
     expect(host.textContent).toContain("provider_adapter_greenblocked");
     expect(host.textContent).toContain("外部副作用：关闭 · Release：关闭");
+    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
+  });
+
+  it("展示 FULL 视频四层贡献、八职责、七阶段和九类故障且无写按钮", async () => {
+    await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()), getMediaStudioFullProductionScenario: vi.fn().mockResolvedValue(fullVideoScenario()) }} />); });
+    expect(host.textContent).toContain("FULL 短视频生产 · 故障恢复");
+    expect(host.textContent).toContain("原子 Skill → Logic 编排 → 数字同事绑定 → 工作台贡献");
+    expect(host.querySelectorAll(".full-video-responsibility-grid article")).toHaveLength(8);
+    expect(host.querySelectorAll(".full-video-stage-grid article")).toHaveLength(7);
+    expect(host.querySelectorAll(".full-video-fault-grid article")).toHaveLength(9);
+    expect(host.textContent).toContain("故障证据 8/9");
+    expect(host.querySelectorAll(".full-video-scenario .media-command-grid article")).toHaveLength(8);
     expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
   });
 });

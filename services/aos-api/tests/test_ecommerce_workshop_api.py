@@ -369,6 +369,10 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/views/media-studio",
             "get",
         ),
+        "ecommerceWorkshopMediaStudioFullProductionScenarioGet": (
+            "/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+            "get",
+        ),
         "ecommerceWorkshopAnalystViewGet": (
             "/v1/ecommerce-workshop/views/analyst",
             "get",
