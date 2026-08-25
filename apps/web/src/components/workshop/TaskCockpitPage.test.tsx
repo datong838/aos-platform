@@ -48,6 +48,15 @@ describe("TaskCockpitPage", () => {
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
   afterEach(() => { act(() => root.unmount()); host.remove(); });
 
+  it("shows the W8-11 cumulative gate fail closed without migration or release controls", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    expect(host.querySelector('[aria-label="W8-11 累计发布工程门"]')).not.toBeNull();
+    expect(host.textContent).toContain("累计门失败关闭"); expect(host.textContent).toContain("0 / 14"); expect(host.textContent).toContain("未知（不以 0 代替）");
+    expect(host.textContent).toContain("Run Tests / Generate OpenAPI / Apply Migration");
+    expect([...host.querySelectorAll("button")].some((item) => /migration|install bundle|release|迁移|安装|发布/i.test(item.textContent ?? "") && !item.disabled)).toBe(false);
+  });
+
   it("shows the W8-10 DR contract fail closed without exposing data-operation controls", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
