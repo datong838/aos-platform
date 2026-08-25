@@ -1,0 +1,38 @@
+{
+  "schema": "aos-workshop-w8-08-lifecycle-acceptance/v1",
+  "code_commit": "8e33ed9e58bd15be5041a626b919a381bb4128de",
+  "tenant_contract": {
+    "positive": "org-org/dev-project",
+    "isolation_canary": "dev-org/dev-project"
+  },
+  "engineering": {
+    "install_new_root_contract": "GREEN",
+    "replacement_unique_leaf_contract": "GREEN",
+    "leaf_first_rollback_contract": "GREEN",
+    "terminal_uninstall_contract": "GREEN",
+    "append_only_history_contract": "GREEN",
+    "explicit_route_retirement_seven_gate_contract": "GREEN",
+    "legacy_route_preserve_without_receipt": "GREEN"
+  },
+  "verification": {
+    "web_targeted": "3 files / 24 tests passed",
+    "web_cumulative": "243 files / 2207 tests passed",
+    "backend_installation_targeted": "10 tests passed",
+    "production_build": "TypeScript and Vite passed; 345 modules transformed"
+  },
+  "operational": {
+    "lifecycle_evidence_source": "NOT_AVAILABLE",
+    "active_installation_exact_ref": "NOT_AVAILABLE",
+    "release_owner_retirement_receipt": "NOT_AVAILABLE",
+    "real_installation_mutation": "NOT_EXECUTED",
+    "real_route_retirement": "NOT_EXECUTED",
+    "disposition": "BLOCKED_FAIL_CLOSED"
+  },
+  "boundaries": [
+    "NO_MIGRATION_APPLY",
+    "NO_REAL_INSTALLATION_MUTATION",
+    "NO_PROVIDER_OR_ACTION",
+    "NO_EXTERNAL_EFFECT",
+    "NO_RELEASE"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "aos-workshop-w8-08-browser-acceptance/v1",
+  "runtime": "Codex in-app browser",
+  "build_commit": "8e33ed9e58bd15be5041a626b919a381bb4128de",
+  "url": "http://127.0.0.1:4188/workshop/orders",
+  "observed_url": "http://127.0.0.1:4188/workshop/orders",
+  "title": "订单管理系统 · AOS",
+  "h1": ["订单管理系统"],
+  "main_count": 1,
+  "horizontal_overflow": false,
+  "catalog_state": "FAILED_API_UNAVAILABLE",
+  "legacy_route_disposition": "PRESERVED_READ_ONLY",
+  "uncaught_console_errors": 0,
+  "expected_console_warnings": ["aos-api", "aos-offline"],
+  "screenshot": {
+    "ref": ".evidence/workshop/w8-08/legacy-route-preserved.png",
+    "sha256": "1eb678d0763e1f0656af3a20a9c48bfe3ac01341f0aea1ab67abcc2aedd2b9ee"
+  },
+  "negative_assertion": "API failure and absence of an explicit retirement Receipt did not auto-retire or rewrite the legacy route",
+  "operational_claim": "NONE"
+}
