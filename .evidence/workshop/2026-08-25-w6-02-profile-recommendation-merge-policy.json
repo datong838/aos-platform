@@ -1,0 +1,42 @@
+{
+  "schema": "aos-workshop-evidence/v1",
+  "task_id": "workshop-w6-02-profile-recommendation-merge-policy-20260825",
+  "recorded_at": "2026-08-25T12:55:00+08:00",
+  "code_commit": "bf88eff",
+  "result": "W6_02_PROFILE_RECOMMENDATION_CONFIRMATION_MERGE_POLICY_CODE_CONTRACT_BROWSER_GREEN",
+  "scope": {
+    "tenant": "org-org/dev-project",
+    "negative_canary": "dev-org/dev-project",
+    "external_effect": false,
+    "release": false
+  },
+  "verification": {
+    "focused_and_cumulative_backend": "24 passed",
+    "focused_frontend": "21 passed",
+    "typescript": "GREEN",
+    "production_build": "GREEN",
+    "openapi_deterministic_check": "GREEN",
+    "openapi_new_operations": 4,
+    "alembic_head": "w6_002",
+    "diff_check": "GREEN",
+    "browser": {
+      "tool": "Codex built-in browser",
+      "url": "http://localhost:5173/aip/production-contracts",
+      "title": "上线执行审批 · AOS",
+      "observation": "历史职责计划显示未固定档位建议与合并策略，并明确兼容读取不代表可用于新生产组合",
+      "fail_closed": "历史计划冻结按钮与生产启动门均保持禁用；页面不自动改档、不自动合并"
+    }
+  },
+  "contract_review": [
+    "LITE/STANDARD/FULL recommendation is deterministic and policy-floored",
+    "confirmation accepts recommendation or upgrade and rejects downgrade below recommendation",
+    "merge receipt requires exact existing base plan, non-overlapping slots, protected-duty separation and fresh exact capability union coverage",
+    "freeze revalidates recommendation, confirmation, policy, merge receipt and assignee readiness"
+  ],
+  "boundaries": [
+    "legacy responsibility plans remain readable but are not promoted to governed production authority",
+    "no installation, TaskRun, agent, provider, business row or release was mutated",
+    "no recommendation was treated as user confirmation",
+    "no real tenant data was backfilled"
+  ]
+}
