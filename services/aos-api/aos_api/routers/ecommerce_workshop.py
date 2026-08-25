@@ -139,6 +139,24 @@ from aos_api.ecommerce_workshop_price_disposition import (
 from aos_api.ecommerce_workshop_price_disposition_store import EcommerceWorkshopPriceDispositionStore
 from aos_api.ecommerce_workshop_customer import EcommerceWorkshopCustomer
 from aos_api.ecommerce_workshop_customer_contracts import WorkshopCustomerViewEnvelope
+from aos_api.ecommerce_workshop_customer_lifecycle import (
+    CreateCustomerConsentPolicyRequest,
+    CreateCustomerDialogueRequest,
+    CreateCustomerJourneyRequest,
+    CreateCustomerSegmentRequest,
+    CustomerConsentPolicyRevision,
+    CustomerDialogueBatchRevision,
+    CustomerDialogueStrategyRevision,
+    CustomerJourneyRevision,
+    CustomerLifecycleBlocked,
+    CustomerLifecycleConflict,
+    CustomerLifecycleContributionView,
+    CustomerSegmentRevision,
+    EcommerceWorkshopCustomerLifecycleService,
+    FreezeCustomerDialogueBatchRequest,
+    PrepareCustomerDialogueBatchRequest,
+)
+from aos_api.ecommerce_workshop_customer_lifecycle_store import EcommerceWorkshopCustomerLifecycleStore
 from aos_api.ecommerce_workshop_shared_context import EcommerceWorkshopSharedContext
 from aos_api.ecommerce_workshop_shared_context_contracts import WorkshopSharedContextEnvelope
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
@@ -332,6 +350,11 @@ def get_ecommerce_workshop_customer() -> EcommerceWorkshopCustomer:
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_customer_lifecycle() -> EcommerceWorkshopCustomerLifecycleService:
+    return EcommerceWorkshopCustomerLifecycleService(EcommerceWorkshopCustomerLifecycleStore())
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_shared_context() -> EcommerceWorkshopSharedContext:
     return EcommerceWorkshopSharedContext()
 
@@ -424,6 +447,10 @@ CustomerDependency = Annotated[
     EcommerceWorkshopCustomer,
     Depends(get_ecommerce_workshop_customer),
 ]
+CustomerLifecycleDependency = Annotated[
+    EcommerceWorkshopCustomerLifecycleService,
+    Depends(get_ecommerce_workshop_customer_lifecycle),
+]
 SharedContextDependency = Annotated[
     EcommerceWorkshopSharedContext,
     Depends(get_ecommerce_workshop_shared_context),
@@ -515,6 +542,14 @@ def _map_price_disposition_error(exc: PriceDispositionBlocked) -> ApiError:
         code=exc.code,
         message=str(exc),
         status_code=409 if isinstance(exc, PriceDispositionConflict) else 422,
+    )
+
+
+def _map_customer_lifecycle_error(exc: CustomerLifecycleBlocked) -> ApiError:
+    return ApiError(
+        code=exc.code,
+        message=str(exc),
+        status_code=409 if isinstance(exc, CustomerLifecycleConflict) else 422,
     )
 
 
@@ -1471,6 +1506,155 @@ def get_ecommerce_workshop_customer_view(
     _reject_query_parameters(request)
     _require_customer_installation(principal=principal, catalog=catalog)
     return customer.read(org_id=principal.org_id, project_id=principal.project_id)
+
+
+@router.post(
+    "/customer/consent-policies",
+    response_model=CustomerConsentPolicyRevision,
+    operation_id="ecommerceWorkshopCustomerConsentPolicyCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_customer_consent_policy(
+    body: CreateCustomerConsentPolicyRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerLifecycleDependency,
+) -> CustomerConsentPolicyRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    try:
+        return service.create_consent_policy(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except CustomerLifecycleBlocked as exc:
+        raise _map_customer_lifecycle_error(exc) from exc
+
+
+@router.post(
+    "/customer/segments",
+    response_model=CustomerSegmentRevision,
+    operation_id="ecommerceWorkshopCustomerSegmentCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_customer_segment(
+    body: CreateCustomerSegmentRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerLifecycleDependency,
+) -> CustomerSegmentRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    try:
+        return service.create_segment(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except CustomerLifecycleBlocked as exc:
+        raise _map_customer_lifecycle_error(exc) from exc
+
+
+@router.post(
+    "/customer/journeys",
+    response_model=CustomerJourneyRevision,
+    operation_id="ecommerceWorkshopCustomerJourneyCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_customer_journey(
+    body: CreateCustomerJourneyRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerLifecycleDependency,
+) -> CustomerJourneyRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    try:
+        return service.create_journey(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except CustomerLifecycleBlocked as exc:
+        raise _map_customer_lifecycle_error(exc) from exc
+
+
+@router.post(
+    "/customer/dialogues",
+    response_model=CustomerDialogueStrategyRevision,
+    operation_id="ecommerceWorkshopCustomerDialogueCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_customer_dialogue(
+    body: CreateCustomerDialogueRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerLifecycleDependency,
+) -> CustomerDialogueStrategyRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    try:
+        return service.create_dialogue(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except CustomerLifecycleBlocked as exc:
+        raise _map_customer_lifecycle_error(exc) from exc
+
+
+@router.post(
+    "/customer/dialogue-batches/prepare",
+    response_model=CustomerDialogueBatchRevision,
+    operation_id="ecommerceWorkshopCustomerDialogueBatchPrepare",
+    status_code=201,
+    responses=_ERRORS,
+)
+def prepare_customer_dialogue_batch(
+    body: PrepareCustomerDialogueBatchRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerLifecycleDependency,
+) -> CustomerDialogueBatchRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    try:
+        return service.prepare_batch(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except CustomerLifecycleBlocked as exc:
+        raise _map_customer_lifecycle_error(exc) from exc
+
+
+@router.post(
+    "/customer/dialogue-batches/{batch_id}/freeze",
+    response_model=CustomerDialogueBatchRevision,
+    operation_id="ecommerceWorkshopCustomerDialogueBatchFreeze",
+    responses=_ERRORS,
+)
+def freeze_customer_dialogue_batch(
+    batch_id: Annotated[str, Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$")],
+    body: FreezeCustomerDialogueBatchRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerLifecycleDependency,
+) -> CustomerDialogueBatchRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    try:
+        return service.freeze_batch(TenantScope(principal.org_id, principal.project_id), batch_id, body, principal.subject)
+    except CustomerLifecycleBlocked as exc:
+        raise _map_customer_lifecycle_error(exc) from exc
+
+
+@router.get(
+    "/views/customer/contributions",
+    response_model=CustomerLifecycleContributionView,
+    operation_id="ecommerceWorkshopCustomerLifecycleContributionViewGet",
+    responses=_ERRORS,
+)
+def get_customer_lifecycle_contribution_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerLifecycleDependency,
+) -> CustomerLifecycleContributionView:
+    _reject_query_parameters(request)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
 
 
 @router.get(

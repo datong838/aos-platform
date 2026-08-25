@@ -437,6 +437,34 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/views/customer",
             "get",
         ),
+        "ecommerceWorkshopCustomerConsentPolicyCreate": (
+            "/v1/ecommerce-workshop/customer/consent-policies",
+            "post",
+        ),
+        "ecommerceWorkshopCustomerSegmentCreate": (
+            "/v1/ecommerce-workshop/customer/segments",
+            "post",
+        ),
+        "ecommerceWorkshopCustomerJourneyCreate": (
+            "/v1/ecommerce-workshop/customer/journeys",
+            "post",
+        ),
+        "ecommerceWorkshopCustomerDialogueCreate": (
+            "/v1/ecommerce-workshop/customer/dialogues",
+            "post",
+        ),
+        "ecommerceWorkshopCustomerDialogueBatchPrepare": (
+            "/v1/ecommerce-workshop/customer/dialogue-batches/prepare",
+            "post",
+        ),
+        "ecommerceWorkshopCustomerDialogueBatchFreeze": (
+            "/v1/ecommerce-workshop/customer/dialogue-batches/{batch_id}/freeze",
+            "post",
+        ),
+        "ecommerceWorkshopCustomerLifecycleContributionViewGet": (
+            "/v1/ecommerce-workshop/views/customer/contributions",
+            "get",
+        ),
         "ecommerceWorkshopSharedContextGet": (
             "/v1/ecommerce-workshop/contexts/{context_id}",
             "get",

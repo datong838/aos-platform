@@ -888,6 +888,33 @@
 .customer-hero h2 { margin: 5px 0; font-size: 20px; }
 .customer-hero p { margin: 0; color: var(--aos-text-secondary); }
 .customer-hero > strong { white-space: nowrap; border: 1px solid var(--aos-accent); border-radius: 999px; padding: 5px 11px; color: var(--aos-accent); }
+.customer-contribution { display: grid; gap: 12px; padding: 15px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.customer-contribution > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.customer-contribution > header span { color: var(--aos-accent); font-size: 11px; font-weight: 700; }
+.customer-contribution > header h2 { margin: 3px 0 0; font-size: 17px; }
+.customer-contribution > header > strong { white-space: nowrap; color: var(--aos-green); }
+.customer-contribution-flow { display: grid; grid-template-columns: 1.7fr 1fr 1fr; gap: 9px; }
+.customer-contribution-flow article { min-width: 0; padding: 12px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-accent); background: var(--aos-surface-hover); }
+.customer-contribution-flow article > span { display: block; margin-bottom: 8px; color: var(--aos-text-tertiary); font-size: 11px; }
+.customer-contribution-flow article div { display: flex; flex-wrap: wrap; gap: 5px; }
+.customer-contribution-flow code,
+.customer-contribution aside code { overflow-wrap: anywhere; border: 1px solid var(--aos-border); border-radius: 3px; padding: 3px 6px; background: var(--aos-surface); color: var(--aos-text-secondary); font-size: 10px; }
+.customer-contribution-flow p { margin: 7px 0 0; color: var(--aos-text-secondary); font-size: 11px; }
+.customer-contribution-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--aos-border); }
+.customer-contribution-counts div { display: grid; gap: 3px; padding: 10px; border-right: 1px solid var(--aos-border); }
+.customer-contribution-counts div:last-child { border-right: 0; }
+.customer-contribution-counts span { color: var(--aos-text-tertiary); font-size: 10px; }
+.customer-batch-evidence,
+.customer-contribution-empty { padding: 12px; border: 1px dashed var(--aos-border); background: var(--aos-surface-hover); }
+.customer-batch-evidence > header { display: flex; justify-content: space-between; gap: 10px; }
+.customer-batch-evidence > header span { color: var(--aos-text-secondary); font-size: 11px; }
+.customer-batch-evidence > div { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; margin-top: 9px; }
+.customer-batch-evidence article { display: grid; gap: 3px; padding: 8px; background: var(--aos-surface); }
+.customer-batch-evidence article span { color: var(--aos-text-tertiary); font-size: 10px; }
+.customer-batch-evidence p,
+.customer-contribution-empty p { margin: 8px 0 0; color: var(--aos-text-secondary); font-size: 11px; }
+.customer-contribution aside { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.customer-contribution aside > span { color: var(--aos-red); font-size: 11px; }
 .customer-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
 .customer-tabs button { display: grid; gap: 4px; min-width: 0; cursor: pointer; border: 1px solid var(--aos-border); padding: 11px; background: var(--aos-surface); color: var(--aos-text); text-align: left; }
 .customer-tabs button span { color: var(--aos-text-tertiary); font-size: 11px; }
@@ -945,6 +972,7 @@
   .price-governance-readiness { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .price-disposition-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .customer-readiness { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .customer-contribution-flow { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 1359px) {
@@ -992,6 +1020,7 @@
   .analyst-metrics { grid-template-columns: 1fr; }
   .price-observations { grid-template-columns: 1fr; }
   .customer-items { grid-template-columns: 1fr; }
+  .customer-batch-evidence > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 720px) {
@@ -1005,5 +1034,7 @@
   .price-disposition-grid { grid-template-columns: 1fr; }
   .customer-hero { flex-direction: column; }
   .customer-tabs,
-  .customer-readiness { grid-template-columns: 1fr; }
+  .customer-readiness,
+  .customer-contribution-counts,
+  .customer-batch-evidence > div { grid-template-columns: 1fr; }
 }

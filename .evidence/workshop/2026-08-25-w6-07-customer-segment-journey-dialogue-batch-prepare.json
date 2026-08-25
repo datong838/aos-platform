@@ -1,0 +1,51 @@
+{
+  "taskId": "workshop-w6-07-customer-segment-journey-dialogue-batch-prepare-20260825",
+  "wave": "W6-07",
+  "baseAuthority": "AOS-000250",
+  "baseCommit": "58c8f7e36cfbe2da4c3fec79c71a2ac691c02489",
+  "branch": "m1",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "implemented": [
+    "P08 CustomerLite v2 public-source allowlist and PII mapping removal",
+    "append-only consent policy, segment, journey, dialogue and dialogue-batch authorities",
+    "tenant-scoped version/hash CAS, RLS and FORCE RLS migration contract",
+    "side-effect-free batch prepare/freeze with five-bucket conservation",
+    "atomic Skill to ecommerce-customer-relationship Logic to digital-colleague contribution view",
+    "strict web parser and customer workspace contribution presentation"
+  ],
+  "verification": {
+    "w607BackendAndOpenApi": "27 passed; deterministic OpenAPI check passed",
+    "p08JdbcCustomerReadBaseline": "25 passed",
+    "w6CumulativeBackend": "54 passed",
+    "frontendTargeted": "8 passed; TypeScript noEmit passed",
+    "frontendCumulative": "229 files / 2121 tests passed",
+    "frontendProductionBuild": "passed",
+    "diffCheck": "passed",
+    "browser": {
+      "surface": "Codex in-app Browser",
+      "url": "http://127.0.0.1:5174/workshop/customer",
+      "atomicSkillCount": 8,
+      "logicVisible": true,
+      "primaryColleagueVisible": true,
+      "tenantVisible": true,
+      "prohibitedCustomerActionButtons": 0,
+      "phoneVisible": false,
+      "emailVisible": false,
+      "protectedFieldNameVisible": false,
+      "consoleErrors": 0
+    }
+  },
+  "safetyCounters": {
+    "contactResolution": 0,
+    "action": 0,
+    "providerCall": 0,
+    "send": 0,
+    "externalEffect": 0,
+    "migrationApply": 0,
+    "release": 0
+  },
+  "operationalBoundary": "CODE_CONTRACT_BROWSER_GREEN_NO_CONTACT_RESOLUTION_NO_START_NO_SEND_NO_EXTERNAL_EFFECT_NO_MIGRATION_APPLY_NO_RELEASE"
+}
