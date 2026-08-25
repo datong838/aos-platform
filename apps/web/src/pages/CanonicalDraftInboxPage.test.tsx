@@ -36,6 +36,9 @@ describe("CanonicalDraftInboxPage", () => {
     await act(async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); });
     expect(host.textContent).toContain("已批准");
     expect(host.textContent).toContain("尚无交付凭证，不能宣称已执行");
+    expect(host.querySelector('[data-testid="action-boundary-panel"]')?.textContent).toContain("专业产物完成 ≠ Action 成功 ≠ Effect 已复核");
+    expect(host.querySelector('[data-stage="approval"]')?.getAttribute("data-state")).toBe("complete");
+    expect(host.querySelector('[data-stage="receipt"]')?.getAttribute("data-state")).toBe("waiting");
     expect(host.textContent).toContain("任务 task-1 · 运行 run-1");
     expect(button(host, "获取单次执行租约").disabled).toBe(false);
   });

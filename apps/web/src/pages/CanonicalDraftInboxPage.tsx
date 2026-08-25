@@ -9,6 +9,7 @@ import {
   type ActionProposalTimeline,
   type AipActionsSdk,
 } from "../api/aipActions";
+import { ActionBoundaryPanel } from "../components/aip/ActionBoundaryPanel";
 import { PageChrome } from "../components/PageChrome";
 import { actionDisplayName, businessDisplayName, objectTypeDisplayName, riskDisplayName, statusDisplayName } from "../lib/aipChineseLabels";
 
@@ -231,6 +232,7 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
       <div className="aip-draft-inbox space-y-4" data-testid="canonical-action-inbox">
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900" data-testid="drafts-chain-banner">
           <strong>真实受控动作权威链</strong> · 页面不注入示例草稿，也不在浏览器维护第二套状态机。
+          <p className="mt-1 text-xs">原子 Skill → Logic 编排 → 数字同事 → 工作台贡献视图；需要外部副作用时，再进入独立 Action / Effect 边界。</p>
           {(taskId || runId) && <details><summary>当前筛选的技术标识</summary>{taskId ? `任务 ${taskId}` : ""}{taskId && runId ? " · " : ""}{runId ? `运行 ${runId}` : ""}</details>}
           {proposalParam && <details><summary>深链提案标识</summary><code>{proposalParam}</code></details>}
         </div>
@@ -300,6 +302,7 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
                       {selected.proposal.status === "unknown" && (
                         <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">外部结果未知：禁止重复执行，只允许读取供应商状态并追加对账凭证。</div>
                       )}
+                      <ActionBoundaryPanel bundle={selected} execution={execution} />
                       <div className="grid gap-3 sm:grid-cols-2">
                         <details><summary>提案标识（审计用）</summary><code className="text-xs">{selected.proposal.id}</code></details>
                         <details><summary>内容摘要（审计用）</summary><code className="text-xs" title={selected.proposal.proposalHash}>{shortHash(selected.proposal.proposalHash)}</code></details>
