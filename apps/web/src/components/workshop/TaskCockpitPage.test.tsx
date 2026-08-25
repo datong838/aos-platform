@@ -48,6 +48,15 @@ describe("TaskCockpitPage", () => {
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
   afterEach(() => { act(() => root.unmount()); host.remove(); });
 
+  it("shows the W8-10 DR contract fail closed without exposing data-operation controls", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    expect(host.querySelector('[aria-label="W8-10 灾难恢复预检"]')).not.toBeNull();
+    expect(host.textContent).toContain("Backup manifest"); expect(host.textContent).toContain("RLS negatives"); expect(host.textContent).toContain("未知（不以 0 代替）");
+    expect(host.textContent).toContain("Inspect Backup / Restore / Rebuild Projection");
+    expect([...host.querySelectorAll("button")].some((item) => /restore|failover|failback|恢复|重建/i.test(item.textContent ?? "") && !item.disabled)).toBe(false);
+  });
+
   it("shows the W8-09 operating contract fail closed without exposing control commands", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
