@@ -2,6 +2,7 @@ import {
   ECOMMERCE_WORKSHOP_SCHEMA_VERSION,
   SOURCE_READINESS_SCHEMA_VERSION,
   TASK_COCKPIT_SCHEMA_VERSION,
+  DISPATCH_SCENARIO_SCHEMA_VERSION,
   OPERATIONS_SCHEMA_VERSION,
   OPERATION_COMMAND_READINESS_SCHEMA_VERSION,
   OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION,
@@ -95,6 +96,16 @@ import {
   type TaskCockpitStep,
   type TaskCockpitStepPageResponse,
   type TaskCockpitTask,
+  type DispatchScenarioBlocker,
+  type DispatchScenarioComposition,
+  type DispatchScenarioContribution,
+  type DispatchScenarioDecisionLedger,
+  type DispatchScenarioExactRef,
+  type DispatchScenarioOutcomeAxis,
+  type DispatchScenarioOutcomeAxisId,
+  type DispatchScenarioRoleBinding,
+  type DispatchScenarioStage,
+  type DispatchScenarioStageId,
   type OperationsAuthorityRef,
   type OperationsBlocker,
   type OperationsCountLedger,
@@ -458,6 +469,48 @@ function parseTaskCockpitBase(raw: Record<string, unknown>, label: string): { te
   return { tenant: parseTenant(raw.tenant), evaluatedAt: timestamp(raw.evaluatedAt, `${label}.evaluatedAt`) };
 }
 function assertUnique(items: readonly string[], label: string): void { if (new Set(items).size !== items.length) throw new TypeError(`${label} identity 重复`); }
+
+const DISPATCH_STAGE_IDS = ["task_graph", "dispatch_intent", "handoff", "receiver_decision", "request_more_or_return", "takeover", "owner_timeline"] as const satisfies readonly DispatchScenarioStageId[];
+const DISPATCH_AXIS_IDS = ["dispatch_decision_recorded", "receiver_reauthorized", "single_active_owner", "takeover_decided", "execution_reconciled"] as const satisfies readonly DispatchScenarioOutcomeAxisId[];
+function parseDispatchScenarioRef(value: unknown, expectedType: string | null, label: string): DispatchScenarioExactRef {
+  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "contentHash"], label);
+  const resourceType = boundedText(raw.resourceType, `${label}.resourceType`, 120); if (expectedType && resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
+  return { resourceType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), revision: integer(raw.revision, `${label}.revision`, 1), contentHash: hash(raw.contentHash, `${label}.contentHash`) };
+}
+function parseDispatchScenarioBlocker(value: unknown): DispatchScenarioBlocker {
+  const raw = record(value, "dispatchScenario.blocker"); exact(raw, ["code", "dependency", "requiredAction"], "dispatchScenario.blocker");
+  const code = boundedText(raw.code, "dispatchScenario.blocker.code", 120); if (!REASON.test(code)) throw new TypeError("dispatchScenario.blocker.code 非法");
+  return { code, dependency: boundedText(raw.dependency, "dispatchScenario.blocker.dependency", 180), requiredAction: boundedText(raw.requiredAction, "dispatchScenario.blocker.requiredAction", 500) };
+}
+function parseDispatchScenarioRoleBinding(value: unknown, label: string): DispatchScenarioRoleBinding {
+  const raw = record(value, label); exact(raw, ["roleRef", "assigneeRef", "skillBindingRef"], label);
+  return { roleRef: parseDispatchScenarioRef(raw.roleRef, "AgentTemplate", `${label}.roleRef`), assigneeRef: parseDispatchScenarioRef(raw.assigneeRef, "AgentInstance", `${label}.assigneeRef`), skillBindingRef: parseDispatchScenarioRef(raw.skillBindingRef, "SkillBinding", `${label}.skillBindingRef`) };
+}
+function parseDispatchScenarioComposition(value: unknown): DispatchScenarioComposition {
+  const raw = record(value, "dispatchScenario.composition"); exact(raw, ["atomicSkillRefs", "logicRevisionRef", "roleBindings"], "dispatchScenario.composition");
+  if (!Array.isArray(raw.atomicSkillRefs) || !raw.atomicSkillRefs.length || !Array.isArray(raw.roleBindings) || !raw.roleBindings.length) throw new TypeError("dispatchScenario.composition 不完整");
+  const atomicSkillRefs = raw.atomicSkillRefs.map((item, index) => parseDispatchScenarioRef(item, "SkillRevision", `dispatchScenario.atomicSkillRefs[${index}]`));
+  const roleBindings = raw.roleBindings.map((item, index) => parseDispatchScenarioRoleBinding(item, `dispatchScenario.roleBindings[${index}]`));
+  assertUnique(atomicSkillRefs.map((item) => `${item.resourceId}:${item.revision}:${item.contentHash}`), "dispatchScenario.atomicSkillRefs"); assertUnique(roleBindings.map((item) => item.skillBindingRef.resourceId), "dispatchScenario.roleBindings");
+  return { atomicSkillRefs, logicRevisionRef: parseDispatchScenarioRef(raw.logicRevisionRef, "LogicRevision", "dispatchScenario.logicRevisionRef"), roleBindings };
+}
+export function parseDispatchScenario(value: unknown): DispatchScenarioContribution {
+  const raw = record(value, "dispatchScenario"); exact(raw, ["schemaVersion", "status", "rootTaskGraphRef", "rootTaskRunRef", "dispatchBindingHash", "composition", "evaluatedAt", "stages", "ledger", "outcomeAxes", "blockers", "commands", "externalEffectsAllowed"], "dispatchScenario");
+  if (raw.schemaVersion !== DISPATCH_SCENARIO_SCHEMA_VERSION || raw.status !== "blocked" || raw.externalEffectsAllowed !== false) throw new TypeError("dispatchScenario 边界漂移");
+  if (!Array.isArray(raw.stages) || raw.stages.length !== DISPATCH_STAGE_IDS.length || !Array.isArray(raw.outcomeAxes) || raw.outcomeAxes.length !== DISPATCH_AXIS_IDS.length || !Array.isArray(raw.blockers) || !raw.blockers.length) throw new TypeError("dispatchScenario 数量漂移");
+  const stageValues = raw.stages;
+  const axisValues = raw.outcomeAxes;
+  const stages = DISPATCH_STAGE_IDS.map((stageId, index): DispatchScenarioStage => { const item = record(stageValues[index], `dispatchScenario.${stageId}`); exact(item, ["stageId", "status", "exactRefs", "contribution", "blockers"], `dispatchScenario.${stageId}`); if (item.stageId !== stageId || !Array.isArray(item.exactRefs) || !Array.isArray(item.blockers)) throw new TypeError("dispatchScenario stage 漂移"); const status = enumValue(item.status, ["ready", "blocked", "unknown"] as const, "dispatchScenario.stage.status"); const exactRefs = item.exactRefs.map((entry, refIndex) => parseDispatchScenarioRef(entry, null, `dispatchScenario.${stageId}.exactRefs[${refIndex}]`)); const blockers = item.blockers.map(parseDispatchScenarioBlocker); if ((status === "ready" && (!exactRefs.length || blockers.length)) || (status !== "ready" && (exactRefs.length || !blockers.length))) throw new TypeError("dispatchScenario stage 伪状态"); assertUnique(exactRefs.map((ref) => `${ref.resourceType}:${ref.resourceId}:${ref.revision}:${ref.contentHash}`), `dispatchScenario.${stageId}.exactRefs`); return { stageId, status, exactRefs, contribution: boundedText(item.contribution, `dispatchScenario.${stageId}.contribution`, 500), blockers }; });
+  const ledgerRaw = record(raw.ledger, "dispatchScenario.ledger"); exact(ledgerRaw, ["tasksExpected", "tasksObserved", "handoffsExpected", "handoffsObserved", "decisionsExpected", "decisionsRecorded", "accepted", "rejected", "requestMore", "returned", "takeoverRequested", "takeoverDecided", "activeOwnerCount"], "dispatchScenario.ledger");
+  const ledger: DispatchScenarioDecisionLedger = { tasksExpected: integer(ledgerRaw.tasksExpected, "dispatchScenario.tasksExpected"), tasksObserved: integer(ledgerRaw.tasksObserved, "dispatchScenario.tasksObserved"), handoffsExpected: integer(ledgerRaw.handoffsExpected, "dispatchScenario.handoffsExpected"), handoffsObserved: integer(ledgerRaw.handoffsObserved, "dispatchScenario.handoffsObserved"), decisionsExpected: integer(ledgerRaw.decisionsExpected, "dispatchScenario.decisionsExpected"), decisionsRecorded: integer(ledgerRaw.decisionsRecorded, "dispatchScenario.decisionsRecorded"), accepted: integer(ledgerRaw.accepted, "dispatchScenario.accepted"), rejected: integer(ledgerRaw.rejected, "dispatchScenario.rejected"), requestMore: integer(ledgerRaw.requestMore, "dispatchScenario.requestMore"), returned: integer(ledgerRaw.returned, "dispatchScenario.returned"), takeoverRequested: integer(ledgerRaw.takeoverRequested, "dispatchScenario.takeoverRequested"), takeoverDecided: integer(ledgerRaw.takeoverDecided, "dispatchScenario.takeoverDecided"), activeOwnerCount: integer(ledgerRaw.activeOwnerCount, "dispatchScenario.activeOwnerCount") };
+  if (ledger.activeOwnerCount > 1 || ledger.tasksObserved > ledger.tasksExpected || ledger.handoffsObserved > ledger.handoffsExpected || ledger.decisionsRecorded > ledger.decisionsExpected || ledger.decisionsRecorded !== ledger.accepted + ledger.rejected + ledger.requestMore + ledger.returned || ledger.takeoverDecided > ledger.takeoverRequested) throw new TypeError("dispatchScenario ledger 不守恒");
+  const outcomeAxes = DISPATCH_AXIS_IDS.map((axisId, index): DispatchScenarioOutcomeAxis => { const item = record(axisValues[index], `dispatchScenario.${axisId}`); exact(item, ["axisId", "status", "exactRef", "blocker"], `dispatchScenario.${axisId}`); if (item.axisId !== axisId) throw new TypeError("dispatchScenario axis 漂移"); const status = enumValue(item.status, ["ready", "blocked", "unknown"] as const, "dispatchScenario.axis.status"); const exactRef = item.exactRef === null ? null : parseDispatchScenarioRef(item.exactRef, null, `dispatchScenario.${axisId}.exactRef`); const blocker = item.blocker === null ? null : parseDispatchScenarioBlocker(item.blocker); if ((status === "ready" && (!exactRef || blocker)) || (status !== "ready" && (exactRef || !blocker))) throw new TypeError("dispatchScenario axis 伪状态"); return { axisId, status, exactRef, blocker }; });
+  const roots = [raw.rootTaskGraphRef, raw.rootTaskRunRef, raw.dispatchBindingHash, raw.composition]; const hasRoots = roots.every((item) => item !== null); if (!hasRoots && !roots.every((item) => item === null)) throw new TypeError("dispatchScenario roots 漂移");
+  const rootTaskGraphRef = raw.rootTaskGraphRef === null ? null : parseDispatchScenarioRef(raw.rootTaskGraphRef, "TaskGraphRevision", "dispatchScenario.rootTaskGraphRef"); const rootTaskRunRef = raw.rootTaskRunRef === null ? null : parseDispatchScenarioRef(raw.rootTaskRunRef, "TaskRun", "dispatchScenario.rootTaskRunRef"); const composition = raw.composition === null ? null : parseDispatchScenarioComposition(raw.composition); const dispatchBindingHash = raw.dispatchBindingHash === null ? null : rawHash(raw.dispatchBindingHash, "dispatchScenario.dispatchBindingHash");
+  if (rootTaskGraphRef && stages[0].status === "ready") { const ids = new Set(stages[0].exactRefs.map((ref) => `${ref.resourceType}:${ref.resourceId}:${ref.revision}:${ref.contentHash}`)); if (!ids.has(`${rootTaskGraphRef.resourceType}:${rootTaskGraphRef.resourceId}:${rootTaskGraphRef.revision}:${rootTaskGraphRef.contentHash}`) || !rootTaskRunRef || !ids.has(`${rootTaskRunRef.resourceType}:${rootTaskRunRef.resourceId}:${rootTaskRunRef.revision}:${rootTaskRunRef.contentHash}`)) throw new TypeError("dispatchScenario root stage 漂移"); }
+  const commandsRaw = record(raw.commands, "dispatchScenario.commands"); exact(commandsRaw, ["dispatch", "decideHandoff", "requestTakeover", "approveTakeover", "mutateOwner"], "dispatchScenario.commands"); if (Object.values(commandsRaw).some((item) => item !== false)) throw new TypeError("dispatchScenario command 必须失败关闭");
+  const blockers = raw.blockers.map(parseDispatchScenarioBlocker); return { schemaVersion: DISPATCH_SCENARIO_SCHEMA_VERSION, status: "blocked", rootTaskGraphRef, rootTaskRunRef, dispatchBindingHash, composition, evaluatedAt: timestamp(raw.evaluatedAt, "dispatchScenario.evaluatedAt"), stages, ledger, outcomeAxes, blockers, commands: { dispatch: false, decideHandoff: false, requestTakeover: false, approveTakeover: false, mutateOwner: false }, externalEffectsAllowed: false };
+}
 
 export function parseTaskCockpitCore(value: unknown): TaskCockpitCoreResponse {
   const raw = record(value, "taskCockpit.core"); exact(raw, ["schemaVersion", "tenant", "evaluatedAt", "taskCutoff", "stateConsistency", "readiness", "blockers", "items", "page"], "taskCockpit.core");

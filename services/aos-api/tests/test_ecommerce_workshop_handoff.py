@@ -54,6 +54,11 @@ def _slot(slot_id: str, instance_id: str, revision: int, *, ready: bool = True) 
                 status="resolved",
                 blockerCodes=[],
                 contentHash=HASH,
+                snapshotHash="b" * 64,
+                expiresAt=NOW + timedelta(minutes=5),
+                requiredCapabilityCount=1,
+                bindingCount=1,
+                snapshotStatus="exact_fresh",
                 createdAt=NOW - timedelta(minutes=5),
             )
         ]

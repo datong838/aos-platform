@@ -58,6 +58,8 @@ from aos_api.ecommerce_workshop_handoff_service import (
 )
 from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
 from aos_api.ecommerce_workshop_growth_scenario import EcommerceWorkshopGrowthScenario
+from aos_api.ecommerce_workshop_dispatch_scenario import EcommerceWorkshopDispatchScenario
+from aos_api.ecommerce_workshop_dispatch_scenario_contracts import DispatchScenarioContribution
 from aos_api.ecommerce_workshop_analyst_contracts import WorkshopAnalystViewEnvelope
 from aos_api.ecommerce_workshop_content_campaign import (
     EcommerceWorkshopContentCampaign,
@@ -305,6 +307,11 @@ def get_ecommerce_workshop_task_cockpit() -> EcommerceWorkshopTaskCockpit:
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_dispatch_scenario() -> EcommerceWorkshopDispatchScenario:
+    return EcommerceWorkshopDispatchScenario()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_handoff_compiler() -> ModuleHandoffCompiler:
     return ModuleHandoffCompiler(
         cockpit=get_ecommerce_workshop_task_cockpit(),
@@ -459,6 +466,9 @@ CatalogDependency = Annotated[
 ]
 TaskCockpitDependency = Annotated[
     EcommerceWorkshopTaskCockpit, Depends(get_ecommerce_workshop_task_cockpit)
+]
+DispatchScenarioDependency = Annotated[
+    EcommerceWorkshopDispatchScenario, Depends(get_ecommerce_workshop_dispatch_scenario)
 ]
 HandoffCompilerDependency = Annotated[
     ModuleHandoffCompiler, Depends(get_ecommerce_workshop_handoff_compiler)
@@ -2201,6 +2211,26 @@ def get_ecommerce_workshop_task_cockpit_core(
             message="Task Cockpit read dependency is unavailable",
             status_code=503,
         ) from exc
+
+
+@router.get(
+    "/views/task-cockpit/dispatch-scenario",
+    response_model=DispatchScenarioContribution,
+    operation_id="ecommerceWorkshopTaskCockpitDispatchScenarioGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_task_cockpit_dispatch_scenario(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    scenario: DispatchScenarioDependency,
+) -> DispatchScenarioContribution:
+    _reject_unknown_query_parameters(request, allowed=frozenset())
+    _require_task_cockpit_installation(principal=principal, catalog=catalog)
+    return scenario.read(
+        scope=TenantScope(principal.org_id, principal.project_id),
+        cutoff=datetime.now(UTC),
+    )
 
 
 @router.get(

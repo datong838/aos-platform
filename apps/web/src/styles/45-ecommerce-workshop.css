@@ -496,6 +496,34 @@
 .task-cockpit-skill-contributions li span,
 .task-cockpit-skill-contributions li small { color: var(--aos-text-secondary); overflow-wrap: anywhere; }
 .task-cockpit-skill-contributions li em { color: var(--aos-amber-700); font-size: 11px; font-style: normal; overflow-wrap: anywhere; }
+.task-cockpit-dispatch-scenario { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-amber-600, #d97706); background: color-mix(in srgb, var(--aos-surface) 95%, var(--aos-amber-50, #fffbeb)); }
+.task-cockpit-dispatch-scenario > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.task-cockpit-dispatch-scenario > header div { display: grid; gap: 4px; }
+.task-cockpit-dispatch-scenario > header span { color: var(--aos-text-tertiary); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.task-cockpit-dispatch-scenario > header h2,
+.task-cockpit-dispatch-scenario > p { margin: 0; }
+.task-cockpit-dispatch-scenario > header > strong { padding: 5px 9px; border: 1px solid var(--aos-amber-600, #d97706); color: var(--aos-amber-700, #b45309); font-size: 11px; white-space: nowrap; }
+.task-cockpit-dispatch-layers,
+.task-cockpit-dispatch-ledger,
+.task-cockpit-dispatch-axes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.task-cockpit-dispatch-layers > div,
+.task-cockpit-dispatch-ledger > div,
+.task-cockpit-dispatch-axes > article { display: grid; gap: 4px; min-width: 0; padding: 10px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.task-cockpit-dispatch-layers span,
+.task-cockpit-dispatch-ledger span,
+.task-cockpit-dispatch-axes span { color: var(--aos-text-tertiary); font-size: 11px; }
+.task-cockpit-dispatch-layers small,
+.task-cockpit-dispatch-axes p { margin: 0; overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 11px; }
+.task-cockpit-dispatch-stages { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.task-cockpit-dispatch-stages li { display: grid; gap: 4px; min-width: 0; padding: 10px; border: 1px solid var(--aos-border); border-top: 3px solid var(--aos-amber-600, #d97706); background: var(--aos-surface); }
+.task-cockpit-dispatch-stages li.is-ready,
+.task-cockpit-dispatch-axes article.is-ready { border-top-color: var(--aos-green-600, #16a34a); }
+.task-cockpit-dispatch-stages li.is-unknown,
+.task-cockpit-dispatch-axes article.is-unknown { border-top-color: var(--aos-amber-600, #d97706); }
+.task-cockpit-dispatch-stages li.is-blocked,
+.task-cockpit-dispatch-axes article.is-blocked { border-top-color: var(--aos-red); }
+.task-cockpit-dispatch-stages p { margin: 0; overflow-wrap: anywhere; font-size: 12px; }
+.task-cockpit-dispatch-stages small { overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 10px; }
 @media (max-width: 720px) { .task-cockpit-responsibility-grid, .task-cockpit-handoff-command-grid, .task-cockpit-assignment-control dl { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .task-cockpit-approval-review-grid { grid-template-columns: 1fr; } }
 .task-cockpit-run-detail table { width: 100%; border-collapse: collapse; min-width: 560px; }
@@ -1034,6 +1062,7 @@
   .ecommerce-workshop-context-refs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .task-cockpit-blockers ul { grid-template-columns: 1fr; }
   .task-cockpit-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .task-cockpit-dispatch-stages { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .task-cockpit-metrics > div:nth-child(3) { border-right: 0; }
   .task-cockpit-metrics > div:nth-child(-n+3) { border-bottom: 1px solid var(--aos-border); }
   .task-cockpit-board { grid-template-columns: minmax(125px, 0.75fr) minmax(480px, 3fr) minmax(125px, 0.75fr); }
@@ -1070,6 +1099,11 @@
   .task-cockpit-business-context { grid-template-columns: 1fr; }
   .task-cockpit-business-context > dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .task-cockpit-business-context > p { grid-column: auto; }
+  .task-cockpit-dispatch-scenario > header { flex-direction: column; }
+  .task-cockpit-dispatch-layers,
+  .task-cockpit-dispatch-ledger,
+  .task-cockpit-dispatch-axes,
+  .task-cockpit-dispatch-stages { grid-template-columns: 1fr; }
   .task-cockpit-scope dl,
   .task-cockpit-card dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .task-cockpit-board { grid-template-columns: 1fr; }

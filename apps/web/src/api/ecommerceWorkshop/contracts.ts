@@ -138,6 +138,17 @@ export type SourceReadinessEnvelope = {
 };
 
 export const TASK_COCKPIT_SCHEMA_VERSION = "aos.ecommerce-workshop.task-cockpit/v1" as const;
+export const DISPATCH_SCENARIO_SCHEMA_VERSION = "aos.ecommerce-workshop.dispatch-scenario/v1" as const;
+export type DispatchScenarioStageId = "task_graph" | "dispatch_intent" | "handoff" | "receiver_decision" | "request_more_or_return" | "takeover" | "owner_timeline";
+export type DispatchScenarioOutcomeAxisId = "dispatch_decision_recorded" | "receiver_reauthorized" | "single_active_owner" | "takeover_decided" | "execution_reconciled";
+export type DispatchScenarioExactRef = { resourceType: string; resourceId: string; revision: number; contentHash: string };
+export type DispatchScenarioBlocker = { code: string; dependency: string; requiredAction: string };
+export type DispatchScenarioRoleBinding = { roleRef: DispatchScenarioExactRef; assigneeRef: DispatchScenarioExactRef; skillBindingRef: DispatchScenarioExactRef };
+export type DispatchScenarioComposition = { atomicSkillRefs: DispatchScenarioExactRef[]; logicRevisionRef: DispatchScenarioExactRef; roleBindings: DispatchScenarioRoleBinding[] };
+export type DispatchScenarioStage = { stageId: DispatchScenarioStageId; status: "ready" | "blocked" | "unknown"; exactRefs: DispatchScenarioExactRef[]; contribution: string; blockers: DispatchScenarioBlocker[] };
+export type DispatchScenarioDecisionLedger = { tasksExpected: number; tasksObserved: number; handoffsExpected: number; handoffsObserved: number; decisionsExpected: number; decisionsRecorded: number; accepted: number; rejected: number; requestMore: number; returned: number; takeoverRequested: number; takeoverDecided: number; activeOwnerCount: number };
+export type DispatchScenarioOutcomeAxis = { axisId: DispatchScenarioOutcomeAxisId; status: "ready" | "blocked" | "unknown"; exactRef: DispatchScenarioExactRef | null; blocker: DispatchScenarioBlocker | null };
+export type DispatchScenarioContribution = { schemaVersion: typeof DISPATCH_SCENARIO_SCHEMA_VERSION; status: "blocked"; rootTaskGraphRef: DispatchScenarioExactRef | null; rootTaskRunRef: DispatchScenarioExactRef | null; dispatchBindingHash: string | null; composition: DispatchScenarioComposition | null; evaluatedAt: string; stages: DispatchScenarioStage[]; ledger: DispatchScenarioDecisionLedger; outcomeAxes: DispatchScenarioOutcomeAxis[]; blockers: DispatchScenarioBlocker[]; commands: { dispatch: false; decideHandoff: false; requestTakeover: false; approveTakeover: false; mutateOwner: false }; externalEffectsAllowed: false };
 export type TaskCockpitTaskStatus = "pending" | "planning" | "awaiting_approval" | "approved" | "executing" | "paused" | "completed" | "failed" | "cancelled" | "rolled_back";
 export type TaskCockpitRunStatus = "queued" | "running" | "pausing" | "paused" | "succeeded" | "failed" | "cancelled" | "unknown";
 export type TaskCockpitStepStatus = "queued" | "running" | "succeeded" | "failed" | "skipped" | "unknown";

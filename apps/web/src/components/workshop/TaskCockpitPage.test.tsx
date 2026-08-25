@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { EcommerceWorkshopClientError, type DispatchControlObservation, type ResponsibilityAssignmentObservation, type TaskCockpitActionReceiptResponse, type TaskCockpitApprovalReviewResponse, type TaskCockpitCoreResponse, type TaskCockpitProductionContextResponse, type TaskCockpitResponsibilityHandoffResponse, type TaskCockpitSkillContributionResponse } from "../../api/ecommerceWorkshop";
+import { EcommerceWorkshopClientError, type DispatchControlObservation, type DispatchScenarioContribution, type ResponsibilityAssignmentObservation, type TaskCockpitActionReceiptResponse, type TaskCockpitApprovalReviewResponse, type TaskCockpitCoreResponse, type TaskCockpitProductionContextResponse, type TaskCockpitResponsibilityHandoffResponse, type TaskCockpitSkillContributionResponse } from "../../api/ecommerceWorkshop";
 import { TaskCockpitPage } from "./TaskCockpitPage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -19,6 +19,16 @@ const actionReceipts: TaskCockpitActionReceiptResponse = { schemaVersion: "aos.e
 const skillContributions: TaskCockpitSkillContributionResponse = { schemaVersion: "aos.ecommerce-workshop.task-cockpit/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, runId: "run-1", taskId: "task-1", evaluatedAt: "2026-08-15T10:00:00Z", projectionStatus: "ready", blockerCodes: [], items: [{ contributionId: "agent-run-1", taskRunRef: { resourceType: "TaskRun", resourceId: "run-1", revision: null, authority: "aip-task-runtime" }, agentRunRef: { resourceType: "AgentRun", resourceId: "agent-run-1", revision: "2", authority: "aip-agent-run" }, moduleId: "ecommerce.task-cockpit", roleRef: { resourceType: "AgentTemplate", resourceId: "ecommerce.data_advisor", revision: 1, contentHash: "a".repeat(64) }, assigneeRef: { resourceType: "AgentInstance", resourceId: "agent-1", revision: 3, contentHash: "b".repeat(64) }, skillRevisionRef: { resourceType: "SkillTemplate", resourceId: "ecommerce.skill.D01", revision: 1, contentHash: "c".repeat(64) }, bindingRef: { resourceType: "SkillBinding", resourceId: "binding-1", revision: "4", authority: "aip-skill-registry" }, logicRevisionRef: { resourceType: "LogicRevision", resourceId: "ecommerce.logic.D01", revision: 2, contentHash: "d".repeat(64) }, displayName: "数据参谋 · 专业贡献", purpose: "完成受控专业步骤", responsibility: "data_advisor", readiness: { status: "available", freshness: "fresh", reasonCodes: [], bindingStatus: "active", lastVerifiedAt: "2026-08-15T09:58:00Z", expiresAt: "2026-08-15T10:10:00Z" }, runProjection: { status: "running", startedAt: null, updatedAt: "2026-08-15T09:59:00Z", waitingFor: [] }, inputRefs: [], outputArtifactRefs: [{ resourceType: "Artifact", resourceId: "artifact-1", revision: "1", authority: "aip-artifact" }], assumptions: [], uncertainties: [], conflicts: [], missingInputs: [], allowedCommands: [] }] };
 const assignmentObservation: ResponsibilityAssignmentObservation = { tenant: { orgId: "org-org", projectId: "dev-project" }, runRef: { resourceType: "TaskRun", resourceId: "run-1", version: 1 }, takeoverRequests: [], takeoverDecisions: [], assignmentLeases: [], evaluatedAt: "2026-08-15T10:00:00Z" };
 const dispatchObservation: DispatchControlObservation = { tenant: { orgId: "org-org", projectId: "dev-project" }, taskRef: { resourceType: "Task", resourceId: "task-每日巡检", version: 2 }, dispatchIntents: [{ tenant: { orgId: "org-org", projectId: "dev-project" }, intentId: "intent-1", revision: 1, taskRef: { resourceType: "Task", resourceId: "task-每日巡检", version: 1 }, taskRunRef: null, stepRunRef: null, responsibilityPlanRef: responsibilityHandoffs.responsibilityPlanRef, command: { commandKind: "responsibility_successor", routeIdentity: "aip.responsibility.successor", routePath: "/v1/aip/responsibility-assignments/successors", requiredPermission: "aip.responsibility.write" }, sourceIdentity: "agent-old", targetIdentity: "agent-new", sourceSlotId: "collector", targetSlotId: null, expectedFence: null, reasonCode: "OPERATOR_REASSIGNED", policyRef: { resourceType: "PolicyRevision", resourceId: "dispatch-policy-1", revision: 1, contentHash: "8".repeat(64) }, diff: {}, impact: {}, readiness: "ready", blockers: [], maker: "user:maker", createdAt: "2026-08-15T10:00:00Z", contentHash: "7".repeat(64) }], confirmations: [], priorityDecisions: [{ tenant: { orgId: "org-org", projectId: "dev-project" }, decisionId: "priority-1", revision: 1, taskRefBefore: { resourceType: "Task", resourceId: "task-每日巡检", version: 1 }, taskRefAfter: { resourceType: "Task", resourceId: "task-每日巡检", version: 2 }, oldPriority: 50, newPriority: 80, reasonCode: "SLA_ESCALATION", policyRef: { resourceType: "PolicyRevision", resourceId: "priority-policy-1", revision: 1, contentHash: "6".repeat(64) }, actor: "user:operator", createdAt: "2026-08-15T10:00:00Z", contentHash: "5".repeat(64) }], evaluatedAt: "2026-08-15T10:00:00Z" };
+const scenarioRef = (resourceType: string, resourceId: string) => ({ resourceType, resourceId, revision: 1, contentHash: `sha256:${"a".repeat(64)}` });
+const scenarioBlocker = { code: "PROVIDER_OUTCOME_UNKNOWN_RECONCILIATION_REQUIRED", dependency: "workshop.dispatch-scenario", requiredAction: "追加 exact reconcile evidence" };
+const dispatchScenario: DispatchScenarioContribution = {
+  schemaVersion: "aos.ecommerce-workshop.dispatch-scenario/v1", status: "blocked", rootTaskGraphRef: scenarioRef("TaskGraphRevision", "graph-1"), rootTaskRunRef: scenarioRef("TaskRun", "run-1"), dispatchBindingHash: "b".repeat(64), evaluatedAt: "2026-08-26T04:00:00Z",
+  composition: { atomicSkillRefs: [scenarioRef("SkillRevision", "prepare-handoff"), scenarioRef("SkillRevision", "plan-responsibilities")], logicRevisionRef: scenarioRef("LogicRevision", "daily-control-dispatch"), roleBindings: [{ roleRef: scenarioRef("AgentTemplate", "operations-lead"), assigneeRef: scenarioRef("AgentInstance", "operations-lead-1"), skillBindingRef: scenarioRef("SkillBinding", "binding-1") }] },
+  stages: (["task_graph", "dispatch_intent", "handoff", "receiver_decision", "request_more_or_return", "takeover", "owner_timeline"] as const).map((stageId) => ({ stageId, status: "ready", exactRefs: [scenarioRef("DecisionReceiptRevision", `${stageId}-1`)], contribution: `stage ${stageId}`, blockers: [] })),
+  ledger: { tasksExpected: 1, tasksObserved: 1, handoffsExpected: 1, handoffsObserved: 1, decisionsExpected: 2, decisionsRecorded: 2, accepted: 1, rejected: 0, requestMore: 1, returned: 0, takeoverRequested: 1, takeoverDecided: 1, activeOwnerCount: 1 },
+  outcomeAxes: (["dispatch_decision_recorded", "receiver_reauthorized", "single_active_owner", "takeover_decided", "execution_reconciled"] as const).map((axisId, index) => index === 4 ? { axisId, status: "unknown", exactRef: null, blocker: scenarioBlocker } : { axisId, status: "ready", exactRef: scenarioRef("DecisionReceiptRevision", axisId), blocker: null }),
+  blockers: [scenarioBlocker], commands: { dispatch: false, decideHandoff: false, requestTakeover: false, approveTakeover: false, mutateOwner: false }, externalEffectsAllowed: false,
+};
 const unreadDetails = { listTaskCockpitRunSteps: vi.fn(), listTaskCockpitRunCheckpoints: vi.fn(), getTaskCockpitRunProductionContext: vi.fn(), getTaskCockpitRunResponsibilityHandoffs: vi.fn(), compileTaskCockpitRunHandoff: vi.fn(), getTaskCockpitRunApprovalReview: vi.fn(), getTaskCockpitRunActionReceipts: vi.fn(), getTaskCockpitRunSkillContributions: vi.fn() };
 
 describe("TaskCockpitPage", () => {
@@ -49,6 +59,32 @@ describe("TaskCockpitPage", () => {
     expect(host.textContent).toContain("共享能力 · 待接入");
     expect(host.textContent).toContain("当前页任务1"); expect(host.textContent).toContain("latest Run1");
     expect(host.textContent).not.toMatch(/今日 GMV|六数字同事在线|经验已入库|朋友圈3条内容/);
+  });
+
+  it("独立呈现 W8-03 四层贡献、七阶段与五轴，所有命令保持关闭", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getTaskCockpitDispatchScenario: vi.fn().mockResolvedValue(dispatchScenario), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    expect(host.textContent).toContain("跨域派发、拒绝、请求补充与人工接管");
+    expect(host.textContent).toContain("原子 Skill → Logic 编排 → 数字同事绑定 → 工作台贡献视图");
+    expect(host.textContent).toContain("prepare-handoff@1");
+    expect(host.textContent).toContain("daily-control-dispatch");
+    expect(host.textContent).toContain("operations-lead → operations-lead-1");
+    expect(host.querySelectorAll(".task-cockpit-dispatch-stages > li")).toHaveLength(7);
+    expect(host.querySelectorAll(".task-cockpit-dispatch-axes > article")).toHaveLength(5);
+    expect(host.textContent).toContain("1/1");
+    expect(host.textContent).toContain("dispatch=false");
+    expect(host.textContent).toContain("mutate_owner=false");
+    expect(client.getTaskCockpitDispatchScenario).toHaveBeenCalledTimes(1);
+    expect([...host.querySelectorAll("button")].some((item) => /派发|接管|owner/i.test(item.textContent ?? "") && !item.disabled)).toBe(false);
+  });
+
+  it("W8-03 独立读取失败不拖垮原有 Task Cockpit", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getTaskCockpitDispatchScenario: vi.fn().mockRejectedValue(new Error("offline")), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    expect(host.textContent).toContain("跨域派发场景读取失败");
+    expect(host.textContent).toContain("每日巡检");
+    expect(host.textContent).toContain("当日任务流 · 执行进度");
+    expect(host.textContent).toContain("派发、决定、接管与 owner 变更均不开放");
   });
 
   it("显式展开 Run 后诚实显示 Step/Checkpoint 空权威集合", async () => {

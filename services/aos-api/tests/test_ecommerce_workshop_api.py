@@ -541,6 +541,10 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/views/task-cockpit",
             "get",
         ),
+        "ecommerceWorkshopTaskCockpitDispatchScenarioGet": (
+            "/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+            "get",
+        ),
         "ecommerceWorkshopTaskCockpitRunStepsList": (
             "/v1/ecommerce-workshop/views/task-cockpit/runs/{run_id}/steps",
             "get",
