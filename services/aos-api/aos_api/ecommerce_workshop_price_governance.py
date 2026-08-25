@@ -6,8 +6,9 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 
 from aos_api.aip_contracts import TenantContext
-from aos_api.ecommerce_workshop_price_governance_contracts import PriceAxisReadiness, PriceBlocker, PriceCountLedger, PriceGovernanceViewId, PriceGovernanceViewSlice, PriceObservationProjection, PricePageInfo, PriceReadinessAxis, WorkshopPriceGovernanceViewEnvelope
+from aos_api.ecommerce_workshop_price_governance_contracts import PRICE_GOVERNANCE_REMEDY_SCHEMA_VERSION, PRICE_GOVERNANCE_SCHEMA_VERSION, PriceAxisReadiness, PriceBlocker, PriceCountLedger, PriceGovernanceViewId, PriceGovernanceViewSlice, PriceObservationProjection, PricePageInfo, PriceReadinessAxis, WorkshopPriceGovernanceViewEnvelope
 from aos_api.ecommerce_workshop_price_governance_reader import PriceGovernanceCanonicalReader, PriceGovernanceReadError, PriceGovernanceViewObservation, validate_price_observation
+from aos_api.ecommerce_workshop_remedy_scenario import EcommerceWorkshopRemedyScenario
 from aos_api.tenant_scope import TenantScope
 
 Clock = Callable[[], datetime]
@@ -26,8 +27,9 @@ def _observation_bucket(item: PriceObservationProjection) -> str:
 class EcommerceWorkshopPriceGovernance:
     """Expose price authority gaps without inventing quotes or capabilities."""
 
-    def __init__(self, *, reader: PriceGovernanceCanonicalReader | None = None, clock: Clock | None = None) -> None:
+    def __init__(self, *, reader: PriceGovernanceCanonicalReader | None = None, remedy_scenario: EcommerceWorkshopRemedyScenario | None = None, clock: Clock | None = None) -> None:
         self._reader = reader
+        self._remedy_scenario = remedy_scenario
         self._clock = clock or (lambda: datetime.now(UTC))
 
     def read(self, *, org_id: str, project_id: str) -> WorkshopPriceGovernanceViewEnvelope:
@@ -69,7 +71,8 @@ class EcommerceWorkshopPriceGovernance:
                 projected, refs = [], []
                 ledger = PriceCountLedger(input=0, eligible=0, excluded=0, needsReview=0, unknown=0, deduplicated=0)
             views.append(PriceGovernanceViewSlice(view_id=view_id, status="ready" if trusted else "blocked", resource_revision=revision, data_cutoff=cutoff, readiness_axes=axes, observations=projected, authority_refs=refs, blockers=[] if trusted else [blocker], count_ledger=ledger))
-        return WorkshopPriceGovernanceViewEnvelope(tenant=TenantContext(org_id=org_id, project_id=project_id), resource_revision=revision, evaluated_at=cutoff, data_cutoff=cutoff, views=views, page=PricePageInfo(count=sum(len(item.observations) for item in views)))
+        scenario = self._remedy_scenario.read(scope=scope, cutoff=cutoff) if self._remedy_scenario is not None else None
+        return WorkshopPriceGovernanceViewEnvelope(schemaVersion=PRICE_GOVERNANCE_REMEDY_SCHEMA_VERSION if scenario is not None else PRICE_GOVERNANCE_SCHEMA_VERSION, tenant=TenantContext(org_id=org_id, project_id=project_id), resource_revision=revision, evaluated_at=cutoff, data_cutoff=cutoff, views=views, remedyScenario=scenario, page=PricePageInfo(count=sum(len(item.observations) for item in views)))
 
 
 __all__ = ["EcommerceWorkshopPriceGovernance"]

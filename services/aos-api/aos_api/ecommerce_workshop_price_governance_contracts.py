@@ -10,8 +10,10 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.ecommerce_workshop_remedy_scenario_contracts import RemedyScenarioContribution
 
 PRICE_GOVERNANCE_SCHEMA_VERSION = "aos.ecommerce-workshop.price-governance-view/v1"
+PRICE_GOVERNANCE_REMEDY_SCHEMA_VERSION = "aos.ecommerce-workshop.price-governance-view/v2"
 
 
 class PriceGovernanceViewId(StrEnum):
@@ -163,13 +165,14 @@ class PricePageInfo(AipContractModel):
 
 
 class WorkshopPriceGovernanceViewEnvelope(AipContractModel):
-    schema_version: Literal[PRICE_GOVERNANCE_SCHEMA_VERSION] = PRICE_GOVERNANCE_SCHEMA_VERSION
+    schema_version: Literal[PRICE_GOVERNANCE_SCHEMA_VERSION, PRICE_GOVERNANCE_REMEDY_SCHEMA_VERSION] = PRICE_GOVERNANCE_SCHEMA_VERSION
     tenant: TenantContext
     resource_revision: int = Field(ge=1)
     evaluated_at: datetime
     data_cutoff: datetime
     readiness: Literal["degraded"] = "degraded"
     views: list[PriceGovernanceViewSlice] = Field(min_length=3, max_length=3)
+    remedy_scenario: RemedyScenarioContribution | None = None
     page: PricePageInfo
 
     @field_validator("evaluated_at", "data_cutoff")
@@ -187,7 +190,9 @@ class WorkshopPriceGovernanceViewEnvelope(AipContractModel):
             raise ValueError("price views require one revision and cutoff")
         if self.page.count != sum(len(item.observations) for item in self.views):
             raise ValueError("price page count must equal observations")
+        if (self.schema_version == PRICE_GOVERNANCE_REMEDY_SCHEMA_VERSION) != (self.remedy_scenario is not None):
+            raise ValueError("price governance v2 requires exactly one remedy scenario")
         return self
 
 
-__all__ = ["PRICE_GOVERNANCE_SCHEMA_VERSION", "PriceAxisReadiness", "PriceBlocker", "PriceCountLedger", "PriceExactRef", "PriceGovernanceViewId", "PriceGovernanceViewSlice", "PriceObservationProjection", "PricePageInfo", "PriceQuoteBasis", "PriceReadinessAxis", "WorkshopPriceGovernanceViewEnvelope"]
+__all__ = ["PRICE_GOVERNANCE_SCHEMA_VERSION", "PRICE_GOVERNANCE_REMEDY_SCHEMA_VERSION", "PriceAxisReadiness", "PriceBlocker", "PriceCountLedger", "PriceExactRef", "PriceGovernanceViewId", "PriceGovernanceViewSlice", "PriceObservationProjection", "PricePageInfo", "PriceQuoteBasis", "PriceReadinessAxis", "WorkshopPriceGovernanceViewEnvelope"]

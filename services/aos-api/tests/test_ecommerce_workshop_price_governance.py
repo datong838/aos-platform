@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from aos_api.ecommerce_workshop_price_governance import EcommerceWorkshopPriceGovernance
 from aos_api.ecommerce_workshop_price_governance_contracts import PriceAxisReadiness, PriceCountLedger, PriceExactRef, PriceGovernanceViewId, PriceObservationProjection, PriceReadinessAxis
 from aos_api.ecommerce_workshop_price_governance_reader import PriceGovernanceViewObservation
+from aos_api.ecommerce_workshop_remedy_scenario import EcommerceWorkshopRemedyScenario
 from aos_api.tenant_scope import TenantScope
 
 HASH = "sha256:" + "a" * 64
@@ -71,3 +72,12 @@ def test_one_tenant_drift_is_isolated_but_cross_revision_drift_blocks_all() -> N
     assert conflict.resource_revision == 1
     assert all(item.status == "blocked" and item.authority_refs == [] for item in conflict.views)
     assert all(item.blockers[0].code == "PRICE_SHARED_RESOURCE_REVISION_CONFLICT" for item in conflict.views)
+
+
+def test_remedy_scenario_is_additive_v2_while_legacy_service_stays_v1() -> None:
+    legacy = EcommerceWorkshopPriceGovernance(clock=lambda: datetime(2026, 8, 24, tzinfo=UTC)).read(org_id="org-org", project_id="dev-project")
+    enhanced = EcommerceWorkshopPriceGovernance(remedy_scenario=EcommerceWorkshopRemedyScenario(), clock=lambda: datetime(2026, 8, 24, tzinfo=UTC)).read(org_id="org-org", project_id="dev-project")
+    assert legacy.schema_version == "aos.ecommerce-workshop.price-governance-view/v1" and legacy.remedy_scenario is None
+    assert enhanced.schema_version == "aos.ecommerce-workshop.price-governance-view/v2"
+    assert enhanced.remedy_scenario is not None
+    assert enhanced.remedy_scenario.blockers[0].code == "PRICE_CASE_EXACT_ROOT_REQUIRED"

@@ -111,6 +111,7 @@ from aos_api.ecommerce_workshop_media_studio_contracts import (
     WorkshopMediaStudioViewEnvelope,
 )
 from aos_api.ecommerce_workshop_price_governance import EcommerceWorkshopPriceGovernance
+from aos_api.ecommerce_workshop_remedy_scenario import EcommerceWorkshopRemedyScenario
 from aos_api.ecommerce_workshop_price_governance_contracts import WorkshopPriceGovernanceViewEnvelope
 from aos_api.ecommerce_workshop_price_research import (
     CreatePriceMatchObservationRequest,
@@ -404,7 +405,7 @@ def get_ecommerce_workshop_analyst() -> EcommerceWorkshopAnalyst:
 
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_price_governance() -> EcommerceWorkshopPriceGovernance:
-    return EcommerceWorkshopPriceGovernance()
+    return EcommerceWorkshopPriceGovernance(remedy_scenario=EcommerceWorkshopRemedyScenario())
 
 
 @lru_cache(maxsize=1)

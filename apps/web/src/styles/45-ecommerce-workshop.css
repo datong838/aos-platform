@@ -888,6 +888,25 @@
 .price-disposition-grid article.is-module_handoff { border-left-color: var(--aos-amber); }
 .price-disposition-grid article strong { font-size: 20px; }
 .price-disposition-grid article small, .price-disposition-card > footer { color: var(--aos-text-secondary); font-size: 11px; }
+.remedy-scenario-card { display: grid; gap: 12px; min-width: 0; padding: 16px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-cyan, #0891b2); background: linear-gradient(135deg, color-mix(in srgb, var(--aos-cyan, #0891b2) 6%, var(--aos-surface)), var(--aos-surface) 65%); }
+.remedy-scenario-card > header, .remedy-scenario-card > footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; }
+.remedy-scenario-card > header span, .remedy-scenario-card small { color: var(--aos-text-tertiary); font-size: 11px; overflow-wrap: anywhere; }
+.remedy-scenario-card > header h3 { margin: 4px 0 0; }
+.remedy-scenario-card > header > strong { color: var(--aos-red); font-size: 12px; }
+.remedy-scenario-binding { display: grid; gap: 4px; padding: 11px 12px; border: 1px dashed var(--aos-border); background: color-mix(in srgb, var(--aos-cyan, #0891b2) 4%, var(--aos-surface)); }
+.remedy-scenario-binding > span { color: var(--aos-cyan, #0891b2); font-size: 11px; font-weight: 700; }
+.remedy-scenario-stages { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; }
+.remedy-scenario-stages article { display: grid; gap: 5px; min-width: 0; padding: 10px 8px; border: 1px solid var(--aos-border); border-top: 3px solid var(--aos-red); background: var(--aos-surface); }
+.remedy-scenario-stages article.is-ready { border-top-color: var(--aos-green); }
+.remedy-scenario-stages article > span { color: var(--aos-text-tertiary); font: 700 10px/1 ui-monospace, monospace; }
+.remedy-scenario-stages article > strong { font-size: 12px; }
+.remedy-scenario-ledger { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.remedy-scenario-ledger > div { display: grid; gap: 4px; padding: 10px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.remedy-scenario-ledger span { color: var(--aos-text-tertiary); font-size: 11px; }
+.remedy-scenario-axes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
+.remedy-scenario-axes article { display: grid; gap: 4px; min-width: 0; padding: 10px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-red); background: var(--aos-surface); }
+.remedy-scenario-axes article.is-ready { border-left-color: var(--aos-green); }
+.remedy-scenario-axes article > span, .remedy-scenario-card > footer { color: var(--aos-text-secondary); font-size: 11px; }
 .price-governance-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
 .price-governance-tabs button { display: grid; gap: 4px; min-width: 0; cursor: pointer; border: 1px solid var(--aos-border); padding: 11px; background: var(--aos-surface); color: var(--aos-text); text-align: left; }
 .price-governance-tabs button span { color: var(--aos-text-tertiary); font-size: 11px; }
@@ -1033,6 +1052,8 @@
   .analyst-readiness-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .price-governance-readiness { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .price-disposition-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .remedy-scenario-stages { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .remedy-scenario-axes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .customer-readiness { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .customer-contribution-flow { grid-template-columns: 1fr; }
 }
@@ -1094,6 +1115,9 @@
   .price-governance-tabs,
   .price-governance-readiness,
   .price-disposition-grid { grid-template-columns: 1fr; }
+  .remedy-scenario-stages,
+  .remedy-scenario-ledger,
+  .remedy-scenario-axes { grid-template-columns: 1fr; }
   .customer-hero { flex-direction: column; }
   .customer-tabs,
   .customer-readiness,
