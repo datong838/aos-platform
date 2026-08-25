@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "aos.workshop.browser-evidence/v1",
+  "taskId": "W8-06",
+  "capturedAt": "2026-08-26T05:48:00Z",
+  "target": "pure-local GET-only TaskCockpit fixture",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "note": "display fixture only; no business API or data mutation"
+  },
+  "desktop": {
+    "viewport": [1440, 1000],
+    "bodyScrollWidth": 1434,
+    "stageCount": 7,
+    "outcomeAxisCount": 5,
+    "preparationDecisionCount": 4,
+    "visibleButtons": ["重新读取"],
+    "commandButtonCount": 0,
+    "consoleWarningsOrErrors": 0,
+    "screenshot": ".evidence/workshop/2026-08-26-w8-06-browser/batch-scenario-desktop.png",
+    "screenshotSha256": "155829c9d3871d8bfc70b75702c266cc9a556e9be1da8806a59b3196c33a5f7f"
+  },
+  "narrow": {
+    "viewport": [720, 900],
+    "bodyScrollWidth": 714,
+    "rootScrollWidth": 714,
+    "stageGridColumns": 1,
+    "outcomeAxisGridColumns": 1,
+    "visibleButtonCount": 1,
+    "commandButtonCount": 0,
+    "screenshot": ".evidence/workshop/2026-08-26-w8-06-browser/batch-scenario-narrow.png",
+    "screenshotSha256": "165a946026c19fc5901d3cecc67320c8f31d941918622d106016593148144ecc"
+  },
+  "assertions": {
+    "fourLayerCompositionVisible": true,
+    "partialUnknownReconciledSeparated": true,
+    "ledgerConserved": true,
+    "automaticRetryAllowed": false,
+    "externalEffectsAllowed": false,
+    "releaseAllowed": false
+  }
+}
