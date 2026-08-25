@@ -1,0 +1,53 @@
+{
+  "taskId": "workshop-w6-08-customer-start-frequency-revocation-contact-20260825",
+  "wave": "W6-08",
+  "baseAuthority": "AOS-000251",
+  "baseCommit": "c85501c2",
+  "branch": "m1",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "implemented": [
+    "frequency policy and cross-batch tenant-scoped reservation authority with serializable rolling-window CAS",
+    "timezone-aware quiet-hours and maximum-contact failure closure",
+    "consent withdrawal sequence race and skipped-withdrawn item state",
+    "governance-prepared explicit start with frozen batch/item hash and exact authority bindings",
+    "nonredeemable opaque permit plus durable attempt/outbox intent with zero protected-contact and provider access",
+    "append-only dispatch observation, partial/unknown/disputed conservation and manual-reconcile boundary",
+    "atomic Skill to ecommerce-customer-relationship Logic to private-domain-manager contribution view"
+  ],
+  "verification": {
+    "w608BackendTargeted": "11 passed",
+    "w6CumulativeBackend": "65 passed",
+    "apiAndOpenApi": "19 passed; deterministic OpenAPI check passed",
+    "openApiInventory": "2634 paths / 2292 schemas / 4413 route rows / 4403 unique operations",
+    "frontendTargeted": "10 passed; TypeScript noEmit passed",
+    "frontendCumulative": "230 files / 2125 tests passed",
+    "frontendProductionBuild": "passed",
+    "diffCheck": "passed",
+    "browser": {
+      "surface": "Codex in-app Browser",
+      "url": "http://127.0.0.1:5174/workshop/customer",
+      "atomicSkillCount": 8,
+      "logicVisible": true,
+      "primaryColleagueVisible": true,
+      "governedStartVisible": true,
+      "tenantVisible": true,
+      "prohibitedContactActionButtons": 0,
+      "protectedContactFieldVisible": false,
+      "consoleErrors": 0
+    }
+  },
+  "safetyCounters": {
+    "permitRedemption": 0,
+    "contactResolution": 0,
+    "providerDispatch": 0,
+    "providerCall": 0,
+    "send": 0,
+    "externalEffect": 0,
+    "migrationApply": 0,
+    "release": 0
+  },
+  "operationalBoundary": "CODE_CONTRACT_BROWSER_GREEN_GOVERNANCE_PREPARED_NO_PERMIT_REDEEM_NO_CONTACT_RESOLUTION_NO_PROVIDER_DISPATCH_NO_SEND_NO_EXTERNAL_EFFECT_NO_MIGRATION_APPLY_NO_RELEASE"
+}

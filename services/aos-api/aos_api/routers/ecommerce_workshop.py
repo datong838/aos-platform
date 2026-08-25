@@ -157,6 +157,21 @@ from aos_api.ecommerce_workshop_customer_lifecycle import (
     PrepareCustomerDialogueBatchRequest,
 )
 from aos_api.ecommerce_workshop_customer_lifecycle_store import EcommerceWorkshopCustomerLifecycleStore
+from aos_api.ecommerce_workshop_customer_contact import (
+    CreateCustomerFrequencyPolicyRequest,
+    CustomerBatchStartDecisionRevision,
+    CustomerConsentWithdrawalObservation,
+    CustomerContactBlocked,
+    CustomerContactConflict,
+    CustomerContactContributionView,
+    CustomerDispatchObservation,
+    CustomerFrequencyPolicyRevision,
+    EcommerceWorkshopCustomerContactService,
+    RecordCustomerConsentWithdrawalRequest,
+    RecordCustomerDispatchObservationRequest,
+    StartCustomerDialogueBatchRequest,
+)
+from aos_api.ecommerce_workshop_customer_contact_store import EcommerceWorkshopCustomerContactStore
 from aos_api.ecommerce_workshop_shared_context import EcommerceWorkshopSharedContext
 from aos_api.ecommerce_workshop_shared_context_contracts import WorkshopSharedContextEnvelope
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
@@ -355,6 +370,13 @@ def get_ecommerce_workshop_customer_lifecycle() -> EcommerceWorkshopCustomerLife
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_customer_contact() -> EcommerceWorkshopCustomerContactService:
+    return EcommerceWorkshopCustomerContactService(
+        EcommerceWorkshopCustomerContactStore(), EcommerceWorkshopCustomerLifecycleStore()
+    )
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_shared_context() -> EcommerceWorkshopSharedContext:
     return EcommerceWorkshopSharedContext()
 
@@ -450,6 +472,10 @@ CustomerDependency = Annotated[
 CustomerLifecycleDependency = Annotated[
     EcommerceWorkshopCustomerLifecycleService,
     Depends(get_ecommerce_workshop_customer_lifecycle),
+]
+CustomerContactDependency = Annotated[
+    EcommerceWorkshopCustomerContactService,
+    Depends(get_ecommerce_workshop_customer_contact),
 ]
 SharedContextDependency = Annotated[
     EcommerceWorkshopSharedContext,
@@ -550,6 +576,14 @@ def _map_customer_lifecycle_error(exc: CustomerLifecycleBlocked) -> ApiError:
         code=exc.code,
         message=str(exc),
         status_code=409 if isinstance(exc, CustomerLifecycleConflict) else 422,
+    )
+
+
+def _map_customer_contact_error(exc: CustomerContactBlocked) -> ApiError:
+    return ApiError(
+        code=exc.code,
+        message=str(exc),
+        status_code=409 if isinstance(exc, CustomerContactConflict) else 422,
     )
 
 
@@ -1652,6 +1686,112 @@ def get_customer_lifecycle_contribution_view(
     catalog: CatalogDependency,
     service: CustomerLifecycleDependency,
 ) -> CustomerLifecycleContributionView:
+    _reject_query_parameters(request)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+
+
+@router.post(
+    "/customer/frequency-policies",
+    response_model=CustomerFrequencyPolicyRevision,
+    operation_id="ecommerceWorkshopCustomerFrequencyPolicyCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_customer_frequency_policy(
+    body: CreateCustomerFrequencyPolicyRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerContactDependency,
+) -> CustomerFrequencyPolicyRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    try:
+        return service.create_frequency_policy(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except CustomerContactBlocked as exc:
+        raise _map_customer_contact_error(exc) from exc
+
+
+@router.post(
+    "/customer/consent-withdrawals",
+    response_model=CustomerConsentWithdrawalObservation,
+    operation_id="ecommerceWorkshopCustomerConsentWithdrawalRecord",
+    status_code=201,
+    responses=_ERRORS,
+)
+def record_customer_consent_withdrawal(
+    body: RecordCustomerConsentWithdrawalRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerContactDependency,
+) -> CustomerConsentWithdrawalObservation:
+    _prepare_idempotency(idempotency_key)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    try:
+        return service.record_withdrawal(TenantScope(principal.org_id, principal.project_id), body)
+    except CustomerContactBlocked as exc:
+        raise _map_customer_contact_error(exc) from exc
+
+
+@router.post(
+    "/customer/dialogue-batches/{batch_id}/start-governance",
+    response_model=CustomerBatchStartDecisionRevision,
+    operation_id="ecommerceWorkshopCustomerDialogueBatchStartGovernance",
+    status_code=201,
+    responses=_ERRORS,
+)
+def start_customer_dialogue_batch_governance(
+    batch_id: Annotated[str, Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$")],
+    body: StartCustomerDialogueBatchRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerContactDependency,
+) -> CustomerBatchStartDecisionRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    try:
+        return service.start_batch(TenantScope(principal.org_id, principal.project_id), batch_id, body, principal.subject)
+    except CustomerContactBlocked as exc:
+        raise _map_customer_contact_error(exc) from exc
+
+
+@router.post(
+    "/customer/dispatch-observations",
+    response_model=CustomerDispatchObservation,
+    operation_id="ecommerceWorkshopCustomerDispatchObservationRecord",
+    status_code=201,
+    responses=_ERRORS,
+)
+def record_customer_dispatch_observation(
+    body: RecordCustomerDispatchObservationRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerContactDependency,
+) -> CustomerDispatchObservation:
+    _prepare_idempotency(idempotency_key)
+    _require_customer_installation(principal=principal, catalog=catalog)
+    try:
+        return service.record_dispatch_observation(TenantScope(principal.org_id, principal.project_id), body)
+    except CustomerContactBlocked as exc:
+        raise _map_customer_contact_error(exc) from exc
+
+
+@router.get(
+    "/views/customer/contact-contributions",
+    response_model=CustomerContactContributionView,
+    operation_id="ecommerceWorkshopCustomerContactContributionViewGet",
+    responses=_ERRORS,
+)
+def get_customer_contact_contribution_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CustomerContactDependency,
+) -> CustomerContactContributionView:
     _reject_query_parameters(request)
     _require_customer_installation(principal=principal, catalog=catalog)
     return service.contribution_view(TenantScope(principal.org_id, principal.project_id))

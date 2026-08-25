@@ -915,6 +915,17 @@
 .customer-contribution-empty p { margin: 8px 0 0; color: var(--aos-text-secondary); font-size: 11px; }
 .customer-contribution aside { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
 .customer-contribution aside > span { color: var(--aos-red); font-size: 11px; }
+.customer-contact-governance { display: grid; gap: 12px; padding: 15px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-amber); background: var(--aos-surface); }
+.customer-contact-governance > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.customer-contact-governance > header span { color: var(--aos-amber); font-size: 11px; font-weight: 700; }
+.customer-contact-governance > header h2 { margin: 3px 0 0; font-size: 17px; }
+.customer-contact-governance > header > strong { white-space: nowrap; color: var(--aos-amber); }
+.customer-contact-ledger { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+.customer-contact-ledger article { display: grid; gap: 4px; min-width: 0; padding: 9px; border: 1px solid var(--aos-border); background: var(--aos-surface-hover); }
+.customer-contact-ledger span { overflow-wrap: anywhere; color: var(--aos-text-tertiary); font-size: 9px; }
+.customer-contact-governance aside { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.customer-contact-governance aside > span { color: var(--aos-red); font-size: 11px; }
+.customer-contact-governance aside code { overflow-wrap: anywhere; border: 1px solid var(--aos-border); border-radius: 3px; padding: 3px 6px; background: var(--aos-surface-hover); color: var(--aos-text-secondary); font-size: 10px; }
 .customer-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
 .customer-tabs button { display: grid; gap: 4px; min-width: 0; cursor: pointer; border: 1px solid var(--aos-border); padding: 11px; background: var(--aos-surface); color: var(--aos-text); text-align: left; }
 .customer-tabs button span { color: var(--aos-text-tertiary); font-size: 11px; }
@@ -1036,5 +1047,6 @@
   .customer-tabs,
   .customer-readiness,
   .customer-contribution-counts,
+  .customer-contact-ledger,
   .customer-batch-evidence > div { grid-template-columns: 1fr; }
 }
