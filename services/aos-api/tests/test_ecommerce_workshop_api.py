@@ -409,6 +409,30 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/views/price-governance/contributions",
             "get",
         ),
+        "ecommerceWorkshopPriceCaseCreate": (
+            "/v1/ecommerce-workshop/price-governance/cases",
+            "post",
+        ),
+        "ecommerceWorkshopPriceDispositionContractCreate": (
+            "/v1/ecommerce-workshop/price-governance/disposition-contracts",
+            "post",
+        ),
+        "ecommerceWorkshopPriceDispositionPrepare": (
+            "/v1/ecommerce-workshop/price-governance/dispositions/prepare",
+            "post",
+        ),
+        "ecommerceWorkshopPriceDispositionFreeze": (
+            "/v1/ecommerce-workshop/price-governance/dispositions/{disposition_id}/freeze",
+            "post",
+        ),
+        "ecommerceWorkshopPriceDispositionObservationRecord": (
+            "/v1/ecommerce-workshop/price-governance/disposition-observations",
+            "post",
+        ),
+        "ecommerceWorkshopPriceDispositionContributionViewGet": (
+            "/v1/ecommerce-workshop/views/price-governance/dispositions",
+            "get",
+        ),
         "ecommerceWorkshopCustomerViewGet": (
             "/v1/ecommerce-workshop/views/customer",
             "get",

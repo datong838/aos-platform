@@ -121,6 +121,22 @@ from aos_api.ecommerce_workshop_price_research import (
     ProductMatchObservation,
 )
 from aos_api.ecommerce_workshop_price_research_store import EcommerceWorkshopPriceResearchStore
+from aos_api.ecommerce_workshop_price_disposition import (
+    CreatePriceCaseRequest,
+    CreatePriceDispositionContractRequest,
+    EcommerceWorkshopPriceDispositionService,
+    FreezePriceDispositionRequest,
+    PreparePriceDispositionRequest,
+    PriceCaseRevision,
+    PriceDispositionBlocked,
+    PriceDispositionConflict,
+    PriceDispositionContractRevision,
+    PriceDispositionContributionView,
+    PriceDispositionObservation,
+    PriceDispositionRevision,
+    RecordPriceDispositionObservationRequest,
+)
+from aos_api.ecommerce_workshop_price_disposition_store import EcommerceWorkshopPriceDispositionStore
 from aos_api.ecommerce_workshop_customer import EcommerceWorkshopCustomer
 from aos_api.ecommerce_workshop_customer_contracts import WorkshopCustomerViewEnvelope
 from aos_api.ecommerce_workshop_shared_context import EcommerceWorkshopSharedContext
@@ -289,6 +305,13 @@ def get_ecommerce_workshop_price_research() -> EcommerceWorkshopPriceResearchSer
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_price_disposition() -> EcommerceWorkshopPriceDispositionService:
+    return EcommerceWorkshopPriceDispositionService(
+        EcommerceWorkshopPriceDispositionStore(), EcommerceWorkshopPriceResearchStore()
+    )
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_media_studio() -> EcommerceWorkshopMediaStudio:
     return EcommerceWorkshopMediaStudio()
 
@@ -393,6 +416,10 @@ PriceResearchDependency = Annotated[
     EcommerceWorkshopPriceResearchService,
     Depends(get_ecommerce_workshop_price_research),
 ]
+PriceDispositionDependency = Annotated[
+    EcommerceWorkshopPriceDispositionService,
+    Depends(get_ecommerce_workshop_price_disposition),
+]
 CustomerDependency = Annotated[
     EcommerceWorkshopCustomer,
     Depends(get_ecommerce_workshop_customer),
@@ -480,6 +507,14 @@ def _map_price_research_error(exc: PriceResearchBlocked) -> ApiError:
         code=exc.code,
         message=str(exc),
         status_code=409 if isinstance(exc, PriceResearchConflict) else 422,
+    )
+
+
+def _map_price_disposition_error(exc: PriceDispositionBlocked) -> ApiError:
+    return ApiError(
+        code=exc.code,
+        message=str(exc),
+        status_code=409 if isinstance(exc, PriceDispositionConflict) else 422,
     )
 
 
@@ -1289,6 +1324,133 @@ def get_price_research_contribution_view(
     catalog: CatalogDependency,
     service: PriceResearchDependency,
 ) -> PriceResearchContributionView:
+    _reject_query_parameters(request)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+
+
+@router.post(
+    "/price-governance/cases",
+    response_model=PriceCaseRevision,
+    operation_id="ecommerceWorkshopPriceCaseCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_price_case(
+    body: CreatePriceCaseRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceDispositionDependency,
+) -> PriceCaseRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.create_case(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except PriceDispositionBlocked as exc:
+        raise _map_price_disposition_error(exc) from exc
+
+
+@router.post(
+    "/price-governance/disposition-contracts",
+    response_model=PriceDispositionContractRevision,
+    operation_id="ecommerceWorkshopPriceDispositionContractCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_price_disposition_contract(
+    body: CreatePriceDispositionContractRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceDispositionDependency,
+) -> PriceDispositionContractRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.create_contract(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except PriceDispositionBlocked as exc:
+        raise _map_price_disposition_error(exc) from exc
+
+
+@router.post(
+    "/price-governance/dispositions/prepare",
+    response_model=PriceDispositionRevision,
+    operation_id="ecommerceWorkshopPriceDispositionPrepare",
+    status_code=201,
+    responses=_ERRORS,
+)
+def prepare_price_disposition(
+    body: PreparePriceDispositionRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceDispositionDependency,
+) -> PriceDispositionRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.prepare(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except PriceDispositionBlocked as exc:
+        raise _map_price_disposition_error(exc) from exc
+
+
+@router.post(
+    "/price-governance/dispositions/{disposition_id}/freeze",
+    response_model=PriceDispositionRevision,
+    operation_id="ecommerceWorkshopPriceDispositionFreeze",
+    responses=_ERRORS,
+)
+def freeze_price_disposition(
+    disposition_id: Annotated[str, Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$")],
+    body: FreezePriceDispositionRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceDispositionDependency,
+) -> PriceDispositionRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.freeze(TenantScope(principal.org_id, principal.project_id), disposition_id, body, principal.subject)
+    except PriceDispositionBlocked as exc:
+        raise _map_price_disposition_error(exc) from exc
+
+
+@router.post(
+    "/price-governance/disposition-observations",
+    response_model=PriceDispositionObservation,
+    operation_id="ecommerceWorkshopPriceDispositionObservationRecord",
+    status_code=201,
+    responses=_ERRORS,
+)
+def record_price_disposition_observation(
+    body: RecordPriceDispositionObservationRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceDispositionDependency,
+) -> PriceDispositionObservation:
+    _prepare_idempotency(idempotency_key)
+    _require_price_governance_installation(principal=principal, catalog=catalog)
+    try:
+        return service.record_observation(TenantScope(principal.org_id, principal.project_id), body)
+    except PriceDispositionBlocked as exc:
+        raise _map_price_disposition_error(exc) from exc
+
+
+@router.get(
+    "/views/price-governance/dispositions",
+    response_model=PriceDispositionContributionView,
+    operation_id="ecommerceWorkshopPriceDispositionContributionViewGet",
+    responses=_ERRORS,
+)
+def get_price_disposition_contribution_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: PriceDispositionDependency,
+) -> PriceDispositionContributionView:
     _reject_query_parameters(request)
     _require_price_governance_installation(principal=principal, catalog=catalog)
     return service.contribution_view(TenantScope(principal.org_id, principal.project_id))

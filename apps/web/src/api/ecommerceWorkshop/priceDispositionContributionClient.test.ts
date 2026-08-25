@@ -1,0 +1,11 @@
+import { describe, expect, it } from "vitest";
+
+import { EcommerceWorkshopClient } from "./client";
+import { parsePriceDispositionContributionView } from "./parser";
+
+const blocked = { schemaVersion: "aos.ecommerce-workshop.price-disposition/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-25T08:00:00Z", atomicSkillIds: ["compile-price-case", "prepare-price-advice", "prepare-price-notice", "prepare-price-handoff", "evaluate-reprice-specialized-gate"], logicId: "ecommerce-price-governance", primaryColleague: "数据参谋", collaboratorColleagues: ["活动策划师", "导购顾问"], caseCount: 0, dispositionCounts: { internal_advice: 0, external_notice: 0, module_handoff: 0, repricing: 0 }, latestDisposition: null, latestObservation: null, blockers: ["PRICE_CASE_NOT_AVAILABLE", "PRICE_DISPOSITION_NOT_AVAILABLE", "PRICE_NOTICE_OPERATIONAL_AUTHORITY_NOT_GRANTED", "PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED"], allowedCommands: ["COMPILE_PRICE_CASE", "CREATE_PRICE_DISPOSITION_CONTRACT", "PREPARE_PRICE_DISPOSITION", "FREEZE_PRICE_DISPOSITION", "RECORD_PRICE_DISPOSITION_OBSERVATION"], repricingEnabled: false, externalEffectsAllowed: false };
+
+describe("price disposition contribution client", () => {
+  it("只读取贡献视图且保留四类分门", async () => { const calls: string[] = []; const client = new EcommerceWorkshopClient({ fetch: async (input) => { calls.push(String(input)); return new Response(JSON.stringify(blocked), { status: 200, headers: { "Content-Type": "application/json" } }); }, getBaseUrl: () => "http://example.test", getAuthHeaders: () => ({}) }); const result = await client.getPriceDispositionContributionView(); expect(result.dispositionCounts).toEqual({ internal_advice: 0, external_notice: 0, module_handoff: 0, repricing: 0 }); expect(calls[0]).toContain("/v1/ecommerce-workshop/views/price-governance/dispositions"); });
+  it("拒绝伪开启调价、外部效果与错误 Skill 顺序", () => { expect(() => parsePriceDispositionContributionView({ ...blocked, repricingEnabled: true })).toThrow(); expect(() => parsePriceDispositionContributionView({ ...blocked, externalEffectsAllowed: true })).toThrow(); expect(() => parsePriceDispositionContributionView({ ...blocked, atomicSkillIds: [...blocked.atomicSkillIds].reverse() })).toThrow(); });
+});

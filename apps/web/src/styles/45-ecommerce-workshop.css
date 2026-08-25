@@ -839,6 +839,17 @@
 .price-governance-hero h2 { margin: 5px 0; font-size: 20px; }
 .price-governance-hero p { margin: 0; color: var(--aos-text-secondary); }
 .price-governance-hero > strong { white-space: nowrap; border: 1px solid var(--aos-amber); border-radius: 999px; padding: 5px 11px; color: var(--aos-amber); }
+.price-disposition-card { display: grid; gap: 12px; min-width: 0; padding: 16px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-indigo-600, #4f46e5); background: linear-gradient(135deg, color-mix(in srgb, var(--aos-indigo-600, #4f46e5) 6%, var(--aos-surface)), var(--aos-surface) 60%); }
+.price-disposition-card > header, .price-disposition-card > footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; }
+.price-disposition-card > header span, .price-disposition-card > small { color: var(--aos-text-tertiary); font-size: 11px; overflow-wrap: anywhere; }
+.price-disposition-card > header h3, .price-disposition-card > p { margin: 4px 0 0; }
+.price-disposition-card > header > strong { color: var(--aos-indigo-600, #4f46e5); font-size: 12px; }
+.price-disposition-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.price-disposition-grid article { display: grid; gap: 5px; min-width: 0; padding: 12px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-green, #16a34a); background: var(--aos-surface); }
+.price-disposition-grid article.is-external_notice, .price-disposition-grid article.is-repricing { border-left-color: var(--aos-red); }
+.price-disposition-grid article.is-module_handoff { border-left-color: var(--aos-amber); }
+.price-disposition-grid article strong { font-size: 20px; }
+.price-disposition-grid article small, .price-disposition-card > footer { color: var(--aos-text-secondary); font-size: 11px; }
 .price-governance-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
 .price-governance-tabs button { display: grid; gap: 4px; min-width: 0; cursor: pointer; border: 1px solid var(--aos-border); padding: 11px; background: var(--aos-surface); color: var(--aos-text); text-align: left; }
 .price-governance-tabs button span { color: var(--aos-text-tertiary); font-size: 11px; }
@@ -932,6 +943,7 @@
   .analyst-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .analyst-readiness-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .price-governance-readiness { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .price-disposition-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .customer-readiness { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
@@ -989,7 +1001,8 @@
   .analyst-tabs { grid-template-columns: 1fr; }
   .price-governance-hero { flex-direction: column; }
   .price-governance-tabs,
-  .price-governance-readiness { grid-template-columns: 1fr; }
+  .price-governance-readiness,
+  .price-disposition-grid { grid-template-columns: 1fr; }
   .customer-hero { flex-direction: column; }
   .customer-tabs,
   .customer-readiness { grid-template-columns: 1fr; }

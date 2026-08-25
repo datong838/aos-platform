@@ -4,11 +4,11 @@ from alembic.config import Config
 from alembic.script import ScriptDirectory
 
 
-def test_w6_005_price_research_is_append_only_rls_and_chained_to_w6_006():
+def test_w6_006_price_disposition_is_append_only_rls_and_single_head():
     root = Path(__file__).parents[2]
-    text = (root / "alembic/versions/w6_005_price_research.py").read_text()
-    assert 'revision: str = "w6_005"' in text
-    assert 'down_revision: str | Sequence[str] | None = "w6_004"' in text
+    text = (root / "alembic/versions/w6_006_price_disposition.py").read_text()
+    assert 'revision: str = "w6_006"' in text
+    assert 'down_revision: str | Sequence[str] | None = "w6_005"' in text
     assert text.count("ENABLE ROW LEVEL SECURITY") == 1
     assert "FORCE ROW LEVEL SECURITY" in text
     assert "GRANT SELECT, INSERT" in text

@@ -1,0 +1,64 @@
+{
+  "taskId": "workshop-w6-06-price-notice-recommendation-reprice-20260825",
+  "capturedAt": "2026-08-25T07:31:48Z",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "route": "http://127.0.0.1:5173/workshop/price-governance",
+  "result": "CODE_CONTRACT_BROWSER_GREEN_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "composition": {
+    "atomicSkillIds": [
+      "compile-price-case",
+      "prepare-price-advice",
+      "prepare-price-notice",
+      "prepare-price-handoff",
+      "evaluate-reprice-specialized-gate"
+    ],
+    "logicId": "ecommerce-price-governance",
+    "primaryColleague": "数据参谋",
+    "collaboratorColleagues": ["活动策划师", "导购顾问"]
+  },
+  "browser": {
+    "dispositionCards": 4,
+    "competitorTabSelected": true,
+    "actionButtonCount": 0,
+    "consoleErrorCount": 0,
+    "visibleAssertions": [
+      "内部建议",
+      "外部通知",
+      "模块交接",
+      "专业门关闭 · executionAllowed=false",
+      "通知发送：0",
+      "调价：0",
+      "外部效果：0"
+    ]
+  },
+  "tests": {
+    "backendTargeted": "23 passed",
+    "apiAndOpenApi": "14 passed; deterministic OpenAPI check passed",
+    "frontendTargeted": "9 passed",
+    "frontendCumulative": "228 files, 2118 tests passed",
+    "frontendBuild": "343 modules transformed"
+  },
+  "openApi": {
+    "paths": 2622,
+    "schemas": 2260,
+    "routeRows": 4401,
+    "uniqueOperations": 4391
+  },
+  "hardBoundaries": {
+    "providerCalls": 0,
+    "notificationSends": 0,
+    "repricing": 0,
+    "externalEffects": 0,
+    "migrationApplied": false,
+    "released": false
+  },
+  "retainedBlockers": [
+    "PRICE_DISPOSITION_GATE_AUTHORITY_RESOLVER_UNAVAILABLE",
+    "PRICE_NOTICE_OPERATIONAL_AUTHORITY_NOT_GRANTED",
+    "PRICE_REPRICE_OPERATIONAL_AUTHORITY_NOT_GRANTED",
+    "P01/SourceReadiness not operational GREEN"
+  ]
+}
