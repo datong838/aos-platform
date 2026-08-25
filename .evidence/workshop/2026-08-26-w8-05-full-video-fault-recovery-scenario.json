@@ -1,0 +1,67 @@
+{
+  "schema": "aos-workshop-evidence-pack/v1",
+  "taskId": "workshop-w8-05-full-video-fault-recovery-scenario-20260826",
+  "baseRevision": "AOS-000274",
+  "sourceCommit": "604ca9b47373e008491b7576658649a8e477299c",
+  "recordedAt": "2026-08-26T05:17:37+08:00",
+  "result": "W8_05_FULL_VIDEO_RECOVERY_EXACT_BINDING_CODE_CONTRACT_BROWSER_GREEN_SECURITY_SCOPED_GREEN_OPERATIONAL_FAIL_CLOSED_NO_RELEASE",
+  "contract": {
+    "method": "GET",
+    "path": "/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+    "exactRoots": [
+      "MediaProductionBriefRevision",
+      "TaskRun"
+    ],
+    "productionStages": 7,
+    "professionalResponsibilities": 8,
+    "faultRecoveryAxes": 9,
+    "atomicSkills": 2,
+    "logicBindings": 1,
+    "roleBindings": 1,
+    "commands": {
+      "prepare": false,
+      "start": false,
+      "resume": false,
+      "takeover": false,
+      "cancel": false,
+      "reconcile": false,
+      "publish": false,
+      "settle": false
+    },
+    "automaticRetryAllowed": false,
+    "externalEffectsAllowed": false,
+    "releaseAllowed": false
+  },
+  "verification": {
+    "backendTargeted": "10 passed, 7 warnings",
+    "backendCumulative": "209 passed, 7 warnings",
+    "frontendTargeted": "2 files, 11 tests passed",
+    "frontendCumulative": "240 files, 2177 tests passed",
+    "typescriptAndBuild": "GREEN, 344 modules",
+    "openapi": "2669 paths, 2442 schemas; 4446 unique operations and 4456 exporter rows",
+    "securityScannerUnit": "9 passed",
+    "scopedSecurity": "14 files, critical=0, warning=0",
+    "browserDesktop": "built-in browser at 1440x1000; 7 stages, 8 responsibilities, 9 fault axes and 8 non-executable commands; 4 visible buttons are reload plus three read-only tabs; console errors/warnings=0",
+    "browserResponsive": "built-in browser at 720x900; bodyScrollWidth=714 <= innerWidth=720; stage, responsibility and fault grids each collapse to one column",
+    "browserInteraction": "switching to responsibility tab preserves the scenario and leaves the visible button count at 4"
+  },
+  "screenshots": [
+    {
+      "path": ".evidence/workshop/2026-08-26-w8-05-browser/full-video-scenario-viewport.jpg",
+      "sha256": "100bd326fbc02a3458c564a821969455d795fdc9b4ac174e1283015404822e3d"
+    },
+    {
+      "path": ".evidence/workshop/2026-08-26-w8-05-browser/full-video-fault-command-viewport.jpg",
+      "sha256": "814a157a38c8c35638a40fa2cbc635b2f0d5c2d0bd39f8c51d2c59927cb5ceb0"
+    }
+  ],
+  "boundaries": [
+    "NO_SHARED_MIGRATION_APPLY",
+    "NO_REAL_TENANT_BUSINESS_WRITE",
+    "NO_PROVIDER_OR_ACTION_EXECUTION",
+    "NO_AUTOMATIC_RETRY",
+    "NO_PUBLISH_OR_SETTLEMENT",
+    "NO_EXTERNAL_EFFECT",
+    "NO_RELEASE"
+  ]
+}
