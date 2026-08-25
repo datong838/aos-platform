@@ -3252,6 +3252,12 @@
       "module": "aos_api.routers.aip_media_provider_jobs",
       "attribute": "router",
       "order": 541
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_media_finance",
+      "attribute": "router",
+      "order": 542
     }
   ]
 }

@@ -53,6 +53,10 @@ class MediaProviderAdapter(Protocol):
     def reconcile(self, job: MediaProviderJob) -> ProviderOperationResult: ...
 
 
+class MediaFinanceSubmitGuard(Protocol):
+    def require_submit_ready(self, scope: TenantScope, job: MediaProviderJob) -> None: ...
+
+
 ExactRefValidator = Callable[[TenantScope, ExactRevisionRef], bool]
 
 
@@ -70,6 +74,7 @@ class AipMediaProviderJobService:
         binding_validator: ExactRefValidator | None = None,
         license_validator: ExactRefValidator | None = None,
         adapter_validator: ExactRefValidator | None = None,
+        finance_submit_guard: MediaFinanceSubmitGuard | None = None,
     ) -> None:
         self._store = store or AipMediaProviderJobStore()
         self._model_store = model_store or AipModelRuntimeStore()
@@ -81,6 +86,7 @@ class AipMediaProviderJobService:
         self._binding_validator = binding_validator
         self._license_validator = license_validator
         self._adapter_validator = adapter_validator
+        self._finance_submit_guard = finance_submit_guard
 
     def prepare(
         self,
@@ -199,6 +205,8 @@ class AipMediaProviderJobService:
             raise MediaProviderJobDependencyBlocked("MEDIA_PROVIDER_ADAPTER_NOT_REGISTERED")
         job = self._store.get_job(scope, job_id)
         self._assert_operation_allowed(job.status, operation)
+        if operation is ProviderOperation.SUBMIT and self._finance_submit_guard is not None:
+            self._finance_submit_guard.require_submit_ready(scope, job)
         if self._adapter.adapter_ref != job.binding.adapter_ref:
             raise MediaProviderJobDependencyBlocked("MEDIA_PROVIDER_ADAPTER_REF_DRIFTED")
         method_name = "status" if operation is ProviderOperation.STATUS else operation.value
@@ -301,4 +309,4 @@ class AipMediaProviderJobService:
         )
 
 
-__all__ = ["AipMediaProviderJobService", "MediaAssetScanner", "MediaProviderAdapter"]
+__all__ = ["AipMediaProviderJobService", "MediaAssetScanner", "MediaProviderAdapter", "MediaFinanceSubmitGuard"]

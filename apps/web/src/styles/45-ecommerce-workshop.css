@@ -741,6 +741,8 @@
 .content-campaign-footnote { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 10px 14px; border: 1px solid var(--aos-border); background: var(--aos-surface); color: var(--aos-text-secondary); font-size: 12px; }
 .media-studio-page,
 .media-studio-read-model { display: grid; gap: 12px; min-width: 0; }
+.media-studio-read-model .content-campaign-items > header { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+.media-studio-read-model .content-campaign-item > small { display: block; margin-top: 8px; overflow-wrap: anywhere; }
 .media-lifecycle { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--aos-border); background: var(--aos-border); }
 .media-lifecycle span { min-width: 0; padding: 9px 5px; text-align: center; overflow-wrap: anywhere; background: var(--aos-surface); color: var(--aos-text-secondary); font-size: 10px; }
 .media-studio-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }

@@ -7,9 +7,12 @@ from datetime import UTC, datetime
 
 from aos_api.aip_contracts import TenantContext
 from aos_api.ecommerce_workshop_media_studio_contracts import (
+    MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION,
+    MEDIA_STUDIO_SCHEMA_VERSION,
     MediaAxisReadiness,
     MediaBlocker,
     MediaCountLedger,
+    MediaFinanceContribution,
     MediaPageInfo,
     MediaProviderExactRef,
     MediaProviderJobContribution,
@@ -19,6 +22,7 @@ from aos_api.ecommerce_workshop_media_studio_contracts import (
     MediaStudioSliceId,
     WorkshopMediaStudioViewEnvelope,
 )
+from aos_api.aip_media_finance_store import AipMediaFinanceStore, MediaFinanceError
 from aos_api.aip_media_provider_job_store import AipMediaProviderJobStore, MediaProviderJobError
 from aos_api.ecommerce_workshop_media_studio_reader import (
     MediaStudioCanonicalReader,
@@ -34,9 +38,10 @@ Clock = Callable[[], datetime]
 class EcommerceWorkshopMediaStudio:
     """Describe current authority gaps without promoting target state."""
 
-    def __init__(self, *, reader: MediaStudioCanonicalReader | None = None, provider_job_store: AipMediaProviderJobStore | None = None, clock: Clock | None = None) -> None:
+    def __init__(self, *, reader: MediaStudioCanonicalReader | None = None, provider_job_store: AipMediaProviderJobStore | None = None, media_finance_store: AipMediaFinanceStore | None = None, clock: Clock | None = None) -> None:
         self._reader = reader
         self._provider_job_store = provider_job_store
+        self._media_finance_store = media_finance_store
         self._clock = clock or (lambda: datetime.now(UTC))
 
     def read(self, *, org_id: str, project_id: str) -> WorkshopMediaStudioViewEnvelope:
@@ -131,7 +136,42 @@ class EcommerceWorkshopMediaStudio:
                 ]
         except (MediaProviderJobError, ValueError, TypeError):
             provider_jobs = []
+        finance_blockers = [
+            MediaBlocker(
+                code="MEDIA_FINANCE_AUTHORITY_NOT_AVAILABLE",
+                dependency="aip.media-finance",
+                required_action="install w7_006 and read tenant-bound finance authority",
+            )
+        ]
+        media_finance: list[MediaFinanceContribution] = []
+        try:
+            finances = self._media_finance_store.list(scope, limit=100).items if self._media_finance_store is not None else None
+            if finances is not None:
+                finance_blockers = []
+                media_finance = [
+                    MediaFinanceContribution(
+                        financeId=item.finance_id,
+                        jobId=item.job_ref.resource_id,
+                        version=item.version,
+                        attemptBindingHash=item.attempt_binding_hash,
+                        capacityReservationRef=MediaProviderExactRef.model_validate(item.capacity_reservation_ref.model_dump(mode="json", by_alias=True)),
+                        budgetReservationRef=MediaProviderExactRef.model_validate(item.budget_reservation_ref.model_dump(mode="json", by_alias=True)),
+                        projectedMinMinor=item.projected_min_minor,
+                        projectedMaxMinor=item.projected_max_minor,
+                        projectedCurrency=item.projected_currency,
+                        reservationsActive=item.reservations_active,
+                        cancelOutcome=item.cancel_outcome.value if item.cancel_outcome else None,
+                        feeConclusion=item.fee_conclusion.value,
+                        settlementStatus=item.settlement_status.value,
+                        currencyBuckets=item.currency_buckets,
+                        blockerCodes=item.blocker_codes,
+                    )
+                    for item in finances
+                ]
+        except (MediaFinanceError, ValueError, TypeError):
+            media_finance = []
         return WorkshopMediaStudioViewEnvelope(
+            schema_version=MEDIA_STUDIO_SCHEMA_VERSION if self._media_finance_store is not None else MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION,
             tenant=TenantContext(org_id=org_id, project_id=project_id),
             evaluated_at=cutoff,
             data_cutoff=cutoff,
@@ -139,6 +179,9 @@ class EcommerceWorkshopMediaStudio:
             provider_jobs_status="ready" if not provider_blockers else "blocked",
             provider_jobs=provider_jobs,
             provider_job_blockers=provider_blockers,
+            media_finance_status="ready" if not finance_blockers else "blocked",
+            media_finance=media_finance,
+            media_finance_blockers=finance_blockers,
             page=MediaPageInfo(count=sum(len(item.authority_refs) for item in slices)),
         )
 

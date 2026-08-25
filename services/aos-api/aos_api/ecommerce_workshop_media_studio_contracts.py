@@ -12,7 +12,8 @@ from aos_api.aip_contracts import AipContractModel, TenantContext
 
 
 MEDIA_STUDIO_LEGACY_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v1"
-MEDIA_STUDIO_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v2"
+MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v2"
+MEDIA_STUDIO_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v3"
 
 
 class MediaStudioSliceId(StrEnum):
@@ -164,8 +165,37 @@ class MediaProviderJobContribution(AipContractModel):
     external_effects_allowed: Literal[False] = False
 
 
+class MediaFinanceBucketContribution(AipContractModel):
+    currency: str = Field(pattern=r"^[A-Z]{3}$")
+    measured_minor: int = Field(ge=0)
+    estimated_minor: int = Field(ge=0)
+    unknown_count: int = Field(ge=0)
+    adjustment_minor: int
+    refund_minor: int = Field(ge=0)
+    residual_minor: int | None
+
+
+class MediaFinanceContribution(AipContractModel):
+    finance_id: str = Field(min_length=1, max_length=200)
+    job_id: str = Field(min_length=1, max_length=200)
+    version: int = Field(ge=1)
+    attempt_binding_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    capacity_reservation_ref: MediaProviderExactRef
+    budget_reservation_ref: MediaProviderExactRef
+    projected_min_minor: int = Field(ge=0)
+    projected_max_minor: int = Field(ge=0)
+    projected_currency: str = Field(pattern=r"^[A-Z]{3}$")
+    reservations_active: bool
+    cancel_outcome: str | None = Field(default=None, pattern=r"^(requested|accepted|too_late|unknown)$")
+    fee_conclusion: str = Field(pattern=r"^(no_charge|chargeable|unknown)$")
+    settlement_status: str = Field(pattern=r"^(pending|settled|disputed|written_off)$")
+    currency_buckets: list[MediaFinanceBucketContribution] = Field(default_factory=list, max_length=20)
+    blocker_codes: list[str] = Field(default_factory=list, max_length=64)
+    external_effects_allowed: Literal[False] = False
+
+
 class WorkshopMediaStudioViewEnvelope(AipContractModel):
-    schema_version: Literal[MEDIA_STUDIO_SCHEMA_VERSION] = MEDIA_STUDIO_SCHEMA_VERSION
+    schema_version: Literal[MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION, MEDIA_STUDIO_SCHEMA_VERSION] = MEDIA_STUDIO_SCHEMA_VERSION
     tenant: TenantContext
     evaluated_at: datetime
     data_cutoff: datetime
@@ -174,6 +204,9 @@ class WorkshopMediaStudioViewEnvelope(AipContractModel):
     provider_jobs_status: Literal["ready", "blocked"]
     provider_jobs: list[MediaProviderJobContribution] = Field(default_factory=list, max_length=100)
     provider_job_blockers: list[MediaBlocker] = Field(default_factory=list, max_length=20)
+    media_finance_status: Literal["ready", "blocked"] = "blocked"
+    media_finance: list[MediaFinanceContribution] = Field(default_factory=list, max_length=100)
+    media_finance_blockers: list[MediaBlocker] = Field(default_factory=lambda: [MediaBlocker(code="MEDIA_FINANCE_LEGACY_VIEW", dependency="media-studio-v3", requiredAction="refresh canonical v3 projection")], max_length=20)
     page: MediaPageInfo
 
     @field_validator("evaluated_at", "data_cutoff")
@@ -195,6 +228,12 @@ class WorkshopMediaStudioViewEnvelope(AipContractModel):
             raise ValueError("ready provider jobs cannot contain blockers")
         if self.provider_jobs_status == "blocked" and not self.provider_job_blockers:
             raise ValueError("blocked provider jobs require blockers")
+        if self.media_finance_status == "ready" and self.media_finance_blockers:
+            raise ValueError("ready media finance cannot contain blockers")
+        if self.media_finance_status == "blocked" and not self.media_finance_blockers:
+            raise ValueError("blocked media finance requires blockers")
+        if self.schema_version == MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION and self.media_finance:
+            raise ValueError("v2 media view cannot carry v3 finance contributions")
         return self
 
 

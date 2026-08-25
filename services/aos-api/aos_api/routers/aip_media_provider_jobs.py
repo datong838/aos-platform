@@ -11,6 +11,7 @@ from aos_api.aip_media_provider_job_contracts import (
     ProviderOperationResult,
 )
 from aos_api.aip_media_provider_job_service import AipMediaProviderJobService
+from aos_api.aip_media_finance_store import AipMediaFinanceStore, MediaFinanceError
 from aos_api.aip_media_provider_job_store import (
     AipMediaProviderJobStore,
     MediaProviderJobConflict,
@@ -25,7 +26,8 @@ from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/media-provider-jobs", tags=["aip-media-provider-jobs"])
 _STORE = AipMediaProviderJobStore()
-_SERVICE = AipMediaProviderJobService(store=_STORE)
+_FINANCE_STORE = AipMediaFinanceStore()
+_SERVICE = AipMediaProviderJobService(store=_STORE, finance_submit_guard=_FINANCE_STORE)
 _CONTROL_ROLES = frozenset({"admin", "executor", "aip_executor"})
 
 
@@ -74,6 +76,8 @@ def _control(
             _scope(principal), principal.subject, job_id, key,
             expected_sequence=expected_sequence,
         )
+    except MediaFinanceError as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=422) from exc
     except MediaProviderJobError as exc:
         raise _map(exc) from exc
 
