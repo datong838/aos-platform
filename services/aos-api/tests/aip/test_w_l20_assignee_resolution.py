@@ -15,10 +15,31 @@ from aos_api.aip_assignee_resolution_store import (
 )
 from aos_api.aip_production_contracts import AssigneeKind, AssigneeRef
 from aos_api.aip_solution_pack_publisher import SOLUTION_PACK_VERSION
+from aos_api.db import connect
 from aos_api.tenant_scope import TenantScope
 
 SCOPE = TenantScope("org-org", "dev-project")
 NOW = datetime(2026, 8, 20, 7, 0, tzinfo=UTC)
+
+
+def _active_agent(instance_id: str) -> None:
+    with connect() as conn:
+        conn.execute(
+            """INSERT INTO aip_agent_template_revision(
+                 template_id,revision,display_name,role_key,lifecycle,source_ref,
+                 source_license,manifest,content_hash,created_by)
+               VALUES('template-w-l20',1,'W-L20','tester','published','{}',
+                      'internal','{}',%s,'tester') ON CONFLICT DO NOTHING""",
+            ("d" * 64,),
+        )
+        conn.execute(
+            """INSERT INTO aip_agent_instance(
+                 org_id,project_id,instance_id,template_id,template_revision,status,
+                 overlay,version,created_by)
+               VALUES(%s,%s,%s,'template-w-l20',1,'active','{}',1,'tester')""",
+            (*SCOPE.key, instance_id),
+        )
+        conn.commit()
 
 
 def test_publisher_bundle_version_locked_at_1_3_0() -> None:
@@ -45,13 +66,15 @@ def test_tool_binding_missing_blocks_and_exact_binding_resolves() -> None:
     assert missing.status is AssigneeResolutionStatus.BLOCKED
     assert "TOOL_BINDING_MISSING" in missing.blocker_codes
 
+    instance_id = f"agent-{uuid4().hex[:8]}"
+    _active_agent(instance_id)
     store.upsert_tool_binding(
         SCOPE,
         UpsertToolBindingRequest(
             binding_id=binding_id,
             tool_id="tool.query",
             version=1,
-            agent_instance_id=f"agent-{uuid4().hex[:8]}",
+            agent_instance_id=instance_id,
         ),
         now=NOW,
     )
@@ -73,8 +96,15 @@ def test_tool_binding_missing_blocks_and_exact_binding_resolves() -> None:
     assert "tool_binding:" in resolved.resolved_ref
 
 
-def test_human_principal_resolves_without_global_catalog() -> None:
-    store = AipAssigneeResolutionStore()
+def test_human_principal_requires_tenant_membership_not_global_catalog() -> None:
+    store = AipAssigneeResolutionStore(
+        membership_resolver=lambda org_id, project_id, subject: (
+            org_id,
+            project_id,
+            subject,
+        )
+        == ("org-org", "dev-project", "user:owner")
+    )
     receipt = store.resolve(
         SCOPE,
         ResolveAssigneeRequest(

@@ -220,10 +220,14 @@ describe("task cockpit strict parser", () => {
     expect(parseTaskCockpitSkillContributions(skillContributions)).toMatchObject({ projectionStatus: "ready", items: [{ contributionId: "agent-run-1", readiness: { status: "available" }, allowedCommands: [] }] });
   });
   it("按 exact slot subject 保留 assignee resolution 观测且不升级为当前 ready", () => {
-    const resolution = { receiptId: "receipt-resolution-1", subjectId: "responsibility-plan:responsibility-1@1/slot:collector", kind: "agent_instance", resourceId: "agent-collector", version: 2, status: "resolved", blockerCodes: [], contentHash: rawHash, createdAt: "2026-08-15T09:40:00Z" };
+    const resolution = { receiptId: "receipt-resolution-1", subjectId: "responsibility-plan:responsibility-1@1/slot:collector", kind: "agent_instance", resourceId: "agent-collector", version: 2, status: "resolved", blockerCodes: [], contentHash: rawHash, snapshotHash: rawHash, expiresAt: "2026-08-15T10:10:00Z", requiredCapabilityCount: 1, bindingCount: 1, snapshotStatus: "exact_fresh", createdAt: "2026-08-15T09:40:00Z" };
     const payload = { ...responsibilityHandoffs, slots: [{ ...responsibilityHandoffs.slots[0], assignee: { ...responsibilityHandoffs.slots[0].assignee, operationalReadiness: "resolved_at_observation", resolutionReceipts: [resolution] } }] };
     expect(parseTaskCockpitResponsibilityHandoffs(payload).slots[0].assignee).toMatchObject({ operationalReadiness: "resolved_at_observation", resolutionReceipts: [{ receiptId: "receipt-resolution-1" }] });
     expect(() => parseTaskCockpitResponsibilityHandoffs({ ...payload, slots: [{ ...payload.slots[0], assignee: { ...payload.slots[0].assignee, resolutionReceipts: [{ ...resolution, subjectId: "responsibility-plan:other@1/slot:collector" }] } }] })).toThrow("exact ref 漂移");
+    const legacy = { ...resolution, snapshotHash: null, expiresAt: null, snapshotStatus: "legacy_unverified" };
+    const legacyPayload = { ...responsibilityHandoffs, slots: [{ ...responsibilityHandoffs.slots[0], assignee: { ...responsibilityHandoffs.slots[0].assignee, operationalReadiness: "blocked_at_observation", resolutionReceipts: [legacy] } }] };
+    expect(parseTaskCockpitResponsibilityHandoffs(legacyPayload).slots[0].assignee.resolutionReceipts[0].snapshotStatus).toBe("legacy_unverified");
+    expect(() => parseTaskCockpitResponsibilityHandoffs({ ...payload, slots: [{ ...payload.slots[0], assignee: { ...payload.slots[0].assignee, resolutionReceipts: [{ ...resolution, snapshotHash: null }] } }] })).toThrow("fresh snapshot 证据不完整");
   });
   it("拒绝 extra、未知状态、坏 decimal、重复 identity 和 count/cursor 漂移", () => {
     expect(() => parseTaskCockpitCore({ ...cockpitCore, extra: true })).toThrow("字段漂移");

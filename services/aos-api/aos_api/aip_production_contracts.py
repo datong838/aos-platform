@@ -142,6 +142,9 @@ class ResponsibilitySlot(AipContractModel):
     gate_refs: list[ExactRevisionRef] = Field(default_factory=list)
     return_stage: str = Field(min_length=1, max_length=160)
     assignee: AssigneeRef
+    assignee_resolution_receipt_id: str | None = Field(
+        default=None, min_length=1, max_length=240
+    )
 
     @field_validator("required_capability_ids")
     @classmethod

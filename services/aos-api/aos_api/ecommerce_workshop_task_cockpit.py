@@ -776,7 +776,9 @@ class EcommerceWorkshopTaskCockpit:
                 resolution_rows = (
                     conn.execute(
                         """SELECT receipt_id,subject_id,kind,resource_id,version,status,
-                                  blocker_codes,content_hash,created_at
+                                  blocker_codes,content_hash,selected_assignee,
+                                  required_capability_refs,binding_refs,snapshot_hash,
+                                  expires_at,created_at
                              FROM aip_assignee_resolution_receipt
                             WHERE org_id=%s AND project_id=%s AND subject_id=ANY(%s)
                             ORDER BY subject_id ASC,created_at ASC,receipt_id ASC""",
@@ -1578,6 +1580,26 @@ class EcommerceWorkshopTaskCockpit:
         try:
             receipts_by_subject: dict[str, list[TaskCockpitAssigneeResolutionReceipt]] = {}
             for row in resolution_rows:
+                selected_assignee = row.get("selected_assignee")
+                required_capability_refs = row.get("required_capability_refs") or []
+                binding_refs = row.get("binding_refs") or []
+                snapshot_hash = row.get("snapshot_hash")
+                expires_at = row.get("expires_at")
+                exact_selected_assignee = (
+                    isinstance(selected_assignee, dict)
+                    and selected_assignee.get("kind") == row["kind"]
+                    and selected_assignee.get("resourceId") == row["resource_id"]
+                    and selected_assignee.get("version") == row["version"]
+                )
+                snapshot_status = (
+                    "blocked"
+                    if row["status"] == "blocked" or not exact_selected_assignee
+                    else "legacy_unverified"
+                    if snapshot_hash is None or expires_at is None
+                    else "stale"
+                    if expires_at <= evaluated_at
+                    else "exact_fresh"
+                )
                 receipt = TaskCockpitAssigneeResolutionReceipt(
                     receiptId=row["receipt_id"],
                     subjectId=row["subject_id"],
@@ -1587,6 +1609,11 @@ class EcommerceWorkshopTaskCockpit:
                     status=row["status"],
                     blockerCodes=row["blocker_codes"],
                     contentHash=row["content_hash"],
+                    snapshotHash=snapshot_hash,
+                    expiresAt=expires_at,
+                    requiredCapabilityCount=len(required_capability_refs),
+                    bindingCount=len(binding_refs),
+                    snapshotStatus=snapshot_status,
                     createdAt=row["created_at"],
                 )
                 receipts_by_subject.setdefault(receipt.subject_id, []).append(receipt)
@@ -1607,7 +1634,7 @@ class EcommerceWorkshopTaskCockpit:
                             )
                             and receipts_by_subject[
                                 f"responsibility-plan:{ref.resource_id}@{ref.revision}/slot:{item['slotId']}"
-                            ][-1].status == "resolved"
+                            ][-1].snapshot_status == "exact_fresh"
                             else "blocked_at_observation"
                             if receipts_by_subject.get(
                                 f"responsibility-plan:{ref.resource_id}@{ref.revision}/slot:{item['slotId']}"

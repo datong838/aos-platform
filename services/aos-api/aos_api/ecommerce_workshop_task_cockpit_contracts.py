@@ -434,12 +434,17 @@ class TaskCockpitAssigneeResolutionReceipt(AipContractModel):
     status: Literal["resolved", "blocked"]
     blocker_codes: list[str] = Field(default_factory=list, max_length=128)
     content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    snapshot_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    expires_at: datetime | None = None
+    required_capability_count: int = Field(ge=0)
+    binding_count: int = Field(ge=0)
+    snapshot_status: Literal["exact_fresh", "legacy_unverified", "blocked", "stale"]
     created_at: datetime
 
-    @field_validator("created_at")
+    @field_validator("created_at", "expires_at")
     @classmethod
-    def _resolution_time_is_aware(cls, value: datetime) -> datetime:
-        if value.utcoffset() is None:
+    def _resolution_time_is_aware(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.utcoffset() is None:
             raise ValueError("Task Cockpit timestamps require a timezone")
         return value
 
@@ -449,6 +454,16 @@ class TaskCockpitAssigneeResolutionReceipt(AipContractModel):
             raise ValueError("assignee resolution blocker codes must be unique")
         if (self.status == "resolved") == bool(self.blocker_codes):
             raise ValueError("assignee resolution status and blockers drifted")
+        if self.snapshot_status == "exact_fresh" and (
+            self.status != "resolved"
+            or self.snapshot_hash is None
+            or self.expires_at is None
+        ):
+            raise ValueError("fresh assignee snapshot evidence is incomplete")
+        if self.snapshot_status == "blocked" and self.status != "blocked":
+            raise ValueError("blocked assignee snapshot status drifted")
+        if self.snapshot_status in {"legacy_unverified", "stale"} and self.status != "resolved":
+            raise ValueError("non-current assignee snapshot must preserve a resolved receipt")
         return self
 
 
@@ -490,13 +505,13 @@ class TaskCockpitStructuralAssignee(AipContractModel):
             return self
         latest_at = ordered[-1].created_at
         latest_statuses = {
-            item.status for item in ordered if item.created_at == latest_at
+            item.snapshot_status for item in ordered if item.created_at == latest_at
         }
         if len(latest_statuses) != 1:
             raise ValueError("assignee resolution latest observation conflicts")
         expected_readiness = (
             "resolved_at_observation"
-            if ordered[-1].status == "resolved"
+            if ordered[-1].snapshot_status == "exact_fresh"
             else "blocked_at_observation"
         )
         if self.operational_readiness != expected_readiness:

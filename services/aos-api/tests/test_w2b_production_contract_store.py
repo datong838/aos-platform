@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from uuid import uuid4
+
 import pytest
 
+from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+from aos_api.aip_assignee_resolution import ResolveAssigneeRequest
+from aos_api.aip_assignee_resolution_store import AipAssigneeResolutionStore
 from aos_api.aip_contracts import ResourceRef
 from aos_api.aip_production_contract_store import (
     AipProductionContractStore,
@@ -113,7 +119,7 @@ def _seed_dependencies() -> None:
             (org_id,project_id,instance_id,template_id,template_revision,status,
              overlay,version,created_by)
             VALUES(%s,%s,'agent-content-w2b','template-content-w2b',1,
-             'provisioning','{}',1,'test') ON CONFLICT DO NOTHING""",
+             'active','{}',1,'test') ON CONFLICT DO NOTHING""",
             SCOPE.key,
         )
         conn.commit()
@@ -190,6 +196,71 @@ def test_responsibility_plan_draft_reports_inactive_binding_blockers() -> None:
         "SKILL_BINDING_NOT_ACTIVE",
     }
     assert store.list_responsibility_plans(SCOPE).count == before_count + 1
+
+
+def test_responsibility_plan_accepts_fresh_canonical_provider_resolution() -> None:
+    _seed_dependencies()
+    now = datetime.now(UTC)
+    suffix = uuid4().hex[:8]
+    binding_id = f"provider-w2b-{suffix}"
+    capability = VersionedAssetRef(
+        asset_type="CapabilityRevision",
+        asset_id="capability.content.review",
+        revision=1,
+        content_hash=HASH,
+    )
+    with connect() as conn:
+        conn.execute(
+            """INSERT INTO aip_capability_binding(
+                 org_id,project_id,binding_id,capability_ref,secret_ref,health,
+                 network_policy_revision,quota_policy_revision,timeout_ms,max_concurrency,
+                 status,version,operational_readiness,allow_degraded,
+                 dependency_snapshot_hash,last_evaluated_at,readiness_expires_at,observed_at)
+               VALUES(%s,%s,%s,%s::jsonb,'secret://pytest/provider','healthy',
+                      'network-1','quota-1',30000,1,'active',1,'available',FALSE,%s,
+                      %s,%s + INTERVAL '1 hour',%s)""",
+            (
+                *SCOPE.key,
+                binding_id,
+                capability.model_dump_json(by_alias=True),
+                "e" * 64,
+                now,
+                now,
+                now,
+            ),
+        )
+        conn.commit()
+    assignee = AssigneeRef(
+        kind=AssigneeKind.PROVIDER_CAPABILITY_BINDING,
+        resource_id=binding_id,
+        version=1,
+    )
+    resolution = AipAssigneeResolutionStore().resolve(
+        SCOPE,
+        ResolveAssigneeRequest(
+            subject_id=f"responsibility-plan:w2b/slot:content.review/{suffix}",
+            candidates=[assignee],
+            required_capabilities=[capability],
+        ),
+        "test",
+        now=now,
+    )
+    request = _responsibility_request().model_copy(deep=True)
+    request.slots[0].assignee = assignee
+    request.slots[0].assignee_resolution_receipt_id = resolution.receipt_id
+
+    created = AipProductionContractStore(
+        responsibility_template_resolver=lambda _scope, _ref: True
+    ).create_responsibility_plan(
+        SCOPE,
+        "test",
+        f"plan-provider-{suffix}",
+        request,
+    )
+
+    assert created.coverage.value == "complete"
+    assert created.uncovered_slots == []
+    assert created.blockers == []
 
 
 def test_responsibility_plan_ignores_tenant_global_capability_bindings() -> None:

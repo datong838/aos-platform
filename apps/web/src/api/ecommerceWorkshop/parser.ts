@@ -455,24 +455,33 @@ function parseTaskCockpitResponsibilitySlot(value: unknown, responsibilityPlanRe
   const expectedSubject = `responsibility-plan:${responsibilityPlanRef.resourceId}@${responsibilityPlanRef.revision}/slot:${slotId}`;
   const resolutionReceipts = assignee.resolutionReceipts.map((value, index) => {
     const receipt = record(value, `taskCockpit.responsibility.resolutionReceipts[${index}]`);
-    exact(receipt, ["receiptId", "subjectId", "kind", "resourceId", "version", "status", "blockerCodes", "contentHash", "createdAt"], `taskCockpit.responsibility.resolutionReceipts[${index}]`);
+    exact(receipt, ["receiptId", "subjectId", "kind", "resourceId", "version", "status", "blockerCodes", "contentHash", "snapshotHash", "expiresAt", "requiredCapabilityCount", "bindingCount", "snapshotStatus", "createdAt"], `taskCockpit.responsibility.resolutionReceipts[${index}]`);
     const receiptKind = enumValue(receipt.kind, ["agent_instance", "human_principal", "tool_binding", "provider_capability_binding"] as const, "taskCockpit.responsibility.resolution.kind");
     const receiptStatus = enumValue(receipt.status, ["resolved", "blocked"] as const, "taskCockpit.responsibility.resolution.status");
     const blockerCodes = taskCockpitStringList(receipt.blockerCodes, "taskCockpit.responsibility.resolution.blockerCodes");
     const contentHash = boundedText(receipt.contentHash, "taskCockpit.responsibility.resolution.contentHash", 64);
     if (!RAW_SHA256.test(contentHash)) throw new TypeError("taskCockpit.responsibility resolution contentHash 不是 SHA-256");
+    const snapshotHash = nullable(receipt.snapshotHash, (item) => boundedText(item, "taskCockpit.responsibility.resolution.snapshotHash", 64));
+    if (snapshotHash !== null && !RAW_SHA256.test(snapshotHash)) throw new TypeError("taskCockpit.responsibility resolution snapshotHash 不是 SHA-256");
+    const expiresAt = nullable(receipt.expiresAt, (item) => timestamp(item, "taskCockpit.responsibility.resolution.expiresAt"));
+    const requiredCapabilityCount = integer(receipt.requiredCapabilityCount, "taskCockpit.responsibility.resolution.requiredCapabilityCount", 0);
+    const bindingCount = integer(receipt.bindingCount, "taskCockpit.responsibility.resolution.bindingCount", 0);
+    const snapshotStatus = enumValue(receipt.snapshotStatus, ["exact_fresh", "legacy_unverified", "blocked", "stale"] as const, "taskCockpit.responsibility.resolution.snapshotStatus");
     const subjectId = boundedText(receipt.subjectId, "taskCockpit.responsibility.resolution.subjectId", 240);
     const receiptResourceId = boundedText(receipt.resourceId, "taskCockpit.responsibility.resolution.resourceId", 200);
     const receiptVersion = integer(receipt.version, "taskCockpit.responsibility.resolution.version", 1);
     if (subjectId !== expectedSubject || receiptKind !== kind || receiptResourceId !== resourceId || receiptVersion !== version) throw new TypeError("taskCockpit.responsibility resolution exact ref 漂移");
     if ((receiptStatus === "resolved") === (blockerCodes.length > 0)) throw new TypeError("taskCockpit.responsibility resolution status/blockers 漂移");
-    return { receiptId: boundedText(receipt.receiptId, "taskCockpit.responsibility.resolution.receiptId", 200), subjectId, kind: receiptKind, resourceId: receiptResourceId, version: receiptVersion, status: receiptStatus, blockerCodes, contentHash, createdAt: timestamp(receipt.createdAt, "taskCockpit.responsibility.resolution.createdAt") };
+    if (snapshotStatus === "exact_fresh" && (receiptStatus !== "resolved" || snapshotHash === null || expiresAt === null)) throw new TypeError("taskCockpit.responsibility fresh snapshot 证据不完整");
+    if (snapshotStatus === "blocked" && receiptStatus !== "blocked") throw new TypeError("taskCockpit.responsibility blocked snapshot 漂移");
+    if ((snapshotStatus === "legacy_unverified" || snapshotStatus === "stale") && receiptStatus !== "resolved") throw new TypeError("taskCockpit.responsibility non-current snapshot 漂移");
+    return { receiptId: boundedText(receipt.receiptId, "taskCockpit.responsibility.resolution.receiptId", 200), subjectId, kind: receiptKind, resourceId: receiptResourceId, version: receiptVersion, status: receiptStatus, blockerCodes, contentHash, snapshotHash, expiresAt, requiredCapabilityCount, bindingCount, snapshotStatus, createdAt: timestamp(receipt.createdAt, "taskCockpit.responsibility.resolution.createdAt") };
   });
   assertUnique(resolutionReceipts.map((item) => item.receiptId), "taskCockpit.responsibility.resolutionReceipts");
   if (resolutionReceipts.some((item, index) => index > 0 && (Date.parse(item.createdAt) < Date.parse(resolutionReceipts[index - 1].createdAt) || (item.createdAt === resolutionReceipts[index - 1].createdAt && item.receiptId < resolutionReceipts[index - 1].receiptId)))) throw new TypeError("taskCockpit.responsibility resolution timeline 漂移");
   const latestAt = resolutionReceipts.at(-1)?.createdAt;
-  const latestStatuses = new Set(resolutionReceipts.filter((item) => item.createdAt === latestAt).map((item) => item.status));
-  const expectedReadiness = resolutionReceipts.length === 0 ? "unverified" : resolutionReceipts.at(-1)?.status === "resolved" ? "resolved_at_observation" : "blocked_at_observation";
+  const latestStatuses = new Set(resolutionReceipts.filter((item) => item.createdAt === latestAt).map((item) => item.snapshotStatus));
+  const expectedReadiness = resolutionReceipts.length === 0 ? "unverified" : resolutionReceipts.at(-1)?.snapshotStatus === "exact_fresh" ? "resolved_at_observation" : "blocked_at_observation";
   if (latestStatuses.size > 1 || operationalReadiness !== expectedReadiness) throw new TypeError("taskCockpit.responsibility assignee readiness 映射漂移");
   return {
     slotId,

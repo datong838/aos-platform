@@ -11,7 +11,7 @@ from typing import Any
 
 from aos_api.aip_contracts import PlanStep, ResourceRef, TenantContext
 from aos_api.aip_production_contracts import (
-    ArtifactRelation, ArtifactRelationListResponse, BriefLifecycle,
+    ArtifactRelation, ArtifactRelationListResponse, AssigneeRef, BriefLifecycle,
     BuildEvidenceBundleRequest, CompileStageTemplateRequest, ContractBlocker,
     ContractReadiness, Coverage, CreateArtifactRelationRequest, CreateBriefRequest,
     CreateEvalContractRequest, CreateEvidenceBundleRequest,
@@ -3922,15 +3922,79 @@ class AipProductionContractStore:
         if not self._responsibility_template_resolver(scope, body.template_ref):
             raise ProductionContractDependencyBlocked("RESPONSIBILITY_TEMPLATE_MISSING_OR_DRIFTED")
         for slot in body.slots:
+            if slot.assignee_resolution_receipt_id:
+                self._require_exact_assignee_resolution(
+                    conn,
+                    scope,
+                    slot.assignee_resolution_receipt_id,
+                    slot.assignee,
+                    set(slot.required_capability_ids),
+                    slot.slot_id,
+                )
+                continue
             if slot.assignee.kind.value != "agent_instance":
-                raise ProductionContractDependencyBlocked(f"ASSIGNEE_AUTHORITY_UNAVAILABLE:{slot.slot_id}")
+                raise ProductionContractDependencyBlocked(
+                    f"ASSIGNEE_RESOLUTION_REQUIRED:{slot.slot_id}"
+                )
             row = conn.execute("""SELECT version FROM aip_agent_instance
-                WHERE org_id=%s AND project_id=%s AND instance_id=%s""",
+                WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status='active'""",
                 (*scope.key, slot.assignee.resource_id)).fetchone()
             if not row:
-                raise ProductionContractDependencyBlocked(f"ASSIGNEE_MISSING:{slot.slot_id}")
+                raise ProductionContractDependencyBlocked(f"ASSIGNEE_MISSING_OR_INACTIVE:{slot.slot_id}")
             if int(row["version"]) != slot.assignee.version:
                 raise ProductionContractDependencyBlocked(f"ASSIGNEE_DRIFTED:{slot.slot_id}")
+
+    def _require_exact_assignee_resolution(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        receipt_id: str,
+        assignee: AssigneeRef,
+        required_capability_ids: set[str],
+        slot_id: str,
+    ) -> None:
+        row = conn.execute(
+            """SELECT kind,resource_id,version,status,selected_assignee,
+                      required_capability_refs,snapshot_hash,expires_at
+                 FROM aip_assignee_resolution_receipt
+                WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
+            (*scope.key, receipt_id),
+        ).fetchone()
+        if row is None:
+            raise ProductionContractDependencyBlocked(
+                f"ASSIGNEE_RESOLUTION_MISSING:{slot_id}"
+            )
+        if row["status"] != "resolved" or not row["snapshot_hash"]:
+            raise ProductionContractDependencyBlocked(
+                f"ASSIGNEE_RESOLUTION_NOT_EXACT:{slot_id}"
+            )
+        if row["expires_at"] is None or row["expires_at"] <= datetime.now(timezone.utc):
+            raise ProductionContractDependencyBlocked(
+                f"ASSIGNEE_RESOLUTION_STALE:{slot_id}"
+            )
+        if (
+            row["kind"] != assignee.kind.value
+            or row["resource_id"] != assignee.resource_id
+            or int(row["version"]) != assignee.version
+        ):
+            raise ProductionContractDependencyBlocked(
+                f"ASSIGNEE_RESOLUTION_DRIFTED:{slot_id}"
+            )
+        selected = self._load(row["selected_assignee"])
+        if selected != assignee.model_dump(mode="json", by_alias=True):
+            raise ProductionContractDependencyBlocked(
+                f"ASSIGNEE_RESOLUTION_SELECTION_DRIFTED:{slot_id}"
+            )
+        capabilities = self._load(row["required_capability_refs"]) or []
+        resolved_ids = {
+            item.get("assetId")
+            for item in capabilities
+            if isinstance(item, dict) and item.get("assetType") == "CapabilityRevision"
+        }
+        if not required_capability_ids <= resolved_ids:
+            raise ProductionContractDependencyBlocked(
+                f"ASSIGNEE_RESOLUTION_CAPABILITY_DRIFTED:{slot_id}"
+            )
 
     def _responsibility_blockers(self, conn: Any, scope: TenantScope, row: Any) -> tuple[list[ContractBlocker], list[str]]:
         """W-L4: coverage via assignee SkillBinding → CapabilityBinding operational, not tenant-global."""
@@ -3940,6 +4004,35 @@ class AipProductionContractStore:
         for slot in self._load(row["slots"]):
             slot_id = slot["slotId"]
             assignee = slot["assignee"]
+            receipt_id = slot.get("assigneeResolutionReceiptId")
+            if receipt_id:
+                try:
+                    self._require_exact_assignee_resolution(
+                        conn,
+                        scope,
+                        receipt_id,
+                        AssigneeRef.model_validate(assignee),
+                        set(slot["requiredCapabilityIds"]),
+                        slot_id,
+                    )
+                except ProductionContractDependencyBlocked as exc:
+                    blockers.append(
+                        ContractBlocker(
+                            code="ASSIGNEE_RESOLUTION_INVALID",
+                            message=str(exc),
+                        )
+                    )
+                    uncovered.append(slot_id)
+                continue
+            if assignee["kind"] != "agent_instance":
+                blockers.append(
+                    ContractBlocker(
+                        code="ASSIGNEE_RESOLUTION_REQUIRED",
+                        message=f"职责 {slot_id} 缺少 canonical AssigneeResolutionReceipt",
+                    )
+                )
+                uncovered.append(slot_id)
+                continue
             instance_id = assignee["resourceId"]
             required = set(slot["requiredCapabilityIds"])
             skill_rows = conn.execute(

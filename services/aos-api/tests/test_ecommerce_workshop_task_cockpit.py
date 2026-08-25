@@ -823,6 +823,17 @@ def _resolution_row(*, status: str = "resolved", created_at: datetime = NOW) -> 
         "status": status,
         "blocker_codes": [] if status == "resolved" else ["AGENT_INSTANCE_MISSING"],
         "content_hash": "9" * 64,
+        "selected_assignee": {
+            "kind": "agent_instance", "resourceId": "agent-research", "version": 2,
+        },
+        "required_capability_refs": [
+            {"resourceType": "Capability", "resourceId": "ecommerce.research", "revision": "1", "authority": "aip-capability-registry"},
+        ],
+        "binding_refs": [
+            {"resourceType": "CapabilityBinding", "resourceId": "binding-1", "revision": "1", "authority": "aip-capability-registry"},
+        ],
+        "snapshot_hash": "8" * 64,
+        "expires_at": NOW + timedelta(minutes=5),
         "created_at": created_at,
         "actor": "must-not-leak",
         "resolved_ref": "must-not-leak",
@@ -837,10 +848,38 @@ def test_responsibility_handoffs_exposes_exact_resolution_observation_without_pr
     assignee = result.slots[0].assignee
     assert assignee.operational_readiness == "resolved_at_observation"
     assert assignee.resolution_receipts[0].status == "resolved"
+    assert assignee.resolution_receipts[0].snapshot_status == "exact_fresh"
+    assert assignee.resolution_receipts[0].required_capability_count == 1
     payload = result.model_dump(mode="json", by_alias=True)
     assert "must-not-leak" not in str(payload)
     assert "actor" not in str(payload)
     assert "resolvedRef" not in str(payload)
+
+
+@pytest.mark.parametrize("legacy_field", ["snapshot_hash", "expires_at"])
+def test_responsibility_handoffs_keeps_legacy_resolution_readable_but_not_ready(
+    legacy_field: str,
+) -> None:
+    receipt = _resolution_row()
+    receipt[legacy_field] = None
+    cockpit, _ = _responsibility_cockpit(resolutions=[receipt])
+    result = cockpit.read_responsibility_handoffs(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    )
+    assignee = result.slots[0].assignee
+    assert assignee.operational_readiness == "blocked_at_observation"
+    assert assignee.resolution_receipts[0].snapshot_status == "legacy_unverified"
+
+
+def test_responsibility_handoffs_marks_expired_exact_snapshot_stale() -> None:
+    receipt = _resolution_row()
+    receipt["expires_at"] = NOW - timedelta(seconds=1)
+    cockpit, _ = _responsibility_cockpit(resolutions=[receipt])
+    result = cockpit.read_responsibility_handoffs(
+        org_id="org-org", project_id="dev-project", run_id="run-1"
+    )
+    assert result.slots[0].assignee.operational_readiness == "blocked_at_observation"
+    assert result.slots[0].assignee.resolution_receipts[0].snapshot_status == "stale"
 
 
 def test_responsibility_handoffs_fails_closed_on_resolution_assignee_drift() -> None:
