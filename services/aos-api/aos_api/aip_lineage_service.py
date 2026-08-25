@@ -375,8 +375,14 @@ class AipLineageService:
             )
         for row in conn.execute(
             """SELECT receipt_id,lease_id,status,provider_request_id,
-                      request_fingerprint,evidence_refs,receipt_kind,
-                      supersedes_receipt_id,created_at
+                      request_fingerprint,evidence_refs,payload,receipt_kind,
+                      supersedes_receipt_id,attempt_id,action_binding_hash,
+                      approval_set_hash,adapter_revision_ref,account_binding_ref,
+                      capability_binding_ref,reservation_ref,response_artifact_ref,
+                      response_hash,output_schema_ref,receipt_schema_ref,
+                      usage_schema_ref,redaction_policy_ref,
+                      usage_receipt_refs,lineage_source_ref,receipt_content_hash,
+                      created_at
                FROM aip_action_receipt
                WHERE org_id=%s AND project_id=%s AND proposal_id=%s""",
             (*scope.key, proposal_id),

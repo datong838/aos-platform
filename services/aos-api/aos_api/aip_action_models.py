@@ -178,6 +178,22 @@ class ActionReceiptSnapshot(ActionReceipt):
     supersedes_receipt_id: str | None = None
     request_fingerprint: str
     payload: dict[str, Any] = Field(default_factory=dict)
+    attempt_id: str | None = None
+    action_binding_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    approval_set_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    adapter_revision_ref: dict[str, Any] | None = None
+    account_binding_ref: dict[str, Any] | None = None
+    capability_binding_ref: dict[str, Any] | None = None
+    reservation_ref: dict[str, Any] | None = None
+    response_artifact_ref: ResourceRef | None = None
+    response_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    output_schema_ref: dict[str, Any] | None = None
+    receipt_schema_ref: dict[str, Any] | None = None
+    usage_schema_ref: dict[str, Any] | None = None
+    redaction_policy_ref: dict[str, Any] | None = None
+    usage_receipt_refs: list[ResourceRef] = Field(default_factory=list)
+    lineage_source_ref: ResourceRef | None = None
+    receipt_content_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
 
 class ActionExecutionLeaseSnapshot(ExecutionLease):
@@ -186,9 +202,28 @@ class ActionExecutionLeaseSnapshot(ExecutionLease):
     reservation_ref: ResourceRef | None = None
 
 
+class ActionExecutionAttemptSnapshot(AipContractModel):
+    id: str
+    lease_id: str
+    proposal_id: str
+    status: str
+    action_binding_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    approval_set_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    idempotency_envelope: str = Field(pattern=r"^[0-9a-f]{64}$")
+    request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    provider_request_id: str | None = None
+    provider_outcome: str | None = None
+    usage_settlement_status: str = "pending"
+    lineage_projection_status: str = "pending"
+    created_at: datetime
+    claimed_at: datetime | None = None
+    finished_at: datetime | None = None
+
+
 class ActionExecutionView(AipContractModel):
     proposal: ActionProposalSnapshot
     lease: ActionExecutionLeaseSnapshot | None = None
+    attempt: ActionExecutionAttemptSnapshot | None = None
     receipts: list[ActionReceiptSnapshot] = Field(default_factory=list)
 
 
@@ -201,6 +236,7 @@ __all__ = [
     "ActionDraftRevisionSnapshot",
     "ActionApprovalEventSnapshot",
     "ActionExecutionLeaseSnapshot",
+    "ActionExecutionAttemptSnapshot",
     "ActionProposalListResponse",
     "ActionProposalSnapshot",
     "ActionProposalTimeline",

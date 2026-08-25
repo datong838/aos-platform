@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "workshop-delivery-evidence/v1",
+  "taskId": "W5-04",
+  "recordedAt": "2026-08-25T01:08:30Z",
+  "branch": "m1",
+  "baselineCommit": "7c6975c0d87dcc57f12b392aac809f2213b1695f",
+  "authorityRevision": "AOS-000238",
+  "outcome": "W5_04_DURABLE_ATTEMPT_EXACT_DELIVERY_BRIDGE_CODE_GREEN_EXTERNAL_RESERVATION_BLOCKED_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "scope": {
+    "implemented": [
+      "durable tenant-scoped ActionExecutionAttempt and dispatch outbox persisted before Provider I/O",
+      "single claim with in-flight honesty and stale-claim unknown recovery without blind Provider retry",
+      "deterministic immutable initial ActionReceipt identity with exact lease, approval, Adapter, account, schema, response Artifact, Usage and lineage refs",
+      "controlled Provider response redaction and bounded payload hash",
+      "unknown Usage without invented zero quantity plus independent settlement and lineage projection request states",
+      "Action lineage source fingerprint over full controlled Receipt content",
+      "exact conformant Adapter revision resolution with output, receipt, usage and redaction policy refs",
+      "deterministic OpenAPI export including the three W5-03 Draft command routes and W5-04 execution view"
+    ],
+    "excluded": [
+      "real environment migration",
+      "real account, secret, approval, lease, reservation or Provider invocation",
+      "automatic external settlement or live lineage projector worker",
+      "canary and release"
+    ]
+  },
+  "verification": {
+    "focused": {
+      "result": "5 passed",
+      "files": [
+        "test_w5_04_action_delivery_bridge.py",
+        "test_w5_04_action_delivery_bridge_migration.py"
+      ]
+    },
+    "cumulative": {
+      "result": "99 passed",
+      "coverage": "W5-01 through W5-04, AIP Action control/execution, W2-D production contracts, Usage, lineage and deterministic OpenAPI"
+    },
+    "openapi": {
+      "result": "13 passed",
+      "deterministicCheck": "green",
+      "addedRoutes": [
+        "POST /v1/aip/action-drafts",
+        "POST /v1/aip/action-drafts/{draft_id}/revisions",
+        "POST /v1/aip/action-drafts/{draft_id}/submit"
+      ],
+      "unexpectedRouteDrift": "none"
+    },
+    "static": {
+      "compileall": "green",
+      "alembicHeads": ["w5_003 (head)"],
+      "diffCheck": "green"
+    },
+    "browser": {
+      "status": "not_applicable",
+      "reason": "No Workshop route, component, copy or page behavior changed in W5-04; browser smoke is not substituted for backend authority evidence."
+    }
+  },
+  "compatibility": {
+    "legacyInternalAdapterPath": "green",
+    "existingActionReceiptAPI": "green_additive",
+    "inFlightReplay": "dispatch_claimed_no_duplicate_call",
+    "staleClaimRecovery": "unknown_no_duplicate_call",
+    "unknownUsage": "quantity_null_not_zero",
+    "crossTenantRead": "invisible",
+    "externalOperationalReadiness": "blocked"
+  },
+  "knownBlockers": [
+    "ACTION_BUDGET_RESERVATION_AUTHORITY_UNAVAILABLE",
+    "REAL_ACCOUNT_BINDING_AND_SECRET_RESOLUTION_NOT_AUTHORIZED",
+    "NO_REAL_PROVIDER_OR_EXTERNAL_EFFECT_EXECUTED"
+  ],
+  "nextTask": "W5-05"
+}
