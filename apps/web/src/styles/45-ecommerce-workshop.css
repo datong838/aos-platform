@@ -861,6 +861,34 @@
 .analyst-metrics article b { display: block; margin-top: 10px; font-size: 22px; }
 .analyst-metrics article p,
 .analyst-metrics article small { overflow-wrap: anywhere; color: var(--aos-text-secondary); }
+.analyst-learning-scenario { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-amber-600, #d97706); background: color-mix(in srgb, var(--aos-surface) 95%, var(--aos-amber-50, #fffbeb)); }
+.analyst-learning-scenario > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.analyst-learning-scenario > header div { display: grid; gap: 4px; }
+.analyst-learning-scenario > header span { color: var(--aos-text-tertiary); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.analyst-learning-scenario > header h2,
+.analyst-learning-scenario > p { margin: 0; }
+.analyst-learning-scenario > header > strong { padding: 5px 9px; border: 1px solid var(--aos-amber-600, #d97706); color: var(--aos-amber-700, #b45309); font-size: 11px; white-space: nowrap; }
+.analyst-learning-layers,
+.analyst-learning-ledger,
+.analyst-learning-axes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.analyst-learning-layers > div,
+.analyst-learning-ledger > div,
+.analyst-learning-axes > article { display: grid; gap: 4px; min-width: 0; padding: 10px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.analyst-learning-layers span,
+.analyst-learning-ledger span,
+.analyst-learning-axes span { color: var(--aos-text-tertiary); font-size: 11px; }
+.analyst-learning-layers small,
+.analyst-learning-axes p { margin: 0; overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 11px; }
+.analyst-learning-stages { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.analyst-learning-stages li { display: grid; gap: 4px; min-width: 0; padding: 10px; border: 1px solid var(--aos-border); border-top: 3px solid var(--aos-amber-600, #d97706); background: var(--aos-surface); }
+.analyst-learning-stages li.is-ready,
+.analyst-learning-axes article.is-ready { border-top-color: var(--aos-green-600, #16a34a); }
+.analyst-learning-stages li.is-unknown,
+.analyst-learning-axes article.is-unknown { border-top-color: var(--aos-amber-600, #d97706); }
+.analyst-learning-stages li.is-blocked,
+.analyst-learning-axes article.is-blocked { border-top-color: var(--aos-red); }
+.analyst-learning-stages p { margin: 0; overflow-wrap: anywhere; font-size: 12px; }
+.analyst-learning-stages small { overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 10px; }
 .async-job-drawer { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-blue); background: var(--aos-surface); }
 .async-job-drawer > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .async-job-drawer > header small { color: var(--aos-blue); font-weight: 700; }
@@ -1063,6 +1091,7 @@
   .task-cockpit-blockers ul { grid-template-columns: 1fr; }
   .task-cockpit-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .task-cockpit-dispatch-stages { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .analyst-learning-stages { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .task-cockpit-metrics > div:nth-child(3) { border-right: 0; }
   .task-cockpit-metrics > div:nth-child(-n+3) { border-bottom: 1px solid var(--aos-border); }
   .task-cockpit-board { grid-template-columns: minmax(125px, 0.75fr) minmax(480px, 3fr) minmax(125px, 0.75fr); }
@@ -1135,6 +1164,11 @@
   .media-readiness-grid { grid-template-columns: 1fr; }
   .analyst-readiness-grid { grid-template-columns: 1fr; }
   .analyst-metrics { grid-template-columns: 1fr; }
+  .analyst-learning-scenario > header { flex-direction: column; }
+  .analyst-learning-layers,
+  .analyst-learning-ledger,
+  .analyst-learning-axes,
+  .analyst-learning-stages { grid-template-columns: 1fr; }
   .price-observations { grid-template-columns: 1fr; }
   .customer-items { grid-template-columns: 1fr; }
   .customer-batch-evidence > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }

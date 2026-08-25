@@ -3,6 +3,7 @@ import {
   SOURCE_READINESS_SCHEMA_VERSION,
   TASK_COCKPIT_SCHEMA_VERSION,
   DISPATCH_SCENARIO_SCHEMA_VERSION,
+  LEARNING_SCENARIO_SCHEMA_VERSION,
   OPERATIONS_SCHEMA_VERSION,
   OPERATION_COMMAND_READINESS_SCHEMA_VERSION,
   OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION,
@@ -106,6 +107,16 @@ import {
   type DispatchScenarioRoleBinding,
   type DispatchScenarioStage,
   type DispatchScenarioStageId,
+  type LearningScenarioBlocker,
+  type LearningScenarioComposition,
+  type LearningScenarioContribution,
+  type LearningScenarioExactRef,
+  type LearningScenarioLedger,
+  type LearningScenarioOutcomeAxis,
+  type LearningScenarioOutcomeAxisId,
+  type LearningScenarioRoleBinding,
+  type LearningScenarioStage,
+  type LearningScenarioStageId,
   type OperationsAuthorityRef,
   type OperationsBlocker,
   type OperationsCountLedger,
@@ -510,6 +521,47 @@ export function parseDispatchScenario(value: unknown): DispatchScenarioContribut
   if (rootTaskGraphRef && stages[0].status === "ready") { const ids = new Set(stages[0].exactRefs.map((ref) => `${ref.resourceType}:${ref.resourceId}:${ref.revision}:${ref.contentHash}`)); if (!ids.has(`${rootTaskGraphRef.resourceType}:${rootTaskGraphRef.resourceId}:${rootTaskGraphRef.revision}:${rootTaskGraphRef.contentHash}`) || !rootTaskRunRef || !ids.has(`${rootTaskRunRef.resourceType}:${rootTaskRunRef.resourceId}:${rootTaskRunRef.revision}:${rootTaskRunRef.contentHash}`)) throw new TypeError("dispatchScenario root stage 漂移"); }
   const commandsRaw = record(raw.commands, "dispatchScenario.commands"); exact(commandsRaw, ["dispatch", "decideHandoff", "requestTakeover", "approveTakeover", "mutateOwner"], "dispatchScenario.commands"); if (Object.values(commandsRaw).some((item) => item !== false)) throw new TypeError("dispatchScenario command 必须失败关闭");
   const blockers = raw.blockers.map(parseDispatchScenarioBlocker); return { schemaVersion: DISPATCH_SCENARIO_SCHEMA_VERSION, status: "blocked", rootTaskGraphRef, rootTaskRunRef, dispatchBindingHash, composition, evaluatedAt: timestamp(raw.evaluatedAt, "dispatchScenario.evaluatedAt"), stages, ledger, outcomeAxes, blockers, commands: { dispatch: false, decideHandoff: false, requestTakeover: false, approveTakeover: false, mutateOwner: false }, externalEffectsAllowed: false };
+}
+
+const LEARNING_STAGE_IDS = ["effect_review", "maturity", "memory_candidate", "governance", "promotion", "knowledge_query", "revocation_impact"] as const satisfies readonly LearningScenarioStageId[];
+const LEARNING_AXIS_IDS = ["effect_mature", "candidate_governed", "knowledge_promoted", "future_query_authorized", "revocation_impact_recorded"] as const satisfies readonly LearningScenarioOutcomeAxisId[];
+function parseLearningScenarioRef(value: unknown, expectedType: string | null, label: string): LearningScenarioExactRef {
+  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "contentHash"], label);
+  const resourceType = boundedText(raw.resourceType, `${label}.resourceType`, 120); if (expectedType && resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
+  return { resourceType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), revision: integer(raw.revision, `${label}.revision`, 1), contentHash: hash(raw.contentHash, `${label}.contentHash`) };
+}
+function parseLearningScenarioBlocker(value: unknown): LearningScenarioBlocker {
+  const raw = record(value, "learningScenario.blocker"); exact(raw, ["code", "dependency", "requiredAction"], "learningScenario.blocker");
+  const code = boundedText(raw.code, "learningScenario.blocker.code", 120); if (!REASON.test(code)) throw new TypeError("learningScenario.blocker.code 非法");
+  return { code, dependency: boundedText(raw.dependency, "learningScenario.blocker.dependency", 180), requiredAction: boundedText(raw.requiredAction, "learningScenario.blocker.requiredAction", 500) };
+}
+function parseLearningScenarioRoleBinding(value: unknown, label: string): LearningScenarioRoleBinding {
+  const raw = record(value, label); exact(raw, ["roleRef", "assigneeRef", "skillBindingRef"], label);
+  return { roleRef: parseLearningScenarioRef(raw.roleRef, "AgentTemplate", `${label}.roleRef`), assigneeRef: parseLearningScenarioRef(raw.assigneeRef, "AgentInstance", `${label}.assigneeRef`), skillBindingRef: parseLearningScenarioRef(raw.skillBindingRef, "SkillBinding", `${label}.skillBindingRef`) };
+}
+function parseLearningScenarioComposition(value: unknown): LearningScenarioComposition {
+  const raw = record(value, "learningScenario.composition"); exact(raw, ["atomicSkillRefs", "logicRevisionRef", "roleBindings"], "learningScenario.composition");
+  if (!Array.isArray(raw.atomicSkillRefs) || !raw.atomicSkillRefs.length || !Array.isArray(raw.roleBindings) || !raw.roleBindings.length) throw new TypeError("learningScenario.composition 不完整");
+  const atomicSkillRefs = raw.atomicSkillRefs.map((item, index) => parseLearningScenarioRef(item, "SkillRevision", `learningScenario.atomicSkillRefs[${index}]`));
+  const roleBindings = raw.roleBindings.map((item, index) => parseLearningScenarioRoleBinding(item, `learningScenario.roleBindings[${index}]`));
+  assertUnique(atomicSkillRefs.map((item) => `${item.resourceId}:${item.revision}:${item.contentHash}`), "learningScenario.atomicSkillRefs"); assertUnique(roleBindings.map((item) => item.skillBindingRef.resourceId), "learningScenario.roleBindings");
+  return { atomicSkillRefs, logicRevisionRef: parseLearningScenarioRef(raw.logicRevisionRef, "LogicRevision", "learningScenario.logicRevisionRef"), roleBindings };
+}
+export function parseLearningScenario(value: unknown): LearningScenarioContribution {
+  const raw = record(value, "learningScenario"); exact(raw, ["schemaVersion", "status", "rootEffectReviewRef", "maturityPolicyRef", "learningBindingHash", "composition", "evaluatedAt", "stages", "ledger", "outcomeAxes", "blockers", "commands", "externalEffectsAllowed"], "learningScenario");
+  if (raw.schemaVersion !== LEARNING_SCENARIO_SCHEMA_VERSION || raw.status !== "blocked" || raw.externalEffectsAllowed !== false) throw new TypeError("learningScenario 边界漂移");
+  if (!Array.isArray(raw.stages) || raw.stages.length !== LEARNING_STAGE_IDS.length || !Array.isArray(raw.outcomeAxes) || raw.outcomeAxes.length !== LEARNING_AXIS_IDS.length || !Array.isArray(raw.blockers) || !raw.blockers.length) throw new TypeError("learningScenario 数量漂移");
+  const stageValues = raw.stages; const axisValues = raw.outcomeAxes;
+  const stages = LEARNING_STAGE_IDS.map((stageId, index): LearningScenarioStage => { const item = record(stageValues[index], `learningScenario.${stageId}`); exact(item, ["stageId", "status", "exactRefs", "contribution", "blockers"], `learningScenario.${stageId}`); if (item.stageId !== stageId || !Array.isArray(item.exactRefs) || !Array.isArray(item.blockers)) throw new TypeError("learningScenario stage 漂移"); const status = enumValue(item.status, ["ready", "blocked", "unknown"] as const, "learningScenario.stage.status"); const exactRefs = item.exactRefs.map((entry, refIndex) => parseLearningScenarioRef(entry, null, `learningScenario.${stageId}.exactRefs[${refIndex}]`)); const blockers = item.blockers.map(parseLearningScenarioBlocker); if ((status === "ready" && (!exactRefs.length || blockers.length)) || (status !== "ready" && (exactRefs.length || !blockers.length))) throw new TypeError("learningScenario stage 伪状态"); assertUnique(exactRefs.map((ref) => `${ref.resourceType}:${ref.resourceId}:${ref.revision}:${ref.contentHash}`), `learningScenario.${stageId}.exactRefs`); return { stageId, status, exactRefs, contribution: boundedText(item.contribution, `learningScenario.${stageId}.contribution`, 500), blockers }; });
+  const ledgerRaw = record(raw.ledger, "learningScenario.ledger"); exact(ledgerRaw, ["reviewsExpected", "reviewsObserved", "candidatesExpected", "candidatesObserved", "promotionsExpected", "promotionsObserved", "citationsExpected", "citationsObserved", "historicalExposures", "retainedExposures", "impactRefsExpected", "impactRefsObserved"], "learningScenario.ledger");
+  const ledger: LearningScenarioLedger = { reviewsExpected: integer(ledgerRaw.reviewsExpected, "learningScenario.reviewsExpected"), reviewsObserved: integer(ledgerRaw.reviewsObserved, "learningScenario.reviewsObserved"), candidatesExpected: integer(ledgerRaw.candidatesExpected, "learningScenario.candidatesExpected"), candidatesObserved: integer(ledgerRaw.candidatesObserved, "learningScenario.candidatesObserved"), promotionsExpected: integer(ledgerRaw.promotionsExpected, "learningScenario.promotionsExpected"), promotionsObserved: integer(ledgerRaw.promotionsObserved, "learningScenario.promotionsObserved"), citationsExpected: integer(ledgerRaw.citationsExpected, "learningScenario.citationsExpected"), citationsObserved: integer(ledgerRaw.citationsObserved, "learningScenario.citationsObserved"), historicalExposures: integer(ledgerRaw.historicalExposures, "learningScenario.historicalExposures"), retainedExposures: integer(ledgerRaw.retainedExposures, "learningScenario.retainedExposures"), impactRefsExpected: integer(ledgerRaw.impactRefsExpected, "learningScenario.impactRefsExpected"), impactRefsObserved: integer(ledgerRaw.impactRefsObserved, "learningScenario.impactRefsObserved") };
+  if (ledger.reviewsObserved > ledger.reviewsExpected || ledger.candidatesObserved > ledger.candidatesExpected || ledger.promotionsObserved > ledger.promotionsExpected || ledger.citationsObserved > ledger.citationsExpected || ledger.impactRefsObserved > ledger.impactRefsExpected || ledger.retainedExposures !== ledger.historicalExposures) throw new TypeError("learningScenario ledger 不守恒");
+  const outcomeAxes = LEARNING_AXIS_IDS.map((axisId, index): LearningScenarioOutcomeAxis => { const item = record(axisValues[index], `learningScenario.${axisId}`); exact(item, ["axisId", "status", "exactRef", "blocker"], `learningScenario.${axisId}`); if (item.axisId !== axisId) throw new TypeError("learningScenario axis 漂移"); const status = enumValue(item.status, ["ready", "blocked", "unknown"] as const, "learningScenario.axis.status"); const exactRef = item.exactRef === null ? null : parseLearningScenarioRef(item.exactRef, null, `learningScenario.${axisId}.exactRef`); const blocker = item.blocker === null ? null : parseLearningScenarioBlocker(item.blocker); if ((status === "ready" && (!exactRef || blocker)) || (status !== "ready" && (exactRef || !blocker))) throw new TypeError("learningScenario axis 伪状态"); return { axisId, status, exactRef, blocker }; });
+  const roots = [raw.rootEffectReviewRef, raw.maturityPolicyRef, raw.learningBindingHash, raw.composition]; const hasRoots = roots.every((item) => item !== null); if (!hasRoots && !roots.every((item) => item === null)) throw new TypeError("learningScenario roots 漂移");
+  const rootEffectReviewRef = raw.rootEffectReviewRef === null ? null : parseLearningScenarioRef(raw.rootEffectReviewRef, "EffectReviewRevision", "learningScenario.rootEffectReviewRef"); const maturityPolicyRef = raw.maturityPolicyRef === null ? null : parseLearningScenarioRef(raw.maturityPolicyRef, "EffectMaturityPolicyRevision", "learningScenario.maturityPolicyRef"); const composition = raw.composition === null ? null : parseLearningScenarioComposition(raw.composition); const learningBindingHash = raw.learningBindingHash === null ? null : rawHash(raw.learningBindingHash, "learningScenario.learningBindingHash");
+  if (rootEffectReviewRef && stages[0].status === "ready") { const ids = new Set(stages[0].exactRefs.map((ref) => `${ref.resourceType}:${ref.resourceId}:${ref.revision}:${ref.contentHash}`)); if (!ids.has(`${rootEffectReviewRef.resourceType}:${rootEffectReviewRef.resourceId}:${rootEffectReviewRef.revision}:${rootEffectReviewRef.contentHash}`)) throw new TypeError("learningScenario root stage 漂移"); }
+  const commandsRaw = record(raw.commands, "learningScenario.commands"); exact(commandsRaw, ["submitCandidate", "approveCandidate", "promoteCandidate", "publishWiki", "revokeKnowledge"], "learningScenario.commands"); if (Object.values(commandsRaw).some((item) => item !== false)) throw new TypeError("learningScenario command 必须失败关闭");
+  const blockers = raw.blockers.map(parseLearningScenarioBlocker); return { schemaVersion: LEARNING_SCENARIO_SCHEMA_VERSION, status: "blocked", rootEffectReviewRef, maturityPolicyRef, learningBindingHash, composition, evaluatedAt: timestamp(raw.evaluatedAt, "learningScenario.evaluatedAt"), stages, ledger, outcomeAxes, blockers, commands: { submitCandidate: false, approveCandidate: false, promoteCandidate: false, publishWiki: false, revokeKnowledge: false }, externalEffectsAllowed: false };
 }
 
 export function parseTaskCockpitCore(value: unknown): TaskCockpitCoreResponse {

@@ -373,6 +373,10 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/views/analyst",
             "get",
         ),
+        "ecommerceWorkshopAnalystLearningScenarioGet": (
+            "/v1/ecommerce-workshop/views/analyst/learning-scenario",
+            "get",
+        ),
         "ecommerceWorkshopPriceGovernanceViewGet": (
             "/v1/ecommerce-workshop/views/price-governance",
             "get",

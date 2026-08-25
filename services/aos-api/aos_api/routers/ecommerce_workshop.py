@@ -60,6 +60,8 @@ from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
 from aos_api.ecommerce_workshop_growth_scenario import EcommerceWorkshopGrowthScenario
 from aos_api.ecommerce_workshop_dispatch_scenario import EcommerceWorkshopDispatchScenario
 from aos_api.ecommerce_workshop_dispatch_scenario_contracts import DispatchScenarioContribution
+from aos_api.ecommerce_workshop_learning_scenario import EcommerceWorkshopLearningScenario
+from aos_api.ecommerce_workshop_learning_scenario_contracts import LearningScenarioContribution
 from aos_api.ecommerce_workshop_analyst_contracts import WorkshopAnalystViewEnvelope
 from aos_api.ecommerce_workshop_content_campaign import (
     EcommerceWorkshopContentCampaign,
@@ -411,6 +413,11 @@ def get_ecommerce_workshop_analyst() -> EcommerceWorkshopAnalyst:
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_learning_scenario() -> EcommerceWorkshopLearningScenario:
+    return EcommerceWorkshopLearningScenario()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_price_governance() -> EcommerceWorkshopPriceGovernance:
     return EcommerceWorkshopPriceGovernance(remedy_scenario=EcommerceWorkshopRemedyScenario())
 
@@ -516,6 +523,10 @@ MediaStudioDependency = Annotated[
 AnalystDependency = Annotated[
     EcommerceWorkshopAnalyst,
     Depends(get_ecommerce_workshop_analyst),
+]
+LearningScenarioDependency = Annotated[
+    EcommerceWorkshopLearningScenario,
+    Depends(get_ecommerce_workshop_learning_scenario),
 ]
 PriceGovernanceDependency = Annotated[
     EcommerceWorkshopPriceGovernance,
@@ -1295,6 +1306,26 @@ def get_ecommerce_workshop_analyst_view(
     _reject_query_parameters(request)
     _require_analyst_installation(principal=principal, catalog=catalog)
     return analyst.read(org_id=principal.org_id, project_id=principal.project_id)
+
+
+@router.get(
+    "/views/analyst/learning-scenario",
+    response_model=LearningScenarioContribution,
+    operation_id="ecommerceWorkshopAnalystLearningScenarioGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_analyst_learning_scenario(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    scenario: LearningScenarioDependency,
+) -> LearningScenarioContribution:
+    _reject_unknown_query_parameters(request, allowed=frozenset())
+    _require_analyst_installation(principal=principal, catalog=catalog)
+    return scenario.read(
+        scope=TenantScope(principal.org_id, principal.project_id),
+        cutoff=datetime.now(UTC),
+    )
 
 
 @router.get(
