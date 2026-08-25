@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { MediaStudioViewResponse } from "../../api/ecommerceWorkshop";
 import { MediaStudioPage } from "./MediaStudioPage";
 
-const response = (): MediaStudioViewResponse => ({ schemaVersion: "aos.ecommerce-workshop.media-studio-view/v3", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: ["context", "execution", "delivery"].map((sliceId) => ({ sliceId: sliceId as "context" | "execution" | "delivery", status: "blocked", dataCutoff: "2026-08-24T08:00:00Z", readinessAxes: ["module", "capability", "assignee", "provider", "budget", "publication"].map((axis) => ({ axis: axis as "module", status: "target", exactRef: null, targetContractRef: `ADR-86#${axis}`, gaps: ["missing authority"], blockers: [{ code: "MEDIA_AUTHORITY_NOT_AVAILABLE", dependency: axis, requiredAction: "attach exact ref" }] })), authorityRefs: [], blockers: [{ code: `MEDIA_${sliceId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`, dependency: sliceId, requiredAction: "attach exact refs" }], countLedger: { denominator: 6, ready: 0, target: 6, blocked: 0, unknown: 0, conflict: 0, notApplicable: 0 } })), providerJobsStatus: "blocked", providerJobs: [], providerJobBlockers: [{ code: "MEDIA_PROVIDER_JOB_AUTHORITY_NOT_AVAILABLE", dependency: "aip.media-provider-jobs", requiredAction: "install authority" }], mediaFinanceStatus: "ready", mediaFinance: [], mediaFinanceBlockers: [], lifecycleStatus: "blocked", lifecycle: null, lifecycleBlockers: [{ code: "MEDIA_LIFECYCLE_LEGACY_VIEW", dependency: "media-studio-v4", requiredAction: "refresh canonical v4 projection" }], page: { limit: 100, count: 0, hasMore: false, nextCursor: null } });
+const response = (): MediaStudioViewResponse => ({ schemaVersion: "aos.ecommerce-workshop.media-studio-view/v3", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: ["context", "execution", "delivery"].map((sliceId) => ({ sliceId: sliceId as "context" | "execution" | "delivery", status: "blocked", dataCutoff: "2026-08-24T08:00:00Z", readinessAxes: ["module", "capability", "assignee", "provider", "budget", "publication"].map((axis) => ({ axis: axis as "module", status: "target", exactRef: null, targetContractRef: `ADR-86#${axis}`, gaps: ["missing authority"], blockers: [{ code: "MEDIA_AUTHORITY_NOT_AVAILABLE", dependency: axis, requiredAction: "attach exact ref" }] })), authorityRefs: [], blockers: [{ code: `MEDIA_${sliceId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`, dependency: sliceId, requiredAction: "attach exact refs" }], countLedger: { denominator: 6, ready: 0, target: 6, blocked: 0, unknown: 0, conflict: 0, notApplicable: 0 } })), providerJobsStatus: "blocked", providerJobs: [], providerJobBlockers: [{ code: "MEDIA_PROVIDER_JOB_AUTHORITY_NOT_AVAILABLE", dependency: "aip.media-provider-jobs", requiredAction: "install authority" }], mediaFinanceStatus: "ready", mediaFinance: [], mediaFinanceBlockers: [], lifecycleStatus: "blocked", lifecycle: null, lifecycleBlockers: [{ code: "MEDIA_LIFECYCLE_LEGACY_VIEW", dependency: "media-studio-v4", requiredAction: "refresh canonical v4 projection" }], publishStatus: "blocked", publishContributions: [], publishBlockers: [{ code: "MEDIA_PUBLISH_LEGACY_VIEW", dependency: "media-studio-v5", requiredAction: "refresh canonical v5 projection" }], page: { limit: 100, count: 0, hasMore: false, nextCursor: null } });
 
 describe("MediaStudioPage", () => {
   let host: HTMLDivElement;
@@ -81,6 +81,22 @@ describe("MediaStudioPage", () => {
     act(() => tabs[2]?.click());
     expect(host.textContent).toContain("family-1");
     expect(host.textContent).toContain("issue-1 · major");
+    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
+  });
+
+  it("展示 Candidate 到 Handoff 的 canonical 发布贡献但不生成发布按钮", async () => {
+    const payload = response();
+    const hash = "a".repeat(64); const binding = "b".repeat(64);
+    const ref = (resourceType: string, resourceId: string) => ({ resourceType, resourceId, revision: 1, contentHash: hash });
+    payload.schemaVersion = "aos.ecommerce-workshop.media-studio-view/v5";
+    payload.publishStatus = "ready"; payload.publishBlockers = [];
+    payload.publishContributions = [{ schemaVersion: "aos.ecommerce-workshop.media-publish-contribution/v1", candidate: { familyId: "family-1", familyVersion: 3, variantRef: ref("ArtifactRevision", "variant-1"), gateSetRef: ref("MediaGateSetDecision", "gate-1"), platform: "douyin", profile: "short-video" }, impact: { previewRef: ref("ImpactPreviewRevision", "preview-1"), actionBindingHash: binding, readiness: "ready", expiresAt: "2026-08-27T00:00:00Z", atomicSkillRefs: [ref("CapabilityRevision", "content.publish")], logicRef: ref("PlanRevision", "logic-media-publish"), colleagueBindingRefs: [] }, action: { proposalId: "proposal-1", proposalVersion: 2, proposalHash: hash, status: "approved", actionBindingHash: binding, approvalCount: 1, leaseId: null, attemptId: null }, receipt: null, handoff: { status: "required", reasonCode: "MEDIA_PUBLISH_MANUAL_EVIDENCE_REQUIRED", requiredFacts: ["provider object identity"], minimalDisclosure: true, completionReceiptRequired: true, completionAllowed: false }, blockerCodes: ["MEDIA_PUBLISH_EXTERNAL_EFFECT_NOT_AUTHORIZED", "MEDIA_PUBLISH_RECEIPT_NOT_AVAILABLE"], externalEffectsAllowed: false }];
+    await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(payload) }} />); });
+    expect(host.textContent).toContain("Candidate → Impact → Action → Receipt → Handoff");
+    expect(host.textContent).toContain("variant-1 · short-video");
+    expect(host.textContent).toContain("logic-media-publish");
+    expect(host.textContent).toContain("尚无 Receipt");
+    expect(host.textContent).toContain("required · 仅最小披露");
     expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
   });
 });

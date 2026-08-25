@@ -902,6 +902,12 @@ class AipActionExecutionService:
     def get_execution_view(self, principal: Principal, proposal_id: str) -> ActionExecutionView:
         """Read the canonical execution projection without inventing client state."""
         scope = TenantScope(principal.org_id, principal.project_id)
+        return self.get_execution_view_for_scope(scope, proposal_id)
+
+    def get_execution_view_for_scope(
+        self, scope: TenantScope, proposal_id: str
+    ) -> ActionExecutionView:
+        """Read the same projection for an already authenticated tenant-bound caller."""
         with connect(scope) as conn:
             lease = conn.execute(
                 """SELECT * FROM aip_action_execution_lease
