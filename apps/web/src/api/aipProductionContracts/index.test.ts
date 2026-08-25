@@ -39,6 +39,20 @@ describe("W2-C production contract SDK",()=>{
     expect(result.items[0].profileRecommendationRef?.resourceType).toBe("ProfileRecommendationRevision");
     expect(result.items[0].mergePolicyRef?.resourceType).toBe("MergePolicyRevision");
   });
+  it("W7-02 读取档位建议并以 If-Match 和幂等键确认",async()=>{
+    transport.apiGet.mockResolvedValue({tenant,items:[],count:0});
+    await aipProductionContracts.listProfileRecommendations();
+    await aipProductionContracts.listProfileConfirmations();
+    expect(transport.apiGet.mock.calls.map(call=>call[0])).toEqual([
+      "/v1/aip/production-contracts/responsibility-profile/recommendations",
+      "/v1/aip/production-contracts/responsibility-profile/confirmations",
+    ]);
+    transport.apiPost.mockRejectedValue(new Error("parser fixture not needed"));
+    const input={recommendationId:"recommendation-1",recommendationRevision:1,recommendationHash:hash,selectedProfile:"STANDARD" as const,reason:"接受预计区间"};
+    await expect(aipProductionContracts.confirmMediaProfile(input,"confirm-1",hash)).rejects.toThrow();
+    expect(transport.apiPost).toHaveBeenCalledWith("/v1/aip/production-contracts/responsibility-profile/media-confirmations",input,{"Idempotency-Key":"confirm-1","If-Match":hash});
+    await expect(aipProductionContracts.confirmMediaProfile(input,"confirm-2"," ")).rejects.toThrow("If-Match 不能为空");
+  });
   it("编译只 POST canonical Plan 请求并携带幂等键",async()=>{
     const input={taskId:"task-1",expectedTaskVersion:2,templateRevision:1,templateContentHash:hash,responsibilityPlanRef:exact("ResponsibilityPlanRevision","plan-1"),productionContextRef:exact("ProductionContextRevision","context-1"),profile:"standard"};
     transport.apiPost.mockResolvedValue({tenant,taskId:"task-1",templateRef:exact("StageTemplateRevision","stage-1"),responsibilityPlanRef:input.responsibilityPlanRef,productionContextRef:input.productionContextRef,planRef:exact("PlanRevision","plan-revision-1"),compilerVersion:"w2c.v1",applicableStageIds:["analysis"],notApplicableStageIds:[],createdAt:"2026-08-14T00:00:00Z"});

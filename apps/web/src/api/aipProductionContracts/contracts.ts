@@ -1,6 +1,85 @@
 export type Tenant = { orgId: string; projectId: string };
 export type ResourceRef = { resourceType: string; resourceId: string; revision: string | null; authority: string };
 export type ExactRevisionRef = { resourceType: string; resourceId: string; revision: number; contentHash: string };
+export type ResponsibilityProfile = "LITE" | "STANDARD" | "FULL";
+export type ProjectedCostRange = {
+  profile: ResponsibilityProfile;
+  currency: string;
+  componentCount: number;
+  priceSnapshotRefs: ExactRevisionRef[];
+  lowerAmount: string | null;
+  upperAmount: string | null;
+  assumptions: string[];
+  unknownCodes: string[];
+  confidence: "high" | "medium" | "low" | "unknown";
+  expiresAt: string;
+};
+export type ProjectedDurationRange = {
+  lowerSeconds: number | null;
+  upperSeconds: number | null;
+  assumptions: string[];
+  unknownCodes: string[];
+};
+export type ProfileRecommendationRevision = {
+  tenant: Tenant;
+  recommendationId: string;
+  revision: number;
+  subjectRef: ExactRevisionRef;
+  recommendedProfile: ResponsibilityProfile;
+  candidateTemplateRefs: Record<ResponsibilityProfile, ExactRevisionRef>;
+  selectedTemplateRef: ExactRevisionRef;
+  policyRef: ExactRevisionRef;
+  riskLevel: number;
+  channelCount: number;
+  reasonCodes: string[];
+  unknownCodes: string[];
+  dependencyRefs: ExactRevisionRef[];
+  projectedCostRanges: ProjectedCostRange[];
+  projectedDuration: ProjectedDurationRange | null;
+  assumptions: string[];
+  confidence: "high" | "medium" | "low" | "unknown";
+  readiness: "ready" | "blocked" | "stale" | "unknown";
+  blockers: string[];
+  snapshotHash: string;
+  contentHash: string;
+  expiresAt: string;
+  createdBy: string;
+  createdAt: string;
+};
+export type ProfileRecommendationListResponse = {
+  tenant: Tenant;
+  items: ProfileRecommendationRevision[];
+  count: number;
+};
+export type ProfileConfirmationReceipt = {
+  tenant: Tenant;
+  confirmationId: string;
+  recommendationId: string;
+  recommendationRevision: number;
+  recommendationHash: string;
+  selectedProfile: ResponsibilityProfile;
+  selectedTemplateRef: ExactRevisionRef;
+  policyRef: ExactRevisionRef;
+  recommendationEtag: string | null;
+  idempotencyKey: string | null;
+  selectedProjectedCostRanges: ProjectedCostRange[];
+  actor: string;
+  reason: string;
+  contentHash: string;
+  createdAt: string;
+};
+export type ProfileConfirmationListResponse = {
+  tenant: Tenant;
+  items: ProfileConfirmationReceipt[];
+  count: number;
+};
+export type ConfirmMediaProfileInput = {
+  recommendationId: string;
+  recommendationRevision: number;
+  recommendationHash: string;
+  selectedProfile: ResponsibilityProfile;
+  reason: string;
+};
 
 export type TaskBriefRevision = {
   tenant: Tenant;

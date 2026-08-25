@@ -20,8 +20,11 @@ from aos_api.aip_responsibility_profile import (
     CreateMergePolicyRequest,
     MergeDecisionReceipt,
     MergePolicyRevision,
+    ProfileConfirmationListResponse,
     ProfileConfirmationReceipt,
+    ProfileRecommendationListResponse,
     ProfileRecommendationRevision,
+    RecommendMediaResponsibilityProfileRequest,
     RecommendResponsibilityProfileRequest,
 )
 from aos_api.aip_responsibility_profile_store import AipResponsibilityProfileStore
@@ -342,6 +345,24 @@ def recommend_responsibility_profile(
         raise _map(exc) from exc
 
 
+@router.post(
+    "/responsibility-profile/media-recommendations",
+    response_model=ProfileRecommendationRevision,
+    status_code=201,
+)
+def recommend_media_responsibility_profile(
+    body: RecommendMediaResponsibilityProfileRequest,
+    principal: Principal = Depends(require_principal),
+    store: AipResponsibilityProfileStore = Depends(get_profile_store),
+):
+    try:
+        return store.recommend_media(
+            _scope(principal), body, principal.subject, now=datetime.now(UTC)
+        )
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+
+
 @router.post("/responsibility-profile/confirmations", response_model=ProfileConfirmationReceipt, status_code=201)
 def confirm_responsibility_profile(
     body: ConfirmResponsibilityProfileRequest,
@@ -352,6 +373,53 @@ def confirm_responsibility_profile(
         return store.confirm(_scope(principal), body, principal.subject, now=datetime.now(UTC))
     except ProductionContractError as exc:
         raise _map(exc) from exc
+
+
+@router.post(
+    "/responsibility-profile/media-confirmations",
+    response_model=ProfileConfirmationReceipt,
+    status_code=201,
+)
+def confirm_media_responsibility_profile(
+    body: ConfirmResponsibilityProfileRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    principal: Principal = Depends(require_principal),
+    store: AipResponsibilityProfileStore = Depends(get_profile_store),
+):
+    try:
+        return store.confirm_media(
+            _scope(principal),
+            body,
+            principal.subject,
+            now=datetime.now(UTC),
+            idempotency_key=_key(idempotency_key),
+            expected_etag=if_match.strip().strip('"'),
+        )
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+
+
+@router.get(
+    "/responsibility-profile/recommendations",
+    response_model=ProfileRecommendationListResponse,
+)
+def list_responsibility_profile_recommendations(
+    principal: Principal = Depends(require_principal),
+    store: AipResponsibilityProfileStore = Depends(get_profile_store),
+):
+    return store.list_recommendations(_scope(principal))
+
+
+@router.get(
+    "/responsibility-profile/confirmations",
+    response_model=ProfileConfirmationListResponse,
+)
+def list_responsibility_profile_confirmations(
+    principal: Principal = Depends(require_principal),
+    store: AipResponsibilityProfileStore = Depends(get_profile_store),
+):
+    return store.list_confirmations(_scope(principal))
 
 
 @router.post("/responsibility-profile/merge-decisions", response_model=MergeDecisionReceipt, status_code=201)

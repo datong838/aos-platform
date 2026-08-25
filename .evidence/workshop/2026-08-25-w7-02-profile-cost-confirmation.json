@@ -1,0 +1,92 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "taskId": "workshop-w7-02-profile-cost-confirmation-20260825",
+  "recordedAt": "2026-08-25T18:47:47+08:00",
+  "baseRevision": "AOS-000255",
+  "result": "W7_02_PROFILE_PROJECTED_COST_CONFIRMATION_CODE_CONTRACT_BROWSER_GREEN_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "implementation": {
+    "profiles": ["LITE", "STANDARD", "FULL"],
+    "authorityReuse": [
+      "ProfileRecommendationRevision",
+      "ProfileConfirmationReceipt",
+      "MergePolicyRevision"
+    ],
+    "newContracts": [
+      "ProjectedCostRange",
+      "ProjectedDurationRange",
+      "exact dependency snapshot",
+      "If-Match CAS",
+      "Idempotency-Key command envelope"
+    ],
+    "currencyAggregation": "separate_by_currency",
+    "unknownAsZero": false,
+    "confirmationStartsProduction": false,
+    "skillComposition": "atomic Skill output -> Logic and Policy profile selection -> digital colleague responsibility binding -> Workshop contribution view"
+  },
+  "verification": {
+    "focusedAndAdjacentPytest": {
+      "status": "GREEN",
+      "passed": 11,
+      "warnings": 7
+    },
+    "openApiAndDomainRouter": {
+      "status": "GREEN",
+      "passed": 22,
+      "subtestsPassed": 2,
+      "warnings": 7,
+      "paths": 2641,
+      "schemas": 2313,
+      "operations": 4412
+    },
+    "web": {
+      "status": "GREEN",
+      "focusedTestFilesPassed": 2,
+      "focusedTestsPassed": 23,
+      "cumulativeTestFilesPassed": 232,
+      "cumulativeTestsPassed": 2132,
+      "buildModules": 344
+    },
+    "alembic": {
+      "status": "GREEN",
+      "heads": ["w7_001"],
+      "realDatabaseApply": false
+    },
+    "security": {
+      "status": "GREEN",
+      "scopedFiles": 15,
+      "critical": 0,
+      "warning": 0
+    },
+    "browser": {
+      "status": "GREEN_CONTROLLED_FIXTURE_ONLY",
+      "url": "http://127.0.0.1:5173/workshop/production-contracts",
+      "viewports": [768, 1440, 1920],
+      "horizontalOverflow": false,
+      "recommendationProfileVisible": "STANDARD",
+      "knownCostRangeVisible": "CNY LITE 1.20-1.80; STANDARD 2.40-3.60",
+      "unknownCostVisible": "FULL LIVE_VIDEO_PRICE_UNKNOWN",
+      "durationVisible": "90-180 seconds",
+      "confirmationButtonVisible": true,
+      "confirmationButtonClicked": false,
+      "consoleErrors": 0
+    },
+    "syntaxAndArtifacts": {
+      "compileAll": "GREEN",
+      "candidateJson": "GREEN",
+      "diffCheck": "GREEN"
+    }
+  },
+  "boundaries": {
+    "realTenantMutation": false,
+    "databaseMigrationApply": false,
+    "hardBudgetDebit": false,
+    "responsibilityPlanFreeze": false,
+    "taskRunCreation": false,
+    "providerInvocation": false,
+    "mediaGeneration": false,
+    "externalPublication": false,
+    "bundlePublication": false,
+    "tenantInstallation": false,
+    "release": false
+  }
+}

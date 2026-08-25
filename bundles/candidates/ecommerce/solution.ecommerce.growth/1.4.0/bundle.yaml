@@ -29,6 +29,7 @@ spec:
       - content/schemas/
       - content/production-profiles/
       - content/media-production-templates/
+      - content/cost-projection-contracts/
   capabilities:
     provides:
       - material.collect

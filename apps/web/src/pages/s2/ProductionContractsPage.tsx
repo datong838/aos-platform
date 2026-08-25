@@ -12,6 +12,10 @@ import {
   type ImpactPreviewRevision,
   type ProductionContextListResponse,
   type ProductionStartDecisionListResponse,
+  type ProfileConfirmationListResponse,
+  type ProfileRecommendationListResponse,
+  type ProfileRecommendationRevision,
+  type ProjectedCostRange,
   type ResponsibilityPlanListResponse,
   type ReviewIssueListResponse,
   type StageTemplateListResponse,
@@ -35,12 +39,17 @@ type AuthorityState = {
   starts: ProductionStartDecisionListResponse;
   contexts: ProductionContextListResponse;
   actionProposals: ActionProposalList;
+  profileRecommendations: ProfileRecommendationListResponse;
+  profileConfirmations: ProfileConfirmationListResponse;
 };
 
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 16 } as const;
 const itemStyle = { padding: "14px 0", borderTop: "1px solid var(--aos-border)" } as const;
 const label: Record<string, string> = { ready: "就绪", blocked: "阻断", stale: "过期", unknown: "未知", measured: "实测", estimated: "估算", draft: "草稿", frozen: "已冻结", complete: "完整", partial: "部分" };
 const impactLabels: Record<string,string>={objectScope:"对象范围",channelScope:"渠道范围",cost:"成本",budget:"预算余量",risks:"主要风险",reversibility:"回滚/补偿",approvalChain:"审批链",rateCapacityKill:"限速/容量/熔断"};
+const profileLabels={LITE:"轻量档",STANDARD:"标准档",FULL:"完整档"} as const;
+
+function projectedCostText(item:ProjectedCostRange){return item.unknownCodes.length?`未知（不以 0 代替） · ${item.unknownCodes.join("、")}`:`${item.currency} ${item.lowerAmount}–${item.upperAmount}`;}
 
 function Blockers({ items }: { items: ContractBlocker[] }) {
   if (!items.length) return null;
@@ -104,17 +113,19 @@ export function ProductionContractsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts, actionProposals, logicList] = await Promise.all([
+      const [briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, actionProposals, logicList] = await Promise.all([
         aipProductionContracts.listBriefs(), aipProductionContracts.listBundles(),
         aipProductionContracts.listEvalContracts(), aipProductionContracts.listResponsibilityPlans(),
         aipProductionContracts.listStageTemplates(), aipProductionContracts.listArtifactRelations(),
         aipProductionContracts.listReviewIssues(), aipProductionContracts.listProductionContexts(), aipProductionContracts.listImpactPreviews(),
         aipProductionContracts.listProductionStartDecisions(),
+        aipProductionContracts.listProfileRecommendations(),
+        aipProductionContracts.listProfileConfirmations(),
         aipActionsSdk.list(500),
         apiGet<{items?:Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>}>("/v1/aip/logic/graphs").catch(()=>({items:[] as Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>})),
       ]);
       setPublishedLogic((logicList.items||[]).filter(item=>item.persisted!==false && Number(item.published_version||0)>0 && /^[0-9a-f]{64}$/.test(item.graph_hash)));
-      setState({ briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts, actionProposals });
+      setState({ briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, actionProposals });
       setError("");
     } catch (e) {
       setState(null);
@@ -134,6 +145,7 @@ export function ProductionContractsPage() {
   const loadEvalDiff=async(id:string,revision:number)=>{if(revision<=1)return;setBusy(`eval-diff:${id}`);try{setEvalDiff(await aipProductionContracts.diffEvalContract(id,revision-1,revision));setError("");}catch(e){setEvalDiff(null);setError(String((e as Error).message||e));}finally{setBusy("");}};
   const freezePlan = (id: string, version: number) => run(`plan:${id}`, () => aipProductionContracts.freezeResponsibilityPlan(id, version, `w2-ui-plan-freeze-${crypto.randomUUID()}`));
   const freezeStage = (id: string, version: number) => run(`stage:${id}`, () => aipProductionContracts.freezeStageTemplate(id, version, `w2-ui-stage-freeze-${crypto.randomUUID()}`));
+  const confirmProfile=(item:ProfileRecommendationRevision)=>run(`profile:${item.recommendationId}`,()=>aipProductionContracts.confirmMediaProfile({recommendationId:item.recommendationId,recommendationRevision:item.revision,recommendationHash:item.contentHash,selectedProfile:item.recommendedProfile,reason:"接受当前建议与预计成本区间"},`w7-ui-profile-confirm-${crypto.randomUUID()}`,item.contentHash));
 
   const selectedTemplate = state?.stages.items.find(item => item.templateId === templateId);
   const evidenceDrawerBundle = state?.bundles.items.find(item => item.bundleId === evidenceDrawerBundleId);
@@ -183,6 +195,8 @@ export function ProductionContractsPage() {
           ["证据包", state.bundles.count],
           ["评测契约", state.evals.count],
           ["职责计划", state.plans.count],
+          ["档位建议", state.profileRecommendations.count],
+          ["人工确认", state.profileConfirmations.count],
           ["阶段模板", state.stages.count],
           ["产物关系", state.relations.count],
           ["评审", state.reviews.count],
@@ -201,6 +215,25 @@ export function ProductionContractsPage() {
         <button className="btn primary" disabled title="必须从真实 Task 与权威依赖创建；本页不生成样例或隐式权威">创建契约（需真实依赖）</button>
         <span className="notice" style={{ padding: "6px 10px" }}>权威记录只读汇总 · 信息不足时禁止启动</span>
       </div>
+      <section className="card" style={{ padding:18,marginBottom:16 }} aria-label="媒体生产档位建议与成本预检">
+        <h2 style={{marginTop:0}}>媒体生产档位建议与成本预检</h2>
+        <p>原子 Skill 成本快照经 Logic 与策略形成 LITE、STANDARD、FULL 建议，再由用户确认数字同事职责档位；确认只固定建议和预计区间，不启动模型、智能体或外部动作。</p>
+        {state.profileRecommendations.count===0?<div className="notice">当前组织尚无媒体生产档位建议。建议必须绑定任务简报、证据包、评测契约、职责模板、阶段模板和价格快照的精确修订；本页不生成样例成本。</div>:state.profileRecommendations.items.map(item=>{
+          const confirmation=state.profileConfirmations.items.find(candidate=>candidate.recommendationId===item.recommendationId&&candidate.recommendationRevision===item.revision&&candidate.recommendationHash===item.contentHash);
+          const expired=new Date(item.expiresAt).getTime()<=Date.now();
+          const canConfirm=item.readiness==="ready"&&!item.blockers.length&&!expired&&!confirmation;
+          return <article key={`${item.recommendationId}@${item.revision}`} style={itemStyle} data-testid={`profile-recommendation-${item.recommendationId}`}>
+            <div style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><strong>建议 {profileLabels[item.recommendedProfile]}</strong><span>{confirmation?"已人工确认":expired?"已过期":label[item.readiness]??item.readiness}</span></div>
+            <p>{item.reasonCodes.join("、")||"由当前策略和任务范围计算"} · 有效期至 {new Date(item.expiresAt).toLocaleString()}</p>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:8}}>{item.projectedCostRanges.map(cost=><div key={`${cost.profile}:${cost.currency}`} style={{padding:"8px 10px",border:"1px solid var(--aos-border)",borderRadius:6}}><strong>{profileLabels[cost.profile]} · {cost.currency}</strong><div>{projectedCostText(cost)}</div><small>{cost.componentCount} 个计价组件 · {cost.priceSnapshotRefs.length} 个价格快照</small></div>)}</div>
+            <p>预计时长：{item.projectedDuration?(item.projectedDuration.unknownCodes.length?`未知（不以 0 代替） · ${item.projectedDuration.unknownCodes.join("、")}`:`${item.projectedDuration.lowerSeconds}–${item.projectedDuration.upperSeconds} 秒`):"未提供"}</p>
+            {item.assumptions.length?<p>关键假设：{item.assumptions.join("；")}</p>:null}
+            {item.blockers.length?<div className="notice bad">阻断：{item.blockers.join("、")}</div>:null}
+            <details><summary>精确依赖（审计用）</summary><code>{item.recommendationId}@{item.revision}</code> · {item.dependencyRefs.length} 个精确依赖 · 内容摘要 <code>{item.contentHash.slice(0,12)}…</code></details>
+            {confirmation?<div className="notice" data-testid={`profile-confirmation-${item.recommendationId}`}>用户已确认 {profileLabels[confirmation.selectedProfile]}；预计成本区间已随确认回执冻结，实际成本仍以用量账本为准。</div>:<button className="btn primary" disabled={!canConfirm||busy===`profile:${item.recommendationId}`} title={canConfirm?"确认当前建议和预计区间；不会启动生产":"建议被阻断、已过期或已有确认，禁止提交"} onClick={()=>void confirmProfile(item)} style={{marginTop:10}}>{busy===`profile:${item.recommendationId}`?"确认中…":"确认建议档位与预计区间"}</button>}
+          </article>;
+        })}
+      </section>
       <section style={grid}>
         <div className="card" style={{ padding: 18 }}><h2 style={{ marginTop: 0 }}>{contractSectionDisplayName("Task Brief")}</h2>
           {state.briefs.count === 0 ? <div className="notice">当前组织尚无任务简报。请从真实任务进入创建流程；本页不生成演示任务。</div> : state.briefs.items.map(item => <article key={item.briefId} style={itemStyle}><div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><strong>{businessDisplayName(item.briefType)}</strong><span>{label[item.lifecycle] ?? statusDisplayName(item.lifecycle)}</span></div><p>关联真实任务 · 修订 {item.revision}</p><details><summary>技术标识（审计用）</summary><code>{item.briefId}@{item.revision}</code> · 任务 <code>{item.taskId}</code><br/><small>版本 {item.version} · 内容摘要 {item.contentHash.slice(0, 12)}…</small></details>{item.lifecycle === "draft" ? <button className="btn" disabled={busy === `brief:${item.briefId}`} onClick={() => void freezeBrief(item.briefId, item.version)} style={{ marginTop: 10 }}>{busy === `brief:${item.briefId}` ? "冻结中…" : "冻结当前修订"}</button> : null}</article>)}

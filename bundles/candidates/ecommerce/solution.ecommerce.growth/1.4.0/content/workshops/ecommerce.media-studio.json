@@ -59,7 +59,9 @@
     "content/media-production-templates/standard.responsibility.json",
     "content/media-production-templates/full.responsibility.json"
   ],
-  "impactCalculatorRefs": [],
+  "impactCalculatorRefs": [
+    "content/cost-projection-contracts/media.v1.json"
+  ],
   "legacyAssetRefs": [],
   "legacyRedirects": ["/s2/media-studio"],
   "minimumRuntimeVersion": "1.7.0"
