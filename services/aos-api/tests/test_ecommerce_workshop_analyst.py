@@ -9,6 +9,7 @@ from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
 from aos_api.ecommerce_workshop_analyst_contracts import AnalystCountLedger, AnalystMetricValue, AnalystReadinessAxis, AnalystViewId
 from aos_api.ecommerce_workshop_analyst_contracts import AnalystAxisReadiness, AnalystExactRef
 from aos_api.ecommerce_workshop_analyst_reader import AnalystViewObservation
+from aos_api.ecommerce_workshop_growth_scenario import EcommerceWorkshopGrowthScenario
 from aos_api.tenant_scope import TenantScope
 
 HASH = "sha256:" + "a" * 64
@@ -74,3 +75,11 @@ def test_cross_view_resource_revision_drift_fails_closed_without_normalizing() -
     assert all(item.status == "blocked" for item in view.views)
     assert all(item.metrics == [] and item.authority_refs == [] for item in view.views)
     assert all(item.blockers[0].code == "ANALYST_SHARED_RESOURCE_REVISION_CONFLICT" for item in view.views)
+
+
+def test_analyst_v2_adds_fail_closed_growth_scenario_without_changing_seven_views() -> None:
+    view = EcommerceWorkshopAnalyst(growth_scenario=EcommerceWorkshopGrowthScenario(), clock=lambda: datetime(2026, 8, 24, tzinfo=UTC)).read(org_id="org-org", project_id="dev-project")
+    assert view.schema_version == "aos.ecommerce-workshop.analyst-view/v2"
+    assert len(view.views) == 7
+    assert view.growth_scenario is not None
+    assert view.growth_scenario.blockers[0].code == "GROWTH_PLAN_EXACT_ROOT_REQUIRED"

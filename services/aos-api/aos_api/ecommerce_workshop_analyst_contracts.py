@@ -10,8 +10,10 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.ecommerce_workshop_growth_scenario_contracts import GrowthScenarioContribution
 
 ANALYST_SCHEMA_VERSION = "aos.ecommerce-workshop.analyst-view/v1"
+ANALYST_SCENARIO_SCHEMA_VERSION = "aos.ecommerce-workshop.analyst-view/v2"
 
 
 class AnalystViewId(StrEnum):
@@ -161,13 +163,14 @@ class AnalystPageInfo(AipContractModel):
 
 
 class WorkshopAnalystViewEnvelope(AipContractModel):
-    schema_version: Literal[ANALYST_SCHEMA_VERSION] = ANALYST_SCHEMA_VERSION
+    schema_version: Literal[ANALYST_SCHEMA_VERSION, ANALYST_SCENARIO_SCHEMA_VERSION] = ANALYST_SCHEMA_VERSION
     tenant: TenantContext
     resource_revision: int = Field(ge=1)
     evaluated_at: datetime
     data_cutoff: datetime
     readiness: Literal["degraded"] = "degraded"
     views: list[AnalystViewSlice] = Field(min_length=7, max_length=7)
+    growth_scenario: GrowthScenarioContribution | None = None
     page: AnalystPageInfo
 
     @field_validator("evaluated_at", "data_cutoff")
@@ -185,7 +188,9 @@ class WorkshopAnalystViewEnvelope(AipContractModel):
             raise ValueError("analyst views require one revision and cutoff")
         if self.page.count != sum(len(item.metrics) for item in self.views):
             raise ValueError("analyst page count must equal metrics")
+        if (self.schema_version == ANALYST_SCENARIO_SCHEMA_VERSION) != (self.growth_scenario is not None):
+            raise ValueError("analyst v2 requires exactly one growth scenario contribution")
         return self
 
 
-__all__ = ["ANALYST_SCHEMA_VERSION", "AnalystAxisReadiness", "AnalystBlocker", "AnalystCountLedger", "AnalystExactRef", "AnalystMetricValue", "AnalystPageInfo", "AnalystReadinessAxis", "AnalystReadinessStatus", "AnalystViewId", "AnalystViewSlice", "WorkshopAnalystViewEnvelope"]
+__all__ = ["ANALYST_SCHEMA_VERSION", "ANALYST_SCENARIO_SCHEMA_VERSION", "AnalystAxisReadiness", "AnalystBlocker", "AnalystCountLedger", "AnalystExactRef", "AnalystMetricValue", "AnalystPageInfo", "AnalystReadinessAxis", "AnalystReadinessStatus", "AnalystViewId", "AnalystViewSlice", "WorkshopAnalystViewEnvelope"]
