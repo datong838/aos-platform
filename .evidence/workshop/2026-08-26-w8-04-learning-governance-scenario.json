@@ -1,0 +1,61 @@
+{
+  "schema": "aos-workshop-evidence-pack/v1",
+  "taskId": "workshop-w8-04-effect-memory-wiki-governance-scenario-20260826",
+  "baseRevision": "AOS-000273",
+  "sourceCommit": "a58a1bda4f8086b73dbb537b59bf228aeede84b0",
+  "recordedAt": "2026-08-26T04:48:08+08:00",
+  "result": "W8_04_LEARNING_GOVERNANCE_EXACT_BINDING_CODE_CONTRACT_BROWSER_GREEN_SECURITY_SCOPED_GREEN_OPERATIONAL_FAIL_CLOSED_NO_RELEASE",
+  "contract": {
+    "method": "GET",
+    "path": "/v1/ecommerce-workshop/views/analyst/learning-scenario",
+    "stages": 7,
+    "outcomeAxes": 5,
+    "atomicSkills": 2,
+    "logicBindings": 1,
+    "digitalColleagueBindings": 1,
+    "historicalExposures": 2,
+    "retainedExposures": 2,
+    "commands": {
+      "submitCandidate": false,
+      "approveCandidate": false,
+      "promoteCandidate": false,
+      "publishWiki": false,
+      "revokeKnowledge": false
+    },
+    "externalEffectsAllowed": false
+  },
+  "verification": {
+    "backendTargeted": "11 passed, 7 warnings",
+    "backendCumulative": "203 passed, 7 warnings",
+    "frontendTargeted": "10 passed",
+    "frontendCumulative": "239 files, 2173 tests passed",
+    "typescriptAndBuild": "GREEN, 344 modules",
+    "openapi": "2668 paths, 2429 schemas; deterministic export at 4445 operations",
+    "securityScannerUnit": "9 passed",
+    "scopedSecurity": "16 files, critical=0, warning=0",
+    "browser": "built-in browser; 7 stages, 5 axes, four-layer contribution, 2/2 exposure retention, all commands false, no write buttons, fresh console errors=0"
+  },
+  "screenshots": [
+    {
+      "path": ".evidence/workshop/2026-08-26-w8-04-browser/learning-governance-section.jpg",
+      "sha256": "72fb51f61032d55317799a54bae1bc403db62e7894ae1e549156b647b1063992"
+    },
+    {
+      "path": ".evidence/workshop/2026-08-26-w8-04-browser/learning-governance.jpg",
+      "sha256": "93f09ae747dff903da713b2418571d4aace0e3c6e75b1c98c2022faf578d84d6"
+    },
+    {
+      "path": ".evidence/workshop/2026-08-26-w8-04-browser/learning-ledger-axes.jpg",
+      "sha256": "5e94e4dd4667b751c1edd795cb010eeb6e5d1173a990ca2e32e618820d2808c0"
+    }
+  ],
+  "boundaries": [
+    "NO_SHARED_MIGRATION_APPLY",
+    "NO_REAL_TENANT_BUSINESS_WRITE",
+    "NO_CANDIDATE_SUBMIT_APPROVE_OR_PROMOTION",
+    "NO_WIKI_PUBLISH_OR_REVOCATION",
+    "NO_PROVIDER_OR_ACTION_EXECUTION",
+    "NO_EXTERNAL_EFFECT",
+    "NO_RELEASE"
+  ]
+}
