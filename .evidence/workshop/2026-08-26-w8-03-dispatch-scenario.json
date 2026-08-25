@@ -2,7 +2,7 @@
   "schema": "aos-workshop-delivery-evidence/v1",
   "task_id": "workshop-w8-03-cross-domain-dispatch-takeover-scenario-20260826",
   "base_revision": "AOS-000270",
-  "delivery_revision": "AOS-000271",
+  "delivery_revision": "AOS-000273",
   "branch": "m1",
   "captured_at": "2026-08-26T04:14:57+08:00",
   "result": "W8_03_DISPATCH_TAKEOVER_EXACT_BINDING_CODE_CONTRACT_BROWSER_GREEN_SECURITY_SCOPED_GREEN_OPERATIONAL_FAIL_CLOSED_NO_RELEASE",
@@ -60,6 +60,7 @@
     "v1.generated.json": "6028a9c46fa7891c40a7f5b5c9fb51fd2d7ae58683295f748d03e91181ee7bbb"
   },
   "operational_blockers": ["DISPATCH_SCENARIO_CANONICAL_ROOT_REQUIRED", "DISPATCH_SCENARIO_OPERATIONAL_AUTHORIZATION_REQUIRED"],
+  "authority_correction": "AOS-000271 used malformed evidence arguments and AOS-000272 still referenced pre-correction artifacts; neither revision was synchronized. AOS-000273 is the explicit CAS correction with verified full source commits and corrected artifacts.",
   "safety": {
     "shared_migration_applied": false,
     "real_provider_action_invoked": false,
