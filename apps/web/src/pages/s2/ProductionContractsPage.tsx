@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   aipProductionContracts,
+  type ArtifactFamilyListResponse,
   type ContractBlocker,
   type ArtifactRelationListResponse,
   type EvalContractListResponse,
@@ -35,6 +36,7 @@ type AuthorityState = {
   evals: EvalContractListResponse;
   plans: ResponsibilityPlanListResponse;
   stages: StageTemplateListResponse;
+  families: ArtifactFamilyListResponse;
   relations: ArtifactRelationListResponse;
   reviews: ReviewIssueListResponse;
   previews: ImpactPreviewListResponse;
@@ -117,10 +119,10 @@ export function ProductionContractsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, capabilities, actionProposals, logicList] = await Promise.all([
+      const [briefs, bundles, evals, plans, stages, families, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, capabilities, actionProposals, logicList] = await Promise.all([
         aipProductionContracts.listBriefs(), aipProductionContracts.listBundles(),
         aipProductionContracts.listEvalContracts(), aipProductionContracts.listResponsibilityPlans(),
-        aipProductionContracts.listStageTemplates(), aipProductionContracts.listArtifactRelations(),
+        aipProductionContracts.listStageTemplates(), aipProductionContracts.listArtifactFamilies(), aipProductionContracts.listArtifactRelations(),
         aipProductionContracts.listReviewIssues(), aipProductionContracts.listProductionContexts(), aipProductionContracts.listImpactPreviews(),
         aipProductionContracts.listProductionStartDecisions(),
         aipProductionContracts.listProfileRecommendations(),
@@ -130,7 +132,7 @@ export function ProductionContractsPage() {
         apiGet<{items?:Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>}>("/v1/aip/logic/graphs").catch(()=>({items:[] as Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>})),
       ]);
       setPublishedLogic((logicList.items||[]).filter(item=>item.persisted!==false && Number(item.published_version||0)>0 && /^[0-9a-f]{64}$/.test(item.graph_hash)));
-      setState({ briefs, bundles, evals, plans, stages, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, capabilities, actionProposals });
+      setState({ briefs, bundles, evals, plans, stages, families, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, capabilities, actionProposals });
       setError("");
     } catch (e) {
       setState(null);
@@ -215,6 +217,7 @@ export function ProductionContractsPage() {
           ["档位建议", state.profileRecommendations.count],
           ["人工确认", state.profileConfirmations.count],
           ["阶段模板", state.stages.count],
+          ["产物家族", state.families.count],
           ["产物关系", state.relations.count],
           ["评审", state.reviews.count],
           ["影响预览", state.previews.count],
@@ -267,6 +270,23 @@ export function ProductionContractsPage() {
         </div>
         <div className="card" style={{ padding: 18 }}><h2 style={{ marginTop: 0 }}>{contractSectionDisplayName("Stage Template")}</h2>
           {state.stages.count === 0 ? <div className="notice">当前组织尚无阶段模板。模板必须来自已验证资产包，本页不生成隐式阶段。</div> : state.stages.items.map(item => { const canFreeze = item.lifecycle === "draft" && item.readiness === "ready" && item.blockers.length === 0; return <article key={item.templateId} style={itemStyle}><div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><strong>{businessDisplayName(item.profile)}</strong><span>{label[item.readiness] ?? statusDisplayName(item.readiness)}</span></div><p>{item.stages.length} 个执行阶段 · {label[item.lifecycle] ?? statusDisplayName(item.lifecycle)}</p><details><summary>技术标识（审计用）</summary><code>{item.templateId}@{item.revision}</code><br/>来源 <code>{item.sourceBundleRef.resourceId}@{item.sourceBundleRef.revision}</code></details><Blockers items={item.blockers} />{item.lifecycle === "draft" ? <button className="btn" disabled={!canFreeze || busy === `stage:${item.templateId}`} title={canFreeze ? "冻结当前就绪模板" : "来源引用缺失、漂移或存在其他阻断"} onClick={() => void freezeStage(item.templateId, item.version)} style={{ marginTop: 10 }}>{busy === `stage:${item.templateId}` ? "冻结中…" : "冻结阶段模板"}</button> : null}</article>; })}
+        </div>
+        <div className="card" style={{ padding: 18 }} data-testid="artifact-family-authority"><h2 style={{ marginTop: 0 }}>产物家族与版本分叉</h2>
+          {state.families.count === 0 ? <div className="notice">当前组织尚无产物家族。页面不会从创建时间、文件名或展示顺序猜测当前版本。</div> : state.families.items.map(family => <article key={family.familyId} style={itemStyle} data-testid={`artifact-family-${family.familyId}`}>
+            <div style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><strong>{family.familyId}</strong><span>{family.topologyStatus === "conflict" ? "存在并发分叉" : family.topologyStatus === "current" ? "当前候选明确" : "尚无候选"}</span></div>
+            <p>家族修订 {family.currentRevision} · {family.members.length} 个不可变成员 · {family.selectionDecisions.length} 条选择决定</p>
+            {family.candidateGroups.map(group => <section key={group.selectionKey} className={`notice${group.status === "conflict" ? " bad" : ""}`} style={{marginTop:8}}>
+              <strong>{group.role === "master" ? "Master 主版本" : group.role === "variant" ? "Variant 变体" : statusDisplayName(group.role)} · {group.profile} / {group.platform}</strong>
+              <div>{group.status === "conflict" ? `冲突：${group.candidates.length} 个未被替代候选，必须显式选择` : group.status === "selected" ? "已按精确候选快照选择" : "唯一当前候选"}</div>
+              <small>候选 {group.candidates.map(item => item.artifactId).join("、")}{group.selectedRef ? ` · 已选 ${group.selectedRef.artifactId}` : ""}</small>
+            </section>)}
+            <ol aria-label={`${family.familyId} 产物时间线`}>{family.members.map(member => <li key={member.artifactRef.artifactId}>
+              <strong>r{member.familyRevision} · {member.role === "master" ? "Master" : member.role === "variant" ? "Variant" : statusDisplayName(member.role)}</strong> · {member.artifactRef.artifactId}
+              <div><small>批准：{member.approvalStatus === "unknown" ? "未知（未从家族状态推断）" : statusDisplayName(member.approvalStatus)} · 执行：{member.executionStatus === "unknown" ? "未知（未从家族状态推断）" : statusDisplayName(member.executionStatus)} · lineage {member.lineageRefs.length} 条</small></div>
+              {member.masterRef ? <div><small>Master：{member.masterRef.artifactId}</small></div> : null}{member.supersedesRef ? <div><small>替代：{member.supersedesRef.artifactId}（历史仍保留）</small></div> : null}
+            </li>)}</ol>
+            <details><summary>精确家族 authority（审计用）</summary>manifest <code>{family.manifestRef.artifactId}</code> · family version {family.version}<br/>最近更新 {new Date(family.updatedAt).toLocaleString()}</details>
+          </article>)}
         </div>
         <div className="card" style={{ padding: 18 }}><h2 style={{ marginTop: 0 }}>{contractSectionDisplayName("Artifact Relation")}</h2>
           {state.relations.count === 0 ? <div className="notice">当前组织尚无产物关系。只有两端产物标识和内容摘要都匹配权威记录时才能建立关系。</div> : state.relations.items.map(item => <article key={item.relationId} style={itemStyle}><strong>{item.relationType === "variant_of" ? "同类变体" : businessDisplayName(item.relationType)}</strong><p>{contractBusinessText(item.reason)}</p><details><summary>技术标识（审计用）</summary><code>{item.fromArtifact.artifactId}</code> → <code>{item.toArtifact.artifactId}</code><br/><small>{item.createdBy}</small></details></article>)}

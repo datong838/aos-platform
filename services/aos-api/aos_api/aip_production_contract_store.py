@@ -11,7 +11,11 @@ from typing import Any
 
 from aos_api.aip_contracts import ExactContractRef, PlanStep, ResourceRef, TenantContext
 from aos_api.aip_production_contracts import (
-    ArtifactRelation, ArtifactRelationListResponse, AssigneeRef, BriefLifecycle,
+    ArtifactFamilyCandidateGroup, ArtifactFamilyCandidateStatus,
+    ArtifactFamilyListResponse, ArtifactFamilyMember, ArtifactFamilyRole,
+    ArtifactFamilySelectionDecision, ArtifactFamilyTopologyStatus,
+    ArtifactFamilyView, ArtifactRelation, ArtifactRelationListResponse,
+    AssigneeRef, AttachArtifactFamilyMemberRequest, BriefLifecycle,
     BuildEvidenceBundleRequest, CompileStageTemplateRequest, ContractBlocker,
     ContractReadiness, Coverage, CreateArtifactRelationRequest, CreateBriefRequest,
     CreateEvalContractRequest, CreateEvidenceBundleRequest,
@@ -22,7 +26,7 @@ from aos_api.aip_production_contracts import (
     EvalContractListResponse, EvalContractRevision, EvalContractDiff,
     EvalContractDiffChange, EvidenceBundleListResponse,
     EvidenceBundleRevision, EvidenceDisclosureDecision, EvidenceRevocation,
-    ExactArtifactRef,
+    ExactArtifactRef, RegisterArtifactFamilyRequest,
     ExactRevisionRef, FreezeProductionContextRequest, Freshness,
     ImpactPreviewListResponse, ImpactPreviewRevision,
     CreateImpactPreviewRequest, ProductionContextListResponse,
@@ -30,7 +34,7 @@ from aos_api.aip_production_contracts import (
     RevokeEvidenceBundleRequest, RevokeEvidenceRequest, ReviseImpactPreviewRequest,
     ResolveReviewIssueRequest, ResponsibilityPlanListResponse,
     ResponsibilityPlanRevision, ReturnDecision, ReturnDecisionListResponse,
-    ReturnReviewIssueRequest,
+    ReturnReviewIssueRequest, SelectArtifactFamilyCandidateRequest,
     ReviseBriefRequest, ReviseEvalContractRequest,
     ReviseResponsibilityPlanRequest, ReviseStageTemplateRequest, ReviewIssue,
     ReviewIssueListResponse, ReviewIssueStatus, StageCompilationResult,
@@ -1499,6 +1503,274 @@ class AipProductionContractStore:
             ).fetchall()
             items = [self._artifact_relation(scope, row) for row in rows]
             return ArtifactRelationListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
+
+    def register_artifact_family(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: RegisterArtifactFamilyRequest,
+    ) -> ArtifactFamilyView:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "artifact_family.register", key, request_hash)
+            if replay:
+                return self.get_artifact_family(scope, replay["resourceId"], conn=conn)
+            manifest = self._artifact_row(conn, scope, body.manifest_artifact)
+            if not (
+                manifest["artifact_type"] == "artifact_family_manifest"
+                and manifest["family_id"] == body.family_id
+                and manifest["family_role"] == ArtifactFamilyRole.FAMILY_MANIFEST.value
+                and int(manifest["family_revision"] or 0) == 1
+            ):
+                raise ProductionContractDependencyBlocked(
+                    "ARTIFACT_FAMILY_MANIFEST_INVALID"
+                )
+            conn.execute(
+                """INSERT INTO aip_artifact_family_head
+                (org_id,project_id,family_id,manifest_artifact_id,
+                 manifest_content_hash,current_revision,version,created_by)
+                VALUES(%s,%s,%s,%s,%s,1,1,%s)""",
+                (
+                    *scope.key,
+                    body.family_id,
+                    body.manifest_artifact.artifact_id,
+                    body.manifest_artifact.content_hash,
+                    actor,
+                ),
+            )
+            self._receipt(
+                conn,
+                scope,
+                "artifact_family.register",
+                key,
+                request_hash,
+                {"resourceType": "ArtifactFamily", "resourceId": body.family_id},
+                actor,
+            )
+            conn.commit()
+            return self.get_artifact_family(scope, body.family_id, conn=conn)
+
+    def attach_artifact_family_member(
+        self,
+        scope: TenantScope,
+        actor: str,
+        family_id: str,
+        key: str,
+        body: AttachArtifactFamilyMemberRequest,
+    ) -> ArtifactFamilyView:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash({"familyId": family_id, **payload})
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "artifact_family.member.attach", key, request_hash)
+            if replay:
+                return self.get_artifact_family(scope, family_id, conn=conn)
+            head = self._artifact_family_head(conn, scope, family_id, for_update=True)
+            if int(head["version"]) != body.expected_family_version:
+                raise ProductionContractConflict("stale artifact family version")
+            artifact = self._artifact_row(conn, scope, body.artifact_ref)
+            if artifact["family_id"] != family_id:
+                raise ProductionContractDependencyBlocked("ARTIFACT_FAMILY_MISMATCH")
+            role = ArtifactFamilyRole(artifact["family_role"])
+            if role is ArtifactFamilyRole.FAMILY_MANIFEST:
+                raise ProductionContractDependencyBlocked("FAMILY_MANIFEST_CANNOT_BE_MEMBER")
+            next_revision = int(head["current_revision"]) + 1
+            if int(artifact["family_revision"] or 0) != next_revision:
+                raise ProductionContractDependencyBlocked(
+                    "ARTIFACT_FAMILY_REVISION_NOT_NEXT"
+                )
+            lineage = self._load(artifact["lineage_refs"])
+            if not isinstance(lineage, list) or not lineage:
+                raise ProductionContractDependencyBlocked("ARTIFACT_LINEAGE_MISSING")
+            try:
+                [ExactRevisionRef.model_validate(item) for item in lineage]
+            except ValueError as exc:
+                raise ProductionContractDependencyBlocked(
+                    "ARTIFACT_LINEAGE_NOT_EXACT"
+                ) from exc
+
+            master: Any | None = None
+            if role is ArtifactFamilyRole.VARIANT:
+                if body.master_ref is None:
+                    raise ProductionContractDependencyBlocked("VARIANT_MASTER_REQUIRED")
+                master = self._artifact_row(conn, scope, body.master_ref)
+                if not self._artifact_family_compatible(artifact, master, master=True):
+                    raise ProductionContractDependencyBlocked("VARIANT_MASTER_INCOMPATIBLE")
+                self._require_family_member(conn, scope, family_id, body.master_ref)
+            elif body.master_ref is not None:
+                raise ProductionContractDependencyBlocked("MASTER_REF_ONLY_FOR_VARIANT")
+
+            superseded: Any | None = None
+            if body.supersedes_ref is not None:
+                superseded = self._artifact_row(conn, scope, body.supersedes_ref)
+                if not self._artifact_family_compatible(artifact, superseded):
+                    raise ProductionContractDependencyBlocked("SUPERSEDES_INCOMPATIBLE")
+                self._require_family_member(conn, scope, family_id, body.supersedes_ref)
+
+            manifest_ref = ExactArtifactRef(
+                artifactId=head["manifest_artifact_id"],
+                contentHash=head["manifest_content_hash"],
+            )
+            self._insert_artifact_relation(
+                conn, scope, actor, "family_member", body.artifact_ref, manifest_ref,
+                body.reason,
+            )
+            if master is not None and body.master_ref is not None:
+                self._insert_artifact_relation(
+                    conn, scope, actor, "variant_of", body.artifact_ref,
+                    body.master_ref, body.reason,
+                )
+            if superseded is not None and body.supersedes_ref is not None:
+                self._insert_artifact_relation(
+                    conn, scope, actor, "supersedes", body.artifact_ref,
+                    body.supersedes_ref, body.reason,
+                )
+            updated = conn.execute(
+                """UPDATE aip_artifact_family_head
+                SET current_revision=%s,version=version+1,updated_at=NOW()
+                WHERE org_id=%s AND project_id=%s AND family_id=%s AND version=%s
+                RETURNING *""",
+                (next_revision, *scope.key, family_id, body.expected_family_version),
+            ).fetchone()
+            if updated is None:
+                raise ProductionContractConflict("artifact family CAS failed")
+            self._receipt(
+                conn,
+                scope,
+                "artifact_family.member.attach",
+                key,
+                request_hash,
+                {"resourceType": "ArtifactFamily", "resourceId": family_id},
+                actor,
+            )
+            conn.commit()
+            return self.get_artifact_family(scope, family_id, conn=conn)
+
+    def select_artifact_family_candidate(
+        self,
+        scope: TenantScope,
+        actor: str,
+        family_id: str,
+        key: str,
+        body: SelectArtifactFamilyCandidateRequest,
+    ) -> ArtifactFamilyView:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash({"familyId": family_id, **payload})
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "artifact_family.candidate.select", key, request_hash)
+            if replay:
+                return self.get_artifact_family(scope, family_id, conn=conn)
+            head = self._artifact_family_head(conn, scope, family_id, for_update=True)
+            if int(head["version"]) != body.expected_family_version:
+                raise ProductionContractConflict("stale artifact family version")
+            if not body.policy_ref.resource_type.endswith("PolicyRevision"):
+                raise ProductionContractDependencyBlocked(
+                    "ARTIFACT_FAMILY_SELECTION_POLICY_TYPE_INVALID"
+                )
+            current = self._artifact_family_view(conn, scope, head)
+            group = next(
+                (item for item in current.candidate_groups if item.selection_key == body.selection_key),
+                None,
+            )
+            if group is None or group.status is not ArtifactFamilyCandidateStatus.CONFLICT:
+                raise ProductionContractDependencyBlocked(
+                    "ARTIFACT_FAMILY_SELECTION_NOT_CONFLICT"
+                )
+            actual_refs = self._sorted_artifact_refs(group.candidates)
+            requested_refs = self._sorted_artifact_refs(body.candidate_refs)
+            if actual_refs != requested_refs:
+                raise ProductionContractDependencyBlocked(
+                    "ARTIFACT_FAMILY_CANDIDATE_SNAPSHOT_DRIFTED"
+                )
+            candidate_set_hash = canonical_hash(actual_refs)
+            revision = int(
+                conn.execute(
+                    """SELECT COALESCE(MAX(revision),0)+1 AS revision
+                    FROM aip_artifact_family_selection_revision
+                    WHERE org_id=%s AND project_id=%s AND family_id=%s
+                      AND selection_key=%s""",
+                    (*scope.key, family_id, body.selection_key),
+                ).fetchone()["revision"]
+            )
+            decision_payload = {
+                "familyId": family_id,
+                "selectionKey": body.selection_key,
+                "revision": revision,
+                "expectedFamilyVersion": body.expected_family_version,
+                "candidateRefs": actual_refs,
+                "selectedRef": body.selected_ref.model_dump(mode="json", by_alias=True),
+                "policyRef": body.policy_ref.model_dump(mode="json", by_alias=True),
+                "reason": body.reason,
+                "actor": actor,
+            }
+            decision_hash = canonical_hash(decision_payload)
+            conn.execute(
+                """INSERT INTO aip_artifact_family_selection_revision
+                (org_id,project_id,family_id,selection_key,revision,
+                 expected_family_version,selected_artifact_id,selected_content_hash,
+                 candidate_refs,candidate_set_hash,policy_ref,reason,decision_hash,actor)
+                VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s,%s,%s)""",
+                (
+                    *scope.key,
+                    family_id,
+                    body.selection_key,
+                    revision,
+                    body.expected_family_version,
+                    body.selected_ref.artifact_id,
+                    body.selected_ref.content_hash,
+                    self._json(actual_refs),
+                    candidate_set_hash,
+                    self._json(body.policy_ref.model_dump(mode="json", by_alias=True)),
+                    body.reason,
+                    decision_hash,
+                    actor,
+                ),
+            )
+            updated = conn.execute(
+                """UPDATE aip_artifact_family_head SET version=version+1,updated_at=NOW()
+                WHERE org_id=%s AND project_id=%s AND family_id=%s AND version=%s
+                RETURNING *""",
+                (*scope.key, family_id, body.expected_family_version),
+            ).fetchone()
+            if updated is None:
+                raise ProductionContractConflict("artifact family CAS failed")
+            self._receipt(
+                conn,
+                scope,
+                "artifact_family.candidate.select",
+                key,
+                request_hash,
+                {"resourceType": "ArtifactFamily", "resourceId": family_id},
+                actor,
+            )
+            conn.commit()
+            return self.get_artifact_family(scope, family_id, conn=conn)
+
+    def get_artifact_family(
+        self, scope: TenantScope, family_id: str, *, conn: Any | None = None
+    ) -> ArtifactFamilyView:
+        def read(connection: Any) -> ArtifactFamilyView:
+            head = self._artifact_family_head(connection, scope, family_id)
+            return self._artifact_family_view(connection, scope, head)
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as connection:
+            return read(connection)
+
+    def list_artifact_families(self, scope: TenantScope) -> ArtifactFamilyListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_artifact_family_head
+                WHERE org_id=%s AND project_id=%s
+                ORDER BY updated_at DESC,family_id""",
+                scope.key,
+            ).fetchall()
+            items = [self._artifact_family_view(conn, scope, row) for row in rows]
+            return ArtifactFamilyListResponse(
                 tenant=self._tenant(scope), items=items, count=len(items)
             )
 
@@ -3516,6 +3788,284 @@ class AipProductionContractStore:
             tenant=self._tenant(scope), ruleId=row["rule_id"], revision=row["revision"],
             spec=self._load(row["spec"]), contentHash=row["content_hash"],
             createdBy=row["created_by"], createdAt=row["created_at"],
+        )
+
+    @staticmethod
+    def _sorted_artifact_refs(refs: list[ExactArtifactRef]) -> list[dict[str, str]]:
+        return sorted(
+            (item.model_dump(mode="json", by_alias=True) for item in refs),
+            key=lambda item: (item["artifactId"], item["contentHash"]),
+        )
+
+    @staticmethod
+    def _artifact_family_compatible(
+        source: Any, target: Any, *, master: bool = False
+    ) -> bool:
+        if master:
+            roles_match = (
+                source["family_role"] == ArtifactFamilyRole.VARIANT.value
+                and target["family_role"] == ArtifactFamilyRole.MASTER.value
+            )
+        else:
+            roles_match = source["family_role"] == target["family_role"]
+        return bool(
+            roles_match
+            and source["family_id"] == target["family_id"]
+            and source["artifact_type"] == target["artifact_type"]
+            and source["profile"] == target["profile"]
+            and source["platform"] == target["platform"]
+            and source["rendition_spec_hash"] == target["rendition_spec_hash"]
+        )
+
+    @staticmethod
+    def _artifact_family_head(
+        conn: Any, scope: TenantScope, family_id: str, *, for_update: bool = False
+    ) -> Any:
+        suffix = " FOR UPDATE" if for_update else ""
+        row = conn.execute(
+            """SELECT * FROM aip_artifact_family_head
+            WHERE org_id=%s AND project_id=%s AND family_id=%s""" + suffix,
+            (*scope.key, family_id),
+        ).fetchone()
+        if row is None:
+            raise ProductionContractNotFound("artifact family not found")
+        return row
+
+    @staticmethod
+    def _artifact_row(conn: Any, scope: TenantScope, ref: ExactArtifactRef) -> Any:
+        row = conn.execute(
+            """SELECT * FROM aip_artifact
+            WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+            (*scope.key, ref.artifact_id),
+        ).fetchone()
+        if row is None or not row["content_hash"]:
+            raise ProductionContractDependencyBlocked("ARTIFACT_HASH_MISSING")
+        if row["content_hash"] != ref.content_hash:
+            raise ProductionContractDependencyBlocked("ARTIFACT_HASH_DRIFTED")
+        return row
+
+    @staticmethod
+    def _require_family_member(
+        conn: Any, scope: TenantScope, family_id: str, ref: ExactArtifactRef
+    ) -> None:
+        row = conn.execute(
+            """SELECT 1 FROM aip_artifact_relation relation
+            JOIN aip_artifact manifest
+              ON manifest.org_id=relation.org_id
+             AND manifest.project_id=relation.project_id
+             AND manifest.artifact_id=relation.to_artifact_id
+            WHERE relation.org_id=%s AND relation.project_id=%s
+              AND relation.relation_type='family_member'
+              AND relation.from_artifact_id=%s
+              AND relation.from_content_hash=%s
+              AND manifest.family_id=%s AND manifest.family_role='family_manifest'""",
+            (*scope.key, ref.artifact_id, ref.content_hash, family_id),
+        ).fetchone()
+        if row is None:
+            raise ProductionContractDependencyBlocked("ARTIFACT_FAMILY_MEMBER_MISSING")
+
+    @staticmethod
+    def _insert_artifact_relation(
+        conn: Any,
+        scope: TenantScope,
+        actor: str,
+        relation_type: str,
+        source: ExactArtifactRef,
+        target: ExactArtifactRef,
+        reason: str,
+    ) -> None:
+        conn.execute(
+            """INSERT INTO aip_artifact_relation
+            (org_id,project_id,relation_id,relation_type,from_artifact_id,
+             from_content_hash,to_artifact_id,to_content_hash,reason,created_by)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            (
+                *scope.key,
+                f"artifact-relation-{uuid.uuid4().hex[:20]}",
+                relation_type,
+                source.artifact_id,
+                source.content_hash,
+                target.artifact_id,
+                target.content_hash,
+                reason,
+                actor,
+            ),
+        )
+
+    def _artifact_family_view(
+        self, conn: Any, scope: TenantScope, head: Any
+    ) -> ArtifactFamilyView:
+        family_id = str(head["family_id"])
+        rows = conn.execute(
+            """SELECT artifact.* FROM aip_artifact artifact
+            JOIN aip_artifact_relation membership
+              ON membership.org_id=artifact.org_id
+             AND membership.project_id=artifact.project_id
+             AND membership.from_artifact_id=artifact.artifact_id
+             AND membership.from_content_hash=artifact.content_hash
+             AND membership.relation_type='family_member'
+            WHERE artifact.org_id=%s AND artifact.project_id=%s
+              AND artifact.family_id=%s
+              AND membership.to_artifact_id=%s
+              AND membership.to_content_hash=%s
+            ORDER BY artifact.family_revision,artifact.artifact_id""",
+            (
+                *scope.key,
+                family_id,
+                head["manifest_artifact_id"],
+                head["manifest_content_hash"],
+            ),
+        ).fetchall()
+        relation_rows = conn.execute(
+            """SELECT relation.* FROM aip_artifact_relation relation
+            JOIN aip_artifact source
+              ON source.org_id=relation.org_id
+             AND source.project_id=relation.project_id
+             AND source.artifact_id=relation.from_artifact_id
+            WHERE relation.org_id=%s AND relation.project_id=%s
+              AND source.family_id=%s
+              AND relation.relation_type IN ('variant_of','supersedes')""",
+            (*scope.key, family_id),
+        ).fetchall()
+        master_by_member = {
+            row["from_artifact_id"]: ExactArtifactRef(
+                artifactId=row["to_artifact_id"], contentHash=row["to_content_hash"]
+            )
+            for row in relation_rows
+            if row["relation_type"] == "variant_of"
+        }
+        supersedes_by_member = {
+            row["from_artifact_id"]: ExactArtifactRef(
+                artifactId=row["to_artifact_id"], contentHash=row["to_content_hash"]
+            )
+            for row in relation_rows
+            if row["relation_type"] == "supersedes"
+        }
+        members = [
+            ArtifactFamilyMember(
+                artifactRef=ExactArtifactRef(
+                    artifactId=row["artifact_id"], contentHash=row["content_hash"]
+                ),
+                familyRevision=int(row["family_revision"]),
+                role=row["family_role"],
+                artifactType=row["artifact_type"],
+                profile=row["profile"],
+                platform=row["platform"],
+                renditionSpecHash=row["rendition_spec_hash"],
+                lineageRefs=[
+                    ExactRevisionRef.model_validate(item)
+                    for item in (self._load(row["lineage_refs"]) or [])
+                ],
+                masterRef=master_by_member.get(row["artifact_id"]),
+                supersedesRef=supersedes_by_member.get(row["artifact_id"]),
+                approvalStatus="unknown",
+                executionStatus="unknown",
+                createdAt=row["created_at"],
+            )
+            for row in rows
+        ]
+        decision_rows = conn.execute(
+            """SELECT * FROM aip_artifact_family_selection_revision
+            WHERE org_id=%s AND project_id=%s AND family_id=%s
+            ORDER BY selection_key,revision""",
+            (*scope.key, family_id),
+        ).fetchall()
+        decisions = [self._artifact_family_decision(row) for row in decision_rows]
+        superseded_ids = {
+            row["to_artifact_id"]
+            for row in relation_rows
+            if row["relation_type"] == "supersedes"
+        }
+        grouped: dict[tuple[str, str, str, str, str], list[ArtifactFamilyMember]] = {}
+        for member in members:
+            if member.artifact_ref.artifact_id in superseded_ids:
+                continue
+            group_key = (
+                member.role.value,
+                member.artifact_type,
+                member.profile,
+                member.platform,
+                member.rendition_spec_hash,
+            )
+            grouped.setdefault(group_key, []).append(member)
+        candidate_groups: list[ArtifactFamilyCandidateGroup] = []
+        for group_key, group_members in sorted(grouped.items()):
+            role, artifact_type, profile, platform, rendition_hash = group_key
+            selection_key = ":".join(group_key)
+            candidates = [item.artifact_ref for item in group_members]
+            selected_ref: ExactArtifactRef | None = None
+            status = ArtifactFamilyCandidateStatus.CURRENT
+            if len(candidates) > 1:
+                status = ArtifactFamilyCandidateStatus.CONFLICT
+                candidate_hash = canonical_hash(self._sorted_artifact_refs(candidates))
+                matching = [
+                    item
+                    for item in decisions
+                    if item.selection_key == selection_key
+                    and item.candidate_set_hash == candidate_hash
+                ]
+                if matching:
+                    selected_ref = matching[-1].selected_ref
+                    status = ArtifactFamilyCandidateStatus.SELECTED
+            candidate_groups.append(
+                ArtifactFamilyCandidateGroup(
+                    selectionKey=selection_key,
+                    role=role,
+                    artifactType=artifact_type,
+                    profile=profile,
+                    platform=platform,
+                    renditionSpecHash=rendition_hash,
+                    candidates=candidates,
+                    selectedRef=selected_ref,
+                    status=status,
+                )
+            )
+        topology = (
+            ArtifactFamilyTopologyStatus.EMPTY
+            if not candidate_groups
+            else ArtifactFamilyTopologyStatus.CONFLICT
+            if any(
+                item.status is ArtifactFamilyCandidateStatus.CONFLICT
+                for item in candidate_groups
+            )
+            else ArtifactFamilyTopologyStatus.CURRENT
+        )
+        return ArtifactFamilyView(
+            tenant=self._tenant(scope),
+            familyId=family_id,
+            version=int(head["version"]),
+            currentRevision=int(head["current_revision"]),
+            manifestRef=ExactArtifactRef(
+                artifactId=head["manifest_artifact_id"],
+                contentHash=head["manifest_content_hash"],
+            ),
+            members=members,
+            candidateGroups=candidate_groups,
+            selectionDecisions=decisions,
+            topologyStatus=topology,
+            updatedAt=head["updated_at"],
+        )
+
+    def _artifact_family_decision(self, row: Any) -> ArtifactFamilySelectionDecision:
+        return ArtifactFamilySelectionDecision(
+            familyId=row["family_id"],
+            selectionKey=row["selection_key"],
+            revision=int(row["revision"]),
+            expectedFamilyVersion=int(row["expected_family_version"]),
+            selectedRef=ExactArtifactRef(
+                artifactId=row["selected_artifact_id"],
+                contentHash=row["selected_content_hash"],
+            ),
+            candidateRefs=[
+                ExactArtifactRef.model_validate(item)
+                for item in (self._load(row["candidate_refs"]) or [])
+            ],
+            candidateSetHash=row["candidate_set_hash"],
+            policyRef=ExactRevisionRef.model_validate(self._load(row["policy_ref"])),
+            reason=row["reason"],
+            decisionHash=row["decision_hash"],
+            actor=row["actor"],
+            createdAt=row["created_at"],
         )
 
     def _artifact_relation(self, scope: TenantScope, row: Any) -> ArtifactRelation:

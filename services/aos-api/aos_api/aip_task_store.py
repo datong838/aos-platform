@@ -1106,6 +1106,61 @@ class AipTaskStore:
         content_hash = payload.get("contentHash") or _canonical_hash(
             {"contentRef": content_ref, "schemaRef": schema_ref, "metadata": metadata}
         )
+        if not (
+            isinstance(content_hash, str)
+            and len(content_hash) == 64
+            and all(character in "0123456789abcdef" for character in content_hash)
+        ):
+            raise AipTaskTransitionBlocked("artifact contentHash must be exact sha256")
+        family_id: str | None = None
+        family_revision: int | None = None
+        family_role: str | None = None
+        profile: str | None = None
+        platform: str | None = None
+        rendition_spec: dict[str, Any] | None = None
+        rendition_spec_hash: str | None = None
+        lineage_refs: list[dict[str, Any]] | None = None
+        family = metadata.get("artifactFamily") if isinstance(metadata, dict) else None
+        if family is not None:
+            if not isinstance(family, dict):
+                raise AipTaskTransitionBlocked("artifactFamily metadata must be an object")
+            family_id = family.get("familyId")
+            family_revision = family.get("familyRevision")
+            family_role = family.get("role")
+            profile = family.get("profile")
+            platform = family.get("platform")
+            rendition_spec = family.get("renditionSpec")
+            lineage_refs = family.get("lineageRefs")
+            if not (
+                isinstance(family_id, str) and family_id.strip()
+                and isinstance(family_revision, int) and not isinstance(family_revision, bool)
+                and family_revision >= 1
+                and family_role in {"family_manifest", "preview", "draft", "master", "variant"}
+                and isinstance(profile, str) and profile.strip()
+                and isinstance(platform, str) and platform.strip()
+                and isinstance(rendition_spec, dict)
+                and isinstance(lineage_refs, list) and lineage_refs
+            ):
+                raise AipTaskTransitionBlocked("artifactFamily metadata is incomplete")
+            for ref in lineage_refs:
+                if not (
+                    isinstance(ref, dict)
+                    and isinstance(ref.get("resourceType"), str) and ref["resourceType"]
+                    and isinstance(ref.get("resourceId"), str) and ref["resourceId"]
+                    and isinstance(ref.get("revision"), int)
+                    and not isinstance(ref.get("revision"), bool)
+                    and ref["revision"] >= 1
+                    and isinstance(ref.get("contentHash"), str)
+                    and len(ref["contentHash"]) == 64
+                    and all(
+                        character in "0123456789abcdef"
+                        for character in ref["contentHash"]
+                    )
+                ):
+                    raise AipTaskTransitionBlocked(
+                        "artifactFamily lineageRefs must be exact revision refs"
+                    )
+            rendition_spec_hash = _canonical_hash(rendition_spec)
         with self._connect(scope) as conn:
             exists = conn.execute(
                 "SELECT 1 FROM aip_task_run WHERE org_id=%s AND project_id=%s AND run_id=%s",
@@ -1116,8 +1171,11 @@ class AipTaskStore:
             conn.execute(
                 """INSERT INTO aip_artifact (
                      org_id,project_id,artifact_id,run_id,artifact_type,content_ref,schema_ref,
-                     source,evidence_refs,marking,content_hash,metadata,created_by,created_at)
-                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s,NOW())""",
+                     source,evidence_refs,marking,content_hash,metadata,created_by,created_at,
+                     family_id,family_revision,family_role,profile,platform,rendition_spec,
+                     rendition_spec_hash,lineage_refs)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,
+                     %s,NOW(),%s,%s,%s,%s,%s,%s::jsonb,%s,%s::jsonb)""",
                 (
                     scope.org_id,
                     scope.project_id,
@@ -1132,6 +1190,14 @@ class AipTaskStore:
                     content_hash,
                     self._json(metadata),
                     actor,
+                    family_id,
+                    family_revision,
+                    family_role,
+                    profile,
+                    platform,
+                    self._json(rendition_spec) if rendition_spec is not None else None,
+                    rendition_spec_hash,
+                    self._json(lineage_refs) if lineage_refs is not None else None,
                 ),
             )
             conn.commit()

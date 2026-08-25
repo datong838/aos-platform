@@ -1,0 +1,104 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "taskId": "workshop-w7-05-artifact-family-master-variant-supersedes-20260825",
+  "recordedAt": "2026-08-25T21:01:51+08:00",
+  "baseRevision": "AOS-000259",
+  "result": "W7_05_IMMUTABLE_ARTIFACT_FAMILY_MASTER_VARIANT_SUPERSEDES_CONFLICT_SELECTION_CODE_CONTRACT_BROWSER_GREEN_SECURITY_SCOPED_GREEN_REPO_BASELINE_RED_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "implementation": {
+    "canonicalAuthority": [
+      "Artifact",
+      "ArtifactRelation",
+      "ArtifactFamilyHead",
+      "ArtifactFamilySelectionRevision"
+    ],
+    "immutableFamily": "Artifact content hash and typed family metadata are immutable; family membership, Variant-to-Master and supersedes remain canonical append-only ArtifactRelation facts",
+    "topology": "un-superseded compatible leaves form deterministic current/conflict candidate groups; no createdAt winner is inferred",
+    "selection": "an explicit immutable selection decision binds family CAS version, exact candidate hashes, selected hash, policy revision, actor and reason without deleting branches",
+    "statusSeparation": "family role/topology never infers Approval or execution; both remain independently unknown until their own authorities are integrated",
+    "compatibility": "ordinary non-family Artifact recording remains valid and all new family columns stay null",
+    "skillComposition": "exact Stage/attempt/template/capability/assignee/provider/policy/license/Eval/Evidence lineage supports Logic output and the digital-colleague Workshop contribution view without turning Artifact Family into a Skill"
+  },
+  "verification": {
+    "backend": {
+      "status": "GREEN",
+      "focusedPassed": 5,
+      "focusedAndCumulativePassed": 70,
+      "warnings": 29,
+      "baselineCorrection": "runtime router inventory advanced by the five W7-05 operations from 4426 to 4431"
+    },
+    "web": {
+      "status": "GREEN",
+      "targetedPassed": 38,
+      "cumulativeTestFilesPassed": 232,
+      "cumulativeTestsPassed": 2136,
+      "typecheck": "GREEN",
+      "buildModules": 344
+    },
+    "openApiAndDomainRouter": {
+      "status": "GREEN",
+      "paths": 2645,
+      "schemas": 2325,
+      "operations": 4417,
+      "inventoryRouteRows": 4427,
+      "runtimeRouteRows": 4431,
+      "deterministicArtifact": "GREEN"
+    },
+    "alembic": {
+      "status": "GREEN",
+      "heads": ["w7_003"],
+      "disposableDatabaseApply": true,
+      "sharedOrRealDatabaseApply": false
+    },
+    "security": {
+      "scannerTests": "GREEN_9",
+      "scopedStatus": "GREEN",
+      "scopedFiles": 18,
+      "scopedCritical": 0,
+      "scopedWarning": 0,
+      "repositoryGateStatus": "RED_EXISTING_BASELINE",
+      "repositoryFiles": 4874,
+      "repositoryCritical": 5,
+      "repositoryWarning": 326
+    },
+    "browser": {
+      "status": "GREEN_CONTROLLED_FIXTURE_ONLY",
+      "route": "/aip/production-contracts",
+      "viewports": [768, 1440, 1920],
+      "horizontalOverflow": false,
+      "familyCount": 1,
+      "familyConflictVisible": true,
+      "masterVariantTimelineVisible": true,
+      "approvalUnknownVisible": 3,
+      "executionUnknownVisible": 3,
+      "unsafeButtonsDisabled": [
+        "create-contract",
+        "production-start",
+        "compile",
+        "review-resolve",
+        "review-return"
+      ],
+      "consoleErrors": 0
+    },
+    "syntaxAndArtifacts": {
+      "compileAll": "GREEN",
+      "webBuild": "GREEN",
+      "diffCheck": "GREEN",
+      "ruff": "NOT_INSTALLED_NO_RESULT"
+    }
+  },
+  "review": {
+    "businessLifecycle": "PASS: branching, explicit selection, immutable history and approval/execution separation remain visible",
+    "technicalSafety": "PASS: exact hash, CAS, RLS/FORCE RLS, append-only guards and tenant isolation remain fail closed",
+    "planConsistency": "PASS"
+  },
+  "boundaries": {
+    "realTenantMutation": false,
+    "sharedDatabaseMigrationApply": false,
+    "providerInvocation": false,
+    "providerRetry": false,
+    "mediaGeneration": false,
+    "externalPublication": false,
+    "familySelectionBusinessMutation": false,
+    "release": false
+  }
+}

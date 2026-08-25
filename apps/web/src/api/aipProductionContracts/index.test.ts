@@ -10,16 +10,19 @@ const exact=(resourceType:string,resourceId:string)=>({resourceType,resourceId,r
 
 describe("W2-C production contract SDK",()=>{
   beforeEach(()=>{transport.apiGet.mockReset();transport.apiPost.mockReset();});
-  it("读取 Stage、Artifact Relation 与 Review authority",async()=>{
+  it("读取 Stage、Artifact Family、Artifact Relation 与 Review authority",async()=>{
     transport.apiGet
+      .mockResolvedValueOnce({tenant,items:[],count:0})
       .mockResolvedValueOnce({tenant,items:[],count:0})
       .mockResolvedValueOnce({tenant,items:[],count:0})
       .mockResolvedValueOnce({tenant,items:[],count:0});
     await aipProductionContracts.listStageTemplates();
+    await aipProductionContracts.listArtifactFamilies();
     await aipProductionContracts.listArtifactRelations();
     await aipProductionContracts.listReviewIssues();
     expect(transport.apiGet.mock.calls.map(call=>call[0])).toEqual([
       "/v1/aip/production-contracts/stage-templates",
+      "/v1/aip/production-contracts/artifact-families",
       "/v1/aip/production-contracts/artifact-relations",
       "/v1/aip/production-contracts/review-issues",
     ]);

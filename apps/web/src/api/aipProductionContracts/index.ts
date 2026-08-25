@@ -1,6 +1,6 @@
 import { apiGet, apiPost } from "../client";
 import type { CompileStageTemplateInput, ConfirmMediaProfileInput, CreateArtifactRelationInput, CreateEvalContractInput, CreateImpactPreviewInput, CreateResponsibilityPlanInput, CreateReviewIssueInput, CreateStageTemplateInput, CreateTaskBriefInput, ProductionStartInput, ResolveReviewIssueInput, ReturnReviewIssueInput, ReviseEvalContractInput, ReviseImpactPreviewInput, ReviseResponsibilityPlanInput, ReviseStageTemplateInput } from "./contracts";
-import { parseArtifactRelation, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContract, parseEvalContractList, parseImpactPreview, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecision, parseProductionStartDecisionList, parseProfileConfirmation, parseProfileConfirmationList, parseProfileRecommendationList, parseResponsibilityPlan, parseResponsibilityPlanList, parseReturnDecision, parseReviewIssue, parseReviewIssueList, parseStageCompilation, parseStageTemplate, parseStageTemplateList, parseTaskBrief } from "./parser";
+import { parseArtifactFamily, parseArtifactFamilyList, parseArtifactRelation, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContract, parseEvalContractList, parseImpactPreview, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecision, parseProductionStartDecisionList, parseProfileConfirmation, parseProfileConfirmationList, parseProfileRecommendationList, parseResponsibilityPlan, parseResponsibilityPlanList, parseReturnDecision, parseReviewIssue, parseReviewIssueList, parseStageCompilation, parseStageTemplate, parseStageTemplateList, parseTaskBrief } from "./parser";
 import { parseEvalContractDiff } from "./parser";
 
 const ROOT="/v1/aip/production-contracts";
@@ -41,6 +41,8 @@ export const aipProductionContracts={
   async compileStageTemplate(templateId:string,input:CompileStageTemplateInput,key:string){return parseStageCompilation(await apiPost<unknown>(`${ROOT}/stage-templates/${encodeURIComponent(templateId)}/compile`,input,keyHeaders(key)));},
   async listArtifactRelations(){return parseArtifactRelationList(await apiGet<unknown>(`${ROOT}/artifact-relations`));},
   async createArtifactRelation(input:CreateArtifactRelationInput,key:string){return parseArtifactRelation(await apiPost<unknown>(`${ROOT}/artifact-relations`,input,keyHeaders(key)));},
+  async listArtifactFamilies(){return parseArtifactFamilyList(await apiGet<unknown>(`${ROOT}/artifact-families`));},
+  async getArtifactFamily(familyId:string){return parseArtifactFamily(await apiGet<unknown>(`${ROOT}/artifact-families/${encodeURIComponent(familyId)}`));},
   async listReviewIssues(){return parseReviewIssueList(await apiGet<unknown>(`${ROOT}/review-issues`));},
   async getReviewIssue(issueId:string){return parseReviewIssue(await apiGet<unknown>(`${ROOT}/review-issues/${encodeURIComponent(issueId)}`));},
   async createReviewIssue(input:CreateReviewIssueInput,key:string){return parseReviewIssue(await apiPost<unknown>(`${ROOT}/review-issues`,input,keyHeaders(key)));},

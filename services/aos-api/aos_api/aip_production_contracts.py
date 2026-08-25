@@ -78,6 +78,26 @@ class ArtifactRelationType(StrEnum):
     DERIVED_FROM = "derived_from"
 
 
+class ArtifactFamilyRole(StrEnum):
+    FAMILY_MANIFEST = "family_manifest"
+    PREVIEW = "preview"
+    DRAFT = "draft"
+    MASTER = "master"
+    VARIANT = "variant"
+
+
+class ArtifactFamilyTopologyStatus(StrEnum):
+    EMPTY = "empty"
+    CURRENT = "current"
+    CONFLICT = "conflict"
+
+
+class ArtifactFamilyCandidateStatus(StrEnum):
+    CURRENT = "current"
+    CONFLICT = "conflict"
+    SELECTED = "selected"
+
+
 class ReviewSeverity(StrEnum):
     INFO = "info"
     WARNING = "warning"
@@ -498,6 +518,101 @@ class ArtifactRelation(CreateArtifactRelationRequest):
 class ArtifactRelationListResponse(AipContractModel):
     tenant: TenantContext
     items: list[ArtifactRelation]
+    count: int = Field(ge=0)
+
+
+class RegisterArtifactFamilyRequest(AipContractModel):
+    family_id: str = Field(min_length=1, max_length=200)
+    manifest_artifact: ExactArtifactRef
+
+
+class AttachArtifactFamilyMemberRequest(AipContractModel):
+    artifact_ref: ExactArtifactRef
+    expected_family_version: int = Field(ge=1)
+    master_ref: ExactArtifactRef | None = None
+    supersedes_ref: ExactArtifactRef | None = None
+    reason: str = Field(min_length=1, max_length=1000)
+
+
+class SelectArtifactFamilyCandidateRequest(AipContractModel):
+    selection_key: str = Field(min_length=1, max_length=500)
+    expected_family_version: int = Field(ge=1)
+    candidate_refs: list[ExactArtifactRef] = Field(min_length=2)
+    selected_ref: ExactArtifactRef
+    policy_ref: ExactRevisionRef
+    reason: str = Field(min_length=1, max_length=1000)
+
+    @model_validator(mode="after")
+    def _selected_is_candidate(self) -> SelectArtifactFamilyCandidateRequest:
+        identities = {
+            (item.artifact_id, item.content_hash) for item in self.candidate_refs
+        }
+        if len(identities) != len(self.candidate_refs):
+            raise ValueError("candidateRefs must be unique")
+        if (self.selected_ref.artifact_id, self.selected_ref.content_hash) not in identities:
+            raise ValueError("selectedRef must be one of candidateRefs")
+        return self
+
+
+class ArtifactFamilyMember(AipContractModel):
+    artifact_ref: ExactArtifactRef
+    family_revision: int = Field(ge=1)
+    role: ArtifactFamilyRole
+    artifact_type: str
+    profile: str
+    platform: str
+    rendition_spec_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    lineage_refs: list[ExactRevisionRef]
+    master_ref: ExactArtifactRef | None = None
+    supersedes_ref: ExactArtifactRef | None = None
+    approval_status: Literal["not_approved", "approved", "unknown"]
+    execution_status: Literal["not_executed", "executed", "unknown"]
+    created_at: datetime
+
+
+class ArtifactFamilySelectionDecision(AipContractModel):
+    family_id: str
+    selection_key: str
+    revision: int = Field(ge=1)
+    expected_family_version: int = Field(ge=1)
+    selected_ref: ExactArtifactRef
+    candidate_refs: list[ExactArtifactRef] = Field(min_length=2)
+    candidate_set_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    policy_ref: ExactRevisionRef
+    reason: str
+    decision_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    actor: str
+    created_at: datetime
+
+
+class ArtifactFamilyCandidateGroup(AipContractModel):
+    selection_key: str
+    role: ArtifactFamilyRole
+    artifact_type: str
+    profile: str
+    platform: str
+    rendition_spec_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    candidates: list[ExactArtifactRef]
+    selected_ref: ExactArtifactRef | None = None
+    status: ArtifactFamilyCandidateStatus
+
+
+class ArtifactFamilyView(AipContractModel):
+    tenant: TenantContext
+    family_id: str
+    version: int = Field(ge=1)
+    current_revision: int = Field(ge=1)
+    manifest_ref: ExactArtifactRef
+    members: list[ArtifactFamilyMember]
+    candidate_groups: list[ArtifactFamilyCandidateGroup]
+    selection_decisions: list[ArtifactFamilySelectionDecision]
+    topology_status: ArtifactFamilyTopologyStatus
+    updated_at: datetime
+
+
+class ArtifactFamilyListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ArtifactFamilyView]
     count: int = Field(ge=0)
 
 

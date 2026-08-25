@@ -37,8 +37,10 @@ from aos_api.aip_production_contracts import (
     EvalContractListResponse, EvalContractDiff, CreateResponsibilityPlanRequest,
     ReviseResponsibilityPlanRequest, ResponsibilityPlanRevision,
     ResponsibilityPlanListResponse,
-    ArtifactRelation, ArtifactRelationListResponse, CompileStageTemplateRequest,
-    CreateArtifactRelationRequest, CreateReviewIssueRequest,
+    ArtifactFamilyListResponse, ArtifactFamilyView, ArtifactRelation,
+    ArtifactRelationListResponse, AttachArtifactFamilyMemberRequest,
+    CompileStageTemplateRequest, CreateArtifactRelationRequest,
+    CreateReviewIssueRequest,
     CreateStageTemplateRequest, ResolveReviewIssueRequest, ReturnDecision,
     ReturnDecisionListResponse,
     ReturnReviewIssueRequest, ReviseStageTemplateRequest, ReviewIssue,
@@ -54,7 +56,8 @@ from aos_api.aip_production_contracts import (
     ResolveEvidenceDisclosureRequest, EvidenceDisclosureDecision,
     EvidenceRevocation,
     FreezeProductionContextRequest, ProductionContextRevision,
-    ProductionContextListResponse,
+    ProductionContextListResponse, RegisterArtifactFamilyRequest,
+    SelectArtifactFamilyCandidateRequest,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -503,6 +506,37 @@ def create_artifact_relation(body: CreateArtifactRelationRequest, idempotency_ke
 @router.get("/artifact-relations", response_model=ArtifactRelationListResponse)
 def list_artifact_relations(principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
     try: return store.list_artifact_relations(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/artifact-families", response_model=ArtifactFamilyView, status_code=201)
+def register_artifact_family(body: RegisterArtifactFamilyRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.register_artifact_family(_scope(principal), principal.subject, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/artifact-families", response_model=ArtifactFamilyListResponse)
+def list_artifact_families(principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.list_artifact_families(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/artifact-families/{family_id}", response_model=ArtifactFamilyView)
+def get_artifact_family(family_id: str, principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.get_artifact_family(_scope(principal), family_id)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/artifact-families/{family_id}/members", response_model=ArtifactFamilyView)
+def attach_artifact_family_member(family_id: str, body: AttachArtifactFamilyMemberRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.attach_artifact_family_member(_scope(principal), principal.subject, family_id, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/artifact-families/{family_id}/selections", response_model=ArtifactFamilyView)
+def select_artifact_family_candidate(family_id: str, body: SelectArtifactFamilyCandidateRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    _require_review_role(principal, control=True)
+    try: return store.select_artifact_family_candidate(_scope(principal), principal.subject, family_id, _key(idempotency_key), body)
     except ProductionContractError as exc: raise _map(exc) from exc
 
 

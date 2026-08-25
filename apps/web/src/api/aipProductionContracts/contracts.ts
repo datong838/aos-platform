@@ -310,6 +310,61 @@ export type ArtifactRelation = CreateArtifactRelationInput & {
   createdAt: string;
 };
 export type ArtifactRelationListResponse = { tenant: Tenant; items: ArtifactRelation[]; count: number };
+export type ArtifactFamilyRole = "family_manifest" | "preview" | "draft" | "master" | "variant";
+export type ArtifactFamilyCandidateStatus = "current" | "conflict" | "selected";
+export type ArtifactFamilyMember = {
+  artifactRef: ExactArtifactRef;
+  familyRevision: number;
+  role: ArtifactFamilyRole;
+  artifactType: string;
+  profile: string;
+  platform: string;
+  renditionSpecHash: string;
+  lineageRefs: ExactRevisionRef[];
+  masterRef: ExactArtifactRef | null;
+  supersedesRef: ExactArtifactRef | null;
+  approvalStatus: "not_approved" | "approved" | "unknown";
+  executionStatus: "not_executed" | "executed" | "unknown";
+  createdAt: string;
+};
+export type ArtifactFamilyCandidateGroup = {
+  selectionKey: string;
+  role: ArtifactFamilyRole;
+  artifactType: string;
+  profile: string;
+  platform: string;
+  renditionSpecHash: string;
+  candidates: ExactArtifactRef[];
+  selectedRef: ExactArtifactRef | null;
+  status: ArtifactFamilyCandidateStatus;
+};
+export type ArtifactFamilySelectionDecision = {
+  familyId: string;
+  selectionKey: string;
+  revision: number;
+  expectedFamilyVersion: number;
+  selectedRef: ExactArtifactRef;
+  candidateRefs: ExactArtifactRef[];
+  candidateSetHash: string;
+  policyRef: ExactRevisionRef;
+  reason: string;
+  decisionHash: string;
+  actor: string;
+  createdAt: string;
+};
+export type ArtifactFamily = {
+  tenant: Tenant;
+  familyId: string;
+  version: number;
+  currentRevision: number;
+  manifestRef: ExactArtifactRef;
+  members: ArtifactFamilyMember[];
+  candidateGroups: ArtifactFamilyCandidateGroup[];
+  selectionDecisions: ArtifactFamilySelectionDecision[];
+  topologyStatus: "empty" | "current" | "conflict";
+  updatedAt: string;
+};
+export type ArtifactFamilyListResponse = { tenant: Tenant; items: ArtifactFamily[]; count: number };
 
 export type ReviewSeverity = "info" | "warning" | "error" | "critical";
 export type ReviewIssueStatus = "open" | "resolved" | "returned" | "superseded";

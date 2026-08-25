@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContractDiff, parseEvalContractList, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecisionList, parseResponsibilityPlanList, parseReviewIssueList, parseStageCompilation, parseStageTemplateList } from "./parser";
+import { parseArtifactFamilyList, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContractDiff, parseEvalContractList, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecisionList, parseResponsibilityPlanList, parseReviewIssueList, parseStageCompilation, parseStageTemplateList } from "./parser";
 const hash="a".repeat(64), tenant={orgId:"org-org",projectId:"dev-project"};
 describe("W2-A production contract parser",()=>{
   it("parses exact authority lists",()=>{
@@ -77,4 +77,12 @@ describe("W2-D production contract parser",()=>{
     expect(context.productionProfileRef?.resourceId).toBe("profile-1");
     expect(()=>parseStageCompilation({...compilation,productionContextRef:exact("PlanRevision","context-1")})).toThrow("ProductionContextRevision");
   });
+});
+
+describe("W7-05 Artifact Family parser",()=>{
+  const artifactRef=(artifactId:string)=>({artifactId,contentHash:hash});
+  const exact=(resourceType:string,resourceId:string)=>({resourceType,resourceId,revision:1,contentHash:hash});
+  const family={tenant,familyId:"family-1",version:3,currentRevision:3,manifestRef:artifactRef("manifest-1"),members:[{artifactRef:artifactRef("variant-1"),familyRevision:3,role:"variant",artifactType:"media_asset",profile:"STANDARD",platform:"douyin",renditionSpecHash:hash,lineageRefs:[exact("StageTemplateRevision","stage-1")],masterRef:artifactRef("master-1"),supersedesRef:null,approvalStatus:"unknown",executionStatus:"unknown",createdAt:"2026-08-25T00:00:00Z"}],candidateGroups:[{selectionKey:`variant:media_asset:STANDARD:douyin:${hash}`,role:"variant",artifactType:"media_asset",profile:"STANDARD",platform:"douyin",renditionSpecHash:hash,candidates:[artifactRef("variant-1")],selectedRef:null,status:"current"}],selectionDecisions:[],topologyStatus:"current",updatedAt:"2026-08-25T00:00:00Z"};
+  it("严格解析家族时间线与独立状态轴",()=>{const parsed=parseArtifactFamilyList({tenant,count:1,items:[family]});expect(parsed.items[0].members[0].approvalStatus).toBe("unknown");expect(parsed.items[0].candidateGroups[0].status).toBe("current");});
+  it("拒绝伪造 family topology 与内容摘要",()=>{expect(()=>parseArtifactFamilyList({tenant,count:1,items:[{...family,topologyStatus:"guessed"}]})).toThrow("topologyStatus");expect(()=>parseArtifactFamilyList({tenant,count:1,items:[{...family,manifestRef:{artifactId:"manifest-1",contentHash:"bad"}}]})).toThrow("SHA-256");});
 });
