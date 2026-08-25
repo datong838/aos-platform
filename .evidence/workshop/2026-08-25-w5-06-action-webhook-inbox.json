@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "workshop-delivery-evidence/v1",
+  "taskId": "W5-06",
+  "recordedAt": "2026-08-25T02:30:00Z",
+  "branch": "m1",
+  "baselineCommit": "84acc76ff1830ab9bee15c2abbb3027a47ed5139",
+  "authorityRevision": "AOS-000240",
+  "outcome": "W5_06_CANONICAL_WEBHOOK_INBOX_REPLAY_ORDERING_CODE_GREEN_NO_REAL_CALLBACK_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "scope": {
+    "implemented": [
+      "endpoint-key directory resolving one tenant and one immutable endpoint revision without trusting caller tenant headers",
+      "HMAC SHA-256 verification over exact signed headers, body hash, timestamp window and allowed key revision before JSON parsing",
+      "append-only tenant-scoped inbox receipt, replay key, observation and quarantine case authorities",
+      "transaction-level endpoint/event serialization so replay keys are recorded only after their immutable receipt",
+      "exact provider request, account binding and action binding match to one execution attempt",
+      "sequence gap, late-event, same-sequence drift and terminal conflict reducer without last-write-wins",
+      "deterministic provider ingress OpenAPI contract with no raw body, secret or tenant identity disclosure"
+    ],
+    "excluded": [
+      "real endpoint publication or secret resolver",
+      "real Provider callback or external Action",
+      "live environment migration",
+      "Canary, Kill drill and release"
+    ]
+  },
+  "verification": {
+    "focused": {
+      "result": "9 passed",
+      "coverage": "endpoint tenant resolution, verification order, key rotation, replay concurrency, drift, binding, ordering, cross-tenant and migration guards"
+    },
+    "cumulative": {
+      "result": "70 passed",
+      "coverage": "W5-01 through W5-06, AIP Action execution and deterministic OpenAPI"
+    },
+    "openapi": {
+      "result": "12 passed",
+      "deterministicCheck": "green",
+      "routeRows": 4368,
+      "uniqueOperationPairs": 4358
+    },
+    "static": {
+      "compileall": "green",
+      "alembicHeads": ["w5_005 (head)"],
+      "diffCheck": "green"
+    },
+    "browser": {
+      "status": "not_applicable",
+      "reason": "No Workshop page, component, navigation, copy or visual behavior changed in W5-06."
+    }
+  },
+  "compatibility": {
+    "legacyActionWebhookHelperUsed": false,
+    "principalOrTenantHeadersTrusted": false,
+    "proposalOrActionReceiptMutatedByWebhook": false,
+    "rawBodyPersisted": false,
+    "secretPersistedOrReturned": false,
+    "externalOperationalReadiness": "blocked"
+  },
+  "sourceSha256": {
+    "services/aos-api/alembic/versions/w5_005_action_webhook_inbox.py": "f58d2dce932b66e2abaaf871dd9251355f6ef9a8302d9d113df365d3d4409c47",
+    "services/aos-api/aos_api/aip_action_webhook_models.py": "3acc76d9c83345eb31c72090b5befa7e4bb8736999ec202b432946ba3cd336ae",
+    "services/aos-api/aos_api/aip_action_webhook_service.py": "3c6d7f95ef2f71649dd62dba8ba9724472bbca5c94ea728f643c0f1cc50365ff",
+    "services/aos-api/aos_api/routers/aip_action_webhooks.py": "b3abb2b2b8445556636032a6d411aa26d6c2c1c81e9566cf2ed914ed85d77dc1",
+    "packages/contracts/openapi/v1.generated.json": "7377386eea76b6186ec4d9a9844995c422dc3e5417d32d3c8456f5e703766309",
+    "packages/contracts/openapi/v1.inventory.json": "1efd46d9c6a36bbaae898848222c42e712c546cb43cb8799850231e0dc5f6118"
+  },
+  "safety": {
+    "testDatabaseUsed": true,
+    "realTenantDataReadOrWritten": false,
+    "realSecretResolved": false,
+    "realProviderCalled": false,
+    "externalEffect": false,
+    "liveMigrationExecuted": false,
+    "releaseExecuted": false
+  },
+  "knownBlockers": [
+    "REAL_ENDPOINT_AND_SECRET_RESOLVER_NOT_PUBLISHED",
+    "NO_REAL_PROVIDER_CALLBACK_OR_CANARY_AUTHORITY",
+    "NO_KILL_DRILL_OR_RELEASE_AUTHORITY"
+  ],
+  "nextTask": "W5-07"
+}
