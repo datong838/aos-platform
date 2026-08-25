@@ -1,0 +1,75 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "task_id": "workshop-w8-03-cross-domain-dispatch-takeover-scenario-20260826",
+  "base_revision": "AOS-000270",
+  "delivery_revision": "AOS-000271",
+  "branch": "m1",
+  "captured_at": "2026-08-26T04:14:57+08:00",
+  "result": "W8_03_DISPATCH_TAKEOVER_EXACT_BINDING_CODE_CONTRACT_BROWSER_GREEN_SECURITY_SCOPED_GREEN_OPERATIONAL_FAIL_CLOSED_NO_RELEASE",
+  "implementation": {
+    "migration": "none",
+    "canonical_stage_count": 7,
+    "canonical_stage_order": ["task_graph", "dispatch_intent", "handoff", "receiver_decision", "request_more_or_return", "takeover", "owner_timeline"],
+    "independent_outcome_axes": ["dispatch_decision_recorded", "receiver_reauthorized", "single_active_owner", "takeover_decided", "execution_reconciled"],
+    "workshop_projection": "atomic Skill -> Logic orchestration -> digital colleague binding -> Workshop contribution",
+    "authority_boundary": "exact TaskGraphRevision and TaskRun roots plus dispatchBindingHash; no shadow Task, Handoff or owner authority",
+    "command_boundary": "GET-only Task Cockpit contribution; dispatch, decideHandoff, requestTakeover, approveTakeover and mutateOwner remain false"
+  },
+  "verification": {
+    "backend_scenario_and_api": "11 passed, 7 warnings",
+    "legacy_handoff_compatibility": "8 passed",
+    "backend_workshop_and_openapi_cumulative": "197 passed, 7 warnings",
+    "web_targeted": "15 tests passed",
+    "web_full": "238 files, 2167 tests passed",
+    "openapi": "2667 paths and 2418 schemas; deterministic generated contract updated",
+    "web_typecheck_and_build": "344 modules transformed; passed",
+    "python_compile_and_diff_check": "passed",
+    "security_scanner_unit": "9 tests passed",
+    "security_scoped": "17 files, 0 critical, 0 warning"
+  },
+  "browser": {
+    "tool": "Codex built-in browser",
+    "url": "http://127.0.0.1:5175/workshop/task-cockpit?w803=1",
+    "fixture": "pure loopback GET-only canonical-contract fixture; org-org/dev-project identifiers only; no database, provider or external call",
+    "fresh_reload_cutoff": "2026-08-25T20:11:38.578Z",
+    "fresh_console_errors": 0,
+    "assertions": {
+      "dispatch_scenario_visible": true,
+      "canonical_stages": 7,
+      "independent_outcome_axes": 5,
+      "atomic_skills": 2,
+      "logic_revisions": 1,
+      "digital_colleague_bindings": 1,
+      "single_active_owner_enforced": true,
+      "all_scenario_commands_false": true,
+      "health_and_source_readiness_fail_closed": true,
+      "no_business_write_entry": true
+    },
+    "screenshots": [
+      {"path": ".evidence/workshop/2026-08-26-w8-03-browser/dispatch-scenario-viewport.png", "dimensions": "1269x714", "sha256": "46f8f2dd56f1eb1909b4ef85b5f9ce1d89de2987d1e1b2a4f7230ced5fbc42af"},
+      {"path": ".evidence/workshop/2026-08-26-w8-03-browser/dispatch-scenario-detail.png", "dimensions": "1269x714", "sha256": "c00a0a91d70359cba5cb414ce54d98567c9f26731c90058a46b42ebb7e02447d"},
+      {"path": ".evidence/workshop/2026-08-26-w8-03-browser/dispatch-scenario-contribution.png", "dimensions": "1269x714", "sha256": "49c41e95709e4ad9d6d298336bdee079a480830069674755fcb53893cb0365a7"},
+      {"path": ".evidence/workshop/2026-08-26-w8-03-browser/dispatch-scenario-full.png", "dimensions": "1280x1028", "sha256": "c7ba46946e8d439a6704de541c9c2501f4cb312684495c392c964aa3af9b2843"}
+    ]
+  },
+  "representative_sha256": {
+    "ecommerce_workshop_dispatch_scenario.py": "4a684288c5c9394909b36746e2c993cec1f0d0671244110e628e1746ba94ef9e",
+    "ecommerce_workshop_dispatch_scenario_contracts.py": "884216ef85a21c2eca6f4e00d93bd3cde7cc5caa271acbb38c3f1c1e42d7f19c",
+    "parser.ts": "1a5b47a9d6c00a96410b473814d6769a15807acfcd2f019331cdbd294ecd6cd4",
+    "TaskCockpitPage.tsx": "cd34523ac593e5adcdd2f6c5f5adeb926bb978cd5bac9d29bf03896d871a9f8e",
+    "v1.generated.json": "6028a9c46fa7891c40a7f5b5c9fb51fd2d7ae58683295f748d03e91181ee7bbb"
+  },
+  "operational_blockers": ["DISPATCH_SCENARIO_CANONICAL_ROOT_REQUIRED", "DISPATCH_SCENARIO_OPERATIONAL_AUTHORIZATION_REQUIRED"],
+  "safety": {
+    "shared_migration_applied": false,
+    "real_provider_action_invoked": false,
+    "dispatch_executed": false,
+    "handoff_decision_written": false,
+    "takeover_requested_or_approved": false,
+    "owner_mutated": false,
+    "business_action_executed": false,
+    "memory_candidate_promoted": false,
+    "release": false
+  },
+  "commit": "34ebf3be"
+}
