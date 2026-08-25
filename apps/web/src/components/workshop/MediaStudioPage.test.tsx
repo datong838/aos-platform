@@ -99,4 +99,17 @@ describe("MediaStudioPage", () => {
     expect(host.textContent).toContain("required · 仅最小披露");
     expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
   });
+
+  it("展示 W7 十一栏累计门且保留 Provider、Canary 和运营阻断", async () => {
+    const payload = response();
+    const gateIds = ["contract_green", "service_green", "database_restart_green", "tenant_rls_green", "browser_positive_green", "browser_negative_green", "security_green", "fault_injection_green", "provider_adapter_green", "publish_canary_green", "operational_ready"] as const;
+    payload.schemaVersion = "aos.ecommerce-workshop.media-studio-view/v6";
+    payload.cumulativeGateSet = { schemaVersion: "aos.ecommerce-workshop.media-cumulative-gates/v1", releaseRevision: "AOS-000267", evaluatedAt: "2026-08-26T02:30:00Z", gates: gateIds.map((gateId, index) => index < 8 ? { gateId, status: "ready", evidenceRef: { resourceType: "EvidencePack", resourceId: "workshop-w7-11", revision: "AOS-000267", contentHash: "f".repeat(64) }, reasonCode: "MEDIA_ENGINEERING_EVIDENCE_CURRENT", observedAt: "2026-08-26T02:30:00Z", externalEffectsObserved: false } : { gateId, status: "blocked", evidenceRef: null, reasonCode: ["MEDIA_PRODUCTION_PROVIDER_ADAPTER_RECEIPT_REQUIRED", "MEDIA_PUBLISH_CANARY_RECEIPT_REQUIRED", "MEDIA_OPERATIONAL_READY_RECEIPT_REQUIRED"][index - 8] ?? "MEDIA_OPERATIONAL_READY_RECEIPT_REQUIRED", observedAt: null, externalEffectsObserved: false }), overallStatus: "blocked", blockerCodes: ["MEDIA_OPERATIONAL_READY_RECEIPT_REQUIRED", "MEDIA_PRODUCTION_PROVIDER_ADAPTER_RECEIPT_REQUIRED", "MEDIA_PUBLISH_CANARY_RECEIPT_REQUIRED"], externalEffectsAllowed: false, releaseAllowed: false };
+    await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(payload) }} />); });
+    expect(host.textContent).toContain("W7 累计门 · 十一栏独立证据");
+    expect(host.querySelectorAll('[aria-label="W7媒体累计十一栏验收门"] .media-command-grid article')).toHaveLength(11);
+    expect(host.textContent).toContain("provider_adapter_greenblocked");
+    expect(host.textContent).toContain("外部副作用：关闭 · Release：关闭");
+    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
+  });
 });

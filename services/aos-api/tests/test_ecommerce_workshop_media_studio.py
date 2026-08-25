@@ -19,6 +19,7 @@ from aos_api.ecommerce_workshop_media_studio_reader import MediaStudioSliceObser
 from aos_api.tenant_scope import TenantScope
 from aos_api.aip_media_provider_job_contracts import MediaJobStatus
 from aos_api.aip_production_contracts import ExactRevisionRef
+from aos_api.ecommerce_workshop_media_cumulative import EcommerceWorkshopMediaCumulative
 
 
 HASH = "sha256:" + "a" * 64
@@ -157,3 +158,18 @@ def test_provider_job_projection_preserves_four_layer_contribution_chain() -> No
     assert contribution.colleague_binding_ref.resource_id == "content-officer-binding"
     assert contribution.status == "unknown"
     assert contribution.external_effects_allowed is False
+
+
+def test_v6_cumulative_gate_is_tenant_enveloped_and_operationally_blocked() -> None:
+    view = EcommerceWorkshopMediaStudio(
+        cumulative=EcommerceWorkshopMediaCumulative(),
+        clock=lambda: datetime(2026, 8, 26, tzinfo=UTC),
+    ).read(org_id="org-org", project_id="dev-project")
+
+    assert view.schema_version.endswith("/v6")
+    assert view.tenant.org_id == "org-org"
+    assert view.tenant.project_id == "dev-project"
+    assert view.cumulative_gate_set is not None
+    assert len(view.cumulative_gate_set.gates) == 11
+    assert view.cumulative_gate_set.overall_status == "blocked"
+    assert view.cumulative_gate_set.release_allowed is False

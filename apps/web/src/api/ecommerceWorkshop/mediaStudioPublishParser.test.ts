@@ -6,7 +6,7 @@ const hash = "a".repeat(64);
 const binding = "b".repeat(64);
 const ref = (resourceType: string, resourceId: string) => ({ resourceType, resourceId, revision: 1, contentHash: hash });
 
-function payload() {
+export function payload() {
   return {
     schemaVersion: "aos.ecommerce-workshop.media-studio-view/v5",
     tenant: { orgId: "org-org", projectId: "dev-project" },

@@ -12,7 +12,9 @@ import {
   MEDIA_STUDIO_FINANCE_SCHEMA_VERSION,
   MEDIA_STUDIO_SCHEMA_VERSION,
   MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION,
+  MEDIA_STUDIO_CUMULATIVE_SCHEMA_VERSION,
   MEDIA_PUBLISH_SCHEMA_VERSION,
+  MEDIA_CUMULATIVE_SCHEMA_VERSION,
   MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION,
   ANALYST_SCHEMA_VERSION,
   PRICE_GOVERNANCE_SCHEMA_VERSION,
@@ -150,6 +152,8 @@ import {
   type MediaStudioLifecycleContribution,
   type MediaPublishContribution,
   type MediaPublishExactRef,
+  type MediaCumulativeGateId,
+  type MediaCumulativeGateSet,
   type AnalystAxisReadiness,
   type AnalystBlocker,
   type AnalystCountLedger,
@@ -1003,11 +1007,48 @@ function parseMediaPublishContribution(value: unknown): MediaPublishContribution
   return { schemaVersion: MEDIA_PUBLISH_SCHEMA_VERSION, candidate, impact, action, receipt, handoff, blockerCodes, externalEffectsAllowed: false };
 }
 
+const MEDIA_CUMULATIVE_GATE_IDS = ["contract_green", "service_green", "database_restart_green", "tenant_rls_green", "browser_positive_green", "browser_negative_green", "security_green", "fault_injection_green", "provider_adapter_green", "publish_canary_green", "operational_ready"] as const satisfies readonly MediaCumulativeGateId[];
+function parseMediaCumulativeGateSet(value: unknown): MediaCumulativeGateSet {
+  const raw = record(value, "media.cumulative");
+  exact(raw, ["schemaVersion", "releaseRevision", "evaluatedAt", "gates", "overallStatus", "blockerCodes", "externalEffectsAllowed", "releaseAllowed"], "media.cumulative");
+  if (raw.schemaVersion !== MEDIA_CUMULATIVE_SCHEMA_VERSION || raw.overallStatus !== "blocked" || raw.externalEffectsAllowed !== false || raw.releaseAllowed !== false || !Array.isArray(raw.gates) || raw.gates.length !== 11 || !Array.isArray(raw.blockerCodes)) throw new TypeError("media cumulative contract 漂移");
+  const rawGates = raw.gates;
+  const releaseRevision = boundedText(raw.releaseRevision, "media.cumulative.releaseRevision", 20);
+  if (!/^AOS-[0-9]{6}$/.test(releaseRevision)) throw new TypeError("media cumulative release 漂移");
+  const gates = MEDIA_CUMULATIVE_GATE_IDS.map((gateId, index) => {
+    const gate = record(rawGates[index], `media.cumulative.${gateId}`);
+    exact(gate, ["gateId", "status", "evidenceRef", "reasonCode", "observedAt", "externalEffectsObserved"], `media.cumulative.${gateId}`);
+    if (gate.gateId !== gateId || gate.externalEffectsObserved !== false) throw new TypeError("media cumulative gate 漂移");
+    const status = enumValue(gate.status, ["ready", "blocked", "unknown", "stale"] as const, `media.cumulative.${gateId}.status`);
+    const reasonCode = boundedText(gate.reasonCode, `media.cumulative.${gateId}.reasonCode`, 120);
+    if (!REASON.test(reasonCode)) throw new TypeError("media cumulative reason 非法");
+    const observedAt = gate.observedAt === null ? null : timestamp(gate.observedAt, `media.cumulative.${gateId}.observedAt`);
+    let evidenceRef = null;
+    if (gate.evidenceRef !== null) {
+      const evidence = record(gate.evidenceRef, `media.cumulative.${gateId}.evidenceRef`);
+      exact(evidence, ["resourceType", "resourceId", "revision", "contentHash"], `media.cumulative.${gateId}.evidenceRef`);
+      const resourceType = enumValue(evidence.resourceType, ["DeliveryReceipt", "EvidencePack"] as const, `media.cumulative.${gateId}.resourceType`);
+      const revision = boundedText(evidence.revision, `media.cumulative.${gateId}.revision`, 20);
+      if (!/^AOS-[0-9]{6}$/.test(revision) || revision !== releaseRevision) throw new TypeError("media cumulative evidence revision 漂移");
+      evidenceRef = { resourceType, resourceId: boundedText(evidence.resourceId, `media.cumulative.${gateId}.resourceId`, 240), revision, contentHash: rawHash(evidence.contentHash, `media.cumulative.${gateId}.contentHash`) };
+    }
+    if ((status === "ready" && (!evidenceRef || !observedAt)) || (status !== "ready" && evidenceRef)) throw new TypeError("media cumulative gate 伪状态");
+    if (["provider_adapter_green", "publish_canary_green", "operational_ready"].includes(gateId) && status === "ready") throw new TypeError("media cumulative external gate 越门");
+    return { gateId, status, evidenceRef, reasonCode, observedAt, externalEffectsObserved: false as const };
+  });
+  const blockerCodes = raw.blockerCodes.map((item) => boundedText(item, "media.cumulative.blockerCode", 120));
+  const expected = gates.filter((item) => item.status !== "ready").map((item) => item.reasonCode).sort();
+  if (JSON.stringify(blockerCodes) !== JSON.stringify(expected)) throw new TypeError("media cumulative blockers 不守恒");
+  return { schemaVersion: MEDIA_CUMULATIVE_SCHEMA_VERSION, releaseRevision, evaluatedAt: timestamp(raw.evaluatedAt, "media.cumulative.evaluatedAt"), gates, overallStatus: "blocked", blockerCodes, externalEffectsAllowed: false, releaseAllowed: false };
+}
+
 export function parseMediaStudioView(value: unknown, expectedTenant?: WorkshopTenant): MediaStudioViewResponse {
   const raw = record(value, "media");
-  const publishV5 = raw.schemaVersion === MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION;
+  const cumulativeV6 = raw.schemaVersion === MEDIA_STUDIO_CUMULATIVE_SCHEMA_VERSION;
+  const publishV5 = raw.schemaVersion === MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION || cumulativeV6;
   if (raw.schemaVersion !== MEDIA_STUDIO_SCHEMA_VERSION && !publishV5) return parseMediaStudioViewV3(value, expectedTenant);
-  if (publishV5) exact(raw, ["schemaVersion", "tenant", "evaluatedAt", "dataCutoff", "readiness", "slices", "providerJobsStatus", "providerJobs", "providerJobBlockers", "mediaFinanceStatus", "mediaFinance", "mediaFinanceBlockers", "lifecycleStatus", "lifecycle", "lifecycleBlockers", "publishStatus", "publishContributions", "publishBlockers", "page"], "media");
+  if (cumulativeV6) exact(raw, ["schemaVersion", "tenant", "evaluatedAt", "dataCutoff", "readiness", "slices", "providerJobsStatus", "providerJobs", "providerJobBlockers", "mediaFinanceStatus", "mediaFinance", "mediaFinanceBlockers", "lifecycleStatus", "lifecycle", "lifecycleBlockers", "publishStatus", "publishContributions", "publishBlockers", "cumulativeGateSet", "page"], "media");
+  else if (publishV5) exact(raw, ["schemaVersion", "tenant", "evaluatedAt", "dataCutoff", "readiness", "slices", "providerJobsStatus", "providerJobs", "providerJobBlockers", "mediaFinanceStatus", "mediaFinance", "mediaFinanceBlockers", "lifecycleStatus", "lifecycle", "lifecycleBlockers", "publishStatus", "publishContributions", "publishBlockers", "page"], "media");
   else
   exact(raw, ["schemaVersion", "tenant", "evaluatedAt", "dataCutoff", "readiness", "slices", "providerJobsStatus", "providerJobs", "providerJobBlockers", "mediaFinanceStatus", "mediaFinance", "mediaFinanceBlockers", "lifecycleStatus", "lifecycle", "lifecycleBlockers", "page"], "media");
   const base = parseMediaStudioViewV3({ schemaVersion: MEDIA_STUDIO_FINANCE_SCHEMA_VERSION, tenant: raw.tenant, evaluatedAt: raw.evaluatedAt, dataCutoff: raw.dataCutoff, readiness: raw.readiness, slices: raw.slices, providerJobsStatus: raw.providerJobsStatus, providerJobs: raw.providerJobs, providerJobBlockers: raw.providerJobBlockers, mediaFinanceStatus: raw.mediaFinanceStatus, mediaFinance: raw.mediaFinance, mediaFinanceBlockers: raw.mediaFinanceBlockers, page: raw.page }, expectedTenant);
@@ -1023,7 +1064,8 @@ export function parseMediaStudioView(value: unknown, expectedTenant?: WorkshopTe
   const publishBlockers = raw.publishBlockers.map(parseMediaBlocker);
   if ((publishStatus === "ready" && publishBlockers.length) || (publishStatus === "blocked" && !publishBlockers.length)) throw new TypeError("media publish readiness 漂移");
   assertUnique(publishContributions.map((item) => item.action.proposalId), "media.publishContributions");
-  return { ...base, schemaVersion: MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION, lifecycleStatus, lifecycle, lifecycleBlockers, publishStatus, publishContributions, publishBlockers };
+  const cumulativeGateSet = cumulativeV6 ? parseMediaCumulativeGateSet(raw.cumulativeGateSet) : null;
+  return { ...base, schemaVersion: cumulativeV6 ? MEDIA_STUDIO_CUMULATIVE_SCHEMA_VERSION : MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION, lifecycleStatus, lifecycle, lifecycleBlockers, publishStatus, publishContributions, publishBlockers, cumulativeGateSet };
 }
 
 const ANALYST_VIEW_IDS = ["overview", "drivers", "diagnosis", "plan", "effects", "evidence", "quality"] as const satisfies readonly AnalystViewId[];

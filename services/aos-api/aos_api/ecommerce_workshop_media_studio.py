@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from aos_api.aip_contracts import TenantContext
 from aos_api.ecommerce_workshop_media_studio_contracts import (
     MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION,
+    MEDIA_STUDIO_CUMULATIVE_SCHEMA_VERSION,
     MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION,
     MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION,
     MEDIA_STUDIO_SCHEMA_VERSION,
@@ -30,6 +31,7 @@ from aos_api.ecommerce_workshop_media_studio_lifecycle import (
     MediaStudioLifecycleError,
 )
 from aos_api.ecommerce_workshop_media_publish import EcommerceWorkshopMediaPublish
+from aos_api.ecommerce_workshop_media_cumulative import EcommerceWorkshopMediaCumulative
 from aos_api.aip_media_finance_store import AipMediaFinanceStore, MediaFinanceError
 from aos_api.aip_media_provider_job_store import AipMediaProviderJobStore, MediaProviderJobError
 from aos_api.aip_action_store import AipActionStoreError
@@ -48,12 +50,13 @@ Clock = Callable[[], datetime]
 class EcommerceWorkshopMediaStudio:
     """Describe current authority gaps without promoting target state."""
 
-    def __init__(self, *, reader: MediaStudioCanonicalReader | None = None, provider_job_store: AipMediaProviderJobStore | None = None, media_finance_store: AipMediaFinanceStore | None = None, lifecycle: EcommerceWorkshopMediaStudioLifecycle | None = None, publisher: EcommerceWorkshopMediaPublish | None = None, clock: Clock | None = None) -> None:
+    def __init__(self, *, reader: MediaStudioCanonicalReader | None = None, provider_job_store: AipMediaProviderJobStore | None = None, media_finance_store: AipMediaFinanceStore | None = None, lifecycle: EcommerceWorkshopMediaStudioLifecycle | None = None, publisher: EcommerceWorkshopMediaPublish | None = None, cumulative: EcommerceWorkshopMediaCumulative | None = None, clock: Clock | None = None) -> None:
         self._reader = reader
         self._provider_job_store = provider_job_store
         self._media_finance_store = media_finance_store
         self._lifecycle = lifecycle
         self._publisher = publisher
+        self._cumulative = cumulative
         self._clock = clock or (lambda: datetime.now(UTC))
 
     def read(self, *, org_id: str, project_id: str) -> WorkshopMediaStudioViewEnvelope:
@@ -222,7 +225,7 @@ class EcommerceWorkshopMediaStudio:
             for code in publish_codes
         ]
         return WorkshopMediaStudioViewEnvelope(
-            schema_version=MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION if self._publisher is not None else (MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION if self._lifecycle is not None else (MEDIA_STUDIO_SCHEMA_VERSION if self._media_finance_store is not None else MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION)),
+            schema_version=MEDIA_STUDIO_CUMULATIVE_SCHEMA_VERSION if self._cumulative is not None else (MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION if self._publisher is not None else (MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION if self._lifecycle is not None else (MEDIA_STUDIO_SCHEMA_VERSION if self._media_finance_store is not None else MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION))),
             tenant=TenantContext(org_id=org_id, project_id=project_id),
             evaluated_at=cutoff,
             data_cutoff=cutoff,
@@ -239,6 +242,7 @@ class EcommerceWorkshopMediaStudio:
             publish_status="ready" if not publish_blockers else "blocked",
             publish_contributions=publish_contributions,
             publish_blockers=publish_blockers,
+            cumulative_gate_set=self._cumulative.read(cutoff=cutoff) if self._cumulative is not None else None,
             page=MediaPageInfo(count=sum(len(item.authority_refs) for item in slices)),
         )
 

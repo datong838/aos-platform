@@ -13,6 +13,7 @@ from aos_api.ecommerce_workshop_media_studio_lifecycle_contracts import (
     MediaStudioLifecycleContribution,
 )
 from aos_api.ecommerce_workshop_media_publish_contracts import MediaPublishContribution
+from aos_api.ecommerce_workshop_media_cumulative_contracts import MediaCumulativeGateSet
 
 
 MEDIA_STUDIO_LEGACY_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v1"
@@ -20,6 +21,7 @@ MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view
 MEDIA_STUDIO_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v3"
 MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v4"
 MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v5"
+MEDIA_STUDIO_CUMULATIVE_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v6"
 
 
 class MediaStudioSliceId(StrEnum):
@@ -201,7 +203,7 @@ class MediaFinanceContribution(AipContractModel):
 
 
 class WorkshopMediaStudioViewEnvelope(AipContractModel):
-    schema_version: Literal[MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION, MEDIA_STUDIO_SCHEMA_VERSION, MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION, MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION] = MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION
+    schema_version: Literal[MEDIA_STUDIO_PROVIDER_SCHEMA_VERSION, MEDIA_STUDIO_SCHEMA_VERSION, MEDIA_STUDIO_LIFECYCLE_SCHEMA_VERSION, MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION, MEDIA_STUDIO_CUMULATIVE_SCHEMA_VERSION] = MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION
     tenant: TenantContext
     evaluated_at: datetime
     data_cutoff: datetime
@@ -219,6 +221,7 @@ class WorkshopMediaStudioViewEnvelope(AipContractModel):
     publish_status: Literal["ready", "blocked"] = "blocked"
     publish_contributions: list[MediaPublishContribution] = Field(default_factory=list, max_length=100)
     publish_blockers: list[MediaBlocker] = Field(default_factory=lambda: [MediaBlocker(code="MEDIA_PUBLISH_LEGACY_VIEW", dependency="media-studio-v5", requiredAction="refresh canonical v5 projection")], max_length=20)
+    cumulative_gate_set: MediaCumulativeGateSet | None = None
     page: MediaPageInfo
 
     @field_validator("evaluated_at", "data_cutoff")
@@ -258,7 +261,12 @@ class WorkshopMediaStudioViewEnvelope(AipContractModel):
         if self.publish_status == "blocked" and not self.publish_blockers:
             raise ValueError("blocked media publish projection requires blockers")
         if self.schema_version != MEDIA_STUDIO_PUBLISH_SCHEMA_VERSION and self.publish_contributions:
-            raise ValueError("legacy media view cannot carry v5 publish contributions")
+            if self.schema_version != MEDIA_STUDIO_CUMULATIVE_SCHEMA_VERSION:
+                raise ValueError("legacy media view cannot carry v5 publish contributions")
+        if self.schema_version == MEDIA_STUDIO_CUMULATIVE_SCHEMA_VERSION and self.cumulative_gate_set is None:
+            raise ValueError("v6 media view requires cumulative gates")
+        if self.schema_version != MEDIA_STUDIO_CUMULATIVE_SCHEMA_VERSION and self.cumulative_gate_set is not None:
+            raise ValueError("legacy media view cannot carry cumulative gates")
         return self
 
 
