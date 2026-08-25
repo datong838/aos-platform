@@ -5,6 +5,7 @@ import {
   ecommerceWorkshopClient,
   type DispatchControlObservation,
   type DispatchScenarioContribution,
+  type BatchScenarioContribution,
   type TaskCockpitActionReceiptResponse,
   type TaskCockpitApprovalReviewResponse,
   type TaskCockpitCheckpointPageResponse,
@@ -21,13 +22,14 @@ import { useSourceReadinessSnapshot } from "./SourceReadinessContext";
 import { aipAgentControl, type IssuedHandoff } from "../../api/aipAgentControl";
 import type { ModuleHandoffCompileResponse, TaskCockpitTask, TaskCockpitRun } from "../../api/ecommerceWorkshop";
 
-type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getResponsibilityAssignmentObservation" | "getDispatchControlObservation" | "getTaskCockpitDispatchScenario">>;
+type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getResponsibilityAssignmentObservation" | "getDispatchControlObservation" | "getTaskCockpitDispatchScenario" | "getTaskCockpitBatchScenario">>;
 type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
 type SkillContributionState = { phase: "loading" | "ready" | "failed"; response: TaskCockpitSkillContributionResponse | null };
 type AssignmentObservationState = { phase: "loading" | "ready" | "failed"; response: ResponsibilityAssignmentObservation | null };
 type DispatchObservationState = { phase: "loading" | "ready" | "failed"; response: DispatchControlObservation | null };
 type DispatchScenarioState = { phase: "idle" | "loading" | "ready" | "failed"; response: DispatchScenarioContribution | null };
+type BatchScenarioState = { phase: "idle" | "loading" | "ready" | "failed"; response: BatchScenarioContribution | null };
 type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null; skillContributions: SkillContributionState; assignmentObservation: AssignmentObservationState; dispatchObservation: DispatchObservationState } | null;
 const TASK_STATUSES: readonly { value: "" | TaskCockpitTaskStatus; label: string }[] = [
   { value: "", label: "全部状态" }, { value: "pending", label: "待规划" }, { value: "planning", label: "规划中" }, { value: "awaiting_approval", label: "待审批" }, { value: "approved", label: "已批准" }, { value: "executing", label: "执行中" }, { value: "paused", label: "已暂停" }, { value: "completed", label: "已完成" }, { value: "failed", label: "失败" }, { value: "cancelled", label: "已取消" }, { value: "rolled_back", label: "已回滚" },
@@ -130,6 +132,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
   const [status, setStatus] = useState<"" | TaskCockpitTaskStatus>("");
   const [detail, setDetail] = useState<DetailState>(null);
   const [dispatchScenario, setDispatchScenario] = useState<DispatchScenarioState>({ phase: "idle", response: null });
+  const [batchScenario, setBatchScenario] = useState<BatchScenarioState>({ phase: "idle", response: null });
   const coreRequest = useRef(0);
   const detailRequest = useRef(0);
   const scenarioRequest = useRef(0);
@@ -148,6 +151,15 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
       );
     } else {
       setDispatchScenario({ phase: "idle", response: null });
+    }
+    if (client.getTaskCockpitBatchScenario) {
+      setBatchScenario({ phase: "loading", response: null });
+      void client.getTaskCockpitBatchScenario().then(
+        (next) => { if (scenarioRequestId === scenarioRequest.current) setBatchScenario({ phase: "ready", response: next }); },
+        () => { if (scenarioRequestId === scenarioRequest.current) setBatchScenario({ phase: "failed", response: null }); },
+      );
+    } else {
+      setBatchScenario({ phase: "idle", response: null });
     }
     void client.getTaskCockpitCore({ status: nextStatus || undefined, limit: 20, cursor }).then(
       (next) => {
@@ -232,6 +244,19 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
         <div className="task-cockpit-dispatch-ledger" aria-label="派发决定与 owner 守恒"><div><span>Task</span><strong>{dispatchScenario.response.ledger.tasksObserved}/{dispatchScenario.response.ledger.tasksExpected}</strong></div><div><span>Handoff</span><strong>{dispatchScenario.response.ledger.handoffsObserved}/{dispatchScenario.response.ledger.handoffsExpected}</strong></div><div><span>决定</span><strong>{dispatchScenario.response.ledger.decisionsRecorded}/{dispatchScenario.response.ledger.decisionsExpected}</strong></div><div><span>request_more</span><strong>{dispatchScenario.response.ledger.requestMore}</strong></div><div><span>接管</span><strong>{dispatchScenario.response.ledger.takeoverDecided}/{dispatchScenario.response.ledger.takeoverRequested}</strong></div><div><span>active owner</span><strong>{dispatchScenario.response.ledger.activeOwnerCount}</strong></div></div>
         <div className="task-cockpit-dispatch-axes">{dispatchScenario.response.outcomeAxes.map((axis) => <article className={`is-${axis.status}`} key={axis.axisId}><span>{axis.axisId}</span><strong>{axis.status}</strong><p>{axis.exactRef ? `${axis.exactRef.resourceType} · v${axis.exactRef.revision}` : axis.blocker?.code}</p></article>)}</div>
         <p className="task-cockpit-approval-boundary">本场景命令：dispatch=false · decide_handoff=false · request_takeover=false · approve_takeover=false · mutate_owner=false。</p>
+      </section> : null}
+
+      {batchScenario.phase === "loading" ? <section className="task-cockpit-batch-scenario is-loading" aria-label="W8-06 批量准备与结果协调场景贡献" role="status"><strong>正在独立读取批量场景…</strong><p>准备、显式启动、Partial/Unknown 与 Reconcile 不由页面本地状态推导。</p></section> : null}
+      {batchScenario.phase === "failed" ? <section className="task-cockpit-batch-scenario is-failed" aria-label="W8-06 批量准备与结果协调场景贡献" role="alert"><strong>批量场景读取失败</strong><p>原有 Task Cockpit 保持可用；准备、启动、取消、自动重试与协调命令均不开放。</p></section> : null}
+      {batchScenario.phase === "ready" && batchScenario.response ? <section className="task-cockpit-batch-scenario is-blocked" aria-label="W8-06 批量准备与结果协调场景贡献">
+        <header><div><span>W8-06 · GET-only</span><h2>批量准备、显式启动与 Partial / Unknown / Reconcile</h2></div><strong>运营失败关闭</strong></header>
+        <p>冻结成员先逐项准备，再以 exact BatchStartDecision 显式启动；unknown 只允许同指纹权威回读或追加 Reconcile Receipt，绝不自动重试。</p>
+        {batchScenario.response.composition ? <div className="task-cockpit-batch-layers"><div><span>原子 Skill</span><strong>{batchScenario.response.composition.atomicSkillRefs.length}</strong><small>{batchScenario.response.composition.atomicSkillRefs.map((item) => `${item.resourceId}@${item.revision}`).join("、")}</small></div><div><span>Logic</span><strong>{batchScenario.response.composition.logicRevisionRef.resourceId}</strong><small>v{batchScenario.response.composition.logicRevisionRef.revision}</small></div><div><span>数字同事绑定</span><strong>{batchScenario.response.composition.roleBindings.length}</strong><small>{batchScenario.response.composition.roleBindings.map((item) => `${item.roleRef.resourceId} → ${item.assigneeRef.resourceId}`).join("、")}</small></div></div> : <p className="task-cockpit-approval-boundary">{batchScenario.response.blockers.map((item) => item.code).join("、")}；未制造 Skill、Logic、数字同事绑定或批次事实。</p>}
+        <ol className="task-cockpit-batch-stages">{batchScenario.response.stages.map((stage) => <li className={`is-${stage.status}`} key={stage.stageId}><span>{stage.stageId}</span><strong>{stage.status}</strong><p>{stage.contribution}</p><small>{stage.exactRefs.length ? `${stage.exactRefs.length} 个 exact ref` : stage.blockers.map((item) => item.code).join("、")}</small></li>)}</ol>
+        <div className="task-cockpit-batch-ledger" aria-label="批量准备与子任务结果守恒"><div><span>冻结成员</span><strong>{batchScenario.response.ledger.frozenTotal}</strong></div><div><span>纳入 / 排除</span><strong>{batchScenario.response.ledger.included} / {batchScenario.response.ledger.excluded}</strong></div><div><span>准备 blocked / unknown</span><strong>{batchScenario.response.ledger.blocked} / {batchScenario.response.ledger.preparationUnknown}</strong></div><div><span>子任务观测</span><strong>{batchScenario.response.ledger.childrenObserved}/{batchScenario.response.ledger.childrenExpected}</strong></div><div><span>成功 / 失败 / 取消</span><strong>{batchScenario.response.ledger.succeeded} / {batchScenario.response.ledger.failed} / {batchScenario.response.ledger.cancelled}</strong></div><div><span>unknown / reconciled</span><strong>{batchScenario.response.ledger.childUnknown} / {batchScenario.response.ledger.reconciled}</strong></div></div>
+        {batchScenario.response.preparationDecisions.length ? <div className="task-cockpit-batch-items"><strong>逐项准备判定</strong><ul>{batchScenario.response.preparationDecisions.map((item) => <li className={`is-${item.disposition}`} key={item.itemKey}><span>{item.itemKey}</span><strong>{item.disposition}</strong><small>{item.reasonCodes.join("、") || `${item.originalRefs.length} 个原始 ref`}</small></li>)}</ul></div> : null}
+        <div className="task-cockpit-batch-axes">{batchScenario.response.outcomeAxes.map((axis) => <article className={`is-${axis.status}`} key={axis.axisId}><span>{axis.axisId}</span><strong>{axis.status}</strong><p>{axis.exactRefs.length ? `${axis.exactRefs.length} 个 exact ref` : axis.blockers.map((item) => item.code).join("、")}</p></article>)}</div>
+        <p className="task-cockpit-approval-boundary">命令：prepare=false · start=false · cancel=false · reconcile=false；automatic_retry=false · external_effect=false · release=false。</p>
       </section> : null}
 
       <section className="task-cockpit-command-blocked" aria-labelledby="task-cockpit-command-title">

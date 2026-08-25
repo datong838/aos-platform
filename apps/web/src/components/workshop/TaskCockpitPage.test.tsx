@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EcommerceWorkshopClientError, type DispatchControlObservation, type DispatchScenarioContribution, type ResponsibilityAssignmentObservation, type TaskCockpitActionReceiptResponse, type TaskCockpitApprovalReviewResponse, type TaskCockpitCoreResponse, type TaskCockpitProductionContextResponse, type TaskCockpitResponsibilityHandoffResponse, type TaskCockpitSkillContributionResponse } from "../../api/ecommerceWorkshop";
+import type { BatchScenarioContribution } from "../../api/ecommerceWorkshop";
 import { TaskCockpitPage } from "./TaskCockpitPage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -28,6 +29,17 @@ const dispatchScenario: DispatchScenarioContribution = {
   ledger: { tasksExpected: 1, tasksObserved: 1, handoffsExpected: 1, handoffsObserved: 1, decisionsExpected: 2, decisionsRecorded: 2, accepted: 1, rejected: 0, requestMore: 1, returned: 0, takeoverRequested: 1, takeoverDecided: 1, activeOwnerCount: 1 },
   outcomeAxes: (["dispatch_decision_recorded", "receiver_reauthorized", "single_active_owner", "takeover_decided", "execution_reconciled"] as const).map((axisId, index) => index === 4 ? { axisId, status: "unknown", exactRef: null, blocker: scenarioBlocker } : { axisId, status: "ready", exactRef: scenarioRef("DecisionReceiptRevision", axisId), blocker: null }),
   blockers: [scenarioBlocker], commands: { dispatch: false, decideHandoff: false, requestTakeover: false, approveTakeover: false, mutateOwner: false }, externalEffectsAllowed: false,
+};
+const batchBlocker = { code: "CHILD_OUTCOME_UNKNOWN_RECONCILIATION_REQUIRED", dependency: "workshop.batch-scenario", requiredAction: "同指纹权威回读" };
+const batchScenario: BatchScenarioContribution = {
+  schemaVersion: "aos.ecommerce-workshop.batch-scenario/v1", status: "blocked", batchPreparationRevisionRef: scenarioRef("BatchPreparationRevision", "prepare-1"), batchStartDecisionRef: scenarioRef("BatchStartDecision", "start-1"), batchStartBindingHash: "c".repeat(64), evaluatedAt: "2026-08-26T07:00:00Z",
+  composition: { atomicSkillRefs: [scenarioRef("SkillRevision", "freeze-batch"), scenarioRef("SkillRevision", "reconcile-attempt")], logicRevisionRef: scenarioRef("LogicRevision", "batch-control-loop"), roleBindings: [{ roleRef: scenarioRef("AgentTemplate", "operations-lead"), assigneeRef: scenarioRef("AgentInstance", "operations-lead-1"), skillBindingRef: scenarioRef("SkillBinding", "batch-binding-1") }] },
+  preparationDecisions: [{ itemKey: "item-1", disposition: "included", originalRefs: [scenarioRef("BusinessItemRevision", "item-1")], decisionRef: scenarioRef("ItemPreparationDecision", "decision-1"), reasonCodes: [] }, { itemKey: "item-2", disposition: "unknown", originalRefs: [scenarioRef("BusinessItemRevision", "item-2")], decisionRef: scenarioRef("ItemPreparationDecision", "decision-2"), reasonCodes: ["SOURCE_FACT_UNKNOWN"] }],
+  childOutcomes: [{ itemKey: "item-1", status: "unknown", requestFingerprint: "d".repeat(64), attemptRef: scenarioRef("Attempt", "attempt-1"), authorityRefs: [scenarioRef("ProviderRequestReceipt", "request-1")], reconcileReceiptRefs: [], automaticRetryAllowed: false }],
+  stages: (["prepare_root", "impact_cost_preview", "explicit_start", "child_dispatch", "partial_outcomes", "unknown_reconcile", "restart_rebuild"] as const).map((stageId, index) => index < 5 ? { stageId, status: "ready", exactRefs: [scenarioRef("StageReceipt", `stage-${index}`)], contribution: `stage ${stageId}`, blockers: [] } : { stageId, status: index === 5 ? "unknown" : "blocked", exactRefs: [], contribution: `wait ${stageId}`, blockers: [batchBlocker] }),
+  ledger: { frozenTotal: 2, included: 1, excluded: 0, blocked: 0, preparationUnknown: 1, childrenExpected: 1, childrenObserved: 1, succeeded: 0, failed: 0, cancelled: 0, childUnknown: 1, reconciled: 0, reconcileReceiptsObserved: 0 },
+  outcomeAxes: (["business_item", "external_action", "usage_settlement", "effect_maturity", "handoff_decision"] as const).map((axisId) => ({ axisId, status: "unknown", exactRefs: [], blockers: [batchBlocker] })),
+  sideEffectLedger: { prepareExternalCalls: 0, providerCalls: 0, actionAttempts: 0, externalEffects: 0 }, blockers: [batchBlocker], commands: { prepare: false, start: false, cancel: false, reconcile: false }, automaticRetryAllowed: false, externalEffectsAllowed: false, releaseAllowed: false,
 };
 const unreadDetails = { listTaskCockpitRunSteps: vi.fn(), listTaskCockpitRunCheckpoints: vi.fn(), getTaskCockpitRunProductionContext: vi.fn(), getTaskCockpitRunResponsibilityHandoffs: vi.fn(), compileTaskCockpitRunHandoff: vi.fn(), getTaskCockpitRunApprovalReview: vi.fn(), getTaskCockpitRunActionReceipts: vi.fn(), getTaskCockpitRunSkillContributions: vi.fn() };
 
@@ -85,6 +97,19 @@ describe("TaskCockpitPage", () => {
     expect(host.textContent).toContain("每日巡检");
     expect(host.textContent).toContain("当日任务流 · 执行进度");
     expect(host.textContent).toContain("派发、决定、接管与 owner 变更均不开放");
+  });
+
+  it("独立呈现 W8-06 四层批量贡献、七阶段与五结果轴且零命令", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getTaskCockpitBatchScenario: vi.fn().mockResolvedValue(batchScenario), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    expect(host.textContent).toContain("批量准备、显式启动与 Partial / Unknown / Reconcile");
+    expect(host.textContent).toContain("freeze-batch@1"); expect(host.textContent).toContain("batch-control-loop"); expect(host.textContent).toContain("operations-lead → operations-lead-1");
+    expect(host.querySelectorAll(".task-cockpit-batch-stages > li")).toHaveLength(7);
+    expect(host.querySelectorAll(".task-cockpit-batch-axes > article")).toHaveLength(5);
+    expect(host.querySelectorAll(".task-cockpit-batch-items li")).toHaveLength(2);
+    expect(host.textContent).toContain("SOURCE_FACT_UNKNOWN"); expect(host.textContent).toContain("automatic_retry=false");
+    expect(client.getTaskCockpitBatchScenario).toHaveBeenCalledTimes(1);
+    expect([...host.querySelectorAll("button")].some((item) => /准备|启动|协调/.test(item.textContent ?? "") && !item.disabled)).toBe(false);
   });
 
   it("显式展开 Run 后诚实显示 Step/Checkpoint 空权威集合", async () => {

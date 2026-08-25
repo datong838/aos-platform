@@ -496,7 +496,8 @@
 .task-cockpit-skill-contributions li span,
 .task-cockpit-skill-contributions li small { color: var(--aos-text-secondary); overflow-wrap: anywhere; }
 .task-cockpit-skill-contributions li em { color: var(--aos-amber-700); font-size: 11px; font-style: normal; overflow-wrap: anywhere; }
-.task-cockpit-dispatch-scenario { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-amber-600, #d97706); background: color-mix(in srgb, var(--aos-surface) 95%, var(--aos-amber-50, #fffbeb)); }
+.task-cockpit-dispatch-scenario,
+.task-cockpit-batch-scenario { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-amber-600, #d97706); background: color-mix(in srgb, var(--aos-surface) 95%, var(--aos-amber-50, #fffbeb)); }
 .task-cockpit-dispatch-scenario > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .task-cockpit-dispatch-scenario > header div { display: grid; gap: 4px; }
 .task-cockpit-dispatch-scenario > header span { color: var(--aos-text-tertiary); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
@@ -524,7 +525,39 @@
 .task-cockpit-dispatch-axes article.is-blocked { border-top-color: var(--aos-red); }
 .task-cockpit-dispatch-stages p { margin: 0; overflow-wrap: anywhere; font-size: 12px; }
 .task-cockpit-dispatch-stages small { overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 10px; }
+.task-cockpit-batch-scenario > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.task-cockpit-batch-scenario > header div { display: grid; gap: 4px; }
+.task-cockpit-batch-scenario > header span { color: var(--aos-text-tertiary); font-size: 11px; letter-spacing: .08em; }
+.task-cockpit-batch-scenario > header h2,
+.task-cockpit-batch-scenario > p { margin: 0; }
+.task-cockpit-batch-scenario > header > strong { padding: 5px 9px; border: 1px solid var(--aos-amber-600, #d97706); color: var(--aos-amber-700, #b45309); font-size: 11px; white-space: nowrap; }
+.task-cockpit-batch-layers,
+.task-cockpit-batch-ledger,
+.task-cockpit-batch-axes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.task-cockpit-batch-layers > div,
+.task-cockpit-batch-ledger > div,
+.task-cockpit-batch-axes > article { display: grid; gap: 4px; min-width: 0; padding: 10px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.task-cockpit-batch-layers span,
+.task-cockpit-batch-ledger span,
+.task-cockpit-batch-axes span { color: var(--aos-text-tertiary); font-size: 11px; }
+.task-cockpit-batch-layers small,
+.task-cockpit-batch-axes p { margin: 0; overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 11px; }
+.task-cockpit-batch-stages { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.task-cockpit-batch-stages li { display: grid; gap: 4px; min-width: 0; padding: 10px; border: 1px solid var(--aos-border); border-top: 3px solid var(--aos-amber-600, #d97706); background: var(--aos-surface); }
+.task-cockpit-batch-stages li.is-ready,
+.task-cockpit-batch-axes article.is-succeeded,
+.task-cockpit-batch-axes article.is-reconciled { border-top-color: var(--aos-green-600, #16a34a); }
+.task-cockpit-batch-stages li.is-blocked,
+.task-cockpit-batch-axes article.is-blocked,
+.task-cockpit-batch-axes article.is-failed { border-top-color: var(--aos-red); }
+.task-cockpit-batch-stages p { margin: 0; overflow-wrap: anywhere; font-size: 12px; }
+.task-cockpit-batch-stages small { overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 10px; }
+.task-cockpit-batch-items { display: grid; gap: 8px; }
+.task-cockpit-batch-items ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.task-cockpit-batch-items li { display: grid; gap: 4px; min-width: 0; padding: 9px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.task-cockpit-batch-items li small { overflow-wrap: anywhere; color: var(--aos-text-secondary); }
 @media (max-width: 720px) { .task-cockpit-responsibility-grid, .task-cockpit-handoff-command-grid, .task-cockpit-assignment-control dl { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .task-cockpit-batch-scenario > header { flex-direction: column; } .task-cockpit-batch-layers, .task-cockpit-batch-ledger, .task-cockpit-batch-axes, .task-cockpit-batch-stages, .task-cockpit-batch-items ul { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .task-cockpit-approval-review-grid { grid-template-columns: 1fr; } }
 .task-cockpit-run-detail table { width: 100%; border-collapse: collapse; min-width: 560px; }
 .task-cockpit-run-detail caption { text-align: left; font-weight: 600; margin-bottom: 6px; }

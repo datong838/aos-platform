@@ -3,6 +3,7 @@ import {
   SOURCE_READINESS_SCHEMA_VERSION,
   TASK_COCKPIT_SCHEMA_VERSION,
   DISPATCH_SCENARIO_SCHEMA_VERSION,
+  BATCH_SCENARIO_SCHEMA_VERSION,
   LEARNING_SCENARIO_SCHEMA_VERSION,
   FULL_VIDEO_SCENARIO_SCHEMA_VERSION,
   OPERATIONS_SCHEMA_VERSION,
@@ -108,6 +109,18 @@ import {
   type DispatchScenarioRoleBinding,
   type DispatchScenarioStage,
   type DispatchScenarioStageId,
+  type BatchScenarioBlocker,
+  type BatchScenarioChildOutcome,
+  type BatchScenarioComposition,
+  type BatchScenarioContribution,
+  type BatchScenarioExactRef,
+  type BatchScenarioLedger,
+  type BatchScenarioOutcomeAxis,
+  type BatchScenarioOutcomeAxisId,
+  type BatchScenarioPreparationDecision,
+  type BatchScenarioRoleBinding,
+  type BatchScenarioStage,
+  type BatchScenarioStageId,
   type LearningScenarioBlocker,
   type LearningScenarioComposition,
   type LearningScenarioContribution,
@@ -534,6 +547,50 @@ export function parseDispatchScenario(value: unknown): DispatchScenarioContribut
   if (rootTaskGraphRef && stages[0].status === "ready") { const ids = new Set(stages[0].exactRefs.map((ref) => `${ref.resourceType}:${ref.resourceId}:${ref.revision}:${ref.contentHash}`)); if (!ids.has(`${rootTaskGraphRef.resourceType}:${rootTaskGraphRef.resourceId}:${rootTaskGraphRef.revision}:${rootTaskGraphRef.contentHash}`) || !rootTaskRunRef || !ids.has(`${rootTaskRunRef.resourceType}:${rootTaskRunRef.resourceId}:${rootTaskRunRef.revision}:${rootTaskRunRef.contentHash}`)) throw new TypeError("dispatchScenario root stage 漂移"); }
   const commandsRaw = record(raw.commands, "dispatchScenario.commands"); exact(commandsRaw, ["dispatch", "decideHandoff", "requestTakeover", "approveTakeover", "mutateOwner"], "dispatchScenario.commands"); if (Object.values(commandsRaw).some((item) => item !== false)) throw new TypeError("dispatchScenario command 必须失败关闭");
   const blockers = raw.blockers.map(parseDispatchScenarioBlocker); return { schemaVersion: DISPATCH_SCENARIO_SCHEMA_VERSION, status: "blocked", rootTaskGraphRef, rootTaskRunRef, dispatchBindingHash, composition, evaluatedAt: timestamp(raw.evaluatedAt, "dispatchScenario.evaluatedAt"), stages, ledger, outcomeAxes, blockers, commands: { dispatch: false, decideHandoff: false, requestTakeover: false, approveTakeover: false, mutateOwner: false }, externalEffectsAllowed: false };
+}
+
+const BATCH_STAGE_IDS = ["prepare_root", "impact_cost_preview", "explicit_start", "child_dispatch", "partial_outcomes", "unknown_reconcile", "restart_rebuild"] as const satisfies readonly BatchScenarioStageId[];
+const BATCH_AXIS_IDS = ["business_item", "external_action", "usage_settlement", "effect_maturity", "handoff_decision"] as const satisfies readonly BatchScenarioOutcomeAxisId[];
+function parseBatchRef(value: unknown, expectedType: string | null, label: string): BatchScenarioExactRef {
+  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "contentHash"], label);
+  const resourceType = boundedText(raw.resourceType, `${label}.resourceType`, 120); if (expectedType && resourceType !== expectedType) throw new TypeError(`${label} resourceType 漂移`);
+  const contentHash = boundedText(raw.contentHash, `${label}.contentHash`, 71); if (!/^sha256:[0-9a-f]{64}$/.test(contentHash)) throw new TypeError(`${label} contentHash 漂移`);
+  return { resourceType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), revision: integer(raw.revision, `${label}.revision`, 1), contentHash };
+}
+function parseBatchBlocker(value: unknown): BatchScenarioBlocker {
+  const raw = record(value, "batchScenario.blocker"); exact(raw, ["code", "dependency", "requiredAction"], "batchScenario.blocker");
+  return { code: boundedText(raw.code, "batchScenario.blocker.code", 120), dependency: boundedText(raw.dependency, "batchScenario.blocker.dependency", 180), requiredAction: boundedText(raw.requiredAction, "batchScenario.blocker.requiredAction", 500) };
+}
+function parseBatchRoleBinding(value: unknown, label: string): BatchScenarioRoleBinding {
+  const raw = record(value, label); exact(raw, ["roleRef", "assigneeRef", "skillBindingRef"], label);
+  return { roleRef: parseBatchRef(raw.roleRef, "AgentTemplate", `${label}.roleRef`), assigneeRef: parseBatchRef(raw.assigneeRef, "AgentInstance", `${label}.assigneeRef`), skillBindingRef: parseBatchRef(raw.skillBindingRef, "SkillBinding", `${label}.skillBindingRef`) };
+}
+function parseBatchComposition(value: unknown): BatchScenarioComposition {
+  const raw = record(value, "batchScenario.composition"); exact(raw, ["atomicSkillRefs", "logicRevisionRef", "roleBindings"], "batchScenario.composition");
+  if (!Array.isArray(raw.atomicSkillRefs) || !raw.atomicSkillRefs.length || !Array.isArray(raw.roleBindings) || !raw.roleBindings.length) throw new TypeError("batchScenario composition 漂移");
+  const atomicSkillRefs = raw.atomicSkillRefs.map((item, index) => parseBatchRef(item, "SkillRevision", `batchScenario.atomicSkillRefs[${index}]`));
+  const roleBindings = raw.roleBindings.map((item, index) => parseBatchRoleBinding(item, `batchScenario.roleBindings[${index}]`));
+  assertUnique(atomicSkillRefs.map((item) => `${item.resourceId}:${item.revision}:${item.contentHash}`), "batchScenario.atomicSkillRefs");
+  assertUnique(roleBindings.map((item) => item.skillBindingRef.resourceId), "batchScenario.roleBindings");
+  return { atomicSkillRefs, logicRevisionRef: parseBatchRef(raw.logicRevisionRef, "LogicRevision", "batchScenario.logicRevisionRef"), roleBindings };
+}
+export function parseBatchScenario(value: unknown): BatchScenarioContribution {
+  const raw = record(value, "batchScenario"); exact(raw, ["schemaVersion", "status", "batchPreparationRevisionRef", "batchStartDecisionRef", "batchStartBindingHash", "composition", "evaluatedAt", "preparationDecisions", "childOutcomes", "stages", "ledger", "outcomeAxes", "sideEffectLedger", "blockers", "commands", "automaticRetryAllowed", "externalEffectsAllowed", "releaseAllowed"], "batchScenario");
+  if (raw.schemaVersion !== BATCH_SCENARIO_SCHEMA_VERSION || raw.status !== "blocked" || !Array.isArray(raw.preparationDecisions) || !Array.isArray(raw.childOutcomes) || !Array.isArray(raw.stages) || !Array.isArray(raw.outcomeAxes) || !Array.isArray(raw.blockers)) throw new TypeError("batchScenario 字段漂移");
+  const stageValues = raw.stages; const axisValues = raw.outcomeAxes;
+  if (stageValues.length !== BATCH_STAGE_IDS.length || axisValues.length !== BATCH_AXIS_IDS.length) throw new TypeError("batchScenario canonical length 漂移");
+  const preparationDecisions = raw.preparationDecisions.map((value, index): BatchScenarioPreparationDecision => { const item = record(value, `batchScenario.preparationDecisions[${index}]`); exact(item, ["itemKey", "disposition", "originalRefs", "decisionRef", "reasonCodes"], `batchScenario.preparationDecisions[${index}]`); if (!Array.isArray(item.originalRefs) || !item.originalRefs.length || !Array.isArray(item.reasonCodes)) throw new TypeError("batchScenario preparation 漂移"); const disposition = enumValue(item.disposition, ["included", "excluded", "blocked", "unknown"] as const, "batchScenario.disposition"); const reasonCodes = item.reasonCodes.map((entry) => boundedText(entry, "batchScenario.reasonCode", 120)); if (["blocked", "unknown"].includes(disposition) && !reasonCodes.length) throw new TypeError("batchScenario preparation 伪状态"); return { itemKey: boundedText(item.itemKey, "batchScenario.itemKey", 200), disposition, originalRefs: item.originalRefs.map((entry, refIndex) => parseBatchRef(entry, null, `batchScenario.originalRefs[${refIndex}]`)), decisionRef: parseBatchRef(item.decisionRef, "ItemPreparationDecision", "batchScenario.decisionRef"), reasonCodes }; });
+  const childOutcomes = raw.childOutcomes.map((value, index): BatchScenarioChildOutcome => { const item = record(value, `batchScenario.childOutcomes[${index}]`); exact(item, ["itemKey", "status", "requestFingerprint", "attemptRef", "authorityRefs", "reconcileReceiptRefs", "automaticRetryAllowed"], `batchScenario.childOutcomes[${index}]`); if (!Array.isArray(item.authorityRefs) || !item.authorityRefs.length || !Array.isArray(item.reconcileReceiptRefs) || item.automaticRetryAllowed !== false) throw new TypeError("batchScenario child outcome 漂移"); const status = enumValue(item.status, ["succeeded", "failed", "cancelled", "unknown", "reconciled"] as const, "batchScenario.child.status"); const reconcileReceiptRefs = item.reconcileReceiptRefs.map((entry, refIndex) => parseBatchRef(entry, null, `batchScenario.reconcileReceiptRefs[${refIndex}]`)); if ((status === "unknown" && reconcileReceiptRefs.length) || (status === "reconciled" && !reconcileReceiptRefs.length)) throw new TypeError("batchScenario reconcile 伪状态"); return { itemKey: boundedText(item.itemKey, "batchScenario.child.itemKey", 200), status, requestFingerprint: rawHash(item.requestFingerprint, "batchScenario.requestFingerprint"), attemptRef: parseBatchRef(item.attemptRef, "Attempt", "batchScenario.attemptRef"), authorityRefs: item.authorityRefs.map((entry, refIndex) => parseBatchRef(entry, null, `batchScenario.authorityRefs[${refIndex}]`)), reconcileReceiptRefs, automaticRetryAllowed: false }; });
+  assertUnique(preparationDecisions.map((item) => item.itemKey), "batchScenario.preparationDecisions"); assertUnique(childOutcomes.map((item) => item.itemKey), "batchScenario.childOutcomes");
+  const stages = BATCH_STAGE_IDS.map((stageId, index): BatchScenarioStage => { const item = record(stageValues[index], `batchScenario.${stageId}`); exact(item, ["stageId", "status", "exactRefs", "contribution", "blockers"], `batchScenario.${stageId}`); if (item.stageId !== stageId || !Array.isArray(item.exactRefs) || !Array.isArray(item.blockers)) throw new TypeError("batchScenario stage 漂移"); const status = enumValue(item.status, ["ready", "blocked", "unknown"] as const, "batchScenario.stage.status"); const exactRefs = item.exactRefs.map((entry, refIndex) => parseBatchRef(entry, null, `batchScenario.${stageId}.exactRefs[${refIndex}]`)); const blockers = item.blockers.map(parseBatchBlocker); if ((status === "ready" && (!exactRefs.length || blockers.length)) || (status !== "ready" && (exactRefs.length || !blockers.length))) throw new TypeError("batchScenario stage 伪状态"); return { stageId, status, exactRefs, contribution: boundedText(item.contribution, `batchScenario.${stageId}.contribution`, 500), blockers }; });
+  const ledgerRaw = record(raw.ledger, "batchScenario.ledger"); const ledgerKeys = ["frozenTotal", "included", "excluded", "blocked", "preparationUnknown", "childrenExpected", "childrenObserved", "succeeded", "failed", "cancelled", "childUnknown", "reconciled", "reconcileReceiptsObserved"] as const; exact(ledgerRaw, ledgerKeys, "batchScenario.ledger"); const ledger = Object.fromEntries(ledgerKeys.map((key) => [key, integer(ledgerRaw[key], `batchScenario.ledger.${key}`)])) as BatchScenarioLedger;
+  if (ledger.frozenTotal !== ledger.included + ledger.excluded + ledger.blocked + ledger.preparationUnknown || ledger.childrenExpected !== ledger.included || ledger.childrenObserved !== ledger.succeeded + ledger.failed + ledger.cancelled + ledger.childUnknown + ledger.reconciled || ledger.childrenObserved > ledger.childrenExpected || ledger.reconcileReceiptsObserved < ledger.reconciled) throw new TypeError("batchScenario ledger 不守恒");
+  const outcomeAxes = BATCH_AXIS_IDS.map((axisId, index): BatchScenarioOutcomeAxis => { const item = record(axisValues[index], `batchScenario.${axisId}`); exact(item, ["axisId", "status", "exactRefs", "blockers"], `batchScenario.${axisId}`); if (item.axisId !== axisId || !Array.isArray(item.exactRefs) || !Array.isArray(item.blockers)) throw new TypeError("batchScenario axis 漂移"); const status = enumValue(item.status, ["succeeded", "partial", "failed", "cancelled", "blocked", "unknown", "reconciled", "not_started"] as const, "batchScenario.axis.status"); const exactRefs = item.exactRefs.map((entry, refIndex) => parseBatchRef(entry, null, `batchScenario.${axisId}.exactRefs[${refIndex}]`)); const blockers = item.blockers.map(parseBatchBlocker); if ((["succeeded", "reconciled"].includes(status) && (!exactRefs.length || blockers.length)) || (status === "partial" && (!exactRefs.length || !blockers.length)) || (!["succeeded", "reconciled", "partial"].includes(status) && (exactRefs.length || !blockers.length))) throw new TypeError("batchScenario axis 伪状态"); return { axisId, status, exactRefs, blockers }; });
+  const commands = record(raw.commands, "batchScenario.commands"); exact(commands, ["prepare", "start", "cancel", "reconcile"], "batchScenario.commands"); if (Object.values(commands).some((item) => item !== false)) throw new TypeError("batchScenario command 越权");
+  const effects = record(raw.sideEffectLedger, "batchScenario.sideEffectLedger"); exact(effects, ["prepareExternalCalls", "providerCalls", "actionAttempts", "externalEffects"], "batchScenario.sideEffectLedger"); if (Object.values(effects).some((item) => item !== 0) || raw.automaticRetryAllowed !== false || raw.externalEffectsAllowed !== false || raw.releaseAllowed !== false) throw new TypeError("batchScenario 副作用越权");
+  const batchPreparationRevisionRef = raw.batchPreparationRevisionRef === null ? null : parseBatchRef(raw.batchPreparationRevisionRef, "BatchPreparationRevision", "batchScenario.batchPreparationRevisionRef"); const batchStartDecisionRef = raw.batchStartDecisionRef === null ? null : parseBatchRef(raw.batchStartDecisionRef, "BatchStartDecision", "batchScenario.batchStartDecisionRef"); const composition = raw.composition === null ? null : parseBatchComposition(raw.composition); const batchStartBindingHash = raw.batchStartBindingHash === null ? null : rawHash(raw.batchStartBindingHash, "batchScenario.batchStartBindingHash"); if ([batchPreparationRevisionRef, batchStartDecisionRef, composition, batchStartBindingHash].filter((item) => item !== null).length % 4 !== 0) throw new TypeError("batchScenario roots 漂移");
+  const included = new Set(preparationDecisions.filter((item) => item.disposition === "included").map((item) => item.itemKey)); if (childOutcomes.some((item) => !included.has(item.itemKey))) throw new TypeError("batchScenario child 非 included");
+  return { schemaVersion: BATCH_SCENARIO_SCHEMA_VERSION, status: "blocked", batchPreparationRevisionRef, batchStartDecisionRef, batchStartBindingHash, composition, evaluatedAt: timestamp(raw.evaluatedAt, "batchScenario.evaluatedAt"), preparationDecisions, childOutcomes, stages, ledger, outcomeAxes, sideEffectLedger: { prepareExternalCalls: 0, providerCalls: 0, actionAttempts: 0, externalEffects: 0 }, blockers: raw.blockers.map(parseBatchBlocker), commands: { prepare: false, start: false, cancel: false, reconcile: false }, automaticRetryAllowed: false, externalEffectsAllowed: false, releaseAllowed: false };
 }
 
 const LEARNING_STAGE_IDS = ["effect_review", "maturity", "memory_candidate", "governance", "promotion", "knowledge_query", "revocation_impact"] as const satisfies readonly LearningScenarioStageId[];

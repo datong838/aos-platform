@@ -60,6 +60,8 @@ from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
 from aos_api.ecommerce_workshop_growth_scenario import EcommerceWorkshopGrowthScenario
 from aos_api.ecommerce_workshop_dispatch_scenario import EcommerceWorkshopDispatchScenario
 from aos_api.ecommerce_workshop_dispatch_scenario_contracts import DispatchScenarioContribution
+from aos_api.ecommerce_workshop_batch_scenario import EcommerceWorkshopBatchScenario
+from aos_api.ecommerce_workshop_batch_scenario_contracts import BatchScenarioContribution
 from aos_api.ecommerce_workshop_learning_scenario import EcommerceWorkshopLearningScenario
 from aos_api.ecommerce_workshop_learning_scenario_contracts import LearningScenarioContribution
 from aos_api.ecommerce_workshop_full_video_scenario import EcommerceWorkshopFullVideoScenario
@@ -316,6 +318,11 @@ def get_ecommerce_workshop_dispatch_scenario() -> EcommerceWorkshopDispatchScena
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_batch_scenario() -> EcommerceWorkshopBatchScenario:
+    return EcommerceWorkshopBatchScenario()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_handoff_compiler() -> ModuleHandoffCompiler:
     return ModuleHandoffCompiler(
         cockpit=get_ecommerce_workshop_task_cockpit(),
@@ -483,6 +490,9 @@ TaskCockpitDependency = Annotated[
 ]
 DispatchScenarioDependency = Annotated[
     EcommerceWorkshopDispatchScenario, Depends(get_ecommerce_workshop_dispatch_scenario)
+]
+BatchScenarioDependency = Annotated[
+    EcommerceWorkshopBatchScenario, Depends(get_ecommerce_workshop_batch_scenario)
 ]
 HandoffCompilerDependency = Annotated[
     ModuleHandoffCompiler, Depends(get_ecommerce_workshop_handoff_compiler)
@@ -2287,6 +2297,26 @@ def get_ecommerce_workshop_task_cockpit_dispatch_scenario(
     catalog: CatalogDependency,
     scenario: DispatchScenarioDependency,
 ) -> DispatchScenarioContribution:
+    _reject_unknown_query_parameters(request, allowed=frozenset())
+    _require_task_cockpit_installation(principal=principal, catalog=catalog)
+    return scenario.read(
+        scope=TenantScope(principal.org_id, principal.project_id),
+        cutoff=datetime.now(UTC),
+    )
+
+
+@router.get(
+    "/views/task-cockpit/batch-scenario",
+    response_model=BatchScenarioContribution,
+    operation_id="ecommerceWorkshopTaskCockpitBatchScenarioGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_task_cockpit_batch_scenario(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    scenario: BatchScenarioDependency,
+) -> BatchScenarioContribution:
     _reject_unknown_query_parameters(request, allowed=frozenset())
     _require_task_cockpit_installation(principal=principal, catalog=catalog)
     return scenario.read(

@@ -83,8 +83,20 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2669
-    assert len(schema.get("components", {}).get("schemas", {})) == 2442
+    assert len(schema["paths"]) == 2670
+    assert len(schema.get("components", {}).get("schemas", {})) == 2456
+
+
+def test_batch_scenario_is_principal_scoped_and_get_only() -> None:
+    schema = json.loads(OPENAPI_PATH.read_bytes())
+    path = "/v1/ecommerce-workshop/views/task-cockpit/batch-scenario"
+    assert set(schema["paths"][path]) == {"get"}
+    operation = schema["paths"][path]["get"]
+    assert operation["operationId"] == "ecommerceWorkshopTaskCockpitBatchScenarioGet"
+    assert operation["security"] == [{"HTTPBearer": []}]
+    assert all(item["in"] != "query" for item in operation.get("parameters", []))
+    response_ref = operation["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
+    assert response_ref.endswith("/BatchScenarioContribution")
 
 
 def test_full_video_scenario_is_principal_scoped_and_get_only() -> None:
