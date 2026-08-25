@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "workshop-delivery-evidence/v1",
+  "taskId": "W5-05",
+  "recordedAt": "2026-08-25T01:54:57Z",
+  "branch": "m1",
+  "baselineCommit": "ecf34171e7f1df57371ccf548345538888e8031d",
+  "authorityRevision": "AOS-000239",
+  "outcome": "W5_05_TYPED_RECONCILE_MANUAL_AUTHORITY_EXACT_COMPENSATION_POLICY_CODE_GREEN_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "scope": {
+    "implemented": [
+      "typed Provider outcome and reconciliation-source axes on immutable Action Receipts",
+      "durable single-claim reconciliation for unknown and accepted outcomes without blind execution retry",
+      "manual reconcile Case with maker-checker, CAS version and immutable evidence-backed decision Receipt",
+      "exact published CompensationPolicyRevision with outcome, effect-scope, maximum-effect and risk-floor gates",
+      "policy-generated compensation Draft or Proposal bound to the original Receipt and residual effect",
+      "durable compensation intent and immutable link preventing concurrent or alternate-request duplicates",
+      "tenant RLS, append-only guards and fact-preserving migration downgrade checks",
+      "deterministic OpenAPI publication of manual Case and decision commands"
+    ],
+    "excluded": [
+      "real environment migration",
+      "real account, secret, Provider query or external Action",
+      "automatic compensation execution",
+      "canary and release"
+    ]
+  },
+  "verification": {
+    "focused": {
+      "result": "18 passed",
+      "coverage": "W5-05 typed reconcile, manual authority, exact compensation policy, migration and OpenAPI"
+    },
+    "cumulative": {
+      "result": "68 passed",
+      "coverage": "W5-01 through W5-05, AIP Action execution, lineage authority and deterministic OpenAPI"
+    },
+    "static": {
+      "compileall": "green",
+      "openapiDeterministic": "green",
+      "alembicHeads": ["w5_004 (head)"],
+      "diffCheck": "green"
+    },
+    "browser": {
+      "status": "not_applicable",
+      "reason": "No Workshop route, component, copy or page behavior changed in W5-05; browser smoke is not substituted for backend authority evidence."
+    }
+  },
+  "compatibility": {
+    "legacyInternalCompensation": "green_additive",
+    "externalFreeFormCompensation": "blocked",
+    "confirmedFailedCompensation": "blocked",
+    "unknownRetry": "reconcile_only_no_execution_retry",
+    "proposalCreationDoesNotClaimEffectReversed": true,
+    "crossTenantRead": "invisible",
+    "externalOperationalReadiness": "blocked"
+  },
+  "knownBlockers": [
+    "REAL_ACCOUNT_BINDING_AND_SECRET_RESOLUTION_NOT_AUTHORIZED",
+    "NO_REAL_PROVIDER_RECONCILIATION_OR_EXTERNAL_EFFECT_EXECUTED",
+    "NO_CANARY_OR_RELEASE_AUTHORITY"
+  ],
+  "nextTask": "W5-06"
+}

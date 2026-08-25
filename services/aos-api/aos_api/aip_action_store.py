@@ -32,6 +32,7 @@ from aos_api.aip_contracts import (
     ResourceRef,
 )
 from aos_api.db import connect as db_connect
+from aos_api.aip_production_contracts import ExactRevisionRef
 from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
@@ -1066,6 +1067,15 @@ class AipActionStore:
                     "contentHash": row["source_draft_hash"],
                 }
             ),
+            compensation_original_proposal_id=row["compensation_original_proposal_id"],
+            compensation_original_receipt_id=row["compensation_original_receipt_id"],
+            compensation_policy_ref=(
+                ExactRevisionRef.model_validate(row["compensation_policy_ref"])
+                if row["compensation_policy_ref"]
+                else None
+            ),
+            compensation_effect=row["compensation_effect"],
+            compensation_residual_effect=row["compensation_residual_effect"],
             proposal_hash=row["proposal_hash"], status=ActionProposalStatus(row["status"]),
             expires_at=row["expires_at"], version=row["version"], created_by=actor(row["created_by"]),
             created_at=row["created_at"], updated_at=row["updated_at"],

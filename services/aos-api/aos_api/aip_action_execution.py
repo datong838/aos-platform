@@ -18,9 +18,15 @@ from aos_api.aip_action_models import (
     ActionExecutionAttemptSnapshot,
     ActionExecutionLeaseSnapshot,
     ActionExecutionView,
+    ActionReconcileAttemptSnapshot,
     ActionReceiptSnapshot,
     CreateCompensationRequest,
+    CreateActionDraftRequest,
+    CreateManualReconcileCaseRequest,
     CreateActionProposalRequest,
+    DecideManualReconcileCaseRequest,
+    ManualReconcileCaseSnapshot,
+    SubmitActionDraftRequest,
 )
 from aos_api.aip_action_store import (
     AipActionConflict,
@@ -431,8 +437,8 @@ class AipActionExecutionService:
             ).fetchone()
             if receipt is None:
                 raise AipActionNotFound("receipt not found in scope")
-            if receipt["status"] != "unknown" or receipt["receipt_kind"] != "initial":
-                raise AipActionTransitionBlocked("only an initial unknown receipt can be reconciled")
+            if receipt["status"] not in {"unknown", "accepted"} or receipt["receipt_kind"] != "initial":
+                raise AipActionTransitionBlocked("only an initial unknown or accepted receipt can be reconciled")
             existing = conn.execute(
                 "SELECT receipt_id FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND supersedes_receipt_id=%s",
                 (*scope.key, receipt_id),
@@ -441,30 +447,440 @@ class AipActionExecutionService:
                 lease = conn.execute("SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND lease_id=%s", (*scope.key, receipt["lease_id"])).fetchone()
                 return self._view(scope, receipt["proposal_id"], lease)
             proposal = conn.execute("SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s", (*scope.key, receipt["proposal_id"])).fetchone()
-        if not receipt["provider_request_id"]:
-            raise AipActionDependencyUnavailable("provider request id unavailable for reconciliation")
-        adapter = self._adapters.get(proposal["action_type_id"])
+            reconcile_attempt_id = f"reconcile-{canonical_hash({'receiptId': receipt_id})[:20]}"
+            conn.execute(
+                """INSERT INTO aip_action_reconcile_attempt
+                   (org_id,project_id,reconcile_attempt_id,original_receipt_id,attempt_id,
+                    proposal_id,adapter_revision_ref,account_binding_ref,provider_request_id,
+                    request_fingerprint,query_policy,status,expires_at)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s::jsonb,'pending',NOW()+INTERVAL '30 minutes')
+                   ON CONFLICT (org_id,project_id,original_receipt_id) DO NOTHING""",
+                (
+                    *scope.key,
+                    reconcile_attempt_id,
+                    receipt_id,
+                    receipt["attempt_id"],
+                    receipt["proposal_id"],
+                    self._store._json(receipt["adapter_revision_ref"]),
+                    self._store._json(receipt["account_binding_ref"]),
+                    receipt["provider_request_id"],
+                    receipt["request_fingerprint"],
+                    self._store._json({"mode": "provider_status_query", "noExecuteRetry": True}),
+                ),
+            )
+            reconcile_attempt = conn.execute(
+                """SELECT * FROM aip_action_reconcile_attempt
+                   WHERE org_id=%s AND project_id=%s AND original_receipt_id=%s FOR UPDATE""",
+                (*scope.key, receipt_id),
+            ).fetchone()
+            if reconcile_attempt["status"] in {"claimed", "resolved", "manual_required"}:
+                conn.commit()
+                lease = conn.execute("SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND lease_id=%s", (*scope.key, receipt["lease_id"])).fetchone()
+                return self._view(scope, receipt["proposal_id"], lease)
+            if not receipt["provider_request_id"]:
+                self._create_or_get_manual_case(
+                    conn, scope, receipt, principal.subject, reason,
+                    ["provider outcome evidence", "business object readback"], [],
+                    reconcile_attempt_id=reconcile_attempt["reconcile_attempt_id"],
+                )
+                conn.commit()
+                lease = conn.execute("SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND lease_id=%s", (*scope.key, receipt["lease_id"])).fetchone()
+                return self._view(scope, receipt["proposal_id"], lease)
+            conn.execute(
+                """UPDATE aip_action_reconcile_attempt SET status='claimed',
+                   claim_token=%s,claimed_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND reconcile_attempt_id=%s""",
+                (f"claim-{uuid.uuid4().hex[:20]}", *scope.key, reconcile_attempt["reconcile_attempt_id"]),
+            )
+            conn.commit()
+        adapter = self._adapter_for_reconcile(proposal, receipt)
         if adapter is None:
-            raise AipActionDependencyUnavailable("adapter unavailable for reconciliation")
+            return self._manual_after_automatic_failure(
+                principal, receipt, reason, reconcile_attempt_id,
+                "exact Adapter reconciliation capability unavailable",
+            )
         try:
             result = adapter.reconcile(provider_request_id=receipt["provider_request_id"], request_fingerprint=receipt["request_fingerprint"])
-        except Exception as exc:
-            raise AipActionDependencyUnavailable("authorized provider reread failed") from exc
-        if result.status not in {"applied", "failed"}:
-            raise AipActionDependencyUnavailable("provider reread did not reach a terminal result")
-        with connect(scope) as conn:
-            new_id = f"receipt-{uuid.uuid4().hex[:20]}"
-            conn.execute(
-                """INSERT INTO aip_action_receipt
-                   (org_id,project_id,receipt_id,proposal_id,lease_id,status,provider_request_id,
-                    request_fingerprint,evidence_refs,payload,receipt_kind,supersedes_receipt_id)
-                   VALUES (%s,%s,%s,%s,%s,'reconciled',%s,%s,'[]'::jsonb,%s::jsonb,'reconcile',%s)""",
-                (*scope.key, new_id, receipt["proposal_id"], receipt["lease_id"], receipt["provider_request_id"], receipt["request_fingerprint"], self._store._json({"resolvedStatus": result.status, "provider": result.payload, "reason": reason}), receipt_id),
+        except Exception:
+            return self._manual_after_automatic_failure(
+                principal, receipt, reason, reconcile_attempt_id,
+                "authorized provider reread failed",
             )
+        if result.status not in {"applied", "failed", "partial"}:
+            return self._manual_after_automatic_failure(
+                principal, receipt, reason, reconcile_attempt_id,
+                "provider reread remained non-terminal",
+            )
+        with connect(scope) as conn:
+            current_attempt = conn.execute(
+                """SELECT * FROM aip_action_reconcile_attempt
+                   WHERE org_id=%s AND project_id=%s AND reconcile_attempt_id=%s FOR UPDATE""",
+                (*scope.key, reconcile_attempt_id),
+            ).fetchone()
+            if current_attempt is None or current_attempt["status"] != "claimed":
+                raise AipActionConflict("reconcile attempt claim changed before delivery")
+            self._append_reconcile_receipt(
+                conn, scope, receipt,
+                provider_outcome=result.status,
+                reconciliation_status="automatic",
+                resolution_quality="confirmed",
+                resolution_source="provider_query",
+                payload={"provider": result.payload, "reason": reason},
+                evidence_refs=[],
+                reconcile_attempt_id=reconcile_attempt_id,
+            )
+            conn.execute(
+                """UPDATE aip_action_reconcile_attempt
+                   SET status='resolved',completed_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND reconcile_attempt_id=%s""",
+                (*scope.key, reconcile_attempt_id),
+            )
+            if receipt["attempt_id"] is not None:
+                conn.execute(
+                    """UPDATE aip_action_execution_attempt
+                       SET status=%s,provider_request_id=%s,finished_at=NOW()
+                       WHERE org_id=%s AND project_id=%s AND attempt_id=%s""",
+                    (result.status, result.provider_request_id, *scope.key, receipt["attempt_id"]),
+                )
             conn.execute("UPDATE aip_action_proposal SET status='reconciled',version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND proposal_id=%s", (*scope.key, receipt["proposal_id"]))
             conn.commit()
             lease = conn.execute("SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND lease_id=%s", (*scope.key, receipt["lease_id"])).fetchone()
         return self._view(scope, receipt["proposal_id"], lease)
+
+    def _manual_after_automatic_failure(
+        self,
+        principal: Principal,
+        receipt: Any,
+        reason: str,
+        reconcile_attempt_id: str,
+        missing_fact: str,
+    ) -> ActionExecutionView:
+        scope = TenantScope(principal.org_id, principal.project_id)
+        with connect(scope) as conn:
+            current = conn.execute(
+                """SELECT * FROM aip_action_receipt
+                   WHERE org_id=%s AND project_id=%s AND receipt_id=%s FOR UPDATE""",
+                (*scope.key, receipt["receipt_id"]),
+            ).fetchone()
+            existing = conn.execute(
+                """SELECT receipt_id FROM aip_action_receipt
+                   WHERE org_id=%s AND project_id=%s AND supersedes_receipt_id=%s""",
+                (*scope.key, receipt["receipt_id"]),
+            ).fetchone()
+            if existing is None:
+                self._create_or_get_manual_case(
+                    conn, scope, current, principal.subject, reason,
+                    [missing_fact, "controlled provider or business evidence"], [],
+                    reconcile_attempt_id=reconcile_attempt_id,
+                )
+            conn.execute(
+                """UPDATE aip_action_reconcile_attempt
+                   SET status='manual_required',completed_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND reconcile_attempt_id=%s
+                     AND status<>'resolved'""",
+                (*scope.key, reconcile_attempt_id),
+            )
+            conn.commit()
+            lease = conn.execute(
+                """SELECT * FROM aip_action_execution_lease
+                   WHERE org_id=%s AND project_id=%s AND lease_id=%s""",
+                (*scope.key, receipt["lease_id"]),
+            ).fetchone()
+        return self._view(scope, receipt["proposal_id"], lease)
+
+    def _create_or_get_manual_case(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        receipt: Any,
+        maker_id: str,
+        reason: str,
+        required_facts: list[str],
+        evidence_refs: list[ResourceRef] | list[dict[str, Any]],
+        *,
+        reconcile_attempt_id: str | None = None,
+        expires_at: datetime | None = None,
+    ) -> Any:
+        normalized_evidence = [
+            item.model_dump(mode="json", by_alias=True)
+            if isinstance(item, ResourceRef)
+            else item
+            for item in evidence_refs
+        ]
+        normalized_required = list(dict.fromkeys([item.strip() for item in required_facts if item.strip()]))
+        case_id = f"manual-case-{canonical_hash({'receiptId': receipt['receipt_id']})[:20]}"
+        missing = normalized_required if not normalized_evidence else []
+        conn.execute(
+            """INSERT INTO aip_action_manual_reconcile_case
+               (org_id,project_id,case_id,original_receipt_id,reconcile_attempt_id,
+                attempt_id,proposal_id,action_binding_hash,account_binding_ref,
+                object_scope,expected_diff,required_facts,evidence_refs,missing_facts,
+                conflict_facts,maker_id,status,expires_at)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,
+                       %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,'open',%s)
+               ON CONFLICT (org_id,project_id,original_receipt_id) DO NOTHING""",
+            (
+                *scope.key, case_id, receipt["receipt_id"], reconcile_attempt_id,
+                receipt["attempt_id"], receipt["proposal_id"], receipt["action_binding_hash"],
+                self._store._json(receipt["account_binding_ref"]),
+                self._store._json({"proposalId": receipt["proposal_id"]}),
+                self._store._json({"reason": reason}),
+                self._store._json(normalized_required), self._store._json(normalized_evidence),
+                self._store._json(missing), self._store._json([]), maker_id,
+                expires_at or datetime.now(timezone.utc) + timedelta(hours=24),
+            ),
+        )
+        if reconcile_attempt_id is not None:
+            conn.execute(
+                """UPDATE aip_action_reconcile_attempt SET status='manual_required',completed_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND reconcile_attempt_id=%s
+                     AND status<>'resolved'""",
+                (*scope.key, reconcile_attempt_id),
+            )
+        return conn.execute(
+            """SELECT * FROM aip_action_manual_reconcile_case
+               WHERE org_id=%s AND project_id=%s AND original_receipt_id=%s""",
+            (*scope.key, receipt["receipt_id"]),
+        ).fetchone()
+
+    def _append_reconcile_receipt(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        original: Any,
+        *,
+        provider_outcome: str,
+        reconciliation_status: str,
+        resolution_quality: str,
+        resolution_source: str,
+        payload: dict[str, Any],
+        evidence_refs: list[dict[str, Any]],
+        reconcile_attempt_id: str | None = None,
+        manual_case_id: str | None = None,
+        manual_decision_receipt_id: str | None = None,
+        applied_effect: dict[str, Any] | None = None,
+        compensated_effect: dict[str, Any] | None = None,
+        residual_effect: dict[str, Any] | None = None,
+    ) -> str:
+        controlled_payload, _ = self._control_provider_payload(payload)
+        new_id = f"receipt-{canonical_hash({'parent': original['receipt_id'], 'method': reconciliation_status})[:20]}"
+        response_hash = canonical_hash(controlled_payload)
+        lineage_source_ref = {
+            "resourceType": "ActionReceipt",
+            "resourceId": new_id,
+            "revision": "reconcile",
+            "authority": "aip_action_receipt",
+        }
+        receipt_fact = {
+            "receiptId": new_id,
+            "originalReceiptId": original["receipt_id"],
+            "attemptId": original["attempt_id"],
+            "proposalId": original["proposal_id"],
+            "leaseId": original["lease_id"],
+            "providerOutcome": provider_outcome,
+            "reconciliationStatus": reconciliation_status,
+            "resolutionQuality": resolution_quality,
+            "resolutionSource": resolution_source,
+            "reconcileAttemptId": reconcile_attempt_id,
+            "manualCaseId": manual_case_id,
+            "manualDecisionReceiptId": manual_decision_receipt_id,
+            "actionBindingHash": original["action_binding_hash"],
+            "responseHash": response_hash,
+            "evidenceRefs": evidence_refs,
+            "payload": controlled_payload,
+            "appliedEffect": applied_effect,
+            "compensatedEffect": compensated_effect,
+            "residualEffect": residual_effect,
+        }
+        receipt_content_hash = canonical_hash(receipt_fact)
+        conn.execute(
+            """INSERT INTO aip_action_receipt
+               (org_id,project_id,receipt_id,proposal_id,lease_id,status,
+                provider_request_id,request_fingerprint,evidence_refs,payload,
+                receipt_kind,supersedes_receipt_id,attempt_id,action_binding_hash,
+                approval_set_hash,adapter_revision_ref,account_binding_ref,
+                capability_binding_ref,reservation_ref,response_hash,
+                output_schema_ref,receipt_schema_ref,usage_schema_ref,
+                redaction_policy_ref,usage_receipt_refs,lineage_source_ref,
+                receipt_content_hash,provider_outcome,reconciliation_status,
+                resolution_quality,resolution_source,resolution_cutoff,
+                reconcile_attempt_id,manual_reconcile_case_id,
+                manual_decision_receipt_id,applied_effect,compensated_effect,residual_effect)
+               VALUES (%s,%s,%s,%s,%s,'reconciled',%s,%s,%s::jsonb,%s::jsonb,
+                       'reconcile',%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,
+                       %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,
+                       %s,%s,%s,%s,NOW(),%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb)""",
+            (
+                *scope.key, new_id, original["proposal_id"], original["lease_id"],
+                original["provider_request_id"], original["request_fingerprint"],
+                self._store._json(evidence_refs), self._store._json(controlled_payload),
+                original["receipt_id"], original["attempt_id"], original["action_binding_hash"],
+                original["approval_set_hash"], self._store._json(original["adapter_revision_ref"]),
+                self._store._json(original["account_binding_ref"]),
+                self._store._json(original["capability_binding_ref"]),
+                self._store._json(original["reservation_ref"]), response_hash,
+                self._store._json(original["output_schema_ref"]),
+                self._store._json(original["receipt_schema_ref"]),
+                self._store._json(original["usage_schema_ref"]),
+                self._store._json(original["redaction_policy_ref"]),
+                self._store._json(original["usage_receipt_refs"]),
+                self._store._json(lineage_source_ref), receipt_content_hash,
+                provider_outcome, reconciliation_status, resolution_quality,
+                resolution_source, reconcile_attempt_id, manual_case_id,
+                manual_decision_receipt_id, self._store._json(applied_effect),
+                self._store._json(compensated_effect), self._store._json(residual_effect),
+            ),
+        )
+        return new_id
+
+    def _adapter_for_reconcile(self, proposal: Any, receipt: Any) -> Any | None:
+        raw_ref = receipt["adapter_revision_ref"]
+        if raw_ref is None:
+            return self._adapters.get(proposal["action_type_id"])
+        try:
+            ref = ImmutableExactRevisionRef.model_validate(raw_ref)
+        except Exception:
+            return None
+        item = self._adapters.get_conformant(ref)
+        return item[1] if item else None
+
+    def create_manual_reconcile_case(
+        self,
+        principal: Principal,
+        receipt_id: str,
+        body: CreateManualReconcileCaseRequest,
+    ) -> ActionExecutionView:
+        self._require_executor(principal)
+        scope = TenantScope(principal.org_id, principal.project_id)
+        with connect(scope) as conn:
+            receipt = conn.execute(
+                """SELECT * FROM aip_action_receipt
+                   WHERE org_id=%s AND project_id=%s AND receipt_id=%s FOR UPDATE""",
+                (*scope.key, receipt_id),
+            ).fetchone()
+            if receipt is None:
+                raise AipActionNotFound("receipt not found in scope")
+            if receipt["receipt_kind"] != "initial" or receipt["status"] not in {"unknown", "accepted"}:
+                raise AipActionTransitionBlocked("manual reconciliation requires an initial unknown or accepted receipt")
+            self._create_or_get_manual_case(
+                conn,
+                scope,
+                receipt,
+                principal.subject,
+                body.reason,
+                body.required_facts,
+                body.evidence_refs,
+                expires_at=body.expires_at,
+            )
+            conn.commit()
+            lease = conn.execute("SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND lease_id=%s", (*scope.key, receipt["lease_id"])).fetchone()
+        return self._view(scope, receipt["proposal_id"], lease)
+
+    def decide_manual_reconcile_case(
+        self,
+        principal: Principal,
+        case_id: str,
+        body: DecideManualReconcileCaseRequest,
+    ) -> ActionExecutionView:
+        self._require_executor(principal)
+        scope = TenantScope(principal.org_id, principal.project_id)
+        with connect(scope) as conn:
+            case = conn.execute(
+                """SELECT * FROM aip_action_manual_reconcile_case
+                   WHERE org_id=%s AND project_id=%s AND case_id=%s FOR UPDATE""",
+                (*scope.key, case_id),
+            ).fetchone()
+            if case is None:
+                raise AipActionNotFound("manual reconcile case not found in scope")
+            if case["status"] == "resolved":
+                receipt = conn.execute("SELECT * FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND receipt_id=%s", (*scope.key, case["original_receipt_id"])).fetchone()
+                lease = conn.execute("SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND lease_id=%s", (*scope.key, receipt["lease_id"])).fetchone()
+                return self._view(scope, case["proposal_id"], lease)
+            if int(case["version"]) != body.expected_version:
+                raise AipActionConflict("manual reconcile case version changed")
+            if case["maker_id"] == principal.subject:
+                raise AipActionTransitionBlocked("manual reconcile maker cannot check the same case")
+            evidence_refs = [*case["evidence_refs"], *[item.model_dump(mode="json", by_alias=True) for item in body.evidence_refs]]
+            if body.decision == "unresolved" or not evidence_refs:
+                conn.execute(
+                    """UPDATE aip_action_manual_reconcile_case
+                       SET status='unresolved',version=version+1,
+                           missing_facts=%s::jsonb,updated_at=NOW()
+                       WHERE org_id=%s AND project_id=%s AND case_id=%s""",
+                    (self._store._json(case["required_facts"] or ["controlled evidence"]), *scope.key, case_id),
+                )
+                conn.commit()
+                receipt = conn.execute("SELECT * FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND receipt_id=%s", (*scope.key, case["original_receipt_id"])).fetchone()
+                lease = conn.execute("SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND lease_id=%s", (*scope.key, receipt["lease_id"])).fetchone()
+                return self._view(scope, case["proposal_id"], lease)
+            outcome = body.decision.removeprefix("confirmed_")
+            original = conn.execute(
+                """SELECT * FROM aip_action_receipt
+                   WHERE org_id=%s AND project_id=%s AND receipt_id=%s FOR UPDATE""",
+                (*scope.key, case["original_receipt_id"]),
+            ).fetchone()
+            existing = conn.execute(
+                """SELECT receipt_id FROM aip_action_receipt
+                   WHERE org_id=%s AND project_id=%s AND supersedes_receipt_id=%s""",
+                (*scope.key, original["receipt_id"]),
+            ).fetchone()
+            if existing is not None:
+                raise AipActionConflict("receipt outcome was already resolved")
+            decision_fact = {
+                "caseId": case_id,
+                "originalReceiptId": original["receipt_id"],
+                "outcome": outcome,
+                "makerId": case["maker_id"],
+                "checkerId": principal.subject,
+                "evidenceRefs": evidence_refs,
+                "appliedEffect": body.applied_effect,
+                "compensatedEffect": body.compensated_effect,
+                "residualEffect": body.residual_effect,
+            }
+            decision_receipt_id = f"manual-decision-{canonical_hash(decision_fact)[:20]}"
+            conn.execute(
+                """INSERT INTO aip_action_manual_reconcile_decision_receipt
+                   (org_id,project_id,decision_receipt_id,case_id,original_receipt_id,
+                    resolved_provider_outcome,resolution_quality,evidence_refs,maker_id,checker_id,
+                    applied_effect,compensated_effect,residual_effect,source_hash)
+                   VALUES (%s,%s,%s,%s,%s,%s,'confirmed',%s::jsonb,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s)""",
+                (
+                    *scope.key, decision_receipt_id, case_id, original["receipt_id"], outcome,
+                    self._store._json(evidence_refs), case["maker_id"], principal.subject,
+                    self._store._json(body.applied_effect), self._store._json(body.compensated_effect),
+                    self._store._json(body.residual_effect), canonical_hash(decision_fact),
+                ),
+            )
+            self._append_reconcile_receipt(
+                conn, scope, original,
+                provider_outcome=outcome,
+                reconciliation_status="manual",
+                resolution_quality="confirmed",
+                resolution_source="manual_evidence",
+                payload={"decisionReceiptId": decision_receipt_id},
+                evidence_refs=evidence_refs,
+                manual_case_id=case_id,
+                manual_decision_receipt_id=decision_receipt_id,
+                applied_effect=body.applied_effect,
+                compensated_effect=body.compensated_effect,
+                residual_effect=body.residual_effect,
+            )
+            if original["attempt_id"] is not None:
+                conn.execute(
+                    """UPDATE aip_action_execution_attempt SET status=%s,finished_at=NOW()
+                       WHERE org_id=%s AND project_id=%s AND attempt_id=%s""",
+                    (outcome, *scope.key, original["attempt_id"]),
+                )
+            conn.execute(
+                """UPDATE aip_action_manual_reconcile_case
+                   SET status='resolved',version=version+1,missing_facts='[]'::jsonb,updated_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND case_id=%s""",
+                (*scope.key, case_id),
+            )
+            conn.execute("UPDATE aip_action_proposal SET status='reconciled',version=version+1,updated_at=NOW() WHERE org_id=%s AND project_id=%s AND proposal_id=%s", (*scope.key, case["proposal_id"]))
+            conn.commit()
+            lease = conn.execute("SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND lease_id=%s", (*scope.key, original["lease_id"])).fetchone()
+        return self._view(scope, case["proposal_id"], lease)
 
     def get_execution_view(self, principal: Principal, proposal_id: str) -> ActionExecutionView:
         """Read the canonical execution projection without inventing client state."""
@@ -488,33 +904,205 @@ class AipActionExecutionService:
         scope = TenantScope(principal.org_id, principal.project_id)
         with connect(scope) as conn:
             original = conn.execute(
-                "SELECT risk_level FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s",
+                "SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s",
                 (*scope.key, proposal_id),
             ).fetchone()
             receipt = conn.execute(
-                "SELECT receipt_id,status FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND receipt_id=%s AND proposal_id=%s",
+                "SELECT * FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND receipt_id=%s AND proposal_id=%s",
                 (*scope.key, body.receipt_id, proposal_id),
             ).fetchone()
         if original is None or receipt is None:
             raise AipActionNotFound("original proposal or receipt not found in scope")
         if original["risk_level"] == "R4":
             raise AipActionTransitionBlocked("R4 compensation requires specialized policy")
-        if receipt["status"] not in {"applied", "reconciled"}:
-            raise AipActionTransitionBlocked("only an applied or reconciled outcome can be compensated")
-        from aos_api.aip_action_service import AipActionService
-
-        request = CreateActionProposalRequest(
-            action_type_id=body.action_type_id,
-            purpose=body.purpose,
-            payload=body.payload,
-            evidence_refs=[ResourceRef(
-                resource_type="ActionReceipt",
-                resource_id=body.receipt_id,
-                revision=None,
-                authority="aip_action_receipt",
-            )],
+        resolved_outcome = receipt["provider_outcome"] or (
+            receipt["status"] if receipt["status"] in {"applied", "failed"} else None
         )
-        return AipActionService(self._store).create_proposal(principal, idempotency_key, request)
+        if resolved_outcome not in {"applied", "partial"}:
+            raise AipActionTransitionBlocked("only a confirmed applied or partial outcome can be compensated")
+        from aos_api.aip_action_service import AipActionService
+        is_external = original["action_type_id"] in W5_EXTERNAL_ACTION_FAMILIES
+        if body.policy_revision_ref is None:
+            if is_external:
+                raise AipActionTransitionBlocked("external compensation requires an exact CompensationPolicyRevision")
+            if not body.action_type_id:
+                raise AipActionTransitionBlocked("legacy internal compensation requires actionTypeId")
+            request = CreateActionProposalRequest(
+                action_type_id=body.action_type_id,
+                purpose=body.purpose,
+                payload=body.payload,
+                evidence_refs=[ResourceRef(
+                    resource_type="ActionReceipt", resource_id=body.receipt_id,
+                    revision=None, authority="aip_action_receipt",
+                )],
+            )
+            return AipActionService(self._store).create_proposal(principal, idempotency_key, request)
+        if body.action_type_id is not None or body.payload:
+            raise AipActionTransitionBlocked("exact policy compensation does not accept caller-selected actionTypeId or payload")
+        with connect(scope) as conn:
+            duplicate = conn.execute(
+                """SELECT compensation_proposal_id FROM aip_action_compensation_link
+                   WHERE org_id=%s AND project_id=%s AND original_receipt_id=%s""",
+                (*scope.key, body.receipt_id),
+            ).fetchone()
+            if duplicate is not None:
+                return self._store.get_proposal(scope, duplicate["compensation_proposal_id"])
+            ref = body.policy_revision_ref
+            policy = conn.execute(
+                """SELECT * FROM aip_action_compensation_policy_revision
+                   WHERE org_id=%s AND project_id=%s AND policy_id=%s AND revision=%s
+                     AND content_hash=%s AND lifecycle='published'
+                     AND valid_from<=NOW() AND (expires_at IS NULL OR expires_at>NOW())""",
+                (*scope.key, ref.resource_id, ref.revision, ref.content_hash),
+            ).fetchone()
+        if policy is None:
+            raise AipActionDependencyUnavailable("exact CompensationPolicyRevision is unavailable")
+        if policy["original_action_type_id"] != original["action_type_id"] or resolved_outcome not in set(policy["allowed_outcomes"]):
+            raise AipActionTransitionBlocked("CompensationPolicyRevision does not allow this Action outcome")
+        applied_effect = receipt["applied_effect"] or receipt["residual_effect"]
+        compensation_effect = body.effect_delta or receipt["residual_effect"] or applied_effect
+        if resolved_outcome == "partial" and (applied_effect is None or compensation_effect is None):
+            raise AipActionTransitionBlocked("partial compensation requires exact applied and residual effect")
+        self._assert_effect_within_policy(
+            compensation_effect,
+            policy["effect_scope_schema"],
+            policy["maximum_effect"],
+        )
+        policy_ref = ref.model_dump(mode="json", by_alias=True)
+        generated_payload = {
+            **policy["payload_template"],
+            "originalProposalId": proposal_id,
+            "originalReceiptId": body.receipt_id,
+            "resolvedProviderOutcome": resolved_outcome,
+            "compensationPolicyRef": policy_ref,
+            "effectDelta": compensation_effect,
+        }
+        intent_fact = {
+            "originalReceiptId": body.receipt_id,
+            "policyRef": policy_ref,
+            "purpose": body.purpose,
+            "effectDelta": compensation_effect,
+            "impactPreviewRef": (
+                body.impact_preview_ref.model_dump(mode="json", by_alias=True)
+                if body.impact_preview_ref
+                else None
+            ),
+        }
+        intent_hash = canonical_hash(intent_fact)
+        with connect(scope) as conn:
+            conn.execute(
+                """INSERT INTO aip_action_compensation_intent
+                   (org_id,project_id,intent_id,original_receipt_id,policy_id,
+                    policy_revision,policy_hash,idempotency_key,request_hash,status)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'pending')
+                   ON CONFLICT (org_id,project_id,original_receipt_id) DO NOTHING""",
+                (
+                    *scope.key, f"comp-intent-{canonical_hash({'receiptId': body.receipt_id})[:20]}",
+                    body.receipt_id, ref.resource_id, ref.revision, ref.content_hash,
+                    idempotency_key, intent_hash,
+                ),
+            )
+            intent = conn.execute(
+                """SELECT * FROM aip_action_compensation_intent
+                   WHERE org_id=%s AND project_id=%s AND original_receipt_id=%s FOR UPDATE""",
+                (*scope.key, body.receipt_id),
+            ).fetchone()
+            if intent["request_hash"] != intent_hash:
+                raise AipActionIdempotencyConflict("compensation intent already fixes another exact request")
+            if intent["status"] == "linked":
+                conn.commit()
+                return self._store.get_proposal(scope, intent["compensation_proposal_id"])
+            effective_idempotency_key = intent["idempotency_key"]
+            conn.commit()
+        request = CreateActionProposalRequest(
+            action_type_id=policy["compensation_action_type_id"],
+            purpose=body.purpose,
+            object_ref=(ResourceRef.model_validate(original["object_ref"]) if original["object_ref"] else None),
+            payload=generated_payload,
+            evidence_refs=[ResourceRef(
+                resource_type="ActionReceipt", resource_id=body.receipt_id,
+                revision=receipt["receipt_content_hash"], authority="aip_action_receipt",
+            )],
+            impact_preview_ref=body.impact_preview_ref,
+        )
+        action_service = AipActionService(self._store)
+        prepared_body = CreateActionDraftRequest.model_validate(
+            request.model_dump(mode="json", by_alias=True)
+        )
+        _prepared_scope, _prepared_snapshot, prepared_risk = action_service._prepare_action(
+            principal, prepared_body
+        )
+        risk_order = {"R0": 0, "R1": 1, "R2": 2, "R3": 3, "R4": 4}
+        if risk_order[prepared_risk.level.value] < risk_order[policy["risk_floor"]]:
+            raise AipActionTransitionBlocked("generated compensation risk is below policy floor")
+        if policy["compensation_action_type_id"] in W5_EXTERNAL_ACTION_FAMILIES:
+            draft = action_service.create_draft(
+                principal,
+                f"{effective_idempotency_key}:draft",
+                prepared_body,
+            )
+            bundle = action_service.submit_draft(
+                principal,
+                draft.draft_id,
+                f"{effective_idempotency_key}:submit",
+                SubmitActionDraftRequest(
+                    expected_revision=draft.revision,
+                    expected_content_hash=draft.content_hash,
+                ),
+            )
+        else:
+            bundle = action_service.create_proposal(principal, effective_idempotency_key, request)
+        # Creating a compensation proposal does not prove that the inverse effect
+        # has happened. Preserve the currently confirmed residual effect until a
+        # later execution Receipt closes that fact.
+        residual_effect = receipt["residual_effect"] or applied_effect
+        link_fact = {
+            "originalProposalId": proposal_id,
+            "originalReceiptId": body.receipt_id,
+            "resolvedOutcomeReceiptId": body.receipt_id,
+            "policyRef": policy_ref,
+            "compensationProposalId": bundle.proposal.id,
+            "appliedEffect": applied_effect,
+            "compensationEffect": compensation_effect,
+            "residualEffect": residual_effect,
+        }
+        with connect(scope) as conn:
+            conn.execute(
+                """INSERT INTO aip_action_compensation_link
+                   (org_id,project_id,link_id,original_proposal_id,original_receipt_id,
+                    resolved_outcome_receipt_id,policy_id,policy_revision,policy_hash,
+                    compensation_proposal_id,action_binding_hash,applied_effect,
+                    compensation_effect,residual_effect,source_hash)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s)
+                   ON CONFLICT (org_id,project_id,original_receipt_id) DO NOTHING""",
+                (
+                    *scope.key, f"comp-link-{canonical_hash(link_fact)[:20]}", proposal_id,
+                    body.receipt_id, body.receipt_id, ref.resource_id, ref.revision,
+                    ref.content_hash, bundle.proposal.id, original["action_binding_hash"],
+                    self._store._json(applied_effect), self._store._json(compensation_effect),
+                    self._store._json(residual_effect), canonical_hash(link_fact),
+                ),
+            )
+            conn.execute(
+                """UPDATE aip_action_compensation_intent
+                   SET status='linked',compensation_proposal_id=%s,linked_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND original_receipt_id=%s
+                     AND request_hash=%s""",
+                (bundle.proposal.id, *scope.key, body.receipt_id, intent_hash),
+            )
+            conn.execute(
+                """UPDATE aip_action_proposal SET compensation_original_proposal_id=%s,
+                   compensation_original_receipt_id=%s,compensation_policy_ref=%s::jsonb,
+                   compensation_effect=%s::jsonb,compensation_residual_effect=%s::jsonb
+                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s""",
+                (
+                    proposal_id, body.receipt_id, self._store._json(policy_ref),
+                    self._store._json(compensation_effect), self._store._json(residual_effect),
+                    *scope.key, bundle.proposal.id,
+                ),
+            )
+            conn.commit()
+        return self._store.get_proposal(scope, bundle.proposal.id)
 
     def _append_initial_receipt(
         self,
@@ -529,6 +1117,14 @@ class AipActionExecutionService:
             quality="unknown", amount=None, unit="request"
         )
         controlled_payload, redaction_manifest = self._control_provider_payload(outcome.payload)
+        applied_effect = controlled_payload.get("appliedEffect")
+        residual_effect = controlled_payload.get("residualEffect")
+        if residual_effect is None and outcome.status in {"applied", "partial"}:
+            residual_effect = applied_effect
+        if not isinstance(applied_effect, dict):
+            applied_effect = None
+        if not isinstance(residual_effect, dict):
+            residual_effect = None
         response_hash = canonical_hash(controlled_payload)
         receipt_id = f"receipt-{canonical_hash({'attemptId': attempt['attempt_id']})[:20]}"
         artifact_id = f"action-response-{attempt['attempt_id'].removeprefix('attempt-')}"
@@ -583,6 +1179,8 @@ class AipActionExecutionService:
             "usageReceiptRefs": [usage_ref],
             "usage": usage.model_dump(mode="json", by_alias=True),
             "lineageSourceRef": lineage_source_ref,
+            "appliedEffect": applied_effect,
+            "residualEffect": residual_effect,
             "payload": receipt_payload,
         }
         receipt_content_hash = canonical_hash(receipt_fact)
@@ -610,11 +1208,12 @@ class AipActionExecutionService:
                     account_binding_ref,capability_binding_ref,reservation_ref,
                     response_artifact_ref,response_hash,output_schema_ref,
                     receipt_schema_ref,usage_schema_ref,redaction_policy_ref,
-                    usage_receipt_refs,lineage_source_ref,receipt_content_hash)
+                    usage_receipt_refs,lineage_source_ref,receipt_content_hash,
+                    provider_outcome,reconciliation_status,applied_effect,residual_effect)
                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,'[]'::jsonb,%s::jsonb,'initial',
                            %s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
                            %s::jsonb,%s,%s::jsonb,%s::jsonb,%s::jsonb,
-                           %s::jsonb,%s::jsonb,%s::jsonb,%s)
+                           %s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,%s::jsonb,%s::jsonb)
                    ON CONFLICT (org_id,project_id,lease_id) WHERE receipt_kind='initial'
                    DO NOTHING RETURNING receipt_id""",
                 (
@@ -642,6 +1241,10 @@ class AipActionExecutionService:
                     self._store._json([usage_ref]),
                     self._store._json(lineage_source_ref),
                     receipt_content_hash,
+                    outcome.status,
+                    "pending" if outcome.status in {"unknown", "accepted"} else "not_required",
+                    self._store._json(applied_effect),
+                    self._store._json(residual_effect),
                 ),
             ).fetchone()
             if inserted is None:
@@ -761,6 +1364,29 @@ class AipActionExecutionService:
                 {"redactedPaths": redacted, "truncated": True},
             )
         return controlled, {"redactedPaths": redacted, "truncated": False}
+
+    @staticmethod
+    def _assert_effect_within_policy(
+        effect: dict[str, Any] | None,
+        scope_schema: dict[str, Any] | None,
+        maximum_effect: dict[str, Any] | None,
+    ) -> None:
+        if effect is None:
+            return
+        allowed_keys = set((scope_schema or {}).get("allowedKeys") or [])
+        if allowed_keys and not set(effect).issubset(allowed_keys):
+            raise AipActionTransitionBlocked("compensation effect exceeds policy scope")
+        if not maximum_effect:
+            return
+        for key, value in effect.items():
+            limit = maximum_effect.get(key)
+            if limit is None:
+                raise AipActionTransitionBlocked("compensation effect exceeds policy maximum")
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                if value < 0 or not isinstance(limit, (int, float)) or isinstance(limit, bool) or value > limit:
+                    raise AipActionTransitionBlocked("compensation effect exceeds policy maximum")
+            elif value != limit:
+                raise AipActionTransitionBlocked("compensation effect exceeds policy maximum")
 
     @staticmethod
     def _binding_context(conn: Any, scope: TenantScope, proposal: Any) -> dict[str, Any]:
@@ -903,6 +1529,18 @@ class AipActionExecutionService:
                    ORDER BY created_at DESC,attempt_id DESC LIMIT 1""",
                 (*scope.key, proposal_id),
             ).fetchone()
+            reconcile_attempt = conn.execute(
+                """SELECT * FROM aip_action_reconcile_attempt
+                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s
+                   ORDER BY created_at DESC,reconcile_attempt_id DESC LIMIT 1""",
+                (*scope.key, proposal_id),
+            ).fetchone()
+            manual_case = conn.execute(
+                """SELECT * FROM aip_action_manual_reconcile_case
+                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s
+                   ORDER BY created_at DESC,case_id DESC LIMIT 1""",
+                (*scope.key, proposal_id),
+            ).fetchone()
             settlement = None
             lineage_request = None
             if attempt is not None:
@@ -941,6 +1579,17 @@ class AipActionExecutionService:
             usage_receipt_refs=[ResourceRef.model_validate(item) for item in row["usage_receipt_refs"]],
             lineage_source_ref=(ResourceRef.model_validate(row["lineage_source_ref"]) if row["lineage_source_ref"] else None),
             receipt_content_hash=row["receipt_content_hash"],
+            provider_outcome=row["provider_outcome"],
+            reconciliation_status=row["reconciliation_status"],
+            resolution_quality=row["resolution_quality"],
+            resolution_source=row["resolution_source"],
+            resolution_cutoff=row["resolution_cutoff"],
+            reconcile_attempt_id=row["reconcile_attempt_id"],
+            manual_reconcile_case_id=row["manual_reconcile_case_id"],
+            manual_decision_receipt_id=row["manual_decision_receipt_id"],
+            applied_effect=row["applied_effect"],
+            compensated_effect=row["compensated_effect"],
+            residual_effect=row["residual_effect"],
         ) for row in receipts]
         attempt_model = None if attempt is None else ActionExecutionAttemptSnapshot(
             id=attempt["attempt_id"], lease_id=attempt["lease_id"], proposal_id=proposal_id,
@@ -948,16 +1597,42 @@ class AipActionExecutionService:
             approval_set_hash=attempt["approval_set_hash"],
             idempotency_envelope=attempt["idempotency_envelope"], request_hash=attempt["request_hash"],
             provider_request_id=attempt["provider_request_id"],
-            provider_outcome=(attempt["status"] if attempt["status"] in {"accepted", "applied", "failed", "unknown"} else None),
+            provider_outcome=(attempt["status"] if attempt["status"] in {"accepted", "applied", "failed", "partial", "unknown"} else None),
             usage_settlement_status=(settlement["status"] if settlement else "pending"),
             lineage_projection_status=(lineage_request["status"] if lineage_request else "pending"),
             created_at=attempt["created_at"], claimed_at=attempt["claimed_at"], finished_at=attempt["finished_at"],
+        )
+        reconcile_model = None if reconcile_attempt is None else ActionReconcileAttemptSnapshot(
+            id=reconcile_attempt["reconcile_attempt_id"],
+            original_receipt_id=reconcile_attempt["original_receipt_id"],
+            status=reconcile_attempt["status"],
+            provider_request_id=reconcile_attempt["provider_request_id"],
+            expires_at=reconcile_attempt["expires_at"],
+            created_at=reconcile_attempt["created_at"],
+            claimed_at=reconcile_attempt["claimed_at"],
+            completed_at=reconcile_attempt["completed_at"],
+        )
+        manual_case_model = None if manual_case is None else ManualReconcileCaseSnapshot(
+            id=manual_case["case_id"],
+            original_receipt_id=manual_case["original_receipt_id"],
+            status=manual_case["status"],
+            version=manual_case["version"],
+            required_facts=manual_case["required_facts"],
+            evidence_refs=[ResourceRef.model_validate(item) for item in manual_case["evidence_refs"]],
+            missing_facts=manual_case["missing_facts"],
+            conflict_facts=manual_case["conflict_facts"],
+            maker_id=manual_case["maker_id"],
+            expires_at=manual_case["expires_at"],
+            created_at=manual_case["created_at"],
+            updated_at=manual_case["updated_at"],
         )
         return ActionExecutionView(
             proposal=bundle.proposal,
             lease=lease_model,
             attempt=attempt_model,
             receipts=receipt_models,
+            reconcile_attempt=reconcile_model,
+            manual_reconcile_case=manual_case_model,
         )
 
     def _event(self, conn: Any, scope: TenantScope, proposal: Any, event_type: str, actor_id: str, payload: dict[str, Any]) -> None:

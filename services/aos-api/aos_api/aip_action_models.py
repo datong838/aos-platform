@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field, field_validator, model_validator
 
@@ -96,6 +96,11 @@ class ActionProposalSnapshot(ActionProposal):
     action_binding_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     approval_policy_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     source_draft_ref: ExactRevisionRef | None = None
+    compensation_original_proposal_id: str | None = None
+    compensation_original_receipt_id: str | None = None
+    compensation_policy_ref: ExactRevisionRef | None = None
+    compensation_effect: dict[str, Any] | None = None
+    compensation_residual_effect: dict[str, Any] | None = None
 
 
 class ActionDraftBundle(AipContractModel):
@@ -166,11 +171,55 @@ class ReconcileActionReceiptRequest(AipContractModel):
     reason: str = "authorized provider reread"
 
 
+class CreateManualReconcileCaseRequest(AipContractModel):
+    reason: str = "automatic reconciliation unavailable"
+    required_facts: list[str] = Field(default_factory=list)
+    evidence_refs: list[ResourceRef] = Field(default_factory=list)
+    expires_at: datetime | None = None
+
+
+class DecideManualReconcileCaseRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    decision: Literal[
+        "confirmed_applied",
+        "confirmed_failed",
+        "confirmed_partial",
+        "unresolved",
+    ]
+    evidence_refs: list[ResourceRef] = Field(default_factory=list)
+    applied_effect: dict[str, Any] | None = None
+    compensated_effect: dict[str, Any] | None = None
+    residual_effect: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def _effect_is_required_for_partial(self) -> "DecideManualReconcileCaseRequest":
+        if self.decision == "confirmed_partial" and (
+            self.applied_effect is None or self.residual_effect is None
+        ):
+            raise ValueError("confirmed_partial requires appliedEffect and residualEffect")
+        return self
+
+
 class CreateCompensationRequest(AipContractModel):
-    action_type_id: str
+    action_type_id: str | None = None
     receipt_id: str
     purpose: str
     payload: dict[str, Any] = Field(default_factory=dict)
+    policy_revision_ref: ExactRevisionRef | None = None
+    effect_delta: dict[str, Any] | None = None
+    impact_preview_ref: ExactRevisionRef | None = None
+
+    @model_validator(mode="after")
+    def _exact_refs(self) -> "CreateCompensationRequest":
+        if self.policy_revision_ref is not None and (
+            self.policy_revision_ref.resource_type != "CompensationPolicyRevision"
+        ):
+            raise ValueError("policyRevisionRef must reference CompensationPolicyRevision")
+        if self.impact_preview_ref is not None and (
+            self.impact_preview_ref.resource_type != "ImpactPreviewRevision"
+        ):
+            raise ValueError("impactPreviewRef must reference ImpactPreviewRevision")
+        return self
 
 
 class ActionReceiptSnapshot(ActionReceipt):
@@ -194,6 +243,45 @@ class ActionReceiptSnapshot(ActionReceipt):
     usage_receipt_refs: list[ResourceRef] = Field(default_factory=list)
     lineage_source_ref: ResourceRef | None = None
     receipt_content_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    provider_outcome: Literal["accepted", "applied", "failed", "partial", "unknown"] | None = None
+    reconciliation_status: Literal[
+        "not_required", "pending", "automatic", "manual", "unresolved"
+    ] = "not_required"
+    resolution_quality: Literal["confirmed", "insufficient", "conflicted"] | None = None
+    resolution_source: Literal["provider_query", "manual_evidence"] | None = None
+    resolution_cutoff: datetime | None = None
+    reconcile_attempt_id: str | None = None
+    manual_reconcile_case_id: str | None = None
+    manual_decision_receipt_id: str | None = None
+    applied_effect: dict[str, Any] | None = None
+    compensated_effect: dict[str, Any] | None = None
+    residual_effect: dict[str, Any] | None = None
+
+
+class ActionReconcileAttemptSnapshot(AipContractModel):
+    id: str
+    original_receipt_id: str
+    status: Literal["pending", "claimed", "resolved", "manual_required"]
+    provider_request_id: str | None = None
+    expires_at: datetime
+    created_at: datetime
+    claimed_at: datetime | None = None
+    completed_at: datetime | None = None
+
+
+class ManualReconcileCaseSnapshot(AipContractModel):
+    id: str
+    original_receipt_id: str
+    status: Literal["open", "unresolved", "resolved"]
+    version: int = Field(ge=1)
+    required_facts: list[str] = Field(default_factory=list)
+    evidence_refs: list[ResourceRef] = Field(default_factory=list)
+    missing_facts: list[str] = Field(default_factory=list)
+    conflict_facts: list[str] = Field(default_factory=list)
+    maker_id: str
+    expires_at: datetime
+    created_at: datetime
+    updated_at: datetime
 
 
 class ActionExecutionLeaseSnapshot(ExecutionLease):
@@ -225,6 +313,8 @@ class ActionExecutionView(AipContractModel):
     lease: ActionExecutionLeaseSnapshot | None = None
     attempt: ActionExecutionAttemptSnapshot | None = None
     receipts: list[ActionReceiptSnapshot] = Field(default_factory=list)
+    reconcile_attempt: ActionReconcileAttemptSnapshot | None = None
+    manual_reconcile_case: ManualReconcileCaseSnapshot | None = None
 
 
 def actor(actor_id: str) -> ActorRef:
@@ -241,9 +331,13 @@ __all__ = [
     "ActionProposalSnapshot",
     "ActionProposalTimeline",
     "ActionReceiptSnapshot",
+    "ActionReconcileAttemptSnapshot",
+    "ManualReconcileCaseSnapshot",
     "ActionExecutionView",
     "AcquireExecutionLeaseRequest",
     "CreateCompensationRequest",
+    "CreateManualReconcileCaseRequest",
+    "DecideManualReconcileCaseRequest",
     "CreateActionDraftRequest",
     "ActionTypeRevisionRef",
     "CreateActionProposalRequest",

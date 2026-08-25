@@ -11,9 +11,11 @@ from aos_api.aip_action_models import (
     ActionProposalListResponse,
     ActionProposalTimeline,
     CreateCompensationRequest,
+    CreateManualReconcileCaseRequest,
     CreateActionDraftRequest,
     CreateActionProposalRequest,
     DecideActionProposalRequest,
+    DecideManualReconcileCaseRequest,
     ExecuteActionLeaseRequest,
     ReconcileActionReceiptRequest,
     ReviseActionDraftRequest,
@@ -224,6 +226,32 @@ def reconcile_action_receipt(
 ) -> ActionExecutionView:
     try:
         return service.reconcile(principal, receipt_id, body.reason)
+    except AipActionStoreError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/action-receipts/{receipt_id}/manual-reconcile-cases", response_model=ActionExecutionView, status_code=status.HTTP_201_CREATED)
+def create_action_manual_reconcile_case(
+    receipt_id: str,
+    body: CreateManualReconcileCaseRequest,
+    principal: Principal = Depends(require_principal),
+    service: AipActionExecutionService = Depends(get_aip_action_execution_service),
+) -> ActionExecutionView:
+    try:
+        return service.create_manual_reconcile_case(principal, receipt_id, body)
+    except AipActionStoreError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/action-manual-reconcile-cases/{case_id}/decisions", response_model=ActionExecutionView)
+def decide_action_manual_reconcile_case(
+    case_id: str,
+    body: DecideManualReconcileCaseRequest,
+    principal: Principal = Depends(require_principal),
+    service: AipActionExecutionService = Depends(get_aip_action_execution_service),
+) -> ActionExecutionView:
+    try:
+        return service.decide_manual_reconcile_case(principal, case_id, body)
     except AipActionStoreError as exc:
         raise _map_error(exc) from exc
 
