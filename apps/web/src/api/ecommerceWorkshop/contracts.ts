@@ -227,6 +227,10 @@ export type CreatorGrowthBlocker = { code: string; dependency: string; requiredA
 export type CreatorGrowthLedger = { input: number; eligible: number; excluded: number; needsReview: number; unknown: number; deduplicated: number };
 export type CreatorGrowthSlice = { businessStage: CreatorBusinessStage; workflowPhases: CreatorWorkflowPhase[]; status: "ready" | "blocked"; dataCutoff: string; authorityRefs: CreatorGrowthRef[]; blockers: CreatorGrowthBlocker[]; countLedger: CreatorGrowthLedger };
 export type CreatorGrowthViewResponse = { schemaVersion: typeof CREATOR_GROWTH_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: CreatorGrowthSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
+export const CREATOR_PREPARE_SCHEMA_VERSION = "aos.ecommerce-workshop.creator-prepare/v1" as const;
+export type CreatorPrepareExactRef = { resourceType: string; resourceId: string; revision: number; contentHash: string };
+export type CreatorBatchPreparation = { tenant: WorkshopTenant; batchId: string; revision: number; version: number; lifecycle: "prepared" | "frozen" | "stale"; exactRefs: Record<string, CreatorPrepareExactRef>; skillRefs: CreatorPrepareExactRef[]; itemHashes: string[]; ledger: CreatorGrowthLedger; externalEffectCount: 0; actionProposalCount: 0; executionLeaseCount: 0; priorContentHash: string | null; contentHash: string; createdBy: string; createdAt: string };
+export type CreatorContributionViewResponse = { schemaVersion: typeof CREATOR_PREPARE_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; atomicSkillRefs: CreatorPrepareExactRef[]; logicRef: CreatorPrepareExactRef | null; primaryColleague: "导购顾问"; collaboratorColleagues: string[]; latestBatch: CreatorBatchPreparation | null; blockers: string[]; allowedCommands: ("PREPARE_CREATOR_BATCH" | "FREEZE_CREATOR_BATCH")[]; externalEffectsAllowed: false };
 
 export const MEDIA_STUDIO_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v1" as const;
 export type MediaStudioSliceId = "context" | "execution" | "delivery";

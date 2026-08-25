@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "aos.workshop-evidence/v1",
+  "taskId": "W6-03",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "authorityBase": "AOS-000245",
+  "capturedAt": "2026-08-25T13:31:00+08:00",
+  "outcome": "CODE_CONTRACT_BROWSER_GREEN_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "implementation": {
+    "discoveryProfile": "source-license-schema-freshness-required-facts",
+    "normalizer": "original-records-pii-refs-stable-identity-conflict",
+    "match": "observation-decision-separated-preliminary-fail-closed",
+    "batch": "prepare-freeze-exact-refs-count-conservation-idempotent",
+    "composition": "atomic-skill-to-logic-to-digital-colleague-to-workshop-contribution",
+    "externalEffectCount": 0,
+    "actionProposalCount": 0,
+    "executionLeaseCount": 0
+  },
+  "verification": {
+    "backendTargeted": "29 passed",
+    "backendW6Cumulative": "55 passed",
+    "frontendTargeted": "4 passed before fallback refinement; 4 passed after refinement",
+    "frontendWorkshopCumulative": "55 passed",
+    "typecheck": "GREEN",
+    "productionBuild": "GREEN / 343 modules",
+    "openapi": "2606 paths / 2217 schemas / 4375 unique operations / deterministic",
+    "alembic": "w6_003 unique head; migration not applied",
+    "compileall": "GREEN",
+    "diffCheck": "GREEN"
+  },
+  "browser": {
+    "tool": "Codex built-in browser",
+    "url": "http://localhost:5173/workshop/creator-growth",
+    "page": "达人邀约与签约驾驶舱",
+    "assertions": [
+      "双阶段轴与五业务阶段保持可见",
+      "原子 Skill → Logic → 数字同事 → 工作台贡献可见",
+      "导购顾问主责，数据参谋、内容官、活动策划师协作可见",
+      "prepare 0 触达 · 0 Action · 0 Lease 可见",
+      "贡献 authority endpoint 未部署时显式 CREATOR_PREPARE_AUTHORITY_UNAVAILABLE 且旧达人只读视图不崩溃",
+      "无新建批次、发送邀约、签署合同、确认寄样或设置佣金按钮"
+    ],
+    "runtimeFacts": {
+      "sourceReadiness": "mixed ready/failed; not promoted",
+      "creatorAuthority": "not live migrated; contribution shown as blocked trusted-empty",
+      "release": "not authorized"
+    }
+  },
+  "safety": {
+    "realBusinessDataMutated": false,
+    "migrationApplied": false,
+    "externalProviderCalled": false,
+    "outreachSent": false,
+    "contractSigned": false,
+    "sampleShipped": false,
+    "commissionChanged": false,
+    "releasePerformed": false
+  },
+  "nextTask": "W6-04"
+}

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache
+from datetime import UTC, datetime
 from typing import Annotated, TypeVar
 
 from fastapi import APIRouter, Depends, Header, Path, Query, Request, Security
@@ -67,6 +68,24 @@ from aos_api.ecommerce_workshop_creator_growth import EcommerceWorkshopCreatorGr
 from aos_api.ecommerce_workshop_creator_growth_contracts import (
     WorkshopCreatorGrowthViewEnvelope,
 )
+from aos_api.ecommerce_workshop_creator_prepare import (
+    CreateCreatorMatchObservationRequest,
+    CreatorBatchPreparationRevision,
+    CreatorContributionView,
+    CreatorDiscoveryProfileRequest,
+    CreatorDiscoveryProfileRevision,
+    CreatorNormalizerReceipt,
+    CreatorPrepareBlocked,
+    CreatorPrepareConflict,
+    CreatorPreparedMatchDecision,
+    CreatorPreparedMatchObservation,
+    DecideCreatorMatchRequest,
+    EcommerceWorkshopCreatorPrepareService,
+    FreezeCreatorBatchRequest,
+    NormalizeCreatorArtifactRequest,
+    PrepareCreatorBatchRequest,
+)
+from aos_api.ecommerce_workshop_creator_prepare_store import EcommerceWorkshopCreatorPrepareStore
 from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
 from aos_api.ecommerce_workshop_media_studio_contracts import (
     WorkshopMediaStudioViewEnvelope,
@@ -223,6 +242,11 @@ def get_ecommerce_workshop_creator_growth() -> EcommerceWorkshopCreatorGrowth:
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_creator_prepare() -> EcommerceWorkshopCreatorPrepareService:
+    return EcommerceWorkshopCreatorPrepareService(EcommerceWorkshopCreatorPrepareStore())
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_media_studio() -> EcommerceWorkshopMediaStudio:
     return EcommerceWorkshopMediaStudio()
 
@@ -303,6 +327,10 @@ CreatorGrowthDependency = Annotated[
     EcommerceWorkshopCreatorGrowth,
     Depends(get_ecommerce_workshop_creator_growth),
 ]
+CreatorPrepareDependency = Annotated[
+    EcommerceWorkshopCreatorPrepareService,
+    Depends(get_ecommerce_workshop_creator_prepare),
+]
 MediaStudioDependency = Annotated[
     EcommerceWorkshopMediaStudio,
     Depends(get_ecommerce_workshop_media_studio),
@@ -379,6 +407,14 @@ def _map_freeze_error(exc: WorkshopFreezeError) -> ApiError:
     if isinstance(exc, WorkshopFreezeBlocked):
         return ApiError(code=exc.code, message=str(exc), status_code=422)
     return ApiError(code=exc.code, message="Workshop freeze failed closed", status_code=503)
+
+
+def _map_creator_prepare_error(exc: CreatorPrepareBlocked) -> ApiError:
+    return ApiError(
+        code=exc.code,
+        message=str(exc),
+        status_code=409 if isinstance(exc, CreatorPrepareConflict) else 422,
+    )
 
 
 def _map_operation_command_error(exc: Exception) -> ApiError:
@@ -771,6 +807,155 @@ def get_ecommerce_workshop_creator_growth_view(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
+
+
+@router.post(
+    "/creator-growth/discovery-profiles",
+    response_model=CreatorDiscoveryProfileRevision,
+    operation_id="ecommerceWorkshopCreatorDiscoveryProfileCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_creator_discovery_profile(
+    body: CreatorDiscoveryProfileRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CreatorPrepareDependency,
+) -> CreatorDiscoveryProfileRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    try:
+        return service.create_profile(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except CreatorPrepareBlocked as exc:
+        raise _map_creator_prepare_error(exc) from exc
+
+
+@router.post(
+    "/creator-growth/normalize",
+    response_model=CreatorNormalizerReceipt,
+    operation_id="ecommerceWorkshopCreatorArtifactNormalize",
+    status_code=201,
+    responses=_ERRORS,
+)
+def normalize_creator_artifact(
+    body: NormalizeCreatorArtifactRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CreatorPrepareDependency,
+) -> CreatorNormalizerReceipt:
+    _prepare_idempotency(idempotency_key)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    try:
+        return service.normalize(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except CreatorPrepareBlocked as exc:
+        raise _map_creator_prepare_error(exc) from exc
+
+
+@router.post(
+    "/creator-growth/match-observations",
+    response_model=CreatorPreparedMatchObservation,
+    operation_id="ecommerceWorkshopCreatorMatchObservationCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def create_creator_match_observation(
+    body: CreateCreatorMatchObservationRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CreatorPrepareDependency,
+) -> CreatorPreparedMatchObservation:
+    _prepare_idempotency(idempotency_key)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    try:
+        return service.observe_match(TenantScope(principal.org_id, principal.project_id), body)
+    except CreatorPrepareBlocked as exc:
+        raise _map_creator_prepare_error(exc) from exc
+
+
+@router.post(
+    "/creator-growth/match-decisions",
+    response_model=CreatorPreparedMatchDecision,
+    operation_id="ecommerceWorkshopCreatorMatchDecisionCreate",
+    status_code=201,
+    responses=_ERRORS,
+)
+def decide_creator_match(
+    body: DecideCreatorMatchRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CreatorPrepareDependency,
+) -> CreatorPreparedMatchDecision:
+    _prepare_idempotency(idempotency_key)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    try:
+        return service.decide_match(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except CreatorPrepareBlocked as exc:
+        raise _map_creator_prepare_error(exc) from exc
+
+
+@router.post(
+    "/creator-growth/batches/prepare",
+    response_model=CreatorBatchPreparationRevision,
+    operation_id="ecommerceWorkshopCreatorBatchPrepare",
+    status_code=201,
+    responses=_ERRORS,
+)
+def prepare_creator_batch(
+    body: PrepareCreatorBatchRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CreatorPrepareDependency,
+) -> CreatorBatchPreparationRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    try:
+        return service.prepare_batch(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except CreatorPrepareBlocked as exc:
+        raise _map_creator_prepare_error(exc) from exc
+
+
+@router.post(
+    "/creator-growth/batches/{batch_id}/freeze",
+    response_model=CreatorBatchPreparationRevision,
+    operation_id="ecommerceWorkshopCreatorBatchFreeze",
+    responses=_ERRORS,
+)
+def freeze_creator_batch(
+    batch_id: Annotated[str, Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$")],
+    body: FreezeCreatorBatchRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CreatorPrepareDependency,
+) -> CreatorBatchPreparationRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    try:
+        return service.freeze_batch(TenantScope(principal.org_id, principal.project_id), batch_id, body, principal.subject)
+    except CreatorPrepareBlocked as exc:
+        raise _map_creator_prepare_error(exc) from exc
+
+
+@router.get(
+    "/views/creator-growth/contributions",
+    response_model=CreatorContributionView,
+    operation_id="ecommerceWorkshopCreatorContributionViewGet",
+    responses=_ERRORS,
+)
+def get_creator_contribution_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: CreatorPrepareDependency,
+) -> CreatorContributionView:
+    _reject_query_parameters(request)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
 
 
 @router.get(

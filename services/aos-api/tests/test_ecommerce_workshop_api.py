@@ -325,10 +325,38 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/views/content-campaign",
             "get",
         ),
-        "ecommerceWorkshopCreatorGrowthViewGet": (
-            "/v1/ecommerce-workshop/views/creator-growth",
-            "get",
-        ),
+            "ecommerceWorkshopCreatorGrowthViewGet": (
+                "/v1/ecommerce-workshop/views/creator-growth",
+                "get",
+            ),
+            "ecommerceWorkshopCreatorDiscoveryProfileCreate": (
+                "/v1/ecommerce-workshop/creator-growth/discovery-profiles",
+                "post",
+            ),
+            "ecommerceWorkshopCreatorArtifactNormalize": (
+                "/v1/ecommerce-workshop/creator-growth/normalize",
+                "post",
+            ),
+            "ecommerceWorkshopCreatorMatchObservationCreate": (
+                "/v1/ecommerce-workshop/creator-growth/match-observations",
+                "post",
+            ),
+            "ecommerceWorkshopCreatorMatchDecisionCreate": (
+                "/v1/ecommerce-workshop/creator-growth/match-decisions",
+                "post",
+            ),
+            "ecommerceWorkshopCreatorBatchPrepare": (
+                "/v1/ecommerce-workshop/creator-growth/batches/prepare",
+                "post",
+            ),
+            "ecommerceWorkshopCreatorBatchFreeze": (
+                "/v1/ecommerce-workshop/creator-growth/batches/{batch_id}/freeze",
+                "post",
+            ),
+            "ecommerceWorkshopCreatorContributionViewGet": (
+                "/v1/ecommerce-workshop/views/creator-growth/contributions",
+                "get",
+            ),
         "ecommerceWorkshopMediaStudioViewGet": (
             "/v1/ecommerce-workshop/views/media-studio",
             "get",

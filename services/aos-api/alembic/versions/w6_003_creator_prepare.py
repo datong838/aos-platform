@@ -1,0 +1,52 @@
+"""Creator discovery, matching and side-effect-free batch preparation (W6-03).
+
+Revision ID: w6_003
+Revises: w6_002
+"""
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+from alembic import op
+
+revision: str = "w6_003"
+down_revision: str | Sequence[str] | None = "w6_002"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
+
+
+TABLES = (
+    ("ecommerce_creator_discovery_profile_revision", "profile_id"),
+    ("ecommerce_creator_normalizer_receipt", "receipt_id"),
+    ("ecommerce_creator_prepared_match_observation", "observation_id"),
+    ("ecommerce_creator_prepared_match_decision", "decision_id"),
+    ("ecommerce_creator_batch_preparation_revision", "batch_id"),
+)
+
+
+def upgrade() -> None:
+    for table, identity in TABLES:
+        op.execute(f"""
+        CREATE TABLE {table} (
+          org_id TEXT NOT NULL,
+          project_id TEXT NOT NULL,
+          {identity} TEXT NOT NULL,
+          revision INTEGER NOT NULL CHECK (revision >= 1),
+          content_hash CHAR(64) NOT NULL CHECK (content_hash ~ '^[0-9a-f]{{64}}$'),
+          authority_data JSONB NOT NULL CHECK (jsonb_typeof(authority_data)='object'),
+          created_at TIMESTAMPTZ NOT NULL,
+          PRIMARY KEY (org_id,project_id,{identity},revision),
+          FOREIGN KEY (org_id,project_id) REFERENCES meta_workspace(org_id,project_id)
+        );
+        ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE {table} FORCE ROW LEVEL SECURITY;
+        CREATE POLICY tenant_scope ON {table}
+          USING (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+          WITH CHECK (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true));
+        GRANT SELECT, INSERT ON {table} TO aos_runtime;
+        """)
+
+
+def downgrade() -> None:
+    for table, _identity in reversed(TABLES):
+        op.execute(f"DROP TABLE {table}")
