@@ -23,10 +23,13 @@ from aos_api.aip_eval_contracts import (
     AssetType,
     EvalCaseResultEvidence,
     EvalContractRevisionRef,
+    EvalGatePolicyRef,
     EvalReportRevision,
     EvalRunAuthorityRecord,
     EvalRunEvent,
     EvalRunStatus,
+    EvalStageAttemptRef,
+    EvalSubjectArtifactRef,
     JudgeRevisionRef,
 )
 from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
@@ -100,6 +103,10 @@ class AipEvalRunner:
         resolve_artifact: ArtifactResolver,
         execute_target: TargetExecutor,
         execute_judge: JudgeExecutor,
+        subject_artifact_ref: EvalSubjectArtifactRef | None = None,
+        stage_attempt_ref: EvalStageAttemptRef | None = None,
+        gate_policy_ref: EvalGatePolicyRef | None = None,
+        evidence_cutoff_at: datetime | None = None,
     ) -> EvalReportRevision:
         """Resolve the suite only from one frozen, ready exact EvalContract revision."""
         ref = EvalContractRevisionRef(
@@ -118,6 +125,10 @@ class AipEvalRunner:
             execute_target=execute_target,
             execute_judge=execute_judge,
             eval_contract_ref=ref,
+            subject_artifact_ref=subject_artifact_ref,
+            stage_attempt_ref=stage_attempt_ref,
+            gate_policy_ref=gate_policy_ref,
+            evidence_cutoff_at=evidence_cutoff_at,
         )
 
     def run(
@@ -132,7 +143,26 @@ class AipEvalRunner:
         execute_target: TargetExecutor,
         execute_judge: JudgeExecutor,
         eval_contract_ref: EvalContractRevisionRef | None = None,
+        subject_artifact_ref: EvalSubjectArtifactRef | None = None,
+        stage_attempt_ref: EvalStageAttemptRef | None = None,
+        gate_policy_ref: EvalGatePolicyRef | None = None,
+        evidence_cutoff_at: datetime | None = None,
     ) -> EvalReportRevision:
+        media_refs = (
+            subject_artifact_ref,
+            stage_attempt_ref,
+            gate_policy_ref,
+            evidence_cutoff_at,
+        )
+        if any(item is None for item in media_refs) and any(item is not None for item in media_refs):
+            raise AipEvalAuthorityConflict(
+                "media Artifact, Stage attempt, policy and cutoff must be bound together"
+            )
+        if subject_artifact_ref is not None:
+            if eval_contract_ref is None:
+                raise AipEvalAuthorityConflict("media subject eval requires exact contract")
+            assert stage_attempt_ref is not None
+            self._assert_media_subject(scope, subject_artifact_ref, stage_attempt_ref)
         suite = self._registry.get_suite_revision(scope, suite_id, suite_revision)
         if eval_contract_ref is not None:
             contract = self._resolve_contract(scope, eval_contract_ref)
@@ -159,6 +189,10 @@ class AipEvalRunner:
             run_id=run_id,
             suite_ref=suite_ref,
             eval_contract_ref=eval_contract_ref,
+            subject_artifact_ref=subject_artifact_ref,
+            stage_attempt_ref=stage_attempt_ref,
+            gate_policy_ref=gate_policy_ref,
+            evidence_cutoff_at=evidence_cutoff_at,
             target=suite.target,
             dataset=suite.dataset,
             judge=suite.judge,
@@ -212,6 +246,10 @@ class AipEvalRunner:
                 run_id=run_id,
                 suite_ref=suite_ref,
                 eval_contract_ref=eval_contract_ref,
+                subject_artifact_ref=subject_artifact_ref,
+                stage_attempt_ref=stage_attempt_ref,
+                gate_policy_ref=gate_policy_ref,
+                evidence_cutoff_at=evidence_cutoff_at,
                 target=suite.target,
                 dataset=suite.dataset,
                 judge=suite.judge,
@@ -257,38 +295,50 @@ class AipEvalRunner:
     def _append_report(self, scope: TenantScope, report: EvalReportRevision) -> None:
         try:
             with self._connect(scope) as conn:
-                if report.eval_contract_ref is None:
-                    statement = """INSERT INTO aip_eval_report_revision (
-                       org_id,project_id,report_id,revision,content_hash,run_id,
-                       suite_ref,target_ref,dataset_ref,judge_ref,results,passed,
-                       failed,total,pass_rate,gate_passed,created_at
-                       ) VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,
-                                 %s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,%s)
-                       ON CONFLICT (org_id,project_id,run_id) DO NOTHING RETURNING report_id"""
-                    params = (
-                        scope.org_id, scope.project_id, report.report_id, report.revision,
-                        report.content_hash, report.run_id, self._json(report.suite_ref),
-                        self._json(report.target), self._json(report.dataset),
-                        self._json(report.judge), self._json(report.results), report.passed,
-                        report.failed, report.total, report.pass_rate, report.gate_passed,
-                        report.created_at,
-                    )
+                base = (
+                    scope.org_id, scope.project_id, report.report_id, report.revision,
+                    report.content_hash, report.run_id,
+                )
+                tail = (
+                    self._json(report.suite_ref), self._json(report.target),
+                    self._json(report.dataset), self._json(report.judge),
+                    self._json(report.results), report.passed, report.failed, report.total,
+                    report.pass_rate, report.gate_passed, report.created_at,
+                )
+                if report.subject_artifact_ref is None:
+                    if report.eval_contract_ref is None:
+                        statement = """INSERT INTO aip_eval_report_revision (
+                           org_id,project_id,report_id,revision,content_hash,run_id,
+                           suite_ref,target_ref,dataset_ref,judge_ref,results,passed,
+                           failed,total,pass_rate,gate_passed,created_at
+                           ) VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,
+                                     %s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,%s)
+                           ON CONFLICT (org_id,project_id,run_id) DO NOTHING RETURNING report_id"""
+                        params = (*base, *tail)
+                    else:
+                        statement = """INSERT INTO aip_eval_report_revision (
+                           org_id,project_id,report_id,revision,content_hash,run_id,
+                           eval_contract_ref,suite_ref,target_ref,dataset_ref,judge_ref,results,
+                           passed,failed,total,pass_rate,gate_passed,created_at
+                           ) VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,
+                                     %s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,%s)
+                           ON CONFLICT (org_id,project_id,run_id) DO NOTHING RETURNING report_id"""
+                        params = (*base, self._json(report.eval_contract_ref), *tail)
                 else:
                     statement = """INSERT INTO aip_eval_report_revision (
                        org_id,project_id,report_id,revision,content_hash,run_id,
-                       eval_contract_ref,suite_ref,target_ref,dataset_ref,judge_ref,results,
+                       eval_contract_ref,subject_artifact_ref,stage_attempt_ref,
+                       gate_policy_ref,evidence_cutoff_at,suite_ref,target_ref,dataset_ref,judge_ref,results,
                        passed,failed,total,pass_rate,gate_passed,created_at
                        ) VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,
-                                 %s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,%s)
+                                 %s::jsonb,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+                                 %s,%s,%s,%s,%s,%s)
                        ON CONFLICT (org_id,project_id,run_id) DO NOTHING RETURNING report_id"""
                     params = (
-                        scope.org_id, scope.project_id, report.report_id, report.revision,
-                        report.content_hash, report.run_id,
-                        self._json(report.eval_contract_ref), self._json(report.suite_ref),
-                        self._json(report.target), self._json(report.dataset),
-                        self._json(report.judge), self._json(report.results), report.passed,
-                        report.failed, report.total, report.pass_rate, report.gate_passed,
-                        report.created_at,
+                        *base, self._json(report.eval_contract_ref),
+                        self._json(report.subject_artifact_ref),
+                        self._json(report.stage_attempt_ref),
+                        self._json(report.gate_policy_ref), report.evidence_cutoff_at, *tail,
                     )
                 row = conn.execute(statement, params).fetchone()
                 if row is None:
@@ -323,6 +373,59 @@ class AipEvalRunner:
             raise AipEvalAuthorityConflict(
                 "eval target publication is withdrawn; a new revision is required"
             )
+
+    def _assert_media_subject(
+        self,
+        scope: TenantScope,
+        artifact_ref: EvalSubjectArtifactRef,
+        attempt_ref: EvalStageAttemptRef,
+    ) -> None:
+        """Resolve media subject and require the canonical latest StepRun attempt."""
+        try:
+            with self._connect(scope) as conn:
+                artifact = conn.execute(
+                    """SELECT artifact_id,content_hash,run_id,family_role
+                       FROM aip_artifact
+                       WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+                    (*scope.key, artifact_ref.resource_id),
+                ).fetchone()
+                attempt = conn.execute(
+                    """SELECT step_run_id,run_id,step_key,attempt,input_hash
+                       FROM aip_step_run
+                       WHERE org_id=%s AND project_id=%s AND step_run_id=%s""",
+                    (*scope.key, attempt_ref.step_run_id),
+                ).fetchone()
+                latest = conn.execute(
+                    """SELECT step_run_id,attempt FROM aip_step_run
+                       WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key=%s
+                       ORDER BY attempt DESC LIMIT 1""",
+                    (*scope.key, attempt_ref.run_id, attempt_ref.step_key),
+                ).fetchone()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "media eval subject resolution failed"
+            ) from exc
+        if (
+            artifact is None
+            or artifact["content_hash"] != artifact_ref.content_hash
+            or artifact["family_role"] != "variant"
+            or artifact["run_id"] != attempt_ref.run_id
+        ):
+            raise AipEvalAuthorityConflict("media eval Artifact is missing or drifted")
+        if (
+            attempt is None
+            or attempt["run_id"] != attempt_ref.run_id
+            or attempt["step_key"] != attempt_ref.step_key
+            or int(attempt["attempt"]) != attempt_ref.attempt
+            or attempt["input_hash"] != attempt_ref.input_hash
+        ):
+            raise AipEvalAuthorityConflict("media eval Stage attempt is missing or drifted")
+        if (
+            latest is None
+            or latest["step_run_id"] != attempt_ref.step_run_id
+            or int(latest["attempt"]) != attempt_ref.attempt
+        ):
+            raise AipEvalAuthorityConflict("media eval requires the latest Stage attempt")
 
     def _resolve_contract(
         self, scope: TenantScope, ref: EvalContractRevisionRef
@@ -399,6 +502,24 @@ class AipEvalRunner:
                 row["eval_contract_ref"]
                 if "eval_contract_ref" in row.keys() and row["eval_contract_ref"] is not None
                 else None
+            ),
+            subject_artifact_ref=(
+                row["subject_artifact_ref"]
+                if "subject_artifact_ref" in row.keys() and row["subject_artifact_ref"] is not None
+                else None
+            ),
+            stage_attempt_ref=(
+                row["stage_attempt_ref"]
+                if "stage_attempt_ref" in row.keys() and row["stage_attempt_ref"] is not None
+                else None
+            ),
+            gate_policy_ref=(
+                row["gate_policy_ref"]
+                if "gate_policy_ref" in row.keys() and row["gate_policy_ref"] is not None
+                else None
+            ),
+            evidence_cutoff_at=(
+                row["evidence_cutoff_at"] if "evidence_cutoff_at" in row.keys() else None
             ),
             dataset=row["dataset_ref"], judge=row["judge_ref"], results=row["results"],
             passed=row["passed"], failed=row["failed"], total=row["total"],

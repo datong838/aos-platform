@@ -17,7 +17,10 @@ from aos_api.aip_production_contracts import (
     ArtifactFamilyView, ArtifactRelation, ArtifactRelationListResponse,
     AssigneeRef, AttachArtifactFamilyMemberRequest, BriefLifecycle,
     BuildEvidenceBundleRequest, CompileStageTemplateRequest, ContractBlocker,
-    ContractReadiness, Coverage, CreateArtifactRelationRequest, CreateBriefRequest,
+    AssembleMediaGateSetRequest, ContractMigrationDecision,
+    ContractMigrationDecisionListResponse, ContractReadiness, Coverage,
+    CreateArtifactRelationRequest, CreateBriefRequest,
+    CreateContractMigrationDecisionRequest,
     CreateEvalContractRequest, CreateEvidenceBundleRequest,
     CreateResponsibilityPlanRequest, CreateReviewIssueRequest,
     RegisterReviewRuleRevisionRequest, ReviewRuleRevision,
@@ -26,7 +29,10 @@ from aos_api.aip_production_contracts import (
     EvalContractListResponse, EvalContractRevision, EvalContractDiff,
     EvalContractDiffChange, EvidenceBundleListResponse,
     EvidenceBundleRevision, EvidenceDisclosureDecision, EvidenceRevocation,
-    ExactArtifactRef, RegisterArtifactFamilyRequest,
+    ExactArtifactRef, MediaGateDefinition, MediaGateKind, MediaGateOutcome,
+    MediaGateProfileListResponse, MediaGateProfileRevision, MediaGateResult,
+    MediaGateSetDecision, MediaGateSetListResponse, MediaGateSetReadiness,
+    RegisterArtifactFamilyRequest, RegisterMediaGateProfileRequest,
     ExactRevisionRef, FreezeProductionContextRequest, Freshness,
     ImpactPreviewListResponse, ImpactPreviewRevision,
     CreateImpactPreviewRequest, ProductionContextListResponse,
@@ -1771,6 +1777,433 @@ class AipProductionContractStore:
             ).fetchall()
             items = [self._artifact_family_view(conn, scope, row) for row in rows]
             return ArtifactFamilyListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
+
+    def register_media_gate_profile(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: RegisterMediaGateProfileRequest,
+    ) -> MediaGateProfileRevision:
+        if self._stage_template_source_resolver is None or not self._stage_template_source_resolver(
+            scope, body.source_bundle_ref
+        ):
+            raise ProductionContractDependencyBlocked(
+                "MEDIA_GATE_PROFILE_SIGNED_SOURCE_MISSING_OR_DRIFTED"
+            )
+        payload = body.model_dump(mode="json", by_alias=True)
+        payload["gates"] = sorted(payload["gates"], key=lambda item: item["gateId"])
+        request_hash = canonical_hash(payload)
+        content_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "media_gate_profile.register", key, request_hash)
+            if replay:
+                return self.get_media_gate_profile(
+                    scope, replay["resourceId"], int(replay["revision"]), conn=conn
+                )
+            for gate in body.gates:
+                self._require_review_rule(conn, scope, gate.rule_ref)
+            existing = conn.execute(
+                """SELECT * FROM aip_media_gate_profile_revision
+                WHERE org_id=%s AND project_id=%s AND profile_id=%s AND revision=%s""",
+                (*scope.key, body.profile_id, body.revision),
+            ).fetchone()
+            if existing is not None:
+                if existing["content_hash"] != content_hash:
+                    raise ProductionContractConflict("media gate profile revision drifted")
+                return self._media_gate_profile(scope, existing)
+            row = conn.execute(
+                """INSERT INTO aip_media_gate_profile_revision
+                (org_id,project_id,profile_id,revision,source_bundle_ref,signature_ref,
+                 policy_ref,gates,content_hash,created_by)
+                VALUES(%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s)
+                RETURNING *""",
+                (
+                    *scope.key,
+                    body.profile_id,
+                    body.revision,
+                    self._json(payload["sourceBundleRef"]),
+                    self._json(payload["signatureRef"]),
+                    self._json(payload["policyRef"]),
+                    self._json(payload["gates"]),
+                    content_hash,
+                    actor,
+                ),
+            ).fetchone()
+            self._receipt(
+                conn,
+                scope,
+                "media_gate_profile.register",
+                key,
+                request_hash,
+                {
+                    "resourceType": "MediaGateProfileRevision",
+                    "resourceId": body.profile_id,
+                    "revision": body.revision,
+                    "contentHash": content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self._media_gate_profile(scope, row)
+
+    def get_media_gate_profile(
+        self,
+        scope: TenantScope,
+        profile_id: str,
+        revision: int,
+        *,
+        conn: Any | None = None,
+    ) -> MediaGateProfileRevision:
+        def read(connection: Any) -> MediaGateProfileRevision:
+            row = connection.execute(
+                """SELECT * FROM aip_media_gate_profile_revision
+                WHERE org_id=%s AND project_id=%s AND profile_id=%s AND revision=%s""",
+                (*scope.key, profile_id, revision),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("media gate profile not found")
+            return self._media_gate_profile(scope, row)
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as connection:
+            return read(connection)
+
+    def list_media_gate_profiles(self, scope: TenantScope) -> MediaGateProfileListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_media_gate_profile_revision
+                WHERE org_id=%s AND project_id=%s
+                ORDER BY created_at DESC,profile_id,revision DESC""",
+                scope.key,
+            ).fetchall()
+            items = [self._media_gate_profile(scope, row) for row in rows]
+            return MediaGateProfileListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
+
+    def create_contract_migration_decision(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: CreateContractMigrationDecisionRequest,
+    ) -> ContractMigrationDecision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "media_contract_migration.create", key, request_hash)
+            if replay:
+                return self.get_contract_migration_decision(scope, replay["resourceId"], conn=conn)
+            source = self._exact_eval_contract_row(conn, scope, body.source_contract_ref)
+            target = self._exact_eval_contract_row(conn, scope, body.target_contract_ref)
+            if source["lifecycle"] != "frozen" or target["lifecycle"] != "frozen":
+                raise ProductionContractDependencyBlocked("CONTRACT_MIGRATION_REQUIRES_FROZEN_REVISIONS")
+            prior = conn.execute(
+                """SELECT eval_contract_ref FROM aip_media_gate_set_decision
+                WHERE org_id=%s AND project_id=%s AND review_cycle_id=%s
+                ORDER BY created_at DESC LIMIT 1""",
+                (*scope.key, body.source_review_cycle_id),
+            ).fetchone()
+            if prior is None or self._load(prior["eval_contract_ref"]) != payload["sourceContractRef"]:
+                raise ProductionContractDependencyBlocked("CONTRACT_MIGRATION_SOURCE_CYCLE_MISSING_OR_DRIFTED")
+            if conn.execute(
+                """SELECT 1 FROM aip_media_gate_set_decision
+                WHERE org_id=%s AND project_id=%s AND review_cycle_id=%s LIMIT 1""",
+                (*scope.key, body.target_review_cycle_id),
+            ).fetchone():
+                raise ProductionContractConflict("contract migration target cycle already started")
+            decision_id = f"contract-migration-{uuid.uuid4().hex[:20]}"
+            decision_hash = canonical_hash({**payload, "actor": actor})
+            row = conn.execute(
+                """INSERT INTO aip_contract_migration_decision
+                (org_id,project_id,decision_id,source_review_cycle_id,review_cycle_id,
+                 source_contract_ref,target_contract_ref,reason,decision_hash,actor)
+                VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,%s) RETURNING *""",
+                (
+                    *scope.key,
+                    decision_id,
+                    body.source_review_cycle_id,
+                    body.target_review_cycle_id,
+                    self._json(payload["sourceContractRef"]),
+                    self._json(payload["targetContractRef"]),
+                    body.reason,
+                    decision_hash,
+                    actor,
+                ),
+            ).fetchone()
+            self._receipt(
+                conn,
+                scope,
+                "media_contract_migration.create",
+                key,
+                request_hash,
+                {
+                    "resourceType": "ContractMigrationDecision",
+                    "resourceId": decision_id,
+                    "revision": 1,
+                    "contentHash": decision_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self._contract_migration(scope, row)
+
+    def get_contract_migration_decision(
+        self, scope: TenantScope, decision_id: str, *, conn: Any | None = None
+    ) -> ContractMigrationDecision:
+        def read(connection: Any) -> ContractMigrationDecision:
+            row = connection.execute(
+                """SELECT * FROM aip_contract_migration_decision
+                WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                (*scope.key, decision_id),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("contract migration decision not found")
+            return self._contract_migration(scope, row)
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as connection:
+            return read(connection)
+
+    def list_contract_migration_decisions(
+        self, scope: TenantScope
+    ) -> ContractMigrationDecisionListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_contract_migration_decision
+                WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,decision_id""",
+                scope.key,
+            ).fetchall()
+            items = [self._contract_migration(scope, row) for row in rows]
+            return ContractMigrationDecisionListResponse(
+                tenant=self._tenant(scope), items=items, count=len(items)
+            )
+
+    def assemble_media_gate_set(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        body: AssembleMediaGateSetRequest,
+    ) -> MediaGateSetDecision:
+        payload = body.model_dump(mode="json", by_alias=True)
+        payload["gateResults"] = sorted(payload["gateResults"], key=lambda item: item["gateId"])
+        request_hash = canonical_hash(payload)
+        with self._connect_factory(scope) as conn:
+            replay = self._replay(conn, scope, "media_gate_set.assemble", key, request_hash)
+            if replay:
+                return self.get_media_gate_set(scope, replay["resourceId"], conn=conn)
+            artifact = self._artifact_row(conn, scope, body.artifact_ref)
+            if artifact["family_role"] != ArtifactFamilyRole.VARIANT.value or not artifact["family_id"]:
+                raise ProductionContractDependencyBlocked("MEDIA_GATE_SET_REQUIRES_VARIANT")
+            family = self.get_artifact_family(scope, artifact["family_id"], conn=conn)
+            group = next(
+                (
+                    item for item in family.candidate_groups
+                    if item.role is ArtifactFamilyRole.VARIANT
+                    and item.profile == artifact["profile"]
+                    and item.platform == artifact["platform"]
+                    and item.rendition_spec_hash == artifact["rendition_spec_hash"]
+                ),
+                None,
+            )
+            if group is None or group.status is ArtifactFamilyCandidateStatus.CONFLICT:
+                raise ProductionContractDependencyBlocked("MEDIA_VARIANT_SELECTION_CONFLICT")
+            current_ref = group.selected_ref or (group.candidates[0] if len(group.candidates) == 1 else None)
+            if current_ref != body.artifact_ref:
+                raise ProductionContractDependencyBlocked("MEDIA_VARIANT_NOT_CURRENT_EXACT_CANDIDATE")
+
+            contract_row = self._exact_eval_contract_row(conn, scope, body.eval_contract_ref)
+            if contract_row["lifecycle"] != "frozen":
+                raise ProductionContractDependencyBlocked("MEDIA_EVAL_CONTRACT_NOT_FROZEN")
+            contract_blockers = self._eval_blockers(conn, scope, contract_row)
+            if contract_blockers:
+                raise ProductionContractDependencyBlocked("MEDIA_EVAL_CONTRACT_NOT_READY")
+            profile = self.get_media_gate_profile(
+                scope,
+                body.gate_profile_ref.resource_id,
+                body.gate_profile_ref.revision,
+                conn=conn,
+            )
+            if profile.content_hash != body.gate_profile_ref.content_hash:
+                raise ProductionContractDependencyBlocked("MEDIA_GATE_PROFILE_DRIFTED")
+            if profile.policy_ref != body.policy_ref:
+                raise ProductionContractDependencyBlocked("MEDIA_GATE_POLICY_DRIFTED")
+            definitions = {item.gate_id: item for item in profile.gates}
+            if set(definitions) != {item.gate_id for item in body.gate_results}:
+                raise ProductionContractDependencyBlocked("MEDIA_GATE_SET_REQUIRED_GATES_MISSING")
+            return_mapping = self._load(contract_row["return_mapping"])
+            if not isinstance(return_mapping, dict) or any(
+                return_mapping.get(gate_id) != definition.return_stage
+                for gate_id, definition in definitions.items()
+            ):
+                raise ProductionContractDependencyBlocked("MEDIA_GATE_RETURN_MAPPING_DRIFTED")
+            self._require_latest_stage_attempt(conn, scope, body.stage_attempt_ref)
+            self._require_contract_migration_for_cycle(conn, scope, body)
+
+            reports: list[MediaGateResult] = []
+            dataset: Any | None = None
+            judge: Any | None = None
+            blocker_codes: list[str] = []
+            for result in body.gate_results:
+                definition = definitions[result.gate_id]
+                if definition.rule_ref != result.rule_ref:
+                    raise ProductionContractDependencyBlocked("MEDIA_GATE_RULE_DRIFTED")
+                self._require_review_rule(conn, scope, result.rule_ref)
+                report = self._media_gate_report_row(conn, scope, result.eval_report_ref)
+                expected_artifact = {
+                    "resourceType": "Artifact",
+                    "resourceId": body.artifact_ref.artifact_id,
+                    "contentHash": body.artifact_ref.content_hash,
+                }
+                if self._load(report["eval_contract_ref"]) != payload["evalContractRef"]:
+                    raise ProductionContractDependencyBlocked("MEDIA_GATE_CONTRACT_MISMATCH")
+                if self._load(report["subject_artifact_ref"]) != expected_artifact:
+                    raise ProductionContractDependencyBlocked("MEDIA_GATE_ARTIFACT_MISMATCH")
+                if self._load(report["stage_attempt_ref"]) != payload["stageAttemptRef"]:
+                    raise ProductionContractDependencyBlocked("MEDIA_GATE_ATTEMPT_MISMATCH")
+                if self._load(report["gate_policy_ref"]) != payload["policyRef"]:
+                    raise ProductionContractDependencyBlocked("MEDIA_GATE_POLICY_MISMATCH")
+                if report["evidence_cutoff_at"] != body.cutoff_at:
+                    raise ProductionContractDependencyBlocked("MEDIA_GATE_CUTOFF_MISMATCH")
+                report_dataset = self._load(report["dataset_ref"])
+                report_judge = self._load(report["judge_ref"])
+                if dataset is None:
+                    dataset, judge = report_dataset, report_judge
+                elif dataset != report_dataset or judge != report_judge:
+                    raise ProductionContractDependencyBlocked("MEDIA_GATE_DATASET_OR_JUDGE_MISMATCH")
+                passed = bool(report["gate_passed"])
+                if (result.outcome is MediaGateOutcome.PASSED) != passed:
+                    raise ProductionContractDependencyBlocked("MEDIA_GATE_OUTCOME_REPORT_MISMATCH")
+                if result.override_ref is not None and (
+                    definition.hard_block or not definition.allow_override
+                ):
+                    raise ProductionContractDependencyBlocked("MEDIA_GATE_OVERRIDE_FORBIDDEN")
+                if result.issue_ref is not None:
+                    issue = self.get_review_issue(scope, result.issue_ref.resource_id, conn=conn)
+                    if (
+                        issue.version != result.issue_ref.version
+                        or issue.artifact_ref != body.artifact_ref
+                        or issue.eval_report_ref != result.eval_report_ref
+                        or issue.rule_ref != result.rule_ref
+                        or issue.return_stage != definition.return_stage
+                    ):
+                        raise ProductionContractDependencyBlocked("MEDIA_GATE_ISSUE_DRIFTED")
+                if result.outcome is not MediaGateOutcome.PASSED:
+                    blocker_codes.append(f"MEDIA_GATE_{definition.kind.value.upper()}_{result.outcome.value.upper()}")
+                reports.append(
+                    MediaGateResult(
+                        **result.model_dump(mode="python"),
+                        datasetRef=report_dataset,
+                        judgeRef=report_judge,
+                        gatePassed=passed,
+                    )
+                )
+
+            readiness = (
+                MediaGateSetReadiness.READY
+                if not blocker_codes
+                else MediaGateSetReadiness.UNKNOWN
+                if any(item.outcome is MediaGateOutcome.UNKNOWN for item in body.gate_results)
+                else MediaGateSetReadiness.BLOCKED
+            )
+            gate_set_id = f"media-gate-set-{uuid.uuid4().hex[:20]}"
+            normalized = {
+                **payload,
+                "gateSetId": gate_set_id,
+                "familyId": artifact["family_id"],
+                "variantProfile": artifact["profile"],
+                "variantPlatform": artifact["platform"],
+                "renditionSpecHash": artifact["rendition_spec_hash"],
+                "readiness": readiness.value,
+                "eligibleForApproval": not blocker_codes,
+                "blockerCodes": blocker_codes,
+                "gateResults": [item.model_dump(mode="json", by_alias=True) for item in reports],
+                "actor": actor,
+            }
+            content_hash = canonical_hash(normalized)
+            row = conn.execute(
+                """INSERT INTO aip_media_gate_set_decision
+                (org_id,project_id,gate_set_id,review_cycle_id,artifact_ref,family_id,
+                 variant_profile,variant_platform,rendition_spec_hash,eval_contract_ref,
+                 gate_profile_ref,policy_ref,cutoff_at,stage_attempt_ref,gate_results,
+                 contract_migration_ref,readiness,eligible_for_approval,blocker_codes,
+                 content_hash,actor)
+                VALUES(%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s::jsonb,%s::jsonb,
+                 %s::jsonb,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s::jsonb,%s,%s)
+                RETURNING *""",
+                (
+                    *scope.key,
+                    gate_set_id,
+                    body.review_cycle_id,
+                    self._json(payload["artifactRef"]),
+                    artifact["family_id"],
+                    artifact["profile"],
+                    artifact["platform"],
+                    artifact["rendition_spec_hash"],
+                    self._json(payload["evalContractRef"]),
+                    self._json(payload["gateProfileRef"]),
+                    self._json(payload["policyRef"]),
+                    body.cutoff_at,
+                    self._json(payload["stageAttemptRef"]),
+                    self._json(normalized["gateResults"]),
+                    self._json(payload["contractMigrationRef"]) if payload["contractMigrationRef"] else None,
+                    readiness.value,
+                    not blocker_codes,
+                    self._json(blocker_codes),
+                    content_hash,
+                    actor,
+                ),
+            ).fetchone()
+            self._receipt(
+                conn,
+                scope,
+                "media_gate_set.assemble",
+                key,
+                request_hash,
+                {
+                    "resourceType": "MediaGateSetDecision",
+                    "resourceId": gate_set_id,
+                    "revision": 1,
+                    "contentHash": content_hash,
+                },
+                actor,
+            )
+            conn.commit()
+            return self._media_gate_set(scope, row)
+
+    def get_media_gate_set(
+        self, scope: TenantScope, gate_set_id: str, *, conn: Any | None = None
+    ) -> MediaGateSetDecision:
+        def read(connection: Any) -> MediaGateSetDecision:
+            row = connection.execute(
+                """SELECT * FROM aip_media_gate_set_decision
+                WHERE org_id=%s AND project_id=%s AND gate_set_id=%s""",
+                (*scope.key, gate_set_id),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("media gate set not found")
+            return self._media_gate_set(scope, row)
+
+        if conn is not None:
+            return read(conn)
+        with self._connect_factory(scope) as connection:
+            return read(connection)
+
+    def list_media_gate_sets(self, scope: TenantScope) -> MediaGateSetListResponse:
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT * FROM aip_media_gate_set_decision
+                WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,gate_set_id""",
+                scope.key,
+            ).fetchall()
+            items = [self._media_gate_set(scope, row) for row in rows]
+            return MediaGateSetListResponse(
                 tenant=self._tenant(scope), items=items, count=len(items)
             )
 
@@ -3788,6 +4221,161 @@ class AipProductionContractStore:
             tenant=self._tenant(scope), ruleId=row["rule_id"], revision=row["revision"],
             spec=self._load(row["spec"]), contentHash=row["content_hash"],
             createdBy=row["created_by"], createdAt=row["created_at"],
+        )
+
+    @staticmethod
+    def _exact_eval_contract_row(
+        conn: Any, scope: TenantScope, ref: ExactRevisionRef
+    ) -> Any:
+        if ref.resource_type != "EvalContractRevision":
+            raise ProductionContractDependencyBlocked("EVAL_CONTRACT_REF_TYPE_INVALID")
+        row = conn.execute(
+            """SELECT * FROM aip_eval_contract_revision
+            WHERE org_id=%s AND project_id=%s AND contract_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        if row is None or row["content_hash"] != ref.content_hash:
+            raise ProductionContractDependencyBlocked("EVAL_CONTRACT_MISSING_OR_DRIFTED")
+        return row
+
+    @staticmethod
+    def _require_latest_stage_attempt(conn: Any, scope: TenantScope, ref: Any) -> None:
+        row = conn.execute(
+            """SELECT step_run_id,run_id,step_key,attempt,input_hash FROM aip_step_run
+            WHERE org_id=%s AND project_id=%s AND step_run_id=%s""",
+            (*scope.key, ref.step_run_id),
+        ).fetchone()
+        latest = conn.execute(
+            """SELECT step_run_id,attempt FROM aip_step_run
+            WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key=%s
+            ORDER BY attempt DESC LIMIT 1""",
+            (*scope.key, ref.run_id, ref.step_key),
+        ).fetchone()
+        if (
+            row is None
+            or row["run_id"] != ref.run_id
+            or row["step_key"] != ref.step_key
+            or int(row["attempt"]) != ref.attempt
+            or row["input_hash"] != ref.input_hash
+        ):
+            raise ProductionContractDependencyBlocked("MEDIA_STAGE_ATTEMPT_MISSING_OR_DRIFTED")
+        if latest is None or latest["step_run_id"] != ref.step_run_id or int(latest["attempt"]) != ref.attempt:
+            raise ProductionContractDependencyBlocked("MEDIA_STAGE_ATTEMPT_NOT_LATEST")
+
+    @staticmethod
+    def _media_gate_report_row(
+        conn: Any, scope: TenantScope, ref: ExactRevisionRef
+    ) -> Any:
+        if ref.resource_type != "EvalReportRevision":
+            raise ProductionContractDependencyBlocked("EVAL_REPORT_REF_TYPE_INVALID")
+        row = conn.execute(
+            """SELECT * FROM aip_eval_report_revision
+            WHERE org_id=%s AND project_id=%s AND report_id=%s AND revision=%s""",
+            (*scope.key, ref.resource_id, ref.revision),
+        ).fetchone()
+        if row is None or row["content_hash"] != ref.content_hash:
+            raise ProductionContractDependencyBlocked("EVAL_REPORT_MISSING_OR_DRIFTED")
+        if any(
+            row[column] is None
+            for column in (
+                "eval_contract_ref",
+                "subject_artifact_ref",
+                "stage_attempt_ref",
+                "gate_policy_ref",
+                "evidence_cutoff_at",
+            )
+        ):
+            raise ProductionContractDependencyBlocked("MEDIA_EVAL_REPORT_BINDING_INCOMPLETE")
+        return row
+
+    def _require_contract_migration_for_cycle(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        body: AssembleMediaGateSetRequest,
+    ) -> None:
+        existing = conn.execute(
+            """SELECT eval_contract_ref FROM aip_media_gate_set_decision
+            WHERE org_id=%s AND project_id=%s AND review_cycle_id=%s
+            ORDER BY created_at DESC""",
+            (*scope.key, body.review_cycle_id),
+        ).fetchall()
+        expected_contract = body.eval_contract_ref.model_dump(mode="json", by_alias=True)
+        if body.contract_migration_ref is None:
+            if any(self._load(row["eval_contract_ref"]) != expected_contract for row in existing):
+                raise ProductionContractDependencyBlocked("CONTRACT_CHANGED_WITHOUT_MIGRATION_DECISION")
+            return
+        migration_ref = body.contract_migration_ref
+        if migration_ref.revision != 1:
+            raise ProductionContractDependencyBlocked("CONTRACT_MIGRATION_REF_INVALID")
+        row = conn.execute(
+            """SELECT * FROM aip_contract_migration_decision
+            WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+            (*scope.key, migration_ref.resource_id),
+        ).fetchone()
+        if (
+            row is None
+            or row["decision_hash"] != migration_ref.content_hash
+            or row["review_cycle_id"] != body.review_cycle_id
+            or self._load(row["target_contract_ref"]) != expected_contract
+        ):
+            raise ProductionContractDependencyBlocked("CONTRACT_MIGRATION_MISSING_OR_DRIFTED")
+
+    def _media_gate_profile(self, scope: TenantScope, row: Any) -> MediaGateProfileRevision:
+        return MediaGateProfileRevision(
+            tenant=self._tenant(scope),
+            profileId=row["profile_id"],
+            revision=int(row["revision"]),
+            sourceBundleRef=self._load(row["source_bundle_ref"]),
+            signatureRef=self._load(row["signature_ref"]),
+            policyRef=self._load(row["policy_ref"]),
+            gates=[MediaGateDefinition.model_validate(item) for item in self._load(row["gates"])],
+            contentHash=row["content_hash"],
+            createdBy=row["created_by"],
+            createdAt=row["created_at"],
+        )
+
+    def _contract_migration(self, scope: TenantScope, row: Any) -> ContractMigrationDecision:
+        return ContractMigrationDecision(
+            tenant=self._tenant(scope),
+            decisionId=row["decision_id"],
+            sourceReviewCycleId=row["source_review_cycle_id"],
+            targetReviewCycleId=row["review_cycle_id"],
+            sourceContractRef=self._load(row["source_contract_ref"]),
+            targetContractRef=self._load(row["target_contract_ref"]),
+            reason=row["reason"],
+            decisionHash=row["decision_hash"],
+            actor=row["actor"],
+            createdAt=row["created_at"],
+        )
+
+    def _media_gate_set(self, scope: TenantScope, row: Any) -> MediaGateSetDecision:
+        return MediaGateSetDecision(
+            tenant=self._tenant(scope),
+            gateSetId=row["gate_set_id"],
+            reviewCycleId=row["review_cycle_id"],
+            artifactRef=self._load(row["artifact_ref"]),
+            familyId=row["family_id"],
+            variantProfile=row["variant_profile"],
+            variantPlatform=row["variant_platform"],
+            renditionSpecHash=row["rendition_spec_hash"],
+            evalContractRef=self._load(row["eval_contract_ref"]),
+            gateProfileRef=self._load(row["gate_profile_ref"]),
+            policyRef=self._load(row["policy_ref"]),
+            cutoffAt=row["cutoff_at"],
+            stageAttemptRef=self._load(row["stage_attempt_ref"]),
+            gateResults=[MediaGateResult.model_validate(item) for item in self._load(row["gate_results"])],
+            contractMigrationRef=(
+                self._load(row["contract_migration_ref"])
+                if row["contract_migration_ref"] is not None
+                else None
+            ),
+            readiness=row["readiness"],
+            eligibleForApproval=bool(row["eligible_for_approval"]),
+            blockerCodes=self._load(row["blocker_codes"]),
+            contentHash=row["content_hash"],
+            actor=row["actor"],
+            createdAt=row["created_at"],
         )
 
     @staticmethod

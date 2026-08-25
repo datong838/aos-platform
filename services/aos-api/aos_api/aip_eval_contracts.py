@@ -283,6 +283,32 @@ class EvalContractRevisionRef(AipContractModel):
     content_hash: str = Field(pattern=SHA256_PATTERN)
 
 
+class EvalSubjectArtifactRef(AipContractModel):
+    """Exact canonical Artifact evaluated by a governed media gate run."""
+
+    resource_type: Literal["Artifact"] = "Artifact"
+    resource_id: str = Field(min_length=1, max_length=200)
+    content_hash: str = Field(pattern=SHA256_PATTERN)
+
+
+class EvalStageAttemptRef(AipContractModel):
+    """Exact latest StepRun attempt whose output is being evaluated."""
+
+    resource_type: Literal["StepRunAttempt"] = "StepRunAttempt"
+    run_id: str = Field(min_length=1, max_length=200)
+    step_key: str = Field(min_length=1, max_length=160)
+    step_run_id: str = Field(min_length=1, max_length=200)
+    attempt: int = Field(ge=1)
+    input_hash: str = Field(pattern=SHA256_PATTERN)
+
+
+class EvalGatePolicyRef(AipContractModel):
+    resource_type: Literal["MediaGatePolicyRevision"] = "MediaGatePolicyRevision"
+    resource_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=SHA256_PATTERN)
+
+
 class EvalRunAuthorityRecord(AipContractModel):
     """Durable run snapshot; large Suite definitions remain separate assets."""
 
@@ -290,6 +316,10 @@ class EvalRunAuthorityRecord(AipContractModel):
     run_id: str = Field(min_length=1, max_length=200)
     suite_ref: AssetRevisionRef
     eval_contract_ref: EvalContractRevisionRef | None = None
+    subject_artifact_ref: EvalSubjectArtifactRef | None = None
+    stage_attempt_ref: EvalStageAttemptRef | None = None
+    gate_policy_ref: EvalGatePolicyRef | None = None
+    evidence_cutoff_at: datetime | None = None
     target: AssetRevisionRef
     dataset: DatasetRevisionRef
     judge: JudgeRevisionRef
@@ -305,6 +335,14 @@ class EvalRunAuthorityRecord(AipContractModel):
     def _suite_reference(self) -> EvalRunAuthorityRecord:
         if self.suite_ref.asset_type is not AssetType.EVAL_SUITE:
             raise ValueError("suite_ref must reference an eval_suite")
+        media_refs = (
+            self.subject_artifact_ref,
+            self.stage_attempt_ref,
+            self.gate_policy_ref,
+            self.evidence_cutoff_at,
+        )
+        if any(item is None for item in media_refs) and any(item is not None for item in media_refs):
+            raise ValueError("media Artifact, Stage attempt, policy and cutoff must be bound together")
         return self
 
 
@@ -338,6 +376,10 @@ class EvalReportRevision(AipContractModel):
     run_id: str = Field(min_length=1, max_length=200)
     suite_ref: AssetRevisionRef
     eval_contract_ref: EvalContractRevisionRef | None = None
+    subject_artifact_ref: EvalSubjectArtifactRef | None = None
+    stage_attempt_ref: EvalStageAttemptRef | None = None
+    gate_policy_ref: EvalGatePolicyRef | None = None
+    evidence_cutoff_at: datetime | None = None
     target: AssetRevisionRef
     dataset: DatasetRevisionRef
     judge: JudgeRevisionRef
@@ -363,6 +405,14 @@ class EvalReportRevision(AipContractModel):
         expected_rate = round(self.passed / self.total, 6)
         if abs(self.pass_rate - expected_rate) > 0.000001:
             raise ValueError("eval report pass rate is inconsistent")
+        media_refs = (
+            self.subject_artifact_ref,
+            self.stage_attempt_ref,
+            self.gate_policy_ref,
+            self.evidence_cutoff_at,
+        )
+        if any(item is None for item in media_refs) and any(item is not None for item in media_refs):
+            raise ValueError("media Artifact, Stage attempt, policy and cutoff must be bound together")
         return self
 
 

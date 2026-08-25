@@ -16,6 +16,9 @@ from aos_api.aip_eval_contracts import (
     CapabilityReceipt,
     DatasetRevisionRef,
     EvalContractRevisionRef,
+    EvalGatePolicyRef,
+    EvalStageAttemptRef,
+    EvalSubjectArtifactRef,
     EvalRunAuthorityRecord,
     EvalRunEvent,
     EvalRunStatus,
@@ -173,29 +176,48 @@ class AipEvalAuthorityStore:
             raise ValueError("initial eval event must be sequence 1: null -> queued")
         try:
             with self._connect(scope) as conn:
-                if record.eval_contract_ref is None:
-                    statement = """INSERT INTO aip_eval_run (
-                       org_id,project_id,run_id,suite_id,suite_revision,suite_hash,
-                       target_ref,dataset_ref,judge_ref,status,idempotency_key,version,
-                       created_by,created_at,started_at,finished_at
-                       ) VALUES (
-                       %s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,
-                       %s,%s,%s,%s)
-                       ON CONFLICT (org_id,project_id,idempotency_key) DO NOTHING
-                       RETURNING *"""
-                    params = self._run_insert_params(scope, record)
+                base = self._run_insert_params(scope, record)
+                if record.subject_artifact_ref is None:
+                    if record.eval_contract_ref is None:
+                        statement = """INSERT INTO aip_eval_run (
+                           org_id,project_id,run_id,suite_id,suite_revision,suite_hash,
+                           target_ref,dataset_ref,judge_ref,status,idempotency_key,version,
+                           created_by,created_at,started_at,finished_at
+                           ) VALUES (
+                           %s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,
+                           %s,%s,%s,%s)
+                           ON CONFLICT (org_id,project_id,idempotency_key) DO NOTHING
+                           RETURNING *"""
+                        params = base
+                    else:
+                        statement = """INSERT INTO aip_eval_run (
+                           org_id,project_id,run_id,suite_id,suite_revision,suite_hash,
+                           eval_contract_ref,target_ref,dataset_ref,judge_ref,status,
+                           idempotency_key,version,created_by,created_at,started_at,finished_at
+                           ) VALUES (
+                           %s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+                           %s,%s,%s,%s,%s,%s,%s)
+                           ON CONFLICT (org_id,project_id,idempotency_key) DO NOTHING
+                           RETURNING *"""
+                        params = (*base[:6], self._json(record.eval_contract_ref), *base[6:])
                 else:
                     statement = """INSERT INTO aip_eval_run (
                        org_id,project_id,run_id,suite_id,suite_revision,suite_hash,
-                       eval_contract_ref,target_ref,dataset_ref,judge_ref,status,
-                       idempotency_key,version,created_by,created_at,started_at,finished_at
+                       eval_contract_ref,subject_artifact_ref,stage_attempt_ref,
+                       gate_policy_ref,evidence_cutoff_at,target_ref,dataset_ref,judge_ref,
+                       status,idempotency_key,version,created_by,created_at,started_at,finished_at
                        ) VALUES (
                        %s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
-                       %s,%s,%s,%s,%s,%s,%s)
+                       %s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,%s,%s,%s,%s)
                        ON CONFLICT (org_id,project_id,idempotency_key) DO NOTHING
                        RETURNING *"""
-                    base = self._run_insert_params(scope, record)
-                    params = (*base[:6], self._json(record.eval_contract_ref), *base[6:])
+                    params = (
+                        *base[:6], self._json(record.eval_contract_ref),
+                        self._json(record.subject_artifact_ref),
+                        self._json(record.stage_attempt_ref),
+                        self._json(record.gate_policy_ref), record.evidence_cutoff_at,
+                        *base[6:],
+                    )
                 row = conn.execute(statement, params).fetchone()
                 if row is None:
                     row = self._run_by_idempotency(conn, scope, record.idempotency_key)
@@ -1403,6 +1425,24 @@ class AipEvalAuthorityStore:
                 EvalContractRevisionRef.model_validate(row["eval_contract_ref"])
                 if "eval_contract_ref" in row.keys() and row["eval_contract_ref"] is not None
                 else None
+            ),
+            subject_artifact_ref=(
+                EvalSubjectArtifactRef.model_validate(row["subject_artifact_ref"])
+                if "subject_artifact_ref" in row.keys() and row["subject_artifact_ref"] is not None
+                else None
+            ),
+            stage_attempt_ref=(
+                EvalStageAttemptRef.model_validate(row["stage_attempt_ref"])
+                if "stage_attempt_ref" in row.keys() and row["stage_attempt_ref"] is not None
+                else None
+            ),
+            gate_policy_ref=(
+                EvalGatePolicyRef.model_validate(row["gate_policy_ref"])
+                if "gate_policy_ref" in row.keys() and row["gate_policy_ref"] is not None
+                else None
+            ),
+            evidence_cutoff_at=(
+                row["evidence_cutoff_at"] if "evidence_cutoff_at" in row.keys() else None
             ),
             target=row["target_ref"],
             dataset=row["dataset_ref"],

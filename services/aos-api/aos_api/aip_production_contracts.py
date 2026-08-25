@@ -7,6 +7,7 @@ from typing import Any, Literal
 from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_contracts import AipContractModel, ResourceRef, TenantContext
+from aos_api.aip_eval_contracts import EvalStageAttemptRef
 
 
 class BriefLifecycle(StrEnum):
@@ -96,6 +97,28 @@ class ArtifactFamilyCandidateStatus(StrEnum):
     CURRENT = "current"
     CONFLICT = "conflict"
     SELECTED = "selected"
+
+
+class MediaGateKind(StrEnum):
+    FACT = "fact"
+    BRAND = "brand"
+    COPYRIGHT = "copyright"
+    PLATFORM = "platform"
+
+
+class MediaGateOutcome(StrEnum):
+    PASSED = "passed"
+    FAILED = "failed"
+    BLOCKED = "blocked"
+    UNKNOWN = "unknown"
+
+
+class MediaGateSetReadiness(StrEnum):
+    READY = "ready"
+    BLOCKED = "blocked"
+    STALE = "stale"
+    CONFLICT = "conflict"
+    UNKNOWN = "unknown"
 
 
 class ReviewSeverity(StrEnum):
@@ -613,6 +636,191 @@ class ArtifactFamilyView(AipContractModel):
 class ArtifactFamilyListResponse(AipContractModel):
     tenant: TenantContext
     items: list[ArtifactFamilyView]
+    count: int = Field(ge=0)
+
+
+class MediaGateDefinition(AipContractModel):
+    gate_id: str = Field(min_length=1, max_length=120)
+    kind: MediaGateKind
+    rule_ref: ExactRevisionRef
+    return_stage: str = Field(min_length=1, max_length=160)
+    hard_block: bool = True
+    allow_override: bool = False
+
+    @model_validator(mode="after")
+    def _stable_gate(self) -> MediaGateDefinition:
+        if self.gate_id != f"media.{self.kind.value}":
+            raise ValueError("media gate ID must be stable and match its kind")
+        if self.rule_ref.resource_type != "EvalRuleRevision":
+            raise ValueError("media gate ruleRef must reference EvalRuleRevision")
+        if self.hard_block and self.allow_override:
+            raise ValueError("hard-block media gates cannot allow override")
+        return self
+
+
+class RegisterMediaGateProfileRequest(AipContractModel):
+    profile_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    source_bundle_ref: ExactRevisionRef
+    signature_ref: ExactRevisionRef
+    policy_ref: ExactRevisionRef
+    gates: list[MediaGateDefinition] = Field(min_length=4, max_length=4)
+
+    @model_validator(mode="after")
+    def _four_required_gates(self) -> RegisterMediaGateProfileRequest:
+        if self.source_bundle_ref.resource_type != "BundleManifestRevision":
+            raise ValueError("sourceBundleRef must reference BundleManifestRevision")
+        if self.signature_ref.resource_type != "BundleSignatureVerification":
+            raise ValueError("signatureRef must reference BundleSignatureVerification")
+        if self.policy_ref.resource_type != "MediaGatePolicyRevision":
+            raise ValueError("policyRef must reference MediaGatePolicyRevision")
+        if {item.kind for item in self.gates} != set(MediaGateKind):
+            raise ValueError("media gate profile requires fact/brand/copyright/platform")
+        if len({item.gate_id for item in self.gates}) != 4:
+            raise ValueError("media gate IDs must be unique")
+        return self
+
+
+class MediaGateProfileRevision(RegisterMediaGateProfileRequest):
+    tenant: TenantContext
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_by: str
+    created_at: datetime
+
+
+class MediaGateProfileListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[MediaGateProfileRevision]
+    count: int = Field(ge=0)
+
+
+class ReviewIssueVersionRef(AipContractModel):
+    resource_type: Literal["ReviewIssue"] = "ReviewIssue"
+    resource_id: str = Field(min_length=1, max_length=200)
+    version: int = Field(ge=1)
+
+
+class MediaGateResultInput(AipContractModel):
+    gate_id: str = Field(min_length=1, max_length=120)
+    outcome: MediaGateOutcome
+    eval_report_ref: ExactRevisionRef
+    rule_ref: ExactRevisionRef
+    issue_ref: ReviewIssueVersionRef | None = None
+    override_ref: ExactRevisionRef | None = None
+
+    @model_validator(mode="after")
+    def _gate_result_refs(self) -> MediaGateResultInput:
+        if self.eval_report_ref.resource_type != "EvalReportRevision":
+            raise ValueError("evalReportRef must reference EvalReportRevision")
+        if self.rule_ref.resource_type != "EvalRuleRevision":
+            raise ValueError("ruleRef must reference EvalRuleRevision")
+        if self.outcome is MediaGateOutcome.PASSED and self.issue_ref is not None:
+            raise ValueError("passed gate cannot carry a blocking ReviewIssue")
+        if self.outcome is not MediaGateOutcome.PASSED and self.issue_ref is None:
+            raise ValueError("non-passed gate requires an exact ReviewIssue version")
+        return self
+
+
+class CreateContractMigrationDecisionRequest(AipContractModel):
+    source_review_cycle_id: str = Field(min_length=1, max_length=200)
+    target_review_cycle_id: str = Field(min_length=1, max_length=200)
+    source_contract_ref: ExactRevisionRef
+    target_contract_ref: ExactRevisionRef
+    reason: str = Field(min_length=1, max_length=2000)
+
+    @model_validator(mode="after")
+    def _contract_migration(self) -> CreateContractMigrationDecisionRequest:
+        if self.source_review_cycle_id == self.target_review_cycle_id:
+            raise ValueError("contract migration must open a new review cycle")
+        if self.source_contract_ref.resource_type != "EvalContractRevision" or self.target_contract_ref.resource_type != "EvalContractRevision":
+            raise ValueError("contract migration requires EvalContractRevision refs")
+        if self.source_contract_ref == self.target_contract_ref:
+            raise ValueError("contract migration requires a changed exact contract")
+        return self
+
+
+class ContractMigrationDecision(CreateContractMigrationDecisionRequest):
+    tenant: TenantContext
+    decision_id: str
+    decision_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    actor: str
+    created_at: datetime
+
+
+class ContractMigrationDecisionListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ContractMigrationDecision]
+    count: int = Field(ge=0)
+
+
+class AssembleMediaGateSetRequest(AipContractModel):
+    review_cycle_id: str = Field(min_length=1, max_length=200)
+    artifact_ref: ExactArtifactRef
+    eval_contract_ref: ExactRevisionRef
+    gate_profile_ref: ExactRevisionRef
+    policy_ref: ExactRevisionRef
+    cutoff_at: datetime
+    stage_attempt_ref: EvalStageAttemptRef
+    gate_results: list[MediaGateResultInput] = Field(min_length=4, max_length=4)
+    contract_migration_ref: ExactRevisionRef | None = None
+
+    @model_validator(mode="after")
+    def _gate_set_shape(self) -> AssembleMediaGateSetRequest:
+        expected = (
+            (self.eval_contract_ref, "EvalContractRevision", "evalContractRef"),
+            (self.gate_profile_ref, "MediaGateProfileRevision", "gateProfileRef"),
+            (self.policy_ref, "MediaGatePolicyRevision", "policyRef"),
+        )
+        for ref, resource_type, label in expected:
+            if ref.resource_type != resource_type:
+                raise ValueError(f"{label} must reference {resource_type}")
+        if self.contract_migration_ref and self.contract_migration_ref.resource_type != "ContractMigrationDecision":
+            raise ValueError("contractMigrationRef must reference ContractMigrationDecision")
+        if len({item.gate_id for item in self.gate_results}) != 4:
+            raise ValueError("gate results must contain four unique stable gates")
+        return self
+
+
+class MediaGateResult(MediaGateResultInput):
+    dataset_ref: dict[str, Any]
+    judge_ref: dict[str, Any]
+    gate_passed: bool
+
+
+class MediaGateSetDecision(AipContractModel):
+    tenant: TenantContext
+    gate_set_id: str
+    review_cycle_id: str
+    artifact_ref: ExactArtifactRef
+    family_id: str
+    variant_profile: str
+    variant_platform: str
+    rendition_spec_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    eval_contract_ref: ExactRevisionRef
+    gate_profile_ref: ExactRevisionRef
+    policy_ref: ExactRevisionRef
+    cutoff_at: datetime
+    stage_attempt_ref: EvalStageAttemptRef
+    gate_results: list[MediaGateResult] = Field(min_length=4, max_length=4)
+    contract_migration_ref: ExactRevisionRef | None = None
+    readiness: MediaGateSetReadiness
+    eligible_for_approval: bool
+    blocker_codes: list[str]
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    actor: str
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def _eligibility(self) -> MediaGateSetDecision:
+        ready = self.readiness is MediaGateSetReadiness.READY
+        if self.eligible_for_approval != (ready and not self.blocker_codes):
+            raise ValueError("approval eligibility drifted from GateSet readiness")
+        return self
+
+
+class MediaGateSetListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[MediaGateSetDecision]
     count: int = Field(ge=0)
 
 

@@ -383,12 +383,12 @@ class RouterManifestRuntimeTests(unittest.TestCase):
         # Runtime inventory includes FastAPI's four framework routes and the
         # W4-07 async-job projection routes; the exported business-route
         # inventory intentionally filters framework routes out.
-        self.assertEqual(4431, result["count"])
+        self.assertEqual(4440, result["count"])
         self.assertEqual(
-            "efd1dda2aad418514a92ec7601ed18ee877db278b0dcdb7d09ef0edd8a39d6ea",
+            "22ea804fc4135987161d0a04f69eade53be01818cd9d8bc88ea6fe6a796ee5b1",
             result["sha256"],
         )
-        self.assertEqual(2645, result["openapi_paths"])
+        self.assertEqual(2651, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],

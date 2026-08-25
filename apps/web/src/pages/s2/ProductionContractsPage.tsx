@@ -11,6 +11,9 @@ import {
   type ImpactDimension,
   type ImpactPreviewListResponse,
   type ImpactPreviewRevision,
+  type MediaGateProfileListResponse,
+  type MediaGateSetListResponse,
+  type ContractMigrationDecisionListResponse,
   type ProductionContextListResponse,
   type ProductionStartDecisionListResponse,
   type ProfileConfirmationListResponse,
@@ -37,6 +40,9 @@ type AuthorityState = {
   plans: ResponsibilityPlanListResponse;
   stages: StageTemplateListResponse;
   families: ArtifactFamilyListResponse;
+  mediaGateProfiles: MediaGateProfileListResponse;
+  mediaGateSets: MediaGateSetListResponse;
+  contractMigrations: ContractMigrationDecisionListResponse;
   relations: ArtifactRelationListResponse;
   reviews: ReviewIssueListResponse;
   previews: ImpactPreviewListResponse;
@@ -119,10 +125,12 @@ export function ProductionContractsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [briefs, bundles, evals, plans, stages, families, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, capabilities, actionProposals, logicList] = await Promise.all([
+      const [briefs, bundles, evals, plans, stages, families, mediaGateProfiles, mediaGateSets, contractMigrations, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, capabilities, actionProposals, logicList] = await Promise.all([
         aipProductionContracts.listBriefs(), aipProductionContracts.listBundles(),
         aipProductionContracts.listEvalContracts(), aipProductionContracts.listResponsibilityPlans(),
-        aipProductionContracts.listStageTemplates(), aipProductionContracts.listArtifactFamilies(), aipProductionContracts.listArtifactRelations(),
+        aipProductionContracts.listStageTemplates(), aipProductionContracts.listArtifactFamilies(),
+        aipProductionContracts.listMediaGateProfiles(), aipProductionContracts.listMediaGateSets(), aipProductionContracts.listContractMigrationDecisions(),
+        aipProductionContracts.listArtifactRelations(),
         aipProductionContracts.listReviewIssues(), aipProductionContracts.listProductionContexts(), aipProductionContracts.listImpactPreviews(),
         aipProductionContracts.listProductionStartDecisions(),
         aipProductionContracts.listProfileRecommendations(),
@@ -132,7 +140,7 @@ export function ProductionContractsPage() {
         apiGet<{items?:Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>}>("/v1/aip/logic/graphs").catch(()=>({items:[] as Array<{id:string;name:string;revision:number;graph_hash:string;published_version?:number|null;persisted?:boolean}>})),
       ]);
       setPublishedLogic((logicList.items||[]).filter(item=>item.persisted!==false && Number(item.published_version||0)>0 && /^[0-9a-f]{64}$/.test(item.graph_hash)));
-      setState({ briefs, bundles, evals, plans, stages, families, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, capabilities, actionProposals });
+      setState({ briefs, bundles, evals, plans, stages, families, mediaGateProfiles, mediaGateSets, contractMigrations, relations, reviews, contexts, previews, starts, profileRecommendations, profileConfirmations, capabilities, actionProposals });
       setError("");
     } catch (e) {
       setState(null);
@@ -218,6 +226,7 @@ export function ProductionContractsPage() {
           ["人工确认", state.profileConfirmations.count],
           ["阶段模板", state.stages.count],
           ["产物家族", state.families.count],
+          ["四门评审", state.mediaGateSets.count],
           ["产物关系", state.relations.count],
           ["评审", state.reviews.count],
           ["影响预览", state.previews.count],
@@ -287,6 +296,18 @@ export function ProductionContractsPage() {
             </li>)}</ol>
             <details><summary>精确家族 authority（审计用）</summary>manifest <code>{family.manifestRef.artifactId}</code> · family version {family.version}<br/>最近更新 {new Date(family.updatedAt).toLocaleString()}</details>
           </article>)}
+        </div>
+        <div className="card" style={{ padding: 18 }} data-testid="media-four-gate-authority"><h2 style={{ marginTop: 0 }}>媒体四门评审贡献视图</h2>
+          <p>原子评测 Skill 由 Logic 固定为事实、品牌、版权、平台四门，并绑定同一数字同事产出的 Variant、最新尝试、评测契约、策略和证据截止时间。本页只读服务端 GateSet，不在前端重算资格。</p>
+          {state.mediaGateProfiles.count === 0 ? <div className="notice">尚无已签名四门配置；页面保持未知，不用本地默认规则补齐。</div> : <div className="notice">已读取 {state.mediaGateProfiles.count} 个已签名四门配置；当前贡献视图只消费精确修订。</div>}
+          {state.mediaGateSets.count === 0 ? <div className="notice">尚无四门 GateSet。没有记录不等于已通过，也不会产生审批。</div> : state.mediaGateSets.items.map(item => <article key={item.gateSetId} style={itemStyle} data-testid={`media-gate-set-${item.gateSetId}`}>
+            <div style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><strong>{item.variantProfile} · {item.variantPlatform}</strong><span>{item.readiness === "ready" ? "四门通过，可进入独立审批" : item.readiness === "blocked" ? "四门阻断" : "四门状态未知"}</span></div>
+            <p>Variant {item.artifactRef.artifactId} · review cycle {item.reviewCycleId}</p>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:8}}>{item.gateResults.map(result => <div key={result.gateId} className={`notice${result.outcome === "passed" ? "" : " bad"}`}><strong>{({"media.fact":"事实门","media.brand":"品牌门","media.copyright":"版权门","media.platform":"平台门"} as Record<string,string>)[result.gateId] ?? result.gateId}</strong><div>{result.outcome === "passed" ? "通过" : result.outcome === "failed" ? "失败" : result.outcome === "blocked" ? "阻断" : "未知"}</div><small>{result.issueRef ? `ReviewIssue ${result.issueRef.resourceId}@v${result.issueRef.version}` : "无阻断问题"}</small></div>)}</div>
+            {item.blockerCodes.length ? <div className="notice bad" style={{marginTop:8}}>阻断：{item.blockerCodes.join("、")}</div> : <div className="notice" style={{marginTop:8}}>GateSet 仅声明 eligibleForApproval；尚未产生批准、执行或发布事实。</div>}
+            <details><summary>精确绑定（审计用）</summary>GateSet <code>{item.gateSetId}</code><br/>EvalContract <code>{item.evalContractRef.resourceId}@{item.evalContractRef.revision}</code><br/>Policy <code>{item.policyRef.resourceId}@{item.policyRef.revision}</code><br/>Attempt <code>{item.stageAttemptRef.stepRunId}@{item.stageAttemptRef.attempt}</code><br/>Cutoff {new Date(item.cutoffAt).toLocaleString()}{item.contractMigrationRef ? <><br/>契约迁移 <code>{item.contractMigrationRef.resourceId}</code></> : null}</details>
+          </article>)}
+          {state.contractMigrations.count ? <details style={{marginTop:10}}><summary>契约迁移审计（{state.contractMigrations.count}）</summary><ul>{state.contractMigrations.items.map(item => <li key={item.decisionId}><code>{item.sourceContractRef.resourceId}@{item.sourceContractRef.revision}</code> → <code>{item.targetContractRef.resourceId}@{item.targetContractRef.revision}</code>；新 review cycle {item.targetReviewCycleId}</li>)}</ul></details> : null}
         </div>
         <div className="card" style={{ padding: 18 }}><h2 style={{ marginTop: 0 }}>{contractSectionDisplayName("Artifact Relation")}</h2>
           {state.relations.count === 0 ? <div className="notice">当前组织尚无产物关系。只有两端产物标识和内容摘要都匹配权威记录时才能建立关系。</div> : state.relations.items.map(item => <article key={item.relationId} style={itemStyle}><strong>{item.relationType === "variant_of" ? "同类变体" : businessDisplayName(item.relationType)}</strong><p>{contractBusinessText(item.reason)}</p><details><summary>技术标识（审计用）</summary><code>{item.fromArtifact.artifactId}</code> → <code>{item.toArtifact.artifactId}</code><br/><small>{item.createdBy}</small></details></article>)}

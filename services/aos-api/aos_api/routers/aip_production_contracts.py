@@ -30,7 +30,10 @@ from aos_api.aip_responsibility_profile import (
 from aos_api.aip_responsibility_profile_store import AipResponsibilityProfileStore
 from aos_api.aip_stage_template_authority import resolve_stage_template_source
 from aos_api.aip_production_contracts import (
-    CreateBriefRequest, CreateEvidenceBundleRequest, BuildEvidenceBundleRequest,
+    AssembleMediaGateSetRequest, ContractMigrationDecision,
+    ContractMigrationDecisionListResponse, CreateBriefRequest,
+    CreateContractMigrationDecisionRequest, CreateEvidenceBundleRequest,
+    BuildEvidenceBundleRequest,
     EvidenceBundleListResponse,
     EvidenceBundleRevision, ReviseBriefRequest, TaskBriefListResponse, TaskBriefRevision,
     CreateEvalContractRequest, ReviseEvalContractRequest, EvalContractRevision,
@@ -56,7 +59,10 @@ from aos_api.aip_production_contracts import (
     ResolveEvidenceDisclosureRequest, EvidenceDisclosureDecision,
     EvidenceRevocation,
     FreezeProductionContextRequest, ProductionContextRevision,
+    MediaGateProfileListResponse, MediaGateProfileRevision,
+    MediaGateSetDecision, MediaGateSetListResponse,
     ProductionContextListResponse, RegisterArtifactFamilyRequest,
+    RegisterMediaGateProfileRequest,
     SelectArtifactFamilyCandidateRequest,
 )
 from aos_api.auth import Principal, require_principal
@@ -537,6 +543,63 @@ def attach_artifact_family_member(family_id: str, body: AttachArtifactFamilyMemb
 def select_artifact_family_candidate(family_id: str, body: SelectArtifactFamilyCandidateRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
     _require_review_role(principal, control=True)
     try: return store.select_artifact_family_candidate(_scope(principal), principal.subject, family_id, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/media-gate-profiles", response_model=MediaGateProfileRevision, status_code=201)
+def register_media_gate_profile(body: RegisterMediaGateProfileRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    _require_review_role(principal, control=True)
+    try: return store.register_media_gate_profile(_scope(principal), principal.subject, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/media-gate-profiles", response_model=MediaGateProfileListResponse)
+def list_media_gate_profiles(principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.list_media_gate_profiles(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/media-gate-profiles/{profile_id}", response_model=MediaGateProfileRevision)
+def get_media_gate_profile(profile_id: str, revision: int = Query(ge=1), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.get_media_gate_profile(_scope(principal), profile_id, revision)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/contract-migration-decisions", response_model=ContractMigrationDecision, status_code=201)
+def create_contract_migration_decision(body: CreateContractMigrationDecisionRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    _require_review_role(principal, control=True)
+    try: return store.create_contract_migration_decision(_scope(principal), principal.subject, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/contract-migration-decisions", response_model=ContractMigrationDecisionListResponse)
+def list_contract_migration_decisions(principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.list_contract_migration_decisions(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/contract-migration-decisions/{decision_id}", response_model=ContractMigrationDecision)
+def get_contract_migration_decision(decision_id: str, principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.get_contract_migration_decision(_scope(principal), decision_id)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/media-gate-sets", response_model=MediaGateSetDecision, status_code=201)
+def assemble_media_gate_set(body: AssembleMediaGateSetRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    _require_review_role(principal)
+    try: return store.assemble_media_gate_set(_scope(principal), principal.subject, _key(idempotency_key), body)
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/media-gate-sets", response_model=MediaGateSetListResponse)
+def list_media_gate_sets(principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.list_media_gate_sets(_scope(principal))
+    except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.get("/media-gate-sets/{gate_set_id}", response_model=MediaGateSetDecision)
+def get_media_gate_set(gate_set_id: str, principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
+    try: return store.get_media_gate_set(_scope(principal), gate_set_id)
     except ProductionContractError as exc: raise _map(exc) from exc
 
 

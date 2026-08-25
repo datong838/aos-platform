@@ -1,0 +1,111 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "taskId": "workshop-w7-06-four-gate-eval-review-return-attempt-20260825",
+  "recordedAt": "2026-08-25T21:58:49+08:00",
+  "baseRevision": "AOS-000261",
+  "result": "W7_06_MEDIA_FOUR_GATE_SAME_ARTIFACT_EVAL_REVIEW_RETURN_ATTEMPT_CODE_CONTRACT_BROWSER_GREEN_SECURITY_SCOPED_GREEN_REPO_BASELINE_RED_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "implementation": {
+    "canonicalAuthority": [
+      "MediaGateProfileRevision",
+      "EvalReportRevision",
+      "MediaGateSetDecision",
+      "ReviewIssue",
+      "ContractMigrationDecision"
+    ],
+    "subjectBinding": "Media Eval is bound to one exact current Variant Artifact, the canonical latest StepRun attempt, one frozen EvalContract, one signed gate profile and one evidence cutoff",
+    "fourGateSet": "fact, brand, copyright and platform results are assembled only when Artifact, contract, policy, cutoff, dataset, judge and attempt remain identical",
+    "failureReturn": "failed, blocked or unknown outcomes require an exact ReviewIssue and explicit return mapping; they never disappear through automatic retry",
+    "contractMigration": "an explicit immutable ContractMigrationDecision opens a new review cycle and never rewrites a prior GateSet",
+    "statusSeparation": "eligibleForApproval is only a derived GateSet contribution; it never fabricates Approval, execution authority or release",
+    "compatibility": "ordinary generic Eval runs remain valid when no media subject binding is supplied",
+    "skillComposition": "four atomic Eval gate skills are composed by Logic and bound to the media digital colleague contribution view without turning the GateSet into a Skill"
+  },
+  "verification": {
+    "backend": {
+      "status": "GREEN",
+      "focusedPassed": 4,
+      "w4AndW7CumulativePassed": 44,
+      "openApiContractPassed": 14,
+      "domainRouterPassed": 8,
+      "domainRouterSubtestsPassed": 2,
+      "warnings": 7
+    },
+    "web": {
+      "status": "GREEN",
+      "targetedProductionContractsTests": 17,
+      "cumulativeTestFilesPassed": 232,
+      "cumulativeTestsPassed": 2137,
+      "buildModules": 344
+    },
+    "openApiAndDomainRouter": {
+      "status": "GREEN",
+      "paths": 2651,
+      "schemas": 2344,
+      "operations": 4426,
+      "inventoryRouteRows": 4436,
+      "runtimeRouteRows": 4440,
+      "runtimeRouteHash": "22ea804fc4135987161d0a04f69eade53be01818cd9d8bc88ea6fe6a796ee5b1",
+      "deterministicArtifact": "GREEN"
+    },
+    "alembic": {
+      "status": "GREEN",
+      "heads": ["w7_004"],
+      "disposableDatabaseUpgradeDowngrade": true,
+      "rlsAndForceRlsVerified": true,
+      "sharedOrRealDatabaseApply": false
+    },
+    "security": {
+      "scannerTests": "GREEN_9",
+      "scopedStatus": "GREEN",
+      "scopedFiles": 18,
+      "scopedCritical": 0,
+      "scopedWarning": 0,
+      "repositoryGateStatus": "RED_EXISTING_BASELINE",
+      "repositoryFiles": 4877,
+      "repositoryCritical": 5,
+      "repositoryWarning": 326
+    },
+    "browser": {
+      "status": "GREEN_CONTROLLED_FIXTURE_ONLY",
+      "route": "/aip/production-contracts",
+      "actualViewport": "1280x720",
+      "requestedViewportOverrideApplied": false,
+      "horizontalOverflow": false,
+      "fourGateContributionVisible": true,
+      "exactReviewIssueVisible": "issue-copyright-browser@v1",
+      "exactBlockerVisible": "MEDIA_GATE_COPYRIGHT_FAILED",
+      "outcomesVisible": {
+        "fact": "passed",
+        "brand": "passed",
+        "copyright": "failed",
+        "platform": "passed"
+      },
+      "productionStartDisabled": true,
+      "approvalFabricated": false,
+      "newConsoleErrorsAfterAcceptanceReload": 0
+    },
+    "syntaxAndArtifacts": {
+      "compileAll": "GREEN",
+      "webBuild": "GREEN",
+      "diffCheck": "GREEN",
+      "ruff": "NOT_INSTALLED_NO_RESULT"
+    }
+  },
+  "review": {
+    "businessLifecycle": "PASS: exact attempt, signed four gates, ReviewIssue return and explicit contract migration remain visible and immutable",
+    "technicalSafety": "PASS: tenant RLS/FORCE RLS, append-only guards, exact hashes, frozen contracts and no automatic retry remain fail closed",
+    "planConsistency": "PASS",
+    "responsiveCaveat": "the built-in browser remained fixed at 1280x720 despite temporary viewport override requests; no three-viewport result is claimed"
+  },
+  "boundaries": {
+    "realTenantMutation": false,
+    "sharedDatabaseMigrationApply": false,
+    "providerInvocation": false,
+    "providerRetry": false,
+    "mediaGeneration": false,
+    "reviewReturnBusinessMutation": false,
+    "contractMigrationBusinessMutation": false,
+    "externalPublication": false,
+    "release": false
+  }
+}

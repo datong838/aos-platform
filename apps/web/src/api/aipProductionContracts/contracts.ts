@@ -366,6 +366,87 @@ export type ArtifactFamily = {
 };
 export type ArtifactFamilyListResponse = { tenant: Tenant; items: ArtifactFamily[]; count: number };
 
+export type MediaGateKind = "fact" | "brand" | "copyright" | "platform";
+export type MediaGateOutcome = "passed" | "failed" | "blocked" | "unknown";
+export type MediaGateDefinition = {
+  gateId: string;
+  kind: MediaGateKind;
+  ruleRef: ExactRevisionRef;
+  returnStage: string;
+  hardBlock: boolean;
+  allowOverride: boolean;
+};
+export type MediaGateProfileRevision = {
+  tenant: Tenant;
+  profileId: string;
+  revision: number;
+  sourceBundleRef: ExactRevisionRef;
+  signatureRef: ExactRevisionRef;
+  policyRef: ExactRevisionRef;
+  gates: MediaGateDefinition[];
+  contentHash: string;
+  createdBy: string;
+  createdAt: string;
+};
+export type MediaGateProfileListResponse = { tenant: Tenant; items: MediaGateProfileRevision[]; count: number };
+export type EvalStageAttemptRef = {
+  resourceType: "StepRunAttempt";
+  runId: string;
+  stepKey: string;
+  stepRunId: string;
+  attempt: number;
+  inputHash: string;
+};
+export type ReviewIssueVersionRef = { resourceType: "ReviewIssue"; resourceId: string; version: number };
+export type MediaGateResult = {
+  gateId: string;
+  outcome: MediaGateOutcome;
+  evalReportRef: ExactRevisionRef;
+  ruleRef: ExactRevisionRef;
+  issueRef: ReviewIssueVersionRef | null;
+  overrideRef: ExactRevisionRef | null;
+  datasetRef: Record<string, unknown>;
+  judgeRef: Record<string, unknown>;
+  gatePassed: boolean;
+};
+export type MediaGateSetDecision = {
+  tenant: Tenant;
+  gateSetId: string;
+  reviewCycleId: string;
+  artifactRef: ExactArtifactRef;
+  familyId: string;
+  variantProfile: string;
+  variantPlatform: string;
+  renditionSpecHash: string;
+  evalContractRef: ExactRevisionRef;
+  gateProfileRef: ExactRevisionRef;
+  policyRef: ExactRevisionRef;
+  cutoffAt: string;
+  stageAttemptRef: EvalStageAttemptRef;
+  gateResults: MediaGateResult[];
+  contractMigrationRef: ExactRevisionRef | null;
+  readiness: "ready" | "blocked" | "stale" | "conflict" | "unknown";
+  eligibleForApproval: boolean;
+  blockerCodes: string[];
+  contentHash: string;
+  actor: string;
+  createdAt: string;
+};
+export type MediaGateSetListResponse = { tenant: Tenant; items: MediaGateSetDecision[]; count: number };
+export type ContractMigrationDecision = {
+  tenant: Tenant;
+  decisionId: string;
+  sourceReviewCycleId: string;
+  targetReviewCycleId: string;
+  sourceContractRef: ExactRevisionRef;
+  targetContractRef: ExactRevisionRef;
+  reason: string;
+  decisionHash: string;
+  actor: string;
+  createdAt: string;
+};
+export type ContractMigrationDecisionListResponse = { tenant: Tenant; items: ContractMigrationDecision[]; count: number };
+
 export type ReviewSeverity = "info" | "warning" | "error" | "critical";
 export type ReviewIssueStatus = "open" | "resolved" | "returned" | "superseded";
 export type CreateReviewIssueInput = {
