@@ -58,9 +58,9 @@
   },
   "sourceSha256": {
     "services/aos-api/alembic/versions/w5_005_action_webhook_inbox.py": "f58d2dce932b66e2abaaf871dd9251355f6ef9a8302d9d113df365d3d4409c47",
-    "services/aos-api/aos_api/aip_action_webhook_models.py": "3acc76d9c83345eb31c72090b5befa7e4bb8736999ec202b432946ba3cd336ae",
+    "services/aos-api/aos_api/aip_action_webhook_models.py": "f065c25bf332a0720550083d37821a679cf60e8d43aa7fe2a54532f8f98719d7",
     "services/aos-api/aos_api/aip_action_webhook_service.py": "3c6d7f95ef2f71649dd62dba8ba9724472bbca5c94ea728f643c0f1cc50365ff",
-    "services/aos-api/aos_api/routers/aip_action_webhooks.py": "b3abb2b2b8445556636032a6d411aa26d6c2c1c81e9566cf2ed914ed85d77dc1",
+    "services/aos-api/aos_api/routers/aip_action_webhooks.py": "934d0fc1b60d12c778e15a5588d0df95f570876d2ca23e3ae4c51755ade46ce5",
     "packages/contracts/openapi/v1.generated.json": "7377386eea76b6186ec4d9a9844995c422dc3e5417d32d3c8456f5e703766309",
     "packages/contracts/openapi/v1.inventory.json": "1efd46d9c6a36bbaae898848222c42e712c546cb43cb8799850231e0dc5f6118"
   },
