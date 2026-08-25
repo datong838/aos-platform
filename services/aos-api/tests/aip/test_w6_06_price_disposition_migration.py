@@ -14,4 +14,4 @@ def test_w6_006_price_disposition_is_append_only_rls_and_single_head():
     assert "GRANT SELECT, INSERT" in text
     assert "UPDATE" not in text and "DELETE" not in text
     config = Config(str(root / "alembic.ini"))
-    assert ScriptDirectory.from_config(config).get_heads() == ["w6_008"]
+    assert ScriptDirectory.from_config(config).get_heads() == ["w6_009"]

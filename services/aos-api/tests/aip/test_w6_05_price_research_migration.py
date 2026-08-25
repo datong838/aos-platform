@@ -14,4 +14,4 @@ def test_w6_005_price_research_is_append_only_rls_and_chained_to_w6_006():
     assert "GRANT SELECT, INSERT" in text
     assert "UPDATE" not in text and "DELETE" not in text
     config = Config(str(root / "alembic.ini"))
-    assert ScriptDirectory.from_config(config).get_heads() == ["w6_008"]
+    assert ScriptDirectory.from_config(config).get_heads() == ["w6_009"]

@@ -15,4 +15,4 @@ def test_w6_008_customer_contact_is_append_only_rls_and_single_head():
     assert "GRANT SELECT, INSERT, UPDATE" not in text and "GRANT SELECT, INSERT, DELETE" not in text
     assert "raw_contact" not in text and "provider_payload" not in text
     config = Config(str(root / "alembic.ini"))
-    assert ScriptDirectory.from_config(config).get_heads() == ["w6_008"]
+    assert ScriptDirectory.from_config(config).get_heads() == ["w6_009"]

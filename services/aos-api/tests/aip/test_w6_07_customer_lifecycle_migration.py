@@ -12,4 +12,4 @@ def test_w6_007_customer_lifecycle_is_append_only_rls_and_single_head():
     assert "FORCE ROW LEVEL SECURITY" in text and "GRANT SELECT, INSERT" in text
     assert "GRANT SELECT, INSERT, UPDATE" not in text and "GRANT SELECT, INSERT, DELETE" not in text
     config = Config(str(root / "alembic.ini"))
-    assert ScriptDirectory.from_config(config).get_heads() == ["w6_008"]
+    assert ScriptDirectory.from_config(config).get_heads() == ["w6_009"]

@@ -1,0 +1,50 @@
+{
+  "taskId": "workshop-w6-09-three-module-partial-usage-effect-handoff-20260825",
+  "wave": "W6-09",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "result": "CODE_CONTRACT_BROWSER_GREEN_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "tests": {
+    "backendTarget": "16 passed",
+    "backendW6Cumulative": "76 passed",
+    "openapiContract": "14 passed",
+    "frontendTarget": "17 passed",
+    "frontendFull": "232 files / 2130 tests passed",
+    "typescript": "passed",
+    "productionBuild": "passed",
+    "migrationHeads": ["w6_009"]
+  },
+  "browserAcceptance": {
+    "surface": "built-in browser",
+    "fixtureOnly": true,
+    "routes": [
+      "/workshop/creator-outreach",
+      "/workshop/price-governance",
+      "/workshop/customer"
+    ],
+    "assertions": [
+      "five axes are rendered independently",
+      "unknown usage is not rendered as zero",
+      "effect insufficient does not become completed",
+      "handoff transport does not become business acceptance",
+      "handoff consume, memory promotion and external effects remain zero",
+      "fresh acceptance tab has zero console errors"
+    ]
+  },
+  "compatibility": {
+    "chain": "atomic Skill -> Logic -> digital colleague -> Workshop contribution view",
+    "existingDomainAuthoritiesPreserved": true,
+    "callerAggregateSuccessAccepted": false,
+    "itemConservationRequired": true
+  },
+  "forbiddenEffects": {
+    "providerDispatch": false,
+    "contactResolution": false,
+    "send": false,
+    "handoffConsume": false,
+    "memoryPromotion": false,
+    "release": false
+  }
+}

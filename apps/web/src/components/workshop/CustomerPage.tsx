@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
-import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type CustomerContactContributionViewResponse, type CustomerLifecycleContributionViewResponse, type CustomerViewId, type CustomerViewResponse } from "../../api/ecommerceWorkshop";
+import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type CustomerContactContributionViewResponse, type CustomerLifecycleContributionViewResponse, type CustomerViewId, type CustomerViewResponse, type ThreeModuleClosureContributionViewResponse } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
+import { ThreeModuleClosureCard, unavailableThreeModuleClosure } from "./ThreeModuleClosureCard";
 
-type Client = Pick<typeof ecommerceWorkshopClient, "getCustomerView" | "getCustomerLifecycleContributionView" | "getCustomerContactContributionView">;
+type Client = Pick<typeof ecommerceWorkshopClient, "getCustomerView" | "getCustomerLifecycleContributionView" | "getCustomerContactContributionView"> & Partial<Pick<typeof ecommerceWorkshopClient, "getThreeModuleClosureContributionView">>;
 type Phase = "loading" | "ready" | "empty" | "forbidden" | "failed";
 const LABELS: Record<CustomerViewId, string> = { customer: "客户最小投影", segment: "客户分群", journey: "生命周期旅程", dialogue: "对话与批次" };
 const AXIS_LABELS = { customer_lite: "客户最小集", consent: "同意依据", segment: "分群投影", journey: "旅程投影", dialogue: "对话摘要", outreach_batch: "触达批次" } as const;
@@ -14,13 +15,14 @@ export function CustomerPage({ client = ecommerceWorkshopClient }: { client?: Cl
   const [response, setResponse] = useState<CustomerViewResponse | null>(null);
   const [contribution, setContribution] = useState<CustomerLifecycleContributionViewResponse | null>(null);
   const [contact, setContact] = useState<CustomerContactContributionViewResponse | null>(null);
+  const [closure, setClosure] = useState<ThreeModuleClosureContributionViewResponse | null>(null);
   const [selected, setSelected] = useState<CustomerViewId>("customer");
   const request = useRef(0);
   const load = () => {
-    const id = ++request.current; setPhase("loading"); setResponse(null); setContribution(null); setContact(null);
-    void Promise.all([client.getCustomerView(), client.getCustomerLifecycleContributionView(), client.getCustomerContactContributionView()]).then(([next, nextContribution, nextContact]) => {
+    const id = ++request.current; setPhase("loading"); setResponse(null); setContribution(null); setContact(null); setClosure(null);
+    void Promise.all([client.getCustomerView(), client.getCustomerLifecycleContributionView(), client.getCustomerContactContributionView(), client.getThreeModuleClosureContributionView?.("customer").catch(() => null) ?? Promise.resolve(null)]).then(([next, nextContribution, nextContact, nextClosure]) => {
       if (id !== request.current) return;
-      setResponse(next); setContribution(nextContribution); setContact(nextContact);
+      setResponse(next); setContribution(nextContribution); setContact(nextContact); setClosure(nextClosure ?? unavailableThreeModuleClosure("customer", next.tenant, next.evaluatedAt));
       setSelected(next.views.find((item) => item.status === "blocked")?.viewId ?? "customer");
       setPhase(next.page.count === 0 && next.views.every((item) => item.status === "ready") ? "empty" : "ready");
     }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
@@ -29,7 +31,7 @@ export function CustomerPage({ client = ecommerceWorkshopClient }: { client?: Cl
   const view = response?.views.find((item) => item.viewId === selected);
   const eligible = response?.views.reduce((sum, item) => sum + item.countLedger.eligible, 0) ?? 0;
   const total = response?.views.reduce((sum, item) => sum + item.countLedger.input, 0) ?? 0;
-  const content = response && contribution && contact && view ? <div className="customer-read-model">
+  const content = response && contribution && contact && closure && view ? <div className="customer-read-model">
     <section className="customer-hero"><div><span>客户关系工作台 · 最小披露</span><h2>只在目的、同意与留存边界内阅读客户关系</h2><p>同意撤回、留存到期、质量失败或来源不可核验都会失败关闭；页面不展示联系方式和身份字段。</p></div><strong>只读 · 零触达</strong></section>
     <section className="creator-growth-axis"><div><span>只读视图</span><strong>4</strong></div><div><span>允许披露</span><strong>{eligible}/{total}</strong></div><div><span>资源 revision</span><strong>r{response.resourceRevision}</strong></div><div><span>写入口</span><strong>0</strong></div></section>
     <section className="customer-contribution" aria-label="客户关系贡献视图">
@@ -49,6 +51,7 @@ export function CustomerPage({ client = ecommerceWorkshopClient }: { client?: Cl
       <div className="customer-contact-ledger">{(["reserved", "skippedWithdrawn", "cancelled", "accepted", "applied", "failed", "unknown", "disputed"] as const).map((bucket) => <article key={bucket}><span>{bucket}</span><strong>{contact.ledger[bucket]}</strong></article>)}</div>
       <aside><strong>失败关闭安全线</strong><span>Permit 兑换 0 · 联系方式解析 0 · Provider 0 · 发送 0 · 外部副作用 0</span>{contact.blockers.map((blocker) => <code key={blocker}>{blocker}</code>)}</aside>
     </section>
+    <ThreeModuleClosureCard value={closure} />
     <div className="customer-tabs" role="tablist" aria-label="客户关系只读视图">{response.views.map((item, index) => <button type="button" role="tab" aria-selected={selected === item.viewId} tabIndex={selected === item.viewId ? 0 : -1} key={item.viewId} onClick={() => setSelected(item.viewId)} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? response.views.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + response.views.length) % response.views.length; setSelected(response.views[nextIndex]!.viewId); event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("button")[nextIndex]?.focus(); }}><strong>{LABELS[item.viewId]}</strong><span>{item.status}</span></button>)}</div>
     <section className="customer-panel" role="tabpanel" aria-label={LABELS[selected]}><header><div><span>{view.viewId}</span><h2>{LABELS[view.viewId]}</h2></div><strong className={`content-campaign-status is-${view.status}`}>{view.status === "ready" ? "同截止面可读" : "失败关闭"}</strong></header>
       <div className="customer-readiness">{view.readinessAxes.map((axis) => <article key={axis.axis} className={`is-${axis.status}`}><strong>{AXIS_LABELS[axis.axis]}</strong><span>{axis.status}</span><p>{axis.exactRef ? `${axis.exactRef.resourceType} · r${axis.exactRef.revision}` : "无 exact authority"}</p></article>)}</div>

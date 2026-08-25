@@ -485,6 +485,26 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/views/customer/contact-contributions",
             "get",
         ),
+        "ecommerceWorkshopThreeModuleClosureCompile": (
+            "/v1/ecommerce-workshop/three-module-closures",
+            "post",
+        ),
+        "ecommerceWorkshopThreeModuleUsageBind": (
+            "/v1/ecommerce-workshop/three-module-closures/usage-bindings",
+            "post",
+        ),
+        "ecommerceWorkshopThreeModuleEffectBind": (
+            "/v1/ecommerce-workshop/three-module-closures/effect-bindings",
+            "post",
+        ),
+        "ecommerceWorkshopThreeModuleHandoffBind": (
+            "/v1/ecommerce-workshop/three-module-closures/handoff-bindings",
+            "post",
+        ),
+        "ecommerceWorkshopThreeModuleClosureContributionViewGet": (
+            "/v1/ecommerce-workshop/views/{module}/closure-contributions",
+            "get",
+        ),
         "ecommerceWorkshopSharedContextGet": (
             "/v1/ecommerce-workshop/contexts/{context_id}",
             "get",

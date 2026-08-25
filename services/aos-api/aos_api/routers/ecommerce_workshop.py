@@ -172,6 +172,22 @@ from aos_api.ecommerce_workshop_customer_contact import (
     StartCustomerDialogueBatchRequest,
 )
 from aos_api.ecommerce_workshop_customer_contact_store import EcommerceWorkshopCustomerContactStore
+from aos_api.ecommerce_workshop_three_module_closure import (
+    BindThreeModuleEffectRequest,
+    BindThreeModuleHandoffRequest,
+    BindThreeModuleUsageRequest,
+    CompileThreeModuleClosureRequest,
+    EcommerceWorkshopThreeModuleClosureService,
+    ThreeModule,
+    ThreeModuleClosureBlocked,
+    ThreeModuleClosureConflict,
+    ThreeModuleClosureContributionView,
+    ThreeModuleClosureRevision,
+    ThreeModuleEffectBindingRevision,
+    ThreeModuleHandoffBindingRevision,
+    ThreeModuleUsageBindingRevision,
+)
+from aos_api.ecommerce_workshop_three_module_closure_store import EcommerceWorkshopThreeModuleClosureStore
 from aos_api.ecommerce_workshop_shared_context import EcommerceWorkshopSharedContext
 from aos_api.ecommerce_workshop_shared_context_contracts import WorkshopSharedContextEnvelope
 from aos_api.ecommerce_workshop_operations import EcommerceWorkshopOperations
@@ -377,6 +393,11 @@ def get_ecommerce_workshop_customer_contact() -> EcommerceWorkshopCustomerContac
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_three_module_closure() -> EcommerceWorkshopThreeModuleClosureService:
+    return EcommerceWorkshopThreeModuleClosureService(EcommerceWorkshopThreeModuleClosureStore())
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_shared_context() -> EcommerceWorkshopSharedContext:
     return EcommerceWorkshopSharedContext()
 
@@ -476,6 +497,10 @@ CustomerLifecycleDependency = Annotated[
 CustomerContactDependency = Annotated[
     EcommerceWorkshopCustomerContactService,
     Depends(get_ecommerce_workshop_customer_contact),
+]
+ThreeModuleClosureDependency = Annotated[
+    EcommerceWorkshopThreeModuleClosureService,
+    Depends(get_ecommerce_workshop_three_module_closure),
 ]
 SharedContextDependency = Annotated[
     EcommerceWorkshopSharedContext,
@@ -584,6 +609,14 @@ def _map_customer_contact_error(exc: CustomerContactBlocked) -> ApiError:
         code=exc.code,
         message=str(exc),
         status_code=409 if isinstance(exc, CustomerContactConflict) else 422,
+    )
+
+
+def _map_three_module_closure_error(exc: ThreeModuleClosureBlocked) -> ApiError:
+    return ApiError(
+        code=exc.code,
+        message=str(exc),
+        status_code=409 if isinstance(exc, ThreeModuleClosureConflict) else 422,
     )
 
 
@@ -744,6 +777,17 @@ def _require_customer_installation(
             markings=principal.markings,
         )
     )
+
+
+def _require_three_module_installation(
+    module: ThreeModule, *, principal: Principal, catalog: EcommerceWorkshopCatalog
+) -> None:
+    checks = {
+        ThreeModule.CREATOR: _require_creator_growth_installation,
+        ThreeModule.PRICE: _require_price_governance_installation,
+        ThreeModule.CUSTOMER: _require_customer_installation,
+    }
+    checks[module](principal=principal, catalog=catalog)
 
 
 def _require_visible_workshop_installation(
@@ -1795,6 +1839,127 @@ def get_customer_contact_contribution_view(
     _reject_query_parameters(request)
     _require_customer_installation(principal=principal, catalog=catalog)
     return service.contribution_view(TenantScope(principal.org_id, principal.project_id))
+
+
+@router.post(
+    "/three-module-closures",
+    response_model=ThreeModuleClosureRevision,
+    operation_id="ecommerceWorkshopThreeModuleClosureCompile",
+    status_code=201,
+    responses=_ERRORS,
+)
+def compile_three_module_closure(
+    body: CompileThreeModuleClosureRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: ThreeModuleClosureDependency,
+) -> ThreeModuleClosureRevision:
+    _prepare_idempotency(idempotency_key)
+    _require_three_module_installation(body.module, principal=principal, catalog=catalog)
+    try:
+        return service.compile(TenantScope(principal.org_id, principal.project_id), body, principal.subject)
+    except ThreeModuleClosureBlocked as exc:
+        raise _map_three_module_closure_error(exc) from exc
+
+
+@router.post(
+    "/three-module-closures/usage-bindings",
+    response_model=ThreeModuleUsageBindingRevision,
+    operation_id="ecommerceWorkshopThreeModuleUsageBind",
+    status_code=201,
+    responses=_ERRORS,
+)
+def bind_three_module_usage(
+    body: BindThreeModuleUsageRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: ThreeModuleClosureDependency,
+) -> ThreeModuleUsageBindingRevision:
+    _prepare_idempotency(idempotency_key)
+    scope = TenantScope(principal.org_id, principal.project_id)
+    try:
+        _require_three_module_installation(
+            service.require_closure(scope, body.closure_ref).module,
+            principal=principal,
+            catalog=catalog,
+        )
+        return service.bind_usage(scope, body)
+    except ThreeModuleClosureBlocked as exc:
+        raise _map_three_module_closure_error(exc) from exc
+
+
+@router.post(
+    "/three-module-closures/effect-bindings",
+    response_model=ThreeModuleEffectBindingRevision,
+    operation_id="ecommerceWorkshopThreeModuleEffectBind",
+    status_code=201,
+    responses=_ERRORS,
+)
+def bind_three_module_effect(
+    body: BindThreeModuleEffectRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: ThreeModuleClosureDependency,
+) -> ThreeModuleEffectBindingRevision:
+    _prepare_idempotency(idempotency_key)
+    scope = TenantScope(principal.org_id, principal.project_id)
+    try:
+        _require_three_module_installation(
+            service.require_closure(scope, body.closure_ref).module,
+            principal=principal,
+            catalog=catalog,
+        )
+        return service.bind_effect(scope, body)
+    except ThreeModuleClosureBlocked as exc:
+        raise _map_three_module_closure_error(exc) from exc
+
+
+@router.post(
+    "/three-module-closures/handoff-bindings",
+    response_model=ThreeModuleHandoffBindingRevision,
+    operation_id="ecommerceWorkshopThreeModuleHandoffBind",
+    status_code=201,
+    responses=_ERRORS,
+)
+def bind_three_module_handoff(
+    body: BindThreeModuleHandoffRequest,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: ThreeModuleClosureDependency,
+) -> ThreeModuleHandoffBindingRevision:
+    _prepare_idempotency(idempotency_key)
+    scope = TenantScope(principal.org_id, principal.project_id)
+    try:
+        _require_three_module_installation(
+            service.require_closure(scope, body.closure_ref).module,
+            principal=principal,
+            catalog=catalog,
+        )
+        return service.bind_handoff(scope, body)
+    except ThreeModuleClosureBlocked as exc:
+        raise _map_three_module_closure_error(exc) from exc
+
+
+@router.get(
+    "/views/{module}/closure-contributions",
+    response_model=ThreeModuleClosureContributionView,
+    operation_id="ecommerceWorkshopThreeModuleClosureContributionViewGet",
+    responses=_ERRORS,
+)
+def get_three_module_closure_contribution_view(
+    request: Request,
+    module: ThreeModule,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: ThreeModuleClosureDependency,
+) -> ThreeModuleClosureContributionView:
+    _reject_query_parameters(request)
+    _require_three_module_installation(module, principal=principal, catalog=catalog)
+    return service.contribution_view(TenantScope(principal.org_id, principal.project_id), module)
 
 
 @router.get(

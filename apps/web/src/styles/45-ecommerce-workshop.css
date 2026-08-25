@@ -926,6 +926,19 @@
 .customer-contact-governance aside { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
 .customer-contact-governance aside > span { color: var(--aos-red); font-size: 11px; }
 .customer-contact-governance aside code { overflow-wrap: anywhere; border: 1px solid var(--aos-border); border-radius: 3px; padding: 3px 6px; background: var(--aos-surface-hover); color: var(--aos-text-secondary); font-size: 10px; }
+.three-module-closure-card { display: grid; gap: 12px; min-width: 0; padding: 16px; border: 1px solid var(--aos-border); border-left: 4px solid var(--aos-teal-600, #0f766e); background: linear-gradient(135deg, color-mix(in srgb, var(--aos-teal-600, #0f766e) 5%, var(--aos-surface)), var(--aos-surface) 64%); }
+.three-module-closure-card > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.three-module-closure-card > header span, .three-module-closure-card small { color: var(--aos-text-tertiary); font-size: 10px; }
+.three-module-closure-card > header h2, .three-module-closure-card > p { margin: 4px 0 0; }
+.three-module-closure-card > header > strong { color: var(--aos-teal-600, #0f766e); font-size: 12px; text-transform: uppercase; }
+.three-module-closure-axes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.three-module-closure-axes article { display: grid; gap: 5px; min-width: 0; padding: 10px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.three-module-closure-axes article span { color: var(--aos-text-secondary); font-size: 10px; text-transform: uppercase; }
+.three-module-closure-axes article strong, .three-module-closure-axes article small { overflow-wrap: anywhere; }
+.three-module-closure-card > footer, .three-module-closure-card > aside { display: flex; flex-wrap: wrap; gap: 7px 14px; color: var(--aos-text-secondary); font-size: 11px; }
+.three-module-closure-card > aside code { overflow-wrap: anywhere; padding: 3px 6px; border: 1px solid var(--aos-border); border-radius: 3px; background: var(--aos-surface-hover); font-size: 10px; }
+@media (max-width: 1100px) { .three-module-closure-axes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .three-module-closure-axes { grid-template-columns: 1fr; } }
 .customer-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
 .customer-tabs button { display: grid; gap: 4px; min-width: 0; cursor: pointer; border: 1px solid var(--aos-border); padding: 11px; background: var(--aos-surface); color: var(--aos-text); text-align: left; }
 .customer-tabs button span { color: var(--aos-text-tertiary); font-size: 11px; }
