@@ -96,6 +96,7 @@ from aos_api.ecommerce_workshop_creator_lifecycle import (
 )
 from aos_api.ecommerce_workshop_creator_lifecycle_store import EcommerceWorkshopCreatorLifecycleStore
 from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
+from aos_api.aip_media_provider_job_store import AipMediaProviderJobStore
 from aos_api.ecommerce_workshop_media_studio_contracts import (
     WorkshopMediaStudioViewEnvelope,
 )
@@ -362,7 +363,7 @@ def get_ecommerce_workshop_price_disposition() -> EcommerceWorkshopPriceDisposit
 
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_media_studio() -> EcommerceWorkshopMediaStudio:
-    return EcommerceWorkshopMediaStudio()
+    return EcommerceWorkshopMediaStudio(provider_job_store=AipMediaProviderJobStore())
 
 
 @lru_cache(maxsize=1)

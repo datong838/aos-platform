@@ -195,6 +195,9 @@ def downgrade() -> None:
           END IF;
         END $$"""
     )
+    # The directory owns a foreign key to endpoint_revision, so it must be
+    # removed before the tenant table family.  Keep the explicit order instead
+    # of CASCADE so unexpected dependencies still fail closed.
+    op.execute("DROP TABLE aip_action_webhook_endpoint_directory")
     for table in reversed(TENANT_TABLES):
         op.execute(f"DROP TABLE {table}")
-    op.execute("DROP TABLE aip_action_webhook_endpoint_directory")

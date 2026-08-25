@@ -3246,6 +3246,12 @@
       "module": "aos_api.routers.aip_fde",
       "attribute": "router",
       "order": 540
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_media_provider_jobs",
+      "attribute": "router",
+      "order": 541
     }
   ]
 }

@@ -1,0 +1,79 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "task_id": "workshop-w7-07-media-model-provider-adapter-malicious-asset-20260825",
+  "base_revision": "AOS-000262",
+  "branch": "m1",
+  "captured_at": "2026-08-25T23:00:00+08:00",
+  "result": "W7_07_MEDIA_PROVIDER_ADAPTER_MALICIOUS_ASSET_CODE_CONTRACT_BROWSER_GREEN_SECURITY_SCOPED_GREEN_REPO_BASELINE_RED_NO_REAL_PROVIDER_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "implementation": {
+    "migration": "w7_005",
+    "authority": [
+      "tenant-scoped immutable scan observations",
+      "append-only MediaProviderJob events and Provider receipts",
+      "purpose-bound MediaAccessGrant with token hash only",
+      "idempotency and semantic webhook deduplication"
+    ],
+    "execution_contract": [
+      "exact ModelRoute/Model/Provider/RuntimePolicy/Plugin/Price/License/Eval/Capability/Binding refs",
+      "server-owned input and output scan",
+      "prepared to submitted/running/terminal monotonic transitions",
+      "timeout or adapter ambiguity becomes unknown and never blind-retries",
+      "default missing scanner or adapter fails closed"
+    ],
+    "workshop_projection": "atomic Skill -> TaskRun Logic -> content officer binding -> exact model/provider/adapter -> scan refs; read-only and externalEffectsAllowed=false",
+    "migration_regression_remediation": "w5_005 empty downgrade now drops the FK-owning endpoint directory before endpoint revisions, without CASCADE or runtime semantic change"
+  },
+  "verification": {
+    "focused_backend": "30 passed, 7 warnings",
+    "cumulative_backend": "93 passed, 7 warnings",
+    "openapi": "14 passed within cumulative set; 2659 paths, 2354 schemas, 4435 unique operations, 4445 route rows",
+    "web_targeted": "2 files, 4 tests passed",
+    "web_full": "232 files, 2137 tests passed",
+    "web_typecheck": "passed",
+    "web_build": "344 modules transformed; passed",
+    "migration_reversibility": "isolated aip9 empty downgrade/upgrade passed after dependency-order remediation",
+    "security_scoped": "19 files, 0 critical, 0 warning; scanner unit tests 9 passed",
+    "security_repository_baseline": "4880 tracked files, 5 critical, 326 warning; pre-existing repository baseline remains RED"
+  },
+  "browser": {
+    "tool": "Codex built-in browser",
+    "url": "http://127.0.0.1:5175/workshop/media-studio",
+    "fixture": "local read-only API; org-org/dev-project; no database and no external call",
+    "viewport_observed": "1280px content width",
+    "assertions": {
+      "media_studio_v2": true,
+      "atomic_skill_logic_colleague_contribution_chain": true,
+      "content_officer_unknown": true,
+      "media_generate_capability": true,
+      "unknown_reconcile_blocker": true,
+      "external_effect_closed": true,
+      "no_submit_cancel_publish_button": true,
+      "no_horizontal_overflow": true,
+      "new_console_errors": 0
+    },
+    "known_warnings": [
+      "React Router v7 startTransition future flag",
+      "React Router v7 relative splat path future flag"
+    ],
+    "screenshot": ".evidence/workshop/2026-08-25-w7-07-browser/media-studio-provider-job.png",
+    "screenshot_sha256": "e63199d51d440976717b9f29581ba477f37a107af8ea6caf424f4719512bac67"
+  },
+  "representative_sha256": {
+    "w7_005_media_provider_job_adapter.py": "c3601bd44b57eb5d7257ee10331f665aff4420263477d6999b3762da3b9b44ed",
+    "aip_media_provider_job_contracts.py": "b2fb46dc281152c5adfe5c8f45a65e82957ca2dc1466c17fff812a674851dd6",
+    "aip_media_provider_job_store.py": "da0db2b15e9eda595158ab88597610769e98090887fe9e882d6d77d4983abf96",
+    "aip_media_provider_job_service.py": "3234f57f4c595b98562b4a7407fa4a9b68e23ab17439ebe51c2968f8452d7577",
+    "aip_media_provider_jobs.py": "6a93b8f35feeca14e8ae17eae9a3a4652e4bff7b6c9093819c92da1599afefc4",
+    "MediaStudioPage.tsx": "93fcb5aacb211821be808ce903780b00f1823ea7b8b09c2d468a70c2a5024cd1"
+  },
+  "safety": {
+    "shared_migration_applied": false,
+    "real_tenant_mutated": false,
+    "real_provider_invoked": false,
+    "media_generated": false,
+    "automatic_retry": false,
+    "external_effect": false,
+    "release": false
+  },
+  "commit": "PENDING_SAFE_COMMIT"
+}

@@ -11,7 +11,8 @@ from pydantic import Field, field_validator, model_validator
 from aos_api.aip_contracts import AipContractModel, TenantContext
 
 
-MEDIA_STUDIO_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v1"
+MEDIA_STUDIO_LEGACY_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v1"
+MEDIA_STUDIO_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v2"
 
 
 class MediaStudioSliceId(StrEnum):
@@ -139,6 +140,30 @@ class MediaPageInfo(AipContractModel):
     next_cursor: None = None
 
 
+class MediaProviderExactRef(AipContractModel):
+    resource_type: str = Field(min_length=1, max_length=120)
+    resource_id: str = Field(min_length=1, max_length=200)
+    revision: int = Field(ge=1)
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class MediaProviderJobContribution(AipContractModel):
+    job_id: str = Field(min_length=1, max_length=200)
+    status: str = Field(pattern=r"^(prepared|submitted|running|cancel_requested|unknown|succeeded|failed|cancelled)$")
+    sequence: int = Field(ge=1)
+    atomic_capability_ref: MediaProviderExactRef
+    logic_ref: MediaProviderExactRef
+    colleague_binding_ref: MediaProviderExactRef
+    model_ref: MediaProviderExactRef
+    provider_ref: MediaProviderExactRef
+    adapter_ref: MediaProviderExactRef
+    scan_refs: list[MediaProviderExactRef] = Field(min_length=1, max_length=64)
+    primary_colleague: Literal["内容官"] = "内容官"
+    collaborator_colleagues: list[str] = Field(default_factory=lambda: ["活动策划师", "数据参谋", "合规协作者"], min_length=1, max_length=10)
+    blocker_codes: list[str] = Field(default_factory=list, max_length=64)
+    external_effects_allowed: Literal[False] = False
+
+
 class WorkshopMediaStudioViewEnvelope(AipContractModel):
     schema_version: Literal[MEDIA_STUDIO_SCHEMA_VERSION] = MEDIA_STUDIO_SCHEMA_VERSION
     tenant: TenantContext
@@ -146,6 +171,9 @@ class WorkshopMediaStudioViewEnvelope(AipContractModel):
     data_cutoff: datetime
     readiness: Literal["degraded"] = "degraded"
     slices: list[MediaStudioSlice] = Field(min_length=3, max_length=3)
+    provider_jobs_status: Literal["ready", "blocked"]
+    provider_jobs: list[MediaProviderJobContribution] = Field(default_factory=list, max_length=100)
+    provider_job_blockers: list[MediaBlocker] = Field(default_factory=list, max_length=20)
     page: MediaPageInfo
 
     @field_validator("evaluated_at", "data_cutoff")
@@ -163,7 +191,11 @@ class WorkshopMediaStudioViewEnvelope(AipContractModel):
             raise ValueError("media slices require one cutoff")
         if self.page.count != sum(len(item.authority_refs) for item in self.slices):
             raise ValueError("media page count must equal exact refs")
+        if self.provider_jobs_status == "ready" and self.provider_job_blockers:
+            raise ValueError("ready provider jobs cannot contain blockers")
+        if self.provider_jobs_status == "blocked" and not self.provider_job_blockers:
+            raise ValueError("blocked provider jobs require blockers")
         return self
 
 
-__all__ = ["MEDIA_STUDIO_SCHEMA_VERSION", "MediaAxisReadiness", "MediaBlocker", "MediaCountLedger", "MediaExactRef", "MediaPageInfo", "MediaReadinessAxis", "MediaReadinessStatus", "MediaStudioSlice", "MediaStudioSliceId", "WorkshopMediaStudioViewEnvelope"]
+__all__ = [name for name in globals() if name.startswith("MEDIA_STUDIO") or name.startswith("Media") or name.startswith("Workshop")]

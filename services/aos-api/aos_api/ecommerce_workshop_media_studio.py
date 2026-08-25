@@ -11,12 +11,15 @@ from aos_api.ecommerce_workshop_media_studio_contracts import (
     MediaBlocker,
     MediaCountLedger,
     MediaPageInfo,
+    MediaProviderExactRef,
+    MediaProviderJobContribution,
     MediaReadinessAxis,
     MediaReadinessStatus,
     MediaStudioSlice,
     MediaStudioSliceId,
     WorkshopMediaStudioViewEnvelope,
 )
+from aos_api.aip_media_provider_job_store import AipMediaProviderJobStore, MediaProviderJobError
 from aos_api.ecommerce_workshop_media_studio_reader import (
     MediaStudioCanonicalReader,
     MediaStudioReadError,
@@ -31,8 +34,9 @@ Clock = Callable[[], datetime]
 class EcommerceWorkshopMediaStudio:
     """Describe current authority gaps without promoting target state."""
 
-    def __init__(self, *, reader: MediaStudioCanonicalReader | None = None, clock: Clock | None = None) -> None:
+    def __init__(self, *, reader: MediaStudioCanonicalReader | None = None, provider_job_store: AipMediaProviderJobStore | None = None, clock: Clock | None = None) -> None:
         self._reader = reader
+        self._provider_job_store = provider_job_store
         self._clock = clock or (lambda: datetime.now(UTC))
 
     def read(self, *, org_id: str, project_id: str) -> WorkshopMediaStudioViewEnvelope:
@@ -97,11 +101,44 @@ class EcommerceWorkshopMediaStudio:
                     ),
                 )
             )
+        provider_blockers = [
+            MediaBlocker(
+                code="MEDIA_PROVIDER_JOB_AUTHORITY_NOT_AVAILABLE",
+                dependency="aip.media-provider-jobs",
+                required_action="install w7_005 authority and read tenant-bound Provider Jobs",
+            )
+        ]
+        provider_jobs: list[MediaProviderJobContribution] = []
+        try:
+            jobs = self._provider_job_store.list_jobs(scope, limit=100).items if self._provider_job_store is not None else None
+            if jobs is not None:
+                provider_blockers = []
+                provider_jobs = [
+                    MediaProviderJobContribution(
+                        jobId=job.job_id,
+                        status=job.status.value,
+                        sequence=job.sequence,
+                        atomicCapabilityRef=MediaProviderExactRef.model_validate(job.binding.capability_ref.model_dump(mode="json", by_alias=True)),
+                        logicRef=MediaProviderExactRef.model_validate(job.task_run_ref.model_dump(mode="json", by_alias=True)),
+                        colleagueBindingRef=MediaProviderExactRef.model_validate(job.binding.binding_ref.model_dump(mode="json", by_alias=True)),
+                        modelRef=MediaProviderExactRef.model_validate(job.binding.model_ref.model_dump(mode="json", by_alias=True)),
+                        providerRef=MediaProviderExactRef.model_validate(job.binding.provider_ref.model_dump(mode="json", by_alias=True)),
+                        adapterRef=MediaProviderExactRef.model_validate(job.binding.adapter_ref.model_dump(mode="json", by_alias=True)),
+                        scanRefs=[MediaProviderExactRef.model_validate(ref.model_dump(mode="json", by_alias=True)) for ref in job.input_scan_refs],
+                        blockerCodes=job.blocker_codes,
+                    )
+                    for job in jobs
+                ]
+        except (MediaProviderJobError, ValueError, TypeError):
+            provider_jobs = []
         return WorkshopMediaStudioViewEnvelope(
             tenant=TenantContext(org_id=org_id, project_id=project_id),
             evaluated_at=cutoff,
             data_cutoff=cutoff,
             slices=slices,
+            provider_jobs_status="ready" if not provider_blockers else "blocked",
+            provider_jobs=provider_jobs,
+            provider_job_blockers=provider_blockers,
             page=MediaPageInfo(count=sum(len(item.authority_refs) for item in slices)),
         )
 

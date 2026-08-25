@@ -1,6 +1,7 @@
 """W2-05A strict media-studio contract shell tests."""
 
 from datetime import UTC, datetime
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
@@ -16,6 +17,8 @@ from aos_api.ecommerce_workshop_media_studio_contracts import (
 )
 from aos_api.ecommerce_workshop_media_studio_reader import MediaStudioSliceObservation
 from aos_api.tenant_scope import TenantScope
+from aos_api.aip_media_provider_job_contracts import MediaJobStatus
+from aos_api.aip_production_contracts import ExactRevisionRef
 
 
 HASH = "sha256:" + "a" * 64
@@ -109,3 +112,48 @@ def test_unknown_axis_stays_blocked_and_out_of_ready() -> None:
     axis = MediaAxisReadiness(axis="provider", status="unknown", blockers=[blocker])
     assert axis.status == "unknown"
     assert axis.exact_ref is None
+
+
+def test_provider_job_projection_preserves_four_layer_contribution_chain() -> None:
+    def ref(kind: str, name: str) -> ExactRevisionRef:
+        return ExactRevisionRef(
+            resourceType=kind, resourceId=name, revision=1, contentHash="b" * 64
+        )
+
+    job = SimpleNamespace(
+        job_id="media-job-1",
+        status=MediaJobStatus.UNKNOWN,
+        sequence=3,
+        task_run_ref=ref("TaskRun", "logic-run-1"),
+        input_scan_refs=[ref("MediaScanObservation", "scan-1")],
+        blocker_codes=["MEDIA_PROVIDER_RESULT_UNKNOWN_RECONCILE_REQUIRED"],
+        binding=SimpleNamespace(
+            capability_ref=ref("CapabilityRevision", "media-generate"),
+            binding_ref=ref("CapabilityBindingRevision", "content-officer-binding"),
+            model_ref=ref("RegisteredModelRevision", "image-model"),
+            provider_ref=ref("ProviderInstanceRevision", "image-provider"),
+            adapter_ref=ref("MediaProviderAdapterRevision", "image-adapter"),
+        ),
+    )
+
+    class Store:
+        def list_jobs(self, scope, *, limit):  # type: ignore[no-untyped-def]
+            assert scope == TenantScope("org-org", "dev-project")
+            assert limit == 100
+            return SimpleNamespace(items=[job])
+
+    view = EcommerceWorkshopMediaStudio(
+        provider_job_store=Store(),  # type: ignore[arg-type]
+        clock=lambda: datetime(2026, 8, 25, tzinfo=UTC),
+    ).read(org_id="org-org", project_id="dev-project")
+
+    assert view.schema_version.endswith("/v2")
+    assert view.provider_jobs_status == "ready"
+    assert view.provider_job_blockers == []
+    contribution = view.provider_jobs[0]
+    assert contribution.atomic_capability_ref.resource_id == "media-generate"
+    assert contribution.logic_ref.resource_id == "logic-run-1"
+    assert contribution.primary_colleague == "内容官"
+    assert contribution.colleague_binding_ref.resource_id == "content-officer-binding"
+    assert contribution.status == "unknown"
+    assert contribution.external_effects_allowed is False

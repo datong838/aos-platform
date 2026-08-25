@@ -243,7 +243,8 @@ export type CreatorDeliveryObservation = { tenant: WorkshopTenant; observationId
 export type CreatorRelationshipRevision = { tenant: WorkshopTenant; relationshipId: string; revision: number; collaborationId: string; contractRef: CreatorPrepareExactRef; deliveryObservationRefs: CreatorPrepareExactRef[]; maturityPolicyRef: CreatorPrepareExactRef; maturityWindowEndsAt: string; status: "preliminary" | "mature" | "at_risk"; contentHash: string; createdAt: string };
 export type CreatorLifecycleViewResponse = { schemaVersion: typeof CREATOR_LIFECYCLE_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; latestStart: CreatorBatchStartDecision | null; ledger: CreatorStartLedger; contracts: CreatorContractRevision[]; deliveries: CreatorDeliveryObservation[]; relationships: CreatorRelationshipRevision[]; blockers: string[]; allowedCommands: "START_CREATOR_BATCH_GOVERNANCE"[]; externalEffectsAllowed: false };
 
-export const MEDIA_STUDIO_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v1" as const;
+export const MEDIA_STUDIO_LEGACY_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v1" as const;
+export const MEDIA_STUDIO_SCHEMA_VERSION = "aos.ecommerce-workshop.media-studio-view/v2" as const;
 export type MediaStudioSliceId = "context" | "execution" | "delivery";
 export type MediaReadinessAxis = "module" | "capability" | "assignee" | "provider" | "budget" | "publication";
 export type MediaReadinessStatus = "ready" | "blocked" | "target" | "unknown" | "conflict" | "not_applicable";
@@ -252,7 +253,9 @@ export type MediaBlocker = { code: string; dependency: string; requiredAction: s
 export type MediaAxisReadiness = { axis: MediaReadinessAxis; status: MediaReadinessStatus; exactRef: MediaExactRef | null; targetContractRef: string | null; gaps: string[]; blockers: MediaBlocker[] };
 export type MediaCountLedger = { denominator: number; ready: number; target: number; blocked: number; unknown: number; conflict: number; notApplicable: number };
 export type MediaStudioSlice = { sliceId: MediaStudioSliceId; status: "ready" | "blocked"; dataCutoff: string; readinessAxes: MediaAxisReadiness[]; authorityRefs: MediaExactRef[]; blockers: MediaBlocker[]; countLedger: MediaCountLedger };
-export type MediaStudioViewResponse = { schemaVersion: typeof MEDIA_STUDIO_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: MediaStudioSlice[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
+export type MediaProviderExactRef = { resourceType: string; resourceId: string; revision: number; contentHash: string };
+export type MediaProviderJobContribution = { jobId: string; status: "prepared" | "submitted" | "running" | "cancel_requested" | "unknown" | "succeeded" | "failed" | "cancelled"; sequence: number; atomicCapabilityRef: MediaProviderExactRef; logicRef: MediaProviderExactRef; colleagueBindingRef: MediaProviderExactRef; modelRef: MediaProviderExactRef; providerRef: MediaProviderExactRef; adapterRef: MediaProviderExactRef; scanRefs: MediaProviderExactRef[]; primaryColleague: "内容官"; collaboratorColleagues: string[]; blockerCodes: string[]; externalEffectsAllowed: false };
+export type MediaStudioViewResponse = { schemaVersion: typeof MEDIA_STUDIO_SCHEMA_VERSION | typeof MEDIA_STUDIO_LEGACY_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; dataCutoff: string; readiness: "degraded"; slices: MediaStudioSlice[]; providerJobsStatus: "ready" | "blocked"; providerJobs: MediaProviderJobContribution[]; providerJobBlockers: MediaBlocker[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
 
 export const ANALYST_SCHEMA_VERSION = "aos.ecommerce-workshop.analyst-view/v1" as const;
 export type AnalystViewId = "overview" | "drivers" | "diagnosis" | "plan" | "effects" | "evidence" | "quality";
