@@ -39,7 +39,7 @@ DOMAIN_COUNTS = {
     "agent": 3,
     "workshop": 116,
     "ontology": 72,
-    "aip": 88,
+    "aip": 90,
     "data": 200,
     "model": 15,
     "apollo": 9,
@@ -216,8 +216,8 @@ class RouterManifestStaticTests(unittest.TestCase):
         cls.routers = cls.generator.load_manifest(MANIFEST_PATH)
 
     def test_manifest_count_order_domains_and_unique_keys(self) -> None:
-        self.assertEqual(539, len(self.routers))
-        self.assertEqual(list(range(539)), [entry["order"] for entry in self.routers])
+        self.assertEqual(541, len(self.routers))
+        self.assertEqual(list(range(541)), [entry["order"] for entry in self.routers])
         self.assertEqual(
             DOMAIN_COUNTS,
             {
@@ -226,7 +226,7 @@ class RouterManifestStaticTests(unittest.TestCase):
             },
         )
         keys = {(entry["module"], entry["attribute"]) for entry in self.routers}
-        self.assertEqual(539, len(keys))
+        self.assertEqual(541, len(keys))
 
     def test_main_exposes_control_plane_etag_to_browser_clients(self) -> None:
         tree = ast.parse(MAIN_PATH.read_text(encoding="utf-8"))
@@ -383,12 +383,12 @@ class RouterManifestRuntimeTests(unittest.TestCase):
         # Runtime inventory includes FastAPI's four framework routes and the
         # W4-07 async-job projection routes; the exported business-route
         # inventory intentionally filters framework routes out.
-        self.assertEqual(4366, result["count"])
+        self.assertEqual(4422, result["count"])
         self.assertEqual(
-            "e4ff3c0d49cb7794123724094df85ec2034975b1f4e4481409d52a18b919b547",
+            "2858a7abb33822a033b3d542cd1dde9157e6b8a0b284c8fa51a891263f770b5f",
             result["sha256"],
         )
-        self.assertEqual(2583, result["openapi_paths"])
+        self.assertEqual(2639, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],

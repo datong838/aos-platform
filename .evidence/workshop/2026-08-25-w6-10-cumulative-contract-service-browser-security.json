@@ -1,0 +1,70 @@
+{
+  "taskId": "workshop-w6-10-cumulative-contract-service-browser-security-20260825",
+  "wave": "W6-10",
+  "authorityRevision": "AOS-000253",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "result": "CUMULATIVE_CODE_CONTRACT_SERVICE_BROWSER_SECURITY_GREEN_OPERATIONAL_EXTERNAL_EFFECT_GATE_RETAINED_NO_RELEASE",
+  "remediation": {
+    "issue": "domain router manifest omitted the already active AIP Action Canary and Webhook routers",
+    "change": "register both routers after aip_actions, preserve existing runtime order, and advance deterministic manifest ordinals",
+    "businessLogicChanged": false,
+    "apiSetChanged": false
+  },
+  "tests": {
+    "backendW6Cumulative": "76 passed",
+    "apiOpenapiRouter": "27 passed / 2 subtests passed",
+    "frontendFull": "232 files / 2130 tests passed",
+    "typescript": "passed",
+    "productionBuild": "344 modules transformed",
+    "pythonCompile": "passed",
+    "migrationHeads": [
+      "w6_009"
+    ],
+    "routerManifest": "541 entries / 4422 runtime routes / sha256 2858a7abb33822a033b3d542cd1dde9157e6b8a0b284c8fa51a891263f770b5f",
+    "openapi": "2639 paths / 2307 schemas / 4418 route rows / 4408 unique operations; deterministic check passed",
+    "securityGate": "scanner tests passed; tracked baseline scan 4854 files critical=5 warning=326 with repository allowlist; W6, manifest, Workshop UI and built Web scope 239 files critical=0 warning=16"
+  },
+  "browserAcceptance": {
+    "surface": "built-in browser",
+    "fixtureOnly": true,
+    "viewports": [
+      1280,
+      1440,
+      1920
+    ],
+    "routes": [
+      "/workshop/creator-outreach",
+      "/workshop/price-governance",
+      "/workshop/customer"
+    ],
+    "assertions": [
+      "all nine route and viewport combinations have no horizontal overflow",
+      "atomic Skill, Logic, digital colleague and Workshop contribution chain is visible",
+      "item, Action, Usage, Effect and Handoff axes are independently visible",
+      "external effect is zero and forbidden action buttons are absent",
+      "skip link is a visible focusable anchor with href #ecommerce-workshop-main",
+      "console error count is zero"
+    ]
+  },
+  "compatibility": {
+    "chain": "atomic Skill -> Logic -> digital colleague -> Workshop contribution view",
+    "existingW6AuthoritiesPreserved": true,
+    "legacyReadCompatibilityPreserved": true,
+    "unknownAndImmaturePromotedToSuccess": false
+  },
+  "forbiddenEffects": {
+    "migrationApply": false,
+    "providerDispatch": false,
+    "protectedContactResolution": false,
+    "send": false,
+    "handoffConsume": false,
+    "realBusinessMutation": false,
+    "canary": false,
+    "externalEffect": false,
+    "memoryPromotion": false,
+    "release": false
+  }
+}
