@@ -123,6 +123,10 @@ export type CreateResponsibilityPlanInput = {
   templateRef: ExactRevisionRef;
   slots: ResponsibilitySlot[];
   mergeDecisions: MergeDecision[];
+  profileRecommendationRef?: ExactRevisionRef | null;
+  profileConfirmationId?: string | null;
+  mergePolicyRef?: ExactRevisionRef | null;
+  mergeDecisionReceiptIds?: string[];
 };
 export type ReviseResponsibilityPlanInput = CreateResponsibilityPlanInput & { expectedVersion: number };
 export type ResponsibilityPlanRevision = CreateResponsibilityPlanInput & {

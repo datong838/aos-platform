@@ -203,6 +203,10 @@ class CreateResponsibilityPlanRequest(AipContractModel):
     template_ref: ExactRevisionRef
     slots: list[ResponsibilitySlot] = Field(min_length=1)
     merge_decisions: list[MergeDecision] = Field(default_factory=list)
+    profile_recommendation_ref: ExactRevisionRef | None = None
+    profile_confirmation_id: str | None = Field(default=None, min_length=1, max_length=200)
+    merge_policy_ref: ExactRevisionRef | None = None
+    merge_decision_receipt_ids: list[str] = Field(default_factory=list, max_length=128)
 
     @model_validator(mode="after")
     def _slot_ids_are_unique(self) -> CreateResponsibilityPlanRequest:
@@ -211,6 +215,30 @@ class CreateResponsibilityPlanRequest(AipContractModel):
             raise ValueError("slot IDs must be unique")
         if self.template_ref.resource_type != "ResponsibilityTemplateRevision":
             raise ValueError("templateRef must reference ResponsibilityTemplateRevision")
+        governed = self.profile in {"LITE", "STANDARD", "FULL"}
+        governance = (
+            self.profile_recommendation_ref,
+            self.profile_confirmation_id,
+            self.merge_policy_ref,
+        )
+        if governed and any(item is None for item in governance):
+            raise ValueError("governed profile requires recommendation, confirmation and merge policy")
+        if not governed and any(item is not None for item in governance):
+            raise ValueError("legacy profile cannot attach W6-02 governance")
+        if self.profile_recommendation_ref and self.profile_recommendation_ref.resource_type != "ProfileRecommendationRevision":
+            raise ValueError("profileRecommendationRef must reference ProfileRecommendationRevision")
+        if self.merge_policy_ref and self.merge_policy_ref.resource_type != "MergePolicyRevision":
+            raise ValueError("mergePolicyRef must reference MergePolicyRevision")
+        if len(self.merge_decision_receipt_ids) != len(set(self.merge_decision_receipt_ids)):
+            raise ValueError("merge decision receipt IDs must be unique")
+        if len(self.merge_decisions) != len(self.merge_decision_receipt_ids):
+            raise ValueError("each merge decision requires one canonical receipt")
+        seen_merge_slots: set[str] = set()
+        for decision in self.merge_decisions:
+            group = {*decision.source_slot_ids, decision.target_slot_id}
+            if seen_merge_slots.intersection(group):
+                raise ValueError("merge decisions cannot overlap or form a cycle")
+            seen_merge_slots.update(group)
         return self
 
 

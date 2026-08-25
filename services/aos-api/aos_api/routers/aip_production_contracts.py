@@ -1,6 +1,8 @@
 """W2 canonical production contract API."""
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Header, Query, status
 from pydantic import Field
 
@@ -12,6 +14,17 @@ from aos_api.aip_production_contract_store import (
 )
 from aos_api.aip_production_start_service import AipProductionStartService
 from aos_api.aip_responsibility_template_authority import resolve_responsibility_template
+from aos_api.aip_responsibility_profile import (
+    ConfirmResponsibilityProfileRequest,
+    CreateMergeDecisionRequest,
+    CreateMergePolicyRequest,
+    MergeDecisionReceipt,
+    MergePolicyRevision,
+    ProfileConfirmationReceipt,
+    ProfileRecommendationRevision,
+    RecommendResponsibilityProfileRequest,
+)
+from aos_api.aip_responsibility_profile_store import AipResponsibilityProfileStore
 from aos_api.aip_stage_template_authority import resolve_stage_template_source
 from aos_api.aip_production_contracts import (
     CreateBriefRequest, CreateEvidenceBundleRequest, BuildEvidenceBundleRequest,
@@ -50,6 +63,7 @@ _STORE = AipProductionContractStore(
     stage_template_source_resolver=resolve_stage_template_source,
 )
 _START_SERVICE = AipProductionStartService(contract_store=_STORE)
+_PROFILE_STORE = AipResponsibilityProfileStore()
 _PRODUCTION_START_ROLES = frozenset(
     {"admin", "operator", "executor", "aip_executor", "production_operator"}
 )
@@ -74,6 +88,10 @@ def get_store() -> AipProductionContractStore:
 
 def get_start_service() -> AipProductionStartService:
     return _START_SERVICE
+
+
+def get_profile_store() -> AipResponsibilityProfileStore:
+    return _PROFILE_STORE
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -298,6 +316,54 @@ def freeze_eval_contract(contract_id: str, body: FreezeContractRequest, idempote
 def create_responsibility_plan(body: CreateResponsibilityPlanRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
     try: return store.create_responsibility_plan(_scope(principal), principal.subject, _key(idempotency_key), body)
     except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/responsibility-profile/merge-policies", response_model=MergePolicyRevision, status_code=201)
+def create_responsibility_merge_policy(
+    body: CreateMergePolicyRequest,
+    principal: Principal = Depends(require_principal),
+    store: AipResponsibilityProfileStore = Depends(get_profile_store),
+):
+    try:
+        return store.create_policy(_scope(principal), body, principal.subject, now=datetime.now(UTC))
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+
+
+@router.post("/responsibility-profile/recommendations", response_model=ProfileRecommendationRevision, status_code=201)
+def recommend_responsibility_profile(
+    body: RecommendResponsibilityProfileRequest,
+    principal: Principal = Depends(require_principal),
+    store: AipResponsibilityProfileStore = Depends(get_profile_store),
+):
+    try:
+        return store.recommend(_scope(principal), body, principal.subject, now=datetime.now(UTC))
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+
+
+@router.post("/responsibility-profile/confirmations", response_model=ProfileConfirmationReceipt, status_code=201)
+def confirm_responsibility_profile(
+    body: ConfirmResponsibilityProfileRequest,
+    principal: Principal = Depends(require_principal),
+    store: AipResponsibilityProfileStore = Depends(get_profile_store),
+):
+    try:
+        return store.confirm(_scope(principal), body, principal.subject, now=datetime.now(UTC))
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+
+
+@router.post("/responsibility-profile/merge-decisions", response_model=MergeDecisionReceipt, status_code=201)
+def create_responsibility_merge_decision(
+    body: CreateMergeDecisionRequest,
+    principal: Principal = Depends(require_principal),
+    store: AipResponsibilityProfileStore = Depends(get_profile_store),
+):
+    try:
+        return store.create_merge_decision(_scope(principal), body, principal.subject, now=datetime.now(UTC))
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
 
 
 @router.get("/responsibility-plans", response_model=ResponsibilityPlanListResponse)

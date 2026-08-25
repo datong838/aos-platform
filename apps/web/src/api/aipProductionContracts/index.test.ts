@@ -31,6 +31,14 @@ describe("W2-C production contract SDK",()=>{
     expect(transport.apiGet).toHaveBeenCalledWith("/v1/aip/production-contracts/eval-contracts/eval%201/diff?fromRevision=1&toRevision=2");
     await expect(aipProductionContracts.diffEvalContract("eval-1",1,1)).rejects.toThrow("修订必须不同");
   });
+  it("读取 W6-02 档位建议、人工确认与合并策略精确引用",async()=>{
+    const schemaRef={resourceType:"Schema",resourceId:"schema-1",revision:"1",authority:"aip"};
+    transport.apiGet.mockResolvedValue({tenant,count:1,items:[{tenant,planId:"plan-1",revision:1,version:1,profile:"STANDARD",templateRef:exact("ResponsibilityTemplateRevision","template-standard"),slots:[{slotId:"operator",responsibilityType:"operation",requiredCapabilityIds:["commerce.read"],inputSchemaRef:schemaRef,outputSchemaRef:schemaRef,gateRefs:[],returnStage:"review",assignee:{kind:"agent_instance",resourceId:"agent-1",version:1}}],mergeDecisions:[],profileRecommendationRef:exact("ProfileRecommendationRevision","recommendation-1"),profileConfirmationId:"confirmation-1",mergePolicyRef:exact("MergePolicyRevision","policy-1"),mergeDecisionReceiptIds:[],coverage:"complete",uncoveredSlots:[],contentHash:hash,lifecycle:"frozen",readiness:"ready",blockers:[],createdBy:"user:dev",createdAt:"2026-08-25T01:00:00Z"}]});
+    const result=await aipProductionContracts.listResponsibilityPlans();
+    expect(result.items[0]).toMatchObject({profile:"STANDARD",profileConfirmationId:"confirmation-1",mergeDecisionReceiptIds:[]});
+    expect(result.items[0].profileRecommendationRef?.resourceType).toBe("ProfileRecommendationRevision");
+    expect(result.items[0].mergePolicyRef?.resourceType).toBe("MergePolicyRevision");
+  });
   it("编译只 POST canonical Plan 请求并携带幂等键",async()=>{
     const input={taskId:"task-1",expectedTaskVersion:2,templateRevision:1,templateContentHash:hash,responsibilityPlanRef:exact("ResponsibilityPlanRevision","plan-1"),productionContextRef:exact("ProductionContextRevision","context-1"),profile:"standard"};
     transport.apiPost.mockResolvedValue({tenant,taskId:"task-1",templateRef:exact("StageTemplateRevision","stage-1"),responsibilityPlanRef:input.responsibilityPlanRef,productionContextRef:input.productionContextRef,planRef:exact("PlanRevision","plan-revision-1"),compilerVersion:"w2c.v1",applicableStageIds:["analysis"],notApplicableStageIds:[],createdAt:"2026-08-14T00:00:00Z"});

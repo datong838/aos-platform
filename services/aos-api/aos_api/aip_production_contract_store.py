@@ -272,7 +272,15 @@ class AipProductionContractStore:
             current = self.get_responsibility_plan(scope, plan_id, int(head["current_revision"]), conn=conn)
             if current.lifecycle is not BriefLifecycle.DRAFT:
                 raise ProductionContractConflict("only a draft responsibility plan can be revised")
-            self._require_responsibility_dependencies(conn, scope, body)
+            current_ref = ExactRevisionRef(
+                resourceType="ResponsibilityPlanRevision",
+                resourceId=plan_id,
+                revision=current.revision,
+                contentHash=current.content_hash,
+            )
+            self._require_responsibility_dependencies(
+                conn, scope, body, expected_merge_base_ref=current_ref
+            )
             revision = int(head["current_revision"]) + 1
             content = body.model_dump(mode="json", by_alias=True, exclude={"expected_version"})
             content_hash = canonical_hash(content)
@@ -298,14 +306,21 @@ class AipProductionContractStore:
             current = self.get_responsibility_plan(scope, plan_id, int(head["current_revision"]), conn=conn)
             if current.lifecycle is not BriefLifecycle.DRAFT:
                 raise ProductionContractConflict("responsibility plan is not a draft")
+            self._require_responsibility_dependencies(
+                conn, scope, current, existing_plan_id=plan_id
+            )
             if current.readiness is not ContractReadiness.READY:
                 codes = ",".join(blocker.code for blocker in current.blockers)
                 raise ProductionContractDependencyBlocked(f"RESPONSIBILITY_PLAN_NOT_READY:{codes}")
             revision = int(head["current_revision"]) + 1
             row = conn.execute("""INSERT INTO aip_responsibility_plan_revision
                 (org_id,project_id,plan_id,revision,profile,template_ref,slots,merge_decisions,
+                 profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,
+                 merge_decision_receipt_ids,
                  content_hash,lifecycle,created_by)
                 SELECT org_id,project_id,plan_id,%s,profile,template_ref,slots,merge_decisions,
+                 profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,
+                 merge_decision_receipt_ids,
                  content_hash,'frozen',%s FROM aip_responsibility_plan_revision
                 WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s RETURNING *""",
                 (revision, actor, *scope.key, plan_id, head["current_revision"])).fetchone()
@@ -3915,12 +3930,23 @@ class AipProductionContractStore:
 
     def _require_responsibility_dependencies(
         self, conn: Any, scope: TenantScope,
-        body: CreateResponsibilityPlanRequest | ReviseResponsibilityPlanRequest,
+        body: CreateResponsibilityPlanRequest | ReviseResponsibilityPlanRequest | ResponsibilityPlanRevision,
+        *,
+        expected_merge_base_ref: ExactRevisionRef | None = None,
+        existing_plan_id: str | None = None,
     ) -> None:
         if self._responsibility_template_resolver is None:
             raise ProductionContractDependencyBlocked("RESPONSIBILITY_TEMPLATE_AUTHORITY_UNAVAILABLE")
         if not self._responsibility_template_resolver(scope, body.template_ref):
             raise ProductionContractDependencyBlocked("RESPONSIBILITY_TEMPLATE_MISSING_OR_DRIFTED")
+        if body.profile in {"LITE", "STANDARD", "FULL"}:
+            self._require_profile_governance(
+                conn,
+                scope,
+                body,
+                expected_merge_base_ref=expected_merge_base_ref,
+                existing_plan_id=existing_plan_id,
+            )
         for slot in body.slots:
             if slot.assignee_resolution_receipt_id:
                 self._require_exact_assignee_resolution(
@@ -3943,6 +3969,114 @@ class AipProductionContractStore:
                 raise ProductionContractDependencyBlocked(f"ASSIGNEE_MISSING_OR_INACTIVE:{slot.slot_id}")
             if int(row["version"]) != slot.assignee.version:
                 raise ProductionContractDependencyBlocked(f"ASSIGNEE_DRIFTED:{slot.slot_id}")
+
+    def _require_profile_governance(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        body: CreateResponsibilityPlanRequest | ReviseResponsibilityPlanRequest | ResponsibilityPlanRevision,
+        *,
+        expected_merge_base_ref: ExactRevisionRef | None,
+        existing_plan_id: str | None,
+    ) -> None:
+        recommendation_ref = body.profile_recommendation_ref
+        policy_ref = body.merge_policy_ref
+        if recommendation_ref is None or policy_ref is None or body.profile_confirmation_id is None:
+            raise ProductionContractDependencyBlocked("PROFILE_GOVERNANCE_REQUIRED")
+        recommendation = conn.execute(
+            """SELECT recommended_profile,candidate_template_refs,policy_ref,content_hash,expires_at
+                 FROM aip_profile_recommendation_revision
+                WHERE org_id=%s AND project_id=%s AND recommendation_id=%s AND revision=%s""",
+            (*scope.key, recommendation_ref.resource_id, recommendation_ref.revision),
+        ).fetchone()
+        if recommendation is None or recommendation["content_hash"] != recommendation_ref.content_hash:
+            raise ProductionContractDependencyBlocked("PROFILE_RECOMMENDATION_MISSING_OR_DRIFTED")
+        if recommendation["expires_at"] <= datetime.now(timezone.utc):
+            raise ProductionContractDependencyBlocked("PROFILE_RECOMMENDATION_STALE")
+        confirmation = conn.execute(
+            """SELECT recommendation_id,recommendation_revision,recommendation_hash,
+                      selected_profile,selected_template_ref,policy_ref
+                 FROM aip_profile_confirmation_receipt
+                WHERE org_id=%s AND project_id=%s AND confirmation_id=%s""",
+            (*scope.key, body.profile_confirmation_id),
+        ).fetchone()
+        expected_policy = policy_ref.model_dump(mode="json", by_alias=True)
+        if (
+            confirmation is None
+            or confirmation["recommendation_id"] != recommendation_ref.resource_id
+            or int(confirmation["recommendation_revision"]) != recommendation_ref.revision
+            or confirmation["recommendation_hash"] != recommendation_ref.content_hash
+            or confirmation["selected_profile"] != body.profile
+            or self._load(confirmation["selected_template_ref"]) != body.template_ref.model_dump(mode="json", by_alias=True)
+            or self._load(confirmation["policy_ref"]) != expected_policy
+        ):
+            raise ProductionContractDependencyBlocked("PROFILE_CONFIRMATION_MISSING_OR_DRIFTED")
+        policy = conn.execute(
+            """SELECT content_hash,expires_at FROM aip_merge_policy_revision
+                WHERE org_id=%s AND project_id=%s AND policy_id=%s AND revision=%s""",
+            (*scope.key, policy_ref.resource_id, policy_ref.revision),
+        ).fetchone()
+        if policy is None or policy["content_hash"] != policy_ref.content_hash:
+            raise ProductionContractDependencyBlocked("MERGE_POLICY_MISSING_OR_DRIFTED")
+        if policy["expires_at"] <= datetime.now(timezone.utc):
+            raise ProductionContractDependencyBlocked("MERGE_POLICY_STALE")
+        if body.merge_decisions and expected_merge_base_ref is None and existing_plan_id is None:
+            raise ProductionContractDependencyBlocked("MERGE_DECISION_REQUIRES_EXISTING_BASE_PLAN")
+        receipts = []
+        if body.merge_decision_receipt_ids:
+            receipts = conn.execute(
+                """SELECT receipt_id,plan_ref,policy_ref,confirmation_id,source_slot_ids,target_slot_id,
+                          merged_responsibility_types
+                     FROM aip_merge_decision_receipt
+                    WHERE org_id=%s AND project_id=%s AND receipt_id=ANY(%s)""",
+                (*scope.key, body.merge_decision_receipt_ids),
+            ).fetchall()
+        if {row["receipt_id"] for row in receipts} != set(body.merge_decision_receipt_ids):
+            raise ProductionContractDependencyBlocked("MERGE_DECISION_RECEIPT_MISSING")
+        if any(
+            self._load(row["policy_ref"]) != expected_policy
+            or row["confirmation_id"] != body.profile_confirmation_id
+            for row in receipts
+        ):
+            raise ProductionContractDependencyBlocked("MERGE_DECISION_RECEIPT_DRIFTED")
+        expected_shapes = {
+            (
+                tuple(sorted(decision.source_slot_ids)),
+                decision.target_slot_id,
+                tuple(sorted(decision.merged_responsibility_types)),
+            )
+            for decision in body.merge_decisions
+        }
+        receipt_shapes = {
+            (
+                tuple(sorted(self._load(row["source_slot_ids"]))),
+                row["target_slot_id"],
+                tuple(sorted(self._load(row["merged_responsibility_types"]))),
+            )
+            for row in receipts
+        }
+        if receipt_shapes != expected_shapes:
+            raise ProductionContractDependencyBlocked("MERGE_DECISION_RECEIPT_SHAPE_DRIFTED")
+        expected_base = (
+            expected_merge_base_ref.model_dump(mode="json", by_alias=True)
+            if expected_merge_base_ref is not None
+            else None
+        )
+        for row in receipts:
+            plan_ref = self._load(row["plan_ref"])
+            if expected_base is not None and plan_ref != expected_base:
+                raise ProductionContractDependencyBlocked("MERGE_DECISION_BASE_PLAN_DRIFTED")
+            if existing_plan_id is not None and plan_ref.get("resourceId") != existing_plan_id:
+                raise ProductionContractDependencyBlocked("MERGE_DECISION_BASE_PLAN_DRIFTED")
+            base = conn.execute(
+                """SELECT content_hash FROM aip_responsibility_plan_revision
+                    WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s""",
+                (*scope.key, plan_ref.get("resourceId"), plan_ref.get("revision")),
+            ).fetchone()
+            if base is None or base["content_hash"] != plan_ref.get("contentHash"):
+                raise ProductionContractDependencyBlocked(
+                    "MERGE_DECISION_BASE_PLAN_MISSING_OR_DRIFTED"
+                )
 
     def _require_exact_assignee_resolution(
         self,
@@ -4140,10 +4274,13 @@ class AipProductionContractStore:
         payload = body.model_dump(mode="json", by_alias=True, exclude={"expected_version"})
         return conn.execute("""INSERT INTO aip_responsibility_plan_revision
             (org_id,project_id,plan_id,revision,profile,template_ref,slots,merge_decisions,
-             content_hash,lifecycle,created_by)
-            VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s) RETURNING *""",
+             profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,
+             merge_decision_receipt_ids,content_hash,lifecycle,created_by)
+            VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,%s,%s,%s) RETURNING *""",
             (*scope.key, plan_id, revision, body.profile, self._json(payload["templateRef"]),
              self._json(payload["slots"]), self._json(payload["mergeDecisions"]),
+             self._json(payload.get("profileRecommendationRef")), payload.get("profileConfirmationId"),
+             self._json(payload.get("mergePolicyRef")), self._json(payload["mergeDecisionReceiptIds"]),
              content_hash, lifecycle.value, actor)).fetchone()
 
     def _eval_contract(self, scope: TenantScope, row: Any, version: int, conn: Any) -> EvalContractRevision:
@@ -4164,6 +4301,10 @@ class AipProductionContractStore:
             tenant=self._tenant(scope), plan_id=row["plan_id"], revision=int(row["revision"]), version=version,
             profile=row["profile"], template_ref=self._load(row["template_ref"]), slots=self._load(row["slots"]),
             merge_decisions=self._load(row["merge_decisions"]),
+            profile_recommendation_ref=self._load(row.get("profile_recommendation_ref")),
+            profile_confirmation_id=row.get("profile_confirmation_id"),
+            merge_policy_ref=self._load(row.get("merge_policy_ref")),
+            merge_decision_receipt_ids=self._load(row.get("merge_decision_receipt_ids")) or [],
             coverage=Coverage.COMPLETE if not uncovered else Coverage.BLOCKED, uncovered_slots=uncovered,
             content_hash=row["content_hash"], lifecycle=row["lifecycle"],
             readiness=ContractReadiness.READY if not blockers else ContractReadiness.BLOCKED,
