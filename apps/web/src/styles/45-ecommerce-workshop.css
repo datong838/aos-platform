@@ -964,6 +964,39 @@
 .business-investigation-progress li div { display: grid; gap: 3px; min-width: 0; }
 .business-investigation-progress li small { overflow-wrap: anywhere; color: var(--aos-text-tertiary); font-size: 10px; }
 .business-investigation-progress p { margin: 10px 0 0; color: var(--aos-text-secondary); font-size: 10px; }
+.business-investigation-stage-review { display: grid; gap: 10px; min-width: 0; padding: 12px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-accent); background: var(--aos-surface); }
+.business-investigation-stage-review > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.business-investigation-stage-review > header span { color: var(--aos-text-tertiary); font-size: 10px; }
+.business-investigation-stage-review > header h3 { margin: 4px 0 0; font-size: 15px; }
+.business-investigation-stage-review > header > strong { flex: 0 0 auto; padding: 3px 7px; border: 1px solid var(--aos-border); border-radius: 3px; color: var(--aos-success); font-size: 10px; }
+.business-investigation-stage-review > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.business-investigation-stage-review > div > section { display: grid; align-content: start; gap: 9px; min-width: 0; padding: 11px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-warning); background: var(--aos-surface-hover); }
+.business-investigation-stage-review > div > section.is-resolved { border-left-color: var(--aos-success); }
+.business-investigation-stage-review > div > section.is-returned { border-left-color: var(--aos-danger); }
+.business-investigation-stage-review > div > section.is-superseded { border-left-color: var(--aos-text-tertiary); }
+.business-investigation-stage-review section > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.business-investigation-stage-review section > header span { color: var(--aos-text-tertiary); font-size: 9px; text-transform: uppercase; }
+.business-investigation-stage-review section h4 { margin: 3px 0 0; overflow-wrap: anywhere; font-size: 13px; }
+.business-investigation-stage-review section > header > strong { color: var(--aos-warning); font-size: 10px; text-transform: uppercase; }
+.business-investigation-stage-review section.is-resolved > header > strong { color: var(--aos-success); }
+.business-investigation-stage-review section.is-returned > header > strong { color: var(--aos-danger); }
+.business-investigation-stage-review section dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: 0; background: var(--aos-border); }
+.business-investigation-stage-review section dl div { min-width: 0; padding: 7px; background: var(--aos-surface); }
+.business-investigation-stage-review section dt { color: var(--aos-text-tertiary); font-size: 9px; }
+.business-investigation-stage-review section dd { margin: 3px 0 0; overflow-wrap: anywhere; color: var(--aos-text-secondary); font-size: 10px; }
+.business-investigation-stage-review section > p,
+.business-investigation-stage-review > p { margin: 0; color: var(--aos-text-secondary); font-size: 10px; line-height: 1.5; }
+.business-investigation-review-decisions { display: grid; grid-template-columns: minmax(220px, 1fr) auto; gap: 9px; align-items: end; padding-top: 9px; border-top: 1px solid var(--aos-border); }
+.business-investigation-review-decisions label { display: grid; gap: 5px; min-width: 0; color: var(--aos-text-secondary); font-size: 10px; }
+.business-investigation-review-decisions textarea { width: 100%; min-width: 0; resize: vertical; padding: 7px 8px; border: 1px solid var(--aos-border-strong); border-radius: 3px; background: var(--aos-surface); color: var(--aos-text-primary); font: inherit; line-height: 1.45; }
+.business-investigation-review-decisions > div { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.business-investigation-review-decisions button { min-height: 32px; padding: 6px 10px; border: 1px solid var(--aos-accent); border-radius: 3px; background: color-mix(in srgb, var(--aos-accent) 10%, var(--aos-surface)); color: var(--aos-accent); font-weight: 700; }
+.business-investigation-review-decisions button:last-child { border-color: color-mix(in srgb, var(--aos-danger) 55%, var(--aos-border)); background: color-mix(in srgb, var(--aos-danger) 5%, var(--aos-surface)); color: var(--aos-danger); }
+.business-investigation-review-decisions button:hover:not(:disabled),
+.business-investigation-review-decisions button:focus-visible,
+.business-investigation-review-decisions textarea:focus-visible { outline: 2px solid color-mix(in srgb, var(--aos-accent) 30%, transparent); outline-offset: 1px; }
+.business-investigation-review-decisions button:disabled { cursor: not-allowed; opacity: .52; }
+.business-investigation-review-boundary { padding: 8px 9px; border-left: 3px solid var(--aos-warning); background: color-mix(in srgb, var(--aos-warning) 7%, var(--aos-surface)); }
 .business-investigation-stage-workspace { grid-column: 1 / -1; }
 .business-investigation-question { margin: 12px 0; padding: 12px; border-left: 3px solid var(--aos-accent); background: var(--aos-surface-hover); color: var(--aos-text-primary); font-size: 13px; line-height: 1.6; }
 .business-investigation-responsibility { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 0; background: var(--aos-border); }
@@ -1413,6 +1446,9 @@
   .analyst-readiness-grid { grid-template-columns: 1fr; }
   .analyst-metrics { grid-template-columns: 1fr; }
   .business-investigation-workbench { grid-template-columns: 1fr; }
+  .business-investigation-stage-review > div { grid-template-columns: 1fr; }
+  .business-investigation-review-decisions { grid-template-columns: 1fr; align-items: stretch; }
+  .business-investigation-review-decisions > div { justify-content: flex-start; }
   .business-investigation-data-command { grid-template-columns: 1fr; align-items: stretch; }
   .analyst-learning-scenario > header { flex-direction: column; }
   .analyst-learning-layers,
@@ -1444,6 +1480,7 @@
   .business-investigation-gate-axes,
   .business-investigation-requirement,
   .business-investigation-blockers,
+  .business-investigation-stage-review section dl,
   .business-investigation-data-command dl,
   .business-investigation-data-decisions { grid-template-columns: 1fr; }
   .price-governance-hero { flex-direction: column; }
