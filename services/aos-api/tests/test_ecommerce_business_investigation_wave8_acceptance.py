@@ -51,4 +51,3 @@ def test_wave8_growth_plan_replay_and_stale_draft_are_both_fail_closed() -> None
     growth_plan.test_approve_fails_closed_for_stale_non_draft_or_non_current(
         2, "draft", True, "stale"
     )
-
