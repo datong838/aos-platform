@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "aos.business-investigation.connector-failure-fixture-matrix/v1",
+  "matrixId": "bi-w3-07-disabled-connector-failures",
+  "revision": 1,
+  "contentHash": "sha256:9233dbb0c8efafabb5123bf17b143ea3703ad086463cd347eb0be6235ebbcd5a",
+  "cases": [
+    {
+      "scenarioId": "niushop-captcha", "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "platform": "niushop", "sourceKind": "synthetic", "enabled": false,
+      "fixtureHash": "sha256:850366d5244f032bb35d0502026ab00b9574a26fbeb237726507a62d048a090f",
+      "adapterPackRef": {"resourceType": "AdapterPackRevision", "resourceId": "niushop-disabled", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "capabilityRef": {"resourceType": "CapabilityRevision", "resourceId": "readonly-observe", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "sessionRef": {"resourceType": "ObservationSessionLeaseRevision", "resourceId": "session-ns", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "observationPlanRef": {"resourceType": "ObservationPlanRevision", "resourceId": "plan-ns", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "stepRef": {"resourceType": "ObservationPlanStepRevision", "resourceId": "step-login", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "scenario": "captcha_required", "outcomeStatus": "blocked_human_assistance", "blockers": ["CAPTCHA_REQUIRED"],
+      "coverage": {"pagesExpected": 1, "pagesObserved": 0, "rowsExpected": 0, "rowsObserved": 0}, "emptyObserved": false, "retryScheduled": false, "externalEffect": false, "captchaAutoSolved": false, "attemptNumber": 1,
+      "requiredHumanAssistance": true, "nonClaims": ["NO_CAPTCHA_SOLVE", "NO_REAL_LOGIN"]
+    },
+    {
+      "scenarioId": "wechat-permission", "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "platform": "wechat_store", "sourceKind": "synthetic", "enabled": false,
+      "fixtureHash": "sha256:eb1fb08956b1e79dba53c191febd1f5caa294039e08d59e4e047d429db7154e0",
+      "adapterPackRef": {"resourceType": "AdapterPackRevision", "resourceId": "wechat-disabled", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "capabilityRef": {"resourceType": "CapabilityRevision", "resourceId": "readonly-observe", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "sessionRef": {"resourceType": "ObservationSessionLeaseRevision", "resourceId": "session-wx", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "observationPlanRef": {"resourceType": "ObservationPlanRevision", "resourceId": "plan-wx", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "stepRef": {"resourceType": "ObservationPlanStepRevision", "resourceId": "step-orders", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "scenario": "permission_denied", "outcomeStatus": "blocked_permission", "blockers": ["BLOCKED_PERMISSION"],
+      "coverage": {"pagesExpected": 1, "pagesObserved": 0, "rowsExpected": 0, "rowsObserved": 0}, "emptyObserved": false, "retryScheduled": false, "externalEffect": false, "captchaAutoSolved": false, "attemptNumber": 1,
+      "requiredHumanAssistance": false, "nonClaims": ["NO_EMPTY_DATA_CLAIM", "NO_PERMISSION_ESCALATION"]
+    },
+    {
+      "scenarioId": "douyin-page-drift", "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "platform": "douyin_store", "sourceKind": "historical_redacted", "enabled": false,
+      "fixtureHash": "sha256:87f9659a82e35d1a801e32d8c0b969ad5c326dcbbae88e82d19c6596a0e3423b",
+      "adapterPackRef": {"resourceType": "AdapterPackRevision", "resourceId": "douyin-disabled", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "capabilityRef": {"resourceType": "CapabilityRevision", "resourceId": "readonly-observe", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "sessionRef": {"resourceType": "ObservationSessionLeaseRevision", "resourceId": "session-dy", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "observationPlanRef": {"resourceType": "ObservationPlanRevision", "resourceId": "plan-dy", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "stepRef": {"resourceType": "ObservationPlanStepRevision", "resourceId": "step-traffic", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "scenario": "page_drift", "outcomeStatus": "blocked_page_drift", "blockers": ["PAGE_CONTRACT_DRIFTED"],
+      "coverage": {"pagesExpected": 1, "pagesObserved": 0, "rowsExpected": 0, "rowsObserved": 0}, "emptyObserved": false, "retryScheduled": false, "externalEffect": false, "captchaAutoSolved": false, "attemptNumber": 1,
+      "requiredHumanAssistance": false, "nonClaims": ["NO_SELECTOR_GUESS", "NO_CURRENT_PAGE_CLAIM"]
+    },
+    {
+      "scenarioId": "wechat-loading-timeout", "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "platform": "wechat_store", "sourceKind": "synthetic", "enabled": false,
+      "fixtureHash": "sha256:870070119172c25c6072d27ccf0373c889e2f0378171bcbc3eafa0f793191ed8",
+      "adapterPackRef": {"resourceType": "AdapterPackRevision", "resourceId": "wechat-disabled", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "capabilityRef": {"resourceType": "CapabilityRevision", "resourceId": "readonly-observe", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "sessionRef": {"resourceType": "ObservationSessionLeaseRevision", "resourceId": "session-wx", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "observationPlanRef": {"resourceType": "ObservationPlanRevision", "resourceId": "plan-wx", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "stepRef": {"resourceType": "ObservationPlanStepRevision", "resourceId": "step-products", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "scenario": "loading_timeout", "outcomeStatus": "partial_loading_timeout", "blockers": ["LOADING_TIMEOUT"],
+      "coverage": {"pagesExpected": 5, "pagesObserved": 1, "rowsExpected": 100, "rowsObserved": 10}, "emptyObserved": false, "retryScheduled": false, "externalEffect": false, "captchaAutoSolved": false, "attemptNumber": 1,
+      "requiredHumanAssistance": false, "nonClaims": ["NO_TIMEOUT_BUMP", "NO_FULL_COVERAGE_CLAIM"]
+    },
+    {
+      "scenarioId": "douyin-pagination", "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "platform": "douyin_store", "sourceKind": "synthetic", "enabled": false,
+      "fixtureHash": "sha256:9a62cc46f45ad9cfb0ad8b32b567714d9dedbd58f10e9cd6d298753291d649c5",
+      "adapterPackRef": {"resourceType": "AdapterPackRevision", "resourceId": "douyin-disabled", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "capabilityRef": {"resourceType": "CapabilityRevision", "resourceId": "readonly-observe", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "sessionRef": {"resourceType": "ObservationSessionLeaseRevision", "resourceId": "session-dy", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "observationPlanRef": {"resourceType": "ObservationPlanRevision", "resourceId": "plan-dy", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "stepRef": {"resourceType": "ObservationPlanStepRevision", "resourceId": "step-creators", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "scenario": "pagination_incomplete", "outcomeStatus": "partial_pagination", "blockers": ["PAGINATION_INCOMPLETE"],
+      "coverage": {"pagesExpected": 8, "pagesObserved": 3, "rowsExpected": 200, "rowsObserved": 75}, "emptyObserved": false, "retryScheduled": false, "externalEffect": false, "captchaAutoSolved": false, "attemptNumber": 1,
+      "requiredHumanAssistance": false, "nonClaims": ["NO_INFINITE_SCROLL", "NO_FULL_LIST_CLAIM"]
+    },
+    {
+      "scenarioId": "niushop-rate-limit", "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "platform": "niushop", "sourceKind": "synthetic", "enabled": false,
+      "fixtureHash": "sha256:06c5c98338543d7dc8accde126a949bf03315d04f4de56edc9ad36ff3953c5c1",
+      "adapterPackRef": {"resourceType": "AdapterPackRevision", "resourceId": "niushop-disabled", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "capabilityRef": {"resourceType": "CapabilityRevision", "resourceId": "readonly-observe", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "sessionRef": {"resourceType": "ObservationSessionLeaseRevision", "resourceId": "session-ns", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "observationPlanRef": {"resourceType": "ObservationPlanRevision", "resourceId": "plan-ns", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "stepRef": {"resourceType": "ObservationPlanStepRevision", "resourceId": "step-export", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "scenario": "rate_limited", "outcomeStatus": "blocked_rate_limit", "blockers": ["RATE_LIMITED"],
+      "coverage": {"pagesExpected": 1, "pagesObserved": 0, "rowsExpected": 0, "rowsObserved": 0}, "emptyObserved": false, "retryScheduled": false, "externalEffect": false, "captchaAutoSolved": false, "attemptNumber": 1,
+      "requiredHumanAssistance": false, "nonClaims": ["NO_RATE_LIMIT_BYPASS", "NO_AUTOMATIC_RETRY"]
+    },
+    {
+      "scenarioId": "wechat-session-revoked", "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "platform": "wechat_store", "sourceKind": "synthetic", "enabled": false,
+      "fixtureHash": "sha256:4ba739ca126a9a3913a3ddf1e68b10765edf36439f6222d682a3fa117759a46d",
+      "adapterPackRef": {"resourceType": "AdapterPackRevision", "resourceId": "wechat-disabled", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "capabilityRef": {"resourceType": "CapabilityRevision", "resourceId": "readonly-observe", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "sessionRef": {"resourceType": "ObservationSessionLeaseRevision", "resourceId": "session-wx", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "observationPlanRef": {"resourceType": "ObservationPlanRevision", "resourceId": "plan-wx", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "stepRef": {"resourceType": "ObservationPlanStepRevision", "resourceId": "step-diagnosis", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "scenario": "session_revoked", "outcomeStatus": "blocked_session_revoked", "blockers": ["SESSION_REVOKED"],
+      "coverage": {"pagesExpected": 1, "pagesObserved": 0, "rowsExpected": 0, "rowsObserved": 0}, "emptyObserved": false, "retryScheduled": false, "externalEffect": false, "captchaAutoSolved": false, "attemptNumber": 1,
+      "requiredHumanAssistance": false, "nonClaims": ["NO_SESSION_REUSE", "NO_CONTINUATION"]
+    },
+    {
+      "scenarioId": "douyin-session-expired", "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "platform": "douyin_store", "sourceKind": "synthetic", "enabled": false,
+      "fixtureHash": "sha256:4b3cedcf3bdeb968e9f2b44bec7dc3a1d1a22f8f0a8aea6ba5e8c8b8545c9612",
+      "adapterPackRef": {"resourceType": "AdapterPackRevision", "resourceId": "douyin-disabled", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "capabilityRef": {"resourceType": "CapabilityRevision", "resourceId": "readonly-observe", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "sessionRef": {"resourceType": "ObservationSessionLeaseRevision", "resourceId": "session-dy", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "observationPlanRef": {"resourceType": "ObservationPlanRevision", "resourceId": "plan-dy", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "stepRef": {"resourceType": "ObservationPlanStepRevision", "resourceId": "step-settlement", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "scenario": "session_expired", "outcomeStatus": "blocked_session_expired", "blockers": ["SESSION_EXPIRED"],
+      "coverage": {"pagesExpected": 1, "pagesObserved": 0, "rowsExpected": 0, "rowsObserved": 0}, "emptyObserved": false, "retryScheduled": false, "externalEffect": false, "captchaAutoSolved": false, "attemptNumber": 1,
+      "requiredHumanAssistance": false, "nonClaims": ["NO_EXPIRY_EXTENSION", "NO_SESSION_REUSE"]
+    },
+    {
+      "scenarioId": "niushop-process-restart", "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "platform": "niushop", "sourceKind": "synthetic", "enabled": false,
+      "fixtureHash": "sha256:fdff6eda7b9447d49b1ea1e9e738cf441fd5bc509e69d0aea65bc067b6c51e1c",
+      "adapterPackRef": {"resourceType": "AdapterPackRevision", "resourceId": "niushop-disabled", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "capabilityRef": {"resourceType": "CapabilityRevision", "resourceId": "readonly-observe", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "sessionRef": {"resourceType": "ObservationSessionLeaseRevision", "resourceId": "session-ns", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "observationPlanRef": {"resourceType": "ObservationPlanRevision", "resourceId": "plan-ns", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "stepRef": {"resourceType": "ObservationPlanStepRevision", "resourceId": "step-orders", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "scenario": "process_restart", "outcomeStatus": "resumed_from_checkpoint", "blockers": [],
+      "coverage": {"pagesExpected": 5, "pagesObserved": 2, "rowsExpected": 100, "rowsObserved": 40}, "emptyObserved": false, "retryScheduled": false, "externalEffect": false, "captchaAutoSolved": false, "attemptNumber": 1,
+      "checkpointSessionRef": {"resourceType": "ObservationSessionLeaseRevision", "resourceId": "session-ns", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "resumeCheckpointRef": {"resourceType": "ObservationCheckpointRevision", "resourceId": "checkpoint-ns-orders-2", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "continuationReceiptRef": {"resourceType": "ObservationContinuationReceipt", "resourceId": "continuation-ns-orders-2", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "requiredHumanAssistance": false, "nonClaims": ["NO_SECOND_ATTEMPT", "NO_SECOND_RUN", "NO_SECOND_RECEIPT"]
+    },
+    {
+      "scenarioId": "douyin-external-unknown", "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "platform": "douyin_store", "sourceKind": "synthetic", "enabled": false,
+      "fixtureHash": "sha256:5e8592cd24597d9b6ea6b79b44c8e6c699a2e1d724e163a481be9d924c2a9d14",
+      "adapterPackRef": {"resourceType": "AdapterPackRevision", "resourceId": "douyin-disabled", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "capabilityRef": {"resourceType": "CapabilityRevision", "resourceId": "readonly-observe", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "sessionRef": {"resourceType": "ObservationSessionLeaseRevision", "resourceId": "session-dy", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "observationPlanRef": {"resourceType": "ObservationPlanRevision", "resourceId": "plan-dy", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "stepRef": {"resourceType": "ObservationPlanStepRevision", "resourceId": "step-export", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+      "scenario": "external_result_unknown", "outcomeStatus": "unknown_reconcile", "blockers": ["UNKNOWN_RECONCILE"],
+      "coverage": {"pagesExpected": 1, "pagesObserved": 0, "rowsExpected": 0, "rowsObserved": 0}, "emptyObserved": false, "retryScheduled": false, "externalEffect": false, "captchaAutoSolved": false, "attemptNumber": 1,
+      "requiredHumanAssistance": false, "nonClaims": ["NO_SUCCESS_CLAIM", "NO_AUTOMATIC_RETRY", "NO_EXTERNAL_REPLAY"]
+    }
+  ]
+}
