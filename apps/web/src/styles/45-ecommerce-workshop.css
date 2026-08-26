@@ -891,6 +891,15 @@
 .business-investigation-current p { margin: 0; color: var(--aos-text-secondary); font-size: 12px; }
 .business-investigation-state.is-forbidden,
 .business-investigation-state.is-failed { border-color: color-mix(in srgb, var(--aos-danger) 45%, var(--aos-border)); }
+.business-investigation-state button,
+.business-investigation-current p > button { margin-left: 10px; min-height: 26px; border: 1px solid var(--aos-border); border-radius: 2px; background: var(--aos-surface-hover); color: var(--aos-text); cursor: pointer; }
+.business-investigation-state.is-loading,
+.business-investigation-current .is-loading { border-left: 2px solid var(--aos-accent); }
+.business-investigation-skeleton { display: block; width: min(420px, 70%); height: 6px; margin-top: 6px; background: linear-gradient(90deg, var(--aos-surface-hover), var(--aos-border), var(--aos-surface-hover)); background-size: 200% 100%; animation: business-investigation-loading 1.2s linear infinite; }
+@keyframes business-investigation-loading { to { background-position: -200% 0; } }
+.business-investigation-workbench > .ecommerce-workshop-state { margin-bottom: 10px; border-radius: 2px; }
+.business-investigation-workbench > .ecommerce-workshop-state.is-stale { border-left: 2px solid var(--aos-warning); }
+.business-investigation-workbench > .ecommerce-workshop-state.is-partial { border-left: 2px solid var(--aos-accent); }
 .business-investigation-selector { display: grid; grid-template-columns: minmax(170px, .8fr) minmax(280px, 1.4fr) minmax(240px, 1.1fr); gap: 8px; align-items: stretch; }
 .business-investigation-selector > label,
 .business-investigation-selector > fieldset { display: grid; align-content: start; gap: 6px; min-width: 0; margin: 0; padding: 9px 10px; border: 1px solid var(--aos-border); background: var(--aos-surface); }

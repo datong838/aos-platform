@@ -10,6 +10,7 @@ import {
   type InvestigationWorkbenchView,
 } from "../../api/ecommerceInvestigation";
 import type { SourceReadinessExactRef } from "../../api/ecommerceWorkshop";
+import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { BUSINESS_INVESTIGATION_READ_FLAG } from "./businessInvestigationFeatureFlags";
 import { type SourceReadinessSnapshot, useSourceReadinessSnapshot } from "./SourceReadinessContext";
 
@@ -49,6 +50,7 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
   const [selectedChannelId, setSelectedChannelId] = useState(""); const [selectedEntityKey, setSelectedEntityKey] = useState(""); const [selectedCaseId, setSelectedCaseId] = useState("");
   const [runPhase, setRunPhase] = useState<RunPhase>("idle"); const [runs, setRuns] = useState<InvestigationRunView[]>([]); const [selectedRunId, setSelectedRunId] = useState("");
   const [viewPhase, setViewPhase] = useState<ViewPhase>("idle"); const [workbenchView, setWorkbenchView] = useState<InvestigationWorkbenchView | null>(null);
+  const [runReloadRevision, setRunReloadRevision] = useState(0); const [viewReloadRevision, setViewReloadRevision] = useState(0);
   const contextReadinessSnapshot = useSourceReadinessSnapshot(); const readinessSnapshot = sourceReadinessSnapshot ?? contextReadinessSnapshot;
   const caseRequest = useRef(0); const runRequest = useRef(0); const viewRequest = useRef(0);
   const channels = useMemo(() => Array.from(new Set(cases.map((item) => item.channelRef.resourceId))), [cases]);
@@ -73,22 +75,31 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
     const requestId = ++runRequest.current; const controller = new AbortController(); setRuns([]); setSelectedRunId(""); setRunPhase("loading");
     void client.listRuns(selectedCaseId, controller.signal).then((response) => { if (requestId !== runRequest.current) return; if (tenant && (tenant.orgId !== response.tenant.orgId || tenant.projectId !== response.tenant.projectId)) { setRunPhase("failed"); return; } setRuns(response.items); setSelectedRunId(response.items[0]?.authority.runId ?? ""); setRunPhase(response.items.length ? "ready" : "empty"); }, (error: unknown) => { if (requestId !== runRequest.current || (error instanceof DOMException && error.name === "AbortError")) return; setRunPhase(error instanceof EcommerceInvestigationClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
     return () => controller.abort();
-  }, [client, selectedCaseId, tenant]);
+  }, [client, selectedCaseId, tenant, runReloadRevision]);
   useEffect(() => {
     if (!selectedRunId) { clearView(); return; }
     if (!client.getRunView) { setWorkbenchView(null); setViewPhase("failed"); return; }
     const requestId = ++viewRequest.current; const controller = new AbortController(); setWorkbenchView(null); setViewPhase("loading");
     void client.getRunView(selectedRunId, controller.signal).then((response) => { if (requestId !== viewRequest.current) return; if (tenant && (tenant.orgId !== response.tenant.orgId || tenant.projectId !== response.tenant.projectId)) { setViewPhase("failed"); return; } setWorkbenchView(response); setViewPhase("ready"); }, (error: unknown) => { if (requestId !== viewRequest.current || (error instanceof DOMException && error.name === "AbortError")) return; setViewPhase(error instanceof EcommerceInvestigationClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
     return () => controller.abort();
-  }, [client, selectedRunId, tenant]);
+  }, [client, selectedRunId, tenant, viewReloadRevision]);
 
   const onChannelChange = (channelId: string) => { const nextEntities = entityChoices(cases, channelId); const nextEntityKey = nextEntities[0]?.key ?? ""; const nextCases = casesForEntity(cases, nextEntityKey); setSelectedChannelId(channelId); setSelectedEntityKey(nextEntityKey); setSelectedCaseId(nextCases[0]?.caseId ?? ""); clearRuns(); };
   const onEntityChange = (key: string) => { const nextCases = casesForEntity(cases, key); setSelectedEntityKey(key); setSelectedCaseId(nextCases[0]?.caseId ?? ""); clearRuns(); };
   const onCaseChange = (caseId: string) => { setSelectedCaseId(caseId); clearRuns(); };
+  const canonicalDataState = useMemo<AsyncState>(() => {
+    if (!workbenchView || !readinessSnapshot || readinessSnapshot.phase !== "ready" || !readinessSnapshot.response) return "ready";
+    const investigation = readinessSnapshot.response.investigation;
+    if (workbenchView.pendingRequirementRef && investigation && sameRequirement(workbenchView.pendingRequirementRef, investigation.requirementRef)) {
+      if (investigation.status === "stale" || readinessSnapshot.response.status === "stale") return "stale";
+      if (investigation.status === "degraded" || investigation.coveredFactCount < investigation.requiredFactCount) return "partial";
+    }
+    return "ready";
+  }, [readinessSnapshot, workbenchView]);
 
   return (
     <section id={id} aria-labelledby={labelledBy} className="analyst-panel business-investigation-tab" role="tabpanel">
-      <header><div><span>Business Investigation · BI-W7-06</span><h2>生意探究</h2></div><strong className="content-campaign-status is-blocked">只读</strong></header>
+      <header><div><span>Business Investigation · BI-W7-07</span><h2>生意探究</h2></div><strong className="content-campaign-status is-blocked">只读</strong></header>
       <aside className="business-investigation-boundary" aria-label="生意探究只读边界">
         <strong>只读边界</strong>
         <span>{BUSINESS_INVESTIGATION_READ_FLAG}</span>
@@ -97,8 +108,8 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
         <span>写入口<strong>0</strong> · 命令、周期计划、评审与 Handoff 关闭</span>
       </aside>
 
-      {phase === "loading" ? <div className="business-investigation-state" role="status"><strong>正在读取分析记录…</strong><p>等待 tenant-scoped canonical Case 列表。</p></div> : null}
-      {phase === "empty" ? <div className="business-investigation-state is-empty"><strong>当前没有可见分析记录</strong><p>未知或未创建不能显示为 0，也不以演示 Case 补齐。</p></div> : null}
+      {phase === "loading" ? <div className="business-investigation-state is-loading" role="status"><strong>正在读取分析记录…</strong><p>等待 tenant-scoped canonical Case 列表。</p><span className="business-investigation-skeleton" aria-hidden="true" /></div> : null}
+      {phase === "empty" ? <div className="business-investigation-state is-empty"><strong>当前没有可见分析记录</strong><p>未知或未创建不能显示为 0，也不以演示 Case 补齐。</p><button type="button" onClick={loadCases}>重新读取列表</button></div> : null}
       {phase === "forbidden" ? <div className="business-investigation-state is-forbidden" role="alert"><strong>无权读取生意探究</strong><p>未泄露其他租户的渠道、实体或分析记录。</p></div> : null}
       {phase === "failed" ? <div className="business-investigation-state is-failed" role="alert"><strong>分析记录读取失败</strong><p>页面已失败关闭，未保留旧选择。</p><button type="button" onClick={loadCases}>重新读取</button></div> : null}
 
@@ -111,17 +122,18 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
       {phase === "ready" && selectedCase ? <section className="business-investigation-current" aria-label="当前分析记录">
         <header><div><span>{selectedCase.analysisType}</span><h3>{selectedCase.title}</h3></div><strong className={`is-${selectedCase.lifecycle.toLowerCase()}`}>{selectedCase.lifecycle}</strong></header>
         <dl><div><dt>Case</dt><dd>{selectedCase.caseId} · r{selectedCase.revision}</dd></div><div><dt>渠道</dt><dd>{selectedCase.channelRef.resourceId}</dd></div><div><dt>经营实体</dt><dd>{selectedCase.businessEntityRef.resourceId}</dd></div><div><dt>创建时间</dt><dd>{new Date(selectedCase.createdAt).toLocaleString("zh-CN", { hour12: false })}</dd></div></dl>
-        {runPhase === "loading" ? <p role="status">正在读取当前 Case 的 Run…</p> : null}
-        {runPhase === "empty" ? <p className="is-empty">当前 Case 尚无 Run；不生成演示记录。</p> : null}
+        {runPhase === "loading" ? <p className="is-loading" role="status">正在读取当前 Case 的 Run…</p> : null}
+        {runPhase === "empty" ? <p className="is-empty">当前 Case 尚无 Run；不生成演示记录。<button type="button" onClick={() => setRunReloadRevision((value) => value + 1)}>重新读取 Run</button></p> : null}
         {runPhase === "forbidden" ? <p className="is-forbidden" role="alert">Run 不可见；Case 保持只读且不泄露其他租户状态。</p> : null}
-        {runPhase === "failed" ? <p className="is-failed" role="alert">Run 读取失败；旧 Run 已清空。</p> : null}
+        {runPhase === "failed" ? <p className="is-failed" role="alert">Run 读取失败；旧 Run 已清空。<button type="button" onClick={() => setRunReloadRevision((value) => value + 1)}>重新读取 Run</button></p> : null}
         {runPhase === "ready" ? <label><span>Run 记录</span><select aria-label="Run 记录" value={selectedRunId} onChange={(event) => { clearView(); setSelectedRunId(event.currentTarget.value); }}>{runs.map((item) => <option key={item.authority.runId} value={item.authority.runId}>{item.authority.runId} · {item.state.lifecycle}/{item.state.control}</option>)}</select></label> : null}
       </section> : null}
       {phase === "ready" && selectedCase && selectedRunId ? <section className="business-investigation-workbench" aria-label="生意探究运行进度">
         {viewPhase === "loading" ? <div className="business-investigation-state" role="status"><strong>正在读取 Case 信封与运行进度…</strong><p>进度由服务端 canonical projection 计算。</p></div> : null}
         {viewPhase === "forbidden" ? <div className="business-investigation-state is-forbidden" role="alert"><strong>运行进度不可见</strong><p>未保留上一 Run 的 StageRail。</p></div> : null}
-        {viewPhase === "failed" ? <div className="business-investigation-state is-failed" role="alert"><strong>运行进度读取失败</strong><p>页面失败关闭，不本地推演 x/y。</p></div> : null}
+        {viewPhase === "failed" ? <div className="business-investigation-state is-failed" role="alert"><strong>运行进度读取失败</strong><p>页面失败关闭，不本地推演 x/y。</p><button type="button" onClick={() => setViewReloadRevision((value) => value + 1)}>重新读取运行进度</button></div> : null}
         {viewPhase === "ready" && workbenchView ? <>
+          {canonicalDataState !== "ready" ? <AsyncStateBoundary state={canonicalDataState} title={canonicalDataState === "stale" ? "数据截止面已过期" : "当前仅有部分事实可用"} description={canonicalDataState === "stale" ? "仅保留已标记的 canonical 快照，不把旧数据冒充当前事实。" : "仅展示已覆盖事实，未满足范围保持缺口，不以零值代替。"} dataCutoff={readinessSnapshot?.response?.cutoffAt ?? workbenchView.observedAt} action={<button type="button" onClick={() => readinessSnapshot?.reload()}>重新核验数据状态</button>} /> : null}
           <article className="business-investigation-envelope"><header><div><span>Case 信封 · cutoff {new Date(workbenchView.observedAt).toLocaleString("zh-CN", { hour12: false })}</span><h3>{workbenchView.caseEnvelope.title}</h3></div><strong>{workbenchView.lifecycle}/{workbenchView.control}</strong></header><dl><div><dt>Case exact</dt><dd>{workbenchView.caseRef.resourceId} · r{workbenchView.caseRef.revision}</dd></div><div><dt>Run exact</dt><dd>{workbenchView.runRef.resourceId} · v{workbenchView.runRef.revision}</dd></div><div><dt>Scope</dt><dd>{workbenchView.caseEnvelope.scopeRef.resourceId} · r{workbenchView.caseEnvelope.scopeRef.revision}</dd></div><div><dt>Profile</dt><dd>{workbenchView.caseEnvelope.investigationProfileRef.resourceId} · r{workbenchView.caseEnvelope.investigationProfileRef.revision}</dd></div><div><dt>Schedule</dt><dd>{workbenchView.caseEnvelope.schedulePolicyRef ? `${workbenchView.caseEnvelope.schedulePolicyRef.resourceId} · r${workbenchView.caseEnvelope.schedulePolicyRef.revision}` : "未绑定"}</dd></div><div><dt>Checkpoint</dt><dd>{workbenchView.runtime.checkpoint ? `${workbenchView.runtime.checkpoint.checkpointId} · #${workbenchView.runtime.checkpoint.sequence}` : "尚无 Checkpoint"}</dd></div></dl></article>
           <article className="business-investigation-progress"><header><div><span>服务端进度</span><h3>{workbenchView.runtime.completed}/{workbenchView.runtime.total} 波完成</h3></div><strong className={`is-${workbenchView.runtime.bindingStatus}`}>{workbenchView.runtime.bindingStatus === "unbound" ? "尚未绑定" : workbenchView.runtime.bindingStatus === "task_pending" ? "等待 TaskRun" : workbenchView.runtime.taskRunStatus}</strong></header><ol>{workbenchView.runtime.stages.map((stage, index) => <li key={stage.stageId} className={`is-${stage.status}`} aria-current={workbenchView.runtime.currentStageId === stage.stageId ? "step" : undefined}><span>{index + 1}</span><div><strong>{stage.title}</strong><small>{stage.stageId} · {stage.status}{stage.attempt ? ` · attempt ${stage.attempt}` : ""}</small></div></li>)}</ol><p>Stage 完成仅表示 canonical StepRun 通过阶段门，不代表真实业务方案已执行。</p></article>
           <article className="business-investigation-stage-workspace"><header><div><span>当前阶段工作区 · {workbenchView.currentWorkspace.stageId ?? "unbound"}</span><h3>{workbenchView.currentWorkspace.title}</h3></div><strong className={`is-${workbenchView.currentWorkspace.status}`}>{workbenchView.currentWorkspace.status}</strong></header><p className="business-investigation-question">{workbenchView.currentWorkspace.question}</p><dl className="business-investigation-responsibility"><div><dt>责任槽</dt><dd>{workbenchView.currentWorkspace.responsibilitySlotIds.length ? workbenchView.currentWorkspace.responsibilitySlotIds.join(" · ") : "未知/未绑定"}</dd></div><div><dt>承担者</dt><dd>{workbenchView.currentWorkspace.assigneeRefs.length ? workbenchView.currentWorkspace.assigneeRefs.map((item) => item.resourceId).join(" · ") : "未知/未绑定"}</dd></div><div><dt>输入 refs</dt><dd>{workbenchView.currentWorkspace.inputRefs.length ? workbenchView.currentWorkspace.inputRefs.map((item) => item.resourceId).join(" · ") : "未知/缺证据"}</dd></div><div><dt>输出 refs</dt><dd>{workbenchView.currentWorkspace.outputRefs.length ? workbenchView.currentWorkspace.outputRefs.map((item) => item.resourceId).join(" · ") : "未知/缺证据"}</dd></div></dl><div className="business-investigation-contributions">{workbenchView.currentWorkspace.areas.map((area) => <section key={area.area} className={`is-${area.status}`}><header><strong>{area.title}</strong><span>{area.status === "reference_only" ? "仅可回链" : area.status === "present" ? "已声明缺口" : "未知/缺证据"}</span></header><p>{area.summary}</p>{area.resourceRefs.length || area.exactRefs.length ? <small>{[...area.resourceRefs.map((item) => item.resourceId), ...area.exactRefs.map((item) => `${item.resourceId} · r${item.revision}`)].join(" · ")}</small> : null}</section>)}</div><ul className="business-investigation-nonclaims">{workbenchView.currentWorkspace.nonClaims.map((item) => <li key={item}>{item}</li>)}</ul></article>
