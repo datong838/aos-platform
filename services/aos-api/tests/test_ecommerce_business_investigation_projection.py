@@ -21,11 +21,13 @@ from aos_api.ecommerce_business_investigation_projection import (
     BusinessInvestigationProjectionNotFound,
     BusinessInvestigationProjectionSource,
     BusinessInvestigationRuntimeSource,
+    BusinessInvestigationStagePlanSource,
     BusinessInvestigationStageRunSource,
     BusinessInvestigationCheckpointSource,
     BusinessInvestigationWorkbenchView,
     CanonicalBusinessInvestigationProjectionReader,
 )
+from aos_api.aip_contracts import ResourceRef
 from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunStateRevision
 from aos_api.tenant_scope import TenantScope
 from tests.aip._migration_test_support import isolated_aip_migration_database
@@ -178,12 +180,32 @@ def test_projection_exposes_server_owned_case_envelope_stage_progress_and_checkp
         task_run_id="task-run-1",
         task_run_version=4,
         task_run_status="running",
+        plan_stages=(
+            BusinessInvestigationStagePlanSource(stage_id="portrait"),
+            BusinessInvestigationStagePlanSource(
+                stage_id="diagnosis",
+                responsibility_slot_ids=("slot-diagnosis",),
+                assignee_refs=(ResourceRef(
+                    resource_type="AgentInstance", resource_id="data-advisor",
+                    revision="7", authority="aip-assignee-directory",
+                ),),
+                input_refs=(ResourceRef(
+                    resource_type="EvidenceBundleRevision", resource_id="evidence-1",
+                    revision="3", authority="aip-evidence-authority",
+                ),),
+            ),
+            BusinessInvestigationStagePlanSource(stage_id="solution-design"),
+        ),
         stages=(
             BusinessInvestigationStageRunSource(
                 stage_id="portrait", step_run_id="step-portrait", attempt=1, status="succeeded"
             ),
             BusinessInvestigationStageRunSource(
-                stage_id="diagnosis", step_run_id="step-diagnosis", attempt=2, status="running"
+                stage_id="diagnosis", step_run_id="step-diagnosis", attempt=2, status="running",
+                output_refs=(ResourceRef(
+                    resource_type="AnalysisDraft", resource_id="draft-1",
+                    revision="1", authority="aip-runtime",
+                ),),
             ),
         ),
         checkpoint=BusinessInvestigationCheckpointSource(
@@ -203,12 +225,27 @@ def test_projection_exposes_server_owned_case_envelope_stage_progress_and_checkp
     assert [item.status for item in view.runtime.stages] == ["completed", "running", "not_started"]
     assert view.runtime.checkpoint is not None and view.runtime.checkpoint.sequence == 2
     assert view.source_watermark.runtime_hash is not None
+    assert view.schema_version.endswith("/v3")
+    assert view.current_workspace.stage_id == "diagnosis"
+    assert view.current_workspace.status == "running"
+    assert view.current_workspace.responsibility_slot_ids == ["slot-diagnosis"]
+    assert [item.resource_id for item in view.current_workspace.input_refs] == ["evidence-1"]
+    assert [item.resource_id for item in view.current_workspace.output_refs] == ["draft-1"]
+    assert [item.area for item in view.current_workspace.areas] == [
+        "known", "unknown", "assumption", "counter_evidence"
+    ]
+    assert view.current_workspace.areas[0].status == "reference_only"
+    assert view.current_workspace.areas[2].status == "unknown"
+    assert all("推理链" not in item.summary for item in view.current_workspace.areas)
 
 
 def test_projection_runtime_unbound_and_task_pending_are_explicit() -> None:
     unbound = projection_view()
     assert unbound.runtime.binding_status == "unbound"
     assert unbound.runtime.completed == 0 and unbound.runtime.current_stage_id is None
+    assert unbound.current_workspace.status == "unbound"
+    assert unbound.current_workspace.stage_id is None
+    assert unbound.current_workspace.areas[0].status == "unknown"
     source = projection_source()
     pending = BusinessInvestigationProjectionBuilder(FixedReader(
         BusinessInvestigationProjectionSource(
@@ -220,6 +257,8 @@ def test_projection_runtime_unbound_and_task_pending_are_explicit() -> None:
     )).build(SCOPE, "run-1", observed_at=NOW)
     assert pending.runtime.binding_status == "task_pending"
     assert pending.runtime.task_run_ref is None and pending.runtime.checkpoint is None
+    assert pending.current_workspace.stage_id == "portrait"
+    assert pending.current_workspace.status == "task_pending"
 
 
 def test_projection_contract_rejects_tampering_and_stale_missing_slot_data() -> None:

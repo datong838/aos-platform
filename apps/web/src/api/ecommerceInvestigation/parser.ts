@@ -12,6 +12,8 @@ import type {
   InvestigationTenant,
   InvestigationWorkbenchView,
   InvestigationRuntimeProjection,
+  InvestigationResourceRef,
+  InvestigationCurrentWorkspace,
 } from "./contracts";
 
 const HASH = /^sha256:[0-9a-f]{64}$/;
@@ -71,6 +73,16 @@ function ref(value: unknown, label: string, expectedType?: string): Investigatio
   return { resourceType, resourceId: text(raw.resourceId, `${label}.resourceId`, 240), revision, contentHash, ...(receiptId ? { receiptId } : {}) };
 }
 function nullableRef(value: unknown, label: string, expectedType?: string): InvestigationExactRef | null { return value === null ? null : ref(value, label, expectedType); }
+function resourceRef(value: unknown, label: string): InvestigationResourceRef {
+  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "authority"], label);
+  return { resourceType: text(raw.resourceType, `${label}.resourceType`, 120), resourceId: text(raw.resourceId, `${label}.resourceId`, 240), revision: raw.revision === null ? null : text(raw.revision, `${label}.revision`, 160), authority: text(raw.authority, `${label}.authority`, 200) };
+}
+function resourceRefs(value: unknown, label: string, max = 200): InvestigationResourceRef[] {
+  if (!Array.isArray(value) || value.length > max) throw new TypeError(`${label} 非法`);
+  const result = value.map((item, index) => resourceRef(item, `${label}[${index}]`));
+  if (new Set(result.map((item) => JSON.stringify(item))).size !== result.length) throw new TypeError(`${label} 必须唯一`);
+  return result;
+}
 function sameTenant(left: InvestigationTenant, right: InvestigationTenant): boolean { return left.orgId === right.orgId && left.projectId === right.projectId; }
 
 function parseCase(value: unknown, expectedTenant: InvestigationTenant): InvestigationCaseRevision {
@@ -162,9 +174,27 @@ function parseRuntime(value: unknown): InvestigationRuntimeProjection {
   return { bindingStatus, taskId, planRef, taskRunRef, taskRunStatus, checkpoint, stages, completed, total: 3, currentStageId };
 }
 
+function parseCurrentWorkspace(value: unknown): InvestigationCurrentWorkspace {
+  const raw = record(value, "view.currentWorkspace");
+  exact(raw, ["stageId", "title", "question", "status", "responsibilitySlotIds", "assigneeRefs", "inputRefs", "outputRefs", "areas", "nonClaims"], "view.currentWorkspace");
+  const stageId = raw.stageId === null ? null : enumValue(raw.stageId, STAGE_IDS, "currentWorkspace.stageId");
+  const title = text(raw.title, "currentWorkspace.title", 120); const question = text(raw.question, "currentWorkspace.question", 500);
+  const status = enumValue(raw.status, ["unbound", "task_pending", "not_started", "running", "blocked", "completed"] as const, "currentWorkspace.status");
+  if (!Array.isArray(raw.responsibilitySlotIds) || raw.responsibilitySlotIds.length > 50) throw new TypeError("responsibilitySlotIds 非法");
+  const responsibilitySlotIds = raw.responsibilitySlotIds.map((item, index) => text(item, `responsibilitySlotIds[${index}]`, 200));
+  if (new Set(responsibilitySlotIds).size !== responsibilitySlotIds.length) throw new TypeError("responsibilitySlotIds 必须唯一");
+  const assigneeRefs = resourceRefs(raw.assigneeRefs, "currentWorkspace.assigneeRefs", 50); const inputRefs = resourceRefs(raw.inputRefs, "currentWorkspace.inputRefs"); const outputRefs = resourceRefs(raw.outputRefs, "currentWorkspace.outputRefs");
+  if (!Array.isArray(raw.areas) || raw.areas.length !== 4) throw new TypeError("currentWorkspace.areas 数量漂移");
+  const expectedAreas = ["known", "unknown", "assumption", "counter_evidence"] as const;
+  const areas = raw.areas.map((value, index) => { const item = record(value, `currentWorkspace.areas[${index}]`); exact(item, ["area", "title", "status", "summary", "resourceRefs", "exactRefs"], `currentWorkspace.areas[${index}]`); const area = enumValue(item.area, expectedAreas, "contribution.area"); if (area !== expectedAreas[index]) throw new TypeError("contribution area 顺序漂移"); if (!Array.isArray(item.exactRefs) || item.exactRefs.length > 20) throw new TypeError("contribution exactRefs 非法"); return { area, title: text(item.title, "contribution.title", 120), status: enumValue(item.status, ["reference_only", "present", "unknown"] as const, "contribution.status"), summary: text(item.summary, "contribution.summary", 500), resourceRefs: resourceRefs(item.resourceRefs, "contribution.resourceRefs"), exactRefs: item.exactRefs.map((candidate, refIndex) => ref(candidate, `contribution.exactRefs[${refIndex}]`)) }; });
+  if (!Array.isArray(raw.nonClaims) || raw.nonClaims.length < 3 || raw.nonClaims.length > 10) throw new TypeError("currentWorkspace.nonClaims 非法"); const nonClaims = raw.nonClaims.map((item, index) => text(item, `nonClaims[${index}]`, 500));
+  if (stageId === null && (status !== "unbound" || responsibilitySlotIds.length || assigneeRefs.length || inputRefs.length || outputRefs.length)) throw new TypeError("unbound currentWorkspace 泄露旧阶段数据");
+  return { stageId, title, question, status, responsibilitySlotIds, assigneeRefs, inputRefs, outputRefs, areas, nonClaims };
+}
+
 export function parseInvestigationWorkbenchView(value: unknown, runId: string, expectedTenant?: InvestigationTenant): InvestigationWorkbenchView {
-  const raw = record(value, "view"); exact(raw, ["schemaVersion", "tenant", "projectionHash", "sourceWatermark", "observedAt", "caseRef", "runRef", "stateRef", "caseEnvelope", "lifecycle", "control", "pendingRequirementRef", "uncertainCommand", "runtime", "artifacts"], "view");
-  if (raw.schemaVersion !== "aos.ecommerce.business-investigation-workbench-view/v2") throw new TypeError("Workbench schemaVersion 无效"); const responseTenant = tenant(raw.tenant, expectedTenant);
+  const raw = record(value, "view"); exact(raw, ["schemaVersion", "tenant", "projectionHash", "sourceWatermark", "observedAt", "caseRef", "runRef", "stateRef", "caseEnvelope", "lifecycle", "control", "pendingRequirementRef", "uncertainCommand", "runtime", "currentWorkspace", "artifacts"], "view");
+  if (raw.schemaVersion !== "aos.ecommerce.business-investigation-workbench-view/v3") throw new TypeError("Workbench schemaVersion 无效"); const responseTenant = tenant(raw.tenant, expectedTenant);
   const projectionHash = text(raw.projectionHash, "view.projectionHash", 71); if (!HASH.test(projectionHash)) throw new TypeError("projectionHash 非法");
   const watermarkRaw = record(raw.sourceWatermark, "view.sourceWatermark"); exact(watermarkRaw, ["caseRevision", "runVersion", "stateVersion", "bindingHashes", "runtimeHash", "contentHash"], "view.sourceWatermark"); if (!Array.isArray(watermarkRaw.bindingHashes) || watermarkRaw.bindingHashes.some((item) => typeof item !== "string" || !HASH.test(item))) throw new TypeError("bindingHashes 非法"); const bindingHashes = watermarkRaw.bindingHashes as string[]; if (JSON.stringify(bindingHashes) !== JSON.stringify([...new Set(bindingHashes)].sort())) throw new TypeError("bindingHashes 非 canonical"); const runtimeHash = watermarkRaw.runtimeHash === null ? null : text(watermarkRaw.runtimeHash, "runtimeHash", 71); const watermarkHash = text(watermarkRaw.contentHash, "watermark.contentHash", 71); if ((runtimeHash && !HASH.test(runtimeHash)) || !HASH.test(watermarkHash)) throw new TypeError("watermark hash 非法");
   const caseRef = ref(raw.caseRef, "view.caseRef", "BusinessInvestigationCaseRevision"); const runRef = ref(raw.runRef, "view.runRef", "BusinessInvestigationRun"); const stateRef = ref(raw.stateRef, "view.stateRef", "BusinessInvestigationRunStateRevision"); if (runRef.resourceId !== runId || stateRef.resourceId !== runId) throw new TypeError("Workbench Run identity 漂移");
@@ -173,5 +203,5 @@ export function parseInvestigationWorkbenchView(value: unknown, runId: string, e
   if (caseRef.resourceId === "" || caseRef.revision !== integer(watermarkRaw.caseRevision, "watermark.caseRevision", 1) || runRef.revision !== integer(watermarkRaw.runVersion, "watermark.runVersion", 1) || stateRef.revision !== integer(watermarkRaw.stateVersion, "watermark.stateVersion", 1)) throw new TypeError("Workbench watermark 漂移");
   const uncertainRaw = raw.uncertainCommand === null ? null : record(raw.uncertainCommand, "view.uncertainCommand"); let uncertainCommand: InvestigationWorkbenchView["uncertainCommand"] = null; if (uncertainRaw) { exact(uncertainRaw, ["commandId", "operation", "requestHash"], "view.uncertainCommand"); const requestHash = text(uncertainRaw.requestHash, "uncertainCommand.requestHash", 71); if (!HASH.test(requestHash)) throw new TypeError("uncertain requestHash 非法"); uncertainCommand = { commandId: text(uncertainRaw.commandId, "uncertainCommand.commandId", 200), operation: text(uncertainRaw.operation, "uncertainCommand.operation", 120), requestHash }; }
   if (!Array.isArray(raw.artifacts) || raw.artifacts.length !== 4) throw new TypeError("artifact slots 数量漂移"); const artifacts = raw.artifacts.map((value, index) => { const item = record(value, `artifacts[${index}]`); exact(item, ["artifactType", "status", "artifactRef", "bindingId", "bindingHash", "selectionRevision", "dataCutoff", "lineageRef"], `artifacts[${index}]`); const artifactType = enumValue(item.artifactType, ARTIFACT_TYPES, "artifactType"); if (artifactType !== ARTIFACT_TYPES[index]) throw new TypeError("artifact slots 顺序漂移"); const status = enumValue(item.status, ["bound", "missing"] as const, "artifact.status"); const artifactRef = nullableRef(item.artifactRef, "artifactRef", artifactType); const bindingId = nullableText(item.bindingId, "bindingId", 200); const bindingHash = item.bindingHash === null ? null : text(item.bindingHash, "bindingHash", 71); const selectionRevision = item.selectionRevision === null ? null : integer(item.selectionRevision, "selectionRevision", 1); const dataCutoff = item.dataCutoff === null ? null : timestamp(item.dataCutoff, "dataCutoff"); const lineageRef = nullableRef(item.lineageRef, "lineageRef"); if ((bindingHash && !HASH.test(bindingHash)) || (status === "missing" && [artifactRef, bindingId, bindingHash, selectionRevision, dataCutoff, lineageRef].some(Boolean)) || (status === "bound" && [artifactRef, bindingId, bindingHash, selectionRevision, dataCutoff, lineageRef].some((item) => item === null))) throw new TypeError("artifact slot 状态漂移"); return { artifactType, status, artifactRef, bindingId, bindingHash, selectionRevision, dataCutoff, lineageRef }; });
-  return { schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v2", tenant: responseTenant, projectionHash, sourceWatermark: { caseRevision: integer(watermarkRaw.caseRevision, "caseRevision", 1), runVersion: integer(watermarkRaw.runVersion, "runVersion", 1), stateVersion: integer(watermarkRaw.stateVersion, "stateVersion", 1), bindingHashes, runtimeHash, contentHash: watermarkHash }, observedAt: timestamp(raw.observedAt, "view.observedAt"), caseRef, runRef, stateRef, caseEnvelope, lifecycle: enumValue(raw.lifecycle, RUN_LIFECYCLES, "view.lifecycle"), control: enumValue(raw.control, RUN_CONTROLS, "view.control"), pendingRequirementRef: nullableRef(raw.pendingRequirementRef, "view.pendingRequirementRef", "DataRequirementRevision"), uncertainCommand, runtime: parseRuntime(raw.runtime), artifacts };
+  return { schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v3", tenant: responseTenant, projectionHash, sourceWatermark: { caseRevision: integer(watermarkRaw.caseRevision, "caseRevision", 1), runVersion: integer(watermarkRaw.runVersion, "runVersion", 1), stateVersion: integer(watermarkRaw.stateVersion, "stateVersion", 1), bindingHashes, runtimeHash, contentHash: watermarkHash }, observedAt: timestamp(raw.observedAt, "view.observedAt"), caseRef, runRef, stateRef, caseEnvelope, lifecycle: enumValue(raw.lifecycle, RUN_LIFECYCLES, "view.lifecycle"), control: enumValue(raw.control, RUN_CONTROLS, "view.control"), pendingRequirementRef: nullableRef(raw.pendingRequirementRef, "view.pendingRequirementRef", "DataRequirementRevision"), uncertainCommand, runtime: parseRuntime(raw.runtime), currentWorkspace: parseCurrentWorkspace(raw.currentWorkspace), artifacts };
 }

@@ -13,7 +13,7 @@ from typing import Any, Literal, Protocol, Self
 import psycopg
 from pydantic import Field, field_validator, model_validator
 
-from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.aip_contracts import AipContractModel, PlanStep, ResourceRef, TenantContext
 from aos_api.aip_contracts import StepRunStatus, TaskRunStatus
 from aos_api.aip_business_investigation_compiler import STAGE_ORDER
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
@@ -37,13 +37,18 @@ from aos_api.ecommerce_business_investigation_run import (
 from aos_api.tenant_scope import TenantScope
 
 
-PROJECTION_SCHEMA = "aos.ecommerce.business-investigation-workbench-view/v2"
+PROJECTION_SCHEMA = "aos.ecommerce.business-investigation-workbench-view/v3"
 SHA256 = r"^sha256:[0-9a-f]{64}$"
 
 STAGE_TITLES = {
     "portrait": "经营画像",
     "diagnosis": "问题与机会",
     "solution-design": "方案设计",
+}
+STAGE_QUESTIONS = {
+    "portrait": "当前经营基本盘、覆盖、质量与未知是什么？",
+    "diagnosis": "哪些问题与机会被证据支持，哪些替代解释仍需保留？",
+    "solution-design": "哪些候选方案、约束、风险与验证条件可进入评审？",
 }
 
 
@@ -199,6 +204,51 @@ class BusinessInvestigationRuntimeProjection(AipContractModel):
         return self
 
 
+class BusinessInvestigationContributionArea(AipContractModel):
+    area: Literal["known", "unknown", "assumption", "counter_evidence"]
+    title: str = Field(min_length=1, max_length=120)
+    status: Literal["reference_only", "present", "unknown"]
+    summary: str = Field(min_length=1, max_length=500)
+    resource_refs: list[ResourceRef] = Field(default_factory=list, max_length=200)
+    exact_refs: list[InvestigationExactRef] = Field(default_factory=list, max_length=20)
+
+
+class BusinessInvestigationCurrentWorkspace(AipContractModel):
+    stage_id: Literal["portrait", "diagnosis", "solution-design"] | None = None
+    title: str = Field(min_length=1, max_length=120)
+    question: str = Field(min_length=1, max_length=500)
+    status: Literal["unbound", "task_pending", "not_started", "running", "blocked", "completed"]
+    responsibility_slot_ids: list[str] = Field(default_factory=list, max_length=50)
+    assignee_refs: list[ResourceRef] = Field(default_factory=list, max_length=50)
+    input_refs: list[ResourceRef] = Field(default_factory=list, max_length=200)
+    output_refs: list[ResourceRef] = Field(default_factory=list, max_length=200)
+    areas: list[BusinessInvestigationContributionArea] = Field(min_length=4, max_length=4)
+    non_claims: list[str] = Field(min_length=3, max_length=10)
+
+    @model_validator(mode="after")
+    def _canonical(self) -> Self:
+        if [item.area for item in self.areas] != [
+            "known", "unknown", "assumption", "counter_evidence"
+        ]:
+            raise ValueError("current workspace contribution area order drifted")
+        for values, label in (
+            (self.responsibility_slot_ids, "responsibilitySlotIds"),
+            ([item.model_dump_json() for item in self.assignee_refs], "assigneeRefs"),
+            ([item.model_dump_json() for item in self.input_refs], "inputRefs"),
+            ([item.model_dump_json() for item in self.output_refs], "outputRefs"),
+        ):
+            if len(values) != len(set(values)):
+                raise ValueError(f"current workspace {label} must be unique")
+        if self.stage_id is None:
+            if self.status != "unbound" or any(
+                (self.responsibility_slot_ids, self.assignee_refs, self.input_refs, self.output_refs)
+            ):
+                raise ValueError("unbound current workspace cannot expose stale stage data")
+        elif self.title != STAGE_TITLES[self.stage_id] or self.question != STAGE_QUESTIONS[self.stage_id]:
+            raise ValueError("current workspace stage copy drifted")
+        return self
+
+
 class BusinessInvestigationWorkbenchView(AipContractModel):
     schema_version: Literal[PROJECTION_SCHEMA] = PROJECTION_SCHEMA
     tenant: TenantContext
@@ -214,6 +264,7 @@ class BusinessInvestigationWorkbenchView(AipContractModel):
     pending_requirement_ref: InvestigationExactRef | None = None
     uncertain_command: BusinessInvestigationUncertainCommand | None = None
     runtime: BusinessInvestigationRuntimeProjection
+    current_workspace: BusinessInvestigationCurrentWorkspace
     artifacts: list[BusinessInvestigationArtifactSlot] = Field(min_length=4, max_length=4)
 
     @field_validator("observed_at")
@@ -268,6 +319,16 @@ class BusinessInvestigationStageRunSource:
     step_run_id: str
     attempt: int
     status: StepRunStatus
+    input_refs: tuple[ResourceRef, ...] = ()
+    output_refs: tuple[ResourceRef, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class BusinessInvestigationStagePlanSource:
+    stage_id: str
+    responsibility_slot_ids: tuple[str, ...] = ()
+    assignee_refs: tuple[ResourceRef, ...] = ()
+    input_refs: tuple[ResourceRef, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -286,6 +347,7 @@ class BusinessInvestigationRuntimeSource:
     task_run_id: str | None = None
     task_run_version: int | None = None
     task_run_status: TaskRunStatus | None = None
+    plan_stages: tuple[BusinessInvestigationStagePlanSource, ...] = ()
     stages: tuple[BusinessInvestigationStageRunSource, ...] = ()
     checkpoint: BusinessInvestigationCheckpointSource | None = None
 
@@ -408,15 +470,28 @@ class CanonicalBusinessInvestigationProjectionReader:
         steps = runtime_row["steps"]
         if not isinstance(steps, list) or [item.get("stepKey") for item in steps] != list(STAGE_ORDER):
             raise ValueError("Business Investigation Plan stages drifted")
+        plan_steps = tuple(PlanStep.model_validate(item) for item in steps)
+        plan_stages = tuple(
+            BusinessInvestigationStagePlanSource(
+                stage_id=item.step_key,
+                responsibility_slot_ids=tuple(item.responsibility_slot_ids),
+                assignee_refs=tuple(item.assignee_refs),
+                input_refs=tuple(item.input_refs),
+            )
+            for item in plan_steps
+        )
         plan_ref = InvestigationExactRef(
             resource_type="PlanRevision", resource_id=plan_id,
             revision=plan_revision, content_hash=f"sha256:{plan_hash}",
         )
         task_run_id = runtime_row["run_id"]
         if task_run_id is None:
-            return BusinessInvestigationRuntimeSource(task_id=task_id, plan_ref=plan_ref)
+            return BusinessInvestigationRuntimeSource(
+                task_id=task_id, plan_ref=plan_ref, plan_stages=plan_stages
+            )
         stage_rows = conn.execute(
-            """SELECT DISTINCT ON (step_key) step_key,step_run_id,attempt,status
+            """SELECT DISTINCT ON (step_key) step_key,step_run_id,attempt,status,
+                              input_refs,output_refs
                FROM aip_step_run
                WHERE org_id=%s AND project_id=%s AND run_id=%s
                  AND step_key=ANY(%s)
@@ -443,12 +518,15 @@ class CanonicalBusinessInvestigationProjectionReader:
             task_run_id=str(task_run_id),
             task_run_version=int(runtime_row["run_version"]),
             task_run_status=TaskRunStatus(str(runtime_row["run_status"])),
+            plan_stages=plan_stages,
             stages=tuple(
                 BusinessInvestigationStageRunSource(
                     stage_id=str(item["step_key"]),
                     step_run_id=str(item["step_run_id"]),
                     attempt=int(item["attempt"]),
                     status=StepRunStatus(str(item["status"])),
+                    input_refs=tuple(ResourceRef.model_validate(ref) for ref in item["input_refs"]),
+                    output_refs=tuple(ResourceRef.model_validate(ref) for ref in item["output_refs"]),
                 )
                 for item in stage_rows
             ),
@@ -468,6 +546,7 @@ class BusinessInvestigationProjectionBuilder:
         bindings = {item.artifact_ref.resource_type: item for item in source.bindings}
         artifacts = [self._slot(kind, bindings.get(kind.value)) for kind in BusinessInvestigationArtifactType]
         runtime = self._runtime(source.runtime)
+        current_workspace = self._current_workspace(source.runtime, runtime, artifacts)
         binding_hashes = sorted(item.binding_hash for item in source.bindings)
         watermark_value = {
             "caseRevision": source.case.revision,
@@ -526,6 +605,7 @@ class BusinessInvestigationProjectionBuilder:
             pending_requirement_ref=source.state.pending_requirement_ref,
             uncertain_command=source.state.uncertain_command,
             runtime=runtime,
+            current_workspace=current_workspace,
             artifacts=artifacts,
         )
         payload = draft.model_dump(by_alias=True, mode="json")
@@ -581,6 +661,108 @@ class BusinessInvestigationProjectionBuilder:
             completed=sum(item.status == "completed" for item in stages),
             current_stage_id=current,
         )
+
+    @staticmethod
+    def _current_workspace(
+        source: BusinessInvestigationRuntimeSource | None,
+        runtime: BusinessInvestigationRuntimeProjection,
+        artifacts: list[BusinessInvestigationArtifactSlot],
+    ) -> BusinessInvestigationCurrentWorkspace:
+        non_claims = [
+            "可回链输入不等于已确认经营事实。",
+            "当前阶段状态不代表方案已在真实业务系统执行。",
+            "不展示或持久化模型私有过程。",
+        ]
+        if source is None:
+            return BusinessInvestigationCurrentWorkspace(
+                title="尚无当前阶段",
+                question="尚未建立 canonical Plan 绑定，当前经营问题未知。",
+                status="unbound",
+                areas=BusinessInvestigationProjectionBuilder._areas([], [], "尚未绑定 canonical Plan。"),
+                non_claims=non_claims,
+            )
+        plan_by_stage = {item.stage_id: item for item in source.plan_stages}
+        run_by_stage = {item.stage_id: item for item in source.stages}
+        if source.task_run_id is None:
+            stage_id = STAGE_ORDER[0]
+            status = "task_pending"
+        elif runtime.current_stage_id is None:
+            stage_id = STAGE_ORDER[-1]
+            status = "completed"
+        else:
+            stage_id = runtime.current_stage_id
+            stage_status = next(item.status for item in runtime.stages if item.stage_id == stage_id)
+            status = {
+                "running": "running",
+                "blocked": "blocked",
+                "completed": "completed",
+            }.get(stage_status, "not_started")
+        plan = plan_by_stage.get(stage_id)
+        stage_run = run_by_stage.get(stage_id)
+        plan_inputs = [] if plan is None else list(plan.input_refs)
+        run_inputs = [] if stage_run is None else list(stage_run.input_refs)
+        inputs = BusinessInvestigationProjectionBuilder._unique_resource_refs(plan_inputs + run_inputs)
+        outputs = BusinessInvestigationProjectionBuilder._unique_resource_refs(
+            [] if stage_run is None else list(stage_run.output_refs)
+        )
+        exact_inputs = [
+            item.artifact_ref for item in artifacts
+            if item.status == "bound" and item.artifact_ref is not None
+        ]
+        unknown_reason = {
+            "task_pending": "Plan 已绑定，但尚未创建 TaskRun。",
+            "not_started": "当前阶段尚未启动，经营结论仍未知。",
+            "running": "当前阶段运行中，未形成专门权威的内容仍保持未知。",
+            "blocked": "当前阶段已阻断，缺失条件不得推演为经营结论。",
+            "completed": "阶段已完成，但未绑定专门内容权威的分类仍保持未知。",
+        }[status]
+        return BusinessInvestigationCurrentWorkspace(
+            stage_id=stage_id,
+            title=STAGE_TITLES[stage_id],
+            question=STAGE_QUESTIONS[stage_id],
+            status=status,
+            responsibility_slot_ids=[] if plan is None else list(plan.responsibility_slot_ids),
+            assignee_refs=[] if plan is None else list(plan.assignee_refs),
+            input_refs=inputs,
+            output_refs=outputs,
+            areas=BusinessInvestigationProjectionBuilder._areas(inputs + outputs, exact_inputs, unknown_reason),
+            non_claims=non_claims,
+        )
+
+    @staticmethod
+    def _areas(
+        resource_refs: list[ResourceRef],
+        exact_refs: list[InvestigationExactRef],
+        unknown_reason: str,
+    ) -> list[BusinessInvestigationContributionArea]:
+        has_refs = bool(resource_refs or exact_refs)
+        return [
+            BusinessInvestigationContributionArea(
+                area="known", title="已知与可回链输入",
+                status="reference_only" if has_refs else "unknown",
+                summary=("仅确认存在可回链输入；其内容尚不能自动声称为经营事实。" if has_refs else "缺少可回链输入，已知事实保持未知。"),
+                resource_refs=resource_refs, exact_refs=exact_refs,
+            ),
+            BusinessInvestigationContributionArea(
+                area="unknown", title="未知与缺口", status="present", summary=unknown_reason,
+            ),
+            BusinessInvestigationContributionArea(
+                area="assumption", title="关键假设", status="unknown",
+                summary="尚无专门的假设 authority，禁止从模型输出或阶段状态推演。",
+            ),
+            BusinessInvestigationContributionArea(
+                area="counter_evidence", title="反证与替代解释", status="unknown",
+                summary="尚无专门的反证 authority，一般 Evidence 不自动归类为反证。",
+            ),
+        ]
+
+    @staticmethod
+    def _unique_resource_refs(values: list[ResourceRef]) -> list[ResourceRef]:
+        unique: dict[str, ResourceRef] = {}
+        for item in values:
+            key = item.model_dump_json(by_alias=True)
+            unique[key] = item
+        return list(unique.values())
 
     @staticmethod
     def _ref(resource_type: str, resource_id: str, revision: int, content_hash: str) -> dict[str, Any]:
