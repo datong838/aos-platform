@@ -158,6 +158,35 @@ class BusinessInvestigationCompilationReceiptStore:
             ) from exc
         return None if row is None else BusinessInvestigationCompilationReceipt.model_validate(row["receipt_data"])
 
+    def get_for_run(
+        self, scope: TenantScope, run_ref: InvestigationExactRef
+    ) -> BusinessInvestigationCompilationReceipt:
+        if run_ref.resource_type != "BusinessInvestigationRun" or not isinstance(
+            run_ref.revision, int
+        ):
+            raise BusinessInvestigationCompileConflict("exact Run ref is required")
+        try:
+            with self._connect_factory(scope) as conn:
+                rows = conn.execute(
+                    """SELECT receipt_data FROM aip_business_investigation_compile_receipt
+                    WHERE org_id=%s AND project_id=%s AND run_id=%s
+                      AND run_version=%s AND run_content_hash=%s
+                    ORDER BY created_at,receipt_id""",
+                    (*scope.key, run_ref.resource_id, run_ref.revision, run_ref.content_hash),
+                ).fetchall()
+        except psycopg.Error as exc:
+            raise BusinessInvestigationCompileConflict(
+                "canonical compilation Receipt read failed closed"
+            ) from exc
+        if len(rows) != 1:
+            raise BusinessInvestigationCompileConflict(
+                "exact Run must resolve one compilation Receipt"
+            )
+        receipt = BusinessInvestigationCompilationReceipt.model_validate(rows[0]["receipt_data"])
+        if receipt.run_ref != run_ref:
+            raise BusinessInvestigationCompileConflict("compilation Receipt Run lineage drifted")
+        return receipt
+
     def record(
         self, scope: TenantScope, receipt: BusinessInvestigationCompilationReceipt
     ) -> BusinessInvestigationCompilationReceiptWrite:

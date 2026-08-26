@@ -13,6 +13,9 @@ from aos_api.aip_business_investigation_runtime import (
     BusinessInvestigationRuntimeBinder,
     BusinessInvestigationRuntimeBlocked,
 )
+from aos_api.aip_business_investigation_compile_saga import (
+    BusinessInvestigationCompilationReceipt,
+)
 from aos_api.aip_contracts import ActorRef, PlanStep, TaskRunStatus, TenantContext
 from aos_api.aip_production_contracts import ExactRevisionRef
 from aos_api.aip_task_models import (
@@ -22,6 +25,7 @@ from aos_api.aip_task_models import (
     TaskTimeline,
 )
 from aos_api.public_contracts import TaskStatus
+from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunView
 from aos_api.tenant_scope import TenantScope
 
 
@@ -141,6 +145,77 @@ class FixedReader:
             raise self.value
         return self.value
 
+    def list_runs(self, scope, *, task_id=None, limit=100):
+        if isinstance(self.value, Exception):
+            raise self.value
+        return [self.value.run]
+
+
+def receipt() -> BusinessInvestigationCompilationReceipt:
+    return BusinessInvestigationCompilationReceipt.model_validate(
+        {
+            "tenant": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
+            "receiptId": "compile-receipt-1",
+            "commandId": "compile-command-1",
+            "requestHash": "sha256:" + "f" * 64,
+            "runRef": {
+                "resourceType": "BusinessInvestigationRun",
+                "resourceId": "investigation-run-1",
+                "revision": 1,
+                "contentHash": "sha256:" + "2" * 64,
+            },
+            "taskId": "task-1",
+            "planRef": exact("PlanRevision", "plan-1", "b", revision=2),
+            "profileRef": exact("InvestigationProfileRevision", "profile-1", "4"),
+            "logicRef": exact("LogicRevision", "logic-1", "5"),
+            "skillBindingSetRef": exact("SkillBindingSetRevision", "binding-1", "8"),
+            "responsibilityPlanRef": exact("ResponsibilityPlanRevision", "role-1", "9"),
+            "inputHash": "d" * 64,
+            "stageCompilationHash": "c" * 64,
+            "compilationHash": "e" * 64,
+            "runtimeAuthorized": False,
+            "createdAt": NOW,
+        }
+    )
+
+
+def domain_run() -> BusinessInvestigationRunView:
+    return BusinessInvestigationRunView.model_validate(
+        {
+            "authority": {
+                "tenant": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
+                "runId": "investigation-run-1",
+                "version": 1,
+                "contentHash": "sha256:" + "2" * 64,
+                "caseRef": {
+                    "resourceType": "BusinessInvestigationCaseRevision",
+                    "resourceId": "case-1",
+                    "revision": 1,
+                    "contentHash": "sha256:" + "1" * 64,
+                },
+                "analysisType": "initial_store_analysis",
+                "triggerKind": "manual",
+                "triggerKey": "manual-1",
+                "lifecycle": "PREPARING",
+                "control": "RUNNING",
+                "createdBy": "owner",
+                "createdAt": NOW,
+            },
+            "state": {
+                "tenant": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
+                "runId": "investigation-run-1",
+                "version": 1,
+                "priorRef": None,
+                "lifecycle": "PREPARING",
+                "control": "RUNNING",
+                "eventSequence": 1,
+                "contentHash": "sha256:" + "3" * 64,
+                "createdBy": "owner",
+                "createdAt": NOW,
+            },
+        }
+    )
+
 
 def test_binder_reuses_exact_canonical_runtime_and_is_deterministic() -> None:
     reader = FixedReader(timeline())
@@ -156,6 +231,16 @@ def test_binder_reuses_exact_canonical_runtime_and_is_deterministic() -> None:
     assert first.checkpoint_ref.resource_id == "checkpoint-2"
     assert first.start_authorized is False
     assert reader.calls == [(SCOPE, "task-run-1"), (SCOPE, "task-run-1")]
+
+
+def test_binder_resolves_unique_paused_runtime_from_exact_receipt() -> None:
+    result = BusinessInvestigationRuntimeBinder(FixedReader(timeline())).bind_receipt(
+        SCOPE, receipt(), domain_run()
+    )
+    assert result.task_run_ref.resource_id == "task-run-1"
+    assert result.task_run_status is TaskRunStatus.PAUSED
+    assert result.checkpoint_ref is not None
+    assert result.business_investigation_run_ref.content_hash == "2" * 64
 
 
 def test_binder_allows_canonical_run_before_first_checkpoint() -> None:

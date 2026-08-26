@@ -12,9 +12,14 @@ from pydantic import Field, model_validator
 from aos_api.aip_business_investigation_compiler import (
     BusinessInvestigationCompilation,
 )
+from aos_api.aip_business_investigation_compile_saga import (
+    BusinessInvestigationCompilationReceipt,
+)
 from aos_api.aip_contracts import AipContractModel, TaskRunStatus, TenantContext
 from aos_api.aip_production_contracts import ExactRevisionRef
-from aos_api.aip_task_models import TaskTimeline
+from aos_api.aip_task_models import TaskRunSnapshot, TaskTimeline
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunView
 from aos_api.tenant_scope import TenantScope
 
 
@@ -76,6 +81,14 @@ class BusinessInvestigationRuntimeBlocked(RuntimeError):
 class RuntimeTimelineReader(Protocol):
     def timeline(self, scope: TenantScope, run_id: str) -> TaskTimeline: ...
 
+    def list_runs(
+        self,
+        scope: TenantScope,
+        *,
+        task_id: str | None = None,
+        limit: int = 100,
+    ) -> list[TaskRunSnapshot]: ...
+
 
 class BusinessInvestigationRuntimeBinder:
     """Validate canonical runtime lineage without mutating runtime authority."""
@@ -102,6 +115,61 @@ class BusinessInvestigationRuntimeBinder:
             ) from exc
         return self._binding(tenant, compilation, task_run_id.strip(), timeline)
 
+    def bind_receipt(
+        self,
+        scope: TenantScope,
+        receipt: BusinessInvestigationCompilationReceipt,
+        domain_run: BusinessInvestigationRunView,
+    ) -> BusinessInvestigationRuntimeBinding:
+        """Resolve one paused canonical TaskRun for an exact compilation Receipt."""
+        tenant = TenantContext(org_id=scope.org_id, project_id=scope.project_id)
+        if receipt.tenant != tenant or domain_run.authority.tenant != tenant:
+            raise BusinessInvestigationRuntimeBlocked("COMPILATION_TENANT_MISMATCH")
+        run_ref = InvestigationExactRef(
+            resource_type="BusinessInvestigationRun",
+            resource_id=domain_run.authority.run_id,
+            revision=domain_run.authority.version,
+            content_hash=domain_run.authority.content_hash,
+        )
+        if receipt.run_ref != run_ref:
+            raise BusinessInvestigationRuntimeBlocked("BUSINESS_RUN_REF_DRIFTED")
+        try:
+            candidates = self._timeline_reader.list_runs(
+                scope, task_id=receipt.task_id, limit=100
+            )
+        except Exception as exc:
+            raise BusinessInvestigationRuntimeBlocked(
+                "TASK_RUN_RESOLUTION_FAILED"
+            ) from exc
+        paused = [
+            item
+            for item in candidates
+            if item.plan_revision_id == receipt.plan_ref.resource_id
+            and item.status is TaskRunStatus.PAUSED
+        ]
+        if len(paused) != 1:
+            raise BusinessInvestigationRuntimeBlocked("PAUSED_TASK_RUN_NOT_UNIQUE")
+        task_run_id = paused[0].id
+        try:
+            timeline = self._timeline_reader.timeline(scope, task_run_id)
+        except Exception as exc:
+            raise BusinessInvestigationRuntimeBlocked(
+                "TIMELINE_RESOLUTION_FAILED"
+            ) from exc
+        return self._binding_from_lineage(
+            tenant=tenant,
+            case_ref=self._aip_ref(
+                domain_run.authority.case_ref,
+                expected_type="BusinessInvestigationCaseRevision",
+            ),
+            run_ref=self._aip_ref(run_ref, expected_type="BusinessInvestigationRun"),
+            compilation_hash=receipt.compilation_hash,
+            task_id=receipt.task_id,
+            expected_plan_ref=receipt.plan_ref,
+            task_run_id=task_run_id,
+            timeline=timeline,
+        )
+
     @classmethod
     def _binding(
         cls,
@@ -110,10 +178,34 @@ class BusinessInvestigationRuntimeBinder:
         task_run_id: str,
         timeline: TaskTimeline,
     ) -> BusinessInvestigationRuntimeBinding:
+        return cls._binding_from_lineage(
+            tenant=tenant,
+            case_ref=compilation.case_ref,
+            run_ref=compilation.run_ref,
+            compilation_hash=compilation.compilation_hash,
+            task_id=compilation.task_id,
+            expected_plan_ref=compilation.plan_ref,
+            task_run_id=task_run_id,
+            timeline=timeline,
+        )
+
+    @classmethod
+    def _binding_from_lineage(
+        cls,
+        *,
+        tenant: TenantContext,
+        case_ref: ExactRevisionRef,
+        run_ref: ExactRevisionRef,
+        compilation_hash: str,
+        task_id: str,
+        expected_plan_ref: ExactRevisionRef,
+        task_run_id: str,
+        timeline: TaskTimeline,
+    ) -> BusinessInvestigationRuntimeBinding:
         task = timeline.task
         plan = timeline.plan
         run = timeline.run
-        if task.id != compilation.task_id:
+        if task.id != task_id:
             raise BusinessInvestigationRuntimeBlocked("TASK_ID_DRIFTED")
         if plan.task_id != task.id or run.task_id != task.id:
             raise BusinessInvestigationRuntimeBlocked("RUNTIME_TASK_LINEAGE_DRIFTED")
@@ -129,7 +221,7 @@ class BusinessInvestigationRuntimeBinder:
             revision=plan.revision,
             content_hash=plan.content_hash,
         )
-        if plan_ref != compilation.plan_ref:
+        if plan_ref != expected_plan_ref:
             raise BusinessInvestigationRuntimeBlocked("PLAN_REF_DRIFTED")
         if run.plan_revision_id != plan.id:
             raise BusinessInvestigationRuntimeBlocked("TASK_RUN_PLAN_DRIFTED")
@@ -147,11 +239,11 @@ class BusinessInvestigationRuntimeBinder:
         )
         snapshot = {
             "tenant": tenant.model_dump(mode="json", by_alias=True),
-            "caseRef": compilation.case_ref.model_dump(mode="json", by_alias=True),
-            "businessInvestigationRunRef": compilation.run_ref.model_dump(
+            "caseRef": case_ref.model_dump(mode="json", by_alias=True),
+            "businessInvestigationRunRef": run_ref.model_dump(
                 mode="json", by_alias=True
             ),
-            "compilationHash": compilation.compilation_hash,
+            "compilationHash": compilation_hash,
             "taskRef": task_ref.model_dump(mode="json", by_alias=True),
             "planRef": plan_ref.model_dump(mode="json", by_alias=True),
             "taskRunRef": task_run_ref.model_dump(mode="json", by_alias=True),
@@ -165,9 +257,9 @@ class BusinessInvestigationRuntimeBinder:
         }
         return BusinessInvestigationRuntimeBinding(
             tenant=tenant,
-            case_ref=compilation.case_ref,
-            business_investigation_run_ref=compilation.run_ref,
-            compilation_hash=compilation.compilation_hash,
+            case_ref=case_ref,
+            business_investigation_run_ref=run_ref,
+            compilation_hash=compilation_hash,
             task_ref=task_ref,
             plan_ref=plan_ref,
             task_run_ref=task_run_ref,
@@ -175,6 +267,21 @@ class BusinessInvestigationRuntimeBinder:
             task_run_status=run.status,
             plan_step_count=len(plan.steps),
             binding_hash=_canonical_hash(snapshot),
+        )
+
+    @staticmethod
+    def _aip_ref(ref, *, expected_type: str) -> ExactRevisionRef:
+        if (
+            ref.resource_type != expected_type
+            or not isinstance(ref.revision, int)
+            or not ref.content_hash.startswith("sha256:")
+        ):
+            raise BusinessInvestigationRuntimeBlocked("DOMAIN_EXACT_REF_DRIFTED")
+        return ExactRevisionRef(
+            resource_type=ref.resource_type,
+            resource_id=ref.resource_id,
+            revision=ref.revision,
+            content_hash=ref.content_hash.removeprefix("sha256:"),
         )
 
     @staticmethod

@@ -15,6 +15,7 @@ import type {
   InvestigationRuntimeProjection,
   InvestigationResourceRef,
   InvestigationCurrentWorkspace,
+  InvestigationDataCommandResponse,
 } from "./contracts";
 
 const HASH = /^sha256:[0-9a-f]{64}$/;
@@ -30,7 +31,7 @@ const TASK_RUN_STATUSES = ["queued", "running", "pausing", "paused", "succeeded"
 const LEGACY_ARTIFACT_TYPES = ["BusinessDossierRevision", "ProblemMapRevision", "SolutionSetRevision", "DecisionReportRevision"] as const;
 const ARTIFACT_TYPES = ["BusinessDossierRevision", "ProblemMapRevision", "OpportunityMapRevision", "SolutionPortfolioRevision"] as const;
 const TIMELINE_TYPES = ["case_revision", "run_created", "state_revision", "artifact_bound"] as const;
-const RUN_COMMANDS = ["PAUSE_RUN", "RESUME_RUN", "CANCEL_RUN"] as const;
+const RUN_COMMANDS = ["PAUSE_RUN", "RESUME_RUN", "CANCEL_RUN", "REQUEST_DATA", "CONFIRM_DATA_REQUIREMENT"] as const;
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) throw new TypeError(`${label} 必须是对象`);
@@ -173,6 +174,31 @@ export function parseInvestigationRunStateCommandResponse(
   };
 }
 
+export function parseInvestigationDataCommandResponse(
+  value: unknown,
+  runId: string,
+  expectedTenant?: InvestigationTenant,
+): InvestigationDataCommandResponse {
+  const raw = record(value, "dataCommand");
+  exact(raw, ["tenant", "requirementRef", "requirementStatus", "runAuthority", "dataReplayed", "runReplayed", "sourceReadPerformed", "externalEffectAuthorized"], "dataCommand");
+  const responseTenant = tenant(raw.tenant, expectedTenant);
+  if (typeof raw.dataReplayed !== "boolean" || typeof raw.runReplayed !== "boolean") throw new TypeError("dataCommand replay 标记非法");
+  if (raw.sourceReadPerformed !== false || raw.externalEffectAuthorized !== false) throw new TypeError("dataCommand 副作用边界漂移");
+  const requirementRef = ref(raw.requirementRef, "dataCommand.requirementRef", "DataRequirementRevision");
+  const runAuthority = parseRunState(raw.runAuthority, responseTenant, runId);
+  if (!runAuthority.pendingRequirementRef || JSON.stringify(runAuthority.pendingRequirementRef) !== JSON.stringify(requirementRef)) throw new TypeError("dataCommand Run/DataRequirement exact 回读漂移");
+  return {
+    tenant: responseTenant,
+    requirementRef,
+    requirementStatus: enumValue(raw.requirementStatus, ["requested", "accepted", "rejected", "fulfilled", "cancelled", "stale", "unknown"] as const, "dataCommand.requirementStatus"),
+    runAuthority,
+    dataReplayed: raw.dataReplayed,
+    runReplayed: raw.runReplayed,
+    sourceReadPerformed: false,
+    externalEffectAuthorized: false,
+  };
+}
+
 function nullableText(value: unknown, label: string, max = 240): string | null { return value === null ? null : text(value, label, max); }
 
 function parseRuntime(value: unknown): InvestigationRuntimeProjection {
@@ -243,20 +269,24 @@ export function parseInvestigationWorkbenchView(value: unknown, runId: string, e
   }
   const lifecycle = enumValue(raw.lifecycle, RUN_LIFECYCLES, "view.lifecycle");
   const control = enumValue(raw.control, RUN_CONTROLS, "view.control");
+  const runtime = parseRuntime(raw.runtime);
+  const pendingRequirementRef = nullableRef(raw.pendingRequirementRef, "view.pendingRequirementRef", "DataRequirementRevision");
   let commandProjection: InvestigationWorkbenchView["commandProjection"] = null;
   if (v5) {
     const commandRaw = record(raw.commandProjection, "view.commandProjection");
     exact(commandRaw, ["expectedStateVersion", "allowedCommands", "externalEffectsAllowed"], "view.commandProjection");
-    if (!Array.isArray(commandRaw.allowedCommands) || commandRaw.allowedCommands.length > 2) throw new TypeError("allowedCommands 非法");
+    if (!Array.isArray(commandRaw.allowedCommands) || commandRaw.allowedCommands.length > 3) throw new TypeError("allowedCommands 非法");
     const allowedCommands = commandRaw.allowedCommands.map((item) => enumValue(item, RUN_COMMANDS, "allowedCommand"));
     const canonical = RUN_COMMANDS.filter((item) => allowedCommands.includes(item));
     if (new Set(allowedCommands).size !== allowedCommands.length || JSON.stringify(allowedCommands) !== JSON.stringify(canonical)) throw new TypeError("allowedCommands 非 canonical");
     const expectedStateVersion = integer(commandRaw.expectedStateVersion, "commandProjection.expectedStateVersion", 1);
     if (expectedStateVersion !== stateRef.revision || commandRaw.externalEffectsAllowed !== false) throw new TypeError("commandProjection authority 漂移");
     const terminal = lifecycle === "COMPLETED" || lifecycle === "FAILED";
-    const expectedCommands = terminal ? [] : control === "RUNNING" ? ["PAUSE_RUN", "CANCEL_RUN"] : control === "PAUSED" ? ["RESUME_RUN", "CANCEL_RUN"] : [];
+    const expectedCommands: string[] = terminal ? [] : control === "RUNNING" ? ["PAUSE_RUN", "CANCEL_RUN"] : control === "PAUSED" ? ["RESUME_RUN", "CANCEL_RUN"] : [];
+    if (!terminal && control === "RUNNING" && !pendingRequirementRef && runtime.bindingStatus === "bound" && runtime.taskRunStatus === "paused" && runtime.checkpoint) expectedCommands.push("REQUEST_DATA");
+    if (!terminal && control === "RUNNING" && lifecycle === "WAITING_DATA" && pendingRequirementRef) expectedCommands.push("CONFIRM_DATA_REQUIREMENT");
     if (JSON.stringify(allowedCommands) !== JSON.stringify(expectedCommands)) throw new TypeError("allowedCommands 与 Run 状态不一致");
     commandProjection = { expectedStateVersion, allowedCommands, externalEffectsAllowed: false };
   }
-  return { schemaVersion, drilldownVersion: canonicalDrilldown ? "canonical-v4" : "legacy-v3", tenant: responseTenant, projectionHash, sourceWatermark: { caseRevision: integer(watermarkRaw.caseRevision, "caseRevision", 1), runVersion: integer(watermarkRaw.runVersion, "runVersion", 1), stateVersion: integer(watermarkRaw.stateVersion, "stateVersion", 1), bindingHashes, runtimeHash, contentHash: watermarkHash }, observedAt: timestamp(raw.observedAt, "view.observedAt"), caseRef, runRef, stateRef, caseEnvelope, lifecycle, control, pendingRequirementRef: nullableRef(raw.pendingRequirementRef, "view.pendingRequirementRef", "DataRequirementRevision"), uncertainCommand, runtime: parseRuntime(raw.runtime), currentWorkspace: parseCurrentWorkspace(raw.currentWorkspace), artifacts, evidence, timeline, commandProjection };
+  return { schemaVersion, drilldownVersion: canonicalDrilldown ? "canonical-v4" : "legacy-v3", tenant: responseTenant, projectionHash, sourceWatermark: { caseRevision: integer(watermarkRaw.caseRevision, "caseRevision", 1), runVersion: integer(watermarkRaw.runVersion, "runVersion", 1), stateVersion: integer(watermarkRaw.stateVersion, "stateVersion", 1), bindingHashes, runtimeHash, contentHash: watermarkHash }, observedAt: timestamp(raw.observedAt, "view.observedAt"), caseRef, runRef, stateRef, caseEnvelope, lifecycle, control, pendingRequirementRef, uncertainCommand, runtime, currentWorkspace: parseCurrentWorkspace(raw.currentWorkspace), artifacts, evidence, timeline, commandProjection };
 }

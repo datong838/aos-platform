@@ -105,18 +105,34 @@ describe("BusinessInvestigationTab", () => {
     const initial: InvestigationWorkbenchView = { ...workbenchView(), schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", drilldownVersion: "canonical-v4", commandProjection: { expectedStateVersion: 1, allowedCommands: ["PAUSE_RUN", "CANCEL_RUN"], externalEffectsAllowed: false } };
     const next: InvestigationWorkbenchView = { ...initial, stateRef: { ...initial.stateRef, revision: 2 }, control: "PAUSED", commandProjection: { expectedStateVersion: 2, allowedCommands: ["RESUME_RUN", "CANCEL_RUN"], externalEffectsAllowed: false } };
     const executeRunCommand = vi.fn().mockResolvedValue({ commandId: "command-intent-1", command: "PAUSE_RUN", replayed: false, authority: { ...runView.state, version: 2, priorRef: ref("BusinessInvestigationRunStateRevision", "run-a"), eventSequence: 2, control: "PAUSED" }, view: next });
-    const client: InvestigationCommandClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand };
+    const client: InvestigationCommandClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand, requestMissingData: vi.fn(), confirmDataRequirement: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled createCommandId={() => "command-intent-1"} />));
     expect(host.textContent).toContain("暂停 Run"); expect(host.textContent).toContain("取消 Run"); expect(host.textContent).not.toContain("继续 Run");
     await act(async () => Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "暂停 Run")?.click());
     expect(executeRunCommand).toHaveBeenCalledWith({ runId: "run-a", command: "PAUSE_RUN", commandId: "command-intent-1", expectedStateVersion: 1 });
     expect(host.textContent).toContain("exact state v2 回读闭合"); expect(host.textContent).toContain("继续 Run"); expect(host.textContent).not.toContain("暂停 Run");
   });
+  it("只按服务端 REQUEST_DATA 入口提交有界事实清单", async () => {
+    const requirementRef = { ...ref("DataRequirementRevision", "requirement-1"), revision: 1 };
+    const initial: InvestigationWorkbenchView = { ...workbenchView(), schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", drilldownVersion: "canonical-v4", runtime: { ...workbenchView().runtime, taskRunStatus: "paused" }, commandProjection: { expectedStateVersion: 1, allowedCommands: ["CANCEL_RUN", "REQUEST_DATA"], externalEffectsAllowed: false } };
+    const next: InvestigationWorkbenchView = { ...initial, stateRef: { ...initial.stateRef, revision: 2 }, lifecycle: "WAITING_DATA", pendingRequirementRef: requirementRef, commandProjection: { expectedStateVersion: 2, allowedCommands: ["CANCEL_RUN", "CONFIRM_DATA_REQUIREMENT"], externalEffectsAllowed: false } };
+    const requestMissingData = vi.fn().mockResolvedValue({ commandId: "data-command-1", command: "REQUEST_DATA", response: { tenant, requirementRef, requirementStatus: "requested", runAuthority: { ...runView.state, version: 2, priorRef: ref("BusinessInvestigationRunStateRevision", "run-a"), lifecycle: "WAITING_DATA", eventSequence: 2, pendingRequirementRef: requirementRef }, dataReplayed: false, runReplayed: false, sourceReadPerformed: false, externalEffectAuthorized: false }, view: next });
+    const client: InvestigationCommandClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand: vi.fn(), requestMissingData, confirmDataRequirement: vi.fn() };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled createCommandId={() => "data-command-1"} />));
+    const form = host.querySelector<HTMLFormElement>('[aria-label="创建补数需求"]')!;
+    expect(form.textContent).toContain("Receipt-first"); expect(form.textContent).toContain("不读取源数据");
+    const facts = form.querySelector<HTMLTextAreaElement>("textarea")!;
+    await act(async () => { Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set?.call(facts, "gmv\nrepeat_purchase"); facts.dispatchEvent(new Event("input", { bubbles: true })); });
+    await act(async () => form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+    expect(requestMissingData).toHaveBeenCalledOnce();
+    expect(requestMissingData).toHaveBeenCalledWith(expect.objectContaining({ runId: "run-a", commandId: "data-command-1", expectedStateVersion: 1, body: expect.objectContaining({ requiredFacts: ["gmv", "repeat_purchase"], freshnessMaxAgeSeconds: 3600, qualityThreshold: 0.95, minPopulation: 20 }) }));
+    expect(host.textContent).toContain("DataRequirement requirement-1 · r1 回读闭合"); expect(host.textContent).toContain("人工确认范围");
+  });
   it("命令结果未知后锁定 POST，只允许 GET 重新核验", async () => {
     const initial: InvestigationWorkbenchView = { ...workbenchView(), schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", drilldownVersion: "canonical-v4", commandProjection: { expectedStateVersion: 1, allowedCommands: ["PAUSE_RUN", "CANCEL_RUN"], externalEffectsAllowed: false } };
     const executeRunCommand = vi.fn().mockRejectedValue(new EcommerceInvestigationClientError("offline", 0, "COMMAND_OUTCOME_UNKNOWN"));
     const getRunView = vi.fn().mockResolvedValue(initial);
-    const client: InvestigationCommandClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView, executeRunCommand };
+    const client: InvestigationCommandClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView, executeRunCommand, requestMissingData: vi.fn(), confirmDataRequirement: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled createCommandId={() => "command-unknown-1"} />));
     await act(async () => Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "暂停 Run")?.click());
     expect(host.textContent).toContain("命令结果未知"); expect(host.textContent).not.toContain("暂停 Run");

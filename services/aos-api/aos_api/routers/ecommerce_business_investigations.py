@@ -26,6 +26,12 @@ from aos_api.ecommerce_business_investigation_application import (
     TriggerBusinessInvestigationScheduleRequest,
     TransitionBusinessInvestigationCaseRequest,
 )
+from aos_api.ecommerce_business_investigation_data_command import (
+    BusinessInvestigationDataCommandConflict,
+    BusinessInvestigationDataCommandResponse,
+    ConfirmBusinessInvestigationDataRequirementCommand,
+    RequestBusinessInvestigationMissingDataCommand,
+)
 from aos_api.ecommerce_business_investigation_case import (
     BusinessInvestigationCaseConflict,
     BusinessInvestigationCaseNotFound,
@@ -60,6 +66,7 @@ router = APIRouter(
 _ERRORS = {
     400: {"model": ErrorBody},
     401: {"model": ErrorBody},
+    403: {"model": ErrorBody},
     404: {"model": ErrorBody},
     409: {"model": ErrorBody},
     422: {"model": ErrorBody},
@@ -70,6 +77,7 @@ ResourceIdPath = Annotated[
     str,
     Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$"),
 ]
+_DATA_WRITE_ROLES = {"admin", "developer", "data-owner"}
 
 
 @lru_cache(maxsize=1)
@@ -128,6 +136,7 @@ def _map_error(exc: Exception) -> ApiError:
             BusinessInvestigationCaseConflict,
             BusinessInvestigationRunConflict,
             BusinessInvestigationScheduleConflict,
+            BusinessInvestigationDataCommandConflict,
         ),
     ):
         return ApiError(
@@ -152,6 +161,15 @@ def _map_error(exc: Exception) -> ApiError:
         message="business investigation authority failed closed",
         status_code=503,
     )
+
+
+def _require_data_write_role(principal: Principal) -> None:
+    if not _DATA_WRITE_ROLES.intersection(principal.roles):
+        raise ApiError(
+            code="BUSINESS_INVESTIGATION_DATA_WRITE_FORBIDDEN",
+            message="Principal role does not allow DataRequirement commands",
+            status_code=403,
+        )
 
 
 @router.get("/cases", response_model=BusinessInvestigationCaseListResponse, responses=_ERRORS)
@@ -446,6 +464,68 @@ def request_run_data(
 ) -> BusinessInvestigationRunStateCommandResponse:
     try:
         return application.request_run_data(
+            _scope(principal),
+            run_id,
+            body,
+            expected_version=_expected_version(if_match),
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/runs/{run_id}:request-missing-data",
+    response_model=BusinessInvestigationDataCommandResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunMissingDataRequest",
+)
+def request_run_missing_data(
+    run_id: ResourceIdPath,
+    body: RequestBusinessInvestigationMissingDataCommand,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationDataCommandResponse:
+    try:
+        _require_data_write_role(principal)
+        return application.request_run_missing_data(
+            _scope(principal),
+            run_id,
+            body,
+            expected_version=_expected_version(if_match),
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/runs/{run_id}:confirm-data-requirement",
+    response_model=BusinessInvestigationDataCommandResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunDataRequirementConfirm",
+)
+def confirm_run_data_requirement(
+    run_id: ResourceIdPath,
+    body: ConfirmBusinessInvestigationDataRequirementCommand,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationDataCommandResponse:
+    try:
+        _require_data_write_role(principal)
+        return application.confirm_run_data_requirement(
             _scope(principal),
             run_id,
             body,

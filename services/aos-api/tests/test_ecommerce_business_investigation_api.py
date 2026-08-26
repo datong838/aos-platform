@@ -29,12 +29,17 @@ from aos_api.ecommerce_business_investigation_run import (
 from aos_api.ecommerce_business_investigation_projection import (
     BusinessInvestigationProjectionNotFound,
 )
+from aos_api.ecommerce_business_investigation_data_command import (
+    BusinessInvestigationDataCommandResponse,
+)
 from aos_api.errors import register_exception_handlers
 from aos_api.routers import ecommerce_business_investigations as routes
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_business_investigation_lifecycle import HASH_A, draft_case, ref
 from test_ecommerce_business_investigation_schedule import case as scheduled_case
 from test_ecommerce_business_investigation_schedule import policy as schedule_policy
+from test_aip_business_investigation_data_requester import request as missing_data_request
+from test_data_requirement_store import requirement as data_requirement
 
 
 NOW = datetime.now(UTC)
@@ -169,13 +174,59 @@ class FakeApplication:
             replayed=False,
         )
 
+    def request_run_missing_data(self, scope, run_id, request, **kwargs):
+        self.calls.append(("request_missing_data", scope, run_id, request, kwargs))
+        authority = data_requirement(requirement_id="requirement-command-1")
+        requirement_ref = ref(
+            "DataRequirementRevision",
+            authority.requirement_id,
+            revision=authority.revision,
+            content_hash=authority.content_hash,
+        )
+        return BusinessInvestigationDataCommandResponse(
+            tenant=TENANT,
+            requirementRef=requirement_ref,
+            requirementStatus=authority.status,
+            runAuthority=state(
+                "RUNNING",
+                kwargs["expected_version"] + 1,
+                lifecycle="WAITING_DATA",
+                pending_requirement_ref=requirement_ref,
+            ),
+            dataReplayed=False,
+            runReplayed=False,
+        )
 
-def client(application: FakeApplication) -> TestClient:
+    def confirm_run_data_requirement(self, scope, run_id, request, **kwargs):
+        self.calls.append(("confirm_data", scope, run_id, request, kwargs))
+        authority = data_requirement(requirement_id="requirement-command-1")
+        requirement_ref = ref(
+            "DataRequirementRevision",
+            authority.requirement_id,
+            revision=authority.revision,
+            content_hash=authority.content_hash,
+        )
+        return BusinessInvestigationDataCommandResponse(
+            tenant=TENANT,
+            requirementRef=requirement_ref,
+            requirementStatus=authority.status,
+            runAuthority=state(
+                "RUNNING",
+                kwargs["expected_version"] + 1,
+                lifecycle="WAITING_DATA",
+                pending_requirement_ref=requirement_ref,
+            ),
+            dataReplayed=True,
+            runReplayed=False,
+        )
+
+
+def client(application: FakeApplication, *, roles=()) -> TestClient:
     app = FastAPI()
     register_exception_handlers(app)
     app.include_router(routes.router)
     app.dependency_overrides[require_principal] = lambda: Principal(
-        subject="user-1", org_id="org-org", project_id="dev-project"
+        subject="user-1", org_id="org-org", project_id="dev-project", roles=list(roles)
     )
     app.dependency_overrides[routes.get_business_investigation_application] = lambda: application
     return TestClient(app)
@@ -213,6 +264,12 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     assert view["operationId"] == "ecommerceInvestigationRunWorkbenchViewGet"
     request_data = paths["/v1/ecommerce/investigations/runs/{run_id}:request-data"]["post"]
     assert request_data["operationId"] == "ecommerceInvestigationRunDataRequest"
+    assert paths["/v1/ecommerce/investigations/runs/{run_id}:request-missing-data"]["post"][
+        "operationId"
+    ] == "ecommerceInvestigationRunMissingDataRequest"
+    assert paths[
+        "/v1/ecommerce/investigations/runs/{run_id}:confirm-data-requirement"
+    ]["post"]["operationId"] == "ecommerceInvestigationRunDataRequirementConfirm"
 
 
 def test_schedule_policy_http_uses_principal_and_two_exact_versions() -> None:
@@ -437,3 +494,42 @@ def test_request_data_requires_exact_ref_headers_and_principal_scope() -> None:
             json={**body, "tenant": {"orgId": "dev-org", "projectId": "dev-project"}},
         )
         assert tenant_injection.status_code == 400
+
+
+def test_missing_data_commands_require_role_and_hide_server_derived_lineage() -> None:
+    fake = FakeApplication()
+    fake.calls = []
+    body = missing_data_request().model_dump(mode="json", by_alias=True)
+    for key in ("requirementId", "idempotencyKey", "channelRef", "entityRef"):
+        body.pop(key)
+    with client(fake) as api:
+        forbidden = api.post(
+            "/v1/ecommerce/investigations/runs/run-1:request-missing-data",
+            headers={"Idempotency-Key": "missing-data", "If-Match": '"1"'},
+            json=body,
+        )
+        assert forbidden.status_code == 403 and fake.calls == []
+
+    with client(fake, roles=("data-owner",)) as api:
+        created = api.post(
+            "/v1/ecommerce/investigations/runs/run-1:request-missing-data",
+            headers={"Idempotency-Key": "missing-data", "If-Match": '"1"'},
+            json=body,
+        )
+        assert created.status_code == 200
+        assert created.json()["sourceReadPerformed"] is False
+        assert created.json()["externalEffectAuthorized"] is False
+        assert fake.calls[-1][0] == "request_missing_data"
+        injected = api.post(
+            "/v1/ecommerce/investigations/runs/run-1:request-missing-data",
+            headers={"Idempotency-Key": "injected", "If-Match": '"1"'},
+            json={**body, "channelRef": ref("ChannelRevision", "other-channel")},
+        )
+        assert injected.status_code == 400
+        confirmed = api.post(
+            "/v1/ecommerce/investigations/runs/run-1:confirm-data-requirement",
+            headers={"Idempotency-Key": "confirm", "If-Match": '"2"'},
+            json={"decision": "accept"},
+        )
+        assert confirmed.status_code == 200
+        assert fake.calls[-1][0] == "confirm_data"

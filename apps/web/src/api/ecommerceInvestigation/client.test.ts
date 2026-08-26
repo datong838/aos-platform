@@ -26,10 +26,33 @@ describe("EcommerceInvestigationClient", () => {
     await expect(client.executeRunCommand({ runId: "run:1", command: "PAUSE_RUN", commandId: "cmd-1", expectedStateVersion: 1 })).resolves.toMatchObject({ commandId: "cmd-1", command: "PAUSE_RUN", authority: { version: 2 }, view: { control: "PAUSED" } });
     expect(fetch).toHaveBeenNthCalledWith(2, "http://aos.test/v1/ecommerce/investigations/runs/run%3A1:pause", expect.objectContaining({ method: "POST", body: "{}", headers: expect.objectContaining({ "Idempotency-Key": "cmd-1", "If-Match": '"1"' }) }));
     expect(fetch).toHaveBeenNthCalledWith(3, "http://aos.test/v1/ecommerce/investigations/runs/run%3A1/view", expect.objectContaining({ method: "GET" }));
+
+    const requirementRef = ref("DataRequirementRevision", "requirement-1");
+    const dataAuthority = { ...authority, lifecycle: "WAITING_DATA", control: "RUNNING", pendingRequirementRef: requirementRef };
+    const dataResponse = { tenant, requirementRef, requirementStatus: "requested", runAuthority: dataAuthority, dataReplayed: false, runReplayed: false, sourceReadPerformed: false, externalEffectAuthorized: false };
+    const dataReadback = { ...payload, schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", sourceWatermark: { ...payload.sourceWatermark, stateVersion: 2 }, stateRef: { ...payload.stateRef, revision: 2 }, lifecycle: "WAITING_DATA", pendingRequirementRef: requirementRef, commandProjection: { expectedStateVersion: 2, allowedCommands: ["PAUSE_RUN", "CANCEL_RUN", "CONFIRM_DATA_REQUIREMENT"], externalEffectsAllowed: false } };
+    fetch.mockResolvedValueOnce(new Response(JSON.stringify(dataResponse), { status: 200, headers: { "Content-Type": "application/json" } })).mockResolvedValueOnce(new Response(JSON.stringify(dataReadback), { status: 200, headers: { "Content-Type": "application/json" } }));
+    const missingData = { purposeCode: "business_portrait_gap", requiredFacts: ["gmv"], timeWindow: { startAt: "2026-08-01T00:00:00Z", endAt: "2026-08-26T00:00:00Z" }, grain: "day", cutoffAt: "2026-08-26T00:00:00Z", freshnessMaxAgeSeconds: 3600, qualityThreshold: 0.95, markings: ["INTERNAL"], minPopulation: 20, acceptableDegradation: ["narrow_time_window"], requestedOutputs: ["DataProductRevision", "EvidenceBundleRevision"], budgetMinor: 1000, expiresAt: "2026-08-27T00:00:00Z" };
+    await expect(client.requestMissingData({ runId: "run:1", commandId: "data-cmd-1", expectedStateVersion: 1, body: missingData })).resolves.toMatchObject({ commandId: "data-cmd-1", command: "REQUEST_DATA", response: { requirementRef, sourceReadPerformed: false }, view: { pendingRequirementRef: requirementRef } });
+    expect(fetch).toHaveBeenNthCalledWith(4, "http://aos.test/v1/ecommerce/investigations/runs/run%3A1:request-missing-data", expect.objectContaining({ method: "POST", body: JSON.stringify(missingData), headers: expect.objectContaining({ "Idempotency-Key": "data-cmd-1", "If-Match": '"1"' }) }));
+    expect(JSON.parse(String(fetch.mock.calls[3]?.[1]?.body))).not.toHaveProperty("tenant");
+    expect(JSON.parse(String(fetch.mock.calls[3]?.[1]?.body))).not.toHaveProperty("channelRef");
+    expect(fetch).toHaveBeenNthCalledWith(5, "http://aos.test/v1/ecommerce/investigations/runs/run%3A1/view", expect.objectContaining({ method: "GET" }));
   });
   it("命令网络不确定时失败关闭且不自动重放 POST", async () => {
     const fetch = vi.fn().mockRejectedValue(new TypeError("offline")); const client = new EcommerceInvestigationClient({ fetch, getBaseUrl: () => "http://aos.test", getAuthHeaders: () => ({}) });
     await expect(client.executeRunCommand({ runId: "run:1", command: "CANCEL_RUN", commandId: "cmd-unknown", expectedStateVersion: 3 })).rejects.toMatchObject({ code: "COMMAND_OUTCOME_UNKNOWN" });
     expect(fetch).toHaveBeenCalledOnce();
+  });
+  it("DataRequirement 命令网络不确定时只尝试一次 POST", async () => {
+    const fetch = vi.fn().mockRejectedValue(new TypeError("offline")); const client = new EcommerceInvestigationClient({ fetch, getBaseUrl: () => "http://aos.test", getAuthHeaders: () => ({}) });
+    await expect(client.confirmDataRequirement({ runId: "run:1", commandId: "data-unknown", expectedStateVersion: 2, decision: "accept" })).rejects.toMatchObject({ code: "COMMAND_OUTCOME_UNKNOWN" });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+  it("确认命令只允许 canonical accept body，驳回才携带 reason", async () => {
+    const fetch = vi.fn(); const client = new EcommerceInvestigationClient({ fetch });
+    await expect(client.confirmDataRequirement({ runId: "run:1", commandId: "accept-shape", expectedStateVersion: 2, decision: "accept", reason: "不会被持久化" })).rejects.toThrow("accept 不接受 reason");
+    await expect(client.confirmDataRequirement({ runId: "run:1", commandId: "reject-shape", expectedStateVersion: 2, decision: "reject" })).rejects.toThrow("reason 无效");
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 import hashlib
 import json
@@ -70,6 +71,12 @@ class BusinessInvestigationDataSagaConflict(RuntimeError):
     pass
 
 
+@dataclass(frozen=True, slots=True)
+class BusinessInvestigationDataCommandIdentity:
+    command_id: str
+    requirement_id: str
+
+
 class MissingFactRequester(Protocol):
     def request_missing_facts(
         self,
@@ -97,6 +104,7 @@ class BusinessInvestigationDataRequirementSaga:
         spec: MissingFactDataSpec,
         *,
         created_at: datetime,
+        data_idempotency_key: str | None = None,
     ) -> BusinessInvestigationDataRequirementCommandResult:
         actor = actor.strip()
         if not actor:
@@ -105,16 +113,15 @@ class BusinessInvestigationDataRequirementSaga:
             raise BusinessInvestigationDataSagaConflict(
                 "createdAt must be timezone-aware"
             )
+        if data_idempotency_key is not None and (
+            not data_idempotency_key.strip() or len(data_idempotency_key) > 200
+        ):
+            raise BusinessInvestigationDataSagaConflict(
+                "data idempotency key must be non-empty and bounded"
+            )
         checkpoint_ref = self._validate_lineage(scope, compilation_receipt, runtime)
         compilation_receipt_ref = compilation_receipt.exact_ref
-        command_identity = {
-            "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
-            "compilationReceiptRef": compilation_receipt_ref.model_dump(
-                mode="json", by_alias=True
-            ),
-            "checkpointRef": checkpoint_ref.model_dump(mode="json", by_alias=True),
-            "purposeCode": spec.purpose_code,
-        }
+        command_identity = self._command_identity(scope, compilation_receipt, runtime, spec)
         command_id = _stable_id("bi-data-requirement", command_identity)
         requirement_id = _stable_id("data-requirement", command_identity)
         request_hash = _canonical_hash(
@@ -131,7 +138,7 @@ class BusinessInvestigationDataRequirementSaga:
             {
                 **spec.model_dump(mode="json", by_alias=True),
                 "requirementId": requirement_id,
-                "idempotencyKey": command_id,
+                "idempotencyKey": data_idempotency_key or command_id,
             }
         )
         result = self._requester.request_missing_facts(
@@ -157,6 +164,44 @@ class BusinessInvestigationDataRequirementSaga:
             data_requirement_ref=exact_ref,
             replayed=result.replayed,
         )
+
+    def identify(
+        self,
+        scope: TenantScope,
+        compilation_receipt: BusinessInvestigationCompilationReceipt,
+        runtime: BusinessInvestigationRuntimeBinding,
+        spec: MissingFactDataSpec,
+    ) -> BusinessInvestigationDataCommandIdentity:
+        self._validate_lineage(scope, compilation_receipt, runtime)
+        material = self._command_identity(scope, compilation_receipt, runtime, spec)
+        return BusinessInvestigationDataCommandIdentity(
+            command_id=_stable_id("bi-data-requirement", material),
+            requirement_id=_stable_id("data-requirement", material),
+        )
+
+    @staticmethod
+    def _command_identity(
+        scope: TenantScope,
+        compilation_receipt: BusinessInvestigationCompilationReceipt,
+        runtime: BusinessInvestigationRuntimeBinding,
+        spec: MissingFactDataSpec,
+    ) -> dict:
+        checkpoint_ref = runtime.checkpoint_ref
+        if checkpoint_ref is None:
+            raise BusinessInvestigationDataSagaConflict("exact Checkpoint is required")
+        return {
+            "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+            "compilationReceiptRef": compilation_receipt.exact_ref.model_dump(
+                mode="json", by_alias=True
+            ),
+            "checkpointRef": InvestigationExactRef(
+                resource_type="CheckpointRevision",
+                resource_id=checkpoint_ref.resource_id,
+                revision=checkpoint_ref.sequence,
+                content_hash=f"sha256:{checkpoint_ref.state_hash}",
+            ).model_dump(mode="json", by_alias=True),
+            "missingFactSpec": spec.model_dump(mode="json", by_alias=True),
+        }
 
     @staticmethod
     def _validate_lineage(

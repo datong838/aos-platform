@@ -40,6 +40,12 @@ from aos_api.ecommerce_business_investigation_schedule import (
     TriggerBusinessInvestigationScheduleRequest,
     scheduled_trigger_key,
 )
+from aos_api.ecommerce_business_investigation_data_command import (
+    BusinessInvestigationDataCommandResponse,
+    ConfirmBusinessInvestigationDataRequirementCommand,
+    EcommerceBusinessInvestigationDataCommandService,
+    RequestBusinessInvestigationMissingDataCommand,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -136,10 +142,14 @@ class EcommerceBusinessInvestigationApplication:
         run_store: BusinessInvestigationRunStore | None = None,
         schedule_store: BusinessInvestigationScheduleStore | None = None,
         projection_reader: BusinessInvestigationProjectionReader | None = None,
+        data_command_service: EcommerceBusinessInvestigationDataCommandService | None = None,
     ) -> None:
         self._cases = case_store or BusinessInvestigationCaseStore()
         self._runs = run_store or BusinessInvestigationRunStore()
         self._schedules = schedule_store or BusinessInvestigationScheduleStore()
+        self._data_commands = (
+            data_command_service or EcommerceBusinessInvestigationDataCommandService()
+        )
         self._projection = BusinessInvestigationProjectionBuilder(
             projection_reader or CanonicalBusinessInvestigationProjectionReader()
         )
@@ -508,6 +518,48 @@ class EcommerceBusinessInvestigationApplication:
         )
         return BusinessInvestigationRunStateCommandResponse(
             tenant=self._tenant(scope), authority=result.authority, replayed=result.replayed
+        )
+
+    def request_run_missing_data(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        request: RequestBusinessInvestigationMissingDataCommand,
+        *,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationDataCommandResponse:
+        return self._data_commands.request_missing_data(
+            scope,
+            run_id,
+            request,
+            expected_version=expected_version,
+            idempotency_key=idempotency_key,
+            actor=actor,
+            occurred_at=occurred_at,
+        )
+
+    def confirm_run_data_requirement(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        request: ConfirmBusinessInvestigationDataRequirementCommand,
+        *,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationDataCommandResponse:
+        return self._data_commands.confirm_requirement(
+            scope,
+            run_id,
+            request,
+            expected_version=expected_version,
+            idempotency_key=idempotency_key,
+            actor=actor,
+            occurred_at=occurred_at,
         )
 
     def mark_run_unknown(

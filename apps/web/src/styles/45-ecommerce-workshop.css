@@ -1027,6 +1027,23 @@
 .business-investigation-blockers > p { min-width: 0; margin: 0; padding: 9px; border: 1px solid color-mix(in srgb, var(--aos-danger) 45%, var(--aos-border)); background: color-mix(in srgb, var(--aos-danger) 5%, var(--aos-surface)); }
 .business-investigation-blockers p { margin: 4px 0 0; color: var(--aos-text-secondary); font-size: 11px; }
 .business-investigation-blockers small { display: block; margin-top: 5px; overflow-wrap: anywhere; color: var(--aos-text-tertiary); }
+.business-investigation-data-command { display: grid; grid-template-columns: minmax(220px, .9fr) minmax(260px, 1.4fr) auto; gap: 10px; align-items: end; margin-top: 10px; padding: 10px; border: 1px solid var(--aos-border-strong); border-left: 3px solid var(--aos-warning); background: var(--aos-surface-hover); }
+.business-investigation-data-command > header { align-self: stretch; }
+.business-investigation-data-command > header span { display: block; color: var(--aos-text-tertiary); font-size: 9px; letter-spacing: .04em; }
+.business-investigation-data-command h4 { margin: 4px 0 0; font-size: 13px; }
+.business-investigation-data-command > header > strong { display: block; margin-top: 7px; color: var(--aos-warning); font-size: 10px; }
+.business-investigation-data-command label { display: grid; gap: 5px; min-width: 0; color: var(--aos-text-secondary); font-size: 10px; }
+.business-investigation-data-command textarea { width: 100%; min-width: 0; resize: vertical; border: 1px solid var(--aos-border); border-radius: 2px; background: var(--aos-surface); color: var(--aos-text-primary); font: inherit; line-height: 1.45; }
+.business-investigation-data-command dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-column: 1 / -1; gap: 1px; margin: 0; background: var(--aos-border); }
+.business-investigation-data-command dl div { min-width: 0; padding: 7px; background: var(--aos-surface); }
+.business-investigation-data-command dt { color: var(--aos-text-tertiary); font-size: 9px; }
+.business-investigation-data-command dd { margin: 3px 0 0; overflow-wrap: anywhere; font-size: 10px; }
+.business-investigation-data-command button { min-height: 32px; padding: 6px 10px; border: 1px solid var(--aos-border-strong); border-radius: 2px; background: var(--aos-surface); color: var(--aos-text-primary); font-weight: 700; }
+.business-investigation-data-command button:hover:not(:disabled),
+.business-investigation-data-command button:focus-visible { border-color: var(--aos-accent); outline: 2px solid color-mix(in srgb, var(--aos-accent) 30%, transparent); outline-offset: 1px; }
+.business-investigation-data-command button:disabled { cursor: not-allowed; opacity: .52; }
+.business-investigation-data-decisions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.business-investigation-data-decisions button:last-child { border-color: color-mix(in srgb, var(--aos-danger) 55%, var(--aos-border)); color: var(--aos-danger); }
 .business-investigation-gate-boundary { margin: 8px 0 0; color: var(--aos-text-tertiary); font-size: 10px; }
 .business-investigation-tenant { color: var(--aos-text-tertiary); font-size: 10px; text-align: right; }
 .analyst-readiness-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
@@ -1396,6 +1413,7 @@
   .analyst-readiness-grid { grid-template-columns: 1fr; }
   .analyst-metrics { grid-template-columns: 1fr; }
   .business-investigation-workbench { grid-template-columns: 1fr; }
+  .business-investigation-data-command { grid-template-columns: 1fr; align-items: stretch; }
   .analyst-learning-scenario > header { flex-direction: column; }
   .analyst-learning-layers,
   .analyst-learning-ledger,
@@ -1425,7 +1443,9 @@
   .business-investigation-drilldown-grid,
   .business-investigation-gate-axes,
   .business-investigation-requirement,
-  .business-investigation-blockers { grid-template-columns: 1fr; }
+  .business-investigation-blockers,
+  .business-investigation-data-command dl,
+  .business-investigation-data-decisions { grid-template-columns: 1fr; }
   .price-governance-hero { flex-direction: column; }
   .price-governance-tabs,
   .price-governance-readiness,

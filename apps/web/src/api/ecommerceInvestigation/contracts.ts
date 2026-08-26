@@ -130,7 +130,9 @@ export type InvestigationLegacyArtifactType = "BusinessDossierRevision" | "Probl
 export type InvestigationArtifactSlot = { artifactType: InvestigationArtifactType | InvestigationLegacyArtifactType; status: "bound" | "missing"; artifactRef: InvestigationExactRef | null; bindingId: string | null; bindingHash: string | null; selectionRevision: number | null; dataCutoff: string | null; lineageRef: InvestigationExactRef | null };
 export type InvestigationEvidenceDrilldown = { status: "exact" | "missing"; exactRefs: InvestigationExactRef[]; locatorRefs: InvestigationResourceRef[] };
 export type InvestigationTimelineEvent = { eventId: string; eventType: "case_revision" | "run_created" | "state_revision" | "artifact_bound"; title: string; occurredAt: string; exactRef: InvestigationExactRef; relatedRef: InvestigationExactRef | null };
-export type InvestigationRunCommand = "PAUSE_RUN" | "RESUME_RUN" | "CANCEL_RUN";
+export type InvestigationControlCommand = "PAUSE_RUN" | "RESUME_RUN" | "CANCEL_RUN";
+export type InvestigationDataCommand = "REQUEST_DATA" | "CONFIRM_DATA_REQUIREMENT";
+export type InvestigationRunCommand = InvestigationControlCommand | InvestigationDataCommand;
 export type InvestigationCommandProjection = {
   expectedStateVersion: number;
   allowedCommands: InvestigationRunCommand[];
@@ -161,6 +163,38 @@ export type InvestigationWorkbenchView = {
 export type InvestigationCaseListResponse = { tenant: InvestigationTenant; items: InvestigationCaseRevision[]; count: number };
 export type InvestigationRunListResponse = { tenant: InvestigationTenant; items: InvestigationRunView[]; count: number };
 export type InvestigationRunStateCommandResponse = { tenant: InvestigationTenant; authority: InvestigationRunState; replayed: boolean };
+export type InvestigationDataRequirementStatus = "requested" | "accepted" | "rejected" | "fulfilled" | "cancelled" | "stale" | "unknown";
+export type InvestigationDataCommandResponse = {
+  tenant: InvestigationTenant;
+  requirementRef: InvestigationExactRef;
+  requirementStatus: InvestigationDataRequirementStatus;
+  runAuthority: InvestigationRunState;
+  dataReplayed: boolean;
+  runReplayed: boolean;
+  sourceReadPerformed: false;
+  externalEffectAuthorized: false;
+};
+export type InvestigationMissingDataInput = {
+  purposeCode: string;
+  requiredFacts: string[];
+  timeWindow: { startAt: string; endAt: string };
+  grain: string;
+  cutoffAt: string;
+  freshnessMaxAgeSeconds: number;
+  qualityThreshold: number;
+  markings: string[];
+  minPopulation: number;
+  acceptableDegradation: string[];
+  requestedOutputs: string[];
+  budgetMinor: number;
+  expiresAt: string;
+};
+export type InvestigationDataCommandResult = {
+  commandId: string;
+  command: InvestigationDataCommand;
+  response: InvestigationDataCommandResponse;
+  view: InvestigationWorkbenchView;
+};
 export type InvestigationReadClient = {
   listCases(signal?: AbortSignal): Promise<InvestigationCaseListResponse>;
   listRuns(caseId: string, signal?: AbortSignal): Promise<InvestigationRunListResponse>;
@@ -168,7 +202,7 @@ export type InvestigationReadClient = {
 };
 export type InvestigationRunCommandResult = {
   commandId: string;
-  command: InvestigationRunCommand;
+  command: InvestigationControlCommand;
   replayed: boolean;
   authority: InvestigationRunState;
   view: InvestigationWorkbenchView;
@@ -176,8 +210,21 @@ export type InvestigationRunCommandResult = {
 export type InvestigationCommandClient = InvestigationReadClient & {
   executeRunCommand(input: {
     runId: string;
-    command: InvestigationRunCommand;
+    command: InvestigationControlCommand;
     commandId: string;
     expectedStateVersion: number;
   }, signal?: AbortSignal): Promise<InvestigationRunCommandResult>;
+  requestMissingData(input: {
+    runId: string;
+    commandId: string;
+    expectedStateVersion: number;
+    body: InvestigationMissingDataInput;
+  }, signal?: AbortSignal): Promise<InvestigationDataCommandResult>;
+  confirmDataRequirement(input: {
+    runId: string;
+    commandId: string;
+    expectedStateVersion: number;
+    decision: "accept" | "reject";
+    reason?: string;
+  }, signal?: AbortSignal): Promise<InvestigationDataCommandResult>;
 };

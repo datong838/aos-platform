@@ -1,7 +1,7 @@
 import { getApiBase } from "../apiBase";
 import { tenantAuthHeaders } from "../tenant";
-import type { InvestigationCaseListResponse, InvestigationCommandClient, InvestigationRunCommand, InvestigationRunCommandResult, InvestigationRunListResponse, InvestigationWorkbenchView } from "./contracts";
-import { parseInvestigationCaseList, parseInvestigationRunList, parseInvestigationRunStateCommandResponse, parseInvestigationWorkbenchView } from "./parser";
+import type { InvestigationCaseListResponse, InvestigationCommandClient, InvestigationControlCommand, InvestigationDataCommandResult, InvestigationMissingDataInput, InvestigationRunCommandResult, InvestigationRunListResponse, InvestigationWorkbenchView } from "./contracts";
+import { parseInvestigationCaseList, parseInvestigationDataCommandResponse, parseInvestigationRunList, parseInvestigationRunStateCommandResponse, parseInvestigationWorkbenchView } from "./parser";
 
 type FetchImplementation = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 export type EcommerceInvestigationClientOptions = { fetch?: FetchImplementation; getBaseUrl?: () => string; getAuthHeaders?: () => Record<string, string> };
@@ -25,7 +25,7 @@ export class EcommerceInvestigationClient implements InvestigationCommandClient 
   async listCases(signal?: AbortSignal): Promise<InvestigationCaseListResponse> { return parseInvestigationCaseList(await this.get("/v1/ecommerce/investigations/cases?limit=200", signal)); }
   async listRuns(caseId: string, signal?: AbortSignal): Promise<InvestigationRunListResponse> { if (!RESOURCE_ID.test(caseId)) throw new TypeError("caseId 无效"); return parseInvestigationRunList(await this.get(`/v1/ecommerce/investigations/cases/${encodeURIComponent(caseId)}/runs?limit=200`, signal), caseId); }
   async getRunView(runId: string, signal?: AbortSignal): Promise<InvestigationWorkbenchView> { if (!RESOURCE_ID.test(runId)) throw new TypeError("runId 无效"); return parseInvestigationWorkbenchView(await this.get(`/v1/ecommerce/investigations/runs/${encodeURIComponent(runId)}/view`, signal), runId); }
-  async executeRunCommand(input: { runId: string; command: InvestigationRunCommand; commandId: string; expectedStateVersion: number }, signal?: AbortSignal): Promise<InvestigationRunCommandResult> {
+  async executeRunCommand(input: { runId: string; command: InvestigationControlCommand; commandId: string; expectedStateVersion: number }, signal?: AbortSignal): Promise<InvestigationRunCommandResult> {
     if (!RESOURCE_ID.test(input.runId)) throw new TypeError("runId 无效");
     if (!RESOURCE_ID.test(input.commandId)) throw new TypeError("commandId 无效");
     if (!Number.isInteger(input.expectedStateVersion) || input.expectedStateVersion < 1) throw new TypeError("expectedStateVersion 无效");
@@ -58,6 +58,48 @@ export class EcommerceInvestigationClient implements InvestigationCommandClient 
       throw new EcommerceInvestigationClientError("command readback did not converge to exact authority", 409, "COMMAND_READBACK_CONFLICT");
     }
     return { commandId: input.commandId, command: input.command, replayed: commandResponse.replayed, authority: commandResponse.authority, view };
+  }
+
+  async requestMissingData(input: { runId: string; commandId: string; expectedStateVersion: number; body: InvestigationMissingDataInput }, signal?: AbortSignal): Promise<InvestigationDataCommandResult> {
+    return this.executeDataCommand({ ...input, command: "REQUEST_DATA", operation: "request-missing-data", body: input.body }, signal);
+  }
+
+  async confirmDataRequirement(input: { runId: string; commandId: string; expectedStateVersion: number; decision: "accept" | "reject"; reason?: string }, signal?: AbortSignal): Promise<InvestigationDataCommandResult> {
+    if (input.decision === "reject" && (!input.reason?.trim() || input.reason !== input.reason.trim() || input.reason.length > 500)) throw new TypeError("reason 无效");
+    if (input.decision === "accept" && input.reason !== undefined) throw new TypeError("accept 不接受 reason");
+    return this.executeDataCommand({ ...input, command: "CONFIRM_DATA_REQUIREMENT", operation: "confirm-data-requirement", body: input.decision === "reject" ? { decision: input.decision, reason: input.reason } : { decision: input.decision } }, signal);
+  }
+
+  private async executeDataCommand(input: { runId: string; commandId: string; expectedStateVersion: number; command: "REQUEST_DATA" | "CONFIRM_DATA_REQUIREMENT"; operation: string; body: unknown }, signal?: AbortSignal): Promise<InvestigationDataCommandResult> {
+    if (!RESOURCE_ID.test(input.runId) || !RESOURCE_ID.test(input.commandId)) throw new TypeError("data command identity 无效");
+    if (!Number.isInteger(input.expectedStateVersion) || input.expectedStateVersion < 1) throw new TypeError("expectedStateVersion 无效");
+    let response: Response;
+    try {
+      response = await this.fetchImpl(`${this.baseUrl().replace(/\/$/, "")}/v1/ecommerce/investigations/runs/${encodeURIComponent(input.runId)}:${input.operation}`, {
+        method: "POST",
+        headers: { ...this.authHeaders(), Accept: "application/json", "Content-Type": "application/json", "Idempotency-Key": input.commandId, "If-Match": `"${input.expectedStateVersion}"` },
+        body: JSON.stringify(input.body),
+        signal,
+      });
+    } catch (cause) {
+      throw new EcommerceInvestigationClientError(cause instanceof Error ? cause.message : String(cause), 0, "COMMAND_OUTCOME_UNKNOWN");
+    }
+    const payload: unknown = await response.json().catch(() => undefined);
+    if (!response.ok) {
+      const raw = typeof payload === "object" && payload !== null ? payload as Record<string, unknown> : {};
+      throw new EcommerceInvestigationClientError(typeof raw.message === "string" ? raw.message : response.statusText || `HTTP ${response.status}`, response.status, typeof raw.code === "string" ? raw.code : "HTTP_ERROR");
+    }
+    if (payload === undefined) throw new EcommerceInvestigationClientError("canonical data command returned non-JSON success", 0, "INVALID_SUCCESS_RESPONSE");
+    let commandResponse;
+    try { commandResponse = parseInvestigationDataCommandResponse(payload, input.runId); }
+    catch (cause) { throw new EcommerceInvestigationClientError(cause instanceof Error ? cause.message : String(cause), 0, "INVALID_SUCCESS_RESPONSE"); }
+    let view: InvestigationWorkbenchView;
+    try { view = await this.getRunView(input.runId, signal); }
+    catch (cause) { throw new EcommerceInvestigationClientError(cause instanceof Error ? cause.message : String(cause), 0, "COMMAND_OUTCOME_UNKNOWN"); }
+    if (view.tenant.orgId !== commandResponse.tenant.orgId || view.tenant.projectId !== commandResponse.tenant.projectId || view.stateRef.revision !== commandResponse.runAuthority.version || view.stateRef.contentHash !== commandResponse.runAuthority.contentHash || JSON.stringify(view.pendingRequirementRef) !== JSON.stringify(commandResponse.requirementRef)) {
+      throw new EcommerceInvestigationClientError("data command readback did not converge to exact authority", 409, "COMMAND_READBACK_CONFLICT");
+    }
+    return { commandId: input.commandId, command: input.command, response: commandResponse, view };
   }
 }
 

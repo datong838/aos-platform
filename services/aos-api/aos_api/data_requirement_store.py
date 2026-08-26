@@ -62,6 +62,12 @@ class DataRequirementApplyResult:
 
 
 @dataclass(frozen=True, slots=True)
+class DataRequirementCommandReceipt:
+    authority: DataRequirementRevisionRecord
+    result: DataRequirementApplyResult
+
+
+@dataclass(frozen=True, slots=True)
 class DataFulfillmentReceiptView:
     fulfillment_id: str
     receipt_id: str
@@ -189,6 +195,38 @@ class DataRequirementStore:
         ):
             raise DataRequirementStoreError("DataRequirement authority readback drift")
         return item
+
+    def find_command_receipt(
+        self, scope: TenantScope, operation: str, idempotency_key: str
+    ) -> DataRequirementCommandReceipt | None:
+        if operation not in self._TARGETS or not idempotency_key.strip():
+            raise DataRequirementValidationError("operation and idempotency key are required")
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """SELECT payload,revision,content_hash FROM data_requirement_revision
+                WHERE org_id=%s AND project_id=%s AND operation=%s AND idempotency_key=%s""",
+                (*scope.key, operation, idempotency_key),
+            ).fetchone()
+        if row is None:
+            return None
+        authority = DataRequirementRevisionRecord.model_validate(row["payload"])
+        stored_hash = f"sha256:{str(row['content_hash']).strip()}"
+        if authority.revision != int(row["revision"]) or authority.content_hash != stored_hash:
+            raise DataRequirementStoreError("DataRequirement command Receipt drifted")
+        return DataRequirementCommandReceipt(
+            authority=authority,
+            result=DataRequirementApplyResult(
+                exact_ref=InvestigationExactRef(
+                    resource_type="DataRequirementRevision",
+                    resource_id=authority.requirement_id,
+                    revision=authority.revision,
+                    content_hash=authority.content_hash,
+                ),
+                version=authority.revision,
+                etag=authority.content_hash,
+                replayed=True,
+            ),
+        )
 
     def list_fulfillment_receipts(
         self, scope: TenantScope, requirement_id: str

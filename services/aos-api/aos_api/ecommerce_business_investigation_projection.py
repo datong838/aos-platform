@@ -285,14 +285,28 @@ class BusinessInvestigationTimelineEvent(AipContractModel):
 
 class BusinessInvestigationCommandProjection(AipContractModel):
     expected_state_version: int = Field(ge=1)
-    allowed_commands: list[Literal["PAUSE_RUN", "RESUME_RUN", "CANCEL_RUN"]] = Field(
-        default_factory=list, max_length=2
+    allowed_commands: list[
+        Literal[
+            "PAUSE_RUN",
+            "RESUME_RUN",
+            "CANCEL_RUN",
+            "REQUEST_DATA",
+            "CONFIRM_DATA_REQUIREMENT",
+        ]
+    ] = Field(
+        default_factory=list, max_length=3
     )
     external_effects_allowed: Literal[False] = False
 
     @model_validator(mode="after")
     def _canonical(self) -> Self:
-        order = {"PAUSE_RUN": 0, "RESUME_RUN": 1, "CANCEL_RUN": 2}
+        order = {
+            "PAUSE_RUN": 0,
+            "RESUME_RUN": 1,
+            "CANCEL_RUN": 2,
+            "REQUEST_DATA": 3,
+            "CONFIRM_DATA_REQUIREMENT": 4,
+        }
         if self.allowed_commands != sorted(set(self.allowed_commands), key=order.__getitem__):
             raise ValueError("allowedCommands must be unique and canonical")
         return self
@@ -350,19 +364,12 @@ class BusinessInvestigationWorkbenchView(AipContractModel):
             raise ValueError("state watermark drifted")
         if self.command_projection.expected_state_version != self.state_ref.revision:
             raise ValueError("commandProjection state version drifted")
-        terminal = self.lifecycle in {
-            BusinessInvestigationRunLifecycle.COMPLETED,
-            BusinessInvestigationRunLifecycle.FAILED,
-        }
-        expected_commands: list[str]
-        if terminal:
-            expected_commands = []
-        elif self.control is BusinessInvestigationRunControl.RUNNING:
-            expected_commands = ["PAUSE_RUN", "CANCEL_RUN"]
-        elif self.control is BusinessInvestigationRunControl.PAUSED:
-            expected_commands = ["RESUME_RUN", "CANCEL_RUN"]
-        else:
-            expected_commands = []
+        expected_commands = BusinessInvestigationProjectionBuilder._allowed_commands(
+            lifecycle=self.lifecycle,
+            control=self.control,
+            pending_requirement_ref=self.pending_requirement_ref,
+            runtime=self.runtime,
+        )
         if self.command_projection.allowed_commands != expected_commands:
             raise ValueError("commandProjection is not authoritative for current Run state")
         if self.projection_hash != self.calculated_projection_hash():
@@ -621,7 +628,7 @@ class BusinessInvestigationProjectionBuilder:
         current_workspace = self._current_workspace(source.runtime, runtime, artifacts)
         evidence = self._evidence(current_workspace)
         timeline = self._timeline(source)
-        command_projection = self._command_projection(source.state)
+        command_projection = self._command_projection(source.state, runtime)
         binding_hashes = sorted(item.binding_hash for item in source.bindings)
         watermark_value = {
             "caseRevision": source.case.revision,
@@ -693,21 +700,60 @@ class BusinessInvestigationProjectionBuilder:
     @staticmethod
     def _command_projection(
         state: BusinessInvestigationRunStateRevision,
+        runtime: BusinessInvestigationRuntimeProjection,
     ) -> BusinessInvestigationCommandProjection:
-        commands: list[Literal["PAUSE_RUN", "RESUME_RUN", "CANCEL_RUN"]] = []
-        if state.lifecycle not in {
-            BusinessInvestigationRunLifecycle.COMPLETED,
-            BusinessInvestigationRunLifecycle.FAILED,
-        }:
-            if state.control is BusinessInvestigationRunControl.RUNNING:
-                commands = ["PAUSE_RUN", "CANCEL_RUN"]
-            elif state.control is BusinessInvestigationRunControl.PAUSED:
-                commands = ["RESUME_RUN", "CANCEL_RUN"]
+        commands = BusinessInvestigationProjectionBuilder._allowed_commands(
+            lifecycle=state.lifecycle,
+            control=state.control,
+            pending_requirement_ref=state.pending_requirement_ref,
+            runtime=runtime,
+        )
         return BusinessInvestigationCommandProjection(
             expected_state_version=state.version,
             allowed_commands=commands,
             external_effects_allowed=False,
         )
+
+    @staticmethod
+    def _allowed_commands(
+        *,
+        lifecycle: BusinessInvestigationRunLifecycle,
+        control: BusinessInvestigationRunControl,
+        pending_requirement_ref: InvestigationExactRef | None,
+        runtime: BusinessInvestigationRuntimeProjection,
+    ) -> list:
+        terminal = lifecycle in {
+            BusinessInvestigationRunLifecycle.COMPLETED,
+            BusinessInvestigationRunLifecycle.FAILED,
+        }
+        commands: list[str] = []
+        if not terminal:
+            if control is BusinessInvestigationRunControl.RUNNING:
+                commands.extend(["PAUSE_RUN", "CANCEL_RUN"])
+            elif control is BusinessInvestigationRunControl.PAUSED:
+                commands.extend(["RESUME_RUN", "CANCEL_RUN"])
+            if (
+                pending_requirement_ref is None
+                and runtime.binding_status == "bound"
+                and runtime.task_run_status is TaskRunStatus.PAUSED
+                and runtime.checkpoint is not None
+                and control is BusinessInvestigationRunControl.RUNNING
+            ):
+                commands.append("REQUEST_DATA")
+            if (
+                lifecycle is BusinessInvestigationRunLifecycle.WAITING_DATA
+                and pending_requirement_ref is not None
+                and control is BusinessInvestigationRunControl.RUNNING
+            ):
+                commands.append("CONFIRM_DATA_REQUIREMENT")
+        order = {
+            "PAUSE_RUN": 0,
+            "RESUME_RUN": 1,
+            "CANCEL_RUN": 2,
+            "REQUEST_DATA": 3,
+            "CONFIRM_DATA_REQUIREMENT": 4,
+        }
+        return sorted(commands, key=order.__getitem__)
 
     @staticmethod
     def _evidence(

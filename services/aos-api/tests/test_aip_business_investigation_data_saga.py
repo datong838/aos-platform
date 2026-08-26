@@ -112,13 +112,14 @@ class FixedRequester:
 class ConflictOnDriftRequester(FixedRequester):
     def __init__(self) -> None:
         super().__init__()
-        self.first_payload = None
+        self.payload_by_key = {}
 
     def request_missing_facts(self, scope, runtime_binding, item, actor, *, created_at):
         payload = item.model_dump(mode="json", by_alias=True)
-        if self.first_payload is not None and self.first_payload != payload:
+        prior = self.payload_by_key.get(item.idempotency_key)
+        if prior is not None and prior != payload:
             raise DataRequirementIdempotencyConflict("idempotency conflict")
-        self.first_payload = payload
+        self.payload_by_key[item.idempotency_key] = payload
         return super().request_missing_facts(
             scope, runtime_binding, item, actor, created_at=created_at
         )
@@ -227,7 +228,7 @@ def test_result_drift_fails_closed_and_spec_has_no_caller_identity() -> None:
     assert "requirement_id" not in fields and "idempotency_key" not in fields
 
 
-def test_different_fact_spec_keeps_command_identity_and_changes_request_hash() -> None:
+def test_different_fact_spec_changes_command_identity_and_request_hash() -> None:
     first = BusinessInvestigationDataRequirementSaga(FixedRequester()).execute(
         SCOPE, "owner", compilation_receipt(), runtime(), spec(), created_at=NOW
     )
@@ -237,25 +238,26 @@ def test_different_fact_spec_keeps_command_identity_and_changes_request_hash() -
     second = BusinessInvestigationDataRequirementSaga(FixedRequester()).execute(
         SCOPE, "owner", compilation_receipt(), runtime(), changed, created_at=NOW
     )
-    assert first.command_id == second.command_id
-    assert first.data_requirement_ref.resource_id == second.data_requirement_ref.resource_id
+    assert first.command_id != second.command_id
+    assert first.data_requirement_ref.resource_id != second.data_requirement_ref.resource_id
     assert first.request_hash != second.request_hash
     assert first.source_read_performed is False and second.source_read_performed is False
 
 
-def test_same_command_payload_drift_propagates_canonical_data_conflict() -> None:
+def test_distinct_spec_does_not_reuse_canonical_data_idempotency_key() -> None:
     requester = ConflictOnDriftRequester()
     saga = BusinessInvestigationDataRequirementSaga(requester)
     saga.execute(SCOPE, "owner", compilation_receipt(), runtime(), spec(), created_at=NOW)
     changed_payload = spec().model_dump(mode="json", by_alias=True)
     changed_payload["expiresAt"] = NOW + timedelta(days=2)
-    with pytest.raises(DataRequirementIdempotencyConflict):
-        saga.execute(
-            SCOPE,
-            "owner",
-            compilation_receipt(),
-            runtime(),
-            MissingFactDataSpec.model_validate(changed_payload),
-            created_at=NOW,
-        )
-    assert len(requester.calls) == 1
+    changed = saga.execute(
+        SCOPE,
+        "owner",
+        compilation_receipt(),
+        runtime(),
+        MissingFactDataSpec.model_validate(changed_payload),
+        created_at=NOW,
+    )
+    assert changed.command_id != requester.calls[0][2].idempotency_key
+    assert requester.calls[0][2].idempotency_key != requester.calls[1][2].idempotency_key
+    assert len(requester.calls) == 2

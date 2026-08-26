@@ -187,6 +187,66 @@ def test_projection_server_owns_fail_closed_command_matrix(
     assert payload["commandProjection"]["externalEffectsAllowed"] is False
 
 
+def test_projection_server_owns_data_command_matrix_from_exact_runtime() -> None:
+    source = projection_source()
+    paused_runtime = BusinessInvestigationRuntimeSource(
+        task_id="task-1",
+        plan_ref=ref("PlanRevision", "plan-1"),
+        task_run_id="task-run-1",
+        task_run_version=4,
+        task_run_status="paused",
+        plan_stages=tuple(
+            BusinessInvestigationStagePlanSource(stage_id=stage_id)
+            for stage_id in ("portrait", "diagnosis", "solution-design")
+        ),
+        checkpoint=BusinessInvestigationCheckpointSource(
+            checkpoint_id="checkpoint-1",
+            sequence=1,
+            step_key="portrait",
+            state_hash="a" * 64,
+            created_at=NOW,
+        ),
+    )
+    request_view = BusinessInvestigationProjectionBuilder(
+        FixedReader(
+            BusinessInvestigationProjectionSource(
+                case=source.case,
+                run=source.run,
+                state=source.state,
+                runtime=paused_runtime,
+            )
+        )
+    ).build(SCOPE, "run-1", observed_at=NOW)
+    assert request_view.command_projection.allowed_commands == [
+        "PAUSE_RUN",
+        "CANCEL_RUN",
+        "REQUEST_DATA",
+    ]
+
+    waiting = _state(
+        version=2,
+        priorRef=ref("BusinessInvestigationRunStateRevision", "run-1"),
+        eventSequence=2,
+        lifecycle="WAITING_DATA",
+        pendingRequirementRef=ref("DataRequirementRevision", "requirement-1"),
+    )
+    confirm_view = BusinessInvestigationProjectionBuilder(
+        FixedReader(
+            BusinessInvestigationProjectionSource(
+                case=source.case,
+                run=source.run,
+                state=waiting,
+                runtime=paused_runtime,
+            )
+        )
+    ).build(SCOPE, "run-1", observed_at=NOW)
+    assert confirm_view.command_projection.allowed_commands == [
+        "PAUSE_RUN",
+        "CANCEL_RUN",
+        "CONFIRM_DATA_REQUIREMENT",
+    ]
+
+
 def test_projection_preserves_waiting_unknown_and_reconciling_without_success_claim() -> None:
     requirement = ref("DataRequirementRevision", "requirement-1")
     waiting = _state(
