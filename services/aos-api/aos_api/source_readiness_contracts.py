@@ -196,6 +196,65 @@ class SourceReadinessItem(AipContractModel):
         return self
 
 
+class InvestigationReadinessBlockerProjection(AipContractModel):
+    code: str = Field(pattern=r"^[A-Z][A-Z0-9_]{1,119}$")
+    fact: str | None = Field(default=None, max_length=160)
+    source_ids: list[str] = Field(default_factory=list, max_length=50)
+    reason: str = Field(min_length=1, max_length=1000)
+
+    @field_validator("source_ids")
+    @classmethod
+    def _unique_sources(cls, value: list[str]) -> list[str]:
+        cleaned = [item.strip() for item in value]
+        if any(not item for item in cleaned) or len(cleaned) != len(set(cleaned)):
+            raise ValueError("blocker sourceIds must be non-empty and unique")
+        return cleaned
+
+
+class InvestigationReadinessProjection(AipContractModel):
+    requirement_ref: ExactResourceRef
+    status: SourceReadinessStatus
+    evaluated_at: datetime
+    required_cutoff: datetime
+    freshness_expires_at: datetime | None = None
+    required_fact_count: int = Field(ge=1)
+    covered_fact_count: int = Field(ge=0)
+    coverage_ratio: float = Field(ge=0, le=1)
+    unmet_facts: list[str] = Field(default_factory=list, max_length=100)
+    blockers: list[InvestigationReadinessBlockerProjection] = Field(
+        default_factory=list, max_length=100
+    )
+
+    @field_validator("unmet_facts")
+    @classmethod
+    def _unique_facts(cls, value: list[str]) -> list[str]:
+        cleaned = [item.strip() for item in value]
+        if any(not item for item in cleaned) or len(cleaned) != len(set(cleaned)):
+            raise ValueError("unmetFacts must be non-empty and unique")
+        return cleaned
+
+    @model_validator(mode="after")
+    def _coverage_is_honest(self) -> Self:
+        if self.requirement_ref.resource_type != "DataRequirementRevision":
+            raise ValueError("requirementRef must be a DataRequirementRevision")
+        if self.covered_fact_count > self.required_fact_count:
+            raise ValueError("coveredFactCount exceeds requiredFactCount")
+        expected = self.covered_fact_count / self.required_fact_count
+        if abs(self.coverage_ratio - expected) > 1e-9:
+            raise ValueError("coverageRatio does not match fact counts")
+        if self.covered_fact_count == self.required_fact_count:
+            if self.unmet_facts:
+                raise ValueError("complete coverage cannot contain unmetFacts")
+        elif not self.unmet_facts:
+            raise ValueError("partial coverage requires unmetFacts")
+        if self.status == SourceReadinessStatus.READY:
+            if self.coverage_ratio != 1 or self.blockers:
+                raise ValueError("ready investigation requires full coverage and no blockers")
+            if self.freshness_expires_at is None or self.freshness_expires_at <= self.evaluated_at:
+                raise ValueError("ready investigation requires unexpired freshness")
+        return self
+
+
 class SourceReadinessEnvelope(AipContractModel):
     schema_version: str = SOURCE_READINESS_SCHEMA_VERSION
     tenant: TenantContext
@@ -204,6 +263,7 @@ class SourceReadinessEnvelope(AipContractModel):
     status: SourceReadinessStatus
     sources: list[SourceReadinessItem]
     receipt_ref: ExactResourceRef | None = None
+    investigation: InvestigationReadinessProjection | None = None
 
     @model_validator(mode="after")
     def _validate_atomic_canonical_set(self) -> Self:
@@ -219,4 +279,15 @@ class SourceReadinessEnvelope(AipContractModel):
         )
         if self.status != aggregate:
             raise ValueError("envelope status must equal strict source aggregate")
+        if self.investigation is not None:
+            projection = self.investigation
+            if projection.evaluated_at != self.checked_at:
+                raise ValueError("investigation evaluatedAt must equal envelope checkedAt")
+            if projection.required_cutoff > self.cutoff_at:
+                raise ValueError("investigation requiredCutoff exceeds envelope cutoffAt")
+            if (
+                projection.status == SourceReadinessStatus.READY
+                and self.status != SourceReadinessStatus.READY
+            ):
+                raise ValueError("historical investigation success cannot override current envelope")
         return self
