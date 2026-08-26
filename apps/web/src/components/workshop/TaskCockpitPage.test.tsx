@@ -48,6 +48,15 @@ describe("TaskCockpitPage", () => {
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
   afterEach(() => { act(() => root.unmount()); host.remove(); });
 
+  it("shows the W8-12 release decision as NO_GO without approval flag or release controls", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    expect(host.querySelector('[aria-label="W8-12 运营就绪与发布决定"]')).not.toBeNull();
+    expect(host.textContent).toContain("NO_GO · 失败关闭"); expect(host.textContent).toContain("8 blocked"); expect(host.textContent).toContain("Approval");
+    expect(host.textContent).toContain("Approve Candidate / Open Feature Flag / Start Rollout");
+    expect([...host.querySelectorAll("button")].some((item) => /approve candidate|feature flag|rollout|rollback|release|发布/i.test(item.textContent ?? "") && !item.disabled)).toBe(false);
+  });
+
   it("shows the W8-11 cumulative gate fail closed without migration or release controls", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
