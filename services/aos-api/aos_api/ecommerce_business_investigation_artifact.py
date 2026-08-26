@@ -16,6 +16,7 @@ from aos_api.business_investigation_shared_contracts import InvestigationExactRe
 
 ARTIFACT_SCHEMA = "aos.ecommerce.business-investigation-artifact-revision/v1"
 BINDING_SCHEMA = "aos.ecommerce.business-investigation-artifact-binding/v1"
+PUBLICATION_RECEIPT_SCHEMA = "aos.ecommerce.business-investigation-artifact-publication-receipt/v1"
 SHA256 = r"^sha256:[0-9a-f]{64}$"
 
 
@@ -196,9 +197,57 @@ class BusinessInvestigationArtifactBinding(AipContractModel):
         return _canonical_hash(payload)
 
 
+class ArtifactPublicationReceipt(AipContractModel):
+    schema_version: str = PUBLICATION_RECEIPT_SCHEMA
+    tenant: TenantContext
+    receipt_id: str = Field(min_length=1, max_length=200)
+    command_id: str = Field(min_length=1, max_length=200)
+    request_hash: str = Field(pattern=SHA256)
+    artifact_ref: InvestigationExactRef
+    binding_ref: InvestigationExactRef
+    eval_report_ref: InvestigationExactRef
+    stage_attempt_ref: InvestigationExactRef
+    case_ref: InvestigationExactRef
+    run_ref: InvestigationExactRef
+    data_cutoff: datetime
+    published_by: str = Field(min_length=1, max_length=200)
+    published_at: datetime
+
+    @field_validator("data_cutoff", "published_at")
+    @classmethod
+    def _aware_publication_time(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("publication timestamps must include timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _publication_integrity(self) -> Self:
+        if self.schema_version != PUBLICATION_RECEIPT_SCHEMA:
+            raise ValueError("unsupported publication receipt schema")
+        expected = (
+            (self.artifact_ref, {item.value for item in BusinessInvestigationArtifactType}, "artifactRef"),
+            (self.binding_ref, {"BusinessInvestigationArtifactBinding"}, "bindingRef"),
+            (self.eval_report_ref, {"EvalReportRevision"}, "evalReportRef"),
+            (self.stage_attempt_ref, {"StepRunAttempt"}, "stageAttemptRef"),
+            (self.case_ref, {"BusinessInvestigationCaseRevision"}, "caseRef"),
+            (self.run_ref, {"BusinessInvestigationRun"}, "runRef"),
+        )
+        for ref, kinds, field in expected:
+            if ref.resource_type not in kinds:
+                raise ValueError(f"{field} has an unsupported resource type")
+        if self.data_cutoff > self.published_at:
+            raise ValueError("dataCutoff must not be later than publishedAt")
+        return self
+
+    def calculated_content_hash(self) -> str:
+        return _canonical_hash(self.model_dump(by_alias=True, mode="json"))
+
+
 __all__ = [
     "ARTIFACT_SCHEMA",
     "BINDING_SCHEMA",
+    "PUBLICATION_RECEIPT_SCHEMA",
+    "ArtifactPublicationReceipt",
     "BusinessInvestigationArtifactBinding",
     "BusinessInvestigationArtifactRevision",
     "BusinessInvestigationArtifactType",
