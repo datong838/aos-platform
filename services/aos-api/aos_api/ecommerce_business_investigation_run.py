@@ -54,6 +54,11 @@ class BusinessInvestigationTriggerKind(StrEnum):
     RECOVERY = "recovery"
 
 
+class BusinessInvestigationRunRequestOutcome(StrEnum):
+    CREATED = "CREATED"
+    SKIPPED_OVERLAP = "SKIPPED_OVERLAP"
+
+
 def _canonical_hash(value: dict[str, Any]) -> str:
     raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
     return "sha256:" + hashlib.sha256(raw.encode()).hexdigest()
@@ -100,6 +105,7 @@ class BusinessInvestigationRunRecord(AipContractModel):
 @dataclass(frozen=True, slots=True)
 class BusinessInvestigationRunWrite:
     authority: BusinessInvestigationRunRecord
+    outcome: BusinessInvestigationRunRequestOutcome
     replayed: bool
 
 
@@ -132,7 +138,7 @@ class BusinessInvestigationRunStore:
         try:
             with self._connect_factory(scope) as conn:
                 row = conn.execute(
-                    "SELECT authority_data,replayed FROM ecommerce_investigation_run_request_biw4_002(%s,%s,%s,%s)",
+                    "SELECT authority_data,outcome,replayed FROM ecommerce_investigation_run_request_biw4_003(%s,%s,%s,%s)",
                     (run.run_id, idempotency_key, request_hash, Jsonb(payload)),
                 ).fetchone()
                 conn.commit()
@@ -142,6 +148,7 @@ class BusinessInvestigationRunStore:
             raise BusinessInvestigationRunConflict("canonical Run request returned no Receipt")
         return BusinessInvestigationRunWrite(
             authority=BusinessInvestigationRunRecord.model_validate(row["authority_data"]),
+            outcome=BusinessInvestigationRunRequestOutcome(row["outcome"]),
             replayed=bool(row["replayed"]),
         )
 
@@ -151,6 +158,7 @@ __all__ = [
     "BusinessInvestigationRunControl",
     "BusinessInvestigationRunLifecycle",
     "BusinessInvestigationRunRecord",
+    "BusinessInvestigationRunRequestOutcome",
     "BusinessInvestigationRunStore",
     "BusinessInvestigationRunWrite",
     "BusinessInvestigationTriggerKind",

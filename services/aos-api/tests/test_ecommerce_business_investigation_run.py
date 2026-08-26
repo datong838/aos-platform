@@ -96,7 +96,11 @@ def test_store_uses_controlled_function_and_checks_content_hash() -> None:
 
     class Cursor:
         def fetchone(self):
-            return {"authority_data": run.model_dump(by_alias=True, mode="json"), "replayed": False}
+            return {
+                "authority_data": run.model_dump(by_alias=True, mode="json"),
+                "outcome": "CREATED",
+                "replayed": False,
+            }
 
     class Connection:
         commits = 0
@@ -115,8 +119,8 @@ def test_store_uses_controlled_function_and_checks_content_hash() -> None:
         yield connection
 
     result = BusinessInvestigationRunStore(connect).request(SCOPE, run, idempotency_key="request-run-1")
-    assert not result.replayed and connection.commits == 1
-    assert "ecommerce_investigation_run_request_biw4_002" in connection.calls[0][0]
+    assert not result.replayed and result.outcome == "CREATED" and connection.commits == 1
+    assert "ecommerce_investigation_run_request_biw4_003" in connection.calls[0][0]
     with pytest.raises(BusinessInvestigationRunConflict, match="content hash"):
         BusinessInvestigationRunStore(connect).request(
             SCOPE, run.model_copy(update={"content_hash": HASH_B}), idempotency_key="bad-hash"
@@ -191,5 +195,5 @@ def test_disposable_database_atomic_active_case_idempotency_isolation_and_guard(
             assert conn.execute("SELECT count(*) FROM ecommerce_investigation_run").fetchone()[0] == 0
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 conn.execute("INSERT INTO ecommerce_investigation_run_outbox(org_id,project_id,outbox_id,event_id,run_id,status,payload,created_at) VALUES('dev-org','dev-project','direct','missing','missing','PENDING','{}',NOW())")
-        with pytest.raises(Exception, match="cannot downgrade biw4_002"):
+        with pytest.raises(Exception, match=r"cannot downgrade biw4_00[23]"):
             command.downgrade(config, "biw4_001")
