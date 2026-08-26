@@ -318,6 +318,28 @@ def test_disposable_database_cas_revoke_isolation_and_downgrade() -> None:
                 expected_version=0,
             )
 
+        expiring_lease = ObservationSessionLeaseRecord.model_validate(
+            lease_payload(leaseId="lease-expired", idempotencyKey="lease-expired")
+        )
+        store.issue_lease(SCOPE, expiring_lease)
+        with psycopg.connect(dsn) as conn:
+            conn.execute(
+                "UPDATE business_investigation_observation_session_lease SET expires_at=NOW()-INTERVAL '1 second' WHERE org_id='org-org' AND project_id='dev-project' AND lease_id='lease-expired'"
+            )
+            conn.commit()
+        with pytest.raises(BusinessInvestigationObservationConflict):
+            store.publish_plan(
+                SCOPE,
+                ObservationPlanRevisionRecord.model_validate(
+                    plan_payload(
+                        planId="plan-expired",
+                        leaseRef=ref("ObservationSessionLeaseRevision", "lease-expired"),
+                        idempotencyKey="plan-expired",
+                    )
+                ),
+                expected_version=0,
+            )
+
         other_lease = ObservationSessionLeaseRecord.model_validate(
             lease_payload(
                 tenant={"orgId": "dev-org", "projectId": "dev-project"},
