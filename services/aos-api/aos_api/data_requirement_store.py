@@ -49,12 +49,30 @@ class DataRequirementValidationError(DataRequirementStoreError):
     code = "DATA_REQUIREMENT_VALIDATION_ERROR"
 
 
+class DataRequirementNotFound(DataRequirementStoreError):
+    code = "DATA_REQUIREMENT_NOT_FOUND"
+
+
 @dataclass(frozen=True, slots=True)
 class DataRequirementApplyResult:
     exact_ref: InvestigationExactRef
     version: int
     etag: str
     replayed: bool
+
+
+@dataclass(frozen=True, slots=True)
+class DataFulfillmentReceiptView:
+    fulfillment_id: str
+    receipt_id: str
+    requirement_revision: int
+    status: str
+    artifact_refs: list[dict[str, Any]]
+    source_readiness_ref: dict[str, Any]
+    cutoff_at: Any
+    fulfilled_at: Any
+    content_hash: str
+    created_by: str
 
 
 def canonical_hash(value: Any) -> str:
@@ -140,6 +158,67 @@ class DataRequirementStore:
         expected_version: int,
     ) -> DataRequirementApplyResult:
         return self._apply(scope, actor, idempotency_key, item, operation="cancel", expected_version=expected_version)
+
+    def get_current(
+        self, scope: TenantScope, requirement_id: str
+    ) -> DataRequirementRevisionRecord:
+        if not requirement_id.strip():
+            raise DataRequirementValidationError("requirement id is required")
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """SELECT r.payload,r.content_hash,h.current_revision,h.current_content_hash
+                   FROM data_requirement_head h
+                   JOIN data_requirement_revision r
+                     ON r.org_id=h.org_id AND r.project_id=h.project_id
+                    AND r.requirement_id=h.requirement_id
+                    AND r.revision=h.current_revision
+                  WHERE h.org_id=%s AND h.project_id=%s AND h.requirement_id=%s""",
+                (scope.org_id, scope.project_id, requirement_id),
+            ).fetchone()
+        if row is None:
+            raise DataRequirementNotFound("DataRequirement was not found")
+        item = DataRequirementRevisionRecord.model_validate(row["payload"])
+        stored_hash = f"sha256:{str(row['content_hash']).strip()}"
+        if (
+            item.tenant.org_id != scope.org_id
+            or item.tenant.project_id != scope.project_id
+            or item.requirement_id != requirement_id
+            or item.revision != int(row["current_revision"])
+            or item.content_hash != stored_hash
+            or str(row["current_content_hash"]).strip() != str(row["content_hash"]).strip()
+        ):
+            raise DataRequirementStoreError("DataRequirement authority readback drift")
+        return item
+
+    def list_fulfillment_receipts(
+        self, scope: TenantScope, requirement_id: str
+    ) -> list[DataFulfillmentReceiptView]:
+        self.get_current(scope, requirement_id)
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT fulfillment_id,receipt_id,requirement_revision,status,
+                          artifact_refs,source_readiness_ref,cutoff_at,fulfilled_at,
+                          content_hash,created_by
+                     FROM data_fulfillment_receipt
+                    WHERE org_id=%s AND project_id=%s AND requirement_id=%s
+                    ORDER BY fulfilled_at,receipt_id""",
+                (scope.org_id, scope.project_id, requirement_id),
+            ).fetchall()
+        return [
+            DataFulfillmentReceiptView(
+                fulfillment_id=str(row["fulfillment_id"]),
+                receipt_id=str(row["receipt_id"]),
+                requirement_revision=int(row["requirement_revision"]),
+                status=str(row["status"]),
+                artifact_refs=list(row["artifact_refs"]),
+                source_readiness_ref=dict(row["source_readiness_ref"]),
+                cutoff_at=row["cutoff_at"],
+                fulfilled_at=row["fulfilled_at"],
+                content_hash=f"sha256:{str(row['content_hash']).strip()}",
+                created_by=str(row["created_by"]),
+            )
+            for row in rows
+        ]
 
     def _apply(
         self,

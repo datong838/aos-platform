@@ -3258,6 +3258,12 @@
       "module": "aos_api.routers.aip_media_finance",
       "attribute": "router",
       "order": 542
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.data_requirements",
+      "attribute": "router",
+      "order": 543
     }
   ]
 }
