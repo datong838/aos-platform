@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "aos.workshop.w8-11.verification/v1",
+  "taskId": "workshop-w8-11-cumulative-release-gate-20260826",
+  "authorityRevision": "AOS-000280",
+  "codeCommits": [
+    "b20d98014770bb806b2064130dfe229570241683",
+    "7e11fb7a472954cd2fd597ce310f0b35b85f5778"
+  ],
+  "engineering": {
+    "targetedTests": { "files": 3, "tests": 26, "status": "passed" },
+    "compatibilityTests": { "files": 5, "tests": 60, "status": "passed" },
+    "webTests": { "files": 249, "tests": 2240, "status": "passed" },
+    "webTypecheck": "passed",
+    "desktopTypecheckAfterFix": "passed",
+    "webBuild": { "modules": 351, "status": "passed" },
+    "alembicGraph": { "heads": ["w7_006"], "bases": ["6cd2ca0eff8f"], "migrationApplied": false },
+    "diffCheck": "passed"
+  },
+  "cumulativeCi": {
+    "passed": 7,
+    "failed": 3,
+    "total": 10,
+    "backend": { "collected": 12461, "lastfailedCacheEntries": 335, "status": "failed" },
+    "security": {
+      "files": 5018,
+      "critical": 5,
+      "warning": 326,
+      "status": "failed",
+      "criticalLocations": [
+        "scripts/.d2_6_runtime_ed25519.pem",
+        "scripts/.d3_runtime_ed25519.pem",
+        "services/aos-api/tests/asset_registry/test_knowledge_package_contracts.py:187",
+        "services/aos-api/tests/tenant_isolation/test_ti1_e3_rebaseline.py:125",
+        "services/aos-api/tests/tenant_isolation/test_ti1_e3_rebaseline.py:128"
+      ],
+      "secretValuesReadOrRecorded": false
+    }
+  },
+  "browser": {
+    "viewport": { "width": 1280, "height": 720 },
+    "formalDependencyPath": {
+      "h1Count": 1,
+      "mainCount": 1,
+      "horizontalOverflow": false,
+      "cardCount": 0,
+      "result": "catalog-fail-closed"
+    },
+    "visualFixture": {
+      "getOnly": true,
+      "h1Count": 1,
+      "mainCount": 1,
+      "horizontalOverflow": false,
+      "cardCount": 1,
+      "cardButtonCount": 0,
+      "gateStatus": "blocked",
+      "passedColumns": 0,
+      "requiredColumns": 14,
+      "moduleRefs": 0,
+      "requiredModuleRefs": 8,
+      "blockers": 26,
+      "authorityEvidence": false
+    }
+  },
+  "releaseLedger": {
+    "status": "blocked",
+    "reasonCodes": [
+      "RELEASE_IDENTITY_INCOMPLETE",
+      "BACKEND_BASELINE_RED",
+      "SECURITY_CRITICAL_FINDINGS_PRESENT",
+      "SAME_CUTOFF_TENANT_EVIDENCE_MISSING",
+      "EXACT_RECEIPT_READBACK_MISSING"
+    ]
+  },
+  "sideEffects": {
+    "realDataMutation": false,
+    "migrationApply": false,
+    "bundleInstall": false,
+    "providerAction": false,
+    "externalEffect": false,
+    "release": false
+  },
+  "outcome": "ENGINEERING_CUMULATIVE_GATE_BROWSER_GREEN / RELEASE_LEDGER_POSITIVE_EVIDENCE_BLOCKED / BACKEND_AND_SECURITY_BASELINE_RED / NO_MIGRATION_APPLY / NO_EXTERNAL_EFFECT / NO_RELEASE"
+}
