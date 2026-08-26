@@ -1,4 +1,5 @@
 import { act } from "react"; import { createRoot, type Root } from "react-dom/client"; import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"; import type { AnalystViewResponse, LearningScenarioContribution } from "../../api/ecommerceWorkshop"; import { AnalystPage } from "./AnalystPage";
+import { CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS, OPEN_BUSINESS_INVESTIGATION_READ_FEATURE, resolveBusinessInvestigationFeatureFlags } from "./businessInvestigationFeatureFlags";
 const ids = ["overview", "drivers", "diagnosis", "plan", "effects", "evidence", "quality"] as const; const axes = ["metric_query", "model", "eval", "plan_materialization", "professional_handoff"] as const; const cutoff="2026-08-24T08:00:00Z";
 const blocked: AnalystViewResponse={schemaVersion:"aos.ecommerce-workshop.analyst-view/v1",tenant:{orgId:"org-org",projectId:"dev-project"},resourceRevision:1,evaluatedAt:cutoff,dataCutoff:cutoff,readiness:"degraded",views:ids.map((viewId)=>{const blocker={code:`ANALYST_${viewId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`,dependency:viewId,requiredAction:"attach exact refs"};return{viewId,status:"blocked",resourceRevision:1,dataCutoff:cutoff,readinessAxes:axes.map((axis)=>({axis,status:"blocked",exactRef:null,blockers:[blocker]})),metrics:[],authorityRefs:[],blockers:[blocker],countLedger:{denominator:0,ready:0,unknown:0,blocked:0,conflict:0}}}),page:{limit:100,count:0,hasMore:false,nextCursor:null}}; const emptyJobs=()=>Promise.resolve({tenant:{orgId:"org-org",projectId:"dev-project"},items:[],count:0});
 const scenarioBlocker={code:"GROWTH_PLAN_EXACT_ROOT_REQUIRED",dependency:"growth-plan",requiredAction:"provide exact refs"}; const scenarioIds=["insight","growth_plan","content","creator","media","publication","effect_review","memory_candidate"] as const; const outcomeIds=["provider_applied","usage_settled","effect_mature","memory_governed"] as const; const blockedV2:AnalystViewResponse={...blocked,schemaVersion:"aos.ecommerce-workshop.analyst-view/v2",growthScenario:{schemaVersion:"aos.ecommerce-workshop.growth-scenario/v1",status:"blocked",rootPlanRef:null,scenarioBindingHash:null,evaluatedAt:cutoff,stages:scenarioIds.map((stageId)=>({stageId,status:"blocked",exactRefs:[],contribution:"等待 exact authority",blockers:[scenarioBlocker]})),ledger:{tasksExpected:0,tasksObserved:0,handoffsExpected:0,handoffsObserved:0,outcomesExpected:4,outcomesReady:0,outcomesBlocked:4,outcomesUnknown:0},outcomeAxes:outcomeIds.map((axisId)=>({axisId,status:"blocked",exactRef:null,blocker:scenarioBlocker})),blockers:[scenarioBlocker],commands:{materialize:false,dispatch:false,publish:false,promoteMemory:false},externalEffectsAllowed:false}};
@@ -8,3 +9,63 @@ describe("AnalystPage",()=>{let host:HTMLDivElement;let root:Root;beforeEach(()=
 describe("AnalystPage GrowthPlan scenario",()=>{let host:HTMLDivElement;let root:Root;beforeEach(()=>{host=document.createElement("div");document.body.appendChild(host);root=createRoot(host)});afterEach(()=>{act(()=>root.unmount());host.remove()});it("展示八阶段四轴守恒且不产生跨域写入口",async()=>{await act(async()=>root.render(<AnalystPage client={{getAnalystView:vi.fn().mockResolvedValue(blockedV2)}} loadAsyncJobs={emptyJobs}/>));expect(host.querySelector('[aria-label="GrowthPlan跨域同链贡献"]')).not.toBeNull();expect(host.textContent).toContain("洞察 → GrowthPlan → 内容 → 达人 → 媒体 → 发布 → 复盘");expect(host.textContent).toContain("原子 Skill → Logic 编排 → 数字同事绑定 → 工作台贡献");expect(host.textContent).toContain("Provider applied、Usage settled、Effect mature、Memory governed 四轴独立");expect(host.textContent).toContain("不自动晋升 Wiki");const buttons=Array.from(host.querySelectorAll("button")).map((item)=>item.textContent).join(" ");expect(buttons).not.toMatch(/开始执行|立即发布|物化任务|晋升 Wiki/)});});
 
 describe("AnalystPage W8-04 learning governance scenario",()=>{let host:HTMLDivElement;let root:Root;beforeEach(()=>{host=document.createElement("div");document.body.appendChild(host);root=createRoot(host)});afterEach(()=>{act(()=>root.unmount());host.remove()});it("展示七阶段五轴、四层贡献与撤销守恒且不开治理命令",async()=>{await act(async()=>root.render(<AnalystPage client={{getAnalystView:vi.fn().mockResolvedValue(blockedV2),getAnalystLearningScenario:vi.fn().mockResolvedValue(learning)}} loadAsyncJobs={emptyJobs}/>));expect(host.querySelector('[aria-label="W8-04 学习治理贡献"]')).not.toBeNull();expect(host.querySelectorAll(".analyst-learning-stages li")).toHaveLength(7);expect(host.querySelectorAll(".analyst-learning-axes article")).toHaveLength(5);expect(host.textContent).toContain("原子 Skill → Logic 编排 → 数字同事绑定 → 工作台贡献视图");expect(host.textContent).toContain("历史 Exposure 保留");expect(host.textContent).toContain("approve ≠ promote");expect(host.textContent).toContain("submit=false · approve=false · promote=false · publish=false · revoke=false");const buttons=Array.from(host.querySelectorAll("button")).map((item)=>item.textContent).join(" ");expect(buttons).not.toMatch(/提交 Candidate|批准 Candidate|晋升知识|发布 Wiki|撤销知识/)});it("学习场景失败不破坏原 Analyst 视图",async()=>{await act(async()=>root.render(<AnalystPage client={{getAnalystView:vi.fn().mockResolvedValue(blockedV2),getAnalystLearningScenario:vi.fn().mockRejectedValue(new Error("unavailable"))}} loadAsyncJobs={emptyJobs}/>));expect(host.querySelector('[role="alert"][aria-label="W8-04 学习治理贡献"]')).not.toBeNull();expect(host.querySelectorAll('[role="tab"]')).toHaveLength(7);expect(host.textContent).toContain("Candidate、Wiki 与撤销命令均不开放")})});
+
+describe("AnalystPage BI-W7-01 investigation contribution", () => {
+  let host: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    root = createRoot(host);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("只识别冻结的 exact flag namespace 且默认关闭", () => {
+    expect(resolveBusinessInvestigationFeatureFlags(undefined)).toBe(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
+    expect(resolveBusinessInvestigationFeatureFlags("workshop.analyst.business-investigation.read")).toBe(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
+    expect(resolveBusinessInvestigationFeatureFlags("ecommerce.investigation.read")).toBe(OPEN_BUSINESS_INVESTIGATION_READ_FEATURE);
+  });
+
+  it("exact read flag 关闭时完整保留原七视图行为", async () => {
+    await act(async () => root.render(
+      <AnalystPage
+        client={{ getAnalystView: vi.fn().mockResolvedValue(blocked) }}
+        featureFlags={CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS}
+        loadAsyncJobs={emptyJobs}
+      />,
+    ));
+
+    const tabs = host.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    expect(tabs).toHaveLength(7);
+    expect(tabs[0]?.textContent).toContain("经营总览");
+    expect(host.textContent).not.toContain("ecommerce.investigation.read");
+  });
+
+  it("exact read flag 开启时生意探究成为首 Tab 且七视图仍可访问", async () => {
+    await act(async () => root.render(
+      <AnalystPage
+        client={{ getAnalystView: vi.fn().mockResolvedValue(blocked) }}
+        featureFlags={OPEN_BUSINESS_INVESTIGATION_READ_FEATURE}
+        loadAsyncJobs={emptyJobs}
+      />,
+    ));
+
+    const tabs = host.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    expect(tabs).toHaveLength(8);
+    expect(tabs[0]?.textContent).toContain("生意探究");
+    expect(tabs[0]?.getAttribute("aria-selected")).toBe("true");
+    expect(host.querySelector('[role="tabpanel"]')?.textContent).toContain("ecommerce.investigation.read");
+    expect(host.querySelector('[role="tabpanel"]')?.textContent).toContain("尚未装载");
+    expect(host.textContent).not.toMatch(/开始分析|创建 Case|继续运行|执行 Handoff/);
+
+    act(() => tabs[0]?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })));
+    expect(host.querySelector('[role="tabpanel"]')?.textContent).toContain("经营总览");
+    expect(tabs[1]?.tabIndex).toBe(0);
+    expect(tabs[1]?.getAttribute("aria-controls")).toBe(host.querySelector('[role="tabpanel"]')?.id);
+  });
+});
