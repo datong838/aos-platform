@@ -16,6 +16,7 @@ from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.business_investigation_shared_contracts import (
+    InvestigationBlocker,
     InvestigationExactRef,
     InvestigationPlatform,
 )
@@ -25,6 +26,7 @@ OBSERVATION_SESSION_LEASE_SCHEMA_VERSION = (
     "aos.business-investigation.observation-session-lease/v1"
 )
 OBSERVATION_PLAN_SCHEMA_VERSION = "aos.business-investigation.observation-plan/v1"
+OBSERVATION_RECEIPT_SCHEMA_VERSION = "aos.business-investigation.observation-receipt/v1"
 SHA256_PATTERN = r"^sha256:[0-9a-f]{64}$"
 MAX_LEASE_DURATION = timedelta(hours=2)
 
@@ -291,3 +293,122 @@ class ObservationPlanRevisionRecord(AipContractModel):
                 raise ValueError("plan action is outside lease action allowlist")
         if any(step.action is ObservationReadAction.EXPORT for step in self.steps) and lease.export_authorization_ref is None:
             raise ValueError("export step requires exact export authorization")
+
+
+class ObservationReceiptStatus(StrEnum):
+    SUCCEEDED = "succeeded"
+    PARTIAL = "partial"
+    BLOCKED = "blocked"
+    UNKNOWN = "unknown"
+
+
+class ObservationReceiptCoverage(AipContractModel):
+    pages_expected: int = Field(ge=0)
+    pages_observed: int = Field(ge=0)
+    rows_expected: int = Field(ge=0)
+    rows_observed: int = Field(ge=0)
+    rows_unknown: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _conserves_counts(self) -> Self:
+        if self.pages_observed > self.pages_expected:
+            raise ValueError("page coverage exceeds expected pages")
+        if self.rows_observed + self.rows_unknown > self.rows_expected:
+            raise ValueError("row coverage exceeds expected rows")
+        return self
+
+
+_LOCATION_EVIDENCE_TYPES = {
+    "PageScreenshotArtifactRevision",
+    "DOMSnapshotArtifactRevision",
+    "ReadOnlyExportArtifactRevision",
+}
+
+
+class ObservationReceiptRecord(AipContractModel):
+    schema_version: str = OBSERVATION_RECEIPT_SCHEMA_VERSION
+    tenant: TenantContext
+    receipt_id: str = Field(min_length=1, max_length=200)
+    plan_ref: InvestigationExactRef
+    step_ref: InvestigationExactRef
+    capability_ref: InvestigationExactRef
+    session_ref: InvestigationExactRef
+    requirement_ref: InvestigationExactRef
+    status: ObservationReceiptStatus
+    semantic_route: str
+    started_at: datetime
+    cutoff_at: datetime
+    finished_at: datetime
+    observed_field_set: list[str] = Field(default_factory=list, max_length=100)
+    coverage: ObservationReceiptCoverage
+    location_evidence_refs: list[InvestigationExactRef] = Field(default_factory=list, max_length=100)
+    fact_observation_refs: list[InvestigationExactRef] = Field(default_factory=list, max_length=100)
+    page_fingerprint: str = Field(pattern=SHA256_PATTERN)
+    operator_ref: str = Field(min_length=1, max_length=200)
+    human_intervention: bool
+    non_claims: list[str] = Field(min_length=1, max_length=100)
+    next_step: str | None = Field(default=None, min_length=1, max_length=500)
+    blockers: list[InvestigationBlocker] = Field(default_factory=list, max_length=50)
+    content_hash: str = Field(pattern=SHA256_PATTERN)
+    idempotency_key: str = Field(min_length=1, max_length=200)
+    request_hash: str = Field(pattern=SHA256_PATTERN)
+    created_by: str = Field(min_length=1, max_length=200)
+
+    @field_validator("started_at", "cutoff_at", "finished_at")
+    @classmethod
+    def _aware_receipt_times(cls, value: datetime, info) -> datetime:
+        return _aware(value, info.field_name)
+
+    @field_validator("semantic_route")
+    @classmethod
+    def _semantic_route(cls, value: str) -> str:
+        try:
+            return ObservationSessionLeaseRecord._routes([value])[0]
+        except ValueError as exc:
+            raise ValueError("semantic route must omit URL scheme, query and fragment") from exc
+
+    @field_validator("observed_field_set", "non_claims")
+    @classmethod
+    def _receipt_lists(cls, value: list[str], info) -> list[str]:
+        return _unique(value, info.field_name)
+
+    @model_validator(mode="after")
+    def _integrity(self) -> Self:
+        if self.schema_version != OBSERVATION_RECEIPT_SCHEMA_VERSION:
+            raise ValueError("unsupported observation receipt schemaVersion")
+        _require_type(self.plan_ref, "ObservationPlanRevision", "planRef")
+        _require_type(self.step_ref, "ObservationPlanStepRevision", "stepRef")
+        _require_type(self.capability_ref, "CapabilityRevision", "capabilityRef")
+        _require_type(self.session_ref, "ObservationSessionLeaseRevision", "sessionRef")
+        _require_type(self.requirement_ref, "DataRequirementRevision", "requirementRef")
+        if self.step_ref.revision != self.plan_ref.revision or self.step_ref.content_hash != self.plan_ref.content_hash:
+            raise ValueError("stepRef must inherit exact plan revision and content hash")
+        if not self.step_ref.resource_id.startswith(f"{self.plan_ref.resource_id}:"):
+            raise ValueError("stepRef identity must be scoped by planId")
+        if not (self.started_at <= self.cutoff_at <= self.finished_at):
+            raise ValueError("receipt timestamp order must be startedAt <= cutoffAt <= finishedAt")
+        keys: set[tuple[str, str, object, str]] = set()
+        for ref in self.location_evidence_refs:
+            if ref.resource_type not in _LOCATION_EVIDENCE_TYPES:
+                raise ValueError("locationEvidenceRefs must contain only locating artifacts")
+            key = (ref.resource_type, ref.resource_id, ref.revision, ref.content_hash)
+            if key in keys:
+                raise ValueError("locationEvidenceRefs must be unique")
+            keys.add(key)
+        keys.clear()
+        for ref in self.fact_observation_refs:
+            _require_type(ref, "PlatformObservation", "factObservationRefs")
+            key = (ref.resource_type, ref.resource_id, ref.revision, ref.content_hash)
+            if key in keys:
+                raise ValueError("factObservationRefs must be unique")
+            keys.add(key)
+        if self.fact_observation_refs and not self.observed_field_set:
+            raise ValueError("factObservationRefs require observedFieldSet")
+        if self.status is ObservationReceiptStatus.SUCCEEDED:
+            if self.blockers:
+                raise ValueError("succeeded receipt cannot contain blockers")
+            if not self.location_evidence_refs and not self.fact_observation_refs:
+                raise ValueError("succeeded receipt requires locating evidence or fact observation")
+        elif not self.blockers:
+            raise ValueError("non-succeeded receipt requires an explicit blocker")
+        return self

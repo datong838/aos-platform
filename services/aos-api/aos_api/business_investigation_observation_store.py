@@ -12,6 +12,7 @@ from psycopg.types.json import Jsonb
 
 from aos_api.business_investigation_observation_contracts import (
     ObservationPlanRevisionRecord,
+    ObservationReceiptRecord,
     ObservationSessionLeaseRecord,
 )
 from aos_api.db import connect as db_connect
@@ -113,6 +114,27 @@ class BusinessInvestigationObservationStore:
         )
         return ObservationAuthorityWrite(
             authority=ObservationPlanRevisionRecord.model_validate(row["authority_data"]),
+            replayed=bool(row["replayed"]),
+        )
+
+    def record_receipt(
+        self,
+        scope: TenantScope,
+        receipt: ObservationReceiptRecord,
+    ) -> ObservationAuthorityWrite[ObservationReceiptRecord]:
+        self._scope_matches(scope, receipt.tenant.org_id, receipt.tenant.project_id)
+        row = self._execute(
+            scope,
+            "SELECT authority_data,replayed FROM observation_receipt_record_biw3_002(%s,%s,%s,%s)",
+            (
+                receipt.receipt_id,
+                receipt.idempotency_key,
+                receipt.request_hash,
+                Jsonb(receipt.model_dump(by_alias=True, mode="json")),
+            ),
+        )
+        return ObservationAuthorityWrite(
+            authority=ObservationReceiptRecord.model_validate(row["authority_data"]),
             replayed=bool(row["replayed"]),
         )
 
