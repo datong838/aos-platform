@@ -1,0 +1,33 @@
+{
+  "taskId": "BI-W9-02",
+  "authorityBase": "AOS-000347",
+  "planCommit": "d3928f0",
+  "codeCommit": "4e077cb3",
+  "status": "BI_W9_02_NIUSHOP_DISABLED_PROFILE_CODE_GREEN_NO_SOURCE_READ_NO_RELEASE",
+  "verification": {
+    "red": "Niushop Profile module missing",
+    "targeted": "14 passed, 7 warnings",
+    "cumulativeW307W901W902": "43 passed, 7 warnings",
+    "json": "GREEN",
+    "compileall": "GREEN",
+    "alembicHeads": "biw8_001 (head)",
+    "diffCheck": "GREEN",
+    "browser": "NOT_APPLICABLE: no page or route; final S8-Visual remains pending"
+  },
+  "profileFacts": [
+    "menu semantics cover catalog, inventory, orders, payments, refunds, customers, membership, distribution, commission, promotions, coupons, experience codes, content, storefront and admin capability",
+    "database discovery is jdbc-mysql-ssh, transaction read-only and bounded to SHOW/DESCRIBE/EXPLAIN/SELECT",
+    "physical table patterns require discovery and do not claim existence",
+    "canonical object mappings require verification and keep hydrationAllowed=false"
+  ],
+  "boundaries": [
+    "NO_REAL_MENU_ROUTE",
+    "NO_SOURCE_READ",
+    "NO_PHYSICAL_TABLE_EXISTENCE_CLAIM",
+    "NO_OBJECT_HYDRATION",
+    "NO_ADAPTER_INSTALLATION",
+    "NO_EXTERNAL_EFFECT",
+    "NO_RELEASE"
+  ],
+  "nextTask": "BI-W9-03"
+}
