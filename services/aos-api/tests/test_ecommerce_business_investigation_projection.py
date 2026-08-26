@@ -138,6 +138,14 @@ def test_projection_rebuild_is_deterministic_and_keeps_canonical_four_slots() ->
     assert first.source_watermark == restarted.source_watermark
     assert [item.artifact_type for item in first.artifacts] == list(BusinessInvestigationArtifactType)
     assert [item.status for item in first.artifacts] == ["bound", "bound", "missing", "missing"]
+    assert sorted(item.event_type for item in first.timeline) == [
+        "artifact_bound", "artifact_bound", "case_revision", "run_created", "state_revision"
+    ]
+    assert [(item.occurred_at, item.event_id) for item in first.timeline] == sorted(
+        (item.occurred_at, item.event_id) for item in first.timeline
+    )
+    assert all(item.exact_ref.content_hash.startswith("sha256:") for item in first.timeline)
+    assert first.timeline == restarted.timeline
     assert first.observed_at != restarted.observed_at
 
 
@@ -225,11 +233,14 @@ def test_projection_exposes_server_owned_case_envelope_stage_progress_and_checkp
     assert [item.status for item in view.runtime.stages] == ["completed", "running", "not_started"]
     assert view.runtime.checkpoint is not None and view.runtime.checkpoint.sequence == 2
     assert view.source_watermark.runtime_hash is not None
-    assert view.schema_version.endswith("/v3")
+    assert view.schema_version.endswith("/v4")
     assert view.current_workspace.stage_id == "diagnosis"
     assert view.current_workspace.status == "running"
     assert view.current_workspace.responsibility_slot_ids == ["slot-diagnosis"]
     assert [item.resource_id for item in view.current_workspace.input_refs] == ["evidence-1"]
+    assert view.evidence.status == "missing"
+    assert [item.resource_id for item in view.evidence.locator_refs] == ["evidence-1"]
+    assert view.evidence.exact_refs == []
     assert [item.resource_id for item in view.current_workspace.output_refs] == ["draft-1"]
     assert [item.area for item in view.current_workspace.areas] == [
         "known", "unknown", "assumption", "counter_evidence"

@@ -37,7 +37,7 @@ from aos_api.ecommerce_business_investigation_run import (
 from aos_api.tenant_scope import TenantScope
 
 
-PROJECTION_SCHEMA = "aos.ecommerce.business-investigation-workbench-view/v3"
+PROJECTION_SCHEMA = "aos.ecommerce.business-investigation-workbench-view/v4"
 SHA256 = r"^sha256:[0-9a-f]{64}$"
 
 STAGE_TITLES = {
@@ -249,6 +249,40 @@ class BusinessInvestigationCurrentWorkspace(AipContractModel):
         return self
 
 
+class BusinessInvestigationEvidenceDrilldown(AipContractModel):
+    status: Literal["exact", "missing"]
+    exact_refs: list[InvestigationExactRef] = Field(default_factory=list, max_length=200)
+    locator_refs: list[ResourceRef] = Field(default_factory=list, max_length=200)
+
+    @model_validator(mode="after")
+    def _honest_status(self) -> Self:
+        exact_keys = [item.model_dump_json() for item in self.exact_refs]
+        locator_keys = [item.model_dump_json() for item in self.locator_refs]
+        if len(exact_keys) != len(set(exact_keys)) or len(locator_keys) != len(set(locator_keys)):
+            raise ValueError("evidence drilldown refs must be unique")
+        if self.status == "exact" and not self.exact_refs:
+            raise ValueError("exact evidence status requires exact refs")
+        if self.status == "missing" and self.exact_refs:
+            raise ValueError("missing evidence status cannot expose exact refs")
+        return self
+
+
+class BusinessInvestigationTimelineEvent(AipContractModel):
+    event_id: str = Field(min_length=1, max_length=300)
+    event_type: Literal["case_revision", "run_created", "state_revision", "artifact_bound"]
+    title: str = Field(min_length=1, max_length=200)
+    occurred_at: datetime
+    exact_ref: InvestigationExactRef
+    related_ref: InvestigationExactRef | None = None
+
+    @field_validator("occurred_at")
+    @classmethod
+    def _aware(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("timeline occurredAt must include timezone")
+        return value
+
+
 class BusinessInvestigationWorkbenchView(AipContractModel):
     schema_version: Literal[PROJECTION_SCHEMA] = PROJECTION_SCHEMA
     tenant: TenantContext
@@ -266,6 +300,8 @@ class BusinessInvestigationWorkbenchView(AipContractModel):
     runtime: BusinessInvestigationRuntimeProjection
     current_workspace: BusinessInvestigationCurrentWorkspace
     artifacts: list[BusinessInvestigationArtifactSlot] = Field(min_length=4, max_length=4)
+    evidence: BusinessInvestigationEvidenceDrilldown
+    timeline: list[BusinessInvestigationTimelineEvent] = Field(min_length=3, max_length=20)
 
     @field_validator("observed_at")
     @classmethod
@@ -278,6 +314,9 @@ class BusinessInvestigationWorkbenchView(AipContractModel):
     def _integrity(self) -> Self:
         if [item.artifact_type for item in self.artifacts] != list(BusinessInvestigationArtifactType):
             raise ValueError("artifact slots require canonical order")
+        timeline_order = [(item.occurred_at, item.event_id) for item in self.timeline]
+        if timeline_order != sorted(timeline_order) or len({item.event_id for item in self.timeline}) != len(self.timeline):
+            raise ValueError("timeline must be unique and chronologically canonical")
         expected = (
             (self.case_ref, "BusinessInvestigationCaseRevision"),
             (self.run_ref, "BusinessInvestigationRun"),
@@ -547,6 +586,8 @@ class BusinessInvestigationProjectionBuilder:
         artifacts = [self._slot(kind, bindings.get(kind.value)) for kind in BusinessInvestigationArtifactType]
         runtime = self._runtime(source.runtime)
         current_workspace = self._current_workspace(source.runtime, runtime, artifacts)
+        evidence = self._evidence(current_workspace)
+        timeline = self._timeline(source)
         binding_hashes = sorted(item.binding_hash for item in source.bindings)
         watermark_value = {
             "caseRevision": source.case.revision,
@@ -607,10 +648,99 @@ class BusinessInvestigationProjectionBuilder:
             runtime=runtime,
             current_workspace=current_workspace,
             artifacts=artifacts,
+            evidence=evidence,
+            timeline=timeline,
         )
         payload = draft.model_dump(by_alias=True, mode="json")
         payload["projectionHash"] = draft.calculated_projection_hash()
         return BusinessInvestigationWorkbenchView.model_validate(payload)
+
+    @staticmethod
+    def _evidence(
+        workspace: BusinessInvestigationCurrentWorkspace,
+    ) -> BusinessInvestigationEvidenceDrilldown:
+        evidence_types = {
+            "EvidenceBundleRevision", "EvidenceRevision", "SourceReadinessEnvelope",
+            "DataRequirementRevision", "DataFulfillmentReceipt", "OntologySnapshotRevision",
+        }
+        exact_by_key: dict[str, InvestigationExactRef] = {}
+        for area in workspace.areas:
+            for item in area.exact_refs:
+                if item.resource_type in evidence_types:
+                    exact_by_key[item.model_dump_json()] = item
+        locator_by_key: dict[str, ResourceRef] = {}
+        for item in [*workspace.input_refs, *workspace.output_refs]:
+            if item.resource_type in evidence_types:
+                locator_by_key[item.model_dump_json()] = item
+        exact_refs = sorted(
+            exact_by_key.values(),
+            key=lambda item: (item.resource_type, item.resource_id, str(item.revision), item.content_hash),
+        )
+        locator_refs = sorted(
+            locator_by_key.values(),
+            key=lambda item: (item.resource_type, item.resource_id, str(item.revision), item.authority),
+        )
+        return BusinessInvestigationEvidenceDrilldown(
+            status="exact" if exact_refs else "missing",
+            exact_refs=exact_refs,
+            locator_refs=locator_refs,
+        )
+
+    @staticmethod
+    def _timeline(
+        source: BusinessInvestigationProjectionSource,
+    ) -> list[BusinessInvestigationTimelineEvent]:
+        events = [
+            BusinessInvestigationTimelineEvent(
+                event_id=f"case:{source.case.case_id}:r{source.case.revision}",
+                event_type="case_revision", title="Case revision 建立",
+                occurred_at=source.case.created_at,
+                exact_ref=InvestigationExactRef.model_validate(
+                    BusinessInvestigationProjectionBuilder._ref(
+                        "BusinessInvestigationCaseRevision", source.case.case_id,
+                        source.case.revision, source.case.content_hash,
+                    )
+                ),
+            ),
+            BusinessInvestigationTimelineEvent(
+                event_id=f"run:{source.run.run_id}:v{source.run.version}",
+                event_type="run_created", title="Run 建立",
+                occurred_at=source.run.created_at,
+                exact_ref=InvestigationExactRef.model_validate(
+                    BusinessInvestigationProjectionBuilder._ref(
+                        "BusinessInvestigationRun", source.run.run_id,
+                        source.run.version, source.run.content_hash,
+                    )
+                ),
+            ),
+            BusinessInvestigationTimelineEvent(
+                event_id=f"state:{source.state.run_id}:v{source.state.version}",
+                event_type="state_revision", title="Run state revision",
+                occurred_at=source.state.created_at,
+                exact_ref=InvestigationExactRef.model_validate(
+                    BusinessInvestigationProjectionBuilder._ref(
+                        "BusinessInvestigationRunStateRevision", source.state.run_id,
+                        source.state.version, source.state.content_hash,
+                    )
+                ),
+            ),
+        ]
+        events.extend(
+            BusinessInvestigationTimelineEvent(
+                event_id=f"binding:{item.binding_id}", event_type="artifact_bound",
+                title=f"{item.artifact_ref.resource_type} 绑定",
+                occurred_at=item.bound_at,
+                exact_ref=InvestigationExactRef(
+                    resource_type="BusinessInvestigationArtifactBinding",
+                    resource_id=item.binding_id,
+                    revision=item.selection_revision,
+                    content_hash=item.binding_hash,
+                ),
+                related_ref=item.artifact_ref,
+            )
+            for item in source.bindings
+        )
+        return sorted(events, key=lambda item: (item.occurred_at, item.event_id))
 
     @staticmethod
     def _runtime(

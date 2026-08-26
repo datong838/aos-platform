@@ -125,8 +125,14 @@ export type InvestigationCurrentWorkspace = {
   areas: InvestigationContributionArea[];
   nonClaims: string[];
 };
+export type InvestigationArtifactType = "BusinessDossierRevision" | "ProblemMapRevision" | "OpportunityMapRevision" | "SolutionPortfolioRevision";
+export type InvestigationLegacyArtifactType = "BusinessDossierRevision" | "ProblemMapRevision" | "SolutionSetRevision" | "DecisionReportRevision";
+export type InvestigationArtifactSlot = { artifactType: InvestigationArtifactType | InvestigationLegacyArtifactType; status: "bound" | "missing"; artifactRef: InvestigationExactRef | null; bindingId: string | null; bindingHash: string | null; selectionRevision: number | null; dataCutoff: string | null; lineageRef: InvestigationExactRef | null };
+export type InvestigationEvidenceDrilldown = { status: "exact" | "missing"; exactRefs: InvestigationExactRef[]; locatorRefs: InvestigationResourceRef[] };
+export type InvestigationTimelineEvent = { eventId: string; eventType: "case_revision" | "run_created" | "state_revision" | "artifact_bound"; title: string; occurredAt: string; exactRef: InvestigationExactRef; relatedRef: InvestigationExactRef | null };
 export type InvestigationWorkbenchView = {
-  schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v3";
+  schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v3" | "aos.ecommerce.business-investigation-workbench-view/v4";
+  drilldownVersion: "legacy-v3" | "canonical-v4";
   tenant: InvestigationTenant;
   projectionHash: string;
   sourceWatermark: { caseRevision: number; runVersion: number; stateVersion: number; bindingHashes: string[]; runtimeHash: string | null; contentHash: string };
@@ -141,7 +147,9 @@ export type InvestigationWorkbenchView = {
   uncertainCommand: { commandId: string; operation: string; requestHash: string } | null;
   runtime: InvestigationRuntimeProjection;
   currentWorkspace: InvestigationCurrentWorkspace;
-  artifacts: Array<{ artifactType: "BusinessDossierRevision" | "ProblemMapRevision" | "SolutionSetRevision" | "DecisionReportRevision"; status: "bound" | "missing"; artifactRef: InvestigationExactRef | null; bindingId: string | null; bindingHash: string | null; selectionRevision: number | null; dataCutoff: string | null; lineageRef: InvestigationExactRef | null }>;
+  artifacts: InvestigationArtifactSlot[];
+  evidence: InvestigationEvidenceDrilldown;
+  timeline: InvestigationTimelineEvent[];
 };
 export type InvestigationCaseListResponse = { tenant: InvestigationTenant; items: InvestigationCaseRevision[]; count: number };
 export type InvestigationRunListResponse = { tenant: InvestigationTenant; items: InvestigationRunView[]; count: number };

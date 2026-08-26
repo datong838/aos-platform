@@ -959,6 +959,27 @@
 .business-investigation-contributions p { margin: 8px 0 0; color: var(--aos-text-secondary); font-size: 11px; line-height: 1.5; }
 .business-investigation-contributions small { display: block; margin-top: 7px; overflow-wrap: anywhere; color: var(--aos-text-tertiary); }
 .business-investigation-nonclaims { display: grid; gap: 4px; margin: 12px 0 0; padding-left: 18px; color: var(--aos-text-tertiary); font-size: 10px; }
+.business-investigation-drilldowns { min-width: 0; padding: 12px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.business-investigation-drilldowns > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.business-investigation-drilldowns > header span { color: var(--aos-text-tertiary); font-size: 10px; }
+.business-investigation-drilldowns h3 { margin: 4px 0 0; font-size: 15px; }
+.business-investigation-drilldown-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 10px; background: var(--aos-border); }
+.business-investigation-drilldown-grid > section { min-width: 0; padding: 10px; background: var(--aos-surface-hover); }
+.business-investigation-drilldown-grid h4 { margin: 0; font-size: 12px; }
+.business-investigation-drilldown-grid p { margin: 5px 0 8px; color: var(--aos-text-tertiary); font-size: 10px; line-height: 1.45; }
+.business-investigation-drilldown-grid details { min-width: 0; margin-top: 5px; padding: 7px 8px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
+.business-investigation-drilldown-grid summary { overflow-wrap: anywhere; cursor: pointer; font-size: 10px; font-weight: 700; }
+.business-investigation-drilldown-grid dl { display: grid; gap: 1px; margin: 7px 0 0; background: var(--aos-border); }
+.business-investigation-drilldown-grid dl div { min-width: 0; padding: 6px; background: var(--aos-surface-hover); }
+.business-investigation-drilldown-grid dt { color: var(--aos-text-tertiary); font-size: 9px; }
+.business-investigation-drilldown-grid dd { margin: 3px 0 0; overflow-wrap: anywhere; font-size: 10px; }
+.business-investigation-drilldown-grid ul,
+.business-investigation-drilldown-grid ol { display: grid; gap: 5px; margin: 7px 0 0; padding-left: 18px; }
+.business-investigation-drilldown-grid li { min-width: 0; overflow-wrap: anywhere; font-size: 10px; }
+.business-investigation-drilldown-grid time { display: block; color: var(--aos-text-tertiary); font-size: 9px; }
+.business-investigation-drilldown-grid li > strong { display: block; margin-top: 2px; }
+.business-investigation-drilldown-grid small { display: block; overflow-wrap: anywhere; color: var(--aos-text-tertiary); }
+.business-investigation-drilldown-boundary { margin: 8px 0 0; color: var(--aos-text-tertiary); font-size: 10px; }
 .business-investigation-gates { min-width: 0; padding: 12px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
 .business-investigation-gates > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .business-investigation-gates > header span { color: var(--aos-text-tertiary); font-size: 10px; }
@@ -1381,6 +1402,7 @@
   .business-investigation-envelope dl { grid-template-columns: 1fr; }
   .business-investigation-responsibility,
   .business-investigation-contributions,
+  .business-investigation-drilldown-grid,
   .business-investigation-gate-axes,
   .business-investigation-requirement,
   .business-investigation-blockers { grid-template-columns: 1fr; }

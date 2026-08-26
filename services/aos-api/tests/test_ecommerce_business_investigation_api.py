@@ -201,6 +201,10 @@ def test_workbench_view_http_uses_principal_tenant_and_hides_non_visible_source(
         assert response.status_code == 200
         assert response.json()["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
         assert response.json()["artifacts"][0]["status"] == "missing"
+        assert response.json()["schemaVersion"].endswith("/v4")
+        assert response.json()["evidence"]["status"] == "missing"
+        assert len(response.json()["timeline"]) >= 3
+        assert all(item["exactRef"]["contentHash"].startswith("sha256:") for item in response.json()["timeline"])
         assert fake.calls[-1][1] == TenantScope("org-org", "dev-project")
         unknown_query = api.get("/v1/ecommerce/investigations/runs/run-1/view?tenant=dev-org")
         assert unknown_query.status_code == 400
