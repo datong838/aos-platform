@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "aos.business-investigation.niushop-profile/v1",
+  "profileId": "bi-w9-02-niushop-disabled-profile",
+  "revision": 1,
+  "contentHash": "sha256:766390ec7377680992868a8e56c02f9ab83109c65bad0edfc8c03a9e1cec36bd",
+  "platform": "niushop",
+  "sourceKind": "synthetic",
+  "genericCapabilityRef": {"resourceType": "AdapterCapabilityMatrixRevision", "resourceId": "bi-w9-01-disabled-generic-adapter-capability", "revision": 1, "contentHash": "sha256:577094cb7d3af08b6ccc4df84af4ce949780208481b891633239275a156ddb31"},
+  "enabled": false,
+  "sourceAccessAuthorized": false,
+  "installationRef": null,
+  "instanceOverlayRef": null,
+  "menuSemantics": [
+    {"semanticId": "catalog_inventory", "factFamilies": ["product", "sku", "inventory"], "requiredObservations": ["catalog_scope", "sku_identity", "stock_scope"], "requiresObservation": true},
+    {"semanticId": "order_transaction", "factFamilies": ["order", "payment", "refund"], "requiredObservations": ["order_lifecycle", "payment_state", "refund_state"], "requiresObservation": true},
+    {"semanticId": "customer_membership", "factFamilies": ["customer", "member"], "requiredObservations": ["member_identity", "customer_attribution"], "requiresObservation": true},
+    {"semanticId": "distribution_commission", "factFamilies": ["distribution", "commission"], "requiredObservations": ["distribution_relation", "commission_definition"], "requiresObservation": true},
+    {"semanticId": "promotion_coupon", "factFamilies": ["promotion", "coupon"], "requiredObservations": ["promotion_scope", "coupon_lifecycle"], "requiresObservation": true},
+    {"semanticId": "experience_code", "factFamilies": ["experience_code"], "requiredObservations": ["code_definition", "redemption_scope"], "requiresObservation": true},
+    {"semanticId": "content_storefront", "factFamilies": ["content", "storefront"], "requiredObservations": ["content_inventory", "decoration_structure"], "requiresObservation": true},
+    {"semanticId": "admin_capability", "factFamilies": ["admin_capability"], "requiredObservations": ["capability_inventory", "permission_boundary"], "requiresObservation": true}
+  ],
+  "databasePolicy": {
+    "connectorType": "jdbc-mysql-ssh", "transport": "ssh", "transactionReadOnly": true,
+    "allowedStatements": ["SHOW", "DESCRIBE", "EXPLAIN", "SELECT"],
+    "forbiddenStatements": ["INSERT", "UPDATE", "DELETE", "DDL", "LOCK", "SET_GLOBAL", "FILE", "PROCEDURE"],
+    "maxRows": 500, "queryTimeoutSeconds": 20, "schemaMetadataOnlyByDefault": true, "sourceAccessAuthorized": false
+  },
+  "databaseDomains": [
+    {"domainId": "catalog_inventory", "patternHints": ["*goods*", "*sku*", "*stock*"], "explorationMode": "metadata_then_bounded_select", "requiresDiscovery": true, "physicalExistenceVerified": false},
+    {"domainId": "order_transaction", "patternHints": ["*order*", "*pay*", "*refund*"], "explorationMode": "metadata_then_bounded_select", "requiresDiscovery": true, "physicalExistenceVerified": false},
+    {"domainId": "customer_membership", "patternHints": ["*member*", "*customer*"], "explorationMode": "metadata_then_bounded_select", "requiresDiscovery": true, "physicalExistenceVerified": false},
+    {"domainId": "distribution_commission", "patternHints": ["*distribution*", "*commission*"], "explorationMode": "metadata_then_bounded_select", "requiresDiscovery": true, "physicalExistenceVerified": false},
+    {"domainId": "promotion_experience", "patternHints": ["*coupon*", "*promotion*", "*experience*"], "explorationMode": "metadata_then_bounded_select", "requiresDiscovery": true, "physicalExistenceVerified": false},
+    {"domainId": "content_storefront", "patternHints": ["*content*", "*decoration*"], "explorationMode": "metadata_then_bounded_select", "requiresDiscovery": true, "physicalExistenceVerified": false},
+    {"domainId": "admin_capability", "patternHints": ["*config*", "*shop*"], "explorationMode": "metadata_then_bounded_select", "requiresDiscovery": true, "physicalExistenceVerified": false}
+  ],
+  "objectMappings": [
+    {"mappingId": "catalog_objects", "sourceDomains": ["catalog_inventory"], "canonicalTypes": ["Product", "SKU", "InventoryPosition"], "canonicalFacts": ["catalog_identity", "sku_identity", "stock_position"], "verificationRequired": true, "hydrationAllowed": false},
+    {"mappingId": "order_objects", "sourceDomains": ["order_transaction"], "canonicalTypes": ["Order", "OrderLine", "Payment", "Refund"], "canonicalFacts": ["order_lifecycle", "line_amount", "payment_state", "refund_state"], "verificationRequired": true, "hydrationAllowed": false},
+    {"mappingId": "customer_objects", "sourceDomains": ["customer_membership"], "canonicalTypes": ["Customer", "MemberAccount"], "canonicalFacts": ["customer_identity", "membership_state"], "verificationRequired": true, "hydrationAllowed": false},
+    {"mappingId": "distribution_objects", "sourceDomains": ["distribution_commission"], "canonicalTypes": ["DistributionRelation", "Commission"], "canonicalFacts": ["distribution_parent", "commission_definition"], "verificationRequired": true, "hydrationAllowed": false},
+    {"mappingId": "promotion_objects", "sourceDomains": ["promotion_experience"], "canonicalTypes": ["Promotion", "Coupon", "ExperienceCode"], "canonicalFacts": ["promotion_scope", "coupon_lifecycle", "experience_redemption"], "verificationRequired": true, "hydrationAllowed": false},
+    {"mappingId": "content_objects", "sourceDomains": ["content_storefront"], "canonicalTypes": ["ContentAsset", "StorefrontSection"], "canonicalFacts": ["content_inventory", "storefront_structure"], "verificationRequired": true, "hydrationAllowed": false}
+  ],
+  "knownRisks": ["SOURCE_TABLE_COMPLEXITY", "HISTORICAL_TEST_DATA_MIXED", "CUSTOMER_ATTRIBUTION_DEFINITION", "COMMISSION_DEFINITION_DRIFT", "SQL_DUMP_FRESHNESS_UNKNOWN", "CODE_DOCUMENTATION_DRIFT"],
+  "nonClaims": ["NO_REAL_MENU_ROUTE", "NO_PHYSICAL_TABLE_EXISTENCE", "NO_SOURCE_READ", "NO_OBJECT_HYDRATION", "NO_ADAPTER_INSTALLATION"]
+}
