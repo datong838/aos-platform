@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aos.dev/schemas/business-investigation/shared-v1.schema.json",
+  "title": "AOS Business Investigation Shared Contracts v1",
+  "description": "Strict BI-W1 DTOs only. Tenant authority comes from the authenticated Principal; these response/evidence fields never authorize a request.",
+  "oneOf": [
+    { "$ref": "#/$defs/sharedEnvelope" },
+    { "$ref": "#/$defs/dataRequirement" },
+    { "$ref": "#/$defs/dataFulfillmentReceipt" },
+    { "$ref": "#/$defs/platformObservation" },
+    { "$ref": "#/$defs/sourceMapping" },
+    { "$ref": "#/$defs/adaptiveProfile" },
+    { "$ref": "#/$defs/semanticHydrationReceipt" }
+  ],
+  "$defs": {
+    "tenant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["orgId", "projectId"],
+      "properties": {
+        "orgId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 200 }
+      }
+    },
+    "exactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resourceType", "resourceId", "revision", "contentHash"],
+      "properties": {
+        "resourceType": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "resourceId": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "revision": {
+          "oneOf": [
+            { "type": "integer", "minimum": 1 },
+            { "type": "string", "minLength": 1, "maxLength": 160 }
+          ]
+        },
+        "contentHash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "receiptId": { "type": "string", "minLength": 1, "maxLength": 240 }
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "dependency", "requiredAction"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,119}$" },
+        "severity": { "type": "string", "enum": ["warning", "blocking"] },
+        "dependency": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "requiredAction": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/blocker" }
+    },
+    "exactRefs": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "$ref": "#/$defs/exactRef" }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "fulfilled", "unknown"],
+      "properties": {
+        "required": { "type": "integer", "minimum": 0 },
+        "fulfilled": { "type": "integer", "minimum": 0 },
+        "unknown": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "readinessStatus": {
+      "type": "string",
+      "enum": ["ready", "blocked", "stale", "unknown"]
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "dataCutoff", "expiresAt"],
+      "properties": {
+        "status": { "type": "string", "enum": ["fresh", "stale", "unknown"] },
+        "dataCutoff": { "type": ["string", "null"], "format": "date-time" },
+        "expiresAt": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "sourceReadinessRef", "coverage", "freshness", "blockers"],
+      "properties": {
+        "status": { "$ref": "#/$defs/readinessStatus" },
+        "sourceReadinessRef": {
+          "oneOf": [{ "$ref": "#/$defs/exactRef" }, { "type": "null" }]
+        },
+        "coverage": { "$ref": "#/$defs/coverage" },
+        "freshness": { "$ref": "#/$defs/freshness" },
+        "blockers": { "$ref": "#/$defs/blockers" }
+      }
+    },
+    "channel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channelId", "platform", "displayName", "channelRef"],
+      "properties": {
+        "channelId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "platform": { "type": "string", "enum": ["niushop", "wechat_store", "douyin_store"] },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "channelRef": { "$ref": "#/$defs/exactRef" }
+      }
+    },
+    "businessEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["businessEntityId", "entityType", "displayName", "channelRef"],
+      "properties": {
+        "businessEntityId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "entityType": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "channelRef": { "$ref": "#/$defs/exactRef" }
+      }
+    },
+    "sharedEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "tenant", "channel", "businessEntity", "caseRef", "runRef", "readiness", "artifactRefs"],
+      "properties": {
+        "schemaVersion": { "const": "aos.business-investigation.shared/v1" },
+        "tenant": { "$ref": "#/$defs/tenant" },
+        "channel": { "$ref": "#/$defs/channel" },
+        "businessEntity": { "$ref": "#/$defs/businessEntity" },
+        "caseRef": { "$ref": "#/$defs/exactRef" },
+        "runRef": { "$ref": "#/$defs/exactRef" },
+        "readiness": { "$ref": "#/$defs/readiness" },
+        "artifactRefs": { "$ref": "#/$defs/exactRefs" }
+      }
+    },
+    "dataRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "tenant", "requirementId", "caseRef", "runRef", "purpose", "factTypes", "status", "requestedAt", "blockers"],
+      "properties": {
+        "schemaVersion": { "const": "aos.data-requirement/v1" },
+        "tenant": { "$ref": "#/$defs/tenant" },
+        "requirementId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "caseRef": { "$ref": "#/$defs/exactRef" },
+        "runRef": { "$ref": "#/$defs/exactRef" },
+        "purpose": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "factTypes": { "type": "array", "minItems": 1, "maxItems": 100, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "status": { "type": "string", "enum": ["requested", "accepted", "planned", "fulfilled", "rejected", "cancelled", "unknown"] },
+        "requestedAt": { "type": "string", "format": "date-time" },
+        "blockers": { "$ref": "#/$defs/blockers" }
+      }
+    },
+    "dataFulfillmentReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "tenant", "fulfillmentId", "requirementRef", "status", "artifactRefs", "fulfilledAt", "blockers"],
+      "properties": {
+        "schemaVersion": { "const": "aos.data-fulfillment-receipt/v1" },
+        "tenant": { "$ref": "#/$defs/tenant" },
+        "fulfillmentId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "requirementRef": { "$ref": "#/$defs/exactRef" },
+        "status": { "type": "string", "enum": ["fulfilled", "partial", "rejected", "unknown"] },
+        "artifactRefs": { "$ref": "#/$defs/exactRefs" },
+        "fulfilledAt": { "type": "string", "format": "date-time" },
+        "blockers": { "$ref": "#/$defs/blockers" }
+      }
+    },
+    "platformObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "tenant", "observationId", "status", "observedAt", "sourceRef", "evidenceRefs", "blockers"],
+      "properties": {
+        "schemaVersion": { "const": "aos.platform-observation/v1" },
+        "tenant": { "$ref": "#/$defs/tenant" },
+        "observationId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "status": { "type": "string", "enum": ["draft", "ready", "running", "paused", "blocked", "unknown", "reconciling", "completed", "cancelled"] },
+        "observedAt": { "type": "string", "format": "date-time" },
+        "sourceRef": { "$ref": "#/$defs/exactRef" },
+        "evidenceRefs": { "$ref": "#/$defs/exactRefs" },
+        "blockers": { "$ref": "#/$defs/blockers" }
+      }
+    },
+    "sourceMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "tenant", "mappingId", "observationRef", "sourceField", "canonicalField", "confidence", "confirmedBy", "blockers"],
+      "properties": {
+        "schemaVersion": { "const": "aos.source-mapping/v1" },
+        "tenant": { "$ref": "#/$defs/tenant" },
+        "mappingId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "observationRef": { "$ref": "#/$defs/exactRef" },
+        "sourceField": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "canonicalField": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "confirmedBy": { "type": ["string", "null"], "minLength": 1, "maxLength": 200 },
+        "blockers": { "$ref": "#/$defs/blockers" }
+      }
+    },
+    "adaptiveProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "tenant", "profileId", "sourceRef", "hypothesisRefs", "coverage", "blockers"],
+      "properties": {
+        "schemaVersion": { "const": "aos.adaptive-profile/v1" },
+        "tenant": { "$ref": "#/$defs/tenant" },
+        "profileId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "sourceRef": { "$ref": "#/$defs/exactRef" },
+        "hypothesisRefs": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/exactRef" } },
+        "coverage": { "$ref": "#/$defs/coverage" },
+        "blockers": { "$ref": "#/$defs/blockers" }
+      }
+    },
+    "semanticHydrationReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "tenant", "hydrationId", "status", "observationRef", "mappingRef", "outputRefs", "hydratedAt", "blockers"],
+      "properties": {
+        "schemaVersion": { "const": "aos.semantic-hydration-receipt/v1" },
+        "tenant": { "$ref": "#/$defs/tenant" },
+        "hydrationId": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "status": { "type": "string", "enum": ["succeeded", "partial", "blocked", "unknown"] },
+        "observationRef": { "$ref": "#/$defs/exactRef" },
+        "mappingRef": { "$ref": "#/$defs/exactRef" },
+        "outputRefs": { "$ref": "#/$defs/exactRefs" },
+        "hydratedAt": { "type": "string", "format": "date-time" },
+        "blockers": { "$ref": "#/$defs/blockers" }
+      }
+    }
+  }
+}
