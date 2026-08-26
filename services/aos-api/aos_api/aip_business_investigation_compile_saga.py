@@ -101,6 +101,17 @@ class BusinessInvestigationCompilationReceipt(AipContractModel):
                 raise ValueError(f"{label} must reference {required}")
         return self
 
+    @property
+    def exact_ref(self) -> InvestigationExactRef:
+        return InvestigationExactRef(
+            resource_type="BusinessInvestigationCompilationReceipt",
+            resource_id=self.receipt_id,
+            revision=1,
+            content_hash=_canonical_hash(
+                self.model_dump(mode="json", by_alias=True)
+            ),
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class BusinessInvestigationCompilationReceiptWrite:

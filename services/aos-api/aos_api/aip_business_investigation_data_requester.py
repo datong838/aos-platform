@@ -31,9 +31,7 @@ from aos_api.tenant_scope import TenantScope
 _FACT_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_.:-]{0,119}$")
 
 
-class MissingFactDataRequest(AipContractModel):
-    requirement_id: str = Field(min_length=1, max_length=200)
-    idempotency_key: str = Field(min_length=1, max_length=200)
+class MissingFactDataSpec(AipContractModel):
     purpose_code: str = Field(pattern=r"^[a-z][a-z0-9_]{1,119}$")
     channel_ref: InvestigationExactRef
     entity_ref: InvestigationExactRef
@@ -49,14 +47,6 @@ class MissingFactDataRequest(AipContractModel):
     requested_outputs: list[str] = Field(min_length=1, max_length=20)
     budget_minor: int = Field(ge=0)
     expires_at: datetime
-
-    @field_validator("requirement_id", "idempotency_key")
-    @classmethod
-    def _trimmed(cls, value: str) -> str:
-        cleaned = value.strip()
-        if not cleaned:
-            raise ValueError("request identity must not be blank")
-        return cleaned
 
     @field_validator("required_facts")
     @classmethod
@@ -84,7 +74,7 @@ class MissingFactDataRequest(AipContractModel):
         return value
 
     @model_validator(mode="after")
-    def _canonical_scope_refs_and_time(self) -> MissingFactDataRequest:
+    def _canonical_scope_refs_and_time(self) -> MissingFactDataSpec:
         if self.channel_ref.resource_type != "ChannelRevision":
             raise ValueError("channelRef must reference ChannelRevision")
         if self.entity_ref.resource_type != "BusinessEntityRevision":
@@ -92,6 +82,19 @@ class MissingFactDataRequest(AipContractModel):
         if self.time_window.end_at > self.cutoff_at:
             raise ValueError("timeWindow must not extend beyond cutoffAt")
         return self
+
+
+class MissingFactDataRequest(MissingFactDataSpec):
+    requirement_id: str = Field(min_length=1, max_length=200)
+    idempotency_key: str = Field(min_length=1, max_length=200)
+
+    @field_validator("requirement_id", "idempotency_key")
+    @classmethod
+    def _trimmed(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("request identity must not be blank")
+        return cleaned
 
 
 class BusinessInvestigationDataRequestBlocked(RuntimeError):
