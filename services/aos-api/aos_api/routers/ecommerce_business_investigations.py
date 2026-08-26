@@ -1,0 +1,317 @@
+"""BI-W4-06 canonical HTTP adapter for ecommerce business investigations."""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from functools import lru_cache
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Header, Path, Query, Security, status
+from fastapi.security import HTTPBearer
+
+from aos_api.auth import Principal, require_principal
+from aos_api.ecommerce_business_investigation_application import (
+    BusinessInvestigationCaseCommandResponse,
+    BusinessInvestigationCaseListResponse,
+    BusinessInvestigationEmptyCommandRequest,
+    BusinessInvestigationRunCommandResponse,
+    BusinessInvestigationRunListResponse,
+    BusinessInvestigationRunStateCommandResponse,
+    CreateBusinessInvestigationCaseRequest,
+    CreateBusinessInvestigationRunRequest,
+    EcommerceBusinessInvestigationApplication,
+    TransitionBusinessInvestigationCaseRequest,
+)
+from aos_api.ecommerce_business_investigation_case import (
+    BusinessInvestigationCaseConflict,
+    BusinessInvestigationCaseNotFound,
+    BusinessInvestigationCaseRevision,
+)
+from aos_api.ecommerce_business_investigation_run import (
+    BusinessInvestigationRunConflict,
+    BusinessInvestigationRunControl,
+    BusinessInvestigationRunNotFound,
+    BusinessInvestigationRunView,
+)
+from aos_api.errors import ApiError, ErrorBody
+from aos_api.tenant_scope import TenantScope
+
+
+_bearer = HTTPBearer(auto_error=False)
+router = APIRouter(
+    prefix="/v1/ecommerce/investigations",
+    tags=["ecommerce-business-investigations"],
+    dependencies=[Security(_bearer)],
+)
+_ERRORS = {
+    400: {"model": ErrorBody},
+    401: {"model": ErrorBody},
+    404: {"model": ErrorBody},
+    409: {"model": ErrorBody},
+    422: {"model": ErrorBody},
+    503: {"model": ErrorBody},
+}
+PrincipalDependency = Annotated[Principal, Depends(require_principal)]
+ResourceIdPath = Annotated[
+    str,
+    Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$"),
+]
+
+
+@lru_cache(maxsize=1)
+def get_business_investigation_application() -> EcommerceBusinessInvestigationApplication:
+    return EcommerceBusinessInvestigationApplication()
+
+
+def _scope(principal: Principal) -> TenantScope:
+    return TenantScope(principal.org_id, principal.project_id)
+
+
+def _idempotency_key(value: str) -> str:
+    cleaned = value.strip()
+    if not cleaned or len(cleaned) > 200:
+        raise ApiError(
+            code="BUSINESS_INVESTIGATION_INVALID_IDEMPOTENCY_KEY",
+            message="Idempotency-Key must be 1..200 characters",
+            status_code=400,
+        )
+    return cleaned
+
+
+def _expected_version(value: str) -> int:
+    cleaned = value.strip()
+    if len(cleaned) >= 2 and cleaned[0] == cleaned[-1] == '"':
+        cleaned = cleaned[1:-1]
+    if not cleaned.isdigit() or int(cleaned) < 1:
+        raise ApiError(
+            code="BUSINESS_INVESTIGATION_INVALID_IF_MATCH",
+            message="If-Match must contain one positive integer version",
+            status_code=400,
+        )
+    return int(cleaned)
+
+
+def _map_error(exc: Exception) -> ApiError:
+    if isinstance(exc, ApiError):
+        return exc
+    if isinstance(exc, (BusinessInvestigationCaseNotFound, BusinessInvestigationRunNotFound)):
+        return ApiError(
+            code="BUSINESS_INVESTIGATION_NOT_FOUND",
+            message="business investigation resource is not visible",
+            status_code=404,
+        )
+    if isinstance(exc, (BusinessInvestigationCaseConflict, BusinessInvestigationRunConflict)):
+        return ApiError(
+            code="BUSINESS_INVESTIGATION_CONFLICT",
+            message=str(exc),
+            status_code=409,
+        )
+    if isinstance(exc, ValueError):
+        return ApiError(
+            code="BUSINESS_INVESTIGATION_INVALID_ARGUMENT",
+            message=str(exc),
+            status_code=422,
+        )
+    return ApiError(
+        code="BUSINESS_INVESTIGATION_AUTHORITY_UNAVAILABLE",
+        message="business investigation authority failed closed",
+        status_code=503,
+    )
+
+
+@router.get("/cases", response_model=BusinessInvestigationCaseListResponse, responses=_ERRORS)
+def list_cases(
+    principal: PrincipalDependency,
+    business_entity_id: str | None = Query(default=None, alias="businessEntityId", min_length=1, max_length=240),
+    limit: int = Query(default=50, ge=1, le=200),
+    application: EcommerceBusinessInvestigationApplication = Depends(get_business_investigation_application),
+) -> BusinessInvestigationCaseListResponse:
+    try:
+        return application.list_cases(
+            _scope(principal), business_entity_id=business_entity_id, limit=limit
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/cases",
+    response_model=BusinessInvestigationCaseCommandResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses=_ERRORS,
+)
+def create_case(
+    body: CreateBusinessInvestigationCaseRequest,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    application: EcommerceBusinessInvestigationApplication = Depends(get_business_investigation_application),
+) -> BusinessInvestigationCaseCommandResponse:
+    try:
+        return application.create_case(
+            _scope(principal),
+            body,
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get("/cases/{case_id}", response_model=BusinessInvestigationCaseRevision, responses=_ERRORS)
+def get_case(
+    case_id: ResourceIdPath,
+    principal: PrincipalDependency,
+    application: EcommerceBusinessInvestigationApplication = Depends(get_business_investigation_application),
+) -> BusinessInvestigationCaseRevision:
+    try:
+        return application.get_case(_scope(principal), case_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/cases/{case_id}:transition",
+    response_model=BusinessInvestigationCaseCommandResponse,
+    responses=_ERRORS,
+)
+def transition_case(
+    case_id: ResourceIdPath,
+    body: TransitionBusinessInvestigationCaseRequest,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(get_business_investigation_application),
+) -> BusinessInvestigationCaseCommandResponse:
+    try:
+        return application.transition_case(
+            _scope(principal),
+            case_id,
+            body,
+            expected_version=_expected_version(if_match),
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get(
+    "/cases/{case_id}/runs", response_model=BusinessInvestigationRunListResponse, responses=_ERRORS
+)
+def list_runs(
+    case_id: ResourceIdPath,
+    principal: PrincipalDependency,
+    limit: int = Query(default=50, ge=1, le=200),
+    application: EcommerceBusinessInvestigationApplication = Depends(get_business_investigation_application),
+) -> BusinessInvestigationRunListResponse:
+    try:
+        return application.list_runs(_scope(principal), case_id, limit=limit)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/cases/{case_id}/runs",
+    response_model=BusinessInvestigationRunCommandResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses=_ERRORS,
+)
+def create_run(
+    case_id: ResourceIdPath,
+    body: CreateBusinessInvestigationRunRequest,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    application: EcommerceBusinessInvestigationApplication = Depends(get_business_investigation_application),
+) -> BusinessInvestigationRunCommandResponse:
+    try:
+        return application.create_run(
+            _scope(principal),
+            case_id,
+            body,
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get("/runs/{run_id}", response_model=BusinessInvestigationRunView, responses=_ERRORS)
+def get_run(
+    run_id: ResourceIdPath,
+    principal: PrincipalDependency,
+    application: EcommerceBusinessInvestigationApplication = Depends(get_business_investigation_application),
+) -> BusinessInvestigationRunView:
+    try:
+        return application.get_run(_scope(principal), run_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+def _transition_run(
+    run_id: str,
+    target: BusinessInvestigationRunControl,
+    principal: Principal,
+    idempotency_key: str,
+    if_match: str,
+    application: EcommerceBusinessInvestigationApplication,
+) -> BusinessInvestigationRunStateCommandResponse:
+    try:
+        return application.transition_run_control(
+            _scope(principal),
+            run_id,
+            target,
+            expected_version=_expected_version(if_match),
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/runs/{run_id}:pause", response_model=BusinessInvestigationRunStateCommandResponse, responses=_ERRORS)
+def pause_run(
+    run_id: ResourceIdPath,
+    _body: BusinessInvestigationEmptyCommandRequest,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(get_business_investigation_application),
+) -> BusinessInvestigationRunStateCommandResponse:
+    return _transition_run(
+        run_id, BusinessInvestigationRunControl.PAUSED, principal, idempotency_key, if_match, application
+    )
+
+
+@router.post("/runs/{run_id}:resume", response_model=BusinessInvestigationRunStateCommandResponse, responses=_ERRORS)
+def resume_run(
+    run_id: ResourceIdPath,
+    _body: BusinessInvestigationEmptyCommandRequest,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(get_business_investigation_application),
+) -> BusinessInvestigationRunStateCommandResponse:
+    return _transition_run(
+        run_id, BusinessInvestigationRunControl.RUNNING, principal, idempotency_key, if_match, application
+    )
+
+
+@router.post("/runs/{run_id}:cancel", response_model=BusinessInvestigationRunStateCommandResponse, responses=_ERRORS)
+def cancel_run(
+    run_id: ResourceIdPath,
+    _body: BusinessInvestigationEmptyCommandRequest,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(get_business_investigation_application),
+) -> BusinessInvestigationRunStateCommandResponse:
+    return _transition_run(
+        run_id, BusinessInvestigationRunControl.CANCELLED, principal, idempotency_key, if_match, application
+    )
+
+
+__all__ = ["get_business_investigation_application", "router"]

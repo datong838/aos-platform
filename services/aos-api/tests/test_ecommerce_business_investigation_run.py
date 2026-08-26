@@ -195,5 +195,5 @@ def test_disposable_database_atomic_active_case_idempotency_isolation_and_guard(
             assert conn.execute("SELECT count(*) FROM ecommerce_investigation_run").fetchone()[0] == 0
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 conn.execute("INSERT INTO ecommerce_investigation_run_outbox(org_id,project_id,outbox_id,event_id,run_id,status,payload,created_at) VALUES('dev-org','dev-project','direct','missing','missing','PENDING','{}',NOW())")
-        with pytest.raises(Exception, match=r"cannot downgrade biw4_00[23]"):
+        with pytest.raises(Exception, match="cannot downgrade biw4_006"):
             command.downgrade(config, "biw4_001")

@@ -3264,6 +3264,12 @@
       "module": "aos_api.routers.data_requirements",
       "attribute": "router",
       "order": 543
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.ecommerce_business_investigations",
+      "attribute": "router",
+      "order": 544
     }
   ]
 }

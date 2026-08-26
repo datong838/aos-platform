@@ -163,6 +163,10 @@ class BusinessInvestigationCaseConflict(BusinessInvestigationCaseError):
     pass
 
 
+class BusinessInvestigationCaseNotFound(BusinessInvestigationCaseError):
+    pass
+
+
 class BusinessInvestigationCaseStore:
     def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
         self._connect_factory = connect_factory or db_connect
@@ -200,11 +204,131 @@ class BusinessInvestigationCaseStore:
             replayed=bool(row["replayed"]),
         )
 
+    def get(self, scope: TenantScope, case_id: str) -> BusinessInvestigationCaseRevision:
+        try:
+            with self._connect_factory(scope) as conn:
+                row = conn.execute(
+                    """SELECT r.authority_data FROM ecommerce_investigation_case_head h
+                    JOIN ecommerce_investigation_case_revision r
+                      ON r.org_id=h.org_id AND r.project_id=h.project_id
+                     AND r.case_id=h.case_id AND r.revision=h.current_revision
+                    WHERE h.org_id=%s AND h.project_id=%s AND h.case_id=%s""",
+                    (*scope.key, case_id),
+                ).fetchone()
+        except psycopg.Error as exc:
+            raise BusinessInvestigationCaseError("canonical Case query failed closed") from exc
+        if row is None:
+            raise BusinessInvestigationCaseNotFound("BusinessInvestigationCase is not visible")
+        return BusinessInvestigationCaseRevision.model_validate(row["authority_data"])
+
+    def list(
+        self,
+        scope: TenantScope,
+        *,
+        business_entity_id: str | None = None,
+        limit: int = 50,
+    ) -> list[BusinessInvestigationCaseRevision]:
+        if limit < 1 or limit > 200:
+            raise BusinessInvestigationCaseConflict("Case query limit must be 1..200")
+        try:
+            with self._connect_factory(scope) as conn:
+                rows = conn.execute(
+                    """SELECT r.authority_data FROM ecommerce_investigation_case_head h
+                    JOIN ecommerce_investigation_case_revision r
+                      ON r.org_id=h.org_id AND r.project_id=h.project_id
+                     AND r.case_id=h.case_id AND r.revision=h.current_revision
+                    WHERE h.org_id=%s AND h.project_id=%s
+                      AND (%s::text IS NULL OR h.business_entity_id=%s)
+                    ORDER BY h.updated_at DESC,h.case_id ASC LIMIT %s""",
+                    (*scope.key, business_entity_id, business_entity_id, limit),
+                ).fetchall()
+        except psycopg.Error as exc:
+            raise BusinessInvestigationCaseError("canonical Case list failed closed") from exc
+        return [BusinessInvestigationCaseRevision.model_validate(row["authority_data"]) for row in rows]
+
+    def transition(
+        self,
+        scope: TenantScope,
+        case_id: str,
+        target: BusinessInvestigationCaseLifecycle,
+        *,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationCaseWrite:
+        if expected_version < 1:
+            raise BusinessInvestigationCaseConflict("expected version must be positive")
+        if not idempotency_key.strip() or len(idempotency_key) > 200:
+            raise BusinessInvestigationCaseConflict("idempotency key must be non-empty and bounded")
+        try:
+            with self._connect_factory(scope) as conn:
+                replay = conn.execute(
+                    """SELECT case_id,expected_version,authority_data
+                    FROM ecommerce_investigation_case_lifecycle_receipt
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation='business_investigation_case.transition' AND idempotency_key=%s""",
+                    (*scope.key, idempotency_key),
+                ).fetchone()
+        except psycopg.Error as exc:
+            raise BusinessInvestigationCaseError("canonical Case lifecycle replay query failed closed") from exc
+        if replay is not None:
+            authority = BusinessInvestigationCaseRevision.model_validate(replay["authority_data"])
+            if (
+                replay["case_id"] != case_id
+                or int(replay["expected_version"]) != expected_version
+                or authority.lifecycle is not target
+            ):
+                raise BusinessInvestigationCaseConflict("Case lifecycle idempotency conflict")
+            return BusinessInvestigationCaseWrite(authority=authority, replayed=True)
+        previous = self.get(scope, case_id)
+        if previous.version != expected_version:
+            raise BusinessInvestigationCaseConflict("Case expected version conflict")
+        payload = previous.model_dump(by_alias=True, mode="json")
+        payload.update(
+            revision=expected_version + 1,
+            version=expected_version + 1,
+            priorRef={
+                "resourceType": "BusinessInvestigationCaseRevision",
+                "resourceId": previous.case_id,
+                "revision": previous.revision,
+                "contentHash": previous.content_hash,
+            },
+            lifecycle=target.value,
+            contentHash="sha256:" + "0" * 64,
+            createdBy=actor,
+            createdAt=occurred_at.isoformat(),
+        )
+        successor = BusinessInvestigationCaseRevision.model_validate(payload)
+        payload["contentHash"] = successor.calculated_content_hash()
+        successor = BusinessInvestigationCaseRevision.model_validate(payload)
+        successor.validate_successor(previous)
+        request_hash = _canonical_hash(
+            {"caseId": case_id, "expectedVersion": expected_version, "targetLifecycle": target.value}
+        )
+        try:
+            with self._connect_factory(scope) as conn:
+                row = conn.execute(
+                    """SELECT authority_data,replayed
+                    FROM ecommerce_investigation_case_transition_biw4_006(%s,%s,%s,%s,%s)""",
+                    (case_id, expected_version, idempotency_key, request_hash, Jsonb(payload)),
+                ).fetchone()
+                conn.commit()
+        except psycopg.Error as exc:
+            raise BusinessInvestigationCaseConflict("canonical Case lifecycle failed closed") from exc
+        if row is None:
+            raise BusinessInvestigationCaseConflict("canonical Case lifecycle returned no Receipt")
+        return BusinessInvestigationCaseWrite(
+            authority=BusinessInvestigationCaseRevision.model_validate(row["authority_data"]),
+            replayed=bool(row["replayed"]),
+        )
+
 
 __all__ = [
     "BusinessInvestigationAnalysisType",
     "BusinessInvestigationCaseConflict",
     "BusinessInvestigationCaseLifecycle",
+    "BusinessInvestigationCaseNotFound",
     "BusinessInvestigationCaseRevision",
     "BusinessInvestigationCaseStore",
     "BusinessInvestigationCaseWrite",

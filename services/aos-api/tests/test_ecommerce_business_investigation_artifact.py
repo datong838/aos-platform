@@ -212,5 +212,5 @@ def test_disposable_database_exact_case_run_rls_runtime_guard_and_nonempty_downg
                 "SELECT set_config('aos.org_id','dev-org',true),set_config('aos.project_id','dev-project',true)"
             )
             assert conn.execute("SELECT count(*) FROM ecommerce_investigation_business_dossier_revision").fetchone()[0] == 0
-        with pytest.raises(Exception, match="cannot downgrade biw4_004"):
+        with pytest.raises(Exception, match="cannot downgrade biw4_006"):
             command.downgrade(config, "biw4_003")
