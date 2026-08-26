@@ -20,6 +20,7 @@ from aos_api.ecommerce_business_investigation_application import (
     CreateBusinessInvestigationCaseRequest,
     CreateBusinessInvestigationRunRequest,
     EcommerceBusinessInvestigationApplication,
+    RequestBusinessInvestigationDataRequest,
     TransitionBusinessInvestigationCaseRequest,
 )
 from aos_api.ecommerce_business_investigation_case import (
@@ -246,6 +247,36 @@ def get_run(
 ) -> BusinessInvestigationRunView:
     try:
         return application.get_run(_scope(principal), run_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/runs/{run_id}:request-data",
+    response_model=BusinessInvestigationRunStateCommandResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunDataRequest",
+)
+def request_run_data(
+    run_id: ResourceIdPath,
+    body: RequestBusinessInvestigationDataRequest,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationRunStateCommandResponse:
+    try:
+        return application.request_run_data(
+            _scope(principal),
+            run_id,
+            body,
+            expected_version=_expected_version(if_match),
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
     except Exception as exc:
         raise _map_error(exc) from exc
 

@@ -59,20 +59,33 @@ class BusinessInvestigationRunRequestOutcome(StrEnum):
     SKIPPED_OVERLAP = "SKIPPED_OVERLAP"
 
 
+class BusinessInvestigationUncertainCommand(AipContractModel):
+    command_id: str = Field(min_length=1, max_length=200)
+    operation: str = Field(pattern=r"^[a-z][a-z0-9_.-]{1,119}$")
+    request_hash: str = Field(pattern=SHA256)
+
+
 class BusinessInvestigationRunStateRevision(AipContractModel):
     schema_version: str = "aos.ecommerce.business-investigation-run-state/v1"
     tenant: TenantContext
     run_id: str = Field(min_length=1, max_length=200)
     version: int = Field(ge=1)
     prior_ref: InvestigationExactRef | None = None
-    lifecycle: Literal[BusinessInvestigationRunLifecycle.PREPARING]
+    lifecycle: Literal[
+        BusinessInvestigationRunLifecycle.PREPARING,
+        BusinessInvestigationRunLifecycle.WAITING_DATA,
+    ]
     control: Literal[
         BusinessInvestigationRunControl.RUNNING,
         BusinessInvestigationRunControl.PAUSED,
+        BusinessInvestigationRunControl.UNKNOWN,
+        BusinessInvestigationRunControl.RECONCILING,
         BusinessInvestigationRunControl.CANCELLED,
     ]
     event_sequence: int = Field(ge=1)
     content_hash: str = Field(pattern=SHA256)
+    pending_requirement_ref: InvestigationExactRef | None = None
+    uncertain_command: BusinessInvestigationUncertainCommand | None = None
     created_by: str = Field(min_length=1, max_length=200)
     created_at: datetime
 
@@ -90,7 +103,13 @@ class BusinessInvestigationRunStateRevision(AipContractModel):
         if self.event_sequence != self.version:
             raise ValueError("Run state version/event sequence drifted")
         if self.version == 1:
-            if self.prior_ref is not None or self.control is not BusinessInvestigationRunControl.RUNNING:
+            if (
+                self.prior_ref is not None
+                or self.lifecycle is not BusinessInvestigationRunLifecycle.PREPARING
+                or self.control is not BusinessInvestigationRunControl.RUNNING
+                or self.pending_requirement_ref is not None
+                or self.uncertain_command is not None
+            ):
                 raise ValueError("Run state r1 must be RUNNING without priorRef")
         else:
             if self.prior_ref is None:
@@ -101,6 +120,23 @@ class BusinessInvestigationRunStateRevision(AipContractModel):
                 or self.prior_ref.revision != self.version - 1
             ):
                 raise ValueError("Run state priorRef must bind preceding revision")
+        if self.lifecycle is BusinessInvestigationRunLifecycle.WAITING_DATA:
+            if (
+                self.pending_requirement_ref is None
+                or self.pending_requirement_ref.resource_type != "DataRequirementRevision"
+                or not isinstance(self.pending_requirement_ref.revision, int)
+            ):
+                raise ValueError("WAITING_DATA requires exact DataRequirementRevision")
+        elif self.pending_requirement_ref is not None:
+            raise ValueError("PREPARING cannot carry pendingRequirementRef")
+        if self.control in {
+            BusinessInvestigationRunControl.UNKNOWN,
+            BusinessInvestigationRunControl.RECONCILING,
+        }:
+            if self.uncertain_command is None:
+                raise ValueError("UNKNOWN/RECONCILING requires uncertainCommand")
+        elif self.uncertain_command is not None:
+            raise ValueError("stable Run control cannot carry uncertainCommand")
         return self
 
     def calculated_content_hash(self) -> str:
@@ -351,6 +387,209 @@ class BusinessInvestigationRunStore:
             replayed=bool(row["replayed"]),
         )
 
+    def request_data(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        requirement_ref: InvestigationExactRef,
+        *,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationRunStateWrite:
+        if (
+            requirement_ref.resource_type != "DataRequirementRevision"
+            or not isinstance(requirement_ref.revision, int)
+        ):
+            raise BusinessInvestigationRunConflict(
+                "request-data requires exact DataRequirementRevision"
+            )
+        return self._transition_extended(
+            scope,
+            run_id,
+            operation="business_investigation_run.request_data",
+            target_lifecycle=BusinessInvestigationRunLifecycle.WAITING_DATA,
+            target_control=BusinessInvestigationRunControl.RUNNING,
+            pending_requirement_ref=requirement_ref,
+            uncertain_command=None,
+            expected_version=expected_version,
+            idempotency_key=idempotency_key,
+            actor=actor,
+            occurred_at=occurred_at,
+        )
+
+    def mark_unknown(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        uncertain_command: BusinessInvestigationUncertainCommand,
+        *,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationRunStateWrite:
+        previous = self.get(scope, run_id).state
+        return self._transition_extended(
+            scope,
+            run_id,
+            operation="business_investigation_run.mark_unknown",
+            target_lifecycle=previous.lifecycle,
+            target_control=BusinessInvestigationRunControl.UNKNOWN,
+            pending_requirement_ref=previous.pending_requirement_ref,
+            uncertain_command=uncertain_command,
+            expected_version=expected_version,
+            idempotency_key=idempotency_key,
+            actor=actor,
+            occurred_at=occurred_at,
+            previous=previous,
+        )
+
+    def begin_reconcile(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        *,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationRunStateWrite:
+        previous = self.get(scope, run_id).state
+        if previous.uncertain_command is None:
+            raise BusinessInvestigationRunConflict("reconcile requires prior uncertainCommand")
+        return self._transition_extended(
+            scope,
+            run_id,
+            operation="business_investigation_run.begin_reconcile",
+            target_lifecycle=previous.lifecycle,
+            target_control=BusinessInvestigationRunControl.RECONCILING,
+            pending_requirement_ref=previous.pending_requirement_ref,
+            uncertain_command=previous.uncertain_command,
+            expected_version=expected_version,
+            idempotency_key=idempotency_key,
+            actor=actor,
+            occurred_at=occurred_at,
+            previous=previous,
+        )
+
+    def _transition_extended(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        *,
+        operation: str,
+        target_lifecycle: BusinessInvestigationRunLifecycle,
+        target_control: BusinessInvestigationRunControl,
+        pending_requirement_ref: InvestigationExactRef | None,
+        uncertain_command: BusinessInvestigationUncertainCommand | None,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+        previous: BusinessInvestigationRunStateRevision | None = None,
+    ) -> BusinessInvestigationRunStateWrite:
+        if expected_version < 1:
+            raise BusinessInvestigationRunConflict("expected version must be positive")
+        if not idempotency_key.strip() or len(idempotency_key) > 200:
+            raise BusinessInvestigationRunConflict("idempotency key must be non-empty and bounded")
+        try:
+            with self._connect_factory(scope) as conn:
+                replay = conn.execute(
+                    """SELECT run_id,expected_version,authority_data
+                    FROM ecommerce_investigation_run_state_transition_receipt
+                    WHERE org_id=%s AND project_id=%s AND operation=%s AND idempotency_key=%s""",
+                    (*scope.key, operation, idempotency_key),
+                ).fetchone()
+        except psycopg.Error as exc:
+            raise BusinessInvestigationRunConflict(
+                "canonical Run state replay query failed closed"
+            ) from exc
+        if replay is not None:
+            authority = BusinessInvestigationRunStateRevision.model_validate(
+                replay["authority_data"]
+            )
+            if (
+                replay["run_id"] != run_id
+                or int(replay["expected_version"]) != expected_version
+                or authority.lifecycle is not target_lifecycle
+                or authority.control is not target_control
+                or authority.pending_requirement_ref != pending_requirement_ref
+                or authority.uncertain_command != uncertain_command
+            ):
+                raise BusinessInvestigationRunConflict("Run state idempotency conflict")
+            return BusinessInvestigationRunStateWrite(authority=authority, replayed=True)
+        previous = previous or self.get(scope, run_id).state
+        if previous.version != expected_version:
+            raise BusinessInvestigationRunConflict("Run expected version conflict")
+        payload = {
+            "schemaVersion": "aos.ecommerce.business-investigation-run-state/v1",
+            "tenant": previous.tenant.model_dump(by_alias=True, mode="json"),
+            "runId": run_id,
+            "version": expected_version + 1,
+            "priorRef": {
+                "resourceType": "BusinessInvestigationRunStateRevision",
+                "resourceId": run_id,
+                "revision": expected_version,
+                "contentHash": previous.content_hash,
+            },
+            "lifecycle": target_lifecycle.value,
+            "control": target_control.value,
+            "eventSequence": previous.event_sequence + 1,
+            "contentHash": "sha256:" + "0" * 64,
+            "pendingRequirementRef": (
+                pending_requirement_ref.model_dump(by_alias=True, mode="json")
+                if pending_requirement_ref
+                else None
+            ),
+            "uncertainCommand": (
+                uncertain_command.model_dump(by_alias=True, mode="json")
+                if uncertain_command
+                else None
+            ),
+            "createdBy": actor,
+            "createdAt": occurred_at.isoformat(),
+        }
+        successor = BusinessInvestigationRunStateRevision.model_validate(payload)
+        payload["contentHash"] = successor.calculated_content_hash()
+        request_hash = _canonical_hash(
+            {
+                "runId": run_id,
+                "expectedVersion": expected_version,
+                "operation": operation,
+                "pendingRequirementRef": payload["pendingRequirementRef"],
+                "uncertainCommand": payload["uncertainCommand"],
+            }
+        )
+        try:
+            with self._connect_factory(scope) as conn:
+                row = conn.execute(
+                    """SELECT authority_data,replayed
+                    FROM ecommerce_investigation_run_state_transition_biw4_007(%s,%s,%s,%s,%s,%s)""",
+                    (
+                        run_id,
+                        expected_version,
+                        operation,
+                        idempotency_key,
+                        request_hash,
+                        Jsonb(payload),
+                    ),
+                ).fetchone()
+                conn.commit()
+        except psycopg.Error as exc:
+            raise BusinessInvestigationRunConflict(
+                "canonical Run state transition failed closed"
+            ) from exc
+        if row is None:
+            raise BusinessInvestigationRunConflict(
+                "canonical Run state transition returned no Receipt"
+            )
+        return BusinessInvestigationRunStateWrite(
+            authority=BusinessInvestigationRunStateRevision.model_validate(row["authority_data"]),
+            replayed=bool(row["replayed"]),
+        )
+
 
 __all__ = [
     "BusinessInvestigationRunConflict",
@@ -365,4 +604,5 @@ __all__ = [
     "BusinessInvestigationRunView",
     "BusinessInvestigationRunWrite",
     "BusinessInvestigationTriggerKind",
+    "BusinessInvestigationUncertainCommand",
 ]

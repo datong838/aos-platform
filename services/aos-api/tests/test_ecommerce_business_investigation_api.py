@@ -1,4 +1,4 @@
-"""BI-W4-06 canonical Case/Run HTTP API tests."""
+"""BI-W4-06/07 canonical Case/Run HTTP API tests."""
 
 from __future__ import annotations
 
@@ -35,7 +35,13 @@ NOW = datetime.now(UTC)
 TENANT = TenantContext(org_id="org-org", project_id="dev-project")
 
 
-def state(control: str = "PAUSED", version: int = 2) -> BusinessInvestigationRunStateRevision:
+def state(
+    control: str = "PAUSED",
+    version: int = 2,
+    *,
+    lifecycle: str = "PREPARING",
+    pending_requirement_ref: dict | None = None,
+) -> BusinessInvestigationRunStateRevision:
     payload = {
         "tenant": TENANT.model_dump(by_alias=True, mode="json"),
         "runId": "run-1",
@@ -46,13 +52,15 @@ def state(control: str = "PAUSED", version: int = 2) -> BusinessInvestigationRun
             revision=version - 1,
             content_hash=HASH_A,
         ),
-        "lifecycle": "PREPARING",
+        "lifecycle": lifecycle,
         "control": control,
         "eventSequence": version,
         "contentHash": HASH_A,
         "createdBy": "user-1",
         "createdAt": NOW,
     }
+    if pending_requirement_ref is not None:
+        payload["pendingRequirementRef"] = pending_requirement_ref
     return BusinessInvestigationRunStateRevision.model_validate(payload)
 
 
@@ -116,6 +124,21 @@ class FakeApplication:
             replayed=False,
         )
 
+    def request_run_data(self, scope, run_id, request, **kwargs):
+        self.calls.append(("request_data", scope, run_id, request, kwargs))
+        return BusinessInvestigationRunStateCommandResponse(
+            tenant=TENANT,
+            authority=state(
+                "RUNNING",
+                kwargs["expected_version"] + 1,
+                lifecycle="WAITING_DATA",
+                pending_requirement_ref=request.requirement_ref.model_dump(
+                    by_alias=True, mode="json"
+                ),
+            ),
+            replayed=False,
+        )
+
 
 def client(application: FakeApplication) -> TestClient:
     app = FastAPI()
@@ -152,6 +175,8 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     assert "/v1/ecommerce/investigations/runs/{run_id}:pause" in paths
     assert "/v1/ecommerce/investigations/runs/{run_id}:resume" in paths
     assert "/v1/ecommerce/investigations/runs/{run_id}:cancel" in paths
+    request_data = paths["/v1/ecommerce/investigations/runs/{run_id}:request-data"]["post"]
+    assert request_data["operationId"] == "ecommerceInvestigationRunDataRequest"
 
 
 def test_case_query_and_create_use_principal_tenant_and_strict_body() -> None:
@@ -255,3 +280,39 @@ def test_create_run_service_requires_case_path_exact_ref_before_store_access() -
         assert "exactly match" in str(exc)
     else:  # pragma: no cover - explicit fail-closed assertion
         raise AssertionError("mismatched caseRef was accepted")
+
+
+def test_request_data_requires_exact_ref_headers_and_principal_scope() -> None:
+    fake = FakeApplication()
+    fake.calls = []
+    body = {
+        "requirementRef": ref("DataRequirementRevision", "requirement-1")
+    }
+    with client(fake) as api:
+        response = api.post(
+            "/v1/ecommerce/investigations/runs/run-1:request-data",
+            headers={"Idempotency-Key": "request-data", "If-Match": '"1"'},
+            json=body,
+        )
+        assert response.status_code == 200
+        assert response.json()["authority"]["lifecycle"] == "WAITING_DATA"
+        assert fake.calls[-1][1] == TenantScope("org-org", "dev-project")
+        assert fake.calls[-1][4]["expected_version"] == 1
+        wrong_ref = api.post(
+            "/v1/ecommerce/investigations/runs/run-1:request-data",
+            headers={"Idempotency-Key": "wrong", "If-Match": "1"},
+            json={"requirementRef": ref("ArtifactRevision", "artifact-1")},
+        )
+        assert wrong_ref.status_code == 400
+        missing_header = api.post(
+            "/v1/ecommerce/investigations/runs/run-1:request-data",
+            headers={"Idempotency-Key": "missing"},
+            json=body,
+        )
+        assert missing_header.status_code == 400
+        tenant_injection = api.post(
+            "/v1/ecommerce/investigations/runs/run-1:request-data",
+            headers={"Idempotency-Key": "tenant", "If-Match": "1"},
+            json={**body, "tenant": {"orgId": "dev-org", "projectId": "dev-project"}},
+        )
+        assert tenant_injection.status_code == 400

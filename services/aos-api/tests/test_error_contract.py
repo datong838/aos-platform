@@ -3,7 +3,7 @@ import logging
 
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from aos_api.errors import ApiError, error_payload, register_exception_handlers
 
@@ -11,6 +11,16 @@ from aos_api.errors import ApiError, error_payload, register_exception_handlers
 class SecretBody(BaseModel):
     count: int
     password: str
+
+
+class CrossFieldBody(BaseModel):
+    resource_type: str
+
+    @model_validator(mode="after")
+    def _supported(self) -> "CrossFieldBody":
+        if self.resource_type != "ExpectedRevision":
+            raise ValueError("resource type is not supported")
+        return self
 
 
 def _client(caplog=None) -> TestClient:
@@ -30,6 +40,10 @@ def _client(caplog=None) -> TestClient:
 
     @app.post("/validation")
     def validation(body: SecretBody):
+        return body
+
+    @app.post("/cross-field-validation")
+    def cross_field_validation(body: CrossFieldBody):
         return body
 
     @app.get("/unknown")
@@ -80,3 +94,14 @@ def test_validation_and_unhandled_errors_do_not_echo_sensitive_input(caplog) -> 
     _assert_envelope(unknown.json())
     assert unknown.json()["code"] == "INTERNAL_ERROR"
     assert "private-token" not in str(unknown.json()) + caplog.text
+
+
+def test_cross_field_validation_context_is_json_safe() -> None:
+    response = _client().post(
+        "/cross-field-validation", json={"resource_type": "WrongRevision"}
+    )
+    assert response.status_code == 400
+    body = response.json()
+    _assert_envelope(body)
+    assert body["code"] == "VALIDATION"
+    assert "resource type is not supported" in str(body["details"])

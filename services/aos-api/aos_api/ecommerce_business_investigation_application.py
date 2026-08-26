@@ -23,6 +23,7 @@ from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationRunStore,
     BusinessInvestigationRunView,
     BusinessInvestigationTriggerKind,
+    BusinessInvestigationUncertainCommand,
 )
 from aos_api.tenant_scope import TenantScope
 
@@ -60,6 +61,19 @@ class CreateBusinessInvestigationRunRequest(AipContractModel):
 
 class BusinessInvestigationEmptyCommandRequest(AipContractModel):
     pass
+
+
+class RequestBusinessInvestigationDataRequest(AipContractModel):
+    requirement_ref: InvestigationExactRef
+
+    @model_validator(mode="after")
+    def _exact_requirement(self) -> "RequestBusinessInvestigationDataRequest":
+        if (
+            self.requirement_ref.resource_type != "DataRequirementRevision"
+            or not isinstance(self.requirement_ref.revision, int)
+        ):
+            raise ValueError("requirementRef must be exact DataRequirementRevision")
+        return self
 
 
 class BusinessInvestigationCaseCommandResponse(AipContractModel):
@@ -257,6 +271,76 @@ class EcommerceBusinessInvestigationApplication:
             tenant=self._tenant(scope), authority=result.authority, replayed=result.replayed
         )
 
+    def request_run_data(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        request: RequestBusinessInvestigationDataRequest,
+        *,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationRunStateCommandResponse:
+        result = self._runs.request_data(
+            scope,
+            run_id,
+            request.requirement_ref,
+            expected_version=expected_version,
+            idempotency_key=idempotency_key,
+            actor=actor,
+            occurred_at=occurred_at,
+        )
+        return BusinessInvestigationRunStateCommandResponse(
+            tenant=self._tenant(scope), authority=result.authority, replayed=result.replayed
+        )
+
+    def mark_run_unknown(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        uncertain_command: BusinessInvestigationUncertainCommand,
+        *,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationRunStateCommandResponse:
+        result = self._runs.mark_unknown(
+            scope,
+            run_id,
+            uncertain_command,
+            expected_version=expected_version,
+            idempotency_key=idempotency_key,
+            actor=actor,
+            occurred_at=occurred_at,
+        )
+        return BusinessInvestigationRunStateCommandResponse(
+            tenant=self._tenant(scope), authority=result.authority, replayed=result.replayed
+        )
+
+    def begin_run_reconcile(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        *,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationRunStateCommandResponse:
+        result = self._runs.begin_reconcile(
+            scope,
+            run_id,
+            expected_version=expected_version,
+            idempotency_key=idempotency_key,
+            actor=actor,
+            occurred_at=occurred_at,
+        )
+        return BusinessInvestigationRunStateCommandResponse(
+            tenant=self._tenant(scope), authority=result.authority, replayed=result.replayed
+        )
+
 
 __all__ = [
     "BusinessInvestigationCaseCommandResponse",
@@ -268,5 +352,6 @@ __all__ = [
     "CreateBusinessInvestigationCaseRequest",
     "CreateBusinessInvestigationRunRequest",
     "EcommerceBusinessInvestigationApplication",
+    "RequestBusinessInvestigationDataRequest",
     "TransitionBusinessInvestigationCaseRequest",
 ]

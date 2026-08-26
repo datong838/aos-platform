@@ -15,6 +15,18 @@ from aos_api.aip_contracts import AIP_ERROR_STATUS
 log = get_logger("aos-api.errors")
 
 
+def _json_safe(value: Any) -> Any:
+    """Keep validation details inspectable without leaking unserializable objects."""
+
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, dict):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    return str(redact_sensitive(str(value)))
+
+
 class ErrorBody(BaseModel):
     code: str
     message: str
@@ -110,7 +122,7 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def _validation(_request: Request, exc: RequestValidationError) -> JSONResponse:
-        safe_errors = redact_sensitive(exc.errors())
+        safe_errors = _json_safe(redact_sensitive(exc.errors()))
         log.info("validation_error count=%s", len(exc.errors()))
         return JSONResponse(
             status_code=400,
