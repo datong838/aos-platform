@@ -15,6 +15,7 @@ from aos_api.business_investigation_shared_contracts import InvestigationExactRe
 
 
 ARTIFACT_SCHEMA = "aos.ecommerce.business-investigation-artifact-revision/v1"
+BINDING_SCHEMA = "aos.ecommerce.business-investigation-artifact-binding/v1"
 SHA256 = r"^sha256:[0-9a-f]{64}$"
 
 
@@ -141,8 +142,64 @@ class BusinessInvestigationArtifactRevision(AipContractModel):
         return _canonical_hash(payload)
 
 
+class BusinessInvestigationArtifactBinding(AipContractModel):
+    schema_version: str = BINDING_SCHEMA
+    tenant: TenantContext
+    binding_id: str = Field(min_length=1, max_length=200)
+    binding_hash: str = Field(pattern=SHA256)
+    artifact_ref: InvestigationExactRef
+    selected_channel_ref: InvestigationExactRef
+    selected_entity_ref: InvestigationExactRef
+    case_ref: InvestigationExactRef
+    run_ref: InvestigationExactRef
+    selection_revision: int = Field(ge=1)
+    data_cutoff: datetime
+    lineage_ref: InvestigationExactRef
+    bound_by: str = Field(min_length=1, max_length=200)
+    bound_at: datetime
+
+    @field_validator("data_cutoff", "bound_at")
+    @classmethod
+    def _aware_time(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("binding timestamps must include timezone")
+        return value
+
+    @model_validator(mode="after")
+    def _binding_integrity(self) -> Self:
+        if self.schema_version != BINDING_SCHEMA:
+            raise ValueError("unsupported artifact binding schema")
+        if self.artifact_ref.resource_type not in {item.value for item in BusinessInvestigationArtifactType} or not isinstance(
+            self.artifact_ref.revision, int
+        ):
+            raise ValueError("artifactRef must reference a governed investigation artifact")
+        expected_types = (
+            (self.selected_channel_ref, "ChannelRevision", "selectedChannelRef"),
+            (self.selected_entity_ref, "BusinessEntityRevision", "selectedEntityRef"),
+            (self.case_ref, "BusinessInvestigationCaseRevision", "caseRef"),
+            (self.run_ref, "BusinessInvestigationRun", "runRef"),
+        )
+        for ref, expected, field in expected_types:
+            if ref.resource_type != expected or not isinstance(ref.revision, int):
+                raise ValueError(f"{field} must be a numeric {expected}")
+        if self.lineage_ref.resource_type not in {"LineageEventRevision", "LineageRevision"} or not isinstance(
+            self.lineage_ref.revision, int
+        ):
+            raise ValueError("lineageRef must be an exact governed lineage revision")
+        if self.data_cutoff > self.bound_at:
+            raise ValueError("dataCutoff must not be later than boundAt")
+        return self
+
+    def calculated_binding_hash(self) -> str:
+        payload = self.model_dump(by_alias=True, mode="json")
+        payload.pop("bindingHash")
+        return _canonical_hash(payload)
+
+
 __all__ = [
     "ARTIFACT_SCHEMA",
+    "BINDING_SCHEMA",
+    "BusinessInvestigationArtifactBinding",
     "BusinessInvestigationArtifactRevision",
     "BusinessInvestigationArtifactType",
 ]
