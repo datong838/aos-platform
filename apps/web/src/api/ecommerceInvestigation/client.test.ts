@@ -49,6 +49,24 @@ describe("EcommerceInvestigationClient", () => {
     await expect(client.confirmDataRequirement({ runId: "run:1", commandId: "data-unknown", expectedStateVersion: 2, decision: "accept" })).rejects.toMatchObject({ code: "COMMAND_OUTCOME_UNKNOWN" });
     expect(fetch).toHaveBeenCalledOnce();
   });
+  it("阶段评审按 canonical exact refs 单次提交并强制 GET 回读收敛", async () => {
+    const rawHash = "a".repeat(64); const aipRef = (resourceType: string, resourceId: string, revision = 1) => ({ resourceType, resourceId, revision, contentHash: rawHash });
+    const openIssue = { tenant, issueId: "review-issue-1", ruleRef: aipRef("EvalRuleRevision", "rule-1"), severity: "error", artifactRef: { artifactId: "artifact-1", contentHash: rawHash }, evalReportRef: aipRef("EvalReportRevision", "eval-1"), location: { stage: "diagnosis", stepRunId: "step-2", attempt: 1 }, evidenceRefs: [aipRef("Evidence", "evidence-1")], suggestedFix: "补齐反证后复核", returnStage: "diagnosis", status: "open", version: 1, createdBy: "reviewer-1", createdAt: "2026-08-26T08:10:00Z", updatedBy: "reviewer-1", updatedAt: "2026-08-26T08:10:00Z" };
+    const resolvedIssue = { ...openIssue, status: "resolved", version: 2, updatedAt: "2026-08-26T08:12:00Z" };
+    const projection = { tenant, runRef: ref("BusinessInvestigationRun", "run:1"), taskRunRef: { resourceType: "TaskRun", resourceId: "task-run-1", version: 2 }, items: [{ issue: resolvedIssue, stage: "diagnosis", evalReportRef: aipRef("EvalReportRevision", "eval-1"), artifactRef: aipRef("Artifact", "artifact-1"), allowedDecisions: [] }], externalEffectsAllowed: false };
+    const response = { tenant, decision: "accept", issue: resolvedIssue, returnDecision: null, replayedOutcomePossible: true, externalEffectsAllowed: false };
+    const fetch = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(response), { status: 200, headers: { "Content-Type": "application/json" } })).mockResolvedValueOnce(new Response(JSON.stringify(projection), { status: 200, headers: { "Content-Type": "application/json" } }));
+    const client = new EcommerceInvestigationClient({ fetch, getBaseUrl: () => "http://aos.test", getAuthHeaders: () => ({ Authorization: "Bearer test" }) });
+    await expect(client.reviewStage({ runId: "run:1", commandId: "review-command-1", expectedStateVersion: 3, decision: "accept", issueId: "review-issue-1", expectedIssueVersion: 1, reason: "人工复核通过" })).resolves.toMatchObject({ commandId: "review-command-1", response: { issue: { version: 2, status: "resolved" } }, projection: { taskRunRef: { resourceId: "task-run-1" } } });
+    expect(fetch).toHaveBeenNthCalledWith(1, "http://aos.test/v1/ecommerce/investigations/runs/run%3A1:review-stage", expect.objectContaining({ method: "POST", headers: expect.objectContaining({ "Idempotency-Key": "review-command-1", "If-Match": '"3"' }), body: JSON.stringify({ decision: "accept", issueId: "review-issue-1", expectedIssueVersion: 1, reason: "人工复核通过" }) }));
+    expect(fetch).toHaveBeenNthCalledWith(2, "http://aos.test/v1/ecommerce/investigations/runs/run%3A1/stage-review", expect.objectContaining({ method: "GET" }));
+    expect(JSON.stringify(fetch.mock.calls)).not.toContain("org-org");
+  });
+  it("阶段评审网络不确定时只尝试一次 POST", async () => {
+    const fetch = vi.fn().mockRejectedValue(new TypeError("offline")); const client = new EcommerceInvestigationClient({ fetch, getBaseUrl: () => "http://aos.test", getAuthHeaders: () => ({}) });
+    await expect(client.reviewStage({ runId: "run:1", commandId: "review-unknown", expectedStateVersion: 3, decision: "return", issueId: "review-issue-1", expectedIssueVersion: 1, reason: "退回补齐证据" })).rejects.toMatchObject({ code: "COMMAND_OUTCOME_UNKNOWN" });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
   it("确认命令只允许 canonical accept body，驳回才携带 reason", async () => {
     const fetch = vi.fn(); const client = new EcommerceInvestigationClient({ fetch });
     await expect(client.confirmDataRequirement({ runId: "run:1", commandId: "accept-shape", expectedStateVersion: 2, decision: "accept", reason: "不会被持久化" })).rejects.toThrow("accept 不接受 reason");

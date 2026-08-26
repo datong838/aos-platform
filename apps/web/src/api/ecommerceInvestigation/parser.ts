@@ -16,6 +16,10 @@ import type {
   InvestigationResourceRef,
   InvestigationCurrentWorkspace,
   InvestigationDataCommandResponse,
+  InvestigationAipExactRef,
+  InvestigationReviewIssue,
+  InvestigationStageReviewProjection,
+  InvestigationStageReviewResponse,
 } from "./contracts";
 
 const HASH = /^sha256:[0-9a-f]{64}$/;
@@ -89,6 +93,17 @@ function resourceRefs(value: unknown, label: string, max = 200): InvestigationRe
   return result;
 }
 function sameTenant(left: InvestigationTenant, right: InvestigationTenant): boolean { return left.orgId === right.orgId && left.projectId === right.projectId; }
+function rawHash(value: unknown, label: string): string { const result = text(value, label, 64); if (!/^[0-9a-f]{64}$/.test(result)) throw new TypeError(`${label} 非法`); return result; }
+function aipRef(value: unknown, label: string, expectedType?: string): InvestigationAipExactRef { const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "contentHash"], label); const resourceType = text(raw.resourceType, `${label}.resourceType`, 120); if (expectedType && resourceType !== expectedType) throw new TypeError(`${label} 类型漂移`); return { resourceType, resourceId: text(raw.resourceId, `${label}.resourceId`, 240), revision: integer(raw.revision, `${label}.revision`, 1), contentHash: rawHash(raw.contentHash, `${label}.contentHash`) }; }
+function parseReviewIssue(value: unknown, expectedTenant: InvestigationTenant): InvestigationReviewIssue {
+  const raw = record(value, "review.issue");
+  exact(raw, ["tenant", "issueId", "ruleRef", "severity", "artifactRef", "evalReportRef", "location", "evidenceRefs", "suggestedFix", "returnStage", "status", "version", "createdBy", "createdAt", "updatedBy", "updatedAt"], "review.issue");
+  const artifactRaw = record(raw.artifactRef, "review.issue.artifactRef"); exact(artifactRaw, ["artifactId", "contentHash"], "review.issue.artifactRef");
+  if (!Array.isArray(raw.evidenceRefs) || raw.evidenceRefs.length > 200) throw new TypeError("review.issue.evidenceRefs 非法");
+  return {
+    tenant: tenant(raw.tenant, expectedTenant), issueId: text(raw.issueId, "review.issue.issueId", 200), ruleRef: aipRef(raw.ruleRef, "review.issue.ruleRef"), severity: enumValue(raw.severity, ["info", "warning", "error", "critical"] as const, "review.issue.severity"), artifactRef: { artifactId: text(artifactRaw.artifactId, "review.issue.artifactId", 200), contentHash: rawHash(artifactRaw.contentHash, "review.issue.artifactHash") }, evalReportRef: aipRef(raw.evalReportRef, "review.issue.evalReportRef", "EvalReportRevision"), location: record(raw.location, "review.issue.location"), evidenceRefs: raw.evidenceRefs.map((item, index) => aipRef(item, `review.issue.evidenceRefs[${index}]`, "Evidence")), suggestedFix: text(raw.suggestedFix, "review.issue.suggestedFix", 4000), returnStage: enumValue(raw.returnStage, ["portrait", "diagnosis", "solution_design"] as const, "review.issue.returnStage"), status: enumValue(raw.status, ["open", "resolved", "returned", "superseded"] as const, "review.issue.status"), version: integer(raw.version, "review.issue.version", 1), createdBy: text(raw.createdBy, "review.issue.createdBy", 320), createdAt: timestamp(raw.createdAt, "review.issue.createdAt"), updatedBy: text(raw.updatedBy, "review.issue.updatedBy", 320), updatedAt: timestamp(raw.updatedAt, "review.issue.updatedAt"),
+  };
+}
 
 function parseCase(value: unknown, expectedTenant: InvestigationTenant): InvestigationCaseRevision {
   const raw = record(value, "case");
@@ -197,6 +212,26 @@ export function parseInvestigationDataCommandResponse(
     sourceReadPerformed: false,
     externalEffectAuthorized: false,
   };
+}
+
+export function parseInvestigationStageReviewProjection(value: unknown, runId: string, expectedTenant?: InvestigationTenant): InvestigationStageReviewProjection {
+  const raw = record(value, "stageReview"); exact(raw, ["tenant", "runRef", "taskRunRef", "items", "externalEffectsAllowed"], "stageReview");
+  const responseTenant = tenant(raw.tenant, expectedTenant); const runRef = ref(raw.runRef, "stageReview.runRef", "BusinessInvestigationRun"); if (runRef.resourceId !== runId) throw new TypeError("stageReview Run identity 漂移");
+  const taskRunRaw = record(raw.taskRunRef, "stageReview.taskRunRef"); exact(taskRunRaw, ["resourceType", "resourceId", "version"], "stageReview.taskRunRef"); if (taskRunRaw.resourceType !== "TaskRun") throw new TypeError("stageReview TaskRun 类型漂移");
+  const taskRunRef = { resourceType: "TaskRun" as const, resourceId: text(taskRunRaw.resourceId, "stageReview.taskRunId", 200), version: integer(taskRunRaw.version, "stageReview.taskRunVersion", 1) };
+  if (!Array.isArray(raw.items) || raw.items.length > 100 || raw.externalEffectsAllowed !== false) throw new TypeError("stageReview 边界漂移");
+  const items = raw.items.map((value, index) => { const item = record(value, `stageReview.items[${index}]`); exact(item, ["issue", "stage", "evalReportRef", "artifactRef", "allowedDecisions"], `stageReview.items[${index}]`); const issue = parseReviewIssue(item.issue, responseTenant); const stage = enumValue(item.stage, ["portrait", "diagnosis", "solution_design"] as const, "stageReview.stage"); const evalReportRef = aipRef(item.evalReportRef, "stageReview.evalReportRef", "EvalReportRevision"); const artifactRef = aipRef(item.artifactRef, "stageReview.artifactRef", "Artifact"); if (!Array.isArray(item.allowedDecisions) || item.allowedDecisions.length > 2) throw new TypeError("stageReview.allowedDecisions 非法"); const allowedDecisions = item.allowedDecisions.map((decision) => enumValue(decision, ["accept", "return"] as const, "stageReview.decision")); const expected = issue.status === "open" ? ["accept", "return"] : []; if (JSON.stringify(allowedDecisions) !== JSON.stringify(expected) || JSON.stringify(evalReportRef) !== JSON.stringify(issue.evalReportRef) || artifactRef.resourceId !== issue.artifactRef.artifactId || artifactRef.contentHash !== issue.artifactRef.contentHash) throw new TypeError("stageReview exact authority 漂移"); return { issue, stage, evalReportRef, artifactRef, allowedDecisions }; });
+  if (new Set(items.map((item) => item.issue.issueId)).size !== items.length) throw new TypeError("stageReview Issue identity 重复");
+  return { tenant: responseTenant, runRef, taskRunRef, items, externalEffectsAllowed: false };
+}
+
+export function parseInvestigationStageReviewResponse(value: unknown, expectedTenant?: InvestigationTenant): InvestigationStageReviewResponse {
+  const raw = record(value, "stageReviewResponse"); exact(raw, ["tenant", "decision", "issue", "returnDecision", "replayedOutcomePossible", "externalEffectsAllowed"], "stageReviewResponse");
+  const responseTenant = tenant(raw.tenant, expectedTenant); const decision = enumValue(raw.decision, ["accept", "return"] as const, "stageReviewResponse.decision"); const issue = parseReviewIssue(raw.issue, responseTenant);
+  let returnDecision: InvestigationStageReviewResponse["returnDecision"] = null;
+  if (raw.returnDecision !== null) { const item = record(raw.returnDecision, "stageReviewResponse.returnDecision"); exact(item, ["tenant", "decisionId", "issueId", "issueVersion", "runId", "stepKey", "stepRunId", "attempt", "attemptIdempotencyKey", "reason", "impactDecisions", "impactReadiness", "decisionHash", "actor", "createdAt"], "stageReviewResponse.returnDecision"); tenant(item.tenant, responseTenant); if (!Array.isArray(item.impactDecisions) || item.impactDecisions.length > 500) throw new TypeError("returnDecision impact 非法"); const impactDecisions = item.impactDecisions.map((value, index) => { const impact = record(value, `impact[${index}]`); exact(impact, ["stepKey", "action", "reason"], `impact[${index}]`); return { stepKey: text(impact.stepKey, "impact.stepKey", 160), action: enumValue(impact.action, ["invalidate", "reuse"] as const, "impact.action"), reason: text(impact.reason, "impact.reason", 500) }; }); const impactReadiness = enumValue(item.impactReadiness, ["exact", "legacy_unavailable"] as const, "returnDecision.impactReadiness"); if ((impactReadiness === "exact") !== Boolean(impactDecisions.length)) throw new TypeError("returnDecision impact readiness 漂移"); returnDecision = { tenant: responseTenant, decisionId: text(item.decisionId, "returnDecision.decisionId", 200), issueId: text(item.issueId, "returnDecision.issueId", 200), issueVersion: integer(item.issueVersion, "returnDecision.issueVersion", 1), runId: text(item.runId, "returnDecision.runId", 200), stepKey: text(item.stepKey, "returnDecision.stepKey", 160), stepRunId: text(item.stepRunId, "returnDecision.stepRunId", 200), attempt: integer(item.attempt, "returnDecision.attempt", 1), attemptIdempotencyKey: text(item.attemptIdempotencyKey, "returnDecision.attemptKey", 160), reason: text(item.reason, "returnDecision.reason", 2000), impactDecisions, impactReadiness, decisionHash: rawHash(item.decisionHash, "returnDecision.decisionHash"), actor: text(item.actor, "returnDecision.actor", 320), createdAt: timestamp(item.createdAt, "returnDecision.createdAt") }; }
+  if ((decision === "return") !== Boolean(returnDecision) || raw.replayedOutcomePossible !== true || raw.externalEffectsAllowed !== false) throw new TypeError("stageReviewResponse shape 漂移");
+  return { tenant: responseTenant, decision, issue, returnDecision, replayedOutcomePossible: true, externalEffectsAllowed: false };
 }
 
 function nullableText(value: unknown, label: string, max = 240): string | null { return value === null ? null : text(value, label, max); }

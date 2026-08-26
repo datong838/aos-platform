@@ -42,6 +42,17 @@ from aos_api.ecommerce_business_investigation_projection import (
     BusinessInvestigationProjectionNotFound,
     BusinessInvestigationWorkbenchView,
 )
+from aos_api.ecommerce_business_investigation_review_command import (
+    BusinessInvestigationReviewCommandBlocked,
+    BusinessInvestigationStageReviewCommand,
+    BusinessInvestigationStageReviewProjection,
+    BusinessInvestigationStageReviewResponse,
+)
+from aos_api.aip_production_contract_store import (
+    ProductionContractConflict,
+    ProductionContractDependencyBlocked,
+    ProductionContractNotFound,
+)
 from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationRunConflict,
     BusinessInvestigationRunControl,
@@ -78,6 +89,7 @@ ResourceIdPath = Annotated[
     Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$"),
 ]
 _DATA_WRITE_ROLES = {"admin", "developer", "data-owner"}
+_REVIEW_WRITE_ROLES = {"admin", "developer", "reviewer"}
 
 
 @lru_cache(maxsize=1)
@@ -123,6 +135,7 @@ def _map_error(exc: Exception) -> ApiError:
             BusinessInvestigationRunNotFound,
             BusinessInvestigationProjectionNotFound,
             BusinessInvestigationScheduleNotFound,
+            ProductionContractNotFound,
         ),
     ):
         return ApiError(
@@ -137,6 +150,9 @@ def _map_error(exc: Exception) -> ApiError:
             BusinessInvestigationRunConflict,
             BusinessInvestigationScheduleConflict,
             BusinessInvestigationDataCommandConflict,
+            BusinessInvestigationReviewCommandBlocked,
+            ProductionContractConflict,
+            ProductionContractDependencyBlocked,
         ),
     ):
         return ApiError(
@@ -168,6 +184,15 @@ def _require_data_write_role(principal: Principal) -> None:
         raise ApiError(
             code="BUSINESS_INVESTIGATION_DATA_WRITE_FORBIDDEN",
             message="Principal role does not allow DataRequirement commands",
+            status_code=403,
+        )
+
+
+def _require_review_write_role(principal: Principal) -> None:
+    if not _REVIEW_WRITE_ROLES.intersection(principal.roles):
+        raise ApiError(
+            code="BUSINESS_INVESTIGATION_REVIEW_WRITE_FORBIDDEN",
+            message="Principal role does not allow stage review commands",
             status_code=403,
         )
 
@@ -441,6 +466,62 @@ def get_run_view(
             )
         return application.get_run_view(
             _scope(principal), run_id, observed_at=datetime.now(UTC)
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get(
+    "/runs/{run_id}/stage-review",
+    response_model=BusinessInvestigationStageReviewProjection,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunStageReviewGet",
+)
+def get_run_stage_review(
+    request: Request,
+    run_id: ResourceIdPath,
+    principal: PrincipalDependency,
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationStageReviewProjection:
+    try:
+        if request.query_params:
+            raise ApiError(
+                code="BUSINESS_INVESTIGATION_UNKNOWN_QUERY",
+                message="Stage Review projection does not accept query parameters",
+                status_code=400,
+            )
+        return application.get_run_stage_review(_scope(principal), run_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/runs/{run_id}:review-stage",
+    response_model=BusinessInvestigationStageReviewResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunStageReview",
+)
+def review_run_stage(
+    run_id: ResourceIdPath,
+    body: BusinessInvestigationStageReviewCommand,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationStageReviewResponse:
+    try:
+        _require_review_write_role(principal)
+        return application.review_run_stage(
+            _scope(principal),
+            run_id,
+            body,
+            expected_state_version=_expected_version(if_match),
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
         )
     except Exception as exc:
         raise _map_error(exc) from exc

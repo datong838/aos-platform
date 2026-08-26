@@ -32,6 +32,13 @@ from aos_api.ecommerce_business_investigation_projection import (
 from aos_api.ecommerce_business_investigation_data_command import (
     BusinessInvestigationDataCommandResponse,
 )
+from aos_api.ecommerce_business_investigation_review_command import (
+    BusinessInvestigationStageReviewItem,
+    BusinessInvestigationStageReviewProjection,
+    BusinessInvestigationStageReviewResponse,
+)
+from aos_api.aip_business_investigation_runtime import CanonicalRuntimeRef
+from aos_api.aip_production_contracts import ReviewIssueStatus
 from aos_api.errors import register_exception_handlers
 from aos_api.routers import ecommerce_business_investigations as routes
 from aos_api.tenant_scope import TenantScope
@@ -220,6 +227,46 @@ class FakeApplication:
             runReplayed=False,
         )
 
+    def get_run_stage_review(self, scope, run_id):
+        self.calls.append(("get_stage_review", scope, run_id))
+        from test_ecommerce_business_investigation_review_command import issue
+
+        current = issue()
+        return BusinessInvestigationStageReviewProjection(
+            tenant=TENANT,
+            runRef=ref("BusinessInvestigationRun", run_id),
+            taskRunRef=CanonicalRuntimeRef(
+                resourceType="TaskRun", resourceId="task-run-1", version=3
+            ),
+            items=[
+                BusinessInvestigationStageReviewItem(
+                    issue=current,
+                    stage="portrait",
+                    evalReportRef=current.eval_report_ref,
+                    artifactRef={
+                        "resourceType": "Artifact",
+                        "resourceId": current.artifact_ref.artifact_id,
+                        "revision": 1,
+                        "contentHash": current.artifact_ref.content_hash,
+                    },
+                    allowedDecisions=["accept", "return"],
+                )
+            ],
+        )
+
+    def review_run_stage(self, scope, run_id, request, **kwargs):
+        self.calls.append(("review_stage", scope, run_id, request, kwargs))
+        from test_ecommerce_business_investigation_review_command import issue
+
+        return BusinessInvestigationStageReviewResponse(
+            tenant=TENANT,
+            decision="accept",
+            issue=issue(
+                status=ReviewIssueStatus.RESOLVED,
+                version=request.expected_issue_version + 1,
+            ),
+        )
+
 
 def client(application: FakeApplication, *, roles=()) -> TestClient:
     app = FastAPI()
@@ -270,6 +317,12 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     assert paths[
         "/v1/ecommerce/investigations/runs/{run_id}:confirm-data-requirement"
     ]["post"]["operationId"] == "ecommerceInvestigationRunDataRequirementConfirm"
+    assert paths[
+        "/v1/ecommerce/investigations/runs/{run_id}/stage-review"
+    ]["get"]["operationId"] == "ecommerceInvestigationRunStageReviewGet"
+    assert paths[
+        "/v1/ecommerce/investigations/runs/{run_id}:review-stage"
+    ]["post"]["operationId"] == "ecommerceInvestigationRunStageReview"
 
 
 def test_schedule_policy_http_uses_principal_and_two_exact_versions() -> None:
@@ -533,3 +586,55 @@ def test_missing_data_commands_require_role_and_hide_server_derived_lineage() ->
         )
         assert confirmed.status_code == 200
         assert fake.calls[-1][0] == "confirm_data"
+
+
+def test_stage_review_projection_and_command_are_principal_scoped() -> None:
+    fake = FakeApplication()
+    fake.calls = []
+    with client(fake) as api:
+        projection = api.get(
+            "/v1/ecommerce/investigations/runs/run-1/stage-review"
+        )
+        assert projection.status_code == 200
+        assert projection.json()["items"][0]["allowedDecisions"] == [
+            "accept", "return"
+        ]
+        assert projection.json()["externalEffectsAllowed"] is False
+        forbidden = api.post(
+            "/v1/ecommerce/investigations/runs/run-1:review-stage",
+            headers={"Idempotency-Key": "review-1", "If-Match": '"1"'},
+            json={
+                "decision": "accept",
+                "issueId": "issue-1",
+                "expectedIssueVersion": 1,
+                "reason": "人工复核通过",
+            },
+        )
+        assert forbidden.status_code == 403
+    with client(fake, roles=("reviewer",)) as api:
+        accepted = api.post(
+            "/v1/ecommerce/investigations/runs/run-1:review-stage",
+            headers={"Idempotency-Key": "review-1", "If-Match": '"1"'},
+            json={
+                "decision": "accept",
+                "issueId": "issue-1",
+                "expectedIssueVersion": 1,
+                "reason": "人工复核通过",
+            },
+        )
+        assert accepted.status_code == 200
+        assert accepted.json()["issue"]["status"] == "resolved"
+        assert accepted.json()["externalEffectsAllowed"] is False
+        assert fake.calls[-1][1] == TenantScope("org-org", "dev-project")
+        injected = api.post(
+            "/v1/ecommerce/investigations/runs/run-1:review-stage",
+            headers={"Idempotency-Key": "review-2", "If-Match": '"1"'},
+            json={
+                "decision": "accept",
+                "issueId": "issue-1",
+                "expectedIssueVersion": 1,
+                "reason": "人工复核通过",
+                "taskRunId": "other-run",
+            },
+        )
+        assert injected.status_code == 400

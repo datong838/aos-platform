@@ -9,6 +9,7 @@ import {
   type InvestigationMissingDataInput,
   type InvestigationReadClient,
   type InvestigationRunView,
+  type InvestigationStageReviewProjection,
   type InvestigationTenant,
   type InvestigationWorkbenchView,
 } from "../../api/ecommerceInvestigation";
@@ -20,9 +21,10 @@ import { type SourceReadinessSnapshot, useSourceReadinessSnapshot } from "./Sour
 type Phase = "loading" | "ready" | "empty" | "forbidden" | "failed";
 type RunPhase = "idle" | "loading" | "ready" | "empty" | "forbidden" | "failed";
 type ViewPhase = "idle" | "loading" | "ready" | "forbidden" | "failed";
+type ReviewPhase = "idle" | "loading" | "ready" | "forbidden" | "failed";
 type CommandPhase = "idle" | "pending" | "succeeded" | "failed" | "unknown";
 type EntityChoice = { key: string; channelId: string; entityId: string };
-type InvestigationTabClient = InvestigationReadClient & Partial<Pick<InvestigationCommandClient, "executeRunCommand" | "requestMissingData" | "confirmDataRequirement">>;
+type InvestigationTabClient = InvestigationReadClient & Partial<Pick<InvestigationCommandClient, "executeRunCommand" | "requestMissingData" | "confirmDataRequirement" | "getStageReview" | "reviewStage">>;
 
 const ANALYSIS_LABELS: Record<InvestigationCaseRevision["analysisType"], string> = {
   initial_store_analysis: "首次全店经营分析",
@@ -55,17 +57,18 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
   const [selectedChannelId, setSelectedChannelId] = useState(""); const [selectedEntityKey, setSelectedEntityKey] = useState(""); const [selectedCaseId, setSelectedCaseId] = useState("");
   const [runPhase, setRunPhase] = useState<RunPhase>("idle"); const [runs, setRuns] = useState<InvestigationRunView[]>([]); const [selectedRunId, setSelectedRunId] = useState("");
   const [viewPhase, setViewPhase] = useState<ViewPhase>("idle"); const [workbenchView, setWorkbenchView] = useState<InvestigationWorkbenchView | null>(null);
+  const [stageReview, setStageReview] = useState<InvestigationStageReviewProjection | null>(null); const [reviewPhase, setReviewPhase] = useState<ReviewPhase>("idle"); const [reviewReason, setReviewReason] = useState("人工复核后的明确结论");
   const [commandPhase, setCommandPhase] = useState<CommandPhase>("idle"); const [commandMessage, setCommandMessage] = useState("");
   const [missingFacts, setMissingFacts] = useState("Order.daily_amount\nProduct.active_count"); const [dataReason, setDataReason] = useState("人工范围复核完成");
   const [runReloadRevision, setRunReloadRevision] = useState(0); const [viewReloadRevision, setViewReloadRevision] = useState(0);
   const contextReadinessSnapshot = useSourceReadinessSnapshot(); const readinessSnapshot = sourceReadinessSnapshot ?? contextReadinessSnapshot;
-  const caseRequest = useRef(0); const runRequest = useRef(0); const viewRequest = useRef(0);
+  const caseRequest = useRef(0); const runRequest = useRef(0); const viewRequest = useRef(0); const reviewRequest = useRef(0);
   const channels = useMemo(() => Array.from(new Set(cases.map((item) => item.channelRef.resourceId))), [cases]);
   const entities = useMemo(() => entityChoices(cases, selectedChannelId), [cases, selectedChannelId]);
   const visibleCases = useMemo(() => casesForEntity(cases, selectedEntityKey), [cases, selectedEntityKey]);
   const selectedCase = visibleCases.find((item) => item.caseId === selectedCaseId) ?? null;
 
-  const clearView = () => { viewRequest.current += 1; setWorkbenchView(null); setViewPhase("idle"); setCommandPhase("idle"); setCommandMessage(""); };
+  const clearView = () => { viewRequest.current += 1; reviewRequest.current += 1; setWorkbenchView(null); setStageReview(null); setReviewPhase("idle"); setViewPhase("idle"); setCommandPhase("idle"); setCommandMessage(""); };
   const clearRuns = () => { runRequest.current += 1; setRuns([]); setSelectedRunId(""); setRunPhase("idle"); clearView(); };
   const selectFromCases = (nextCases: InvestigationCaseRevision[]) => {
     const channelId = nextCases[0]?.channelRef.resourceId ?? ""; const nextEntities = entityChoices(nextCases, channelId); const nextEntityKey = nextEntities[0]?.key ?? ""; const nextCasesForEntity = casesForEntity(nextCases, nextEntityKey);
@@ -76,7 +79,7 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
     void client.listCases().then((response) => { if (requestId !== caseRequest.current) return; setTenant(response.tenant); setCases(response.items); selectFromCases(response.items); setPhase(response.items.length ? "ready" : "empty"); }, (error: unknown) => { if (requestId !== caseRequest.current || (error instanceof DOMException && error.name === "AbortError")) return; setPhase(error instanceof EcommerceInvestigationClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
   };
 
-  useEffect(() => { loadCases(); return () => { caseRequest.current += 1; runRequest.current += 1; viewRequest.current += 1; }; }, [client]);
+  useEffect(() => { loadCases(); return () => { caseRequest.current += 1; runRequest.current += 1; viewRequest.current += 1; reviewRequest.current += 1; }; }, [client]);
   useEffect(() => {
     if (!selectedCaseId) { setRuns([]); setSelectedRunId(""); setRunPhase("idle"); return; }
     const requestId = ++runRequest.current; const controller = new AbortController(); setRuns([]); setSelectedRunId(""); setRunPhase("loading");
@@ -88,6 +91,12 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
     if (!client.getRunView) { setWorkbenchView(null); setViewPhase("failed"); return; }
     const requestId = ++viewRequest.current; const controller = new AbortController(); setWorkbenchView(null); setViewPhase("loading");
     void client.getRunView(selectedRunId, controller.signal).then((response) => { if (requestId !== viewRequest.current) return; if (tenant && (tenant.orgId !== response.tenant.orgId || tenant.projectId !== response.tenant.projectId)) { setViewPhase("failed"); return; } setWorkbenchView(response); setViewPhase("ready"); }, (error: unknown) => { if (requestId !== viewRequest.current || (error instanceof DOMException && error.name === "AbortError")) return; setViewPhase(error instanceof EcommerceInvestigationClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
+    return () => controller.abort();
+  }, [client, selectedRunId, tenant, viewReloadRevision]);
+  useEffect(() => {
+    if (!selectedRunId || !client.getStageReview) { setStageReview(null); setReviewPhase("idle"); return; }
+    const requestId = ++reviewRequest.current; const controller = new AbortController(); setStageReview(null); setReviewPhase("loading");
+    void client.getStageReview(selectedRunId, controller.signal).then((response) => { if (requestId !== reviewRequest.current) return; if (tenant && (tenant.orgId !== response.tenant.orgId || tenant.projectId !== response.tenant.projectId)) { setStageReview(null); setReviewPhase("failed"); return; } setStageReview(response); setReviewPhase("ready"); }, (error: unknown) => { if (requestId !== reviewRequest.current || (error instanceof DOMException && error.name === "AbortError")) return; setStageReview(null); setReviewPhase(error instanceof EcommerceInvestigationClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
     return () => controller.abort();
   }, [client, selectedRunId, tenant, viewReloadRevision]);
 
@@ -127,6 +136,13 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
     if (!operation) { setCommandPhase("failed"); setCommandMessage("当前客户端未提供 canonical DataRequirement 命令；已失败关闭。"); return; }
     void operation.then((result) => { setWorkbenchView(result.view); setCommandPhase("succeeded"); setCommandMessage(`${command} 已按 DataRequirement ${result.response.requirementRef.resourceId} · r${result.response.requirementRef.revision} 回读闭合${result.response.dataReplayed || result.response.runReplayed ? "（幂等重放）" : ""}。`); }, (error: unknown) => { const unknown = error instanceof EcommerceInvestigationClientError && error.code === "COMMAND_OUTCOME_UNKNOWN"; setCommandPhase(unknown ? "unknown" : "failed"); setCommandMessage(unknown ? "数据命令结果未知；已锁定写入口，只允许 GET 重新核验，禁止再次 POST。" : "数据命令被拒绝或 exact 回读冲突；已锁定写入口，请先重新读取。"); });
   };
+  const executeReviewCommand = (issueId: string, expectedIssueVersion: number, decision: "accept" | "return") => {
+    const expectedStateVersion = workbenchView?.commandProjection?.expectedStateVersion;
+    const item = stageReview?.items.find((candidate) => candidate.issue.issueId === issueId);
+    if (!commandsEnabled || !client.reviewStage || !expectedStateVersion || !item?.allowedDecisions.includes(decision) || !reviewReason.trim() || commandPhase === "pending" || commandPhase === "unknown" || commandPhase === "failed") return;
+    const commandId = createCommandId(); setCommandPhase("pending"); setCommandMessage(`REVIEW_STAGE/${decision} 正在提交；不会自动重试。`);
+    void client.reviewStage({ runId: selectedRunId, commandId, expectedStateVersion, decision, issueId, expectedIssueVersion, reason: reviewReason }).then((result) => { setStageReview(result.projection); setCommandPhase("succeeded"); setCommandMessage(`ReviewIssue ${result.response.issue.issueId} 已按 canonical v${result.response.issue.version}/${result.response.issue.status} 回读闭合。`); }, (error: unknown) => { const unknown = error instanceof EcommerceInvestigationClientError && error.code === "COMMAND_OUTCOME_UNKNOWN"; setCommandPhase(unknown ? "unknown" : "failed"); setCommandMessage(unknown ? "评审命令结果未知；已锁定写入口，只允许 GET 重新核验。" : "评审命令被拒绝或 exact 回读冲突；已锁定写入口。"); });
+  };
 
   return (
     <section id={id} aria-labelledby={labelledBy} className="analyst-panel business-investigation-tab" role="tabpanel">
@@ -136,7 +152,7 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
         <span>{BUSINESS_INVESTIGATION_READ_FLAG}</span>
         <span>Principal 可见 canonical Case/Run</span>
         <span>三级选择原子切换</span>
-        <span>{commandsEnabled ? BUSINESS_INVESTIGATION_COMMAND_FLAG : "写入口 0"} · 周期计划、评审与 Handoff 关闭</span>
+        <span>{commandsEnabled ? `${BUSINESS_INVESTIGATION_COMMAND_FLAG} · canonical 评审受控` : "写入口 0 · 周期计划、评审与 Handoff 关闭"}</span>
       </aside>
 
       {phase === "loading" ? <div className="business-investigation-state is-loading" role="status"><strong>正在读取分析记录…</strong><p>等待 tenant-scoped canonical Case 列表。</p><span className="business-investigation-skeleton" aria-hidden="true" /></div> : null}
@@ -181,6 +197,10 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
             {commandPhase === "failed" || commandPhase === "unknown" ? <button type="button" onClick={() => { setCommandPhase("idle"); setCommandMessage(""); setViewReloadRevision((value) => value + 1); }}>仅 GET 重新核验</button> : null}
           </article> : null}
           <article className="business-investigation-progress"><header><div><span>服务端进度</span><h3>{workbenchView.runtime.completed}/{workbenchView.runtime.total} 波完成</h3></div><strong className={`is-${workbenchView.runtime.bindingStatus}`}>{workbenchView.runtime.bindingStatus === "unbound" ? "尚未绑定" : workbenchView.runtime.bindingStatus === "task_pending" ? "等待 TaskRun" : workbenchView.runtime.taskRunStatus}</strong></header><ol>{workbenchView.runtime.stages.map((stage, index) => <li key={stage.stageId} className={`is-${stage.status}`} aria-current={workbenchView.runtime.currentStageId === stage.stageId ? "step" : undefined}><span>{index + 1}</span><div><strong>{stage.title}</strong><small>{stage.stageId} · {stage.status}{stage.attempt ? ` · attempt ${stage.attempt}` : ""}</small></div></li>)}</ol><p>Stage 完成仅表示 canonical StepRun 通过阶段门，不代表真实业务方案已执行。</p></article>
+          {reviewPhase === "loading" ? <div className="business-investigation-state is-loading" role="status"><strong>正在读取 canonical 阶段评审…</strong><p>评审投影与 Run 进度分离读取。</p></div> : null}
+          {reviewPhase === "forbidden" ? <div className="business-investigation-state is-forbidden" role="alert"><strong>阶段评审不可见</strong><p>未泄露其他租户 ReviewIssue。</p></div> : null}
+          {reviewPhase === "failed" ? <div className="business-investigation-state is-failed" role="alert"><strong>阶段评审读取失败</strong><p>页面失败关闭，不本地推演 Review 状态。</p></div> : null}
+          {reviewPhase === "ready" && stageReview ? <article className="business-investigation-stage-review" aria-label="阶段人工评审"><header><div><span>canonical ReviewIssue · TaskRun {stageReview.taskRunRef.resourceId}</span><h3>阶段人工评审</h3></div><strong>{stageReview.externalEffectsAllowed ? "外部副作用开启" : "无外部副作用"}</strong></header>{stageReview.items.length ? <div>{stageReview.items.map((item) => <section key={item.issue.issueId} className={`is-${item.issue.status}`}><header><div><span>{item.stage} · Issue v{item.issue.version}</span><h4>{item.issue.issueId}</h4></div><strong>{item.issue.status}</strong></header><dl><div><dt>Eval exact</dt><dd>{item.evalReportRef.resourceId} · r{item.evalReportRef.revision}</dd></div><div><dt>Artifact exact</dt><dd>{item.artifactRef.resourceId} · r{item.artifactRef.revision}</dd></div><div><dt>建议修正</dt><dd>{item.issue.suggestedFix}</dd></div><div><dt>回退阶段</dt><dd>{item.issue.returnStage}</dd></div></dl>{commandsEnabled && item.allowedDecisions.length ? <div className="business-investigation-review-decisions"><label><span>人工决定说明</span><textarea rows={2} value={reviewReason} maxLength={2000} onChange={(event) => setReviewReason(event.currentTarget.value)} /></label><div><button type="button" disabled={commandPhase === "pending" || !reviewReason.trim()} onClick={() => executeReviewCommand(item.issue.issueId, item.issue.version, "accept")}>接受阶段产物</button><button type="button" disabled={commandPhase === "pending" || !reviewReason.trim()} onClick={() => executeReviewCommand(item.issue.issueId, item.issue.version, "return")}>退回当前阶段</button></div></div> : <p>服务端未授权可写决定；页面不本地推演 Review 状态。</p>}</section>)}</div> : <p>当前 Run 没有 canonical ReviewIssue；不生成演示评审。</p>}<p className="business-investigation-review-boundary">request_more 尚无独立 canonical 状态边，当前失败关闭；评审不会触发 Provider、数据源读取或外部操作。</p></article> : null}
           <article className="business-investigation-stage-workspace"><header><div><span>当前阶段工作区 · {workbenchView.currentWorkspace.stageId ?? "unbound"}</span><h3>{workbenchView.currentWorkspace.title}</h3></div><strong className={`is-${workbenchView.currentWorkspace.status}`}>{workbenchView.currentWorkspace.status}</strong></header><p className="business-investigation-question">{workbenchView.currentWorkspace.question}</p><dl className="business-investigation-responsibility"><div><dt>责任槽</dt><dd>{workbenchView.currentWorkspace.responsibilitySlotIds.length ? workbenchView.currentWorkspace.responsibilitySlotIds.join(" · ") : "未知/未绑定"}</dd></div><div><dt>承担者</dt><dd>{workbenchView.currentWorkspace.assigneeRefs.length ? workbenchView.currentWorkspace.assigneeRefs.map((item) => item.resourceId).join(" · ") : "未知/未绑定"}</dd></div><div><dt>输入 refs</dt><dd>{workbenchView.currentWorkspace.inputRefs.length ? workbenchView.currentWorkspace.inputRefs.map((item) => item.resourceId).join(" · ") : "未知/缺证据"}</dd></div><div><dt>输出 refs</dt><dd>{workbenchView.currentWorkspace.outputRefs.length ? workbenchView.currentWorkspace.outputRefs.map((item) => item.resourceId).join(" · ") : "未知/缺证据"}</dd></div></dl><div className="business-investigation-contributions">{workbenchView.currentWorkspace.areas.map((area) => <section key={area.area} className={`is-${area.status}`}><header><strong>{area.title}</strong><span>{area.status === "reference_only" ? "仅可回链" : area.status === "present" ? "已声明缺口" : "未知/缺证据"}</span></header><p>{area.summary}</p>{area.resourceRefs.length || area.exactRefs.length ? <small>{[...area.resourceRefs.map((item) => item.resourceId), ...area.exactRefs.map((item) => `${item.resourceId} · r${item.revision}`)].join(" · ")}</small> : null}</section>)}</div><ul className="business-investigation-nonclaims">{workbenchView.currentWorkspace.nonClaims.map((item) => <li key={item}>{item}</li>)}</ul></article>
           <article className="business-investigation-drilldowns"><header><div><span>服务端可回链投影 · {workbenchView.drilldownVersion}</span><h3>Evidence / Artifact / Timeline</h3></div><strong className={workbenchView.drilldownVersion === "canonical-v4" ? "is-bound" : "is-unbound"}>{workbenchView.drilldownVersion === "canonical-v4" ? "canonical" : "legacy"}</strong></header><div className="business-investigation-drilldown-grid">
             <section aria-label="Evidence 下钻"><h4>Evidence</h4><p>{workbenchView.evidence.status === "exact" ? "可核验 exact refs" : "缺少可核验 Evidence exact ref"}</p>{workbenchView.evidence.exactRefs.map((item) => <details key={`${item.resourceType}:${item.resourceId}:${item.revision}`}><summary>{item.resourceType} · {item.resourceId}</summary><dl><div><dt>revision</dt><dd>{String(item.revision)}</dd></div><div><dt>hash</dt><dd>{item.contentHash}</dd></div></dl></details>)}{workbenchView.evidence.locatorRefs.length ? <details><summary>仅定位 refs · 非 exact</summary><ul>{workbenchView.evidence.locatorRefs.map((item) => <li key={`${item.resourceType}:${item.resourceId}:${item.revision ?? "_"}`}>{item.resourceType} · {item.resourceId} · {item.revision ?? "无 revision"}</li>)}</ul></details> : null}</section>

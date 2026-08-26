@@ -19,6 +19,7 @@ from aos_api.aip_eval_contracts import (
 from aos_api.aip_production_contracts import (
     CreateReviewIssueRequest,
     ExactRevisionRef,
+    ResolveReviewIssueRequest,
     ReturnDecision,
     ReturnReviewIssueRequest,
     ReviewIssue,
@@ -96,6 +97,15 @@ class ReviewAuthority(Protocol):
         key: str,
         body: ReturnReviewIssueRequest,
     ) -> ReturnDecision: ...
+
+    def resolve_review_issue(
+        self,
+        scope: TenantScope,
+        actor: str,
+        issue_id: str,
+        key: str,
+        body: ResolveReviewIssueRequest,
+    ) -> ReviewIssue: ...
 
 
 class BusinessInvestigationEvalCoordinator:
@@ -205,6 +215,45 @@ class BusinessInvestigationEvalCoordinator:
         if body.target_stage != issue.return_stage:
             raise BusinessInvestigationEvalBlocked("RETURN_STAGE_DRIFTED")
         return self._reviews.return_review_issue(
+            scope, actor.strip(), issue.issue_id, idempotency_key.strip(), body
+        )
+
+    def resolve_review_issue(
+        self,
+        scope: TenantScope,
+        runtime: BusinessInvestigationRuntimeBinding,
+        issue: ReviewIssue,
+        actor: str,
+        idempotency_key: str,
+        body: ResolveReviewIssueRequest,
+    ) -> ReviewIssue:
+        self._runtime_guard(scope, runtime)
+        tenant = TenantContext(org_id=scope.org_id, project_id=scope.project_id)
+        if issue.tenant != tenant:
+            raise BusinessInvestigationEvalBlocked("ISSUE_TENANT_DRIFTED")
+        if body.expected_version != issue.version:
+            raise BusinessInvestigationEvalBlocked("ISSUE_VERSION_DRIFTED")
+        expected_refs = {
+            (
+                "Artifact",
+                issue.artifact_ref.artifact_id,
+                1,
+                issue.artifact_ref.content_hash,
+            ),
+            (
+                issue.eval_report_ref.resource_type,
+                issue.eval_report_ref.resource_id,
+                issue.eval_report_ref.revision,
+                issue.eval_report_ref.content_hash,
+            ),
+        }
+        actual_refs = {
+            (ref.resource_type, ref.resource_id, ref.revision, ref.content_hash)
+            for ref in body.resolution_refs
+        }
+        if actual_refs != expected_refs:
+            raise BusinessInvestigationEvalBlocked("RESOLUTION_REFS_DRIFTED")
+        return self._reviews.resolve_review_issue(
             scope, actor.strip(), issue.issue_id, idempotency_key.strip(), body
         )
 

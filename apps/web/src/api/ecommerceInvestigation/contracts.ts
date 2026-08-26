@@ -195,6 +195,69 @@ export type InvestigationDataCommandResult = {
   response: InvestigationDataCommandResponse;
   view: InvestigationWorkbenchView;
 };
+export type InvestigationAipExactRef = { resourceType: string; resourceId: string; revision: number; contentHash: string };
+export type InvestigationReviewIssue = {
+  tenant: InvestigationTenant;
+  issueId: string;
+  ruleRef: InvestigationAipExactRef;
+  severity: "info" | "warning" | "error" | "critical";
+  artifactRef: { artifactId: string; contentHash: string };
+  evalReportRef: InvestigationAipExactRef;
+  location: Record<string, unknown>;
+  evidenceRefs: InvestigationAipExactRef[];
+  suggestedFix: string;
+  returnStage: "portrait" | "diagnosis" | "solution_design";
+  status: "open" | "resolved" | "returned" | "superseded";
+  version: number;
+  createdBy: string;
+  createdAt: string;
+  updatedBy: string;
+  updatedAt: string;
+};
+export type InvestigationStageReviewItem = {
+  issue: InvestigationReviewIssue;
+  stage: "portrait" | "diagnosis" | "solution_design";
+  evalReportRef: InvestigationAipExactRef;
+  artifactRef: InvestigationAipExactRef;
+  allowedDecisions: ("accept" | "return")[];
+};
+export type InvestigationStageReviewProjection = {
+  tenant: InvestigationTenant;
+  runRef: InvestigationExactRef;
+  taskRunRef: { resourceType: "TaskRun"; resourceId: string; version: number };
+  items: InvestigationStageReviewItem[];
+  externalEffectsAllowed: false;
+};
+export type InvestigationReturnDecision = {
+  tenant: InvestigationTenant;
+  decisionId: string;
+  issueId: string;
+  issueVersion: number;
+  runId: string;
+  stepKey: string;
+  stepRunId: string;
+  attempt: number;
+  attemptIdempotencyKey: string;
+  reason: string;
+  impactDecisions: { stepKey: string; action: "invalidate" | "reuse"; reason: string }[];
+  impactReadiness: "exact" | "legacy_unavailable";
+  decisionHash: string;
+  actor: string;
+  createdAt: string;
+};
+export type InvestigationStageReviewResponse = {
+  tenant: InvestigationTenant;
+  decision: "accept" | "return";
+  issue: InvestigationReviewIssue;
+  returnDecision: InvestigationReturnDecision | null;
+  replayedOutcomePossible: true;
+  externalEffectsAllowed: false;
+};
+export type InvestigationStageReviewResult = {
+  commandId: string;
+  response: InvestigationStageReviewResponse;
+  projection: InvestigationStageReviewProjection;
+};
 export type InvestigationReadClient = {
   listCases(signal?: AbortSignal): Promise<InvestigationCaseListResponse>;
   listRuns(caseId: string, signal?: AbortSignal): Promise<InvestigationRunListResponse>;
@@ -227,4 +290,14 @@ export type InvestigationCommandClient = InvestigationReadClient & {
     decision: "accept" | "reject";
     reason?: string;
   }, signal?: AbortSignal): Promise<InvestigationDataCommandResult>;
+  getStageReview(runId: string, signal?: AbortSignal): Promise<InvestigationStageReviewProjection>;
+  reviewStage(input: {
+    runId: string;
+    commandId: string;
+    expectedStateVersion: number;
+    decision: "accept" | "return";
+    issueId: string;
+    expectedIssueVersion: number;
+    reason: string;
+  }, signal?: AbortSignal): Promise<InvestigationStageReviewResult>;
 };

@@ -30,6 +30,7 @@ from aos_api.aip_production_contracts import (
     CreateReviewIssueRequest,
     ExactArtifactRef,
     ExactRevisionRef,
+    ResolveReviewIssueRequest,
     ReturnReviewIssueRequest,
     ReviewIssue,
     ReviewIssueStatus,
@@ -178,6 +179,10 @@ class Reviews:
         self.calls.append(("return", args))
         return "decision"
 
+    def resolve_review_issue(self, *args):
+        self.calls.append(("resolve", args))
+        return "resolved-issue"
+
 
 def test_passed_eval_never_auto_promotes_and_uses_exact_contract() -> None:
     req = request()
@@ -317,4 +322,50 @@ def test_return_issue_is_explicit_and_runtime_bound() -> None:
             "owner",
             "return-2",
             command.model_copy(update={"run_id": "other-run"}),
+        )
+
+
+def test_resolve_issue_requires_server_exact_eval_and_artifact_refs() -> None:
+    req = request()
+    reviews = Reviews()
+    coordinator = BusinessInvestigationEvalCoordinator(Runner(report(req)), reviews)
+    current = ReviewIssue(
+        tenant=TenantContext(org_id="org-org", project_id="dev-project"),
+        issue_id="issue-1",
+        status=ReviewIssueStatus.OPEN,
+        version=1,
+        created_by="owner",
+        created_at=NOW,
+        updated_by="owner",
+        updated_at=NOW,
+        rule_ref=exact("EvalRuleRevision", "rule-1", "7"),
+        severity=ReviewSeverity.ERROR,
+        artifact_ref=ExactArtifactRef(
+            artifact_id="artifact-1", content_hash="b" * 64
+        ),
+        eval_report_ref=exact("EvalReportRevision", "report-1", "f"),
+        location={"stage": "portrait"},
+        suggested_fix="revise portrait",
+        return_stage="portrait",
+    )
+    body = ResolveReviewIssueRequest(
+        expected_version=1,
+        reason="人工复核通过",
+        resolution_refs=[
+            current.eval_report_ref,
+            exact("Artifact", "artifact-1", "b"),
+        ],
+    )
+    assert coordinator.resolve_review_issue(
+        SCOPE, runtime(), current, "owner", "resolve-1", body
+    ) == "resolved-issue"
+    assert reviews.calls[0][0] == "resolve"
+    with pytest.raises(BusinessInvestigationEvalBlocked, match="RESOLUTION_REFS_DRIFTED"):
+        coordinator.resolve_review_issue(
+            SCOPE,
+            runtime(),
+            current,
+            "owner",
+            "resolve-2",
+            body.model_copy(update={"resolution_refs": [current.eval_report_ref]}),
         )

@@ -46,6 +46,12 @@ from aos_api.ecommerce_business_investigation_data_command import (
     EcommerceBusinessInvestigationDataCommandService,
     RequestBusinessInvestigationMissingDataCommand,
 )
+from aos_api.ecommerce_business_investigation_review_command import (
+    BusinessInvestigationStageReviewCommand,
+    BusinessInvestigationStageReviewProjection,
+    BusinessInvestigationStageReviewResponse,
+    EcommerceBusinessInvestigationReviewCommandService,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -143,12 +149,16 @@ class EcommerceBusinessInvestigationApplication:
         schedule_store: BusinessInvestigationScheduleStore | None = None,
         projection_reader: BusinessInvestigationProjectionReader | None = None,
         data_command_service: EcommerceBusinessInvestigationDataCommandService | None = None,
+        review_command_service: EcommerceBusinessInvestigationReviewCommandService | None = None,
     ) -> None:
         self._cases = case_store or BusinessInvestigationCaseStore()
         self._runs = run_store or BusinessInvestigationRunStore()
         self._schedules = schedule_store or BusinessInvestigationScheduleStore()
         self._data_commands = (
             data_command_service or EcommerceBusinessInvestigationDataCommandService()
+        )
+        self._review_commands = (
+            review_command_service or EcommerceBusinessInvestigationReviewCommandService()
         )
         self._projection = BusinessInvestigationProjectionBuilder(
             projection_reader or CanonicalBusinessInvestigationProjectionReader()
@@ -560,6 +570,30 @@ class EcommerceBusinessInvestigationApplication:
             idempotency_key=idempotency_key,
             actor=actor,
             occurred_at=occurred_at,
+        )
+
+    def get_run_stage_review(
+        self, scope: TenantScope, run_id: str
+    ) -> BusinessInvestigationStageReviewProjection:
+        return self._review_commands.projection(scope, run_id)
+
+    def review_run_stage(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        request: BusinessInvestigationStageReviewCommand,
+        *,
+        expected_state_version: int,
+        idempotency_key: str,
+        actor: str,
+    ) -> BusinessInvestigationStageReviewResponse:
+        return self._review_commands.review_stage(
+            scope,
+            run_id,
+            request,
+            expected_state_version=expected_state_version,
+            idempotency_key=idempotency_key,
+            actor=actor,
         )
 
     def mark_run_unknown(
