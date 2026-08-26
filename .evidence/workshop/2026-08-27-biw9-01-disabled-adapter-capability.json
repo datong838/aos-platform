@@ -1,0 +1,36 @@
+{
+  "taskId": "BI-W9-01",
+  "authorityBase": "AOS-000346",
+  "recordedAt": "2026-08-26T22:09:27Z",
+  "planCommit": "b130f30",
+  "codeCommit": "b87fb0a173c8ec00137488dde7693971e3abcc65",
+  "status": "BI_W9_01_DISABLED_GENERIC_ADAPTER_CAPABILITY_CONTRACT_GREEN_NO_SOURCE_READ_NO_RELEASE",
+  "verification": {
+    "red": "module import failed before implementation",
+    "targeted": "18 passed, 7 warnings",
+    "cumulativeWithBIW307": "29 passed, 7 warnings",
+    "json": "GREEN",
+    "compileall": "GREEN",
+    "alembicHeads": "biw8_001 (head)",
+    "diffCheck": "GREEN",
+    "browser": "NOT_APPLICABLE: no page or route; S8-Visual eight-menu hard gate remains pending"
+  },
+  "contractFacts": [
+    "Niushop, WeChat Store and Douyin Store share one store.operation.read generic capability schema",
+    "all fixtures are declared-only, enabled=false and activationAllowed=false",
+    "terms, installation, configuration, session, contract and runtime gates degrade deterministically",
+    "permission, page drift, partial coverage and unknown outcomes never become success or empty data"
+  ],
+  "boundaries": [
+    "NO_REAL_BUSINESS_DATA",
+    "NO_SOURCE_READ",
+    "NO_ADAPTER_INSTALLATION",
+    "NO_PLATFORM_TERMS_CLAIM",
+    "NO_PROVIDER_EXECUTION",
+    "NO_ACTION_EXECUTION",
+    "NO_MIGRATION_APPLY",
+    "NO_EXTERNAL_EFFECT",
+    "NO_RELEASE"
+  ],
+  "nextTask": "BI-W9-02"
+}
