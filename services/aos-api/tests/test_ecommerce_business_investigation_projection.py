@@ -20,6 +20,9 @@ from aos_api.ecommerce_business_investigation_projection import (
     BusinessInvestigationProjectionError,
     BusinessInvestigationProjectionNotFound,
     BusinessInvestigationProjectionSource,
+    BusinessInvestigationRuntimeSource,
+    BusinessInvestigationStageRunSource,
+    BusinessInvestigationCheckpointSource,
     BusinessInvestigationWorkbenchView,
     CanonicalBusinessInvestigationProjectionReader,
 )
@@ -167,6 +170,58 @@ def test_projection_preserves_waiting_unknown_and_reconciling_without_success_cl
         assert "completed" not in view.model_dump(by_alias=True, mode="json")
 
 
+def test_projection_exposes_server_owned_case_envelope_stage_progress_and_checkpoint() -> None:
+    source = projection_source()
+    runtime = BusinessInvestigationRuntimeSource(
+        task_id="task-1",
+        plan_ref=ref("PlanRevision", "plan-1"),
+        task_run_id="task-run-1",
+        task_run_version=4,
+        task_run_status="running",
+        stages=(
+            BusinessInvestigationStageRunSource(
+                stage_id="portrait", step_run_id="step-portrait", attempt=1, status="succeeded"
+            ),
+            BusinessInvestigationStageRunSource(
+                stage_id="diagnosis", step_run_id="step-diagnosis", attempt=2, status="running"
+            ),
+        ),
+        checkpoint=BusinessInvestigationCheckpointSource(
+            checkpoint_id="checkpoint-2", sequence=2, step_key="diagnosis",
+            state_hash="a" * 64, created_at=NOW,
+        ),
+    )
+    view = BusinessInvestigationProjectionBuilder(
+        FixedReader(BusinessInvestigationProjectionSource(
+            case=source.case, run=source.run, state=source.state, runtime=runtime
+        ))
+    ).build(SCOPE, "run-1", observed_at=NOW)
+    assert view.case_envelope.title == source.case.title
+    assert view.runtime.binding_status == "bound"
+    assert view.runtime.completed == 1 and view.runtime.total == 3
+    assert view.runtime.current_stage_id == "diagnosis"
+    assert [item.status for item in view.runtime.stages] == ["completed", "running", "not_started"]
+    assert view.runtime.checkpoint is not None and view.runtime.checkpoint.sequence == 2
+    assert view.source_watermark.runtime_hash is not None
+
+
+def test_projection_runtime_unbound_and_task_pending_are_explicit() -> None:
+    unbound = projection_view()
+    assert unbound.runtime.binding_status == "unbound"
+    assert unbound.runtime.completed == 0 and unbound.runtime.current_stage_id is None
+    source = projection_source()
+    pending = BusinessInvestigationProjectionBuilder(FixedReader(
+        BusinessInvestigationProjectionSource(
+            case=source.case, run=source.run, state=source.state,
+            runtime=BusinessInvestigationRuntimeSource(
+                task_id="task-1", plan_ref=ref("PlanRevision", "plan-1")
+            ),
+        )
+    )).build(SCOPE, "run-1", observed_at=NOW)
+    assert pending.runtime.binding_status == "task_pending"
+    assert pending.runtime.task_run_ref is None and pending.runtime.checkpoint is None
+
+
 def test_projection_contract_rejects_tampering_and_stale_missing_slot_data() -> None:
     view = projection_view()
     payload = view.model_dump(by_alias=True, mode="json")
@@ -222,6 +277,8 @@ def test_canonical_reader_is_tenant_bounded_read_only_and_not_visible_is_distinc
             calls.append((normalized, params))
             if "DISTINCT ON" in normalized:
                 return Cursor([])
+            if "aip_business_investigation_compile_receipt" in normalized:
+                return Cursor([])
             if params[:2] == OTHER_SCOPE.key:
                 return Cursor([])
             return Cursor(
@@ -240,7 +297,7 @@ def test_canonical_reader_is_tenant_bounded_read_only_and_not_visible_is_distinc
 
     reader = CanonicalBusinessInvestigationProjectionReader(connect)
     assert reader.read(SCOPE, "run-1").run.run_id == "run-1"
-    assert len(calls) == 2 and all(call[0].startswith("SELECT") for call in calls)
+    assert len(calls) == 3 and all(call[0].startswith("SELECT") for call in calls)
     assert calls[0][1] == (*SCOPE.key, "run-1")
     with pytest.raises(BusinessInvestigationProjectionNotFound):
         reader.read(OTHER_SCOPE, "run-1")

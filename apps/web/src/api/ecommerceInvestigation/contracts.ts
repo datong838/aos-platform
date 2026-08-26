@@ -90,9 +90,41 @@ export type InvestigationRunState = {
 };
 
 export type InvestigationRunView = { authority: InvestigationRunRecord; state: InvestigationRunState };
+export type InvestigationStageStatus = "not_started" | "running" | "waiting_data" | "waiting_human" | "blocked" | "review" | "accepted" | "returned" | "completed";
+export type InvestigationStageRailItem = { stageId: "portrait" | "diagnosis" | "solution-design"; title: string; status: InvestigationStageStatus; stepRunId: string | null; attempt: number | null };
+export type InvestigationRuntimeProjection = {
+  bindingStatus: "unbound" | "task_pending" | "bound";
+  taskId: string | null;
+  planRef: InvestigationExactRef | null;
+  taskRunRef: { resourceType: "TaskRun"; resourceId: string; version: number } | null;
+  taskRunStatus: "queued" | "running" | "pausing" | "paused" | "succeeded" | "failed" | "cancelled" | "unknown" | null;
+  checkpoint: { checkpointId: string; sequence: number; stepKey: string | null; stateHash: string; createdAt: string } | null;
+  stages: InvestigationStageRailItem[];
+  completed: number;
+  total: 3;
+  currentStageId: "portrait" | "diagnosis" | "solution-design" | null;
+};
+export type InvestigationWorkbenchView = {
+  schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v2";
+  tenant: InvestigationTenant;
+  projectionHash: string;
+  sourceWatermark: { caseRevision: number; runVersion: number; stateVersion: number; bindingHashes: string[]; runtimeHash: string | null; contentHash: string };
+  observedAt: string;
+  caseRef: InvestigationExactRef;
+  runRef: InvestigationExactRef;
+  stateRef: InvestigationExactRef;
+  caseEnvelope: { title: string; analysisType: InvestigationAnalysisType; lifecycle: InvestigationCaseLifecycle; channelRef: InvestigationExactRef; businessEntityRef: InvestigationExactRef; investigationProfileRef: InvestigationExactRef; scopeRef: InvestigationExactRef; schedulePolicyRef: InvestigationExactRef | null; createdBy: string; createdAt: string };
+  lifecycle: InvestigationRunLifecycle;
+  control: InvestigationRunControl;
+  pendingRequirementRef: InvestigationExactRef | null;
+  uncertainCommand: { commandId: string; operation: string; requestHash: string } | null;
+  runtime: InvestigationRuntimeProjection;
+  artifacts: Array<{ artifactType: "BusinessDossierRevision" | "ProblemMapRevision" | "SolutionSetRevision" | "DecisionReportRevision"; status: "bound" | "missing"; artifactRef: InvestigationExactRef | null; bindingId: string | null; bindingHash: string | null; selectionRevision: number | null; dataCutoff: string | null; lineageRef: InvestigationExactRef | null }>;
+};
 export type InvestigationCaseListResponse = { tenant: InvestigationTenant; items: InvestigationCaseRevision[]; count: number };
 export type InvestigationRunListResponse = { tenant: InvestigationTenant; items: InvestigationRunView[]; count: number };
 export type InvestigationReadClient = {
   listCases(signal?: AbortSignal): Promise<InvestigationCaseListResponse>;
   listRuns(caseId: string, signal?: AbortSignal): Promise<InvestigationRunListResponse>;
+  getRunView?(runId: string, signal?: AbortSignal): Promise<InvestigationWorkbenchView>;
 };

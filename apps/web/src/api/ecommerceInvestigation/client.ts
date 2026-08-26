@@ -1,7 +1,7 @@
 import { getApiBase } from "../apiBase";
 import { tenantAuthHeaders } from "../tenant";
-import type { InvestigationCaseListResponse, InvestigationReadClient, InvestigationRunListResponse } from "./contracts";
-import { parseInvestigationCaseList, parseInvestigationRunList } from "./parser";
+import type { InvestigationCaseListResponse, InvestigationReadClient, InvestigationRunListResponse, InvestigationWorkbenchView } from "./contracts";
+import { parseInvestigationCaseList, parseInvestigationRunList, parseInvestigationWorkbenchView } from "./parser";
 
 type FetchImplementation = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 export type EcommerceInvestigationClientOptions = { fetch?: FetchImplementation; getBaseUrl?: () => string; getAuthHeaders?: () => Record<string, string> };
@@ -24,6 +24,7 @@ export class EcommerceInvestigationClient implements InvestigationReadClient {
   }
   async listCases(signal?: AbortSignal): Promise<InvestigationCaseListResponse> { return parseInvestigationCaseList(await this.get("/v1/ecommerce/investigations/cases?limit=200", signal)); }
   async listRuns(caseId: string, signal?: AbortSignal): Promise<InvestigationRunListResponse> { if (!RESOURCE_ID.test(caseId)) throw new TypeError("caseId 无效"); return parseInvestigationRunList(await this.get(`/v1/ecommerce/investigations/cases/${encodeURIComponent(caseId)}/runs?limit=200`, signal), caseId); }
+  async getRunView(runId: string, signal?: AbortSignal): Promise<InvestigationWorkbenchView> { if (!RESOURCE_ID.test(runId)) throw new TypeError("runId 无效"); return parseInvestigationWorkbenchView(await this.get(`/v1/ecommerce/investigations/runs/${encodeURIComponent(runId)}/view`, signal), runId); }
 }
 
 export const ecommerceInvestigationClient = new EcommerceInvestigationClient();

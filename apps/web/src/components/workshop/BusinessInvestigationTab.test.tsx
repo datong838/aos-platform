@@ -1,7 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { InvestigationCaseRevision, InvestigationReadClient, InvestigationRunListResponse } from "../../api/ecommerceInvestigation";
+import type { InvestigationCaseRevision, InvestigationReadClient, InvestigationRunListResponse, InvestigationWorkbenchView } from "../../api/ecommerceInvestigation";
 import { EcommerceInvestigationClientError } from "../../api/ecommerceInvestigation";
 import { BusinessInvestigationTab } from "./BusinessInvestigationTab";
 
@@ -9,28 +9,35 @@ const hash = `sha256:${"a".repeat(64)}`; const tenant = { orgId: "org-org", proj
 const makeCase = (caseId: string, channelId: string, entityId: string, title: string): InvestigationCaseRevision => ({ schemaVersion: "aos.ecommerce.business-investigation-case/v1", tenant, caseId, revision: 1, version: 1, priorRef: null, contentHash: hash, lifecycle: "ACTIVE", analysisType: "initial_store_analysis", title, purposeCode: "business.investigation.initial", channelRef: ref("ChannelRevision", channelId), businessEntityRef: ref("BusinessEntityRevision", entityId), entityChannelBindingRef: ref("BusinessEntityChannelBindingRevision", `${channelId}-${entityId}`), investigationProfileRef: ref("InvestigationProfileRevision", `profile-${entityId}`), scopeRef: ref("InvestigationScopeRevision", `scope-${entityId}`), schedulePolicyRef: null, createdBy: "user-1", createdAt: "2026-08-26T08:00:00Z" });
 const cases = [makeCase("case-a", "private-mall", "store-a", "私域首析"), makeCase("case-b", "private-mall", "store-b", "私域复盘"), makeCase("case-c", "wechat-store", "store-c", "微信首析")];
 const emptyRuns = (): InvestigationRunListResponse => ({ tenant, items: [], count: 0 });
+const workbenchView = (): InvestigationWorkbenchView => ({ schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v2", tenant, projectionHash: hash, sourceWatermark: { caseRevision: 1, runVersion: 1, stateVersion: 1, bindingHashes: [], runtimeHash: hash, contentHash: hash }, observedAt: "2026-08-26T08:10:00Z", caseRef: ref("BusinessInvestigationCaseRevision", "case-a"), runRef: ref("BusinessInvestigationRun", "run-a"), stateRef: ref("BusinessInvestigationRunStateRevision", "run-a"), caseEnvelope: { title: "私域首析", analysisType: "initial_store_analysis", lifecycle: "ACTIVE", channelRef: ref("ChannelRevision", "private-mall"), businessEntityRef: ref("BusinessEntityRevision", "store-a"), investigationProfileRef: ref("InvestigationProfileRevision", "profile-store-a"), scopeRef: ref("InvestigationScopeRevision", "scope-store-a"), schedulePolicyRef: null, createdBy: "user-1", createdAt: "2026-08-26T08:00:00Z" }, lifecycle: "PORTRAIT", control: "RUNNING", pendingRequirementRef: null, uncertainCommand: null, runtime: { bindingStatus: "bound", taskId: "task-a", planRef: ref("PlanRevision", "plan-a"), taskRunRef: { resourceType: "TaskRun", resourceId: "task-run-a", version: 2 }, taskRunStatus: "running", checkpoint: { checkpointId: "checkpoint-1", sequence: 1, stepKey: "portrait", stateHash: "a".repeat(64), createdAt: "2026-08-26T08:09:00Z" }, stages: [{ stageId: "portrait", title: "经营画像", status: "completed", stepRunId: "step-1", attempt: 1 }, { stageId: "diagnosis", title: "问题与机会", status: "running", stepRunId: "step-2", attempt: 1 }, { stageId: "solution-design", title: "方案设计", status: "not_started", stepRunId: null, attempt: null }], completed: 1, total: 3, currentStageId: "diagnosis" }, artifacts: ["BusinessDossierRevision", "ProblemMapRevision", "SolutionSetRevision", "DecisionReportRevision"].map((artifactType) => ({ artifactType: artifactType as "BusinessDossierRevision", status: "missing" as const, artifactRef: null, bindingId: null, bindingHash: null, selectionRevision: null, dataCutoff: null, lineageRef: null })) });
 
 describe("BusinessInvestigationTab", () => {
   let host: HTMLDivElement; let root: Root;
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
   afterEach(() => { act(() => root.unmount()); host.remove(); });
   it("展示 canonical 三级选择并保持 GET-only 边界", async () => {
-    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()) };
+    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()), getRunView: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
     expect(host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')?.value).toBe("private-mall"); expect(host.querySelectorAll('[role="radio"]')).toHaveLength(2); expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-a"); expect(host.textContent).toContain("当前 Case 尚无 Run"); expect(host.textContent).toContain("写入口0"); expect(host.textContent).not.toMatch(/创建 Case|开始分析|继续运行|请求补数|执行 Handoff/);
   });
   it("切换渠道时原子替换实体与 Case 并忽略晚到 Run", async () => {
     let resolveOld!: (value: InvestigationRunListResponse) => void; const oldRun = new Promise<InvestigationRunListResponse>((resolve) => { resolveOld = resolve; });
-    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockImplementation((caseId) => caseId === "case-a" ? oldRun : Promise.resolve(emptyRuns())) };
+    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockImplementation((caseId) => caseId === "case-a" ? oldRun : Promise.resolve(emptyRuns())), getRunView: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />)); const channel = host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')!;
     await act(async () => { channel.value = "wechat-store"; channel.dispatchEvent(new Event("change", { bubbles: true })); });
     expect(host.textContent).toContain("store-c"); expect(host.textContent).toContain("微信首析"); expect(host.textContent).not.toContain("store-a");
     await act(async () => resolveOld(emptyRuns())); expect(host.textContent).toContain("微信首析"); expect(host.textContent).not.toContain("私域首析");
   });
   it("区分空态、无权限和失败且不保留旧选择", async () => {
-    const emptyClient: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: [], count: 0 }), listRuns: vi.fn() };
+    const emptyClient: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: [], count: 0 }), listRuns: vi.fn(), getRunView: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={emptyClient} />)); expect(host.textContent).toContain("当前没有可见分析记录");
-    const forbidden: InvestigationReadClient = { listCases: vi.fn().mockRejectedValue(new EcommerceInvestigationClientError("forbidden", 403, "FORBIDDEN")), listRuns: vi.fn() };
+    const forbidden: InvestigationReadClient = { listCases: vi.fn().mockRejectedValue(new EcommerceInvestigationClientError("forbidden", 403, "FORBIDDEN")), listRuns: vi.fn(), getRunView: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={forbidden} />)); expect(host.textContent).toContain("无权读取生意探究"); expect(host.textContent).not.toContain("store-a");
+  });
+  it("展示服务端 Case 信封、三波进度与 Checkpoint，不在前端推演", async () => {
+    const run = { authority: { schemaVersion: "aos.ecommerce.business-investigation-run/v1" as const, tenant, runId: "run-a", version: 1 as const, contentHash: hash, caseRef: ref("BusinessInvestigationCaseRevision", "case-a"), analysisType: "initial_store_analysis" as const, triggerKind: "manual" as const, triggerKey: "manual:run-a", lifecycle: "PREPARING" as const, control: "RUNNING" as const, createdBy: "user-1", createdAt: "2026-08-26T08:01:00Z" }, state: { schemaVersion: "aos.ecommerce.business-investigation-run-state/v1" as const, tenant, runId: "run-a", version: 1, priorRef: null, lifecycle: "PORTRAIT" as const, control: "RUNNING" as const, eventSequence: 1, contentHash: hash, pendingRequirementRef: null, uncertainCommand: null, createdBy: "user-1", createdAt: "2026-08-26T08:02:00Z" } };
+    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [run], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView()) };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
+    expect(client.getRunView).toHaveBeenCalledWith("run-a", expect.any(AbortSignal)); expect(host.textContent).toContain("1/3 波完成"); expect(host.textContent).toContain("checkpoint-1 · #1"); expect(host.textContent).toContain("经营画像"); expect(host.textContent).toContain("问题与机会"); expect(host.textContent).toContain("方案设计"); expect(host.textContent).toContain("不代表真实业务方案已执行");
   });
 });
