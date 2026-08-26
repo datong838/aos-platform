@@ -99,7 +99,7 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
 
   return (
     <section id={id} aria-labelledby={labelledBy} className="analyst-panel business-investigation-tab" role="tabpanel">
-      <header><div><span>Business Investigation · BI-W7-07</span><h2>生意探究</h2></div><strong className="content-campaign-status is-blocked">只读</strong></header>
+      <header><div><span>Business Investigation · BI-W7-08</span><h2>生意探究</h2></div><strong className="content-campaign-status is-blocked">只读</strong></header>
       <aside className="business-investigation-boundary" aria-label="生意探究只读边界">
         <strong>只读边界</strong>
         <span>{BUSINESS_INVESTIGATION_READ_FLAG}</span>
@@ -115,7 +115,15 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
 
       {phase === "ready" ? <div className="business-investigation-selector" aria-label="生意探究三级选择">
         <label><span>1 · 渠道视角</span><select aria-label="渠道视角" value={selectedChannelId} onChange={(event) => onChannelChange(event.currentTarget.value)}>{channels.map((channelId) => <option key={channelId} value={channelId}>{channelId}</option>)}</select><small>来自 Case 的 exact ChannelRevision，不推测渠道名称。</small></label>
-        <fieldset><legend>2 · 经营实体</legend><div className="business-investigation-entities">{entities.map((entity) => <button type="button" role="radio" aria-checked={selectedEntityKey === entity.key} className={selectedEntityKey === entity.key ? "is-selected" : ""} key={entity.key} onClick={() => onEntityChange(entity.key)}><strong>{entity.entityId}</strong><span>{entity.channelId}</span></button>)}</div><small>同名实体按渠道隔离；上游切换后旧实体内容立即清空。</small></fieldset>
+        <fieldset><legend>2 · 经营实体</legend><div className="business-investigation-entities">{entities.map((entity, index) => <button type="button" role="radio" aria-checked={selectedEntityKey === entity.key} tabIndex={selectedEntityKey === entity.key ? 0 : -1} className={selectedEntityKey === entity.key ? "is-selected" : ""} key={entity.key} onClick={() => onEntityChange(entity.key)} onKeyDown={(event) => {
+          if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+          event.preventDefault();
+          const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? entities.length - 1 : (index + (event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1) + entities.length) % entities.length;
+          const next = entities[nextIndex];
+          if (!next) return;
+          onEntityChange(next.key);
+          event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[nextIndex]?.focus();
+        }}><strong>{entity.entityId}</strong><span>{entity.channelId}</span></button>)}</div><small>同名实体按渠道隔离；上游切换后旧实体内容立即清空。</small></fieldset>
         <label><span>3 · 分析记录</span><select aria-label="分析记录" value={selectedCaseId} onChange={(event) => onCaseChange(event.currentTarget.value)}>{visibleCases.map((item) => <option key={item.caseId} value={item.caseId}>{item.title} · {ANALYSIS_LABELS[item.analysisType]}</option>)}</select><small>Case revision、生命周期和运行记录均来自 canonical authority。</small></label>
       </div> : null}
 

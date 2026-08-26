@@ -24,6 +24,18 @@ describe("BusinessInvestigationTab", () => {
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
     expect(host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')?.value).toBe("private-mall"); expect(host.querySelectorAll('[role="radio"]')).toHaveLength(2); expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-a"); expect(host.textContent).toContain("当前 Case 尚无 Run"); expect(host.textContent).toContain("写入口0"); expect(host.textContent).not.toMatch(/创建 Case|开始分析|继续运行|请求补数|执行 Handoff/);
   });
+  it("经营实体 radio 使用 roving tabindex 与方向键原子切换", async () => {
+    const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()), getRunView: vi.fn() };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
+    const radios = host.querySelectorAll<HTMLButtonElement>('[role="radio"]');
+    expect(Array.from(radios, (item) => item.tabIndex)).toEqual([0, -1]);
+    await act(async () => radios[0]?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })));
+    expect(Array.from(host.querySelectorAll<HTMLButtonElement>('[role="radio"]'), (item) => item.tabIndex)).toEqual([-1, 0]);
+    expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-b");
+    await act(async () => host.querySelectorAll<HTMLButtonElement>('[role="radio"]')[1]?.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true })));
+    expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-a");
+    expect(client.listRuns).toHaveBeenLastCalledWith("case-a", expect.any(AbortSignal));
+  });
   it("切换渠道时原子替换实体与 Case 并忽略晚到 Run", async () => {
     let resolveOld!: (value: InvestigationRunListResponse) => void; const oldRun = new Promise<InvestigationRunListResponse>((resolve) => { resolveOld = resolve; });
     const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockImplementation((caseId) => caseId === "case-a" ? oldRun : Promise.resolve(emptyRuns())), getRunView: vi.fn() };
