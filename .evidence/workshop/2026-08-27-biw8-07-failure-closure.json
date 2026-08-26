@@ -1,0 +1,41 @@
+{
+  "taskId": "BI-W8-07",
+  "authorityBase": "AOS-000345",
+  "recordedAt": "2026-08-26T21:59:36Z",
+  "planCommits": [
+    "3996018",
+    "3c389ef",
+    "97def0f"
+  ],
+  "codeCommit": "ea6b82b090c1599a465ca2b7a5d09eae56df405c",
+  "status": "BI_W8_07_REPLAY_EXPIRY_CONFLICT_PERMISSION_UNKNOWN_OUTCOME_GREEN_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "redEvidence": [
+    "compileHandoff network rejection was previously classified as NETWORK and left a repeatable failed state",
+    "AipHandoffService issued-event persistence path lacked ResourceRef import and failed three existing one-time handoff scenarios"
+  ],
+  "verification": {
+    "backendCumulative": "62 passed, 18 warnings",
+    "frontendCumulative": "71 passed",
+    "typescript": "GREEN",
+    "viteBuild": "GREEN",
+    "compileall": "GREEN",
+    "alembicHeads": "biw8_001 (head)",
+    "diffCheck": "GREEN",
+    "browser": {
+      "route": "http://127.0.0.1:5173/workshop/analyst",
+      "viewport": "1280x720",
+      "observed": "known HTTP rejection remains FAILED; no issue, consume, decision, or accepted state was shown; no horizontal overflow",
+      "unknownOutcomeCoverage": "component test locks write actions after COMMAND_OUTCOME_UNKNOWN; the local browser server did not simulate a network-unknown transport"
+    }
+  },
+  "boundaries": [
+    "NO_REAL_BUSINESS_DATA",
+    "NO_SOURCE_READ",
+    "NO_PROVIDER_EXECUTION",
+    "NO_ACTION_EXECUTION",
+    "NO_MIGRATION_APPLY",
+    "NO_EXTERNAL_EFFECT",
+    "NO_RELEASE"
+  ],
+  "remainingHardGate": "S8-Visual: eight Workshop menus require 1280/1440/1920 frontend-backend integration and visual-baseline comparison before overall completion"
+}
