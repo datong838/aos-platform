@@ -26,7 +26,7 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryStore,
     AipAgentRegistryTransitionBlocked,
 )
-from aos_api.aip_contracts import HandoffResourceRef, TenantContext
+from aos_api.aip_contracts import HandoffResourceRef, ResourceRef, TenantContext
 from aos_api.tenant_scope import TenantScope
 
 RefAuthorizer = Callable[[TenantScope, HandoffResourceRef, VersionedAssetRef], bool]

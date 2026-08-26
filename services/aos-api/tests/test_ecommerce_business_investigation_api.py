@@ -324,6 +324,7 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     assert "/v1/ecommerce/investigations/schedule-policies/{schedule_policy_id}:update" in paths
     assert "/v1/ecommerce/investigations/schedule-policies/{schedule_policy_id}:trigger" in paths
     assert "/v1/ecommerce/investigations/growth-plans/{plan_id}:approve" in paths
+    assert "/v1/ecommerce/investigations/runs/{run_id}/handoffs:compile" in paths
     view = paths["/v1/ecommerce/investigations/runs/{run_id}/view"]["get"]
     assert view["operationId"] == "ecommerceInvestigationRunWorkbenchViewGet"
     request_data = paths["/v1/ecommerce/investigations/runs/{run_id}:request-data"]["post"]
@@ -340,6 +341,9 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     assert paths[
         "/v1/ecommerce/investigations/runs/{run_id}:review-stage"
     ]["post"]["operationId"] == "ecommerceInvestigationRunStageReview"
+    assert paths[
+        "/v1/ecommerce/investigations/runs/{run_id}/handoffs:compile"
+    ]["post"]["operationId"] == "ecommerceInvestigationHandoffCompile"
 
 
 def test_schedule_policy_http_uses_principal_and_two_exact_versions() -> None:
@@ -692,3 +696,35 @@ def test_growth_plan_approval_is_strict_principal_scoped_and_has_no_external_eff
             json={**body, "approvedAt": NOW.isoformat()},
         )
         assert injected.status_code == 400
+
+
+def test_handoff_compile_requires_review_role_and_rejects_tenant_injection() -> None:
+    fake = FakeApplication()
+    fake.calls = []
+    body = {
+        "handoffId": "handoff-1",
+        "approvedPlanRef": {
+            "resourceType": "GrowthPlanRevision",
+            "resourceId": "plan-1",
+            "revision": 2,
+            "contentHash": "a" * 64,
+        },
+        "sourceSlotId": "slot-analyst",
+        "targetModuleId": "ecommerce.task-cockpit",
+        "targetSlotId": "slot-cockpit",
+        "purpose": "受控承接",
+        "requestedOutcome": "回写 canonical 决定",
+        "markings": ["INTERNAL"],
+        "expiresAt": "2026-08-27T06:15:00Z",
+    }
+    with client(fake) as api:
+        forbidden = api.post(
+            "/v1/ecommerce/investigations/runs/run-1/handoffs:compile",
+            json=body,
+        )
+        assert forbidden.status_code == 403 and fake.calls == []
+        injected = api.post(
+            "/v1/ecommerce/investigations/runs/run-1/handoffs:compile",
+            json={**body, "tenant": {"orgId": "dev-org", "projectId": "dev-project"}},
+        )
+        assert injected.status_code == 400 and fake.calls == []

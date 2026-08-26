@@ -10,7 +10,11 @@ from aos_api.aip_agent_registry_contracts import (
     RegistryReceipt,
     VersionedAssetRef,
 )
-from aos_api.aip_agent_registry_store import AipAgentRegistryNotFound, AipAgentRegistryTransitionBlocked
+from aos_api.aip_agent_registry_store import (
+    AipAgentRegistryConflict,
+    AipAgentRegistryNotFound,
+    AipAgentRegistryTransitionBlocked,
+)
 from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.routers import aip_handoffs
 
@@ -143,3 +147,45 @@ def test_issue_replay_hides_bearer_and_consume_is_one_shot(client) -> None:
 def test_issue_requires_idempotency_header(client) -> None:
     response = client.post("/v1/aip/handoffs", headers=headers(), json={})
     assert response.status_code == 400
+
+
+def test_conflict_and_expiry_are_explicit_http_failures_without_false_success(client) -> None:
+    class ConflictService(HandoffService):
+        def issue(self, scope, request, *, idempotency_key, actor, occurred_at):
+            raise AipAgentRegistryConflict("same key was used for another envelope")
+
+    conflict = ConflictService()
+    client.app.dependency_overrides[aip_handoffs.get_handoff_service] = lambda: conflict
+    body = {
+        "handoffId": "handoff-1",
+        "envelope": envelope().envelope.model_dump(mode="json", by_alias=True),
+    }
+    try:
+        response = client.post(
+            "/v1/aip/handoffs",
+            headers=headers(**{"Idempotency-Key": "idem-conflict"}),
+            json=body,
+        )
+        assert response.status_code == 409
+        assert response.json()["code"] == "AIP_AGENT_REGISTRY_CONFLICT"
+
+        class ExpiredService(HandoffService):
+            def consume(self, scope, handoff_id, *, bearer_token, receiver_instance, actor, occurred_at):
+                raise AipAgentRegistryTransitionBlocked("handoff expired")
+
+        client.app.dependency_overrides[aip_handoffs.get_handoff_service] = lambda: ExpiredService()
+        expired = client.post(
+            "/v1/aip/handoffs/handoff-1/consume",
+            headers=headers(),
+            json={
+                "bearerToken": "b" * 40,
+                "receiverInstance": asset("AgentInstance", "receiver-1").model_dump(
+                    mode="json", by_alias=True
+                ),
+            },
+        )
+        assert expired.status_code == 422
+        assert expired.json()["code"] == "AIP_AGENT_REGISTRY_TRANSITION_BLOCKED"
+        assert "consumedAt" not in expired.json()
+    finally:
+        client.app.dependency_overrides.pop(aip_handoffs.get_handoff_service, None)

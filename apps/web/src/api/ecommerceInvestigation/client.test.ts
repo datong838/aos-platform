@@ -82,4 +82,9 @@ describe("EcommerceInvestigationClient", () => {
     expect(fetch).toHaveBeenCalledWith("http://aos.test/v1/ecommerce/investigations/runs/run%3A1/handoffs:compile", expect.objectContaining({ method: "POST", body: JSON.stringify(input) }));
     expect(String(fetch.mock.calls[0]?.[1]?.body)).not.toContain("org-org"); expect(String(fetch.mock.calls[0]?.[1]?.body)).not.toContain("task-run-1"); expect(String(fetch.mock.calls[0]?.[1]?.body)).not.toContain("artifact-1");
   });
+  it("Handoff 编译网络不确定时只尝试一次且不伪造成功", async () => {
+    const rawHash = "a".repeat(64); const fetch = vi.fn().mockRejectedValue(new TypeError("offline")); const client = new EcommerceInvestigationClient({ fetch, getBaseUrl: () => "http://aos.test", getAuthHeaders: () => ({}) });
+    await expect(client.compileHandoff("run:1", { handoffId: "handoff-unknown", approvedPlanRef: { resourceType: "GrowthPlanRevision", resourceId: "growth-plan-1", revision: 2, contentHash: rawHash }, sourceSlotId: "slot-analyst", targetModuleId: "ecommerce.task-cockpit", targetSlotId: "slot-cockpit", purpose: "受控承接", requestedOutcome: "返回决定", markings: ["INTERNAL"], expiresAt: "2026-08-27T08:15:00Z" })).rejects.toMatchObject({ code: "COMMAND_OUTCOME_UNKNOWN" });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
 });

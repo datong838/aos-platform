@@ -170,4 +170,14 @@ describe("BusinessInvestigationTab", () => {
     expect(compileHandoff).toHaveBeenCalledWith("run-a", expect.objectContaining({ handoffId: "bi-handoff-handoff-command-1", sourceSlotId: "slot-diagnosis", targetModuleId: "ecommerce.task-cockpit", targetSlotId: "slot-cockpit", approvedPlanRef: { resourceType: "GrowthPlanRevision", resourceId: "growth-plan-1", revision: 2, contentHash: rawHash } }));
     expect(host.textContent).toContain("编译阻断：TARGET_INSTANCE_NOT_READY"); expect(host.textContent).toContain("4/4 exact refs"); expect(handoffClient.issueHandoff).not.toHaveBeenCalled(); expect(host.textContent).toContain("页面未保留");
   });
+  it("Handoff 编译失败后不显示签发、接收或假成功入口", async () => {
+    const rawHash = "a".repeat(64); const compileHandoff = vi.fn().mockRejectedValue(new EcommerceInvestigationClientError("offline", 0, "COMMAND_OUTCOME_UNKNOWN"));
+    const client: InvestigationReadClient & Partial<InvestigationCommandClient> = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView()), compileHandoff };
+    const handoffClient = { issueHandoff: vi.fn(), consumeHandoff: vi.fn(), listHandoffDecisions: vi.fn(), createHandoffDecision: vi.fn() };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} handoffClient={handoffClient} commandsEnabled createCommandId={() => "handoff-unknown"} />));
+    const setInput = async (label: string, value: string) => { const input = host.querySelector<HTMLInputElement>(`[aria-label="${label}"]`)!; await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); }); };
+    await setInput("Handoff 目标职责槽", "slot-cockpit"); await setInput("Handoff 批准方案 ID", "growth-plan-1"); await setInput("Handoff 方案 revision", "2"); await setInput("Handoff 方案 SHA-256", rawHash);
+    await act(async () => Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent?.includes("编译 exact 交接"))?.click());
+    expect(compileHandoff).toHaveBeenCalledOnce(); expect(host.textContent).toContain("编译结果未知"); expect(host.textContent).toContain("unknown"); expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent?.includes("编译 exact 交接"))?.disabled).toBe(true); expect(host.textContent).not.toContain("人工确认签发"); expect(host.textContent).not.toContain("目标职责安全接收"); expect(host.textContent).not.toContain("accepted 不等于"); expect(handoffClient.issueHandoff).not.toHaveBeenCalled();
+  });
 });

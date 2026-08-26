@@ -29,7 +29,7 @@ type CommandPhase = "idle" | "pending" | "succeeded" | "failed" | "unknown";
 type EntityChoice = { key: string; channelId: string; entityId: string };
 type InvestigationTabClient = InvestigationReadClient & Partial<Pick<InvestigationCommandClient, "executeRunCommand" | "requestMissingData" | "confirmDataRequirement" | "getStageReview" | "reviewStage" | "compileHandoff">>;
 type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
-type HandoffPhase = "idle" | "compiling" | "compiled" | "issuing" | "issued" | "consuming" | "consumed" | "deciding" | "decided" | "blocked" | "failed";
+type HandoffPhase = "idle" | "compiling" | "compiled" | "issuing" | "issued" | "consuming" | "consumed" | "deciding" | "decided" | "blocked" | "unknown" | "failed";
 
 const ANALYSIS_LABELS: Record<InvestigationCaseRevision["analysisType"], string> = {
   initial_store_analysis: "首次全店经营分析",
@@ -48,6 +48,7 @@ const HANDOFF_TARGETS: readonly { value: InvestigationHandoffTargetModule; label
   { value: "ecommerce.customer", label: "客户经营" },
 ];
 const entityKey = (channelId: string, entityId: string) => `${encodeURIComponent(channelId)}/${encodeURIComponent(entityId)}`;
+const isUnknownCommandOutcome = (error: unknown) => error instanceof EcommerceInvestigationClientError ? error.code === "COMMAND_OUTCOME_UNKNOWN" : typeof error === "object" && error !== null && "status" in error && error.status === 0;
 
 function entityChoices(cases: InvestigationCaseRevision[], channelId: string): EntityChoice[] {
   const seen = new Set<string>(); const result: EntityChoice[] = [];
@@ -172,19 +173,19 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
     const revision = Number(handoffPlanRevision); const rawHash = canonicalHash(handoffPlanHash.trim());
     if (!client.compileHandoff || !selectedRunId || !handoffSourceSlot.trim() || !handoffTargetSlot.trim() || !handoffPlanId.trim() || !Number.isInteger(revision) || revision < 1 || !/^[0-9a-f]{64}$/.test(rawHash) || !handoffPurpose.trim() || !handoffOutcome.trim()) return;
     const handoffId = `bi-handoff-${createCommandId()}`.slice(0, 200); setHandoffPhase("compiling"); setHandoffFailure(""); setHandoffCompiled(null); setHandoffIssued(null); setHandoffToken(null);
-    void client.compileHandoff(selectedRunId, { handoffId, approvedPlanRef: { resourceType: "GrowthPlanRevision", resourceId: handoffPlanId.trim(), revision, contentHash: rawHash }, sourceSlotId: handoffSourceSlot.trim(), targetModuleId: handoffTarget, targetSlotId: handoffTargetSlot.trim(), purpose: handoffPurpose.trim(), requestedOutcome: handoffOutcome.trim(), markings: ["INTERNAL"], expiresAt: new Date(Date.now() + 15 * 60_000).toISOString() }).then((result) => { setHandoffCompiled(result); setHandoffPhase(result.handoff.readiness === "ready" ? "compiled" : "blocked"); }, (error: unknown) => { setHandoffFailure(error instanceof Error ? error.message : "Handoff 编译失败"); setHandoffPhase("failed"); });
+    void client.compileHandoff(selectedRunId, { handoffId, approvedPlanRef: { resourceType: "GrowthPlanRevision", resourceId: handoffPlanId.trim(), revision, contentHash: rawHash }, sourceSlotId: handoffSourceSlot.trim(), targetModuleId: handoffTarget, targetSlotId: handoffTargetSlot.trim(), purpose: handoffPurpose.trim(), requestedOutcome: handoffOutcome.trim(), markings: ["INTERNAL"], expiresAt: new Date(Date.now() + 15 * 60_000).toISOString() }).then((result) => { setHandoffCompiled(result); setHandoffPhase(result.handoff.readiness === "ready" ? "compiled" : "blocked"); }, (error: unknown) => { const unknown = isUnknownCommandOutcome(error); setHandoffFailure(unknown ? "Handoff 编译结果未知；已锁定全部写入口，只允许 GET 或重新选择上下文后核验。" : error instanceof Error ? error.message : "Handoff 编译失败"); setHandoffPhase(unknown ? "unknown" : "failed"); });
   };
   const issueHandoff = () => {
     if (!handoffCompiled?.handoff.issueCommand) return; setHandoffPhase("issuing"); setHandoffFailure("");
-    void handoffClient.issueHandoff(handoffCompiled.handoff.issueCommand, `issue-${createCommandId()}`.slice(0, 200)).then((result) => { setHandoffIssued(result); setHandoffToken(result.bearerToken); setHandoffPhase("issued"); }, (error: unknown) => { setHandoffFailure(error instanceof Error ? error.message : "Handoff 签发失败"); setHandoffPhase("failed"); });
+    void handoffClient.issueHandoff(handoffCompiled.handoff.issueCommand, `issue-${createCommandId()}`.slice(0, 200)).then((result) => { setHandoffIssued(result); setHandoffToken(result.bearerToken); setHandoffPhase("issued"); }, (error: unknown) => { const unknown = isUnknownCommandOutcome(error); setHandoffFailure(unknown ? "Handoff 签发结果未知；禁止再次 POST，请先 GET 回读。" : error instanceof Error ? error.message : "Handoff 签发失败"); setHandoffPhase(unknown ? "unknown" : "failed"); });
   };
   const consumeHandoff = () => {
     if (!handoffCompiled?.handoff.issueCommand || !handoffIssued || !handoffToken) return; setHandoffPhase("consuming"); setHandoffFailure("");
-    void handoffClient.consumeHandoff(handoffIssued.handoff.handoffId, { bearerToken: handoffToken, receiverInstance: handoffCompiled.handoff.issueCommand.envelope.receiverInstance }).then(() => { setHandoffToken(null); setHandoffPhase("consumed"); }, (error: unknown) => { setHandoffToken(null); setHandoffFailure(error instanceof Error ? error.message : "Handoff 接收失败"); setHandoffPhase("failed"); });
+    void handoffClient.consumeHandoff(handoffIssued.handoff.handoffId, { bearerToken: handoffToken, receiverInstance: handoffCompiled.handoff.issueCommand.envelope.receiverInstance }).then(() => { setHandoffToken(null); setHandoffPhase("consumed"); }, (error: unknown) => { setHandoffToken(null); const unknown = isUnknownCommandOutcome(error); setHandoffFailure(unknown ? "Handoff 接收结果未知；一次性凭证已清除，禁止再次 POST。" : error instanceof Error ? error.message : "Handoff 接收失败"); setHandoffPhase(unknown ? "unknown" : "failed"); });
   };
   const acceptHandoff = () => {
     if (!handoffCompiled?.handoff.issueCommand || !handoffIssued) return; setHandoffPhase("deciding"); setHandoffFailure("");
-    void handoffClient.listHandoffDecisions(handoffIssued.handoff.handoffId).then((timeline) => handoffClient.createHandoffDecision(handoffIssued.handoff.handoffId, { decision: "accepted", expectedHeadVersion: timeline.headVersion, reasonCode: null, gapCodes: [], returnRefs: [], correlationRef: null, receiverInstance: handoffCompiled.handoff.issueCommand!.envelope.receiverInstance }, `decision-${createCommandId()}`.slice(0, 200))).then(() => { setHandoffPhase("decided"); }, (error: unknown) => { setHandoffFailure(error instanceof Error ? error.message : "Handoff 决定失败"); setHandoffPhase("failed"); });
+    void handoffClient.listHandoffDecisions(handoffIssued.handoff.handoffId).then((timeline) => handoffClient.createHandoffDecision(handoffIssued.handoff.handoffId, { decision: "accepted", expectedHeadVersion: timeline.headVersion, reasonCode: null, gapCodes: [], returnRefs: [], correlationRef: null, receiverInstance: handoffCompiled.handoff.issueCommand!.envelope.receiverInstance }, `decision-${createCommandId()}`.slice(0, 200))).then(() => { setHandoffPhase("decided"); }, (error: unknown) => { const unknown = isUnknownCommandOutcome(error); setHandoffFailure(unknown ? "Handoff 决定结果未知；禁止再次 POST，请先 GET 回读。" : error instanceof Error ? error.message : "Handoff 决定失败"); setHandoffPhase(unknown ? "unknown" : "failed"); });
   };
 
   return (
@@ -259,7 +260,7 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
               <label className="is-wide"><span>期望结果</span><input aria-label="Handoff 期望结果" value={handoffOutcome} onChange={(event) => { setHandoffOutcome(event.currentTarget.value); resetHandoff(); }} /></label>
             </div>
             <div className="business-investigation-handoff-actions">
-              <button type="button" onClick={compileHandoff} disabled={handoffPhase === "compiling" || !handoffTargetSlot.trim() || !handoffPlanId.trim() || !/^[0-9a-f]{64}$/.test(canonicalHash(handoffPlanHash.trim()))}>1 · 编译 exact 交接</button>
+              <button type="button" onClick={compileHandoff} disabled={handoffPhase === "compiling" || handoffPhase === "unknown" || !handoffTargetSlot.trim() || !handoffPlanId.trim() || !/^[0-9a-f]{64}$/.test(canonicalHash(handoffPlanHash.trim()))}>1 · 编译 exact 交接</button>
               {handoffCompiled?.handoff.readiness === "ready" ? <button type="button" onClick={issueHandoff} disabled={handoffPhase !== "compiled"}>2 · 人工确认签发</button> : null}
               {handoffIssued && handoffToken ? <button type="button" onClick={consumeHandoff} disabled={handoffPhase !== "issued"}>3 · 目标职责安全接收</button> : null}
               {handoffIssued && handoffPhase === "consumed" ? <button type="button" onClick={acceptHandoff}>4 · 接受交接</button> : null}
