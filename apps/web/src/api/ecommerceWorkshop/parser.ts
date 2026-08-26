@@ -56,6 +56,8 @@ import {
   type SourceReadinessEnvelope,
   type SourceReadinessExactRef,
   type SourceReadinessItem,
+  type SourceReadinessInvestigation,
+  type SourceReadinessInvestigationBlocker,
   type SourceReadinessLatestRun,
   type SourceReadinessPolicyObservation,
   type SourceReadinessPolicyStatus,
@@ -438,6 +440,35 @@ function parseSourceReadinessPolicy(value: unknown): SourceReadinessPolicyObserv
   exact(raw, ["status", "ruleRef", "summary"], "sourceReadiness.policy");
   return { status: enumValue<SourceReadinessPolicyStatus>(raw.status, ["pass", "fail", "unknown"], "sourceReadiness.policy.status"), ruleRef: nullable(raw.ruleRef, parseSourceReadinessExactRef), summary: nullable(raw.summary, (item) => boundedText(item, "sourceReadiness.policy.summary", 1000)) };
 }
+function parseSourceReadinessInvestigationBlocker(value: unknown, index: number): SourceReadinessInvestigationBlocker {
+  const raw = record(value, `sourceReadiness.investigation.blockers[${index}]`);
+  exact(raw, ["code", "fact", "sourceIds", "reason"], `sourceReadiness.investigation.blockers[${index}]`);
+  const sourceIds = strings(raw.sourceIds, `sourceReadiness.investigation.blockers[${index}].sourceIds`);
+  if (sourceIds.length > 50 || new Set(sourceIds).size !== sourceIds.length || sourceIds.some((item) => !item.trim())) throw new TypeError("investigation blocker sourceIds 必须非空且唯一");
+  return { code: boundedText(raw.code, "sourceReadiness.investigation.blocker.code", 120), fact: nullable(raw.fact, (item) => boundedText(item, "sourceReadiness.investigation.blocker.fact", 160)), sourceIds, reason: boundedText(raw.reason, "sourceReadiness.investigation.blocker.reason", 1000) };
+}
+function parseSourceReadinessInvestigation(value: unknown, checkedAt: string, cutoffAt: string, envelopeStatus: SourceReadinessStatus): SourceReadinessInvestigation {
+  const raw = record(value, "sourceReadiness.investigation");
+  exact(raw, ["requirementRef", "status", "evaluatedAt", "requiredCutoff", "freshnessExpiresAt", "requiredFactCount", "coveredFactCount", "coverageRatio", "unmetFacts", "blockers"], "sourceReadiness.investigation");
+  const requirementRef = parseSourceReadinessExactRef(raw.requirementRef);
+  if (requirementRef.resourceType !== "DataRequirementRevision") throw new TypeError("investigation requirementRef 必须引用 DataRequirementRevision");
+  const status = enumValue<SourceReadinessStatus>(raw.status, SOURCE_STATUSES, "sourceReadiness.investigation.status");
+  const evaluatedAt = timestamp(raw.evaluatedAt, "sourceReadiness.investigation.evaluatedAt");
+  const requiredCutoff = timestamp(raw.requiredCutoff, "sourceReadiness.investigation.requiredCutoff");
+  const freshnessExpiresAt = nullable(raw.freshnessExpiresAt, (item) => timestamp(item, "sourceReadiness.investigation.freshnessExpiresAt"));
+  const requiredFactCount = integer(raw.requiredFactCount, "sourceReadiness.investigation.requiredFactCount", 1);
+  const coveredFactCount = integer(raw.coveredFactCount, "sourceReadiness.investigation.coveredFactCount");
+  if (coveredFactCount > requiredFactCount) throw new TypeError("investigation coveredFactCount 超过 requiredFactCount");
+  if (typeof raw.coverageRatio !== "number" || raw.coverageRatio < 0 || raw.coverageRatio > 1 || Math.abs(raw.coverageRatio - coveredFactCount / requiredFactCount) > 1e-9) throw new TypeError("investigation coverageRatio 不守恒");
+  const unmetFacts = strings(raw.unmetFacts, "sourceReadiness.investigation.unmetFacts");
+  if (unmetFacts.length > 100 || new Set(unmetFacts).size !== unmetFacts.length || unmetFacts.some((item) => !item.trim())) throw new TypeError("investigation unmetFacts 必须非空且唯一");
+  const blockers = Array.isArray(raw.blockers) ? raw.blockers.map(parseSourceReadinessInvestigationBlocker) : (() => { throw new TypeError("sourceReadiness.investigation.blockers 必须是数组"); })();
+  if (blockers.length > 100) throw new TypeError("sourceReadiness.investigation.blockers 超限");
+  if (evaluatedAt !== checkedAt || Date.parse(requiredCutoff) > Date.parse(cutoffAt)) throw new TypeError("investigation cutoff 与 envelope 漂移");
+  if ((coveredFactCount === requiredFactCount) === (unmetFacts.length > 0)) throw new TypeError("investigation coverage 与 unmetFacts 不一致");
+  if (status === "ready" && (raw.coverageRatio !== 1 || blockers.length > 0 || freshnessExpiresAt === null || Date.parse(freshnessExpiresAt) <= Date.parse(evaluatedAt) || envelopeStatus !== "ready")) throw new TypeError("investigation 伪 ready 或覆盖当前 envelope 阻断");
+  return { requirementRef, status, evaluatedAt, requiredCutoff, freshnessExpiresAt, requiredFactCount, coveredFactCount, coverageRatio: raw.coverageRatio, unmetFacts, blockers };
+}
 function parseSourceReadinessItem(value: unknown): SourceReadinessItem {
   const raw = record(value, "sourceReadiness.item");
   exact(raw, ["schemaVersion", "tenant", "sourceId", "pipelineId", "objectType", "status", "checkedAt", "observedAt", "sourceEventAt", "projectedAt", "dataCutoff", "freshnessExpiresAt", "sourceConfigRef", "mappingRef", "schemaRef", "maskingPolicyRef", "freshnessPolicyRef", "qualityPolicyRef", "reconciliationPolicyRef", "queryCapabilityRef", "latestRun", "counts", "quality", "reconciliation", "reasons", "blockers"], "sourceReadiness.item");
@@ -448,7 +479,9 @@ function parseSourceReadinessItem(value: unknown): SourceReadinessItem {
 }
 export function parseSourceReadinessEnvelope(value: unknown): SourceReadinessEnvelope {
   const raw = record(value, "sourceReadiness");
-  exact(raw, ["schemaVersion", "tenant", "checkedAt", "cutoffAt", "status", "sources", "receiptRef"], "sourceReadiness");
+  const envelopeKeys = ["schemaVersion", "tenant", "checkedAt", "cutoffAt", "status", "sources", "receiptRef"];
+  if (Object.prototype.hasOwnProperty.call(raw, "investigation")) envelopeKeys.push("investigation");
+  exact(raw, envelopeKeys, "sourceReadiness");
   if (raw.schemaVersion !== SOURCE_READINESS_SCHEMA_VERSION) throw new TypeError("sourceReadiness.schemaVersion 漂移");
   if (!Array.isArray(raw.sources)) throw new TypeError("sourceReadiness.sources 必须是数组");
   const tenant = parseTenant(raw.tenant); const checkedAt = timestamp(raw.checkedAt, "sourceReadiness.checkedAt"); const sources = raw.sources.map(parseSourceReadinessItem);
@@ -458,7 +491,9 @@ export function parseSourceReadinessEnvelope(value: unknown): SourceReadinessEnv
   const status = enumValue<SourceReadinessStatus>(raw.status, SOURCE_STATUSES, "sourceReadiness.status");
   const aggregate = sources.reduce<SourceReadinessStatus>((current, item) => SOURCE_STATUS_PRECEDENCE[item.status] > SOURCE_STATUS_PRECEDENCE[current] ? item.status : current, "ready");
   if (status !== aggregate) throw new TypeError("sourceReadiness aggregate status 漂移");
-  return { schemaVersion: SOURCE_READINESS_SCHEMA_VERSION, tenant, checkedAt, cutoffAt: timestamp(raw.cutoffAt, "sourceReadiness.cutoffAt"), status, sources, receiptRef: nullable(raw.receiptRef, parseSourceReadinessExactRef) };
+  const cutoffAt = timestamp(raw.cutoffAt, "sourceReadiness.cutoffAt");
+  const investigation = raw.investigation === undefined || raw.investigation === null ? null : parseSourceReadinessInvestigation(raw.investigation, checkedAt, cutoffAt, status);
+  return { schemaVersion: SOURCE_READINESS_SCHEMA_VERSION, tenant, checkedAt, cutoffAt, status, sources, receiptRef: nullable(raw.receiptRef, parseSourceReadinessExactRef), investigation };
 }
 
 const TASK_STATUSES = ["pending", "planning", "awaiting_approval", "approved", "executing", "paused", "completed", "failed", "cancelled", "rolled_back"] as const;

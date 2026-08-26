@@ -192,6 +192,8 @@ const sourceItem = (pipelineId: string, status = "blocked") => ({
   quality: { status: "unknown", ruleRef: null, summary: null }, reconciliation: { status: "unknown", ruleRef: null, summary: null }, reasons: sourceBlockers, blockers: sourceBlockers,
 });
 const sourceEnvelope = (status = "blocked") => ({ schemaVersion: "aos.source-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, checkedAt: sourceCheckedAt, cutoffAt: sourceCheckedAt, status, sources: sourcePipelines.map((pipelineId) => sourceItem(pipelineId, status)), receiptRef: null });
+const sourceRequirementRef = { resourceType: "DataRequirementRevision", resourceId: "requirement-1", revision: "2", contentHash: "b".repeat(64), authority: "Data" };
+const sourceInvestigation = { requirementRef: sourceRequirementRef, status: "blocked", evaluatedAt: sourceCheckedAt, requiredCutoff: sourceCheckedAt, freshnessExpiresAt: null, requiredFactCount: 3, coveredFactCount: 1, coverageRatio: 1 / 3, unmetFacts: ["customer_segment", "repeat_purchase"], blockers: [{ code: "FACT_COVERAGE_PARTIAL", fact: "customer_segment", sourceIds: ["niushop-qyh"], reason: "当前事实覆盖不足" }] };
 
 describe("source readiness strict parser", () => {
   it.each(["blocked", "unknown", "empty", "forbidden"])("诚实保留 %s 与 ordered P01-P12", (status) => {
@@ -199,6 +201,20 @@ describe("source readiness strict parser", () => {
     expect(parsed.status).toBe(status);
     expect(parsed.sources).toHaveLength(12);
     expect(parsed.sources[0].pipelineId).toBe("P01-shop-qyh");
+    expect(parsed.investigation).toBeNull();
+  });
+  it("在原 canonical envelope 内解析 investigation requirement、coverage 与 blocker", () => {
+    const parsed = parseSourceReadinessEnvelope({ ...sourceEnvelope(), investigation: sourceInvestigation });
+    expect(parsed.investigation).toMatchObject({ status: "blocked", requiredFactCount: 3, coveredFactCount: 1, unmetFacts: ["customer_segment", "repeat_purchase"] });
+    expect(parsed.investigation?.requirementRef.resourceId).toBe("requirement-1");
+  });
+  it("拒绝 investigation 类型、cutoff、coverage、unmet、source identity 与历史伪 ready 漂移", () => {
+    expect(() => parseSourceReadinessEnvelope({ ...sourceEnvelope(), investigation: { ...sourceInvestigation, requirementRef: { ...sourceRequirementRef, resourceType: "EvidenceBundleRevision" } } })).toThrow("DataRequirementRevision");
+    expect(() => parseSourceReadinessEnvelope({ ...sourceEnvelope(), investigation: { ...sourceInvestigation, evaluatedAt: "2026-08-21T14:00:01Z" } })).toThrow("cutoff");
+    expect(() => parseSourceReadinessEnvelope({ ...sourceEnvelope(), investigation: { ...sourceInvestigation, coverageRatio: 0.5 } })).toThrow("coverageRatio");
+    expect(() => parseSourceReadinessEnvelope({ ...sourceEnvelope(), investigation: { ...sourceInvestigation, coveredFactCount: 3, coverageRatio: 1 } })).toThrow("unmetFacts");
+    expect(() => parseSourceReadinessEnvelope({ ...sourceEnvelope(), investigation: { ...sourceInvestigation, blockers: [{ ...sourceInvestigation.blockers[0], sourceIds: ["niushop-qyh", "niushop-qyh"] }] } })).toThrow("sourceIds");
+    expect(() => parseSourceReadinessEnvelope({ ...sourceEnvelope(), investigation: { ...sourceInvestigation, status: "ready", coveredFactCount: 3, coverageRatio: 1, unmetFacts: [], blockers: [], freshnessExpiresAt: "2026-08-22T14:00:00Z" } })).toThrow("伪 ready");
   });
   it("只在 exact authority 与 policy/run/freshness 全部闭合时接受 ready", () => {
     const exactRef = { resourceType: "Policy", resourceId: "policy-1", revision: "1", contentHash: "a".repeat(64), authority: "Data" };

@@ -99,6 +99,19 @@ export type SourceReadinessExactRef = { resourceType: string; resourceId: string
 export type SourceReadinessLatestRun = { runId: string | null; status: SourceReadinessObservationStatus; scheduledFor: string | null; startedAt: string | null; finishedAt: string | null; rowsWritten: number | null; errorCode: string | null };
 export type SourceReadinessCounts = { sourceTotal: number | null; sourceActive: number | null; sourceDeleted: number | null; projectionTotal: number | null; unexplainedDelta: number | null };
 export type SourceReadinessPolicyObservation = { status: SourceReadinessPolicyStatus; ruleRef: SourceReadinessExactRef | null; summary: string | null };
+export type SourceReadinessInvestigationBlocker = { code: string; fact: string | null; sourceIds: string[]; reason: string };
+export type SourceReadinessInvestigation = {
+  requirementRef: SourceReadinessExactRef;
+  status: SourceReadinessStatus;
+  evaluatedAt: string;
+  requiredCutoff: string;
+  freshnessExpiresAt: string | null;
+  requiredFactCount: number;
+  coveredFactCount: number;
+  coverageRatio: number;
+  unmetFacts: string[];
+  blockers: SourceReadinessInvestigationBlocker[];
+};
 export type SourceReadinessItem = {
   schemaVersion: typeof SOURCE_READINESS_SCHEMA_VERSION;
   tenant: WorkshopTenant;
@@ -135,6 +148,7 @@ export type SourceReadinessEnvelope = {
   status: SourceReadinessStatus;
   sources: SourceReadinessItem[];
   receiptRef: SourceReadinessExactRef | null;
+  investigation?: SourceReadinessInvestigation | null;
 };
 
 export const TASK_COCKPIT_SCHEMA_VERSION = "aos.ecommerce-workshop.task-cockpit/v1" as const;
