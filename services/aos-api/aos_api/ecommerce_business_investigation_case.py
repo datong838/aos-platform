@@ -142,7 +142,12 @@ class BusinessInvestigationCaseRevision(AipContractModel):
             },
             BusinessInvestigationCaseLifecycle.CLOSED: set(),
         }
-        if self.lifecycle not in allowed[previous.lifecycle]:
+        schedule_rebind = (
+            self.lifecycle is previous.lifecycle
+            and self.schedule_policy_ref is not None
+            and self.schedule_policy_ref != previous.schedule_policy_ref
+        )
+        if not schedule_rebind and self.lifecycle not in allowed[previous.lifecycle]:
             raise ValueError("Case lifecycle transition is not allowed")
 
 

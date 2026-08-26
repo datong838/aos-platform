@@ -14,6 +14,7 @@ from aos_api.ecommerce_business_investigation_application import (
     BusinessInvestigationCaseListResponse,
     BusinessInvestigationRunListResponse,
     BusinessInvestigationRunStateCommandResponse,
+    BusinessInvestigationSchedulePolicyCommandResponse,
     CreateBusinessInvestigationRunRequest,
     EcommerceBusinessInvestigationApplication,
 )
@@ -32,6 +33,8 @@ from aos_api.errors import register_exception_handlers
 from aos_api.routers import ecommerce_business_investigations as routes
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_business_investigation_lifecycle import HASH_A, draft_case, ref
+from test_ecommerce_business_investigation_schedule import case as scheduled_case
+from test_ecommerce_business_investigation_schedule import policy as schedule_policy
 
 
 NOW = datetime.now(UTC)
@@ -116,6 +119,22 @@ class FakeApplication:
     def create_run(self, scope, case_id, request, **kwargs):
         raise AssertionError("create_run is covered by strict request/path service tests")
 
+    def put_schedule_policy(self, scope, case_id, request, **kwargs):
+        self.calls.append(("put_schedule", scope, case_id, request, kwargs))
+        return BusinessInvestigationSchedulePolicyCommandResponse(
+            tenant=TENANT,
+            authority=schedule_policy(),
+            caseAuthority=scheduled_case(
+                revision=3,
+                schedule_ref=ref("SchedulePolicyRevision", "schedule-1"),
+            ),
+            replayed=False,
+        )
+
+    def get_schedule_policy(self, scope, schedule_policy_id):
+        self.calls.append(("get_schedule", scope, schedule_policy_id))
+        return schedule_policy()
+
     def get_run(self, scope, run_id):
         raise BusinessInvestigationCaseNotFound("not visible")
 
@@ -186,10 +205,72 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     assert "/v1/ecommerce/investigations/runs/{run_id}:pause" in paths
     assert "/v1/ecommerce/investigations/runs/{run_id}:resume" in paths
     assert "/v1/ecommerce/investigations/runs/{run_id}:cancel" in paths
+    assert "/v1/ecommerce/investigations/cases/{case_id}/schedule-policies" in paths
+    assert "/v1/ecommerce/investigations/schedule-policies/{schedule_policy_id}" in paths
+    assert "/v1/ecommerce/investigations/schedule-policies/{schedule_policy_id}:update" in paths
+    assert "/v1/ecommerce/investigations/schedule-policies/{schedule_policy_id}:trigger" in paths
     view = paths["/v1/ecommerce/investigations/runs/{run_id}/view"]["get"]
     assert view["operationId"] == "ecommerceInvestigationRunWorkbenchViewGet"
     request_data = paths["/v1/ecommerce/investigations/runs/{run_id}:request-data"]["post"]
     assert request_data["operationId"] == "ecommerceInvestigationRunDataRequest"
+
+
+def test_schedule_policy_http_uses_principal_and_two_exact_versions() -> None:
+    fake = FakeApplication()
+    fake.calls = []
+    current = scheduled_case()
+    body = {
+        "schedulePolicyId": "schedule-1",
+        "caseRef": ref(
+            "BusinessInvestigationCaseRevision",
+            "case-1",
+            revision=2,
+            content_hash=current.content_hash,
+        ),
+        "analysisType": "weekly_business_review",
+        "policyKind": "weekly_review",
+        "cadence": "weekly",
+        "enabled": True,
+        "overlapPolicy": "skip",
+        "timezone": "Asia/Shanghai",
+        "weeklyDay": 1,
+        "localTime": "09:00",
+    }
+    with client(fake) as api:
+        created = api.post(
+            "/v1/ecommerce/investigations/cases/case-1/schedule-policies",
+            headers={"Idempotency-Key": "schedule-create", "If-Match": '"2"'},
+            json=body,
+        )
+        assert created.status_code == 201
+        assert fake.calls[-1][1] == TenantScope("org-org", "dev-project")
+        assert fake.calls[-1][-1]["expected_policy_revision"] == 0
+        assert fake.calls[-1][-1]["expected_case_version"] == 2
+        updated_body = {
+            **body,
+            "caseRef": ref(
+                "BusinessInvestigationCaseRevision",
+                "case-1",
+                revision=3,
+                content_hash=scheduled_case(
+                    revision=3,
+                    schedule_ref=ref("SchedulePolicyRevision", "schedule-1"),
+                ).content_hash,
+            ),
+            "enabled": False,
+        }
+        updated = api.post(
+            "/v1/ecommerce/investigations/schedule-policies/schedule-1:update",
+            headers={
+                "Idempotency-Key": "schedule-update",
+                "If-Match": '"1"',
+                "X-Case-If-Match": '"3"',
+            },
+            json=updated_body,
+        )
+        assert updated.status_code == 200
+        assert fake.calls[-1][-1]["expected_policy_revision"] == 1
+        assert fake.calls[-1][-1]["expected_case_version"] == 3
 
 
 def test_workbench_view_http_uses_principal_tenant_and_hides_non_visible_source() -> None:

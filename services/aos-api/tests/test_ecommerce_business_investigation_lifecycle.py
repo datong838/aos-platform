@@ -131,6 +131,27 @@ def test_state_contract_is_strict_preparing_control_axis_only() -> None:
         )
 
 
+def test_case_successor_allows_only_exact_schedule_rebind_at_same_lifecycle() -> None:
+    previous = draft_case()
+    payload = previous.model_dump(by_alias=True, mode="json")
+    payload.update(
+        revision=2,
+        version=2,
+        priorRef=ref(
+            "BusinessInvestigationCaseRevision",
+            previous.case_id,
+            content_hash=previous.content_hash,
+        ),
+        schedulePolicyRef=ref("SchedulePolicyRevision", "schedule-1"),
+        contentHash=HASH_A,
+    )
+    successor = BusinessInvestigationCaseRevision.model_validate(payload)
+    successor.validate_successor(previous)
+    unchanged = successor.model_copy(update={"schedule_policy_ref": previous.schedule_policy_ref})
+    with pytest.raises(ValueError, match="lifecycle transition"):
+        unchanged.validate_successor(previous)
+
+
 def test_migration_freezes_rls_receipts_cas_and_no_runtime_direct_write() -> None:
     module = _migration()
     assert module.revision == "biw4_006" and module.down_revision == "biw4_005"

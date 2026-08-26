@@ -17,10 +17,13 @@ from aos_api.ecommerce_business_investigation_application import (
     BusinessInvestigationRunCommandResponse,
     BusinessInvestigationRunListResponse,
     BusinessInvestigationRunStateCommandResponse,
+    BusinessInvestigationSchedulePolicyCommandResponse,
     CreateBusinessInvestigationCaseRequest,
     CreateBusinessInvestigationRunRequest,
     EcommerceBusinessInvestigationApplication,
     RequestBusinessInvestigationDataRequest,
+    PutBusinessInvestigationSchedulePolicyRequest,
+    TriggerBusinessInvestigationScheduleRequest,
     TransitionBusinessInvestigationCaseRequest,
 )
 from aos_api.ecommerce_business_investigation_case import (
@@ -38,6 +41,11 @@ from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationRunControl,
     BusinessInvestigationRunNotFound,
     BusinessInvestigationRunView,
+)
+from aos_api.ecommerce_business_investigation_schedule import (
+    BusinessInvestigationScheduleConflict,
+    BusinessInvestigationScheduleNotFound,
+    BusinessInvestigationSchedulePolicyRevision,
 )
 from aos_api.errors import ApiError, ErrorBody
 from aos_api.tenant_scope import TenantScope
@@ -106,6 +114,7 @@ def _map_error(exc: Exception) -> ApiError:
             BusinessInvestigationCaseNotFound,
             BusinessInvestigationRunNotFound,
             BusinessInvestigationProjectionNotFound,
+            BusinessInvestigationScheduleNotFound,
         ),
     ):
         return ApiError(
@@ -113,7 +122,14 @@ def _map_error(exc: Exception) -> ApiError:
             message="business investigation resource is not visible",
             status_code=404,
         )
-    if isinstance(exc, (BusinessInvestigationCaseConflict, BusinessInvestigationRunConflict)):
+    if isinstance(
+        exc,
+        (
+            BusinessInvestigationCaseConflict,
+            BusinessInvestigationRunConflict,
+            BusinessInvestigationScheduleConflict,
+        ),
+    ):
         return ApiError(
             code="BUSINESS_INVESTIGATION_CONFLICT",
             message=str(exc),
@@ -249,6 +265,121 @@ def create_run(
             _scope(principal),
             case_id,
             body,
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/cases/{case_id}/schedule-policies",
+    response_model=BusinessInvestigationSchedulePolicyCommandResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationSchedulePolicyCreate",
+)
+def create_schedule_policy(
+    case_id: ResourceIdPath,
+    body: PutBusinessInvestigationSchedulePolicyRequest,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationSchedulePolicyCommandResponse:
+    try:
+        return application.put_schedule_policy(
+            _scope(principal),
+            case_id,
+            body,
+            expected_policy_revision=0,
+            expected_case_version=_expected_version(if_match),
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get(
+    "/schedule-policies/{schedule_policy_id}",
+    response_model=BusinessInvestigationSchedulePolicyRevision,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationSchedulePolicyGet",
+)
+def get_schedule_policy(
+    schedule_policy_id: ResourceIdPath,
+    principal: PrincipalDependency,
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationSchedulePolicyRevision:
+    try:
+        return application.get_schedule_policy(_scope(principal), schedule_policy_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/schedule-policies/{schedule_policy_id}:update",
+    response_model=BusinessInvestigationSchedulePolicyCommandResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationSchedulePolicyUpdate",
+)
+def update_schedule_policy(
+    schedule_policy_id: ResourceIdPath,
+    body: PutBusinessInvestigationSchedulePolicyRequest,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    case_if_match: str = Header(alias="X-Case-If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationSchedulePolicyCommandResponse:
+    try:
+        if body.schedule_policy_id != schedule_policy_id:
+            raise ValueError("schedulePolicyId must match path")
+        return application.put_schedule_policy(
+            _scope(principal),
+            body.case_ref.resource_id,
+            body,
+            expected_policy_revision=_expected_version(if_match),
+            expected_case_version=_expected_version(case_if_match),
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/schedule-policies/{schedule_policy_id}:trigger",
+    response_model=BusinessInvestigationRunCommandResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationSchedulePolicyTrigger",
+)
+def trigger_schedule_policy(
+    schedule_policy_id: ResourceIdPath,
+    body: TriggerBusinessInvestigationScheduleRequest,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationRunCommandResponse:
+    try:
+        return application.trigger_schedule_policy(
+            _scope(principal),
+            schedule_policy_id,
+            body,
+            expected_policy_revision=_expected_version(if_match),
             idempotency_key=_idempotency_key(idempotency_key),
             actor=principal.subject,
             occurred_at=datetime.now(UTC),

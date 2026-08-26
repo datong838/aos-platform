@@ -31,6 +31,15 @@ from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationTriggerKind,
     BusinessInvestigationUncertainCommand,
 )
+from aos_api.ecommerce_business_investigation_schedule import (
+    BusinessInvestigationSchedulePolicyRevision,
+    BusinessInvestigationScheduleConflict,
+    BusinessInvestigationSchedulePolicyWrite,
+    BusinessInvestigationScheduleStore,
+    PutBusinessInvestigationSchedulePolicyRequest,
+    TriggerBusinessInvestigationScheduleRequest,
+    scheduled_trigger_key,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -113,15 +122,24 @@ class BusinessInvestigationRunListResponse(AipContractModel):
     count: int = Field(ge=0)
 
 
+class BusinessInvestigationSchedulePolicyCommandResponse(AipContractModel):
+    tenant: TenantContext
+    authority: BusinessInvestigationSchedulePolicyRevision
+    case_authority: BusinessInvestigationCaseRevision
+    replayed: bool
+
+
 class EcommerceBusinessInvestigationApplication:
     def __init__(
         self,
         case_store: BusinessInvestigationCaseStore | None = None,
         run_store: BusinessInvestigationRunStore | None = None,
+        schedule_store: BusinessInvestigationScheduleStore | None = None,
         projection_reader: BusinessInvestigationProjectionReader | None = None,
     ) -> None:
         self._cases = case_store or BusinessInvestigationCaseStore()
         self._runs = run_store or BusinessInvestigationRunStore()
+        self._schedules = schedule_store or BusinessInvestigationScheduleStore()
         self._projection = BusinessInvestigationProjectionBuilder(
             projection_reader or CanonicalBusinessInvestigationProjectionReader()
         )
@@ -210,6 +228,8 @@ class EcommerceBusinessInvestigationApplication:
         actor: str,
         occurred_at: datetime,
     ) -> BusinessInvestigationRunCommandResponse:
+        if request.trigger_kind is BusinessInvestigationTriggerKind.SCHEDULED:
+            raise ValueError("scheduled Run must use the canonical SchedulePolicy trigger endpoint")
         if (
             request.case_ref.resource_type != "BusinessInvestigationCaseRevision"
             or request.case_ref.resource_id != case_id
@@ -227,6 +247,186 @@ class EcommerceBusinessInvestigationApplication:
             createdBy=actor,
             createdAt=occurred_at.isoformat(),
         )
+        authority = BusinessInvestigationRunRecord.model_validate(payload)
+        payload["contentHash"] = authority.calculated_content_hash()
+        write = self._runs.request(
+            scope,
+            BusinessInvestigationRunRecord.model_validate(payload),
+            idempotency_key=idempotency_key,
+        )
+        return BusinessInvestigationRunCommandResponse(
+            tenant=self._tenant(scope),
+            run=self._runs.get(scope, write.authority.run_id),
+            outcome=write.outcome,
+            replayed=write.replayed,
+        )
+
+    def put_schedule_policy(
+        self,
+        scope: TenantScope,
+        case_id: str,
+        request: PutBusinessInvestigationSchedulePolicyRequest,
+        *,
+        expected_policy_revision: int,
+        expected_case_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationSchedulePolicyCommandResponse:
+        if request.case_ref.resource_type != "BusinessInvestigationCaseRevision" or (
+            request.case_ref.resource_id != case_id
+            or request.case_ref.revision != expected_case_version
+        ):
+            raise ValueError("caseRef must exactly match Case path and expected version")
+        replay = self._schedules.find_put_receipt(scope, idempotency_key)
+        if replay is not None:
+            authority = replay.authority
+            if (
+                replay.expected_policy_revision != expected_policy_revision
+                or replay.expected_case_version != expected_case_version
+                or authority.schedule_policy_id != request.schedule_policy_id
+                or authority.case_ref != request.case_ref
+                or authority.analysis_type is not request.analysis_type
+                or authority.policy_kind is not request.policy_kind
+                or authority.cadence is not request.cadence
+                or authority.enabled is not request.enabled
+                or authority.overlap_policy != request.overlap_policy
+                or authority.timezone != request.timezone
+                or authority.weekly_day != request.weekly_day
+                or authority.local_time != request.local_time
+            ):
+                raise BusinessInvestigationScheduleConflict(
+                    "SchedulePolicy idempotency conflict"
+                )
+            return BusinessInvestigationSchedulePolicyCommandResponse(
+                tenant=self._tenant(scope),
+                authority=authority,
+                case_authority=replay.case_authority,
+                replayed=True,
+            )
+        previous_case = self._cases.get(scope, case_id)
+        if previous_case.version != expected_case_version or request.case_ref.content_hash != previous_case.content_hash:
+            raise ValueError("caseRef does not match current Case authority")
+        if request.analysis_type is not previous_case.analysis_type:
+            raise ValueError("SchedulePolicy analysisType must match Case")
+        previous_policy = None
+        if expected_policy_revision:
+            previous_policy = self._schedules.get(scope, request.schedule_policy_id)
+            if previous_policy.revision != expected_policy_revision:
+                raise ValueError("SchedulePolicy expected revision conflict")
+        payload = request.model_dump(by_alias=True, mode="json")
+        payload.update(
+            schemaVersion="aos.ecommerce.business-investigation-schedule-policy/v1",
+            tenant=self._tenant(scope).model_dump(by_alias=True, mode="json"),
+            revision=expected_policy_revision + 1,
+            version=expected_policy_revision + 1,
+            priorRef=(
+                None
+                if previous_policy is None
+                else {
+                    "resourceType": "SchedulePolicyRevision",
+                    "resourceId": previous_policy.schedule_policy_id,
+                    "revision": previous_policy.revision,
+                    "contentHash": previous_policy.content_hash,
+                }
+            ),
+            contentHash="sha256:" + "0" * 64,
+            createdBy=actor,
+            createdAt=occurred_at.isoformat(),
+        )
+        policy = BusinessInvestigationSchedulePolicyRevision.model_validate(payload)
+        payload["contentHash"] = policy.calculated_content_hash()
+        policy = BusinessInvestigationSchedulePolicyRevision.model_validate(payload)
+        if previous_policy is not None:
+            policy.validate_successor(previous_policy)
+        case_payload = previous_case.model_dump(by_alias=True, mode="json")
+        case_payload.update(
+            revision=expected_case_version + 1,
+            version=expected_case_version + 1,
+            priorRef={
+                "resourceType": "BusinessInvestigationCaseRevision",
+                "resourceId": previous_case.case_id,
+                "revision": previous_case.revision,
+                "contentHash": previous_case.content_hash,
+            },
+            schedulePolicyRef={
+                "resourceType": "SchedulePolicyRevision",
+                "resourceId": policy.schedule_policy_id,
+                "revision": policy.revision,
+                "contentHash": policy.content_hash,
+            },
+            contentHash="sha256:" + "0" * 64,
+            createdBy=actor,
+            createdAt=occurred_at.isoformat(),
+        )
+        case_authority = BusinessInvestigationCaseRevision.model_validate(case_payload)
+        case_payload["contentHash"] = case_authority.calculated_content_hash()
+        case_authority = BusinessInvestigationCaseRevision.model_validate(case_payload)
+        case_authority.validate_successor(previous_case)
+        write: BusinessInvestigationSchedulePolicyWrite = self._schedules.put_and_bind_case(
+            scope,
+            policy,
+            case_authority,
+            expected_policy_revision=expected_policy_revision,
+            expected_case_version=expected_case_version,
+            idempotency_key=idempotency_key,
+        )
+        return BusinessInvestigationSchedulePolicyCommandResponse(
+            tenant=self._tenant(scope),
+            authority=write.authority,
+            case_authority=write.case_authority,
+            replayed=write.replayed,
+        )
+
+    def get_schedule_policy(
+        self, scope: TenantScope, schedule_policy_id: str
+    ) -> BusinessInvestigationSchedulePolicyRevision:
+        return self._schedules.get(scope, schedule_policy_id)
+
+    def trigger_schedule_policy(
+        self,
+        scope: TenantScope,
+        schedule_policy_id: str,
+        request: TriggerBusinessInvestigationScheduleRequest,
+        *,
+        expected_policy_revision: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationRunCommandResponse:
+        policy = self._schedules.get(scope, schedule_policy_id)
+        if policy.revision != expected_policy_revision or request.schedule_policy_ref != InvestigationExactRef(
+            resourceType="SchedulePolicyRevision",
+            resourceId=policy.schedule_policy_id,
+            revision=policy.revision,
+            contentHash=policy.content_hash,
+        ):
+            raise ValueError("schedulePolicyRef does not match current policy authority")
+        if not policy.enabled:
+            raise ValueError("SchedulePolicy is disabled")
+        case = self._cases.get(scope, policy.case_ref.resource_id)
+        if case.schedule_policy_ref != request.schedule_policy_ref or case.lifecycle is not BusinessInvestigationCaseLifecycle.ACTIVE:
+            raise ValueError("SchedulePolicy is not bound to an ACTIVE Case")
+        payload = {
+            "schemaVersion": "aos.ecommerce.business-investigation-run/v1",
+            "tenant": self._tenant(scope).model_dump(by_alias=True, mode="json"),
+            "runId": request.run_id,
+            "version": 1,
+            "contentHash": "sha256:" + "0" * 64,
+            "caseRef": {
+                "resourceType": "BusinessInvestigationCaseRevision",
+                "resourceId": case.case_id,
+                "revision": case.revision,
+                "contentHash": case.content_hash,
+            },
+            "analysisType": policy.analysis_type.value,
+            "triggerKind": BusinessInvestigationTriggerKind.SCHEDULED.value,
+            "triggerKey": scheduled_trigger_key(policy, request.scheduled_at),
+            "lifecycle": BusinessInvestigationRunLifecycle.PREPARING.value,
+            "control": BusinessInvestigationRunControl.RUNNING.value,
+            "createdBy": actor,
+            "createdAt": occurred_at.isoformat(),
+        }
         authority = BusinessInvestigationRunRecord.model_validate(payload)
         payload["contentHash"] = authority.calculated_content_hash()
         write = self._runs.request(
@@ -364,9 +564,12 @@ __all__ = [
     "BusinessInvestigationRunCommandResponse",
     "BusinessInvestigationRunListResponse",
     "BusinessInvestigationRunStateCommandResponse",
+    "BusinessInvestigationSchedulePolicyCommandResponse",
     "CreateBusinessInvestigationCaseRequest",
     "CreateBusinessInvestigationRunRequest",
     "EcommerceBusinessInvestigationApplication",
     "RequestBusinessInvestigationDataRequest",
+    "PutBusinessInvestigationSchedulePolicyRequest",
+    "TriggerBusinessInvestigationScheduleRequest",
     "TransitionBusinessInvestigationCaseRequest",
 ]
