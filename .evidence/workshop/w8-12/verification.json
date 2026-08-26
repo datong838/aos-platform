@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "aos.workshop.w8-12.verification/v1",
+  "taskId": "workshop-w8-12-operational-readiness-release-decision-20260826",
+  "authorityRevision": "AOS-000281",
+  "planCommit": "9667c15",
+  "codeCommit": "5b8ca21d914b893634399350662c659846869b5e",
+  "engineering": {
+    "targetedTests": { "files": 3, "tests": 27, "status": "passed" },
+    "webTests": { "files": 251, "tests": 2252, "status": "passed" },
+    "webTypecheck": "passed",
+    "desktopTypecheck": "passed",
+    "webBuild": { "modules": 353, "status": "passed" },
+    "diffCheck": "passed"
+  },
+  "inheritedCumulativeBaseline": {
+    "sourceTask": "workshop-w8-11-cumulative-release-gate-20260826",
+    "backend": { "collected": 12461, "lastfailedCacheEntries": 335, "status": "failed", "rerunInThisTask": false },
+    "security": {
+      "scannerSelfTests": { "tests": 9, "status": "passed" },
+      "files": 5026,
+      "critical": 5,
+      "warning": 326,
+      "status": "failed",
+      "secretValuesReadOrRecorded": false
+    }
+  },
+  "browser": {
+    "viewport": { "width": 1280, "height": 720 },
+    "formalDependencyPath": {
+      "h1Count": 1,
+      "mainCount": 1,
+      "horizontalOverflow": false,
+      "cardCount": 0,
+      "result": "catalog-fail-closed",
+      "screenshotSha256": "2680e4466d02999597e510b139147411696a13a7ebc7d02e17f4dbcb97d90ad3"
+    },
+    "visualFixture": {
+      "getOnly": true,
+      "h1Count": 1,
+      "mainCount": 1,
+      "horizontalOverflow": false,
+      "cardCount": 1,
+      "cardButtonCount": 0,
+      "decision": "NO_GO",
+      "readyCapabilities": 0,
+      "requiredCapabilities": 8,
+      "blockedCapabilities": 8,
+      "blockers": 14,
+      "dangerousButtons": [],
+      "authorityEvidence": false,
+      "screenshotSha256": "dc0e2c3f05dc845f1f9c1a63ed70b11cb85a39f5150a74f2f37b7834124f9219"
+    }
+  },
+  "decision": {
+    "status": "NO_GO",
+    "reasonCodes": [
+      "BACKEND_BASELINE_RED",
+      "SECURITY_CRITICAL_FINDINGS_PRESENT",
+      "RELEASE_CANDIDATE_MISSING",
+      "W8_11_CUMULATIVE_GREEN_MISSING",
+      "EXPLICIT_RELEASE_APPROVAL_MISSING",
+      "OPERATIONAL_RECEIPT_MISSING"
+    ],
+    "commands": {
+      "approveCandidate": false,
+      "openFeatureFlag": false,
+      "startRollout": false,
+      "stopRollout": false,
+      "rollback": false,
+      "failForward": false,
+      "release": false
+    }
+  },
+  "sideEffects": {
+    "realDataMutation": false,
+    "migrationApply": false,
+    "bundleInstall": false,
+    "featureFlagMutation": false,
+    "providerAction": false,
+    "externalEffect": false,
+    "release": false
+  },
+  "outcome": "ENGINEERING_OPERATIONAL_DECISION_CONTRACT_BROWSER_GREEN / RELEASE_DECISION_NO_GO / BACKEND_AND_SECURITY_BASELINE_RED / NO_REAL_TENANT_MUTATION / NO_EXTERNAL_EFFECT / NO_RELEASE"
+}
