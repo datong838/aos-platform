@@ -37,6 +37,8 @@ from aos_api.ecommerce_business_investigation_review_command import (
     BusinessInvestigationStageReviewProjection,
     BusinessInvestigationStageReviewResponse,
 )
+from aos_api.ecommerce_analyst_growth_plan_approval import GrowthPlanApprovalResponse
+from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
 from aos_api.aip_business_investigation_runtime import CanonicalRuntimeRef
 from aos_api.aip_production_contracts import ReviewIssueStatus
 from aos_api.errors import register_exception_handlers
@@ -267,6 +269,20 @@ class FakeApplication:
             ),
         )
 
+    def approve_growth_plan(self, scope, plan_id, request, **kwargs):
+        self.calls.append(("approve_growth_plan", scope, plan_id, request, kwargs))
+        return GrowthPlanApprovalResponse(
+            tenant=TENANT,
+            draftRef=request.draft_ref,
+            approvedRef=AnalystExactRef(
+                resourceType="GrowthPlanRevision",
+                resourceId=plan_id,
+                revision=request.draft_ref.revision + 1,
+                contentHash="b" * 64,
+            ),
+            replayed=False,
+        )
+
 
 def client(application: FakeApplication, *, roles=()) -> TestClient:
     app = FastAPI()
@@ -307,6 +323,7 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     assert "/v1/ecommerce/investigations/schedule-policies/{schedule_policy_id}" in paths
     assert "/v1/ecommerce/investigations/schedule-policies/{schedule_policy_id}:update" in paths
     assert "/v1/ecommerce/investigations/schedule-policies/{schedule_policy_id}:trigger" in paths
+    assert "/v1/ecommerce/investigations/growth-plans/{plan_id}:approve" in paths
     view = paths["/v1/ecommerce/investigations/runs/{run_id}/view"]["get"]
     assert view["operationId"] == "ecommerceInvestigationRunWorkbenchViewGet"
     request_data = paths["/v1/ecommerce/investigations/runs/{run_id}:request-data"]["post"]
@@ -636,5 +653,42 @@ def test_stage_review_projection_and_command_are_principal_scoped() -> None:
                 "reason": "人工复核通过",
                 "taskRunId": "other-run",
             },
+        )
+        assert injected.status_code == 400
+
+
+def test_growth_plan_approval_is_strict_principal_scoped_and_has_no_external_effect() -> None:
+    fake = FakeApplication()
+    fake.calls = []
+    body = {
+        "draftRef": {
+            "resourceType": "GrowthPlanRevision",
+            "resourceId": "plan-1",
+            "revision": 1,
+            "contentHash": "a" * 64,
+        }
+    }
+    with client(fake) as api:
+        forbidden = api.post(
+            "/v1/ecommerce/investigations/growth-plans/plan-1:approve",
+            headers={"Idempotency-Key": "approve-1", "If-Match": '"1"'},
+            json=body,
+        )
+        assert forbidden.status_code == 403
+    with client(fake, roles=("reviewer",)) as api:
+        approved = api.post(
+            "/v1/ecommerce/investigations/growth-plans/plan-1:approve",
+            headers={"Idempotency-Key": "approve-1", "If-Match": '"1"'},
+            json=body,
+        )
+        assert approved.status_code == 200
+        assert approved.json()["lifecycle"] == "approved"
+        assert approved.json()["externalEffectsAllowed"] is False
+        assert fake.calls[-1][0] == "approve_growth_plan"
+        assert fake.calls[-1][-1]["expected_version"] == 1
+        injected = api.post(
+            "/v1/ecommerce/investigations/growth-plans/plan-1:approve",
+            headers={"Idempotency-Key": "approve-2", "If-Match": '"1"'},
+            json={**body, "approvedAt": NOW.isoformat()},
         )
         assert injected.status_code == 400

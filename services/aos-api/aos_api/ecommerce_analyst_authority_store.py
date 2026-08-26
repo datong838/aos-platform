@@ -76,7 +76,21 @@ class EcommerceAnalystAuthorityStore:
             raise AnalystAuthorityNotFound("exact GrowthPlanRevision was not found in scope")
         item = GrowthPlanRevision.model_validate(row["payload"])
         self._require_scope(scope, item.tenant.org_id, item.tenant.project_id)
+        if item.content_hash != row["content_hash"]:
+            raise AnalystAuthorityNotFound("GrowthPlanRevision payload hash does not match authority")
         return item
+
+    def find_plan_publication_receipt(
+        self, scope: TenantScope, key: str
+    ) -> AnalystExactRef | None:
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                "SELECT result_ref FROM ecommerce_analyst_authority_receipt WHERE org_id=%s AND project_id=%s AND operation=%s AND idempotency_key=%s",
+                (*scope.key, "analyst.growth_plan_publish", key),
+            ).fetchone()
+        if row is None:
+            return None
+        return AnalystExactRef.model_validate(row["result_ref"])
 
     def is_current_plan(self, scope: TenantScope, ref: AnalystExactRef) -> bool:
         with self._connect_factory(scope) as conn:

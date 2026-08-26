@@ -48,6 +48,16 @@ from aos_api.ecommerce_business_investigation_review_command import (
     BusinessInvestigationStageReviewProjection,
     BusinessInvestigationStageReviewResponse,
 )
+from aos_api.ecommerce_analyst_authority_store import (
+    AnalystAuthorityConflict,
+    AnalystAuthorityIdempotencyConflict,
+    AnalystAuthorityNotFound,
+)
+from aos_api.ecommerce_analyst_growth_plan_approval import (
+    ApproveGrowthPlanRequest,
+    GrowthPlanApprovalBlocked,
+    GrowthPlanApprovalResponse,
+)
 from aos_api.aip_production_contract_store import (
     ProductionContractConflict,
     ProductionContractDependencyBlocked,
@@ -136,6 +146,7 @@ def _map_error(exc: Exception) -> ApiError:
             BusinessInvestigationProjectionNotFound,
             BusinessInvestigationScheduleNotFound,
             ProductionContractNotFound,
+            AnalystAuthorityNotFound,
         ),
     ):
         return ApiError(
@@ -153,6 +164,9 @@ def _map_error(exc: Exception) -> ApiError:
             BusinessInvestigationReviewCommandBlocked,
             ProductionContractConflict,
             ProductionContractDependencyBlocked,
+            AnalystAuthorityConflict,
+            AnalystAuthorityIdempotencyConflict,
+            GrowthPlanApprovalBlocked,
         ),
     ):
         return ApiError(
@@ -520,6 +534,36 @@ def review_run_stage(
             run_id,
             body,
             expected_state_version=_expected_version(if_match),
+            idempotency_key=_idempotency_key(idempotency_key),
+            actor=principal.subject,
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/growth-plans/{plan_id}:approve",
+    response_model=GrowthPlanApprovalResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationGrowthPlanApprove",
+)
+def approve_growth_plan(
+    plan_id: ResourceIdPath,
+    body: ApproveGrowthPlanRequest,
+    principal: PrincipalDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> GrowthPlanApprovalResponse:
+    try:
+        _require_review_write_role(principal)
+        return application.approve_growth_plan(
+            _scope(principal),
+            plan_id,
+            body,
+            expected_version=_expected_version(if_match),
             idempotency_key=_idempotency_key(idempotency_key),
             actor=principal.subject,
         )

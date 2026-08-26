@@ -52,6 +52,11 @@ from aos_api.ecommerce_business_investigation_review_command import (
     BusinessInvestigationStageReviewResponse,
     EcommerceBusinessInvestigationReviewCommandService,
 )
+from aos_api.ecommerce_analyst_growth_plan_approval import (
+    ApproveGrowthPlanRequest,
+    EcommerceAnalystGrowthPlanApprovalService,
+    GrowthPlanApprovalResponse,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -150,6 +155,7 @@ class EcommerceBusinessInvestigationApplication:
         projection_reader: BusinessInvestigationProjectionReader | None = None,
         data_command_service: EcommerceBusinessInvestigationDataCommandService | None = None,
         review_command_service: EcommerceBusinessInvestigationReviewCommandService | None = None,
+        growth_plan_approval_service: EcommerceAnalystGrowthPlanApprovalService | None = None,
     ) -> None:
         self._cases = case_store or BusinessInvestigationCaseStore()
         self._runs = run_store or BusinessInvestigationRunStore()
@@ -159,6 +165,9 @@ class EcommerceBusinessInvestigationApplication:
         )
         self._review_commands = (
             review_command_service or EcommerceBusinessInvestigationReviewCommandService()
+        )
+        self._growth_plan_approvals = (
+            growth_plan_approval_service or EcommerceAnalystGrowthPlanApprovalService()
         )
         self._projection = BusinessInvestigationProjectionBuilder(
             projection_reader or CanonicalBusinessInvestigationProjectionReader()
@@ -592,6 +601,25 @@ class EcommerceBusinessInvestigationApplication:
             run_id,
             request,
             expected_state_version=expected_state_version,
+            idempotency_key=idempotency_key,
+            actor=actor,
+        )
+
+    def approve_growth_plan(
+        self,
+        scope: TenantScope,
+        plan_id: str,
+        request: ApproveGrowthPlanRequest,
+        *,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+    ) -> GrowthPlanApprovalResponse:
+        return self._growth_plan_approvals.approve(
+            scope,
+            plan_id,
+            request,
+            expected_version=expected_version,
             idempotency_key=idempotency_key,
             actor=actor,
         )

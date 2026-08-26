@@ -5,8 +5,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from aos_api.ecommerce_analyst_authority_contracts import GrowthPlanRevision
-from aos_api.ecommerce_analyst_authority_store import AnalystAuthorityConflict, AnalystAuthorityIdempotencyConflict, EcommerceAnalystAuthorityStore
+from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, GrowthPlanRevision
+from aos_api.ecommerce_analyst_authority_store import AnalystAuthorityConflict, AnalystAuthorityIdempotencyConflict, AnalystAuthorityNotFound, EcommerceAnalystAuthorityStore
 from aos_api.tenant_scope import TenantScope
 
 NOW = datetime(2026, 8, 25, tzinfo=UTC)
@@ -65,3 +65,26 @@ def test_publish_plan_enforces_cas_idempotency_tenant_and_actor() -> None:
     with pytest.raises(AnalystAuthorityConflict, match="actor"):
         store.publish_plan(SCOPE, "user:other", "key", plan(), expected_version=0)
     assert untouched.calls == []
+
+
+def test_plan_exact_ref_rejects_payload_hash_drift_and_receipt_is_scope_bound() -> None:
+    payload = plan().model_dump(mode="json", by_alias=True)
+    drifted = {**payload, "contentHash": "b" * 64}
+    connection = Connection(rows=[{"payload": drifted, "content_hash": HASH}])
+    with pytest.raises(AnalystAuthorityNotFound, match="payload hash"):
+        EcommerceAnalystAuthorityStore(factory(connection)).get_plan_exact(
+            SCOPE,
+            AnalystExactRef.model_validate(exact("GrowthPlanRevision", "plan-1")),
+        )
+
+    receipt = Connection(rows=[{"result_ref": exact("GrowthPlanRevision", "plan-1")}])
+    result = EcommerceAnalystAuthorityStore(factory(receipt)).find_plan_publication_receipt(
+        SCOPE, "approval-key"
+    )
+    assert result is not None and result.resource_id == "plan-1"
+    assert receipt.calls[0][1] == (
+        "org-org",
+        "dev-project",
+        "analyst.growth_plan_publish",
+        "approval-key",
+    )
