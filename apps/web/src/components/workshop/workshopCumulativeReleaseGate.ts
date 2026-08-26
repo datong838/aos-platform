@@ -53,7 +53,7 @@ export function evaluateWorkshopCumulativeReleaseGate(evidence: CumulativeReleas
   let modulesVerified = 0;
   for (const moduleId of RELEASE_MODULES) {
     const matches = evidence.moduleRefs?.filter((item) => item.moduleId === moduleId) ?? [];
-    if (matches.length !== 1 || !exact(matches[0].ref)) blockers.add(`CUMULATIVE_MODULE_${moduleId.replaceAll("-", "_").toUpperCase()}_REQUIRED`);
+    if (matches.length !== 1 || !exact(matches[0].ref)) blockers.add(`CUMULATIVE_MODULE_${moduleId.replace(/-/g, "_").toUpperCase()}_REQUIRED`);
     else modulesVerified += 1;
   }
 

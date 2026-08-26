@@ -777,9 +777,10 @@ function parseTaskCockpitResponsibilitySlot(value: unknown, responsibilityPlanRe
   });
   assertUnique(resolutionReceipts.map((item) => item.receiptId), "taskCockpit.responsibility.resolutionReceipts");
   if (resolutionReceipts.some((item, index) => index > 0 && (Date.parse(item.createdAt) < Date.parse(resolutionReceipts[index - 1].createdAt) || (item.createdAt === resolutionReceipts[index - 1].createdAt && item.receiptId < resolutionReceipts[index - 1].receiptId)))) throw new TypeError("taskCockpit.responsibility resolution timeline 漂移");
-  const latestAt = resolutionReceipts.at(-1)?.createdAt;
+  const latestResolutionReceipt = resolutionReceipts[resolutionReceipts.length - 1];
+  const latestAt = latestResolutionReceipt?.createdAt;
   const latestStatuses = new Set(resolutionReceipts.filter((item) => item.createdAt === latestAt).map((item) => item.snapshotStatus));
-  const expectedReadiness = resolutionReceipts.length === 0 ? "unverified" : resolutionReceipts.at(-1)?.snapshotStatus === "exact_fresh" ? "resolved_at_observation" : "blocked_at_observation";
+  const expectedReadiness = resolutionReceipts.length === 0 ? "unverified" : latestResolutionReceipt?.snapshotStatus === "exact_fresh" ? "resolved_at_observation" : "blocked_at_observation";
   if (latestStatuses.size > 1 || operationalReadiness !== expectedReadiness) throw new TypeError("taskCockpit.responsibility assignee readiness 映射漂移");
   return {
     slotId,
@@ -1349,7 +1350,7 @@ function parsePriceSlice(value: unknown, expected: PriceGovernanceViewId, cutoff
 const REMEDY_STAGE_IDS = ["price_observation", "match_decision", "price_case", "affected_orders", "operation_case", "customer_handoff", "contact_permit", "action_outcomes", "effect_review"] as const satisfies readonly RemedyScenarioStageId[];
 const REMEDY_OUTCOME_AXIS_IDS = ["repricing_applied", "refund_compensation_submitted", "customer_message_accepted", "operation_case_resolved", "effect_mature"] as const satisfies readonly RemedyScenarioOutcomeAxisId[];
 const REMEDY_FORBIDDEN_KEYS = new Set(["mobile", "phone", "openid", "email", "address", "contactvalue", "paymentpayload", "providerpayload"]);
-function rejectRemedySensitiveKeys(value: unknown): void { if (Array.isArray(value)) { value.forEach(rejectRemedySensitiveKeys); return; } if (!value || typeof value !== "object") return; for (const [key, child] of Object.entries(value as Record<string, unknown>)) { if (REMEDY_FORBIDDEN_KEYS.has(key.toLowerCase().replaceAll("_", ""))) throw new TypeError("remedy scenario 禁止联系方式、支付或 provider 正文"); rejectRemedySensitiveKeys(child); } }
+function rejectRemedySensitiveKeys(value: unknown): void { if (Array.isArray(value)) { value.forEach(rejectRemedySensitiveKeys); return; } if (!value || typeof value !== "object") return; for (const [key, child] of Object.entries(value as Record<string, unknown>)) { if (REMEDY_FORBIDDEN_KEYS.has(key.toLowerCase().replace(/_/g, ""))) throw new TypeError("remedy scenario 禁止联系方式、支付或 provider 正文"); rejectRemedySensitiveKeys(child); } }
 function parseRemedyRef(value: unknown, label: string): RemedyScenarioExactRef { const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "contentHash"], label); return { resourceType: boundedText(raw.resourceType, `${label}.resourceType`, 120), resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 200), revision: integer(raw.revision, `${label}.revision`, 1), contentHash: hash(raw.contentHash, `${label}.contentHash`) }; }
 function remedyRefIdentity(value: RemedyScenarioExactRef): string { return `${value.resourceType}:${value.resourceId}:${value.revision}:${value.contentHash}`; }
 function parseRemedyBlocker(value: unknown): RemedyScenarioBlocker { const raw = record(value, "remedy.blocker"); exact(raw, ["code", "dependency", "requiredAction"], "remedy.blocker"); const code = boundedText(raw.code, "remedy.blocker.code", 120); if (!REASON.test(code)) throw new TypeError("remedy blocker code 非法"); return { code, dependency: boundedText(raw.dependency, "remedy.blocker.dependency", 180), requiredAction: boundedText(raw.requiredAction, "remedy.blocker.requiredAction", 500) }; }

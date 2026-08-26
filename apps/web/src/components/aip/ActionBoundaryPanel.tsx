@@ -31,7 +31,7 @@ export function deriveActionBoundaryStages(
   execution: ActionExecutionView,
 ): ActionBoundaryStage[] {
   const { proposal } = bundle;
-  const latestReceipt = execution.receipts.at(-1);
+  const latestReceipt = execution.receipts[execution.receipts.length - 1];
   const effectRef = effectReviewRef(execution);
   const rejected = proposal.status === "rejected" || proposal.status === "expired";
   const approvalComplete = COMPLETED_APPROVAL_STATUSES.has(proposal.status)
