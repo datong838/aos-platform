@@ -130,8 +130,14 @@ export type InvestigationLegacyArtifactType = "BusinessDossierRevision" | "Probl
 export type InvestigationArtifactSlot = { artifactType: InvestigationArtifactType | InvestigationLegacyArtifactType; status: "bound" | "missing"; artifactRef: InvestigationExactRef | null; bindingId: string | null; bindingHash: string | null; selectionRevision: number | null; dataCutoff: string | null; lineageRef: InvestigationExactRef | null };
 export type InvestigationEvidenceDrilldown = { status: "exact" | "missing"; exactRefs: InvestigationExactRef[]; locatorRefs: InvestigationResourceRef[] };
 export type InvestigationTimelineEvent = { eventId: string; eventType: "case_revision" | "run_created" | "state_revision" | "artifact_bound"; title: string; occurredAt: string; exactRef: InvestigationExactRef; relatedRef: InvestigationExactRef | null };
+export type InvestigationRunCommand = "PAUSE_RUN" | "RESUME_RUN" | "CANCEL_RUN";
+export type InvestigationCommandProjection = {
+  expectedStateVersion: number;
+  allowedCommands: InvestigationRunCommand[];
+  externalEffectsAllowed: false;
+};
 export type InvestigationWorkbenchView = {
-  schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v3" | "aos.ecommerce.business-investigation-workbench-view/v4";
+  schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v3" | "aos.ecommerce.business-investigation-workbench-view/v4" | "aos.ecommerce.business-investigation-workbench-view/v5";
   drilldownVersion: "legacy-v3" | "canonical-v4";
   tenant: InvestigationTenant;
   projectionHash: string;
@@ -150,11 +156,28 @@ export type InvestigationWorkbenchView = {
   artifacts: InvestigationArtifactSlot[];
   evidence: InvestigationEvidenceDrilldown;
   timeline: InvestigationTimelineEvent[];
+  commandProjection?: InvestigationCommandProjection | null;
 };
 export type InvestigationCaseListResponse = { tenant: InvestigationTenant; items: InvestigationCaseRevision[]; count: number };
 export type InvestigationRunListResponse = { tenant: InvestigationTenant; items: InvestigationRunView[]; count: number };
+export type InvestigationRunStateCommandResponse = { tenant: InvestigationTenant; authority: InvestigationRunState; replayed: boolean };
 export type InvestigationReadClient = {
   listCases(signal?: AbortSignal): Promise<InvestigationCaseListResponse>;
   listRuns(caseId: string, signal?: AbortSignal): Promise<InvestigationRunListResponse>;
   getRunView?(runId: string, signal?: AbortSignal): Promise<InvestigationWorkbenchView>;
+};
+export type InvestigationRunCommandResult = {
+  commandId: string;
+  command: InvestigationRunCommand;
+  replayed: boolean;
+  authority: InvestigationRunState;
+  view: InvestigationWorkbenchView;
+};
+export type InvestigationCommandClient = InvestigationReadClient & {
+  executeRunCommand(input: {
+    runId: string;
+    command: InvestigationRunCommand;
+    commandId: string;
+    expectedStateVersion: number;
+  }, signal?: AbortSignal): Promise<InvestigationRunCommandResult>;
 };

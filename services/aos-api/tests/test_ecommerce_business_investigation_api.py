@@ -201,7 +201,12 @@ def test_workbench_view_http_uses_principal_tenant_and_hides_non_visible_source(
         assert response.status_code == 200
         assert response.json()["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
         assert response.json()["artifacts"][0]["status"] == "missing"
-        assert response.json()["schemaVersion"].endswith("/v4")
+        assert response.json()["schemaVersion"].endswith("/v5")
+        assert response.json()["commandProjection"] == {
+            "expectedStateVersion": 1,
+            "allowedCommands": ["PAUSE_RUN", "CANCEL_RUN"],
+            "externalEffectsAllowed": False,
+        }
         assert response.json()["evidence"]["status"] == "missing"
         assert len(response.json()["timeline"]) >= 3
         assert all(item["exactRef"]["contentHash"].startswith("sha256:") for item in response.json()["timeline"])

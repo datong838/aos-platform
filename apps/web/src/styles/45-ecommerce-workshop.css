@@ -926,21 +926,32 @@
 .business-investigation-current label { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: 8px; }
 .business-investigation-workbench { display: grid; grid-template-columns: 1fr; gap: 8px; }
 .business-investigation-envelope,
+.business-investigation-commands,
 .business-investigation-progress,
 .business-investigation-stage-workspace { min-width: 0; padding: 12px; border: 1px solid var(--aos-border); background: var(--aos-surface); }
 .business-investigation-envelope > header,
+.business-investigation-commands > header,
 .business-investigation-progress > header,
 .business-investigation-stage-workspace > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .business-investigation-envelope header span,
+.business-investigation-commands header span,
 .business-investigation-progress header span,
 .business-investigation-stage-workspace header span { color: var(--aos-text-tertiary); font-size: 10px; }
 .business-investigation-envelope h3,
+.business-investigation-commands h3,
 .business-investigation-progress h3,
 .business-investigation-stage-workspace h3 { margin: 4px 0 0; font-size: 15px; }
 .business-investigation-envelope dl { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; margin: 10px 0 0; background: var(--aos-border); }
 .business-investigation-envelope dl div { min-width: 0; padding: 9px; background: var(--aos-surface-hover); }
 .business-investigation-envelope dt { color: var(--aos-text-tertiary); font-size: 10px; }
 .business-investigation-envelope dd { margin: 4px 0 0; overflow-wrap: anywhere; font-size: 11px; }
+.business-investigation-commands > div { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.business-investigation-commands button { min-height: 34px; padding: 7px 12px; border: 1px solid var(--aos-border); border-radius: 4px; background: var(--aos-surface-hover); color: var(--aos-text-primary); cursor: pointer; font-weight: 700; }
+.business-investigation-commands button:hover:not(:disabled) { border-color: var(--aos-accent); }
+.business-investigation-commands button:disabled { cursor: wait; opacity: 0.55; }
+.business-investigation-commands > p { margin: 10px 0 0; color: var(--aos-text-secondary); font-size: 11px; }
+.business-investigation-commands.is-failed,
+.business-investigation-commands.is-unknown { border-left: 3px solid var(--aos-danger); }
 .business-investigation-progress ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 10px 0 0; padding: 0; background: var(--aos-border); list-style: none; }
 .business-investigation-progress li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 8px; padding: 9px; border: 0; background: var(--aos-surface-hover); }
 .business-investigation-progress li > span { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; background: var(--aos-border); font-size: 11px; }

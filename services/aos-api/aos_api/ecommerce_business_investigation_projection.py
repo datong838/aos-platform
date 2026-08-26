@@ -37,7 +37,7 @@ from aos_api.ecommerce_business_investigation_run import (
 from aos_api.tenant_scope import TenantScope
 
 
-PROJECTION_SCHEMA = "aos.ecommerce.business-investigation-workbench-view/v4"
+PROJECTION_SCHEMA = "aos.ecommerce.business-investigation-workbench-view/v5"
 SHA256 = r"^sha256:[0-9a-f]{64}$"
 
 STAGE_TITLES = {
@@ -283,6 +283,21 @@ class BusinessInvestigationTimelineEvent(AipContractModel):
         return value
 
 
+class BusinessInvestigationCommandProjection(AipContractModel):
+    expected_state_version: int = Field(ge=1)
+    allowed_commands: list[Literal["PAUSE_RUN", "RESUME_RUN", "CANCEL_RUN"]] = Field(
+        default_factory=list, max_length=2
+    )
+    external_effects_allowed: Literal[False] = False
+
+    @model_validator(mode="after")
+    def _canonical(self) -> Self:
+        order = {"PAUSE_RUN": 0, "RESUME_RUN": 1, "CANCEL_RUN": 2}
+        if self.allowed_commands != sorted(set(self.allowed_commands), key=order.__getitem__):
+            raise ValueError("allowedCommands must be unique and canonical")
+        return self
+
+
 class BusinessInvestigationWorkbenchView(AipContractModel):
     schema_version: Literal[PROJECTION_SCHEMA] = PROJECTION_SCHEMA
     tenant: TenantContext
@@ -302,6 +317,7 @@ class BusinessInvestigationWorkbenchView(AipContractModel):
     artifacts: list[BusinessInvestigationArtifactSlot] = Field(min_length=4, max_length=4)
     evidence: BusinessInvestigationEvidenceDrilldown
     timeline: list[BusinessInvestigationTimelineEvent] = Field(min_length=3, max_length=20)
+    command_projection: BusinessInvestigationCommandProjection
 
     @field_validator("observed_at")
     @classmethod
@@ -332,6 +348,23 @@ class BusinessInvestigationWorkbenchView(AipContractModel):
             raise ValueError("Run watermark drifted")
         if self.source_watermark.state_version != self.state_ref.revision:
             raise ValueError("state watermark drifted")
+        if self.command_projection.expected_state_version != self.state_ref.revision:
+            raise ValueError("commandProjection state version drifted")
+        terminal = self.lifecycle in {
+            BusinessInvestigationRunLifecycle.COMPLETED,
+            BusinessInvestigationRunLifecycle.FAILED,
+        }
+        expected_commands: list[str]
+        if terminal:
+            expected_commands = []
+        elif self.control is BusinessInvestigationRunControl.RUNNING:
+            expected_commands = ["PAUSE_RUN", "CANCEL_RUN"]
+        elif self.control is BusinessInvestigationRunControl.PAUSED:
+            expected_commands = ["RESUME_RUN", "CANCEL_RUN"]
+        else:
+            expected_commands = []
+        if self.command_projection.allowed_commands != expected_commands:
+            raise ValueError("commandProjection is not authoritative for current Run state")
         if self.projection_hash != self.calculated_projection_hash():
             raise ValueError("projectionHash drifted")
         return self
@@ -588,6 +621,7 @@ class BusinessInvestigationProjectionBuilder:
         current_workspace = self._current_workspace(source.runtime, runtime, artifacts)
         evidence = self._evidence(current_workspace)
         timeline = self._timeline(source)
+        command_projection = self._command_projection(source.state)
         binding_hashes = sorted(item.binding_hash for item in source.bindings)
         watermark_value = {
             "caseRevision": source.case.revision,
@@ -650,10 +684,30 @@ class BusinessInvestigationProjectionBuilder:
             artifacts=artifacts,
             evidence=evidence,
             timeline=timeline,
+            command_projection=command_projection,
         )
         payload = draft.model_dump(by_alias=True, mode="json")
         payload["projectionHash"] = draft.calculated_projection_hash()
         return BusinessInvestigationWorkbenchView.model_validate(payload)
+
+    @staticmethod
+    def _command_projection(
+        state: BusinessInvestigationRunStateRevision,
+    ) -> BusinessInvestigationCommandProjection:
+        commands: list[Literal["PAUSE_RUN", "RESUME_RUN", "CANCEL_RUN"]] = []
+        if state.lifecycle not in {
+            BusinessInvestigationRunLifecycle.COMPLETED,
+            BusinessInvestigationRunLifecycle.FAILED,
+        }:
+            if state.control is BusinessInvestigationRunControl.RUNNING:
+                commands = ["PAUSE_RUN", "CANCEL_RUN"]
+            elif state.control is BusinessInvestigationRunControl.PAUSED:
+                commands = ["RESUME_RUN", "CANCEL_RUN"]
+        return BusinessInvestigationCommandProjection(
+            expected_state_version=state.version,
+            allowed_commands=commands,
+            external_effects_allowed=False,
+        )
 
     @staticmethod
     def _evidence(
@@ -957,6 +1011,7 @@ class BusinessInvestigationProjectionBuilder:
 
 __all__ = [
     "BusinessInvestigationArtifactSlot",
+    "BusinessInvestigationCommandProjection",
     "BusinessInvestigationProjectionBuilder",
     "BusinessInvestigationProjectionError",
     "BusinessInvestigationProjectionNotFound",

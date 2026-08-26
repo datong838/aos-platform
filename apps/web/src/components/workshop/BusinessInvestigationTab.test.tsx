@@ -1,7 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { InvestigationCaseRevision, InvestigationReadClient, InvestigationRunListResponse, InvestigationWorkbenchView } from "../../api/ecommerceInvestigation";
+import type { InvestigationCaseRevision, InvestigationCommandClient, InvestigationReadClient, InvestigationRunListResponse, InvestigationWorkbenchView } from "../../api/ecommerceInvestigation";
 import { EcommerceInvestigationClientError } from "../../api/ecommerceInvestigation";
 import { BusinessInvestigationTab } from "./BusinessInvestigationTab";
 import type { SourceReadinessSnapshot } from "./SourceReadinessContext";
@@ -22,7 +22,7 @@ describe("BusinessInvestigationTab", () => {
   it("展示 canonical 三级选择并保持 GET-only 边界", async () => {
     const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()), getRunView: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
-    expect(host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')?.value).toBe("private-mall"); expect(host.querySelectorAll('[role="radio"]')).toHaveLength(2); expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-a"); expect(host.textContent).toContain("当前 Case 尚无 Run"); expect(host.textContent).toContain("写入口0"); expect(host.textContent).not.toMatch(/创建 Case|开始分析|继续运行|请求补数|执行 Handoff/);
+    expect(host.querySelector<HTMLSelectElement>('[aria-label="渠道视角"]')?.value).toBe("private-mall"); expect(host.querySelectorAll('[role="radio"]')).toHaveLength(2); expect(host.querySelector<HTMLSelectElement>('[aria-label="分析记录"]')?.value).toBe("case-a"); expect(host.textContent).toContain("当前 Case 尚无 Run"); expect(host.textContent).toContain("写入口 0"); expect(host.textContent).not.toMatch(/创建 Case|开始分析|继续运行|请求补数|执行 Handoff/);
   });
   it("经营实体 radio 使用 roving tabindex 与方向键原子切换", async () => {
     const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue(emptyRuns()), getRunView: vi.fn() };
@@ -100,5 +100,27 @@ describe("BusinessInvestigationTab", () => {
     const viewClient: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(workbenchView()) };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={viewClient} />)); expect(host.textContent).toContain("运行进度读取失败"); expect(host.textContent).not.toContain("1/3 波完成");
     await act(async () => host.querySelectorAll<HTMLButtonElement>("button").forEach((button) => { if (button.textContent === "重新读取运行进度") button.click(); })); expect(viewClient.getRunView).toHaveBeenCalledTimes(2); expect(host.textContent).toContain("1/3 波完成");
+  });
+  it("仅按 v5 allowedCommands 单次提交并以 exact 回读替换视图", async () => {
+    const initial: InvestigationWorkbenchView = { ...workbenchView(), schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", drilldownVersion: "canonical-v4", commandProjection: { expectedStateVersion: 1, allowedCommands: ["PAUSE_RUN", "CANCEL_RUN"], externalEffectsAllowed: false } };
+    const next: InvestigationWorkbenchView = { ...initial, stateRef: { ...initial.stateRef, revision: 2 }, control: "PAUSED", commandProjection: { expectedStateVersion: 2, allowedCommands: ["RESUME_RUN", "CANCEL_RUN"], externalEffectsAllowed: false } };
+    const executeRunCommand = vi.fn().mockResolvedValue({ commandId: "command-intent-1", command: "PAUSE_RUN", replayed: false, authority: { ...runView.state, version: 2, priorRef: ref("BusinessInvestigationRunStateRevision", "run-a"), eventSequence: 2, control: "PAUSED" }, view: next });
+    const client: InvestigationCommandClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView: vi.fn().mockResolvedValue(initial), executeRunCommand };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled createCommandId={() => "command-intent-1"} />));
+    expect(host.textContent).toContain("暂停 Run"); expect(host.textContent).toContain("取消 Run"); expect(host.textContent).not.toContain("继续 Run");
+    await act(async () => Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "暂停 Run")?.click());
+    expect(executeRunCommand).toHaveBeenCalledWith({ runId: "run-a", command: "PAUSE_RUN", commandId: "command-intent-1", expectedStateVersion: 1 });
+    expect(host.textContent).toContain("exact state v2 回读闭合"); expect(host.textContent).toContain("继续 Run"); expect(host.textContent).not.toContain("暂停 Run");
+  });
+  it("命令结果未知后锁定 POST，只允许 GET 重新核验", async () => {
+    const initial: InvestigationWorkbenchView = { ...workbenchView(), schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", drilldownVersion: "canonical-v4", commandProjection: { expectedStateVersion: 1, allowedCommands: ["PAUSE_RUN", "CANCEL_RUN"], externalEffectsAllowed: false } };
+    const executeRunCommand = vi.fn().mockRejectedValue(new EcommerceInvestigationClientError("offline", 0, "COMMAND_OUTCOME_UNKNOWN"));
+    const getRunView = vi.fn().mockResolvedValue(initial);
+    const client: InvestigationCommandClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [runView], count: 1 }), getRunView, executeRunCommand };
+    await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} commandsEnabled createCommandId={() => "command-unknown-1"} />));
+    await act(async () => Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "暂停 Run")?.click());
+    expect(host.textContent).toContain("命令结果未知"); expect(host.textContent).not.toContain("暂停 Run");
+    await act(async () => Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "仅 GET 重新核验")?.click());
+    expect(executeRunCommand).toHaveBeenCalledOnce(); expect(getRunView).toHaveBeenCalledTimes(2);
   });
 });

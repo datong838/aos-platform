@@ -1,5 +1,5 @@
 import { act } from "react"; import { createRoot, type Root } from "react-dom/client"; import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"; import type { AnalystViewResponse, LearningScenarioContribution } from "../../api/ecommerceWorkshop"; import { AnalystPage } from "./AnalystPage";
-import { CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS, OPEN_BUSINESS_INVESTIGATION_READ_FEATURE, resolveBusinessInvestigationFeatureFlags } from "./businessInvestigationFeatureFlags";
+import { CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS, OPEN_BUSINESS_INVESTIGATION_COMMAND_FEATURE, OPEN_BUSINESS_INVESTIGATION_READ_FEATURE, resolveBusinessInvestigationFeatureFlags } from "./businessInvestigationFeatureFlags";
 const ids = ["overview", "drivers", "diagnosis", "plan", "effects", "evidence", "quality"] as const; const axes = ["metric_query", "model", "eval", "plan_materialization", "professional_handoff"] as const; const cutoff="2026-08-24T08:00:00Z";
 const emptyInvestigationClient = { listCases: vi.fn().mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 }), listRuns: vi.fn().mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 }) };
 const blocked: AnalystViewResponse={schemaVersion:"aos.ecommerce-workshop.analyst-view/v1",tenant:{orgId:"org-org",projectId:"dev-project"},resourceRevision:1,evaluatedAt:cutoff,dataCutoff:cutoff,readiness:"degraded",views:ids.map((viewId)=>{const blocker={code:`ANALYST_${viewId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`,dependency:viewId,requiredAction:"attach exact refs"};return{viewId,status:"blocked",resourceRevision:1,dataCutoff:cutoff,readinessAxes:axes.map((axis)=>({axis,status:"blocked",exactRef:null,blockers:[blocker]})),metrics:[],authorityRefs:[],blockers:[blocker],countLedger:{denominator:0,ready:0,unknown:0,blocked:0,conflict:0}}}),page:{limit:100,count:0,hasMore:false,nextCursor:null}}; const emptyJobs=()=>Promise.resolve({tenant:{orgId:"org-org",projectId:"dev-project"},items:[],count:0});
@@ -30,6 +30,8 @@ describe("AnalystPage BI-W7-01 investigation contribution", () => {
     expect(resolveBusinessInvestigationFeatureFlags(undefined)).toBe(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
     expect(resolveBusinessInvestigationFeatureFlags("workshop.analyst.business-investigation.read")).toBe(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
     expect(resolveBusinessInvestigationFeatureFlags("ecommerce.investigation.read")).toBe(OPEN_BUSINESS_INVESTIGATION_READ_FEATURE);
+    expect(resolveBusinessInvestigationFeatureFlags("ecommerce.investigation.commands")).toBe(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
+    expect(resolveBusinessInvestigationFeatureFlags("ecommerce.investigation.read,ecommerce.investigation.commands")).toBe(OPEN_BUSINESS_INVESTIGATION_COMMAND_FEATURE);
   });
 
   it("exact read flag 关闭时完整保留原七视图行为", async () => {

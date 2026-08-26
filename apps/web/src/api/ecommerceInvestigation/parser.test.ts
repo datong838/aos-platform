@@ -12,6 +12,7 @@ const viewV4 = { ...view, schemaVersion: "aos.ecommerce.business-investigation-w
   { eventId: "run:run-1:v1", eventType: "run_created", title: "Run 建立", occurredAt: "2026-08-26T08:01:00Z", exactRef: ref("BusinessInvestigationRun", "run-1"), relatedRef: null },
   { eventId: "state:run-1:v1", eventType: "state_revision", title: "Run state revision", occurredAt: "2026-08-26T08:02:00Z", exactRef: ref("BusinessInvestigationRunStateRevision", "run-1"), relatedRef: null },
 ] };
+const viewV5 = { ...viewV4, schemaVersion: "aos.ecommerce.business-investigation-workbench-view/v5", commandProjection: { expectedStateVersion: 1, allowedCommands: ["PAUSE_RUN", "CANCEL_RUN"], externalEffectsAllowed: false } };
 
 describe("ecommerceInvestigation strict parser", () => {
   it("解析 tenant-scoped Case 与 Run canonical 列表", () => {
@@ -50,7 +51,13 @@ describe("ecommerceInvestigation strict parser", () => {
     expect(parsed.artifacts.map((item) => item.artifactType)).toEqual(["BusinessDossierRevision", "ProblemMapRevision", "OpportunityMapRevision", "SolutionPortfolioRevision"]);
     expect(parsed.timeline.map((item) => item.eventType)).toEqual(["case_revision", "run_created", "state_revision"]);
     const legacy = parseInvestigationWorkbenchView(view, "run-1", tenant);
-    expect(legacy).toMatchObject({ drilldownVersion: "legacy-v3", evidence: { status: "missing", exactRefs: [] }, timeline: [] });
+    expect(legacy).toMatchObject({ drilldownVersion: "legacy-v3", evidence: { status: "missing", exactRefs: [] }, timeline: [], commandProjection: null });
+  });
+  it("只消费 v5 服务端 canonical allowedCommands 并拒绝本地推演空间", () => {
+    expect(parseInvestigationWorkbenchView(viewV5, "run-1", tenant).commandProjection).toEqual({ expectedStateVersion: 1, allowedCommands: ["PAUSE_RUN", "CANCEL_RUN"], externalEffectsAllowed: false });
+    expect(() => parseInvestigationWorkbenchView({ ...viewV5, commandProjection: { ...viewV5.commandProjection, allowedCommands: ["RESUME_RUN"] } }, "run-1", tenant)).toThrow(/Run 状态不一致/);
+    expect(() => parseInvestigationWorkbenchView({ ...viewV5, commandProjection: { ...viewV5.commandProjection, expectedStateVersion: 2 } }, "run-1", tenant)).toThrow(/authority 漂移/);
+    expect(() => parseInvestigationWorkbenchView({ ...viewV5, commandProjection: { ...viewV5.commandProjection, externalEffectsAllowed: true } }, "run-1", tenant)).toThrow(/authority 漂移/);
   });
   it("拒绝伪 exact Evidence、Timeline 乱序与重复事件", () => {
     expect(() => parseInvestigationWorkbenchView({ ...viewV4, evidence: { ...viewV4.evidence, status: "missing" } }, "run-1")).toThrow(/evidence status/);

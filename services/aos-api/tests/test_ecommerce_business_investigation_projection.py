@@ -147,6 +147,44 @@ def test_projection_rebuild_is_deterministic_and_keeps_canonical_four_slots() ->
     assert all(item.exact_ref.content_hash.startswith("sha256:") for item in first.timeline)
     assert first.timeline == restarted.timeline
     assert first.observed_at != restarted.observed_at
+    assert first.schema_version == "aos.ecommerce.business-investigation-workbench-view/v5"
+    assert first.command_projection.expected_state_version == first.state_ref.revision
+    assert first.command_projection.allowed_commands == ["PAUSE_RUN", "CANCEL_RUN"]
+    assert first.command_projection.external_effects_allowed is False
+
+
+@pytest.mark.parametrize(
+    ("control", "expected"),
+    [
+        ("RUNNING", ["PAUSE_RUN", "CANCEL_RUN"]),
+        ("PAUSED", ["RESUME_RUN", "CANCEL_RUN"]),
+        ("UNKNOWN", []),
+        ("RECONCILING", []),
+        ("CANCELLED", []),
+    ],
+)
+def test_projection_server_owns_fail_closed_command_matrix(
+    control: str, expected: list[str]
+) -> None:
+    changes = {}
+    if control != "RUNNING":
+        changes = {
+            "version": 2,
+            "eventSequence": 2,
+            "priorRef": ref("BusinessInvestigationRunStateRevision", "run-1"),
+        }
+    if control in {"UNKNOWN", "RECONCILING"}:
+        changes["uncertainCommand"] = {
+            "commandId": "command-1", "operation": "investigation.fetch", "requestHash": HASH_A,
+        }
+    state = _state(control=control, **changes)
+    view = BusinessInvestigationProjectionBuilder(FixedReader(projection_source(state=state))).build(
+        SCOPE, "run-1", observed_at=NOW
+    )
+    assert view.command_projection.allowed_commands == expected
+    payload = view.model_dump(by_alias=True, mode="json")
+    assert payload["commandProjection"]["expectedStateVersion"] == state.version
+    assert payload["commandProjection"]["externalEffectsAllowed"] is False
 
 
 def test_projection_preserves_waiting_unknown_and_reconciling_without_success_claim() -> None:
@@ -233,7 +271,7 @@ def test_projection_exposes_server_owned_case_envelope_stage_progress_and_checkp
     assert [item.status for item in view.runtime.stages] == ["completed", "running", "not_started"]
     assert view.runtime.checkpoint is not None and view.runtime.checkpoint.sequence == 2
     assert view.source_watermark.runtime_hash is not None
-    assert view.schema_version.endswith("/v4")
+    assert view.schema_version.endswith("/v5")
     assert view.current_workspace.stage_id == "diagnosis"
     assert view.current_workspace.status == "running"
     assert view.current_workspace.responsibility_slot_ids == ["slot-diagnosis"]
@@ -275,7 +313,7 @@ def test_projection_runtime_unbound_and_task_pending_are_explicit() -> None:
 def test_projection_contract_rejects_tampering_and_stale_missing_slot_data() -> None:
     view = projection_view()
     payload = view.model_dump(by_alias=True, mode="json")
-    payload["control"] = "PAUSED"
+    payload["caseEnvelope"]["title"] = "tampered title"
     with pytest.raises(ValidationError, match="projectionHash"):
         BusinessInvestigationWorkbenchView.model_validate(payload)
     payload = view.model_dump(by_alias=True, mode="json")
