@@ -1,0 +1,72 @@
+{
+  "schema": "aos-workshop-delivery-evidence/v1",
+  "task_id": "BI-W8-06-IMPL2",
+  "recorded_at": "2026-08-26T21:41:52Z",
+  "base_authority_revision": "AOS-000344",
+  "plan_commit": "2507433",
+  "code_commit": "52f1f1964da2fa0626d90fc05c72eb0f3d2532d7",
+  "result": "BI_W8_06_CONTROLLED_CROSS_MODULE_HANDOFF_CODE_BROWSER_GREEN_NO_EXTERNAL_EFFECT_NO_RELEASE",
+  "capability": {
+    "source_module": "ecommerce.analyst",
+    "target_modules": [
+      "ecommerce.task-cockpit",
+      "ecommerce.operations",
+      "ecommerce.content-campaign",
+      "ecommerce.creator-growth",
+      "ecommerce.media-studio",
+      "ecommerce.price-governance",
+      "ecommerce.customer"
+    ],
+    "exact_refs": [
+      "current approved GrowthPlanRevision",
+      "current BusinessInvestigationCompilationReceipt",
+      "canonical Task and TaskRun",
+      "four bound investigation artifact revisions",
+      "current ResponsibilityPlan target slot and AgentInstance"
+    ],
+    "fail_closed_guards": [
+      "missing or stale exact ref blocks token consumption",
+      "receiver AgentInstance revision drift blocks consumption",
+      "target responsibility slot drift blocks consumption",
+      "compile never issues token or creates Handoff"
+    ]
+  },
+  "verification": {
+    "backend_targeted": "8 passed",
+    "backend_cumulative": "137 passed",
+    "frontend_targeted": "69 passed",
+    "frontend_typecheck": "green",
+    "frontend_build": "green with existing chunk-size warning",
+    "python_compileall": "green",
+    "git_diff_check": "green"
+  },
+  "browser_acceptance": {
+    "tool": "Codex built-in browser",
+    "route": "http://127.0.0.1:5173/workshop/analyst",
+    "effective_viewport": "1280x720",
+    "reference": "/Users/ddt/work/projects/ai_agent/docs/palantier/foundry/html/workshop-analyst.html",
+    "checks": [
+      "经营参谋导航选中且八个分析页签可见",
+      "页面主区域无水平溢出",
+      "Handoff 面板无水平溢出",
+      "Handoff 表单以三列密集布局呈现，列宽约 274px",
+      "细边框、低圆角、层级与当前经营参谋视觉基线一致",
+      "暗色与亮色主题均完成目视复核",
+      "本次重新加载截止后未出现新的控制台错误"
+    ],
+    "scope_limit": "本证据只关闭 BI-W8-06 当前经营参谋局部页面；不替代 S8-Visual 八大菜单 1280/1440/1920 逐页验收"
+  },
+  "side_effects": {
+    "real_business_data_mutations": 0,
+    "source_reads": 0,
+    "provider_or_action_executions": 0,
+    "migrations_applied": 0,
+    "external_effects": 0,
+    "releases": 0
+  },
+  "hard_boundaries": [
+    "NO_EXTERNAL_EFFECT",
+    "NO_RELEASE",
+    "S8_VISUAL_REQUIRED_BEFORE_FRONTEND_BACKEND_COMPLETE_CLAIM"
+  ]
+}
