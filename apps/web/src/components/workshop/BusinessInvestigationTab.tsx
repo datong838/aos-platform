@@ -6,6 +6,8 @@ import {
   type InvestigationCaseRevision,
   type InvestigationCommandClient,
   type InvestigationControlCommand,
+  type InvestigationHandoffCompileResponse,
+  type InvestigationHandoffTargetModule,
   type InvestigationMissingDataInput,
   type InvestigationReadClient,
   type InvestigationRunView,
@@ -13,6 +15,7 @@ import {
   type InvestigationTenant,
   type InvestigationWorkbenchView,
 } from "../../api/ecommerceInvestigation";
+import { aipAgentControl, type IssuedHandoff } from "../../api/aipAgentControl";
 import type { SourceReadinessExactRef } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { BUSINESS_INVESTIGATION_COMMAND_FLAG, BUSINESS_INVESTIGATION_READ_FLAG, isBusinessInvestigationCommandEnabled, resolveBusinessInvestigationFeatureFlags } from "./businessInvestigationFeatureFlags";
@@ -24,7 +27,9 @@ type ViewPhase = "idle" | "loading" | "ready" | "forbidden" | "failed";
 type ReviewPhase = "idle" | "loading" | "ready" | "forbidden" | "failed";
 type CommandPhase = "idle" | "pending" | "succeeded" | "failed" | "unknown";
 type EntityChoice = { key: string; channelId: string; entityId: string };
-type InvestigationTabClient = InvestigationReadClient & Partial<Pick<InvestigationCommandClient, "executeRunCommand" | "requestMissingData" | "confirmDataRequirement" | "getStageReview" | "reviewStage">>;
+type InvestigationTabClient = InvestigationReadClient & Partial<Pick<InvestigationCommandClient, "executeRunCommand" | "requestMissingData" | "confirmDataRequirement" | "getStageReview" | "reviewStage" | "compileHandoff">>;
+type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
+type HandoffPhase = "idle" | "compiling" | "compiled" | "issuing" | "issued" | "consuming" | "consumed" | "deciding" | "decided" | "blocked" | "failed";
 
 const ANALYSIS_LABELS: Record<InvestigationCaseRevision["analysisType"], string> = {
   initial_store_analysis: "首次全店经营分析",
@@ -33,6 +38,15 @@ const ANALYSIS_LABELS: Record<InvestigationCaseRevision["analysisType"], string>
   creator_sales: "达人销售",
   product_structure: "商品结构",
 };
+const HANDOFF_TARGETS: readonly { value: InvestigationHandoffTargetModule; label: string }[] = [
+  { value: "ecommerce.task-cockpit", label: "任务驾驶舱" },
+  { value: "ecommerce.operations", label: "运营中心" },
+  { value: "ecommerce.content-campaign", label: "内容活动" },
+  { value: "ecommerce.creator-growth", label: "达人增长" },
+  { value: "ecommerce.media-studio", label: "多媒体工作室" },
+  { value: "ecommerce.price-governance", label: "价格治理" },
+  { value: "ecommerce.customer", label: "客户经营" },
+];
 const entityKey = (channelId: string, entityId: string) => `${encodeURIComponent(channelId)}/${encodeURIComponent(entityId)}`;
 
 function entityChoices(cases: InvestigationCaseRevision[], channelId: string): EntityChoice[] {
@@ -52,7 +66,7 @@ function sameRequirement(left: InvestigationWorkbenchView["pendingRequirementRef
   return Boolean(left && right && left.resourceType === right.resourceType && left.resourceId === right.resourceId && String(left.revision) === String(right.revision) && canonicalHash(left.contentHash) === canonicalHash(right.contentHash));
 }
 
-export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInvestigationClient, sourceReadinessSnapshot, commandsEnabled = isBusinessInvestigationCommandEnabled(resolveBusinessInvestigationFeatureFlags()), createCommandId = () => globalThis.crypto.randomUUID() }: { id: string; labelledBy: string; client?: InvestigationTabClient; sourceReadinessSnapshot?: SourceReadinessSnapshot; commandsEnabled?: boolean; createCommandId?: () => string }) {
+export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInvestigationClient, handoffClient = aipAgentControl, sourceReadinessSnapshot, commandsEnabled = isBusinessInvestigationCommandEnabled(resolveBusinessInvestigationFeatureFlags()), createCommandId = () => globalThis.crypto.randomUUID() }: { id: string; labelledBy: string; client?: InvestigationTabClient; handoffClient?: HandoffCommandClient; sourceReadinessSnapshot?: SourceReadinessSnapshot; commandsEnabled?: boolean; createCommandId?: () => string }) {
   const [phase, setPhase] = useState<Phase>("loading"); const [tenant, setTenant] = useState<InvestigationTenant | null>(null); const [cases, setCases] = useState<InvestigationCaseRevision[]>([]);
   const [selectedChannelId, setSelectedChannelId] = useState(""); const [selectedEntityKey, setSelectedEntityKey] = useState(""); const [selectedCaseId, setSelectedCaseId] = useState("");
   const [runPhase, setRunPhase] = useState<RunPhase>("idle"); const [runs, setRuns] = useState<InvestigationRunView[]>([]); const [selectedRunId, setSelectedRunId] = useState("");
@@ -60,6 +74,11 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
   const [stageReview, setStageReview] = useState<InvestigationStageReviewProjection | null>(null); const [reviewPhase, setReviewPhase] = useState<ReviewPhase>("idle"); const [reviewReason, setReviewReason] = useState("人工复核后的明确结论");
   const [commandPhase, setCommandPhase] = useState<CommandPhase>("idle"); const [commandMessage, setCommandMessage] = useState("");
   const [missingFacts, setMissingFacts] = useState("Order.daily_amount\nProduct.active_count"); const [dataReason, setDataReason] = useState("人工范围复核完成");
+  const [handoffPhase, setHandoffPhase] = useState<HandoffPhase>("idle"); const [handoffFailure, setHandoffFailure] = useState("");
+  const [handoffCompiled, setHandoffCompiled] = useState<InvestigationHandoffCompileResponse | null>(null); const [handoffIssued, setHandoffIssued] = useState<IssuedHandoff | null>(null); const [handoffToken, setHandoffToken] = useState<string | null>(null);
+  const [handoffTarget, setHandoffTarget] = useState<InvestigationHandoffTargetModule>("ecommerce.task-cockpit"); const [handoffSourceSlot, setHandoffSourceSlot] = useState(""); const [handoffTargetSlot, setHandoffTargetSlot] = useState("");
+  const [handoffPlanId, setHandoffPlanId] = useState(""); const [handoffPlanRevision, setHandoffPlanRevision] = useState("1"); const [handoffPlanHash, setHandoffPlanHash] = useState("");
+  const [handoffPurpose, setHandoffPurpose] = useState("将已批准增长方案交给目标模块受控承接"); const [handoffOutcome, setHandoffOutcome] = useState("返回可审计的承接决定与差距清单");
   const [runReloadRevision, setRunReloadRevision] = useState(0); const [viewReloadRevision, setViewReloadRevision] = useState(0);
   const contextReadinessSnapshot = useSourceReadinessSnapshot(); const readinessSnapshot = sourceReadinessSnapshot ?? contextReadinessSnapshot;
   const caseRequest = useRef(0); const runRequest = useRef(0); const viewRequest = useRef(0); const reviewRequest = useRef(0);
@@ -68,7 +87,9 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
   const visibleCases = useMemo(() => casesForEntity(cases, selectedEntityKey), [cases, selectedEntityKey]);
   const selectedCase = visibleCases.find((item) => item.caseId === selectedCaseId) ?? null;
 
-  const clearView = () => { viewRequest.current += 1; reviewRequest.current += 1; setWorkbenchView(null); setStageReview(null); setReviewPhase("idle"); setViewPhase("idle"); setCommandPhase("idle"); setCommandMessage(""); };
+  const resetHandoff = () => { setHandoffPhase("idle"); setHandoffFailure(""); setHandoffCompiled(null); setHandoffIssued(null); setHandoffToken(null); };
+
+  const clearView = () => { viewRequest.current += 1; reviewRequest.current += 1; setWorkbenchView(null); setStageReview(null); setReviewPhase("idle"); setViewPhase("idle"); setCommandPhase("idle"); setCommandMessage(""); resetHandoff(); };
   const clearRuns = () => { runRequest.current += 1; setRuns([]); setSelectedRunId(""); setRunPhase("idle"); clearView(); };
   const selectFromCases = (nextCases: InvestigationCaseRevision[]) => {
     const channelId = nextCases[0]?.channelRef.resourceId ?? ""; const nextEntities = entityChoices(nextCases, channelId); const nextEntityKey = nextEntities[0]?.key ?? ""; const nextCasesForEntity = casesForEntity(nextCases, nextEntityKey);
@@ -93,6 +114,10 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
     void client.getRunView(selectedRunId, controller.signal).then((response) => { if (requestId !== viewRequest.current) return; if (tenant && (tenant.orgId !== response.tenant.orgId || tenant.projectId !== response.tenant.projectId)) { setViewPhase("failed"); return; } setWorkbenchView(response); setViewPhase("ready"); }, (error: unknown) => { if (requestId !== viewRequest.current || (error instanceof DOMException && error.name === "AbortError")) return; setViewPhase(error instanceof EcommerceInvestigationClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
     return () => controller.abort();
   }, [client, selectedRunId, tenant, viewReloadRevision]);
+  useEffect(() => {
+    const slotId = workbenchView?.currentWorkspace.responsibilitySlotIds[0] ?? "";
+    if (slotId) setHandoffSourceSlot(slotId);
+  }, [workbenchView]);
   useEffect(() => {
     if (!selectedRunId || !client.getStageReview) { setStageReview(null); setReviewPhase("idle"); return; }
     const requestId = ++reviewRequest.current; const controller = new AbortController(); setStageReview(null); setReviewPhase("loading");
@@ -142,6 +167,24 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
     if (!commandsEnabled || !client.reviewStage || !expectedStateVersion || !item?.allowedDecisions.includes(decision) || !reviewReason.trim() || commandPhase === "pending" || commandPhase === "unknown" || commandPhase === "failed") return;
     const commandId = createCommandId(); setCommandPhase("pending"); setCommandMessage(`REVIEW_STAGE/${decision} 正在提交；不会自动重试。`);
     void client.reviewStage({ runId: selectedRunId, commandId, expectedStateVersion, decision, issueId, expectedIssueVersion, reason: reviewReason }).then((result) => { setStageReview(result.projection); setCommandPhase("succeeded"); setCommandMessage(`ReviewIssue ${result.response.issue.issueId} 已按 canonical v${result.response.issue.version}/${result.response.issue.status} 回读闭合。`); }, (error: unknown) => { const unknown = error instanceof EcommerceInvestigationClientError && error.code === "COMMAND_OUTCOME_UNKNOWN"; setCommandPhase(unknown ? "unknown" : "failed"); setCommandMessage(unknown ? "评审命令结果未知；已锁定写入口，只允许 GET 重新核验。" : "评审命令被拒绝或 exact 回读冲突；已锁定写入口。"); });
+  };
+  const compileHandoff = () => {
+    const revision = Number(handoffPlanRevision); const rawHash = canonicalHash(handoffPlanHash.trim());
+    if (!client.compileHandoff || !selectedRunId || !handoffSourceSlot.trim() || !handoffTargetSlot.trim() || !handoffPlanId.trim() || !Number.isInteger(revision) || revision < 1 || !/^[0-9a-f]{64}$/.test(rawHash) || !handoffPurpose.trim() || !handoffOutcome.trim()) return;
+    const handoffId = `bi-handoff-${createCommandId()}`.slice(0, 200); setHandoffPhase("compiling"); setHandoffFailure(""); setHandoffCompiled(null); setHandoffIssued(null); setHandoffToken(null);
+    void client.compileHandoff(selectedRunId, { handoffId, approvedPlanRef: { resourceType: "GrowthPlanRevision", resourceId: handoffPlanId.trim(), revision, contentHash: rawHash }, sourceSlotId: handoffSourceSlot.trim(), targetModuleId: handoffTarget, targetSlotId: handoffTargetSlot.trim(), purpose: handoffPurpose.trim(), requestedOutcome: handoffOutcome.trim(), markings: ["INTERNAL"], expiresAt: new Date(Date.now() + 15 * 60_000).toISOString() }).then((result) => { setHandoffCompiled(result); setHandoffPhase(result.handoff.readiness === "ready" ? "compiled" : "blocked"); }, (error: unknown) => { setHandoffFailure(error instanceof Error ? error.message : "Handoff 编译失败"); setHandoffPhase("failed"); });
+  };
+  const issueHandoff = () => {
+    if (!handoffCompiled?.handoff.issueCommand) return; setHandoffPhase("issuing"); setHandoffFailure("");
+    void handoffClient.issueHandoff(handoffCompiled.handoff.issueCommand, `issue-${createCommandId()}`.slice(0, 200)).then((result) => { setHandoffIssued(result); setHandoffToken(result.bearerToken); setHandoffPhase("issued"); }, (error: unknown) => { setHandoffFailure(error instanceof Error ? error.message : "Handoff 签发失败"); setHandoffPhase("failed"); });
+  };
+  const consumeHandoff = () => {
+    if (!handoffCompiled?.handoff.issueCommand || !handoffIssued || !handoffToken) return; setHandoffPhase("consuming"); setHandoffFailure("");
+    void handoffClient.consumeHandoff(handoffIssued.handoff.handoffId, { bearerToken: handoffToken, receiverInstance: handoffCompiled.handoff.issueCommand.envelope.receiverInstance }).then(() => { setHandoffToken(null); setHandoffPhase("consumed"); }, (error: unknown) => { setHandoffToken(null); setHandoffFailure(error instanceof Error ? error.message : "Handoff 接收失败"); setHandoffPhase("failed"); });
+  };
+  const acceptHandoff = () => {
+    if (!handoffCompiled?.handoff.issueCommand || !handoffIssued) return; setHandoffPhase("deciding"); setHandoffFailure("");
+    void handoffClient.listHandoffDecisions(handoffIssued.handoff.handoffId).then((timeline) => handoffClient.createHandoffDecision(handoffIssued.handoff.handoffId, { decision: "accepted", expectedHeadVersion: timeline.headVersion, reasonCode: null, gapCodes: [], returnRefs: [], correlationRef: null, receiverInstance: handoffCompiled.handoff.issueCommand!.envelope.receiverInstance }, `decision-${createCommandId()}`.slice(0, 200))).then(() => { setHandoffPhase("decided"); }, (error: unknown) => { setHandoffFailure(error instanceof Error ? error.message : "Handoff 决定失败"); setHandoffPhase("failed"); });
   };
 
   return (
@@ -202,6 +245,31 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
           {reviewPhase === "failed" ? <div className="business-investigation-state is-failed" role="alert"><strong>阶段评审读取失败</strong><p>页面失败关闭，不本地推演 Review 状态。</p></div> : null}
           {reviewPhase === "ready" && stageReview ? <article className="business-investigation-stage-review" aria-label="阶段人工评审"><header><div><span>canonical ReviewIssue · TaskRun {stageReview.taskRunRef.resourceId}</span><h3>阶段人工评审</h3></div><strong>{stageReview.externalEffectsAllowed ? "外部副作用开启" : "无外部副作用"}</strong></header>{stageReview.items.length ? <div>{stageReview.items.map((item) => <section key={item.issue.issueId} className={`is-${item.issue.status}`}><header><div><span>{item.stage} · Issue v{item.issue.version}</span><h4>{item.issue.issueId}</h4></div><strong>{item.issue.status}</strong></header><dl><div><dt>Eval exact</dt><dd>{item.evalReportRef.resourceId} · r{item.evalReportRef.revision}</dd></div><div><dt>Artifact exact</dt><dd>{item.artifactRef.resourceId} · r{item.artifactRef.revision}</dd></div><div><dt>建议修正</dt><dd>{item.issue.suggestedFix}</dd></div><div><dt>回退阶段</dt><dd>{item.issue.returnStage}</dd></div></dl>{commandsEnabled && item.allowedDecisions.length ? <div className="business-investigation-review-decisions"><label><span>人工决定说明</span><textarea rows={2} value={reviewReason} maxLength={2000} onChange={(event) => setReviewReason(event.currentTarget.value)} /></label><div><button type="button" disabled={commandPhase === "pending" || !reviewReason.trim()} onClick={() => executeReviewCommand(item.issue.issueId, item.issue.version, "accept")}>接受阶段产物</button><button type="button" disabled={commandPhase === "pending" || !reviewReason.trim()} onClick={() => executeReviewCommand(item.issue.issueId, item.issue.version, "return")}>退回当前阶段</button></div></div> : <p>服务端未授权可写决定；页面不本地推演 Review 状态。</p>}</section>)}</div> : <p>当前 Run 没有 canonical ReviewIssue；不生成演示评审。</p>}<p className="business-investigation-review-boundary">request_more 尚无独立 canonical 状态边，当前失败关闭；评审不会触发 Provider、数据源读取或外部操作。</p></article> : null}
           <article className="business-investigation-stage-workspace"><header><div><span>当前阶段工作区 · {workbenchView.currentWorkspace.stageId ?? "unbound"}</span><h3>{workbenchView.currentWorkspace.title}</h3></div><strong className={`is-${workbenchView.currentWorkspace.status}`}>{workbenchView.currentWorkspace.status}</strong></header><p className="business-investigation-question">{workbenchView.currentWorkspace.question}</p><dl className="business-investigation-responsibility"><div><dt>责任槽</dt><dd>{workbenchView.currentWorkspace.responsibilitySlotIds.length ? workbenchView.currentWorkspace.responsibilitySlotIds.join(" · ") : "未知/未绑定"}</dd></div><div><dt>承担者</dt><dd>{workbenchView.currentWorkspace.assigneeRefs.length ? workbenchView.currentWorkspace.assigneeRefs.map((item) => item.resourceId).join(" · ") : "未知/未绑定"}</dd></div><div><dt>输入 refs</dt><dd>{workbenchView.currentWorkspace.inputRefs.length ? workbenchView.currentWorkspace.inputRefs.map((item) => item.resourceId).join(" · ") : "未知/缺证据"}</dd></div><div><dt>输出 refs</dt><dd>{workbenchView.currentWorkspace.outputRefs.length ? workbenchView.currentWorkspace.outputRefs.map((item) => item.resourceId).join(" · ") : "未知/缺证据"}</dd></div></dl><div className="business-investigation-contributions">{workbenchView.currentWorkspace.areas.map((area) => <section key={area.area} className={`is-${area.status}`}><header><strong>{area.title}</strong><span>{area.status === "reference_only" ? "仅可回链" : area.status === "present" ? "已声明缺口" : "未知/缺证据"}</span></header><p>{area.summary}</p>{area.resourceRefs.length || area.exactRefs.length ? <small>{[...area.resourceRefs.map((item) => item.resourceId), ...area.exactRefs.map((item) => `${item.resourceId} · r${item.revision}`)].join(" · ")}</small> : null}</section>)}</div><ul className="business-investigation-nonclaims">{workbenchView.currentWorkspace.nonClaims.map((item) => <li key={item}>{item}</li>)}</ul></article>
+          {commandsEnabled && client.compileHandoff ? <article className={`business-investigation-handoff is-${handoffPhase}`} aria-label="生意探究受控交接">
+            <header><div><span>BI-W8-06 · Receipt-first Saga</span><h3>跨模块受控交接</h3></div><strong>{handoffPhase}</strong></header>
+            <p className="business-investigation-handoff-boundary">分析师只提交已批准 GrowthPlan exact ref；服务端派生当前 Run、TaskRun、四类领域产物与职责绑定。编译零副作用，签发、接收和接受均需独立确认。</p>
+            <div className="business-investigation-handoff-grid">
+              <label><span>目标工作台</span><select aria-label="Handoff 目标工作台" value={handoffTarget} onChange={(event) => { setHandoffTarget(event.currentTarget.value as InvestigationHandoffTargetModule); resetHandoff(); }}>{HANDOFF_TARGETS.map((item) => <option key={item.value} value={item.value}>{item.label} · {item.value}</option>)}</select></label>
+              <label><span>来源职责槽</span><input aria-label="Handoff 来源职责槽" value={handoffSourceSlot} onChange={(event) => { setHandoffSourceSlot(event.currentTarget.value); resetHandoff(); }} /></label>
+              <label><span>目标职责槽</span><input aria-label="Handoff 目标职责槽" value={handoffTargetSlot} onChange={(event) => { setHandoffTargetSlot(event.currentTarget.value); resetHandoff(); }} placeholder="由目标模块责任编排提供" /></label>
+              <label><span>批准方案 ID</span><input aria-label="Handoff 批准方案 ID" value={handoffPlanId} onChange={(event) => { setHandoffPlanId(event.currentTarget.value); resetHandoff(); }} /></label>
+              <label><span>方案 revision</span><input aria-label="Handoff 方案 revision" inputMode="numeric" value={handoffPlanRevision} onChange={(event) => { setHandoffPlanRevision(event.currentTarget.value); resetHandoff(); }} /></label>
+              <label><span>方案 SHA-256</span><input aria-label="Handoff 方案 SHA-256" value={handoffPlanHash} onChange={(event) => { setHandoffPlanHash(event.currentTarget.value); resetHandoff(); }} placeholder="64 位小写哈希" /></label>
+              <label className="is-wide"><span>交接目的</span><input aria-label="Handoff 交接目的" value={handoffPurpose} onChange={(event) => { setHandoffPurpose(event.currentTarget.value); resetHandoff(); }} /></label>
+              <label className="is-wide"><span>期望结果</span><input aria-label="Handoff 期望结果" value={handoffOutcome} onChange={(event) => { setHandoffOutcome(event.currentTarget.value); resetHandoff(); }} /></label>
+            </div>
+            <div className="business-investigation-handoff-actions">
+              <button type="button" onClick={compileHandoff} disabled={handoffPhase === "compiling" || !handoffTargetSlot.trim() || !handoffPlanId.trim() || !/^[0-9a-f]{64}$/.test(canonicalHash(handoffPlanHash.trim()))}>1 · 编译 exact 交接</button>
+              {handoffCompiled?.handoff.readiness === "ready" ? <button type="button" onClick={issueHandoff} disabled={handoffPhase !== "compiled"}>2 · 人工确认签发</button> : null}
+              {handoffIssued && handoffToken ? <button type="button" onClick={consumeHandoff} disabled={handoffPhase !== "issued"}>3 · 目标职责安全接收</button> : null}
+              {handoffIssued && handoffPhase === "consumed" ? <button type="button" onClick={acceptHandoff}>4 · 接受交接</button> : null}
+            </div>
+            {handoffCompiled ? <dl className="business-investigation-handoff-refs"><div><dt>Run exact</dt><dd>{handoffCompiled.runRef.resourceId} · r{String(handoffCompiled.runRef.revision)}</dd></div><div><dt>编译 Receipt</dt><dd>{handoffCompiled.compilationReceiptRef.resourceId}</dd></div><div><dt>领域产物</dt><dd>{handoffCompiled.artifactRefs.length}/4 exact refs</dd></div><div><dt>一次性凭证</dt><dd>{handoffToken ? "仅在当前页面内存，尚未接收" : "页面未保留"}</dd></div></dl> : null}
+            {handoffPhase === "blocked" && handoffCompiled ? <p role="status">编译阻断：{handoffCompiled.handoff.blockers.map((item) => `${item.code} · ${item.requiredAction}`).join("；")}</p> : null}
+            {handoffPhase === "compiled" ? <p role="status">exact refs 已核验，尚未签发 canonical Handoff。</p> : null}
+            {handoffIssued ? <p role="status">{handoffIssued.handoff.handoffId} · {handoffPhase}{handoffPhase === "decided" ? "；accepted 不等于下游任务已完成" : ""}</p> : null}
+            {handoffFailure ? <p role="alert">{handoffFailure}</p> : null}
+          </article> : null}
           <article className="business-investigation-drilldowns"><header><div><span>服务端可回链投影 · {workbenchView.drilldownVersion}</span><h3>Evidence / Artifact / Timeline</h3></div><strong className={workbenchView.drilldownVersion === "canonical-v4" ? "is-bound" : "is-unbound"}>{workbenchView.drilldownVersion === "canonical-v4" ? "canonical" : "legacy"}</strong></header><div className="business-investigation-drilldown-grid">
             <section aria-label="Evidence 下钻"><h4>Evidence</h4><p>{workbenchView.evidence.status === "exact" ? "可核验 exact refs" : "缺少可核验 Evidence exact ref"}</p>{workbenchView.evidence.exactRefs.map((item) => <details key={`${item.resourceType}:${item.resourceId}:${item.revision}`}><summary>{item.resourceType} · {item.resourceId}</summary><dl><div><dt>revision</dt><dd>{String(item.revision)}</dd></div><div><dt>hash</dt><dd>{item.contentHash}</dd></div></dl></details>)}{workbenchView.evidence.locatorRefs.length ? <details><summary>仅定位 refs · 非 exact</summary><ul>{workbenchView.evidence.locatorRefs.map((item) => <li key={`${item.resourceType}:${item.resourceId}:${item.revision ?? "_"}`}>{item.resourceType} · {item.resourceId} · {item.revision ?? "无 revision"}</li>)}</ul></details> : null}</section>
             <section aria-label="Artifact 下钻"><h4>Artifact</h4><p>四类领域槽位；missing 不继承旧 Run。</p>{workbenchView.artifacts.map((item) => <details key={item.artifactType}><summary>{item.artifactType} · {item.status}</summary>{item.status === "bound" && item.artifactRef ? <dl><div><dt>exact</dt><dd>{item.artifactRef.resourceId} · r{String(item.artifactRef.revision)}</dd></div><div><dt>hash</dt><dd>{item.artifactRef.contentHash}</dd></div><div><dt>binding</dt><dd>{item.bindingId} · selection r{item.selectionRevision}</dd></div><div><dt>cutoff</dt><dd>{item.dataCutoff ? new Date(item.dataCutoff).toLocaleString("zh-CN", { hour12: false }) : "未知"}</dd></div><div><dt>lineage</dt><dd>{item.lineageRef ? `${item.lineageRef.resourceId} · r${String(item.lineageRef.revision)}` : "未知"}</dd></div></dl> : <p>尚无 canonical binding。</p>}</details>)}</section>

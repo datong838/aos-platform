@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseInvestigationCaseList, parseInvestigationRunList, parseInvestigationWorkbenchView } from "./parser";
+import { parseInvestigationCaseList, parseInvestigationHandoffCompile, parseInvestigationRunList, parseInvestigationWorkbenchView } from "./parser";
 
 const hash = `sha256:${"a".repeat(64)}`; const tenant = { orgId: "org-org", projectId: "dev-project" };
 const ref = (resourceType: string, resourceId: string, revision = 1) => ({ resourceType, resourceId, revision, contentHash: hash });
@@ -63,5 +63,14 @@ describe("ecommerceInvestigation strict parser", () => {
     expect(() => parseInvestigationWorkbenchView({ ...viewV4, evidence: { ...viewV4.evidence, status: "missing" } }, "run-1")).toThrow(/evidence status/);
     expect(() => parseInvestigationWorkbenchView({ ...viewV4, timeline: [...viewV4.timeline].reverse() }, "run-1")).toThrow(/timeline 非 canonical/);
     expect(() => parseInvestigationWorkbenchView({ ...viewV4, timeline: [viewV4.timeline[0], viewV4.timeline[0], viewV4.timeline[2]] }, "run-1")).toThrow(/timeline 非 canonical/);
+  });
+  it("解析 BI Handoff 的批准方案、四产物与 contentHash，并拒绝缺失 exact hash", () => {
+    const rawHash = "a".repeat(64); const artifactTypes = ["BusinessDossierRevision", "ProblemMapRevision", "OpportunityMapRevision", "SolutionPortfolioRevision"];
+    const issueCommand = { handoffId: "handoff-1", envelope: { taskRef: { resourceType: "Task", resourceId: "task-1", revision: "1", authority: "aip-task-runtime" }, runRef: { resourceType: "TaskRun", resourceId: "task-run-1", revision: "2", authority: "aip-task-runtime" }, senderInstance: { assetType: "AgentInstance", assetId: "analyst-1", revision: 1, contentHash: rawHash }, receiverInstance: { assetType: "AgentInstance", assetId: "cockpit-1", revision: 2, contentHash: rawHash }, objectRefs: [{ resourceType: "GrowthPlanRevision", resourceId: "growth-plan-1", revision: "2", authority: "ecommerce-analyst", contentHash: hash }], artifactRefs: artifactTypes.map((resourceType, index) => ({ resourceType, resourceId: `artifact-${index + 1}`, revision: "1", authority: "business-investigation-artifact", contentHash: hash })), evidenceRefs: [], context: {}, allowedContextFields: [], markings: ["INTERNAL"], expiresAt: "2026-08-27T08:15:00Z" } };
+    const handoff = { schemaVersion: "aos.ecommerce-workshop.module-handoff-compile/v1", tenant, runId: "task-run-1", taskId: "task-1", evaluatedAt: "2026-08-27T08:00:00Z", responsibilityPlanRef: { resourceType: "ResponsibilityPlanRevision", resourceId: "responsibility-1", revision: 1, contentHash: rawHash }, sourceModuleId: "ecommerce.analyst", targetModuleId: "ecommerce.task-cockpit", sourceSlotId: "slot-analyst", targetSlotId: "slot-cockpit", readiness: "ready", blockers: [], issueCommand, sideEffects: { handoffsIssued: 0, tokensMinted: 0, decisionsCreated: 0, agentRunsStarted: 0 } };
+    const payload = { schemaVersion: "aos.ecommerce.business-investigation-handoff-compile/v1", tenant, runRef: ref("BusinessInvestigationRun", "run-1"), approvedPlanRef: { resourceType: "GrowthPlanRevision", resourceId: "growth-plan-1", revision: 2, contentHash: rawHash }, compilationReceiptRef: ref("BusinessInvestigationCompilationReceipt", "compile-1"), artifactRefs: artifactTypes.map((resourceType, index) => ref(resourceType, `artifact-${index + 1}`)), handoff };
+    const parsed = parseInvestigationHandoffCompile(payload, "run-1", tenant);
+    expect(parsed.approvedPlanRef).toMatchObject({ resourceId: "growth-plan-1", revision: 2 }); expect(parsed.artifactRefs).toHaveLength(4); expect(parsed.artifactRefs[0]?.resourceType).toBe("BusinessDossierRevision"); expect(parsed.handoff.issueCommand?.envelope.objectRefs[0]?.contentHash).toBe(hash);
+    expect(() => parseInvestigationHandoffCompile({ ...payload, handoff: { ...handoff, issueCommand: { ...issueCommand, envelope: { ...issueCommand.envelope, objectRefs: [{ ...issueCommand.envelope.objectRefs[0], contentHash: undefined }] } } } }, "run-1", tenant)).toThrow(/contentHash|字段漂移/);
   });
 });

@@ -11,7 +11,12 @@ from typing import Any
 
 from pydantic import Field, field_validator, model_validator
 
-from aos_api.aip_contracts import AipContractModel, ResourceRef, TenantContext
+from aos_api.aip_contracts import (
+    AipContractModel,
+    HandoffResourceRef,
+    ResourceRef,
+    TenantContext,
+)
 
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
@@ -151,9 +156,9 @@ class HandoffEnvelopeRequest(AipContractModel):
     run_ref: ResourceRef
     sender_instance: VersionedAssetRef
     receiver_instance: VersionedAssetRef
-    object_refs: list[ResourceRef] = Field(default_factory=list, max_length=100)
-    artifact_refs: list[ResourceRef] = Field(default_factory=list, max_length=100)
-    evidence_refs: list[ResourceRef] = Field(default_factory=list, max_length=100)
+    object_refs: list[HandoffResourceRef | ResourceRef] = Field(default_factory=list, max_length=100)
+    artifact_refs: list[HandoffResourceRef | ResourceRef] = Field(default_factory=list, max_length=100)
+    evidence_refs: list[HandoffResourceRef | ResourceRef] = Field(default_factory=list, max_length=100)
     context: dict[str, Any] = Field(default_factory=dict)
     allowed_context_fields: list[str] = Field(default_factory=list, max_length=64)
     markings: list[str] = Field(min_length=1, max_length=32)

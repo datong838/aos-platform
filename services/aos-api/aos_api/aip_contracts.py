@@ -45,6 +45,20 @@ class ResourceRef(AipContractModel):
         return cleaned
 
 
+class HandoffResourceRef(ResourceRef):
+    """Content-addressable reference carried by a Handoff envelope.
+
+    ``contentHash`` stays optional at the shared transport boundary so older
+    envelopes without governed refs remain readable. Production resolvers may
+    (and BI-W8-06 does) require it for the resource kinds they authorize.
+    """
+
+    content_hash: str | None = Field(
+        default=None,
+        pattern=r"^sha256:[0-9a-f]{64}$",
+    )
+
+
 class ExactContractRef(AipContractModel):
     """Content-addressed revision reference usable by the canonical Task plan."""
 

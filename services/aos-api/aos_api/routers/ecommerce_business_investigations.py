@@ -48,6 +48,11 @@ from aos_api.ecommerce_business_investigation_review_command import (
     BusinessInvestigationStageReviewProjection,
     BusinessInvestigationStageReviewResponse,
 )
+from aos_api.ecommerce_business_investigation_handoff import (
+    BusinessInvestigationHandoffBlocked,
+    BusinessInvestigationHandoffCompileResponse,
+    CompileBusinessInvestigationHandoffRequest,
+)
 from aos_api.ecommerce_analyst_authority_store import (
     AnalystAuthorityConflict,
     AnalystAuthorityIdempotencyConflict,
@@ -167,6 +172,7 @@ def _map_error(exc: Exception) -> ApiError:
             AnalystAuthorityConflict,
             AnalystAuthorityIdempotencyConflict,
             GrowthPlanApprovalBlocked,
+            BusinessInvestigationHandoffBlocked,
         ),
     ):
         return ApiError(
@@ -566,6 +572,33 @@ def approve_growth_plan(
             expected_version=_expected_version(if_match),
             idempotency_key=_idempotency_key(idempotency_key),
             actor=principal.subject,
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/runs/{run_id}/handoffs:compile",
+    response_model=BusinessInvestigationHandoffCompileResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationHandoffCompile",
+)
+def compile_handoff(
+    run_id: ResourceIdPath,
+    body: CompileBusinessInvestigationHandoffRequest,
+    principal: PrincipalDependency,
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationHandoffCompileResponse:
+    try:
+        _require_review_write_role(principal)
+        return application.compile_handoff(
+            _scope(principal),
+            run_id,
+            body,
+            roles=principal.roles,
+            principal_markings=principal.markings,
         )
     except Exception as exc:
         raise _map_error(exc) from exc

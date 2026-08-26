@@ -926,9 +926,10 @@ export function parseDispatchControlObservation(value: unknown): DispatchControl
 }
 
 function parseCompileResourceRef(value: unknown, label: string, expectedType?: string) {
-  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "authority"], label);
+  const raw = record(value, label); exact(raw, ["resourceType", "resourceId", "revision", "authority", ...(raw.contentHash === undefined ? [] : ["contentHash"])], label);
   const resourceType = boundedText(raw.resourceType, `${label}.resourceType`, 160); if (expectedType && resourceType !== expectedType) throw new TypeError(`${label}.resourceType 漂移`);
-  return { resourceType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 300), revision: nullable(raw.revision, (item) => boundedText(item, `${label}.revision`, 160)), authority: boundedText(raw.authority, `${label}.authority`, 160) };
+  const contentHash = raw.contentHash === undefined ? undefined : boundedText(raw.contentHash, `${label}.contentHash`, 71); if (contentHash !== undefined && !/^sha256:[0-9a-f]{64}$/.test(contentHash)) throw new TypeError(`${label}.contentHash 不是 SHA-256`);
+  return { resourceType, resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 300), revision: nullable(raw.revision, (item) => boundedText(item, `${label}.revision`, 160)), authority: boundedText(raw.authority, `${label}.authority`, 160), ...(contentHash === undefined ? {} : { contentHash }) };
 }
 function parseCompileAssetRef(value: unknown, label: string) {
   const raw = record(value, label); exact(raw, ["assetType", "assetId", "revision", "contentHash"], label);

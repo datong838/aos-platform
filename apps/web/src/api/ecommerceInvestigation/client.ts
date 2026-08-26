@@ -1,7 +1,7 @@
 import { getApiBase } from "../apiBase";
 import { tenantAuthHeaders } from "../tenant";
-import type { InvestigationCaseListResponse, InvestigationCommandClient, InvestigationControlCommand, InvestigationDataCommandResult, InvestigationMissingDataInput, InvestigationRunCommandResult, InvestigationRunListResponse, InvestigationStageReviewProjection, InvestigationStageReviewResult, InvestigationWorkbenchView } from "./contracts";
-import { parseInvestigationCaseList, parseInvestigationDataCommandResponse, parseInvestigationRunList, parseInvestigationRunStateCommandResponse, parseInvestigationStageReviewProjection, parseInvestigationStageReviewResponse, parseInvestigationWorkbenchView } from "./parser";
+import type { InvestigationCaseListResponse, InvestigationCommandClient, InvestigationControlCommand, InvestigationDataCommandResult, InvestigationHandoffCompileInput, InvestigationHandoffCompileResponse, InvestigationMissingDataInput, InvestigationRunCommandResult, InvestigationRunListResponse, InvestigationStageReviewProjection, InvestigationStageReviewResult, InvestigationWorkbenchView } from "./contracts";
+import { parseInvestigationCaseList, parseInvestigationDataCommandResponse, parseInvestigationHandoffCompile, parseInvestigationRunList, parseInvestigationRunStateCommandResponse, parseInvestigationStageReviewProjection, parseInvestigationStageReviewResponse, parseInvestigationWorkbenchView } from "./parser";
 
 type FetchImplementation = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 export type EcommerceInvestigationClientOptions = { fetch?: FetchImplementation; getBaseUrl?: () => string; getAuthHeaders?: () => Record<string, string> };
@@ -26,6 +26,25 @@ export class EcommerceInvestigationClient implements InvestigationCommandClient 
   async listRuns(caseId: string, signal?: AbortSignal): Promise<InvestigationRunListResponse> { if (!RESOURCE_ID.test(caseId)) throw new TypeError("caseId 无效"); return parseInvestigationRunList(await this.get(`/v1/ecommerce/investigations/cases/${encodeURIComponent(caseId)}/runs?limit=200`, signal), caseId); }
   async getRunView(runId: string, signal?: AbortSignal): Promise<InvestigationWorkbenchView> { if (!RESOURCE_ID.test(runId)) throw new TypeError("runId 无效"); return parseInvestigationWorkbenchView(await this.get(`/v1/ecommerce/investigations/runs/${encodeURIComponent(runId)}/view`, signal), runId); }
   async getStageReview(runId: string, signal?: AbortSignal): Promise<InvestigationStageReviewProjection> { if (!RESOURCE_ID.test(runId)) throw new TypeError("runId 无效"); return parseInvestigationStageReviewProjection(await this.get(`/v1/ecommerce/investigations/runs/${encodeURIComponent(runId)}/stage-review`, signal), runId); }
+  async compileHandoff(runId: string, input: InvestigationHandoffCompileInput, signal?: AbortSignal): Promise<InvestigationHandoffCompileResponse> {
+    if (!RESOURCE_ID.test(runId) || !RESOURCE_ID.test(input.handoffId)) throw new TypeError("handoff identity 无效");
+    let response: Response;
+    try {
+      response = await this.fetchImpl(`${this.baseUrl().replace(/\/$/, "")}/v1/ecommerce/investigations/runs/${encodeURIComponent(runId)}/handoffs:compile`, {
+        method: "POST",
+        headers: { ...this.authHeaders(), Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+        signal,
+      });
+    } catch (cause) {
+      throw new EcommerceInvestigationClientError(cause instanceof Error ? cause.message : String(cause), 0, "NETWORK");
+    }
+    const payload: unknown = await response.json().catch(() => undefined);
+    if (!response.ok) { const raw = typeof payload === "object" && payload !== null ? payload as Record<string, unknown> : {}; throw new EcommerceInvestigationClientError(typeof raw.message === "string" ? raw.message : response.statusText || `HTTP ${response.status}`, response.status, typeof raw.code === "string" ? raw.code : "HTTP_ERROR"); }
+    if (payload === undefined) throw new EcommerceInvestigationClientError("canonical handoff compile returned non-JSON success", 0, "INVALID_SUCCESS_RESPONSE");
+    try { return parseInvestigationHandoffCompile(payload, runId); }
+    catch (cause) { throw new EcommerceInvestigationClientError(cause instanceof Error ? cause.message : String(cause), 0, "INVALID_SUCCESS_RESPONSE"); }
+  }
   async executeRunCommand(input: { runId: string; command: InvestigationControlCommand; commandId: string; expectedStateVersion: number }, signal?: AbortSignal): Promise<InvestigationRunCommandResult> {
     if (!RESOURCE_ID.test(input.runId)) throw new TypeError("runId 无效");
     if (!RESOURCE_ID.test(input.commandId)) throw new TypeError("commandId 无效");

@@ -1,3 +1,5 @@
+import type { ModuleHandoffCompileResponse } from "../ecommerceWorkshop/contracts";
+
 export type InvestigationTenant = { orgId: string; projectId: string };
 
 export type InvestigationExactRef = {
@@ -8,6 +10,40 @@ export type InvestigationExactRef = {
   receiptId?: string;
 };
 export type InvestigationResourceRef = { resourceType: string; resourceId: string; revision: string | null; authority: string };
+export type InvestigationAnalystExactRef = {
+  resourceType: "GrowthPlanRevision";
+  resourceId: string;
+  revision: number;
+  contentHash: string;
+};
+export type InvestigationHandoffTargetModule =
+  | "ecommerce.task-cockpit"
+  | "ecommerce.operations"
+  | "ecommerce.content-campaign"
+  | "ecommerce.creator-growth"
+  | "ecommerce.media-studio"
+  | "ecommerce.price-governance"
+  | "ecommerce.customer";
+export type InvestigationHandoffCompileInput = {
+  handoffId: string;
+  approvedPlanRef: InvestigationAnalystExactRef;
+  sourceSlotId: string;
+  targetModuleId: InvestigationHandoffTargetModule;
+  targetSlotId: string;
+  purpose: string;
+  requestedOutcome: string;
+  markings: string[];
+  expiresAt: string;
+};
+export type InvestigationHandoffCompileResponse = {
+  schemaVersion: "aos.ecommerce.business-investigation-handoff-compile/v1";
+  tenant: InvestigationTenant;
+  runRef: InvestigationExactRef;
+  approvedPlanRef: InvestigationAnalystExactRef;
+  compilationReceiptRef: InvestigationExactRef;
+  artifactRefs: InvestigationExactRef[];
+  handoff: ModuleHandoffCompileResponse;
+};
 
 export type InvestigationAnalysisType =
   | "initial_store_analysis"
@@ -271,6 +307,7 @@ export type InvestigationRunCommandResult = {
   view: InvestigationWorkbenchView;
 };
 export type InvestigationCommandClient = InvestigationReadClient & {
+  compileHandoff(runId: string, input: InvestigationHandoffCompileInput, signal?: AbortSignal): Promise<InvestigationHandoffCompileResponse>;
   executeRunCommand(input: {
     runId: string;
     command: InvestigationControlCommand;

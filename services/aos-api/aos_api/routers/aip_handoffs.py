@@ -23,12 +23,17 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryTransitionBlocked,
 )
 from aos_api.aip_handoff_service import AipHandoffService
+from aos_api.aip_handoff_reference_authority import AipHandoffReferenceAuthority
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/handoffs", tags=["aip-handoffs"])
-_SERVICE = AipHandoffService(ref_authorizer=lambda _scope, _ref, _instance: True)
+_REFERENCE_AUTHORITY = AipHandoffReferenceAuthority()
+_SERVICE = AipHandoffService(
+    ref_authorizer=_REFERENCE_AUTHORITY,
+    envelope_authorizer=_REFERENCE_AUTHORITY.authorize_receiver,
+)
 
 
 def get_handoff_service() -> AipHandoffService:

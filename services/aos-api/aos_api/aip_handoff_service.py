@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 import secrets
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
 
 from aos_api.aip_agent_registry_contracts import (
@@ -26,16 +26,18 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryStore,
     AipAgentRegistryTransitionBlocked,
 )
-from aos_api.aip_contracts import ResourceRef, TenantContext
+from aos_api.aip_contracts import HandoffResourceRef, TenantContext
 from aos_api.tenant_scope import TenantScope
 
-RefAuthorizer = Callable[[TenantScope, ResourceRef, VersionedAssetRef], bool]
+RefAuthorizer = Callable[[TenantScope, HandoffResourceRef, VersionedAssetRef], bool]
+EnvelopeAuthorizer = Callable[[TenantScope, Mapping[str, object], VersionedAssetRef], bool]
 
 
 class AipHandoffService(AipAgentRegistryStore):
-    def __init__(self, connect_factory=None, *, ref_authorizer: RefAuthorizer | None = None) -> None:
+    def __init__(self, connect_factory=None, *, ref_authorizer: RefAuthorizer | None = None, envelope_authorizer: EnvelopeAuthorizer | None = None) -> None:
         super().__init__(connect_factory)
         self._ref_authorizer = ref_authorizer
+        self._envelope_authorizer = envelope_authorizer
 
     def issue(
         self,
@@ -188,6 +190,10 @@ class AipHandoffService(AipAgentRegistryStore):
                     raise AipAgentRegistryTransitionBlocked("handoff receiver exact revision drifted")
                 self._require_exact_active_instance(conn, scope, receiver_instance)
                 self._reauthorize_refs(scope, row, receiver_instance)
+                if self._envelope_authorizer is not None and not self._envelope_authorizer(scope, row, receiver_instance):
+                    raise AipAgentRegistryTransitionBlocked(
+                        "receiver responsibility binding drifted after handoff compilation"
+                    )
                 updated = self._terminal_transition(
                     conn, scope, row, "consumed", actor, None, occurred_at
                 )
@@ -579,9 +585,9 @@ class AipHandoffService(AipAgentRegistryStore):
         self, scope: TenantScope, row, receiver_instance: VersionedAssetRef
     ) -> None:
         refs = [
-            *[ResourceRef.model_validate(item) for item in row["object_refs"]],
-            *[ResourceRef.model_validate(item) for item in row["artifact_refs"]],
-            *[ResourceRef.model_validate(item) for item in row["evidence_refs"]],
+            *[HandoffResourceRef.model_validate(item) for item in row["object_refs"]],
+            *[HandoffResourceRef.model_validate(item) for item in row["artifact_refs"]],
+            *[HandoffResourceRef.model_validate(item) for item in row["evidence_refs"]],
         ]
         if refs and self._ref_authorizer is None:
             raise AipAgentRegistryTransitionBlocked(

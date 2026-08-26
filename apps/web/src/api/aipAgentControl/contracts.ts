@@ -1,6 +1,6 @@
 export type Tenant = { orgId: string; projectId: string };
 export type AssetRef = { assetType: string; assetId: string; revision: number; contentHash: string };
-export type ResourceRef = { resourceType: string; resourceId: string; revision: string | null; authority: string };
+export type ResourceRef = { resourceType: string; resourceId: string; revision: string | null; authority: string; contentHash?: string };
 
 export type AgentTemplate = {
   templateId: string;

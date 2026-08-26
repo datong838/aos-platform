@@ -21,6 +21,8 @@ import type {
   InvestigationStageReviewProjection,
   InvestigationStageReviewResponse,
 } from "./contracts";
+import type { InvestigationHandoffCompileResponse } from "./contracts";
+import { parseModuleHandoffCompile } from "../ecommerceWorkshop/parser";
 
 const HASH = /^sha256:[0-9a-f]{64}$/;
 const PURPOSE = /^[a-z][a-z0-9_.-]{1,119}$/;
@@ -324,4 +326,29 @@ export function parseInvestigationWorkbenchView(value: unknown, runId: string, e
     commandProjection = { expectedStateVersion, allowedCommands, externalEffectsAllowed: false };
   }
   return { schemaVersion, drilldownVersion: canonicalDrilldown ? "canonical-v4" : "legacy-v3", tenant: responseTenant, projectionHash, sourceWatermark: { caseRevision: integer(watermarkRaw.caseRevision, "caseRevision", 1), runVersion: integer(watermarkRaw.runVersion, "runVersion", 1), stateVersion: integer(watermarkRaw.stateVersion, "stateVersion", 1), bindingHashes, runtimeHash, contentHash: watermarkHash }, observedAt: timestamp(raw.observedAt, "view.observedAt"), caseRef, runRef, stateRef, caseEnvelope, lifecycle, control, pendingRequirementRef, uncertainCommand, runtime, currentWorkspace: parseCurrentWorkspace(raw.currentWorkspace), artifacts, evidence, timeline, commandProjection };
+}
+
+export function parseInvestigationHandoffCompile(
+  value: unknown,
+  runId: string,
+  expectedTenant?: InvestigationTenant,
+): InvestigationHandoffCompileResponse {
+  const raw = record(value, "handoffCompile");
+  exact(raw, ["schemaVersion", "tenant", "runRef", "approvedPlanRef", "compilationReceiptRef", "artifactRefs", "handoff"], "handoffCompile");
+  if (raw.schemaVersion !== "aos.ecommerce.business-investigation-handoff-compile/v1") throw new TypeError("handoffCompile schemaVersion 漂移");
+  const responseTenant = tenant(raw.tenant, expectedTenant);
+  const runRef = ref(raw.runRef, "handoffCompile.runRef", "BusinessInvestigationRun");
+  if (runRef.resourceId !== runId) throw new TypeError("handoffCompile Run identity 漂移");
+  const planRaw = record(raw.approvedPlanRef, "handoffCompile.approvedPlanRef");
+  exact(planRaw, ["resourceType", "resourceId", "revision", "contentHash"], "handoffCompile.approvedPlanRef");
+  if (planRaw.resourceType !== "GrowthPlanRevision") throw new TypeError("handoffCompile approvedPlanRef 类型漂移");
+  const planHash = text(planRaw.contentHash, "handoffCompile.approvedPlanRef.contentHash", 64);
+  if (!/^[0-9a-f]{64}$/.test(planHash)) throw new TypeError("handoffCompile approvedPlanRef hash 非法");
+  const approvedPlanRef = { resourceType: "GrowthPlanRevision" as const, resourceId: text(planRaw.resourceId, "handoffCompile.approvedPlanRef.resourceId", 200), revision: integer(planRaw.revision, "handoffCompile.approvedPlanRef.revision", 1), contentHash: planHash };
+  const compilationReceiptRef = ref(raw.compilationReceiptRef, "handoffCompile.compilationReceiptRef", "BusinessInvestigationCompilationReceipt");
+  if (!Array.isArray(raw.artifactRefs) || raw.artifactRefs.length !== 4) throw new TypeError("handoffCompile artifactRefs 必须完整覆盖四类产物");
+  const artifactRefs = raw.artifactRefs.map((item, index) => ref(item, `handoffCompile.artifactRefs[${index}]`, ARTIFACT_TYPES[index]));
+  const handoff = parseModuleHandoffCompile(raw.handoff);
+  if (handoff.tenant.orgId !== responseTenant.orgId || handoff.tenant.projectId !== responseTenant.projectId || handoff.sourceModuleId !== "ecommerce.analyst" || handoff.runId === "") throw new TypeError("handoffCompile module lineage 漂移");
+  return { schemaVersion: "aos.ecommerce.business-investigation-handoff-compile/v1", tenant: responseTenant, runRef, approvedPlanRef, compilationReceiptRef, artifactRefs, handoff };
 }

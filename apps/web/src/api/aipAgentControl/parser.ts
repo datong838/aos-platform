@@ -99,14 +99,20 @@ function nullableRef(value: unknown, label: string, expectedType?: string): Asse
 }
 function resourceRef(value: unknown, label: string): ResourceRef {
   const raw = obj(value, label);
-  exact(raw, label, ["resourceType", "resourceId", "revision", "authority"]);
+  exact(raw, label, ["resourceType", "resourceId", "revision", "authority", "contentHash"], ["resourceType", "resourceId", "revision", "authority"]);
   if (raw.revision !== null && typeof raw.revision !== "string") throw new Error(`${label}.revision 必须是字符串或 null`);
-  return {
+  const result: ResourceRef = {
     resourceType: str(raw.resourceType, `${label}.resourceType`),
     resourceId: str(raw.resourceId, `${label}.resourceId`),
     revision: raw.revision as string | null,
     authority: str(raw.authority, `${label}.authority`),
   };
+  if (raw.contentHash !== undefined) {
+    const contentHash = str(raw.contentHash, `${label}.contentHash`);
+    if (!/^sha256:[0-9a-f]{64}$/.test(contentHash)) throw new Error(`${label}.contentHash 非 SHA-256`);
+    result.contentHash = contentHash;
+  }
+  return result;
 }
 function exactResourceRef(value: unknown, label: string, expectedType: string): ResourceRef {
   const result = resourceRef(value, label);

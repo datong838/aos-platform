@@ -1498,6 +1498,35 @@
   .customer-batch-evidence > div { grid-template-columns: 1fr; }
 }
 
+.business-investigation-handoff { display: grid; gap: 10px; min-width: 0; padding: 12px; border: 1px solid var(--aos-border); border-left: 3px solid var(--aos-accent); background: var(--aos-surface); }
+.business-investigation-handoff.is-blocked,
+.business-investigation-handoff.is-failed { border-left-color: var(--aos-danger); }
+.business-investigation-handoff.is-decided { border-left-color: var(--aos-success); }
+.business-investigation-handoff > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.business-investigation-handoff > header span { color: var(--aos-text-tertiary); font-size: 10px; }
+.business-investigation-handoff > header h3 { margin: 4px 0 0; font-size: 15px; }
+.business-investigation-handoff > header > strong { color: var(--aos-text-secondary); font-size: 11px; text-transform: uppercase; }
+.business-investigation-handoff-boundary { margin: 0; padding: 8px 10px; border: 1px dashed var(--aos-border); color: var(--aos-text-secondary); font-size: 11px; line-height: 1.6; }
+.business-investigation-handoff-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.business-investigation-handoff-grid label { display: grid; gap: 5px; min-width: 0; color: var(--aos-text-secondary); font-size: 11px; }
+.business-investigation-handoff-grid label.is-wide { grid-column: span 3; }
+.business-investigation-handoff-grid input,
+.business-investigation-handoff-grid select { min-width: 0; width: 100%; padding: 7px 8px; border: 1px solid var(--aos-border-strong); border-radius: 2px; background: var(--aos-surface); color: var(--aos-text-primary); }
+.business-investigation-handoff-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.business-investigation-handoff-actions button { min-height: 32px; padding: 6px 10px; border: 1px solid var(--aos-border); border-radius: 2px; background: var(--aos-surface-hover); color: var(--aos-text-primary); cursor: pointer; font-weight: 700; }
+.business-investigation-handoff-actions button:disabled { cursor: not-allowed; opacity: .5; }
+.business-investigation-handoff-refs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 0; background: var(--aos-border); }
+.business-investigation-handoff-refs div { min-width: 0; padding: 8px; background: var(--aos-surface-hover); }
+.business-investigation-handoff-refs dt { color: var(--aos-text-tertiary); font-size: 10px; }
+.business-investigation-handoff-refs dd { margin: 4px 0 0; overflow-wrap: anywhere; font-size: 11px; }
+.business-investigation-handoff > p[role] { margin: 0; color: var(--aos-text-secondary); font-size: 11px; }
+
+@media (max-width: 920px) {
+  .business-investigation-handoff-grid { grid-template-columns: 1fr; }
+  .business-investigation-handoff-grid label.is-wide { grid-column: auto; }
+  .business-investigation-handoff-refs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ecommerce-workshop-shell,
   .ecommerce-workshop-shell *,

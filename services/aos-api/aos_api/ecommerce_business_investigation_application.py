@@ -57,6 +57,11 @@ from aos_api.ecommerce_analyst_growth_plan_approval import (
     EcommerceAnalystGrowthPlanApprovalService,
     GrowthPlanApprovalResponse,
 )
+from aos_api.ecommerce_business_investigation_handoff import (
+    BusinessInvestigationHandoffCompileResponse,
+    CompileBusinessInvestigationHandoffRequest,
+    EcommerceBusinessInvestigationHandoffService,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -156,6 +161,7 @@ class EcommerceBusinessInvestigationApplication:
         data_command_service: EcommerceBusinessInvestigationDataCommandService | None = None,
         review_command_service: EcommerceBusinessInvestigationReviewCommandService | None = None,
         growth_plan_approval_service: EcommerceAnalystGrowthPlanApprovalService | None = None,
+        handoff_service: EcommerceBusinessInvestigationHandoffService | None = None,
     ) -> None:
         self._cases = case_store or BusinessInvestigationCaseStore()
         self._runs = run_store or BusinessInvestigationRunStore()
@@ -171,6 +177,9 @@ class EcommerceBusinessInvestigationApplication:
         )
         self._projection = BusinessInvestigationProjectionBuilder(
             projection_reader or CanonicalBusinessInvestigationProjectionReader()
+        )
+        self._handoffs = handoff_service or EcommerceBusinessInvestigationHandoffService(
+            projection=self._projection
         )
 
     @staticmethod
@@ -622,6 +631,23 @@ class EcommerceBusinessInvestigationApplication:
             expected_version=expected_version,
             idempotency_key=idempotency_key,
             actor=actor,
+        )
+
+    def compile_handoff(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        request: CompileBusinessInvestigationHandoffRequest,
+        *,
+        roles: list[str],
+        principal_markings: list[str],
+    ) -> BusinessInvestigationHandoffCompileResponse:
+        return self._handoffs.compile(
+            scope,
+            run_id,
+            request,
+            roles=roles,
+            principal_markings=principal_markings,
         )
 
     def mark_run_unknown(

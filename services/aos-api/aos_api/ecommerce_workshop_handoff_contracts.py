@@ -11,7 +11,7 @@ from typing import Any, Literal
 from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_agent_registry_contracts import IssueHandoffRequest
-from aos_api.aip_contracts import AipContractModel, ResourceRef, TenantContext
+from aos_api.aip_contracts import AipContractModel, HandoffResourceRef, ResourceRef, TenantContext
 from aos_api.aip_production_contracts import ExactRevisionRef
 
 
@@ -36,9 +36,9 @@ class ModuleHandoffCompileRequest(AipContractModel):
     target_slot_id: str = Field(min_length=1, max_length=160)
     purpose: str = Field(min_length=1, max_length=240)
     requested_outcome: str = Field(min_length=1, max_length=500)
-    object_refs: list[ResourceRef] = Field(default_factory=list, max_length=100)
-    artifact_refs: list[ResourceRef] = Field(default_factory=list, max_length=100)
-    evidence_refs: list[ResourceRef] = Field(default_factory=list, max_length=100)
+    object_refs: list[HandoffResourceRef | ResourceRef] = Field(default_factory=list, max_length=100)
+    artifact_refs: list[HandoffResourceRef | ResourceRef] = Field(default_factory=list, max_length=100)
+    evidence_refs: list[HandoffResourceRef | ResourceRef] = Field(default_factory=list, max_length=100)
     context: dict[str, Any] = Field(default_factory=dict)
     allowed_context_fields: list[str] = Field(default_factory=list, max_length=64)
     markings: list[str] = Field(min_length=1, max_length=32)
