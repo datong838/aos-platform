@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "aos.business-investigation.wechat-store-profile/v1",
+  "profileId": "bi-w9-03-disabled-wechat-store-profile",
+  "revision": 1,
+  "contentHash": "sha256:cc86d42d95c949c599252debcc1d1394facd021236feac4e2fa959726c0fd493",
+  "platform": "wechat_store",
+  "sourceKind": "historical_redacted",
+  "genericCapabilityRef": {
+    "resourceType": "AdapterCapabilityMatrixRevision",
+    "resourceId": "bi-w9-01-disabled-generic-adapter-capability",
+    "revision": 1,
+    "contentHash": "sha256:577094cb7d3af08b6ccc4df84af4ce949780208481b891633239275a156ddb31"
+  },
+  "enabled": false,
+  "sourceAccessAuthorized": false,
+  "installationRef": null,
+  "instanceOverlayRef": null,
+  "observationModes": ["browser_observation", "controlled_export"],
+  "pageSemantics": [
+    {"semanticId": "store-trust", "factFamilies": ["store_trust"], "requiredObservations": ["store_profile", "experience_score", "diagnosis", "violation_and_complaint"], "requiresObservation": true},
+    {"semanticId": "product-supply", "factFamilies": ["product_supply"], "requiredObservations": ["product_lifecycle", "price_band", "inventory", "growth_opportunity"], "requiresObservation": true},
+    {"semanticId": "order-fulfillment", "factFamilies": ["order_fulfillment"], "requiredObservations": ["order_status", "delivery", "completion"], "requiresObservation": true},
+    {"semanticId": "aftersales-service", "factFamilies": ["aftersales_service"], "requiredObservations": ["refund", "return", "review", "service_loss"], "requiresObservation": true},
+    {"semanticId": "traffic-content-ecosystem", "factFamilies": ["traffic_content_ecosystem"], "requiredObservations": ["recommendation", "search", "live", "short_video", "sharing"], "requiresObservation": true},
+    {"semanticId": "customer-membership", "factFamilies": ["customer_membership"], "requiredObservations": ["new_repeat", "member", "audience_segment"], "requiresObservation": true},
+    {"semanticId": "marketing-promotion", "factFamilies": ["marketing_promotion"], "requiredObservations": ["coupon", "campaign", "paid_growth", "actual_usage"], "requiresObservation": true},
+    {"semanticId": "creator-alliance", "factFamilies": ["creator_alliance"], "requiredObservations": ["alliance_product", "creator_collaboration", "commission_effect"], "requiresObservation": true},
+    {"semanticId": "finance-settlement", "factFamilies": ["finance_settlement"], "requiredObservations": ["account_flow", "settlement", "insurance", "price_protection"], "requiresObservation": true},
+    {"semanticId": "store-analytics", "factFamilies": ["store_analytics"], "requiredObservations": ["funnel", "source_mix", "time_window", "metric_definition"], "requiresObservation": true}
+  ],
+  "exportMappings": [
+    {"mappingId": "product-export", "factFamilies": ["product"], "artifactSchemaRef": {"resourceType": "ControlledExportArtifactSchemaRevision", "resourceId": "wechat-store-product-export", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "requiresPermission": true, "permissionVerified": false, "exportAllowed": false, "coverageVerificationRequired": true, "freshnessVerificationRequired": true},
+    {"mappingId": "order-export", "factFamilies": ["order"], "artifactSchemaRef": {"resourceType": "ControlledExportArtifactSchemaRevision", "resourceId": "wechat-store-order-export", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "requiresPermission": true, "permissionVerified": false, "exportAllowed": false, "coverageVerificationRequired": true, "freshnessVerificationRequired": true},
+    {"mappingId": "aftersales-export", "factFamilies": ["aftersales"], "artifactSchemaRef": {"resourceType": "ControlledExportArtifactSchemaRevision", "resourceId": "wechat-store-aftersales-export", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "requiresPermission": true, "permissionVerified": false, "exportAllowed": false, "coverageVerificationRequired": true, "freshnessVerificationRequired": true},
+    {"mappingId": "traffic-export", "factFamilies": ["traffic"], "artifactSchemaRef": {"resourceType": "ControlledExportArtifactSchemaRevision", "resourceId": "wechat-store-traffic-export", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "requiresPermission": true, "permissionVerified": false, "exportAllowed": false, "coverageVerificationRequired": true, "freshnessVerificationRequired": true},
+    {"mappingId": "customer-export", "factFamilies": ["customer"], "artifactSchemaRef": {"resourceType": "ControlledExportArtifactSchemaRevision", "resourceId": "wechat-store-customer-export", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "requiresPermission": true, "permissionVerified": false, "exportAllowed": false, "coverageVerificationRequired": true, "freshnessVerificationRequired": true},
+    {"mappingId": "alliance-export", "factFamilies": ["alliance"], "artifactSchemaRef": {"resourceType": "ControlledExportArtifactSchemaRevision", "resourceId": "wechat-store-alliance-export", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "requiresPermission": true, "permissionVerified": false, "exportAllowed": false, "coverageVerificationRequired": true, "freshnessVerificationRequired": true},
+    {"mappingId": "settlement-export", "factFamilies": ["settlement"], "artifactSchemaRef": {"resourceType": "ControlledExportArtifactSchemaRevision", "resourceId": "wechat-store-settlement-export", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "requiresPermission": true, "permissionVerified": false, "exportAllowed": false, "coverageVerificationRequired": true, "freshnessVerificationRequired": true},
+    {"mappingId": "analytics-export", "factFamilies": ["analytics"], "artifactSchemaRef": {"resourceType": "ControlledExportArtifactSchemaRevision", "resourceId": "wechat-store-analytics-export", "revision": 1, "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "requiresPermission": true, "permissionVerified": false, "exportAllowed": false, "coverageVerificationRequired": true, "freshnessVerificationRequired": true}
+  ],
+  "failurePolicy": {
+    "permissionInsufficient": "BLOCKED_PERMISSION",
+    "asyncLoadingTimeout": "PARTIAL_LOADING_TIMEOUT",
+    "virtualListTruncated": "PARTIAL_PAGINATION",
+    "maskedValue": "BLOCKED_MASKED_VALUE",
+    "pageDrift": "BLOCKED_PAGE_DRIFT",
+    "externalUnknown": "UNKNOWN_RECONCILE",
+    "automaticRetry": false,
+    "emptyObserved": false,
+    "externalEffect": false
+  },
+  "knownRisks": ["ASYNC_LOADING", "VIRTUAL_LIST", "MASKED_VALUE", "PERMISSION_VARIANCE", "PAGE_DRIFT", "METRIC_DEFINITION_DRIFT"],
+  "nonClaims": ["NO_PLATFORM_ACCESS", "NO_EXPORT_EXECUTION", "NO_API_VERIFICATION", "NO_ADAPTER_INSTALLATION", "NO_BUSINESS_FACT_HYDRATION", "NO_EXTERNAL_EFFECT"]
+}
