@@ -260,6 +260,12 @@ def test_reader_preserves_missing_agent_run_as_blocked_without_fabrication() -> 
     assert result.projection_status == "blocked"
     assert result.blocker_codes == ["NO_CANONICAL_AGENT_RUN_CONTRIBUTION"]
     assert result.skill_contributions.items == []
+    assert result.side_effects.model_dump() == {
+        "agent_run_created_count": 0,
+        "handoff_created_count": 0,
+        "task_run_transition_count": 0,
+        "external_business_mutation_count": 0,
+    }
 
 
 def test_reader_keeps_stale_contribution_blocked() -> None:
@@ -277,6 +283,9 @@ def test_reader_keeps_stale_contribution_blocked() -> None:
         "SKILL_BINDING_READINESS_STALE",
         "CONTRIBUTION_NOT_CURRENTLY_AVAILABLE",
     ]
+    assert result.skill_contributions.items[0].readiness.status == "stale"
+    assert result.side_effects.agent_run_created_count == 0
+    assert result.side_effects.task_run_transition_count == 0
 
 
 @pytest.mark.parametrize(

@@ -219,13 +219,12 @@ def test_unresolved_or_cross_tenant_ref_blocks_before_plan_creation() -> None:
     def missing_binding(_scope, exact_ref):
         return exact_ref.resource_type != "SkillBindingSetRevision"
 
-    with pytest.raises(
-        BusinessInvestigationCompilationBlocked,
-        match="SKILL_BINDING_SET_NOT_RESOLVED",
-    ):
+    with pytest.raises(BusinessInvestigationCompilationBlocked) as captured:
         BusinessInvestigationProfileCompiler(
             stage_compiler, missing_binding
         ).compile(SCOPE, "owner", "compile-1", request)
+    assert captured.value.code == "SKILL_BINDING_SET_NOT_RESOLVED"
+    assert captured.value.resource_ref == request.profile.skill_binding_set_ref
     assert stage_compiler.calls == []
 
     with pytest.raises(BusinessInvestigationCompilationBlocked, match="CASE_NOT_RESOLVED"):

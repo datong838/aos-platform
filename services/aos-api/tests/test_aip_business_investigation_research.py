@@ -227,6 +227,14 @@ def test_cross_tenant_route_failure_or_expired_deadline_fails_closed() -> None:
         match="RESEARCH_ROUTE_RESOLUTION_FAILED",
     ):
         failing.create_job(SCOPE, runtime(), step(), "owner", now=NOW)
+    drifted = BusinessInvestigationResearchAdapter(
+        lambda _scope, _kind: ROUTES["ontology"], creator
+    )
+    with pytest.raises(
+        BusinessInvestigationResearchBlocked,
+        match="RESEARCH_ROUTE_KIND_DRIFTED",
+    ):
+        drifted.create_job(SCOPE, runtime(), step("data"), "owner", now=NOW)
     assert creator.calls == []
 
 
