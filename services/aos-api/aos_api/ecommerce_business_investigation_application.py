@@ -14,6 +14,12 @@ from aos_api.ecommerce_business_investigation_case import (
     BusinessInvestigationCaseRevision,
     BusinessInvestigationCaseStore,
 )
+from aos_api.ecommerce_business_investigation_projection import (
+    BusinessInvestigationProjectionBuilder,
+    BusinessInvestigationProjectionReader,
+    BusinessInvestigationWorkbenchView,
+    CanonicalBusinessInvestigationProjectionReader,
+)
 from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationRunControl,
     BusinessInvestigationRunLifecycle,
@@ -112,9 +118,13 @@ class EcommerceBusinessInvestigationApplication:
         self,
         case_store: BusinessInvestigationCaseStore | None = None,
         run_store: BusinessInvestigationRunStore | None = None,
+        projection_reader: BusinessInvestigationProjectionReader | None = None,
     ) -> None:
         self._cases = case_store or BusinessInvestigationCaseStore()
         self._runs = run_store or BusinessInvestigationRunStore()
+        self._projection = BusinessInvestigationProjectionBuilder(
+            projection_reader or CanonicalBusinessInvestigationProjectionReader()
+        )
 
     @staticmethod
     def _tenant(scope: TenantScope) -> TenantContext:
@@ -233,6 +243,11 @@ class EcommerceBusinessInvestigationApplication:
 
     def get_run(self, scope: TenantScope, run_id: str) -> BusinessInvestigationRunView:
         return self._runs.get(scope, run_id)
+
+    def get_run_view(
+        self, scope: TenantScope, run_id: str, *, observed_at: datetime
+    ) -> BusinessInvestigationWorkbenchView:
+        return self._projection.build(scope, run_id, observed_at=observed_at)
 
     def list_runs(
         self,

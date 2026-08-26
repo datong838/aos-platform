@@ -381,14 +381,15 @@ class RouterManifestRuntimeTests(unittest.TestCase):
             result = json.loads(output.read_text())
 
         # Runtime inventory includes FastAPI's four framework routes and the
-        # BI-W4-07 request-data command; the exported business-route inventory
+        # BI-W4-07 request-data command and BI-W4-08 rebuildable GET projection;
+        # the exported business-route inventory
         # intentionally filters framework routes out.
-        self.assertEqual(4478, result["count"])
+        self.assertEqual(4479, result["count"])
         self.assertEqual(
-            "180ee38a392597d37d6b7cdb8cf19dc0943277868540112db3643e870c8b77af",
+            "ccfd89f5ccadd933966a04dc3f412934f888e7e940ee66f95acda106eeae0bc3",
             result["sha256"],
         )
-        self.assertEqual(2685, result["openapi_paths"])
+        self.assertEqual(2686, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],

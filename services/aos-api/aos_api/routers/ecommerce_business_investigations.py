@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from functools import lru_cache
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Path, Query, Security, status
+from fastapi import APIRouter, Depends, Header, Path, Query, Request, Security, status
 from fastapi.security import HTTPBearer
 
 from aos_api.auth import Principal, require_principal
@@ -27,6 +27,11 @@ from aos_api.ecommerce_business_investigation_case import (
     BusinessInvestigationCaseConflict,
     BusinessInvestigationCaseNotFound,
     BusinessInvestigationCaseRevision,
+)
+from aos_api.ecommerce_business_investigation_projection import (
+    BusinessInvestigationProjectionError,
+    BusinessInvestigationProjectionNotFound,
+    BusinessInvestigationWorkbenchView,
 )
 from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationRunConflict,
@@ -95,7 +100,14 @@ def _expected_version(value: str) -> int:
 def _map_error(exc: Exception) -> ApiError:
     if isinstance(exc, ApiError):
         return exc
-    if isinstance(exc, (BusinessInvestigationCaseNotFound, BusinessInvestigationRunNotFound)):
+    if isinstance(
+        exc,
+        (
+            BusinessInvestigationCaseNotFound,
+            BusinessInvestigationRunNotFound,
+            BusinessInvestigationProjectionNotFound,
+        ),
+    ):
         return ApiError(
             code="BUSINESS_INVESTIGATION_NOT_FOUND",
             message="business investigation resource is not visible",
@@ -106,6 +118,12 @@ def _map_error(exc: Exception) -> ApiError:
             code="BUSINESS_INVESTIGATION_CONFLICT",
             message=str(exc),
             status_code=409,
+        )
+    if isinstance(exc, BusinessInvestigationProjectionError):
+        return ApiError(
+            code="BUSINESS_INVESTIGATION_AUTHORITY_UNAVAILABLE",
+            message="business investigation authority failed closed",
+            status_code=503,
         )
     if isinstance(exc, ValueError):
         return ApiError(
@@ -247,6 +265,34 @@ def get_run(
 ) -> BusinessInvestigationRunView:
     try:
         return application.get_run(_scope(principal), run_id)
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get(
+    "/runs/{run_id}/view",
+    response_model=BusinessInvestigationWorkbenchView,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunWorkbenchViewGet",
+)
+def get_run_view(
+    request: Request,
+    run_id: ResourceIdPath,
+    principal: PrincipalDependency,
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationWorkbenchView:
+    try:
+        if request.query_params:
+            raise ApiError(
+                code="BUSINESS_INVESTIGATION_UNKNOWN_QUERY",
+                message="Workbench View does not accept query parameters",
+                status_code=400,
+            )
+        return application.get_run_view(
+            _scope(principal), run_id, observed_at=datetime.now(UTC)
+        )
     except Exception as exc:
         raise _map_error(exc) from exc
 

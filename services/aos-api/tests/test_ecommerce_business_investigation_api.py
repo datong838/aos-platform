@@ -25,6 +25,9 @@ from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationRunControl,
     BusinessInvestigationRunStateRevision,
 )
+from aos_api.ecommerce_business_investigation_projection import (
+    BusinessInvestigationProjectionNotFound,
+)
 from aos_api.errors import register_exception_handlers
 from aos_api.routers import ecommerce_business_investigations as routes
 from aos_api.tenant_scope import TenantScope
@@ -116,6 +119,14 @@ class FakeApplication:
     def get_run(self, scope, run_id):
         raise BusinessInvestigationCaseNotFound("not visible")
 
+    def get_run_view(self, scope, run_id, *, observed_at):
+        self.calls.append(("get_run_view", scope, run_id, observed_at))
+        if self.missing:
+            raise BusinessInvestigationProjectionNotFound("secret projection id")
+        from test_ecommerce_business_investigation_projection import projection_view
+
+        return projection_view(observed_at=observed_at)
+
     def transition_run_control(self, scope, run_id, target, **kwargs):
         self.calls.append(("transition_run", scope, run_id, target, kwargs))
         return BusinessInvestigationRunStateCommandResponse(
@@ -175,8 +186,28 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     assert "/v1/ecommerce/investigations/runs/{run_id}:pause" in paths
     assert "/v1/ecommerce/investigations/runs/{run_id}:resume" in paths
     assert "/v1/ecommerce/investigations/runs/{run_id}:cancel" in paths
+    view = paths["/v1/ecommerce/investigations/runs/{run_id}/view"]["get"]
+    assert view["operationId"] == "ecommerceInvestigationRunWorkbenchViewGet"
     request_data = paths["/v1/ecommerce/investigations/runs/{run_id}:request-data"]["post"]
     assert request_data["operationId"] == "ecommerceInvestigationRunDataRequest"
+
+
+def test_workbench_view_http_uses_principal_tenant_and_hides_non_visible_source() -> None:
+    fake = FakeApplication()
+    fake.calls = []
+    fake.missing = False
+    with client(fake) as api:
+        response = api.get("/v1/ecommerce/investigations/runs/run-1/view")
+        assert response.status_code == 200
+        assert response.json()["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
+        assert response.json()["artifacts"][0]["status"] == "missing"
+        assert fake.calls[-1][1] == TenantScope("org-org", "dev-project")
+        unknown_query = api.get("/v1/ecommerce/investigations/runs/run-1/view?tenant=dev-org")
+        assert unknown_query.status_code == 400
+        fake.missing = True
+        hidden = api.get("/v1/ecommerce/investigations/runs/run-1/view")
+        assert hidden.status_code == 404 and "secret projection id" not in hidden.text
+    fake.missing = False
 
 
 def test_case_query_and_create_use_principal_tenant_and_strict_body() -> None:
