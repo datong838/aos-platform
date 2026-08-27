@@ -298,16 +298,19 @@ def test_preview_and_health_are_explicitly_synthetic():
 
 
 def test_demo_trial_route_is_explicitly_unsupported(client, auth_headers):
+    eng = get_engine()
+    pipeline = eng.create_pipeline(TEST_SCOPE, name="honesty-trial")
+    node = eng.add_node(TEST_SCOPE, pipeline.id, "honesty-transform")
     response = client.post(
-        "/v1/pipelines/demo-pipeline/nodes/demo-transform/trial-run",
+        f"/v1/pipelines/{pipeline.id}/nodes/{node.id}/trial-run",
         headers=auth_headers,
         json={"sample_input": {"secret": "must-not-be-echoed"}},
     )
 
     assert response.status_code == 200
     body = response.json()
-    assert body["mode"] == "demo"
     assert body["status"] == "unsupported"
+    assert body["error_code"] == "PIPELINE_EXECUTOR_MISSING"
     assert body["output_rows"] == []
     assert "must-not-be-echoed" not in response.text
 

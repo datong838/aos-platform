@@ -8,7 +8,7 @@ T3  卸载不存在的 bundle → 严格模式 raise KeyError，宽容模式 ret
 T4  再安装 2 个被卸载的 → 再次 4 个全 installed；content digest === T1 首次安装的 digest（幂等+一致性）
 T5  重复安装已存在的 bundle（幂等） → installed_at 不更新；hash 不变；不抛异常
 T6  尝试安装越权 bundle（未知 alias catalog-evil）→ ManifestLoader 抛 alias 未 allowlisted（安全）
-T7  所有 4 个 bundle 的 content 文件数匹配 D2 规格（core=5/niushop=11/operations=6/growth=8）
+T7  所有 4 个 bundle 的 content 文件数满足 D2 最小规格，growth 必要扩展资产完整
 """
 
 from __future__ import annotations
@@ -33,28 +33,38 @@ EXPECTED_BUNDLE_SPECS: dict[str, dict[str, Any]] = {
         "kind": "domain",
         "expected_files_note": "5 content files (object-types/link-types/derived-metrics/skeleton/pii)",
         "min_files": 5,
-        "max_files": 10,
     },
     "platforms/ecommerce-niushop": {
         "bundle_id": "ecommerce-niushop",
         "kind": "platform",
         "expected_files_note": "11 content (manifest+8 mappings+pii+fingerprint)",
         "min_files": 10,
-        "max_files": 20,
     },
     "solutions/ecommerce-operations-base": {
         "bundle_id": "ecommerce-operations-base",
         "kind": "solution",
         "expected_files_note": "6 content (L01-L03/W01-W02/dryRun)",
         "min_files": 5,
-        "max_files": 15,
     },
     "solutions/ecommerce-growth": {
         "bundle_id": "ecommerce-growth",
         "kind": "solution",
-        "expected_files_note": "8 content (L05/policies/gates/agents/W03/dryRun/3 placeholders)",
-        "min_files": 7,
-        "max_files": 15,
+        "expected_files_note": "expanded atomic Skill/Logic/coworker/Workshop catalog and evidence",
+        "min_files": 30,
+        "required_files": {
+            "content/logic/ecommerce-37-logic-catalog.json",
+            "content/logic/ecommerce-37-skill-compatibility-map.json",
+            "content/agents/ecommerce-six-coworkers.json",
+            "content/workshops/ecommerce.analyst.json",
+            "content/workshops/ecommerce.content-campaign.json",
+            "content/workshops/ecommerce.creator-growth.json",
+            "content/workshops/ecommerce.customer.json",
+            "content/workshops/ecommerce.media-studio.json",
+            "content/workshops/ecommerce.price-governance.json",
+            "content/workshops/ecommerce.task-cockpit.json",
+            "evidence/bundle-evals.json",
+            "evidence/sbom.json",
+        },
     },
 }
 
@@ -199,9 +209,11 @@ class TestD2BundleInstallUninstallReinstallLoop:
             # content artifact 数在预期区间
             artifacts = getattr(rec.loaded, "artifacts") or []
             n = len(artifacts)
-            assert exp["min_files"] <= n <= exp["max_files"], (
-                f"{rel} artifact 数 {n} 超出预期区间 [{exp['min_files']}, {exp['max_files']}]"
+            assert n >= exp["min_files"], (
+                f"{rel} artifact 数 {n} 小于预期下限 {exp['min_files']}"
             )
+            paths = {artifact.relative_path for artifact in artifacts}
+            assert exp.get("required_files", set()) <= paths
             assert run.is_installed(exp["bundle_id"]), f"{rel} 未标记 installed"
             installed_ids.append(exp["bundle_id"])
 
@@ -321,3 +333,5 @@ class TestD2BundleInstallUninstallReinstallLoop:
                 f"{bid} artifact 数 {n} < min {exp['min_files']}"
                 f"（{exp['expected_files_note']}）"
             )
+            paths = {artifact.relative_path for artifact in artifacts}
+            assert exp.get("required_files", set()) <= paths
