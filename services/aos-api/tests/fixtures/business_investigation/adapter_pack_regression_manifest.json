@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "aos.business-investigation.adapter-pack-regression-manifest/v1",
+  "manifestId": "bi-w9-07-three-platform-disabled-adapter-pack-regression",
+  "revision": 1,
+  "noExternalEffect": true,
+  "artifacts": [
+    {
+      "fixtureId": "generic-disabled-capability",
+      "path": "adapter_capability_matrix.json",
+      "schemaVersion": "aos.business-investigation.adapter-capability-matrix/v1",
+      "platforms": ["niushop", "wechat_store", "douyin_store"],
+      "sourceKinds": ["synthetic"],
+      "sha256": "sha256:7fe9825207b29dd6be15012e5f9224c7f25aa893a67c4014c2b3acccf8a23690"
+    },
+    {
+      "fixtureId": "niushop-disabled-profile",
+      "path": "niushop_profile.json",
+      "schemaVersion": "aos.business-investigation.niushop-profile/v1",
+      "platforms": ["niushop"],
+      "sourceKinds": ["synthetic"],
+      "sha256": "sha256:48fae6b78a7297540e92ca1dfaa22adb7e014080612977d733ef72b7680ce075"
+    },
+    {
+      "fixtureId": "wechat-store-disabled-profile",
+      "path": "wechat_store_profile.json",
+      "schemaVersion": "aos.business-investigation.wechat-store-profile/v1",
+      "platforms": ["wechat_store"],
+      "sourceKinds": ["historical_redacted"],
+      "sha256": "sha256:1405c2c687bbe7b764c6f0c45d5c2eeb8efcf5a5ea8e7fe21463e1d2d8ffca98"
+    },
+    {
+      "fixtureId": "douyin-store-disabled-profile",
+      "path": "douyin_store_profile.json",
+      "schemaVersion": "aos.business-investigation.douyin-store-profile/v1",
+      "platforms": ["douyin_store"],
+      "sourceKinds": ["historical_redacted"],
+      "sha256": "sha256:cb6ac36ed4f2a10640d9ff1625c4ca62d774f205cf397b3b51c92314d95484bd"
+    },
+    {
+      "fixtureId": "disabled-tenant-overlay",
+      "path": "instance_overlay.json",
+      "schemaVersion": "aos.business-investigation.instance-overlay/v1",
+      "platforms": ["wechat_store"],
+      "sourceKinds": ["synthetic"],
+      "sha256": "sha256:c74a4851fdf1672eb6dae70c219bd3e509c4d49579bc472a2fcb62e8b3f7d2c6"
+    },
+    {
+      "fixtureId": "disabled-activation-matrix",
+      "path": "adapter_activation_matrix.json",
+      "schemaVersion": "aos.business-investigation.adapter-activation-matrix/v1",
+      "platforms": ["niushop", "wechat_store", "douyin_store"],
+      "sourceKinds": ["synthetic"],
+      "sha256": "sha256:62b62acff9df0fb957e611a7651324a41d608dc920ef353dfc79cf3ec55711ec"
+    },
+    {
+      "fixtureId": "fail-closed-connector-matrix",
+      "path": "connector_failure_matrix.json",
+      "schemaVersion": "aos.business-investigation.connector-failure-fixture-matrix/v1",
+      "platforms": ["niushop", "wechat_store", "douyin_store"],
+      "sourceKinds": ["synthetic", "historical_redacted"],
+      "sha256": "sha256:226aa45f3a31d9a1f875de0b0637c15e366d0885c70419d41b25ea281bf59757"
+    }
+  ]
+}
