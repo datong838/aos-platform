@@ -157,3 +157,13 @@ V8 已关闭“读取失败后页面结构完全偏离视觉稿”的 P1；真�
 - 当前仍有可见细节差异（任务卡密度、部分英文 authority 文案、媒体卡片间距、各页字号/边框/色阶），均继续作为 P1/P2 处理。
 
 `final result: failed`
+
+## V17 内容与活动可信空结构密度复验
+
+- source/current 同为 `1280×720`；最新当前证据为 `v17-content-campaign-1280x720.png`，并已替换 comparison 中的旧 V13 图片引用。
+- 中栏按 source 的垂直信息密度补齐“AI 策划结论 → 活动概览 → 底部审批操作”三段：助手结论 `x=513/y=218/w=466/h≈88.6`，活动概览 `x=513/y≈320.6/w=466/h≈285.5`，底部操作条 `x=498/y≈610.5/w=496/h≈70.5`。
+- 三栏保持 `190 / 502 / 280px`，toolbar `x=308/y=48/w=972/h=40`，board `x=308/y=88/w=972/h=595`，document `clientWidth=scrollWidth=1280`；没有顶部挤压或页面级横向溢出。
+- 所有同位写操作均为 disabled；页面未复制七夕活动、预算、GMV、毛利、风险建议或发布成功等演示事实。canonical authority 不可用时明确显示“尚未形成可审阅方案 / 等待 exact authority / 失败关闭”。
+- 测试先红后绿；内容页专项 `3/3`、八菜单累计专项 `65/65`、TypeScript、production build 与 diff-check 全部 GREEN。既有 React `act(...)` 警告及 Vite 大 chunk 警告未转化为失败。
+
+V17 关闭内容页中栏可信空结构密度 P1；八页仍有字号、色阶、卡片密度及多视口差异待清零，整体结论继续为 `failed`。
