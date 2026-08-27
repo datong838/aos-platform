@@ -59,7 +59,7 @@ def test_sink_calls_persist_dataset_with_scope():
 
     assert captured.get("scope") is TEST_SCOPE
     item = captured.get("item", {})
-    assert item.get("rid", "").startswith("ri.dataset.")
+    assert item.get("rid") == f"ri.aos.main.dataset.{pl.id}"
     assert item.get("pipelineId") == pl.id
     assert item.get("status") == "READY"
 
@@ -133,8 +133,7 @@ def test_sink_returns_dataset_with_rid_id():
     finally:
         monkey.undo()
 
-    # ds.id 应该是 ri.dataset.<...> 格式
-    assert ds.id.startswith("ri.dataset.")
+    assert ds.id == f"ri.aos.main.dataset.{pl.id}"
 
     output_ref = f"dataset://catalog/{ds.id}"
     assert len(output_ref) <= 512
@@ -168,8 +167,8 @@ def test_sink_backward_compat_dataset_resolver_sees_dataset():
     assert dataset_resolver(output_ref) is True
 
 
-def test_sink_rid_unique_per_call():
-    """rid 每次调用唯一（避免 sink 多次冲突）。"""
+def test_sink_rid_is_idempotent_per_pipeline():
+    """同一 pipeline 重试覆盖同一 Dataset authority，不创建第二身份。"""
     eng = get_engine()
     pl = _make_pipeline()
 
@@ -182,4 +181,4 @@ def test_sink_rid_unique_per_call():
     finally:
         monkey.undo()
 
-    assert ds1.id != ds2.id
+    assert ds1.id == ds2.id == f"ri.aos.main.dataset.{pl.id}"

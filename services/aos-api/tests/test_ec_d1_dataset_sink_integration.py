@@ -61,20 +61,21 @@ def _stub_persist(monkeypatch: pytest.MonkeyPatch) -> dict:
 def test_output_ref_format_via_live_executor(monkeypatch):
     """ec_live_executor 返回的 output_ref 格式为 dataset://catalog/<rid>。
 
-    合法约束：scheme=dataset, netloc=catalog, path=/<rid>, rid 以 ri.dataset. 开头。
+    合法约束：scheme=dataset, netloc=catalog, path=/<rid>, rid 为 canonical AOS Dataset RID。
     """
     from aos_api import ec_live_executor as mod
 
     # mock source/transform/sink_ot，只验证 sink_dataset 行为
     sample_rows = [{"a": 1}, {"b": 2}]
     monkeypatch.setattr(mod, "fetch_source_rows", lambda **kw: sample_rows)
-    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p: rows)
+    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p, **kw: rows)
     monkeypatch.setattr(mod, "build_link_rows", lambda rows, p: rows)
     monkeypatch.setattr(mod, "sink_to_ot", lambda *a, **kw: {"objects_written": 0, "links_written": 0})
     _stub_persist(monkeypatch)
 
+    pipeline = _make_pipeline()
     result = mod.ec_live_executor(
-        pipeline=_make_pipeline(),
+        pipeline=pipeline,
         nodes=[],
         node_id=None,
         sample_input={},
@@ -85,11 +86,11 @@ def test_output_ref_format_via_live_executor(monkeypatch):
     )
 
     output_ref = result["output_ref"]
-    assert output_ref.startswith("dataset://catalog/ri.dataset.")
+    assert output_ref.startswith("dataset://catalog/ri.aos.main.dataset.")
     parsed = urlsplit(output_ref)
     assert parsed.scheme == "dataset"
     assert parsed.netloc == "catalog"
-    assert parsed.path.startswith("/ri.dataset.")
+    assert parsed.path.startswith("/ri.aos.main.dataset.")
     assert not parsed.query
     assert not parsed.fragment
     assert len(output_ref) <= 512
@@ -100,13 +101,14 @@ def test_output_ref_rid_matches_returned_dataset(monkeypatch):
     from aos_api import ec_live_executor as mod
 
     monkeypatch.setattr(mod, "fetch_source_rows", lambda **kw: [{"a": 1}])
-    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p: rows)
+    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p, **kw: rows)
     monkeypatch.setattr(mod, "build_link_rows", lambda rows, p: rows)
     monkeypatch.setattr(mod, "sink_to_ot", lambda *a, **kw: {"objects_written": 0, "links_written": 0})
     _stub_persist(monkeypatch)
 
+    pipeline = _make_pipeline()
     result = mod.ec_live_executor(
-        pipeline=_make_pipeline(),
+        pipeline=pipeline,
         nodes=[],
         node_id=None,
         sample_input={},
@@ -116,9 +118,9 @@ def test_output_ref_rid_matches_returned_dataset(monkeypatch):
         scope=TEST_SCOPE,
     )
 
-    # output_ref 中的 rid 应该是合法的 ri.dataset.<hex8>
+    # output_ref 中的 rid 应与 pipeline 绑定的 canonical RID 一致。
     rid = result["output_ref"].split("/")[-1]
-    assert rid.startswith("ri.dataset.")
+    assert rid == f"ri.aos.main.dataset.{pipeline.id}"
     # rid 在 engine 中能找到对应 dataset
     eng = get_engine()
     assert eng.get_dataset(TEST_SCOPE, rid) is not None
@@ -133,7 +135,7 @@ def test_rows_read_written_nonneg_int(monkeypatch):
 
     sample_rows = [{"a": 1}, {"b": 2}, {"c": 3}]
     monkeypatch.setattr(mod, "fetch_source_rows", lambda **kw: sample_rows)
-    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p: rows)
+    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p, **kw: rows)
     monkeypatch.setattr(mod, "build_link_rows", lambda rows, p: rows)
     monkeypatch.setattr(mod, "sink_to_ot", lambda *a, **kw: {"objects_written": 0, "links_written": 0})
     _stub_persist(monkeypatch)
@@ -162,7 +164,7 @@ def test_rows_read_written_zero_on_empty_input(monkeypatch):
     from aos_api import ec_live_executor as mod
 
     monkeypatch.setattr(mod, "fetch_source_rows", lambda **kw: [])
-    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p: rows)
+    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p, **kw: rows)
     monkeypatch.setattr(mod, "build_link_rows", lambda rows, p: rows)
     monkeypatch.setattr(mod, "sink_to_ot", lambda *a, **kw: {"objects_written": 0, "links_written": 0})
     _stub_persist(monkeypatch)
@@ -195,7 +197,7 @@ def test_scope_passed_to_persist_dataset(monkeypatch):
 
     assert captured["scope"] is TEST_SCOPE
     item = captured["item"]
-    assert item["rid"].startswith("ri.dataset.")
+    assert item["rid"] == f"ri.aos.main.dataset.{pl.id}"
     assert item["pipelineId"] == pl.id
 
 
@@ -258,7 +260,7 @@ def test_persist_dataset_tenant_scope_conflict_degraded(monkeypatch):
     # sink_to_dataset 不抛异常（降级为 warning）
     ds = sink_to_dataset(eng, TEST_SCOPE, pl, [{"a": 1}])
     assert ds is not None
-    assert ds.id.startswith("ri.dataset.")
+    assert ds.id == f"ri.aos.main.dataset.{pl.id}"
 
 
 def test_persist_dataset_required_scope_violation(monkeypatch):
@@ -351,7 +353,7 @@ def test_all_persist_fail_sink_still_returns_dataset(monkeypatch):
 
     ds = sink_to_dataset(eng, TEST_SCOPE, pl, [{"a": 1}])
     assert ds is not None
-    assert ds.id.startswith("ri.dataset.")
+    assert ds.id == f"ri.aos.main.dataset.{pl.id}"
 
 
 # ── 6. 端到端集成：sink_to_dataset + ec_live_executor ──
@@ -363,7 +365,7 @@ def test_live_executor_sink_integration_rows_consistent(monkeypatch):
 
     sample_rows = [{"a": 1}, {"b": 2}]
     monkeypatch.setattr(mod, "fetch_source_rows", lambda **kw: sample_rows)
-    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p: rows)
+    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p, **kw: rows)
     monkeypatch.setattr(mod, "build_link_rows", lambda rows, p: rows)
     monkeypatch.setattr(mod, "sink_to_ot", lambda *a, **kw: {"objects_written": 0, "links_written": 0})
     _stub_persist(monkeypatch)
@@ -381,7 +383,7 @@ def test_live_executor_sink_integration_rows_consistent(monkeypatch):
 
     assert result["rows_read"] == len(sample_rows)
     assert result["rows_written"] == len(sample_rows)
-    assert result["output_ref"].startswith("dataset://catalog/ri.dataset.")
+    assert result["output_ref"].startswith("dataset://catalog/ri.aos.main.dataset.")
 
 
 def test_live_executor_sink_dataset_resolver_sees_dataset(monkeypatch):
@@ -390,7 +392,7 @@ def test_live_executor_sink_dataset_resolver_sees_dataset(monkeypatch):
     from aos_api.ec_pipeline_resolvers import dataset_resolver
 
     monkeypatch.setattr(mod, "fetch_source_rows", lambda **kw: [{"a": 1}])
-    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p: rows)
+    monkeypatch.setattr(mod, "apply_derived_metrics", lambda rows, p, **kw: rows)
     monkeypatch.setattr(mod, "build_link_rows", lambda rows, p: rows)
     monkeypatch.setattr(mod, "sink_to_ot", lambda *a, **kw: {"objects_written": 0, "links_written": 0})
     _stub_persist(monkeypatch)
