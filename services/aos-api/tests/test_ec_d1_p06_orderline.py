@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -220,16 +221,17 @@ def _run_executor(
 ) -> dict[str, Any]:
     eng = get_engine()
     eng.ecom_consistency_store = store
-    return ec_mod.ec_live_executor(
-        pipeline=FakePipeline(pipeline_id),
-        nodes=[],
-        node_id=None,
-        sample_input=rows,
-        execution_kind="schedule",
-        cancel_event=None,
-        deadline=0,
-        scope=scope,
-    )
+    with patch.object(ec_mod, "fetch_source_rows", return_value=rows):
+        return ec_mod.ec_live_executor(
+            pipeline=FakePipeline(pipeline_id),
+            nodes=[],
+            node_id=None,
+            sample_input=None,
+            execution_kind="schedule",
+            cancel_event=None,
+            deadline=0,
+            scope=scope,
+        )
 
 
 # ═══════════════════════════════════════════════
@@ -244,7 +246,7 @@ def test_p06_initial_load_lands_orderline_ot():
 
     result = _run_executor(rows, store=store)
 
-    assert result["output_ref"].startswith("dataset://catalog/ri.dataset.")
+    assert result["output_ref"] == "dataset://catalog/ri.aos.main.dataset.p06-orderline"
     assert len(store.calls) == 1
     command = store.calls[0]
     assert len(command.objects) == 2
@@ -383,8 +385,6 @@ def test_p06_create_time_zero_cursor_uses_refund_action_time():
     修正：watermark_col 改为 refund_action_time。
     验证：SQL 用 refund_action_time 做 WHERE；create_time=0 转 None。
     """
-    from unittest.mock import MagicMock, patch
-
     from aos_api.ec_source_adapter import (
         fetch_source_rows,
         reset_soft_delete_counts,
@@ -416,24 +416,10 @@ def test_p06_create_time_zero_cursor_uses_refund_action_time():
         }
     }
 
-    # 用真实记录 execute 调用的 fake cursor（而非 MagicMock）
-    class _RecordingCursor:
-        def __init__(self, rows):
-            self.rows = rows
-            self.executed: list[tuple[str, Any]] = []
-
-        def execute(self, sql, params=None):
-            self.executed.append((sql, params))
-
-        def fetchall(self):
-            return self.rows
-
-        def close(self):
-            pass
-
-    cur = _RecordingCursor(niushop_rows)
-    niushop_conn = MagicMock()
-    niushop_conn.cursor.return_value = cur
+    runtime = MagicMock()
+    runtime.__enter__.return_value = runtime
+    runtime.__exit__.return_value = None
+    runtime.read_rows.return_value = niushop_rows
 
     with patch(
         "aos_api.ec_source_adapter.connect",
@@ -441,10 +427,10 @@ def test_p06_create_time_zero_cursor_uses_refund_action_time():
             __enter__=MagicMock(return_value=aos_conn),
             __exit__=MagicMock(return_value=None),
         ),
-    ), patch("aos_api.ec_source_adapter.pymysql") as mock_pymysql:
-        mock_pymysql.connect.return_value = niushop_conn
-        mock_pymysql.cursors.DictCursor = MagicMock()
-
+    ), patch(
+        "aos_api.ec_source_adapter.JdbcConnectorRuntime",
+        return_value=runtime,
+    ):
         from types import SimpleNamespace
         node = SimpleNamespace(
             id="n-src",
@@ -470,16 +456,12 @@ def test_p06_create_time_zero_cursor_uses_refund_action_time():
     # refund_action_time 保留（非 0）
     assert rows[0]["refund_action_time"] == 1000
 
-    # 验证 SQL 用 refund_action_time 做 WHERE（从 cursor.executed 提取数据查询 SQL）
-    data_sqls = [
-        sql for sql, _ in cur.executed
-        if "READ ONLY" not in sql
-    ]
-    assert len(data_sqls) == 1
-    assert "refund_action_time" in data_sqls[0]
-    # create_time 不出现在 WHERE 子句中（游标修正点）
-    where_clause = data_sqls[0].split("WHERE", 1)[1] if "WHERE" in data_sqls[0] else ""
-    assert "create_time" not in where_clause
+    runtime.read_rows.assert_called_once_with(
+        "ns_order_goods",
+        composite_cursor=(500, 199, "refund_action_time", "order_goods_id"),
+        limit=100,
+        where_equals={},
+    )
 
 
 def test_p06_contains_link_requires_order_header():
@@ -513,7 +495,7 @@ def test_p06_contains_link_requires_order_header():
     assert obj is not None
     assert obj["external_id"] == "niushop:1:200"
 
-    # DANGLING_LINK：Order.lines Link，source Order 不存在 → 拒绝
+    # Object-first：source Order 不存在时 Link 被忽略并进入 side channel。
     dangling_link = link_row(
         link_type="Order.lines",
         source_type="Order",
@@ -521,9 +503,13 @@ def test_p06_contains_link_requires_order_header():
         source_pk="999",  # 不存在的 Order
         target_pk="200",
     )
-    with pytest.raises(EcomConsistencyError) as caught:
-        sink_to_ot(eng, TEST_SCOPE, FakePipeline("p06-link"), [dangling_link])
-    assert caught.value.code == "DANGLING_LINK"
+    dangling_result = sink_to_ot(
+        eng, TEST_SCOPE, FakePipeline("p06-link"), [dangling_link]
+    )
+    assert dangling_result == {"objects_written": 0, "links_written": 0}
+    retained = store.get_last_dangling_links()
+    assert len(retained) == 1
+    assert retained[0].cursor_external_id == "link:999->200"
 
     # 正常场景：先创建 Order，再创建 Order.lines Link
     store2 = _make_sqlite_store()
@@ -536,37 +522,26 @@ def test_p06_contains_link_requires_order_header():
     # Link 落地成功（无异常即通过）
 
 
-def test_p06_forproduct_link_missing_pushes_dlq():
-    """#9 forProduct Link 缺失进 DLQ（不自动造对象）。
-
-    悬挂 Link（target Product 不存在）被 store 拒绝（DANGLING_LINK），
-    executor 捕获异常 → 投递 DLQ → 重新抛出。
-    验证：不自动创建 Product 对象。
-    """
-    from aos_api.routers.wave_ext import _dlq
-
-    _dlq.clear()
-    dangling = EcomConsistencyError(
-        "DANGLING_LINK",
-        "link endpoints must exist in the same committed tenant scope",
+def test_p06_forproduct_link_missing_is_retained_without_auto_create():
+    """#9 forProduct target 缺失时 Link 被忽略，不自动造 Product。"""
+    store = _make_sqlite_store()
+    eng = get_engine()
+    eng.ecom_consistency_store = store
+    sink_to_ot(eng, TEST_SCOPE, FakePipeline("p06-forproduct"), [
+        orderline_row(goods_id="200"),
+    ])
+    dangling = link_row(
+        link_type="OrderLine.ofProduct",
+        source_type="OrderLine",
+        target_type="Product",
+        source_pk="200",
+        target_pk="product-missing",
     )
-    store = FakeStore(raises=dangling)
-
-    # executor 捕获 DANGLING_LINK → DLQ → re-raise
-    with pytest.raises(EcomConsistencyError) as caught:
-        _run_executor(
-            [orderline_row(goods_id="200")],
-            store=store,
-            pipeline_id="p06-dlq-forproduct",
-        )
-
-    assert caught.value.code == "DANGLING_LINK"
-    # DLQ 被投递
-    assert len(_dlq) >= 1
-    dlq_item = list(_dlq.values())[-1]
-    assert dlq_item["pipelineId"] == "p06-dlq-forproduct"
-    assert dlq_item["errorCode"] == "EcomConsistencyError"
-    _dlq.clear()
+    result = sink_to_ot(eng, TEST_SCOPE, FakePipeline("p06-forproduct"), [dangling])
+    assert result == {"objects_written": 0, "links_written": 0}
+    retained = store.get_last_dangling_links()
+    assert len(retained) == 1
+    assert retained[0].target.external_id == "niushop:1:product-missing"
 
 
 def test_p06_forsku_link_sku_id_zero_rule():
@@ -594,10 +569,12 @@ def test_p06_forsku_link_sku_id_zero_rule():
         source_pk="200",
         target_pk="0",  # sku_id=0
     )
-    # ProductSku "niushop:1:0" 不存在 → DANGLING_LINK
-    with pytest.raises(EcomConsistencyError) as caught:
-        sink_to_ot(eng, TEST_SCOPE, FakePipeline("p06-sku0"), [forsku_link])
-    assert caught.value.code == "DANGLING_LINK"
+    # ProductSku "niushop:1:0" 不存在 → Link ignored 并保留 side channel。
+    result = sink_to_ot(eng, TEST_SCOPE, FakePipeline("p06-sku0"), [forsku_link])
+    assert result == {"objects_written": 0, "links_written": 0}
+    retained = store.get_last_dangling_links()
+    assert len(retained) == 1
+    assert retained[0].target.external_id == "niushop:1:0"
 
     # 验证 target external_id 确实是 "niushop:1:0"（sku_id=0 → niushop:1:0）
     # 通过检查 Link 的 target external_id（从异常 details 或构造过程验证）
