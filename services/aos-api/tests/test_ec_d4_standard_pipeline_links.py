@@ -86,6 +86,8 @@ def _test_executor(
     cancel_event: Any,
     deadline: float,
     scope: TenantScope,
+    run_id: str,
+    run_started_at: float,
 ) -> dict[str, Any]:
     """测试执行器：绕过 MySQL，透传 sample rows，产出合法 evidence。
 
