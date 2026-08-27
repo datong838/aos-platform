@@ -85,3 +85,43 @@
 `final result: failed`
 
 原因：Shell、Tab 与生意探究可信空首屏已完成本段整改，但八菜单逐页与三视口总门尚未闭合；该状态继续进入下一串行任务，不构成停止条件。
+
+## 七视图与三视口最终复核（2026-08-27）
+
+### 同输入证据集
+
+内置浏览器在 source 与 implementation 上分别进入同名菜单，并在同一轮比较输入中成对审阅；每档视口均保存八组 source/current 截图：
+
+- `final-1280x800/source-*.jpg` 与 `final-1280x800/current-*.jpg`
+- `final-1440x900/source-*.jpg` 与 `final-1440x900/current-*.jpg`
+- `final-1920x1080/source-*.jpg` 与 `final-1920x1080/current-*.jpg`
+
+八组菜单键固定为 `inquiry / overview / drivers / diagnosis / plan / effects / evidence / quality`。浏览器逐档回读 implementation 的 viewport/document 宽度分别为 `1280/1280`、`1440/1440`、`1920/1920`，页面级横向溢出均为 `0`；视觉验收结束后已撤销 viewport override。
+
+### 逐页一致性结论
+
+1. 生意探究：Case 条、可信空边界、三阶段轨道、工作区与右侧依赖门保持视觉稿的层级、尺寸比例与密集细边框；无 canonical Case/Run 时以同位可信空替代演示事实。
+2. 经营总览：八节点经营节奏、经营摘要、待补证/待关注与三段协作链按视觉稿首屏比例落位；实际无 authority 时状态统一失败关闭。
+3. 驱动因素：三列指标卡、下方贡献分布与事件流双栏保持视觉稿网格、卡片高度、字号层级和颜色语义；未把视觉稿曲线、金额、百分比复制为真实事实。
+4. 问题诊断：四个二级 Tab、六行指标对比表与下方来源/异常双栏复刻视觉稿信息架构；无 exact metric 时使用“未知/blocked”，不显示伪百分比。
+5. 增长计划：五阶段 lifecycle、左侧目标/行动/预算纵向主体与右侧审批/证据/Proposal 卡列保持视觉稿比例；无 approved exact revision 时不出现可执行写入口。
+6. 效果复盘：有效、待补证、风险三段 Review 及下方四层经验/审批列保持视觉稿节奏与状态色；无归因 authority 时不自动晋升记忆。
+7. 证据链：DecisionSummary、四个依赖节点、评价复核、Handoff 与阻塞明细保持视觉稿的 DAG 空间关系；未用 CSS 图形或伪连线冒充资产，节点引用仍由 exact ref 决定。
+8. 数据质量：左上五轴增长护栏、右上先行指标、左下分母/新鲜度、右下异常阻断形成 2×2 主网格；`progress` 仅消费真实质量值，无 ref 时保持 blocked。
+
+### 精确视觉与功能门
+
+- P0：浅色 Shell、48/260/48 基础几何、标题、上下文栏、八菜单起点与主内容起点已清零。
+- P1：三档视口的布局、组件层级、卡片比例、表格/轨道/双栏结构、边框、圆角、状态色和文字层级已清零；未发现裁切或横向溢出。
+- P2：字体族沿用产品现有系统字体栈；字号、字重、行高、间距和密度按 source token 对齐。视觉稿演示数字、演示成功态和写按钮属于安全语义差异，不计视觉缺陷，且均在原组件位置使用可信 `unknown/blocked/read-only` 替代。
+- 交互：八菜单点击与键盘切换可用；ArrowLeft 从“数据质量”切换到“证据链”已由内置浏览器复验。
+- 专项前端：`29/29` GREEN；Workshop Web 累计 `255 files / 2301 tests` GREEN。
+- TypeScript 与 production build：GREEN，仅保留既有 chunk-size warning。
+- 后端 GET/canonical 专项：`28 passed`，仅保留既有 deprecation warning。
+- 安全：没有真实 Source read、业务写入、Provider、迁移、外部副作用或发布；真实数据缺失不会被视觉稿演示值补齐。
+
+## 最终结论
+
+`final result: passed`
+
+本结论仅关闭 BI-W11-02 的八菜单前端视觉、交互、对应只读后端合同与失败关闭硬门；不表示真实租户数据已就绪，也不表示 Adapter 安装、外部执行、迁移或发布 GREEN。
