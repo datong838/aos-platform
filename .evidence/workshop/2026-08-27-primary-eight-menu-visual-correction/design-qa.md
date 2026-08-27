@@ -167,3 +167,13 @@ V8 已关闭“读取失败后页面结构完全偏离视觉稿”的 P1；真�
 - 测试先红后绿；内容页专项 `3/3`、八菜单累计专项 `65/65`、TypeScript、production build 与 diff-check 全部 GREEN。既有 React `act(...)` 警告及 Vite 大 chunk 警告未转化为失败。
 
 V17 关闭内容页中栏可信空结构密度 P1；八页仍有字号、色阶、卡片密度及多视口差异待清零，整体结论继续为 `failed`。
+
+## V18 多媒体可信空三栏语义复验
+
+- 最新当前证据为 `v18-media-studio-1280x720.png`，comparison 已切换该图；source/current 均为 `1280×720`。
+- 顶部上下文、四指标、三 Tab 与 panel 继续保持 `y=48/104/194/238` 的连续轨道；panel `x=308/w=972/h=482`，三栏可用宽度为 `240/408/300px`，document `clientWidth=scrollWidth=1280`。
+- 左栏由整页 reason code 改为“文案任务 / 任务列表 / 可信空卡 / 折叠原始 blocker”；中栏增加“等待生产上下文”摘要后继续展示全部 target axes；右栏增加“内容官建议 / 尚无可回链内容建议”后保留原始 blocker。reason code、dependency 与 required action 没有删除。
+- 页面没有复制七夕专题、banner 文案、CTR、GMV、Provider 结果或已产出状态；真实 `unknown/blocked` 保持原值。
+- Media 专项 `9/9` 与 TypeScript GREEN；累计回归和 production build 在本提交前再次执行。
+
+V18 关闭多媒体失败态“英文大段撑满三栏、缺少中文工作区层级”的 P1；右栏内容密度、target 卡字号与三视口仍进入后续清零，整体结论继续为 `failed`。

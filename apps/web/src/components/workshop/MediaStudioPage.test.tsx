@@ -39,6 +39,10 @@ describe("MediaStudioPage", () => {
     expect(Array.from(host.querySelectorAll(".media-studio-summary-metrics strong")).map((item) => item.textContent)).toEqual(["unknown", "unknown", "unknown", "unknown"]);
     expect(host.querySelector(".media-studio-context-strip")?.textContent).toContain("内容官（owner 未绑定）");
     expect(host.querySelector(".media-studio-context-strip")?.textContent).toContain("今日计划：unknown");
+    expect(host.querySelector(".media-studio-task-empty")?.textContent).toContain("当前没有可审阅文案任务");
+    expect(host.querySelector(".media-studio-production-empty")?.textContent).toContain("等待生产上下文");
+    expect(host.querySelector(".media-studio-advice-empty")?.textContent).toContain("尚无可回链内容建议");
+    expect(host.textContent).not.toMatch(/七夕专题|banner 文案|历史回款 CTR|整体 GMV 贡献 ¥/);
     expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).some((button) => button.textContent === "重新读取")).toBe(true);
     expect(host.textContent).toContain("target ≠ achieved；Provider submitted ≠ delivered；published、settled 与 effect-reviewed 分轴。");
     expect(host.textContent).not.toMatch(/开始|发布|取消|批准|结算|对账/);

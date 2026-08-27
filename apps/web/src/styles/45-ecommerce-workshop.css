@@ -1585,6 +1585,30 @@
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.media-studio"] .media-studio-center { display: grid; align-content: start; gap: 12px; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.media-studio"] .media-studio-center .media-readiness-grid,
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.media-studio"] .media-studio-center .content-campaign-items { margin: 0; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.media-studio"] .media-studio-task-lane,
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.media-studio"] .media-studio-advice-lane { align-content: start; border: 0; background: #fff; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.media-studio"] .media-studio-task-lane { border-right: 1px solid #e2e8f0; }
+.media-studio-task-lane > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #edf2f7; }
+.media-studio-task-lane > header small,
+.media-studio-advice-empty small { display: block; margin-bottom: 3px; color: #a0aec0; font-size: 10px; }
+.media-studio-task-lane > header span { color: #a0aec0; font-size: 10px; }
+.media-studio-task-empty,
+.media-studio-production-empty,
+.media-studio-advice-empty { display: grid; gap: 6px; padding: 14px; border: 1px solid #e2e8f0; border-left: 3px solid #ecc94b; background: #fffaf0; }
+.media-studio-task-empty p,
+.media-studio-production-empty p,
+.media-studio-advice-empty p { color: #718096; font-size: 11px; line-height: 1.55; }
+.media-studio-production-empty { border-left-color: #4299e1; background: #ebf8ff; }
+.media-studio-production-empty > span { color: #a0aec0; font-size: 10px; }
+.media-studio-advice-empty { margin-bottom: 4px; border-left-color: #4299e1; background: #ebf8ff; }
+.media-studio-task-lane details,
+.media-studio-advice-lane details { padding: 9px 10px; border: 1px solid #e2e8f0; border-left: 3px solid #f56565; background: #fff; }
+.media-studio-task-lane summary,
+.media-studio-advice-lane summary { cursor: pointer; overflow-wrap: anywhere; color: #4a5568; font-size: 10px; font-weight: 650; }
+.media-studio-task-lane details span,
+.media-studio-advice-lane details span { display: block; margin-top: 6px; color: #a0aec0; font-size: 10px; overflow-wrap: anywhere; }
+.media-studio-task-lane details p,
+.media-studio-advice-lane details p { margin-top: 6px; color: #718096; font-size: 10px; line-height: 1.5; }
 @media (max-width: 1180px) {
   .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.media-studio"] .media-studio-panel { grid-template-columns: 250px minmax(360px, 1fr) 300px; }
 }
