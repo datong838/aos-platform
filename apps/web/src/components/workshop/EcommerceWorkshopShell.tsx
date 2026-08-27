@@ -57,7 +57,10 @@ export function EcommerceWorkshopShell({
 
   return (
     <SourceReadinessProvider>
-    <div className={`ecommerce-workshop-shell${focusMode ? " is-focus" : ""}`}>
+    <div
+      className={`ecommerce-workshop-shell${focusMode ? " is-focus" : ""}`}
+      data-module-id={module.moduleId}
+    >
       <a className="ecommerce-workshop-skip-link" href="#ecommerce-workshop-main">
         跳到模块主内容
       </a>
@@ -85,14 +88,22 @@ export function EcommerceWorkshopShell({
         </div>
       </header>
 
-      <dl className="ecommerce-workshop-context-refs" aria-label="模块版本上下文">
-        <div><dt>Module</dt><dd>{module.moduleId}</dd></div>
-        <div><dt>Bundle</dt><dd>{module.moduleRef.bundleId}@{module.moduleRef.version}</dd></div>
-        <div><dt>Installation</dt><dd>r{module.installationRef.revision} / lock r{module.installationRef.lockRevision}</dd></div>
-        <div><dt>数据截止</dt><dd>{dataCutoff ?? "尚无可验证时间"}</dd></div>
-      </dl>
+      <details className="ecommerce-workshop-technical-context">
+        <summary>
+          <span>模块与数据上下文</span>
+          <small>{module.moduleId} · {module.readiness} · cutoff {dataCutoff ?? "待验证"}</small>
+        </summary>
+        <div className="ecommerce-workshop-technical-context-body">
+          <dl className="ecommerce-workshop-context-refs" aria-label="模块版本上下文">
+            <div><dt>Module</dt><dd>{module.moduleId}</dd></div>
+            <div><dt>Bundle</dt><dd>{module.moduleRef.bundleId}@{module.moduleRef.version}</dd></div>
+            <div><dt>Installation</dt><dd>r{module.installationRef.revision} / lock r{module.installationRef.lockRevision}</dd></div>
+            <div><dt>数据截止</dt><dd>{dataCutoff ?? "尚无可验证时间"}</dd></div>
+          </dl>
 
-      <SourceReadinessPanel />
+          <SourceReadinessPanel />
+        </div>
+      </details>
 
       <section
         id="ecommerce-workshop-main"

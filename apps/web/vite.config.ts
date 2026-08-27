@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+const apiProxyTarget = process.env.VITE_AOS_API_PROXY_TARGET?.trim() || "http://127.0.0.1:8080";
 
 export default defineConfig({
   plugins: [react()],
@@ -16,7 +17,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8000",
+        target: apiProxyTarget,
         changeOrigin: true,
         rewrite: (requestPath) => requestPath.replace(/^\/api/, ""),
       },

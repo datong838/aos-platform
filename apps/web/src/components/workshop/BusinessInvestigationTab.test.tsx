@@ -55,6 +55,7 @@ describe("BusinessInvestigationTab", () => {
     const client: InvestigationReadClient = { listCases: vi.fn().mockResolvedValue({ tenant, items: cases, count: 3 }), listRuns: vi.fn().mockResolvedValue({ tenant, items: [run], count: 1 }), getRunView: vi.fn().mockResolvedValue(workbenchView()) };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={client} />));
     expect(client.getRunView).toHaveBeenCalledWith("run-a", expect.any(AbortSignal)); expect(host.textContent).toContain("1/3 波完成"); expect(host.textContent).toContain("checkpoint-1 · #1"); expect(host.textContent).toContain("经营画像"); expect(host.textContent).toContain("问题与机会"); expect(host.textContent).toContain("方案设计"); expect(host.textContent).toContain("不代表真实业务方案已执行");
+    expect(host.querySelector<HTMLDetailsElement>(".business-investigation-envelope")?.open).toBe(false); expect(host.querySelector(".business-investigation-envelope summary")?.textContent).toContain("Case / Run exact 信封");
     expect(host.textContent).toContain("哪些问题与机会被证据支持"); expect(host.textContent).toContain("已知与可回链输入"); expect(host.textContent).toContain("关键假设"); expect(host.textContent).toContain("反证与替代解释"); expect(host.textContent).toContain("evidence-1"); expect(host.textContent).not.toContain("推理链");
   });
   it("只消费同一 pending DataRequirement 的 canonical readiness 与 blocker", async () => {

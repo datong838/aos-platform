@@ -33,6 +33,21 @@ describe("EcommerceWorkshopShell", () => {
     expect(host.textContent).not.toContain("DEPENDENCY_NOT_GREEN");
   });
 
+  it("技术上下文默认折叠但保留 exact refs、readiness 与键盘可展开语义", async () => {
+    const module = workshopModuleFixture();
+    await act(async () => root.render(
+      <EcommerceWorkshopShell module={module} dataCutoff="2026-08-14T09:59:00Z" />,
+    ));
+    const context = host.querySelector<HTMLDetailsElement>(".ecommerce-workshop-technical-context");
+    const summary = context?.querySelector("summary");
+    expect(context?.open).toBe(false);
+    expect(summary?.textContent).toContain("模块与数据上下文");
+    expect(summary?.textContent).toContain(module.moduleId);
+    expect(summary?.textContent).toContain("2026-08-14T09:59:00Z");
+    expect(context?.querySelector("[aria-label='模块版本上下文']")?.textContent).toContain("Bundle");
+    expect(context?.textContent).toContain("数据源就绪度");
+  });
+
   for (const module of WORKSHOP_ACCEPTANCE_MODULES) {
     it(`${module.moduleId} 保留唯一 H1、精确路由与可达主区`, async () => {
       await act(async () => root.render(
@@ -51,6 +66,8 @@ describe("EcommerceWorkshopShell", () => {
       expect(host.querySelectorAll("h1")).toHaveLength(1);
       expect(heading?.textContent).toContain(module.label);
       expect(main).not.toBeNull();
+      expect(host.querySelector(".ecommerce-workshop-shell")?.getAttribute("data-module-id"))
+        .toBe(module.moduleId);
       expect(host.querySelector<HTMLAnchorElement>(".ecommerce-workshop-skip-link")?.hash)
         .toBe("#ecommerce-workshop-main");
     });
