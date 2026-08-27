@@ -576,7 +576,7 @@ export function AppShell() {
             </div>
             <div className="analyst-exact-header-right">
               <label><span>渠道视角</span><select aria-label="渠道视角" value="" disabled><option value="">渠道未知</option></select></label>
-              <span className="analyst-exact-owner" title="经营参谋（负责人：未绑定）">经营参谋（负责人：未绑定）</span>
+              <span className="analyst-exact-owner" title="经营参谋（owner 未绑定）">经营参谋（owner 未绑定）</span>
               <button type="button" onClick={() => document.getElementById("analyst-tab-plan")?.click()}><NavIcon name="table" />查看今日方案</button>
             </div>
           </> : onTaskCockpitVisualRoute ? <>

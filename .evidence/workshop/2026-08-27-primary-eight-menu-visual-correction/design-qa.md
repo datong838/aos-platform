@@ -10,7 +10,7 @@
 ## 已确认 P0/P1
 
 1. P0：任务总控页当前结构与 `workshop-task-cockpit.html` 不同。source 的 KPI 带、任务下达条、执行组/任务流/策划组三栏、共享 Skill 带和明日预告未按同位结构落地。
-2. P1：经营参谋公共顶部区域发生挤压。标题、面包屑、渠道选择、负责人标签与“查看今日方案”共用过窄横向轨道，负责人被截断；第二行 cutoff/readiness 状态条贴近并压缩首行。
+2. P1（已修正，待三视口累计复验）：经营参谋公共顶部区域曾发生挤压。标题、面包屑、渠道选择、负责人标签与“查看今日方案”共用横向轨道，原负责人胶囊比 source 多占约 29px；现已按 source 密度收敛并保持“未绑定”真值。
 3. P1：先前证据把经营参谋内部八 Tab 当成 Workshop 八个一级菜单，验收 scope 错误。
 
 ## 修复顺序
@@ -34,10 +34,10 @@
 
 - 实测视口：`1280×720`。
 - 经营参谋 topbar：`x=48/y=0/w=1232/h=48`；标题 `26px/39px`、面包屑和右侧控件恢复为与 source 一致的单轨结构。
-- 负责人标签：`w=166/clientW=164/scrollW=164`，完整显示“经营参谋（负责人：未绑定）”，无 ellipsis。
-- 右侧控件组与左侧标题组无重叠；document `clientWidth=scrollWidth=1280`。
+- 负责人标签：source `w≈136.75px`；当前 `w=137.69/clientW=136/scrollW=136`，完整显示“经营参谋（owner 未绑定）”，无 ellipsis。
+- 右侧控件组由 `438.34px` 收敛为 `410.02px`（source `≈409.09px`），与左侧标题组重叠为 `0`；document `clientWidth=scrollWidth=1280`。
 - 状态条从 `y=48` 开始进入 972px 内容轨，不再挤压顶部标题行；窄视口仍保留显式断点换行。
-- 截图：`v10-analyst-1280x720.png`；source：`source-analyst-1280x720.png`。
+- 截图：`v14-analyst-1280x720.png`；source：`source-analyst-1280x720.png`。
 - 专项：八页组件与 AppShell `60/60` GREEN；TypeScript、生产构建与 `git diff --check` GREEN。
 
 V0 的“顶部挤压/负责人截断”缺陷已在 1280 首档关闭；不得据此推导其余视觉细节已经 1:1。
@@ -123,12 +123,19 @@ V7 结构性 P1 已关闭；细节仍进入 V9。
 ## V8 客户关系工作台首轮复验
 
 - source：`foundry/html/workshop-customer.html`，核心结构为四 Tab 与三栏客户工作区。
-- 当前：`v8-customer-1280x720.png`。
+- 当前：`v14-customer-1280x720.png`。
 - 当前实测：topbar `48px`、toolbar `40px`、Tab 从 `y=88` 开始、三栏主体占据首屏；document `clientWidth=1280/scrollWidth=1280`。
 - 当前真实 GET 失败时不再退化为占满首屏的通用错误卡，而是保留客户最小投影/同意依据/依赖证据三栏；所有字段明确为 `unknown` 或 exact authority 缺失，不制造客户、联系方式、同意状态或数量 0。
 - 新增失败态三栏骨架测试；Customer `4/4` GREEN，并进入累计回归。
 
 V8 已关闭“读取失败后页面结构完全偏离视觉稿”的 P1；真实客户内容仍受 authority 门保护，V9 继续做视觉细节复核。
+
+### V14 顶部与三栏几何复核
+
+- 顶部上下文条已收敛为视觉稿同位的 `x=308, y=48, w=972, h=40`，`scrollWidth=clientWidth=972`，不存在顶部挤压或横向溢出。
+- 主面板从 `y=88` 起，左侧任务列宽 `280px`；四个真实只读视图改为纵向任务列，单项高度 `42px`，不再以横向四 Tab 挤占首屏。
+- 中栏仍只展示服务返回的 readiness，右栏仍只展示依赖与下一证据；顶部数量全部为 `unknown`，没有复制视觉稿中的演示客户、数量或触达任务。
+- 页面文档宽度 `1280/1280`，无横向溢出。V14 关闭客户页顶部挤压 P0，但与视觉稿的内容密度、卡片细节和底部动作区仍存在差异，因此整体视觉审计继续为 RED。
 
 ## V9 当前判定
 
@@ -137,7 +144,8 @@ V8 已关闭“读取失败后页面结构完全偏离视觉稿”的 P1；真�
 - 八路由 `1280×720` 顶栏均为 `48px`；公共 aside `260px`、content `972px`，实测 `scrollWidth=clientWidth=1280`，document/body 均无横向溢出。
 - source/current 对照确认公共骨架、顶部轨道、侧栏宽度、主要纵向起点与三栏比例已对齐；当前租户真实/可信空内容不复制 source 演示数据。
 - 六个非 Cockpit/Analyst 一级页已补回各自 source 对应的标题/面包屑、搜索框、上下文标签和操作按钮位置；会引发业务写入的视觉按钮保持 `disabled`，只复刻视觉层，不绕过只读门。六页实测左组/搜索/操作区均无重叠，`scrollWidth=clientWidth=1280`。
-- 最新证据：`v11-{operations,content-campaign,creator-growth,media-studio}-1280x720.png`、`v12-{price-governance,customer}-1280x720.png`；价格/客户面包屑重复已在 v12 关闭。
+- 最新证据：`v11-operations-1280x720.png`、`v13-{content-campaign,creator-growth,media-studio,price-governance}-1280x720.png`、`v14-{analyst,customer}-1280x720.png`；价格/客户面包屑重复已在 v12 关闭，分析/客户顶部挤压已在 v14 关闭。
+- 价格治理补齐 source 型只读上下文条：品牌/SKU、owner/协作者、策略 revision、待复核视图与刷新入口同轨；实测 `x=308/y=48/w=972/h=55`，Tab `y=103/h=43`，panel `y=146`，无横向溢出。`3 个视图待复核`来自三个 canonical blocked view，不冒充价格异常数量。
 - 已确认不能把 source 演示业务数据复制进真实租户，也不能用不同视口截图得出 pixel-perfect pass。
 - 当前仍有可见细节差异（任务卡密度、部分英文 authority 文案、媒体卡片间距、各页字号/边框/色阶），均继续作为 P1/P2 处理。
 

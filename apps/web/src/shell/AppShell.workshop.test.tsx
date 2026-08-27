@@ -170,8 +170,8 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelector(".brand-block")).toBeNull();
     expect(host.querySelector(".analyst-exact-header-left h1")?.textContent).toBe("经营参谋 · 增长指挥中心");
     expect(host.querySelector<HTMLSelectElement>('.analyst-exact-header-right select[aria-label="渠道视角"]')?.disabled).toBe(true);
-    expect(host.querySelector(".analyst-exact-owner")?.textContent).toBe("经营参谋（负责人：未绑定）");
-    expect(host.querySelector(".analyst-exact-owner")?.getAttribute("title")).toBe("经营参谋（负责人：未绑定）");
+    expect(host.querySelector(".analyst-exact-owner")?.textContent).toBe("经营参谋（owner 未绑定）");
+    expect(host.querySelector(".analyst-exact-owner")?.getAttribute("title")).toBe("经营参谋（owner 未绑定）");
     const planButton = Array.from(host.querySelectorAll<HTMLButtonElement>(".analyst-exact-header-right button")).find((item) => item.textContent === "查看今日方案");
     expect(planButton).toBeDefined();
 

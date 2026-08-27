@@ -76,5 +76,5 @@ export function CustomerPage({ client = ecommerceWorkshopClient }: { client?: Cl
     </section>
     <footer className="content-campaign-footnote"><span>租户 {response.tenant.orgId}/{response.tenant.projectId}</span><span>统一 cutoff {new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</span><span>consent + retention enforced</span></footer>
   </div> : null;
-  return <section className="customer-page" aria-label="客户关系只读视图"><div className="content-campaign-toolbar"><span>客户关系工作台 · privacy-minimized read-only</span><button type="button" onClick={load}>重新读取</button></div>{phase === "failed" ? <CustomerFailureSurface /> : <AsyncStateBoundary state={stateFor(phase)} dataCutoff={response?.dataCutoff}>{content}</AsyncStateBoundary>}</section>;
+  return <section className="customer-page" aria-label="客户关系只读视图"><div className="content-campaign-toolbar customer-context-strip"><button className="customer-reload-control" type="button" onClick={load}>重新读取</button><span>栖月汇 · 客户 unknown</span><span>私域管家（owner 未绑定）</span><small>任务驱动 · Plan Mode · Artifact 产出</small><i aria-hidden="true" /><b>高价值 unknown · 潜力 unknown · 活跃 unknown</b><em>沉睡 unknown · 流失预警 unknown</em></div>{phase === "failed" ? <CustomerFailureSurface /> : <AsyncStateBoundary state={stateFor(phase)} dataCutoff={response?.dataCutoff}>{content}</AsyncStateBoundary>}</section>;
 }
