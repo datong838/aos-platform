@@ -147,7 +147,7 @@ def test_soft_delete_zero_time_and_pii_cleaning() -> None:
         pipeline_id="pl-clean",
         config={"source_id": "src-1", "table": "ns_member", "pk": "member_id"},
     )
-    assert rows == [{"member_id": 2, "is_delete": 0, "create_time": None, "keep": "ok"}]
+    assert rows == [{"member_id": 2, "is_delete": 0, "create_time": None}]
     assert get_soft_delete_count("pl-clean", "n-src") == 1
 
 

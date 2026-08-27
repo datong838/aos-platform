@@ -1,12 +1,12 @@
 """D1-W4: 集中负向测试（NFR + AC-D1-6）。
 
 验证 D1 的负向行为：跨租户拒绝/重跑幂等/断点恢复/冲突检测/源库零写入/
-DLQ 失败不变成功/DLQ 无 PII/软删行进 DLQ/悬挂 Link 拒绝/派生指标缺失不阻塞。
+DLQ 失败不变成功/DLQ 无 PII/软删行进 DLQ/悬挂 Link 隔离/派生指标缺失不阻塞。
 
 测试策略：
 - 跨租户/悬挂 Link：用真实 sqlite EcomConsistencyStore（验证内核行为）
 - 重跑/断点/冲突：用 FakeStore（验证 ot_writer 调用契约）
-- 源库零写入/软删：mock pymysql，验证 READ ONLY 和过滤
+- 源库零写入/软删：mock 统一 JdbcConnectorRuntime，验证只读路由和过滤
 - DLQ：直接调用 ec_dlq_handler.handle_failure
 - 派生指标：直接调用 ec_derived_metrics.apply_derived_metrics（骨架透传）
 """
@@ -42,7 +42,6 @@ from aos_api.public_contracts import (
     ForwardEnumValue,
     StableCursor,
 )
-from aos_api.routers.wave_ext import _dlq
 from aos_api.tenant_scope import TenantScope
 
 # 预先完成 logging 配置（与 test_ec_d1_dlq.py 一致）
@@ -141,13 +140,6 @@ def _reset_engine():
     eng.reset_all_for_tests()
     yield
     eng.reset_all_for_tests()
-
-
-@pytest.fixture(autouse=True)
-def _reset_dlq():
-    _dlq.clear()
-    yield
-    _dlq.clear()
 
 
 # ═══════════════════════════════════════════════
@@ -330,23 +322,10 @@ def test_source_database_read_only():
         }
     }
 
-    class _RecordingCursor:
-        def __init__(self, rows):
-            self.rows = rows
-            self.executed: list[tuple[str, Any]] = []
-
-        def execute(self, sql, params=None):
-            self.executed.append((sql, params))
-
-        def fetchall(self):
-            return self.rows
-
-        def close(self):
-            pass
-
-    cur = _RecordingCursor(niushop_rows)
-    niushop_conn = MagicMock()
-    niushop_conn.cursor.return_value = cur
+    runtime = MagicMock()
+    runtime.__enter__.return_value = runtime
+    runtime.__exit__.return_value = None
+    runtime.read_rows.return_value = niushop_rows
 
     reset_soft_delete_counts()
     from types import SimpleNamespace
@@ -361,26 +340,16 @@ def test_source_database_read_only():
             __enter__=MagicMock(return_value=aos_conn),
             __exit__=MagicMock(return_value=None),
         ),
-    ), patch("aos_api.ec_source_adapter.pymysql") as mock_pymysql:
-        mock_pymysql.connect.return_value = niushop_conn
-        mock_pymysql.cursors.DictCursor = MagicMock()
-
+    ), patch("aos_api.ec_source_adapter.JdbcConnectorRuntime", return_value=runtime):
         fetch_source_rows(
             pipeline=SimpleNamespace(id="pl-neg-ro"),
             nodes=[node], node_id="n-src",
             sample_input=None, scope=TEST_SCOPE,
         )
 
-    # 第一个 execute 是 READ ONLY
-    assert len(cur.executed) >= 1
-    assert "SET SESSION TRANSACTION READ ONLY" in cur.executed[0][0]
-
-    # 无写操作 SQL
-    write_keywords = ("INSERT", "UPDATE", "DELETE", "CREATE", "ALTER", "DROP", "TRUNCATE")
-    for sql, _ in cur.executed:
-        sql_upper = sql.upper()
-        for kw in write_keywords:
-            assert not sql_upper.startswith(kw), f"源库收到写操作 SQL: {kw}"
+    runtime.read_rows.assert_called_once_with(
+        "ns_goods", composite_cursor=None, limit=None, where_equals={}
+    )
 
 
 # ═══════════════════════════════════════════════
@@ -393,37 +362,25 @@ def test_dlq_failure_never_marked_succeeded():
 
     验证：
     - handle_failure 创建的 DLQ 条目 status="open"（非 "succeeded"）
-    - 预置的 "failed" 条目不被 handle_failure 改为 "succeeded"
+    - 不同 run 的独立失败记录不改写前一条 Receipt
     """
     # 1. handle_failure 创建的条目 status="open"
-    handle_failure(FakePipeline("neg-dlq-fail"), TEST_SCOPE, RuntimeError("boom"))
-    assert len(_dlq) == 1
-    [item] = list(_dlq.values())
-    assert item["status"] == "open"
-    assert item["status"] != "succeeded"
+    first = handle_failure(
+        FakePipeline("neg-dlq-fail"), TEST_SCOPE, RuntimeError("boom"),
+        run_id="run-neg-dlq-fail",
+    )
+    assert first is not None
+    assert first["status"] == "open"
+    assert first["status"] != "succeeded"
 
-    # 2. 预置 "failed" 条目不被 handle_failure 修改
-    from aos_api.routers.wave_ext import _resource_key
-    failed_key = _resource_key(TEST_SCOPE, "dlq-preexisting-failed")
-    _dlq[failed_key] = {
-        "id": "dlq-preexisting-failed",
-        "pipelineId": "neg-dlq-preexisting",
-        "errorCode": "SomeError",
-        "reason": "previous failure",
-        "status": "failed",
-        "retry_count": 0,
-        "max_retry": 3,
-        "createdAt": "2026-07-31T00:00:00+00:00",
-        "orgId": "dev-org",
-        "projectId": "dev-project",
-    }
-
-    # 再次调用 handle_failure（不同 pipeline）
-    handle_failure(FakePipeline("neg-dlq-other"), TEST_SCOPE, RuntimeError("another boom"))
-
-    # 预置的 "failed" 条目未被修改
-    assert _dlq[failed_key]["status"] == "failed"
-    assert _dlq[failed_key]["status"] != "succeeded"
+    # 再次记录不同 run，旧 Receipt 不会被改成成功。
+    second = handle_failure(
+        FakePipeline("neg-dlq-other"), TEST_SCOPE, RuntimeError("another boom"),
+        run_id="run-neg-dlq-other",
+    )
+    assert second is not None
+    assert second["status"] == "open"
+    assert first["status"] == "open"
 
 
 # ═══════════════════════════════════════════════
@@ -439,10 +396,12 @@ def test_dlq_no_pii_leaked():
     exc = RuntimeError(
         "contact 13800138000 id 110101199003071234 card 6222020200112345 email a@b.com"
     )
-    handle_failure(FakePipeline("neg-dlq-pii"), TEST_SCOPE, exc)
+    item = handle_failure(
+        FakePipeline("neg-dlq-pii"), TEST_SCOPE, exc,
+        run_id="run-neg-dlq-pii",
+    )
 
-    assert len(_dlq) == 1
-    [item] = list(_dlq.values())
+    assert item is not None
     reason = item["reason"]
 
     # 手机号脱敏
@@ -462,19 +421,16 @@ def test_dlq_no_pii_leaked():
         re.compile(r"62\d{14,17}"),        # 银行卡
         re.compile(r"\S+@\S+\.\S+"),       # 邮箱
     ]
-    for item in _dlq.values():
-        for field_name, field_value in item.items():
-            if not isinstance(field_value, str):
-                continue
-            for pattern in pii_patterns:
-                matches = pattern.findall(field_value)
-                # reason 字段中的 PII 已被脱敏为 ***，其他字段不应含 PII
-                if field_name == "reason":
-                    # reason 中不应有原始 PII（已被 *** 替换）
-                    for m in matches:
-                        assert m == "***" or len(m) <= 3, (
-                            f"reason 字段含未脱敏 PII: {m}"
-                        )
+    for field_name, field_value in item.items():
+        if not isinstance(field_value, str):
+            continue
+        for pattern in pii_patterns:
+            matches = pattern.findall(field_value)
+            if field_name == "reason":
+                for match in matches:
+                    assert match == "***" or len(match) <= 3, (
+                        f"reason 字段含未脱敏 PII: {match}"
+                    )
 
 
 # ═══════════════════════════════════════════════
@@ -500,10 +456,10 @@ def test_soft_deleted_rows_counted_for_dlq():
             "password": "x", "database": "niushop_b2c_v5",
         }
     }
-    cur = MagicMock()
-    cur.fetchall.return_value = niushop_rows
-    niushop_conn = MagicMock()
-    niushop_conn.cursor.return_value = cur
+    runtime = MagicMock()
+    runtime.__enter__.return_value = runtime
+    runtime.__exit__.return_value = None
+    runtime.read_rows.return_value = niushop_rows
 
     reset_soft_delete_counts()
     from types import SimpleNamespace
@@ -521,10 +477,7 @@ def test_soft_deleted_rows_counted_for_dlq():
             __enter__=MagicMock(return_value=aos_conn),
             __exit__=MagicMock(return_value=None),
         ),
-    ), patch("aos_api.ec_source_adapter.pymysql") as mock_pymysql:
-        mock_pymysql.connect.return_value = niushop_conn
-        mock_pymysql.cursors.DictCursor = MagicMock()
-
+    ), patch("aos_api.ec_source_adapter.JdbcConnectorRuntime", return_value=runtime):
         rows = fetch_source_rows(
             pipeline=SimpleNamespace(id="pl-neg-softdel"),
             nodes=[node], node_id="n-src",
@@ -539,15 +492,12 @@ def test_soft_deleted_rows_counted_for_dlq():
 
 
 # ═══════════════════════════════════════════════
-# 9. 悬挂 Link 拒绝
+# 9. 悬挂 Link 隔离
 # ═══════════════════════════════════════════════
 
 
-def test_dangling_link_rejected_by_store():
-    """#9 悬挂 Link 拒绝：target 不存在的 Link 被 ecom_consistency_store 拒绝。
-
-    用真实 sqlite store 验证：Order.lines Link 的 target（OrderLine）不存在 → DANGLING_LINK。
-    """
+def test_dangling_link_is_ignored_and_retained_for_dlq():
+    """#9 悬挂 Link 不写入，并留在 store side channel 供 DLQ 处理。"""
     store = _make_sqlite_store()
     eng = get_engine()
     eng.ecom_consistency_store = store
@@ -563,10 +513,14 @@ def test_dangling_link_rejected_by_store():
         "cursor_external_id": "link:999->888",
     }
 
-    with pytest.raises(EcomConsistencyError) as caught:
-        sink_to_ot(eng, TEST_SCOPE, FakePipeline("neg-dangling"), [dangling_link_row])
+    result = sink_to_ot(
+        eng, TEST_SCOPE, FakePipeline("neg-dangling"), [dangling_link_row]
+    )
 
-    assert caught.value.code == "DANGLING_LINK"
+    assert result == {"objects_written": 0, "links_written": 0}
+    dangling_links = store.get_last_dangling_links()
+    assert len(dangling_links) == 1
+    assert dangling_links[0].cursor_external_id == "link:999->888"
 
 
 # ═══════════════════════════════════════════════

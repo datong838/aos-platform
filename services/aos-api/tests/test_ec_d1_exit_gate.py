@@ -303,7 +303,7 @@ def test_exit_gate_source_adapter_read_only_transaction() -> None:
     assert READ_ONLY_SQL == "SET SESSION TRANSACTION READ ONLY"
     # SourceAdapter 只能通过统一 Runtime 读取；只读 SQL 由 Runtime 专项测试冻结。
     runtime.read_rows.assert_called_once_with(
-        "ns_goods", composite_cursor=None, limit=None
+        "ns_goods", composite_cursor=None, limit=None, where_equals={}
     )
 
 
