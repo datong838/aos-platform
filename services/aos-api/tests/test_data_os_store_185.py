@@ -64,6 +64,44 @@ def test_product_surface_has_no_demo_source(api_client):
     assert "demo-file-wo" not in ids
 
 
+def test_source_list_exposes_public_metadata_without_runtime_credentials(
+    api_client,
+    monkeypatch,
+):
+    source_id = f"src-secret-projection-{int(time.time())}"
+    internal = {
+        "id": source_id,
+        "type": "jdbc-mysql-ssh",
+        "connector_type": "jdbc-mysql-ssh",
+        "pluginId": "jdbc-mysql-ssh",
+        "runtimeMode": "agent",
+        "status": "active",
+        "siteId": 1,
+        "orgId": "dev-org",
+        "projectId": "dev-project",
+        "host": "internal.example",
+        "username": "runtime-user",
+        "password": "synthetic-password",
+        "sshPassword": "synthetic-ssh-password",
+        "secretRef": "synthetic-secret-ref",
+        "config": {"token": "synthetic-token"},
+    }
+    wave_ext._connectors[source_id] = internal
+    monkeypatch.setattr(wave_ext, "_hydrate_data_os_scope", lambda *_args, **_kwargs: None)
+    try:
+        response = api_client.get("/v1/sources", headers=_auth())
+        assert response.status_code == 200
+        listed = next(item for item in response.json()["items"] if item["id"] == source_id)
+        assert listed == {
+            key: value
+            for key, value in internal.items()
+            if key in wave_ext._PUBLIC_SOURCE_FIELDS
+        }
+        assert wave_ext._connectors[source_id]["password"] == "synthetic-password"
+    finally:
+        wave_ext._connectors.pop(source_id, None)
+
+
 def test_source_pipeline_persist_roundtrip(api_client):
     sid = f"src-persist-{int(time.time())}"
     pid = f"pipe-persist-{int(time.time())}"

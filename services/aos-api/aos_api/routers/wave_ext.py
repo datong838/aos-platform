@@ -1184,6 +1184,29 @@ def _source_scope_visible(source_id: str | None, scope: TenantScope) -> bool:
     return _scope_visible(src, scope)
 
 
+_PUBLIC_SOURCE_FIELDS = frozenset(
+    {
+        "id",
+        "type",
+        "connector_type",
+        "pluginId",
+        "runtimeMode",
+        "status",
+        "name",
+        "displayName",
+        "description",
+        "siteId",
+        "orgId",
+        "projectId",
+    }
+)
+
+
+def _public_source(item: dict[str, Any]) -> dict[str, Any]:
+    """Project an executable source configuration onto its public metadata."""
+    return {key: value for key, value in item.items() if key in _PUBLIC_SOURCE_FIELDS}
+
+
 @router.post("/v1/sources")
 def create_source(body: ConnectorIn, principal: Principal = Depends(require_principal)):
     from aos_api.connector_registry import assert_type_installed
@@ -1209,14 +1232,18 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
     }
     _connectors[body.id] = item
     _persist_safe("persist_source", scope, item)
-    return item
+    return _public_source(item)
 
 
 @router.get("/v1/sources")
 def list_sources(principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
-    items = [c for c in _connectors.values() if _scope_visible(c, scope)]
+    items = [
+        _public_source(source)
+        for source in _connectors.values()
+        if _scope_visible(source, scope)
+    ]
     return {"items": items}
 
 
