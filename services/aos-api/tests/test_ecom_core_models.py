@@ -233,6 +233,38 @@ def test_batch_checkpoint_must_cover_link_source_version() -> None:
         )
 
 
+def test_batch_request_hash_excludes_transaction_cas_guard_only() -> None:
+    scope = SyncScope(
+        org_id="org-a",
+        workspace_id="workspace-a",
+        platform="synthetic",
+        shop_or_marketplace_id="shop-a",
+        stream="catalog",
+    )
+    original = BatchCommand(
+        scope=scope,
+        idempotency_key="page-1",
+        expected_checkpoint_version=0,
+        next_checkpoint=StableCursor(source_updated_at_utc=NOW, external_id="p-1"),
+        objects=[record("Product", "p-1")],
+    )
+    replay_after_commit = original.model_copy(update={"expected_checkpoint_version": 1})
+    changed_payload = original.model_copy(
+        update={
+            "objects": [
+                record(
+                    "Product",
+                    "p-1",
+                    properties={**VALID_PROPERTIES["Product"], "title": "Changed"},
+                )
+            ]
+        }
+    )
+
+    assert replay_after_commit.request_hash() == original.request_hash()
+    assert changed_payload.request_hash() != original.request_hash()
+
+
 def test_same_millisecond_cursor_is_stable_and_has_no_gaps() -> None:
     items = [record("Order", ext) for ext in ["o-3", "o-1", "o-2"]]
     window = stable_incremental_window(items, checkpoint=None, lookback_seconds=0)

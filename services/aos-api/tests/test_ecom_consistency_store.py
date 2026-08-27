@@ -171,6 +171,21 @@ def test_idempotent_replay_returns_saved_result_without_advancing(store: EcomCon
     assert store.get_checkpoint(command)["version"] == 1
 
 
+def test_idempotent_replay_accepts_newer_observed_checkpoint_guard(
+    store: EcomConsistencyStore,
+) -> None:
+    command = batch(obj("Product", "product-1"))
+    first = store.apply_batch(command)
+    replay_after_commit = command.model_copy(update={"expected_checkpoint_version": 1})
+
+    replay = store.apply_batch(replay_after_commit)
+
+    assert first.replayed is False
+    assert replay.replayed is True
+    assert replay.checkpoint_version == 1
+    assert store.get_checkpoint(command)["version"] == 1
+
+
 def test_same_idempotency_key_with_different_hash_conflicts(store: EcomConsistencyStore) -> None:
     first = batch(obj("Product", "product-1"))
     store.apply_batch(first)

@@ -375,10 +375,13 @@ class BatchCommand(BaseModel):
         )
 
     def request_hash(self) -> str:
+        # expected_checkpoint_version is a transaction-time CAS guard, not part
+        # of the semantic batch payload. A replay of the same source page may
+        # observe a newer checkpoint after the original commit and must still
+        # resolve through the stored idempotency receipt.
         return deterministic_hash(
             {
                 "scope": self.scope,
-                "expectedCheckpointVersion": self.expected_checkpoint_version,
                 "nextCheckpoint": self.next_checkpoint,
                 "objects": self.ordered_objects(),
                 "links": self.ordered_links(),
