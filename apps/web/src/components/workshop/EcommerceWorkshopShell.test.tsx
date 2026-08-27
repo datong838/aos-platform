@@ -23,13 +23,13 @@ describe("EcommerceWorkshopShell", () => {
     host.remove();
   });
 
-  it("available 只有一个 H1、skip link 和明确 W2 边界", async () => {
+  it("available 只有一个 H1、skip link 和明确正式读模型边界", async () => {
     await act(async () => root.render(
       <EcommerceWorkshopShell module={workshopModuleFixture()} dataCutoff="2026-08-14T09:59:00Z" />,
     ));
     expect(host.querySelectorAll("h1")).toHaveLength(1);
     expect(host.querySelector<HTMLAnchorElement>(".ecommerce-workshop-skip-link")?.hash).toBe("#ecommerce-workshop-main");
-    expect(host.textContent).toContain("业务视图将在 W2 接入");
+    expect(host.textContent).toContain("业务视图等待正式读模型接入");
     expect(host.textContent).not.toContain("DEPENDENCY_NOT_GREEN");
   });
 
@@ -66,7 +66,7 @@ describe("EcommerceWorkshopShell", () => {
       expect(host.querySelectorAll("h1")).toHaveLength(module.moduleId === "ecommerce.analyst" ? 0 : 1);
       if (module.moduleId === "ecommerce.analyst") {
         expect(host.querySelector(".analyst-exact-context-strip")?.textContent).toContain("渠道未选择");
-        expect(host.querySelector(".analyst-exact-context-strip")?.textContent).toContain("真实业务写入 0");
+        expect(host.querySelector(".analyst-exact-context-strip")?.textContent).toContain("业务操作：只读");
       } else {
         expect(heading?.textContent).toContain(module.label);
       }
@@ -82,9 +82,9 @@ describe("EcommerceWorkshopShell", () => {
     await act(async () => root.render(
       <EcommerceWorkshopShell module={moduleWithReadiness("unknown")} dataCutoff={null} />,
     ));
-    expect(host.textContent).toContain("就绪状态待验证");
+    expect(host.textContent).toContain("状态待核对");
     expect(host.textContent).toContain("DEPENDENCY_NOT_GREEN");
-    expect(host.textContent).not.toContain("业务视图将在 W2 接入");
+    expect(host.textContent).not.toContain("业务视图等待正式读模型接入");
   });
 
   it("卸载时发送退出专注事件，平台壳不会残留隐藏状态", async () => {

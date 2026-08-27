@@ -19,8 +19,8 @@ const DEFAULT_COPY: Record<AsyncState, { title: string; description: string }> =
   stale: { title: "数据可能已过期", description: "后台刷新未完成，当前保留上一份已标记快照。" },
   partial: { title: "部分数据可用", description: "仅展示已确认部分，缺失范围不会以零值代替。" },
   failed: { title: "读取失败", description: "正式服务未返回可验证结果。" },
-  unknown: { title: "就绪状态待验证", description: "依赖 authority 尚未提供可验证结论。" },
-  blocked: { title: "当前被依赖阻断", description: "必须先处理下列阻断项。" },
+  unknown: { title: "状态待核对", description: "当前数据来源尚未提供可验证结论。" },
+  blocked: { title: "等待必要条件", description: "页面保持可浏览；补齐所需数据后可继续处理。" },
   "not-installed": { title: "模块未安装", description: "当前工作区的 active installation 中没有此模块。" },
   ready: { title: "已就绪", description: "资源已通过当前边界检查。" },
 };

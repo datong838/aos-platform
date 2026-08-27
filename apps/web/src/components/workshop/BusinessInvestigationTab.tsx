@@ -190,36 +190,36 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
 
   return (
     <section id={id} aria-labelledby={labelledBy} className="analyst-panel business-investigation-tab" role="tabpanel">
-      <header><div><span>Business Investigation · BI-W8-01</span><h2>生意探究</h2></div><strong className="content-campaign-status is-blocked">{commandsEnabled ? "受控命令" : "只读"}</strong></header>
+      <header><div><span>经营分析 · 证据驱动</span><h2>生意探究</h2></div><strong className="content-campaign-status is-blocked">{commandsEnabled ? "受控操作" : "只读"}</strong></header>
       <aside className="business-investigation-boundary" aria-label="生意探究只读边界">
         <strong>只读边界</strong>
-        <span>{BUSINESS_INVESTIGATION_READ_FLAG}</span>
-        <span>Principal 可见 canonical Case/Run</span>
-        <span>三级选择原子切换</span>
-        <span>{commandsEnabled ? `${BUSINESS_INVESTIGATION_COMMAND_FLAG} · canonical 评审受控` : "写入口 0 · 周期计划、评审与 Handoff 关闭"}</span>
+        <span>仅当前租户可见的正式分析记录</span>
+        <span>按渠道、经营实体与分析记录三级选择</span>
+        <span>{commandsEnabled ? "评审操作受控开放" : "当前为只读模式；周期计划、评审与交接未开启"}</span>
+        <details><summary>查看数据审计信息</summary><code>{BUSINESS_INVESTIGATION_READ_FLAG}</code><code>{BUSINESS_INVESTIGATION_COMMAND_FLAG}</code><span>写入口 0 · 周期计划、评审与 Handoff 关闭</span>{commandsEnabled ? <span>ecommerce.investigation.commands · canonical 评审受控</span> : null}</details>
       </aside>
 
-      {phase === "loading" ? <div className="business-investigation-state is-loading" role="status"><strong>正在读取分析记录…</strong><p>等待 tenant-scoped canonical Case 列表。</p><span className="business-investigation-skeleton" aria-hidden="true" /></div> : null}
+      {phase === "loading" ? <div className="business-investigation-state is-loading" role="status"><strong>正在读取分析记录…</strong><p>等待当前租户的正式分析记录。</p><span className="business-investigation-skeleton" aria-hidden="true" /></div> : null}
       {phase === "empty" ? <div className="business-investigation-empty-scaffold">
         <section className="business-investigation-empty-casebar" aria-label="当前生意探究案例为空">
           <div className="business-investigation-empty-case-main">
-            <span className="business-investigation-empty-kicker">Business investigation case</span>
+            <span className="business-investigation-empty-kicker">经营分析记录</span>
             <div className="business-investigation-empty-title"><strong>当前没有可见分析记录</strong><span>可信空</span><span>只读</span></div>
-            <div className="business-investigation-empty-target"><b>经营实体</b><span>未选择经营实体</span><small>等待 canonical Case</small></div>
-            <div className="business-investigation-empty-meta"><span>分析类型：未知</span><span>范围：当前租户 / 只读</span><span>负责人：未绑定</span><span>周期计划：未物化</span></div>
+            <div className="business-investigation-empty-target"><b>经营实体</b><span>未选择经营实体</span><small>等待正式分析记录</small></div>
+            <div className="business-investigation-empty-meta"><span>分析类型：待核对</span><span>范围：当前租户 / 只读</span><span>负责人：未绑定</span><span>周期计划：尚未建立</span></div>
           </div>
           <div className="business-investigation-empty-actions"><button type="button" onClick={loadCases}>重新读取列表</button></div>
         </section>
         <aside className="business-investigation-empty-demo-boundary" aria-label="可信空展示边界">
           <strong>可信空边界</strong>
-          <span>当前租户没有 canonical Case/Run；页面仅复刻工作区结构，不注入演示经营事实。</span>
+          <span>当前租户没有正式分析记录；页面仅呈现可信空工作区，不注入演示经营事实。</span>
         </aside>
-        <section className="business-investigation-empty-stagebar" aria-label="生意探究三个串行波次">
-          {["经营画像", "问题与机会", "方案设计"].map((label, index) => <article key={label}><span>{index + 1}</span><div><strong>{label}</strong><small>待进入 · 需要 canonical Case</small></div></article>)}
+        <section className="business-investigation-empty-stagebar" aria-label="生意探究三个业务阶段">
+          {["经营画像", "问题与机会", "方案设计"].map((label, index) => <article key={label}><span>{index + 1}</span><div><strong>{label}</strong><small>待进入 · 需要正式分析记录</small></div></article>)}
         </section>
         <section className="business-investigation-empty-workspace" aria-label="生意探究可信空工作区">
-          <article><span>当前阶段工作区</span><strong>等待分析 Case</strong><p>未知或未创建不能显示为 0，也不以演示 Case 补齐。</p></article>
-          <aside><strong>依赖与下一证据</strong><p>先读取当前租户可见的 canonical Case/Run；没有 exact authority 时保持可信空。</p><small>Source read 0 · Provider 0 · 外部副作用 0</small></aside>
+          <article><span>当前阶段工作区</span><strong>等待正式分析记录</strong><p>未知或未创建不能显示为 0，也不以演示记录补齐。</p></article>
+          <aside><strong>依赖与下一证据</strong><p>先读取当前租户可见的正式分析记录；没有正式数据来源时保持可信空。</p><small>数据读取 0 · 分析服务 0 · 外部操作 0</small></aside>
         </section>
       </div> : null}
       {phase === "forbidden" ? <div className="business-investigation-state is-forbidden" role="alert"><strong>无权读取生意探究</strong><p>未泄露其他租户的渠道、实体或分析记录。</p></div> : null}
@@ -268,7 +268,7 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
           {reviewPhase === "ready" && stageReview ? <article className="business-investigation-stage-review" aria-label="阶段人工评审"><header><div><span>canonical ReviewIssue · TaskRun {stageReview.taskRunRef.resourceId}</span><h3>阶段人工评审</h3></div><strong>{stageReview.externalEffectsAllowed ? "外部副作用开启" : "无外部副作用"}</strong></header>{stageReview.items.length ? <div>{stageReview.items.map((item) => <section key={item.issue.issueId} className={`is-${item.issue.status}`}><header><div><span>{item.stage} · Issue v{item.issue.version}</span><h4>{item.issue.issueId}</h4></div><strong>{item.issue.status}</strong></header><dl><div><dt>Eval exact</dt><dd>{item.evalReportRef.resourceId} · r{item.evalReportRef.revision}</dd></div><div><dt>Artifact exact</dt><dd>{item.artifactRef.resourceId} · r{item.artifactRef.revision}</dd></div><div><dt>建议修正</dt><dd>{item.issue.suggestedFix}</dd></div><div><dt>回退阶段</dt><dd>{item.issue.returnStage}</dd></div></dl>{commandsEnabled && item.allowedDecisions.length ? <div className="business-investigation-review-decisions"><label><span>人工决定说明</span><textarea rows={2} value={reviewReason} maxLength={2000} onChange={(event) => setReviewReason(event.currentTarget.value)} /></label><div><button type="button" disabled={commandPhase === "pending" || !reviewReason.trim()} onClick={() => executeReviewCommand(item.issue.issueId, item.issue.version, "accept")}>接受阶段产物</button><button type="button" disabled={commandPhase === "pending" || !reviewReason.trim()} onClick={() => executeReviewCommand(item.issue.issueId, item.issue.version, "return")}>退回当前阶段</button></div></div> : <p>服务端未授权可写决定；页面不本地推演 Review 状态。</p>}</section>)}</div> : <p>当前 Run 没有 canonical ReviewIssue；不生成演示评审。</p>}<p className="business-investigation-review-boundary">request_more 尚无独立 canonical 状态边，当前失败关闭；评审不会触发 Provider、数据源读取或外部操作。</p></article> : null}
           <article className="business-investigation-stage-workspace"><header><div><span>当前阶段工作区 · {workbenchView.currentWorkspace.stageId ?? "unbound"}</span><h3>{workbenchView.currentWorkspace.title}</h3></div><strong className={`is-${workbenchView.currentWorkspace.status}`}>{workbenchView.currentWorkspace.status}</strong></header><p className="business-investigation-question">{workbenchView.currentWorkspace.question}</p><dl className="business-investigation-responsibility"><div><dt>责任槽</dt><dd>{workbenchView.currentWorkspace.responsibilitySlotIds.length ? workbenchView.currentWorkspace.responsibilitySlotIds.join(" · ") : "未知/未绑定"}</dd></div><div><dt>承担者</dt><dd>{workbenchView.currentWorkspace.assigneeRefs.length ? workbenchView.currentWorkspace.assigneeRefs.map((item) => item.resourceId).join(" · ") : "未知/未绑定"}</dd></div><div><dt>输入 refs</dt><dd>{workbenchView.currentWorkspace.inputRefs.length ? workbenchView.currentWorkspace.inputRefs.map((item) => item.resourceId).join(" · ") : "未知/缺证据"}</dd></div><div><dt>输出 refs</dt><dd>{workbenchView.currentWorkspace.outputRefs.length ? workbenchView.currentWorkspace.outputRefs.map((item) => item.resourceId).join(" · ") : "未知/缺证据"}</dd></div></dl><div className="business-investigation-contributions">{workbenchView.currentWorkspace.areas.map((area) => <section key={area.area} className={`is-${area.status}`}><header><strong>{area.title}</strong><span>{area.status === "reference_only" ? "仅可回链" : area.status === "present" ? "已声明缺口" : "未知/缺证据"}</span></header><p>{area.summary}</p>{area.resourceRefs.length || area.exactRefs.length ? <small>{[...area.resourceRefs.map((item) => item.resourceId), ...area.exactRefs.map((item) => `${item.resourceId} · r${item.revision}`)].join(" · ")}</small> : null}</section>)}</div><ul className="business-investigation-nonclaims">{workbenchView.currentWorkspace.nonClaims.map((item) => <li key={item}>{item}</li>)}</ul></article>
           {commandsEnabled && client.compileHandoff ? <article className={`business-investigation-handoff is-${handoffPhase}`} aria-label="生意探究受控交接">
-            <header><div><span>BI-W8-06 · Receipt-first Saga</span><h3>跨模块受控交接</h3></div><strong>{handoffPhase}</strong></header>
+            <header><div><span>先留回执 · 再做交接</span><h3>跨工作台受控交接</h3></div><strong>{handoffPhase === "idle" ? "待准备" : handoffPhase === "compiling" ? "正在准备" : handoffPhase === "compiled" ? "已准备" : handoffPhase === "issuing" ? "正在签发" : handoffPhase === "issued" ? "已签发" : handoffPhase === "consuming" ? "正在接收" : handoffPhase === "consumed" ? "已接收" : handoffPhase === "deciding" ? "正在确认" : handoffPhase === "decided" ? "已确认" : handoffPhase === "unknown" ? "结果待核对" : "处理失败"}</strong></header>
             <p className="business-investigation-handoff-boundary">分析师只提交已批准 GrowthPlan exact ref；服务端派生当前 Run、TaskRun、四类领域产物与职责绑定。编译零副作用，签发、接收和接受均需独立确认。</p>
             <div className="business-investigation-handoff-grid">
               <label><span>目标工作台</span><select aria-label="Handoff 目标工作台" value={handoffTarget} onChange={(event) => { setHandoffTarget(event.currentTarget.value as InvestigationHandoffTargetModule); resetHandoff(); }}>{HANDOFF_TARGETS.map((item) => <option key={item.value} value={item.value}>{item.label} · {item.value}</option>)}</select></label>
@@ -310,7 +310,7 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
           })()}
         </> : null}
       </section> : null}
-      {tenant ? <footer className="business-investigation-tenant">租户 {tenant.orgId}/{tenant.projectId} · {commandsEnabled ? "canonical command 单次消费" : "canonical GET-only"} · 未读取真实源系统</footer> : null}
+      {tenant ? <footer className="business-investigation-tenant">租户 {tenant.orgId}/{tenant.projectId} · {commandsEnabled ? "受控操作需逐次确认" : "只读"} · 未读取真实源系统</footer> : null}
     </section>
   );
 }

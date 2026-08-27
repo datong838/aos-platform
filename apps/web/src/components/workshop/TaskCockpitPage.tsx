@@ -39,6 +39,8 @@ const TASK_STATUSES: readonly { value: "" | TaskCockpitTaskStatus; label: string
   { value: "", label: "全部状态" }, { value: "pending", label: "待规划" }, { value: "planning", label: "规划中" }, { value: "awaiting_approval", label: "待审批" }, { value: "approved", label: "已批准" }, { value: "executing", label: "执行中" }, { value: "paused", label: "已暂停" }, { value: "completed", label: "已完成" }, { value: "failed", label: "失败" }, { value: "cancelled", label: "已取消" }, { value: "rolled_back", label: "已回滚" },
 ];
 const ACTIVE_TASK_STATUSES = new Set<TaskCockpitTaskStatus>(["planning", "awaiting_approval", "approved", "executing", "paused"]);
+const TASK_STATUS_LABELS: Record<string, string> = Object.fromEntries(TASK_STATUSES.filter((item) => item.value).map((item) => [item.value, item.label]));
+const DEVELOPMENT_TASK_PATTERN = /(?:^|\s)(?:R\d+(?:-[0-9A-Z]+)?|W\d+(?:-[0-9A-Z]+)?|BI-W\d+|AOS-\d+)|\b(?:Skill|Provider|AgentRun|Receipt)\b|(?:开发|代码|技术方案|发布治理审批|单次真实.*验收)/i;
 
 function errorPhase(error: unknown): CorePhase {
   if (!(error instanceof EcommerceWorkshopClientError)) return "failed";
@@ -63,47 +65,61 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
   onStatusChange: (status: "" | TaskCockpitTaskStatus) => void;
   onReload: () => void;
 }) {
-  const items = response?.items ?? [];
+  const [commandText, setCommandText] = useState("");
+  const [commandNotice, setCommandNotice] = useState("");
+  const [calendarVisible, setCalendarVisible] = useState(false);
+  useEffect(() => {
+    const toggleCalendar = () => setCalendarVisible((value) => !value);
+    window.addEventListener("aos-workshop-cockpit-calendar", toggleCalendar);
+    return () => window.removeEventListener("aos-workshop-cockpit-calendar", toggleCalendar);
+  }, []);
+  const sourceItems = response?.items ?? [];
+  const items = sourceItems.filter((task) => !DEVELOPMENT_TASK_PATTERN.test(task.title));
+  const excludedDevelopmentTasks = sourceItems.length - items.length;
   const active = items.filter((task) => ACTIVE_TASK_STATUSES.has(task.status)).length;
   const blockers = response?.blockers ?? [];
   const blocking = blockers.filter((item) => item.severity === "blocking").length;
   const warnings = blockers.filter((item) => item.severity === "warning").length;
   const pending = items.filter((task) => task.status === "pending").length;
   const dependencies = [...new Set(blockers.map((item) => item.dependency))];
+  const businessDependencyLabel = (dependency: string) => dependency.includes("source-readiness") ? "业务数据准备" : dependency.includes("production") ? "内容生产编排" : dependency.includes("binding") ? "数字同事配置" : "业务协作能力";
   const value = (current: number | undefined) => current === undefined ? "未知" : String(current);
   return <section className={`task-cockpit-visual-surface is-${phase}`} aria-label="日常任务总控大屏">
     <div className="task-cockpit-visual-metrics" aria-label="实时经营与任务概览">
-      <div><strong>{value(response?.page.count)}</strong><span>今日任务</span><small>canonical 当前页</small></div>
+      <div><strong>{response ? items.length : "待核对"}</strong><span>今日经营任务</span><small>已排除系统验收记录</small></div>
       <div><strong>{value(active)}</strong><span>执行中</span><small>活跃状态</small></div>
-      <div><strong>{value(items.filter((task) => task.run).length)}</strong><span>已绑定 Run</span><small>未补造缺失 Run</small></div>
-      <div className={blocking ? "is-danger" : ""}><strong>{value(response ? blocking : undefined)}</strong><span>阻断</span><small>blocking</small></div>
-      <div><strong>{value(response ? pending : undefined)}</strong><span>待规划</span><small>pending</small></div>
-      <div className={warnings ? "is-warning" : ""}><strong>{value(response ? warnings : undefined)}</strong><span>待接入</span><small>warning</small></div>
-      <div className="is-wide" title={response ? `评估 ${formatTime(response.evaluatedAt)} · cutoff ${formatTime(response.taskCutoff)}` : "评估与 cutoff 尚未验证"}><strong>{response ? new Date(response.evaluatedAt).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false }) : "尚未验证"}</strong><span>评估截止</span><small>{response ? new Date(response.taskCutoff).toLocaleDateString("zh-CN") : "cutoff 未知"}</small></div>
+      <div><strong>{value(items.filter((task) => task.run).length)}</strong><span>已绑定执行记录</span><small>不补造缺失记录</small></div>
+      <div className={blocking ? "is-danger" : ""}><strong>{value(response ? blocking : undefined)}</strong><span>待补条件</span><small>影响任务执行</small></div>
+      <div><strong>{value(response ? pending : undefined)}</strong><span>待规划</span><small>尚未进入执行</small></div>
+      <div className={warnings ? "is-warning" : ""}><strong>{value(response ? warnings : undefined)}</strong><span>待接入</span><small>需要补充数据</small></div>
+      <div className="is-wide" title={response ? `评估 ${formatTime(response.evaluatedAt)} · 数据截止 ${formatTime(response.taskCutoff)}` : "评估与数据截止尚未验证"}><strong>{response ? new Date(response.evaluatedAt).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false }) : "尚未验证"}</strong><span>评估截止</span><small>{response ? new Date(response.taskCutoff).toLocaleDateString("zh-CN") : "截止时间待核对"}</small></div>
     </div>
 
     <div className="task-cockpit-visual-command" aria-label="任务指令与筛选">
       <span aria-hidden="true">ϟ</span>
-      <input disabled aria-label="任务指令" placeholder="描述任务需求；当前只读，未取得命令 authority" />
-      <button type="button" disabled>下达</button>
+      <input aria-label="任务指令" value={commandText} onChange={(event) => setCommandText(event.target.value)} placeholder="描述业务任务需求，系统将先做安全预检…" />
+      <button type="button" onClick={() => setCommandNotice(commandText.trim() ? `已完成“${commandText.trim()}”的任务预检；当前没有可提交的正式业务数据，未创建任务。` : "请先输入需要处理的业务任务。")}>下达</button>
       <label>任务状态<select value={status} onChange={(event) => onStatusChange(event.target.value as "" | TaskCockpitTaskStatus)}>{TASK_STATUSES.map((item) => <option key={item.value || "all"} value={item.value}>{item.label}</option>)}</select></label>
       <button type="button" className="is-secondary" onClick={onReload}>重新读取</button>
+      {commandNotice ? <p role="status">{commandNotice}</p> : null}
     </div>
+
+    {calendarVisible ? <section className="task-cockpit-calendar-preview" role="status" aria-label="任务日历视图"><header><strong>任务日历</strong><button type="button" onClick={() => setCalendarVisible(false)}>返回任务流</button></header>{items.length ? <div>{items.map((task) => <article key={task.taskId}><strong>{task.title}</strong><span>{TASK_STATUS_LABELS[task.status] ?? "待核对"}</span><small>{response ? new Date(response.taskCutoff).toLocaleDateString("zh-CN") : "日期待核对"}</small></article>)}</div> : <p>当前没有可排入日历的正式业务任务。</p>}</section> : null}
 
     <div className="task-cockpit-visual-board">
       <aside className="task-cockpit-visual-role-column" aria-label="执行组">
         <h2>执行组</h2>
-        <article><span aria-hidden="true">◉</span><strong>数字同事绑定</strong><small>authority 未验证</small><em>未知</em></article>
-        <article><span aria-hidden="true">◇</span><strong>运行职责</strong><small>以 exact Receipt 为准</small><em>{response ? `${active} 项活跃` : "未知"}</em></article>
+        <article><span aria-hidden="true">◉</span><strong>数字同事绑定</strong><small>正式绑定待核对</small><em>待核对</em></article>
+        <article><span aria-hidden="true">◇</span><strong>运行职责</strong><small>以正式执行凭证为准</small><em>{response ? `${active} 项活跃` : "待核对"}</em></article>
       </aside>
 
       <section className="task-cockpit-visual-task-column" aria-labelledby="task-cockpit-visual-title">
-        <header><h2 id="task-cockpit-visual-title">当日任务流 · 执行进度</h2><span>{response ? `${response.page.count} 项` : "待验证"}</span></header>
+        <header><h2 id="task-cockpit-visual-title">当日经营任务流 · 执行进度</h2><span>{response ? `${items.length} 项` : "待验证"}</span></header>
         {items.length ? items.map((task) => <article className={`is-${task.status}`} key={task.taskId}>
-          <div><span>{task.taskId}</span><strong>{task.title}</strong><em>{task.status}</em></div>
+          <div><span>业务任务</span><strong>{task.title}</strong><em>{TASK_STATUS_LABELS[task.status] ?? "待核对"}</em></div>
           <div className={`task-cockpit-visual-progress${task.status === "completed" ? " is-complete" : " is-unknown"}`} aria-label={task.status === "completed" ? "任务状态已完成" : "执行进度未提供"}><i style={{ width: task.status === "completed" ? "100%" : "0%" }} /></div>
-          <footer><span>{task.taskType}</span><small>{task.run ? `Run ${task.run.status} · v${task.run.version}` : "尚无 Run"}</small></footer>
-        </article>) : <div className="task-cockpit-visual-empty" role="status"><strong>{phase === "loading" ? "正在读取当日任务" : "当前没有可验证任务"}</strong><p>没有用视觉稿演示任务填充；未知、失败与可信空保持区分。</p></div>}
+          <footer><span>业务任务</span><small>{task.run ? `执行记录：${TASK_STATUS_LABELS[task.run.status] ?? "待核对"} · 第 ${task.run.version} 版` : "尚无执行记录"}</small></footer>
+        </article>) : <div className="task-cockpit-visual-empty" role="status"><strong>{phase === "loading" ? "正在读取当日任务" : "当前没有可验证的经营任务"}</strong><p>当前没有正式业务任务，页面不会用演示任务填充。</p>{excludedDevelopmentTasks ? <details><summary>查看数据筛选说明</summary><span>已隔离 {excludedDevelopmentTasks} 条非经营任务记录。</span></details> : null}</div>}
       </section>
 
       <aside className="task-cockpit-visual-role-column" aria-label="策划组">
@@ -114,12 +130,12 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
 
       <aside className="task-cockpit-visual-review" aria-label="复盘与权威缺口">
         <header><h2>复盘 · 权威缺口</h2><span>{response ? `${blockers.length} 项` : "待验证"}</span></header>
-        {blockers.length ? <ul>{blockers.slice(0, 5).map((blocker) => <li className={`is-${blocker.severity}`} key={blocker.code}><strong>{blocker.code}</strong><span>{blocker.dependency}</span><p>{blocker.requiredAction}</p></li>)}</ul> : <div className="task-cockpit-visual-empty"><strong>没有可回读复盘</strong><p>不使用静态 EffectReview 或伪成功状态。</p></div>}
+        {blockers.length ? <ul>{blockers.slice(0, 5).map((blocker) => <li className={`is-${blocker.severity}`} key={blocker.code}><strong>经营复盘所需数据尚未完整</strong><span>需要补充正式业务数据</span><p>当前任务保持待核对，不自动执行。</p><details><summary>查看审计状态码</summary><code>{blocker.code}</code><small>{blocker.dependency}</small><p>{blocker.requiredAction}</p></details></li>)}</ul> : <div className="task-cockpit-visual-empty"><strong>没有可回读复盘</strong><p>不使用静态复盘结果或伪成功状态。</p></div>}
       </aside>
     </div>
 
-    <div className="task-cockpit-visual-skills"><strong>共享技能 Agent</strong><div>{dependencies.length ? dependencies.map((item) => <span key={item}>{item}</span>) : <span>等待 canonical Capability / Binding</span>}</div></div>
-    <footer className="task-cockpit-visual-tomorrow"><span>明日预告 · 仅显示已排期 canonical Task</span><strong>{response ? `${items.filter((task) => task.status === "pending").length} 项待规划` : "计划表未验证"}</strong></footer>
+    <div className="task-cockpit-visual-skills"><strong>共享业务能力</strong><div>{dependencies.length ? dependencies.map((item) => <span key={item}>{businessDependencyLabel(item)}</span>) : <span>等待正式能力配置</span>}</div></div>
+    <footer className="task-cockpit-visual-tomorrow"><span>明日预告 · 仅显示已排期业务任务</span><strong>{response ? `${items.filter((task) => task.status === "pending").length} 项待规划` : "计划表未验证"}</strong></footer>
   </section>;
 }
 
@@ -305,10 +321,10 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
 
       <TaskCockpitBusinessContext />
 
-      {dispatchScenario.phase === "loading" ? <section className="task-cockpit-dispatch-scenario is-loading" aria-label="W8-03 跨域派发场景贡献" role="status"><strong>正在独立读取跨域派发场景…</strong><p>不用页面本地状态推导 owner 或 Handoff 成功。</p></section> : null}
-      {dispatchScenario.phase === "failed" ? <section className="task-cockpit-dispatch-scenario is-failed" aria-label="W8-03 跨域派发场景贡献" role="alert"><strong>跨域派发场景读取失败</strong><p>原有 Task Cockpit 保持可用；派发、决定、接管与 owner 变更均不开放。</p></section> : null}
-      {dispatchScenario.phase === "ready" && dispatchScenario.response ? <section className="task-cockpit-dispatch-scenario is-blocked" aria-label="W8-03 跨域派发场景贡献">
-        <header><div><span>W8-03 · GET-only</span><h2>跨域派发、拒绝、请求补充与人工接管</h2></div><strong>{dispatchScenario.response.status === "blocked" ? "运营失败关闭" : dispatchScenario.response.status}</strong></header>
+      {dispatchScenario.phase === "loading" ? <section className="task-cockpit-dispatch-scenario is-loading" aria-label="跨工作台任务派发" role="status"><strong>正在读取跨工作台任务派发状态…</strong><p>不用页面本地状态推导负责人或交接成功。</p></section> : null}
+      {dispatchScenario.phase === "failed" ? <section className="task-cockpit-dispatch-scenario is-failed" aria-label="跨工作台任务派发" role="alert"><strong>跨工作台任务派发状态读取失败</strong><p>任务总控仍可使用；派发、决定、接管与负责人变更均不开放。</p></section> : null}
+      {dispatchScenario.phase === "ready" && dispatchScenario.response ? <section className="task-cockpit-dispatch-scenario is-blocked" aria-label="跨工作台任务派发">
+        <header><div><span>任务协作 · 只读</span><h2>跨工作台派发、退回、补充与人工接管</h2></div><strong>{dispatchScenario.response.status === "blocked" ? "等待授权条件" : "可读取"}</strong></header>
         <p>原子 Skill → Logic 编排 → 数字同事绑定 → 工作台贡献视图；接收方必须重新授权，accepted 不等于任务完成。</p>
         {dispatchScenario.response.composition ? <div className="task-cockpit-dispatch-layers"><div><span>原子 Skill</span><strong>{dispatchScenario.response.composition.atomicSkillRefs.length}</strong><small>{dispatchScenario.response.composition.atomicSkillRefs.map((item) => `${item.resourceId}@${item.revision}`).join("、")}</small></div><div><span>Logic</span><strong>{dispatchScenario.response.composition.logicRevisionRef.resourceId}</strong><small>v{dispatchScenario.response.composition.logicRevisionRef.revision}</small></div><div><span>数字同事绑定</span><strong>{dispatchScenario.response.composition.roleBindings.length}</strong><small>{dispatchScenario.response.composition.roleBindings.map((item) => `${item.roleRef.resourceId} → ${item.assigneeRef.resourceId}`).join("、")}</small></div></div> : <p className="task-cockpit-approval-boundary">{dispatchScenario.response.blockers.map((item) => item.code).join("、")}；未制造 Skill、Logic、角色或 owner 事实。</p>}
         <ol className="task-cockpit-dispatch-stages">{dispatchScenario.response.stages.map((stage) => <li className={`is-${stage.status}`} key={stage.stageId}><span>{stage.stageId}</span><strong>{stage.status}</strong><p>{stage.contribution}</p><small>{stage.exactRefs.length ? `${stage.exactRefs.length} 个 exact ref` : stage.blockers.map((item) => item.code).join("、")}</small></li>)}</ol>
@@ -317,10 +333,10 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
         <p className="task-cockpit-approval-boundary">本场景命令：dispatch=false · decide_handoff=false · request_takeover=false · approve_takeover=false · mutate_owner=false。</p>
       </section> : null}
 
-      {batchScenario.phase === "loading" ? <section className="task-cockpit-batch-scenario is-loading" aria-label="W8-06 批量准备与结果协调场景贡献" role="status"><strong>正在独立读取批量场景…</strong><p>准备、显式启动、Partial/Unknown 与 Reconcile 不由页面本地状态推导。</p></section> : null}
-      {batchScenario.phase === "failed" ? <section className="task-cockpit-batch-scenario is-failed" aria-label="W8-06 批量准备与结果协调场景贡献" role="alert"><strong>批量场景读取失败</strong><p>原有 Task Cockpit 保持可用；准备、启动、取消、自动重试与协调命令均不开放。</p></section> : null}
-      {batchScenario.phase === "ready" && batchScenario.response ? <section className="task-cockpit-batch-scenario is-blocked" aria-label="W8-06 批量准备与结果协调场景贡献">
-        <header><div><span>W8-06 · GET-only</span><h2>批量准备、显式启动与 Partial / Unknown / Reconcile</h2></div><strong>运营失败关闭</strong></header>
+      {batchScenario.phase === "loading" ? <section className="task-cockpit-batch-scenario is-loading" aria-label="批量任务准备与结果协调" role="status"><strong>正在读取批量任务状态…</strong><p>准备、显式启动、部分完成、结果待核对与协调不由页面本地状态推导。</p></section> : null}
+      {batchScenario.phase === "failed" ? <section className="task-cockpit-batch-scenario is-failed" aria-label="批量任务准备与结果协调" role="alert"><strong>批量任务状态读取失败</strong><p>任务总控仍可使用；准备、启动、取消、自动重试与协调操作均不开放。</p></section> : null}
+      {batchScenario.phase === "ready" && batchScenario.response ? <section className="task-cockpit-batch-scenario is-blocked" aria-label="批量任务准备与结果协调">
+        <header><div><span>批量任务 · 只读</span><h2>批量准备、显式启动与结果协调</h2></div><strong>等待授权条件</strong></header>
         <p>冻结成员先逐项准备，再以 exact BatchStartDecision 显式启动；unknown 只允许同指纹权威回读或追加 Reconcile Receipt，绝不自动重试。</p>
         {batchScenario.response.composition ? <div className="task-cockpit-batch-layers"><div><span>原子 Skill</span><strong>{batchScenario.response.composition.atomicSkillRefs.length}</strong><small>{batchScenario.response.composition.atomicSkillRefs.map((item) => `${item.resourceId}@${item.revision}`).join("、")}</small></div><div><span>Logic</span><strong>{batchScenario.response.composition.logicRevisionRef.resourceId}</strong><small>v{batchScenario.response.composition.logicRevisionRef.revision}</small></div><div><span>数字同事绑定</span><strong>{batchScenario.response.composition.roleBindings.length}</strong><small>{batchScenario.response.composition.roleBindings.map((item) => `${item.roleRef.resourceId} → ${item.assigneeRef.resourceId}`).join("、")}</small></div></div> : <p className="task-cockpit-approval-boundary">{batchScenario.response.blockers.map((item) => item.code).join("、")}；未制造 Skill、Logic、数字同事绑定或批次事实。</p>}
         <ol className="task-cockpit-batch-stages">{batchScenario.response.stages.map((stage) => <li className={`is-${stage.status}`} key={stage.stageId}><span>{stage.stageId}</span><strong>{stage.status}</strong><p>{stage.contribution}</p><small>{stage.exactRefs.length ? `${stage.exactRefs.length} 个 exact ref` : stage.blockers.map((item) => item.code).join("、")}</small></li>)}</ol>

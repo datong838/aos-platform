@@ -15,6 +15,14 @@ function readinessState(module: EcommerceWorkshopModule): AsyncState {
   return "blocked";
 }
 
+const READINESS_LABEL = {
+  available: "可用",
+  degraded: "部分可用",
+  disabled: "已停用",
+  blocked: "等待条件",
+  unknown: "待核对",
+} as const;
+
 export function EcommerceWorkshopShell({
   module,
   dataCutoff,
@@ -52,7 +60,7 @@ export function EcommerceWorkshopShell({
   const pendingView = children ?? (
     <section className="ecommerce-workshop-view-pending" role="status">
       <h2>模块目录与外壳已就绪</h2>
-      <p>业务视图将在 W2 接入；当前不使用视觉稿或示例数据代替正式读模型。</p>
+      <p>业务视图等待正式读模型接入；当前不使用视觉稿或示例数据代替业务事实。</p>
     </section>
   );
 
@@ -67,11 +75,11 @@ export function EcommerceWorkshopShell({
       </a>
       <header className="ecommerce-workshop-context-header">
         {analystVisualContext ? <div className="analyst-exact-context-strip">
-          <span className="is-blue">渠道未选择 · cutoff 未验证</span>
-          <span className="is-purple">经营参谋（owner · 未绑定）</span>
-          <span className="is-gray">数据截止未验证 · 新鲜度 unknown</span>
+          <span className="is-blue">渠道未选择 · 数据截止未验证</span>
+          <span className="is-purple">经营参谋（负责人未绑定）</span>
+          <span className="is-gray">数据截止未验证 · 新鲜度待核对</span>
           <i aria-hidden="true" />
-          <span className="is-red">真实业务写入 0</span>
+          <span className="is-red">业务操作：只读</span>
           <button ref={focusButton} type="button" className="is-yellow" aria-pressed={focusMode} onClick={toggleFocus}>{focusMode ? "退出专注" : "专注模式"}</button>
         </div> : <><div>
           <p className="ecommerce-workshop-eyebrow">已安装电商工作台</p>
@@ -82,7 +90,7 @@ export function EcommerceWorkshopShell({
         </div>
         <div className="ecommerce-workshop-context-actions">
           <span className={`ecommerce-workshop-readiness-badge is-${module.readiness}`}>
-            {module.readiness}
+            {READINESS_LABEL[module.readiness]}
           </span>
           <button
             ref={focusButton}
@@ -100,7 +108,7 @@ export function EcommerceWorkshopShell({
       <details className="ecommerce-workshop-technical-context">
         <summary>
           <span>模块与数据上下文</span>
-          <small>{module.moduleId} · {module.readiness} · cutoff {dataCutoff ?? "待验证"}</small>
+          <small>{module.moduleId} · {READINESS_LABEL[module.readiness]} · 数据截止 {dataCutoff ?? "待验证"}</small>
         </summary>
         <div className="ecommerce-workshop-technical-context-body">
           <dl className="ecommerce-workshop-context-refs" aria-label="模块版本上下文">

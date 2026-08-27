@@ -51,40 +51,40 @@ describe("TaskCockpitPage", () => {
   it("shows the W8-12 release decision as NO_GO without approval flag or release controls", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
-    expect(host.querySelector('[aria-label="W8-12 运营就绪与发布决定"]')).not.toBeNull();
-    expect(host.textContent).toContain("NO_GO · 失败关闭"); expect(host.textContent).toContain("8 blocked"); expect(host.textContent).toContain("Approval");
-    expect(host.textContent).toContain("Approve Candidate / Open Feature Flag / Start Rollout");
+    expect(host.querySelector('[aria-label="运营就绪与发布决定"]')).not.toBeNull();
+    expect(host.textContent).toContain("暂不发布"); expect(host.textContent).toContain("8 blocked"); expect(host.textContent).toContain("Approval");
+    expect(host.textContent).toContain("批准候选、开启功能、开始灰度");
     expect([...host.querySelectorAll("button")].some((item) => /approve candidate|feature flag|rollout|rollback|release|发布/i.test(item.textContent ?? "") && !item.disabled)).toBe(false);
   });
 
   it("shows the W8-11 cumulative gate fail closed without migration or release controls", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
-    expect(host.querySelector('[aria-label="W8-11 累计发布工程门"]')).not.toBeNull();
-    expect(host.textContent).toContain("累计门失败关闭"); expect(host.textContent).toContain("0 / 14"); expect(host.textContent).toContain("未知（不以 0 代替）");
-    expect(host.textContent).toContain("Run Tests / Generate OpenAPI / Apply Migration");
+    expect(host.querySelector('[aria-label="累计发布安全检查"]')).not.toBeNull();
+    expect(host.textContent).toContain("等待发布证据"); expect(host.textContent).toContain("0 / 14"); expect(host.textContent).toContain("未知（不以 0 代替）");
+    expect(host.textContent).toContain("运行测试、生成接口契约、应用数据变更");
     expect([...host.querySelectorAll("button")].some((item) => /migration|install bundle|release|迁移|安装|发布/i.test(item.textContent ?? "") && !item.disabled)).toBe(false);
   });
 
   it("shows the W8-10 DR contract fail closed without exposing data-operation controls", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
-    expect(host.querySelector('[aria-label="W8-10 灾难恢复预检"]')).not.toBeNull();
+    expect(host.querySelector('[aria-label="灾难恢复预检"]')).not.toBeNull();
     expect(host.textContent).toContain("Backup manifest"); expect(host.textContent).toContain("RLS negatives"); expect(host.textContent).toContain("未知（不以 0 代替）");
-    expect(host.textContent).toContain("Inspect Backup / Restore / Rebuild Projection");
+    expect(host.textContent).toContain("检查备份、恢复、重建数据视图");
     expect([...host.querySelectorAll("button")].some((item) => /restore|failover|failback|恢复|重建/i.test(item.textContent ?? "") && !item.disabled)).toBe(false);
   });
 
   it("shows the W8-09 operating contract fail closed without exposing control commands", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
-    expect(host.querySelector('[aria-label="W8-09 运营就绪预检"]')).not.toBeNull();
-    expect(host.textContent).toContain("Unknown backlog");
+    expect(host.querySelector('[aria-label="运营就绪预检"]')).not.toBeNull();
+    expect(host.textContent).toContain("待核对事项");
     expect(host.textContent).toContain("未知（不以 0 代替）");
     expect(host.textContent).toContain("全部禁用");
   });
 
-  it("只显示 canonical partial 范围、服务端 blocker 和 Task/Run，视觉命令槽保持禁用且不制造 H1", async () => {
+  it("只显示正式任务范围、服务端待补条件和执行记录，视觉命令槽返回安全预检且不制造 H1", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
     expect(host.querySelectorAll("h1")).toHaveLength(0);
@@ -92,8 +92,11 @@ describe("TaskCockpitPage", () => {
     expect(host.textContent).toContain("业务上下文未装配");
     expect(host.textContent).not.toMatch(/派发|暂停任务|取消任务|批准任务/);
     expect(host.querySelector(".task-cockpit-command-blocked input")).toBeNull();
-    expect(host.querySelector<HTMLInputElement>(".task-cockpit-visual-command input")?.disabled).toBe(true);
-    expect([...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === "下达")?.disabled).toBe(true);
+    expect(host.querySelector<HTMLInputElement>(".task-cockpit-visual-command input")?.disabled).toBe(false);
+    const dispatch = [...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === "下达");
+    expect(dispatch?.disabled).toBe(false);
+    act(() => dispatch?.click());
+    expect(host.querySelector('[role="status"]')?.textContent).toContain("请先输入需要处理的业务任务");
     expect(client.getTaskCockpitCore).toHaveBeenCalledWith({ status: undefined, limit: 20, cursor: undefined });
   });
 
@@ -115,7 +118,7 @@ describe("TaskCockpitPage", () => {
   it("独立呈现 W8-03 四层贡献、七阶段与五轴，所有命令保持关闭", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getTaskCockpitDispatchScenario: vi.fn().mockResolvedValue(dispatchScenario), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
-    expect(host.textContent).toContain("跨域派发、拒绝、请求补充与人工接管");
+    expect(host.textContent).toContain("跨工作台派发、退回、补充与人工接管");
     expect(host.textContent).toContain("原子 Skill → Logic 编排 → 数字同事绑定 → 工作台贡献视图");
     expect(host.textContent).toContain("prepare-handoff@1");
     expect(host.textContent).toContain("daily-control-dispatch");
@@ -132,16 +135,16 @@ describe("TaskCockpitPage", () => {
   it("W8-03 独立读取失败不拖垮原有 Task Cockpit", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getTaskCockpitDispatchScenario: vi.fn().mockRejectedValue(new Error("offline")), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
-    expect(host.textContent).toContain("跨域派发场景读取失败");
+    expect(host.textContent).toContain("跨工作台任务派发状态读取失败");
     expect(host.textContent).toContain("每日巡检");
     expect(host.textContent).toContain("当日任务流 · 执行进度");
-    expect(host.textContent).toContain("派发、决定、接管与 owner 变更均不开放");
+    expect(host.textContent).toContain("派发、决定、接管与负责人变更均不开放");
   });
 
   it("独立呈现 W8-06 四层批量贡献、七阶段与五结果轴且零命令", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getTaskCockpitBatchScenario: vi.fn().mockResolvedValue(batchScenario), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
-    expect(host.textContent).toContain("批量准备、显式启动与 Partial / Unknown / Reconcile");
+    expect(host.textContent).toContain("批量准备、显式启动与结果协调");
     expect(host.textContent).toContain("freeze-batch@1"); expect(host.textContent).toContain("batch-control-loop"); expect(host.textContent).toContain("operations-lead → operations-lead-1");
     expect(host.querySelectorAll(".task-cockpit-batch-stages > li")).toHaveLength(7);
     expect(host.querySelectorAll(".task-cockpit-batch-axes > article")).toHaveLength(5);

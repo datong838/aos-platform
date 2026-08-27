@@ -2,8 +2,8 @@ import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 import type { ProductionBlocker, ProductionComponentBase, ProductionContributionLineage, ProductionExactRef, ProductionIntent, ProductionReceipt, ProductionUiState } from "./types";
 
 const STATE_LABELS: Record<ProductionUiState, string> = {
-  loading: "读取中", empty: "可信空", partial: "部分可用", stale: "已过期", blocked: "已阻断",
-  forbidden: "无权访问", unknown: "状态未知", ready: "就绪", failed: "读取失败",
+  loading: "读取中", empty: "可信空", partial: "部分可用", stale: "已过期", blocked: "等待条件",
+  forbidden: "无权访问", unknown: "待核对", ready: "可用", failed: "读取失败",
 };
 
 export function ReadinessBadge({ state }: { state: ProductionUiState }) {
@@ -21,17 +21,17 @@ export function ReceiptLink({ value }: { value: ProductionReceipt }) {
 }
 
 export function BlockerList({ items }: { items: ProductionBlocker[] }) {
-  if (!items.length) return <p className="production-clear">当前 cutoff 未声明 blocker；仍以 exact authority 回读为准。</p>;
+  if (!items.length) return <p className="production-clear">当前数据截止面没有待补条件；仍以正式来源回读为准。</p>;
   return <ul className="production-blockers" aria-label="阻断原因">{items.map((item) => <li key={`${item.code}:${item.message}`}>
-    <strong>{item.message}</strong><span>{item.owner} · {item.cutoffAt ?? "cutoff 未提供"}</span><p>{item.href ? <a href={item.href}>{item.requiredAction} →</a> : item.requiredAction}</p><details><summary>技术状态码（审计用）</summary><code>{item.code}</code></details>
+    <strong>{item.message}</strong><span>责任方：{item.owner || "待确认"} · {item.cutoffAt ?? "截止时间未提供"}</span><p>{item.href ? <a href={item.href}>{item.requiredAction} →</a> : item.requiredAction}</p><details><summary>技术状态码（审计用）</summary><code>{item.code}</code></details>
   </li>)}</ul>;
 }
 
 export function ContributionLineage({ value }: { value: ProductionContributionLineage }) {
   return <ol className="production-lineage" aria-label="专业贡献归因路径">
-    <li><span>原子 Skill</span>{value.atomicSkillRef ? <ExactRefLink value={value.atomicSkillRef} /> : <strong>unknown</strong>}</li>
-    <li><span>Logic 编排</span>{value.logicRef ? <ExactRefLink value={value.logicRef} /> : <strong>unknown</strong>}</li>
-    <li><span>数字同事</span><strong>{value.coworker ? `${value.coworker.roleName} · ${value.coworker.assigneeId}` : "unknown"}</strong></li>
+    <li><span>原子技能</span>{value.atomicSkillRef ? <ExactRefLink value={value.atomicSkillRef} /> : <strong>待核对</strong>}</li>
+    <li><span>逻辑编排</span>{value.logicRef ? <ExactRefLink value={value.logicRef} /> : <strong>待核对</strong>}</li>
+    <li><span>数字同事</span><strong>{value.coworker ? `${value.coworker.roleName} · ${value.coworker.assigneeId}` : "待核对"}</strong></li>
     <li><span>工作台贡献</span><strong>{value.workshopContribution}</strong></li>
   </ol>;
 }
@@ -39,10 +39,10 @@ export function ContributionLineage({ value }: { value: ProductionContributionLi
 export function AuthorityStateBoundary({ state, title, children }: { state: ProductionUiState; title: string; children: ReactNode }) {
   const terminal = state === "failed" || state === "forbidden";
   return <section className={`production-authority-state is-${state}`} aria-label={`${title} · ${STATE_LABELS[state]}`} aria-live={terminal ? "assertive" : "polite"}>
-    {state === "loading" ? <p>正在读取 canonical authority…</p> : null}
+    {state === "loading" ? <p>正在读取正式业务数据…</p> : null}
     {state === "empty" ? <p>当前是可信空集合，没有用样例或本地缓存补齐。</p> : null}
-    {state === "failed" ? <p role="alert">canonical authority 读取失败，当前保持失败关闭。</p> : null}
-    {state === "forbidden" ? <p role="alert">当前操作者无权读取该 authority。</p> : null}
+    {state === "failed" ? <p role="alert">正式业务数据读取失败，当前不推断业务结论。</p> : null}
+    {state === "forbidden" ? <p role="alert">当前操作者无权读取该业务数据。</p> : null}
     {!terminal && state !== "loading" && state !== "empty" ? children : null}
   </section>;
 }

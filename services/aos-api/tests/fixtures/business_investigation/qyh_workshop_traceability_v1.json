@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "aos.ecommerce.qyh-workshop-traceability/v1",
+  "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+  "profileCutoff": "2026-08-25T12:56:33Z",
+  "runtimeAuthority": "governed-canonical-projections-only",
+  "sourcePolicy": {
+    "fixturePurpose": "read-only regression and evidence recomputation",
+    "runtimeDatabaseAccess": false,
+    "containsPii": false,
+    "mayHydrateProduction": false
+  },
+  "pages": [
+    {"route": "/workshop/analyst", "role": "orchestration-entry", "uiFunctions": ["切换经营视图", "发起只读生意探究", "重新读取正式分析记录"], "failureMode": "没有正式分析记录时保持可信空，所有控件仍返回安全结果", "writeBoundary": "不创建经营事实、不提交方案、不触发业务动作", "api": ["/v1/ecommerce-workshop/views/analyst", "/v1/ecommerce-business-investigations"], "domains": ["BusinessInvestigationCase", "BusinessInvestigationRun", "DataRequirement", "SourceReadiness", "Evidence", "Handoff"]},
+    {"route": "/workshop/operations", "role": "domain-contribution", "uiFunctions": ["切换运营业务切片", "筛选经营事项", "重新读取订单与履约事实"], "failureMode": "订单或履约事实不完整时显示待核对，不制造运营任务", "writeBoundary": "不改订单、不改履约、不触发售后", "api": ["/v1/ecommerce-workshop/views/operations"], "domains": ["Order", "OrderLine", "Payment", "Shipment", "AfterSaleEvent"]},
+    {"route": "/workshop/content-campaign", "role": "domain-contribution", "uiFunctions": ["切换活动策划视图", "预检新建活动", "预检草稿与发布动作"], "failureMode": "没有正式活动数据时显示可信空，操作只返回预检说明", "writeBoundary": "不创建草稿、不生成内容、不发布活动", "api": ["/v1/ecommerce-workshop/views/content-campaign"], "domains": ["ContentIntent", "ContentVariant", "CalendarEntry", "Review"]},
+    {"route": "/workshop/creator-growth", "role": "domain-contribution", "uiFunctions": ["切换达人视图", "筛选候选范围", "预检邀约动作"], "failureMode": "候选范围未闭合时保持待核对，不展示虚构达人", "writeBoundary": "不解析联系方式、不发送邀约、不触达达人", "api": ["/v1/ecommerce-workshop/views/creator-growth"], "domains": ["Customer", "ShareRelation", "CreatorCandidate", "Handoff"]},
+    {"route": "/workshop/media-studio", "role": "domain-contribution", "uiFunctions": ["切换生产阶段", "查看正式交付成果", "预检新建生产任务"], "failureMode": "没有正式生产记录时保持可信空，控件仍可安全响应", "writeBoundary": "不调用外部生成服务、不发布媒体、不产生费用", "api": ["/v1/ecommerce-workshop/views/media-studio"], "domains": ["ProductionContract", "Artifact", "Review", "Receipt"]},
+    {"route": "/workshop/price-governance", "role": "domain-contribution", "uiFunctions": ["切换价格视图", "查看价格观察", "预检监控与处置动作"], "failureMode": "价格来源或授权不完整时显示待核对，不伪造价格异常", "writeBoundary": "不执行调价、不退款补偿、不发送客户消息", "api": ["/v1/ecommerce-workshop/views/price-governance"], "domains": ["Product", "ProductSku", "PriceObservation", "Proposal"]},
+    {"route": "/workshop/customer", "role": "domain-contribution", "uiFunctions": ["切换客户关系视图", "查看隐私安全分群", "预检客户批次"], "failureMode": "客户最小投影不可读时保持可信空，不展示联系方式或虚构客户", "writeBoundary": "不解析联系方式、不发送消息、不触发客户批次", "api": ["/v1/ecommerce-workshop/views/customer"], "domains": ["Customer", "CustomerSegment", "Journey", "Touchpoint"]},
+    {"route": "/workshop/cockpit", "role": "task-receipt-aggregation", "uiFunctions": ["筛选业务任务", "查看执行进度与复盘", "预检任务下达"], "failureMode": "没有正式业务任务时显示可信空，预检不创建运行实例", "writeBoundary": "不派发任务、不执行命令、不触发外部副作用", "api": ["/v1/ecommerce-workshop/views/task-cockpit"], "domains": ["Task", "PlanStep", "TaskRun", "Receipt", "Handoff"]}
+  ],
+  "scenarios": [
+    {
+      "id": "qyh-store-portrait",
+      "stage": "portrait",
+      "facts": {"spuTotal": 65, "skuTotal": 73, "membersTotal": 54, "ordersTotal": 182, "articlesTotal": 9},
+      "interpretation": "形成跨商品、客户、订单、活动和内容的经营基本盘，但各域口径必须独立标注。",
+      "competingExplanation": "历史插件表、软删除和不同状态机可能改变可经营口径。",
+      "evidenceGap": "缺同一业务截止的 P01-P12 Fulfillment 与业务口径签字。",
+      "decisionImplication": "先生成 DataRequirement 并完成同 cutoff 履行，再进入问题排序。",
+      "evidencePlanes": ["qyh-mysql-aggregate-profile", "aos-domain-map"],
+      "nonClaims": ["不代表当前实时值", "不代表收入或利润", "不授权任何业务写入"]
+    },
+    {
+      "id": "qyh-experience-bottleneck",
+      "stage": "diagnosis",
+      "facts": {"slots": 164, "consumed": 3, "consumptionRate": 0.0182926829, "pending": 161},
+      "interpretation": "体验活动名额消费偏低，是需要优先验证的转化瓶颈候选。",
+      "competingExplanation": "活动过期、资格定义或名额生成规则可能使分母不可直接用于转化率。",
+      "evidenceGap": "缺活动有效期、资格人群和曝光/访问漏斗。",
+      "decisionImplication": "在增长计划前补齐活动有效性和漏斗事实。",
+      "evidencePlanes": ["qyh-mysql-aggregate-profile", "qyh-data-quality-findings"],
+      "nonClaims": ["不宣称最终转化率", "不宣称活动失败", "不触发自动营销"]
+    },
+    {
+      "id": "qyh-content-low-engagement",
+      "stage": "diagnosis",
+      "facts": {"articles": 9, "reads": 217, "likes": 0},
+      "interpretation": "现有样本显示内容互动弱，需要进入内容覆盖与互动口径复核。",
+      "competingExplanation": "发布时间、渠道覆盖、埋点完整性和小样本可能解释低互动。",
+      "evidenceGap": "缺逐渠道曝光、发布时间、点击和转化链路。",
+      "decisionImplication": "先形成内容 DataRequirement，不直接生成发布计划。",
+      "evidencePlanes": ["qyh-mysql-aggregate-profile", "qyh-risk-register"],
+      "nonClaims": ["不宣称内容无价值", "不宣称点赞埋点完整", "不自动发布内容"]
+    },
+    {
+      "id": "qyh-creator-activation",
+      "stage": "diagnosis",
+      "facts": {"members": 54, "qualifiedShopOwners": 35, "shareParentPresent": 44},
+      "interpretation": "店主资格和分享关系提供达人候选发现范围，但尚未形成可邀约候选。",
+      "competingExplanation": "资格、活跃度、同意状态和分享关系新旧系统可能不一致。",
+      "evidenceGap": "缺活跃推广者、同意、可触达和去重后的 canonical candidate。",
+      "decisionImplication": "达人页只展示候选范围与缺口，保持邀约动作关闭。",
+      "evidencePlanes": ["qyh-mysql-aggregate-profile", "qyh-data-quality-findings"],
+      "nonClaims": ["不等同达人候选", "不等同活跃推广者", "不授权邀约或触达"]
+    },
+    {
+      "id": "qyh-order-money-safety",
+      "stage": "portrait",
+      "facts": {"ordersTotal": 182, "ordersNotDeleted": 122, "paidNotDeleted": 97, "completedPaidPayMoney": 9307.72, "allPaidNotDeletedPayMoney": 11110.42},
+      "interpretation": "订单量和支付金额可作为待复核经营事实，但金额名称必须保持来源字段语义。",
+      "competingExplanation": "退款、成本、测试单、关闭已支付订单和多支付状态机可能改变收入解释。",
+      "evidenceGap": "缺退款、成本、测试订单和财务确认口径。",
+      "decisionImplication": "运营页可展示订单事实，经营参谋不得将 pay_money 命名为 GMV、收入或利润。",
+      "evidencePlanes": ["qyh-mysql-aggregate-profile", "qyh-data-quality-findings"],
+      "nonClaims": ["不是确认 GMV", "不是确认收入", "不是利润"]
+    },
+    {
+      "id": "qyh-coupon-quality-conflict",
+      "stage": "diagnosis",
+      "facts": {"couponRows": 478, "useOrderReferences": 33},
+      "interpretation": "优惠券使用字段存在质量冲突，应先进入数据质量处置。",
+      "competingExplanation": "use_time 缺失、状态字段和历史迁移可能使用不同语义。",
+      "evidenceGap": "缺统一核销状态定义和冲突记录复核。",
+      "decisionImplication": "不发布核销率结论，生成质量 blocker。",
+      "evidencePlanes": ["qyh-mysql-aggregate-profile", "qyh-data-quality-findings"],
+      "nonClaims": ["不宣称核销率", "不自动修复数据", "不修改优惠券状态"]
+    }
+  ]
+}

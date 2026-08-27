@@ -14,10 +14,10 @@ describe("WorkshopOperatingReadinessCard", () => {
 
   it("renders an honest read-only blocked state without fake zero metrics or actions", async () => {
     await act(async () => root.render(<WorkshopOperatingReadinessCard />));
-    expect(host.textContent).toContain("运营失败关闭");
+    expect(host.textContent).toContain("等待运营证据");
     expect(host.textContent).toContain("未知（不以 0 代替）");
-    expect(host.textContent).toContain("原子 Skill");
-    expect(host.textContent).toContain("Logic 编排");
+    expect(host.textContent).toContain("原子技能");
+    expect(host.textContent).toContain("逻辑编排");
     expect(host.textContent).toContain("数字同事绑定");
     expect(host.textContent).toContain("工作台贡献");
     expect(host.textContent).toContain("OPERATING_RELEASE_ROOTS_REQUIRED");

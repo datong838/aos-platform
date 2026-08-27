@@ -318,16 +318,26 @@ type WorkshopVisualHeaderSpec = {
 
 const WORKSHOP_VISUAL_HEADERS: Record<string, WorkshopVisualHeaderSpec> = {
   "/workshop/operations": { brand: "栖月汇微商城", title: "统一运营驾驶舱", search: "搜索订单号、SKU、告警关键词…", actions: ["筛选", "＋ 新建处理"] },
-  "/workshop/content-campaign": { brand: "AOS", crumb: "电商业务", title: "内容与活动工作台", search: "搜索活动、内容、商品…", actions: ["保存草稿", "批准并发布"] },
-  "/workshop/creator-growth": { brand: "AOS", crumb: "电商业务", title: "达人邀约驾驶舱", search: "搜索达人、机构、邀约记录…", context: "栖月汇微商城", actions: ["导入达人", "＋ 新建邀约批次"] },
+  "/workshop/content-campaign": { brand: "栖月汇微商城", title: "内容与活动工作台", search: "搜索活动、内容、商品…", actions: ["保存草稿", "批准并发布"] },
+  "/workshop/creator-growth": { brand: "栖月汇微商城", title: "达人邀约驾驶舱", search: "搜索达人、机构、邀约记录…", actions: ["导入达人", "＋ 新建邀约批次"] },
   "/workshop/media-studio": { brand: "栖月汇微商城", title: "多媒体内容生产", search: "搜索文案、视频、直播任务…", context: "栖月汇微商城", actions: ["查看内容计划", "＋ 新建内容任务"] },
   "/workshop/price-governance": { title: "价格治理驾驶舱", crumb: "工作台 › 增长引擎域 › 价格治理", context: "栖月汇微商城", actions: ["导出报告", "＋ 新建监测策略"] },
-  "/workshop/customer": { title: "客户关系工作台", crumb: "工作台 › 运营执行域 › 客户关系", context: "栖月汇微商城 · 客户未知", actions: ["导入客户", "＋ 新建触达任务"] },
+  "/workshop/customer": { title: "客户关系工作台", crumb: "工作台 › 运营执行域 › 客户关系", context: "栖月汇微商城 · 客户待核对", actions: ["导入客户", "＋ 新建触达任务"] },
 };
 
 function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
   const spec = WORKSHOP_VISUAL_HEADERS[pathname];
+  const navigate = useNavigate();
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [actionNotice, setActionNotice] = useState("");
   if (!spec) return null;
+  const runHeaderAction = (label: string) => {
+    setActionNotice("");
+    if (label === "筛选") { searchRef.current?.focus(); return; }
+    if (label === "查看内容计划") { navigate("/workshop/content-campaign"); return; }
+    const noun = label.replace(/^＋\s*/, "");
+    setActionNotice(`${noun}预检已打开：当前没有可提交的正式业务数据，页面不会创建记录或触发外部操作。`);
+  };
   return <>
     <div className="workshop-visual-header-left">
       {spec.title === "价格治理驾驶舱" || spec.title === "客户关系工作台" ? <h1>{spec.title}</h1> : null}
@@ -337,10 +347,11 @@ function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
       {spec.crumb && spec.title !== "价格治理驾驶舱" && spec.title !== "客户关系工作台" ? <span>/</span> : null}
       {spec.title !== "价格治理驾驶舱" && spec.title !== "客户关系工作台" ? <b>{spec.title}</b> : null}
     </div>
-    {spec.search ? <label className="workshop-visual-header-search"><NavIcon name="search" /><input type="search" placeholder={spec.search} /></label> : <div />}
+    {spec.search ? <label className="workshop-visual-header-search"><NavIcon name="search" /><input ref={searchRef} type="search" placeholder={spec.search} /></label> : <div />}
     <div className="workshop-visual-header-actions">
       {spec.context ? <span>{spec.context}</span> : null}
-      {spec.actions.map((label, index) => <button key={label} type="button" className={index === spec.actions.length - 1 ? "is-primary" : ""} disabled title="当前只读门未授权该动作">{label}</button>)}
+      {spec.actions.map((label, index) => <button key={label} type="button" className={index === spec.actions.length - 1 ? "is-primary" : ""} title={label === "筛选" ? "聚焦当前页只读检索" : label === "查看内容计划" ? "打开内容与活动工作台" : "打开安全预检，不写入业务数据"} onClick={() => runHeaderAction(label)}>{label}</button>)}
+      {actionNotice ? <span className="workshop-header-action-notice" role="status">{actionNotice}<button type="button" aria-label="关闭操作提示" onClick={() => setActionNotice("")}>×</button></span> : null}
     </div>
   </>;
 }
@@ -575,14 +586,14 @@ export function AppShell() {
               <span>工作台 › 增长指挥域 › 经营参谋</span>
             </div>
             <div className="analyst-exact-header-right">
-              <label><span>渠道视角</span><select aria-label="渠道视角" value="" disabled><option value="">渠道未知</option></select></label>
-              <span className="analyst-exact-owner" title="经营参谋（owner 未绑定）">经营参谋（owner 未绑定）</span>
+              <label><span>渠道视角</span><select aria-label="渠道视角" defaultValue=""><option value="">渠道未知</option></select></label>
+              <span className="analyst-exact-owner" title="经营参谋（负责人未绑定）">经营参谋（负责人未绑定）</span>
               <button type="button" onClick={() => document.getElementById("analyst-tab-plan")?.click()}><NavIcon name="table" />查看今日方案</button>
             </div>
           </> : onTaskCockpitVisualRoute ? <>
             <div className="task-cockpit-exact-header-left"><strong>栖月汇微商城</strong><span>/</span><b>日常任务总控大屏</b></div>
             <div className="task-cockpit-exact-header-search"><NavIcon name="search" /><input type="search" placeholder="搜索任务、同事、关键词…" /></div>
-            <div className="task-cockpit-exact-header-right"><span>{cockpitDateLabel}</span><button type="button"><NavIcon name="table" />日历视图</button></div>
+            <div className="task-cockpit-exact-header-right"><span>{cockpitDateLabel}</span><button type="button" onClick={() => window.dispatchEvent(new CustomEvent("aos-workshop-cockpit-calendar"))}><NavIcon name="table" />日历视图</button></div>
           </> : onWorkshopMappedHeaderRoute ? <WorkshopPrimaryVisualHeader pathname={location.pathname} /> : <><div className="topbar-left">
             <nav className="breadcrumb" aria-label="面包屑">
               {crumbs.map((c, i) => (

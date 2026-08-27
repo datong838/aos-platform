@@ -10,8 +10,8 @@ describe("WorkshopDisasterRecoveryCard", () => {
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); });
   it("renders an honest read-only blocked state without restore controls", async () => {
     await act(async () => root.render(<WorkshopDisasterRecoveryCard />));
-    expect(host.textContent).toContain("灾备失败关闭"); expect(host.textContent).toContain("未知（不以 0 代替）");
-    expect(host.textContent).toContain("原子 Skill"); expect(host.textContent).toContain("Logic 编排"); expect(host.textContent).toContain("数字同事绑定"); expect(host.textContent).toContain("工作台贡献");
+    expect(host.textContent).toContain("等待灾备证据"); expect(host.textContent).toContain("未知（不以 0 代替）");
+    expect(host.textContent).toContain("原子技能"); expect(host.textContent).toContain("逻辑编排"); expect(host.textContent).toContain("数字同事绑定"); expect(host.textContent).toContain("工作台贡献");
     expect(host.textContent).toContain("DR_RELEASE_ROOTS_REQUIRED"); expect(host.textContent).toContain("全部禁用"); expect(host.querySelectorAll("button")).toHaveLength(0);
   });
 });

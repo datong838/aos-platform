@@ -19,17 +19,17 @@ describe("AsyncJobDrawer", () => {
   afterEach(() => { act(() => root.unmount()); host.remove(); });
   it("展示 partial 证据并不在统一视图提交命令", async () => {
     await act(async () => root.render(<AsyncJobDrawer load={vi.fn().mockResolvedValue(projection)} />));
-    expect(host.textContent).toContain("研究任务"); expect(host.textContent).toContain("partial");
-    expect(host.textContent).toContain("部分产物1"); expect(host.textContent).toContain("research_job_not_resumable");
+    expect(host.textContent).toContain("研究任务"); expect(host.textContent).toContain("部分完成");
+    expect(host.textContent).toContain("阶段产物1"); expect(host.textContent).toContain("research_job_not_resumable");
     expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).filter((button) => ["取消", "重试", "对账"].some((label) => button.textContent?.includes(label))).every((button) => button.disabled)).toBe(true);
   });
   it("切换流水线任务展示 exact checkpoint 与 authority 边界", async () => {
     await act(async () => root.render(<AsyncJobDrawer load={vi.fn().mockResolvedValue(projection)} />));
-    const pipeline = Array.from(host.querySelectorAll<HTMLButtonElement>('nav button')).find((button) => button.textContent?.includes("pipeline-1"));
+    const pipeline = Array.from(host.querySelectorAll<HTMLButtonElement>('nav button'))[1];
     act(() => pipeline?.click());
     expect(host.textContent).toContain("schedule-1@3");
     expect(host.textContent).toContain("knowledge_pipeline_commands_owned_by_pipeline_authority");
-    expect(host.textContent).toContain("统一视图不复制命令状态机");
+    expect(host.textContent).toContain("当前页面只展示业务进度");
   });
   it("读取失败关闭且不自动重试", async () => {
     const load = vi.fn().mockRejectedValue(new Error("offline"));

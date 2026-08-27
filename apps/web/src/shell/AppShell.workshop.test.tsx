@@ -169,9 +169,9 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelector(".analyst-exact-side-item.is-active")?.textContent).toContain("经营参谋 · 增长指挥中心");
     expect(host.querySelector(".brand-block")).toBeNull();
     expect(host.querySelector(".analyst-exact-header-left h1")?.textContent).toBe("经营参谋 · 增长指挥中心");
-    expect(host.querySelector<HTMLSelectElement>('.analyst-exact-header-right select[aria-label="渠道视角"]')?.disabled).toBe(true);
-    expect(host.querySelector(".analyst-exact-owner")?.textContent).toBe("经营参谋（owner 未绑定）");
-    expect(host.querySelector(".analyst-exact-owner")?.getAttribute("title")).toBe("经营参谋（owner 未绑定）");
+    expect(host.querySelector<HTMLSelectElement>('.analyst-exact-header-right select[aria-label="渠道视角"]')?.disabled).toBe(false);
+    expect(host.querySelector(".analyst-exact-owner")?.textContent).toBe("经营参谋（负责人未绑定）");
+    expect(host.querySelector(".analyst-exact-owner")?.getAttribute("title")).toBe("经营参谋（负责人未绑定）");
     const planButton = Array.from(host.querySelectorAll<HTMLButtonElement>(".analyst-exact-header-right button")).find((item) => item.textContent === "查看今日方案");
     expect(planButton).toBeDefined();
 
@@ -196,7 +196,12 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelector<HTMLInputElement>('.workshop-visual-header-search input')?.placeholder).toBe("搜索订单号、SKU、告警关键词…");
     const visualHeaderActions = [...host.querySelectorAll<HTMLButtonElement>(".workshop-visual-header-actions button")];
     expect(visualHeaderActions.map((button) => button.textContent)).toEqual(["筛选", "＋ 新建处理"]);
-    expect(visualHeaderActions.every((button) => button.disabled)).toBe(true);
+    expect(visualHeaderActions[0]?.disabled).toBe(false);
+    expect(visualHeaderActions[1]?.disabled).toBe(false);
+    await act(async () => visualHeaderActions[0]?.click());
+    expect(document.activeElement).toBe(host.querySelector(".workshop-visual-header-search input"));
+    await act(async () => visualHeaderActions[1]?.click());
+    expect(host.querySelector(".workshop-header-action-notice")?.textContent).toContain("不会创建记录或触发外部操作");
   });
 
   it("任务总控路由启用独立视觉壳并保留搜索与日历入口", async () => {
@@ -217,7 +222,7 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelector(".task-cockpit-exact-header-right button")?.textContent).toContain("日历视图");
   });
 
-  it("六个业务工作台使用各自视觉稿顶部语义且写动作全部失败关闭", async () => {
+  it("六个业务工作台使用各自视觉稿顶部语义且所有动作均可给出安全结果", async () => {
     const client = { listModules: async () => workshopCatalogFixture() };
     const cases = [
       ["/workshop/operations", "统一运营驾驶舱", "搜索订单号、SKU、告警关键词…"],
@@ -238,7 +243,14 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
       await flush();
       expect(host.querySelector(".workshop-visual-header-left")?.textContent).toContain(title);
       expect(host.querySelector<HTMLInputElement>(".workshop-visual-header-search input")?.placeholder ?? null).toBe(placeholder);
-      expect([...host.querySelectorAll<HTMLButtonElement>(".workshop-visual-header-actions button")].every((button) => button.disabled)).toBe(true);
+      const actions = [...host.querySelectorAll<HTMLButtonElement>(".workshop-visual-header-actions button")];
+      expect(actions).toHaveLength(2);
+      expect(actions.every((button) => !button.disabled)).toBe(true);
+      const safePreview = actions.find((button) => button.textContent !== "筛选" && button.textContent !== "查看内容计划");
+      if (safePreview) {
+        await act(async () => safePreview.click());
+        expect(host.querySelector('.workshop-header-action-notice')?.textContent).toContain("不会创建记录或触发外部操作");
+      }
     }
   });
 

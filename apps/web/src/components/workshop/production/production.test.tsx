@@ -42,9 +42,9 @@ describe("W3-09 common production UI", () => {
       <ImpactPreviewDialog {...base("影响预览")} previewRef={ref("ImpactPreviewRevision", "preview-1")} rows={[]} open onClose={() => undefined} />
     </div>));
     expect(host.querySelectorAll(".production-frame")).toHaveLength(9);
-    expect(host.textContent).toContain("原子 Skill");
+    expect(host.textContent).toContain("原子技能");
     expect(host.textContent).toContain("build-evidence-pack");
-    expect(host.textContent).toContain("Logic 编排");
+    expect(host.textContent).toContain("逻辑编排");
     expect(host.textContent).toContain("内容官 · agent-content-1");
     expect(host.textContent).toContain("工作台贡献");
   });

@@ -51,9 +51,9 @@ describe("BusinessInvestigationTab", () => {
     expect(host.querySelector(".business-investigation-empty-casebar")).not.toBeNull();
     expect(host.querySelector(".business-investigation-empty-demo-boundary")).not.toBeNull();
     expect(host.querySelectorAll(".business-investigation-empty-stagebar article")).toHaveLength(3);
-    expect(host.textContent).toContain("等待 canonical Case");
-    expect(host.textContent).toContain("Source read 0");
-    expect(host.textContent).toContain("不以演示 Case 补齐");
+    expect(host.textContent).toContain("等待正式分析记录");
+    expect(host.textContent).toContain("数据读取 0");
+    expect(host.textContent).toContain("不注入演示经营事实");
     expect(host.textContent).toContain("不注入演示经营事实");
     const forbidden: InvestigationReadClient = { listCases: vi.fn().mockRejectedValue(new EcommerceInvestigationClientError("forbidden", 403, "FORBIDDEN")), listRuns: vi.fn(), getRunView: vi.fn() };
     await act(async () => root.render(<BusinessInvestigationTab id="panel" labelledBy="tab" client={forbidden} />)); expect(host.textContent).toContain("无权读取生意探究"); expect(host.textContent).not.toContain("store-a");

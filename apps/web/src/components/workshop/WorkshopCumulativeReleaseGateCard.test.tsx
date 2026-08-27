@@ -10,9 +10,9 @@ describe("WorkshopCumulativeReleaseGateCard", () => {
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); });
   it("renders fourteen honest unknown columns and no state-changing controls", async () => {
     await act(async () => root.render(<WorkshopCumulativeReleaseGateCard />));
-    expect(host.textContent).toContain("累计门失败关闭"); expect(host.textContent).toContain("0 / 14"); expect(host.textContent).toContain("0 / 8");
+    expect(host.textContent).toContain("等待发布证据"); expect(host.textContent).toContain("0 / 14"); expect(host.textContent).toContain("0 / 8");
     expect(host.textContent).toContain("OpenAPI"); expect(host.textContent).toContain("Alembic"); expect(host.textContent).toContain("Receipt Readback");
-    expect(host.textContent).toContain("原子 Skill"); expect(host.textContent).toContain("Logic 编排"); expect(host.textContent).toContain("数字同事绑定"); expect(host.textContent).toContain("工作台贡献");
+    expect(host.textContent).toContain("原子技能"); expect(host.textContent).toContain("逻辑编排"); expect(host.textContent).toContain("数字同事绑定"); expect(host.textContent).toContain("工作台贡献");
     expect(host.textContent).toContain("未知（不以 0 代替）"); expect(host.textContent).toContain("全部禁用"); expect(host.querySelectorAll("button")).toHaveLength(0);
   });
 });

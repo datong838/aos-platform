@@ -55,6 +55,6 @@ describe("Workshop state boundaries", () => {
       <CapabilityBlocker readiness={unknown.readiness} blockers={unknown.blockers} />,
     ));
     expect(host.textContent).toContain("DEPENDENCY_NOT_GREEN");
-    expect(host.textContent).toContain("当前没有可验证 authority ref");
+    expect(host.textContent).toContain("当前没有可验证的数据依据");
   });
 });

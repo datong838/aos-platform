@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8" />
+<title>工作台视觉稿同视口对照</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #111827; color: #f9fafb; font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; padding: 10px 16px; background: #111827; border-bottom: 1px solid #374151; }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; }
+  figure { margin: 0; min-width: 0; background: #fff; border: 1px solid #4b5563; }
+  figcaption { padding: 7px 10px; background: #1f2937; color: #fff; }
+  img { display: block; width: 100%; height: auto; }
+</style>
+<header><strong id="title">工作台视觉对照</strong><span>左：视觉稿　右：实际页面</span></header>
+<main><figure><figcaption>视觉稿</figcaption><img id="reference" alt="视觉稿" /></figure><figure><figcaption>实际页面</figcaption><img id="actual" alt="实际页面" /></figure></main>
+<script>
+  const params = new URLSearchParams(location.search);
+  const page = params.get("page") || "analyst";
+  const viewport = params.get("viewport") || "1440x900";
+  document.querySelector("#title").textContent = `${page} · ${viewport}`;
+  document.querySelector("#reference").src = `ref-${page}-${viewport}.png`;
+  document.querySelector("#actual").src = `actual-${page}-${viewport}.png`;
+</script>
+</html>
