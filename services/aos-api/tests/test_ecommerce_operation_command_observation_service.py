@@ -2,8 +2,13 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from aos_api.aip_action_models import ActionExecutionView, ActionProposalSnapshot, ActionReceiptSnapshot
-from aos_api.aip_contracts import ActionProposalStatus, ActionReceiptStatus, ActionRiskLevel, ExecutionLease
+from aos_api.aip_action_models import (
+    ActionExecutionLeaseSnapshot,
+    ActionExecutionView,
+    ActionProposalSnapshot,
+    ActionReceiptSnapshot,
+)
+from aos_api.aip_contracts import ActionProposalStatus, ActionReceiptStatus, ActionRiskLevel
 from aos_api.auth import Principal
 from aos_api.ecommerce_operation_command_observation import (
     EcommerceOperationCommandObservationService,
@@ -34,7 +39,7 @@ def view(*, status: ActionReceiptStatus | None) -> ActionExecutionView:
         created_at=NOW,
         updated_at=NOW,
     )
-    lease = ExecutionLease(id="lease-1", proposal_id="proposal-1", proposal_hash=HASH, attempt=1, expires_at=NOW + timedelta(minutes=10), created_at=NOW)
+    lease = ActionExecutionLeaseSnapshot(id="lease-1", proposal_id="proposal-1", proposal_hash=HASH, attempt=1, expires_at=NOW + timedelta(minutes=10), created_at=NOW)
     receipts = [] if status is None else [ActionReceiptSnapshot(id="receipt-1", proposal_id="proposal-1", lease_id="lease-1", status=status, request_fingerprint=HASH, payload={"commandId": "classify", "operationReceipt": {"receiptId": "op-receipt-1"}}, created_at=NOW)]
     return ActionExecutionView(proposal=proposal, lease=lease, receipts=receipts)
 

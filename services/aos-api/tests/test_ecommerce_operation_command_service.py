@@ -4,7 +4,9 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from aos_api.aip_action_models import (
+    ActionApprovalEventSnapshot,
     ActionDraftBundle,
+    ActionExecutionLeaseSnapshot,
     ActionExecutionView,
     ActionProposalSnapshot,
     ActionReceiptSnapshot,
@@ -14,9 +16,7 @@ from aos_api.aip_contracts import (
     ActionReceiptStatus,
     ActionRiskLevel,
     ApprovalDecision,
-    ApprovalEvent,
     DraftSnapshot,
-    ExecutionLease,
 )
 from aos_api.auth import Principal
 from aos_api.ecommerce_operation_case_contracts import OperationAuthorityReceipt
@@ -387,7 +387,7 @@ class FakeCanonicalActionStore:
                 created_at=NOW,
             ),
             approvals=[
-                ApprovalEvent(
+                ActionApprovalEventSnapshot(
                     id="approval-1",
                     proposal_id="proposal-1",
                     proposal_version=1,
@@ -455,7 +455,7 @@ class FakeCanonicalExecution:
             proposal=FakeCanonicalActionStore(
                 self.payload, self.action_type_id
             ).bundle.proposal,
-            lease=ExecutionLease(
+            lease=ActionExecutionLeaseSnapshot(
                 id="lease-1",
                 proposal_id="proposal-1",
                 proposal_hash=PROPOSAL_HASH,
@@ -500,7 +500,7 @@ class FakeCanonicalExecution:
             proposal=FakeCanonicalActionStore(
                 self.payload, self.action_type_id
             ).bundle.proposal,
-            lease=ExecutionLease(
+            lease=ActionExecutionLeaseSnapshot(
                 id=lease_id,
                 proposal_id="proposal-1",
                 proposal_hash=expected_hash,
