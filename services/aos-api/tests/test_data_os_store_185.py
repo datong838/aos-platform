@@ -169,6 +169,19 @@ def test_sources_list_filtered_by_org(api_client):
     ensure_org("org-filter-b", name="Filter B")
     ensure_workspace("org-filter-a", "dev-project")
     ensure_workspace("org-filter-b", "dev-project")
+    with connect() as conn:
+        for org_id, name in (("org-filter-a", "Filter A"), ("org-filter-b", "Filter B")):
+            conn.execute(
+                "INSERT INTO twa_org (id,name) VALUES (%s,%s) ON CONFLICT (id) DO NOTHING",
+                (org_id, name),
+            )
+            conn.execute(
+                "INSERT INTO twa_workspace (org_id,project_id,name) "
+                "VALUES (%s,'dev-project','Filter workspace') "
+                "ON CONFLICT (org_id,project_id) DO NOTHING",
+                (org_id,),
+            )
+        conn.commit()
     upsert_member("org-filter-a", "dev-project", "alice", "owner", actor_id="alice")
     upsert_member("org-filter-b", "dev-project", "alice", "owner", actor_id="alice")
 
@@ -203,4 +216,6 @@ def test_sources_list_filtered_by_org(api_client):
             conn.execute("DELETE FROM meta_membership WHERE org_id=%s", (oid,))
             conn.execute("DELETE FROM meta_workspace WHERE org_id=%s", (oid,))
             conn.execute("DELETE FROM meta_org WHERE id=%s", (oid,))
+            conn.execute("DELETE FROM twa_workspace WHERE org_id=%s", (oid,))
+            conn.execute("DELETE FROM twa_org WHERE id=%s", (oid,))
         conn.commit()
