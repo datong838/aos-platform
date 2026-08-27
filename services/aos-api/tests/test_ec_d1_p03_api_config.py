@@ -399,7 +399,7 @@ class TestP03ExecutorLinkLandingE2E:
              patch("aos_api.ec_live_executor.sink_to_ot", side_effect=_sink_ot), \
              patch("aos_api.ec_live_executor.get_engine", return_value=MagicMock()), \
              patch("aos_api.ec_live_executor.apply_derived_metrics",
-                   side_effect=lambda rows, pipeline: rows):
+                   side_effect=lambda rows, pipeline, *, link_aggregator: rows):
             result = ec_live_executor(
                 pipeline=pipeline_ns,
                 nodes=[SimpleNamespace(id="source", node_type="source", config={})],

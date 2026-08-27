@@ -393,7 +393,7 @@ class TestP02ExecutorLinkLandingE2E:
              patch("aos_api.ec_live_executor.sink_to_ot", side_effect=_sink_ot), \
              patch("aos_api.ec_live_executor.get_engine", return_value=MagicMock()), \
              patch("aos_api.ec_live_executor.apply_derived_metrics",
-                   side_effect=lambda rows, pipeline: rows):
+                   side_effect=lambda rows, pipeline, *, link_aggregator: rows):
             result = ec_live_executor(
                 pipeline=pipeline_ns,
                 nodes=[SimpleNamespace(id="source", node_type="source", config={})],
@@ -405,9 +405,9 @@ class TestP02ExecutorLinkLandingE2E:
                 scope=TEST_SCOPE,
             )
 
-        # 2 objects + 4 inCategory links = 6
+        # Product 当前同时构造 inCategory 与 sellsProduct：2 + 4 + 2 = 8
         assert result["rows_read"] == 2
-        assert result["rows_written"] == 6
+        assert result["rows_written"] == 8
 
         assert len(sink_ot_calls) == 1
         _, _, output_rows = sink_ot_calls[0]
@@ -432,6 +432,10 @@ class TestP02ExecutorLinkLandingE2E:
         g2_links = [l for l in links if l["source_pk"] == "g-2"]
         assert len(g2_links) == 3
         assert {l["target_source_pk"] for l in g2_links} == {"1", "2", "3"}
+
+        sells_product_links = _links_by_type(output_rows, "Shop.sellsProduct")
+        assert len(sells_product_links) == 2
+        assert {l["target_source_pk"] for l in sells_product_links} == {"g-1", "g-2"}
 
         # Link 行不含 ot 字段（与 ec_link_builder 约定一致）
         assert all("ot" not in l for l in links)
