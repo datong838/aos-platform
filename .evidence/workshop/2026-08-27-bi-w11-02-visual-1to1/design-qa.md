@@ -51,3 +51,37 @@
 `final result: failed`
 
 原因：新鲜基线已证明当前实现与 source visual truth 存在 P0/P1/P2 差异。该结论只冻结整改起点，不构成停工；下一串行任务立即进入 1:1 实现。
+
+## Shell / Tab / 生意探究可信空整改复核
+
+同一比较输入：
+
+- source：`remediation-shell-tabs/source-inquiry-1280.jpg`
+- implementation：`remediation-shell-tabs/current-inquiry-shell-tabs-1280.jpg`
+- 两张图片均为本轮内置浏览器在同一 `1280×720` 视口的新鲜截图；截图前回读 implementation 已进入 `#analyst-tab-investigation` 且 `.business-investigation-empty-casebar` 存在。
+
+已清零的基线差异：
+
+1. P0 明暗体系：经营参谋 route-only Shell 已改为 source 的浅色 token；其他 AOS 路由不继承该作用域。
+2. P0 首屏层级：页头 `48px`、上下文栏 `36px`、Tab `39px`，Tab 从 `y=84` 起，主区从 `y=123` 起。
+3. P1 全局/二级导航：全局栏 `48px`，二级栏 `x=48, y=48, w=260, h=672`；活动经营参谋入口 `x=48, y=262, w=259, h=35.5`，与 source 一致。
+4. P1 页头：标题 `x=64, y=4, 26px/39px, 700`；渠道控件从 `x=551.48` 起；“查看今日方案”按钮 `x=851.48, y=9.5, w=109.34, h=28`，并经浏览器点击验证可切换到真实“增长计划”Tab。
+5. P1 Tab：容器 `x=308, y=84, w=972, h=39, padding=0 20px`；活动 Tab `padding=9px 14px, 12px/18px, 600`，与 source 一致。
+6. P1 生意探究可信空骨架：Case 区 `x=328, y=137, w=926, h=127`；可信空边界 `y=274, h=32`；三阶段条 `y=316, h=54`；工作区 `y=380, w=926, h=160`。没有 canonical Case/Run 时不复制视觉稿演示数据、不把 unknown 显示为 0。
+7. 功能守恒：侧栏路由、折叠按钮、专注模式、重新读取、键盘 Tab 与“查看今日方案”入口仍可用；真实业务写入、Provider、Source read、迁移和发布均未发生。
+
+验证：
+
+- 针对性：`EcommerceWorkshopShell`、`AppShell.workshop`、`BusinessInvestigationTab`、`AnalystPage` 合计 `33/33` GREEN。
+- Web 累计：`255 files / 2300 tests` GREEN。
+- TypeScript + production build：GREEN；仅保留既有 chunk size 警告。
+
+仍需继续的差异：
+
+1. 当前真实租户没有 canonical Case/Run，内容必须保持可信空，因此不能照抄 source 的演示 Case、商品数、步骤数或 checkpoint；后续只对组件几何、样式与状态语义做同构复刻。
+2. 经营总览、驱动因素、问题诊断、增长计划、效果复盘、证据链、数据质量七页尚未逐页完成 1:1 对齐。
+3. `1280×800 / 1440×900 / 1920×1080` 三视口与键盘/交互复核仍待逐页闭合。
+
+`final result: failed`
+
+原因：Shell、Tab 与生意探究可信空首屏已完成本段整改，但八菜单逐页与三视口总门尚未闭合；该状态继续进入下一串行任务，不构成停止条件。

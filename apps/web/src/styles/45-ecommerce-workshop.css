@@ -164,6 +164,334 @@
   min-height: 32px;
   padding: 6px 10px;
 }
+
+/* BI-W11-02：经营参谋 route-only 精确壳。display:contents 只重排视觉层，
+   readiness/GET-only/失败关闭 DOM 与可访问语义仍保留。 */
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--aos-bg);
+}
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] > .ecommerce-workshop-context-header {
+  flex: 0 0 36px;
+  min-height: 36px;
+  margin: 0;
+  padding: 8px 20px;
+  box-sizing: border-box;
+  gap: 8px;
+  border-bottom: 1px solid var(--aos-divider);
+  background: var(--aos-surface);
+}
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] .ecommerce-workshop-context-header > div:first-child {
+  gap: 8px;
+}
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] .ecommerce-workshop-context-header h1 {
+  margin: 0;
+  padding: 1px 6px;
+  border: 1px solid #ddd6fe;
+  border-radius: 3px;
+  background: #faf5ff;
+  color: #7c3aed;
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] .ecommerce-workshop-eyebrow {
+  margin: 0;
+  padding: 1px 6px;
+  border: 1px solid #bfdbfe;
+  border-radius: 3px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 600;
+}
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] .ecommerce-workshop-context-actions {
+  margin-left: auto;
+  gap: 6px;
+}
+.analyst-exact-context-strip { display: flex; align-items: center; gap: 8px; width: 100%; }
+.analyst-exact-context-strip > i { flex: 1; }
+.analyst-exact-context-strip > span,
+.analyst-exact-context-strip > button {
+  min-height: 19px;
+  box-sizing: border-box;
+  padding: 1px 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  background: #f7fafc;
+  color: #718096;
+  font: 600 10px/15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  white-space: nowrap;
+}
+.analyst-exact-context-strip > button { cursor: pointer; }
+.analyst-exact-context-strip .is-blue { border-color: #bfdbfe; background: #eff6ff; color: #2563eb; }
+.analyst-exact-context-strip .is-purple { border-color: #ddd6fe; background: #faf5ff; color: #7c3aed; }
+.analyst-exact-context-strip .is-green { border-color: #bbf7d0; background: #f0fdf4; color: #16a34a; }
+.analyst-exact-context-strip .is-red { width: 105px; justify-content: center; border-color: #fecaca; background: #fef2f2; color: #dc2626; }
+.analyst-exact-context-strip .is-yellow { width: 91px; justify-content: center; border-color: #fde68a; background: #fffbeb; color: #d97706; }
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] .ecommerce-workshop-readiness-badge,
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] .ecommerce-workshop-focus-button {
+  min-height: 24px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+}
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] > .ecommerce-workshop-technical-context {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] > #ecommerce-workshop-main,
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] .ecommerce-workshop-unverified-read-view,
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] .analyst-page,
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] .analyst-read-model {
+  display: contents;
+}
+.p-app.is-analyst-visual .ecommerce-workshop-shell[data-module-id="ecommerce.analyst"] > #ecommerce-workshop-main > .ecommerce-workshop-state {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.p-app.is-analyst-visual .analyst-page > .content-campaign-toolbar {
+  position: absolute;
+  z-index: 3;
+  top: 4px;
+  right: 232px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.p-app.is-analyst-visual .analyst-page > .content-campaign-toolbar > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.p-app.is-analyst-visual .analyst-page > .content-campaign-toolbar button {
+  width: 76px;
+  min-height: 24px;
+  padding: 2px 8px;
+  border-color: #bbf7d0;
+  border-radius: 3px;
+  background: #f0fdf4;
+  color: #16a34a;
+  font-size: 10px;
+}
+.p-app.is-analyst-visual .analyst-tabs {
+  order: 10;
+  display: flex;
+  flex: 0 0 39px;
+  min-height: 39px;
+  gap: 0;
+  padding: 0 20px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--aos-divider);
+  background: var(--aos-surface);
+}
+.p-app.is-analyst-visual .analyst-tabs.has-investigation {
+  grid-template-columns: none;
+}
+.p-app.is-analyst-visual .analyst-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  min-width: 0;
+  height: 39px;
+  padding: 9px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--aos-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: left;
+  white-space: nowrap;
+  box-shadow: none;
+}
+.p-app.is-analyst-visual .analyst-tabs button:hover {
+  background: var(--aos-surface-hover);
+  color: var(--aos-text);
+}
+.p-app.is-analyst-visual .analyst-tabs button strong {
+  font-weight: 400;
+}
+.p-app.is-analyst-visual .analyst-tabs button span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 600;
+}
+.p-app.is-analyst-visual .analyst-tabs button[aria-selected="true"] {
+  border-color: var(--aos-accent);
+  color: var(--aos-accent);
+  box-shadow: none;
+}
+.p-app.is-analyst-visual .analyst-tabs button[aria-selected="true"] strong {
+  font-weight: 600;
+}
+.p-app.is-analyst-visual .analyst-tabs button[aria-selected="true"] span {
+  background: #fffbeb;
+  color: #d97706;
+}
+.p-app.is-analyst-visual .analyst-hero-context { order: 30; margin: 0 20px 10px; }
+.p-app.is-analyst-visual .analyst-supplemental-context { order: 31; margin: 0 20px 10px; }
+.p-app.is-analyst-visual .async-job-drawer { order: 32; margin: 0 20px 10px; }
+.p-app.is-analyst-visual .ecommerce-workshop-blockers { order: 33; margin: 0 20px 10px; }
+.p-app.is-analyst-visual .business-investigation-tab,
+.p-app.is-analyst-visual .analyst-panel {
+  order: 20;
+  margin: 14px 20px 10px;
+}
+.p-app.is-analyst-visual .business-investigation-tab {
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.p-app.is-analyst-visual .business-investigation-tab > header,
+.p-app.is-analyst-visual .business-investigation-tab > .business-investigation-boundary {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.business-investigation-empty-scaffold { display: grid; gap: 10px; }
+.business-investigation-empty-casebar {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-height: 127px;
+  padding: 12px 14px;
+  border: 1px solid var(--aos-divider);
+  border-radius: 4px;
+  background: var(--aos-surface);
+  color: #4a5568;
+}
+.business-investigation-empty-case-main { display: grid; gap: 7px; flex: 1; min-width: 0; }
+.business-investigation-empty-kicker { color: var(--aos-text-tertiary); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+.business-investigation-empty-title { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.business-investigation-empty-title > strong { color: var(--aos-text); font-size: 16px; line-height: 1.25; }
+.business-investigation-empty-title > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 19px;
+  padding: 1px 6px;
+  border: 1px solid #fde68a;
+  border-radius: 3px;
+  background: #fffbeb;
+  color: #d97706;
+  font-size: 10px;
+  font-weight: 600;
+}
+.business-investigation-empty-title > span + span { border-color: #e5e7eb; background: #f3f4f6; color: #6b7280; }
+.business-investigation-empty-target { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.business-investigation-empty-target b { color: var(--aos-text-tertiary); font-size: 11px; }
+.business-investigation-empty-target > span {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border: 1px dashed var(--aos-divider);
+  border-radius: 4px;
+  background: var(--aos-surface-hover);
+  color: var(--aos-text-secondary);
+  font-size: 11px;
+}
+.business-investigation-empty-target small { padding-left: 6px; border-left: 1px solid var(--aos-divider); color: var(--aos-text-tertiary); font-size: 9px; }
+.business-investigation-empty-meta { display: flex; gap: 6px 14px; flex-wrap: wrap; color: var(--aos-text-tertiary); font-size: 10px; }
+.business-investigation-empty-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.business-investigation-empty-actions button {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--aos-border);
+  border-radius: 4px;
+  background: var(--aos-surface);
+  color: var(--aos-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.business-investigation-empty-demo-boundary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid #fde68a;
+  border-radius: 3px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 10px;
+  line-height: 18px;
+}
+.business-investigation-empty-demo-boundary strong { color: #b45309; white-space: nowrap; }
+.business-investigation-empty-stagebar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--aos-divider);
+  border-radius: 4px;
+  background: var(--aos-surface);
+}
+.business-investigation-empty-stagebar article { display: flex; align-items: center; gap: 10px; min-width: 0; height: 52px; padding: 11px 14px; border-right: 1px solid var(--aos-divider); box-sizing: border-box; }
+.business-investigation-empty-stagebar article:last-child { border-right: 0; }
+.business-investigation-empty-stagebar article > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 700;
+}
+.business-investigation-empty-stagebar article div { display: block; min-width: 0; height: 26px; line-height: 26px; white-space: nowrap; }
+.business-investigation-empty-stagebar article strong { color: var(--aos-text); font-size: 12px; line-height: 26px; }
+.business-investigation-empty-stagebar article small { margin-left: 4px; color: var(--aos-text-tertiary); font-size: 10px; line-height: 26px; }
+.business-investigation-empty-workspace { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(250px, 1fr); min-height: 160px; border: 1px solid var(--aos-divider); border-radius: 4px; background: var(--aos-surface); }
+.business-investigation-empty-workspace > article,
+.business-investigation-empty-workspace > aside { min-width: 0; padding: 14px; }
+.business-investigation-empty-workspace > article { border-right: 1px solid var(--aos-divider); }
+.business-investigation-empty-workspace span,
+.business-investigation-empty-workspace small { color: var(--aos-text-tertiary); font-size: 10px; }
+.business-investigation-empty-workspace strong { display: block; margin: 4px 0; color: var(--aos-text); font-size: 13px; }
+.business-investigation-empty-workspace p { margin: 5px 0; color: var(--aos-text-secondary); font-size: 11px; }
+.business-investigation-empty-workspace aside { background: var(--aos-surface-hover); }
+.p-app.is-analyst-visual .business-investigation-tab { margin-right: 26px; }
+.p-app.is-analyst-visual .content-campaign-footnote { order: 40; margin: 0 20px 20px; }
 .ecommerce-workshop-readiness-badge,
 .ecommerce-workshop-blocker-state {
   display: inline-flex;

@@ -200,7 +200,28 @@ export function BusinessInvestigationTab({ id, labelledBy, client = ecommerceInv
       </aside>
 
       {phase === "loading" ? <div className="business-investigation-state is-loading" role="status"><strong>正在读取分析记录…</strong><p>等待 tenant-scoped canonical Case 列表。</p><span className="business-investigation-skeleton" aria-hidden="true" /></div> : null}
-      {phase === "empty" ? <div className="business-investigation-state is-empty"><strong>当前没有可见分析记录</strong><p>未知或未创建不能显示为 0，也不以演示 Case 补齐。</p><button type="button" onClick={loadCases}>重新读取列表</button></div> : null}
+      {phase === "empty" ? <div className="business-investigation-empty-scaffold">
+        <section className="business-investigation-empty-casebar" aria-label="当前生意探究案例为空">
+          <div className="business-investigation-empty-case-main">
+            <span className="business-investigation-empty-kicker">Business investigation case</span>
+            <div className="business-investigation-empty-title"><strong>当前没有可见分析记录</strong><span>可信空</span><span>只读</span></div>
+            <div className="business-investigation-empty-target"><b>经营实体</b><span>未选择经营实体</span><small>等待 canonical Case</small></div>
+            <div className="business-investigation-empty-meta"><span>分析类型：未知</span><span>范围：当前租户 / 只读</span><span>负责人：未绑定</span><span>周期计划：未物化</span></div>
+          </div>
+          <div className="business-investigation-empty-actions"><button type="button" onClick={loadCases}>重新读取列表</button></div>
+        </section>
+        <aside className="business-investigation-empty-demo-boundary" aria-label="可信空展示边界">
+          <strong>可信空边界</strong>
+          <span>当前租户没有 canonical Case/Run；页面仅复刻工作区结构，不注入演示经营事实。</span>
+        </aside>
+        <section className="business-investigation-empty-stagebar" aria-label="生意探究三个串行波次">
+          {["经营画像", "问题与机会", "方案设计"].map((label, index) => <article key={label}><span>{index + 1}</span><div><strong>{label}</strong><small>待进入 · 需要 canonical Case</small></div></article>)}
+        </section>
+        <section className="business-investigation-empty-workspace" aria-label="生意探究可信空工作区">
+          <article><span>当前阶段工作区</span><strong>等待分析 Case</strong><p>未知或未创建不能显示为 0，也不以演示 Case 补齐。</p></article>
+          <aside><strong>依赖与下一证据</strong><p>先读取当前租户可见的 canonical Case/Run；没有 exact authority 时保持可信空。</p><small>Source read 0 · Provider 0 · 外部副作用 0</small></aside>
+        </section>
+      </div> : null}
       {phase === "forbidden" ? <div className="business-investigation-state is-forbidden" role="alert"><strong>无权读取生意探究</strong><p>未泄露其他租户的渠道、实体或分析记录。</p></div> : null}
       {phase === "failed" ? <div className="business-investigation-state is-failed" role="alert"><strong>分析记录读取失败</strong><p>页面已失败关闭，未保留旧选择。</p><button type="button" onClick={loadCases}>重新读取</button></div> : null}
 

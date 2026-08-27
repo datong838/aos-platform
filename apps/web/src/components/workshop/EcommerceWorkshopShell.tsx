@@ -48,6 +48,7 @@ export function EcommerceWorkshopShell({
     if (!next) window.requestAnimationFrame(() => focusButton.current?.focus());
   };
   const state = readinessState(module);
+  const analystVisualContext = module.moduleId === "ecommerce.analyst";
   const pendingView = children ?? (
     <section className="ecommerce-workshop-view-pending" role="status">
       <h2>模块目录与外壳已就绪</h2>
@@ -65,7 +66,14 @@ export function EcommerceWorkshopShell({
         跳到模块主内容
       </a>
       <header className="ecommerce-workshop-context-header">
-        <div>
+        {analystVisualContext ? <div className="analyst-exact-context-strip">
+          <span className="is-blue">渠道未选择 · cutoff 未验证</span>
+          <span className="is-purple">经营参谋（owner · 未绑定）</span>
+          <span className="is-gray">数据截止未验证 · 新鲜度 unknown</span>
+          <i aria-hidden="true" />
+          <span className="is-red">真实业务写入 0</span>
+          <button ref={focusButton} type="button" className="is-yellow" aria-pressed={focusMode} onClick={toggleFocus}>{focusMode ? "退出专注" : "专注模式"}</button>
+        </div> : <><div>
           <p className="ecommerce-workshop-eyebrow">已安装电商工作台</p>
           <h1>{module.displayName}</h1>
           {module.menuLabel !== module.displayName ? (
@@ -86,6 +94,7 @@ export function EcommerceWorkshopShell({
             {focusMode ? "退出专注" : "专注模式"}
           </button>
         </div>
+        </>}
       </header>
 
       <details className="ecommerce-workshop-technical-context">

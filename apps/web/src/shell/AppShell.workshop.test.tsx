@@ -146,6 +146,49 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(currentLinks[0].textContent).toContain("统一运营驾驶舱");
   });
 
+  it("经营参谋路由独立启用视觉稿作用域且不改写其他 Workshop 路由", async () => {
+    const client = { listModules: async () => workshopCatalogFixture() };
+    await act(async () => root.render(
+      <MemoryRouter key="analyst" initialEntries={["/workshop/analyst"]}>
+        <EcommerceWorkshopCatalogProvider client={client}>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="workshop/:workshopModule/*" element={<EcommerceWorkshopEntryRoute />} />
+            </Route>
+          </Routes>
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+
+    expect(host.querySelector(".p-app")?.classList.contains("is-analyst-visual")).toBe(true);
+    expect(host.querySelector(".analyst-exact-side-nav")).not.toBeNull();
+    expect(host.querySelector(".analyst-exact-global")).not.toBeNull();
+    expect(host.querySelectorAll(".analyst-exact-global-links a")).toHaveLength(6);
+    expect(host.querySelectorAll(".analyst-exact-side-item")).toHaveLength(13);
+    expect(host.querySelector(".analyst-exact-side-item.is-active")?.textContent).toContain("经营参谋 · 增长指挥中心");
+    expect(host.querySelector(".brand-block")).toBeNull();
+    expect(host.querySelector(".analyst-exact-header-left h1")?.textContent).toBe("经营参谋 · 增长指挥中心");
+    expect(host.querySelector<HTMLSelectElement>('.analyst-exact-header-right select[aria-label="渠道视角"]')?.disabled).toBe(true);
+    const planButton = Array.from(host.querySelectorAll<HTMLButtonElement>(".analyst-exact-header-right button")).find((item) => item.textContent === "查看今日方案");
+    expect(planButton).toBeDefined();
+
+    await act(async () => root.render(
+      <MemoryRouter key="operations" initialEntries={["/workshop/operations"]}>
+        <EcommerceWorkshopCatalogProvider client={client}>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="workshop/:workshopModule/*" element={<EcommerceWorkshopEntryRoute />} />
+            </Route>
+          </Routes>
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+
+    expect(host.querySelector(".p-app")?.classList.contains("is-analyst-visual")).toBe(false);
+  });
+
   it("侧栏折叠可恢复，专注模式进入与退出不丢失上下文和焦点", async () => {
     const client = { listModules: async () => workshopCatalogFixture() };
     await act(async () => root.render(

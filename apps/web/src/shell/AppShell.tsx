@@ -129,6 +129,25 @@ function GlobalNav({
 }) {
   const navigate = useNavigate();
 
+  if (pathname === "/workshop/analyst") {
+    const links: Array<{ to: string; icon: IconName; label: string }> = [
+      { to: "/workshop/cockpit", icon: "monitor", label: "日常总控" },
+      { to: "/workshop/operations", icon: "inbox", label: "运营驾驶舱" },
+      { to: "/workshop/price-governance", icon: "activity", label: "价格治理" },
+      { to: "/workshop/customer", icon: "user", label: "客户关系" },
+      { to: "/workshop/buddy", icon: "chat", label: "Buddy" },
+      { to: "/workshop/analyst", icon: "layers", label: "经营参谋" },
+    ];
+    return <nav className="p-nav-global analyst-exact-global" aria-label="全局导航">
+      <div className="analyst-exact-global-brand"><NavIcon name="plus-circle" /><span>AOS</span></div>
+      <div className="analyst-exact-global-links">{links.map((item) => <NavLink key={item.to} to={item.to} end title={item.label} aria-label={item.label} className={({ isActive }) => `analyst-exact-global-item${isActive ? " is-active" : ""}`}><NavIcon name={item.icon} /></NavLink>)}</div>
+      <div className="analyst-exact-global-bottom">
+        <button type="button" className="analyst-exact-global-item" title="帮助" aria-label="帮助"><NavIcon name="wrench" /></button>
+        <UserMenu pref={pref} onAppearanceChange={onAppearanceChange} />
+      </div>
+    </nav>;
+  }
+
   // 上半部分图标：menu 切换侧栏，home 回首页，其余装饰性
   const topItems: {
     icon: IconName;
@@ -258,6 +277,36 @@ function UserMenu({
   );
 }
 
+const ANALYST_VISUAL_WORKSHOP_LINKS: Array<{ to: string; label: string; icon: IconName }> = [
+  { to: "/workshop/cockpit", label: "日常任务总控大屏", icon: "monitor" },
+  { to: "/workshop/content-campaign", label: "内容与活动工作台", icon: "table" },
+  { to: "/workshop/operations", label: "统一运营驾驶舱", icon: "inbox" },
+  { to: "/workshop/creator-growth", label: "达人邀约驾驶舱", icon: "user" },
+  { to: "/workshop/media-studio", label: "多媒体内容生产", icon: "film" },
+  { to: "/workshop/analyst", label: "经营参谋 · 增长指挥中心", icon: "layers" },
+  { to: "/workshop/price-governance", label: "价格治理驾驶舱", icon: "activity" },
+  { to: "/workshop/customer", label: "客户关系工作台", icon: "user" },
+];
+
+function AnalystVisualNavigation() {
+  const item = ({ to, label, icon }: { to: string; label: string; icon: IconName }) => <NavLink key={to} to={to} end className={({ isActive }) => `analyst-exact-side-item${isActive ? " is-active" : ""}`}><NavIcon name={icon} /><span>{label}</span></NavLink>;
+  return <nav className="analyst-exact-side-nav" aria-label="经营参谋视觉稿主导航">
+    <div className="analyst-exact-side-title">工作台</div>
+    <div className="analyst-exact-side-section">{ANALYST_VISUAL_WORKSHOP_LINKS.map(item)}</div>
+    <div className="analyst-exact-side-section">{item({ to: "/workshop/buddy", label: "Buddy · 智能助手", icon: "chat" })}</div>
+    <div className="analyst-exact-side-title">应用程序构建工具</div>
+    <div className="analyst-exact-side-section">
+      {item({ to: "/workshop/canvas", label: "画布编辑", icon: "layers" })}
+      {item({ to: "/workshop/graph", label: "对象探索", icon: "graph" })}
+    </div>
+    <div className="analyst-exact-side-title">AIP 决策引擎</div>
+    <div className="analyst-exact-side-section">
+      {item({ to: "/aip/logic", label: "AIP 逻辑画布", icon: "workflow" })}
+      {item({ to: "/aip/drafts", label: "Draft 审批台", icon: "inbox" })}
+    </div>
+  </nav>;
+}
+
 export function AppShell() {
   const [pref, setPref] = useState<AppearancePreference>(() =>
     readAppearancePreference(),
@@ -282,6 +331,7 @@ export function AppShell() {
       ? undefined
       : staticActive;
   const onApolloRoute = location.pathname.startsWith("/apollo");
+  const onAnalystVisualRoute = location.pathname === "/workshop/analyst";
 
   const { collapsed: sidebarCollapsed, toggle: toggleSidebar } =
     useSidebarCollapsed();
@@ -467,7 +517,7 @@ export function AppShell() {
   }, [collapsedSections, toggleSection, active?.id, workshopCatalog.modules]);
 
   return (
-    <div className={`p-app${workshopFocusMode ? " is-workshop-focus" : ""}`}>
+    <div className={`p-app${workshopFocusMode ? " is-workshop-focus" : ""}${onAnalystVisualRoute ? " is-analyst-visual" : ""}`}>
       <GlobalNav
         onToggleSidebar={toggleSidebar}
         pathname={location.pathname}
@@ -476,7 +526,17 @@ export function AppShell() {
       />
       <div className="p-main">
         <header className="topbar">
-          <div className="topbar-left">
+          {onAnalystVisualRoute ? <>
+            <div className="analyst-exact-header-left">
+              <h1>经营参谋 · 增长指挥中心</h1>
+              <span>工作台 › 增长指挥域 › 经营参谋</span>
+            </div>
+            <div className="analyst-exact-header-right">
+              <label><span>渠道视角</span><select aria-label="渠道视角" value="" disabled><option value="">渠道未知</option></select></label>
+              <span className="analyst-exact-owner">经营参谋（负责人：未绑定）</span>
+              <button type="button" onClick={() => document.getElementById("analyst-tab-plan")?.click()}><NavIcon name="table" />查看今日方案</button>
+            </div>
+          </> : <><div className="topbar-left">
             <nav className="breadcrumb" aria-label="面包屑">
               {crumbs.map((c, i) => (
                 <span key={`${c}-${i}`} className="breadcrumb-item">
@@ -511,6 +571,7 @@ export function AppShell() {
               </button>
             </div>
           </div>
+          </>}
         </header>
         <div className="layout">
           <aside className={`aside${sidebarCollapsed ? " is-collapsed" : ""}`}>
@@ -524,7 +585,7 @@ export function AppShell() {
             >
               <NavIcon name="chevron" />
             </button>
-            <div className="brand-block">
+            {onAnalystVisualRoute ? null : <div className="brand-block">
               <div className="brand-mark" aria-hidden>
                 <NavIcon name="layers" className="brand-mark-icon" />
               </div>
@@ -532,11 +593,11 @@ export function AppShell() {
                 <div className="brand-title">AI操作系统</div>
                 <div className="brand-sub">AOS 企业AI转型方案</div>
               </div>
-            </div>
-            <nav className="nav" aria-label="主导航">
+            </div>}
+            {onAnalystVisualRoute ? <AnalystVisualNavigation /> : <nav className="nav" aria-label="主导航">
               {navNodes}
-            </nav>
-            <div className="aside-foot">AOS · {DEMO_VERSION}</div>
+            </nav>}
+            {onAnalystVisualRoute ? null : <div className="aside-foot">AOS · {DEMO_VERSION}</div>}
           </aside>
           <main className="main">
             <OfflineBanner />

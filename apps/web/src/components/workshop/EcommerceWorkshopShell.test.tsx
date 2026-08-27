@@ -63,8 +63,13 @@ describe("EcommerceWorkshopShell", () => {
       ));
       const heading = host.querySelector("h1");
       const main = host.querySelector("#ecommerce-workshop-main");
-      expect(host.querySelectorAll("h1")).toHaveLength(1);
-      expect(heading?.textContent).toContain(module.label);
+      expect(host.querySelectorAll("h1")).toHaveLength(module.moduleId === "ecommerce.analyst" ? 0 : 1);
+      if (module.moduleId === "ecommerce.analyst") {
+        expect(host.querySelector(".analyst-exact-context-strip")?.textContent).toContain("渠道未选择");
+        expect(host.querySelector(".analyst-exact-context-strip")?.textContent).toContain("真实业务写入 0");
+      } else {
+        expect(heading?.textContent).toContain(module.label);
+      }
       expect(main).not.toBeNull();
       expect(host.querySelector(".ecommerce-workshop-shell")?.getAttribute("data-module-id"))
         .toBe(module.moduleId);
