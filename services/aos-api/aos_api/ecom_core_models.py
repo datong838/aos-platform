@@ -388,6 +388,18 @@ class BatchCommand(BaseModel):
             }
         )
 
+    def legacy_request_hash(self, *, expected_checkpoint_version: int) -> str:
+        """Rebuild the pre-BI-W10 receipt hash for exact compatibility checks."""
+        return deterministic_hash(
+            {
+                "scope": self.scope,
+                "expectedCheckpointVersion": expected_checkpoint_version,
+                "nextCheckpoint": self.next_checkpoint,
+                "objects": self.ordered_objects(),
+                "links": self.ordered_links(),
+            }
+        )
+
     def ordered_objects(self) -> list[CoreObjectRecord]:
         return sorted(
             self.objects,

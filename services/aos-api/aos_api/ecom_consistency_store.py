@@ -10,7 +10,7 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from threading import RLock
-from typing import Any
+from typing import Any, Mapping
 
 from sqlalchemy import (
     JSON,
@@ -302,7 +302,11 @@ class EcomConsistencyStore:
                 self._lock_idempotency_key(conn, lock_key)
                 replay = self._get_receipt(conn, command)
                 if replay is not None:
-                    if replay["request_hash"] != request_hash:
+                    if not self._receipt_matches_request(
+                        command=command,
+                        receipt=replay,
+                        request_hash=request_hash,
+                    ):
                         raise EcomConsistencyError(
                             "IDEMPOTENCY_CONFLICT",
                             "idempotency key was already used with a different request",
@@ -677,6 +681,32 @@ class EcomConsistencyStore:
             )
             .mappings()
             .first()
+        )
+
+    @staticmethod
+    def _receipt_matches_request(
+        *,
+        command: BatchCommand,
+        receipt: Mapping[str, Any],
+        request_hash: str,
+    ) -> bool:
+        stored_hash = str(receipt["request_hash"])
+        if stored_hash == request_hash:
+            return True
+
+        # Receipts written before BI-W10 included the transaction CAS guard in
+        # the request hash. The original expected version is recoverable from
+        # the committed result only; no key-only or payload-relaxed fallback is
+        # allowed.
+        try:
+            saved = BatchResult.model_validate(receipt["result"])
+        except (TypeError, ValueError):
+            return False
+        original_expected_version = saved.checkpoint_version - 1
+        if original_expected_version < 0:
+            return False
+        return stored_hash == command.legacy_request_hash(
+            expected_checkpoint_version=original_expected_version
         )
 
     def _upsert_object(self, conn: Connection, record: CoreObjectRecord) -> str:

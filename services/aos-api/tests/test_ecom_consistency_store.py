@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, update
 from sqlalchemy.pool import StaticPool
 
 from aos_api.ecom_consistency_store import (
@@ -184,6 +184,46 @@ def test_idempotent_replay_accepts_newer_observed_checkpoint_guard(
     assert replay.replayed is True
     assert replay.checkpoint_version == 1
     assert store.get_checkpoint(command)["version"] == 1
+
+
+def test_idempotent_replay_accepts_exact_legacy_receipt_hash(
+    store: EcomConsistencyStore,
+) -> None:
+    command = batch(obj("Product", "product-1"))
+    store.apply_batch(command)
+    legacy_hash = command.legacy_request_hash(expected_checkpoint_version=0)
+    with store._engine.begin() as conn:
+        conn.execute(update(ecom_ingest_receipt).values(request_hash=legacy_hash))
+
+    replay = store.apply_batch(
+        command.model_copy(update={"expected_checkpoint_version": 1})
+    )
+
+    assert replay.replayed is True
+    assert replay.checkpoint_version == 1
+
+
+def test_legacy_receipt_hash_does_not_accept_changed_payload(
+    store: EcomConsistencyStore,
+) -> None:
+    command = batch(obj("Product", "product-1"))
+    store.apply_batch(command)
+    legacy_hash = command.legacy_request_hash(expected_checkpoint_version=0)
+    with store._engine.begin() as conn:
+        conn.execute(update(ecom_ingest_receipt).values(request_hash=legacy_hash))
+    changed = batch(
+        obj(
+            "Product",
+            "product-1",
+            properties={**VALID_PROPERTIES["Product"], "title": "changed"},
+        ),
+        expected=1,
+    )
+
+    with pytest.raises(EcomConsistencyError) as caught:
+        store.apply_batch(changed)
+
+    assert caught.value.code == "IDEMPOTENCY_CONFLICT"
 
 
 def test_same_idempotency_key_with_different_hash_conflicts(store: EcomConsistencyStore) -> None:
