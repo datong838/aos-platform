@@ -10,9 +10,8 @@ P04 Category 规格（frozen/02）:
 - Link: inCategory: Product → Category (category_id)（多分类字符串需先定义拆分契约）
 - 派生指标: 无（Category 没有 FR-D1-7 定义的 4 个派生指标）
 
-注意：P04 的 inCategory Link 由 W3 的 ec_link_builder.py 构造。
-W2 的测试只验证 Category OT 落地和分类环/孤儿父级校验。
-测试时 mock ec_link_builder.build_link_rows 为透传。
+注意：P04 的 inCategory Link 由 W3 的 ec_link_builder.py 构造；本套件直接冻结
+当前 Product.inCategory 与 Shop.sellsProduct 合同，不再保留实现前的透传骨架。
 
 测试覆盖 6 项（FR-D1-6 四段实施）+ 3 项额外：
 1. 初装：首次全量读取 → 落地 OT + Dataset
@@ -174,6 +173,10 @@ def _stub_persist(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(data_os_store, "persist_dataset_history", lambda *a, **kw: None)
 
 
+def _links_by_type(rows: list[dict], link_type: str) -> list[dict]:
+    return [row for row in rows if row.get("link_type") == link_type]
+
+
 # ═══════════════════════════════════════════════
 # 1. 初装：首次全量读取 → 落地 OT + Dataset
 # ═══════════════════════════════════════════════
@@ -214,7 +217,7 @@ def test_initial_load_lands_category_ot_and_dataset(monkeypatch):
     real_eng = get_engine()
     real_eng.reset_all_for_tests()
     ds = sink_to_dataset(real_eng, TEST_SCOPE, FakePipeline(), rows)
-    assert ds.id.startswith("ri.dataset.")
+    assert ds.id == "ri.aos.main.dataset.p04-category"
     builds = real_eng.list_builds(TEST_SCOPE, ds.id)
     assert len(builds) == 1
     assert builds[0].rows_written == 3
@@ -562,110 +565,90 @@ def test_root_category_pid_zero_accepted():
 # ═══════════════════════════════════════════════
 
 
-def test_incategory_split_contract_single_value(monkeypatch):
+def test_incategory_split_contract_single_value():
     """inCategory 拆分契约：单值 category_id 字符串。
 
-    任务说明：mock ec_link_builder.build_link_rows 为透传。
-    骨架阶段 build_link_rows 透传 rows，不追加 Link 行。
-    本测试验证：单值 category_id 时，rows 透传不变（W3 实现后会追加 inCategory Link）。
+    单值 category_id 产生一条 inCategory，同时保留 Product 的 sellsProduct Link。
     """
     from aos_api.ec_link_builder import build_link_rows
 
     rows = [product_row_with_categories(goods_id="g-1", category_id_str="1")]
 
-    # mock 为透传（与骨架行为一致）
-    monkeypatch.setattr(
-        "aos_api.ec_link_builder.build_link_rows",
-        lambda rows, p: rows,
-    )
-
     result = build_link_rows(rows, FakePipeline("p02"))
-    assert result == rows
-    assert len(result) == 1
+    assert len(result) == 3
     assert result[0]["properties"]["categoryId"] == "1"
+    category_links = _links_by_type(result, "Product.inCategory")
+    assert len(category_links) == 1
+    assert category_links[0]["target_source_pk"] == "1"
+    assert len(_links_by_type(result, "Shop.sellsProduct")) == 1
 
 
-def test_incategory_split_contract_multi_value(monkeypatch):
+def test_incategory_split_contract_multi_value():
     """inCategory 拆分契约：多值 category_id 字符串（逗号分隔）。
 
     Niushop 的 ns_goods.category_id 字段可能是 "1,2,3" 形式（frozen/02 §P04 Link）。
-    拆分契约：按逗号分割，每个 category_id 独立构造一条 inCategory Link。
-    骨架阶段 build_link_rows 透传，不拆分；W3 实现后会拆分。
-    本测试验证：多值字符串时，rows 透传不变（拆分契约由 W3 实现）。
+    拆分契约：按逗号分割，每个非空 category_id 独立构造一条 inCategory Link。
     """
     from aos_api.ec_link_builder import build_link_rows
 
     rows = [product_row_with_categories(goods_id="g-1", category_id_str="1,2,3")]
 
-    monkeypatch.setattr(
-        "aos_api.ec_link_builder.build_link_rows",
-        lambda rows, p: rows,
-    )
-
     result = build_link_rows(rows, FakePipeline("p02"))
-    # 骨架透传：rows 不变，categoryId 仍为原始多值字符串
-    assert len(result) == 1
+    assert len(result) == 5
     assert result[0]["properties"]["categoryId"] == "1,2,3"
+    category_links = _links_by_type(result, "Product.inCategory")
+    assert {link["target_source_pk"] for link in category_links} == {"1", "2", "3"}
+    assert len(_links_by_type(result, "Shop.sellsProduct")) == 1
 
 
-def test_incategory_split_contract_empty_value(monkeypatch):
+def test_incategory_split_contract_empty_value():
     """inCategory 拆分契约：空值 category_id 字符串。
 
-    空字符串 → 不构造 inCategory Link（W3 实现后）。
-    骨架阶段透传，rows 不变。
+    空字符串不构造 inCategory，但 Product 仍构造 sellsProduct。
     """
     from aos_api.ec_link_builder import build_link_rows
 
     rows = [product_row_with_categories(goods_id="g-1", category_id_str="")]
 
-    monkeypatch.setattr(
-        "aos_api.ec_link_builder.build_link_rows",
-        lambda rows, p: rows,
-    )
-
     result = build_link_rows(rows, FakePipeline("p02"))
-    assert len(result) == 1
+    assert len(result) == 2
     assert result[0]["properties"]["categoryId"] == ""
+    assert _links_by_type(result, "Product.inCategory") == []
+    assert len(_links_by_type(result, "Shop.sellsProduct")) == 1
 
 
-def test_incategory_split_contract_invalid_value(monkeypatch):
-    """inCategory 拆分契约：异常值 category_id 字符串（非数字）。
+def test_incategory_split_contract_opaque_value():
+    """inCategory 拆分契约：非数字 source id 仍按 opaque identity 处理。
 
-    异常值（如 "abc"）→ 不构造 inCategory Link 或进 DLQ（W3 实现后）。
-    骨架阶段透传，rows 不变。
+    Category source id 没有“必须为数字”的本地第二套 authority。
     """
     from aos_api.ec_link_builder import build_link_rows
 
     rows = [product_row_with_categories(goods_id="g-1", category_id_str="abc,xyz")]
 
-    monkeypatch.setattr(
-        "aos_api.ec_link_builder.build_link_rows",
-        lambda rows, p: rows,
-    )
-
     result = build_link_rows(rows, FakePipeline("p02"))
-    assert len(result) == 1
+    assert len(result) == 4
     assert result[0]["properties"]["categoryId"] == "abc,xyz"
+    category_links = _links_by_type(result, "Product.inCategory")
+    assert {link["target_source_pk"] for link in category_links} == {"abc", "xyz"}
+    assert len(_links_by_type(result, "Shop.sellsProduct")) == 1
 
 
-def test_incategory_split_contract_mixed_valid_invalid(monkeypatch):
-    """inCategory 拆分契约：混合有效/无效值（"1,abc,2"）。
+def test_incategory_split_contract_mixed_opaque_values():
+    """inCategory 拆分契约：混合数字/非数字 opaque source id。
 
-    W3 实现后：有效值 1/2 构造 inCategory Link，无效值 abc 进 DLQ。
-    骨架阶段透传，rows 不变。
+    三个非空 token 均构造 inCategory Link，不伪造 DLQ。
     """
     from aos_api.ec_link_builder import build_link_rows
 
     rows = [product_row_with_categories(goods_id="g-1", category_id_str="1,abc,2")]
 
-    monkeypatch.setattr(
-        "aos_api.ec_link_builder.build_link_rows",
-        lambda rows, p: rows,
-    )
-
     result = build_link_rows(rows, FakePipeline("p02"))
-    assert len(result) == 1
+    assert len(result) == 5
     assert result[0]["properties"]["categoryId"] == "1,abc,2"
+    category_links = _links_by_type(result, "Product.inCategory")
+    assert {link["target_source_pk"] for link in category_links} == {"1", "abc", "2"}
+    assert len(_links_by_type(result, "Shop.sellsProduct")) == 1
 
 
 # ═══════════════════════════════════════════════

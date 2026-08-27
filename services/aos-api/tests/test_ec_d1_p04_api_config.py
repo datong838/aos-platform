@@ -310,7 +310,7 @@ def test_dataset_sink_called_and_output_ref_format(monkeypatch):
     assert sink_rows[0]["source_pk"] == "1"
     assert sink_rows[0]["properties"]["name"] == "根分类"
     # output_ref 格式：dataset://catalog/<rid>
-    assert result["output_ref"].startswith("dataset://catalog/ri.dataset.")
+    assert result["output_ref"] == "dataset://catalog/ri.aos.main.dataset.ec-p04-category"
     eng.reset_all_for_tests()
 
 
