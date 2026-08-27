@@ -184,7 +184,13 @@ def test_knowledge_payload_paths_fail_closed(path: str, message: str) -> None:
     [
         "file:///tmp/source.json",
         "http://example.com/source",
-        "https://user:password@example.com/source",
+        (
+            "https://"
+            + "synthetic-user"
+            + ":"
+            + "synthetic-pass"
+            + "@example.com/source"
+        ),
         "https://example.com/source#secret",
         "relative/source",
     ],

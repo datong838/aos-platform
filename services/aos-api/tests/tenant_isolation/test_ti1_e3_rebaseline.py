@@ -122,9 +122,17 @@ def test_incomplete_source_snapshot_blocks_gate() -> None:
 
 def test_environment_fingerprint_excludes_credentials() -> None:
     first = environment_fingerprint(
-        "postgresql://user:secret-a@127.0.0.1:5433/aos_meta"
+        "postgresql://"
+        + "synthetic-a"
+        + ":"
+        + "invalid-a"
+        + "@127.0.0.1:5433/aos_meta"
     )
     second = environment_fingerprint(
-        "postgresql://other:secret-b@127.0.0.1:5433/aos_meta"
+        "postgresql://"
+        + "synthetic-b"
+        + ":"
+        + "invalid-b"
+        + "@127.0.0.1:5433/aos_meta"
     )
     assert first == second

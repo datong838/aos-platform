@@ -44,3 +44,7 @@ scripts/d5_phase_d_targeted.py
 scripts/f4_verify.py
 scripts/d5_phase_d_report.html
 scripts/f_wave_report.html
+
+# Local runtime signing keys must never be tracked.
+scripts/.d2_6_runtime_ed25519.pem
+scripts/.d3_runtime_ed25519.pem
