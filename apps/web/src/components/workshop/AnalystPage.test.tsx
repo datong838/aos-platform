@@ -72,6 +72,37 @@ describe("AnalystPage BI-W7-01 investigation contribution", () => {
     expect(tabs[1]?.tabIndex).toBe(0);
     expect(tabs[1]?.getAttribute("aria-controls")).toBe(host.querySelector('[role="tabpanel"]')?.id);
   });
+
+  it("同一冻结 flag 根支持全关、只读、受控命令再全关", async () => {
+    const analystClient = { getAnalystView: vi.fn().mockResolvedValue(blocked) };
+    const renderWith = async (featureFlags: typeof CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS) => {
+      await act(async () => root.render(
+        <AnalystPage
+          client={analystClient}
+          investigationClient={emptyInvestigationClient}
+          featureFlags={featureFlags}
+          loadAsyncJobs={emptyJobs}
+        />,
+      ));
+    };
+
+    await renderWith(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
+    expect(host.querySelector("#analyst-tab-investigation")).toBeNull();
+
+    await renderWith(OPEN_BUSINESS_INVESTIGATION_READ_FEATURE);
+    expect(host.querySelector("#analyst-tab-investigation")).not.toBeNull();
+    expect(host.querySelector(".business-investigation-tab > header > strong")?.textContent).toBe("只读");
+    expect(host.textContent).toContain("写入口 0 · 周期计划、评审与 Handoff 关闭");
+
+    await renderWith(OPEN_BUSINESS_INVESTIGATION_COMMAND_FEATURE);
+    expect(host.querySelector(".business-investigation-tab > header > strong")?.textContent).toBe("受控命令");
+    expect(host.textContent).toContain("ecommerce.investigation.commands · canonical 评审受控");
+
+    await renderWith(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
+    expect(host.querySelector("#analyst-tab-investigation")).toBeNull();
+    expect(host.querySelectorAll<HTMLButtonElement>('[role="tab"]')).toHaveLength(7);
+    expect(host.querySelector('[role="tabpanel"]')?.textContent).toContain("经营总览");
+  });
 });
 
 describe("AnalystPage S8 visual density", () => {
