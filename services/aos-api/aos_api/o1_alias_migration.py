@@ -478,13 +478,19 @@ def seal_report(scope: TenantScope, *, run_id: uuid.UUID) -> dict[str, Any]:
             "SELECT COUNT(*) AS count FROM projection_outbox WHERE org_id=%s AND project_id=%s AND projected=FALSE",
             scope.key,
         ).fetchone()["count"]
+        canary_scope = TenantScope("dev-org", "dev-project")
         conn.execute("SET LOCAL ROLE aos_runtime")
-        conn.execute("SELECT set_config('aos.org_id','dev-org',true)")
-        conn.execute("SELECT set_config('aos.project_id','dev-project',true)")
-        foreign_sidecar = conn.execute("SELECT COUNT(*) AS count FROM ecom_alias_migration").fetchone()["count"]
+        conn.execute("SELECT set_config('aos.org_id',%s,true)", (canary_scope.org_id,))
+        conn.execute("SELECT set_config('aos.project_id',%s,true)", (canary_scope.project_id,))
+        foreign_sidecar = conn.execute(
+            "SELECT COUNT(*) AS count FROM ecom_alias_migration "
+            "WHERE org_id=%s AND project_id=%s",
+            canary_scope.key,
+        ).fetchone()["count"]
         foreign_objects = conn.execute(
-            "SELECT COUNT(*) AS count FROM obj_instance WHERE object_type=ANY(%s) AND object_id ~ '^[^:]+:[^:]+:.+$'",
-            (list(core_types),),
+            "SELECT COUNT(*) AS count FROM obj_instance WHERE org_id=%s AND project_id=%s "
+            "AND object_type=ANY(%s) AND object_id ~ '^[^:]+:[^:]+:.+$'",
+            (*canary_scope.key, list(core_types)),
         ).fetchone()["count"]
     sidecar_total = sum(int(row["count"]) for row in sidecar)
     sidecar_cleaned = sum(int(row["count"]) for row in sidecar if row["state"] == "cleaned")

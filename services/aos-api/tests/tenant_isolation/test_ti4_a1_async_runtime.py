@@ -56,6 +56,7 @@ def test_a1_schema_report_is_green() -> None:
             "228ti6cassets",
             "228ti6drelations",
             "228ti6edirectory",
+            "biw8_001",
     }
     assert report["ti4ApolloSpokePrimaryKeyValid"] is True
     assert report["ti4ApolloSpokeWorkspaceForeignKeyValid"] is True

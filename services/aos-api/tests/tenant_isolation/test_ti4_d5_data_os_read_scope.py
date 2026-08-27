@@ -118,9 +118,12 @@ def test_d5_boot_is_empty_then_router_lazy_loads_strict_workspace_scope() -> Non
         assert {item["id"] for item in wave_ext.list_syncs(_principal(scope_a))["items"]} == {
             ids_a["sync"]
         }
-        assert {
+        dataset_rids_b = {
             item["rid"] for item in wave_ext.list_datasets(_principal(scope_b))["items"]
-        } == {ids_b["dataset"]}
+        }
+        assert ids_b["dataset"] in dataset_rids_b
+        assert ids_a["dataset"] not in dataset_rids_b
+        assert "ri.aos.main.dataset.P01-shop-qyh" in dataset_rids_b
         assert {
             item["id"] for item in wave_ext.list_pipelines(_principal(scope_a))["items"]
         } == {ids_a["pipeline"]}

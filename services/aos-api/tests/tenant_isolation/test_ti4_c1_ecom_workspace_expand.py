@@ -83,6 +83,7 @@ def test_c1_schema_report_is_green_and_fks_remain_not_valid() -> None:
             "228ti6cassets",
             "228ti6drelations",
             "228ti6edirectory",
+            "biw8_001",
     }
     assert report["ti4EcomInvalidPrimaryKeys"] == []
     assert report["ti4EcomNullableScopeColumns"] == []

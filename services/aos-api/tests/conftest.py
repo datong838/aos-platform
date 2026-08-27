@@ -34,7 +34,10 @@ def _isolated_postgres_database():
         "postgresql://aos_app:aos_dev_only_change_me@127.0.0.1:5433/aos_meta",
     )
     parts = conninfo_to_dict(base_dsn)
-    database_name = f"aos_test_{uuid.uuid4().hex[:12]}"
+    # Every standard test session owns and drops this database.  The explicit
+    # suffix lets destructive TI-4 migration drills prove they are never using
+    # the shared development database.
+    database_name = f"aos_test_{uuid.uuid4().hex[:12]}_ti4_test"
     admin_dsn = make_conninfo(**{**parts, "dbname": parts.get("dbname") or "postgres"})
     test_dsn = URL.create(
         "postgresql",

@@ -121,8 +121,8 @@ def test_demo_clear_keeps_other_workspace_objects_and_templates() -> None:
         conn.execute(
             "INSERT INTO obj_instance "
             "(object_type,object_id,props,org_id,project_id) "
-            "VALUES ('Order',%s,'{}'::jsonb,%s,%s)",
-            (f"other-{suffix}", *other.key),
+            "VALUES (%s,%s,'{}'::jsonb,%s,%s)",
+            (object_type, f"other-{suffix}", *other.key),
         )
         conn.commit()
 

@@ -112,6 +112,7 @@ def test_schema_lint_confirms_nine_policies_and_safe_role() -> None:
             "228ti6cassets",
             "228ti6drelations",
             "228ti6edirectory",
+            "biw8_001",
     }
     assert report["ti3RuntimeRoleSafe"] is True
     assert report["ti3RlsTableCount"] == 9

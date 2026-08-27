@@ -28,6 +28,9 @@ TI5_A2_REVISION = "228ti5a2kv"
 TI5_A3_REVISION = "228ti5a3lineage"
 # The B1 contract remains required; schema reports accept the current TI-6 head.
 TI5_B1_REVISION = "228ti6edirectory"
+# Later domain migrations preserve the sealed TI-4/TI-5 tenant contracts.  Keep
+# this exact instead of accepting arbitrary unknown descendants.
+CURRENT_SCHEMA_HEAD_REVISION = "biw8_001"
 AUTHZ_COLUMNS = frozenset({"org_id", "project_id"})
 EXPECTED_FOREIGN_KEYS = frozenset(
     {
@@ -110,6 +113,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("RLS_ENABLED_BEFORE_E6")
     if revision not in {
@@ -136,6 +140,7 @@ def build_ti1_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     return {
@@ -303,6 +308,7 @@ def build_ti1_e3_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -436,6 +442,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -532,6 +539,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("TI2_EXPAND_COLUMNS_NOT_NULLABLE")
     if missing_tables:
@@ -568,6 +576,7 @@ def build_ti2_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI5_A2_REVISION,
                 TI5_A3_REVISION,
                 TI5_B1_REVISION,
+                CURRENT_SCHEMA_HEAD_REVISION,
             }
             else non_nullable_columns
         ),
@@ -602,6 +611,7 @@ def build_ti2_e4_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
     rows = conn.execute(
@@ -663,6 +673,7 @@ def build_ti2_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -776,6 +787,7 @@ def build_ti2_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -889,6 +901,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -931,6 +944,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("TI3_EXPAND_COLUMNS_NOT_NULLABLE")
     if templates_with_scope:
@@ -975,6 +989,7 @@ def build_ti3_e1_schema_report(conn: Any) -> dict[str, Any]:
                 TI5_A2_REVISION,
                 TI5_A3_REVISION,
                 TI5_B1_REVISION,
+                CURRENT_SCHEMA_HEAD_REVISION,
             }
             else expand_not_nullable
         ),
@@ -1003,6 +1018,7 @@ def build_ti3_e6_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1115,6 +1131,7 @@ def build_ti3_e7_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1258,6 +1275,7 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1306,6 +1324,7 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         expected_fk += " NOT VALID"
     invalid_foreign_keys = sorted(
@@ -1325,6 +1344,7 @@ def build_ti4_c1_schema_report(conn: Any) -> dict[str, Any]:
             TI5_A2_REVISION,
             TI5_A3_REVISION,
             TI5_B1_REVISION,
+            CURRENT_SCHEMA_HEAD_REVISION,
         }
         else []
     )
@@ -1373,6 +1393,7 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1408,6 +1429,7 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("TI4_DATA_OS_EXPAND_COLUMNS_NOT_NULLABLE")
 
@@ -1465,6 +1487,7 @@ def build_ti4_d1_schema_report(conn: Any) -> dict[str, Any]:
                 TI5_A2_REVISION,
                 TI5_A3_REVISION,
                 TI5_B1_REVISION,
+                CURRENT_SCHEMA_HEAD_REVISION,
             }
             else non_nullable_expand_columns
         ),
@@ -1546,6 +1569,7 @@ def build_ti4_d7_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1662,6 +1686,7 @@ def build_ti4_c3_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1763,6 +1788,7 @@ def build_ti4_a1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1871,6 +1897,7 @@ def build_ti5_a1_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -1967,6 +1994,7 @@ def build_ti5_a2_schema_report(conn: Any) -> dict[str, Any]:
         TI5_A2_REVISION,
         TI5_A3_REVISION,
         TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
     }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
@@ -2081,7 +2109,11 @@ def build_ti5_a3_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] not in {TI5_A3_REVISION, TI5_B1_REVISION}:
+    if report["alembicRevision"] not in {
+        TI5_A3_REVISION,
+        TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     columns = {
@@ -2221,7 +2253,10 @@ def build_ti5_b1_schema_report(conn: Any) -> dict[str, Any]:
     issues = [
         issue for issue in report["issues"] if issue != "ALEMBIC_REVISION_MISMATCH"
     ]
-    if report["alembicRevision"] != TI5_B1_REVISION:
+    if report["alembicRevision"] not in {
+        TI5_B1_REVISION,
+        CURRENT_SCHEMA_HEAD_REVISION,
+    }:
         issues.append("ALEMBIC_REVISION_MISMATCH")
 
     tables = (

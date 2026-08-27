@@ -5,6 +5,7 @@ import inspect
 import json
 import re
 import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -54,7 +55,11 @@ def test_object_graph_funnel_and_tool_reads_are_scope_isolated() -> None:
     _ensure_workspace(scope_a)
     _ensure_workspace(scope_b)
     object_type = f"ReadType-{suffix}"
+    graph_source_type = "Order"
+    graph_target_type = "OrderLine"
     source_id = f"source-{suffix}"
+    shop_id = f"ti3-{suffix}"
+    now = datetime.now(UTC)
     with connect() as conn:
         conn.execute(
             "INSERT INTO meta_object_type (id,name) VALUES (%s,%s)",
@@ -73,10 +78,49 @@ def test_object_graph_funnel_and_tool_reads_are_scope_isolated() -> None:
                 ),
             )
         conn.execute(
-            "INSERT INTO graph_edge "
-            "(src_type,src_id,rel,dst_type,dst_id,org_id,project_id) "
-            "VALUES (%s,%s,'related',%s,'a',%s,%s)",
-            (object_type, source_id, object_type, *scope_a.key),
+            "INSERT INTO ecom_object "
+            "(org_id,workspace_id,platform,shop_or_marketplace_id,object_type,external_id,"
+            "properties,source_updated_at,source_timezone,canonical_status,raw_status,"
+            "schema_version,payload_hash) VALUES "
+            "(%s,%s,'niushop',%s,%s,%s,'{}'::jsonb,%s,'UTC','active','active',1,%s),"
+            "(%s,%s,'niushop',%s,%s,'a','{}'::jsonb,%s,'UTC','active','active',1,%s),"
+            "(%s,%s,'niushop',%s,%s,%s,'{}'::jsonb,%s,'UTC','active','active',1,%s)",
+            (
+                *scope_a.key,
+                shop_id,
+                graph_source_type,
+                source_id,
+                now,
+                "a" * 64,
+                *scope_a.key,
+                shop_id,
+                graph_target_type,
+                now,
+                "b" * 64,
+                *scope_b.key,
+                shop_id,
+                graph_source_type,
+                source_id,
+                now,
+                "c" * 64,
+            ),
+        )
+        conn.execute(
+            "INSERT INTO ecom_link "
+            "(org_id,workspace_id,link_type,source_platform,source_shop_or_marketplace_id,"
+            "source_object_type,source_external_id,target_platform,target_shop_or_marketplace_id,"
+            "target_object_type,target_external_id,properties,source_updated_at,payload_hash) "
+            "VALUES (%s,%s,'Order.lines','niushop',%s,%s,%s,'niushop',%s,%s,'a','{}'::jsonb,%s,%s)",
+            (
+                *scope_a.key,
+                shop_id,
+                graph_source_type,
+                source_id,
+                shop_id,
+                graph_target_type,
+                now,
+                "d" * 64,
+            ),
         )
         conn.execute(
             "INSERT INTO funnel_status "
@@ -100,8 +144,8 @@ def test_object_graph_funnel_and_tool_reads_are_scope_isolated() -> None:
     assert [row["id"] for row in tool_a["result"]["items"]] == ["a"]
     assert [row["id"] for row in tool_b["result"]["items"]] == ["b"]
 
-    assert neighbors(object_type, source_id, _principal(scope_a))["items"]
-    assert neighbors(object_type, source_id, _principal(scope_b))["items"] == []
+    assert neighbors(graph_source_type, source_id, _principal(scope_a))["items"]
+    assert neighbors(graph_source_type, source_id, _principal(scope_b))["items"] == []
     assert funnel_status(object_type, _principal(scope_a))["stage"] == "hydration"
     with pytest.raises(ApiError) as hidden:
         funnel_status(object_type, _principal(scope_b))

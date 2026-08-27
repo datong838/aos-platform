@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from aos_api.auth import Principal
+from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.routers import wave_ext
 from aos_api.tenant_scope import TenantScope
@@ -24,6 +25,18 @@ def _principal(scope: TenantScope) -> Principal:
 
 @pytest.fixture(autouse=True)
 def _clean_job_dlq_state() -> None:
+    with connect() as conn:
+        for scope in (SCOPE_A, SCOPE_B):
+            conn.execute(
+                "INSERT INTO twa_org (id,name) VALUES (%s,%s) ON CONFLICT DO NOTHING",
+                (scope.org_id, scope.org_id),
+            )
+            conn.execute(
+                "INSERT INTO twa_workspace (org_id,project_id,name) "
+                "VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",
+                (scope.org_id, scope.project_id, scope.project_id),
+            )
+        conn.commit()
     jobs = dict(wave_ext._jobs)
     dlq = dict(wave_ext._dlq)
     capabilities = dict(wave_ext._capabilities)
@@ -76,18 +89,17 @@ def test_capability_job_same_id_is_scoped_and_foreign_status_is_hidden() -> None
     assert foreign_error.value.status_code == 404
 
 
-def test_dlq_same_id_list_retry_and_docintel_failure_are_scoped() -> None:
+def test_dlq_scoped_id_list_retry_and_docintel_failure_are_scoped() -> None:
     with patch("aos_api.routers.wave_ext.uuid.uuid4", return_value=_FixedUuid()):
         item_a = wave_ext.push_dlq({"reason": "a"}, _principal(SCOPE_A))
         item_b = wave_ext.push_dlq({"reason": "b"}, _principal(SCOPE_B))
 
-    assert item_a["id"] == item_b["id"]
+    assert item_a["id"] != item_b["id"]
     assert wave_ext.list_dlq(_principal(SCOPE_A))["items"] == [item_a]
     assert wave_ext.list_dlq(_principal(SCOPE_B))["items"] == [item_b]
     assert wave_ext.retry_dlq(item_a["id"], _principal(SCOPE_A))["status"] == "retried"
     assert item_b["status"] == "open"
 
-    wave_ext._dlq.pop(wave_ext._resource_key(SCOPE_B, item_b["id"]))
     with pytest.raises(ApiError) as foreign_error:
         wave_ext.retry_dlq(item_a["id"], _principal(SCOPE_B))
     assert foreign_error.value.status_code == 404

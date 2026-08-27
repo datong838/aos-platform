@@ -27,6 +27,20 @@ def _load_migration():
     return module
 
 
+def _ensure_workspace(scope: TenantScope) -> None:
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO twa_org (id,name) VALUES (%s,%s) ON CONFLICT DO NOTHING",
+            (scope.org_id, scope.org_id),
+        )
+        conn.execute(
+            "INSERT INTO twa_workspace (org_id,project_id,name) "
+            "VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",
+            (scope.org_id, scope.project_id, scope.project_id),
+        )
+        conn.commit()
+
+
 def test_contract_migration_is_scoped_and_reversible() -> None:
     module = _load_migration()
     source = MIGRATION.read_text(encoding="utf-8")
@@ -69,6 +83,7 @@ def test_e7_schema_report_is_green() -> None:
             "228ti6cassets",
             "228ti6drelations",
             "228ti6edirectory",
+            "biw8_001",
     }
     assert report["ti2ContractInvalidPrimaryKeys"] == []
     assert report["ti2ContractNullableModulePkTables"] == []
@@ -120,6 +135,8 @@ def test_app05_uninstall_is_scoped_etag_guarded_and_keeps_business_data(client) 
     module_id = f"uninstall-module-{suffix}"
     scope_a = TenantScope(f"org-a-{suffix}", f"project-{suffix}")
     scope_b = TenantScope(f"org-b-{suffix}", f"project-{suffix}")
+    _ensure_workspace(scope_a)
+    _ensure_workspace(scope_b)
     create_module(scope_a, {"id": module_id, "name": "A"})
     create_module(scope_b, {"id": module_id, "name": "B"})
     event = create_event(scope_a, module_id, {"name": "running"})

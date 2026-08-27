@@ -97,6 +97,7 @@ def test_d7_schema_report_and_quarantine_guards_are_green() -> None:
             "228ti6cassets",
             "228ti6drelations",
             "228ti6edirectory",
+            "biw8_001",
     }
     assert report["ti4DataOsContractInvalidPrimaryKeys"] == []
     assert report["ti4DataOsContractNullableScope"] == []

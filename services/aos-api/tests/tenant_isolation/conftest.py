@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import psycopg
@@ -27,6 +28,12 @@ def _current_database_name() -> str | None:
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     ti4_items = [item for item in items if _is_ti4_test(item)]
     if not ti4_items:
+        return
+
+    # The root test fixture creates, migrates and drops a uniquely named
+    # disposable database after collection.  Only the explicit shared-database
+    # escape hatch needs a live name check here.
+    if os.getenv("AOS_TEST_USE_SHARED_DATABASE") != "1":
         return
 
     database_name = _current_database_name()
