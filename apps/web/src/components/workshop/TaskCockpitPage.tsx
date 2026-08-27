@@ -79,7 +79,7 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
       <div className={blocking ? "is-danger" : ""}><strong>{value(response ? blocking : undefined)}</strong><span>阻断</span><small>blocking</small></div>
       <div><strong>{value(response ? pending : undefined)}</strong><span>待规划</span><small>pending</small></div>
       <div className={warnings ? "is-warning" : ""}><strong>{value(response ? warnings : undefined)}</strong><span>待接入</span><small>warning</small></div>
-      <div className="is-wide"><strong>{response ? formatTime(response.evaluatedAt) : "尚未验证"}</strong><span>评估时间</span><small>cutoff {response ? formatTime(response.taskCutoff) : "未知"}</small></div>
+      <div className="is-wide" title={response ? `评估 ${formatTime(response.evaluatedAt)} · cutoff ${formatTime(response.taskCutoff)}` : "评估与 cutoff 尚未验证"}><strong>{response ? new Date(response.evaluatedAt).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false }) : "尚未验证"}</strong><span>评估截止</span><small>{response ? new Date(response.taskCutoff).toLocaleDateString("zh-CN") : "cutoff 未知"}</small></div>
     </div>
 
     <div className="task-cockpit-visual-command" aria-label="任务指令与筛选">

@@ -38,14 +38,14 @@
 - 右侧控件组由 `438.34px` 收敛为 `410.02px`（source `≈409.09px`），与左侧标题组重叠为 `0`；document `clientWidth=scrollWidth=1280`。
 - 状态条从 `y=48` 开始进入 972px 内容轨，不再挤压顶部标题行；窄视口仍保留显式断点换行。
 - 截图：`v14-analyst-1280x720.png`；source：`source-analyst-1280x720.png`。
-- 专项：八页组件与 AppShell `60/60` GREEN；TypeScript、生产构建与 `git diff --check` GREEN。
+- 专项：八页组件与 AppShell `65/65` GREEN；TypeScript、生产构建与 `git diff --check` GREEN。
 
 V0 的“顶部挤压/负责人截断”缺陷已在 1280 首档关闭；不得据此推导其余视觉细节已经 1:1。
 
 ## V1 任务总控首轮复验
 
 - source：`foundry/html/workshop-task-cockpit.html` 与用户提供的 source 截图。
-- 当前：`v1-task-cockpit-1280x720.png`。
+- 当前：`v16-task-cockpit-1280x720.png`。
 - 实测几何：topbar `48px`；二级图标栏 `48px`；KPI `72px`；只读指令栏 `51px`；主体 `428px`；共享 Skill `50px`；审计折叠栏 `37px`。
 - 页面横向宽度：document `clientWidth=1280/scrollWidth=1280`，无页面级横向溢出。
 - 已恢复 source 的 KPI、指令条、执行组—任务流—策划组—复盘四列、共享 Skill 与明日预告结构；数据只消费当前 canonical Task/Run/blocker，缺失事实显示“未知/待验证”。
@@ -54,6 +54,13 @@ V0 的“顶部挤压/负责人截断”缺陷已在 1280 首档关闭；不得�
 - 专项：`TaskCockpitPage + AppShell` 共 `22/22` GREEN；TypeScript GREEN。
 
 V1 当前从结构性 P0 转为细节 P1/P2 复审；还需在 V9 用 source/current 同输入关闭字体、间距与三视口差异。V2–V8 尚未完成，因此整体结论不变。
+
+### V16 顶部指标带复核
+
+- 视觉稿同位的 `73px` 指标带已改为六个等宽事实槽加一个截止槽；当前 `x=308/y=48/w=972/h=73`，`scrollWidth=clientWidth=972`。
+- 原完整日期时间造成指标带内部 `989/972` 溢出的顶部挤压已消除；评估时刻压缩为 `HH:mm`，日期保留在同槽次级文本，完整 evaluated/cutoff 仍保留在 `title` 可回读语义中。
+- 下达与筛选条仍为 `x=308/y=121/w=972/h=53`，没有与指标带或右侧按钮重叠；页面文档宽度仍为 `1280/1280`。
+- 专项 `TaskCockpitPage + AppShell` 为 `23/23` GREEN。V16 只关闭顶部挤压，不把真实 canonical Task 内容差异判成像素封板。
 
 ## V2 统一运营驾驶舱首轮复验
 
@@ -140,11 +147,11 @@ V8 已关闭“读取失败后页面结构完全偏离视觉稿”的 P1；真�
 ## V9 当前判定
 
 - 八页已经形成 `comparison.html` / `comparison-full.png` 同输入：左侧 source、右侧 current，16 张图片均为 `1280×720` 且已确认可读。
-- 新鲜累计回归：八页组件、经营探究与 AppShell 共 `60/60` GREEN；TypeScript `--noEmit`、生产构建与 `git diff --check` GREEN。现有 React `act(...)` 警告未转化为测试失败，但继续作为测试环境噪声记录。
+- 新鲜累计回归：八页组件、经营探究与 AppShell 共 `65/65` GREEN；TypeScript `--noEmit`、生产构建与 `git diff --check` GREEN。现有 React `act(...)` 警告未转化为测试失败，但继续作为测试环境噪声记录。
 - 八路由 `1280×720` 顶栏均为 `48px`；公共 aside `260px`、content `972px`，实测 `scrollWidth=clientWidth=1280`，document/body 均无横向溢出。
 - source/current 对照确认公共骨架、顶部轨道、侧栏宽度、主要纵向起点与三栏比例已对齐；当前租户真实/可信空内容不复制 source 演示数据。
 - 六个非 Cockpit/Analyst 一级页已补回各自 source 对应的标题/面包屑、搜索框、上下文标签和操作按钮位置；会引发业务写入的视觉按钮保持 `disabled`，只复刻视觉层，不绕过只读门。六页实测左组/搜索/操作区均无重叠，`scrollWidth=clientWidth=1280`。
-- 最新证据：`v11-operations-1280x720.png`、`v13-{content-campaign,creator-growth,media-studio,price-governance}-1280x720.png`、`v14-{analyst,customer}-1280x720.png`；价格/客户面包屑重复已在 v12 关闭，分析/客户顶部挤压已在 v14 关闭。
+- 最新证据：`v16-task-cockpit-1280x720.png`、`v11-operations-1280x720.png`、`v13-{content-campaign,creator-growth,media-studio,price-governance}-1280x720.png`、`v14-{analyst,customer}-1280x720.png`；价格/客户面包屑重复已在 v12 关闭，分析/客户顶部挤压已在 v14 关闭，任务总控指标带溢出已在 v16 关闭。
 - 价格治理补齐 source 型只读上下文条：品牌/SKU、owner/协作者、策略 revision、待复核视图与刷新入口同轨；实测 `x=308/y=48/w=972/h=55`，Tab `y=103/h=43`，panel `y=146`，无横向溢出。`3 个视图待复核`来自三个 canonical blocked view，不冒充价格异常数量。
 - 已确认不能把 source 演示业务数据复制进真实租户，也不能用不同视口截图得出 pixel-perfect pass。
 - 当前仍有可见细节差异（任务卡密度、部分英文 authority 文案、媒体卡片间距、各页字号/边框/色阶），均继续作为 P1/P2 处理。
