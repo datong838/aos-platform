@@ -5,8 +5,8 @@ AC-D1.5-2（← FR-D1.5-2）PII 扫描：
 - normalized CustomerLite row → sink_to_ot → ecom_object.properties 中 PII 0 残留
 
 AC-D1.5-4（← FR-D1.5-4）派生指标端到端落地：
-- ec_live_executor 端到端（不 mock apply_derived_metrics）→ CustomerLite properties 中
-  order_count / last_order_days 字段存在（值为 null，因 ec_live_executor 不注入 link_aggregator）
+- ec_live_executor 端到端（不 mock apply_derived_metrics）→ CustomerLite 动态指标
+  不污染基础 properties，而是通过独立 derived CAS 写入（值为 null，因未注入 link_aggregator）
 - 无订单的 CustomerLite 字段为 null
 
 与 test_ec_d1_5_p08_pipeline.py 的差异：
@@ -15,7 +15,7 @@ AC-D1.5-4（← FR-D1.5-4）派生指标端到端落地：
 
 约束（FR-D1.5-4）：
 - ec_live_executor 在 D1.5 阶段不注入 link_aggregator（保持 apply_derived_metrics(rows, pipeline)）
-- AC-D1.5-4 只要"字段存在"，null 兼容满足验收
+- AC-D1.5-4 的动态指标通过 derived CAS 存在，null 兼容满足验收
 - 生产环境真实聚合由 ecom_consistency_store.query_links_by_link_type 后接线（D1.5 后续 step）
 """
 
@@ -66,6 +66,7 @@ class FakeStore:
         raises: Exception | None = None,
     ) -> None:
         self.calls: list[BatchCommand] = []
+        self.derived_calls: list[Any] = []
         self._result = result
         self._raises = raises
         self._checkpoints: dict[tuple, int] = {}
@@ -94,6 +95,16 @@ class FakeStore:
         if version is None:
             return None
         return {"version": version}
+
+    def get_latest_authoritative_revision(self, _identity: Any) -> int:
+        return max(1, len(self.calls))
+
+    def get_derived_revision(self, _identity: Any, _object_type: str) -> int:
+        return len(self.derived_calls)
+
+    def update_derived_metrics(self, command: Any) -> Any:
+        self.derived_calls.append(command)
+        return SimpleNamespace(updated=True, replayed=False)
 
 
 class FakeEngine:
@@ -172,33 +183,11 @@ def _fake_aos_conn(props: dict[str, Any] | None) -> MagicMock:
     return conn
 
 
-class _FakePymysqlCursor:
-    def __init__(self, rows: list[dict[str, Any]]) -> None:
-        self.rows = rows
-        self.executed: list[tuple[str, Any]] = []
-
-    def execute(self, sql: str, params: Any = None) -> None:
-        self.executed.append((sql, params))
-
-    def fetchall(self) -> list[dict[str, Any]]:
-        return self.rows
-
-    def close(self) -> None:
-        pass
-
-
-def _fake_pymysql_conn(rows: list[dict[str, Any]]) -> tuple[MagicMock, _FakePymysqlCursor]:
-    cur = _FakePymysqlCursor(rows)
-    conn = MagicMock()
-    conn.cursor.return_value = cur
-    return conn, cur
-
-
-@patch("aos_api.ec_source_adapter.pymysql")
+@patch("aos_api.ec_source_adapter.JdbcConnectorRuntime")
 @patch("aos_api.ec_source_adapter.connect")
 def test_step14_pii_zero_in_source_adapter_output(
     mock_connect: MagicMock,
-    mock_pymysql: MagicMock,
+    mock_runtime_cls: MagicMock,
 ) -> None:
     """AC-D1.5-2 端到端确认：ns_member 含 8 个 PII → fetch_source_rows → row 流 PII 0 命中。
 
@@ -208,9 +197,10 @@ def test_step14_pii_zero_in_source_adapter_output(
     mock_connect.return_value.__enter__.return_value = aos_conn
     mock_connect.return_value.__exit__.return_value = None
 
-    niushop_conn, _ = _fake_pymysql_conn([_ns_member_raw_row(member_id=1001)])
-    mock_pymysql.connect.return_value = niushop_conn
-    mock_pymysql.cursors.DictCursor = MagicMock()
+    fake_runtime = MagicMock()
+    fake_runtime.__enter__.return_value = fake_runtime
+    fake_runtime.read_rows.return_value = [_ns_member_raw_row(member_id=1001)]
+    mock_runtime_cls.return_value = fake_runtime
 
     reset_soft_delete_counts()
     node = SimpleNamespace(
@@ -236,6 +226,7 @@ def test_step14_pii_zero_in_source_adapter_output(
     row = rows[0]
     leaked = PII_FIELDS & set(row.keys())
     assert not leaked, f"PII 字段泄漏到 row 流: {leaked}"
+    fake_runtime.read_rows.assert_called_once()
 
 
 def test_step14_pii_zero_in_ot_properties_after_sink() -> None:
@@ -315,16 +306,22 @@ def _run_executor(
     """
     eng = get_engine()
     eng.ecom_consistency_store = store
-    return ec_mod.ec_live_executor(
-        pipeline=FakePipeline(pipeline_id),
-        nodes=[],
-        node_id=None,
-        sample_input=rows,
-        execution_kind="schedule",
-        cancel_event=None,
-        deadline=0,
-        scope=scope,
+    source = SimpleNamespace(
+        id="n-src",
+        node_type="source",
+        config={"source_id": "src-step14", "source_table": "synthetic"},
     )
+    with patch.object(ec_mod, "fetch_source_rows", return_value=rows):
+        return ec_mod.ec_live_executor(
+            pipeline=FakePipeline(pipeline_id),
+            nodes=[source],
+            node_id=source.id,
+            sample_input=None,
+            execution_kind="schedule",
+            cancel_event=None,
+            deadline=0,
+            scope=scope,
+        )
 
 
 def test_step14_derived_metrics_fields_present_e2e() -> None:
@@ -353,17 +350,16 @@ def test_step14_derived_metrics_fields_present_e2e() -> None:
     assert len(command.objects) == 2
     assert all(obj.object_type == "CustomerLite" for obj in command.objects)
 
-    # AC-D1.5-4 核心断言：派生指标字段存在
+    # AC-D1.5-4 核心断言：动态指标不污染基础 payload，并经独立 CAS 写入。
     for obj in command.objects:
-        assert "order_count" in obj.properties, (
-            f"ecom_object.properties 缺少 order_count 字段 (member_id={obj.identity.external_id})"
-        )
-        assert "last_order_days" in obj.properties, (
-            f"ecom_object.properties 缺少 last_order_days 字段 (member_id={obj.identity.external_id})"
-        )
-        # 字段值为 null（ec_live_executor 不注入 link_aggregator）
-        assert obj.properties["order_count"] is None
-        assert obj.properties["last_order_days"] is None
+        assert "order_count" not in obj.properties
+        assert "last_order_days" not in obj.properties
+    assert len(store.derived_calls) == 2
+    for derived_command in store.derived_calls:
+        assert derived_command.derived_props == {
+            "order_count": None,
+            "last_order_days": None,
+        }
 
 
 def test_step14_derived_metrics_null_for_customer_without_orders() -> None:
@@ -378,12 +374,15 @@ def test_step14_derived_metrics_null_for_customer_without_orders() -> None:
 
     _run_executor(rows, store=store)
 
-    command = store.calls[0]
-    obj = command.objects[0]
+    obj = store.calls[0].objects[0]
     assert obj.identity.external_id == "niushop:1:9999"
-    # 无订单 → 字段为 null
-    assert obj.properties["order_count"] is None
-    assert obj.properties["last_order_days"] is None
+    assert "order_count" not in obj.properties
+    assert "last_order_days" not in obj.properties
+    assert len(store.derived_calls) == 1
+    assert store.derived_calls[0].derived_props == {
+        "order_count": None,
+        "last_order_days": None,
+    }
 
 
 def test_step14_derived_metrics_do_not_pollute_non_customer_lite() -> None:
@@ -415,18 +414,7 @@ def test_step14_derived_metrics_do_not_pollute_non_customer_lite() -> None:
     ]
 
     # 用 Product pipeline id 触发 D1 quality_score 派生指标
-    eng = get_engine()
-    eng.ecom_consistency_store = store
-    ec_mod.ec_live_executor(
-        pipeline=FakePipeline("p02-product"),
-        nodes=[],
-        node_id=None,
-        sample_input=rows,
-        execution_kind="schedule",
-        cancel_event=None,
-        deadline=0,
-        scope=TEST_SCOPE,
-    )
+    _run_executor(rows, store=store, pipeline_id="p02-product")
 
     command = store.calls[0]
     obj = command.objects[0]
@@ -467,18 +455,7 @@ def test_step14_d1_derived_metrics_still_works_e2e() -> None:
         }
     ]
 
-    eng = get_engine()
-    eng.ecom_consistency_store = store
-    ec_mod.ec_live_executor(
-        pipeline=FakePipeline("p02-product"),
-        nodes=[],
-        node_id=None,
-        sample_input=rows,
-        execution_kind="schedule",
-        cancel_event=None,
-        deadline=0,
-        scope=TEST_SCOPE,
-    )
+    _run_executor(rows, store=store, pipeline_id="p02-product")
 
     command = store.calls[0]
     obj = command.objects[0]
