@@ -314,22 +314,49 @@ def test_p05_cross_tenant_create_rejected(client, auth_headers):
     )
     assert r.status_code == 200, r.text
 
+    # 精确登记负租户，使请求抵达被测 pipeline scope 冲突，而不是被目录门提前拒绝。
+    from aos_api.db import connect
+
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO twa_org (id,name) VALUES ('other-org','负向测试组织') "
+            "ON CONFLICT (id) DO NOTHING"
+        )
+        conn.execute(
+            "INSERT INTO twa_workspace (org_id,project_id,name) "
+            "VALUES ('other-org','other-project','负向测试工作区') "
+            "ON CONFLICT (org_id,project_id) DO NOTHING"
+        )
+        conn.commit()
+
     # other-org 创建自己的 source（避免 source 跨租户先抛）
     other_headers = {
         **auth_headers,
         "X-Org-Id": "other-org",
         "X-Project-Id": "other-project",
     }
-    r = client.post(
-        "/v1/sources",
-        headers=other_headers,
-        json={"id": sid_other, "type": "file"},
-    )
-    assert r.status_code == 200, r.text
+    try:
+        r = client.post(
+            "/v1/sources",
+            headers=other_headers,
+            json={"id": sid_other, "type": "file"},
+        )
+        assert r.status_code == 200, r.text
 
-    # other-org 创建同 id pipeline → 409 TENANT_SCOPE_CONFLICT
-    r2 = client.post(
-        "/v1/pipelines", headers=other_headers, json=_p05_payload(pid, sid_other)
-    )
-    assert r2.status_code == 409, r2.text
-    assert r2.json()["code"] == "TENANT_SCOPE_CONFLICT"
+        # other-org 创建同 id pipeline → 409 TENANT_SCOPE_CONFLICT
+        r2 = client.post(
+            "/v1/pipelines", headers=other_headers, json=_p05_payload(pid, sid_other)
+        )
+        assert r2.status_code == 409, r2.text
+        assert r2.json()["code"] == "TENANT_SCOPE_CONFLICT"
+    finally:
+        with connect() as conn:
+            conn.execute(
+                "DELETE FROM meta_source WHERE id=%s AND org_id='other-org' AND project_id='other-project'",
+                (sid_other,),
+            )
+            conn.execute(
+                "DELETE FROM twa_workspace WHERE org_id='other-org' AND project_id='other-project'"
+            )
+            conn.execute("DELETE FROM twa_org WHERE id='other-org'")
+            conn.commit()

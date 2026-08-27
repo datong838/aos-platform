@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -173,16 +174,17 @@ def _run_executor(
     """调用 ec_live_executor，注入 FakeStore 到 engine。"""
     eng = get_engine()
     eng.ecom_consistency_store = store
-    return ec_mod.ec_live_executor(
-        pipeline=FakePipeline(pipeline_id),
-        nodes=[],
-        node_id=None,
-        sample_input=rows,
-        execution_kind="schedule",
-        cancel_event=None,
-        deadline=0,
-        scope=scope,
-    )
+    with patch.object(ec_mod, "fetch_source_rows", return_value=rows):
+        return ec_mod.ec_live_executor(
+            pipeline=FakePipeline(pipeline_id),
+            nodes=[],
+            node_id=None,
+            sample_input=None,
+            execution_kind="schedule",
+            cancel_event=None,
+            deadline=0,
+            scope=scope,
+        )
 
 
 # ═══════════════════════════════════════════════
@@ -198,7 +200,7 @@ def test_p05_initial_load_lands_order_ot():
     result = _run_executor(rows, store=store)
 
     # Dataset 落地
-    assert result["output_ref"].startswith("dataset://catalog/ri.dataset.")
+    assert result["output_ref"] == "dataset://catalog/ri.aos.main.dataset.p05-order"
     # OT 落地：1 个 BatchCommand，2 个 Order 对象
     assert len(store.calls) == 1
     command = store.calls[0]
@@ -407,8 +409,6 @@ def test_p05_soft_deleted_rows_filtered_to_dlq():
     软删过滤在 source_adapter._clean_rows 完成。用 P05 的 ns_order 表配置
     验证 is_delete=1 的行被过滤且计数。
     """
-    from unittest.mock import MagicMock, patch
-
     from aos_api.ec_source_adapter import (
         fetch_source_rows,
         get_soft_delete_count,
@@ -435,10 +435,10 @@ def test_p05_soft_deleted_rows_filtered_to_dlq():
             "database": "niushop_b2c_v5",
         }
     }
-    cur = MagicMock()
-    cur.fetchall.return_value = niushop_rows
-    niushop_conn = MagicMock()
-    niushop_conn.cursor.return_value = cur
+    runtime = MagicMock()
+    runtime.__enter__.return_value = runtime
+    runtime.__exit__.return_value = None
+    runtime.read_rows.return_value = niushop_rows
 
     with patch(
         "aos_api.ec_source_adapter.connect",
@@ -446,10 +446,10 @@ def test_p05_soft_deleted_rows_filtered_to_dlq():
             __enter__=MagicMock(return_value=aos_conn),
             __exit__=MagicMock(return_value=None),
         ),
-    ) as _, patch("aos_api.ec_source_adapter.pymysql") as mock_pymysql:
-        mock_pymysql.connect.return_value = niushop_conn
-        mock_pymysql.cursors.DictCursor = MagicMock()
-
+    ) as _, patch(
+        "aos_api.ec_source_adapter.JdbcConnectorRuntime",
+        return_value=runtime,
+    ):
         from types import SimpleNamespace
         node = SimpleNamespace(
             id="n-src",
@@ -468,6 +468,13 @@ def test_p05_soft_deleted_rows_filtered_to_dlq():
             sample_input=None,
             scope=TEST_SCOPE,
         )
+
+    runtime.read_rows.assert_called_once_with(
+        "ns_order",
+        composite_cursor=None,
+        limit=None,
+        where_equals={},
+    )
 
     # 有效行 3 条（is_delete=0）
     assert len(rows) == 3
