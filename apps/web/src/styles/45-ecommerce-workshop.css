@@ -2352,6 +2352,44 @@
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-audit-context > summary { height: 36px; box-sizing: border-box; cursor: pointer; padding: 9px 14px; color: #718096; font-size: 11px; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-audit-stack { display: grid; gap: 12px; padding: 12px; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .content-campaign-footnote { order: 4; min-height: 37px; box-sizing: border-box; border-width: 0; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .is-failed-read .customer-failure-taskrail { padding: 14px; background: #f8fafc; }
+.customer-failure-taskrail > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+.customer-failure-taskrail > header strong { font-size: 12px; }
+.customer-failure-taskrail > header span { color: #a0aec0; font-size: 9px; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .is-failed-read .customer-failure-taskrail button { min-height: 44px; background: #fff; }
+.customer-failure-segments { margin-top: 15px; padding-top: 13px; border-top: 1px solid #e2e8f0; }
+.customer-failure-segments > strong { font-size: 11px; }
+.customer-failure-segments > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 9px; }
+.customer-failure-segments span { padding: 7px; border: 1px solid #e2e8f0; border-radius: 3px; background: #fff; color: #718096; font-size: 9px; }
+.customer-failure-segments small { display: block; margin-top: 8px; color: #a0aec0; font-size: 9px; line-height: 1.45; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .is-failed-read .customer-failure-plan { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 16px; background: #f7fafc; }
+.customer-failure-plan > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding-bottom: 11px; border-bottom: 1px solid #e2e8f0; }
+.customer-failure-plan > header span { color: #a0aec0; font-size: 9px; letter-spacing: .08em; }
+.customer-failure-plan > header h2 { margin: 4px 0 0; font-size: 15px; }
+.customer-failure-plan > header > strong { padding: 4px 7px; border: 1px solid #fbd38d; border-radius: 3px; background: #fffaf0; color: #b7791f; font-size: 10px; }
+.customer-failure-plan > p { margin: 0 0 3px; color: #718096; font-size: 10px; line-height: 1.5; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .customer-failure-plan article { display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: center; gap: 9px; min-height: 49px; padding: 8px 10px; border: 1px solid #e2e8f0; border-left: 3px solid #cbd5e0; background: #fff; }
+.customer-failure-plan article i { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid #cbd5e0; border-radius: 50%; color: #a0aec0; font-size: 9px; font-style: normal; }
+.customer-failure-plan article div { display: grid; gap: 3px; min-width: 0; }
+.customer-failure-plan article div strong { font-size: 11px; }
+.customer-failure-plan article div span { color: #a0aec0; font-size: 9px; }
+.customer-failure-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 2px; }
+.customer-failure-actions button { min-height: 29px; border: 1px solid #dce3eb; border-radius: 3px; background: #fff; color: #a0aec0; font-size: 10px; }
+.customer-failure-actions small { grid-column: 1 / -1; color: #a0aec0; font-size: 9px; }
+.p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.customer"] .is-failed-read .customer-failure-artifacts { display: grid; align-content: start; gap: 10px; padding: 14px; background: #f8fafc; }
+.customer-failure-artifacts > section { padding: 12px; border: 1px solid #e2e8f0; border-radius: 3px; background: #fff; }
+.customer-failure-artifacts > section > header span { color: #a0aec0; font-size: 9px; letter-spacing: .08em; }
+.customer-failure-artifacts > section > header h3 { margin: 4px 0 0; font-size: 13px; }
+.customer-failure-artifacts > section > strong { display: block; margin-top: 10px; color: #718096; font-size: 11px; }
+.customer-failure-artifacts > section > p { margin: 6px 0 0; color: #a0aec0; font-size: 9px; line-height: 1.5; }
+.customer-failure-segment-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.customer-failure-segment-grid span { padding: 9px; border: 1px solid #edf2f7; background: #f8fafc; color: #718096; text-align: center; font-size: 9px; line-height: 1.7; }
+.customer-failure-segment-grid b { color: #a0aec0; font-size: 11px; }
+.customer-failure-artifacts > section:last-child > div { margin-top: 9px; padding: 9px; border-left: 3px solid #e53e3e; background: #fff5f5; }
+.customer-failure-artifacts > section:last-child > div > * { display: block; overflow-wrap: anywhere; }
+.customer-failure-artifacts > section:last-child > div strong { font-size: 10px; }
+.customer-failure-artifacts > section:last-child > div span { margin-top: 4px; color: #718096; font-size: 9px; }
+.customer-failure-artifacts > section:last-child > div p { margin: 6px 0 0; color: #718096; font-size: 9px; line-height: 1.45; }
 
 /* 视觉稿自身的常见桌面断点：同一 1280 CSS 视口必须使用源稿收紧后的固定栏宽。 */
 @media (max-width: 1439px) {
