@@ -147,6 +147,17 @@ def _iso_ts(row: dict[str, Any], *fields: str, fallback: datetime) -> str:
     return fallback.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _observation_time(row: dict[str, Any], source_business_time: datetime) -> datetime:
+    """返回内部快照观测时间；缺失时保持既有源业务时间语义。"""
+    if row.get("_aos_observed_at") in (None, ""):
+        return source_business_time
+    return _ts(row, "_aos_observed_at")
+
+
+def _business_iso(source_business_time: datetime) -> str:
+    return source_business_time.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _money(v: Any) -> str:
     """金额兜底：None/空/非法 → '0'；合法则转字符串（避免 float 进 Money 校验）。"""
     if v is None:
@@ -195,7 +206,13 @@ def _base(row: dict[str, Any], ot: str, pk: Any, when: datetime) -> dict[str, An
 
 
 def to_shop(row: dict[str, Any]) -> dict[str, Any]:
-    o = _base(row, "Shop", row.get("site_id"), _ts(row, "create_time"))
+    source_business_time = _ts(row, "create_time")
+    o = _base(
+        row,
+        "Shop",
+        row.get("site_id"),
+        _observation_time(row, source_business_time),
+    )
     o["properties"] = {
         "name": _str(row.get("site_name"), "栖月汇商贸"),
         "status": "active",
@@ -218,11 +235,7 @@ def to_category(row: dict[str, Any]) -> dict[str, Any]:
 
 def to_product(row: dict[str, Any]) -> dict[str, Any]:
     source_business_time = _ts(row, "modify_time", "create_time")
-    observed_at = (
-        _ts(row, "_aos_observed_at")
-        if row.get("_aos_observed_at") not in (None, "")
-        else source_business_time
-    )
+    observed_at = _observation_time(row, source_business_time)
     o = _base(row, "Product", row.get("goods_id"), observed_at)
     # UX7: P02 Canonical Schema v2 只做真实源字段的 additive enrichment。
     # P02 SNAPSHOT 使用稳定的运行观测截面作为权威版本；源业务时间分别
@@ -254,7 +267,13 @@ def to_product(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def to_product_sku(row: dict[str, Any]) -> dict[str, Any]:
-    o = _base(row, "ProductSku", row.get("sku_id"), _ts(row, "modify_time", "create_time"))
+    source_business_time = _ts(row, "modify_time", "create_time")
+    o = _base(
+        row,
+        "ProductSku",
+        row.get("sku_id"),
+        _observation_time(row, source_business_time),
+    )
     o["properties"] = {
         "productId": _str(row.get("goods_id"), "0"),
         "status": "active",
@@ -263,21 +282,27 @@ def to_product_sku(row: dict[str, Any]) -> dict[str, Any]:
         "currency": CURRENCY,
         "stock": _str(row.get("stock"), "0"),
         "stockAlarm": _str(row.get("goods_stock_alarm"), "0"),
+        "updatedAt": _business_iso(source_business_time),
     }
     return o
 
 
 def to_customer_lite(row: dict[str, Any]) -> dict[str, Any]:
     # ns_member 无 create_time/modify_time → 用 reg_time 等
+    source_business_time = _ts(
+        row, "reg_time", "last_visit_time", "login_time", "last_login_time"
+    )
     o = _base(
         row,
         "CustomerLite",
         row.get("member_id"),
-        _ts(row, "reg_time", "last_visit_time", "login_time", "last_login_time"),
+        _observation_time(row, source_business_time),
     )
     o["properties"] = {
         "memberLevel": _str(row.get("member_level"), "0"),
         "status": "active",
+        "createdAt": _business_iso(source_business_time),
+        "updatedAt": _business_iso(source_business_time),
     }
     # 隐私最小化 schema v2：只允许写入脱敏后的四个规范字段（createdAt /
     # updatedAt 在 OTWriter 补齐）。用于一次性收敛历史 CustomerLite PII。
@@ -286,7 +311,13 @@ def to_customer_lite(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def to_order(row: dict[str, Any]) -> dict[str, Any]:
-    o = _base(row, "Order", row.get("order_id"), _ts(row, "modify_time", "create_time"))
+    source_business_time = _ts(row, "modify_time", "create_time")
+    o = _base(
+        row,
+        "Order",
+        row.get("order_id"),
+        _observation_time(row, source_business_time),
+    )
     # O1-A §5.2.13: 保存 properties.createdAt — 供 link_aggregator 读取 Order 创建时间
     created_ts = _ts(row, "create_time")
     created_iso = created_ts.strftime("%Y-%m-%dT%H:%M:%SZ") if created_ts else None
@@ -302,6 +333,7 @@ def to_order(row: dict[str, Any]) -> dict[str, Any]:
         "deliveryStatus": _str(row.get("delivery_status")),
         "isDelete": _str(row.get("is_delete"), "0"),
         "createdAt": created_iso,  # O1-A: CustomerLite last_order_days 依赖此字段
+        "updatedAt": _business_iso(source_business_time),
     }
     return o
 
@@ -341,11 +373,18 @@ def to_weapp(row: dict[str, Any]) -> dict[str, Any]:
 
     主键 weapp_id；增量每日快照（全表量小）。
     """
-    o = _base(row, "Weapp", row.get("weapp_id"), _ts(row, "modify_time", "create_time"))
+    source_business_time = _ts(row, "modify_time", "create_time")
+    o = _base(
+        row,
+        "Weapp",
+        row.get("weapp_id"),
+        _observation_time(row, source_business_time),
+    )
     o["properties"] = {
         "appId": _str(row.get("appid"), _str(row.get("weapp_id"))),
         "name": _str(row.get("weapp_name"), _str(row.get("weapp_id"))),
         "status": "active",
+        "updatedAt": _business_iso(source_business_time),
     }
     return o
 
@@ -356,12 +395,26 @@ def to_system_config(row: dict[str, Any]) -> dict[str, Any]:
     逻辑键 site_id + app_module + config_key（+ weapp_id?）。
     source_pk 用 id 字段（如有），否则逻辑键拼接。
     """
-    pk = row.get("id") or _str(row.get("site_id")) + ":" + _str(row.get("app_module")) + ":" + _str(row.get("config_key"))
-    o = _base(row, "SystemConfig", pk, _ts(row, "modify_time", "create_time"))
+    pk = (
+        row.get("id")
+        or _str(row.get("site_id"))
+        + ":"
+        + _str(row.get("app_module"))
+        + ":"
+        + _str(row.get("config_key"))
+    )
+    source_business_time = _ts(row, "modify_time", "create_time")
+    o = _base(
+        row,
+        "SystemConfig",
+        pk,
+        _observation_time(row, source_business_time),
+    )
     o["properties"] = {
         "siteId": _str(row.get("site_id"), "1"),
         "module": _str(row.get("app_module")),
         "key": _str(row.get("config_key")),
+        "updatedAt": _business_iso(source_business_time),
         # value 是 JSON，保留原始值（可能含密钥，由 SourceAdapter PII 脱敏处理）
     }
     return o
@@ -374,11 +427,18 @@ def to_product_review(row: dict[str, Any]) -> dict[str, Any]:
     score 字段保留在 row 顶层（供 _apply_review_quality_bucket 读取）。
     """
     pk = row.get("evaluate_id") or row.get("id")
-    o = _base(row, "ProductReview", pk, _ts(row, "create_time"))
+    source_business_time = _ts(row, "create_time")
+    o = _base(
+        row,
+        "ProductReview",
+        pk,
+        _observation_time(row, source_business_time),
+    )
     o["properties"] = {
         "productId": _str(row.get("goods_id")),
         "memberId": _str(row.get("member_id")),
         "score": _str(row.get("scores"), _str(row.get("score"))),
+        "updatedAt": _business_iso(source_business_time),
     }
     return o
 

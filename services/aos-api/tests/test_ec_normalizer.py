@@ -33,9 +33,12 @@ from aos_api.ec_normalizer import (
     to_order,
     to_order_line,
     to_product,
+    to_product_review,
     to_product_sku,
     to_shipment,
     to_shop,
+    to_system_config,
+    to_weapp,
 )
 
 
@@ -159,6 +162,64 @@ def test_to_product_uses_snapshot_observation_without_losing_source_business_tim
     assert out["properties"]["updatedAt"] == "2023-11-14T22:30:00Z"
     assert out["properties"]["sourceModifiedAt"] == "2023-11-14T22:30:00Z"
     assert "_aos_observed_at" not in out["properties"]
+    assert "_aos_observed_at" not in out
+
+
+@pytest.mark.parametrize(
+    ("mapper", "raw", "business_time", "business_property"),
+    [
+        (to_shop, {"site_id": 1, "create_time": 1700000000}, 1700000000, None),
+        (
+            to_product_sku,
+            {"sku_id": 1, "goods_id": 2, "modify_time": 1700001000},
+            1700001000,
+            "updatedAt",
+        ),
+        (
+            to_order,
+            {"order_id": 1, "modify_time": 1700002000, "create_time": 1700000000},
+            1700002000,
+            "updatedAt",
+        ),
+        (
+            to_customer_lite,
+            {"member_id": 1, "reg_time": 1700003000},
+            1700003000,
+            "updatedAt",
+        ),
+        (
+            to_weapp,
+            {"weapp_id": 1, "modify_time": 1700004000},
+            1700004000,
+            "updatedAt",
+        ),
+        (
+            to_system_config,
+            {"id": 1, "modify_time": 1700005000},
+            1700005000,
+            "updatedAt",
+        ),
+        (
+            to_product_review,
+            {"evaluate_id": 1, "create_time": 1700006000},
+            1700006000,
+            "updatedAt",
+        ),
+    ],
+)
+def test_snapshot_observation_mappers_preserve_source_business_time(
+    mapper, raw, business_time, business_property
+):
+    observed_at = 1700010000
+    out = mapper({**raw, "_aos_observed_at": observed_at})
+
+    assert out["source_updated_at"] == datetime.fromtimestamp(observed_at, tz=timezone.utc)
+    assert "_aos_observed_at" not in out
+    assert "_aos_observed_at" not in out["properties"]
+    if business_property is not None:
+        assert out["properties"][business_property] == datetime.fromtimestamp(
+            business_time, tz=timezone.utc
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def test_to_product_sku_maps_sku_id_and_price():

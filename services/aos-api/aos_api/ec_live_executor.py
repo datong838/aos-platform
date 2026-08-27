@@ -181,24 +181,38 @@ def _stamp_snapshot_observation(
     rows: list[dict[str, Any]],
     run_started_at: Any,
 ) -> None:
-    """为 P02 Product 权威写入一次运行内稳定的观测截面。
+    """为缺少可靠变更时钟的全量快照写入运行内稳定观测截面。
 
-    Niushop 的库存和销量会变化但 ``modify_time`` 不一定推进。这里使用
-    Phase5 运行开始时间作为快照观测版本，不修改源业务时间，也不放松
-    Store 对“同版本不同载荷”的失败关闭约束。
+    这些 Niushop 资源的可变载荷或成员集合会变化，但源业务时间不保证
+    同步推进。这里使用 Phase5 运行开始时间作为快照观测版本，不修改源
+    业务时间，也不放松 Store 对“同版本不同载荷”的失败关闭约束。
     """
     from aos_api.ec_normalizer import _resolve_target_ot
 
     pipeline_id = str(getattr(pipeline, "id", "") or "").lower()
     write_mode = str(getattr(pipeline, "write_mode", "") or "").upper()
+    snapshot_targets = {
+        "p01": "Shop",
+        "p02": "Product",
+        "p03": "ProductSku",
+        "p05": "Order",
+        "p08": "CustomerLite",
+        "p09": "Weapp",
+        "p10": "SystemConfig",
+        "p11": "ProductReview",
+    }
+    expected_target = next(
+        (target for prefix, target in snapshot_targets.items() if pipeline_id.startswith(prefix)),
+        None,
+    )
     if (
-        not pipeline_id.startswith("p02")
+        expected_target is None
         or write_mode not in {"UPSERT", "SNAPSHOT"}
-        or _resolve_target_ot(pipeline) != "Product"
+        or _resolve_target_ot(pipeline) != expected_target
     ):
         return
     if not isinstance(run_started_at, (int, float)) or run_started_at <= 0:
-        raise RuntimeError("P02 snapshot observation requires stable run_started_at")
+        raise RuntimeError("snapshot observation requires stable run_started_at")
     for row in rows:
         if isinstance(row, dict) and not row.get("ot"):
             row["_aos_observed_at"] = float(run_started_at)
