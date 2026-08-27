@@ -2298,6 +2298,21 @@
 .price-observations article dl div { min-width: 0; padding: 7px; background: var(--aos-surface-hover); }
 .price-observations article dt { color: var(--aos-text-tertiary); font-size: 10px; }
 .price-observations article dd { margin: 3px 0 0; overflow-wrap: anywhere; font-size: 12px; }
+.price-governance-readiness > header { grid-column: 1 / -1; padding: 2px 2px 9px; border-bottom: 1px solid #e2e8f0; }
+.price-governance-readiness > header span { color: #a0aec0; font-size: 9px; letter-spacing: .08em; }
+.price-governance-readiness > header h2 { margin: 4px 0 0; font-size: 14px; }
+.price-empty-sku { display: grid; gap: 0; margin: 0; padding: 0; border: 0; }
+.price-empty-sku > header { display: flex; justify-content: space-between; padding: 3px 4px 11px; border-bottom: 1px solid #e2e8f0; }
+.price-empty-sku > header span { color: #a0aec0; font-size: 10px; }
+.price-empty-sku > div { display: flex; justify-content: space-between; gap: 8px; padding: 13px 10px; border-bottom: 1px solid #edf2f7; background: #fff; }
+.price-empty-sku > div b { font-size: 11px; }
+.price-empty-sku > div span { color: #a0aec0; font-size: 10px; }
+.price-empty-sku > p { margin: 14px 0 0; padding: 14px; border: 1px dashed #dce3eb; color: #718096; font-size: 10px; line-height: 1.5; }
+.price-colleague-summary { margin: 0 0 13px; padding: 12px; border: 1px solid #dbeafe; border-left: 3px solid #4299e1; background: #fff; }
+.price-colleague-summary span { color: #a0aec0; font-size: 9px; letter-spacing: .08em; }
+.price-colleague-summary h3 { margin: 4px 0 9px; }
+.price-colleague-summary strong { font-size: 10px; }
+.price-colleague-summary p { margin: 6px 0 0; color: #718096; font-size: 9px; line-height: 1.5; }
 
 .customer-page,
 .customer-read-model { display: grid; gap: 12px; min-width: 0; }

@@ -187,6 +187,12 @@ V17 关闭内容页中栏可信空结构密度 P1；八页仍有字号、色阶�
 - reader 失败态已恢复 source 同位结构：左栏“今日任务与客户分群”、中栏“Plan Mode · 只读执行计划”、右栏“Artifact 产出 / 客户分层结果 / 依赖与下一证据”。四个 canonical view 与六条 readiness axis 原样保留，两项计划动作全部 disabled，`CUSTOMER_VIEW_READ_FAILED` 原始失败码仍可见。
 - source 的客户人数、具体唤醒任务、计划进度、话术、姓名与分层数量均未进入产品；当前统一使用 `未装载 / unknown / 当前没有可回链产物` 安全语义替换，读取失败不被冒充为前后端完成。
 - V20 已关闭客户页正式 reader 失败时“三栏产品结构消失”的 P1 差异；全页像素细节、正常数据态、多视口与其余页面差异仍未全部闭合，整体 `final result: failed` 保持不变。
+
+## V21 价格治理可信空三栏复审
+
+- `v21-price-governance-1280x720.png` 已替换 comparison 的旧 V13 图；1280 视口无横向溢出。
+- 左栏恢复“核心 SKU 列表”可信空槽，中栏六轴增加“价格治理任务链”层级，右栏增加“数字同事协作”并保留原 blocker；未注入商品、价格、异常比例或处置结论。
+- V21 关闭可信空三栏语义密度差异，但真实 authority 数据态、多视口和全页像素差异未全部清零，整体 `final result: failed` 不变。
 - 顶部上下文、四指标、三 Tab 与 panel 继续保持 `y=48/104/194/238` 的连续轨道；panel `x=308/w=972/h=482`，三栏可用宽度为 `240/408/300px`，document `clientWidth=scrollWidth=1280`。
 - 左栏由整页 reason code 改为“文案任务 / 任务列表 / 可信空卡 / 折叠原始 blocker”；中栏增加“等待生产上下文”摘要后继续展示全部 target axes；右栏增加“内容官建议 / 尚无可回链内容建议”后保留原始 blocker。reason code、dependency 与 required action 没有删除。
 - 页面没有复制七夕专题、banner 文案、CTR、GMV、Provider 结果或已产出状态；真实 `unknown/blocked` 保持原值。
