@@ -49,8 +49,8 @@ def sink_to_ot(
     调用 ``ecom_consistency_store.apply_batch``（BatchCommand 单事务：
     upsert→link→checkpoint→receipt）。
 
-    向后兼容：``eng`` 未注入 ``ecom_consistency_store`` 或 ``output_rows`` 为空时，
-    返回零计数（骨架行为），等总控组装后 store 必存在。
+    ``output_rows`` 为空时返回零计数；非空输出但 ``eng`` 未注入
+    ``ecom_consistency_store`` 时失败关闭，禁止静默绕过权威层。
     """
     # 空 batch 无法构造 BatchCommand（validator 拒绝空 objects+links）
     if not output_rows:

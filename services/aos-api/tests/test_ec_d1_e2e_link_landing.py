@@ -267,16 +267,22 @@ def test_e2e_inCategory_lands_as_Product_inCategory() -> None:
     assert len(store.calls) == 1
     command = store.calls[0]
     assert len(command.objects) == 1
-    assert len(command.links) == 1
-    link = command.links[0]
-    assert link.link_type == "Product.inCategory"
-    assert link.source_type == "Product"
-    assert link.target_type == "Category"
-    assert link.source.external_id == "niushop:1:g-1"
-    assert link.target.external_id == "niushop:1:c-1"
+    assert len(command.links) == 2
+    links = {link.link_type: link for link in command.links}
+    category_link = links["Product.inCategory"]
+    assert category_link.source_type == "Product"
+    assert category_link.target_type == "Category"
+    assert category_link.source.external_id == "niushop:1:g-1"
+    assert category_link.target.external_id == "niushop:1:c-1"
+    shop_link = links["Shop.sellsProduct"]
+    assert shop_link.source_type == "Shop"
+    assert shop_link.target_type == "Product"
+    assert shop_link.source.external_id == "niushop:1:1"
+    assert shop_link.target.external_id == "niushop:1:g-1"
     assert CORE_LINK_TYPES["Product.inCategory"] == ("Product", "Category")
+    assert CORE_LINK_TYPES["Shop.sellsProduct"] == ("Shop", "Product")
     assert result["objects_written"] == 1
-    assert result["links_written"] == 1
+    assert result["links_written"] == 2
 
 
 # ═══════════════════════════════════════════════
@@ -516,18 +522,15 @@ def test_e2e_empty_rows_passthrough_returns_zero() -> None:
 
 
 # ═══════════════════════════════════════════════
-# 10. 骨架兼容：engine 无 store 时返回零计数
+# 10. 失败关闭：engine 无 store 时拒绝写入
 # ═══════════════════════════════════════════════
 
 
-def test_e2e_no_store_engine_returns_zero() -> None:
-    """骨架兼容：engine 没有 ecom_consistency_store 属性时返回零计数
-    （向后兼容，等总控组装后 store 必存在）。
-    """
+def test_e2e_no_store_engine_fails_closed() -> None:
+    """engine 未注入权威 store 时必须失败关闭。"""
     eng = NoStoreEngine()
     pipeline = _make_pipeline("P03", "ProductSku")
     rows = build_link_rows([_sku_row(source_pk="s-1", product_id="g-1")], pipeline)
 
-    result = sink_to_ot(eng, TEST_SCOPE, pipeline, rows)
-
-    assert result == {"objects_written": 0, "links_written": 0}
+    with pytest.raises(RuntimeError, match="authoritative layer without store"):
+        sink_to_ot(eng, TEST_SCOPE, pipeline, rows)
