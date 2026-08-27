@@ -217,7 +217,12 @@ def _require_review_write_role(principal: Principal) -> None:
         )
 
 
-@router.get("/cases", response_model=BusinessInvestigationCaseListResponse, responses=_ERRORS)
+@router.get(
+    "/cases",
+    response_model=BusinessInvestigationCaseListResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationCaseList",
+)
 def list_cases(
     principal: PrincipalDependency,
     business_entity_id: str | None = Query(default=None, alias="businessEntityId", min_length=1, max_length=240),
@@ -237,6 +242,7 @@ def list_cases(
     response_model=BusinessInvestigationCaseCommandResponse,
     status_code=status.HTTP_201_CREATED,
     responses=_ERRORS,
+    operation_id="ecommerceInvestigationCaseCreate",
 )
 def create_case(
     body: CreateBusinessInvestigationCaseRequest,
@@ -256,7 +262,12 @@ def create_case(
         raise _map_error(exc) from exc
 
 
-@router.get("/cases/{case_id}", response_model=BusinessInvestigationCaseRevision, responses=_ERRORS)
+@router.get(
+    "/cases/{case_id}",
+    response_model=BusinessInvestigationCaseRevision,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationCaseGet",
+)
 def get_case(
     case_id: ResourceIdPath,
     principal: PrincipalDependency,
@@ -272,6 +283,7 @@ def get_case(
     "/cases/{case_id}:transition",
     response_model=BusinessInvestigationCaseCommandResponse,
     responses=_ERRORS,
+    operation_id="ecommerceInvestigationCaseTransition",
 )
 def transition_case(
     case_id: ResourceIdPath,
@@ -296,7 +308,10 @@ def transition_case(
 
 
 @router.get(
-    "/cases/{case_id}/runs", response_model=BusinessInvestigationRunListResponse, responses=_ERRORS
+    "/cases/{case_id}/runs",
+    response_model=BusinessInvestigationRunListResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunList",
 )
 def list_runs(
     case_id: ResourceIdPath,
@@ -315,6 +330,7 @@ def list_runs(
     response_model=BusinessInvestigationRunCommandResponse,
     status_code=status.HTTP_201_CREATED,
     responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunCreate",
 )
 def create_run(
     case_id: ResourceIdPath,
@@ -451,7 +467,12 @@ def trigger_schedule_policy(
         raise _map_error(exc) from exc
 
 
-@router.get("/runs/{run_id}", response_model=BusinessInvestigationRunView, responses=_ERRORS)
+@router.get(
+    "/runs/{run_id}",
+    response_model=BusinessInvestigationRunView,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunGet",
+)
 def get_run(
     run_id: ResourceIdPath,
     principal: PrincipalDependency,
@@ -718,7 +739,12 @@ def _transition_run(
         raise _map_error(exc) from exc
 
 
-@router.post("/runs/{run_id}:pause", response_model=BusinessInvestigationRunStateCommandResponse, responses=_ERRORS)
+@router.post(
+    "/runs/{run_id}:pause",
+    response_model=BusinessInvestigationRunStateCommandResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunPause",
+)
 def pause_run(
     run_id: ResourceIdPath,
     _body: BusinessInvestigationEmptyCommandRequest,
@@ -732,7 +758,12 @@ def pause_run(
     )
 
 
-@router.post("/runs/{run_id}:resume", response_model=BusinessInvestigationRunStateCommandResponse, responses=_ERRORS)
+@router.post(
+    "/runs/{run_id}:resume",
+    response_model=BusinessInvestigationRunStateCommandResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunResume",
+)
 def resume_run(
     run_id: ResourceIdPath,
     _body: BusinessInvestigationEmptyCommandRequest,
@@ -746,7 +777,12 @@ def resume_run(
     )
 
 
-@router.post("/runs/{run_id}:cancel", response_model=BusinessInvestigationRunStateCommandResponse, responses=_ERRORS)
+@router.post(
+    "/runs/{run_id}:cancel",
+    response_model=BusinessInvestigationRunStateCommandResponse,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationRunCancel",
+)
 def cancel_run(
     run_id: ResourceIdPath,
     _body: BusinessInvestigationEmptyCommandRequest,

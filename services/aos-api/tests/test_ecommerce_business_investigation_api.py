@@ -325,6 +325,40 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     assert "/v1/ecommerce/investigations/schedule-policies/{schedule_policy_id}:trigger" in paths
     assert "/v1/ecommerce/investigations/growth-plans/{plan_id}:approve" in paths
     assert "/v1/ecommerce/investigations/runs/{run_id}/handoffs:compile" in paths
+    expected_operation_ids = {
+        ("/v1/ecommerce/investigations/cases", "get"): "ecommerceInvestigationCaseList",
+        ("/v1/ecommerce/investigations/cases", "post"): "ecommerceInvestigationCaseCreate",
+        ("/v1/ecommerce/investigations/cases/{case_id}", "get"): "ecommerceInvestigationCaseGet",
+        (
+            "/v1/ecommerce/investigations/cases/{case_id}:transition",
+            "post",
+        ): "ecommerceInvestigationCaseTransition",
+        (
+            "/v1/ecommerce/investigations/cases/{case_id}/runs",
+            "get",
+        ): "ecommerceInvestigationRunList",
+        (
+            "/v1/ecommerce/investigations/cases/{case_id}/runs",
+            "post",
+        ): "ecommerceInvestigationRunCreate",
+        ("/v1/ecommerce/investigations/runs/{run_id}", "get"): "ecommerceInvestigationRunGet",
+        (
+            "/v1/ecommerce/investigations/runs/{run_id}:pause",
+            "post",
+        ): "ecommerceInvestigationRunPause",
+        (
+            "/v1/ecommerce/investigations/runs/{run_id}:resume",
+            "post",
+        ): "ecommerceInvestigationRunResume",
+        (
+            "/v1/ecommerce/investigations/runs/{run_id}:cancel",
+            "post",
+        ): "ecommerceInvestigationRunCancel",
+    }
+    assert {
+        route: paths[route[0]][route[1]]["operationId"]
+        for route in expected_operation_ids
+    } == expected_operation_ids
     view = paths["/v1/ecommerce/investigations/runs/{run_id}/view"]["get"]
     assert view["operationId"] == "ecommerceInvestigationRunWorkbenchViewGet"
     request_data = paths["/v1/ecommerce/investigations/runs/{run_id}:request-data"]["post"]
