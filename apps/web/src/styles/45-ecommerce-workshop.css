@@ -1521,6 +1521,42 @@
 .creator-growth-audit-context > summary { height: 36px; box-sizing: border-box; padding: 9px 14px; cursor: pointer; color: #718096; font-size: 11px; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .creator-growth-board { order: 1; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.creator-growth"] .content-campaign-footnote { order: 3; min-height: 37px; box-sizing: border-box; border-width: 0; }
+.creator-growth-finder { display: grid; gap: 9px; padding: 12px 13px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+.creator-growth-finder > div:first-child { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.creator-growth-finder > div:first-child strong { font-size: 12px; }
+.creator-growth-finder > div:first-child span { color: #a0aec0; font-size: 9px; }
+.creator-growth-finder input { width: 100%; min-height: 30px; box-sizing: border-box; padding: 0 9px; border: 1px solid #dce3eb; border-radius: 3px; background: #fff; color: #718096; font-size: 11px; }
+.creator-growth-finder > div:last-child { display: flex; gap: 5px; }
+.creator-growth-finder button { min-height: 25px; padding: 0 7px; border: 1px solid #dce3eb; border-radius: 3px; background: #fff; color: #718096; font-size: 9px; }
+.creator-growth-profile { margin-top: 12px; padding: 13px; border: 1px solid #dce3eb; border-radius: 3px; background: #fff; }
+.creator-growth-profile > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.creator-growth-profile > header span { color: #a0aec0; font-size: 9px; letter-spacing: .08em; }
+.creator-growth-profile > header h2 { margin: 4px 0 0; font-size: 15px; }
+.creator-growth-profile > header > strong { padding: 4px 7px; border: 1px solid #fbd38d; border-radius: 3px; background: #fffaf0; color: #b7791f; font-size: 10px; }
+.creator-growth-profile > p { margin: 9px 0 0; color: #718096; font-size: 11px; line-height: 1.55; }
+.creator-growth-profile-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 11px; border: 1px solid #e2e8f0; background: #e2e8f0; gap: 1px; }
+.creator-growth-profile-axis { min-width: 0; padding: 9px; background: #f8fafc; }
+.creator-growth-profile-axis span,
+.creator-growth-profile-axis strong,
+.creator-growth-profile-axis small { display: block; overflow-wrap: anywhere; }
+.creator-growth-profile-axis span { color: #718096; font-size: 9px; }
+.creator-growth-profile-axis strong { margin: 4px 0; font-size: 12px; }
+.creator-growth-profile-axis small { color: #a0aec0; font-size: 8px; line-height: 1.4; }
+.creator-growth-analysis { background: #f8fafc; }
+.creator-growth-analysis-summary { margin-top: 12px; padding: 12px; border: 1px solid #dbeafe; border-left: 3px solid #4299e1; border-radius: 3px; background: #fff; }
+.creator-growth-analysis-summary span,
+.creator-growth-analysis-summary strong { display: block; }
+.creator-growth-analysis-summary span { color: #718096; font-size: 10px; }
+.creator-growth-analysis-summary strong { margin-top: 5px; color: #2b6cb0; font-size: 13px; }
+.creator-growth-analysis-summary p { margin: 7px 0 0; color: #718096; font-size: 10px; line-height: 1.55; }
+.creator-growth-next-actions { margin-top: 10px; padding: 11px 12px; border: 1px solid #e2e8f0; border-radius: 3px; background: #fff; }
+.creator-growth-next-actions h3 { margin: 0; font-size: 12px; }
+.creator-growth-next-actions > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+.creator-growth-next-actions button { min-height: 28px; border: 1px solid #dce3eb; border-radius: 3px; background: #f8fafc; color: #a0aec0; font-size: 10px; }
+.creator-growth-next-actions small { display: block; margin-top: 7px; color: #a0aec0; font-size: 9px; }
+.creator-growth-blocker-audit { margin-top: 10px; border-top: 1px solid #e2e8f0; }
+.creator-growth-blocker-audit > summary { padding: 10px 0 7px; color: #718096; cursor: pointer; font-size: 10px; }
+.creator-growth-blocker-audit > ul { margin: 0; padding: 0; list-style: none; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.media-studio"] { min-height: 100%; height: 100%; background: #f0f2f5; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.media-studio"] > .ecommerce-workshop-context-header,
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.media-studio"] > .ecommerce-workshop-technical-context,
