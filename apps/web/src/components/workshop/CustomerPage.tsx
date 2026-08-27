@@ -10,6 +10,17 @@ const LABELS: Record<CustomerViewId, string> = { customer: "客户最小投影",
 const AXIS_LABELS = { customer_lite: "客户最小集", consent: "同意依据", segment: "分群投影", journey: "旅程投影", dialogue: "对话摘要", outreach_batch: "触达批次" } as const;
 const stateFor = (phase: Phase): AsyncState => phase === "ready" || phase === "empty" ? "ready" : phase;
 
+function CustomerFailureSurface() {
+  return <div className="customer-read-model is-failed-read">
+    <div className="customer-tabs" role="tablist" aria-label="客户关系只读视图">{Object.entries(LABELS).map(([viewId, label], index) => <button id={`customer-tab-${viewId}`} type="button" role="tab" aria-selected={index === 0} tabIndex={index === 0 ? 0 : -1} disabled key={viewId}><strong>{label}</strong><span>unknown</span></button>)}</div>
+    <section className="customer-panel" role="tabpanel" aria-label="客户最小投影"><header><div><span>customer</span><h2>客户最小投影</h2></div><strong className="content-campaign-status is-blocked">读取失败</strong></header>
+      <div className="customer-readiness">{Object.entries(AXIS_LABELS).map(([axis, label]) => <article className="is-unknown" key={axis}><strong>{label}</strong><span>unknown</span><p>无 exact authority</p></article>)}</div>
+      <section className="customer-items"><p>正式服务未返回可验证客户投影；不以演示客户、联系方式或 0 值补齐。</p></section>
+      <aside className="media-studio-blockers"><h3>依赖与下一证据</h3><div><strong>CUSTOMER_VIEW_READ_FAILED</strong><span>canonical customer reader</span><p>重新读取同租户、同截止面的隐私最小化投影。</p></div></aside>
+    </section>
+  </div>;
+}
+
 export function CustomerPage({ client = ecommerceWorkshopClient }: { client?: Client }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [response, setResponse] = useState<CustomerViewResponse | null>(null);
@@ -32,6 +43,9 @@ export function CustomerPage({ client = ecommerceWorkshopClient }: { client?: Cl
   const eligible = response?.views.reduce((sum, item) => sum + item.countLedger.eligible, 0) ?? 0;
   const total = response?.views.reduce((sum, item) => sum + item.countLedger.input, 0) ?? 0;
   const content = response && contribution && contact && closure && view ? <div className="customer-read-model">
+    <details className="customer-audit-context">
+      <summary>客户治理全过程与累计审计</summary>
+      <div className="customer-audit-stack">
     <section className="customer-hero"><div><span>客户关系工作台 · 最小披露</span><h2>只在目的、同意与留存边界内阅读客户关系</h2><p>同意撤回、留存到期、质量失败或来源不可核验都会失败关闭；页面不展示联系方式和身份字段。</p></div><strong>只读 · 零触达</strong></section>
     <section className="creator-growth-axis"><div><span>只读视图</span><strong>4</strong></div><div><span>允许披露</span><strong>{eligible}/{total}</strong></div><div><span>资源 revision</span><strong>r{response.resourceRevision}</strong></div><div><span>写入口</span><strong>0</strong></div></section>
     <section className="customer-contribution" aria-label="客户关系贡献视图">
@@ -52,6 +66,8 @@ export function CustomerPage({ client = ecommerceWorkshopClient }: { client?: Cl
       <aside><strong>失败关闭安全线</strong><span>Permit 兑换 0 · 联系方式解析 0 · Provider 0 · 发送 0 · 外部副作用 0</span>{contact.blockers.map((blocker) => <code key={blocker}>{blocker}</code>)}</aside>
     </section>
     <ThreeModuleClosureCard value={closure} />
+      </div>
+    </details>
     <div className="customer-tabs" role="tablist" aria-label="客户关系只读视图">{response.views.map((item, index) => <button id={`customer-tab-${item.viewId}`} aria-controls={`customer-panel-${item.viewId}`} type="button" role="tab" aria-selected={selected === item.viewId} tabIndex={selected === item.viewId ? 0 : -1} key={item.viewId} onClick={() => setSelected(item.viewId)} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? response.views.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + response.views.length) % response.views.length; setSelected(response.views[nextIndex]!.viewId); event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("button")[nextIndex]?.focus(); }}><strong>{LABELS[item.viewId]}</strong><span>{item.status}</span></button>)}</div>
     <section id={`customer-panel-${selected}`} aria-labelledby={`customer-tab-${selected}`} className="customer-panel" role="tabpanel" aria-label={LABELS[selected]}><header><div><span>{view.viewId}</span><h2>{LABELS[view.viewId]}</h2></div><strong className={`content-campaign-status is-${view.status}`}>{view.status === "ready" ? "同截止面可读" : "失败关闭"}</strong></header>
       <div className="customer-readiness">{view.readinessAxes.map((axis) => <article key={axis.axis} className={`is-${axis.status}`}><strong>{AXIS_LABELS[axis.axis]}</strong><span>{axis.status}</span><p>{axis.exactRef ? `${axis.exactRef.resourceType} · r${axis.exactRef.revision}` : "无 exact authority"}</p></article>)}</div>
@@ -60,5 +76,5 @@ export function CustomerPage({ client = ecommerceWorkshopClient }: { client?: Cl
     </section>
     <footer className="content-campaign-footnote"><span>租户 {response.tenant.orgId}/{response.tenant.projectId}</span><span>统一 cutoff {new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</span><span>consent + retention enforced</span></footer>
   </div> : null;
-  return <section className="customer-page" aria-label="客户关系只读视图"><div className="content-campaign-toolbar"><span>Customer View v1 · privacy-minimized</span><button type="button" onClick={load}>重新读取</button></div><AsyncStateBoundary state={stateFor(phase)} dataCutoff={response?.dataCutoff} action={phase === "failed" ? <button type="button" onClick={load}>重新读取</button> : undefined}>{content}</AsyncStateBoundary></section>;
+  return <section className="customer-page" aria-label="客户关系只读视图"><div className="content-campaign-toolbar"><span>客户关系工作台 · privacy-minimized read-only</span><button type="button" onClick={load}>重新读取</button></div>{phase === "failed" ? <CustomerFailureSurface /> : <AsyncStateBoundary state={stateFor(phase)} dataCutoff={response?.dataCutoff}>{content}</AsyncStateBoundary>}</section>;
 }

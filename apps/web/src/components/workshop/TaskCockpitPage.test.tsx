@@ -84,7 +84,7 @@ describe("TaskCockpitPage", () => {
     expect(host.textContent).toContain("全部禁用");
   });
 
-  it("只显示 canonical partial 范围、服务端 blocker 和 Task/Run，不制造命令或 H1", async () => {
+  it("只显示 canonical partial 范围、服务端 blocker 和 Task/Run，视觉命令槽保持禁用且不制造 H1", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
     expect(host.querySelectorAll("h1")).toHaveLength(0);
@@ -92,7 +92,8 @@ describe("TaskCockpitPage", () => {
     expect(host.textContent).toContain("业务上下文未装配");
     expect(host.textContent).not.toMatch(/派发|暂停任务|取消任务|批准任务/);
     expect(host.querySelector(".task-cockpit-command-blocked input")).toBeNull();
-    expect([...host.querySelectorAll("button")].some((item) => item.textContent === "下达")).toBe(false);
+    expect(host.querySelector<HTMLInputElement>(".task-cockpit-visual-command input")?.disabled).toBe(true);
+    expect([...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === "下达")?.disabled).toBe(true);
     expect(client.getTaskCockpitCore).toHaveBeenCalledWith({ status: undefined, limit: 20, cursor: undefined });
   });
 
@@ -100,6 +101,8 @@ describe("TaskCockpitPage", () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
     expect(host.querySelectorAll(".task-cockpit-metrics > div")).toHaveLength(6);
+    expect(host.querySelectorAll(".task-cockpit-visual-metrics > div")).toHaveLength(7);
+    expect(host.querySelector<HTMLElement>('.task-cockpit-visual-progress[aria-label="执行进度未提供"] i')?.style.width).toBe("0%");
     expect(host.textContent).toContain("通用任务指令仍失败关闭");
     expect(host.textContent).toContain("执行组"); expect(host.textContent).toContain("策划组");
     expect(host.textContent).toContain("当日任务流 · 执行进度");

@@ -34,13 +34,16 @@ describe("MediaStudioPage", () => {
   it("展示三切片 target 边界且没有媒体写入口", async () => {
     await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()) }} />); });
     expect(host.querySelectorAll('[role="tab"]')).toHaveLength(3);
+    expect(host.querySelectorAll(".media-studio-summary-metrics article")).toHaveLength(4);
+    expect(host.querySelectorAll(".media-studio-summary-metrics strong")).toHaveLength(4);
+    expect(Array.from(host.querySelectorAll(".media-studio-summary-metrics strong")).map((item) => item.textContent)).toEqual(["unknown", "unknown", "unknown", "unknown"]);
     expect(host.textContent).toContain("target ≠ achieved；Provider submitted ≠ delivered；published、settled 与 effect-reviewed 分轴。");
     expect(host.textContent).not.toMatch(/开始|发布|取消|批准|结算|对账/);
   });
 
   it("切换 Tab 不制造业务事实", async () => {
     await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()) }} />); });
-    const tab = Array.from(host.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find((item) => item.textContent?.includes("职责与执行"));
+    const tab = Array.from(host.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find((item) => item.textContent?.includes("短视频"));
     expect(tab).toBeTruthy();
     act(() => tab?.click());
     expect(host.querySelector('[role="tabpanel"]')?.textContent).toContain("当前没有可挂接的媒体 authority");
@@ -71,7 +74,7 @@ describe("MediaStudioPage", () => {
     expect(host.textContent).toContain("内容官 · unknown");
     expect(host.textContent).toContain("media-generate");
     expect(host.textContent).toContain("外部副作用关闭");
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
+    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案blocked", "短视频blocked", "数字人直播blocked"]);
   });
 
   it("按币种分轴展示双预留、取消、Usage 与 Settlement 且保持只读", async () => {
@@ -83,7 +86,7 @@ describe("MediaStudioPage", () => {
     expect(host.textContent).toContain("CNY：measured 1000");
     expect(host.textContent).toContain("USD：measured 0 / estimated 25");
     expect(host.textContent).toContain("too_late");
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
+    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案blocked", "短视频blocked", "数字人直播blocked"]);
   });
 
   it("按 frozen context 在三 Tab 展示七节点、八职责、Stage、Artifact、Issue 与禁用命令", async () => {
@@ -105,7 +108,7 @@ describe("MediaStudioPage", () => {
     act(() => tabs[2]?.click());
     expect(host.textContent).toContain("family-1");
     expect(host.textContent).toContain("issue-1 · major");
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
+    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案blocked", "短视频blocked", "数字人直播blocked"]);
   });
 
   it("展示 Candidate 到 Handoff 的 canonical 发布贡献但不生成发布按钮", async () => {
@@ -121,7 +124,7 @@ describe("MediaStudioPage", () => {
     expect(host.textContent).toContain("logic-media-publish");
     expect(host.textContent).toContain("尚无 Receipt");
     expect(host.textContent).toContain("required · 仅最小披露");
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
+    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案blocked", "短视频blocked", "数字人直播blocked"]);
   });
 
   it("展示 W7 十一栏累计门且保留 Provider、Canary 和运营阻断", async () => {
@@ -134,7 +137,7 @@ describe("MediaStudioPage", () => {
     expect(host.querySelectorAll('[aria-label="W7媒体累计十一栏验收门"] .media-command-grid article')).toHaveLength(11);
     expect(host.textContent).toContain("provider_adapter_greenblocked");
     expect(host.textContent).toContain("外部副作用：关闭 · Release：关闭");
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
+    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案blocked", "短视频blocked", "数字人直播blocked"]);
   });
 
   it("展示 FULL 视频四层贡献、八职责、七阶段和九类故障且无写按钮", async () => {
@@ -146,6 +149,6 @@ describe("MediaStudioPage", () => {
     expect(host.querySelectorAll(".full-video-fault-grid article")).toHaveLength(9);
     expect(host.textContent).toContain("故障证据 8/9");
     expect(host.querySelectorAll(".full-video-scenario .media-command-grid article")).toHaveLength(8);
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "生产上下文blocked", "职责与执行blocked", "交付与复盘blocked"]);
+    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案blocked", "短视频blocked", "数字人直播blocked"]);
   });
 });

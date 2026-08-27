@@ -67,6 +67,101 @@ body,
   color: var(--aos-text-secondary);
 }
 
+/* 日常任务总控视觉稿同样使用固定浅色工作台壳；只作用于该路由。 */
+.p-app.is-task-cockpit-visual {
+  --aos-accent: #2B6CB0;
+  --aos-accent-hover: #2C5282;
+  --aos-accent-light: #EBF4FF;
+  --aos-accent-border: #BEE3F8;
+  --aos-bg: #F0F2F5;
+  --aos-bg-secondary: #F7FAFC;
+  --aos-aside: #FFFFFF;
+  --aos-header: #FFFFFF;
+  --aos-card: #FFFFFF;
+  --aos-elevated: #FFFFFF;
+  --aos-surface: #FFFFFF;
+  --aos-surface-hover: #F7FAFC;
+  --aos-border: #E2E8F0;
+  --aos-border-strong: #CBD5E0;
+  --aos-divider: #EDF2F7;
+  --aos-text: #1A202C;
+  --aos-text-secondary: #4A5568;
+  --aos-muted: #718096;
+  --aos-text-tertiary: #718096;
+  --aos-faint: #A0AEC0;
+  --aos-input-bg: #FFFFFF;
+  background: #F0F2F5;
+  color: #4A5568;
+}
+
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) {
+  --aos-accent: #2B6CB0; --aos-accent-hover: #2C5282; --aos-accent-light: #EBF4FF; --aos-accent-border: #BEE3F8;
+  --aos-bg: #F0F2F5; --aos-bg-secondary: #F7FAFC; --aos-aside: #FFFFFF; --aos-header: #FFFFFF; --aos-card: #FFFFFF;
+  --aos-elevated: #FFFFFF; --aos-surface: #FFFFFF; --aos-surface-hover: #F7FAFC; --aos-border: #E2E8F0; --aos-border-strong: #CBD5E0;
+  --aos-divider: #EDF2F7; --aos-text: #1A202C; --aos-text-secondary: #4A5568; --aos-muted: #718096; --aos-text-tertiary: #718096;
+  --aos-faint: #A0AEC0; --aos-input-bg: #FFFFFF; background: #F0F2F5; color: #4A5568;
+}
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .aside { width: 260px; background: #fff; color: #4a5568; }
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .brand-block,
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .aside-foot,
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .aos-nav-section-toggle,
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .aos-nav-subgroup,
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .aos-nav-label,
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .aos-nav-badge { display: none; }
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .nav { padding: 0; }
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .aos-nav-section-content { display: grid; }
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .aos-nav-link {
+  justify-content: center;
+  min-height: 42px;
+  padding: 0;
+  border-left: 3px solid transparent;
+}
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .aos-nav-link.is-active {
+  border-left-color: #2b6cb0;
+  background: #ebf4ff;
+  color: #2b6cb0;
+}
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .aside-toggle { right: 8px; }
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .content { padding: 0; overflow: hidden; background: #f0f2f5; }
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .topbar { background: #fff; color: #4a5568; }
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .topbar:has(.workshop-visual-header-left) {
+  display: grid;
+  grid-template-columns: minmax(245px, auto) minmax(260px, 480px) minmax(245px, 1fr);
+  align-items: center;
+  gap: 16px;
+  height: 48px;
+  padding: 0 16px;
+}
+.workshop-visual-header-left,
+.workshop-visual-header-actions,
+.workshop-visual-header-search { display: flex; align-items: center; min-width: 0; }
+.workshop-visual-header-left { gap: 8px; white-space: nowrap; font-size: 13px; color: #4a5568; }
+.workshop-visual-header-left strong { color: #2b6cb0; font-weight: 500; }
+.workshop-visual-header-left b { color: #1a202c; font-weight: 600; }
+.workshop-visual-header-left h1 { margin: 0; color: #4a5568; font-size: 26px; line-height: 39px; font-weight: 700; letter-spacing: .02em; }
+.workshop-visual-header-left h1 + span { color: #4a5568; }
+.workshop-visual-header-search { position: relative; }
+.workshop-visual-header-search .nav-icon { position: absolute; left: 12px; width: 14px; height: 14px; color: #a0aec0; }
+.workshop-visual-header-search input {
+  width: 100%; height: 32px; box-sizing: border-box; padding: 0 12px 0 36px; border: 1px solid #e2e8f0; border-radius: 4px;
+  background: #fff; color: #1a202c; font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.workshop-visual-header-actions { justify-content: flex-end; gap: 8px; }
+.workshop-visual-header-actions > span { height: 28px; padding: 0 10px; display: inline-flex; align-items: center; border: 1px solid #bee3f8; border-radius: 4px; background: #ebf8ff; color: #2b6cb0; font-size: 12px; white-space: nowrap; }
+.workshop-visual-header-actions button {
+  height: 30px; padding: 0 11px; border: 1px solid #e2e8f0; border-radius: 3px; background: #fff; color: #4a5568;
+  font: 500 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; white-space: nowrap; opacity: 1;
+}
+.workshop-visual-header-actions button.is-primary { border-color: #2b6cb0; background: #2b6cb0; color: #fff; }
+
+@media (max-width: 1180px) {
+  .p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .topbar:has(.workshop-visual-header-left) {
+    grid-template-columns: minmax(230px, auto) minmax(200px, 1fr) auto;
+    gap: 10px;
+  }
+  .workshop-visual-header-actions > span { display: none; }
+}
+
 .p-main {
   flex: 1;
   display: flex;
@@ -485,11 +580,12 @@ body,
   align-items: center;
   justify-content: flex-start;
   gap: 16px;
+  height: 48px;
   padding: 0 16px;
 }
 .analyst-exact-header-left,
 .analyst-exact-header-right { display: flex; align-items: center; }
-.analyst-exact-header-left { min-width: 0; gap: 12px; }
+.analyst-exact-header-left { min-width: 0; gap: 12px; flex: 0 1 auto; }
 .analyst-exact-header-left h1 {
   margin: 0;
   color: #4a5568;
@@ -499,7 +595,7 @@ body,
   white-space: nowrap;
 }
 .analyst-exact-header-left > span { color: #4a5568; font-size: 13px; line-height: 19.5px; white-space: nowrap; }
-.analyst-exact-header-right { gap: 8px; }
+.analyst-exact-header-right { gap: 8px; flex: 0 0 auto; }
 .analyst-exact-header-right label { display: flex; align-items: center; gap: 5px; color: #4a5568; font-size: 10px; font-weight: 650; line-height: 15px; }
 .analyst-exact-header-right select {
   width: 102px;
@@ -513,10 +609,8 @@ body,
   opacity: 1;
 }
 .analyst-exact-owner {
-  width: 137px;
+  min-width: 166px;
   box-sizing: border-box;
-  overflow: hidden;
-  text-overflow: ellipsis;
   min-height: 19px;
   padding: 1px 6px;
   border: 1px solid #ddd6fe;
@@ -545,6 +639,67 @@ body,
   cursor: pointer;
 }
 .p-app.is-analyst-visual .analyst-exact-header-right > button .nav-icon { width: 10px; height: 10px; }
+
+.p-app.is-task-cockpit-visual .topbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(280px, 480px) minmax(220px, 1fr);
+  height: 48px;
+  padding: 0 16px;
+  gap: 16px;
+  background: #fff;
+  color: #4a5568;
+}
+.task-cockpit-exact-header-left,
+.task-cockpit-exact-header-right,
+.task-cockpit-exact-header-search { display: flex; align-items: center; min-width: 0; }
+.task-cockpit-exact-header-left { gap: 9px; font-size: 13px; }
+.task-cockpit-exact-header-left strong { color: #2b6cb0; font-weight: 500; }
+.task-cockpit-exact-header-left span { color: #a0aec0; }
+.task-cockpit-exact-header-left b { color: #1a202c; font-weight: 600; white-space: nowrap; }
+.task-cockpit-exact-header-search { position: relative; }
+.task-cockpit-exact-header-search .nav-icon { position: absolute; left: 12px; width: 14px; height: 14px; color: #a0aec0; }
+.task-cockpit-exact-header-search input {
+  width: 100%; height: 32px; padding: 0 12px 0 36px; border: 1px solid #e2e8f0; border-radius: 4px;
+  background: #fff; color: #1a202c; font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.task-cockpit-exact-header-right { justify-content: flex-end; gap: 12px; font-size: 12px; color: #a0aec0; }
+.task-cockpit-exact-header-right button {
+  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border: 1px solid #e2e8f0; border-radius: 4px;
+  background: #fff; color: #4a5568; font: 600 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.task-cockpit-exact-header-right .nav-icon { width: 14px; height: 14px; }
+.p-app.is-task-cockpit-visual .aside { width: 260px; background: #fff; }
+.p-app.is-task-cockpit-visual .brand-block,
+.p-app.is-task-cockpit-visual .aside-foot,
+.p-app.is-task-cockpit-visual .aos-nav-section-toggle,
+.p-app.is-task-cockpit-visual .aos-nav-subgroup,
+.p-app.is-task-cockpit-visual .aos-nav-label,
+.p-app.is-task-cockpit-visual .aos-nav-badge { display: none; }
+.p-app.is-task-cockpit-visual .nav { padding: 0; }
+.p-app.is-task-cockpit-visual .aos-nav-section-content { display: grid; }
+.p-app.is-task-cockpit-visual .aos-nav-link { justify-content: center; min-height: 42px; padding: 0; border-left: 3px solid transparent; }
+.p-app.is-task-cockpit-visual .aos-nav-link.is-active { border-left-color: #2b6cb0; background: #ebf4ff; color: #2b6cb0; }
+.p-app.is-task-cockpit-visual .aside-toggle { right: 8px; }
+.p-app.is-task-cockpit-visual .content { padding: 0; overflow: hidden; background: #f0f2f5; }
+
+@media (max-width: 980px) {
+  .p-app.is-task-cockpit-visual .topbar { grid-template-columns: minmax(190px, 1fr) minmax(220px, 1fr); }
+  .task-cockpit-exact-header-right { display: none; }
+}
+
+@media (max-width: 1080px) {
+  .p-app.is-analyst-visual .topbar {
+    height: 92px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 48px 36px;
+    gap: 0;
+    align-content: center;
+  }
+  .analyst-exact-header-left,
+  .analyst-exact-header-right { width: 100%; }
+  .analyst-exact-header-right { justify-content: flex-start; }
+}
 
 .p-app.is-analyst-visual .aside { width: 260px; background: #fff; color: #4a5568; }
 .analyst-exact-side-nav { flex: 1; min-height: 0; overflow-y: auto; }

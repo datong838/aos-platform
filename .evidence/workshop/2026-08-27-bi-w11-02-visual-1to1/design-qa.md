@@ -125,3 +125,11 @@
 `final result: passed`
 
 本结论仅关闭 BI-W11-02 的八菜单前端视觉、交互、对应只读后端合同与失败关闭硬门；不表示真实租户数据已就绪，也不表示 Adapter 安装、外部执行、迁移或发布 GREEN。
+
+## 2026-08-27 主工作台八菜单口径纠错
+
+用户提供的 `workshop-task-cockpit.html` 与当前 `/workshop/cockpit` 同屏证据证明：本文件验收的“八菜单”是经营参谋页面内部八个 Tab，并非 Workshop 八个一级业务菜单。当前任务总控页与视觉源在 KPI 带、任务下达条、三栏任务流、组件密度、字号、颜色和比例上均存在大幅差异；经营参谋页顶部还存在标题、面包屑、渠道控件、负责人标签、按钮与状态条挤压/截断。
+
+因此，上述 `final result: passed` 仅作为历史局部结论保留，不再具有主工作台八菜单封板效力。主工作台八菜单重新验收已经登记到 `S8-VISUAL-PRIMARY-EIGHT-MENU-CORRECTION`，新证据目录为 `.evidence/workshop/2026-08-27-primary-eight-menu-visual-correction/`。
+
+`final result: failed`

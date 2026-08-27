@@ -307,6 +307,44 @@ function AnalystVisualNavigation() {
   </nav>;
 }
 
+type WorkshopVisualHeaderSpec = {
+  brand?: string;
+  title: string;
+  crumb?: string;
+  search?: string;
+  context?: string;
+  actions: string[];
+};
+
+const WORKSHOP_VISUAL_HEADERS: Record<string, WorkshopVisualHeaderSpec> = {
+  "/workshop/operations": { brand: "栖月汇微商城", title: "统一运营驾驶舱", search: "搜索订单号、SKU、告警关键词…", actions: ["筛选", "＋ 新建处理"] },
+  "/workshop/content-campaign": { brand: "AOS", crumb: "电商业务", title: "内容与活动工作台", search: "搜索活动、内容、商品…", actions: ["保存草稿", "批准并发布"] },
+  "/workshop/creator-growth": { brand: "AOS", crumb: "电商业务", title: "达人邀约驾驶舱", search: "搜索达人、机构、邀约记录…", context: "栖月汇微商城", actions: ["导入达人", "＋ 新建邀约批次"] },
+  "/workshop/media-studio": { brand: "栖月汇微商城", title: "多媒体内容生产", search: "搜索文案、视频、直播任务…", context: "栖月汇微商城", actions: ["查看内容计划", "＋ 新建内容任务"] },
+  "/workshop/price-governance": { title: "价格治理驾驶舱", crumb: "工作台 › 增长引擎域 › 价格治理", context: "栖月汇微商城", actions: ["导出报告", "＋ 新建监测策略"] },
+  "/workshop/customer": { title: "客户关系工作台", crumb: "工作台 › 运营执行域 › 客户关系", context: "栖月汇微商城 · 客户未知", actions: ["导入客户", "＋ 新建触达任务"] },
+};
+
+function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
+  const spec = WORKSHOP_VISUAL_HEADERS[pathname];
+  if (!spec) return null;
+  return <>
+    <div className="workshop-visual-header-left">
+      {spec.title === "价格治理驾驶舱" || spec.title === "客户关系工作台" ? <h1>{spec.title}</h1> : null}
+      {spec.brand ? <strong>{spec.brand}</strong> : null}
+      {spec.brand || spec.crumb ? <span>/</span> : null}
+      {spec.crumb ? <span>{spec.crumb}</span> : null}
+      {spec.crumb && spec.title !== "价格治理驾驶舱" && spec.title !== "客户关系工作台" ? <span>/</span> : null}
+      {spec.title !== "价格治理驾驶舱" && spec.title !== "客户关系工作台" ? <b>{spec.title}</b> : null}
+    </div>
+    {spec.search ? <label className="workshop-visual-header-search"><NavIcon name="search" /><input type="search" placeholder={spec.search} /></label> : <div />}
+    <div className="workshop-visual-header-actions">
+      {spec.context ? <span>{spec.context}</span> : null}
+      {spec.actions.map((label, index) => <button key={label} type="button" className={index === spec.actions.length - 1 ? "is-primary" : ""} disabled title="当前只读门未授权该动作">{label}</button>)}
+    </div>
+  </>;
+}
+
 export function AppShell() {
   const [pref, setPref] = useState<AppearancePreference>(() =>
     readAppearancePreference(),
@@ -332,6 +370,11 @@ export function AppShell() {
       : staticActive;
   const onApolloRoute = location.pathname.startsWith("/apollo");
   const onAnalystVisualRoute = location.pathname === "/workshop/analyst";
+  const onTaskCockpitVisualRoute = location.pathname === "/workshop/cockpit";
+  const onWorkshopPrimaryVisualRoute = ["/workshop/cockpit", "/workshop/operations", "/workshop/content-campaign", "/workshop/creator-growth", "/workshop/media-studio", "/workshop/analyst", "/workshop/price-governance", "/workshop/customer"].includes(location.pathname);
+  const onWorkshopFullSidebarVisualRoute = onWorkshopPrimaryVisualRoute;
+  const onWorkshopMappedHeaderRoute = Boolean(WORKSHOP_VISUAL_HEADERS[location.pathname]);
+  const cockpitDateLabel = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short" }).format(new Date());
 
   const { collapsed: sidebarCollapsed, toggle: toggleSidebar } =
     useSidebarCollapsed();
@@ -517,7 +560,7 @@ export function AppShell() {
   }, [collapsedSections, toggleSection, active?.id, workshopCatalog.modules]);
 
   return (
-    <div className={`p-app${workshopFocusMode ? " is-workshop-focus" : ""}${onAnalystVisualRoute ? " is-analyst-visual" : ""}`}>
+    <div className={`p-app${workshopFocusMode ? " is-workshop-focus" : ""}${onWorkshopPrimaryVisualRoute ? " is-workshop-primary-visual" : ""}${onAnalystVisualRoute ? " is-analyst-visual" : ""}${onTaskCockpitVisualRoute ? " is-task-cockpit-visual" : ""}`}>
       <GlobalNav
         onToggleSidebar={toggleSidebar}
         pathname={location.pathname}
@@ -533,10 +576,14 @@ export function AppShell() {
             </div>
             <div className="analyst-exact-header-right">
               <label><span>渠道视角</span><select aria-label="渠道视角" value="" disabled><option value="">渠道未知</option></select></label>
-              <span className="analyst-exact-owner">经营参谋（负责人：未绑定）</span>
+              <span className="analyst-exact-owner" title="经营参谋（负责人：未绑定）">经营参谋（负责人：未绑定）</span>
               <button type="button" onClick={() => document.getElementById("analyst-tab-plan")?.click()}><NavIcon name="table" />查看今日方案</button>
             </div>
-          </> : <><div className="topbar-left">
+          </> : onTaskCockpitVisualRoute ? <>
+            <div className="task-cockpit-exact-header-left"><strong>栖月汇微商城</strong><span>/</span><b>日常任务总控大屏</b></div>
+            <div className="task-cockpit-exact-header-search"><NavIcon name="search" /><input type="search" placeholder="搜索任务、同事、关键词…" /></div>
+            <div className="task-cockpit-exact-header-right"><span>{cockpitDateLabel}</span><button type="button"><NavIcon name="table" />日历视图</button></div>
+          </> : onWorkshopMappedHeaderRoute ? <WorkshopPrimaryVisualHeader pathname={location.pathname} /> : <><div className="topbar-left">
             <nav className="breadcrumb" aria-label="面包屑">
               {crumbs.map((c, i) => (
                 <span key={`${c}-${i}`} className="breadcrumb-item">
@@ -585,7 +632,7 @@ export function AppShell() {
             >
               <NavIcon name="chevron" />
             </button>
-            {onAnalystVisualRoute ? null : <div className="brand-block">
+            {onWorkshopFullSidebarVisualRoute ? null : <div className="brand-block">
               <div className="brand-mark" aria-hidden>
                 <NavIcon name="layers" className="brand-mark-icon" />
               </div>
@@ -594,10 +641,10 @@ export function AppShell() {
                 <div className="brand-sub">AOS 企业AI转型方案</div>
               </div>
             </div>}
-            {onAnalystVisualRoute ? <AnalystVisualNavigation /> : <nav className="nav" aria-label="主导航">
+            {onWorkshopFullSidebarVisualRoute ? <AnalystVisualNavigation /> : <nav className="nav" aria-label="主导航">
               {navNodes}
             </nav>}
-            {onAnalystVisualRoute ? null : <div className="aside-foot">AOS · {DEMO_VERSION}</div>}
+            {onWorkshopFullSidebarVisualRoute ? null : <div className="aside-foot">AOS · {DEMO_VERSION}</div>}
           </aside>
           <main className="main">
             <OfflineBanner />
