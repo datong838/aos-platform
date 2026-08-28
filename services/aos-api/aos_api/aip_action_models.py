@@ -297,6 +297,7 @@ class ActionExecutionAttemptSnapshot(AipContractModel):
     status: str
     action_binding_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     approval_set_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    adapter_revision_ref: dict[str, Any] | None = None
     idempotency_envelope: str = Field(pattern=r"^[0-9a-f]{64}$")
     request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     provider_request_id: str | None = None

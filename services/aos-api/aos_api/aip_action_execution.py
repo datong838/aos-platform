@@ -1444,7 +1444,37 @@ class AipActionExecutionService:
             adapter = self._adapters.get(proposal["action_type_id"])
             if adapter is None:
                 raise AipActionDependencyUnavailable("Action adapter is not registered")
-            return adapter, binding
+            adapter_ref = getattr(adapter, "adapter_revision_ref", None)
+            if adapter_ref is None:
+                return adapter, binding
+            try:
+                ref = ImmutableExactRevisionRef.model_validate(adapter_ref)
+            except Exception as exc:
+                raise AipActionDependencyUnavailable(
+                    "registered Action adapter exact ref is invalid"
+                ) from exc
+            item = self._adapters.get_conformant(ref)
+            if item is None or item[1] is not adapter:
+                raise AipActionDependencyUnavailable(
+                    "registered Action adapter exact revision is not conformant"
+                )
+            revision, _ = item
+            if (
+                revision.lifecycle is not AdapterLifecycle.PUBLISHED
+                or revision.action_type_family != proposal["action_type_id"]
+            ):
+                raise AipActionDependencyUnavailable(
+                    "Adapter revision is not published for this Action family"
+                )
+            exact = lambda value: value.model_dump(mode="json", by_alias=True)
+            return adapter, {
+                **binding,
+                "adapterRevisionRef": exact(ref),
+                "outputSchemaRef": exact(revision.output_schema_ref),
+                "receiptSchemaRef": exact(revision.receipt_schema_ref),
+                "usageSchemaRef": exact(revision.usage_schema_ref),
+                "redactionPolicyRef": exact(revision.redaction_policy_ref),
+            }
         try:
             ref = ImmutableExactRevisionRef.model_validate(raw_ref)
         except Exception as exc:
@@ -1618,6 +1648,7 @@ class AipActionExecutionService:
             id=attempt["attempt_id"], lease_id=attempt["lease_id"], proposal_id=proposal_id,
             status=attempt["status"], action_binding_hash=attempt["action_binding_hash"],
             approval_set_hash=attempt["approval_set_hash"],
+            adapter_revision_ref=attempt["adapter_revision_ref"],
             idempotency_envelope=attempt["idempotency_envelope"], request_hash=attempt["request_hash"],
             provider_request_id=attempt["provider_request_id"],
             provider_outcome=(attempt["status"] if attempt["status"] in {"accepted", "applied", "failed", "partial", "unknown"} else None),

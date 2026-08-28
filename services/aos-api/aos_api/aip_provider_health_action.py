@@ -12,6 +12,10 @@ from typing import Any, Callable, Literal
 from pydantic import Field
 
 from aos_api.aip_action_adapters import AdapterOutcome
+from aos_api.aip_adapter_contracts import (
+    ImmutableExactRevisionRef,
+    NormalizedUsageCandidate,
+)
 from aos_api.aip_contracts import AipContractModel
 
 PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID = "aip.provider-health-probe"
@@ -48,6 +52,15 @@ class ProviderHealthProbeActionAdapter:
 
     def __init__(self, refresh: Callable[[], dict[str, Any]]) -> None:
         self._refresh = refresh
+        self.adapter_revision_ref: ImmutableExactRevisionRef | None = None
+
+    def normalize_usage(self, *, outcome: AdapterOutcome) -> NormalizedUsageCandidate:
+        return NormalizedUsageCandidate(
+            providerRequestId=outcome.provider_request_id,
+            quality="measured" if outcome.status == "applied" else "unknown",
+            amount=3 if outcome.status == "applied" else None,
+            unit="probe",
+        )
 
     def execute(
         self, *, payload: dict[str, Any], idempotency_key: str
@@ -92,4 +105,3 @@ class ProviderHealthProbeActionAdapter:
                 "automaticRetry": False,
             },
         )
-
