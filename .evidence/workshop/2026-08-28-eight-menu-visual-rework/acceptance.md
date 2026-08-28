@@ -24,6 +24,12 @@ result: `VISUAL_REWORK_GREEN / QYH_FUNCTIONAL_ACCEPTANCE_GREEN_AT_READONLY_CUTOF
 
 八页页面级横向溢出均为 `false`；页面业务区均未出现 `AOS-*`、`BI-W*` 或开发波次编号。离线视觉稿的大放大镜/大日历 SVG 已由本地尺寸兜底消除。
 
+### 修复后逐页交互复验
+
+- 再次按真实路由逐页打开 `cockpit`、`operations`、`content-campaign`、`creator-growth`、`media-studio`、`analyst`、`price-governance`、`customer`，八页的“折叠侧栏 → 展开侧栏”均实际点击成功。
+- 多媒体 3 个阶段、经营参谋 8 个业务标签、价格治理 3 个业务标签、客户关系 4 个业务标签逐个点击；其余页面的重新读取按钮按只读边界实际点击。
+- 八页 `1280px` 视口横向溢出均为 `false`；本轮没有点击导入、新建、发布、执行、暂停、重试等潜在状态变更入口。
+
 ## 六数字同事浮层
 
 - 执行组：客服专员、私域管家、导购顾问；策划组：数据参谋、内容官、活动策划师。
