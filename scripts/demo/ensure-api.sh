@@ -81,6 +81,9 @@ export AOS_S3_BUCKET="${AOS_S3_BUCKET:-aos-media}"
 export AOS_S3_ACCESS_KEY="${AOS_S3_ACCESS_KEY:-aosdev}"
 export AOS_S3_SECRET_KEY="${AOS_S3_SECRET_KEY:-aos_dev_only_change_me}"
 export AOS_ANALYTICS_URL="${AOS_ANALYTICS_URL:-http://127.0.0.1:8084}"
+# 本地 API 恢复不能隐式执行外部 Provider 健康探测。Provider 维护有独立
+# 审批/证据入口，不通过通用 ensure-api 启动脚本继承环境开关。
+export AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED=false
 export PYTHONPATH="$ROOT/services/aos-api${PYTHONPATH:+:$PYTHONPATH}"
 
 export AOS_ENSURE_ROOT="$ROOT"
@@ -123,8 +126,21 @@ PY
 
 for _ in $(seq 1 45); do
   if curl -sf --max-time 2 http://127.0.0.1:8080/v1/health >/dev/null; then
-    echo "OK  aos-api restarted (detached session)"
-    exit 0
+    if python "$ROOT/scripts/demo/api_runtime_guard.py" \
+      --pid-file "$PID_DIR/aos-api.pid" \
+      --port 8080 \
+      --expected-token uvicorn \
+      --expected-token aos_api.main:app; then
+      echo "OK  aos-api restarted with exact runtime ownership (detached session)"
+      exit 0
+    fi
+    echo "FAIL aos-api health belongs to a different or unverifiable runtime"
+    break
+  fi
+  if [ -f "$PID_DIR/aos-api.pid" ] && ! kill -0 "$(cat "$PID_DIR/aos-api.pid")" 2>/dev/null; then
+    echo "FAIL newly started aos-api process exited before owning port 8080"
+    rm -f "$PID_DIR/aos-api.pid"
+    break
   fi
   sleep 1
 done
