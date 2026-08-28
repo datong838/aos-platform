@@ -13,9 +13,62 @@ import hashlib
 import json
 import os
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
+
+
+MINIMUM_PYTHON = (3, 10)
+
+
+class RuntimeBootstrapError(RuntimeError):
+    """Raised when no compatible repository Python runtime is available."""
+
+
+def _repository_python() -> Path:
+    repository = Path(__file__).resolve().parents[2]
+    return repository / "services" / "aos-api" / ".venv" / "bin" / "python"
+
+
+def ensure_supported_runtime(
+    *,
+    version_info: tuple[int, ...] | Any = sys.version_info,
+    executable: Path | str = sys.executable,
+    candidate: Path | None = None,
+    argv: list[str] | None = None,
+    execv: Any = os.execv,
+) -> None:
+    """Re-exec with the repository runtime before importing ``aos_api``.
+
+    The macOS system Python can be older than the API's minimum runtime.  A
+    deterministic evidence command must not depend on the operator remembering
+    to select the virtual environment manually.
+    """
+
+    current = tuple(version_info[:2])
+    if current >= MINIMUM_PYTHON:
+        return
+    target = candidate or _repository_python()
+    if not target.is_file():
+        raise RuntimeBootstrapError(
+            "SOURCE_READINESS_PYTHON_RUNTIME_UNAVAILABLE: "
+            f"requires Python {MINIMUM_PYTHON[0]}.{MINIMUM_PYTHON[1]}+"
+        )
+    if Path(executable).resolve() == target.resolve():
+        raise RuntimeBootstrapError(
+            "SOURCE_READINESS_PYTHON_RUNTIME_INCOMPATIBLE: "
+            f"requires Python {MINIMUM_PYTHON[0]}.{MINIMUM_PYTHON[1]}+"
+        )
+    command = argv if argv is not None else sys.argv
+    execv(str(target), [str(target), *command])
+
+
+try:
+    ensure_supported_runtime()
+except RuntimeBootstrapError as exc:
+    raise SystemExit(str(exc)) from exc
+
 
 from aos_api.source_readiness import build_source_readiness_service
 

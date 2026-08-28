@@ -5,7 +5,10 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -59,3 +62,56 @@ def test_evidence_hash_is_canonical_and_payload_fields_are_excluded(monkeypatch)
     serialized = json.dumps(pack, ensure_ascii=False).lower()
     assert "secret" not in serialized
     assert "rawpayload" not in serialized
+
+
+def test_runtime_bootstrap_keeps_compatible_interpreter(tmp_path: Path) -> None:
+    module = _load_module()
+    calls: list[tuple[str, list[str]]] = []
+
+    module.ensure_supported_runtime(
+        version_info=(3, 11, 9),
+        executable=tmp_path / "python",
+        candidate=tmp_path / "repository-python",
+        argv=["export_source_readiness_evidence.py", "--help"],
+        execv=lambda executable, argv: calls.append((executable, argv)),
+    )
+
+    assert calls == []
+
+
+def test_runtime_bootstrap_reexecutes_repository_interpreter(tmp_path: Path) -> None:
+    module = _load_module()
+    candidate = tmp_path / "repository-python"
+    candidate.write_text("", encoding="utf-8")
+    calls: list[tuple[str, list[str]]] = []
+
+    module.ensure_supported_runtime(
+        version_info=(3, 9, 18),
+        executable=tmp_path / "system-python",
+        candidate=candidate,
+        argv=["export_source_readiness_evidence.py", "--help"],
+        execv=lambda executable, argv: calls.append((executable, argv)),
+    )
+
+    assert calls == [
+        (
+            str(candidate),
+            [str(candidate), "export_source_readiness_evidence.py", "--help"],
+        )
+    ]
+
+
+def test_runtime_bootstrap_fails_closed_without_candidate(tmp_path: Path) -> None:
+    module = _load_module()
+
+    with pytest.raises(
+        module.RuntimeBootstrapError,
+        match="SOURCE_READINESS_PYTHON_RUNTIME_UNAVAILABLE",
+    ):
+        module.ensure_supported_runtime(
+            version_info=(3, 9, 18),
+            executable=tmp_path / "system-python",
+            candidate=tmp_path / "missing-python",
+            argv=["export_source_readiness_evidence.py"],
+            execv=os.execv,
+        )
