@@ -12,6 +12,20 @@ const AXIS_LABELS = { customer_lite: "客户最小集", consent: "同意依据",
 const STATUS_LABELS: Record<string, string> = { ready: "可读取", blocked: "等待条件", unknown: "待核对", partial: "部分可用", failed: "读取失败", forbidden: "无权访问", eligible: "符合条件", excluded: "已排除", needsReview: "待复核", deduplicated: "已去重", reserved: "已预留", skippedWithdrawn: "已撤回跳过", cancelled: "已取消", accepted: "已受理", applied: "已应用", disputed: "有争议" };
 const labelStatus = (value: string) => STATUS_LABELS[value] ?? value;
 const stateFor = (phase: Phase): AsyncState => phase === "ready" || phase === "empty" ? "ready" : phase;
+const unavailableLifecycle = (next: CustomerViewResponse): CustomerLifecycleContributionViewResponse => ({
+  schemaVersion: "aos.ecommerce-workshop.customer-lifecycle/v1", tenant: next.tenant, evaluatedAt: next.evaluatedAt,
+  atomicSkillIds: ["build-evidence-pack", "segment-entities", "consent-and-purpose-check", "needs-discovery", "customer-journey-plan", "response-or-outreach-draft", "verify-claims", "review-outcomes"],
+  logicId: "ecommerce-customer-relationship", primaryColleague: "私域管家", collaboratorColleagues: ["内容官", "客服专员", "导购顾问", "数据参谋"],
+  consentPolicyCount: 0, segmentCount: 0, journeyCount: 0, dialogueCount: 0, latestBatch: null,
+  blockers: ["CUSTOMER_LIFECYCLE_CONTRIBUTION_UNAVAILABLE"], allowedCommands: [], contactResolutionAllowed: false, startAllowed: false, sendAllowed: false, externalEffectsAllowed: false,
+});
+const unavailableContact = (next: CustomerViewResponse): CustomerContactContributionViewResponse => ({
+  schemaVersion: "aos.ecommerce-workshop.customer-contact-governance/v1", tenant: next.tenant, evaluatedAt: next.evaluatedAt,
+  atomicSkillIds: ["build-evidence-pack", "segment-entities", "consent-and-purpose-check", "needs-discovery", "customer-journey-plan", "response-or-outreach-draft", "verify-claims", "review-outcomes"],
+  logicId: "ecommerce-customer-relationship", primaryColleague: "私域管家", collaboratorColleagues: ["内容官", "客服专员", "导购顾问", "数据参谋"],
+  latestStart: null, ledger: { frozenEligible: 0, reserved: 0, skippedWithdrawn: 0, cancelled: 0, accepted: 0, applied: 0, failed: 0, unknown: 0, disputed: 0 },
+  frequencyPolicyCount: 0, withdrawalCount: 0, blockers: ["CUSTOMER_CONTACT_CONTRIBUTION_UNAVAILABLE"], allowedCommands: [], permitRedemptionAllowed: false, contactResolutionAllowed: false, providerDispatchAllowed: false, sendAllowed: false, externalEffectsAllowed: false,
+});
 
 function CustomerFailureSurface() {
   const [selected, setSelected] = useState<CustomerViewId>("customer");
@@ -36,9 +50,9 @@ export function CustomerPage({ client = ecommerceWorkshopClient }: { client?: Cl
   const request = useRef(0);
   const load = () => {
     const id = ++request.current; setPhase("loading"); setResponse(null); setContribution(null); setContact(null); setClosure(null);
-    void Promise.all([client.getCustomerView(), client.getCustomerLifecycleContributionView(), client.getCustomerContactContributionView(), client.getThreeModuleClosureContributionView?.("customer").catch(() => null) ?? Promise.resolve(null)]).then(([next, nextContribution, nextContact, nextClosure]) => {
+    void Promise.all([client.getCustomerView(), client.getCustomerLifecycleContributionView().catch(() => null), client.getCustomerContactContributionView().catch(() => null), client.getThreeModuleClosureContributionView?.("customer").catch(() => null) ?? Promise.resolve(null)]).then(([next, nextContribution, nextContact, nextClosure]) => {
       if (id !== request.current) return;
-      setResponse(next); setContribution(nextContribution); setContact(nextContact); setClosure(nextClosure ?? unavailableThreeModuleClosure("customer", next.tenant, next.evaluatedAt));
+      setResponse(next); setContribution(nextContribution ?? unavailableLifecycle(next)); setContact(nextContact ?? unavailableContact(next)); setClosure(nextClosure ?? unavailableThreeModuleClosure("customer", next.tenant, next.evaluatedAt));
       setSelected(next.views.find((item) => item.status === "blocked")?.viewId ?? "customer");
       setPhase(next.page.count === 0 && next.views.every((item) => item.status === "ready") ? "empty" : "ready");
     }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
@@ -76,8 +90,8 @@ export function CustomerPage({ client = ecommerceWorkshopClient }: { client?: Cl
     <div className="customer-tabs" role="tablist" aria-label="客户关系只读视图">{response.views.map((item, index) => <button id={`customer-tab-${item.viewId}`} aria-controls={`customer-panel-${item.viewId}`} type="button" role="tab" aria-selected={selected === item.viewId} tabIndex={selected === item.viewId ? 0 : -1} key={item.viewId} onClick={() => setSelected(item.viewId)} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? response.views.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + response.views.length) % response.views.length; setSelected(response.views[nextIndex]!.viewId); event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("button")[nextIndex]?.focus(); }}><strong>{LABELS[item.viewId]}</strong><span>{labelStatus(item.status)}</span></button>)}</div>
     <section id={`customer-panel-${selected}`} aria-labelledby={`customer-tab-${selected}`} className="customer-panel" role="tabpanel" aria-label={LABELS[selected]}><header><div><span>客户关系视图</span><h2>{LABELS[view.viewId]}</h2></div><strong className={`content-campaign-status is-${view.status}`}>{view.status === "ready" ? "同截止面可读" : "等待必要条件"}</strong></header>
       <div className="customer-readiness">{view.readinessAxes.map((axis) => <article key={axis.axis} className={`is-${axis.status}`}><strong>{AXIS_LABELS[axis.axis]}</strong><span>{labelStatus(axis.status)}</span><p>{axis.exactRef ? `${axis.exactRef.resourceType} · r${axis.exactRef.revision}` : "暂无可验证来源"}</p></article>)}</div>
-      <section className="customer-items">{view.items.length ? view.items.map((item) => <article key={`${item.customerRef.resourceId}:${item.customerRef.revision}`} className={`is-${item.disclosure}`}><header><div><strong>{item.customerRef.resourceType}</strong><span>{item.customerRef.resourceId} · r{item.customerRef.revision}</span></div><b>{item.disclosure}</b></header><dl><div><dt>目的</dt><dd>{item.purpose}</dd></div><div><dt>新鲜度 / 质量</dt><dd>{item.freshness} / {item.quality}</dd></div><div><dt>同意 / 留存</dt><dd>{item.consent} / {item.retention}</dd></div><div><dt>k 匿名 / 原始证据</dt><dd>{item.kAnonymitySatisfied === null ? "unknown" : String(item.kAnonymitySatisfied)} / {item.originalRefs.length}</dd></div></dl></article>) : <p>当前没有可披露的客户最小投影；可信空与 blocked/unknown 分开表达。</p>}</section>
-      <aside className="media-studio-blockers"><h3>所需条件与下一步</h3>{view.blockers.length ? view.blockers.map((item) => <div key={item.code}><strong>{item.requiredAction}</strong><span>{item.dependency}</span><details><summary>查看审计状态码</summary><code>{item.code}</code></details></div>) : <p>本视图当前没有待补条件。</p>}</aside>
+      <section className="customer-items">{view.items.length ? view.items.map((item) => <article key={`${item.customerRef.resourceId}:${item.customerRef.revision}`} className={`is-${item.disclosure}`}><header><div><strong>{item.customerRef.resourceType}</strong><span>{item.customerRef.resourceId} · r{item.customerRef.revision}</span></div><b>{item.disclosure}</b></header><dl><div><dt>目的</dt><dd>{item.purpose}</dd></div><div><dt>新鲜度 / 质量</dt><dd>{item.freshness} / {item.quality}</dd></div><div><dt>同意 / 留存</dt><dd>{item.consent} / {item.retention}</dd></div><div><dt>k 匿名 / 原始证据</dt><dd>{item.kAnonymitySatisfied === null ? "待核对" : String(item.kAnonymitySatisfied)} / {item.originalRefs.length}</dd></div></dl></article>) : <p>当前没有可披露的客户最小投影；可信空、等待条件与待核对分别表达。</p>}</section>
+      <aside className="media-studio-blockers"><h3>所需条件与下一步</h3>{view.blockers.length ? view.blockers.map((item) => <div key={item.code}><strong>补充同租户、同数据截止的客户最小化正式数据</strong><span>客户关系正式数据来源</span><details><summary>查看审计状态码</summary><code>{item.code}</code><p>{item.requiredAction}</p><p>{item.dependency}</p></details></div>) : <p>本视图当前没有待补条件。</p>}</aside>
     </section>
     <footer className="content-campaign-footnote"><span>租户 {response.tenant.orgId}/{response.tenant.projectId}</span><span>统一数据截止 {new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</span><span>同意与留存规则已执行</span></footer>
   </div> : null;

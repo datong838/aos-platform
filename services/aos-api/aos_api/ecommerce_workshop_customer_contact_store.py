@@ -53,7 +53,6 @@ class EcommerceWorkshopCustomerContactStore:
         columns = f",{extra_columns}" if extra_columns else ""
         placeholders = "," + ",".join("%s" for _ in extra_values) if extra_values else ""
         with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
             conn.execute(
                 f"INSERT INTO {table}(org_id,project_id,{identity_column},revision{columns},content_hash,authority_data,created_at) VALUES (%s,%s,%s,%s{placeholders},%s,%s::jsonb,%s) ON CONFLICT DO NOTHING",
                 (*scope.key, identity, revision, *extra_values, content_hash, self._json(item.model_dump(mode="json", by_alias=True)), created_at),
@@ -90,7 +89,13 @@ class EcommerceWorkshopCustomerContactStore:
     def reserve_frequency(self, scope: TenantScope, item: CustomerFrequencyReservationRevision) -> CustomerFrequencyReservationRevision:
         self._assert_tenant(scope, item)
         with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+            # Tenant scope is applied before the store receives the connection,
+            # so transaction characteristics can no longer be changed here.
+            # Serialize the mutable frequency bucket explicitly instead.
+            conn.execute(
+                "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                (f"{scope.org_id}:{scope.project_id}:{item.customer_ref.resource_id}:{item.frequency_policy_ref.resource_id}",),
+            )
             existing = conn.execute(
                 "SELECT authority_data,content_hash FROM ecommerce_customer_frequency_reservation_revision WHERE org_id=%s AND project_id=%s AND reservation_id=%s AND revision=1",
                 (*scope.key, item.reservation_id),
@@ -137,7 +142,6 @@ class EcommerceWorkshopCustomerContactStore:
 
     def require_consent_policy(self, scope: TenantScope, ref: CustomerExactRef) -> CustomerConsentPolicyRevision:
         with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
             row = conn.execute(
                 "SELECT authority_data,content_hash FROM ecommerce_customer_consent_policy_revision WHERE org_id=%s AND project_id=%s AND policy_id=%s AND revision=%s",
                 (*scope.key, ref.resource_id, ref.revision),
@@ -148,7 +152,6 @@ class EcommerceWorkshopCustomerContactStore:
 
     def latest_withdrawal_or_none(self, scope: TenantScope, customer_ref: CustomerExactRef, consent_policy_ref: CustomerExactRef) -> CustomerConsentWithdrawalObservation | None:
         with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
             row = conn.execute(
                 "SELECT authority_data FROM ecommerce_customer_consent_withdrawal_observation WHERE org_id=%s AND project_id=%s AND customer_id=%s AND consent_policy_id=%s ORDER BY sequence DESC,created_at DESC LIMIT 1",
                 (*scope.key, customer_ref.resource_id, consent_policy_ref.resource_id),
@@ -163,7 +166,6 @@ class EcommerceWorkshopCustomerContactStore:
 
     def latest_start_or_none(self, scope: TenantScope, batch_id: str) -> CustomerBatchStartDecisionRevision | None:
         with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
             row = conn.execute(
                 "SELECT authority_data FROM ecommerce_customer_batch_start_decision_revision WHERE org_id=%s AND project_id=%s AND batch_id=%s ORDER BY revision DESC LIMIT 1",
                 (*scope.key, batch_id),
@@ -172,7 +174,6 @@ class EcommerceWorkshopCustomerContactStore:
 
     def latest_start_for_tenant_or_none(self, scope: TenantScope) -> CustomerBatchStartDecisionRevision | None:
         with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
             row = conn.execute(
                 "SELECT authority_data FROM ecommerce_customer_batch_start_decision_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC LIMIT 1",
                 scope.key,
@@ -181,7 +182,6 @@ class EcommerceWorkshopCustomerContactStore:
 
     def require_start(self, scope: TenantScope, ref: CustomerExactRef) -> CustomerBatchStartDecisionRevision:
         with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
             row = conn.execute(
                 "SELECT authority_data,content_hash FROM ecommerce_customer_batch_start_decision_revision WHERE org_id=%s AND project_id=%s AND decision_id=%s AND revision=%s",
                 (*scope.key, ref.resource_id, ref.revision),
@@ -196,7 +196,6 @@ class EcommerceWorkshopCustomerContactStore:
 
     def list_dispatch_observations(self, scope: TenantScope, decision_id: str) -> list[CustomerDispatchObservation]:
         with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
             rows = conn.execute(
                 "SELECT authority_data FROM ecommerce_customer_dispatch_observation WHERE org_id=%s AND project_id=%s AND decision_id=%s ORDER BY created_at,observation_id",
                 (*scope.key, decision_id),
@@ -205,7 +204,6 @@ class EcommerceWorkshopCustomerContactStore:
 
     def authority_counts(self, scope: TenantScope) -> dict[str, int]:
         with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
             frequency = conn.execute("SELECT COUNT(*) AS count FROM ecommerce_customer_frequency_policy_revision WHERE org_id=%s AND project_id=%s", scope.key).fetchone()["count"]
             withdrawals = conn.execute("SELECT COUNT(*) AS count FROM ecommerce_customer_consent_withdrawal_observation WHERE org_id=%s AND project_id=%s", scope.key).fetchone()["count"]
         return {"frequency_policy": frequency, "withdrawal": withdrawals}

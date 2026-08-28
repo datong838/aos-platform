@@ -64,6 +64,7 @@ ConnectFactory = Callable[[], AbstractContextManager[Any]]
 Clock = Callable[[], datetime]
 
 _CURSOR_VERSION = 1
+_BUSINESS_TASK_SQL = "t.task_type NOT LIKE 'aip.%%' AND t.task_type <> 'logic_graph_run'"
 _BLOCKERS = (
     TaskCockpitBlocker(
         code="TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED",
@@ -1088,6 +1089,7 @@ class EcommerceWorkshopTaskCockpit:
                      ORDER BY r.created_at DESC,r.run_id DESC LIMIT 1
                   ) run ON TRUE
                  WHERE t.org_id=%s AND t.project_id=%s AND t.created_at<=%s
+                       AND {_BUSINESS_TASK_SQL}
                        {status_clause}""",
             tuple(params),
         ).fetchone()
@@ -2124,7 +2126,12 @@ class EcommerceWorkshopTaskCockpit:
         boundary: tuple[datetime, str] | None,
         limit: int,
     ) -> list[Any]:
-        clauses = ["t.org_id=%s", "t.project_id=%s", "t.created_at<=%s"]
+        clauses = [
+            "t.org_id=%s",
+            "t.project_id=%s",
+            "t.created_at<=%s",
+            _BUSINESS_TASK_SQL,
+        ]
         params: list[Any] = [cutoff, scope.org_id, scope.project_id, cutoff]
         if status is not None:
             clauses.append("t.status=%s")

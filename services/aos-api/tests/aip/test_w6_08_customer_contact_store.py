@@ -49,3 +49,37 @@ def test_frequency_policy_quiet_hours_are_timezone_aware_and_fail_closed():
     item = policy()
     assert EcommerceWorkshopCustomerContactStore._inside_quiet_hours(item, datetime(2026, 8, 25, 15, tzinfo=UTC)) is True
     assert EcommerceWorkshopCustomerContactStore._inside_quiet_hours(item, datetime(2026, 8, 25, 8, tzinfo=UTC)) is False
+
+
+class _Result:
+    def __init__(self, row=None):
+        self._row = row
+
+    def fetchone(self):
+        return self._row
+
+
+class _Connection:
+    def __init__(self):
+        self.queries: list[str] = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return None
+
+    def execute(self, query, _params=None):
+        self.queries.append(query)
+        return _Result()
+
+
+def test_tenant_scoped_read_does_not_change_transaction_characteristics_after_scope_query():
+    connection = _Connection()
+    store = EcommerceWorkshopCustomerContactStore(connect_factory=lambda _scope: connection)
+
+    assert store.latest_start_for_tenant_or_none(SCOPE) is None
+    assert connection.queries == [
+        "SELECT authority_data FROM ecommerce_customer_batch_start_decision_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC LIMIT 1"
+    ]
+    assert all("SET TRANSACTION" not in query for query in connection.queries)

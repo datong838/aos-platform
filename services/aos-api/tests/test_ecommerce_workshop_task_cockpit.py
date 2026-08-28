@@ -163,6 +163,14 @@ def test_core_read_is_degraded_read_only_and_uses_stable_keyset_cursor() -> None
         assert "REPEATABLE READ READ ONLY" in sql
         assert "SET LOCAL ROLE AOS_RUNTIME" in sql
         assert not any(token in sql for token in ("INSERT ", "UPDATE ", "DELETE "))
+        business_queries = [
+            query
+            for query, _ in connection.calls
+            if "FROM aip_task t" in query
+        ]
+        assert len(business_queries) == 2
+        assert all("t.task_type NOT LIKE 'aip.%%'" in query for query in business_queries)
+        assert all("t.task_type <> 'logic_graph_run'" in query for query in business_queries)
     page_query, page_params = queue.connections[1].calls[-1]
     assert "(t.created_at,t.task_id)<(%s,%s)" in page_query
     assert page_params is not None
