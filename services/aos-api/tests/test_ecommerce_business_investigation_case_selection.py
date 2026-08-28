@@ -16,10 +16,15 @@ from aos_api.ecommerce_business_investigation_case_selection import (
     BusinessInvestigationCaseSelectionBlocked,
     BusinessInvestigationCaseSelectionConflict,
     BusinessInvestigationCaseSelectionResolver,
+    CatalogCanonicalProfileSelectionSource,
     CanonicalProfileSelection,
     CanonicalShopSelection,
     PostgresCanonicalShopSelectionSource,
 )
+from aos_api.ecommerce_business_investigation_aip_composition import (
+    AipProductionCompositionObservation,
+)
+from aos_api.aip_contracts import TenantContext
 from aos_api.source_readiness import SourceReadinessService
 from aos_api.tenant_scope import TenantScope
 from test_source_readiness_service import Facts, _snapshot
@@ -68,6 +73,21 @@ class ProfileSource:
     def read(self, scope, analysis_type):
         assert scope == SCOPE and analysis_type == "initial_store_analysis"
         return self.value
+
+
+class CompositionSource:
+    def __init__(self, blockers=("AIP_INVESTIGATION_STAGE_TEMPLATE_MISSING",)):
+        self.blockers = blockers
+
+    def read(self, scope, analysis_type, **kwargs):
+        assert scope == SCOPE and analysis_type == "initial_store_analysis"
+        return AipProductionCompositionObservation(
+            tenant=TenantContext(orgId=scope.org_id, projectId=scope.project_id),
+            analysisType=analysis_type,
+            observedAt=datetime.now(UTC),
+            ready=not self.blockers,
+            blockers=list(self.blockers),
+        )
 
 
 def resolver(*, shop=SHOP, profile=PROFILE, count_delta=0):
@@ -125,11 +145,14 @@ def test_default_catalog_resolves_l1_refs_without_claiming_runtime_ready() -> No
     actual = BusinessInvestigationCaseSelectionResolver(
         readiness_service=SourceReadinessService(Facts(_snapshot())),
         shop_source=ShopSource(),
+        profile_source=CatalogCanonicalProfileSelectionSource(
+            composition_source=CompositionSource()
+        ),
     ).read(SCOPE, "initial_store_analysis")
     assert actual.case_creatable is True
     assert actual.run_creatable is False
     assert actual.blockers == []
-    assert actual.run_blockers == ["AIP_PRODUCTION_COMPOSITION_NOT_RESOLVED"]
+    assert actual.run_blockers == ["AIP_INVESTIGATION_STAGE_TEMPLATE_MISSING"]
     assert actual.investigation_profile_ref is not None
     assert actual.investigation_profile_ref.resource_id == "ecommerce.initial-store-analysis"
     assert actual.scope_ref is not None
@@ -142,6 +165,9 @@ def test_unknown_analysis_type_keeps_l1_refs_missing() -> None:
     actual = BusinessInvestigationCaseSelectionResolver(
         readiness_service=SourceReadinessService(Facts(_snapshot())),
         shop_source=ShopSource(),
+        profile_source=CatalogCanonicalProfileSelectionSource(
+            composition_source=CompositionSource()
+        ),
     ).read(SCOPE, "weekly_business_review")
     assert actual.case_creatable is False
     assert actual.investigation_profile_ref is None

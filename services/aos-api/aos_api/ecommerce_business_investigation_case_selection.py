@@ -13,6 +13,10 @@ from pydantic import Field, model_validator
 from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.db import connect as db_connect
+from aos_api.ecommerce_business_investigation_aip_composition import (
+    AipProductionCompositionSource,
+    PostgresAipProductionCompositionSource,
+)
 from aos_api.ecommerce_business_investigation_profile_catalog import (
     EcommerceInvestigationProfileCatalog,
 )
@@ -173,22 +177,27 @@ class PostgresCanonicalShopSelectionSource:
 class CatalogCanonicalProfileSelectionSource:
     """Resolve stable L1 refs while keeping AIP runtime composition separate."""
 
-    def __init__(self, catalog: EcommerceInvestigationProfileCatalog | None = None) -> None:
+    def __init__(
+        self,
+        catalog: EcommerceInvestigationProfileCatalog | None = None,
+        composition_source: AipProductionCompositionSource | None = None,
+    ) -> None:
         self._catalog = catalog or EcommerceInvestigationProfileCatalog()
+        self._composition = composition_source or PostgresAipProductionCompositionSource()
 
     def read(
         self, scope: TenantScope, analysis_type: str
     ) -> CanonicalProfileSelection | None:
-        del scope
         resolved = self._catalog.read(analysis_type)
         if resolved is None:
             return None
         profile, investigation_scope = resolved
+        composition = self._composition.read(scope, analysis_type)
         return CanonicalProfileSelection(
             profile.exact_ref,
             investigation_scope.exact_ref,
-            run_creatable=False,
-            run_blockers=("AIP_PRODUCTION_COMPOSITION_NOT_RESOLVED",),
+            run_creatable=composition.ready,
+            run_blockers=tuple(composition.blockers),
         )
 
 
