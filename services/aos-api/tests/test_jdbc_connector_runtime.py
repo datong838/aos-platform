@@ -27,6 +27,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import aos_api.jdbc_connector_runtime as jdbc_runtime
 from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime, SshTunnel, _cleanup_all_cached
 
 
@@ -512,3 +513,76 @@ def test_jdbc_runtime_exit_handles_none_conn_gracefully(
         rt.__enter__()
     # __exit__ 不抛异常（_conn 为 None）
     rt.__exit__(None, None, None)
+
+
+def _tunnel_failure_config() -> dict[str, object]:
+    return {
+        "sshHost": "ssh.example.com",
+        "sshUser": "u",
+        "dbHost": "mysql.internal",
+        "dbPort": 3306,
+        "database": "db",
+        "username": "u",
+        "secretRef": "s",
+    }
+
+
+@patch("aos_api.jdbc_connector_runtime._get_or_create_tunnel", return_value=43123)
+@patch("aos_api.jdbc_connector_runtime._get_or_create_conn", side_effect=RuntimeError("connect failed"))
+@patch("aos_api.jdbc_connector_runtime._is_tunnel_alive", return_value=False)
+def test_db_connect_failure_evicts_only_the_dead_tunnel_used_by_the_call(
+    mock_alive: MagicMock,
+    mock_conn: MagicMock,
+    mock_get_tunnel: MagicMock,
+) -> None:
+    config = _tunnel_failure_config()
+    key = jdbc_runtime._tunnel_cache_key(config)
+    owned = jdbc_runtime._CachedTunnel(tunnel=MagicMock(), local_port=43123)
+    jdbc_runtime._TUNNEL_CACHE[key] = owned
+
+    with pytest.raises(RuntimeError, match="connect failed"):
+        JdbcConnectorRuntime(config).__enter__()
+
+    assert key not in jdbc_runtime._TUNNEL_CACHE
+    owned.tunnel.close.assert_called_once_with()
+    mock_get_tunnel.assert_called_once_with(config)
+    mock_conn.assert_called_once()
+    mock_alive.assert_called_once_with(owned)
+
+
+@patch("aos_api.jdbc_connector_runtime._get_or_create_tunnel", return_value=43123)
+@patch("aos_api.jdbc_connector_runtime._get_or_create_conn", side_effect=RuntimeError("remote db unavailable"))
+@patch("aos_api.jdbc_connector_runtime._is_tunnel_alive", return_value=True)
+def test_db_connect_failure_keeps_a_healthy_tunnel_without_retry(
+    mock_alive: MagicMock,
+    mock_conn: MagicMock,
+    mock_get_tunnel: MagicMock,
+) -> None:
+    config = _tunnel_failure_config()
+    key = jdbc_runtime._tunnel_cache_key(config)
+    owned = jdbc_runtime._CachedTunnel(tunnel=MagicMock(), local_port=43123)
+    jdbc_runtime._TUNNEL_CACHE[key] = owned
+
+    with pytest.raises(RuntimeError, match="remote db unavailable"):
+        JdbcConnectorRuntime(config).__enter__()
+
+    assert jdbc_runtime._TUNNEL_CACHE[key] is owned
+    owned.tunnel.close.assert_not_called()
+    mock_get_tunnel.assert_called_once_with(config)
+    mock_conn.assert_called_once()
+    mock_alive.assert_called_once_with(owned)
+
+
+def test_dead_tunnel_eviction_does_not_close_a_concurrent_replacement() -> None:
+    config = _tunnel_failure_config()
+    key = jdbc_runtime._tunnel_cache_key(config)
+    stale = jdbc_runtime._CachedTunnel(tunnel=MagicMock(), local_port=43123)
+    replacement = jdbc_runtime._CachedTunnel(tunnel=MagicMock(), local_port=43124)
+    jdbc_runtime._TUNNEL_CACHE[key] = replacement
+
+    with patch("aos_api.jdbc_connector_runtime._is_tunnel_alive", return_value=False):
+        assert jdbc_runtime._evict_cached_tunnel_if_dead(key, stale) is False
+
+    assert jdbc_runtime._TUNNEL_CACHE[key] is replacement
+    stale.tunnel.close.assert_not_called()
+    replacement.tunnel.close.assert_not_called()
