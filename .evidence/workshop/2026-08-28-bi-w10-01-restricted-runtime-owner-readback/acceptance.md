@@ -20,12 +20,12 @@ Watchdog 受限环境中，`GET /v1/health` 返回 200，`lsof` 只显示 PID `6
 ## 验证
 
 - 守护专项：`17/17 passed`。
-- JDBC/Cron/SourceAdapter/live executor/SourceReadiness 累计：`78/78 passed`，6 条既有 Pydantic warning。
+- JDBC/Cron/SourceAdapter/live executor/SourceReadiness 累计：`109/109 passed`，7 条既有 warning。首次累计回归暴露 Cron 关闭用例会继承本地 Provider 维护开关，已将该用例收紧为同时关闭 Provider 后重跑全组 GREEN；生产启动逻辑未改。
 - `bash -n scripts/demo/ensure-api.sh`：GREEN。
 - `compileall scripts/demo/api_runtime_guard.py`：GREEN。
 - 受限环境实际回读：`RUNTIME_OWNER_EXACT`，`listenerPids=[68386]`，PID 未重启。
 - 无 `--restart` 执行 `ensure-api.sh`：先输出 exact owner JSON，再返回 `already up`。
-- SourceReadiness 新鲜回读：截止 `2026-08-28T08:07:12.607959Z`，`10 ready / 2 failed`，P07 仍为连接失败，P08 仍缺少当日自然 run；未伪造恢复。
+- SourceReadiness 新鲜回读：截止 `2026-08-28T08:27:29.536453Z`，`10 ready / 2 failed`，P07/P08 均仍为 `failed`；未伪造恢复。
 
 ## 结论
 

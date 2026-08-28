@@ -40,6 +40,7 @@ def test_lifespan_does_not_create_cron_task_when_disabled(
         lambda: types.SimpleNamespace(value="managed"),
     )
     monkeypatch.setenv("AOS_QYH_CRON_ENABLED", "false")
+    monkeypatch.setenv("AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED", "false")
 
     def fail_create_task(*_args: object, **_kwargs: object) -> None:
         raise AssertionError("disabled browser acceptance must not create a cron task")
