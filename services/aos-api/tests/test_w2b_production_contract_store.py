@@ -358,6 +358,108 @@ def test_responsibility_plan_requires_assignee_operational_binding() -> None:
     }
 
 
+class _CoverageRows:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def fetchall(self):
+        return self._rows
+
+
+class _CoverageConnection:
+    def __init__(self, capability_rows, binding_ids):
+        self._capability_rows = capability_rows
+        self._binding_ids = binding_ids
+
+    def execute(self, query, _params):
+        if "FROM aip_skill_binding" in query:
+            return _CoverageRows([{"capability_refs": self._binding_ids}])
+        if "FROM aip_capability_binding" in query:
+            return _CoverageRows(self._capability_rows)
+        raise AssertionError(query)
+
+
+def _coverage_row(
+    binding_id: str,
+    capability_id: str,
+    *,
+    readiness: str = "available",
+):
+    return {
+        "binding_id": binding_id,
+        "capability_ref": {"assetId": capability_id},
+        "status": "active",
+        "health": "healthy",
+        "operational_readiness": readiness,
+        "allow_degraded": False,
+        "dependency_snapshot_hash": HASH,
+        "readiness_expires_at": datetime.now(UTC).replace(year=2099),
+    }
+
+
+def _coverage_plan_row():
+    return {
+        "slots": [
+            {
+                "slotId": "investigation-owner",
+                "assignee": {
+                    "kind": "agent_instance",
+                    "resourceId": "agent-content-w2b",
+                    "version": 1,
+                },
+                "requiredCapabilityIds": ["strategy.plan"],
+            }
+        ]
+    }
+
+
+def test_responsibility_coverage_ignores_blocked_non_required_binding() -> None:
+    store = AipProductionContractStore()
+    conn = _CoverageConnection(
+        [
+            _coverage_row("required-ready", "strategy.plan"),
+            _coverage_row(
+                "unrelated-blocked", "image.generate", readiness="blocked"
+            ),
+        ],
+        ["required-ready", "unrelated-blocked"],
+    )
+    blockers, uncovered = store._responsibility_blockers(  # noqa: SLF001
+        conn, SCOPE, _coverage_plan_row()
+    )
+    assert blockers == []
+    assert uncovered == []
+
+
+def test_responsibility_coverage_keeps_missing_required_binding_closed() -> None:
+    store = AipProductionContractStore()
+    conn = _CoverageConnection(
+        [_coverage_row("unrelated-ready", "image.generate")],
+        ["required-missing", "unrelated-ready"],
+    )
+    blockers, uncovered = store._responsibility_blockers(  # noqa: SLF001
+        conn, SCOPE, _coverage_plan_row()
+    )
+    assert {item.code for item in blockers} == {"CAPABILITY_BINDING_MISSING"}
+    assert uncovered == ["investigation-owner"]
+
+
+def test_responsibility_coverage_accepts_one_fresh_candidate_for_required_id() -> None:
+    store = AipProductionContractStore()
+    conn = _CoverageConnection(
+        [
+            _coverage_row("required-blocked", "strategy.plan", readiness="blocked"),
+            _coverage_row("required-ready", "strategy.plan"),
+        ],
+        ["required-blocked", "required-ready"],
+    )
+    blockers, uncovered = store._responsibility_blockers(  # noqa: SLF001
+        conn, SCOPE, _coverage_plan_row()
+    )
+    assert blockers == []
+    assert uncovered == []
+
+
 def test_eval_revise_uses_cas_and_blocked_freeze_does_not_advance_head() -> None:
     _seed_dependencies()
     store = AipProductionContractStore()

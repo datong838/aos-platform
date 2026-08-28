@@ -5620,6 +5620,8 @@ class AipProductionContractStore:
                         if isinstance(identifier, str) and identifier.strip():
                             binding_ids.append(identifier.strip())
             binding_ids = sorted(set(binding_ids))
+            if not required:
+                continue
             if not binding_ids:
                 blockers.append(
                     ContractBlocker(
@@ -5634,39 +5636,47 @@ class AipProductionContractStore:
                    WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)""",
                 (*scope.key, binding_ids),
             ).fetchall()
-            found = {item["binding_id"] for item in cap_rows}
             slot_codes: set[str] = set()
-            if found != set(binding_ids):
-                slot_codes.add("CAPABILITY_BINDING_MISSING")
-            provided: set[str] = set()
+            candidates: dict[str, list[Any]] = {item: [] for item in required}
             for crow in cap_rows:
                 cap_id = self._capability_identifier(self._load(crow["capability_ref"]))
-                if not cap_id:
+                if cap_id not in required:
+                    continue
+                candidates[cap_id].append(crow)
+            for cap_id, rows in candidates.items():
+                if not rows:
                     slot_codes.add("CAPABILITY_BINDING_MISSING")
                     continue
-                if crow["status"] != "active" or crow["health"] != "healthy":
+                active = [
+                    item
+                    for item in rows
+                    if item["status"] == "active" and item["health"] == "healthy"
+                ]
+                if not active:
                     slot_codes.add("CAPABILITY_BINDING_NOT_ACTIVE")
                     continue
-                usable = crow["operational_readiness"] == "available" or (
-                    crow["operational_readiness"] == "degraded"
-                    and bool(crow["allow_degraded"])
-                )
-                if not usable:
+                operational = [
+                    item
+                    for item in active
+                    if item["operational_readiness"] == "available"
+                    or (
+                        item["operational_readiness"] == "degraded"
+                        and bool(item["allow_degraded"])
+                    )
+                ]
+                if not operational:
                     slot_codes.add("CAPABILITY_BINDING_NOT_OPERATIONAL")
                     continue
-                if (
-                    crow["dependency_snapshot_hash"] is None
-                    or crow["readiness_expires_at"] is None
-                    or crow["readiness_expires_at"] <= now
-                ):
+                fresh = [
+                    item
+                    for item in operational
+                    if item["dependency_snapshot_hash"] is not None
+                    and item["readiness_expires_at"] is not None
+                    and item["readiness_expires_at"] > now
+                ]
+                if not fresh:
                     slot_codes.add("CAPABILITY_BINDING_STALE")
                     continue
-                provided.add(cap_id)
-            if not required <= provided:
-                if "CAPABILITY_BINDING_NOT_OPERATIONAL" not in slot_codes and (
-                    "CAPABILITY_BINDING_STALE" not in slot_codes
-                ):
-                    slot_codes.add("CAPABILITY_BINDING_NOT_ACTIVE")
             if slot_codes:
                 messages = {
                     "CAPABILITY_BINDING_MISSING": f"职责 {slot_id} 缺少 assignee 归属的 CapabilityBinding",
