@@ -22,3 +22,10 @@
 - 从侧栏实际点击 `/workshop/content-campaign` 再点击 `/workshop/cockpit`，两次进入后 `.content.scrollTop=0`、`.content.scrollLeft=0`。
 - 日常任务页首屏重新完整显示顶部经营指标与任务命令条；控制台 error 为 `0`。
 - 数字同事浮层关闭、侧栏折叠和恢复仍可工作，未引入新的页面功能退化。
+
+## 八页逐页复验
+
+- 在同一浏览器会话中从共享侧栏依次点击八个菜单，而非直接猜测 URL。
+- 八页 canonical path 分别为 `/workshop/cockpit`、`/workshop/content-campaign`、`/workshop/operations`、`/workshop/creator-growth`、`/workshop/media-studio`、`/workshop/analyst`、`/workshop/price-governance`、`/workshop/customer`。
+- 每次切换后共享内容滚动起点均为 `0`、横向溢出均为 `0`、页面均恰好一个一级标题、控制台 error 均为 `0`。
+- 逐页读取到实际可见的业务组件：任务下达与六数字同事、活动三视图与草稿动作、订单/库存/履约/支付等运营切片、达人五阶段、媒体三类任务、经营参谋七阶段、价格三视图、客户四视图。正式数据缺失的组件显示“等待条件/正式数据”，未伪造演示业务事实。
