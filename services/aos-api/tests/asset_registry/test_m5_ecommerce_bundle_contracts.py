@@ -70,10 +70,15 @@ BUNDLE_CASES = (
         display_name="电商增长方案包（D3：W03 客户与私域运营台 + L05 分润异常检测）",
         dependencies=CORE_DEPENDENCY,
         exports={
-            "agents": ("content/agents/",),
-            "logic": ("content/logic/",),
+            "agents": (
+                "content/agents/",
+                "content/knowledge/",
+                "content/live/",
+                "content/media/",
+            ),
+            "logic": ("content/logic/", "content/growth/"),
             "workshops": ("content/workshops/",),
-            "evals": ("content/evals/",),
+            "evals": ("content/evals/", "content/harness/"),
             "policies": ("content/policies/",),
             "schemas": ("content/schemas/",),
         },

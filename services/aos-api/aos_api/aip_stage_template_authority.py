@@ -6,6 +6,9 @@ import json
 from typing import Any
 
 from aos_api.aip_production_contracts import ExactRevisionRef
+from aos_api.ecommerce_business_investigation_profile_catalog import (
+    INITIAL_STORE_PROFILE,
+)
 from aos_api.tenant_scope import TenantScope
 
 _BUNDLE_DEFINITIONS: dict[str, dict[str, Any]] = {
@@ -35,8 +38,22 @@ def published_source_bundle_ref(bundle_id: str = "solution.ecommerce.growth") ->
     )
 
 
+def published_investigation_profile_source_ref() -> ExactRevisionRef:
+    """Return the immutable L1 Profile used to derive the BI stage graph."""
+    ref = INITIAL_STORE_PROFILE.exact_ref
+    return ExactRevisionRef(
+        resource_type=ref.resource_type,
+        resource_id=ref.resource_id,
+        revision=ref.revision,
+        content_hash=ref.content_hash.removeprefix("sha256:"),
+    )
+
+
 def resolve_stage_template_source(scope: TenantScope, ref: ExactRevisionRef) -> bool:
     _ = scope
+    investigation = published_investigation_profile_source_ref()
+    if ref.resource_type == investigation.resource_type:
+        return ref == investigation
     if ref.resource_type != "SolutionPack":
         return False
     definition = _BUNDLE_DEFINITIONS.get(ref.resource_id)

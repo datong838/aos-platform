@@ -7,6 +7,7 @@ from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+from aos_api.ecommerce_business_investigation_aip_authority import selected_skill_refs
 from aos_api.ecommerce_business_investigation_aip_composition import (
     INVESTIGATION_LOGIC_IDS,
     INVESTIGATION_SKILL_IDS,
@@ -36,10 +37,12 @@ def rows() -> dict[str, list[dict]]:
     publications = []
     skills = []
     bindings = []
+    selection = selected_skill_refs()
     for index, (logic_id, skill_id) in enumerate(
         zip(INVESTIGATION_LOGIC_IDS, INVESTIGATION_SKILL_IDS), start=1
     ):
         digest = h(str(index))
+        selected = selection[skill_id]
         publications.append(
             {
                 "publication_id": f"publication-{index}",
@@ -51,10 +54,10 @@ def rows() -> dict[str, list[dict]]:
         skills.append(
             {
                 "skill_id": skill_id,
-                "revision": 2,
+                "revision": selected.revision,
                 "canonical_logic_id": logic_id,
                 "lifecycle": "published",
-                "content_hash": h(chr(96 + index)),
+                "content_hash": selected.content_hash,
                 "publication_tenant": {"orgId": "org-org", "projectId": "dev-project"},
                 "logic_revision_ref": {
                     "assetType": "LogicRevision",
@@ -69,7 +72,7 @@ def rows() -> dict[str, list[dict]]:
                 "binding_id": f"binding-{index}",
                 "instance_id": "ecommerce.data-advisor.default",
                 "skill_id": skill_id,
-                "skill_revision": 2,
+                "skill_revision": selected.revision,
                 "status": "active",
                 "version": 7,
                 "dependency_snapshot_hash": h("d"),
@@ -184,16 +187,26 @@ def test_complete_exact_composition_is_ready() -> None:
     assert connection.tenant_params and set(connection.tenant_params) == {SCOPE.key}
 
 
-def test_multiple_published_skill_revisions_are_not_resolved_by_latest() -> None:
+def test_explicit_skill_ref_is_selected_without_using_latest_revision() -> None:
     data = rows()
     duplicate = deepcopy(data["skills"][-1])
-    duplicate["revision"] = 4
+    duplicate["revision"] = 9
     duplicate["content_hash"] = h("e")
     data["skills"].append(duplicate)
     resolver, _ = source(data)
     actual = resolver.read(SCOPE, "initial_store_analysis", observed_at=NOW)
     assert actual.ready is False
-    assert "AIP_SKILL_REVISION_SELECTION_AMBIGUOUS" in actual.blockers
+    assert "AIP_SKILL_SELECTION_REF_MISSING_OR_DRIFTED" not in actual.blockers
+    d03 = next(ref for ref in actual.skill_refs if ref.resource_id == "ecommerce.skill.D03")
+    assert d03.revision == 4
+
+
+def test_declared_skill_ref_drift_does_not_fall_back_to_another_revision() -> None:
+    data = rows()
+    data["skills"][-1]["content_hash"] = h("e")
+    resolver, _ = source(data)
+    actual = resolver.read(SCOPE, "initial_store_analysis", observed_at=NOW)
+    assert "AIP_SKILL_SELECTION_REF_MISSING_OR_DRIFTED" in actual.blockers
     assert all(ref.resource_id != "ecommerce.skill.D03" for ref in actual.skill_refs)
 
 

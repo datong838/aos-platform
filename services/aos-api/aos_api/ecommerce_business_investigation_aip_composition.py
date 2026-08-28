@@ -14,6 +14,7 @@ from pydantic import Field, model_validator
 from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.db import connect as db_connect
+from aos_api.ecommerce_business_investigation_aip_authority import selected_skill_refs
 from aos_api.tenant_scope import TenantScope
 
 
@@ -193,15 +194,23 @@ class PostgresAipProductionCompositionSource:
                 continue
             skills_by_id[str(row["skill_id"])].append(row)
         selected_skill_by_id: dict[str, Any] = {}
+        selection = selected_skill_refs()
         for skill_id, logic_id in zip(INVESTIGATION_SKILL_IDS, INVESTIGATION_LOGIC_IDS):
             candidates = skills_by_id[skill_id]
             if not candidates:
                 blockers.append("AIP_SKILL_PUBLICATION_MISSING")
                 continue
-            if len(candidates) != 1:
-                blockers.append("AIP_SKILL_REVISION_SELECTION_AMBIGUOUS")
+            expected = selection[skill_id]
+            exact_candidates = [
+                row
+                for row in candidates
+                if int(row["revision"]) == expected.revision
+                and _sha(str(row["content_hash"])) == _sha(expected.content_hash)
+            ]
+            if len(exact_candidates) != 1:
+                blockers.append("AIP_SKILL_SELECTION_REF_MISSING_OR_DRIFTED")
                 continue
-            row = candidates[0]
+            row = exact_candidates[0]
             selected_skill_by_id[skill_id] = row
             skill_ref = InvestigationExactRef(
                 resourceType="SkillTemplateRevision",
