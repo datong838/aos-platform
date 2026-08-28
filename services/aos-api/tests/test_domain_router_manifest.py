@@ -384,12 +384,15 @@ class RouterManifestRuntimeTests(unittest.TestCase):
         # DataRequirement and Business Investigation canonical routes delivered
         # through BI-W2/4/6/8; the exported business-route inventory
         # intentionally filters framework routes out.
-        self.assertEqual(4489, result["count"])
+        # BI-W10 exact case selection added one canonical GET route after the
+        # previous manifest seal; keep the runtime checksum pinned to the
+        # current reviewed inventory rather than silently ignoring drift.
+        self.assertEqual(4490, result["count"])
         self.assertEqual(
-            "77769ce63c117551f74b99fdd30658951b80626d4433a51b18e5f7fff0a64cac",
+            "9dc2875e8b30e08ccbb0eda165423486c90b7d750393ed51f97e5faccdbdd515",
             result["sha256"],
         )
-        self.assertEqual(2696, result["openapi_paths"])
+        self.assertEqual(2697, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],

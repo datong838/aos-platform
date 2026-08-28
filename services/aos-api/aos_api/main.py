@@ -112,6 +112,18 @@ except Exception:  # pragma: no cover
     log.exception("dotenv_load_failed")
 
 
+def _prebuild_jdbc_ssh_tunnels() -> None:
+    """Best-effort read-only transport preparation for every migration mode."""
+    try:
+        from aos_api.jdbc_connector_runtime import (
+            prebuild_all_ssh_tunnels_from_meta_source,
+        )
+
+        prebuild_all_ssh_tunnels_from_meta_source()
+    except Exception:
+        log.exception("startup_jdbc_ssh_prebuild_failed_continue")
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     cron_stop = asyncio.Event()
@@ -142,12 +154,6 @@ async def lifespan(_app: FastAPI):
                 boot_tenant_catalogs()
             except Exception:
                 log.exception("startup_tenant_catalog_failed_continue")
-            # ── JDBC SSH 隧道预建立（boot_tenant_catalogs 之后，PG 已 ready）──
-            try:
-                from aos_api.jdbc_connector_runtime import prebuild_all_ssh_tunnels_from_meta_source
-                prebuild_all_ssh_tunnels_from_meta_source()
-            except Exception:
-                log.exception("startup_jdbc_ssh_prebuild_failed_continue")
             try:
                 from aos_api import data_os_store
                 from aos_api.routers import wave_ext as wave_ext_mod
@@ -300,6 +306,10 @@ async def lifespan(_app: FastAPI):
             log.exception("startup_meta_store_failed_continue")
     else:
         log.info("startup_schema_bootstrap_skipped migration_mode=%s", mode_value)
+
+    # SSH is read-only transport preparation, not schema bootstrap. Managed
+    # migration mode must therefore receive the same best-effort warm-up.
+    _prebuild_jdbc_ssh_tunnels()
 
     # ── OKF Wiki 冷启动(含 Procedural Playbook) + 三层运行记忆冷启动（in-memory，best-effort）──
     try:

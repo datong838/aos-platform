@@ -45,6 +45,33 @@ _TUNNEL_READY_RETRIES: int = 50
 _TUNNEL_READY_INTERVAL: float = 0.2
 
 
+def _classify_ssh_stderr(stderr: str) -> str:
+    """Map SSH stderr to a stable, non-sensitive diagnostic code.
+
+    Raw stderr may contain infrastructure endpoints, local paths, or echoed
+    command details.  Runtime errors and DLQ records therefore expose only a
+    bounded classification, never the original text.
+    """
+    normalized = " ".join(stderr.lower().split())
+    if not normalized:
+        return "NO_STDERR"
+    if "permission denied" in normalized or "authentication failed" in normalized:
+        return "AUTHENTICATION_FAILED"
+    if "operation timed out" in normalized or "connection timed out" in normalized:
+        return "CONNECT_TIMEOUT"
+    if "connection refused" in normalized:
+        return "CONNECTION_REFUSED"
+    if "could not resolve hostname" in normalized or "name or service not known" in normalized:
+        return "HOST_RESOLUTION_FAILED"
+    if "host key verification failed" in normalized:
+        return "HOST_KEY_VERIFICATION_FAILED"
+    if "address already in use" in normalized or "cannot listen to port" in normalized:
+        return "LOCAL_FORWARD_BIND_FAILED"
+    if "forwarding failed" in normalized or "administratively prohibited" in normalized:
+        return "FORWARD_FAILED"
+    return "SSH_PROCESS_ERROR"
+
+
 # ═══════════════════════════════════════════════════════════════
 # D4 Phase C · C1: 302 表分类打标（A/B/C/D/E）
 # 上位规格：D4-12OT业务闭环与302表衔接执行规格.md §4.3
@@ -415,27 +442,25 @@ def prebuild_ssh_tunnels(props_list: list[dict[str, Any]]) -> list[dict[str, Any
             elapsed = int((time.time() - start) * 1000)
             results.append({
                 "key": key,
-                "ssh_endpoint": f"{props.get('sshHost')}:{props.get('sshPort', 22)}",
                 "ok": True,
                 "local_port": local_port,
                 "elapsed_ms": elapsed,
             })
             log.info(
-                "startup_prebuild ssh tunnel OK: endpoint=%s:%s user=%s port=%d elapsed=%dms",
-                props.get("sshHost"), props.get("sshPort", 22), props.get("sshUser"), local_port, elapsed,
+                "startup_prebuild ssh tunnel OK: key=%s port=%d elapsed=%dms",
+                key, local_port, elapsed,
             )
         except Exception as exc:
             elapsed = int((time.time() - start) * 1000)
             results.append({
                 "key": key,
-                "ssh_endpoint": f"{props.get('sshHost')}:{props.get('sshPort', 22)}",
                 "ok": False,
-                "error": str(exc),
+                "error": exc.__class__.__name__,
                 "elapsed_ms": elapsed,
             })
             log.error(
-                "startup_prebuild ssh tunnel FAILED: endpoint=%s:%s user=%s elapsed=%dms error=%s",
-                props.get("sshHost"), props.get("sshPort", 22), props.get("sshUser"), elapsed, exc,
+                "startup_prebuild ssh tunnel FAILED: key=%s elapsed=%dms error_type=%s",
+                key, elapsed, exc.__class__.__name__,
             )
     return results
 
@@ -594,8 +619,12 @@ echo '{self.ssh_password}'
 
         cmd = [
             "ssh", "-4",
-            "-o", "ServerAliveInterval=30",
-            "-o", "ServerAliveCountMax=3",
+            "-o", "ConnectTimeout=8",
+            "-o", "ConnectionAttempts=1",
+            "-o", "NumberOfPasswordPrompts=1",
+            "-o", "ServerAliveInterval=15",
+            "-o", "ServerAliveCountMax=4",
+            "-o", "TCPKeepAlive=yes",
             "-o", "StrictHostKeyChecking=no",
             "-o", "ExitOnForwardFailure=yes",
             "-p", str(self.ssh_port),
@@ -609,9 +638,8 @@ echo '{self.ssh_password}'
         env["DISPLAY"] = ":0"
 
         log.info(
-            "Opening SSH tunnel (password): %s@%s:%d -> 127.0.0.1:%d (remote=%s:%d)",
-            self.ssh_user, self.ssh_host, self.ssh_port,
-            self._local_port, self.remote_host, self.remote_port,
+            "Opening SSH tunnel: auth=password local_port=%d",
+            self._local_port,
         )
         try:
             self._proc = subprocess.Popen(
@@ -628,7 +656,13 @@ echo '{self.ssh_password}'
     def _open_with_key(self) -> int:
         """key 认证模式：ssh -N -i key，子进程由 AOS 持有。"""
         cmd = [
-            "ssh",
+            "ssh", "-4",
+            "-o", "ConnectTimeout=8",
+            "-o", "ConnectionAttempts=1",
+            "-o", "NumberOfPasswordPrompts=1",
+            "-o", "ServerAliveInterval=15",
+            "-o", "ServerAliveCountMax=4",
+            "-o", "TCPKeepAlive=yes",
             "-N",  # 不执行远程命令，保持为可管理子进程
             "-L", f"{self._local_port}:{self.remote_host}:{self.remote_port}",
             "-p", str(self.ssh_port),
@@ -638,9 +672,8 @@ echo '{self.ssh_password}'
             f"{self.ssh_user}@{self.ssh_host}",
         ]
         log.info(
-            "Opening SSH tunnel (key): %s@%s:%d -> 127.0.0.1:%d (remote=%s:%d)",
-            self.ssh_user, self.ssh_host, self.ssh_port,
-            self._local_port, self.remote_host, self.remote_port,
+            "Opening SSH tunnel: auth=key local_port=%d",
+            self._local_port,
         )
         try:
             self._proc = subprocess.Popen(
@@ -661,15 +694,33 @@ echo '{self.ssh_password}'
                 rc = self._proc.returncode
                 if rc != 0:
                     stderr = self._proc.stderr.read().decode(errors="replace") if self._proc.stderr else ""
-                    raise RuntimeError(f"SSH tunnel exited rc={rc}: {stderr.strip()}")
+                    diagnostic = _classify_ssh_stderr(stderr)
+                    raise RuntimeError(
+                        f"SSH tunnel exited rc={rc}; diagnostic={diagnostic}"
+                    )
             if _is_port_open("127.0.0.1", self._local_port):
                 log.info("SSH tunnel ready at 127.0.0.1:%d", self._local_port)
                 return self._local_port
             time.sleep(_TUNNEL_READY_INTERVAL)
 
+        diagnostic = "NO_STDERR"
+        if self._proc is not None:
+            try:
+                self._proc.terminate()
+                self._proc.wait(timeout=5)
+                stderr = (
+                    self._proc.stderr.read().decode(errors="replace")
+                    if self._proc.stderr
+                    else ""
+                )
+                diagnostic = _classify_ssh_stderr(stderr)
+            except Exception:
+                diagnostic = "SSH_PROCESS_ERROR"
+            finally:
+                self._proc = None
         raise RuntimeError(
             f"SSH tunnel failed to become ready after "
-            f"{_TUNNEL_READY_RETRIES} retries (127.0.0.1:{self._local_port})"
+            f"{_TUNNEL_READY_RETRIES} retries; diagnostic={diagnostic}"
         )
 
     def close(self) -> None:

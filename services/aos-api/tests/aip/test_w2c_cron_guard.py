@@ -52,3 +52,29 @@ def test_lifespan_does_not_create_cron_task_when_disabled(
             pass
 
     asyncio.run(probe())
+
+
+def test_managed_lifespan_prebuilds_read_only_jdbc_tunnels(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+    monkeypatch.setattr(
+        main,
+        "run_migrations",
+        lambda: types.SimpleNamespace(value="managed"),
+    )
+    monkeypatch.setattr(
+        main,
+        "_prebuild_jdbc_ssh_tunnels",
+        lambda: calls.append("prebuild"),
+    )
+    monkeypatch.setenv("AOS_QYH_CRON_ENABLED", "false")
+    monkeypatch.setenv("AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED", "false")
+
+    async def probe() -> None:
+        async with main.lifespan(main.app):
+            pass
+
+    asyncio.run(probe())
+
+    assert calls == ["prebuild"]

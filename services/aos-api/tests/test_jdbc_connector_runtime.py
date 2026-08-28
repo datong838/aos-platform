@@ -136,6 +136,12 @@ def test_ssh_tunnel_opens_with_correct_command(
     assert "-f" not in cmd_args
     assert "-fN" not in cmd_args
     assert "-p" in cmd_args
+    assert "ConnectTimeout=8" in cmd_args
+    assert "ConnectionAttempts=1" in cmd_args
+    assert "NumberOfPasswordPrompts=1" in cmd_args
+    assert "ServerAliveInterval=15" in cmd_args
+    assert "ServerAliveCountMax=4" in cmd_args
+    assert "TCPKeepAlive=yes" in cmd_args
     # user 与 host 合并为 user@host 字符串
     assert any("tunnel_user@ssh.example.com" == a for a in cmd_args), \
         f"user@host missing in {cmd_args}"
@@ -194,11 +200,89 @@ def test_ssh_tunnel_timeout_cleans_owned_process(
         remote_port=3306,
     )
 
-    with pytest.raises(RuntimeError, match="failed to become ready"):
+    proc_mock.stderr.read.return_value = (
+        b"ssh: connect to host source.example port 22: Operation timed out"
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="failed to become ready.*diagnostic=CONNECT_TIMEOUT",
+    ):
         tunnel.open()
 
     proc_mock.terminate.assert_called_once()
     proc_mock.wait.assert_called_once_with(timeout=5)
+
+
+@pytest.mark.parametrize(
+    ("stderr", "expected"),
+    [
+        ("Permission denied (publickey,password).", "AUTHENTICATION_FAILED"),
+        ("connect to host x port 22: Connection refused", "CONNECTION_REFUSED"),
+        ("Could not resolve hostname x", "HOST_RESOLUTION_FAILED"),
+        ("bind [127.0.0.1]:50000: Address already in use", "LOCAL_FORWARD_BIND_FAILED"),
+        ("", "NO_STDERR"),
+        ("unexpected private transport detail", "SSH_PROCESS_ERROR"),
+    ],
+)
+def test_ssh_stderr_is_classified_without_exposing_raw_detail(
+    stderr: str,
+    expected: str,
+) -> None:
+    assert jdbc_runtime._classify_ssh_stderr(stderr) == expected
+
+
+@patch("aos_api.jdbc_connector_runtime._get_or_create_tunnel", return_value=43123)
+def test_prebuild_success_result_does_not_expose_ssh_endpoint(
+    mock_tunnel: MagicMock,
+) -> None:
+    props = {
+        "sshHost": "private-source.example",
+        "sshPort": 2222,
+        "sshUser": "private-user",
+        "sshPassword": "private-password",
+        "dbHost": "private-db.internal",
+        "dbPort": 3306,
+    }
+
+    result = jdbc_runtime.prebuild_ssh_tunnels([props])
+
+    assert result == [
+        {
+            "key": jdbc_runtime._tunnel_cache_key(props),
+            "ok": True,
+            "local_port": 43123,
+            "elapsed_ms": result[0]["elapsed_ms"],
+        }
+    ]
+    assert "private-source.example" not in repr(result)
+    assert "private-user" not in repr(result)
+    assert "private-password" not in repr(result)
+    mock_tunnel.assert_called_once_with(props)
+
+
+@patch(
+    "aos_api.jdbc_connector_runtime._get_or_create_tunnel",
+    side_effect=RuntimeError("private-source.example private-password"),
+)
+def test_prebuild_failure_result_exposes_only_exception_class(
+    mock_tunnel: MagicMock,
+) -> None:
+    props = {
+        "sshHost": "private-source.example",
+        "sshUser": "private-user",
+        "sshPassword": "private-password",
+        "dbHost": "private-db.internal",
+    }
+
+    result = jdbc_runtime.prebuild_ssh_tunnels([props])
+
+    assert result[0]["ok"] is False
+    assert result[0]["error"] == "RuntimeError"
+    assert "private-source.example" not in repr(result)
+    assert "private-user" not in repr(result)
+    assert "private-password" not in repr(result)
+    mock_tunnel.assert_called_once_with(props)
 
 
 # ═══════════════════════════════════════════════
