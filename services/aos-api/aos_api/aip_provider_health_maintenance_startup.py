@@ -32,6 +32,7 @@ CANONICAL_SERVICE_SUBJECT = "service:aip-provider-health-maintenance"
 CANONICAL_SCOPE = TenantScope("org-org", "dev-project")
 CANONICAL_SERVICE_ROLES = ["aip_executor"]
 CANONICAL_SERVICE_MARKINGS = ["public", "restricted"]
+CANONICAL_PLUGIN_ID = "provider-health-probe"
 _TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
 
 
@@ -50,6 +51,7 @@ class ProviderHealthStartupPreflight:
     ready: bool
     authority_mode: str | None = None
     principal: Principal | None = None
+    plugin_snapshot: dict[str, Any] | None = None
     action_type_snapshot: dict[str, Any] | None = None
 
 
@@ -65,10 +67,60 @@ def _legacy_maintenance_enabled(environ: Mapping[str, str]) -> bool:
     )
 
 
+def _default_plugin_catalog() -> dict[str, Any]:
+    from aos_api.action_template_registry import DEFAULTS, KEY, SUBDIR
+    from aos_api.aip_kv_store import get_payload
+    from aos_api.plugin_disk import scan_disk
+    from aos_api.tenant_scope import bind_tenant_scope
+
+    with bind_tenant_scope(CANONICAL_SCOPE):
+        state = get_payload(KEY) or {}
+    raw_installed = state.get("installed")
+    installed = (
+        {str(item) for item in raw_installed}
+        if isinstance(raw_installed, list)
+        else set(DEFAULTS)
+    )
+    items = []
+    for manifest in scan_disk(SUBDIR):
+        if manifest.get("id") != CANONICAL_PLUGIN_ID:
+            continue
+        items.append(
+            {
+                "id": CANONICAL_PLUGIN_ID,
+                "actionTypeId": manifest.get("actionTypeId"),
+                "installed": CANONICAL_PLUGIN_ID in installed,
+            }
+        )
+    return {"items": items}
+
+
+def _canonical_plugin_snapshot(
+    plugin_catalog: Callable[[], dict[str, Any]],
+) -> dict[str, Any]:
+    items = plugin_catalog().get("items") or []
+    matches = [item for item in items if item.get("id") == CANONICAL_PLUGIN_ID]
+    if len(matches) != 1:
+        raise ProviderHealthStartupPreflightError(
+            "PROVIDER_HEALTH_ACTION_PLUGIN_NOT_DISCOVERABLE"
+        )
+    snapshot = dict(matches[0])
+    if snapshot.get("actionTypeId") != PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID:
+        raise ProviderHealthStartupPreflightError(
+            "PROVIDER_HEALTH_ACTION_PLUGIN_CONTRACT_DRIFTED"
+        )
+    if snapshot.get("installed") is not True:
+        raise ProviderHealthStartupPreflightError(
+            "PROVIDER_HEALTH_ACTION_PLUGIN_NOT_INSTALLED"
+        )
+    return snapshot
+
+
 def preflight_provider_health_maintenance_startup(
     *,
     environ: Mapping[str, str] | None = None,
     action_store: AipActionStore | None = None,
+    plugin_catalog: Callable[[], dict[str, Any]] | None = None,
 ) -> ProviderHealthStartupPreflight:
     """Validate wiring prerequisites without constructing or starting a runtime."""
     env = os.environ if environ is None else environ
@@ -104,6 +156,9 @@ def preflight_provider_health_maintenance_startup(
         markings=list(CANONICAL_SERVICE_MARKINGS),
         token_kind="service",
     )
+    plugin_snapshot = _canonical_plugin_snapshot(
+        plugin_catalog or _default_plugin_catalog
+    )
     store = action_store or AipActionStore()
     expected = provider_health_action_type_snapshot()
     try:
@@ -125,6 +180,7 @@ def preflight_provider_health_maintenance_startup(
         ready=True,
         authority_mode=authority_mode,
         principal=principal,
+        plugin_snapshot=plugin_snapshot,
         action_type_snapshot=installed,
     )
 
@@ -136,6 +192,7 @@ def build_provider_health_maintenance_startup(
     refresh_readiness: Callable[..., dict[str, Any]] | None = None,
     model_runtime_store: AipModelRuntimeStore | None = None,
     action_store: AipActionStore | None = None,
+    plugin_catalog: Callable[[], dict[str, Any]] | None = None,
     registry: ActionAdapterRegistry | None = None,
     clock: Callable[[], datetime] | None = None,
 ) -> ProviderHealthMaintenanceStartup:
@@ -146,6 +203,7 @@ def build_provider_health_maintenance_startup(
             preflight=preflight_provider_health_maintenance_startup(
                 environ=env,
                 action_store=action_store,
+                plugin_catalog=plugin_catalog,
             )
         )
 
@@ -153,6 +211,7 @@ def build_provider_health_maintenance_startup(
     preflight = preflight_provider_health_maintenance_startup(
         environ=env,
         action_store=store,
+        plugin_catalog=plugin_catalog,
     )
     if refresh_health is None or refresh_readiness is None:
         raise ProviderHealthStartupPreflightError(
@@ -181,6 +240,7 @@ __all__ = [
     "AUTHORITY_MODE_ENV",
     "CANONICAL_AUTHORITY_MODE",
     "CANONICAL_SCOPE",
+    "CANONICAL_PLUGIN_ID",
     "CANONICAL_SERVICE_MARKINGS",
     "CANONICAL_SERVICE_ROLES",
     "CANONICAL_SERVICE_SUBJECT",

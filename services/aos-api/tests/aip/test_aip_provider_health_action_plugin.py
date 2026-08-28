@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from aos_api.action_template_registry import (
     DEFAULTS,
     REQUIRED,
@@ -17,6 +19,9 @@ from aos_api.aip_provider_health_action import PROVIDER_HEALTH_PROBE_ACTION_TYPE
 from aos_api.aip_provider_health_action_authority import (
     provider_health_action_type_snapshot,
 )
+from aos_api.auth import Principal
+from aos_api.errors import ApiError
+from aos_api.routers.wave_ext import _require_action_plugin_mutation_authority
 from aos_api.tenant_scope import TenantScope, bind_tenant_scope
 
 SCOPE = TenantScope("org-org", "dev-project")
@@ -78,6 +83,47 @@ def test_catalog_discovers_plugin_without_default_or_required_install() -> None:
     assert item["actionTypeId"] == PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID
     assert item["required"] is False
     assert item["installed"] is False
+
+
+@pytest.mark.parametrize(
+    "principal",
+    [
+        Principal(
+            subject="user:developer",
+            org_id=SCOPE.org_id,
+            project_id=SCOPE.project_id,
+            roles=["developer"],
+        ),
+        Principal(
+            subject="user:admin",
+            org_id="dev-org",
+            project_id="dev-project",
+            roles=["admin"],
+        ),
+    ],
+)
+def test_provider_health_plugin_mutation_rejects_wrong_authority_before_write(
+    principal: Principal,
+) -> None:
+    with pytest.raises(ApiError) as error:
+        _require_action_plugin_mutation_authority(
+            "provider-health-probe",
+            principal,
+        )
+    assert error.value.code == "FORBIDDEN"
+    assert error.value.status_code == 403
+
+
+def test_provider_health_plugin_mutation_accepts_canonical_admin() -> None:
+    _require_action_plugin_mutation_authority(
+        "provider-health-probe",
+        Principal(
+            subject="user:admin",
+            org_id=SCOPE.org_id,
+            project_id=SCOPE.project_id,
+            roles=["admin"],
+        ),
+    )
 
 
 def test_explicit_test_install_persists_exact_snapshot_only() -> None:

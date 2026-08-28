@@ -1095,9 +1095,30 @@ def list_action_plugins_api(principal: Principal = Depends(require_principal)):
     return list_action_plugins()
 
 
+def _require_action_plugin_mutation_authority(
+    plugin_id: str,
+    principal: Principal,
+) -> None:
+    if not ({"admin", "owner"} & set(principal.roles)):
+        raise ApiError(
+            code="FORBIDDEN",
+            message="admin or owner role required",
+            status_code=403,
+        )
+    if plugin_id == "provider-health-probe" and (
+        principal.org_id,
+        principal.project_id,
+    ) != ("org-org", "dev-project"):
+        raise ApiError(
+            code="FORBIDDEN",
+            message="provider health plugin is restricted to the canonical tenant",
+            status_code=403,
+        )
+
+
 @router.post("/v1/action-plugins/{plugin_id}/install")
 def install_action_plugin(plugin_id: str, principal: Principal = Depends(require_principal)):
-    _ = principal
+    _require_action_plugin_mutation_authority(plugin_id, principal)
     from aos_api.action_template_registry import install_plugin
 
     return _plugin_install_route(install_plugin, plugin_id)
@@ -1105,7 +1126,7 @@ def install_action_plugin(plugin_id: str, principal: Principal = Depends(require
 
 @router.post("/v1/action-plugins/{plugin_id}/uninstall")
 def uninstall_action_plugin(plugin_id: str, principal: Principal = Depends(require_principal)):
-    _ = principal
+    _require_action_plugin_mutation_authority(plugin_id, principal)
     from aos_api.action_template_registry import uninstall_plugin
 
     return _plugin_uninstall_route(uninstall_plugin, plugin_id)
