@@ -91,6 +91,24 @@ def next_run_at(cron: str, now: datetime | None = None) -> datetime | None:
     return None
 
 
+def _validate_cron_slot(
+    scheduled_for: datetime,
+    *,
+    now: datetime | None = None,
+) -> datetime:
+    """只接受服务器当前 UTC 分钟，拒绝未来注入和历史补跑。"""
+    if scheduled_for.tzinfo is None:
+        raise ValueError("CRON_SLOT_TIMEZONE_REQUIRED")
+    slot = scheduled_for.astimezone(timezone.utc).replace(second=0, microsecond=0)
+    current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).replace(
+        second=0,
+        microsecond=0,
+    )
+    if slot != current:
+        raise ValueError("CRON_SLOT_OUTSIDE_CURRENT_MINUTE")
+    return slot
+
+
 def ensure_qyh_staggered_daily_schedules() -> list[dict[str, Any]]:
     """把 12 OT 收敛为真实 live-pipeline 每日错峰 Cron，保留已有历史。"""
     from aos_api.phase5_pipeline_engine import get_engine
@@ -225,7 +243,7 @@ def execute_schedule(
 
     slot = scheduled_for or datetime.now(timezone.utc)
     if trigger == "cron":
-        slot = slot.replace(second=0, microsecond=0)
+        slot = _validate_cron_slot(slot)
     run_id = _claim_run(scope, schedule_id, slot, trigger)
     if run_id is None:
         return {"status": "duplicate", "scheduleId": schedule_id, "scheduledFor": slot}

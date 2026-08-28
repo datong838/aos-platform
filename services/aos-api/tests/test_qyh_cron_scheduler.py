@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from aos_api.qyh_cron_scheduler import (
     QYH_DAILY_CRON_BY_PIPELINE,
     QYH_PIPELINE_ORDER,
+    _validate_cron_slot,
     cron_matches,
     next_run_at,
 )
@@ -42,3 +43,37 @@ def test_next_hourly_run_uses_shanghai_timezone() -> None:
 def test_invalid_cron_fails_closed() -> None:
     assert not cron_matches("not a cron", datetime.now(ZoneInfo("Asia/Shanghai")))
     assert next_run_at("not a cron") is None
+
+
+def test_cron_slot_accepts_only_the_server_current_minute() -> None:
+    now = datetime(2026, 8, 28, 4, 0, 17, tzinfo=timezone.utc)
+    scheduled = datetime(2026, 8, 28, 12, 0, 59, tzinfo=ZoneInfo("Asia/Shanghai"))
+    assert _validate_cron_slot(scheduled, now=now) == datetime(
+        2026, 8, 28, 4, 0, tzinfo=timezone.utc
+    )
+
+
+def test_cron_slot_rejects_future_or_historical_minutes() -> None:
+    now = datetime(2026, 8, 28, 4, 0, 17, tzinfo=timezone.utc)
+    for scheduled in (
+        datetime(2026, 8, 28, 4, 1, tzinfo=timezone.utc),
+        datetime(2026, 8, 28, 3, 59, tzinfo=timezone.utc),
+    ):
+        try:
+            _validate_cron_slot(scheduled, now=now)
+        except ValueError as exc:
+            assert str(exc) == "CRON_SLOT_OUTSIDE_CURRENT_MINUTE"
+        else:  # pragma: no cover - explicit fail-closed assertion
+            raise AssertionError("out-of-minute cron slot must be rejected")
+
+
+def test_cron_slot_requires_an_explicit_timezone() -> None:
+    try:
+        _validate_cron_slot(
+            datetime(2026, 8, 28, 4, 0),
+            now=datetime(2026, 8, 28, 4, 0, tzinfo=timezone.utc),
+        )
+    except ValueError as exc:
+        assert str(exc) == "CRON_SLOT_TIMEZONE_REQUIRED"
+    else:  # pragma: no cover - explicit fail-closed assertion
+        raise AssertionError("naive cron slot must be rejected")
