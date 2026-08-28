@@ -82,32 +82,41 @@ class BusinessInvestigationBindingReadinessCoordinator:
     ) -> InvestigationBindingRefreshResult:
         now = self._clock()
         plan = self._current_plan(scope)
-        assignee_ids = {
-            slot.assignee.resource_id
-            for slot in plan.slots
-            if slot.assignee.kind.value == "agent_instance"
-        }
+        required_by_assignee: dict[str, set[str]] = {}
+        for slot in plan.slots:
+            if slot.assignee.kind.value != "agent_instance":
+                continue
+            required_by_assignee.setdefault(
+                slot.assignee.resource_id, set()
+            ).update(slot.required_capability_ids)
         active_skills = [
             item
             for item in self._skills.list_bindings(scope, limit=200)
-            if item.status == "active" and item.instance_id in assignee_ids
+            if item.status == "active"
+            and item.instance_id in required_by_assignee
         ]
-        capability_ids = sorted(
-            {
-                binding_id
-                for item in active_skills
-                for binding_id in item.capability_binding_ids
-            }
-        )
+        required_by_binding: dict[str, set[str]] = {}
+        for item in active_skills:
+            for binding_id in item.capability_binding_ids:
+                required_by_binding.setdefault(binding_id, set()).update(
+                    required_by_assignee[item.instance_id]
+                )
+        capability_bindings = []
+        for binding_id, required_capability_ids in sorted(
+            required_by_binding.items()
+        ):
+            binding = self._capabilities.get(scope, binding_id)
+            if binding.capability.asset_id in required_capability_ids:
+                capability_bindings.append(binding)
         observations = [
             self._refresh_capability(
                 scope,
-                binding_id,
+                binding,
                 now=now,
                 actor=actor,
                 idempotency_prefix=idempotency_prefix,
             )
-            for binding_id in capability_ids
+            for binding in capability_bindings
         ]
 
         selected = selected_skill_refs()
@@ -164,13 +173,13 @@ class BusinessInvestigationBindingReadinessCoordinator:
     def _refresh_capability(
         self,
         scope: TenantScope,
-        binding_id: str,
+        before,
         *,
         now: datetime,
         actor: str,
         idempotency_prefix: str,
     ) -> BindingRefreshObservation:
-        before = self._capabilities.get(scope, binding_id)
+        binding_id = before.binding_id
         if self._fresh(before, now):
             return self._observation("capability", before, before, "fresh-skip")
         after, readiness, _ = self._capabilities.evaluate(

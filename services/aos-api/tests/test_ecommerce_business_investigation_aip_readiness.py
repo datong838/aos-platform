@@ -29,6 +29,7 @@ def binding(
     *,
     instance_id="ecommerce.data_advisor.default",
     skill_id=None,
+    capability_id=None,
     revision=1,
     content_hash="sha256:" + "b" * 64,
     capability_ids=(),
@@ -46,6 +47,9 @@ def binding(
             )
             if skill_id
             else None
+        ),
+        capability=(
+            SimpleNamespace(asset_id=capability_id) if capability_id else None
         ),
         capability_binding_ids=list(capability_ids),
         status="active",
@@ -166,7 +170,7 @@ def exact_skill_bindings(*, fresh=False):
     ]
 
 
-def plan(*, blocked=False):
+def plan(*, blocked=False, slots=None):
     return SimpleNamespace(
         plan_id="plan-1",
         revision=1,
@@ -174,12 +178,13 @@ def plan(*, blocked=False):
         lifecycle=BriefLifecycle.DRAFT,
         readiness=ContractReadiness.BLOCKED if blocked else ContractReadiness.READY,
         blockers=[SimpleNamespace(code="CAPABILITY_BINDING_NOT_OPERATIONAL")] if blocked else [],
-        slots=[
+        slots=slots or [
             SimpleNamespace(
                 assignee=SimpleNamespace(
                     kind=SimpleNamespace(value="agent_instance"),
                     resource_id="ecommerce.data_advisor.default",
-                )
+                ),
+                required_capability_ids=["material.collect", "strategy.plan"],
             )
         ],
     )
@@ -191,7 +196,11 @@ def test_refreshes_capabilities_before_exact_skills_and_finalizes_plan() -> None
     coordinator = BusinessInvestigationBindingReadinessCoordinator(
         store=Store(current_plan),
         capabilities=CapabilityService(
-            [binding("cap-material"), binding("cap-strategy")], events
+            [
+                binding("cap-material", capability_id="material.collect"),
+                binding("cap-strategy", capability_id="strategy.plan"),
+            ],
+            events,
         ),
         skills=SkillRegistry(exact_skill_bindings(), events),
         materializer=Materializer(current_plan),
@@ -216,7 +225,14 @@ def test_fresh_dependencies_are_skipped_without_extending_ttl() -> None:
     result = BusinessInvestigationBindingReadinessCoordinator(
         store=Store(current_plan),
         capabilities=CapabilityService(
-            [binding("cap-material", fresh=True), binding("cap-strategy", fresh=True)],
+            [
+                binding(
+                    "cap-material", capability_id="material.collect", fresh=True
+                ),
+                binding(
+                    "cap-strategy", capability_id="strategy.plan", fresh=True
+                ),
+            ],
             events,
         ),
         skills=SkillRegistry(exact_skill_bindings(fresh=True), events),
@@ -233,7 +249,12 @@ def test_blocked_canonical_result_is_preserved_and_plan_stays_draft() -> None:
     result = BusinessInvestigationBindingReadinessCoordinator(
         store=Store(current_plan),
         capabilities=CapabilityService(
-            [binding("cap-material"), binding("cap-strategy")], events, blocked=True
+            [
+                binding("cap-material", capability_id="material.collect"),
+                binding("cap-strategy", capability_id="strategy.plan"),
+            ],
+            events,
+            blocked=True,
         ),
         skills=SkillRegistry(exact_skill_bindings(), events),
         materializer=Materializer(current_plan, frozen=False),
@@ -254,7 +275,11 @@ def test_missing_exact_selected_skill_binding_fails_closed() -> None:
     coordinator = BusinessInvestigationBindingReadinessCoordinator(
         store=Store(current_plan),
         capabilities=CapabilityService(
-            [binding("cap-material"), binding("cap-strategy")], events
+            [
+                binding("cap-material", capability_id="material.collect"),
+                binding("cap-strategy", capability_id="strategy.plan"),
+            ],
+            events,
         ),
         skills=SkillRegistry(skills, events),
         materializer=Materializer(current_plan),
@@ -262,3 +287,68 @@ def test_missing_exact_selected_skill_binding_fails_closed() -> None:
     )
     with pytest.raises(ValueError, match="exact active SkillBinding unavailable"):
         coordinator.refresh(SCOPE)
+
+
+def test_only_capabilities_required_by_each_assignee_are_refreshed() -> None:
+    events = []
+    current_plan = plan()
+    skills = exact_skill_bindings()
+    skills[0].capability_binding_ids.append("cap-unrelated")
+    capabilities = CapabilityService(
+        [
+            binding("cap-material", capability_id="material.collect"),
+            binding("cap-strategy", capability_id="strategy.plan"),
+            binding("cap-unrelated", capability_id="image.generate"),
+        ],
+        events,
+    )
+    result = BusinessInvestigationBindingReadinessCoordinator(
+        store=Store(current_plan),
+        capabilities=capabilities,
+        skills=SkillRegistry(skills, events),
+        materializer=Materializer(current_plan),
+        clock=lambda: NOW,
+    ).refresh(SCOPE)
+    evaluated_capabilities = [
+        item[1] for item in events if item[0] == "capability"
+    ]
+    assert evaluated_capabilities == ["cap-material", "cap-strategy"]
+    assert "cap-unrelated" not in {item.binding_id for item in result.items}
+
+
+def test_shared_binding_is_refreshed_once_for_multiple_required_slots() -> None:
+    events = []
+    current_plan = plan(
+        slots=[
+            SimpleNamespace(
+                assignee=SimpleNamespace(
+                    kind=SimpleNamespace(value="agent_instance"),
+                    resource_id="ecommerce.data_advisor.default",
+                ),
+                required_capability_ids=["material.collect"],
+            ),
+            SimpleNamespace(
+                assignee=SimpleNamespace(
+                    kind=SimpleNamespace(value="agent_instance"),
+                    resource_id="ecommerce.data_advisor.default",
+                ),
+                required_capability_ids=["strategy.plan"],
+            ),
+        ]
+    )
+    skills = exact_skill_bindings()
+    BusinessInvestigationBindingReadinessCoordinator(
+        store=Store(current_plan),
+        capabilities=CapabilityService(
+            [
+                binding("cap-material", capability_id="material.collect"),
+                binding("cap-strategy", capability_id="strategy.plan"),
+            ],
+            events,
+        ),
+        skills=SkillRegistry(skills, events),
+        materializer=Materializer(current_plan),
+        clock=lambda: NOW,
+    ).refresh(SCOPE)
+    assert [event[1] for event in events].count("cap-material") == 1
+    assert [event[1] for event in events].count("cap-strategy") == 1
