@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 from aos_api.aip_provider_health_maintenance import (
     AipTextProviderHealthMaintainer,
+    maintenance_enabled,
     maintenance_interval_seconds,
 )
 
@@ -68,6 +69,7 @@ def test_due_health_refreshes_once_then_refreshes_bindings() -> None:
         store=Store([health(minutes=5)]),
         refresh_health=refresh_health,
         refresh_readiness=refresh_readiness,
+        authorize_provider_refresh=lambda _now: True,
         clock=lambda: NOW,
     ).run_once()
     assert result["status"] == "TEXT_PROVIDER_HEALTH_MAINTENANCE_GREEN"
@@ -86,6 +88,7 @@ def test_provider_failure_is_closed_without_readiness_or_retry() -> None:
         store=Store([]),
         refresh_health=blocked,
         refresh_readiness=lambda **_: called.append("readiness"),
+        authorize_provider_refresh=lambda _now: True,
         clock=lambda: NOW,
     ).run_once()
     assert result == {
@@ -126,6 +129,7 @@ def test_readiness_failure_is_retried_without_another_provider_cycle() -> None:
         store=store,
         refresh_health=refresh_health,
         refresh_readiness=refresh_readiness,
+        authorize_provider_refresh=lambda _now: True,
         clock=lambda: NOW,
     )
     first = maintainer.run_once()
@@ -135,6 +139,53 @@ def test_readiness_failure_is_retried_without_another_provider_cycle() -> None:
     assert second["status"] == "TEXT_PROVIDER_HEALTH_MAINTENANCE_GREEN"
     assert health_calls == [1]
     assert readiness_calls == [1, 1]
+
+
+def test_enabled_loop_does_not_authorize_due_provider_refresh(monkeypatch) -> None:
+    monkeypatch.setenv("AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED", "true")
+    called = []
+    result = AipTextProviderHealthMaintainer(
+        store=Store([]),
+        refresh_health=lambda: called.append("health"),
+        refresh_readiness=lambda **_: called.append("readiness"),
+        clock=lambda: NOW,
+    ).run_once()
+    assert maintenance_enabled() is True
+    assert result == {
+        "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
+        "stage": "authorization",
+        "errorType": "ProviderHealthAuthorizationUnavailable",
+        "errorCode": "EXACT_APPROVAL_LEASE_REQUIRED",
+        "providerCalls": 0,
+        "healthObservationWritten": False,
+        "automaticRetry": False,
+    }
+    assert called == []
+
+
+def test_authorization_error_is_sanitized_without_provider_call() -> None:
+    called = []
+
+    def unavailable(_now):
+        raise RuntimeError("private approval-store detail")
+
+    result = AipTextProviderHealthMaintainer(
+        store=Store([]),
+        refresh_health=lambda: called.append("health"),
+        refresh_readiness=lambda **_: called.append("readiness"),
+        authorize_provider_refresh=unavailable,
+        clock=lambda: NOW,
+    ).run_once()
+    assert result == {
+        "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
+        "stage": "authorization",
+        "errorType": "RuntimeError",
+        "errorCode": "RuntimeError",
+        "providerCalls": 0,
+        "healthObservationWritten": False,
+        "automaticRetry": False,
+    }
+    assert called == []
 
 
 def test_interval_is_bounded(monkeypatch) -> None:

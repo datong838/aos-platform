@@ -64,6 +64,11 @@ def _safe_error(exc: Exception) -> dict[str, str]:
     return {"errorType": type(exc).__name__, "errorCode": str(code)}
 
 
+def _deny_provider_refresh(_now: datetime) -> bool:
+    """Default runtime boundary: an enabled loop is not call authorization."""
+    return False
+
+
 class AipTextProviderHealthMaintainer:
     """Execute at most one approved health cycle per scheduler tick."""
 
@@ -73,11 +78,15 @@ class AipTextProviderHealthMaintainer:
         store: AipModelRuntimeStore | None = None,
         refresh_health: Callable[[], dict[str, Any]] | None = None,
         refresh_readiness: Callable[..., dict[str, Any]] | None = None,
+        authorize_provider_refresh: Callable[[datetime], bool] | None = None,
         clock: Callable[[], datetime] | None = None,
     ) -> None:
         self._store = store or AipModelRuntimeStore()
         self._refresh_health = refresh_health or _default_health_refresh
         self._refresh_readiness = refresh_readiness or _default_readiness_refresh
+        self._authorize_provider_refresh = (
+            authorize_provider_refresh or _deny_provider_refresh
+        )
         self._clock = clock or (lambda: datetime.now(UTC))
         self._readiness_pending = False
 
@@ -108,6 +117,27 @@ class AipTextProviderHealthMaintainer:
 
         health_result: dict[str, Any] | None = None
         if remaining <= REFRESH_BEFORE_EXPIRY:
+            try:
+                authorized = self._authorize_provider_refresh(now)
+            except Exception as exc:
+                return {
+                    "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
+                    "stage": "authorization",
+                    **_safe_error(exc),
+                    "providerCalls": 0,
+                    "healthObservationWritten": False,
+                    "automaticRetry": False,
+                }
+            if authorized is not True:
+                return {
+                    "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
+                    "stage": "authorization",
+                    "errorType": "ProviderHealthAuthorizationUnavailable",
+                    "errorCode": "EXACT_APPROVAL_LEASE_REQUIRED",
+                    "providerCalls": 0,
+                    "healthObservationWritten": False,
+                    "automaticRetry": False,
+                }
             try:
                 health_result = self._refresh_health()
             except Exception as exc:
