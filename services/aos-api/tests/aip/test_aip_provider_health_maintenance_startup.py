@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import pytest
 
+from aos_api.aip_action_adapters import ACTION_ADAPTERS, ActionAdapterRegistry
 from aos_api.aip_action_store import AipActionNotFound
 from aos_api.aip_provider_health_action import PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID
 from aos_api.aip_provider_health_action_authority import (
@@ -18,6 +19,7 @@ from aos_api.aip_provider_health_maintenance_startup import (
     SERVICE_ORG_ENV,
     SERVICE_PROJECT_ENV,
     SERVICE_SUBJECT_ENV,
+    build_provider_health_maintenance_startup,
     preflight_provider_health_maintenance_startup,
 )
 
@@ -145,4 +147,78 @@ def test_preflight_green_returns_only_canonical_service_identity() -> None:
     assert result.principal.token_kind == "service"
     assert store.calls == [
         (CANONICAL_SCOPE, PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID)
+    ]
+
+
+def test_startup_factory_inactive_requires_no_callable_or_database_read() -> None:
+    store = SnapshotStore(error=AssertionError("database must not be read"))
+    result = build_provider_health_maintenance_startup(
+        environ={},
+        action_store=store,
+    )
+    assert result.preflight.status == (
+        "PROVIDER_HEALTH_MAINTENANCE_STARTUP_INACTIVE"
+    )
+    assert result.runtime is None
+    assert store.calls == []
+
+
+@pytest.mark.parametrize(
+    ("refresh_health", "refresh_readiness"),
+    [
+        (None, lambda **_: {}),
+        (lambda: {}, None),
+        (None, None),
+    ],
+)
+def test_startup_factory_requires_both_explicit_callables_after_preflight(
+    refresh_health, refresh_readiness
+) -> None:
+    store = SnapshotStore(snapshot=provider_health_action_type_snapshot())
+    with pytest.raises(ProviderHealthStartupPreflightError) as error:
+        build_provider_health_maintenance_startup(
+            environ=_enabled_env(),
+            refresh_health=refresh_health,
+            refresh_readiness=refresh_readiness,
+            action_store=store,
+        )
+    assert error.value.code == (
+        "EXPLICIT_PROVIDER_HEALTH_RUNTIME_CALLABLES_REQUIRED"
+    )
+    assert store.calls == [
+        (CANONICAL_SCOPE, PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID)
+    ]
+
+
+def test_startup_factory_builds_isolated_runtime_without_calling_effects() -> None:
+    store = SnapshotStore(snapshot=provider_health_action_type_snapshot())
+    registry = ActionAdapterRegistry()
+    calls = {"health": 0, "readiness": 0}
+
+    def refresh_health():
+        calls["health"] += 1
+        raise AssertionError("construction must not call Provider refresh")
+
+    def refresh_readiness(**_):
+        calls["readiness"] += 1
+        raise AssertionError("construction must not call readiness refresh")
+
+    global_before = ACTION_ADAPTERS.get(PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID)
+    result = build_provider_health_maintenance_startup(
+        environ=_enabled_env(),
+        refresh_health=refresh_health,
+        refresh_readiness=refresh_readiness,
+        action_store=store,
+        registry=registry,
+    )
+    assert result.preflight.ready is True
+    assert result.runtime is not None
+    assert result.runtime.registry is registry
+    assert result.runtime.conformance_report.green is True
+    assert result.runtime.action_type_snapshot == provider_health_action_type_snapshot()
+    assert calls == {"health": 0, "readiness": 0}
+    assert ACTION_ADAPTERS.get(PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID) is global_before
+    assert store.calls == [
+        (CANONICAL_SCOPE, PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID),
+        (CANONICAL_SCOPE, PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID),
     ]

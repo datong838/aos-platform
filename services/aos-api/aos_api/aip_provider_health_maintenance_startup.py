@@ -4,12 +4,19 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from datetime import datetime
+from typing import Any, Callable
 
+from aos_api.aip_action_adapters import ActionAdapterRegistry
 from aos_api.aip_action_store import AipActionStore, AipActionStoreError
+from aos_api.aip_model_runtime_store import AipModelRuntimeStore
 from aos_api.aip_provider_health_action import PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID
 from aos_api.aip_provider_health_action_authority import (
     provider_health_action_type_snapshot,
+)
+from aos_api.aip_provider_health_maintenance_runtime import (
+    ProviderHealthMaintenanceRuntime,
+    build_provider_health_maintenance_runtime,
 )
 from aos_api.auth import Principal
 from aos_api.tenant_scope import TenantScope
@@ -44,6 +51,12 @@ class ProviderHealthStartupPreflight:
     authority_mode: str | None = None
     principal: Principal | None = None
     action_type_snapshot: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True)
+class ProviderHealthMaintenanceStartup:
+    preflight: ProviderHealthStartupPreflight
+    runtime: ProviderHealthMaintenanceRuntime | None = None
 
 
 def _legacy_maintenance_enabled(environ: Mapping[str, str]) -> bool:
@@ -116,6 +129,54 @@ def preflight_provider_health_maintenance_startup(
     )
 
 
+def build_provider_health_maintenance_startup(
+    *,
+    environ: Mapping[str, str] | None = None,
+    refresh_health: Callable[[], dict[str, Any]] | None = None,
+    refresh_readiness: Callable[..., dict[str, Any]] | None = None,
+    model_runtime_store: AipModelRuntimeStore | None = None,
+    action_store: AipActionStore | None = None,
+    registry: ActionAdapterRegistry | None = None,
+    clock: Callable[[], datetime] | None = None,
+) -> ProviderHealthMaintenanceStartup:
+    """Build, but never start, a canonical runtime after exact preflight."""
+    env = os.environ if environ is None else environ
+    if not _legacy_maintenance_enabled(env):
+        return ProviderHealthMaintenanceStartup(
+            preflight=preflight_provider_health_maintenance_startup(
+                environ=env,
+                action_store=action_store,
+            )
+        )
+
+    store = action_store or AipActionStore()
+    preflight = preflight_provider_health_maintenance_startup(
+        environ=env,
+        action_store=store,
+    )
+    if refresh_health is None or refresh_readiness is None:
+        raise ProviderHealthStartupPreflightError(
+            "EXPLICIT_PROVIDER_HEALTH_RUNTIME_CALLABLES_REQUIRED"
+        )
+    if preflight.principal is None:
+        raise ProviderHealthStartupPreflightError(
+            "PROVIDER_HEALTH_STARTUP_PRINCIPAL_UNAVAILABLE"
+        )
+    runtime = build_provider_health_maintenance_runtime(
+        principal=preflight.principal,
+        refresh_health=refresh_health,
+        refresh_readiness=refresh_readiness,
+        model_runtime_store=model_runtime_store,
+        action_store=store,
+        registry=registry,
+        clock=clock,
+    )
+    return ProviderHealthMaintenanceStartup(
+        preflight=preflight,
+        runtime=runtime,
+    )
+
+
 __all__ = [
     "AUTHORITY_MODE_ENV",
     "CANONICAL_AUTHORITY_MODE",
@@ -126,8 +187,10 @@ __all__ = [
     "MAINTENANCE_ENABLED_ENV",
     "ProviderHealthStartupPreflight",
     "ProviderHealthStartupPreflightError",
+    "ProviderHealthMaintenanceStartup",
     "SERVICE_ORG_ENV",
     "SERVICE_PROJECT_ENV",
     "SERVICE_SUBJECT_ENV",
+    "build_provider_health_maintenance_startup",
     "preflight_provider_health_maintenance_startup",
 ]
