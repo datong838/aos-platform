@@ -29,7 +29,9 @@ from aos_api.db import connect
 from aos_api.tenant_scope import TenantScope
 
 SCOPE = TenantScope("org-org", "dev-project")
-NOW = datetime(2026, 8, 28, 13, 0, tzinfo=UTC)
+# Keep expiry-sensitive API fixtures ahead of the database clock while retaining
+# one stable instant for every assertion in this test process.
+NOW = datetime.now(UTC)
 
 
 def _principal(subject: str, role: str, *, scope: TenantScope = SCOPE) -> Principal:
