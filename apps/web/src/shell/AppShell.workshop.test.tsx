@@ -34,6 +34,7 @@ function NavigationProbe() {
   return <>
     <button type="button" data-testid="go-content" onClick={() => navigate("/workshop/content-campaign")}>go content</button>
     <button type="button" data-testid="go-customer" onClick={() => navigate("/workshop/customer")}>go customer</button>
+    <button type="button" data-testid="go-operations" onClick={() => navigate("/workshop/operations")}>go operations</button>
   </>;
 }
 
@@ -403,5 +404,45 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     await act(async () => newContact.click());
     expect(host.querySelector(".workshop-header-action-notice")?.textContent).toContain("新建触达任务预检已打开");
     expect(host.textContent).not.toContain("新建监测策略预检已打开");
+  });
+
+  it("全局导航图标聚焦当前搜索并进入既有安全路由", async () => {
+    const client = { listModules: async () => workshopCatalogFixture() };
+    await act(async () => root.render(
+      <MemoryRouter initialEntries={["/workshop/operations"]}>
+        <EcommerceWorkshopCatalogProvider client={client}>
+          <NavigationProbe />
+          <LocationProbe />
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="*" element={<div />} />
+            </Route>
+          </Routes>
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+
+    const globalNav = host.querySelector<HTMLElement>('nav[aria-label="全局导航"]')!;
+    await act(async () => globalNav.querySelector<HTMLButtonElement>('button[title="搜索"]')!.click());
+    expect(document.activeElement).toBe(host.querySelector(".workshop-visual-header-search input"));
+    expect(host.querySelector("[data-testid='location']")?.textContent).toBe("/workshop/operations");
+
+    const destinations = [
+      ["通知", "/workshop/inbox"],
+      ["历史", "/aip/lineage"],
+      ["项目", "/workshop"],
+      ["应用", "/workshop"],
+      ["数据", "/data"],
+      ["帮助", "/settings/ops-start-guide"],
+    ] as const;
+    for (const [title, path] of destinations) {
+      await act(async () => host.querySelector<HTMLButtonElement>("[data-testid='go-operations']")!.click());
+      await flush();
+      const button = host.querySelector<HTMLButtonElement>(`nav[aria-label="全局导航"] button[title="${title}"]`)!;
+      await act(async () => button.click());
+      await flush();
+      expect(host.querySelector("[data-testid='location']")?.textContent).toBe(path);
+    }
   });
 });

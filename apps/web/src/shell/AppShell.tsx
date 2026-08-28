@@ -129,6 +129,16 @@ function GlobalNav({
   onAppearanceChange: (next: AppearancePreference) => void;
 }) {
   const navigate = useNavigate();
+  const openSearch = () => {
+    const search = document.querySelector<HTMLInputElement>(
+      ".workshop-visual-header-search input, .task-cockpit-exact-header-search input",
+    );
+    if (search) {
+      search.focus();
+      return;
+    }
+    navigate("/ontology/wiki-index");
+  };
 
   if (pathname === "/workshop/analyst") {
     const links: Array<{ to: string; icon: IconName; label: string }> = [
@@ -143,13 +153,13 @@ function GlobalNav({
       <div className="analyst-exact-global-brand"><NavIcon name="plus-circle" /><span>AOS</span></div>
       <div className="analyst-exact-global-links">{links.map((item) => <NavLink key={item.to} to={item.to} end title={item.label} aria-label={item.label} className={({ isActive }) => `analyst-exact-global-item${isActive ? " is-active" : ""}`}><NavIcon name={item.icon} /></NavLink>)}</div>
       <div className="analyst-exact-global-bottom">
-        <button type="button" className="analyst-exact-global-item" title="帮助" aria-label="帮助"><NavIcon name="wrench" /></button>
+        <button type="button" className="analyst-exact-global-item" title="帮助" aria-label="帮助" onClick={() => navigate("/settings/ops-start-guide")}><NavIcon name="wrench" /></button>
         <UserMenu pref={pref} onAppearanceChange={onAppearanceChange} />
       </div>
     </nav>;
   }
 
-  // 上半部分图标：menu 切换侧栏，home 回首页，其余装饰性
+  // 全局图标只复用既有路由；不在导航层创建业务记录或触发外部效果。
   const topItems: {
     icon: IconName;
     label: string;
@@ -158,12 +168,12 @@ function GlobalNav({
   }[] = [
     { icon: "menu", label: "菜单", onClick: onToggleSidebar },
     { icon: "home", label: "首页", active: pathname === "/", onClick: () => navigate("/") },
-    { icon: "search", label: "搜索" },
-    { icon: "bell", label: "通知" },
-    { icon: "clock", label: "历史" },
-    { icon: "folder", label: "项目" },
-    { icon: "apps", label: "应用", active: pathname.startsWith("/workshop") },
-    { icon: "database", label: "数据", active: pathname.startsWith("/data") },
+    { icon: "search", label: "搜索", onClick: openSearch },
+    { icon: "bell", label: "通知", onClick: () => navigate("/workshop/inbox") },
+    { icon: "clock", label: "历史", onClick: () => navigate("/aip/lineage") },
+    { icon: "folder", label: "项目", onClick: () => navigate("/workshop") },
+    { icon: "apps", label: "应用", active: pathname.startsWith("/workshop"), onClick: () => navigate("/workshop") },
+    { icon: "database", label: "数据", active: pathname.startsWith("/data"), onClick: () => navigate("/data") },
   ];
 
   return (
@@ -182,7 +192,7 @@ function GlobalNav({
         ))}
       </div>
       <div className="p-nav-global-bottom">
-        <button type="button" className="p-nav-g-item" title="帮助">
+        <button type="button" className="p-nav-g-item" title="帮助" onClick={() => navigate("/settings/ops-start-guide")}>
           <NavIcon name="wrench" />
         </button>
         <UserMenu pref={pref} onAppearanceChange={onAppearanceChange} />
