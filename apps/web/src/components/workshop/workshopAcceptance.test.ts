@@ -15,6 +15,16 @@ describe("W8-07 workshop acceptance contract", () => {
     expect(WORKSHOP_ACCEPTANCE_MODULES).toHaveLength(8);
     expect(new Set(WORKSHOP_ACCEPTANCE_MODULES.map((item) => item.moduleId)).size).toBe(8);
     expect(new Set(WORKSHOP_ACCEPTANCE_MODULES.map((item) => item.route)).size).toBe(8);
+    expect(WORKSHOP_ACCEPTANCE_MODULES.map((item) => item.route)).toEqual([
+      "/workshop/cockpit",
+      "/workshop/content-campaign",
+      "/workshop/operations",
+      "/workshop/creator-growth",
+      "/workshop/media-studio",
+      "/workshop/analyst",
+      "/workshop/price-governance",
+      "/workshop/customer",
+    ]);
     expect(WORKSHOP_ACCEPTANCE_VIEWPORTS).toEqual([1280, 1440, 1920]);
     expect(WORKSHOP_ACCEPTANCE_STATES).toEqual([
       "loading", "empty", "forbidden", "stale", "partial", "failed", "unknown",

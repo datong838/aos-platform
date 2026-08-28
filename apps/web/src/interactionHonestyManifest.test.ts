@@ -17,13 +17,13 @@ const ONTOLOGY_ROUTES = [
 const AIP_AUTHORITY_ROUTES = ["/aip/memory-governance", "/aip/assist", "/aip/analyst"] as const;
 
 const ECOMMERCE_WORKSHOP_ROUTES = [
-  "/workshop/task-cockpit",
+  "/workshop/cockpit",
   "/workshop/content-campaign",
   "/workshop/operations",
-  "/workshop/creator-outreach",
+  "/workshop/creator-growth",
   "/workshop/media-studio",
   "/workshop/analyst",
-  "/workshop/pricing-governance",
+  "/workshop/price-governance",
   "/workshop/customer",
 ] as const;
 

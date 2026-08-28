@@ -1,11 +1,11 @@
 export const WORKSHOP_ACCEPTANCE_MODULES = [
-  { moduleId: "ecommerce.task-cockpit", route: "/workshop/task-cockpit", label: "日常任务总控大屏", tabModel: false },
+  { moduleId: "ecommerce.task-cockpit", route: "/workshop/cockpit", label: "日常任务总控大屏", tabModel: false },
   { moduleId: "ecommerce.content-campaign", route: "/workshop/content-campaign", label: "内容与活动工作台", tabModel: false },
   { moduleId: "ecommerce.operations", route: "/workshop/operations", label: "统一运营驾驶舱", tabModel: false },
-  { moduleId: "ecommerce.creator-growth", route: "/workshop/creator-outreach", label: "达人邀约与签约驾驶舱", tabModel: false },
+  { moduleId: "ecommerce.creator-growth", route: "/workshop/creator-growth", label: "达人邀约与签约驾驶舱", tabModel: false },
   { moduleId: "ecommerce.media-studio", route: "/workshop/media-studio", label: "多媒体任务全过程闭环工作台", tabModel: true },
   { moduleId: "ecommerce.analyst", route: "/workshop/analyst", label: "经营参谋·增长指挥中心", tabModel: true },
-  { moduleId: "ecommerce.price-governance", route: "/workshop/pricing-governance", label: "价格治理驾驶舱", tabModel: true },
+  { moduleId: "ecommerce.price-governance", route: "/workshop/price-governance", label: "价格治理驾驶舱", tabModel: true },
   { moduleId: "ecommerce.customer", route: "/workshop/customer", label: "客户关系工作台", tabModel: true },
 ] as const;
 
