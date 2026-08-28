@@ -19,6 +19,11 @@ from aos_api.aip_provider_health_maintenance_authority import (
     ProviderHealthActionLeaseConsumer,
     ProviderHealthLeaseExecution,
 )
+from aos_api.aip_provider_health_maintenance_inbox import (
+    ProviderHealthLeaseInboxError,
+    ProviderHealthMaintenanceLeaseInbox,
+    ProviderHealthMaintenanceLeaseRunner,
+)
 from aos_api.auth import Principal, require_principal
 from aos_api.db import connect
 from aos_api.tenant_scope import TenantScope
@@ -141,7 +146,7 @@ def _approved_lease(client) -> tuple[Principal, dict, dict]:
     return executor, approved, response.json()["lease"]
 
 
-def test_maintainer_consumes_one_exact_receipt_without_double_refresh(client) -> None:
+def test_inbox_runner_consumes_one_exact_receipt_without_double_refresh(client) -> None:
     _seed_action_type()
     executor, proposal, lease = _approved_lease(client)
     refresh = CountingRefresh()
@@ -170,14 +175,12 @@ def test_maintainer_consumes_one_exact_receipt_without_double_refresh(client) ->
     readiness_calls = []
     legacy_calls = []
     try:
-        consumer = ProviderHealthActionLeaseConsumer(
-            AipActionExecutionService(AipActionStore(), ACTION_ADAPTERS),
-            ProviderHealthLeaseExecution(
-                principal=executor,
-                lease_id=lease["id"],
-                expected_proposal_hash=proposal["proposalHash"],
-            ),
-        )
+        service = AipActionExecutionService(AipActionStore(), ACTION_ADAPTERS)
+        inbox = ProviderHealthMaintenanceLeaseInbox(executor)
+        execution = inbox.resolve(NOW)
+        assert execution is not None
+        assert execution.lease_id == lease["id"]
+        runner = ProviderHealthMaintenanceLeaseRunner(inbox, service)
         maintainer = AipTextProviderHealthMaintainer(
             store=DueHealthStore(),
             refresh_health=lambda: legacy_calls.append("legacy"),
@@ -188,20 +191,22 @@ def test_maintainer_consumes_one_exact_receipt_without_double_refresh(client) ->
                     "completedRoles": ["a", "b", "c", "d", "e", "f"],
                 }
             ),
-            execute_authorized_refresh=consumer,
+            execute_authorized_refresh=runner,
             clock=lambda: NOW,
         )
         first = maintainer.run_once()
+        replay = ProviderHealthActionLeaseConsumer(service, execution)(NOW)
         second = maintainer.run_once()
-        assert first["status"] == second["status"] == (
-            "TEXT_PROVIDER_HEALTH_MAINTENANCE_GREEN"
-        )
+        assert first["status"] == "TEXT_PROVIDER_HEALTH_MAINTENANCE_GREEN"
         assert first["observationId"] == (
             "provider-health-maintenance-action-test"
         )
+        assert replay["actionLeaseId"] == lease["id"]
+        assert second["stage"] == "action_authority"
+        assert second["errorCode"] == "EXACT_APPROVAL_LEASE_REQUIRED"
         assert refresh.calls == 1
         assert legacy_calls == []
-        assert readiness_calls == [1, 1]
+        assert readiness_calls == [1]
         assert report.green is True
         with connect(SCOPE) as conn:
             counts = conn.execute(
@@ -230,3 +235,80 @@ def test_lease_execution_rejects_invalid_hash_before_service_call() -> None:
         assert "sha256" in str(exc)
     else:
         raise AssertionError("invalid expected hash must fail closed")
+
+
+def test_inbox_is_owner_scoped_and_rejects_foreign_tenant(client) -> None:
+    _seed_action_type()
+    executor, _proposal, _lease = _approved_lease(client)
+    other = _principal("maintenance-other-executor", "aip_executor")
+    assert ProviderHealthMaintenanceLeaseInbox(other).resolve(NOW) is None
+    try:
+        ProviderHealthMaintenanceLeaseInbox(
+            _principal(
+                "maintenance-canary-executor",
+                "aip_executor",
+                scope=TenantScope("dev-org", "dev-project"),
+            )
+        )
+    except ProviderHealthLeaseInboxError as exc:
+        assert exc.code == "PROVIDER_HEALTH_MAINTENANCE_TENANT_FORBIDDEN"
+    else:
+        raise AssertionError("foreign tenant inbox must fail closed")
+    assert ProviderHealthMaintenanceLeaseInbox(executor).resolve(NOW) is not None
+    client.app.dependency_overrides.pop(require_principal, None)
+
+
+def test_inbox_rejects_multiple_exact_leases(client) -> None:
+    _seed_action_type()
+    executor, proposal_one, lease_one = _approved_lease(client)
+    _executor_two, proposal_two, lease_two = _approved_lease(client)
+    with connect(SCOPE) as conn:
+        conn.execute(
+            "UPDATE aip_action_execution_lease SET owner_id=%s WHERE lease_id=%s",
+            (executor.subject, lease_two["id"]),
+        )
+        conn.commit()
+    try:
+        ProviderHealthMaintenanceLeaseInbox(executor).resolve(NOW)
+    except ProviderHealthLeaseInboxError as exc:
+        assert exc.code == (
+            "MULTIPLE_EXACT_PROVIDER_HEALTH_LEASES_REQUIRE_SELECTION"
+        )
+    else:
+        raise AssertionError("multiple exact leases must require explicit selection")
+    with connect(SCOPE) as conn:
+        conn.execute(
+            "UPDATE aip_action_execution_lease SET status='expired' WHERE lease_id IN (%s,%s)",
+            (lease_one["id"], lease_two["id"]),
+        )
+        conn.commit()
+    assert proposal_one["id"] != proposal_two["id"]
+    client.app.dependency_overrides.pop(require_principal, None)
+
+
+def test_inbox_excludes_expired_and_action_revision_drift(client) -> None:
+    _seed_action_type()
+    executor, proposal, lease = _approved_lease(client)
+    with connect(SCOPE) as conn:
+        conn.execute(
+            "UPDATE aip_action_proposal SET action_type_revision_hash=%s WHERE proposal_id=%s",
+            ("f" * 64, proposal["id"]),
+        )
+        conn.commit()
+    assert ProviderHealthMaintenanceLeaseInbox(executor).resolve(NOW) is None
+    with connect(SCOPE) as conn:
+        conn.execute(
+            "UPDATE aip_action_execution_lease SET expires_at=%s WHERE lease_id=%s",
+            (NOW - timedelta(seconds=1), lease["id"]),
+        )
+        conn.commit()
+    assert ProviderHealthMaintenanceLeaseInbox(executor).resolve(NOW) is None
+    try:
+        ProviderHealthMaintenanceLeaseInbox(executor).resolve(
+            datetime(2026, 8, 28, 13, 0)
+        )
+    except ProviderHealthLeaseInboxError as exc:
+        assert exc.code == "PROVIDER_HEALTH_MAINTENANCE_CUTOFF_TZ_REQUIRED"
+    else:
+        raise AssertionError("naive cutoff must fail closed")
+    client.app.dependency_overrides.pop(require_principal, None)
