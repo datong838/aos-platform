@@ -33,9 +33,15 @@ from aos_api.ecommerce_business_investigation_data_command import (
     RequestBusinessInvestigationMissingDataCommand,
 )
 from aos_api.ecommerce_business_investigation_case import (
+    BusinessInvestigationAnalysisType,
     BusinessInvestigationCaseConflict,
     BusinessInvestigationCaseNotFound,
     BusinessInvestigationCaseRevision,
+)
+from aos_api.ecommerce_business_investigation_case_selection import (
+    BusinessInvestigationCaseSelection,
+    BusinessInvestigationCaseSelectionBlocked,
+    BusinessInvestigationCaseSelectionConflict,
 )
 from aos_api.ecommerce_business_investigation_projection import (
     BusinessInvestigationProjectionError,
@@ -173,6 +179,8 @@ def _map_error(exc: Exception) -> ApiError:
             AnalystAuthorityIdempotencyConflict,
             GrowthPlanApprovalBlocked,
             BusinessInvestigationHandoffBlocked,
+            BusinessInvestigationCaseSelectionBlocked,
+            BusinessInvestigationCaseSelectionConflict,
         ),
     ):
         return ApiError(
@@ -215,6 +223,25 @@ def _require_review_write_role(principal: Principal) -> None:
             message="Principal role does not allow stage review commands",
             status_code=403,
         )
+
+
+@router.get(
+    "/case-selection",
+    response_model=BusinessInvestigationCaseSelection,
+    responses=_ERRORS,
+    operation_id="ecommerceInvestigationCaseSelectionGet",
+)
+def get_case_selection(
+    principal: PrincipalDependency,
+    analysis_type: BusinessInvestigationAnalysisType = Query(alias="analysisType"),
+    application: EcommerceBusinessInvestigationApplication = Depends(
+        get_business_investigation_application
+    ),
+) -> BusinessInvestigationCaseSelection:
+    try:
+        return application.get_case_selection(_scope(principal), analysis_type)
+    except Exception as exc:
+        raise _map_error(exc) from exc
 
 
 @router.get(

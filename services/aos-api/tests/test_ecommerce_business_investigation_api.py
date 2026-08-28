@@ -19,8 +19,12 @@ from aos_api.ecommerce_business_investigation_application import (
     EcommerceBusinessInvestigationApplication,
 )
 from aos_api.ecommerce_business_investigation_case import (
+    BusinessInvestigationAnalysisType,
     BusinessInvestigationCaseNotFound,
     BusinessInvestigationCaseRevision,
+)
+from aos_api.ecommerce_business_investigation_case_selection import (
+    BusinessInvestigationCaseSelection,
 )
 from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationRunControl,
@@ -87,6 +91,15 @@ def state(
 class FakeApplication:
     calls: list[tuple] = []
     missing = False
+
+    def get_case_selection(self, scope, analysis_type):
+        self.calls.append(("get_case_selection", scope, analysis_type))
+        return BusinessInvestigationCaseSelection(
+            tenant=TENANT,
+            analysisType=analysis_type.value,
+            sourceReadinessStatus="failed",
+            blockers=["SOURCE_READINESS_NOT_READY"],
+        )
 
     def list_cases(self, scope, *, business_entity_id, limit):
         self.calls.append(("list_cases", scope, business_entity_id, limit))
@@ -314,6 +327,7 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     app.include_router(routes.router)
     paths = app.openapi()["paths"]
     assert "/v1/ecommerce/investigations/cases" in paths
+    assert "/v1/ecommerce/investigations/case-selection" in paths
     assert "/v1/ecommerce/investigations/cases/{case_id}:transition" in paths
     assert "/v1/ecommerce/investigations/cases/{case_id}/runs" in paths
     assert "/v1/ecommerce/investigations/runs/{run_id}:pause" in paths
@@ -326,6 +340,10 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     assert "/v1/ecommerce/investigations/growth-plans/{plan_id}:approve" in paths
     assert "/v1/ecommerce/investigations/runs/{run_id}/handoffs:compile" in paths
     expected_operation_ids = {
+        (
+            "/v1/ecommerce/investigations/case-selection",
+            "get",
+        ): "ecommerceInvestigationCaseSelectionGet",
         ("/v1/ecommerce/investigations/cases", "get"): "ecommerceInvestigationCaseList",
         ("/v1/ecommerce/investigations/cases", "post"): "ecommerceInvestigationCaseCreate",
         ("/v1/ecommerce/investigations/cases/{case_id}", "get"): "ecommerceInvestigationCaseGet",
@@ -378,6 +396,26 @@ def test_router_exposes_only_canonical_case_run_surface_and_manifest_registratio
     assert paths[
         "/v1/ecommerce/investigations/runs/{run_id}/handoffs:compile"
     ]["post"]["operationId"] == "ecommerceInvestigationHandoffCompile"
+
+
+def test_case_selection_is_principal_scoped_and_read_only() -> None:
+    fake = FakeApplication()
+    fake.calls = []
+    with client(fake) as api:
+        response = api.get(
+            "/v1/ecommerce/investigations/case-selection",
+            params={"analysisType": "initial_store_analysis"},
+        )
+    assert response.status_code == 200
+    assert response.json()["caseCreatable"] is False
+    assert response.json()["blockers"] == ["SOURCE_READINESS_NOT_READY"]
+    assert fake.calls == [
+        (
+            "get_case_selection",
+            TenantScope("org-org", "dev-project"),
+            BusinessInvestigationAnalysisType.INITIAL_STORE_ANALYSIS,
+        )
+    ]
 
 
 def test_schedule_policy_http_uses_principal_and_two_exact_versions() -> None:

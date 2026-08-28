@@ -14,6 +14,10 @@ from aos_api.ecommerce_business_investigation_case import (
     BusinessInvestigationCaseRevision,
     BusinessInvestigationCaseStore,
 )
+from aos_api.ecommerce_business_investigation_case_selection import (
+    BusinessInvestigationCaseSelection,
+    BusinessInvestigationCaseSelectionResolver,
+)
 from aos_api.ecommerce_business_investigation_projection import (
     BusinessInvestigationProjectionBuilder,
     BusinessInvestigationProjectionReader,
@@ -162,6 +166,7 @@ class EcommerceBusinessInvestigationApplication:
         review_command_service: EcommerceBusinessInvestigationReviewCommandService | None = None,
         growth_plan_approval_service: EcommerceAnalystGrowthPlanApprovalService | None = None,
         handoff_service: EcommerceBusinessInvestigationHandoffService | None = None,
+        case_selection_resolver: BusinessInvestigationCaseSelectionResolver | None = None,
     ) -> None:
         self._cases = case_store or BusinessInvestigationCaseStore()
         self._runs = run_store or BusinessInvestigationRunStore()
@@ -181,6 +186,9 @@ class EcommerceBusinessInvestigationApplication:
         self._handoffs = handoff_service or EcommerceBusinessInvestigationHandoffService(
             projection=self._projection
         )
+        self._case_selection = (
+            case_selection_resolver or BusinessInvestigationCaseSelectionResolver()
+        )
 
     @staticmethod
     def _tenant(scope: TenantScope) -> TenantContext:
@@ -195,6 +203,17 @@ class EcommerceBusinessInvestigationApplication:
         actor: str,
         occurred_at: datetime,
     ) -> BusinessInvestigationCaseCommandResponse:
+        self._case_selection.verify_case_refs(
+            scope,
+            request.analysis_type.value,
+            (
+                request.channel_ref,
+                request.business_entity_ref,
+                request.entity_channel_binding_ref,
+                request.investigation_profile_ref,
+                request.scope_ref,
+            ),
+        )
         payload = request.model_dump(by_alias=True, mode="json")
         payload.update(
             schemaVersion="aos.ecommerce.business-investigation-case/v1",
@@ -216,6 +235,13 @@ class EcommerceBusinessInvestigationApplication:
         return BusinessInvestigationCaseCommandResponse(
             tenant=self._tenant(scope), authority=result.authority, replayed=result.replayed
         )
+
+    def get_case_selection(
+        self,
+        scope: TenantScope,
+        analysis_type: BusinessInvestigationAnalysisType,
+    ) -> BusinessInvestigationCaseSelection:
+        return self._case_selection.read(scope, analysis_type.value)
 
     def transition_case(
         self,
