@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
+from aos_api.db import connect
 from aos_api.idempotency import idempotency_store
 from aos_api.main import create_app
 from aos_api.metrics import reset_metrics
@@ -18,6 +19,18 @@ def api_client():
     mock_data.reset_mock_state()
     reset_metrics()
     reset_plugin_store()
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO twa_org(id,name) VALUES ('org-a','插件隔离测试组织') "
+            "ON CONFLICT (id) DO NOTHING"
+        )
+        conn.execute(
+            "INSERT INTO twa_workspace(org_id,project_id,name) VALUES "
+            "('org-a','prj-1','插件隔离工作区一'),"
+            "('org-a','prj-2','插件隔离工作区二') "
+            "ON CONFLICT (org_id,project_id) DO NOTHING"
+        )
+        conn.commit()
     app = create_app()
     with TestClient(app) as c:
         yield c
