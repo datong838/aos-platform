@@ -57,6 +57,9 @@ export function EcommerceWorkshopShell({
   };
   const state = readinessState(module);
   const analystVisualContext = module.moduleId === "ecommerce.analyst";
+  const appHeaderOwnsHeading = analystVisualContext
+    || module.moduleId === "ecommerce.price-governance"
+    || module.moduleId === "ecommerce.customer";
   const pendingView = children ?? (
     <section className="ecommerce-workshop-view-pending" role="status">
       <h2>模块目录与外壳已就绪</h2>
@@ -83,7 +86,9 @@ export function EcommerceWorkshopShell({
           <button ref={focusButton} type="button" className="is-yellow" aria-pressed={focusMode} onClick={toggleFocus}>{focusMode ? "退出专注" : "专注模式"}</button>
         </div> : <><div>
           <p className="ecommerce-workshop-eyebrow">已安装电商工作台</p>
-          <h1>{module.displayName}</h1>
+          {appHeaderOwnsHeading
+            ? <strong className="ecommerce-workshop-module-title">{module.displayName}</strong>
+            : <h1>{module.displayName}</h1>}
           {module.menuLabel !== module.displayName ? (
             <p className="ecommerce-workshop-alias">菜单名：{module.menuLabel}</p>
           ) : null}
@@ -107,15 +112,15 @@ export function EcommerceWorkshopShell({
 
       <details className="ecommerce-workshop-technical-context">
         <summary>
-          <span>模块与数据上下文</span>
-          <small>{module.moduleId} · {READINESS_LABEL[module.readiness]} · 数据截止 {dataCutoff ?? "待验证"}</small>
+          <span>模块安装上下文</span>
+          <small>{module.moduleId} · 模块能力{READINESS_LABEL[module.readiness]} · 安装目录截止 {dataCutoff ?? "待验证"}</small>
         </summary>
         <div className="ecommerce-workshop-technical-context-body">
           <dl className="ecommerce-workshop-context-refs" aria-label="模块版本上下文">
             <div><dt>Module</dt><dd>{module.moduleId}</dd></div>
             <div><dt>Bundle</dt><dd>{module.moduleRef.bundleId}@{module.moduleRef.version}</dd></div>
             <div><dt>Installation</dt><dd>r{module.installationRef.revision} / lock r{module.installationRef.lockRevision}</dd></div>
-            <div><dt>数据截止</dt><dd>{dataCutoff ?? "尚无可验证时间"}</dd></div>
+            <div><dt>安装目录截止</dt><dd>{dataCutoff ?? "尚无可验证时间"}</dd></div>
           </dl>
 
           <SourceReadinessPanel />
@@ -128,18 +133,30 @@ export function EcommerceWorkshopShell({
         aria-label="模块主内容"
       >
         {catalogStale ? (
-          <AsyncStateBoundary state="stale" dataCutoff={dataCutoff}>
+          <AsyncStateBoundary
+            state="stale"
+            title="安装目录快照可能已过期"
+            description="安装目录只判定模块能力；下方业务视图按自身当前 canonical GET 独立判定。"
+          >
             {pendingView}
           </AsyncStateBoundary>
         ) : state === "ready" ? (
           pendingView
         ) : state === "partial" ? (
-          <AsyncStateBoundary state="partial" dataCutoff={dataCutoff}>
+          <AsyncStateBoundary
+            state="partial"
+            title="模块能力部分可用"
+            description="这是安装目录结论；下方业务视图使用自身正式读模型的状态和截止。"
+          >
             {pendingView}
           </AsyncStateBoundary>
         ) : (
           <>
-            <AsyncStateBoundary state={state} dataCutoff={dataCutoff} />
+            <AsyncStateBoundary
+              state={state}
+              title={`模块能力${READINESS_LABEL[module.readiness]}`}
+              description="安装目录尚未给出可用结论；下方业务视图按自身当前 canonical GET 独立判定。"
+            />
             {exposeReadOnlyWhenUnverified && children ? (
               <div className="ecommerce-workshop-unverified-read-view">
                 {children}

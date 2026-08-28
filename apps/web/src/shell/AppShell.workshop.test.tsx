@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setTenant } from "../api/tenant";
 import { EcommerceWorkshopCatalogProvider } from "../components/workshop";
-import { workshopCatalogFixture } from "../components/workshop/workshopTestFixtures";
+import { workshopCatalogFixture, workshopModuleFixture } from "../components/workshop/workshopTestFixtures";
 import { EcommerceWorkshopEntryRoute } from "../pages/s2/ecommerce/routes";
 import { AppShell } from "./AppShell";
 
@@ -223,16 +223,26 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
   });
 
   it("六个业务工作台使用各自视觉稿顶部语义且所有动作均可给出安全结果", async () => {
-    const client = { listModules: async () => workshopCatalogFixture() };
     const cases = [
-      ["/workshop/operations", "统一运营驾驶舱", "搜索订单号、SKU、告警关键词…"],
-      ["/workshop/content-campaign", "内容与活动工作台", "搜索活动、内容、商品…"],
-      ["/workshop/creator-growth", "达人邀约驾驶舱", "搜索达人、机构、邀约记录…"],
-      ["/workshop/media-studio", "多媒体内容生产", "搜索文案、视频、直播任务…"],
-      ["/workshop/price-governance", "价格治理驾驶舱", null],
-      ["/workshop/customer", "客户关系工作台", null],
+      ["/workshop/operations", "ecommerce.operations", "统一运营驾驶舱", "搜索订单号、SKU、告警关键词…"],
+      ["/workshop/content-campaign", "ecommerce.content-campaign", "内容与活动工作台", "搜索活动、内容、商品…"],
+      ["/workshop/creator-growth", "ecommerce.creator-growth", "达人邀约驾驶舱", "搜索达人、机构、邀约记录…"],
+      ["/workshop/media-studio", "ecommerce.media-studio", "多媒体内容生产", "搜索文案、视频、直播任务…"],
+      ["/workshop/price-governance", "ecommerce.price-governance", "价格治理驾驶舱", null],
+      ["/workshop/customer", "ecommerce.customer", "客户关系工作台", null],
     ] as const;
-    for (const [path, title, placeholder] of cases) {
+    for (const [path, moduleId, title, placeholder] of cases) {
+      const client = {
+        listModules: async () => workshopCatalogFixture({
+          items: [workshopModuleFixture({
+            moduleId,
+            route: path,
+            displayName: title,
+            menuLabel: title,
+            legacyRoutes: [],
+          })],
+        }),
+      };
       await act(async () => root.render(
         <MemoryRouter key={path} initialEntries={[path]}>
           <EcommerceWorkshopCatalogProvider client={client}>
@@ -241,7 +251,9 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
         </MemoryRouter>,
       ));
       await flush();
+      expect(host.querySelector("[data-module-id]")?.getAttribute("data-module-id")).toBe(moduleId);
       expect(host.querySelector(".workshop-visual-header-left")?.textContent).toContain(title);
+      expect(host.querySelectorAll("h1"), path).toHaveLength(1);
       expect(host.querySelector<HTMLInputElement>(".workshop-visual-header-search input")?.placeholder ?? null).toBe(placeholder);
       const actions = [...host.querySelectorAll<HTMLButtonElement>(".workshop-visual-header-actions button")];
       expect(actions).toHaveLength(2);

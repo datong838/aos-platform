@@ -41,8 +41,9 @@ describe("EcommerceWorkshopShell", () => {
     const context = host.querySelector<HTMLDetailsElement>(".ecommerce-workshop-technical-context");
     const summary = context?.querySelector("summary");
     expect(context?.open).toBe(false);
-    expect(summary?.textContent).toContain("模块与数据上下文");
+    expect(summary?.textContent).toContain("模块安装上下文");
     expect(summary?.textContent).toContain(module.moduleId);
+    expect(summary?.textContent).toContain("安装目录截止");
     expect(summary?.textContent).toContain("2026-08-14T09:59:00Z");
     expect(context?.querySelector("[aria-label='模块版本上下文']")?.textContent).toContain("Bundle");
     expect(context?.textContent).toContain("数据源就绪度");
@@ -63,10 +64,15 @@ describe("EcommerceWorkshopShell", () => {
       ));
       const heading = host.querySelector("h1");
       const main = host.querySelector("#ecommerce-workshop-main");
-      expect(host.querySelectorAll("h1")).toHaveLength(module.moduleId === "ecommerce.analyst" ? 0 : 1);
+      const appHeaderOwnsHeading = module.moduleId === "ecommerce.analyst"
+        || module.moduleId === "ecommerce.price-governance"
+        || module.moduleId === "ecommerce.customer";
+      expect(host.querySelectorAll("h1")).toHaveLength(appHeaderOwnsHeading ? 0 : 1);
       if (module.moduleId === "ecommerce.analyst") {
         expect(host.querySelector(".analyst-exact-context-strip")?.textContent).toContain("渠道未选择");
         expect(host.querySelector(".analyst-exact-context-strip")?.textContent).toContain("业务操作：只读");
+      } else if (appHeaderOwnsHeading) {
+        expect(host.querySelector(".ecommerce-workshop-module-title")?.textContent).toContain(module.label);
       } else {
         expect(heading?.textContent).toContain(module.label);
       }
@@ -82,7 +88,8 @@ describe("EcommerceWorkshopShell", () => {
     await act(async () => root.render(
       <EcommerceWorkshopShell module={moduleWithReadiness("unknown")} dataCutoff={null} />,
     ));
-    expect(host.textContent).toContain("状态待核对");
+    expect(host.textContent).toContain("模块能力待核对");
+    expect(host.textContent).toContain("下方业务视图按自身当前 canonical GET 独立判定");
     expect(host.textContent).toContain("DEPENDENCY_NOT_GREEN");
     expect(host.textContent).not.toContain("业务视图等待正式读模型接入");
   });
