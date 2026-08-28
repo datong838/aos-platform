@@ -1,0 +1,67 @@
+{
+  "id": "provider-health-probe",
+  "actionTypeId": "aip.provider-health-probe",
+  "name": "Text Provider Health Probe",
+  "nameZh": "文本 Provider 健康探测",
+  "description": "受控执行一次三探针健康校验，仅回执元数据",
+  "version": "1.0.0",
+  "author": "aos",
+  "runtime": "stub",
+  "capabilities": [
+    "action",
+    "single-external-effect"
+  ],
+  "objectType": "ProviderHealthObservation",
+  "parameters": [
+    {
+      "name": "providerId",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "providerRevision",
+      "type": "integer",
+      "required": true
+    },
+    {
+      "name": "probeCount",
+      "type": "integer",
+      "required": true
+    },
+    {
+      "name": "outputPolicy",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "requiredMarkings": [
+    "restricted"
+  ],
+  "submissionCriteria": [
+    {
+      "field": "providerId",
+      "op": "eq",
+      "value": "agnes-text-qyh-dev"
+    },
+    {
+      "field": "providerRevision",
+      "op": "eq",
+      "value": 7
+    },
+    {
+      "field": "probeCount",
+      "op": "eq",
+      "value": 3
+    },
+    {
+      "field": "outputPolicy",
+      "op": "eq",
+      "value": "metadata-only"
+    }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}
