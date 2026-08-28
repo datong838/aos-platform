@@ -28,7 +28,22 @@ result: `VISUAL_REWORK_GREEN / QYH_FUNCTIONAL_ACCEPTANCE_GREEN_AT_READONLY_CUTOF
 
 - 再次按真实路由逐页打开 `cockpit`、`operations`、`content-campaign`、`creator-growth`、`media-studio`、`analyst`、`price-governance`、`customer`，八页的“折叠侧栏 → 展开侧栏”均实际点击成功。
 - 多媒体 3 个阶段、经营参谋 8 个业务标签、价格治理 3 个业务标签、客户关系 4 个业务标签逐个点击；其余页面的重新读取按钮按只读边界实际点击。
-- 八页 `1280px` 视口横向溢出均为 `false`；本轮没有点击导入、新建、发布、执行、暂停、重试等潜在状态变更入口。
+- 八页 `1280px` 视口横向溢出均为 `false`。在独立真实功能自验收波中，进一步逐页点击所有明确由页面实现为“安全预检”的新建、生成、内部动作、退款、触达、暂停与重新执行入口；页面均返回“未创建业务记录 / 未触发业务操作 / 不触发外部操作”的本地预检结果。没有点击会绕过预检的真实发布、导入或 Provider 执行入口。
+
+### 栖月汇真实功能自验收明细
+
+| 页面 | 实际点击的主要组件 | 实测结果 |
+| --- | --- | --- |
+| 日常任务总控 | 任务状态、导购顾问介绍浮层、Escape、空指令下达 | 浮层完整展示专业能力/工作边界/个人状态待核对；空指令只返回安全预检 |
+| 统一运营 | 订单、订单明细、库存、履约、支付、售后、运营工单；分类事件与退款预检 | 七切片逐一成为当前详情；分类与退款均提示“当前业务条件不足，未触发业务操作” |
+| 内容活动 | 活动策划、内容日历、日常模板；新建活动、生成方案、保存草稿、重新生成、两处批准发布 | 无正式计划时意图保持只读可信空；六类入口逐项返回未创建记录、内容、预算、生成任务或发布任务的预检结果 |
+| 达人邀约 | 达人库、招募漏斗、商务签约、履约效果、长期关系；检索、三类筛选、读取档案/建议、导入、新建批次 | 五视图逐一选中；无正式候选时保持 `0 条正式数据`，读取保持可信空，导入与新建只打开无写入预检 |
+| 多媒体 | 三阶段、重新读取、查看内容计划、新建内容任务 | 查看内容计划正确跳转内容页；无正式生产上下文时保持可信空；新建任务只打开无 Provider、无费用预检 |
+| 经营参谋 | 八个分析页签、今日方案、重新读取、数据质量 | 八页签逐一选中且 `查看今日方案` 切换增长计划；无 Case/Run 保持可信空；质量分母与分类显示“未知”而非伪 0 |
+| 价格治理 | 同款价格治理、竞品比价、调度控制台、刷新、导出、新建策略 | 三视图逐一选中；无正式价格来源时保持待核对，导出和新建策略只打开无调价预检 |
+| 客户关系 | 客户最小投影、客户分群、生命周期旅程、对话与批次；重读、导入、新建触达、暂停、重新执行 | 四视图逐一选中；四类动作都只返回预检，未解析联系方式、未创建任务、未触达客户 |
+
+八页每次回读后 `documentElement.scrollWidth === clientWidth === 1280`；业务主区没有开发任务编号。页面动作实现复核确认上述预检仅更新本地提示状态，正式业务接口仍为 GET-only。
 
 ## 六数字同事浮层
 
@@ -40,8 +55,8 @@ result: `VISUAL_REWORK_GREEN / QYH_FUNCTIONAL_ACCEPTANCE_GREEN_AT_READONLY_CUTOF
 ## 栖月汇当前只读事实
 
 - 当前 SourceReadiness source/projection 逐类对账保持相等；`dev-org/dev-project` canary 为 `0/0`。
-- 可直接支持页面正向验收的正式投影包括 P01=1、P02=57、P03=62、P04=11、P05=122、P06=232、P09=3、P10=39、P12=208；运营页实际读取订单 50、订单行 50、发货 19、支付 50 的有界列表/聚合。
-- P07 当前保留 19 条 source/projection，但最新自然运行记录为隧道连接失败；P08 保留 54 条、P11 保留 5 条，latest run 仍需下一自然计划验证当前幂等修复。这些事实不影响页面组件工作，但不能被包装为同截止面 SourceReadiness GREEN。
+- `2026-08-28T05:34:18Z` 新鲜只读回读的十二类 source/projection 分别为：Shop `1/1`、Product `57/57`、ProductSku `62/62`、Category `11/11`、Order `122/122`、OrderLine `232/232`、Shipment `19/19`、CustomerLite `54/54`、Weapp `3/3`、SystemConfig `39/39`、ProductReview `5/5`、Payment `210/210`；全部 `unexplainedDelta=0`。运营页实际读取订单 50、订单行 50、发货 19、支付 50 的有界列表/聚合。
+- P07 当前最新自然运行仍为连接失败；P08 当日自然 run 缺失且最新仍为失败；P09 成功 run 存在提前写入 scheduled slot 的历史时序异常。P11 已于 12:00 自然成功，P12 已于 13:00 自然成功并把 Payment 更新为 `210/210`。因此整体 SourceReadiness 仍为 `failed`，这些异常不能被页面已有历史数量包装成同截止面 GREEN。
 - 本次页面功能结论仅为“已取得的正式只读数据可展示、无数据/旧数据/失败可诚实表达、主动作安全失败关闭”；不等价于真实运行、试点或发布授权。
 
 ## 自动化验证
@@ -49,6 +64,6 @@ result: `VISUAL_REWORK_GREEN / QYH_FUNCTIONAL_ACCEPTANCE_GREEN_AT_READONLY_CUTOF
 - `TaskCockpitPage.test.tsx` 新增六数字同事数量、职责浮层、无伪造个人事实、悬停/点击/Escape 测试。
 - 浏览器逐页交互检查：八页侧栏均可在 `260px/48px` 间切换；八页无横向溢出；主要 Tab、筛选、重读与安全预检可工作。
 - Web 累计回归：`255` 个测试文件、`2312/2312` GREEN。
-- 后端栖月汇追溯、Business Investigation projection、Workshop API 与 SourceReadiness 专项：`30/30` GREEN。
+- 后端栖月汇追溯、Business Investigation projection、Workshop API 与 SourceReadiness 专项新鲜复跑：`26/26` GREEN。
 - TypeScript 与 Vite 生产构建 GREEN（`359` modules）；仅保留既有大 chunk 提醒。`git diff --check` GREEN。
 - 浏览器复验经营参谋“数据质量”：失败关闭且分母为 `0` 的技术账本统一呈现“未知”；`1280px` 视口 `scrollWidth=1280`，无横向溢出。
