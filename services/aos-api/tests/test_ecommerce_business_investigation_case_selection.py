@@ -47,7 +47,8 @@ PROFILE = CanonicalProfileSelection(
     ref("InvestigationProfileRevision", "initial-store", "d"),
     ref("InvestigationScopeRevision", "whole-store", "e"),
     run_creatable=False,
-    blockers=(),
+    case_blockers=(),
+    run_blockers=("AIP_PRODUCTION_COMPOSITION_NOT_RESOLVED",),
 )
 
 
@@ -105,6 +106,7 @@ def test_ready_selection_returns_five_exact_refs_but_separates_run_readiness() -
     assert actual.case_creatable is True
     assert actual.run_creatable is False
     assert actual.blockers == []
+    assert actual.run_blockers == ["AIP_PRODUCTION_COMPOSITION_NOT_RESOLVED"]
     assert actual.business_entity_ref == SHOP.business_entity_ref
     assert actual.investigation_profile_ref == PROFILE.investigation_profile_ref
 
@@ -115,7 +117,35 @@ def test_source_failure_and_missing_profile_fail_closed_without_placeholder_refs
     assert actual.run_creatable is False
     assert "SOURCE_READINESS_NOT_READY" in actual.blockers
     assert "INVESTIGATION_PROFILE_AUTHORITY_MISSING" in actual.blockers
+    assert actual.run_blockers == ["CASE_SELECTION_NOT_CREATABLE"]
     assert actual.investigation_profile_ref is None and actual.scope_ref is None
+
+
+def test_default_catalog_resolves_l1_refs_without_claiming_runtime_ready() -> None:
+    actual = BusinessInvestigationCaseSelectionResolver(
+        readiness_service=SourceReadinessService(Facts(_snapshot())),
+        shop_source=ShopSource(),
+    ).read(SCOPE, "initial_store_analysis")
+    assert actual.case_creatable is True
+    assert actual.run_creatable is False
+    assert actual.blockers == []
+    assert actual.run_blockers == ["AIP_PRODUCTION_COMPOSITION_NOT_RESOLVED"]
+    assert actual.investigation_profile_ref is not None
+    assert actual.investigation_profile_ref.resource_id == "ecommerce.initial-store-analysis"
+    assert actual.scope_ref is not None
+    assert actual.scope_ref.resource_id == (
+        "ecommerce.current-business-entity.full-store.readonly"
+    )
+
+
+def test_unknown_analysis_type_keeps_l1_refs_missing() -> None:
+    actual = BusinessInvestigationCaseSelectionResolver(
+        readiness_service=SourceReadinessService(Facts(_snapshot())),
+        shop_source=ShopSource(),
+    ).read(SCOPE, "weekly_business_review")
+    assert actual.case_creatable is False
+    assert actual.investigation_profile_ref is None
+    assert "INVESTIGATION_PROFILE_AUTHORITY_MISSING" in actual.blockers
 
 
 def test_exact_ref_drift_is_rejected_before_case_store_access() -> None:

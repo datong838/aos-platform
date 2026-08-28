@@ -13,6 +13,9 @@ from pydantic import Field, model_validator
 from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.db import connect as db_connect
+from aos_api.ecommerce_business_investigation_profile_catalog import (
+    EcommerceInvestigationProfileCatalog,
+)
 from aos_api.source_readiness import SourceReadinessService, build_source_readiness_service
 from aos_api.source_readiness_contracts import (
     CANONICAL_QYH_PIPELINE_IDS,
@@ -46,6 +49,7 @@ class BusinessInvestigationCaseSelection(AipContractModel):
     case_creatable: bool = False
     run_creatable: bool = False
     blockers: list[str] = Field(default_factory=list)
+    run_blockers: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _creatable_requires_complete_exact_selection(self) -> "BusinessInvestigationCaseSelection":
@@ -60,6 +64,8 @@ class BusinessInvestigationCaseSelection(AipContractModel):
             raise ValueError("caseCreatable requires five exact refs and no blockers")
         if self.run_creatable and not self.case_creatable:
             raise ValueError("runCreatable requires caseCreatable")
+        if self.run_creatable and self.run_blockers:
+            raise ValueError("runCreatable requires no runBlockers")
         return self
 
 
@@ -75,7 +81,8 @@ class CanonicalProfileSelection:
     investigation_profile_ref: InvestigationExactRef
     scope_ref: InvestigationExactRef
     run_creatable: bool
-    blockers: tuple[str, ...] = ()
+    case_blockers: tuple[str, ...] = ()
+    run_blockers: tuple[str, ...] = ()
 
 
 class ShopSelectionSource(Protocol):
@@ -163,14 +170,26 @@ class PostgresCanonicalShopSelectionSource:
         return CanonicalShopSelection(channel_ref, business_entity_ref, binding_ref)
 
 
-class MissingCanonicalProfileSelectionSource:
-    """Fail closed until a production InvestigationProfile/Scope authority is installed."""
+class CatalogCanonicalProfileSelectionSource:
+    """Resolve stable L1 refs while keeping AIP runtime composition separate."""
+
+    def __init__(self, catalog: EcommerceInvestigationProfileCatalog | None = None) -> None:
+        self._catalog = catalog or EcommerceInvestigationProfileCatalog()
 
     def read(
         self, scope: TenantScope, analysis_type: str
     ) -> CanonicalProfileSelection | None:
-        del scope, analysis_type
-        return None
+        del scope
+        resolved = self._catalog.read(analysis_type)
+        if resolved is None:
+            return None
+        profile, investigation_scope = resolved
+        return CanonicalProfileSelection(
+            profile.exact_ref,
+            investigation_scope.exact_ref,
+            run_creatable=False,
+            run_blockers=("AIP_PRODUCTION_COMPOSITION_NOT_RESOLVED",),
+        )
 
 
 class BusinessInvestigationCaseSelectionResolver:
@@ -182,11 +201,12 @@ class BusinessInvestigationCaseSelectionResolver:
     ) -> None:
         self._readiness = readiness_service or build_source_readiness_service()
         self._shops = shop_source or PostgresCanonicalShopSelectionSource()
-        self._profiles = profile_source or MissingCanonicalProfileSelectionSource()
+        self._profiles = profile_source or CatalogCanonicalProfileSelectionSource()
 
     def read(self, scope: TenantScope, analysis_type: str) -> BusinessInvestigationCaseSelection:
         readiness = self._readiness.read(org_id=scope.org_id, project_id=scope.project_id)
         blockers: list[str] = []
+        run_blockers: list[str] = []
         if readiness.status is not SourceReadinessStatus.READY or tuple(
             item.pipeline_id for item in readiness.sources
         ) != CANONICAL_QYH_PIPELINE_IDS:
@@ -199,9 +219,12 @@ class BusinessInvestigationCaseSelectionResolver:
             blockers.extend(
                 ["INVESTIGATION_PROFILE_AUTHORITY_MISSING", "INVESTIGATION_SCOPE_AUTHORITY_MISSING"]
             )
-        elif profile.blockers:
-            blockers.extend(profile.blockers)
+        else:
+            blockers.extend(profile.case_blockers)
+            run_blockers.extend(profile.run_blockers)
         case_creatable = not blockers and shop is not None and profile is not None
+        if not case_creatable:
+            run_blockers.append("CASE_SELECTION_NOT_CREATABLE")
         return BusinessInvestigationCaseSelection(
             tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
             analysisType=analysis_type,
@@ -216,6 +239,7 @@ class BusinessInvestigationCaseSelectionResolver:
             caseCreatable=case_creatable,
             runCreatable=bool(case_creatable and profile and profile.run_creatable),
             blockers=sorted(set(blockers)),
+            runBlockers=sorted(set(run_blockers)),
         )
 
     def verify_case_refs(
