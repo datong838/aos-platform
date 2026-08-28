@@ -15,19 +15,48 @@ from typing import Any
 def _process_exists(pid: int) -> bool:
     try:
         os.kill(pid, 0)
-    except (ProcessLookupError, PermissionError):
+    except ProcessLookupError:
         return False
+    except PermissionError:
+        # POSIX EPERM means the PID exists but this restricted caller cannot
+        # signal it.  Identity and listener ownership are still checked below.
+        return True
     return True
 
 
 def _command_reader(pid: int) -> str:
-    completed = subprocess.run(
-        ["ps", "-p", str(pid), "-o", "command="],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        completed = subprocess.run(
+            ["ps", "-p", str(pid), "-o", "command="],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return ""
     return completed.stdout.strip() if completed.returncode == 0 else ""
+
+
+def _working_directory_reader(pid: int) -> str:
+    try:
+        completed = subprocess.run(
+            ["lsof", "-a", "-p", str(pid), "-d", "cwd", "-Fn"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return ""
+    if completed.returncode != 0:
+        return ""
+    return next(
+        (
+            line[1:].strip()
+            for line in completed.stdout.splitlines()
+            if line.startswith("n") and line[1:].strip()
+        ),
+        "",
+    )
 
 
 def _listener_reader(port: int) -> set[int]:
@@ -68,8 +97,10 @@ def evaluate_runtime_owner(
     pid_file: Path,
     port: int,
     expected_tokens: tuple[str, ...],
+    expected_cwd: Path | None = None,
     process_exists: Callable[[int], bool] = _process_exists,
     command_reader: Callable[[int], str] = _command_reader,
+    working_directory_reader: Callable[[int], str] = _working_directory_reader,
     listener_reader: Callable[[int], set[int]] = _listener_reader,
 ) -> dict[str, Any]:
     """Require one live expected process to be the sole listener for ``port``."""
@@ -86,10 +117,6 @@ def evaluate_runtime_owner(
     if not process_exists(pid):
         return _result(False, "PROCESS_NOT_ALIVE", pid=pid, port=port)
 
-    command = command_reader(pid)
-    if not command or any(token not in command for token in expected_tokens):
-        return _result(False, "PROCESS_IDENTITY_MISMATCH", pid=pid, port=port)
-
     try:
         listener_pids = listener_reader(port)
     except (OSError, RuntimeError, ValueError):
@@ -102,6 +129,20 @@ def evaluate_runtime_owner(
             port=port,
             listener_pids=listener_pids,
         )
+
+    command = command_reader(pid)
+    if command:
+        if any(token not in command for token in expected_tokens):
+            return _result(False, "PROCESS_IDENTITY_MISMATCH", pid=pid, port=port)
+    else:
+        observed_cwd = working_directory_reader(pid)
+        if (
+            expected_cwd is None
+            or not observed_cwd
+            or Path(observed_cwd).resolve() != expected_cwd.resolve()
+        ):
+            return _result(False, "PROCESS_IDENTITY_MISMATCH", pid=pid, port=port)
+
     return _result(
         True,
         "RUNTIME_OWNER_EXACT",
@@ -116,11 +157,13 @@ def main() -> int:
     parser.add_argument("--pid-file", required=True, type=Path)
     parser.add_argument("--port", required=True, type=int)
     parser.add_argument("--expected-token", action="append", default=[])
+    parser.add_argument("--expected-cwd", type=Path)
     args = parser.parse_args()
     result = evaluate_runtime_owner(
         pid_file=args.pid_file,
         port=args.port,
         expected_tokens=tuple(args.expected_token),
+        expected_cwd=args.expected_cwd,
     )
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return 0 if result["ok"] else 1

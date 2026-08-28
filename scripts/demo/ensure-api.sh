@@ -16,6 +16,15 @@ if [ "${1:-}" = "--restart" ]; then
   RESTART=1
 fi
 
+runtime_owner_exact() {
+  python "$ROOT/scripts/demo/api_runtime_guard.py" \
+    --pid-file "$PID_DIR/aos-api.pid" \
+    --port 8080 \
+    --expected-cwd "$ROOT/services/aos-api" \
+    --expected-token uvicorn \
+    --expected-token aos_api.main:app
+}
+
 stop_api() {
   if [ -f "$PID_DIR/aos-api.pid" ]; then
     kill "$(cat "$PID_DIR/aos-api.pid")" 2>/dev/null || true
@@ -51,7 +60,9 @@ PY
 )"
 }
 
-if [ "$RESTART" = "0" ] && curl -sf --max-time 2 http://127.0.0.1:8080/v1/health >/dev/null; then
+if [ "$RESTART" = "0" ] \
+  && curl -sf --max-time 2 http://127.0.0.1:8080/v1/health >/dev/null \
+  && runtime_owner_exact; then
   echo "OK  aos-api already up  http://127.0.0.1:8080/v1/health"
   exit 0
 fi
@@ -126,11 +137,7 @@ PY
 
 for _ in $(seq 1 45); do
   if curl -sf --max-time 2 http://127.0.0.1:8080/v1/health >/dev/null; then
-    if python "$ROOT/scripts/demo/api_runtime_guard.py" \
-      --pid-file "$PID_DIR/aos-api.pid" \
-      --port 8080 \
-      --expected-token uvicorn \
-      --expected-token aos_api.main:app; then
+    if runtime_owner_exact; then
       echo "OK  aos-api restarted with exact runtime ownership (detached session)"
       exit 0
     fi
