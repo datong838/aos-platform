@@ -1,18 +1,18 @@
 ---
 knowledge_id: qyh.customer-service.escalation
 version: 1
-owner: AOS/FDE 与栖月汇商贸有限公司运营
+owner: AOS/FDE 与租户运营责任人
 license_id: aos-internal-owned-v1
 usage_policy: workspace_retrieval
 marking: internal
 review_cycle_days: 90
 ---
 
-# 栖月汇微商城客服升级与承诺边界
+# 微商城客服升级与承诺边界
 
 ## 适用范围
 
-本规则用于栖月汇商贸有限公司默认工作区中的客服专员、导购顾问与私域管家。它只提供处理原则和升级路径，不替代订单、退款、物流及平台规则的实时权威数据。
+本规则用于租户工作区中的客服专员、导购顾问与私域管家。它只提供处理原则和升级路径，不替代订单、退款、物流及平台规则的实时权威数据。
 
 ## 回复前检查
 

@@ -29,9 +29,9 @@ class InventoryObjectRevision(AipContractModel):
 
 class InventoryReadItem(AipContractModel):
     object_id: str = Field(min_length=1, max_length=300)
-    stock: int = Field(ge=0)
-    stock_alarm: int = Field(ge=0)
-    stock_health: InventoryHealth
+    stock: int | None = Field(default=None, ge=0)
+    stock_alarm: int | None = Field(default=None, ge=0)
+    stock_health: InventoryHealth | None = None
     source_updated_at: datetime
     revision: InventoryObjectRevision
 
@@ -52,7 +52,14 @@ class InventoryReadItem(AipContractModel):
 class InventoryReadPage(AipContractModel):
     limit: int = Field(ge=1, le=100)
     count: int = Field(ge=0, le=100)
+    unknown_count: int = Field(default=0, ge=0, le=100)
     has_more: bool
+
+    @model_validator(mode="after")
+    def _unknown_is_bounded(self) -> InventoryReadPage:
+        if self.unknown_count > self.count:
+            raise ValueError("Inventory unknownCount cannot exceed count")
+        return self
 
 
 class InventoryReadEnvelope(AipContractModel):

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from functools import partial
 from typing import Any
 
@@ -28,13 +29,19 @@ class EcommerceInventoryReaderError(RuntimeError):
     pass
 
 
-def _non_negative_integer(value: object, *, field: str) -> int:
+def _optional_non_negative_integer(value: object, *, field: str) -> int | None:
+    if value is None:
+        return None
     if isinstance(value, bool):
         raise ValueError(f"{field} must be a non-negative integer")
     text = str(value).strip()
-    if not text.isdigit():
+    try:
+        number = Decimal(text)
+    except InvalidOperation as exc:
+        raise ValueError(f"{field} must be a non-negative integer") from exc
+    if not number.is_finite() or number < 0 or number != number.to_integral_value():
         raise ValueError(f"{field} must be a non-negative integer")
-    return int(text)
+    return int(number)
 
 
 class EcommerceInventoryReader:
@@ -84,6 +91,12 @@ class EcommerceInventoryReader:
             page=InventoryReadPage(
                 limit=limit,
                 count=len(items),
+                unknown_count=sum(
+                    item.stock is None
+                    or item.stock_alarm is None
+                    or item.stock_health is None
+                    for item in items
+                ),
                 has_more=len(rows) > limit,
             ),
         )
@@ -95,12 +108,16 @@ class EcommerceInventoryReader:
         payload_hash = str(row["payload_hash"]).strip()
         return InventoryReadItem(
             object_id=object_id,
-            stock=_non_negative_integer(properties["stock"], field="stock"),
-            stock_alarm=_non_negative_integer(
-                properties["stockAlarm"],
+            stock=_optional_non_negative_integer(properties.get("stock"), field="stock"),
+            stock_alarm=_optional_non_negative_integer(
+                properties.get("stockAlarm"),
                 field="stockAlarm",
             ),
-            stock_health=InventoryHealth(properties["stock_health"]),
+            stock_health=(
+                InventoryHealth(properties["stock_health"])
+                if properties.get("stock_health") is not None
+                else None
+            ),
             source_updated_at=row["source_updated_at"],
             revision=InventoryObjectRevision(
                 resource_id=object_id,

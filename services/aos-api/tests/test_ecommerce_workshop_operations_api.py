@@ -104,7 +104,11 @@ def test_operations_shell_is_tenant_bound_and_structurally_blocked() -> None:
 
     class InventoryReader:
         def read(self, **kwargs):
-            return type("Inventory", (), {"items": []})()
+            return type(
+                "Inventory",
+                (),
+                {"items": [], "page": type("Page", (), {"unknown_count": 0})()},
+            )()
 
     class CaseStore:
         def list_cases(self, scope, *, limit=50):

@@ -163,7 +163,10 @@ def test_transaction_and_inventory_slices_are_ready_from_bounded_readers() -> No
             assert cutoff == NOW
             assert limit == 50
             assert scope == {"org_id": "org-org", "project_id": "dev-project"}
-            return SimpleNamespace(items=[object()])
+            return SimpleNamespace(
+                items=[object(), object()],
+                page=SimpleNamespace(unknown_count=1),
+            )
 
     class EmptyCaseStore:
         def list_cases(self, scope, *, limit=50):
@@ -187,6 +190,8 @@ def test_transaction_and_inventory_slices_are_ready_from_bounded_readers() -> No
 
     assert [item.status.value for item in envelope.slices[:5]] == ["ready"] * 5
     assert [item.count_ledger.attached for item in envelope.slices[:5]] == [1] * 5
+    assert envelope.slices[2].count_ledger.source_total == 2
+    assert envelope.slices[2].count_ledger.unmatched == 1
     assert envelope.slices[5].status.value == "ready"
     assert envelope.slices[5].count_ledger.attached == 1
     assert envelope.slices[6].status.value == "ready"
@@ -208,7 +213,7 @@ def test_one_transaction_reader_failure_blocks_only_its_slice() -> None:
 
     class InventoryReader:
         def read(self, **kwargs):
-            return SimpleNamespace(items=[])
+            return SimpleNamespace(items=[], page=SimpleNamespace(unknown_count=0))
 
     class EmptyCaseStore:
         def list_cases(self, scope, *, limit=50):
@@ -238,7 +243,7 @@ def test_aftersale_reader_failure_blocks_only_aftersale_slice() -> None:
 
     class InventoryReader:
         def read(self, **kwargs):
-            return SimpleNamespace(items=[])
+            return SimpleNamespace(items=[], page=SimpleNamespace(unknown_count=0))
 
     class AftersaleReader:
         def read(self, **kwargs):

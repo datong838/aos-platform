@@ -182,6 +182,19 @@ def _str(v: Any, default: str = "") -> str:
     return s if s != "" else default
 
 
+def _optional_non_negative_integer_string(v: Any, *, field: str) -> str | None:
+    """保留可选库存语义，并把无损 Decimal 整数规范为 integer_string。"""
+    if v is None or str(v).strip() == "":
+        return None
+    try:
+        value = Decimal(str(v).strip())
+    except (InvalidOperation, ValueError) as exc:
+        raise ValueError(f"{field} must be a non-negative integer") from exc
+    if not value.is_finite() or value < 0 or value != value.to_integral_value():
+        raise ValueError(f"{field} must be a non-negative integer")
+    return str(int(value))
+
+
 def _base(row: dict[str, Any], ot: str, pk: Any, when: datetime) -> dict[str, Any]:
     """在 raw row 基础上追加 OT 元字段，保留原始 raw 字段。
 
@@ -274,16 +287,24 @@ def to_product_sku(row: dict[str, Any]) -> dict[str, Any]:
         row.get("sku_id"),
         _observation_time(row, source_business_time),
     )
-    o["properties"] = {
+    properties = {
         "productId": _str(row.get("goods_id"), "0"),
         "status": "active",
         "barcode": _str(row.get("sku_no"), ""),
         "price": _money(row.get("price")),
         "currency": CURRENCY,
-        "stock": _str(row.get("stock"), "0"),
-        "stockAlarm": _str(row.get("goods_stock_alarm"), "0"),
         "updatedAt": _business_iso(source_business_time),
     }
+    stock = _optional_non_negative_integer_string(row.get("stock"), field="stock")
+    stock_alarm = _optional_non_negative_integer_string(
+        row.get("goods_stock_alarm"),
+        field="goods_stock_alarm",
+    )
+    if stock is not None:
+        properties["stock"] = stock
+    if stock_alarm is not None:
+        properties["stockAlarm"] = stock_alarm
+    o["properties"] = properties
     return o
 
 

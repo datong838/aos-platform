@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any
 
@@ -246,6 +247,38 @@ def test_to_product_sku_maps_sku_id_and_price():
     # raw 字段保留（供 apply_derived_metrics 读取 stock/goods_stock_alarm）
     assert out["stock"] == 100
     assert out["goods_stock_alarm"] == 10
+
+
+def test_to_product_sku_normalizes_integral_decimal_inventory_without_loss():
+    out = to_product_sku({
+        "sku_id": 73,
+        "goods_id": 65,
+        "stock": Decimal("497.000"),
+        "goods_stock_alarm": Decimal("10.0"),
+        "modify_time": 1700002000,
+    })
+
+    assert out["properties"]["stock"] == "497"
+    assert out["properties"]["stockAlarm"] == "10"
+
+
+def test_to_product_sku_preserves_missing_inventory_as_unknown():
+    out = to_product_sku({"sku_id": 73, "goods_id": 65, "modify_time": 1700002000})
+
+    assert "stock" not in out["properties"]
+    assert "stockAlarm" not in out["properties"]
+
+
+@pytest.mark.parametrize("value", [Decimal("1.5"), -1, "not-a-number"])
+def test_to_product_sku_rejects_lossy_or_invalid_inventory(value: object):
+    with pytest.raises(ValueError, match="stock must be a non-negative integer"):
+        to_product_sku({
+            "sku_id": 73,
+            "goods_id": 65,
+            "stock": value,
+            "goods_stock_alarm": 0,
+            "modify_time": 1700002000,
+        })
 
 
 def test_to_customer_lite_maps_member_id_and_reg_time():

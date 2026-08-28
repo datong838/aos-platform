@@ -184,12 +184,21 @@ class EcommerceWorkshopOperations:
                 )
                 continue
             if slice_id is OperationsSliceId.INVENTORY and not inventory_error:
+                unknown_count = inventory.page.unknown_count if inventory is not None else 0
+                source_total = len(inventory.items) if inventory is not None else 0
                 slices.append(
-                    self._ready_slice(
+                    OperationsSliceReadiness(
                         slice_id=slice_id,
-                        evaluated_at=evaluated_at,
+                        status=OperationsSliceStatus.READY,
+                        data_cutoff=evaluated_at,
                         authority_refs=authority_refs,
-                        count=len(inventory.items) if inventory is not None else 0,
+                        blockers=[],
+                        count_ledger=OperationsCountLedger(
+                            source_total=source_total,
+                            attached=source_total - unknown_count,
+                            unmatched=unknown_count,
+                            conflicted=0,
+                        ),
                     )
                 )
                 continue

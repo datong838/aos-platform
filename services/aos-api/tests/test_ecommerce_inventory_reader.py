@@ -71,6 +71,7 @@ def test_inventory_reader_is_tenant_bound_read_only_and_exact() -> None:
     assert result.page.has_more is True
     assert result.items[0].stock == 100
     assert result.items[0].stock_alarm == 10
+    assert result.page.unknown_count == 0
     assert result.items[0].revision.content_hash == "sha256:" + "a" * 64
 
     connection = queue.connections[0]
@@ -107,15 +108,12 @@ def test_inventory_reader_keeps_positive_and_canary_scopes_independent() -> None
     assert queue.connections[1].calls[-1][1][:2] == ("dev-org", "dev-project")
 
 
-@pytest.mark.parametrize(
-    "properties",
-    [
-        {"stockAlarm": "10", "stock_health": "ok"},
-        {"stock": "100", "stock_health": "ok"},
-        {"stock": "100", "stockAlarm": "10", "stock_health": "unknown"},
-        {"stock": "not-an-int", "stockAlarm": "10", "stock_health": "ok"},
-    ],
-)
+@pytest.mark.parametrize("properties", [
+    {"stock": "100", "stockAlarm": "10", "stock_health": "unknown"},
+    {"stock": "not-an-int", "stockAlarm": "10", "stock_health": "ok"},
+    {"stock": "1.5", "stockAlarm": "10", "stock_health": "ok"},
+    {"stock": "-1", "stockAlarm": "10", "stock_health": "ok"},
+])
 def test_inventory_reader_fails_closed_on_semantic_drift(
     properties: dict[str, object],
 ) -> None:
@@ -132,6 +130,46 @@ def test_inventory_reader_fails_closed_on_semantic_drift(
             cutoff=CUTOFF,
             limit=10,
         )
+
+
+def test_inventory_reader_keeps_optional_missing_values_as_unknown() -> None:
+    missing_stock = _row(object_id="sku-missing-stock")
+    missing_stock["properties"] = {"stockAlarm": "10", "stock_health": "ok"}
+    missing_alarm = _row(object_id="sku-missing-alarm")
+    missing_alarm["properties"] = {"stock": "100", "stock_health": "ok"}
+    missing_health = _row(object_id="sku-missing-health")
+    missing_health["properties"] = {"stock": "100", "stockAlarm": "10"}
+    reader = EcommerceInventoryReader(
+        connect_factory=ConnectionQueue([missing_stock, missing_alarm, missing_health]).connect
+    )
+
+    result = reader.read(
+        org_id="org-org", project_id="dev-project", cutoff=CUTOFF, limit=10
+    )
+
+    assert result.page.count == 3
+    assert result.page.unknown_count == 3
+    assert result.items[0].stock is None
+    assert result.items[1].stock_alarm is None
+    assert result.items[2].stock_health is None
+
+
+def test_inventory_reader_accepts_integral_decimal_strings_without_truncation() -> None:
+    row = _row()
+    row["properties"] = {
+        "stock": "497.000",
+        "stockAlarm": "10.0",
+        "stock_health": "ok",
+    }
+    reader = EcommerceInventoryReader(connect_factory=ConnectionQueue([row]).connect)
+
+    result = reader.read(
+        org_id="org-org", project_id="dev-project", cutoff=CUTOFF, limit=10
+    )
+
+    assert result.items[0].stock == 497
+    assert result.items[0].stock_alarm == 10
+    assert result.page.unknown_count == 0
 
 
 def test_inventory_reader_rejects_naive_cutoff_and_invalid_limit() -> None:
