@@ -5,6 +5,7 @@ import {
   Route,
   Routes,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -26,6 +27,11 @@ vi.mock("../components/EnvReadonlyBadge", () => ({ EnvReadonlyBadge: () => null 
 function LocationProbe() {
   const location = useLocation();
   return <output data-testid="location">{location.pathname}</output>;
+}
+
+function NavigationProbe() {
+  const navigate = useNavigate();
+  return <button type="button" data-testid="go-content" onClick={() => navigate("/workshop/content-campaign")}>go</button>;
 }
 
 async function flush() {
@@ -299,5 +305,48 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelector(".p-app")?.classList.contains("is-workshop-focus")).toBe(false);
     expect(document.activeElement).toBe(exit);
     expect(host.querySelector("aside")?.classList.contains("is-collapsed")).toBe(true);
+  });
+
+  it("主工作台路由切换时复位共享内容容器滚动位置", async () => {
+    const client = {
+      listModules: async () => workshopCatalogFixture({
+        items: [
+          workshopModuleFixture(),
+          workshopModuleFixture({
+            moduleId: "ecommerce.content-campaign",
+            route: "/workshop/content-campaign",
+            displayName: "内容与活动工作台",
+            menuLabel: "内容与活动工作台",
+            legacyRoutes: [],
+          }),
+        ],
+      }),
+    };
+    await act(async () => root.render(
+      <MemoryRouter initialEntries={["/workshop/operations"]}>
+        <EcommerceWorkshopCatalogProvider client={client}>
+          <NavigationProbe />
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="workshop/:workshopModule/*" element={<EcommerceWorkshopEntryRoute />} />
+            </Route>
+          </Routes>
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+
+    const content = host.querySelector<HTMLDivElement>(".content")!;
+    content.scrollTop = 115.5;
+    content.scrollLeft = 24;
+    expect(content.scrollTop).toBe(115.5);
+    expect(content.scrollLeft).toBe(24);
+
+    await act(async () => host.querySelector<HTMLButtonElement>("[data-testid='go-content']")!.click());
+    await flush();
+
+    expect(content.scrollTop).toBe(0);
+    expect(content.scrollLeft).toBe(0);
+    expect(host.querySelector(".analyst-exact-side-item.is-active")?.textContent).toContain("内容与活动工作台");
   });
 });

@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-do
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -364,6 +365,7 @@ export function AppShell() {
     () => `${getTenant().orgId}:${getTenant().projectId}`,
   );
   const location = useLocation();
+  const contentRef = useRef<HTMLDivElement>(null);
   const workshopCatalog = useEcommerceWorkshopCatalog();
   const activeWorkshop = findInstalledWorkshopRoute(
     workshopCatalog.modules,
@@ -398,6 +400,13 @@ export function AppShell() {
       window.matchMedia("(prefers-color-scheme: dark)").matches,
   );
   const [workshopFocusMode, setWorkshopFocusMode] = useState(false);
+
+  useLayoutEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+    content.scrollTop = 0;
+    content.scrollLeft = 0;
+  }, [location.pathname, workspaceKey]);
 
   useEffect(() => {
     const onFocusMode = (event: Event) => {
@@ -660,7 +669,7 @@ export function AppShell() {
           <main className="main">
             <OfflineBanner />
             <ApiStatusBar />
-            <div className="content">
+            <div className="content" ref={contentRef}>
               <Outlet key={workspaceKey} />
             </div>
           </main>
