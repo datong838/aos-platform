@@ -18,7 +18,7 @@ result: `VISUAL_REWORK_GREEN / QYH_FUNCTIONAL_ACCEPTANCE_GREEN_AT_READONLY_CUTOF
 | 内容与活动工作台 | 1280×720 并排复核 | `260px ↔ 48px` | 活动策划/内容日历/日常模板、新建活动预检 | 无正式活动时不注入演示活动 |
 | 达人邀约驾驶舱 | 1280×720 并排复核 | `260px ↔ 48px` | 五个业务视图、新建批次预检 | 无正式达人候选时不生成姓名、评分或联系方式 |
 | 多媒体内容生产 | 1280×720 并排复核 | `260px ↔ 48px` | 阶段切换、新建内容任务预检 | 无正式媒体任务时保持可信空 |
-| 经营参谋 · 增长指挥中心 | 1280×720 并排复核 | `260px ↔ 48px` | 渠道、八标签、今日方案、列表重读 | 无 canonical Case/Run 时只读可信空，不构造经营结论 |
+| 经营参谋 · 增长指挥中心 | 1280×720 并排复核 | `260px ↔ 48px` | 渠道、八标签、今日方案、列表重读、数据质量账本 | 无 canonical Case/Run 时只读可信空；分母未知时显示“未知”而不是业务零，不构造经营结论 |
 | 价格治理驾驶舱 | 1280×720 并排复核 | `260px ↔ 48px` | 刷新、新建监测策略预检 | 无正式价格事实时不生成商品、价格或调价建议 |
 | 客户关系工作台 | 1280×720 并排复核 | `260px ↔ 48px` | 重读、新建触达任务、暂停/重新执行预检 | 无正式客户任务时不生成客户或触达记录 |
 
@@ -42,6 +42,7 @@ result: `VISUAL_REWORK_GREEN / QYH_FUNCTIONAL_ACCEPTANCE_GREEN_AT_READONLY_CUTOF
 
 - `TaskCockpitPage.test.tsx` 新增六数字同事数量、职责浮层、无伪造个人事实、悬停/点击/Escape 测试。
 - 浏览器逐页交互检查：八页侧栏均可在 `260px/48px` 间切换；八页无横向溢出；主要 Tab、筛选、重读与安全预检可工作。
-- Web 累计回归：`255` 个测试文件、`2311/2311` GREEN。
+- Web 累计回归：`255` 个测试文件、`2312/2312` GREEN。
 - 后端栖月汇追溯、Business Investigation projection、Workshop API 与 SourceReadiness 专项：`30/30` GREEN。
 - TypeScript 与 Vite 生产构建 GREEN（`359` modules）；仅保留既有大 chunk 提醒。`git diff --check` GREEN。
+- 浏览器复验经营参谋“数据质量”：失败关闭且分母为 `0` 的技术账本统一呈现“未知”；`1280px` 视口 `scrollWidth=1280`，无横向溢出。

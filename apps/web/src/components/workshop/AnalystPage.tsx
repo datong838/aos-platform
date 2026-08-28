@@ -54,6 +54,10 @@ function metricValue(view: AnalystViewSlice, index: number) {
   };
 }
 
+function qualityLedgerValue(view: AnalystViewSlice, value: number): number | "未知" {
+  return view.status !== "ready" && view.countLedger.denominator === 0 ? "未知" : value;
+}
+
 function AnalystExactTechnicalDetails({ view }: { view: AnalystViewSlice }) {
   return <details className="analyst-exact-technical-details">
     <summary>证据、归因与安全边界</summary>
@@ -98,7 +102,7 @@ function AnalystExactView({ view, selected }: { view: AnalystViewSlice; selected
   </section>;
 
   return <section {...panelProps}>
-    <header className="analyst-exact-visually-hidden"><h2>{LABELS[view.viewId]}</h2></header><div className="analyst-exact-quality-grid"><article><header><strong>增长护栏 · 数据质量门</strong><span>{view.status}</span></header>{view.readinessAxes.map((axis) => <div key={axis.axis}><span>{AXIS_LABELS[axis.axis]}</span><progress value={axis.status === "ready" ? 1 : 0} max={1} /><small>{axis.status}</small></div>)}</article><aside><header><strong>先行指标 · 同截止面巡检</strong><span>只读</span></header><div className="analyst-exact-quality-metrics">{metrics.slice(0, 2).map((metric) => <section key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.status}</small></section>)}</div><p>未知不显示为 0；没有 exact quality ref 时保持失败关闭。</p></aside><article><header><strong>分母与新鲜度</strong><span>{view.countLedger.denominator}</span></header><dl><div><dt>ready</dt><dd>{view.countLedger.ready}</dd></div><div><dt>unknown</dt><dd>{view.countLedger.unknown}</dd></div><div><dt>blocked</dt><dd>{view.countLedger.blocked}</dd></div></dl></article><aside><header><strong>异常与阻断</strong><span>{view.blockers.length}</span></header>{blockers.slice(0, 3).map((item) => <p key={item.code}><strong>{item.code}</strong><br />{item.requiredAction}</p>)}</aside></div>{common}
+    <header className="analyst-exact-visually-hidden"><h2>{LABELS[view.viewId]}</h2></header><div className="analyst-exact-quality-grid"><article><header><strong>增长护栏 · 数据质量门</strong><span>{view.status}</span></header>{view.readinessAxes.map((axis) => <div key={axis.axis}><span>{AXIS_LABELS[axis.axis]}</span><progress value={axis.status === "ready" ? 1 : 0} max={1} /><small>{axis.status}</small></div>)}</article><aside><header><strong>先行指标 · 同截止面巡检</strong><span>只读</span></header><div className="analyst-exact-quality-metrics">{metrics.slice(0, 2).map((metric) => <section key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.status}</small></section>)}</div><p>未知不显示为 0；没有 exact quality ref 时保持失败关闭。</p></aside><article aria-label="分母与新鲜度"><header><strong>分母与新鲜度</strong><span>{qualityLedgerValue(view, view.countLedger.denominator)}</span></header><dl><div><dt>ready</dt><dd>{qualityLedgerValue(view, view.countLedger.ready)}</dd></div><div><dt>unknown</dt><dd>{qualityLedgerValue(view, view.countLedger.unknown)}</dd></div><div><dt>blocked</dt><dd>{qualityLedgerValue(view, view.countLedger.blocked)}</dd></div></dl></article><aside><header><strong>异常与阻断</strong><span>{view.blockers.length}</span></header>{blockers.slice(0, 3).map((item) => <p key={item.code}><strong>{item.code}</strong><br />{item.requiredAction}</p>)}</aside></div>{common}
   </section>;
 }
 
