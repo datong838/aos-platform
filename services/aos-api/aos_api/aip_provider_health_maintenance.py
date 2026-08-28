@@ -79,14 +79,25 @@ class AipTextProviderHealthMaintainer:
         refresh_health: Callable[[], dict[str, Any]] | None = None,
         refresh_readiness: Callable[..., dict[str, Any]] | None = None,
         authorize_provider_refresh: Callable[[datetime], bool] | None = None,
+        execute_authorized_refresh: (
+            Callable[[datetime], dict[str, Any]] | None
+        ) = None,
         clock: Callable[[], datetime] | None = None,
     ) -> None:
+        if (
+            execute_authorized_refresh is not None
+            and authorize_provider_refresh is not None
+        ):
+            raise ValueError(
+                "canonical Action consumer and legacy authorizer are mutually exclusive"
+            )
         self._store = store or AipModelRuntimeStore()
         self._refresh_health = refresh_health or _default_health_refresh
         self._refresh_readiness = refresh_readiness or _default_readiness_refresh
         self._authorize_provider_refresh = (
             authorize_provider_refresh or _deny_provider_refresh
         )
+        self._execute_authorized_refresh = execute_authorized_refresh
         self._clock = clock or (lambda: datetime.now(UTC))
         self._readiness_pending = False
 
@@ -117,38 +128,52 @@ class AipTextProviderHealthMaintainer:
 
         health_result: dict[str, Any] | None = None
         if remaining <= REFRESH_BEFORE_EXPIRY:
-            try:
-                authorized = self._authorize_provider_refresh(now)
-            except Exception as exc:
-                return {
-                    "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
-                    "stage": "authorization",
-                    **_safe_error(exc),
-                    "providerCalls": 0,
-                    "healthObservationWritten": False,
-                    "automaticRetry": False,
-                }
-            if authorized is not True:
-                return {
-                    "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
-                    "stage": "authorization",
-                    "errorType": "ProviderHealthAuthorizationUnavailable",
-                    "errorCode": "EXACT_APPROVAL_LEASE_REQUIRED",
-                    "providerCalls": 0,
-                    "healthObservationWritten": False,
-                    "automaticRetry": False,
-                }
-            try:
-                health_result = self._refresh_health()
-            except Exception as exc:
-                self._readiness_pending = False
-                return {
-                    "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
-                    "stage": "provider_health",
-                    **_safe_error(exc),
-                    "healthObservationWritten": False,
-                    "automaticRetry": False,
-                }
+            if self._execute_authorized_refresh is not None:
+                try:
+                    health_result = self._execute_authorized_refresh(now)
+                except Exception as exc:
+                    self._readiness_pending = False
+                    return {
+                        "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
+                        "stage": "action_authority",
+                        **_safe_error(exc),
+                        "providerCalls": 0,
+                        "healthObservationWritten": False,
+                        "automaticRetry": False,
+                    }
+            else:
+                try:
+                    authorized = self._authorize_provider_refresh(now)
+                except Exception as exc:
+                    return {
+                        "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
+                        "stage": "authorization",
+                        **_safe_error(exc),
+                        "providerCalls": 0,
+                        "healthObservationWritten": False,
+                        "automaticRetry": False,
+                    }
+                if authorized is not True:
+                    return {
+                        "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
+                        "stage": "authorization",
+                        "errorType": "ProviderHealthAuthorizationUnavailable",
+                        "errorCode": "EXACT_APPROVAL_LEASE_REQUIRED",
+                        "providerCalls": 0,
+                        "healthObservationWritten": False,
+                        "automaticRetry": False,
+                    }
+                try:
+                    health_result = self._refresh_health()
+                except Exception as exc:
+                    self._readiness_pending = False
+                    return {
+                        "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
+                        "stage": "provider_health",
+                        **_safe_error(exc),
+                        "healthObservationWritten": False,
+                        "automaticRetry": False,
+                    }
             if health_result.get("status") != "PROVIDER_HEALTH_REFRESH_GREEN":
                 self._readiness_pending = False
                 return {

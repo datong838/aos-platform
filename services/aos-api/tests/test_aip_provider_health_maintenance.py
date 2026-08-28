@@ -188,6 +188,80 @@ def test_authorization_error_is_sanitized_without_provider_call() -> None:
     assert called == []
 
 
+def test_canonical_action_result_skips_legacy_refresh_and_runs_readiness() -> None:
+    called = []
+
+    def execute_action(_now):
+        called.append("action")
+        return {
+            "status": "PROVIDER_HEALTH_REFRESH_GREEN",
+            "observationId": "health-action-1",
+            "expiresAt": NOW + timedelta(minutes=15),
+            "providerCalls": 3,
+        }
+
+    def refresh_readiness(**_):
+        called.append("readiness")
+        return {
+            "status": "R12_ECOMMERCE_RUNTIME_READINESS_REFRESH_GREEN",
+            "completedRoles": ["a", "b", "c", "d", "e", "f"],
+        }
+
+    result = AipTextProviderHealthMaintainer(
+        store=Store([health(minutes=5)]),
+        refresh_health=lambda: called.append("legacy-health"),
+        refresh_readiness=refresh_readiness,
+        execute_authorized_refresh=execute_action,
+        clock=lambda: NOW,
+    ).run_once()
+    assert result["status"] == "TEXT_PROVIDER_HEALTH_MAINTENANCE_GREEN"
+    assert result["observationId"] == "health-action-1"
+    assert result["providerCalls"] == 3
+    assert called == ["action", "readiness"]
+
+
+def test_canonical_action_failure_is_closed_without_legacy_refresh() -> None:
+    called = []
+
+    def unavailable(_now):
+        called.append("action")
+        error = RuntimeError("private action-store detail")
+        error.code = "PROVIDER_HEALTH_EXECUTION_LEASE_MISMATCH"
+        raise error
+
+    result = AipTextProviderHealthMaintainer(
+        store=Store([]),
+        refresh_health=lambda: called.append("legacy-health"),
+        refresh_readiness=lambda **_: called.append("readiness"),
+        execute_authorized_refresh=unavailable,
+        clock=lambda: NOW,
+    ).run_once()
+    assert result == {
+        "status": "TEXT_PROVIDER_HEALTH_MAINTENANCE_BLOCKED",
+        "stage": "action_authority",
+        "errorType": "RuntimeError",
+        "errorCode": "PROVIDER_HEALTH_EXECUTION_LEASE_MISMATCH",
+        "providerCalls": 0,
+        "healthObservationWritten": False,
+        "automaticRetry": False,
+    }
+    assert called == ["action"]
+
+
+def test_canonical_consumer_and_legacy_authorizer_are_mutually_exclusive() -> None:
+    try:
+        AipTextProviderHealthMaintainer(
+            store=Store([]),
+            authorize_provider_refresh=lambda _now: True,
+            execute_authorized_refresh=lambda _now: {},
+            clock=lambda: NOW,
+        )
+    except ValueError as exc:
+        assert "mutually exclusive" in str(exc)
+    else:
+        raise AssertionError("dual authority configuration must fail closed")
+
+
 def test_interval_is_bounded(monkeypatch) -> None:
     monkeypatch.setenv(
         "AOS_AIP_TEXT_HEALTH_MAINTENANCE_INTERVAL_SECONDS", "1"
