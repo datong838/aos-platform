@@ -49,11 +49,15 @@ def _script_callable(module_name: str, function_name: str) -> Callable[..., Any]
     return getattr(importlib.import_module(module_name), function_name)
 
 
-def _default_health_refresh() -> dict[str, Any]:
+def refresh_provider_health_from_authorized_runtime() -> dict[str, Any]:
+    """Invoke the reviewed health writer after canonical Action authorization."""
     return _script_callable("refresh_r2_provider_health", "refresh")()
 
 
-def _default_readiness_refresh(*, now: datetime) -> dict[str, Any]:
+def refresh_ecommerce_readiness_from_authorized_runtime(
+    *, now: datetime
+) -> dict[str, Any]:
+    """Refresh the reviewed ecommerce readiness projection at one cutoff."""
     return _script_callable(
         "refresh_r12_ecommerce_runtime_readiness", "apply"
     )(now=now)
@@ -92,8 +96,13 @@ class AipTextProviderHealthMaintainer:
                 "canonical Action consumer and legacy authorizer are mutually exclusive"
             )
         self._store = store or AipModelRuntimeStore()
-        self._refresh_health = refresh_health or _default_health_refresh
-        self._refresh_readiness = refresh_readiness or _default_readiness_refresh
+        self._refresh_health = (
+            refresh_health or refresh_provider_health_from_authorized_runtime
+        )
+        self._refresh_readiness = (
+            refresh_readiness
+            or refresh_ecommerce_readiness_from_authorized_runtime
+        )
         self._authorize_provider_refresh = (
             authorize_provider_refresh or _deny_provider_refresh
         )

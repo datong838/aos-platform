@@ -5,6 +5,8 @@ import asyncio
 import os
 from contextlib import suppress
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,6 +46,60 @@ def _qyh_cron_worker_enabled() -> bool:
         "no",
         "off",
     }
+
+
+@dataclass(frozen=True)
+class _ProviderHealthLoopSelection:
+    maintainer: Any | None
+    status: str
+    error_code: str | None = None
+
+
+def _build_provider_health_startup():
+    """Construct the canonical runtime without starting it or hiding authority."""
+    from aos_api.aip_provider_health_maintenance import (
+        refresh_ecommerce_readiness_from_authorized_runtime,
+        refresh_provider_health_from_authorized_runtime,
+    )
+    from aos_api.aip_provider_health_maintenance_startup import (
+        build_provider_health_maintenance_startup,
+    )
+
+    return build_provider_health_maintenance_startup(
+        refresh_health=refresh_provider_health_from_authorized_runtime,
+        refresh_readiness=refresh_ecommerce_readiness_from_authorized_runtime,
+    )
+
+
+def _select_provider_health_maintenance() -> _ProviderHealthLoopSelection:
+    """Fail closed to no loop while retaining only a stable diagnostic code."""
+    from aos_api.aip_provider_health_maintenance_runtime import (
+        ProviderHealthRuntimeAssemblyError,
+    )
+    from aos_api.aip_provider_health_maintenance_startup import (
+        ProviderHealthStartupPreflightError,
+    )
+
+    try:
+        startup = _build_provider_health_startup()
+    except (
+        ProviderHealthStartupPreflightError,
+        ProviderHealthRuntimeAssemblyError,
+    ) as exc:
+        return _ProviderHealthLoopSelection(
+            maintainer=None,
+            status="PROVIDER_HEALTH_MAINTENANCE_STARTUP_FAILED_CLOSED",
+            error_code=exc.code,
+        )
+    if startup.runtime is None:
+        return _ProviderHealthLoopSelection(
+            maintainer=None,
+            status=startup.preflight.status,
+        )
+    return _ProviderHealthLoopSelection(
+        maintainer=startup.runtime.maintainer,
+        status="PROVIDER_HEALTH_MAINTENANCE_STARTUP_RUNTIME_GREEN",
+    )
 
 # Load aos-platform/.env (AGNES_* etc.) before request handlers run
 try:
@@ -284,14 +340,14 @@ async def lifespan(_app: FastAPI):
     else:
         log.info("startup_qyh_real_cron_worker_disabled explicit=true")
 
-    from aos_api.aip_provider_health_maintenance import (
-        AipTextProviderHealthMaintainer,
-        maintenance_enabled,
-        maintenance_interval_seconds,
-    )
+    from aos_api.aip_provider_health_maintenance import maintenance_interval_seconds
+
+    provider_health_selection = _select_provider_health_maintenance()
 
     async def _provider_health_loop() -> None:
-        maintainer = AipTextProviderHealthMaintainer()
+        maintainer = provider_health_selection.maintainer
+        if maintainer is None:
+            return
         interval = maintenance_interval_seconds()
         while not provider_health_stop.is_set():
             try:
@@ -311,7 +367,7 @@ async def lifespan(_app: FastAPI):
             except TimeoutError:
                 continue
 
-    if maintenance_enabled():
+    if provider_health_selection.maintainer is not None:
         provider_health_task = asyncio.create_task(
             _provider_health_loop(), name="aip-text-provider-health-maintenance"
         )
@@ -319,8 +375,16 @@ async def lifespan(_app: FastAPI):
             "startup_aip_text_provider_health_maintenance interval_seconds=%d",
             maintenance_interval_seconds(),
         )
+    elif provider_health_selection.error_code is not None:
+        log.warning(
+            "startup_aip_text_provider_health_maintenance_failed_closed code=%s",
+            provider_health_selection.error_code,
+        )
     else:
-        log.info("startup_aip_text_provider_health_maintenance_disabled")
+        log.info(
+            "startup_aip_text_provider_health_maintenance_inactive status=%s",
+            provider_health_selection.status,
+        )
     yield
     cron_stop.set()
     provider_health_stop.set()
