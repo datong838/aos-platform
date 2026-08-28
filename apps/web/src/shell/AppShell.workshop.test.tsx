@@ -31,7 +31,10 @@ function LocationProbe() {
 
 function NavigationProbe() {
   const navigate = useNavigate();
-  return <button type="button" data-testid="go-content" onClick={() => navigate("/workshop/content-campaign")}>go</button>;
+  return <>
+    <button type="button" data-testid="go-content" onClick={() => navigate("/workshop/content-campaign")}>go content</button>
+    <button type="button" data-testid="go-customer" onClick={() => navigate("/workshop/customer")}>go customer</button>
+  </>;
 }
 
 async function flush() {
@@ -348,5 +351,57 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(content.scrollTop).toBe(0);
     expect(content.scrollLeft).toBe(0);
     expect(host.querySelector(".analyst-exact-side-item.is-active")?.textContent).toContain("内容与活动工作台");
+  });
+
+  it("页头安全预检提示不跨 canonical 页面残留", async () => {
+    const client = {
+      listModules: async () => workshopCatalogFixture({
+        items: [
+          workshopModuleFixture({
+            moduleId: "ecommerce.price-governance",
+            route: "/workshop/price-governance",
+            displayName: "价格治理驾驶舱",
+            menuLabel: "价格治理驾驶舱",
+            legacyRoutes: [],
+          }),
+          workshopModuleFixture({
+            moduleId: "ecommerce.customer",
+            route: "/workshop/customer",
+            displayName: "客户关系工作台",
+            menuLabel: "客户关系工作台",
+            legacyRoutes: [],
+          }),
+        ],
+      }),
+    };
+    await act(async () => root.render(
+      <MemoryRouter initialEntries={["/workshop/price-governance"]}>
+        <EcommerceWorkshopCatalogProvider client={client}>
+          <NavigationProbe />
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="workshop/:workshopModule/*" element={<EcommerceWorkshopEntryRoute />} />
+            </Route>
+          </Routes>
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+
+    const newStrategy = [...host.querySelectorAll<HTMLButtonElement>(".workshop-visual-header-actions button")]
+      .find((button) => button.textContent === "＋ 新建监测策略")!;
+    await act(async () => newStrategy.click());
+    expect(host.querySelector(".workshop-header-action-notice")?.textContent).toContain("新建监测策略预检已打开");
+
+    await act(async () => host.querySelector<HTMLButtonElement>("[data-testid='go-customer']")!.click());
+    await flush();
+    expect(host.querySelector(".workshop-header-action-notice")).toBeNull();
+    expect(host.querySelector(".workshop-visual-header-left")?.textContent).toContain("客户关系工作台");
+
+    const newContact = [...host.querySelectorAll<HTMLButtonElement>(".workshop-visual-header-actions button")]
+      .find((button) => button.textContent === "＋ 新建触达任务")!;
+    await act(async () => newContact.click());
+    expect(host.querySelector(".workshop-header-action-notice")?.textContent).toContain("新建触达任务预检已打开");
+    expect(host.textContent).not.toContain("新建监测策略预检已打开");
   });
 });

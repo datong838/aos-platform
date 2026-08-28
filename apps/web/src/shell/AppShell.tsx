@@ -603,7 +603,7 @@ export function AppShell() {
             <div className="task-cockpit-exact-header-left"><strong>栖月汇微商城</strong><span>/</span><b>日常任务总控大屏</b></div>
             <div className="task-cockpit-exact-header-search"><NavIcon name="search" /><input type="search" placeholder="搜索任务、同事、关键词…" /></div>
             <div className="task-cockpit-exact-header-right"><span>{cockpitDateLabel}</span><button type="button" onClick={() => window.dispatchEvent(new CustomEvent("aos-workshop-cockpit-calendar"))}><NavIcon name="table" />日历视图</button></div>
-          </> : onWorkshopMappedHeaderRoute ? <WorkshopPrimaryVisualHeader pathname={location.pathname} /> : <><div className="topbar-left">
+          </> : onWorkshopMappedHeaderRoute ? <WorkshopPrimaryVisualHeader key={location.pathname} pathname={location.pathname} /> : <><div className="topbar-left">
             <nav className="breadcrumb" aria-label="面包屑">
               {crumbs.map((c, i) => (
                 <span key={`${c}-${i}`} className="breadcrumb-item">
