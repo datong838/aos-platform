@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from aos_api.aip_contracts import ActionRiskLevel
+from aos_api.aip_provider_health_action import (
+    PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID,
+)
 
 _ORDER = {level: index for index, level in enumerate(ActionRiskLevel)}
 
@@ -33,7 +36,10 @@ def classify_action_risk(
     ).lower()
     reasons: list[str] = []
     floor = ActionRiskLevel.R1
-    if any(word in text for word in ("refund", "payment", "pay_", "inventory", "permission", "退款", "支付", "库存", "权限")):
+    if action_type_id == PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID:
+        floor = ActionRiskLevel.R2
+        reasons.append("provider_external_health_probe")
+    elif any(word in text for word in ("refund", "payment", "pay_", "inventory", "permission", "退款", "支付", "库存", "权限")):
         floor = ActionRiskLevel.R4
         reasons.append("irreversible_or_financial")
     elif any(word in text for word in ("price", "discount", "commission", "bulk", "livestream", "价格", "优惠", "佣金", "批量", "直播")):
