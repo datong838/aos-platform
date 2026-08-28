@@ -241,6 +241,28 @@ class BusinessInvestigationAuthorityMaterializer:
             )
         return InvestigationAuthorityMaterialization(stage, plan)
 
+    def finalize_responsibility_plan(
+        self,
+        scope: TenantScope,
+        plan_id: str,
+        *,
+        actor: str = "aos-main-development",
+    ) -> ResponsibilityPlanRevision:
+        """Freeze the current plan only when canonical dependencies are READY."""
+        plan = self._store.get_responsibility_plan(scope, plan_id)
+        if (
+            plan.lifecycle is BriefLifecycle.DRAFT
+            and plan.readiness is ContractReadiness.READY
+        ):
+            return self._store.freeze_responsibility_plan(
+                scope,
+                actor,
+                plan.plan_id,
+                plan.version,
+                f"bi-w10-02-investigation-responsibility-freeze:{plan.plan_id}:v{plan.version}",
+            )
+        return plan
+
     def _active_instance_versions(self, scope: TenantScope) -> dict[str, int]:
         instance_ids = [item[2] for item in _ROLE_BLUEPRINTS]
         with self._connect(scope) as conn:

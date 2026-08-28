@@ -206,3 +206,28 @@ def test_materializer_reentry_uses_current_heads_and_does_not_refreeze() -> None
         "create-plan",
         "get-plan",
     ]
+
+
+def test_finalize_responsibility_plan_freezes_only_ready_draft() -> None:
+    store = Store(ContractReadiness.READY)
+    runner = materializer(store)
+    created = runner.ensure(SCOPE)
+    store.plan = SimpleNamespace(
+        lifecycle=BriefLifecycle.DRAFT,
+        readiness=ContractReadiness.READY,
+        plan_id=created.responsibility_plan.plan_id,
+        version=3,
+    )
+    actual = runner.finalize_responsibility_plan(SCOPE, store.plan.plan_id)
+    assert actual.lifecycle is BriefLifecycle.FROZEN
+    assert store.calls[-1][0] == "freeze-plan"
+
+
+def test_finalize_responsibility_plan_keeps_blocked_draft() -> None:
+    store = Store(ContractReadiness.BLOCKED)
+    runner = materializer(store)
+    runner.ensure(SCOPE)
+    before = store.plan
+    actual = runner.finalize_responsibility_plan(SCOPE, before.plan_id)
+    assert actual is before
+    assert store.calls[-1][0] == "get-plan"
