@@ -303,6 +303,10 @@ body,
 .aside.is-collapsed .brand-block,
 .aside.is-collapsed .aside-foot { display: none; }
 .aside.is-collapsed .aos-nav-link { justify-content: center; padding: 8px 0; }
+.aside.is-collapsed .analyst-exact-side-title { display: none; }
+.aside.is-collapsed .analyst-exact-side-section { padding: 4px 0; }
+.aside.is-collapsed .analyst-exact-side-item { justify-content: center; padding: 10px 0; }
+.aside.is-collapsed .analyst-exact-side-item span { display: none; }
 
 .brand-block {
   display: flex;
@@ -744,6 +748,8 @@ body,
 }
 .analyst-exact-side-item:focus-visible { outline: 2px solid #2b6cb0; outline-offset: -2px; }
 .p-app.is-analyst-visual .aside-toggle { right: 8px; }
+.p-app.is-workshop-primary-visual .aside.is-collapsed { width: 48px; }
+.p-app.is-workshop-primary-visual:not(.is-analyst-visual):not(.is-task-cockpit-visual) .aside.is-collapsed { width: 48px; }
 
 .analyst-exact-global {
   display: flex;

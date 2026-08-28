@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import {
   EcommerceWorkshopClientError,
@@ -25,6 +25,8 @@ import { WorkshopOperatingReadinessCard } from "./WorkshopOperatingReadinessCard
 import { WorkshopDisasterRecoveryCard } from "./WorkshopDisasterRecoveryCard";
 import { WorkshopCumulativeReleaseGateCard } from "./WorkshopCumulativeReleaseGateCard";
 import { WorkshopOperationalReleaseDecisionCard } from "./WorkshopOperationalReleaseDecisionCard";
+import { NavIcon } from "../../shell/icons";
+import type { IconName } from "../../nav";
 
 type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getResponsibilityAssignmentObservation" | "getDispatchControlObservation" | "getTaskCockpitDispatchScenario" | "getTaskCockpitBatchScenario">>;
 type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
@@ -41,6 +43,26 @@ const TASK_STATUSES: readonly { value: "" | TaskCockpitTaskStatus; label: string
 const ACTIVE_TASK_STATUSES = new Set<TaskCockpitTaskStatus>(["planning", "awaiting_approval", "approved", "executing", "paused"]);
 const TASK_STATUS_LABELS: Record<string, string> = Object.fromEntries(TASK_STATUSES.filter((item) => item.value).map((item) => [item.value, item.label]));
 const DEVELOPMENT_TASK_PATTERN = /(?:^|\s)(?:R\d+(?:-[0-9A-Z]+)?|W\d+(?:-[0-9A-Z]+)?|BI-W\d+|AOS-\d+)|\b(?:Skill|Provider|AgentRun|Receipt)\b|(?:开发|代码|技术方案|发布治理审批|单次真实.*验收)/i;
+
+type CockpitColleague = {
+  id: string;
+  name: string;
+  group: "execution" | "planning";
+  icon: IconName;
+  subtitle: string;
+  capability: string;
+  boundary: string;
+  agents: string;
+};
+
+const COCKPIT_COLLEAGUES: readonly CockpitColleague[] = [
+  { id: "service-specialist", name: "客服专员", group: "execution", icon: "chat", subtitle: "客户服务与售后风险处置专家", capability: "意图与情绪识别、订单与物流安全查询、售后分诊、投诉升级、满意度反哺", boundary: "最小验证后读取脱敏事实；输出回复或工单草稿，高风险事项转人工", agents: "素材采集、文案生成" },
+  { id: "private-domain-steward", name: "私域管家", group: "execution", icon: "heart", subtitle: "客户关系沉淀与生命周期运营专家", capability: "授权身份关联、可解释标签分层、触达排期、沉默召回、关系反馈", boundary: "仅使用受限客户投影；遵守渠道授权、频控与退订边界", agents: "素材采集、文案生成" },
+  { id: "shopping-advisor", name: "导购顾问", group: "execution", icon: "user", subtitle: "购物决策支持与转化优化专家", capability: "需求诊断、约束下商品推荐、成分属性解释、商品对比搭配、异议处理与促单", boundary: "推荐必须可解释并受库存、价格、禁忌与承诺边界约束；越界转人工", agents: "素材采集、策略规划、脚本撰写、直播编排" },
+  { id: "data-advisor", name: "数据参谋", group: "planning", icon: "graph", subtitle: "经营洞察、任务编排与效果复盘专家", capability: "经营健康巡检、内外机会研究、增长方案、审批后任务拆解、执行监控、归因复盘", boundary: "建议必须有证据和时效；审批前只产出草稿，派活须可追溯到经营事实或记忆", agents: "素材采集、策略规划、数据复盘" },
+  { id: "content-officer", name: "内容官", group: "planning", icon: "film", subtitle: "全平台内容策略与生产编排专家", capability: "选题研究、人群与内容策略、图文文案、短视频策划、多平台适配、事实品牌合规审核、线索识别与归因", boundary: "所有内容先形成草稿；事实、品牌、版权与平台规则通过审核后才能发布", agents: "素材采集、策略规划、文案生成、脚本撰写、内容审核、平台适配" },
+  { id: "campaign-planner", name: "活动策划师", group: "planning", icon: "spark", subtitle: "增长活动设计、协同与止损专家", capability: "机会目标、人群商品机制、预算毛利模拟、跨同事任务编排、执行监控止损、增量复盘", boundary: "方案受库存、毛利、预算、投诉与履约护栏约束；外部合作和高风险动作需审批", agents: "素材采集、策略规划、平台适配、数据复盘" },
+];
 
 function errorPhase(error: unknown): CorePhase {
   if (!(error instanceof EcommerceWorkshopClientError)) return "failed";
@@ -68,11 +90,48 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
   const [commandText, setCommandText] = useState("");
   const [commandNotice, setCommandNotice] = useState("");
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [activeColleague, setActiveColleague] = useState<CockpitColleague | null>(null);
+  const [colleaguePinned, setColleaguePinned] = useState(false);
+  const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({});
+  const surfaceRef = useRef<HTMLElement | null>(null);
+  const colleagueTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const colleaguePopoverRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const toggleCalendar = () => setCalendarVisible((value) => !value);
     window.addEventListener("aos-workshop-cockpit-calendar", toggleCalendar);
     return () => window.removeEventListener("aos-workshop-cockpit-calendar", toggleCalendar);
   }, []);
+  useEffect(() => {
+    if (!activeColleague) return;
+    const place = () => {
+      const surface = surfaceRef.current;
+      const trigger = colleagueTriggerRef.current;
+      const popover = colleaguePopoverRef.current;
+      if (!surface || !trigger || !popover) return;
+      const rect = trigger.getBoundingClientRect();
+      const surfaceRect = surface.getBoundingClientRect();
+      const commandBottom = surface.querySelector<HTMLElement>(".task-cockpit-visual-command")?.getBoundingClientRect().bottom ?? surfaceRect.top;
+      const skillsTop = surface.querySelector<HTMLElement>(".task-cockpit-visual-skills")?.getBoundingClientRect().top ?? surfaceRect.bottom;
+      const safeTop = commandBottom + 8;
+      const safeBottom = skillsTop - 8;
+      const maxHeight = Math.max(180, safeBottom - safeTop);
+      const popoverRect = popover.getBoundingClientRect();
+      const onLeft = rect.left < surfaceRect.left + surfaceRect.width / 2;
+      const preferredLeft = onLeft ? rect.right + 10 : rect.left - popoverRect.width - 10;
+      const left = Math.max(surfaceRect.left + 10, Math.min(preferredLeft, surfaceRect.right - popoverRect.width - 10));
+      const preferredTop = rect.top + rect.height / 2 - Math.min(popoverRect.height, maxHeight) / 2;
+      const top = Math.max(safeTop, Math.min(preferredTop, safeBottom - Math.min(popoverRect.height, maxHeight)));
+      setPopoverStyle({ left, top, maxHeight });
+    };
+    const frame = window.requestAnimationFrame(place);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { setActiveColleague(null); setColleaguePinned(false); }
+    };
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    document.addEventListener("keydown", onKeyDown);
+    return () => { window.cancelAnimationFrame(frame); window.removeEventListener("resize", place); window.removeEventListener("scroll", place, true); document.removeEventListener("keydown", onKeyDown); };
+  }, [activeColleague]);
   const sourceItems = response?.items ?? [];
   const items = sourceItems.filter((task) => !DEVELOPMENT_TASK_PATTERN.test(task.title));
   const excludedDevelopmentTasks = sourceItems.length - items.length;
@@ -84,7 +143,33 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
   const dependencies = [...new Set(blockers.map((item) => item.dependency))];
   const businessDependencyLabel = (dependency: string) => dependency.includes("source-readiness") ? "业务数据准备" : dependency.includes("production") ? "内容生产编排" : dependency.includes("binding") ? "数字同事配置" : "业务协作能力";
   const value = (current: number | undefined) => current === undefined ? "未知" : String(current);
-  return <section className={`task-cockpit-visual-surface is-${phase}`} aria-label="日常任务总控大屏">
+  const showColleague = (profile: CockpitColleague, trigger: HTMLButtonElement, pinned: boolean) => {
+    colleagueTriggerRef.current = trigger;
+    setActiveColleague(profile);
+    setColleaguePinned(pinned);
+  };
+  const renderColleague = (profile: CockpitColleague) => <button
+    type="button"
+    className={`task-cockpit-colleague-card${activeColleague?.id === profile.id ? " is-active" : ""}`}
+    key={profile.id}
+    aria-haspopup="dialog"
+    aria-expanded={activeColleague?.id === profile.id}
+    aria-controls="task-cockpit-colleague-popover"
+    onMouseEnter={(event) => showColleague(profile, event.currentTarget, false)}
+    onMouseLeave={() => { if (!colleaguePinned) setActiveColleague(null); }}
+    onFocus={(event) => showColleague(profile, event.currentTarget, false)}
+    onBlur={() => { if (!colleaguePinned) setActiveColleague(null); }}
+    onClick={(event) => {
+      if (activeColleague?.id === profile.id && colleaguePinned) { setActiveColleague(null); setColleaguePinned(false); return; }
+      showColleague(profile, event.currentTarget, true);
+    }}
+  >
+    <span aria-hidden="true"><NavIcon name={profile.icon} /></span>
+    <strong>{profile.name}</strong>
+    <small>{profile.subtitle}</small>
+    <em>个人运行状态待核对</em>
+  </button>;
+  return <section ref={surfaceRef} className={`task-cockpit-visual-surface is-${phase}`} aria-label="日常任务总控大屏">
     <div className="task-cockpit-visual-metrics" aria-label="实时经营与任务概览">
       <div><strong>{response ? items.length : "待核对"}</strong><span>今日经营任务</span><small>已排除系统验收记录</small></div>
       <div><strong>{value(active)}</strong><span>执行中</span><small>活跃状态</small></div>
@@ -109,8 +194,7 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
     <div className="task-cockpit-visual-board">
       <aside className="task-cockpit-visual-role-column" aria-label="执行组">
         <h2>执行组</h2>
-        <article><span aria-hidden="true">◉</span><strong>数字同事绑定</strong><small>正式绑定待核对</small><em>待核对</em></article>
-        <article><span aria-hidden="true">◇</span><strong>运行职责</strong><small>以正式执行凭证为准</small><em>{response ? `${active} 项活跃` : "待核对"}</em></article>
+        {COCKPIT_COLLEAGUES.filter((profile) => profile.group === "execution").map(renderColleague)}
       </aside>
 
       <section className="task-cockpit-visual-task-column" aria-labelledby="task-cockpit-visual-title">
@@ -124,8 +208,7 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
 
       <aside className="task-cockpit-visual-role-column" aria-label="策划组">
         <h2>策划组</h2>
-        <article><span aria-hidden="true">▥</span><strong>数据参谋</strong><small>只读规划输入</small><em>待验证</em></article>
-        <article><span aria-hidden="true">✎</span><strong>内容官</strong><small>不推导自动分配</small><em>待验证</em></article>
+        {COCKPIT_COLLEAGUES.filter((profile) => profile.group === "planning").map(renderColleague)}
       </aside>
 
       <aside className="task-cockpit-visual-review" aria-label="复盘与权威缺口">
@@ -136,6 +219,24 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
 
     <div className="task-cockpit-visual-skills"><strong>共享业务能力</strong><div>{dependencies.length ? dependencies.map((item) => <span key={item}>{businessDependencyLabel(item)}</span>) : <span>等待正式能力配置</span>}</div></div>
     <footer className="task-cockpit-visual-tomorrow"><span>明日预告 · 仅显示已排期业务任务</span><strong>{response ? `${items.filter((task) => task.status === "pending").length} 项待规划` : "计划表未验证"}</strong></footer>
+    {activeColleague ? <div
+      ref={colleaguePopoverRef}
+      id="task-cockpit-colleague-popover"
+      className="task-cockpit-colleague-popover"
+      role="dialog"
+      aria-label={`${activeColleague.name}介绍`}
+      aria-modal="false"
+      style={popoverStyle}
+      onMouseEnter={() => { if (colleaguePinned) setColleaguePinned(true); }}
+    >
+      <header><div><strong>{activeColleague.name}</strong><span>{activeColleague.subtitle}</span></div><b>数字同事</b><button type="button" aria-label="关闭数字同事介绍" onClick={() => { setActiveColleague(null); setColleaguePinned(false); }}>×</button></header>
+      <dl>
+        <div><dt>专业能力</dt><dd>{activeColleague.capability}</dd></div>
+        <div><dt>工作边界</dt><dd>{activeColleague.boundary}</dd></div>
+        <div><dt>常用能力</dt><dd>{activeColleague.agents}</dd></div>
+        <div><dt>当前状态</dt><dd>{response ? "已取得任务总览；尚无个人级归因，不能推导在线或执行中" : "个人运行状态待核对"}</dd></div>
+      </dl>
+    </div> : null}
   </section>;
 }
 

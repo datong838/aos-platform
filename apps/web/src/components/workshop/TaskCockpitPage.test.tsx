@@ -115,6 +115,22 @@ describe("TaskCockpitPage", () => {
     expect(host.textContent).not.toMatch(/今日 GMV|六数字同事在线|经验已入库|朋友圈3条内容/);
   });
 
+  it("呈现六位数字同事并让介绍浮层支持悬停、点击与 Escape，且不伪造个人运行事实", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    const cards = [...host.querySelectorAll<HTMLButtonElement>(".task-cockpit-colleague-card")];
+    expect(cards).toHaveLength(6);
+    for (const name of ["客服专员", "私域管家", "导购顾问", "数据参谋", "内容官", "活动策划师"]) expect(host.textContent).toContain(name);
+    expect(host.textContent).not.toMatch(/\d+\/\d+\s*(?:进行中|已派发)|六数字同事在线/);
+    await act(async () => cards[2]?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })));
+    expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')?.textContent).toContain("购物决策支持与转化优化专家");
+    expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')?.textContent).toContain("尚无个人级归因");
+    await act(async () => cards[2]?.click());
+    expect(cards[2]?.getAttribute("aria-expanded")).toBe("true");
+    await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')).toBeNull();
+  });
+
   it("独立呈现 W8-03 四层贡献、七阶段与五轴，所有命令保持关闭", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getTaskCockpitDispatchScenario: vi.fn().mockResolvedValue(dispatchScenario), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
