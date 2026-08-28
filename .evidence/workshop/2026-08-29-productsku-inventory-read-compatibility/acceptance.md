@@ -17,6 +17,11 @@
 - `compileall` 与 `git diff --check`：GREEN。
 - 累计回归发现的 solution bundle 真实租户名称已按既有 candidate 租户中性正文修复；未放宽 PII guard。
 
-## 运行时待完成步骤
+## 运行时与浏览器复验
 
-本文件先记录代码与直接 reader 证据。精确 API owner 重载、canonical operations GET 和内置浏览器统一运营复验完成后追加运行时证据；在追加前不宣称运行时闭合。
+- 精确 API owner 已在 06:08 重载为 PID `14251`；`RUNTIME_OWNER_EXACT`，唯一监听 `127.0.0.1:8080`，health `ok`。
+- canonical operations GET：库存切片 `ready`，当前有界页 ledger 为 `sourceTotal/attached/unmatched/conflicted=50/41/9/0`；旧 `INVENTORY_READ_FAILED_CLOSED` 已消失。其余六个切片保持原有诚实状态，运营工单仍因缺 authority 保持等待条件。
+- 内置浏览器实际打开 `/workshop/operations`：唯一 H1、横向溢出 `0`；点击库存切片后显示“正式数据可读”、`50/41/9/0` 与同一截止；点击分类事件返回“当前业务条件不足，未触发业务操作”；侧栏折叠、展开和恢复均工作。
+- 页面未用直接 reader 的全量 `62/41/21` 替换当前有界业务页 `50/41/9`，两个统计口径分别保留。
+
+结论：`PRODUCTSKU_INVENTORY_READ_COMPATIBILITY_CODE_RUNTIME_BROWSER_GREEN / P03_NATURAL_RECOVERY_NOT_CLAIMED / NO_EXTERNAL_EFFECT / NO_RELEASE`。
