@@ -788,11 +788,22 @@
 .source-readiness-summary dd { margin: 3px 0 0; overflow-wrap: anywhere; }
 .source-readiness-blockers { margin: 0 0 14px; padding: 10px 12px; border-left: 3px solid var(--aos-red); background: color-mix(in srgb, var(--aos-red) 6%, var(--aos-surface)); color: var(--aos-text-secondary); overflow-wrap: anywhere; }
 .source-readiness-table-wrap { overflow-x: auto; }
-.source-readiness-panel table { width: 100%; min-width: 780px; border-collapse: collapse; font-size: 12px; }
+.source-readiness-panel table { width: 100%; min-width: 980px; border-collapse: collapse; font-size: 12px; }
 .source-readiness-panel th,
 .source-readiness-panel td { padding: 8px 10px; border-top: 1px solid var(--aos-border); text-align: left; vertical-align: top; }
 .source-readiness-panel thead th { color: var(--aos-text-tertiary); font-weight: 600; }
-.source-readiness-panel tbody th { white-space: nowrap; }
+.source-readiness-panel tbody th { min-width: 110px; }
+.source-readiness-panel tbody th strong { display: block; }
+.source-readiness-panel td:nth-child(3) { white-space: nowrap; }
+.source-readiness-panel td:nth-child(4) { min-width: 180px; }
+.source-readiness-panel td:nth-child(5) { min-width: 210px; }
+.source-readiness-audit { margin-top: 6px; color: var(--aos-text-tertiary); }
+.source-readiness-audit summary { width: max-content; cursor: pointer; color: var(--aos-blue); font-size: 11px; }
+.source-readiness-audit dl { display: grid; gap: 5px; margin: 8px 0 0; padding: 8px; background: var(--aos-surface-subtle); border: 1px solid var(--aos-border); }
+.source-readiness-audit dl div { min-width: 0; }
+.source-readiness-audit dt { font-size: 10px; }
+.source-readiness-audit dd { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 0; }
+.source-readiness-audit code { overflow-wrap: anywhere; white-space: normal; }
 
 @media (max-width: 900px) {
   .source-readiness-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }

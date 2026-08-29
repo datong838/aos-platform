@@ -18,6 +18,19 @@ function envelope(orgId = "org-org"): SourceReadinessEnvelope {
   };
 }
 
+function diagnosedEnvelope(): SourceReadinessEnvelope {
+  const response = envelope();
+  response.status = "failed";
+  response.sources = response.sources.map((source, index) => {
+    if (index === 0) return { ...source, status: "failed", blockers: ["LATEST_RUN_NOT_SUCCEEDED"], reasons: ["LATEST_RUN_NOT_SUCCEEDED"], latestRun: { ...source.latestRun, status: "failed", rowsWritten: 0, errorCode: "SSH_CONNECT_TIMEOUT" } };
+    if (index === 1) return { ...source, status: "stale", blockers: [], reasons: [] };
+    if (index === 2) return { ...source, status: "unknown", blockers: ["FUTURE_AUDIT_CODE"], reasons: ["FUTURE_AUDIT_CODE"] };
+    if (index === 3) return { ...source, status: "failed", blockers: [], reasons: [], latestRun: { ...source.latestRun, status: "failed", errorCode: "PIPELINE_EXECUTOR_FAILED" } };
+    return source;
+  });
+  return response;
+}
+
 function clientError(status: number): EcommerceWorkshopClientError {
   return new EcommerceWorkshopClientError("failed", { status, operationId: "ecommerceWorkshopSourceReadinessGet", body: { code: status === 403 ? "FORBIDDEN" : "FAILED", message: "failed", details: null, traceId: "trace" } });
 }
@@ -32,10 +45,37 @@ describe("SourceReadinessPanel", () => {
     await act(async () => root.render(<SourceReadinessPanel client={client} />));
     await act(async () => undefined);
     expect(host.querySelectorAll("tbody tr")).toHaveLength(12);
-    expect(host.textContent).toContain("blocked");
-    expect(host.textContent).toContain("SOURCE_CONFIG_EXACT_REF_MISSING");
+    expect(host.textContent).toContain("等待条件");
+    expect(host.textContent).toContain("店铺");
+    expect(host.textContent).toContain("源配置权威待补齐");
+    expect(host.textContent).toContain("待处理对象12");
     expect(host.textContent).toContain("未知 / 未知");
     expect(client.getSourceReadiness).toHaveBeenCalledTimes(1);
+  });
+
+  it("首层展示中文失败诊断和下一步，审计详情保留稳定码", async () => {
+    await act(async () => root.render(<SourceReadinessPanel client={{ getSourceReadiness: vi.fn().mockResolvedValue(diagnosedEnvelope()) }} />));
+    await act(async () => undefined);
+    const firstRow = host.querySelectorAll("tbody tr")[0];
+    expect(firstRow?.textContent).toContain("店铺");
+    expect(firstRow?.textContent).toContain("运行失败");
+    expect(firstRow?.textContent).toContain("数据连接超时");
+    expect(firstRow?.textContent).toContain("检查数据连接后等待下一次计划读取");
+    expect(host.textContent).toContain("数据已过期");
+    expect(host.textContent).toContain("数据已超过新鲜度期限");
+    expect(host.textContent).toContain("等待下一次计划读取更新数据");
+    expect(host.textContent).toContain("需要进一步核对数据条件");
+    expect(host.textContent).toContain("查看运行审计后等待下一次计划读取");
+    const details = firstRow?.querySelector("details");
+    expect(details?.querySelector("summary")?.textContent).toContain("查看审计码");
+    expect(details?.open).toBe(false);
+    expect(details?.textContent).toContain("P01-shop-qyh");
+    expect(details?.textContent).toContain("SSH_CONNECT_TIMEOUT");
+    expect(details?.textContent).toContain("LATEST_RUN_NOT_SUCCEEDED");
+    await act(async () => details?.querySelector("summary")?.click());
+    expect(details?.open).toBe(true);
+    await act(async () => details?.querySelector("summary")?.click());
+    expect(details?.open).toBe(false);
   });
 
   it("403 与 tenant mismatch 都失败关闭且不渲染源行", async () => {
