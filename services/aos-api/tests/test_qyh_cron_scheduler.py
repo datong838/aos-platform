@@ -1,6 +1,9 @@
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
+import aos_api.phase5_pipeline_engine as pipeline_engine_module
+import aos_api.qyh_cron_scheduler as scheduler_module
 from aos_api.qyh_cron_scheduler import (
     QYH_DAILY_CRON_BY_PIPELINE,
     QYH_PIPELINE_ORDER,
@@ -8,6 +11,20 @@ from aos_api.qyh_cron_scheduler import (
     cron_matches,
     next_run_at,
 )
+from aos_api.tenant_scope import TenantScope
+
+
+class _PersistConnection:
+    def __init__(self) -> None:
+        self.calls = []
+        self.committed = False
+
+    def execute(self, sql, params=None):
+        self.calls.append((" ".join(sql.split()), params))
+        return self
+
+    def commit(self):
+        self.committed = True
 
 
 def test_qyh_has_exactly_twelve_real_pipeline_targets() -> None:
@@ -77,3 +94,96 @@ def test_cron_slot_requires_an_explicit_timezone() -> None:
         assert str(exc) == "CRON_SLOT_TIMEZONE_REQUIRED"
     else:  # pragma: no cover - explicit fail-closed assertion
         raise AssertionError("naive cron slot must be rejected")
+
+
+def test_execute_schedule_persists_sanitized_transport_code(monkeypatch) -> None:
+    scope = TenantScope("org-org", "dev-project")
+    conn = _PersistConnection()
+
+    @contextmanager
+    def fake_connect(_scope):
+        yield conn
+
+    class Engine:
+        @staticmethod
+        def execute_pipeline_once(_scope, _pipeline_id):
+            return {
+                "ok": False,
+                "rows_written": 0,
+                "duration_ms": 17,
+                "error_code": "SSH_CONNECT_TIMEOUT",
+                "error_message": "pipeline executor failed",
+            }
+
+    monkeypatch.setattr(
+        scheduler_module,
+        "_get_schedule",
+        lambda _scope, _schedule_id: {
+            "id": "sch-P10-system-config-qyh",
+            "enabled": True,
+            "pipelineId": "P10-system-config-qyh",
+            "ingest": {
+                "kind": "pipeline-live-v1",
+                "pipelineId": "P10-system-config-qyh",
+            },
+        },
+    )
+    monkeypatch.setattr(scheduler_module, "_claim_run", lambda *_args: "run-1")
+    monkeypatch.setattr(scheduler_module, "connect", fake_connect)
+    monkeypatch.setattr(pipeline_engine_module, "get_engine", lambda: Engine())
+
+    outcome = scheduler_module.execute_schedule(
+        scope,
+        "sch-P10-system-config-qyh",
+        trigger="test",
+        scheduled_for=datetime(2026, 8, 29, 12, 0, tzinfo=timezone.utc),
+    )
+
+    persisted = next(params for sql, params in conn.calls if sql.startswith("UPDATE meta_schedule_run"))
+    assert outcome["status"] == "failed"
+    assert persisted[3] == "SSH_CONNECT_TIMEOUT"
+    assert persisted[4] == "pipeline executor failed"
+    assert conn.committed is True
+
+
+def test_execute_schedule_masks_unexpected_scheduler_exception(monkeypatch) -> None:
+    scope = TenantScope("org-org", "dev-project")
+    conn = _PersistConnection()
+
+    @contextmanager
+    def fake_connect(_scope):
+        yield conn
+
+    class Engine:
+        @staticmethod
+        def execute_pipeline_once(_scope, _pipeline_id):
+            raise RuntimeError("password=secret user@example.com")
+
+    monkeypatch.setattr(
+        scheduler_module,
+        "_get_schedule",
+        lambda _scope, _schedule_id: {
+            "id": "sch-P10-system-config-qyh",
+            "enabled": True,
+            "pipelineId": "P10-system-config-qyh",
+            "ingest": {
+                "kind": "pipeline-live-v1",
+                "pipelineId": "P10-system-config-qyh",
+            },
+        },
+    )
+    monkeypatch.setattr(scheduler_module, "_claim_run", lambda *_args: "run-2")
+    monkeypatch.setattr(scheduler_module, "connect", fake_connect)
+    monkeypatch.setattr(pipeline_engine_module, "get_engine", lambda: Engine())
+
+    scheduler_module.execute_schedule(
+        scope,
+        "sch-P10-system-config-qyh",
+        trigger="test",
+        scheduled_for=datetime(2026, 8, 29, 12, 0, tzinfo=timezone.utc),
+    )
+
+    persisted = next(params for sql, params in conn.calls if sql.startswith("UPDATE meta_schedule_run"))
+    assert persisted[3] == "SCHEDULE_EXECUTOR_EXCEPTION"
+    assert persisted[4] == "schedule executor failed"
+    assert "secret" not in str(persisted)

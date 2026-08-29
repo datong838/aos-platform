@@ -253,10 +253,11 @@ def execute_schedule(
     try:
         from aos_api.phase5_pipeline_engine import get_engine
         result = get_engine().execute_pipeline_once(scope, str(schedule["pipelineId"]))
-    except Exception as exc:  # fail closed and keep a durable error record
+    except Exception:  # fail closed and keep a durable error record
         result = {
             "ok": False, "rows_written": 0, "duration_ms": 0,
-            "error_code": "SCHEDULE_EXECUTOR_EXCEPTION", "error_message": type(exc).__name__,
+            "error_code": "SCHEDULE_EXECUTOR_EXCEPTION",
+            "error_message": "schedule executor failed",
         }
     duration_ms = int(result.get("duration_ms") or max(1, (time.monotonic() - started) * 1000))
     status = "succeeded" if result.get("ok") else "failed"

@@ -24,9 +24,10 @@ class Result:
 
 
 class Connection:
-    def __init__(self) -> None:
+    def __init__(self, *, failed_pipeline_id: str | None = None) -> None:
         self.calls: list[tuple[str, object]] = []
         self.rolled_back = False
+        self.failed_pipeline_id = failed_pipeline_id
 
     def rollback(self):
         self.rolled_back = True
@@ -61,12 +62,20 @@ class Connection:
                         "ingest_pipeline_id": item.pipeline_id,
                         "ingest_source_id": "niushop-qyh",
                         "id": f"run-{item.pipeline_id}",
-                        "status": "succeeded",
+                        "status": (
+                            "failed"
+                            if item.pipeline_id == self.failed_pipeline_id
+                            else "succeeded"
+                        ),
                         "scheduled_for": NOW,
                         "started_at": NOW,
                         "finished_at": NOW,
                         "rows_written": 1,
-                        "error_code": None,
+                        "error_code": (
+                            "SSH_CONNECT_TIMEOUT"
+                            if item.pipeline_id == self.failed_pipeline_id
+                            else None
+                        ),
                     }
                     for index, item in enumerate(CANONICAL_QYH_SOURCES)
                 ]
@@ -125,3 +134,22 @@ def test_reader_is_one_repeatable_read_transaction_and_never_reads_props() -> No
     assert " props" not in sql.lower()
     assert "properties" not in sql.lower()
     assert "secret" not in sql.lower()
+
+
+def test_reader_projects_sanitized_latest_run_error_code() -> None:
+    failed_pipeline_id = CANONICAL_QYH_SOURCES[0].pipeline_id
+    conn = Connection(failed_pipeline_id=failed_pipeline_id)
+
+    @contextmanager
+    def connect_factory():
+        yield conn
+
+    snapshot = PostgresSourceReadinessFactSource(
+        connect_factory=connect_factory,
+        clock=lambda: NOW,
+    ).read_atomic(org_id="org-org", project_id="dev-project")
+
+    source = next(item for item in snapshot.sources if item.pipeline_id == failed_pipeline_id)
+    assert source.latest_run is not None
+    assert source.latest_run.status == "failed"
+    assert source.latest_run.error_code == "SSH_CONNECT_TIMEOUT"

@@ -138,6 +138,108 @@ def test_executor_exception_is_failed_and_secret_is_not_exposed():
     assert run.output_ref == ""
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_code"),
+    [
+        (
+            RuntimeError(
+                "SSH tunnel failed to become ready after 50 retries; diagnostic=NO_STDERR"
+            ),
+            "SSH_TUNNEL_NOT_READY",
+        ),
+        (
+            RuntimeError("SSH tunnel exited rc=255; diagnostic=CONNECT_TIMEOUT"),
+            "SSH_CONNECT_TIMEOUT",
+        ),
+        (
+            RuntimeError("SSH tunnel exited rc=255; diagnostic=AUTHENTICATION_FAILED"),
+            "SSH_AUTHENTICATION_FAILED",
+        ),
+        (
+            RuntimeError("SSH tunnel exited rc=255; diagnostic=CONNECTION_REFUSED"),
+            "SSH_CONNECTION_REFUSED",
+        ),
+        (
+            RuntimeError("SSH tunnel exited rc=255; diagnostic=HOST_RESOLUTION_FAILED"),
+            "SSH_HOST_RESOLUTION_FAILED",
+        ),
+        (
+            RuntimeError(
+                "SSH tunnel exited rc=255; diagnostic=HOST_KEY_VERIFICATION_FAILED"
+            ),
+            "SSH_HOST_KEY_VERIFICATION_FAILED",
+        ),
+        (
+            RuntimeError("SSH tunnel exited rc=255; diagnostic=LOCAL_FORWARD_BIND_FAILED"),
+            "SSH_LOCAL_FORWARD_BIND_FAILED",
+        ),
+        (
+            RuntimeError("SSH tunnel exited rc=255; diagnostic=FORWARD_FAILED"),
+            "SSH_FORWARD_FAILED",
+        ),
+        (
+            RuntimeError("SSH tunnel exited rc=255; diagnostic=SSH_PROCESS_ERROR"),
+            "SSH_PROCESS_FAILED",
+        ),
+    ],
+)
+def test_executor_transport_exception_uses_stable_sanitized_code(exception, expected_code):
+    eng = get_engine()
+
+    def failing(**_kwargs):
+        raise exception
+
+    eng.register_executor("transport-failure", failing)
+    pl = eng.create_pipeline(
+        TEST_SCOPE,
+        name="p",
+        executor_id="transport-failure",
+        execution_mode="live",
+    )
+    sc = eng.create_schedule(TEST_SCOPE, name="s", pipeline_id=pl.id)
+
+    run = eng.run_schedule(TEST_SCOPE, sc.id)
+
+    assert run.status == "failed"
+    assert run.error_code == expected_code
+    assert run.error_message == "pipeline executor failed"
+    assert "diagnostic=" not in run.error_message
+
+
+@pytest.mark.parametrize(
+    ("mysql_code", "expected_code"),
+    [
+        (2003, "MYSQL_CONNECT_FAILED"),
+        (2006, "MYSQL_SERVER_GONE"),
+        (2013, "MYSQL_CONNECTION_LOST"),
+    ],
+)
+def test_mysql_operational_exception_uses_stable_sanitized_code(mysql_code, expected_code):
+    eng = get_engine()
+
+    OperationalError = type("OperationalError", (Exception,), {"__module__": "pymysql.err"})
+
+    def failing(**_kwargs):
+        raise OperationalError(mysql_code, "sensitive-host user@example.com password=secret")
+
+    eng.register_executor("mysql-failure", failing)
+    pl = eng.create_pipeline(
+        TEST_SCOPE,
+        name="p",
+        executor_id="mysql-failure",
+        execution_mode="live",
+    )
+    sc = eng.create_schedule(TEST_SCOPE, name="s", pipeline_id=pl.id)
+
+    run = eng.run_schedule(TEST_SCOPE, sc.id)
+
+    assert run.status == "failed"
+    assert run.error_code == expected_code
+    assert run.error_message == "pipeline executor failed"
+    assert "sensitive-host" not in run.error_message
+    assert "secret" not in run.error_message
+
+
 def test_missing_output_evidence_cannot_be_success():
     eng = get_engine()
     eng.register_executor("bad", lambda **_kwargs: {"rows_read": 1, "rows_written": 1})
