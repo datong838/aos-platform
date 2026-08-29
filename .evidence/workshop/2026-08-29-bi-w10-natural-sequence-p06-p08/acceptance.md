@@ -29,7 +29,9 @@
 | Pipeline | 上海自然时槽 | 新 run | source/projection | SourceReadiness | 裁决 |
 |---|---:|---|---|---|---|
 | P06 OrderLine | 07:00 | `2026-08-28T23:00:08.591057+00:00`，`succeeded`，`rowsWritten=936` | `234 / 234` | `ready` | 自然运行、同租户同截点计数与 readiness 闭合 |
-| P07 Shipment | 08:00 | 待自然时槽 | 待回读 | 待回读 | 待自然事实 |
+| P07 Shipment | 08:00 | `2026-08-29T00:00:02.671566+00:00`，`failed`，`PIPELINE_EXECUTOR_FAILED` | `19 / 19` | `failed` | 自然运行证明缓存本地转发端口探活不能代表远端 DB 端到端可用；不得用既有计数覆盖失败 |
 | P08 CustomerLite | 09:00 | 待自然时槽 | 待回读 | 待回读 | 待自然事实 |
 
 P03 保留 04:00 自然失败事实；本记录不会把库存 reader 兼容性、现有 ProductSku source/projection 或其他 Pipeline 的成功冒充为 P03 自然恢复。
+
+P07 本次失败后已按总计划 §117 最小修复：DB 建连通过 exact cached tunnel 失败时，按 cache key + 对象 identity 驱逐调用方实际使用的隧道；不在同一 run 内重试，不关闭并发 replacement。JDBC/Cron/P07/P08/Executor 专项 `83 passed`，compileall 与 scoped diff check GREEN。P07 业务恢复仍只等待下一自然时槽；修复将通过精确 API 重载供 P08 和后续自然运行消费。

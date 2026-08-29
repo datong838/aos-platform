@@ -613,9 +613,7 @@ def _tunnel_failure_config() -> dict[str, object]:
 
 @patch("aos_api.jdbc_connector_runtime._get_or_create_tunnel", return_value=43123)
 @patch("aos_api.jdbc_connector_runtime._get_or_create_conn", side_effect=RuntimeError("connect failed"))
-@patch("aos_api.jdbc_connector_runtime._is_tunnel_alive", return_value=False)
-def test_db_connect_failure_evicts_only_the_dead_tunnel_used_by_the_call(
-    mock_alive: MagicMock,
+def test_db_connect_failure_evicts_the_exact_tunnel_used_by_the_call(
     mock_conn: MagicMock,
     mock_get_tunnel: MagicMock,
 ) -> None:
@@ -631,13 +629,12 @@ def test_db_connect_failure_evicts_only_the_dead_tunnel_used_by_the_call(
     owned.tunnel.close.assert_called_once_with()
     mock_get_tunnel.assert_called_once_with(config)
     mock_conn.assert_called_once()
-    mock_alive.assert_called_once_with(owned)
 
 
 @patch("aos_api.jdbc_connector_runtime._get_or_create_tunnel", return_value=43123)
 @patch("aos_api.jdbc_connector_runtime._get_or_create_conn", side_effect=RuntimeError("remote db unavailable"))
 @patch("aos_api.jdbc_connector_runtime._is_tunnel_alive", return_value=True)
-def test_db_connect_failure_keeps_a_healthy_tunnel_without_retry(
+def test_db_connect_failure_does_not_trust_local_port_only_probe(
     mock_alive: MagicMock,
     mock_conn: MagicMock,
     mock_get_tunnel: MagicMock,
@@ -650,11 +647,29 @@ def test_db_connect_failure_keeps_a_healthy_tunnel_without_retry(
     with pytest.raises(RuntimeError, match="remote db unavailable"):
         JdbcConnectorRuntime(config).__enter__()
 
-    assert jdbc_runtime._TUNNEL_CACHE[key] is owned
-    owned.tunnel.close.assert_not_called()
+    assert key not in jdbc_runtime._TUNNEL_CACHE
+    owned.tunnel.close.assert_called_once_with()
     mock_get_tunnel.assert_called_once_with(config)
     mock_conn.assert_called_once()
-    mock_alive.assert_called_once_with(owned)
+    mock_alive.assert_not_called()
+
+
+def test_db_connect_failure_does_not_close_a_concurrent_tunnel_replacement() -> None:
+    config = _tunnel_failure_config()
+    key = jdbc_runtime._tunnel_cache_key(config)
+    used = jdbc_runtime._CachedTunnel(tunnel=MagicMock(), local_port=43123)
+    replacement = jdbc_runtime._CachedTunnel(tunnel=MagicMock(), local_port=43124)
+    jdbc_runtime._TUNNEL_CACHE[key] = replacement
+
+    assert jdbc_runtime._evict_cached_tunnel(
+        key,
+        used,
+        reason="db_connect_failed",
+    ) is False
+
+    assert jdbc_runtime._TUNNEL_CACHE[key] is replacement
+    used.tunnel.close.assert_not_called()
+    replacement.tunnel.close.assert_not_called()
 
 
 def test_dead_tunnel_eviction_does_not_close_a_concurrent_replacement() -> None:

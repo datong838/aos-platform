@@ -376,15 +376,13 @@ def _evict_cached_conn(key: str, expected: _CachedConn) -> None:
             log.warning("Closing evicted DB conn failed (key=%s): %s", key, exc)
 
 
-def _evict_cached_tunnel_if_dead(key: str, expected: _CachedTunnel) -> bool:
-    """仅驱逐调用方取得且已确认失效的隧道。
-
-    DB 首次连接失败不等于 SSH 隧道失败：远端 MySQL 拒绝连接时，本地
-    隧道仍可能健康。因此这里二次探活，并用对象 identity 防止误关闭
-    并发线程刚刚重建的新隧道。调用方不得在同一次运行内自动重试。
-    """
-    if _is_tunnel_alive(expected):
-        return False
+def _evict_cached_tunnel(
+    key: str,
+    expected: _CachedTunnel,
+    *,
+    reason: str,
+) -> bool:
+    """仅驱逐调用方实际使用的缓存隧道，不影响并发 replacement。"""
     with _CACHE_LOCK:
         current = _TUNNEL_CACHE.get(key)
         if current is not expected:
@@ -394,8 +392,15 @@ def _evict_cached_tunnel_if_dead(key: str, expected: _CachedTunnel) -> bool:
         expected.tunnel.close()
     except Exception as exc:
         log.warning("Closing evicted SSH tunnel failed (key=%s): %s", key, exc)
-    log.info("SSH tunnel evicted (key=%s, reason=db_connect_failed_and_tunnel_dead)", key)
+    log.info("SSH tunnel evicted (key=%s, reason=%s)", key, reason)
     return True
+
+
+def _evict_cached_tunnel_if_dead(key: str, expected: _CachedTunnel) -> bool:
+    """仅在本地端口探活失败时驱逐调用方取得的 exact tunnel。"""
+    if _is_tunnel_alive(expected):
+        return False
+    return _evict_cached_tunnel(key, expected, reason="tunnel_probe_failed")
 
 
 def _cleanup_all_cached() -> None:
@@ -796,7 +801,14 @@ class JdbcConnectorRuntime:
             self._cached_conn = _get_or_create_conn(self._config, db_host, db_port)
         except Exception:
             if tunnel_key is not None and cached_tunnel is not None:
-                _evict_cached_tunnel_if_dead(tunnel_key, cached_tunnel)
+                # 本地转发端口可连接并不代表转发到远端数据库端到端可用。
+                # DB 建连已经通过 exact tunnel 失败，本轮不重试，只驱逐该
+                # 对象，让下一次自然运行重新建立完整传输路径。
+                _evict_cached_tunnel(
+                    tunnel_key,
+                    cached_tunnel,
+                    reason="db_connect_failed",
+                )
             raise
         self._conn = self._cached_conn.conn
         local_port_for_key = db_port if db_host == "127.0.0.1" else None
