@@ -11,11 +11,13 @@ from typing import Any
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 from aos_api.module_identity import resolve_module_pk
+from aos_api.schema_readiness import mark_relation_ready, relation_exists
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.widget_instances")
-
 def ensure_schema() -> None:
+    if relation_exists("module_widget_instance"):
+        return
     with connect() as conn:
         conn.execute(
             """
@@ -42,6 +44,7 @@ def ensure_schema() -> None:
             """
         )
         conn.commit()
+    mark_relation_ready("module_widget_instance")
 
 
 def list_instances(scope: TenantScope, module_id: str) -> list[dict[str, Any]]:

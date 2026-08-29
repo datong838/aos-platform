@@ -6,9 +6,31 @@ Total: 9 modules + 16 widgets + 3 themes + 9 canvas configs + 108 widget instanc
 """
 from __future__ import annotations
 
+from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.demo.seed_workshop")
+
+
+def _ensure_seed_scope() -> None:
+    """Persist the disposable Workshop demo workspace before child seeds."""
+    with connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO meta_org (id, name, kind, join_policy, discoverable)
+            VALUES ('dev-org', '开发测试组织', 'standard', 'invite_or_apply', TRUE)
+            ON CONFLICT (id) DO NOTHING
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO meta_workspace
+              (org_id, project_id, name, deletable, kind)
+            VALUES ('dev-org', 'dev-project', '默认工作区', TRUE, 'default')
+            ON CONFLICT (org_id, project_id) DO NOTHING
+            """
+        )
+        conn.commit()
 
 
 def seed_workshop() -> dict[str, int]:
@@ -24,6 +46,11 @@ def seed_workshop() -> dict[str, int]:
     from aos_api.demo.seed_widgets import seed_widgets
 
     log.info("seed_workshop_start")
+
+    # Workshop catalog tables are tenant-owned and reference the composite
+    # workspace root.  Establish the disposable demo scope before seeding any
+    # child rows so a freshly migrated database remains FK-correct.
+    _ensure_seed_scope()
 
     result = {
         "modules": seed_modules(),

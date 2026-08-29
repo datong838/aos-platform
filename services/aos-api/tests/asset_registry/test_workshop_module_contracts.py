@@ -152,6 +152,15 @@ def test_ecommerce_source_bundles_publish_eight_typed_non_placeholder_profiles()
     operations = ManifestLoader({"candidate": candidate_root}).load(
         "bundle://candidate/solution.ecommerce.operations-base/1.2.0"
     )
+    growth_exports = growth.manifest.spec.exports.model_dump()
+    assert growth_exports["agents"] == [
+        "content/agents/",
+        "content/knowledge/",
+        "content/live/",
+        "content/media/",
+    ]
+    assert growth_exports["logic"] == ["content/logic/", "content/growth/"]
+    assert growth_exports["evals"] == ["content/evals/", "content/harness/"]
     modules = [*growth.workshop_modules, *operations.workshop_modules]
 
     assert len(modules) == 8

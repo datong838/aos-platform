@@ -11,10 +11,10 @@ from typing import Any
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 from aos_api.module_identity import resolve_module_pk
+from aos_api.schema_readiness import mark_relation_ready, relation_exists
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_events")
-
 _DEFAULT_EVENTS: list[dict[str, Any]] = [
     {
         "id": "evt-refresh",
@@ -35,6 +35,8 @@ _DEFAULT_EVENTS: list[dict[str, Any]] = [
 
 def ensure_events_schema() -> None:
     """Create module_events table if not exists."""
+    if relation_exists("module_events"):
+        return
     with connect() as conn:
         conn.execute(
             """
@@ -60,6 +62,7 @@ def ensure_events_schema() -> None:
             """
         )
         conn.commit()
+    mark_relation_ready("module_events")
     log.info("module_events_schema_ensured")
 
 

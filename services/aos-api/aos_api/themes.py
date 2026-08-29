@@ -10,11 +10,13 @@ from typing import Any
 
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.schema_readiness import mark_relation_ready, relation_exists
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.themes")
-
 def ensure_schema() -> None:
+    if relation_exists("theme"):
+        return
     with connect() as conn:
         conn.execute(
             """
@@ -34,6 +36,7 @@ def ensure_schema() -> None:
             """
         )
         conn.commit()
+    mark_relation_ready("theme")
 
 
 def list_themes(scope: TenantScope) -> list[dict[str, Any]]:

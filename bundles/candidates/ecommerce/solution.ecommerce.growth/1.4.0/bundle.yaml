@@ -17,12 +17,17 @@ spec:
   exports:
     agents:
       - content/agents/
+      - content/knowledge/
+      - content/live/
+      - content/media/
     logic:
       - content/logic/
+      - content/growth/
     workshops:
       - content/workshops/
     evals:
       - content/evals/
+      - content/harness/
     policies:
       - content/policies/
     schemas:

@@ -11,11 +11,13 @@ from typing import Any
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 from aos_api.module_identity import resolve_module_pk
+from aos_api.schema_readiness import mark_relation_ready, relation_exists
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.module_deployments")
-
 def ensure_schema() -> None:
+    if relation_exists("module_deployment"):
+        return
     with connect() as conn:
         conn.execute(
             """
@@ -41,6 +43,7 @@ def ensure_schema() -> None:
             """
         )
         conn.commit()
+    mark_relation_ready("module_deployment")
 
 
 def list_deployments(scope: TenantScope, module_id: str) -> list[dict[str, Any]]:

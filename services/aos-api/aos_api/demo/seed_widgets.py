@@ -54,7 +54,7 @@ def seed_widgets() -> int:
                     id, name, name_zh, type, source, category, icon, description,
                     config_schema, version, installed, org_id, project_id
                 ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s)
-                ON CONFLICT (id) DO UPDATE SET
+                ON CONFLICT (org_id, project_id, id) DO UPDATE SET
                     name=EXCLUDED.name, name_zh=EXCLUDED.name_zh,
                     type=EXCLUDED.type, source=EXCLUDED.source,
                     category=EXCLUDED.category, icon=EXCLUDED.icon,

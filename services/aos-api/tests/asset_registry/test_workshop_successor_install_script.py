@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 from pathlib import Path
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 SCRIPT = REPOSITORY_ROOT / "scripts/workshop_w1_10_successor_install.py"
-AUTHOR_ROOT = REPOSITORY_ROOT / "bundles/solutions"
 RELEASE_ROOT = REPOSITORY_ROOT / "bundles/releases/ecommerce"
 
 RELEASES = (
@@ -15,12 +15,14 @@ RELEASES = (
         "solution.ecommerce.growth",
         "1.3.0",
         7,
+        "fa984229dde02fef8953ba80fd52b94262b2f0336fd3d3381926329921143101",
     ),
     (
         "ecommerce-operations-base",
         "solution.ecommerce.operations-base",
         "1.1.0",
         1,
+        "7b85053c5959c3d5e6182c5f88cb0d298f3be329fbac144953c8fdeca48f2d49",
     ),
 )
 
@@ -33,6 +35,16 @@ def _files(root: Path) -> dict[str, bytes]:
     }
 
 
+def _tree_hash(root: Path) -> str:
+    digest = hashlib.sha256()
+    for relative_path, content in _files(root).items():
+        digest.update(relative_path.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(content)
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
 def _load_script():
     spec = importlib.util.spec_from_file_location("workshop_successor", SCRIPT)
     assert spec is not None and spec.loader is not None
@@ -41,11 +53,11 @@ def _load_script():
     return module
 
 
-def test_release_snapshots_are_exact_versioned_copies() -> None:
-    for author_name, bundle_id, version, _ in RELEASES:
+def test_release_snapshots_match_immutable_tree_hashes() -> None:
+    for _author_name, bundle_id, version, _module_count, expected_hash in RELEASES:
         release = RELEASE_ROOT / bundle_id / version
         assert release.is_dir()
-        assert _files(release) == _files(AUTHOR_ROOT / author_name)
+        assert _tree_hash(release) == expected_hash
         assert not (release / "bundle.signature.json").exists()
 
 

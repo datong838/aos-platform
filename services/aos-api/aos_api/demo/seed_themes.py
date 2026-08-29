@@ -82,7 +82,7 @@ def seed_themes() -> int:
                 INSERT INTO theme (
                     id, name, mode, is_preset, tokens, description, org_id, project_id
                 ) VALUES (%s,%s,%s,%s,%s::jsonb,%s,%s,%s)
-                ON CONFLICT (id) DO UPDATE SET
+                ON CONFLICT (org_id, project_id, id) DO UPDATE SET
                     name=EXCLUDED.name, mode=EXCLUDED.mode,
                     is_preset=EXCLUDED.is_preset, tokens=EXCLUDED.tokens,
                     description=EXCLUDED.description, updated_at=NOW()
