@@ -127,6 +127,7 @@ def _lock(
     *,
     current_installation_ref: dict[str, object] | None = None,
     target_markings: Collection[str] = (),
+    target_data_scopes: Collection[str] = (),
 ) -> StoredCompositionLock:
     request = CompositionRequest.model_validate(
         {
@@ -151,6 +152,7 @@ def _lock(
     target_permissions = {
         **empty_permissions,
         "markings": sorted(target_markings),
+        "dataScopes": sorted(target_data_scopes),
     }
     bindings = [
         {
@@ -239,12 +241,17 @@ def _lock(
     )
 
 
-def _active(persisted, *, installation_id=INSTALLATION_ID):
+def _active(
+    persisted,
+    *,
+    installation_id=INSTALLATION_ID,
+    target_data_scopes: Collection[str] = (),
+):
     return ActiveWorkshopBundle(
         installation_id=installation_id,
         active_revision=5,
         overlay_revision="overlay-5",
-        lock=_lock(persisted),
+        lock=_lock(persisted, target_data_scopes=target_data_scopes),
         bundle=persisted,
     )
 
@@ -314,8 +321,12 @@ def test_catalog_projects_only_active_tenant_modules_and_exact_refs() -> None:
     assert [item.order for item in response.items] == sorted(
         item.order for item in response.items
     )
-    assert all(item.readiness.value == "unknown" for item in response.items)
+    assert all(item.readiness.value == "blocked" for item in response.items)
     assert all(item.blockers for item in response.items)
+    assert all(
+        any(blocker.reason_code == "DATA_SCOPE_NOT_GRANTED" for blocker in item.blockers)
+        for item in response.items
+    )
     assert all(item.installation_ref.lock_hash == _lock(persisted).lock_hash for item in response.items)
     assert all(item.module_ref.bundle_content_hash == loaded.content_hash for item in response.items)
     assert all(item.last_receipt_ref is None for item in response.items)
@@ -357,6 +368,45 @@ def test_catalog_get_readiness_and_not_installed_are_explicit() -> None:
             roles=["operator"],
             markings=["public"],
         )
+
+
+def test_catalog_resolves_data_scope_only_from_exact_active_lock() -> None:
+    persisted = _persisted(_loaded_growth())
+    catalog = _catalog(
+        FakeSource(
+            {
+                ("org-org", "dev-project"): (
+                    _active(
+                        persisted,
+                        target_data_scopes=("ecommerce.workshop.read",),
+                    ),
+                )
+            }
+        )
+    )
+
+    response = catalog.list_modules(
+        org_id="org-org",
+        project_id="dev-project",
+        roles=["operator"],
+        markings=["public"],
+    )
+
+    assert response.count == 7
+    assert all(item.readiness.value == "unknown" for item in response.items)
+    assert all(
+        not any(blocker.dependency_type.value == "data_scope" for blocker in item.blockers)
+        for item in response.items
+    )
+    assert all(
+        {blocker.reason_code for blocker in item.blockers}
+        >= {
+            "AIP_FEATURE_UNVERIFIED",
+            "CAPABILITY_BINDING_UNVERIFIED",
+            "OBJECT_READINESS_UNVERIFIED",
+        }
+        for item in response.items
+    )
 
 
 def test_catalog_fails_closed_on_content_hash_drift_or_duplicate_active_modules() -> None:

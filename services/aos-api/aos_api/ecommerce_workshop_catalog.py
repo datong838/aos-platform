@@ -584,7 +584,11 @@ def _module_projection(
     if artifact_path is None:
         raise RegistryIntegrityCorruptError()
     artifact = next(item for item in loaded.artifacts if item.relative_path == artifact_path)
-    blockers = _initial_blockers(module=module, bundle_status=persisted.status)
+    blockers = _initial_blockers(
+        module=module,
+        bundle_status=persisted.status,
+        granted_data_scopes=installed.lock.payload.permission_diff.target.data_scopes,
+    )
     readiness = _readiness_from(blockers)
     return EcommerceWorkshopModuleProjection.model_validate(
         {
@@ -638,7 +642,10 @@ def _artifact_contains_module(
 
 
 def _initial_blockers(
-    *, module: WorkshopModuleContribution, bundle_status: str
+    *,
+    module: WorkshopModuleContribution,
+    bundle_status: str,
+    granted_data_scopes: Collection[str] = (),
 ) -> list[WorkshopReadinessBlocker]:
     if bundle_status in {"deprecated", "revoked"}:
         reason = "BUNDLE_REVOKED" if bundle_status == "revoked" else "BUNDLE_DEPRECATED"
@@ -676,12 +683,6 @@ def _initial_blockers(
             "AIP_FEATURE_UNVERIFIED",
             "等待对应 AIP authority 集成并由 canonical reader 回读",
         ),
-        (
-            WorkshopDependencyType.DATA_SCOPE,
-            module.permissions.data_scopes,
-            "DATA_SCOPE_UNVERIFIED",
-            "验证当前主体与数据源的 scope/freshness 后重新评估",
-        ),
     )
     for dependency_type, dependency_ids, reason_code, required_action in groups:
         blockers.extend(
@@ -698,6 +699,22 @@ def _initial_blockers(
             )
             for dependency_id in dependency_ids
         )
+    granted_scope_set = set(granted_data_scopes)
+    blockers.extend(
+        WorkshopReadinessBlocker.model_validate(
+            {
+                "dependencyType": WorkshopDependencyType.DATA_SCOPE.value,
+                "dependencyId": dependency_id,
+                "state": WorkshopDependencyState.BLOCKED.value,
+                "reasonCode": "DATA_SCOPE_NOT_GRANTED",
+                "recoverable": True,
+                "requiredAction": "由当前生效 CompositionLock 明确授予该数据范围后重新评估",
+                "ref": None,
+            }
+        )
+        for dependency_id in module.permissions.data_scopes
+        if dependency_id not in granted_scope_set
+    )
     if not blockers:
         return [
             WorkshopReadinessBlocker.model_validate(
