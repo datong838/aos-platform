@@ -113,8 +113,10 @@ class CustomerViewSlice(AipContractModel):
     def _canonical_and_honest(self) -> CustomerViewSlice:
         if self.data_cutoff.utcoffset() is None or [item.axis for item in self.readiness_axes] != list(CustomerReadinessAxis):
             raise ValueError("customer view requires canonical axes and timezone cutoff")
-        if self.count_ledger.input - self.count_ledger.deduplicated != len(self.items):
+        if self.status == "ready" and self.count_ledger.input - self.count_ledger.deduplicated != len(self.items):
             raise ValueError("customer ledger does not match items")
+        if self.status == "blocked" and len(self.items) > self.count_ledger.input - self.count_ledger.deduplicated:
+            raise ValueError("blocked customer view cannot disclose more items than its ledger")
         if self.status == "ready" and (self.blockers or any(item.status in {"blocked", "unknown"} for item in self.readiness_axes)):
             raise ValueError("ready customer view cannot hide blocked axes")
         if self.status == "blocked" and not self.blockers:

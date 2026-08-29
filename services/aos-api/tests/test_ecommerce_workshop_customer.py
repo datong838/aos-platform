@@ -62,6 +62,20 @@ def test_customer_bounded_reader_allows_trusted_empty_without_fake_people() -> N
     assert [call[3] for call in reader.calls] == [100, 100, 100, 100]
 
 
+def test_customer_blocked_source_count_is_preserved_without_disclosing_items() -> None:
+    class CountOnlyReader(FakeReader):
+        def read_view(self, scope, *, view_id, cutoff, limit):
+            value = super().read_view(scope, view_id=view_id, cutoff=cutoff, limit=limit)
+            blocker = CustomerBlocker(code="CUSTOMER_CONSENT_AUTHORITY_NOT_AVAILABLE", dependency="customer.consent", required_action="attach exact consent authority")
+            axes = tuple(CustomerAxisReadiness(axis=axis, status="ready", exact_ref=value.authority_refs[0]) if axis is CustomerReadinessAxis.CUSTOMER_LITE else CustomerAxisReadiness(axis=axis, status="blocked", blockers=[blocker]) for axis in CustomerReadinessAxis)
+            return CustomerViewObservation(scope=scope, resource_revision=3, data_cutoff=cutoff, readiness_axes=axes, authority_refs=value.authority_refs, input_count=54, suppressed_count=54)
+
+    envelope = EcommerceWorkshopCustomer(reader=CountOnlyReader(), clock=lambda: NOW).read(org_id="org-org", project_id="dev-project")
+    assert all(item.status == "blocked" and item.items == [] for item in envelope.views)
+    assert all(item.count_ledger.input == 54 and item.count_ledger.unknown == 54 for item in envelope.views)
+    assert all(item.readiness_axes[0].status == "ready" for item in envelope.views)
+
+
 def test_customer_tenant_drift_is_isolated_and_revision_drift_blocks_all() -> None:
     isolated = EcommerceWorkshopCustomer(reader=FakeReader(tenant_drift=CustomerViewId.SEGMENT), clock=lambda: NOW).read(org_id="org-org", project_id="dev-project")
     assert [item.status for item in isolated.views] == ["ready", "blocked", "ready", "ready"]

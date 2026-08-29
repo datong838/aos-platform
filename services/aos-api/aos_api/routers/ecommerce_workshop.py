@@ -158,6 +158,7 @@ from aos_api.ecommerce_workshop_price_disposition import (
 )
 from aos_api.ecommerce_workshop_price_disposition_store import EcommerceWorkshopPriceDispositionStore
 from aos_api.ecommerce_workshop_customer import EcommerceWorkshopCustomer
+from aos_api.ecommerce_workshop_customer_source_reader import EcommerceWorkshopCustomerSourceReader
 from aos_api.ecommerce_workshop_customer_contracts import WorkshopCustomerViewEnvelope
 from aos_api.ecommerce_workshop_customer_lifecycle import (
     CreateCustomerConsentPolicyRequest,
@@ -438,7 +439,7 @@ def get_ecommerce_workshop_price_governance() -> EcommerceWorkshopPriceGovernanc
 
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_customer() -> EcommerceWorkshopCustomer:
-    return EcommerceWorkshopCustomer()
+    return EcommerceWorkshopCustomer(reader=EcommerceWorkshopCustomerSourceReader())
 
 
 @lru_cache(maxsize=1)

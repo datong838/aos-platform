@@ -36,9 +36,9 @@ class EcommerceWorkshopCustomer:
             except (CustomerReadError, ValueError, TypeError):
                 observation = None
             candidates.append((view_id, blocker, observation))
-        trusted_revisions = {item.resource_revision for _, _, item in candidates if item is not None and all(axis.status not in {"blocked", "unknown"} for axis in item.readiness_axes)}
-        revision_conflict = len(trusted_revisions) > 1
-        revision = next(iter(trusted_revisions)) if len(trusted_revisions) == 1 else 1
+        observed_revisions = {item.resource_revision for _, _, item in candidates if item is not None}
+        revision_conflict = len(observed_revisions) > 1
+        revision = next(iter(observed_revisions)) if len(observed_revisions) == 1 else 1
         views = []
         for view_id, blocker, observation in candidates:
             if revision_conflict:
@@ -53,11 +53,29 @@ class EcommerceWorkshopCustomer:
                 unknown = sum(item.disclosure == "unknown" or item.freshness == "unknown" or item.quality == "unknown" or item.consent == "unknown" or item.retention == "unknown" for item in items)
                 excluded = len(items) - eligible - unknown
                 ledger = CustomerCountLedger(input=observation.input_count, eligible=eligible, excluded=excluded, unknown=unknown, deduplicated=observation.deduplicated_count)
+                view_blockers = []
+            elif observation is not None:
+                axes = list(observation.readiness_axes)
+                items = []
+                refs = list(observation.authority_refs)
+                axis_blockers = [item for axis in axes for item in axis.blockers]
+                unique_blockers = list({item.code: item for item in axis_blockers}.values())
+                if unique_blockers:
+                    blocker = unique_blockers[0]
+                view_blockers = unique_blockers or [blocker]
+                ledger = CustomerCountLedger(
+                    input=observation.input_count,
+                    eligible=0,
+                    excluded=0,
+                    unknown=observation.suppressed_count,
+                    deduplicated=observation.deduplicated_count,
+                )
             else:
                 axes = [CustomerAxisReadiness(axis=axis, status="blocked", blockers=[CustomerBlocker(code=blocker.code, dependency=f"customer.{axis.value}", required_action=blocker.required_action)]) for axis in CustomerReadinessAxis]
                 items, refs = [], []
                 ledger = CustomerCountLedger(input=0, eligible=0, excluded=0, unknown=0, deduplicated=0)
-            views.append(CustomerViewSlice(view_id=view_id, status="ready" if trusted else "blocked", resource_revision=revision, data_cutoff=cutoff, readiness_axes=axes, items=items, authority_refs=refs, blockers=[] if trusted else [blocker], count_ledger=ledger))
+                view_blockers = [blocker]
+            views.append(CustomerViewSlice(view_id=view_id, status="ready" if trusted else "blocked", resource_revision=revision, data_cutoff=cutoff, readiness_axes=axes, items=items, authority_refs=refs, blockers=view_blockers, count_ledger=ledger))
         return WorkshopCustomerViewEnvelope(tenant=TenantContext(org_id=org_id, project_id=project_id), resource_revision=revision, evaluated_at=cutoff, data_cutoff=cutoff, views=views, page=CustomerPageInfo(count=sum(len(item.items) for item in views)))
 
 

@@ -124,6 +124,7 @@ describe("TaskCockpitPage", () => {
     expect(host.textContent).not.toMatch(/\d+\/\d+\s*(?:进行中|已派发)|六数字同事在线/);
     await act(async () => cards[2]?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })));
     expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')?.textContent).toContain("购物决策支持与转化优化专家");
+    expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')?.textContent).toContain("常用 Agent");
     expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')?.textContent).toContain("尚无个人级归因");
     await act(async () => cards[2]?.click());
     expect(cards[2]?.getAttribute("aria-expanded")).toBe("true");

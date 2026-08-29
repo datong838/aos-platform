@@ -233,7 +233,7 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
       <dl>
         <div><dt>专业能力</dt><dd>{activeColleague.capability}</dd></div>
         <div><dt>工作边界</dt><dd>{activeColleague.boundary}</dd></div>
-        <div><dt>常用能力</dt><dd>{activeColleague.agents}</dd></div>
+        <div><dt>常用 Agent</dt><dd>{activeColleague.agents}</dd></div>
         <div><dt>当前状态</dt><dd>{response ? "已取得任务总览；尚无个人级归因，不能推导在线或执行中" : "个人运行状态待核对"}</dd></div>
       </dl>
     </div> : null}
