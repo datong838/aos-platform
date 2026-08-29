@@ -61,11 +61,30 @@ describe("AnalystPage BI-W7-01 investigation contribution", () => {
   });
 
   it("只识别冻结的 exact flag namespace 且默认关闭", () => {
-    expect(resolveBusinessInvestigationFeatureFlags(undefined)).toBe(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
+    expect(resolveBusinessInvestigationFeatureFlags(undefined, false)).toBe(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
+    expect(resolveBusinessInvestigationFeatureFlags(undefined, true)).toBe(OPEN_BUSINESS_INVESTIGATION_READ_FEATURE);
+    expect(resolveBusinessInvestigationFeatureFlags("", true)).toBe(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
     expect(resolveBusinessInvestigationFeatureFlags("workshop.analyst.business-investigation.read")).toBe(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
     expect(resolveBusinessInvestigationFeatureFlags("ecommerce.investigation.read")).toBe(OPEN_BUSINESS_INVESTIGATION_READ_FEATURE);
     expect(resolveBusinessInvestigationFeatureFlags("ecommerce.investigation.commands")).toBe(CLOSED_BUSINESS_INVESTIGATION_FEATURE_FLAGS);
     expect(resolveBusinessInvestigationFeatureFlags("ecommerce.investigation.read,ecommerce.investigation.commands")).toBe(OPEN_BUSINESS_INVESTIGATION_COMMAND_FEATURE);
+  });
+
+  it("开发态未配置时默认开放只读验收入口且不隐式开放命令", async () => {
+    await act(async () => root.render(
+      <AnalystPage
+        client={{ getAnalystView: vi.fn().mockResolvedValue(blocked) }}
+        investigationClient={emptyInvestigationClient}
+        featureFlags={resolveBusinessInvestigationFeatureFlags(undefined, true)}
+        loadAsyncJobs={emptyJobs}
+      />,
+    ));
+
+    const tabs = host.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    expect(tabs).toHaveLength(8);
+    expect(tabs[0]?.textContent).toContain("生意探究");
+    expect(host.textContent).toContain("写入口 0 · 周期计划、评审与 Handoff 关闭");
+    expect(host.textContent).not.toContain("ecommerce.investigation.commands · canonical 评审受控");
   });
 
   it("exact read flag 关闭时完整保留原七视图行为", async () => {

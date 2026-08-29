@@ -16,9 +16,13 @@ export const OPEN_BUSINESS_INVESTIGATION_COMMAND_FEATURE: BusinessInvestigationF
 
 export function resolveBusinessInvestigationFeatureFlags(
   serializedFlags: string | undefined = import.meta.env.VITE_AOS_FEATURE_FLAGS,
+  development = import.meta.env.MODE === "development",
 ): BusinessInvestigationFeatureFlags {
+  const effectiveFlags = serializedFlags === undefined && development
+    ? BUSINESS_INVESTIGATION_READ_FLAG
+    : (serializedFlags ?? "");
   const enabled = new Set(
-    (serializedFlags ?? "")
+    effectiveFlags
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean),
