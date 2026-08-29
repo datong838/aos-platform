@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet, apiPost, apiPut, S2Chrome, useJsonGet } from "./shared";
+import { apiGet, apiPut, S2Chrome, useJsonGet } from "./shared";
 import {
   BpBanner,
   BpKvList,
@@ -149,7 +149,6 @@ export function ModuleInterfacePage() {
   const [readOnlyStale, setReadOnlyStale] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [creating, setCreating] = useState(false);
   const requestGeneration = useRef(0);
 
   const selected = data?.items?.find((m) => m.id === selectedId) || data?.items?.[0];
@@ -189,37 +188,6 @@ export function ModuleInterfacePage() {
     void loadInterface(activeId, selected);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when module id changes
   }, [activeId, loadInterface]);
-
-  async function createMod() {
-    if (creating) return;
-    setCreating(true);
-    setMsg("");
-    try {
-      const created = await apiPost<ModuleListItem>("/v1/modules", {
-        name: "接口台 Module", description: "从模块接口页创建", objectType: "WorkOrder",
-        entryPath: "/workshop/inbox", widgets: ["table", "filters", "selection"], buddyBound: true,
-      });
-      if (!created.id || created.name !== "接口台 Module") throw new Error("创建回包与请求不一致");
-      let listed: { items: ModuleListItem[] };
-      try {
-        listed = await apiGet<{ items: ModuleListItem[] }>("/v1/modules");
-      } catch (e) {
-        setMsg(`创建已提交但重读核验失败：${String((e as Error).message || e)}`);
-        return;
-      }
-      if (!listed.items.some((item) => item.id === created.id)) {
-        setMsg("创建已提交但重读核验失败：列表未返回新 Module");
-        return;
-      }
-      setData(listed);
-      setSelectedId(created.id);
-      setMsg("Module 已创建并完成重读核验");
-    } catch (e) {
-      setMsg(`创建失败：${String((e as Error).message || e)}`);
-    } finally {
-      setCreating(false);
-    }
-  }
 
   function updateField(id: string, patch: Partial<InterfaceField>) {
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)));
@@ -299,7 +267,7 @@ export function ModuleInterfacePage() {
   const modules = data?.items || [];
 
   return (
-    <S2Chrome title="Module 接口与嵌套 Loop" lede="定义子 Module 暴露的输入/输出接口，支持 Loop 嵌套渲染。">
+    <S2Chrome title="应用接口与列表嵌套" lede="为当前工作区中的真实应用定义输入与输出契约。">
       <BpToolbar>
         <label className="mi-module-pick">
           <span className="muted">编辑接口</span>
@@ -310,7 +278,7 @@ export function ModuleInterfacePage() {
             onChange={(e) => setSelectedId(e.target.value || null)}
             disabled={!modules.length}
           >
-            {!modules.length ? <option value="">暂无 Module</option> : null}
+            {!modules.length ? <option value="">当前工作区暂无应用</option> : null}
             {modules.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
@@ -318,9 +286,7 @@ export function ModuleInterfacePage() {
             ))}
           </select>
         </label>
-        <button type="button" className="btn" disabled={creating} onClick={() => void createMod()}>
-          {creating ? "创建中…" : "创建 Module"}
-        </button>
+        <Link to="/workshop/new" className="btn-nav">新建应用</Link>
         <button
           type="button"
           className="btn"
@@ -364,7 +330,7 @@ export function ModuleInterfacePage() {
         left={
           <div className="bp-object-panel mi-panel">
             <div className="bp-ws-section-title">
-              接口定义 · {selected?.name || "维修 Inbox"}
+              接口定义 · {selected?.name || "尚未选择应用"}
               <span className="mi-counts muted">
                 {" "}
                 · 入参 {inputCount} / 出参 {outputCount}
@@ -381,7 +347,7 @@ export function ModuleInterfacePage() {
                     setIfaceName(e.target.value);
                     setDirty(true);
                   }}
-                  disabled={ifaceLoading || readOnlyStale}
+                  disabled={!activeId || ifaceLoading || readOnlyStale}
                 />
               </label>
               <label className="mi-meta-field">
@@ -393,16 +359,16 @@ export function ModuleInterfacePage() {
                     setIfaceVersion(e.target.value);
                     setDirty(true);
                   }}
-                  disabled={ifaceLoading || readOnlyStale}
+                  disabled={!activeId || ifaceLoading || readOnlyStale}
                 />
               </label>
             </div>
 
             <div className="mi-field-actions">
-              <button type="button" className="btn" disabled={readOnlyStale} onClick={() => addField("input")}>
+              <button type="button" className="btn" disabled={!activeId || readOnlyStale} onClick={() => addField("input")}>
                 + 入参
               </button>
-              <button type="button" className="btn" disabled={readOnlyStale} onClick={() => addField("output")}>
+              <button type="button" className="btn" disabled={!activeId || readOnlyStale} onClick={() => addField("output")}>
                 + 出参
               </button>
             </div>
@@ -428,7 +394,7 @@ export function ModuleInterfacePage() {
                 {!ifaceLoading && fields.length === 0 && (
                   <tr>
                     <td colSpan={5} className="muted">
-                      暂无字段，点击「+ 入参 / + 出参」添加
+                      {activeId ? "当前接口暂无字段，可添加入参或出参" : "请先新建或选择真实应用"}
                     </td>
                   </tr>
                 )}
@@ -450,7 +416,7 @@ export function ModuleInterfacePage() {
                           value={f.name}
                           aria-label="字段名"
                           onChange={(e) => updateField(f.id, { name: e.target.value })}
-                          disabled={readOnlyStale}
+                          disabled={!activeId || readOnlyStale}
                         />
                       </td>
                       <td>
@@ -460,7 +426,7 @@ export function ModuleInterfacePage() {
                           value={f.type}
                           aria-label="字段类型"
                           onChange={(e) => updateField(f.id, { type: e.target.value })}
-                          disabled={readOnlyStale}
+                          disabled={!activeId || readOnlyStale}
                         />
                       </td>
                       <td>
@@ -473,7 +439,7 @@ export function ModuleInterfacePage() {
                               direction: e.target.value === "output" ? "output" : "input",
                             })
                           }
-                          disabled={readOnlyStale}
+                          disabled={!activeId || readOnlyStale}
                         >
                           <option value="input">入参</option>
                           <option value="output">出参</option>
@@ -485,7 +451,7 @@ export function ModuleInterfacePage() {
                           className="btn mi-btn-danger"
                           aria-label={`删除 ${f.name}`}
                           onClick={() => removeField(f.id)}
-                          disabled={readOnlyStale}
+                          disabled={!activeId || readOnlyStale}
                         >
                           删
                         </button>
@@ -501,45 +467,34 @@ export function ModuleInterfacePage() {
             </datalist>
 
             {selected && (
-              <BpKvList
-                rows={[
-                  { key: "entryPath", value: selected.entryPath || "—", mono: true },
-                  { key: "objectType", value: selected.objectType || "—" },
-                  { key: "moduleId", value: selected.id, mono: true },
-                ]}
-              />
+              <details>
+                <summary className="muted" style={{ cursor: "pointer" }}>查看应用接口审计信息</summary>
+                <BpKvList
+                  rows={[
+                    { key: "entryPath", value: selected.entryPath || "—", mono: true },
+                    { key: "objectType", value: selected.objectType || "—" },
+                    { key: "moduleId", value: selected.id, mono: true },
+                  ]}
+                />
+              </details>
             )}
           </div>
         }
         right={
           <div className="bp-object-panel">
-            <div className="bp-ws-section-title">嵌套 Loop · 规划示意</div>
+            <div className="bp-ws-section-title">列表嵌套结构</div>
             <div className="muted" style={{ fontSize: "0.8rem" }}>
-              <div>父 Module：{selected?.name || "风险告警管理"}</div>
-              <div
-                style={{
-                  marginLeft: "1rem",
-                  borderLeft: "2px solid rgba(56,189,248,0.3)",
-                  paddingLeft: "0.75rem",
-                  marginTop: 8,
-                }}
-              >
-                <div className="card" style={{ marginBottom: 6 }}>
-                  子 Loop · 工单列表行
-                </div>
-                <div className="card">子 Module · 详情侧栏</div>
-              </div>
-              <p style={{ marginTop: 8 }}>
-                Loop 变量 <code>row</code> 绑定至子 Module <code>input.workOrder</code>
-              </p>
+              {selected
+                ? "当前服务没有返回独立的嵌套结构记录，因此不在页面补造父子关系。"
+                : "请先选择真实应用；当前没有可核验的嵌套结构。"}
             </div>
           </div>
         }
       />
 
       <BpBanner tone="info">
-        嵌套 Module 通过 Interface 契约解耦；Loop 执行器尚未接入，本区仅展示规划示意。打开业务应用请用{" "}
-        <Link to="/workshop">应用列表</Link>，本页只编辑接口契约。
+        本页只编辑服务端已返回的应用接口契约；嵌套结构没有权威记录时保持为空。打开业务应用请使用{" "}
+        <Link to="/workshop">应用列表</Link>。
       </BpBanner>
     </S2Chrome>
   );

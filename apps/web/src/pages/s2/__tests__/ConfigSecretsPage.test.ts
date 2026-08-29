@@ -26,7 +26,7 @@ describe("ConfigSecretsPage", () => {
     host.remove();
   });
 
-  it("renders with MOCK fallback config overrides", async () => {
+  it("权威为空时只展示配置元数据可信空态", async () => {
     const { ConfigSecretsPage } = await import("../ConfigSecretsPage");
     await act(async () => {
       root.render(createElement(MemoryRouter, null, createElement(ConfigSecretsPage)));
@@ -38,15 +38,13 @@ describe("ConfigSecretsPage", () => {
 
     const text = host.textContent || "";
     expect(text).toContain("配置与密钥");
-    expect(text).toContain("aip.model.default");
-    expect(text).toContain("db.connection.poolSize");
-    expect(text).toContain("integration.apiKey");
-    expect(text).toContain("全局");
-    expect(text).toContain("环境");
-    expect(text).toContain("Spoke");
+    expect(text).toContain("当前没有可审计配置项");
+    expect(text).toContain("不会生成模型、连接池、密钥或维护窗口示例");
+    expect(text).not.toContain("aip.model.default");
+    expect(text).not.toContain("integration.apiKey");
   });
 
-  it("masks sensitive values by default", async () => {
+  it("页面不读取或显示密钥正文", async () => {
     const { ConfigSecretsPage } = await import("../ConfigSecretsPage");
     await act(async () => {
       root.render(createElement(MemoryRouter, null, createElement(ConfigSecretsPage)));
@@ -57,15 +55,12 @@ describe("ConfigSecretsPage", () => {
     });
 
     const text = host.textContent || "";
-    // Sensitive value should be masked
-    expect(text).toContain("••••");
-    expect(text).not.toContain("sk-aip-xxxxxxxxxxxxxxxxxxxx");
-    // Non-sensitive values should be visible
-    expect(text).toContain("glm-4-flash");
-    expect(text).toContain("50");
+    expect(text).toContain("页面永不读取或显示密钥正文");
+    expect(text).not.toContain("vault:secret/");
+    expect(text).not.toContain("sk-");
   });
 
-  it("shows maintenance window and new config button", async () => {
+  it("未登记维护窗口时明确空态且仅允许走变更审批", async () => {
     const { ConfigSecretsPage } = await import("../ConfigSecretsPage");
     await act(async () => {
       root.render(createElement(MemoryRouter, null, createElement(ConfigSecretsPage)));
@@ -77,16 +72,8 @@ describe("ConfigSecretsPage", () => {
 
     const text = host.textContent || "";
     expect(text).toContain("维护窗口");
-    expect(text).toContain("开始时间");
-    expect(text).toContain("结束时间");
-    expect(text).toContain("2026-07-28 02:00");
-    expect(text).toContain("2026-07-28 04:00");
-    expect(text).toContain("新增配置");
-
-    const buttons = host.querySelectorAll("button");
-    const newBtn = Array.from(buttons).find((b) =>
-      b.textContent?.includes("新增配置"),
-    );
-    expect(newBtn).toBeTruthy();
+    expect(text).toContain("尚未登记");
+    expect(text).toContain("创建配置变更");
+    expect(text).not.toContain("2026-07-28");
   });
 });

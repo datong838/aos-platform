@@ -15,6 +15,7 @@ vi.mock("./integrationCases/useIntegrationCasesReadModel", () => ({
 }));
 
 import { IntegrationCasesPage } from "./IntegrationCasesPage";
+import { businessCaseName } from "./integrationCases/IntegrationCaseCatalog";
 
 function state<T>(data: T | null, status: "idle" | "loading" | "ready" | "empty" | "forbidden" | "not_visible_or_missing" | "error" | "stale" | "refreshing" = "ready") {
   return { data, status, error: null };
@@ -67,6 +68,22 @@ describe("IntegrationCasesPage", () => {
     expect(host.textContent).not.toContain("9 个平台案例");
     expect(host.textContent).not.toContain("G1-G10 公共阻塞项");
     expect(host.textContent).not.toContain("日均 1.2M 行");
+  });
+
+  it("业务标题不展示开发编号，精确标识不进入目录首屏", async () => {
+    const item = CURRENT_CASE_LIST_FIXTURE.items[0];
+    const pollutedName = `${item.displayName}（D3：W03 客户台 + L05 分润异常）`;
+    expect(businessCaseName(pollutedName)).toBe(`${item.displayName}（客户台与分润异常）`);
+    expect(businessCaseName(`${item.displayName}（D3：叠加：decision_tag 注入）`)).toBe(`${item.displayName}（叠加：决策标签配置）`);
+    useReadModel.mockReturnValue(model({
+      list: state({ ...CURRENT_CASE_LIST_FIXTURE, items: [{ ...item, displayName: pollutedName }] }),
+      visibleItems: [{ ...item, displayName: pollutedName }],
+    }));
+    await renderPage();
+    expect(host.textContent).toContain(item.displayName);
+    expect(host.textContent).not.toContain("D3");
+    expect(host.textContent).not.toContain("W03");
+    expect(host.textContent).not.toContain(item.caseId);
   });
 
   it("scope 切换清空筛选并交给 read model 清理选择", async () => {

@@ -119,7 +119,7 @@ export const NAV_ITEMS: NavItem[] = [
     path: "/workshop/widget-registry",
     label: "组件注册表",
     icon: "apps",
-    status: "s2",
+    status: "live",
     crumbs: ["构建工具", "组件注册表"],
   },
   {
@@ -127,7 +127,7 @@ export const NAV_ITEMS: NavItem[] = [
     path: "/workshop/variables",
     label: "变量管理器",
     icon: "layers",
-    status: "s2",
+    status: "live",
     crumbs: ["构建工具", "变量管理器"],
   },
   {
@@ -135,7 +135,7 @@ export const NAV_ITEMS: NavItem[] = [
     path: "/workshop/styles",
     label: "主题与样式",
     icon: "sun",
-    status: "s2",
+    status: "live",
     crumbs: ["构建工具", "主题与样式"],
   },
   {
@@ -656,9 +656,9 @@ export const NAV_ITEMS: NavItem[] = [
   {
     id: "apollo-saas-provisioning",
     path: "/apollo/provisioning",
-    label: "SaaS 开通",
+    label: "租户开通",
     icon: "apps",
     status: "live",
-    crumbs: [OPS_NAV_SECTION, "SaaS 开通"],
+    crumbs: [OPS_NAV_SECTION, "租户开通"],
   },
 ];

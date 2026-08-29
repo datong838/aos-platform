@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   CATEGORY_LABELS,
+  connectorCapabilityLabel,
   filterCatalog,
   computeCatalogStats,
   type ConnectorCatalogCard,
@@ -36,6 +37,17 @@ describe("DataConnectionPage · CATEGORY_LABELS", () => {
   });
   it("流式 label", () => {
     expect(CATEGORY_LABELS.stream).toBe("流式");
+  });
+});
+
+describe("DataConnectionPage · 用户文案", () => {
+  it("将连接器能力代码翻译为产品语义", () => {
+    expect(connectorCapabilityLabel("ingest")).toBe("数据入库");
+    expect(connectorCapabilityLabel("ssh-tunnel")).toBe("SSH 隧道");
+  });
+
+  it("未知能力保持原值，避免伪造含义", () => {
+    expect(connectorCapabilityLabel("future-capability")).toBe("future-capability");
   });
 });
 

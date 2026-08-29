@@ -7,12 +7,11 @@ interface Module {
   id: string;
   name: string;
   description?: string;
-  type: string;
+  category?: string;
   status: string;
-  created_at?: string;
-  updated_at?: string;
-  widget_count?: number;
-  event_count?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  widgets?: unknown[];
 }
 
 export function WorkshopModulePage() {
@@ -22,6 +21,7 @@ export function WorkshopModulePage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [publishConfirm, setPublishConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     loadModules();
@@ -53,30 +53,32 @@ export function WorkshopModulePage() {
   async function publishModule(id: string) {
     try {
       await apiPost(`/v1/modules/${encodeURIComponent(id)}/publish`, {});
-      loadModules();
+      setPublishConfirm(null);
+      await loadModules();
     } catch (e) {
       setError(String((e as Error).message || e));
     }
   }
 
   const filteredModules = modules.filter((m) => {
-    if (filterType !== "all" && m.type !== filterType) return false;
+    if (filterType !== "all" && m.category !== filterType) return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return m.name.toLowerCase().includes(q) || (m.description && m.description.toLowerCase().includes(q));
   });
+  const categories = Array.from(new Set(modules.map((item) => item.category).filter(Boolean))) as string[];
 
   return (
-    <PageChrome title="模块管理" lede="管理所有 Workshop 模块 · 创建/编辑/发布/删除">
+    <PageChrome title="应用管理" lede="管理当前工作区的自建应用、编辑状态与发布流程">
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: "var(--aos-text)" }}>
-          模块列表 ({filteredModules.length})
+          应用列表（{filteredModules.length}）
         </span>
         <button
           onClick={() => navigate("/workshop/create")}
           style={{ padding: "6px 14px", fontSize: 12, fontWeight: 600, border: "none", borderRadius: 2, background: "var(--aos-accent)", color: "var(--text-on-brand)", cursor: "pointer" }}
         >
-          + 创建模块
+          + 新建应用
         </button>
         <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
           <div style={{ position: "relative" }}>
@@ -84,7 +86,8 @@ export function WorkshopModulePage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="搜索模块..."
+              placeholder="搜索应用…"
+              aria-label="搜索应用"
               style={{ padding: "6px 32px 6px 10px", fontSize: 12, border: "1px solid var(--aos-border-strong)", borderRadius: 4, width: 200 }}
             />
             <svg style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", width: 14, height: 14, color: "var(--aos-faint)" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -98,10 +101,7 @@ export function WorkshopModulePage() {
             style={{ padding: "6px 8px", fontSize: 12, border: "1px solid var(--aos-border-strong)", borderRadius: 4 }}
           >
             <option value="all">全部类型</option>
-            <option value="dashboard">数据看板</option>
-            <option value="workflow">工作流</option>
-            <option value="chatbot">聊天机器人</option>
-            <option value="analytics">数据分析</option>
+            {categories.map((category) => <option key={category} value={category}>{category}</option>)}
           </select>
         </div>
       </div>
@@ -115,7 +115,7 @@ export function WorkshopModulePage() {
       {loading ? (
         <div style={{ textAlign: "center", padding: 24, color: "var(--aos-faint)" }}>加载中...</div>
       ) : filteredModules.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 24, color: "var(--aos-faint)" }}>暂无模块</div>
+        <div style={{ textAlign: "center", padding: 24, color: "var(--aos-faint)" }}>当前工作区暂无自建应用，可从“新建应用”开始创建。</div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
           {filteredModules.map((m) => (
@@ -127,7 +127,7 @@ export function WorkshopModulePage() {
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)" }}>{m.name}</div>
                   <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: "var(--aos-accent-light)", color: "var(--aos-accent)" }}>
-                    {m.type}
+                    {m.category || "未分类"}
                   </span>
                 </div>
                 <span style={{
@@ -143,16 +143,16 @@ export function WorkshopModulePage() {
               )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, fontSize: 11, marginBottom: 12 }}>
                 <div>
-                  <div style={{ color: "var(--aos-faint)" }}>微件数</div>
-                  <div style={{ fontWeight: 600, color: "var(--aos-text)" }}>{m.widget_count || 0}</div>
+                  <div style={{ color: "var(--aos-faint)" }}>组件数</div>
+                  <div style={{ fontWeight: 600, color: "var(--aos-text)" }}>{Array.isArray(m.widgets) ? m.widgets.length : "未读取"}</div>
                 </div>
                 <div>
                   <div style={{ color: "var(--aos-faint)" }}>事件数</div>
-                  <div style={{ fontWeight: 600, color: "var(--aos-text)" }}>{m.event_count || 0}</div>
+                  <div style={{ fontWeight: 600, color: "var(--aos-text)" }}>未读取</div>
                 </div>
                 <div>
                   <div style={{ color: "var(--aos-faint)" }}>更新时间</div>
-                  <div style={{ fontWeight: 600, color: "var(--aos-text)", fontSize: 10 }}>{m.updated_at?.slice(0, 10) || "—"}</div>
+                  <div style={{ fontWeight: 600, color: "var(--aos-text)", fontSize: 10 }}>{m.updatedAt?.slice(0, 10) || "未读取"}</div>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6 }}>
@@ -162,14 +162,18 @@ export function WorkshopModulePage() {
                 >
                   编辑
                 </button>
-                {m.status !== "published" && (
+                {m.status !== "published" && publishConfirm !== m.id && (
                   <button
-                    onClick={() => publishModule(m.id)}
+                    onClick={() => setPublishConfirm(m.id)}
                     style={{ flex: 1, padding: "5px 8px", fontSize: 11, borderRadius: 4, border: "none", background: "var(--aos-green)", color: "var(--text-on-brand)", cursor: "pointer" }}
                   >
                     发布
                   </button>
                 )}
+                {m.status !== "published" && publishConfirm === m.id && (<>
+                  <button className="btn-primary" onClick={() => void publishModule(m.id)}>确认发布</button>
+                  <button className="btn" onClick={() => setPublishConfirm(null)}>取消</button>
+                </>)}
                 <button
                   onClick={() => deleteModule(m.id)}
                   style={{ flex: 1, padding: "5px 8px", fontSize: 11, borderRadius: 4, border: "1px solid var(--aos-red)", background: "var(--aos-surface)", color: "var(--aos-red)", cursor: "pointer" }}

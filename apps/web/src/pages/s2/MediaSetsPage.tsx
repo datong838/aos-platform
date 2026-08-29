@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiDelete, apiPost } from "../../api/client";
+import { apiDelete, apiPatch, apiPost } from "../../api/client";
 import {
   BpBanner,
   BpMetricGrid,
@@ -108,19 +108,6 @@ export function batchMoveCategory(
   return items.map((m) => (selected.has(m.rid) ? { ...m, category: cat } : m));
 }
 
-// ── Mock data ──────────────────────────────────────────────────
-
-const DEMO_MEDIA: MediaItem[] = [
-  { rid: "media-001", name: "工单模板.csv", category: "document", bytes: 1024, contentType: "text/csv", tags: ["demo", "工单"], stored: true, uploadedAt: new Date(Date.now() - 3600000).toISOString() },
-  { rid: "media-002", name: "product-photo.jpg", category: "image", bytes: 2048576, contentType: "image/jpeg", tags: ["商品"], stored: true, uploadedAt: new Date(Date.now() - 7200000).toISOString() },
-  { rid: "media-003", name: "tutorial.mp4", category: "video", bytes: 52428800, contentType: "video/mp4", tags: ["教程"], stored: true },
-  { rid: "media-004", name: "report.pdf", category: "document", bytes: 819200, contentType: "application/pdf", tags: ["报告", "Q2"], stored: true },
-  { rid: "media-005", name: "notification.mp3", category: "audio", bytes: 51200, contentType: "audio/mpeg", tags: ["通知"], stored: false },
-  { rid: "media-006", name: "screenshot.png", category: "image", bytes: 307200, contentType: "image/png", tags: ["截图"], stored: true },
-  { rid: "media-007", name: "data-export.json", category: "document", bytes: 4096, contentType: "application/json", tags: ["导出"], stored: true },
-  { rid: "media-008", name: "banner.webp", category: "image", bytes: 102400, contentType: "image/webp", tags: ["横幅"], stored: true },
-];
-
 // ── Page Component ─────────────────────────────────────────────
 
 export function MediaSetsPage() {
@@ -131,6 +118,7 @@ export function MediaSetsPage() {
   const [dragOver, setDragOver] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [msg, setMsg] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const allItems = useMemo(() => {
     const apiItems = data?.items;
@@ -141,7 +129,7 @@ export function MediaSetsPage() {
         tags: m.tags || [],
       }));
     }
-    return DEMO_MEDIA;
+    return [];
   }, [data?.items]);
 
   const filtered = useMemo(() => filterMedia(allItems, category, query), [allItems, category, query]);
@@ -162,17 +150,23 @@ export function MediaSetsPage() {
     setSelected(new Set());
   }
 
-  async function handleUpload(name: string, contentType: string) {
+  async function handleUpload(file: File) {
     setMsg("");
     try {
-      const text = "demo,data\n1,a\n";
-      const b64 = btoa(unescape(encodeURIComponent(text)));
+      if (file.size > 50 * 1024 * 1024) {
+        throw new Error("单个文件不能超过 50 MB");
+      }
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let binary = "";
+      for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+        binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+      }
       await apiPost("/v1/media-sets", {
-        name,
-        contentType,
-        bytesBase64: b64,
+        name: file.name,
+        contentType: file.type || "application/octet-stream",
+        bytesBase64: btoa(binary),
       });
-      setMsg(`已上传 · ${name}`);
+      setMsg(`已上传 · ${file.name}`);
       reload();
     } catch (e) {
       setMsg(String((e as Error).message || e));
@@ -182,9 +176,7 @@ export function MediaSetsPage() {
   async function handleBatchDelete() {
     setMsg("");
     try {
-      for (const rid of selected) {
-        await apiDelete(`/v1/media-sets/${encodeURIComponent(rid)}`).catch(() => null);
-      }
+      await Promise.all([...selected].map((rid) => apiDelete(`/v1/media-sets/${encodeURIComponent(rid)}`)));
       setMsg(`已批量删除 ${selected.size} 项`);
       setSelected(new Set());
       reload();
@@ -193,15 +185,32 @@ export function MediaSetsPage() {
     }
   }
 
-  function handleBatchTag() {
+  async function handleBatchTag() {
     if (!tagInput.trim() || selected.size === 0) return;
-    setMsg(`已为 ${selected.size} 项添加标签「${tagInput.trim()}」`);
-    setTagInput("");
+    try {
+      await Promise.all([...selected].map((rid) => {
+        const item = allItems.find((media) => media.rid === rid);
+        return apiPatch(`/v1/media-sets/${encodeURIComponent(rid)}`, {
+          tags: item ? batchAddTag([item], new Set([rid]), tagInput.trim())[0].tags : [tagInput.trim()],
+        });
+      }));
+      setMsg(`已为 ${selected.size} 项添加标签「${tagInput.trim()}」`);
+      setTagInput("");
+      reload();
+    } catch (e) {
+      setMsg(String((e as Error).message || e));
+    }
   }
 
-  function handleBatchMove(cat: MediaCategory) {
+  async function handleBatchMove(cat: MediaCategory) {
     if (selected.size === 0) return;
-    setMsg(`已移动 ${selected.size} 项到「${CATEGORY_LABELS[cat]}」`);
+    try {
+      await Promise.all([...selected].map((rid) => apiPatch(`/v1/media-sets/${encodeURIComponent(rid)}`, { category: cat })));
+      setMsg(`已移动 ${selected.size} 项到「${CATEGORY_LABELS[cat]}」`);
+      reload();
+    } catch (e) {
+      setMsg(String((e as Error).message || e));
+    }
   }
 
   function handleDrop(e: React.DragEvent) {
@@ -209,7 +218,7 @@ export function MediaSetsPage() {
     setDragOver(false);
     const files = Array.from(e.dataTransfer.files);
     for (const f of files) {
-      void handleUpload(f.name, f.type || "application/octet-stream");
+      void handleUpload(f);
     }
   }
 
@@ -254,6 +263,9 @@ export function MediaSetsPage() {
       {/* Upload zone */}
       <div
         className={`card${dragOver ? " bp-drag-over" : ""}`}
+        role="button"
+        tabIndex={0}
+        aria-label="选择媒体文件上传"
         style={{
           border: dragOver ? "2px dashed var(--aos-accent)" : "2px dashed var(--aos-border-strong)",
           borderRadius: 2,
@@ -266,20 +278,27 @@ export function MediaSetsPage() {
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        onClick={() => {
-          const input = document.createElement("input");
-          input.type = "file";
-          input.multiple = true;
-          input.onchange = () => {
-            if (input.files) {
-              for (const f of Array.from(input.files)) {
-                void handleUpload(f.name, f.type || "application/octet-stream");
-              }
-            }
-          };
-          input.click();
+        onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            fileInputRef.current?.click();
+          }
         }}
       >
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          aria-label="媒体文件"
+          style={{ display: "none" }}
+          onChange={(event) => {
+            for (const file of Array.from(event.target.files || [])) {
+              void handleUpload(file);
+            }
+            event.target.value = "";
+          }}
+        />
         <p className="muted" style={{ margin: 0 }}>
           {dragOver ? "松开以上传" : "拖拽文件到此处，或点击选择文件上传"}
         </p>
@@ -296,12 +315,12 @@ export function MediaSetsPage() {
             onChange={(e) => setTagInput(e.target.value)}
             style={{ width: 120 }}
           />
-          <button type="button" className="btn" onClick={() => handleBatchTag()}>
+          <button type="button" className="btn" onClick={() => void handleBatchTag()}>
             打标签
           </button>
           <select
             onChange={(e) => {
-              if (e.target.value) handleBatchMove(e.target.value as MediaCategory);
+              if (e.target.value) void handleBatchMove(e.target.value as MediaCategory);
               e.target.value = "";
             }}
             defaultValue=""
@@ -323,9 +342,11 @@ export function MediaSetsPage() {
       {/* Thumbnail grid */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
         <h2 className="aos-text" style={{ fontSize: "0.875rem" }}>文件列表</h2>
-        <button type="button" className="nav-link" onClick={() => selectAll()}>
-          全选 ({filtered.length})
-        </button>
+        {filtered.length > 0 && (
+          <button type="button" className="nav-link" onClick={() => selectAll()}>
+            全选 ({filtered.length})
+          </button>
+        )}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "0.75rem" }}>
@@ -378,12 +399,12 @@ export function MediaSetsPage() {
 
       {filtered.length === 0 && (
         <BpBanner tone="warn">
-          无匹配媒体 · 调整筛选或上传新文件
+          当前租户尚无媒体 · 可上传正式文件，页面不会用演示条目填充
         </BpBanner>
       )}
 
       <BpBanner tone="info">
-        媒体集对齐 <code>media-sets.html</code> · 支持拖拽上传 + 批量操作 ·{" "}
+        媒体文件按当前租户隔离存储 · 支持拖拽上传与批量操作 ·{" "}
         <Link to="/data">数据源管理</Link> ·{" "}
         <Link to="/data/datasets">数据集</Link>
       </BpBanner>

@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 import {
   AsyncStateBoundary,
@@ -55,7 +54,7 @@ export const CATALOG_APPS: CatalogApp[] = [
     eyebrow: "业务应用",
     accent: "blue",
     recentDesc: "统计卡片 · 订单列表 · 趋势图 · 详情面板",
-    allDesc: "Order Management Dashboard",
+    allDesc: "订单概览、筛选、明细与趋势",
     category: "ops",
     entryPath: "/workshop/orders",
   },
@@ -65,7 +64,7 @@ export const CATALOG_APPS: CatalogApp[] = [
     eyebrow: "风控 Inbox",
     accent: "blue",
     recentDesc: "筛选 · 风控告警表格 · 对象详情 · 活动日志",
-    allDesc: "Risk Alert Manager · 风控告警筛选 · 处置",
+    allDesc: "风险告警筛选、核验与处置",
     category: "ops",
     entryPath: "/workshop/inbox",
   },
@@ -74,8 +73,8 @@ export const CATALOG_APPS: CatalogApp[] = [
     name: "对象探索",
     eyebrow: "本体前端",
     accent: "purple",
-    recentDesc: "对象实例 · 属性筛选 · 图表探索 · Actions",
-    allDesc: "Object Explorer · 对象实例 · 属性筛选",
+    recentDesc: "对象实例 · 属性筛选 · 图表探索 · 业务操作",
+    allDesc: "对象实例、属性筛选与关系探索",
     category: "analytics",
     entryPath: "/workshop/graph",
   },
@@ -94,8 +93,8 @@ export const CATALOG_APPS: CatalogApp[] = [
     name: "画布编辑",
     eyebrow: "应用构建",
     accent: "blue",
-    recentDesc: "Slate 画布 · 微件 · 布局",
-    allDesc: "Slate 画布 · 微件 · 布局",
+    recentDesc: "应用画布 · 组件 · 布局",
+    allDesc: "应用画布、组件与布局",
     category: "ops",
     entryPath: "/workshop/canvas",
     canvasPath: "/workshop/canvas",
@@ -106,8 +105,8 @@ export const CATALOG_APPS: CatalogApp[] = [
     name: "态势大屏",
     eyebrow: "态势感知",
     accent: "blue",
-    recentDesc: "COP 大屏 · 实时监控",
-    allDesc: "COP 大屏 · 实时监控",
+    recentDesc: "经营态势 · 实时监控",
+    allDesc: "经营态势与实时监控",
     category: "ops",
     entryPath: "/workshop/cop",
   },
@@ -126,8 +125,8 @@ export const CATALOG_APPS: CatalogApp[] = [
     name: "模块接口",
     eyebrow: "系统集成",
     accent: "blue",
-    recentDesc: "API · 变量 · 事件",
-    allDesc: "API · 变量 · 事件",
+    recentDesc: "接口 · 变量 · 事件",
+    allDesc: "接口、变量与事件",
     category: "ops",
     entryPath: "/workshop/module-interface",
   },
@@ -221,6 +220,13 @@ export function getCategoryColor(category: string | undefined): string {
   return found?.color || "var(--aos-text-secondary)";
 }
 
+function readinessLabel(readiness: string) {
+  if (readiness === "available" || readiness === "ready") return "可使用";
+  if (readiness === "degraded") return "数据待核验";
+  if (readiness === "blocked") return "等待正式数据";
+  return "状态待核验";
+}
+
 /* ============================================================================
  * Page
  * ========================================================================== */
@@ -247,14 +253,6 @@ export function WorkshopListPage() {
     [availablePlatformApps, filter],
   );
 
-  async function handleTouch(id: string) {
-    try {
-      await apiPost(`/v1/modules/${id}/touch`, {});
-    } catch {
-      /* 目录卡可能无对应 meta_module · 忽略 */
-    }
-  }
-
   return (
     <PageChrome hideHeader>
       <div className="wl-page">
@@ -262,21 +260,21 @@ export function WorkshopListPage() {
           <div className="wl-head-text">
             <h1 className="wl-head-title">应用列表</h1>
             <p className="wl-head-lede">
-              已安装电商工作台来自当前 active installation；平台辅助模块单独列出，不作为八个业务 Module。
+              已安装电商工作台来自当前有效安装；平台辅助入口单独列出，不计入八个业务工作台。
             </p>
           </div>
           <Link to="/workshop/create" data-testid="btn-new-module" className="wl-btn-new">
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 5v14M5 12h14" strokeLinecap="round" />
             </svg>
-            新建 Module
+            新建应用
           </Link>
         </div>
 
         <section className="wl-panel" data-testid="installed-ecommerce-section">
           <div className="wl-panel-head">
             <h2 className="wl-panel-title">已安装电商工作台</h2>
-            <span className="wl-panel-meta">active installation · {workshopCatalog.modules.length} 个</span>
+            <span className="wl-panel-meta">当前有效安装 · {workshopCatalog.modules.length} 个</span>
           </div>
           {workshopCatalog.phase === "loading" ? (
             <AsyncStateBoundary state="loading" />
@@ -298,12 +296,16 @@ export function WorkshopListPage() {
                 {workshopCatalog.modules.map((module) => (
                   <article key={`${module.moduleId}:${module.moduleRef.moduleArtifactHash}`} className="wl-mod-card">
                     <Link to={module.route} className="wl-mod-main">
-                      <div className="wl-mod-eyebrow is-purple">已安装 · {module.readiness}</div>
+                      <div className="wl-mod-eyebrow is-purple">已安装 · {readinessLabel(module.readiness)}</div>
                       <div className="wl-mod-title is-purple">{module.menuLabel}</div>
-                      <p className="wl-mod-desc">{module.moduleId} · {module.moduleRef.bundleId}@{module.moduleRef.version}</p>
+                      <p className="wl-mod-desc">从当前工作区进入业务运行视图</p>
                     </Link>
                     <div className="wl-mod-actions">
                       <Link to={module.route}>▶ 打开运行态</Link>
+                      <details className="aos-inline-audit">
+                        <summary>审计信息</summary>
+                        <code>{module.moduleId}</code> · <code>{module.moduleRef.bundleId}@{module.moduleRef.version}</code>
+                      </details>
                     </div>
                   </article>
                 ))}
@@ -324,14 +326,13 @@ export function WorkshopListPage() {
                 <Link
                   to={app.entryPath}
                   className="wl-mod-main"
-                  onClick={() => void handleTouch(app.id)}
                 >
                   <div className={`wl-mod-eyebrow is-${app.accent}`}>{app.eyebrow}</div>
                   <div className={`wl-mod-title is-${app.accent}`}>{app.name}</div>
                   <p className="wl-mod-desc">{app.recentDesc}</p>
                 </Link>
                 <div className="wl-mod-actions">
-                  <Link to={app.entryPath} onClick={() => void handleTouch(app.id)}>
+                  <Link to={app.entryPath}>
                     ▶ 打开运行态
                   </Link>
                   <span className="wl-mod-sep">·</span>
@@ -367,7 +368,6 @@ export function WorkshopListPage() {
                 <Link
                   to={app.entryPath}
                   className="wl-mod-main"
-                  onClick={() => void handleTouch(app.id)}
                 >
                   <div className={`wl-mod-eyebrow is-${app.accent}`}>{app.eyebrow}</div>
                   <div className={`wl-mod-title is-${app.accent}`}>{app.name}</div>

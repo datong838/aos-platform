@@ -69,9 +69,10 @@ export function WikiIndexPage() {
     return types.filter((t) => t.id.toLowerCase().includes(q) || (t.name && t.name.toLowerCase().includes(q)));
   }, [types, searchQuery]);
   const coverage = summarizeWikiCoverage(wikiCards);
+  const selectedTypeName = types.find((item) => item.id === selectedType)?.name || "业务对象";
 
   return (
-    <S2Chrome title="Wiki 索引" lede="活知识 Wiki 索引 · 组织知识空间 + 类型卡片 + 搜索">
+    <S2Chrome title="知识索引" lede="组织知识空间 · 业务对象知识卡 · 覆盖与缺口搜索">
       <div className="wiki-index-layout">
         {/* 左侧知识空间 */}
         <aside
@@ -85,11 +86,11 @@ export function WikiIndexPage() {
             知识空间
           </h2>
           <div className="bp-banner bp-banner-info" style={{ fontSize: "0.75rem" }}>
-            栖月汇商贸有限公司 · 默认工作区<br />生产知识空间<br />编辑统一提交 Draft 审批，不使用旧本体分支作为知识真源。
+            栖月汇商贸有限公司 · 默认工作区<br />生产知识空间<br />编辑统一提交草稿审批，审批通过后才进入生产知识。
           </div>
 
           <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 16 }}>
-            Object 类型
+            业务对象类型
           </h2>
           <ul style={{ listStyle: "none", padding: 0, margin: "0.5rem 0 0" }}>
             {filteredTypes.map((t) => (
@@ -115,7 +116,7 @@ export function WikiIndexPage() {
           <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
             <input
               type="search"
-              placeholder="搜索 objectType / objectId / 摘要…"
+              placeholder="搜索业务对象、摘要或审计标识…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -138,11 +139,11 @@ export function WikiIndexPage() {
           </div>
 
           {cardErr && <p className="error">{cardErr}</p>}
-          {loadingCards && <p className="muted">加载 Wiki 卡片中…</p>}
+          {loadingCards && <p className="muted">加载知识卡片中…</p>}
 
           {!loadingCards && !cardErr && filteredCards.length === 0 && (
             <p className="muted">
-              请从左侧选择一个 Object 类型，加载其下所有 Wiki 知识卡片。
+              请从左侧选择一个业务对象类型，加载其下全部知识卡片。
             </p>
           )}
 
@@ -160,36 +161,43 @@ export function WikiIndexPage() {
                 }}
               >
                 {filteredCards.map((card) => (
-                  <Link
+                  <article
                     key={`${card.type}/${card.id}`}
-                    to={`/ontology/wiki?type=${encodeURIComponent(card.type)}&id=${encodeURIComponent(card.id)}`}
                     style={{
                       display: "block",
                       padding: "0.75rem",
                       border: "1px solid var(--aos-border)",
                       borderRadius: 2,
-                      textDecoration: "none",
                       background: "var(--aos-surface)",
                     }}
                     className="bp-wiki-card"
                   >
-                    <div style={{ fontSize: "0.7rem", opacity: 0.6, marginBottom: 4 }}>
-                      {card.type} · {card.covered ? `Wiki 已覆盖 · ${card.versionCount} 个历史版本` : "Wiki 知识缺口"}
-                    </div>
-                    <div style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: 4 }}>
-                      {card.displayLabel}
-                    </div>
-                    <div style={{ fontSize: "0.7rem", opacity: 0.55 }}>{card.sourceRecordLabel}</div>
-                    {card.summary && (
-                      <div style={{ fontSize: "0.75rem", opacity: 0.7, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {card.summary}
+                    <Link
+                      to={`/ontology/wiki?type=${encodeURIComponent(card.type)}&id=${encodeURIComponent(card.id)}`}
+                      style={{ display: "block", textDecoration: "none", color: "inherit" }}
+                    >
+                      <div style={{ fontSize: "0.7rem", opacity: 0.6, marginBottom: 4 }}>
+                        {selectedTypeName} · {card.covered ? `已有知识 · ${card.versionCount} 个历史版本` : "知识缺口"}
                       </div>
-                    )}
-                    <div style={{ fontSize: "0.7rem", marginTop: 8, color: "var(--aos-indigo-600)" }}>
-                      {card.covered ? "查看知识卡片 →" : "为该主体补充知识 →"}
-                    </div>
-                    {card.lastUpdatedAt && <div style={{ fontSize: "0.68rem", marginTop: 4, opacity: 0.55 }}>最近更新 {card.lastUpdatedAt}</div>}
-                  </Link>
+                      <div style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: 4 }}>
+                        {card.displayLabel}
+                      </div>
+                      {card.summary && (
+                        <div style={{ fontSize: "0.75rem", opacity: 0.7, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {card.summary}
+                        </div>
+                      )}
+                      <div style={{ fontSize: "0.7rem", marginTop: 8, color: "var(--aos-indigo-600)" }}>
+                        {card.covered ? "查看知识卡片 →" : "为该业务对象补充知识 →"}
+                      </div>
+                      {card.lastUpdatedAt && <div style={{ fontSize: "0.68rem", marginTop: 4, opacity: 0.55 }}>最近更新 {card.lastUpdatedAt}</div>}
+                    </Link>
+                    <details className="bp-audit-details" style={{ marginTop: 6 }}>
+                      <summary>来源审计</summary>
+                      <div style={{ fontSize: "0.7rem", opacity: 0.65 }}>对象类型：{card.type} · 对象标识：{card.id}</div>
+                      <div style={{ fontSize: "0.7rem", opacity: 0.65 }}>{card.sourceRecordLabel}</div>
+                    </details>
+                  </article>
                 ))}
               </div>
             </>

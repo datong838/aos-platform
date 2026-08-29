@@ -30,7 +30,7 @@ describe("IntegrationCaseCatalog", () => {
     host.remove();
   });
 
-  it("renders current-only fields and reports the selected server case", async () => {
+  it("renders the current business summary and reports the selected server case", async () => {
     const onSelectCase = vi.fn();
     await act(async () => {
       root.render(
@@ -44,11 +44,13 @@ describe("IntegrationCaseCatalog", () => {
     });
 
     expect(host.textContent).toContain("Current commerce case");
-    expect(host.textContent).toContain(INSTALLATION_ID);
-    expect(host.textContent).toContain("overlay-7");
-    expect(host.textContent).toContain("阻塞 1");
+    expect(host.textContent).toContain("证据快照 第 2 版");
+    expect(host.textContent).toContain("待处理 1");
+    expect(host.textContent).not.toContain(INSTALLATION_ID);
+    expect(host.textContent).not.toContain("overlay-7");
     const button = host.querySelector("button") as HTMLButtonElement;
     expect(button.getAttribute("aria-pressed")).toBe("true");
+    expect(button.dataset.caseId).toBe(CASE_ID);
     await act(async () => button.click());
     expect(onSelectCase).toHaveBeenCalledWith(CASE_ID);
   });
@@ -64,7 +66,8 @@ describe("IntegrationCaseCatalog", () => {
     );
 
     expect(html).toContain("Anonymized reference");
-    expect(html).toContain("脱敏参考");
+    expect(html).toContain("参考接入案例目录");
+    expect(html).toContain(`data-case-id=\"${REFERENCE_CASE_ID}\"`);
     expect(html).not.toContain("Owner");
     expect(html).not.toContain("Installation");
     expect(html).not.toContain("Overlay");

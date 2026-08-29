@@ -6,6 +6,9 @@ import {
   formatNextRun,
   progressPercent,
   routeStatusTone,
+  syncRouteBusinessName,
+  syncRouteTargetLabel,
+  syncTaskToRoute,
   toggleRouteStatus,
   type SyncRoute,
 } from "./SyncRoutesPage";
@@ -19,6 +22,18 @@ const MOCK_ROUTES: SyncRoute[] = [
 ];
 
 describe("SyncRoutesPage · routeStatusTone", () => {
+  it("把技术任务、数据源与 RID 映射为中文业务路由", () => {
+    const route = syncTaskToRoute({
+      id: "sync-1",
+      name: "栖月汇-P05-order-qyh 同步任务",
+      source_id: "niushop-qyh",
+      target_dataset: "ri.aos.main.dataset.P05-order-qyh",
+      status: "active",
+    });
+    expect(syncRouteBusinessName(route)).toBe("栖月汇-订单同步");
+    expect(syncRouteTargetLabel(route)).toBe("订单数据集");
+    expect(route.conflicts).toBeUndefined();
+  });
   it("active → ok", () => {
     expect(routeStatusTone("active")).toBe("ok");
   });

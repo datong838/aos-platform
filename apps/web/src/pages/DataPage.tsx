@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState, type ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 import {
@@ -16,16 +16,40 @@ import {
   connectorTone,
   runtimeLabel,
   sourceSubtitle,
+  sourceBusinessName,
   SourceNameLink,
   statusZh,
   StoragePillLink,
   type ConnectorPlugin,
   type SourceRow,
 } from "./s2/dataConnectionUi";
+import { pipelineDisplayTitle, type PipelineMeta } from "./s2/pipelineMeta";
 
 function primaryDatasetRid(sourceId: string | undefined, datasets: DatasetRow[]): string | undefined {
   if (!sourceId) return undefined;
   return datasets.find((d) => d.sourceId === sourceId)?.rid;
+}
+
+export function datasetRidForSync(sync: SyncRow, datasets: DatasetRow[]): string | undefined {
+  if (!sync.pipelineId) return undefined;
+  return datasets.find((dataset) => dataset.pipelineId === sync.pipelineId)?.rid;
+}
+
+export function scheduleForSync(sync: SyncRow, schedules: ScheduleRow[]): ScheduleRow | undefined {
+  if (sync.scheduleId) {
+    const exact = schedules.find((schedule) => schedule.id === sync.scheduleId);
+    if (exact) return exact;
+  }
+  if (!sync.pipelineId) return undefined;
+  return schedules.find((schedule) => schedule.pipelineId === sync.pipelineId);
+}
+
+export function scheduleBusinessDisplay(schedule?: ScheduleRow): { business: string; raw?: string } {
+  const raw = schedule?.cron || schedule?.name;
+  if (!raw) return { business: "未读取" };
+  const daily = raw.match(/^(\d{1,2}) (\d{1,2}) \* \* \*$/);
+  if (daily) return { business: `每日 ${daily[2].padStart(2, "0")}:${daily[1].padStart(2, "0")}`, raw };
+  return { business: "按已配置计划执行", raw };
 }
 
 type DatasetRow = {
@@ -44,8 +68,8 @@ type DlqRow = {
   pipelineId?: string;
 };
 
-type SyncRow = { id?: string; sourceId?: string; status?: string; finishedAt?: number };
-type PipelineRow = { id?: string; sourceId?: string; status?: string; datasetRid?: string };
+type SyncRow = { id?: string; sourceId?: string; pipelineId?: string; scheduleId?: string; status?: string; finishedAt?: number };
+type PipelineRow = PipelineMeta & { status?: string };
 
 type MainTab = "sources" | "syncs" | "agents" | "exports";
 type SourceView = "list" | "new";
@@ -57,6 +81,31 @@ export function sourceCreatePayload(id: string, type: string, runtimeMode: Runti
 
 export function verifyCreatedSource(items: SourceRow[], id: string, runtimeMode: RuntimeMode): boolean {
   return items.some((item) => item.id === id && item.runtimeMode === runtimeMode);
+}
+
+export function filterSources(
+  items: SourceRow[],
+  typeFilter: "all" | "jdbc" | "file",
+  statusFilter: "all" | "online" | "attention",
+): SourceRow[] {
+  return items.filter((source) => {
+    const type = (source.type || "").toLowerCase();
+    if (typeFilter === "jdbc" && !type.includes("jdbc")) return false;
+    if (typeFilter === "file" && !(type === "file" || type.startsWith("file-"))) return false;
+    const online = statusZh(source.status) === "在线";
+    if (statusFilter === "online" && !online) return false;
+    if (statusFilter === "attention" && online) return false;
+    return true;
+  });
+}
+
+export function firstInstalledConnectorId(items: ConnectorPlugin[]): string {
+  return items.find((item) => item.installed)?.id || "";
+}
+
+export function requestedInstalledConnectorId(items: ConnectorPlugin[], requested?: string | null): string {
+  if (requested && items.some((item) => item.id === requested && item.installed)) return requested;
+  return firstInstalledConnectorId(items);
 }
 
 export type ConnectorCategory = "database" | "saas" | "api" | "file" | "stream";
@@ -171,6 +220,7 @@ type EdgeAgent = { id?: string; probeOk?: boolean; outbound?: boolean };
 /** 74/76 · 对齐 data-connection · 六列表 · 蓝图按钮风格 */
 export function DataPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<MainTab>("sources");
   const [sourceView, setSourceView] = useState<SourceView>("list");
   const [msg, setMsg] = useState("");
@@ -197,6 +247,8 @@ export function DataPage() {
   const [connApiKey, setConnApiKey] = useState("");
   const [connFilePath, setConnFilePath] = useState("");
   const [connErrors, setConnErrors] = useState<Record<string, string>>({});
+  const [sourceTypeFilter, setSourceTypeFilter] = useState<"all" | "jdbc" | "file">("all");
+  const [sourceStatusFilter, setSourceStatusFilter] = useState<"all" | "online" | "attention">("all");
 
   async function refresh() {
     const [ds, d, src, syn, pipes, media, sch, agent, cps] = await Promise.all([
@@ -224,6 +276,18 @@ export function DataPage() {
   useEffect(() => {
     refresh().catch((e) => setErr(String(e.message || e)));
   }, []);
+
+  const createRequested = searchParams.get("create") === "1";
+  const requestedConnector = searchParams.get("connector");
+  useEffect(() => {
+    if (!createRequested) return;
+    setWizardStep(1);
+    setConnectorType(requestedInstalledConnectorId(connectorPlugins, requestedConnector));
+    setRuntimeMode("agent");
+    setNewSourceId("");
+    setSourceView("new");
+    setTab("sources");
+  }, [connectorPlugins, createRequested, requestedConnector]);
 
   async function createSource() {
     const id = newSourceId.trim() || `src-${Date.now().toString(36)}`;
@@ -261,56 +325,36 @@ export function DataPage() {
     }
   }
 
-  async function createSyncJob() {
-    setErr(null);
-    if (!sources.length) {
-      setErr("请先新建数据源");
-      setTab("sources");
-      setSourceView("new");
-      return;
-    }
-    try {
-      const sourceId = sources[0].id!;
-      const sync = await apiPost<{ id: string }>("/v1/syncs", { sourceId });
-      setMsg(`已创建同步 ${sync.id}`);
-      await refresh();
-      setTab("syncs");
-    } catch (e) {
-      setErr(String((e as Error).message || e));
-    }
+  function syncBusinessName(sync: SyncRow): string {
+    const pipeline = pipelines.find((item) => item.id === sync.pipelineId);
+    return `${pipelineDisplayTitle(pipeline || { id: sync.pipelineId || "当前业务数据" })}同步`;
   }
 
-  function scheduleForSource(sourceId?: string): string {
-    if (!sourceId) return "—";
-    const pipeIds = new Set(pipelines.filter((p) => p.sourceId === sourceId).map((p) => p.id));
-    const hit = schedules.find((s) => s.pipelineId && pipeIds.has(s.pipelineId));
-    if (hit?.cron) return hit.cron;
-    if (hit?.name) return hit.name;
-    return "—";
-  }
-
-  function targetForSource(sourceId?: string): ReactNode {
-    const src = sources.find((s) => s.id === sourceId);
-    if (!src?.id) return "—";
-    return (
-      <StoragePillLink
-        sourceId={src.id}
-        type={src.type}
-        datasetRid={primaryDatasetRid(src.id, datasets)}
-      />
-    );
+  function targetForSync(sync: SyncRow): ReactNode {
+    const source = sources.find((item) => item.id === sync.sourceId);
+    if (!source?.id) return "未读取";
+    const datasetRid = datasetRidForSync(sync, datasets);
+    if (!datasetRid) return "未读取";
+    return <StoragePillLink sourceId={source.id} type={source.type} datasetRid={datasetRid} />;
   }
 
   const pipelineLinkForSource = (sourceId?: string) =>
     sourceId ? `/data/pipelines?sourceId=${encodeURIComponent(sourceId)}` : "/data/pipelines";
 
   function openNewSource() {
+    const connectorId = firstInstalledConnectorId(connectorPlugins);
     setWizardStep(1);
-    setConnectorType("file");
+    setConnectorType(connectorId);
     setRuntimeMode("agent");
     setNewSourceId("");
     setSourceView("new");
     setTab("sources");
+    navigate(`/data?create=1${connectorId ? `&connector=${encodeURIComponent(connectorId)}` : ""}`);
+  }
+
+  function closeNewSource() {
+    setSourceView("list");
+    navigate("/data", { replace: true });
   }
 
   const onlineCount = sources.filter((s) => statusZh(s.status) === "在线").length;
@@ -320,13 +364,15 @@ export function DataPage() {
   }).length;
   const syncFail = syncs.length - syncOk;
 
+  const filteredSources = filterSources(sources, sourceTypeFilter, sourceStatusFilter);
+
   function sourceRows(): ReactNode[][] {
-    if (!sources.length) return [["—", "—", "—", "—", "—", "暂无数据源"]];
-    return sources.map((s) => {
+    if (!filteredSources.length) return [["—", "—", "—", "—", "—", "无匹配数据源"]];
+    return filteredSources.map((s) => {
       const sid = s.id || "";
       const dsRid = primaryDatasetRid(sid, datasets);
       return [
-        <SourceNameLink key={`n-${sid}`} sourceId={sid} subtitle={sourceSubtitle(s.type)} />,
+        <SourceNameLink key={`n-${sid}`} sourceId={sid} displayName={sourceBusinessName(s, connectorPlugins)} subtitle={sourceSubtitle(s.type)} />,
         <ConnectorTagLink key={`c-${sid}`} sourceId={sid} type={s.type} plugins={connectorPlugins} />,
         <StoragePillLink key={`st-${sid}`} sourceId={sid} type={s.type} datasetRid={dsRid} />,
         <span key={`r-${sid}`} className="aos-text">
@@ -377,7 +423,7 @@ export function DataPage() {
                 tone: sources.length ? "ok" : "warn",
               },
               {
-                label: "今日同步",
+                label: "近24小时同步",
                 value: syncs.length,
                 hint:
                   syncs.length === 0
@@ -392,23 +438,19 @@ export function DataPage() {
                 tone: datasets.length || mediaCount ? "ok" : "muted",
               },
               {
-                label: "数据健康",
+                label: "失败记录",
                 value: dlq.length ? (
                   <span className="data-status data-status-warn">
                     <span className="data-status-dot" aria-hidden />
-                    <span>{dlq.length} 告警</span>
+                    <span>{dlq.length} 条待处理</span>
                   </span>
                 ) : (
                   <span className="data-status data-status-ok">
                     <span className="data-status-dot" aria-hidden />
-                    <span>正常</span>
+                    <span>无待处理</span>
                   </span>
                 ),
-                hint: (
-                  <Link to="/data/health" className="nav-link">
-                    查看健康检查 →
-                  </Link>
-                ),
+                hint: <span>来自失败队列 · 质量检查另行统计</span>,
                 tone: dlq.length ? "warn" : "ok",
               },
             ]}
@@ -416,15 +458,15 @@ export function DataPage() {
 
           <div className="filter-bar" style={{ marginTop: "0.75rem", justifyContent: "space-between" }}>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <select className="btn" disabled title="筛选占位 · 对齐蓝图">
-                <option>全部类型</option>
-                <option>JDBC</option>
-                <option>文件</option>
+              <select aria-label="数据源类型" className="btn" value={sourceTypeFilter} onChange={(event) => setSourceTypeFilter(event.target.value as typeof sourceTypeFilter)}>
+                <option value="all">全部类型</option>
+                <option value="jdbc">数据库</option>
+                <option value="file">文件</option>
               </select>
-              <select className="btn" disabled title="筛选占位 · 对齐蓝图">
-                <option>全部状态</option>
-                <option>在线</option>
-                <option>告警</option>
+              <select aria-label="数据源状态" className="btn" value={sourceStatusFilter} onChange={(event) => setSourceStatusFilter(event.target.value as typeof sourceStatusFilter)}>
+                <option value="all">全部状态</option>
+                <option value="online">在线</option>
+                <option value="attention">需关注</option>
               </select>
               <button type="button" className="btn" onClick={() => void refresh().catch((e) => setErr(String(e)))}>
                 刷新
@@ -450,7 +492,7 @@ export function DataPage() {
                 配置连接器、运行时与凭证，将外部系统接入数据湖仓。
               </p>
             </div>
-            <button type="button" className="btn-nav" onClick={() => setSourceView("list")}>
+            <button type="button" className="btn-nav" onClick={closeNewSource}>
               ← 返回列表
             </button>
           </div>
@@ -478,12 +520,12 @@ export function DataPage() {
             <>
               <div className="bp-ws-section-title">选择连接器插件</div>
               <p className="muted" style={{ fontSize: "0.75rem" }}>
-                目录来自 `plugins/connectors` · 对齐 20 §3.1 · stub 仅可装不可拉数
+                选择当前工作区可用的连接器；尚未安装或未具备正式读取能力的连接器不会进入创建流程。
               </p>
               <div className="bp-discover-grid">
                 {connectorPlugins.length === 0 ? (
                   <p className="muted" style={{ fontSize: "0.85rem" }}>
-                    暂无连接器插件目录 · 请确认 API `/v1/connector-plugins` 与 `plugins/connectors` 可用
+                    当前工作区尚无可用连接器，请先完成连接器安装与正式连接配置。
                   </p>
                 ) : (
                   connectorPlugins.map((c) => {
@@ -511,11 +553,14 @@ export function DataPage() {
                       >
                         <div className="bp-discover-title">
                           {c.nameZh || c.name || c.id}
-                          {c.runtime === "stub" ? " · stub" : ""}
                         </div>
                         <p className="bp-discover-meta">{c.description || c.id}</p>
                         <p className="muted" style={{ fontSize: "0.7rem", margin: "0.35rem 0 0" }}>
-                          {c.installed ? "已安装" : "未安装"}
+                          {c.installed
+                            ? c.runtime === "stub"
+                              ? "已安装 · 尚未具备正式读取能力"
+                              : "已安装"
+                            : "尚未安装"}
                         </p>
                       </button>
                       {!c.installed && (
@@ -836,7 +881,7 @@ export function DataPage() {
           <div className="data-section-head">
             <div>
               <h2 className="data-section-title">同步任务</h2>
-              <p className="data-section-sub">对标 Foundry Syncs · 源 → Dataset / MediaSet / Stream</p>
+              <p className="data-section-sub">数据源 → 业务数据集 / 媒体资料 / 实时数据流</p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <ActionLinks
@@ -847,9 +892,9 @@ export function DataPage() {
                   { to: "/data/pipelines", label: "管道构建" },
                 ]}
               />
-              <button type="button" className="btn-primary" onClick={() => void createSyncJob()}>
-                + 新建同步
-              </button>
+              <Link to="/data/schedules" className="btn-primary">
+                + 新建计划
+              </Link>
             </div>
           </div>
           <div className="data-conn-table">
@@ -857,27 +902,33 @@ export function DataPage() {
               columns={["同步名称", "数据源", "目标", "调度", "上次运行", "状态"]}
               rows={
                 syncs.length
-                  ? syncs.map((s) => [
+                  ? syncs.map((s) => {
+                    const schedule = scheduleBusinessDisplay(scheduleForSync(s, schedules));
+                    return [
                       <span key={`nm-${s.id}`} style={{ display: "inline-flex", flexDirection: "column", gap: 4 }}>
                         <Link to={pipelineLinkForSource(s.sourceId)} className="bp-action-link" style={{ fontWeight: 500 }}>
-                          {s.id}
+                          {syncBusinessName(s)}
                         </Link>
                         <Link to={pipelineLinkForSource(s.sourceId)} className="bp-action-link" style={{ fontSize: "0.75rem" }}>
                           管道 →
                         </Link>
+                        <details><summary>技术审计信息</summary><code>{s.id}</code>{s.pipelineId ? <> · <code>{s.pipelineId}</code></> : null}{s.scheduleId ? <> · <code>{s.scheduleId}</code></> : null}</details>
                       </span>,
-                      <span key={`src-${s.id}`} className="muted">
-                        {s.sourceId || "—"}
+                      <span key={`src-${s.id}`}>
+                        {sourceBusinessName(sources.find((item) => item.id === s.sourceId) || { id: s.sourceId }, connectorPlugins)}
+                        {s.sourceId ? <details><summary>技术审计信息</summary><code>{s.sourceId}</code></details> : null}
                       </span>,
-                      <span key={`tg-${s.id}`}>{targetForSource(s.sourceId)}</span>,
-                      <span key={`sc-${s.id}`} className="muted">
-                        {scheduleForSource(s.sourceId)}
+                      <span key={`tg-${s.id}`}>{targetForSync(s)}</span>,
+                      <span key={`sc-${s.id}`}>
+                        {schedule.business}
+                        {schedule.raw ? <details><summary>技术审计信息</summary><code>{schedule.raw}</code></details> : null}
                       </span>,
                       <span key={`lr-${s.id}`} className="muted">
                         {formatRelative(s.finishedAt)}
                       </span>,
                       <SyncStatusText key={`st-${s.id}`} status={s.status} />,
-                    ])
+                    ];
+                  })
                   : [["—", "—", "—", "—", "—", "暂无同步"]]
               }
             />
@@ -890,7 +941,7 @@ export function DataPage() {
           <div className="data-section-head">
             <div>
               <h2 className="data-section-title">边缘代理</h2>
-              <p className="data-section-sub">内网源通过 Agent 出站拉取</p>
+              <p className="data-section-sub">通过本机代理安全读取内网数据源</p>
             </div>
             <Link to="/data/agents" className="btn-outline-cyan">
               打开代理管理 →
@@ -900,16 +951,16 @@ export function DataPage() {
             <div className="data-agent-grid">
               <div className={`data-agent-card${edgeAgent.probeOk === false ? " is-offline" : ""}`}>
                 <div className="data-agent-card-head">
-                  <span className="data-agent-name">{edgeAgent.id || "agent-local"}</span>
+                  <span className="data-agent-name">本机边缘代理</span>
                   <span className={edgeAgent.probeOk === false ? "data-sync-status-bad" : "data-sync-status-ok"}>
                     {edgeAgent.probeOk === false ? "离线" : "在线"}
                   </span>
                 </div>
                 <p className="data-agent-meta">
-                  默认代理 · 承载 JDBC / 文件
-                  {edgeAgent.outbound != null ? ` · outbound=${String(edgeAgent.outbound)}` : ""}
+                  承载数据库与文件数据接入
                 </p>
                 <p className="data-agent-stats">心跳 · 本机节点</p>
+                <details><summary>技术审计信息</summary><code>{edgeAgent.id || "未返回代理标识"}</code>{edgeAgent.outbound != null ? <> · 出站读取 <code>{String(edgeAgent.outbound)}</code></> : null}</details>
               </div>
             </div>
           ) : (
@@ -928,18 +979,11 @@ export function DataPage() {
           <div className="data-section-head">
             <div>
               <h2 className="data-section-title">导出任务</h2>
-              <p className="data-section-sub">Dataset / Object → 外部系统（JDBC / S3 / REST）</p>
+              <p className="data-section-sub">将受控数据资产交付到外部系统</p>
             </div>
-            <button type="button" className="btn-ghost" disabled title="导出创建后置接线">
-              + 新建导出
-            </button>
+            <Link to="/apollo/assets" className="btn-nav">查看受控资产包 →</Link>
           </div>
-          <div className="data-conn-table">
-            <BpTable
-              columns={["导出名称", "源", "目标", "调度", "上次导出", "状态"]}
-              rows={[["—", "—", "—", "—", "—", "暂无导出"]]}
-            />
-          </div>
+          <BpBanner tone="info">当前工作区没有可验证的导出任务。创建跨系统交付前，需先在受控资产包中形成可审计资产；本页不会用客户端记录冒充导出成功。</BpBanner>
           <div style={{ marginTop: "0.75rem" }}>
             <ActionLinks
               items={[

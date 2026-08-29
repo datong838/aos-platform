@@ -102,18 +102,6 @@ export function resolveRequestedPaletteItem(palette: PaletteItem[], search: stri
   return palette.find((item) => item.pluginId === pluginId && item.kind === canvasKind) || null;
 }
 
-const DEFAULT_LAYOUT: CanvasNode[] = [
-  { id: "n-filter", kind: "filter", title: "Filter · site", pluginId: "filter-list", config: { site: "DC-East" } },
-  {
-    id: "n-table",
-    kind: "table",
-    title: "Object Table · WorkOrder",
-    pluginId: "object-table",
-    config: { objectType: "WorkOrder" },
-  },
-  { id: "n-buddy", kind: "buddy", title: "Buddy Chip", pluginId: "buddy-chip" },
-];
-
 type ModuleRow = {
   id: string;
   name: string;
@@ -165,7 +153,7 @@ const KIND_ICON: Record<CanvasKind, string> = {
 };
 
 export function normalizeLayout(widgets: unknown, objectType?: string): CanvasNode[] {
-  if (!Array.isArray(widgets) || widgets.length === 0) return structuredClone(DEFAULT_LAYOUT);
+  if (!Array.isArray(widgets) || widgets.length === 0) return [];
   if (typeof widgets[0] === "string") {
     return (widgets as string[]).map((w, i) => {
       const lower = w.toLowerCase();
@@ -186,7 +174,7 @@ export function normalizeLayout(widgets: unknown, objectType?: string): CanvasNo
                     : lower.includes("header") || lower.includes("page")
                       ? "page-header"
                       : "table";
-      const objType = objectType || "WorkOrder";
+      const objType = objectType || "";
       return {
         id: `n-${i}-${kind}`,
         kind,
@@ -200,19 +188,9 @@ export function normalizeLayout(widgets: unknown, objectType?: string): CanvasNo
                 ? "metric-card"
                 : undefined,
         config:
-          kind === "filter"
-            ? { site: "DC-East" }
-            : kind === "table"
-              ? { objectType: objType }
-              : kind === "action"
-                ? { actionTypeId: "CloseWorkOrder" }
-                : kind === "graph"
-                  ? { objectType: objType, objectId: "wo-1001" }
-                  : kind === "metric"
-                    ? { objectType: objType, groupBy: "status" }
-                    : kind === "overlay"
-                      ? { objectType: objType, objectId: "wo-1001" }
-                      : undefined,
+          kind === "table" || kind === "graph" || kind === "metric" || kind === "overlay"
+            ? (objType ? { objectType: objType } : undefined)
+            : undefined,
       };
     });
   }
@@ -228,13 +206,6 @@ export function normalizeLayout(widgets: unknown, objectType?: string): CanvasNo
     };
   });
 }
-
-const FALLBACK_PALETTE: PaletteItem[] = [
-  { kind: "filter", label: "+ Filter List", pluginId: "filter-list" },
-  { kind: "table", label: "+ Object Table", pluginId: "object-table" },
-  { kind: "buddy", label: "+ Buddy Chip", pluginId: "buddy-chip" },
-  { kind: "overlay", label: "+ Object View · Wiki", tone: "violet", pluginId: "object-view" },
-];
 
 function sectionLabel(kind: CanvasKind): string {
   if (kind === "filter") return "筛选";
@@ -476,15 +447,15 @@ function WidgetPreview({
 export function CanvasPage() {
   const [modules, setModules] = useState<ModuleRow[]>([]);
   const [moduleId, setModuleId] = useState<string>("");
-  const [nodes, setNodes] = useState<CanvasNode[]>(() => structuredClone(DEFAULT_LAYOUT));
-  const [selected, setSelected] = useState(DEFAULT_LAYOUT[0].id);
+  const [nodes, setNodes] = useState<CanvasNode[]>([]);
+  const [selected, setSelected] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [previewOn, setPreviewOn] = useState(true);
   const [dirty, setDirty] = useState(false);
   const [propTab, setPropTab] = useState<"content" | "style" | "events" | "data">("content");
-  const [palette, setPalette] = useState(FALLBACK_PALETTE);
+  const [palette, setPalette] = useState<PaletteItem[]>([]);
   const [paletteNote, setPaletteNote] = useState<string | null>(null);
   const [paletteReady, setPaletteReady] = useState(false);
   const [paletteAuthoritative, setPaletteAuthoritative] = useState(false);
@@ -605,9 +576,11 @@ export function CanvasPage() {
   const site =
     nodes.find((n) => n.kind === "filter")?.config?.site ||
     node?.config?.site ||
-    "DC-East";
+    "";
   const objectType =
-    nodes.find((n) => n.kind === "table")?.config?.objectType || "WorkOrder";
+    nodes.find((n) => n.kind === "table")?.config?.objectType ||
+    modules.find((item) => item.id === moduleId)?.objectType ||
+    "";
 
   const loadModules = useCallback(async () => {
     const res = await apiGet<{ items: ModuleRow[] }>("/v1/modules");
@@ -681,14 +654,14 @@ export function CanvasPage() {
           setPaletteNote(null);
           setPaletteAuthoritative(true);
         } else {
-          setPalette(FALLBACK_PALETTE);
-          setPaletteNote("Widget 插件目录为空 · 暂用本地兜底调色板");
+          setPalette([]);
+          setPaletteNote("当前没有可核验的组件插件");
           setPaletteAuthoritative(false);
         }
       } catch {
         if (!cancelled) {
-          setPalette(FALLBACK_PALETTE);
-          setPaletteNote("无法加载 widget-plugins · 暂用本地兜底调色板");
+          setPalette([]);
+          setPaletteNote("组件插件目录加载失败");
           setPaletteAuthoritative(false);
         }
       } finally {
@@ -742,6 +715,7 @@ export function CanvasPage() {
   }
 
   async function runPreview() {
+    if (!moduleId || !objectType) return;
     setErr(null);
     try {
       const r = await apiPost<{ items?: Row[]; objects?: Row[] }>("/v1/object-sets/query", {
@@ -756,7 +730,7 @@ export function CanvasPage() {
   }
 
   useEffect(() => {
-    if (previewOn) void runPreview();
+    if (previewOn && moduleId && objectType) void runPreview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [site, objectType, previewOn]);
 
@@ -958,6 +932,30 @@ export function CanvasPage() {
 
   const currentModule = modules.find((m) => m.id === moduleId);
 
+  if (!modulesReady) {
+    return (
+      <PageChrome title="画布编辑" lede="当前应用 · 组件布局与交互配置">
+        <p className="muted">正在读取当前工作区的应用目录…</p>
+      </PageChrome>
+    );
+  }
+
+  if (!moduleId || !currentModule) {
+    return (
+      <PageChrome title="画布编辑" lede="当前应用 · 组件布局与交互配置">
+        {err && <p className="error">{err}</p>}
+        <div className="card" style={{ padding: 24 }}>
+          <h2 style={{ marginTop: 0 }}>当前工作区暂无可编辑应用</h2>
+          <p className="muted">画布不会注入演示组件或查询业务数据。请先新建应用，再返回选择真实应用。</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link to="/workshop/new" className="btn-nav">新建应用</Link>
+            <Link to="/workshop" className="btn-nav">返回应用列表</Link>
+          </div>
+        </div>
+      </PageChrome>
+    );
+  }
+
   return (
     <PageChrome
       title="画布编辑"
@@ -977,16 +975,14 @@ export function CanvasPage() {
           <div className="p-slate-topbar-left">
             <span className="p-slate-breadcrumb">Workshop</span>
             <NavIcon name="chevron" style={{ width: "12px", height: "12px", color: "var(--aos-text-tertiary)" }} />
-            <h1 className="p-slate-title">
+            <h2 className="p-slate-title">
               {currentModule?.name || "画布编辑"}
               <NavIcon name="star" style={{ width: "12px", height: "12px", color: "var(--aos-text-tertiary)" }} />
-            </h1>
+            </h2>
           </div>
           <nav className="p-slate-tabs">
-            <button type="button" className="p-slate-tab" disabled title="文件菜单规划中">文件</button>
-            <button type="button" className="p-slate-tab" disabled title="帮助菜单规划中">帮助</button>
             <button type="button" className="p-slate-tab is-active" disabled title="当前模块只读标识">
-              {currentModule?.name || "Module"} <span className="p-slate-version">v1</span>
+              {currentModule.name}
             </button>
           </nav>
           <div className="p-slate-topbar-right">
@@ -1049,9 +1045,6 @@ export function CanvasPage() {
             >
               发布
             </Link>
-            <button type="button" className="p-slate-close" disabled title="关闭入口规划中">
-              <NavIcon name="close" style={{ width: "14px", height: "14px" }} />
-            </button>
           </div>
         </header>
 
@@ -1113,39 +1106,6 @@ export function CanvasPage() {
                 预览
               </button>
             </div>
-            <div style={{ width: "1px", height: "16px", background: "var(--aos-border)" }} />
-            <button
-              type="button"
-              onClick={() => setMsg("撤销功能开发中")}
-              title="撤销"
-              style={{
-                fontSize: "12px",
-                padding: "4px 8px",
-                borderRadius: "4px",
-                border: "1px solid var(--aos-border)",
-                background: "var(--aos-surface)",
-                color: "var(--aos-text)",
-                cursor: "pointer",
-              }}
-            >
-              ↶ 撤销
-            </button>
-            <button
-              type="button"
-              onClick={() => setMsg("重做功能开发中")}
-              title="重做"
-              style={{
-                fontSize: "12px",
-                padding: "4px 8px",
-                borderRadius: "4px",
-                border: "1px solid var(--aos-border)",
-                background: "var(--aos-surface)",
-                color: "var(--aos-text)",
-                cursor: "pointer",
-              }}
-            >
-              ↷ 重做
-            </button>
           </div>
           <div className="p-slate-toolbar-tabs">
             {TOOLBAR_TABS.map((t) => (
@@ -1240,7 +1200,7 @@ export function CanvasPage() {
               </div>
             ) : canvasMode === "workflow" ? (
               <div className="p-slate-body">
-                <WorkflowMode moduleId={moduleId || "mod-canvas-draft"} />
+                <WorkflowMode moduleId={moduleId} />
               </div>
             ) : (
             <div className="p-slate-body">
@@ -2158,14 +2118,14 @@ export function CanvasPage() {
                     </div>
                   </div>
                 )}
-                {activeTab === "dashboard" && <DashboardTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "queries" && <QueriesTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "functions" && <FunctionsTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "events" && <EventsTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "data" && <DataTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "dependencies" && <DependenciesTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "styles" && <StylesTab moduleId={moduleId || "mod-canvas-draft"} />}
-                {activeTab === "variables" && <VariablesTab moduleId={moduleId || "mod-canvas-draft"} />}
+                {activeTab === "dashboard" && <DashboardTab moduleId={moduleId} />}
+                {activeTab === "queries" && <QueriesTab moduleId={moduleId} />}
+                {activeTab === "functions" && <FunctionsTab moduleId={moduleId} />}
+                {activeTab === "events" && <EventsTab moduleId={moduleId} />}
+                {activeTab === "data" && <DataTab moduleId={moduleId} />}
+                {activeTab === "dependencies" && <DependenciesTab moduleId={moduleId} />}
+                {activeTab === "styles" && <StylesTab moduleId={moduleId} />}
+                {activeTab === "variables" && <VariablesTab moduleId={moduleId} />}
               </div>
             )}
           </div>
@@ -2297,6 +2257,6 @@ function SortableCanvasNode({ node, onClick, onRemove, rows, moveNode }: { node:
   );
 }
 
-export function layoutNodeCount(nodes: CanvasNode[] = DEFAULT_LAYOUT): number {
+export function layoutNodeCount(nodes: CanvasNode[] = []): number {
   return nodes.length;
 }

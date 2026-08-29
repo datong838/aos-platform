@@ -250,7 +250,7 @@ export function CodeRepositoriesPage() {
                         />
                       ) : (
                         <p className="muted" style={{ fontSize: "0.75rem" }}>
-                          此仓库为本地工程目录，文件列表不可用。
+                          当前 HEAD 快照没有可显示的顶层文件。
                         </p>
                       )}
                     </div>

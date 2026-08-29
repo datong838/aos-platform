@@ -171,6 +171,13 @@ export interface CreateModulePayload {
   template: TemplateId;
 }
 
+const TEMPLATE_WIDGETS: Record<TemplateId, string[]> = {
+  blank: [],
+  table: ["filters", "table", "details"],
+  dashboard: ["stats", "trend", "distribution"],
+  explorer: ["object-list", "property-filters", "relation-chart"],
+};
+
 export function buildCreatePayload(input: {
   name: string;
   domain: DomainId;
@@ -229,7 +236,7 @@ export function WorkshopCreatePage() {
 
   async function handleCreate() {
     if (!canFinishCreate(appName)) {
-      setError("请填写模块名称后再创建。");
+      setError("请填写应用名称后再创建。");
       goStep(1);
       return;
     }
@@ -245,18 +252,28 @@ export function WorkshopCreatePage() {
       template,
     });
     try {
-      const result = await apiPost<{ module_id: string }>("/v1/modules", payload);
-      setTimeout(() => navigate(`/workshop/canvas?module=${result.module_id}`), 600);
-    } catch {
-      const mockId = `mod-mock-${Date.now()}`;
-      setTimeout(() => navigate(`/workshop/canvas?module=${mockId}`), 600);
+      const result = await apiPost<{ id: string }>("/v1/modules", {
+        name: payload.name,
+        description: payload.description,
+        objectType: payload.object_type,
+        category: payload.domain,
+        widgets: TEMPLATE_WIDGETS[payload.template],
+        components: {
+          icon: payload.icon,
+          template: payload.template,
+          boundProperties: payload.bound_props,
+        },
+      });
+      navigate(`/workshop/canvas?module=${encodeURIComponent(result.id)}`);
+    } catch (cause) {
+      setError(cause instanceof Error ? `创建失败：${cause.message}` : "创建失败，请核对当前工作区权限后重试。");
     } finally {
       setCreating(false);
     }
   }
 
   return (
-    <PageChrome title="新建 Module" lede="四步创建 Workshop 应用模块：基本信息 → 数据绑定 → 模板选择 → 确认创建">
+    <PageChrome title="新建应用" lede="四步创建工作台应用：基本信息 → 数据绑定 → 模板选择 → 确认创建">
       <div className="ws-create-page">
         <div className="ws-create-layout">
           {/* 左侧步骤导航 */}
@@ -311,11 +328,11 @@ export function WorkshopCreatePage() {
             {step === 1 && (
               <section data-testid="create-panel-1">
                 <h3 className="ws-create-panel-title">基本信息</h3>
-                <p className="ws-create-panel-desc">设置模块名称、图标和业务域，创建后仍可修改。</p>
+                <p className="ws-create-panel-desc">设置应用名称、图标和业务域，创建后仍可修改。</p>
 
                 <div className="ws-create-field">
                   <label className="ws-create-label">
-                    模块名称 <span className="ws-create-req">*</span>
+                    应用名称 <span className="ws-create-req">*</span>
                   </label>
                   <input
                     className="ws-create-input"
@@ -328,7 +345,7 @@ export function WorkshopCreatePage() {
 
                 <div className="ws-create-field">
                   <label className="ws-create-label">
-                    模块标识 <span className="ws-create-label-hint">（自动生成，用于 API 引用）</span>
+                    应用标识 <span className="ws-create-label-hint">（自动生成，供审计与接口引用）</span>
                   </label>
                   <input
                     className="ws-create-input is-readonly"
@@ -341,7 +358,7 @@ export function WorkshopCreatePage() {
 
                 <div className="ws-create-field">
                   <label className="ws-create-label">
-                    模块图标 <span className="ws-create-label-hint">（选择一个）</span>
+                    应用图标 <span className="ws-create-label-hint">（选择一个）</span>
                   </label>
                   <div className="ws-create-icon-row" data-testid="create-icons">
                     {ICONS.map((ic) => (
@@ -398,7 +415,7 @@ export function WorkshopCreatePage() {
               <section data-testid="create-panel-2">
                 <h3 className="ws-create-panel-title">数据绑定</h3>
                 <p className="ws-create-panel-desc">
-                  选择本体中的对象类型作为数据源。Module 的 Widget 将通过 Object Set 引用这些数据。
+                  选择本体中的对象类型作为数据源，页面组件将按所选属性读取数据。
                 </p>
 
                 <div className="ws-create-bind-row">
@@ -431,7 +448,7 @@ export function WorkshopCreatePage() {
                     <div className="ws-create-bind-head">{objectType} 属性列表</div>
                     <div style={{ padding: 8 }}>
                       <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 6 }}>
-                        勾选要展示的属性（自动绑定到 Widget）：
+                        勾选要展示的属性：
                       </div>
                       <div data-testid="create-props">
                         {OBJ_PROPS[objectType].map((p) => (
@@ -450,7 +467,7 @@ export function WorkshopCreatePage() {
                       <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 4 }}>
                         初始过滤条件（选填）
                       </div>
-                      <div className="ws-create-filter-box">status != &quot;cancelled&quot;</div>
+                      <div className="ws-create-filter-box">未设置</div>
                     </div>
                   </div>
                 </div>
@@ -464,7 +481,7 @@ export function WorkshopCreatePage() {
                     />
                   </svg>
                   <span>
-                    当前用户对 {objectType} 对象有读取权限。写入操作需在创建后通过 Action 配置单独授权。
+                    创建时将由服务端校验当前工作区对所选对象的权限；未通过校验不会创建应用。业务写入仍需单独授权。
                   </span>
                 </div>
               </section>
@@ -473,7 +490,7 @@ export function WorkshopCreatePage() {
             {step === 3 && (
               <section data-testid="create-panel-3">
                 <h3 className="ws-create-panel-title">模板选择</h3>
-                <p className="ws-create-panel-desc">选择起始布局模板，系统将预填充 Widget 和变量。后续可自由增删修改。</p>
+                <p className="ws-create-panel-desc">选择起始布局模板，系统将预填充受支持的页面组件。后续可在画布中调整。</p>
 
                 <div className="ws-create-template-grid" data-testid="create-templates">
                   {TEMPLATES.map((t) => (
@@ -504,25 +521,25 @@ export function WorkshopCreatePage() {
             {step === 4 && (
               <section data-testid="create-panel-4">
                 <h3 className="ws-create-panel-title">确认创建</h3>
-                <p className="ws-create-panel-desc">请检查以下信息，确认后将创建 Module 并进入画布编辑器。</p>
+                <p className="ws-create-panel-desc">请检查以下信息，确认后将创建应用草稿并进入画布编辑器。</p>
 
                 <div className="ws-create-summary">
-                  <div className="ws-create-summary-head">Module 信息汇总</div>
+                  <div className="ws-create-summary-head">应用信息汇总</div>
                   <div className="ws-create-summary-body">
                     <table className="ws-create-summary-table" data-testid="create-summary">
                       <tbody>
                         <tr>
-                          <td>模块名称</td>
+                          <td>应用名称</td>
                           <td style={{ fontWeight: 500 }}>{appName.trim() || "未填写"}</td>
                         </tr>
                         <tr>
-                          <td>模块标识</td>
+                          <td>应用标识</td>
                           <td style={{ fontFamily: "monospace", color: "var(--aos-text-secondary)" }}>
                             {slug || "—"}
                           </td>
                         </tr>
                         <tr>
-                          <td>模块图标</td>
+                          <td>应用图标</td>
                           <td>{selectedIcon.label}</td>
                         </tr>
                         <tr>
@@ -544,7 +561,7 @@ export function WorkshopCreatePage() {
                         <tr>
                           <td>创建后状态</td>
                           <td>
-                            <span className="ws-create-badge-draft">Draft</span>
+                            <span className="ws-create-badge-draft">草稿</span>
                           </td>
                         </tr>
                       </tbody>
@@ -553,12 +570,11 @@ export function WorkshopCreatePage() {
                 </div>
 
                 <div className="ws-blue-box">
-                  <div className="ws-blue-box-title">创建后将自动执行：</div>
+                  <div className="ws-blue-box-title">确认后将执行：</div>
                   <ul style={{ listStyle: "none", padding: 0, margin: 0, lineHeight: 1.8 }}>
-                    <li>1. 创建 Module 资源（含 1 个 Layout + Widget）</li>
-                    <li>2. 创建 Variables 并绑定 ObjectSet / Object</li>
-                    <li>3. 创建 Event Handler（如模板需要）</li>
-                    <li>4. 跳转到画布编辑器（可立即编辑界面）</li>
+                    <li>1. 在当前工作区创建应用草稿</li>
+                    <li>2. 保存所选业务对象、展示属性与页面组件初值</li>
+                    <li>3. 跳转到该应用的画布编辑器</li>
                   </ul>
                 </div>
               </section>

@@ -197,10 +197,14 @@ async def lifespan(_app: FastAPI):
                         QYH_DAILY_CRON_BY_PIPELINE,
                         ensure_qyh_staggered_daily_schedules,
                     )
+                    from aos_api.source_readiness_contracts import (
+                        canonical_qyh_source_for_pipeline,
+                    )
 
                     for _p in _items:
                         _dataset_rid = f"ri.aos.main.dataset.{_p.id}"
                         _dkey = _wx._resource_key(_scope, _dataset_rid)
+                        _canonical_source = canonical_qyh_source_for_pipeline(_p.id)
                         _wx._datasets[_dkey] = {
                             "rid": _dataset_rid,
                             "name": _p.name,
@@ -209,7 +213,9 @@ async def lifespan(_app: FastAPI):
                             "status": "READY",
                             "createdAt": _now,
                             "updatedAt": _now,
-                            "objectTypeHint": _p.id,
+                            "objectTypeHint": (
+                                _canonical_source.object_type if _canonical_source else None
+                            ),
                             "displayName": _p.name,
                             "orgId": _scope.org_id,
                             "projectId": _scope.project_id,

@@ -5,6 +5,7 @@ import type {
   IntegrationEvidenceSummary,
   IntegrationStageGate,
 } from "../../../api/integrationCases/types";
+import { businessCaseName } from "./IntegrationCaseCatalog";
 
 export type IntegrationCaseReadStatus =
   | "idle"
@@ -138,51 +139,59 @@ function DetailFacts({ detail }: { detail: IntegrationCaseDetailResponse }) {
   return (
     <div data-case-id={detail.caseId} data-case-scope={detail.scope}>
       <dl>
-        <div><dt>案例</dt><dd>{detail.displayName}</dd></div>
-        <div><dt>Case ID</dt><dd><code>{detail.caseId}</code></dd></div>
+        <div><dt>案例</dt><dd>{businessCaseName(detail.displayName)}</dd></div>
         <div><dt>作用域</dt><dd>{current ? "当前租户" : "脱敏参考"}</dd></div>
-        <div><dt>服务端计算阶段</dt><dd>{STAGE_LABELS[detail.computedStage]}（<code>{detail.computedStage}</code>）</dd></div>
-        <div><dt>Snapshot revision</dt><dd>{detail.snapshotRevision ?? "无"}</dd></div>
-        <div><dt>Cutoff</dt><dd>{detail.cutoffAt ? <time dateTime={detail.cutoffAt}>{detail.cutoffAt}</time> : "无"}</dd></div>
-        <div><dt>下次投影时间</dt><dd>{detail.nextProjectionAt ? <time dateTime={detail.nextProjectionAt}>{detail.nextProjectionAt}</time> : "无"}</dd></div>
+        <div><dt>当前阶段</dt><dd>{STAGE_LABELS[detail.computedStage]}</dd></div>
+        <div><dt>证据快照</dt><dd>{detail.snapshotRevision === null ? "尚无" : `第 ${detail.snapshotRevision} 版`}</dd></div>
       </dl>
 
       {current ? (
-        <section aria-label="当前租户引用">
-          <h4>当前租户引用</h4>
+        <details aria-label="审计详情">
+          <summary>查看审计详情</summary>
           <dl>
-            <div><dt>Owner</dt><dd>{detail.owner}</dd></div>
-            <div><dt>Installation</dt><dd><code>{detail.installationId}</code> · revision {detail.installationRevision}</dd></div>
-            <div><dt>Overlay revision</dt><dd><code>{detail.overlayRevision}</code></dd></div>
-            <div><dt>Composition</dt><dd><code>{detail.compositionId}</code></dd></div>
-            <div><dt>Lock revision</dt><dd>{detail.lockRevision}</dd></div>
-            <div><dt>Lock hash</dt><dd><code>{detail.lockHash}</code>（服务端只读）</dd></div>
+            <div><dt>案例标识</dt><dd><code>{detail.caseId}</code></dd></div>
+            <div><dt>负责人</dt><dd>{detail.owner}</dd></div>
+            <div><dt>安装标识</dt><dd><code>{detail.installationId}</code> · 第 {detail.installationRevision} 版</dd></div>
+            <div><dt>覆盖配置版本</dt><dd><code>{detail.overlayRevision}</code></dd></div>
+            <div><dt>组合标识</dt><dd><code>{detail.compositionId}</code></dd></div>
+            <div><dt>锁定版本</dt><dd>{detail.lockRevision}</dd></div>
+            <div><dt>锁定摘要</dt><dd><code>{detail.lockHash}</code>（服务端只读）</dd></div>
+            <div><dt>数据截止时间</dt><dd>{detail.cutoffAt ? <time dateTime={detail.cutoffAt}>{detail.cutoffAt}</time> : "无"}</dd></div>
+            <div><dt>下次计算时间</dt><dd>{detail.nextProjectionAt ? <time dateTime={detail.nextProjectionAt}>{detail.nextProjectionAt}</time> : "无"}</dd></div>
           </dl>
-        </section>
+        </details>
       ) : (
         <p role="note">此案例是独立脱敏参考副本；不披露当前租户 Owner、Installation、Overlay、Composition、Lock 或统计。</p>
       )}
 
-      <section aria-label="八阶段门">
-        <h4>服务端 8 个阶段门</h4>
-        <p>按响应原样展示；页面不据此重算或推断阶段。</p>
-        <ol>{detail.stageGates.map((gate) => <StageGate key={gate.stage} gate={gate} />)}</ol>
+      <section aria-label="案例核验摘要">
+        <h4>核验摘要</h4>
+        <p>已满足阶段 {detail.stageGates.filter((gate) => gate.status === "satisfied").length} / {detail.stageGates.length}；待处理事项 {detail.blockers.length} 项。</p>
       </section>
 
-      <section aria-label="阻塞项">
-        <h4>阻塞项</h4>
-        {detail.blockers.length === 0
-          ? <p>服务端未返回阻塞项。</p>
-          : <ul>{detail.blockers.map((blocker) => <Blocker key={blocker.blockerId} blocker={blocker} discloseOwner={current} />)}</ul>}
-      </section>
+      <details aria-label="阶段门与证据审计详情">
+        <summary>查看阶段门、待处理事项与证据审计详情</summary>
+        <section aria-label="八阶段门">
+          <h4>八个阶段门</h4>
+          <p>按响应原样展示；页面不据此重算或推断阶段。</p>
+          <ol>{detail.stageGates.map((gate) => <StageGate key={gate.stage} gate={gate} />)}</ol>
+        </section>
 
-      <section aria-label="Evidence 元数据">
-        <h4>受限 Evidence 元数据</h4>
-        <p>仅展示服务端响应中的元数据，不展示 claims、原文、内部 actor、Secret、PII 或事故正文。</p>
-        {detail.latestEvidence.length === 0
-          ? <p>服务端未返回 Evidence 元数据。</p>
-          : <ul>{detail.latestEvidence.map((evidence) => <Evidence key={`${evidence.evidenceId}:${evidence.revision}`} evidence={evidence} />)}</ul>}
-      </section>
+        <section aria-label="阻塞项">
+          <h4>待处理事项</h4>
+          {detail.blockers.length === 0
+            ? <p>服务端未返回待处理事项。</p>
+            : <ul>{detail.blockers.map((blocker) => <Blocker key={blocker.blockerId} blocker={blocker} discloseOwner={current} />)}</ul>}
+        </section>
+
+        <section aria-label="Evidence 元数据">
+          <h4>受限证据元数据</h4>
+          <p>仅展示服务端响应中的审计元数据，不展示原文、内部执行人、密钥、个人信息或事故正文。</p>
+          {detail.latestEvidence.length === 0
+            ? <p>服务端未返回证据元数据。</p>
+            : <ul>{detail.latestEvidence.map((evidence) => <Evidence key={`${evidence.evidenceId}:${evidence.revision}`} evidence={evidence} />)}</ul>}
+        </section>
+      </details>
     </div>
   );
 }
@@ -194,7 +203,7 @@ export function IntegrationCaseDetail({ state, onRetry, onCreateSnapshot, snapsh
     <section aria-label="接入案例详情" style={panelStyle}>
       <header>
         <h3 style={{ margin: 0 }}>接入案例详情</h3>
-        <p>只读展示服务端事实；页面不计算阶段或 hash。</p>
+        <p>只读展示服务端事实；页面不自行计算阶段。</p>
       </header>
 
       {state.status === "idle" && <p role="status">请选择一个接入案例。</p>}
@@ -205,18 +214,18 @@ export function IntegrationCaseDetail({ state, onRetry, onCreateSnapshot, snapsh
       {state.status === "refreshing" && <p role="status">正在刷新接入案例详情；以下为最后一次服务端事实。</p>}
       {showData && state.data && <DetailFacts detail={state.data} />}
       {canSnapshot && (
-        <section aria-label="Evidence 快照操作" style={{ marginTop: 12, borderTop: "1px solid var(--aos-border)", paddingTop: 12 }}>
+        <section aria-label="证据快照操作" style={{ marginTop: 12, borderTop: "1px solid var(--aos-border)", paddingTop: 12 }}>
           <button
             type="button"
             className="btn btn-primary"
             disabled={snapshotPending}
             onClick={onCreateSnapshot}
           >
-            {snapshotPending ? "正在生成快照…" : "生成 Evidence 快照"}
+            {snapshotPending ? "正在生成快照…" : "生成证据快照"}
           </button>
           {snapshotError && <p role="alert" style={{ color: "var(--aos-danger)" }}>{snapshotError}</p>}
           <p style={{ color: "var(--aos-muted)", fontSize: "0.75rem", marginTop: 4 }}>
-            触发服务端重新投影阶段（可能产生新的 StageEvent）。
+            触发服务端重新计算阶段，并保留新的阶段事件。
           </p>
         </section>
       )}

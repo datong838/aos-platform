@@ -20,6 +20,11 @@ describe("appearance", () => {
 });
 
 describe("selection limit", () => {
+  it("拒绝空字段或空值并规范化有效筛选", () => {
+    expect(canAddFilter([], { field: " ", value: "open" })).toEqual({ ok: false, reason: "请填写筛选字段" });
+    expect(canAddFilter([], { field: "status", value: " " })).toEqual({ ok: false, reason: "请填写筛选值" });
+    expect(addFilter([], { field: " status ", value: " open " })).toEqual([{ field: "status", value: "open" }]);
+  });
   it("blocks over 10 dimensions", () => {
     const current = Array.from({ length: SELECTION_LIMIT }, (_, i) => ({
       field: `f${i}`,

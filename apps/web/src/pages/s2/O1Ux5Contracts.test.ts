@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ECOM_ORDER_MAPPING } from "./remainder";
-import { overlayDiffRows, overlayIfMatch } from "./ontology";
+import { overlayDiffRows, overlayIfMatch, overlayModeLabel, overlayTargetKindLabel } from "./ontology";
 import { summarizeWikiCoverage } from "./WikiIndexPage";
 
 describe("O1-UX5 页面合同", () => {
@@ -39,6 +39,10 @@ describe("O1-UX5 页面合同", () => {
     expect(rows.map(([field]) => field)).toEqual(["模式", "显示名", "可见属性", "扩展属性", "组织策略"]);
     expect(rows[2]).toEqual(["可见属性", "orderNo、createdAt", "—"]);
     expect(rows[3][1]).toBe("channel");
+    expect(rows[0]).toEqual(["模式", "组织覆盖", "继承安装模板"]);
+    expect(overlayTargetKindLabel("ObjectType")).toBe("对象类型");
+    expect(overlayTargetKindLabel("LinkType")).toBe("关系类型");
+    expect(overlayModeLabel("inherit")).toBe("继承安装模板");
   });
 
   it("Wiki 索引区分真实覆盖和知识缺口", () => {

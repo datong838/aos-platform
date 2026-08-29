@@ -39,6 +39,12 @@ describe("nav product sections alignment", () => {
     expect(S2_LIVE_PATHS.has("/aip/memory-governance")).toBe(true);
   });
 
+  it("does not mark implemented builder pages as placeholders", () => {
+    for (const path of ["/workshop/widget-registry", "/workshop/variables", "/workshop/styles"]) {
+      expect(findNavPage(path)?.status).toBe("live");
+    }
+  });
+
   it("TWB.2 ops section collapses by default flag", () => {
     const ops = NAV_ITEMS.find(
       (i) => "section" in i && (i as { section: string }).section === "运维交付",
@@ -98,13 +104,9 @@ describe("nav product sections alignment", () => {
     ]) {
       expect(navPages().find((p) => p.path === path)?.status).toBe("live");
     }
-    // no remaining DEMO s2 stubs except explicitly planned pages (223-plan W4)
+    // Implemented builder pages are no longer advertised as DEMO placeholders.
     const remainingS2 = navPages().filter((p) => p.status === "s2");
-    expect(remainingS2.map((p) => p.path)).toEqual([
-      "/workshop/widget-registry",
-      "/workshop/variables",
-      "/workshop/styles",
-    ]);
+    expect(remainingS2.map((p) => p.path)).toEqual([]);
     for (const p of remainingS2) {
       expect(PLANNED_S2.has(p.path), `unexpected s2 stub: ${p.path}`).toBe(true);
     }

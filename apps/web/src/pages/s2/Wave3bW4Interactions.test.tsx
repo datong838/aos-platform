@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
@@ -82,6 +84,19 @@ describe("Wave3B W4 · DOM 真实性闭环", () => {
     expect(host.textContent).toContain("已保存并验证主题 用户主题");
   });
 
+  it("Styles 服务失败时不注入演示主题或虚构业务记录", async () => {
+    apiMocks.get.mockRejectedValue(new Error("theme offline"));
+    await act(async () => root.render(<MemoryRouter><StylesPage /></MemoryRouter>));
+    await flush();
+
+    expect(host.textContent).toContain("主题服务暂不可用");
+    expect(host.textContent).not.toContain("AOS 浅色");
+    expect(host.textContent).not.toContain("订单管理");
+    expect(host.textContent).not.toContain("张三");
+    expect(host.textContent).not.toContain("#20250725");
+    expect(apiMocks.post).not.toHaveBeenCalled();
+  });
+
   it("Widget 详情只为已安装且声明 canvasKind 的插件给出真实画布链接", async () => {
     apiMocks.get.mockResolvedValue({
       items: [{ id: "metric-card", nameZh: "指标卡", installed: true, canvasKind: "metric", author: "aos" }],
@@ -91,6 +106,18 @@ describe("Wave3B W4 · DOM 真实性闭环", () => {
     await act(async () => byText(host, "指标卡").click());
     const link = host.querySelector<HTMLAnchorElement>('a[href*="pluginId=metric-card"]');
     expect(link?.getAttribute("href")).toBe("/workshop/canvas?pluginId=metric-card&canvasKind=metric");
+  });
+
+  it("Widget 服务失败时保持可信空态且不注入演示目录", async () => {
+    apiMocks.get.mockRejectedValue(new Error("widget offline"));
+    await act(async () => root.render(<MemoryRouter><WidgetRegistryPage /></MemoryRouter>));
+    await flush();
+
+    expect(host.textContent).toContain("组件目录服务暂不可用");
+    expect(host.textContent).toContain("没有匹配的组件");
+    expect(host.textContent).not.toContain("甘特图");
+    expect(host.textContent).not.toContain("自定义图表");
+    expect(apiMocks.post).not.toHaveBeenCalled();
   });
 
   it("成熟度页以真实 Eval/Draft 数据展示条件，并核验服务端熔断响应", async () => {

@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { act, createElement, type ComponentProps } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
@@ -83,7 +85,7 @@ describe("Wave 3C W1 · Object Type 保存后详情重读", () => {
 
   function saveButton(): HTMLButtonElement {
     const found = Array.from(host.querySelectorAll("button")).find((item) =>
-      item.textContent?.includes("保存元数据"),
+      item.textContent?.includes("保存对象信息"),
     );
     if (!found) throw new Error("save metadata button not found");
     return found;
@@ -132,7 +134,7 @@ describe("Wave 3C W1 · Object Type 保存后详情重读", () => {
     await flush();
 
     expect(detailReads).toBe(2);
-    expect(host.textContent).toContain("已保存并重读 Object Type 详情");
+    expect(host.textContent).toContain("已保存并重读对象类型详情");
     expect(onMetaSaved).toHaveBeenCalledTimes(1);
   });
 
@@ -163,8 +165,8 @@ describe("Wave 3C W1 · Object Type 保存后详情重读", () => {
     });
     await flush();
 
-    const dataTab = Array.from(host.querySelectorAll("button")).find((item) => item.textContent?.trim() === "Data");
-    if (!dataTab) throw new Error("Data tab not found");
+    const dataTab = Array.from(host.querySelectorAll("button")).find((item) => item.textContent?.trim() === "数据");
+    if (!dataTab) throw new Error("数据页签未找到");
     await act(async () => dataTab.click());
     const save = Array.from(host.querySelectorAll("button")).find((item) => item.textContent?.includes("保存到分支 dev"));
     if (!save) throw new Error("branch save button not found");
@@ -173,7 +175,7 @@ describe("Wave 3C W1 · Object Type 保存后详情重读", () => {
 
     expect(ontology.putObject).toHaveBeenCalledTimes(1);
     expect(detailReads).toBe(2);
-    expect(host.textContent).toContain("已写入分支 overlay 并重读 Object Type 详情 · dev");
+    expect(host.textContent).toContain("已写入分支定制并重读对象类型详情 · dev");
     expect(onBranchSaved).toHaveBeenCalledTimes(1);
   });
 
@@ -212,7 +214,7 @@ describe("Wave 3C W1 · Object Type 保存后详情重读", () => {
     await flush();
 
     expect(host.textContent).toContain("客户");
-    expect(host.textContent).not.toContain("已保存并重读 Object Type 详情");
+    expect(host.textContent).not.toContain("已保存并重读对象类型详情");
     expect(oldSaved).not.toHaveBeenCalled();
     expect(saveButton().disabled).toBe(false);
   });

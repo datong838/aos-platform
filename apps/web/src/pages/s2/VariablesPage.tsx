@@ -15,6 +15,7 @@ type VariableItem = {
   bindings: string[];
   description?: string;
   isSystem?: boolean;
+  readOnlyReason?: string;
 };
 
 type ModuleOption = { id: string; name: string };
@@ -27,6 +28,7 @@ type ApiVariable = {
   initialValue?: unknown;
   currentValue?: unknown;
   description?: string;
+  bindings?: string[];
 };
 
 type EditorState = {
@@ -167,15 +169,17 @@ export function mapApiVariable(item: ApiVariable): VariableItem {
   const type = normalizeVarType(item.varType);
   const scope = normalizeScope(item.group);
   const desc = item.description || "";
+  const id = String(item.id || "").trim();
   return {
-    id: item.id || `var_${Math.random().toString(36).slice(2, 10)}`,
-    name: item.name || "未命名",
+    id,
+    name: item.name || "未命名变量",
     type,
     scope,
     initialValue: formatInitialValue(item.initialValue ?? item.currentValue),
-    bindings: desc ? [desc] : [],
+    bindings: Array.isArray(item.bindings) ? item.bindings.filter((binding) => typeof binding === "string" && binding.trim()).map((binding) => binding.trim()) : [],
     description: desc,
     isSystem: false,
+    readOnlyReason: id ? undefined : "标识缺失（只读）",
   };
 }
 
@@ -193,30 +197,14 @@ export function countVariablesByScope(items: VariableItem[]) {
   };
 }
 
-/** 无后端时的演示数据（演示路径） */
-export const MOCK_VARIABLES: VariableItem[] = [
-  { id: "all_orders", name: "all_orders", type: "ObjectSet", scope: "page", initialValue: "Order · 全量查询 (status != archived)", bindings: ["📊 订单表格", "📈 统计卡片"], description: "全部订单对象集" },
-  { id: "selected_order", name: "selected_order", type: "Object", scope: "page", initialValue: "← 表格行选中事件写入", bindings: ["📋 详情面板", "🔧 操作按钮组"] },
-  { id: "filter_status", name: "filter_status", type: "String", scope: "page", initialValue: '"all"', bindings: ["🔍 筛选下拉", "📊 订单表格"] },
-  { id: "date_range", name: "date_range", type: "DateRange", scope: "page", initialValue: "{ start: now-7d, end: now }", bindings: ["📅 日期选择器", "📊 订单表格", "📈 统计卡片"] },
-  { id: "search_keyword", name: "search_keyword", type: "String", scope: "page", initialValue: '""', bindings: ["🔍 搜索框"] },
-  { id: "is_loading", name: "is_loading", type: "Boolean", scope: "page", initialValue: "false", bindings: ["⏳ 加载遮罩"] },
-  { id: "page_num", name: "page_num", type: "Number", scope: "page", initialValue: "1", bindings: ["📄 分页器"] },
-  { id: "current_user", name: "current_user", type: "Object", scope: "app", initialValue: "$user · 系统注入", bindings: ["👤 用户头像", "🔒 权限判断"], isSystem: true },
-  { id: "app_theme", name: "app_theme", type: "String", scope: "app", initialValue: '"light"', bindings: ["🎨 全局样式"] },
-  { id: "notification_count", name: "notification_count", type: "Number", scope: "app", initialValue: "0 · WebSocket 推送", bindings: ["🔔 通知徽章"] },
-  { id: "ENV", name: "ENV", type: "String", scope: "global", initialValue: '"production"', bindings: ["🌐 全部页面"], isSystem: true },
-  { id: "API_BASE_URL", name: "API_BASE_URL", type: "String", scope: "global", initialValue: '"https://aos-api.internal/v1"', bindings: ["🌐 全部页面"], isSystem: true },
-];
-
 const TYPE_LABELS: Record<VarType, string> = {
-  ObjectSet: "▢ ObjectSet",
-  Object: "● Object",
-  String: "Aa String",
-  Number: "# Number",
-  Boolean: "✓ Boolean",
-  DateRange: "📅 DateRange",
-  Array: "[] Array",
+  ObjectSet: "▢ 对象集",
+  Object: "● 单个对象",
+  String: "Aa 文本",
+  Number: "# 数值",
+  Boolean: "✓ 是 / 否",
+  DateRange: "📅 日期范围",
+  Array: "[] 列表",
 };
 
 const SCOPE_LABELS: Record<VarScope, string> = {
@@ -297,8 +285,8 @@ export function VariablesPage() {
   const [scope, setScope] = useState<string>("all");
   const [modules, setModules] = useState<ModuleOption[]>([]);
   const [moduleId, setModuleId] = useState<string>("");
-  const [variables, setVariables] = useState<VariableItem[]>(MOCK_VARIABLES);
-  const [dataMode, setDataMode] = useState<"api" | "mock">("mock");
+  const [variables, setVariables] = useState<VariableItem[]>([]);
+  const [dataMode, setDataMode] = useState<"api" | "unavailable">("unavailable");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -307,8 +295,8 @@ export function VariablesPage() {
 
   const loadVariables = useCallback(async (mid: string) => {
     if (!mid) {
-      setVariables(MOCK_VARIABLES);
-      setDataMode("mock");
+      setVariables([]);
+      setDataMode("unavailable");
       return;
     }
     setLoading(true);
@@ -322,8 +310,8 @@ export function VariablesPage() {
       setVariables(items);
       setDataMode("api");
     } catch (e) {
-      setVariables(MOCK_VARIABLES);
-      setDataMode("mock");
+      setVariables([]);
+      setDataMode("unavailable");
       setError(String((e as Error).message || e));
     } finally {
       setLoading(false);
@@ -350,16 +338,16 @@ export function VariablesPage() {
         if (preferred) {
           await loadVariables(preferred);
         } else {
-          setVariables(MOCK_VARIABLES);
-          setDataMode("mock");
+          setVariables([]);
+          setDataMode("unavailable");
           setLoading(false);
         }
       } catch (e) {
         if (cancelled) return;
         setModules([]);
         setModuleId("");
-        setVariables(MOCK_VARIABLES);
-        setDataMode("mock");
+        setVariables([]);
+        setDataMode("unavailable");
         setError(String((e as Error).message || e));
         setLoading(false);
       }
@@ -398,38 +386,8 @@ export function VariablesPage() {
       description: editor.description.trim(),
     };
 
-    /* 演示路径：仅本地改列表 */
     if (dataMode !== "api" || !moduleId) {
-      if (editor.mode === "create") {
-        const next: VariableItem = {
-          id: `mock_${Date.now()}`,
-          name: payload.name,
-          type: editor.type,
-          scope: editor.scope,
-          initialValue: formatInitialValue(payload.initialValue),
-          bindings: [],
-          description: payload.description,
-        };
-        setVariables((prev) => [...prev, next]);
-        setFeedback("已在仅当前演示中新建变量，不写服务端");
-      } else if (editor.id) {
-        setVariables((prev) =>
-          prev.map((v) =>
-            v.id === editor.id
-              ? {
-                  ...v,
-                  name: payload.name,
-                  type: editor.type,
-                  scope: editor.scope,
-                  initialValue: formatInitialValue(payload.initialValue),
-                  description: payload.description,
-                }
-              : v,
-          ),
-        );
-        setFeedback("已在仅当前演示中编辑变量，不写服务端");
-      }
-      setEditor(null);
+      setError("请先选择可读取的真实模块，再维护变量");
       return;
     }
 
@@ -459,8 +417,7 @@ export function VariablesPage() {
     if (!window.confirm(`确认删除变量「${v.name}」？`)) return;
 
     if (dataMode !== "api" || !moduleId) {
-      setVariables((prev) => prev.filter((x) => x.id !== v.id));
-      setFeedback("已在仅当前演示中删除变量，不写服务端");
+      setError("当前没有可写的真实模块变量权威");
       return;
     }
 
@@ -486,18 +443,18 @@ export function VariablesPage() {
   }
 
   return (
-    <PageChrome title="变量管理器" lede="集中管理页面级、应用级和全局变量 · 数据来自模块变量 API">
+    <PageChrome title="变量管理器" lede="集中管理页面级、应用级和当前工作区范围内的共享变量。">
       <div className="vr-page">
-        {dataMode === "mock" && (
-          <div className="vr-demo-banner" role="status">
-            演示路径 · 后端不可用时使用 MOCK 数据
-            {error ? `（${error}）` : ""}
+        {dataMode === "unavailable" && (
+          <div className="vr-demo-banner" role={error ? "alert" : "status"}>
+            {error ? `变量权威读取失败：${error}` : "请先创建或选择真实模块，再维护变量。"}
           </div>
         )}
         {dataMode === "api" && (
-          <div className="vr-api-banner" role="status">
-            真数据源 · GET/POST/PUT/DELETE /v1/modules/:id/variables
-          </div>
+          <details className="vr-api-banner">
+            <summary>变量已从当前模块读取</summary>
+            <code>GET/POST/PUT/DELETE /v1/modules/:id/variables</code>
+          </details>
         )}
         {error && dataMode === "api" && (
           <div className="vr-error-banner" role="alert">
@@ -522,7 +479,7 @@ export function VariablesPage() {
                 aria-label="选择模块"
               >
                 {modules.length === 0 ? (
-                  <option value="">无可用模块（演示）</option>
+                  <option value="">无可用模块</option>
                 ) : (
                   modules.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -532,10 +489,10 @@ export function VariablesPage() {
                 )}
               </select>
             </label>
-            <Link to="/workshop/orders" className="vr-btn vr-btn-secondary">
+            <Link to="/workshop/canvas" className="vr-btn vr-btn-secondary">
               返回编辑器
             </Link>
-            <button type="button" className="vr-btn vr-btn-primary" onClick={openCreate} disabled={busy}>
+            <button type="button" className="vr-btn vr-btn-primary" onClick={openCreate} disabled={busy || dataMode !== "api" || !moduleId} title={dataMode !== "api" || !moduleId ? "请先选择真实模块" : undefined}>
               + 新建变量
             </button>
           </div>
@@ -583,7 +540,7 @@ export function VariablesPage() {
                 <th>类型</th>
                 <th>作用域</th>
                 <th>初始值 / 数据源</th>
-                <th>绑定微件</th>
+                <th>绑定组件</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -591,13 +548,13 @@ export function VariablesPage() {
               {!loading && filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="vr-empty">
-                    暂无变量，点击「+ 新建变量」创建
+                    {dataMode === "api" && moduleId ? "当前模块暂无变量，可新建变量" : "当前没有可读取的真实模块变量"}
                   </td>
                 </tr>
               )}
-              {filtered.map((v) => (
+              {filtered.map((v, index) => (
                 <tr
-                  key={v.id}
+                  key={v.id || `missing-${index}`}
                   style={{
                     borderLeft: `3px solid ${
                       v.scope === "page"
@@ -627,17 +584,14 @@ export function VariablesPage() {
                         v.bindings.map((b, i) => (
                           <span key={i} className="vr-binding">
                             {b}
-                            {dataMode === "mock" && (
-                              <span data-testid="demo-binding-source"> · 仅当前演示</span>
-                            )}
                           </span>
                         ))
                       )}
                     </div>
                   </td>
                   <td>
-                    {v.isSystem ? (
-                      <span className="vr-system">系统变量</span>
+                    {v.isSystem || v.readOnlyReason ? (
+                      <span className="vr-system">{v.readOnlyReason || "系统变量"}</span>
                     ) : (
                       <div className="vr-row-actions">
                         <button type="button" className="vr-edit" onClick={() => openEdit(v)} disabled={busy}>
@@ -658,24 +612,15 @@ export function VariablesPage() {
         <div className="vr-flow">
           <h3>数据流图</h3>
           <div className="vr-flow-body">
-            <div className="vr-flow-row">
-              <span className="vr-flow-chip is-blue">all_orders</span>
-              <span className="vr-flow-arrow">→ 行选中 →</span>
-              <span className="vr-flow-chip is-indigo">selected_order</span>
-              <span className="vr-flow-arrow">→ 读取 →</span>
-              <span className="vr-flow-chip is-outline">📋 详情面板</span>
-            </div>
-            <div className="vr-flow-row">
-              <span className="vr-flow-chip is-green">filter_status</span>
-              <span className="vr-flow-arrow">+→</span>
-              <span className="vr-flow-chip is-purple">date_range</span>
-              <span className="vr-flow-arrow">+→</span>
-              <span className="vr-flow-chip is-amber">search_keyword</span>
-              <span className="vr-flow-arrow">→ 联合过滤 →</span>
-              <span className="vr-flow-chip is-blue">all_orders</span>
-            </div>
+            {variables.length ? variables.slice(0, 6).map((variable) => (
+              <div className="vr-flow-row" key={variable.id}>
+                <span className="vr-flow-chip is-blue">{variable.name}</span>
+                <span className="vr-flow-arrow">→ {variable.bindings.length ? "已绑定" : "尚未绑定"} →</span>
+                <span className="vr-flow-chip is-outline">{variable.bindings.join("、") || "无绑定目标"}</span>
+              </div>
+            )) : <p className="muted">当前没有可绘制的真实变量绑定。</p>}
             <div className="vr-flow-hint">
-              💡 页面级变量仅当前页面可见；应用级变量跨页面共享；全局变量在所有应用中可用（如环境配置、API 地址）。画布绑定由画布页消费同一 API。
+              💡 页面级变量仅当前页面可见；应用级变量可在当前应用内跨页面共享；全局变量受当前租户与工作区边界约束。绑定关系与画布使用同一份变量记录。
             </div>
           </div>
         </div>
@@ -695,7 +640,7 @@ export function VariablesPage() {
                 <input
                   value={editor.name}
                   onChange={(e) => setEditor({ ...editor, name: e.target.value })}
-                  placeholder="variable_name"
+                  placeholder="如：选中状态"
                   autoFocus
                 />
               </label>
@@ -728,7 +673,7 @@ export function VariablesPage() {
                 <input
                   value={editor.initialValue}
                   onChange={(e) => setEditor({ ...editor, initialValue: e.target.value })}
-                  placeholder='如 "all" / 1 / true / []'
+                  placeholder="请输入与变量类型匹配的初始值"
                 />
               </label>
               <label className="vr-field">

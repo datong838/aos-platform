@@ -138,7 +138,7 @@ describe("DocumentIntelligencePage · real interaction", () => {
     await act(async () => writeButton.click());
     await flush();
     expect(apiPost).toHaveBeenCalledWith("/api/datasource/documents/doc-1/ontology-write", { object_type_id: "Invoice" });
-    expect(host.textContent).toContain("Object obj-1");
+    expect(host.textContent).toContain("已生成业务对象");
 
     const checkbox = host.querySelector<HTMLInputElement>("[data-testid='doc-item-doc-1'] input[type='checkbox']")!;
     await act(async () => checkbox.click());
@@ -216,7 +216,7 @@ describe("DocumentIntelligencePage · real interaction", () => {
     await act(async () => runButton.click());
     await flush();
 
-    expect(host.textContent).toContain("抽取完成 · 真 API");
+    expect(host.textContent).toContain("抽取完成 · 权威回包");
     expect(host.textContent).toContain("写入成功但统计刷新失败");
     expect(host.textContent).not.toContain("抽取失败，未生成演示结果");
   });

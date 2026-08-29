@@ -1,5 +1,6 @@
 import { lazy, type ComponentType } from "react";
 import type { LazyExoticComponent } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 
 function lazify<T extends ComponentType<any>>(
   factory: () => Promise<Record<string, unknown>>,
@@ -67,7 +68,16 @@ const WidgetRegistryPage = lazify(() => import("./WidgetRegistryPage"), "WidgetR
 const VariablesPage = lazify(() => import("./VariablesPage"), "VariablesPage");
 const StylesPage = lazify(() => import("./StylesPage"), "StylesPage");
 const DataConnectionPage = lazify(() => import("./DataConnectionPage"), "DataConnectionPage");
-const DataSourceCreatePage = lazify(() => import("./DataSourceCreatePage"), "DataSourceCreatePage");
+function DataSourceCreateRedirect() {
+  const location = useLocation();
+  const connector = new URLSearchParams(location.search).get("connector");
+  return (
+    <Navigate
+      replace
+      to={`/data?create=1${connector ? `&connector=${encodeURIComponent(connector)}` : ""}`}
+    />
+  );
+}
 const RiskAlertPage = lazify(() => import("./RiskAlertPage"), "RiskAlertPage");
 const PropertyEditorPage = lazify(() => import("./PropertyEditorPage"), "PropertyEditorPage");
 const FunctionEditorPage = lazify(() => import("./FunctionEditorPage"), "FunctionEditorPage");
@@ -107,7 +117,7 @@ export const S2_LIVE_ROUTES: { path: string; Component: ComponentType }[] = [
   { path: "ontology/action-types/:actionId", Component: ActionTypeEditorPage },
   { path: "data/media-sets", Component: MediaSetsPage },
   { path: "data/connections", Component: DataConnectionPage },
-  { path: "data/sources/new", Component: DataSourceCreatePage },
+  { path: "data/sources/new", Component: DataSourceCreateRedirect },
   { path: "data/sources/:sourceId", Component: SourceDetailPage },
   { path: "data/pipelines", Component: PipelinesPage },
   { path: "data/pipelines/:pipelineId", Component: PipelineCanvasPage },

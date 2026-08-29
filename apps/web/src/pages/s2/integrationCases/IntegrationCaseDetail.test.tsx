@@ -46,10 +46,12 @@ describe("IntegrationCaseDetail", () => {
     return onRetry;
   }
 
-  it("原样展示服务端 computedStage、恰好八门、blocker 与受限 Evidence 元数据", async () => {
+  it("首屏展示中文阶段摘要，技术阶段门与证据默认折叠", async () => {
     await render();
 
-    expect(host.textContent).toContain("connection_verified");
+    expect(host.textContent).toContain("当前阶段连接已验证");
+    expect(host.textContent).toContain("已满足阶段 2 / 8；待处理事项 1 项");
+    expect(host.querySelector<HTMLDetailsElement>('details[aria-label="阶段门与证据审计详情"]')?.open).toBe(false);
     expect(host.querySelectorAll("[data-stage]")).toHaveLength(8);
     expect(host.querySelector('[data-stage="data_verified"]')?.getAttribute("data-gate-status")).toBe("blocked");
     expect(host.textContent).toContain("MISSING_PIPELINE_RUN");
@@ -59,7 +61,7 @@ describe("IntegrationCaseDetail", () => {
     expect(host.textContent).toContain(HASH_A);
     expect(host.textContent).toContain(HASH_B);
     expect(host.textContent).toContain("页面不据此重算或推断阶段");
-    expect(host.textContent).toContain("页面不计算阶段或 hash");
+    expect(host.textContent).toContain("页面不自行计算阶段");
     expect(host.querySelectorAll("input, textarea, select")).toHaveLength(0);
   });
 

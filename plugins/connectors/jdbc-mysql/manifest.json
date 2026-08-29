@@ -2,7 +2,7 @@
   "id": "jdbc-mysql",
   "name": "JDBC MySQL",
   "nameZh": "MySQL JDBC",
-  "description": "MySQL 结构化入库 · 已接 probe/ingest",
+  "description": "MySQL 结构化入库 · 支持结构发现与数据入库",
   "kind": "source",
   "version": "0.1.0",
   "author": "aos",

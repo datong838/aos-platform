@@ -26,14 +26,18 @@ export const SOURCE_LABELS: Record<string, { zh: string }> = {
 
 /** 管道 ID / 数据集 RID → 中文业务名称映射 */
 export const PIPELINE_ZH_NAMES: Record<string, string> = {
-  "P01-shop": "店铺基础信息",
-  "P02-product": "商品主表",
-  "P03-product-sku": "商品SKU规格",
-  "P04-category": "商品类目",
-  "P05-order": "订单主表",
-  "P06-order-line": "订单明细行",
-  "P07-shipment": "物流发货单",
-  "P08-customer-lite": "会员基础档案",
+  "P01-shop": "店铺",
+  "P02-product": "商品",
+  "P03-product-sku": "商品SKU",
+  "P04-category": "类目",
+  "P05-order": "订单",
+  "P06-order-line": "订单明细",
+  "P07-shipment": "发货",
+  "P08-customer-lite": "会员",
+  "P09-weapp": "小程序",
+  "P10-system-config": "系统配置",
+  "P11-product-review": "商品评价",
+  "P12-payment": "支付",
   "P09-member": "会员详细信息",
   "P10-stock": "库存台账",
 };
@@ -54,9 +58,9 @@ export function getPipelineDisplayName(id?: string, fallbackName?: string): stri
   const baseId = id.replace(/-qyh$/, "");
   if (PIPELINE_ZH_NAMES[baseId]) return PIPELINE_ZH_NAMES[baseId];
   // 尝试从 dataset RID 中提取
-  const ridMatch = id.match(/P(\d+-[a-z-]+)/i);
+  const ridMatch = id.match(/P\d{2}-[a-z0-9-]+/i);
   if (ridMatch) {
-    const key = `P${ridMatch[1].toLowerCase()}`;
+    const key = ridMatch[0].replace(/-qyh$/i, "");
     if (PIPELINE_ZH_NAMES[key]) return PIPELINE_ZH_NAMES[key];
   }
   return fallbackName || id;
@@ -102,9 +106,16 @@ export function pipelineDisplayTitle(p: PipelineMeta): string {
 
 export function pipelineFlowLine(p: PipelineMeta): string {
   const table = tableKeyFromBlob(p.id, p.datasetRid);
-  const out = table ? TABLE_LABELS[table]?.zh || p.datasetRid || "dataset" : p.datasetRid || "dataset";
-  const src = p.sourceId || "source";
-  return `${src} → Ingest → ${out}`;
+  const out = table ? TABLE_LABELS[table]?.zh || pipelineDisplayTitle(p) : pipelineDisplayTitle(p);
+  return `${getSourceDisplayName(p.sourceId)} → 数据抽取 → ${out}`;
+}
+
+export function pipelineStatusKey(status?: string): "success" | "failed" | "running" | "unknown" {
+  const normalized = (status || "").trim().toUpperCase();
+  if (normalized === "SUCCEEDED" || normalized === "SUCCESS") return "success";
+  if (normalized === "FAILED" || normalized === "ERROR") return "failed";
+  if (normalized === "RUNNING" || normalized === "IN_PROGRESS") return "running";
+  return "unknown";
 }
 
 export function buildStatusBadge(status?: string): { label: string; tone: "ok" | "draft" | "run" | "muted" } {

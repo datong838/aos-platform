@@ -78,5 +78,29 @@ describe("CanvasPage · 发布入口", () => {
       expect.stringContaining("/v1/modules/"),
       expect.objectContaining({ status: "published" }),
     );
+    expect(host.querySelectorAll("h1")).toHaveLength(1);
+  });
+
+  it("无真实应用时只显示可信空态且不查询业务数据", async () => {
+    apiMocks.get.mockImplementation(async (path: string) => {
+      if (path === "/v1/modules") return { items: [] };
+      if (path === "/v1/widget-plugins") return { palette: [] };
+      throw new Error(`unexpected GET ${path}`);
+    });
+    await act(async () => {
+      root.render(createElement(MemoryRouter, null, createElement(CanvasPage)));
+    });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(host.textContent).toContain("当前工作区暂无可编辑应用");
+    expect(host.querySelector('a[href="/workshop/new"]')).toBeTruthy();
+    expect(host.textContent).not.toContain("DC-East");
+    expect(host.textContent).not.toContain("Buddy Chip");
+    expect(apiMocks.post).not.toHaveBeenCalled();
+    expect(apiMocks.patch).not.toHaveBeenCalled();
   });
 });

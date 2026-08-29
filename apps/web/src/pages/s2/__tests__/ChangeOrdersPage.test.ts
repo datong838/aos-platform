@@ -26,7 +26,7 @@ describe("ChangeOrdersPage", () => {
     host.remove();
   });
 
-  it("renders with MOCK fallback change orders", async () => {
+  it("权威为空时只展示可信空态，不生成示例变更单", async () => {
     const { ChangeOrdersPage } = await import("../ChangeOrdersPage");
     await act(async () => {
       root.render(createElement(MemoryRouter, null, createElement(ChangeOrdersPage)));
@@ -38,18 +38,12 @@ describe("ChangeOrdersPage", () => {
 
     const text = host.textContent || "";
     expect(text).toContain("变更审批");
-    expect(text).toContain("CHG-2026-0412");
-    expect(text).toContain("CHG-2026-0408");
-    expect(text).toContain("CHG-2026-0395");
-    expect(text).toContain("待审批");
-    expect(text).toContain("已通过");
-    expect(text).toContain("已驳回");
-    expect(text).toContain("资产包升级");
-    expect(text).toContain("配置变更");
-    expect(text).toContain("新模块部署");
+    expect(text).toContain("当前工作区没有变更单");
+    expect(text).toContain("页面不会生成示例审批记录");
+    expect(text).not.toContain("CHG-2026");
   });
 
-  it("shows change order detail with approval pipeline", async () => {
+  it("空态不暴露虚构审批人与审批流", async () => {
     const { ChangeOrdersPage } = await import("../ChangeOrdersPage");
     await act(async () => {
       root.render(createElement(MemoryRouter, null, createElement(ChangeOrdersPage)));
@@ -60,18 +54,12 @@ describe("ChangeOrdersPage", () => {
     });
 
     const text = host.textContent || "";
-    expect(text).toContain("审批流");
-    expect(text).toContain("提交");
-    expect(text).toContain("安全评审");
-    expect(text).toContain("变更委员会");
-    expect(text).toContain("张运维");
-    expect(text).toContain("李安全");
-    expect(text).toContain("王总监");
-    expect(text).toContain("影响范围");
-    expect(text).toContain("计划窗口");
+    expect(text).not.toContain("张运维");
+    expect(text).not.toContain("李安全");
+    expect(text).not.toContain("王总监");
   });
 
-  it("shows approve and reject buttons for pending order", async () => {
+  it("没有待审批权威记录时不提供决策按钮", async () => {
     const { ChangeOrdersPage } = await import("../ChangeOrdersPage");
     await act(async () => {
       root.render(createElement(MemoryRouter, null, createElement(ChangeOrdersPage)));
@@ -84,7 +72,7 @@ describe("ChangeOrdersPage", () => {
     const buttons = host.querySelectorAll("button");
     const approveBtn = Array.from(buttons).find((b) => b.textContent === "批准");
     const rejectBtn = Array.from(buttons).find((b) => b.textContent === "驳回");
-    expect(approveBtn).toBeTruthy();
-    expect(rejectBtn).toBeTruthy();
+    expect(approveBtn).toBeFalsy();
+    expect(rejectBtn).toBeFalsy();
   });
 });

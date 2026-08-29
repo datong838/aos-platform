@@ -27,6 +27,16 @@ const panelStyle = {
   padding: 12,
 } as const;
 
+export function assetBusinessName(value: string): string {
+  return value
+    .replace(/\b(?:D|W|L)\d+[A-Z0-9-]*\s*[：:]?/gi, "")
+    .replace(/\s*\+\s*/g, "与")
+    .replace(/（\s*/g, "（")
+    .replace(/\s*）/g, "）")
+    .replace(/\s{2,}/g, " ")
+    .trim() || "未命名资产包";
+}
+
 function Retry({ reload }: { reload: () => void }) {
   return <button type="button" className="btn" onClick={reload}>重试读取</button>;
 }
@@ -242,7 +252,7 @@ export function RegistryPanel({
                 <tr key={`${bundle.publisher}/${bundle.bundleId}`} data-selected={active || undefined}>
                   <td><code>{bundle.publisher}</code></td>
                   <td><code>{bundle.bundleId}</code></td>
-                  <td>{bundle.displayName}</td>
+                  <td>{assetBusinessName(bundle.displayName)}</td>
                   <td>{bundle.kind}</td>
                   <td>
                     <button

@@ -30,6 +30,7 @@ import {
   getSourceRecordLabel,
 } from "../../components/ontology/ontologyDisplayNames";
 import { apiGet, apiPost, S2Chrome, useJsonGet } from "./shared";
+import { businessDetailItems } from "./objectTypeDetail";
 import {
   BpBanner,
   BpLinkRow,
@@ -44,6 +45,19 @@ type ObjectTypeSummary = {
   name: string;
   properties?: unknown;
 };
+type ExplorerAction = { id: string; name: string; objectType?: string; status?: string };
+
+export function buildObjectTimeline(row: Record<string, unknown> | null): Array<{ label: string; value: string }> {
+  if (!row) return [];
+  const candidates: Array<[string, unknown]> = [
+    ["业务记录创建", row.createdAt || row.created_at],
+    ["业务记录更新", row.updatedAt || row.updated_at],
+    ["来源数据同步", row._sourceUpdatedAt || row.sourceUpdatedAt],
+  ];
+  return candidates
+    .filter(([, value]) => value !== undefined && value !== null && value !== "")
+    .map(([label, value]) => ({ label, value: String(value) }));
+}
 
 type ExplorerGraphNode = {
   key: string;
@@ -113,6 +127,7 @@ export function GraphExplorerPage() {
   const { data: types, err: tErr } = useJsonGet<{ items: ObjectTypeSummary[] }>(
     "/v1/ontology/object-types",
   );
+  const actionsApi = useJsonGet<{ items: ExplorerAction[] }>("/v1/actions/types");
   const [typeId, setTypeId] = useState(searchParams.get("type")?.trim() || "Order");
   const [objects, setObjects] = useState<Record<string, unknown>[]>([]);
   const [objectId, setObjectId] = useState<string | null>(null);
@@ -303,7 +318,9 @@ export function GraphExplorerPage() {
     Object.entries(detail)
       .filter(([k]) => !k.startsWith("_"))
       .map(([k, v]) => ({ label: k, value: String(v ?? "—") }));
-  const detailProps = allDetailProps && allDetailProps.slice(0, 6);
+  const detailProps = detail ? businessDetailItems(detail) : null;
+  const detailActions = (actionsApi.data?.items || []).filter((action) => action.objectType === typeId);
+  const detailTimeline = buildObjectTimeline(detail);
 
   const currentType = types?.items?.find((t) => t.id === typeId);
   const currentTypeName = currentType?.name || typeId;
@@ -455,7 +472,7 @@ export function GraphExplorerPage() {
   }
 
   return (
-    <S2Chrome title="对象探索" lede="Object Explorer · 按类型浏览对象 · Selection 绑定 Object View + Wiki">
+    <S2Chrome title="对象探索" lede="按类型浏览真实业务对象，联动关系图、知识页与受控业务动作">
       <div className="p-objx-app">
         {/* 标签栏 */}
         <div className="p-objx-tabs-bar">
@@ -474,7 +491,9 @@ export function GraphExplorerPage() {
             >
               <option value="">已保存探索</option>
               {savedExplorations.map((item) => (
-                <option key={item.id} value={item.id}>{item.payload.name}</option>
+                <option key={item.id} value={item.id}>
+                  {item.payload.name} · {item.payload.visibility === "workspace" ? "工作区" : "仅自己"} · 修订 {item.revision}
+                </option>
               ))}
             </select>
             <label className="p-objx-select-label">
@@ -659,7 +678,7 @@ export function GraphExplorerPage() {
 
         {columnResolution.schemaIncomplete && viewMode === "table" && (
           <div className="p-objx-schema-warning" role="status">
-            当前 Object Type 的属性 Schema 元数据不完整，暂按全部已加载对象的字段并集展示；不会从第一行猜列。
+            当前对象类型的属性定义不完整，暂按全部已加载对象的字段并集展示；不会从第一行猜列。
           </div>
         )}
 
@@ -761,8 +780,8 @@ export function GraphExplorerPage() {
               <div className="p-objx-annotation-editor">
                 <h3>新建注释草稿</h3>
                 <p className="muted">
-                  {objectId ? `绑定对象 ${typeId}/${objectId}` : `绑定 Object Type ${typeId}`}
-                  {" · "}保存后形成不可变 revision，可在后续 Wiki 审批流中引用。
+                  {objectId ? `绑定当前选中的${currentTypeName}实例` : `绑定${currentTypeName}对象类型`}
+                  {" · "}保存后形成不可变修订，可在后续知识审批流中引用。
                 </p>
                 <label>
                   标题
@@ -790,12 +809,12 @@ export function GraphExplorerPage() {
           }
           detail={
             <div className="bp-cop-sidebar">
-              <div className="bp-ws-section-title">Object View + Wiki</div>
+              <div className="bp-ws-section-title">业务对象详情</div>
               {detail ? (
                 <>
                   <div className="bp-object-title">{getObjectDisplayLabel(typeId, detail)}</div>
                   <p className="muted" style={{ fontSize: "0.75rem" }}>
-                    {getSourceIdentityLabel(detail)} · Selection 绑定
+                    {getSourceIdentityLabel(detail)} · 当前选择
                   </p>
                   <div className="p-objx-detail-tabs" role="tablist" aria-label="对象详情视图">
                     {(
@@ -803,8 +822,8 @@ export function GraphExplorerPage() {
                         ["overview", "概览"],
                         ["properties", "属性"],
                         ["relations", "关系"],
-                        ["wiki", "Wiki"],
-                        ["action", "Action"],
+                        ["wiki", "知识"],
+                        ["action", "业务动作"],
                         ["timeline", "时间线"],
                       ] as const
                     ).map(([key, label]) => (
@@ -821,7 +840,12 @@ export function GraphExplorerPage() {
                     ))}
                   </div>
                   {detailTab === "overview" && detailProps && <BpPropGrid items={detailProps} />}
-                  {detailTab === "properties" && allDetailProps && <BpPropGrid items={allDetailProps} />}
+                  {detailTab === "properties" && allDetailProps && (
+                    <details open>
+                      <summary>原始字段审计</summary>
+                      <BpPropGrid items={allDetailProps} />
+                    </details>
+                  )}
                   {detailTab === "relations" &&
                     (neighbors.length > 0 ? (
                       <BpTable
@@ -838,29 +862,50 @@ export function GraphExplorerPage() {
                   {detailTab === "wiki" &&
                     (wiki ? (
                       <div className="bp-domain bp-domain-wiki p-objx-wiki-preview">
-                        <div>Wiki · 当前生效内容</div>
+                        <div>知识页 · 当前生效内容</div>
                         <p>{wiki.slice(0, 500)}</p>
                         <Link to={`/ontology/wiki?type=${encodeURIComponent(typeId)}&id=${encodeURIComponent(String(objectId || ""))}`}>
-                          打开 Wiki 全页
+                          打开知识页
                         </Link>
                       </div>
                     ) : (
                       <p className="muted">
-                        当前对象暂无 Wiki。UX1 保持只读，不在此处伪造创建成功。
+                        当前对象暂无知识页；此处保持只读，不伪造创建成功。
                       </p>
                     ))}
                   {detailTab === "action" && (
-                    <p className="muted">对象级受控 Action 将在 UA2/UX5 接入；当前不展示无目标绑定的假动作。</p>
+                    detailActions.length > 0 ? (
+                      <ul className="card-list">
+                        {detailActions.map((action) => (
+                          <li key={action.id} className="card">
+                            <strong>{action.name}</strong>
+                            <span className="muted">{action.status ? ` · ${action.status}` : ""}</span>
+                            <Link to={`/ontology/action-types/${encodeURIComponent(action.id)}`} className="bp-action-link">
+                              查看定义 →
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="muted">当前对象类型尚未配置可用的业务动作。</p>
+                    )
                   )}
                   {detailTab === "timeline" && (
-                    <p className="muted">可审计任务、Action、版本和 Evidence 时间线将在 UA2 后接入。</p>
+                    detailTimeline.length > 0 ? (
+                      <BpTable
+                        columns={["事件", "权威时间"]}
+                        rows={detailTimeline.map((event) => [event.label, event.value])}
+                      />
+                    ) : (
+                      <p className="muted">当前对象没有可读取的权威时间记录。</p>
+                    )
                   )}
                 </>
               ) : (
-                <p className="muted">选择左侧实例查看 Object View</p>
+                <p className="muted">从表格选择业务对象后查看详情</p>
               )}
               <p className="muted" style={{ fontSize: "0.65rem", marginTop: "1rem" }}>
-                硬约束：顶层须 Action；不可「仅调 Logic」写回 Ontology。
+                变更边界：对象写回必须经过受控业务动作，不允许绕过审批直接写入。
               </p>
             </div>
           }
@@ -874,7 +919,7 @@ export function GraphExplorerPage() {
         links={[
           { to: "/ontology", label: "本体管理" },
           { to: "/ontology/graph-health", label: "图谱健康" },
-          { to: "/workshop/inbox", label: "风险告警 Inbox" },
+          { to: "/workshop/inbox", label: "风险告警" },
         ]}
       />
     </S2Chrome>

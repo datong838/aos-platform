@@ -55,13 +55,13 @@ export type LinkGraphEdge = {
 export type LinkGraphLayout = { width: number; height: number; nodes: LinkGraphNode[]; edges: LinkGraphEdge[] };
 
 const TABS = [
-  { id: "overview", label: "Overview" },
-  { id: "properties", label: "Properties" },
-  { id: "actions", label: "Action types" },
-  { id: "links", label: "Link type graph" },
-  { id: "dependents", label: "Dependents" },
-  { id: "data", label: "Data" },
-  { id: "usage", label: "Usage" },
+  { id: "overview", label: "概览" },
+  { id: "properties", label: "属性" },
+  { id: "actions", label: "业务动作" },
+  { id: "links", label: "关系图" },
+  { id: "dependents", label: "依赖" },
+  { id: "data", label: "数据" },
+  { id: "usage", label: "使用统计" },
 ];
 
 function branchAllowsOverlayWrite(branchId: string, branchReadonly?: boolean): boolean {
@@ -70,34 +70,15 @@ function branchAllowsOverlayWrite(branchId: string, branchReadonly?: boolean): b
   return true;
 }
 
-function propNames(properties?: PropDef[]): string[] {
-  return (properties || []).map((p) => p.name.trim()).filter(Boolean);
-}
-
-/** 从列表字段派生元数据（详情 API 失败时降级） */
+/** 只保留列表响应明确提供的标识和显示名，不推导存储或治理事实。 */
 export function deriveOtDetailMeta(
   typeId: string,
   typeName: string,
-  properties?: PropDef[],
+  _properties?: PropDef[],
 ): OtDetailMeta {
-  const names = propNames(properties);
-  const primaryKey = names[0] || "id";
-  const titleHit = names.find((n) => /^(title|name|display_name|label)$/i.test(n));
-  const titleKey = titleHit || (names[1] || primaryKey);
-  const display = (typeName || typeId).trim() || typeId;
-  const plural = display.endsWith("s") ? display : `${display}s`;
   return {
-    rid: `ri.ontology.main.object-type.${typeId.toLowerCase()}`,
     apiName: typeId,
-    primaryKey,
-    titleKey,
-    displayName: display,
-    pluralName: plural,
-    backingDataset: `ds/${typeId.toLowerCase()}`,
-    syncStrategy: "incremental",
-    storageType: "object_storage",
-    createdBy: "system",
-    visibility: "org",
+    displayName: (typeName || typeId).trim() || typeId,
   };
 }
 
@@ -110,32 +91,93 @@ export function buildOtMetaKvItems(input: {
   funnelStage?: string;
   meta?: OtDetailMeta | null;
 }): OtMetaKvItem[] {
-  const base = deriveOtDetailMeta(input.typeId, input.typeName, input.properties);
-  const m = { ...base, ...(input.meta || {}) };
+  const m = input.meta || {};
   const funnelTone = input.funnelStage && /live|index|done/i.test(input.funnelStage) ? "ok" : "warn";
-  return [
-    { label: "RID", value: m.rid || base.rid! },
-    { label: "API 名", value: m.apiName || input.typeId },
-    { label: "PK", value: m.primaryKey || "id" },
-    { label: "TitleKey", value: m.titleKey || "id" },
-    { label: "显示名", value: m.displayName || input.typeName },
-    { label: "Plural", value: m.pluralName || `${input.typeName}s` },
-    { label: "BackingDataset", value: m.backingDataset || `ds/${input.typeId.toLowerCase()}` },
-    { label: "Sync 策略", value: m.syncStrategy || "incremental" },
-    { label: "存储类型", value: m.storageType || "object_storage" },
-    { label: "创建人", value: m.createdBy || "system" },
+  const items: OtMetaKvItem[] = [
+    { label: "对象类型标识", value: input.typeId },
+    { label: "显示名称", value: m.displayName || input.typeName },
     { label: "分支", value: input.branchId },
-    {
-      label: "可见性",
-      value: m.visibility || "org",
-    },
-    {
-      label: "管道",
-      value: input.funnelStage || "未配置",
-      tone: funnelTone === "ok" ? "ok" : "warn",
-    },
-    { label: "Properties", value: String((input.properties || []).length) },
+    { label: "属性数", value: String((input.properties || []).length) },
+    { label: "业务漏斗", value: businessFunnelLabel(input.funnelStage), tone: funnelTone === "ok" ? "ok" : "warn" },
   ];
+  const explicit: Array<[string, string | undefined]> = [
+    ["资源标识", m.rid],
+    ["接口名称", m.apiName],
+    ["主键", m.primaryKey],
+    ["标题字段", m.titleKey],
+    ["复数名称", m.pluralName],
+    ["承载数据集", m.backingDataset],
+    ["同步策略", m.syncStrategy],
+    ["存储类型", m.storageType],
+    ["创建人", m.createdBy],
+    ["可见范围", m.visibility],
+  ];
+  explicit.forEach(([label, value]) => {
+    if (value) items.push({ label, value });
+  });
+  return items;
+}
+
+export function businessObjectDescription(input: string): string {
+  return input
+    .replace(/^\s*(?:Phase|阶段)\s*[A-Z0-9+.-]+\s*[·:：-]?\s*/i, "")
+    .replace(/\bObject\s*Type\b/gi, "对象类型")
+    .replace(/\bObject\b/gi, "对象")
+    .replace(/\bWiki\b/gi, "知识页")
+    .replace(/\bDraft\b/gi, "草稿审批")
+    .trim();
+}
+
+function businessFunnelLabel(stage?: string): string {
+  if (!stage) return "未配置";
+  if (/error|fail/i.test(stage)) return "异常";
+  if (/hydration/i.test(stage)) return "语义准备中";
+  if (/index/i.test(stage)) return "索引中";
+  if (/live/i.test(stage)) return "已生效";
+  if (/done/i.test(stage)) return "已完成";
+  return "状态待确认";
+}
+
+export function businessObjectLabel(
+  row: Record<string, unknown>,
+  typeName: string,
+  index = 0,
+): string {
+  const explicit = row._displayLabel || row.displayLabel || row.title || row.name;
+  if (explicit) return String(explicit);
+  const businessCode = row.orderNo || row.order_no || row.code || row.number;
+  if (businessCode) return `${typeName || "业务对象"} · ${String(businessCode)}`;
+  const sourceLabel = row._sourceRecordLabel;
+  if (sourceLabel) return `${typeName || "业务对象"} · ${String(sourceLabel)}`;
+  return `第 ${index + 1} 条业务实例`;
+}
+
+const BUSINESS_DETAIL_LABELS: Record<string, string> = {
+  orderNo: "订单号",
+  order_no: "订单号",
+  totalAmount: "订单金额",
+  total_amount: "订单金额",
+  currency: "币种",
+  status: "数据状态",
+  payStatus: "支付状态",
+  orderStatus: "订单状态",
+  deliveryStatus: "配送状态",
+  memberId: "会员标识",
+  customerName: "客户名称",
+  shopId: "店铺标识",
+  createdAt: "创建时间",
+  updatedAt: "更新时间",
+  code: "业务编码",
+  number: "业务编号",
+  title: "标题",
+  name: "名称",
+};
+
+export function businessDetailItems(row: Record<string, unknown>): OtMetaKvItem[] {
+  return Object.entries(BUSINESS_DETAIL_LABELS)
+    .filter(([key]) => row[key] !== undefined && row[key] !== null && row[key] !== "")
+    .slice(0, 10)
+    .map(([key, label]) => ({ label, value: String(row[key]) }));
 }
 
 /** 简单环形布局：中心 OT + 邻居节点/边 */
@@ -179,7 +221,7 @@ export function buildLinkGraphLayout(
       id: l.id,
       from,
       to,
-      label: l.rel || "link",
+      label: l.name || l.rel || "关系",
       x1: a.x,
       y1: a.y,
       x2: b.x,
@@ -198,15 +240,15 @@ function LinkTypeGraphViz({
 }) {
   const layout = useMemo(() => buildLinkGraphLayout(typeId, links), [typeId, links]);
   if (links.length === 0) {
-    return <p className="muted w3-c2-link-empty">暂无 Link Type</p>;
+    return <p className="muted w3-c2-link-empty">暂无关系类型</p>;
   }
   return (
-    <div className="w3-c2-link-graph" aria-label="link type graph">
+    <div className="w3-c2-link-graph" aria-label="对象关系图">
       <svg
         className="w3-c2-link-svg"
         viewBox={`0 0 ${layout.width} ${layout.height}`}
         role="img"
-        aria-label={`${typeId} link graph`}
+        aria-label={`${typeId} 对象关系图`}
       >
         {layout.edges.map((e) => {
           const mx = (e.x1 + e.x2) / 2;
@@ -404,7 +446,7 @@ export function ObjectTypeDetailPanel({
       }
       if (requestScopeRef.current !== requestScope) return;
       applyDetailSnapshot(verified);
-      setMetaMsg("已保存并重读 Object Type 详情");
+      setMetaMsg("已保存并重读对象类型详情");
       onMetaSaved?.();
     } catch (e) {
       if (requestScopeRef.current !== requestScope) return;
@@ -451,7 +493,7 @@ export function ObjectTypeDetailPanel({
       if (verified.id !== typeId) throw new Error("详情重读目标不一致");
       if (requestScopeRef.current !== requestScope) return;
       applyDetailSnapshot(verified);
-      setEditMsg(`已写入分支 overlay 并重读 Object Type 详情 · ${branchId}`);
+      setEditMsg(`已写入分支定制并重读对象类型详情 · ${branchId}`);
       onBranchSaved?.();
     } catch (e) {
       if (requestScopeRef.current !== requestScope) return;
@@ -539,11 +581,12 @@ export function ObjectTypeDetailPanel({
       }),
     [typeId, typeName, branchId, props, funnelStage, otMeta],
   );
-  const detailProps =
+  const detailProps = detail ? businessDetailItems(detail) : null;
+  const detailAuditProps =
     detail &&
     Object.entries(detail)
       .filter(([k]) => !k.startsWith("_"))
-      .slice(0, 8)
+      .slice(0, 16)
       .map(([k, v]) => ({ label: k, value: String(v ?? "—") }));
 
   const funnelTone = funnelStage && /live|index|done/i.test(funnelStage) ? "ok" : "warn";
@@ -551,35 +594,31 @@ export function ObjectTypeDetailPanel({
   return (
     <div className="bp-object-panel" style={{ marginTop: "1rem" }}>
       <div className="bp-object-title">
-        {typeName}{" "}
-        <span className="muted" style={{ fontSize: "0.75rem", fontWeight: 400 }}>
-          ({typeId}) @ {branchId}
-        </span>
+        {typeName}
+        <details style={{ display: "inline-block", marginLeft: 10, fontSize: "0.75rem", fontWeight: 400 }}>
+          <summary>审计上下文</summary>
+          <code>{typeId}</code> · 分支 <code>{branchId}</code>
+        </details>
       </div>
 
       <BpTabs tabs={TABS} active={tab} onChange={setTab} />
 
       {tab === "overview" && (
         <div className="ont-overview">
-          {/* ① Metadata · 对齐 ontology-object */}
+          {/* ① 对象概览 */}
           <section className="ont-meta-card">
             <div className="ont-meta-eyebrow">
-              <span>① Metadata</span>
-              <span className="muted">· Object type 元数据</span>
+              <span>① 对象概览</span>
+              <span className="muted">· 当前对象类型</span>
             </div>
             <div className="ont-meta-head">
               <div>
                 <div className="muted" style={{ fontSize: "0.7rem" }}>
                   显示名
                 </div>
-                <input
-                  className="aos-input ont-meta-title-input"
-                  value={metaName}
-                  onChange={(e) => setMetaName(e.target.value)}
-                  aria-label="object type name"
-                />
+                <strong>{metaName}</strong>
                 <p className="muted" style={{ fontSize: "0.75rem", margin: "0.25rem 0 0" }}>
-                  英文名 / API: <code>{typeId}</code>
+                  {businessObjectDescription(metaDesc) || "暂无业务说明"}
                 </p>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
@@ -587,53 +626,47 @@ export function ObjectTypeDetailPanel({
                   {metaPublish ? "已发布" : "草稿"}
                 </span>
                 <span className={`bp-tag bp-tag-${funnelTone}`}>
-                  Funnel: {funnelStage || "未配置"}
+                  业务漏斗：{businessFunnelLabel(funnelStage)}
                 </span>
-                <span className="bp-tag">{instanceCount} 实例</span>
+                <span className="bp-tag">{instanceCount} 个实例</span>
               </div>
             </div>
-            <label className="ont-form-field" style={{ display: "block", marginTop: 8 }}>
-              <span className="muted" style={{ fontSize: "0.7rem" }}>
-                描述
-              </span>
-              <input
-                className="aos-input"
-                value={metaDesc}
-                onChange={(e) => setMetaDesc(e.target.value)}
-                placeholder="Object Type 描述"
-              />
-            </label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 8, alignItems: "center" }}>
-              <label className="ont-form-check">
-                <input
-                  type="checkbox"
-                  checked={metaPublish}
-                  onChange={(e) => setMetaPublish(e.target.checked)}
-                />
-                发布（需至少 1 个 property）
+            <details style={{ marginTop: 10 }}>
+              <summary>编辑对象信息</summary>
+              <label className="ont-form-field" style={{ display: "block", marginTop: 8 }}>
+                <span className="muted" style={{ fontSize: "0.7rem" }}>显示名称</span>
+                <input className="aos-input ont-meta-title-input" value={metaName} onChange={(e) => setMetaName(e.target.value)} aria-label="对象类型显示名称" />
               </label>
-              <button
-                type="button"
-                className="btn-primary"
-                disabled={metaBusy}
-                onClick={() => void saveMeta()}
-              >
-                {metaBusy ? "保存中…" : "保存元数据"}
-              </button>
-              <button type="button" className="bp-action-link" onClick={() => setTab("properties")}>
-                编辑 Properties →
-              </button>
-            </div>
+              <label className="ont-form-field" style={{ display: "block", marginTop: 8 }}>
+                <span className="muted" style={{ fontSize: "0.7rem" }}>业务说明</span>
+                <input className="aos-input" value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder="对象类型业务说明" />
+              </label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 8, alignItems: "center" }}>
+                <label className="ont-form-check">
+                  <input type="checkbox" checked={metaPublish} onChange={(e) => setMetaPublish(e.target.checked)} />
+                  发布（至少需要一个属性）
+                </label>
+                <button type="button" className="btn-primary" disabled={metaBusy} onClick={() => void saveMeta()}>
+                  {metaBusy ? "保存中…" : "保存对象信息"}
+                </button>
+                <button type="button" className="bp-action-link" onClick={() => setTab("properties")}>
+                  编辑属性 →
+                </button>
+              </div>
+            </details>
             {metaMsg && <p className="bp-prop-ok">{metaMsg}</p>}
             {metaErr && <p className="error">{metaErr}</p>}
-            <BpPropGrid items={metaKvItems} />
+            <details style={{ marginTop: 10 }}>
+              <summary>审计信息</summary>
+              <BpPropGrid items={metaKvItems} />
+            </details>
           </section>
 
           <div className="ont-overview-grid">
             <div className="ont-ov-card">
               <div className="ont-ov-card-head">
                 <h3>
-                  <span className="ont-ov-num">②</span> Properties
+                  <span className="ont-ov-num">②</span> 属性
                 </h3>
                 <button type="button" className="bp-action-link" onClick={() => setTab("properties")}>
                   查看全部 →
@@ -655,7 +688,7 @@ export function ObjectTypeDetailPanel({
             <div className="ont-ov-card">
               <div className="ont-ov-card-head">
                 <h3>
-                  <span className="ont-ov-num">③</span> Action types
+                  <span className="ont-ov-num">③</span> 业务动作
                 </h3>
                 <button type="button" className="bp-action-link" onClick={() => setTab("actions")}>
                   打开 →
@@ -673,13 +706,13 @@ export function ObjectTypeDetailPanel({
             <div className="ont-ov-card">
               <div className="ont-ov-card-head">
                 <h3>
-                  <span className="ont-ov-num">④</span> Link type graph
+                  <span className="ont-ov-num">④</span> 关系图
                 </h3>
                 <Link
                   to={`/ontology/link-types/${links[0] ? encodeURIComponent(links[0].id) : "new"}?src=${encodeURIComponent(typeId)}`}
                   className="bp-action-link"
                 >
-                  {links[0] ? "打开编辑器 →" : "新建 Link →"}
+                  {links[0] ? "打开编辑器 →" : "新建关系 →"}
                 </Link>
               </div>
               <LinkTypeGraphViz typeId={typeId} links={links} />
@@ -687,17 +720,17 @@ export function ObjectTypeDetailPanel({
             <div className="ont-ov-card">
               <div className="ont-ov-card-head">
                 <h3>
-                  <span className="ont-ov-num">⑥</span> Data · Funnel
+                  <span className="ont-ov-num">⑥</span> 数据与业务漏斗
                 </h3>
                 <Link to={`/ontology/funnel?type=${encodeURIComponent(typeId)}`} className="bp-action-link">
-                  Pipeline →
+                  查看业务漏斗 →
                 </Link>
               </div>
               <p className="muted" style={{ fontSize: "0.8rem", margin: 0 }}>
-                {funnelStage ? `Stage: ${funnelStage}` : "未配置 Funnel"}
+                业务漏斗：{businessFunnelLabel(funnelStage)}
               </p>
               <button type="button" className="bp-action-link" style={{ marginTop: 8 }} onClick={() => setTab("data")}>
-                打开 Data Tab →
+                查看数据 →
               </button>
             </div>
           </div>
@@ -711,17 +744,17 @@ export function ObjectTypeDetailPanel({
             className="ont-wiki-cta"
           >
             <div>
-              <div className="ont-wiki-eyebrow">谛听增强 · WIKI</div>
+              <div className="ont-wiki-eyebrow">智能知识</div>
               <div className="aos-text" style={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                LLM Wiki 知识卡片（双向绑定）
+                智能知识卡片（双向绑定）
               </div>
               <p className="muted" style={{ fontSize: "0.75rem", margin: "0.25rem 0 0" }}>
                 {objects[0]?.id
-                  ? `Object 旁挂载活 Wiki · 写经 Draft · 默认实例 ${String(objects[0].id)}`
-                  : "当前分支暂无实例 · 打开后自行选择对象"}
+                  ? "已选择首个读取到的实例 · 编辑需经草稿审批"
+                  : "当前分支暂无实例 · 打开后选择对象"}
               </p>
             </div>
-            <span className="ont-wiki-go">打开 Wiki →</span>
+            <span className="ont-wiki-go">打开知识页 →</span>
           </Link>
         </div>
       )}
@@ -736,7 +769,7 @@ export function ObjectTypeDetailPanel({
               <div key={i} className="ont-prop-row" style={{ display: "contents" }}>
                 <label className="ont-form-field">
                   <span>
-                    name{i === 0 ? " · PK" : ""}
+                    属性标识{i === 0 ? " · 主键候选" : ""}
                   </span>
                   <input
                     className="aos-input"
@@ -749,7 +782,7 @@ export function ObjectTypeDetailPanel({
                   />
                 </label>
                 <label className="ont-form-field">
-                  <span>type</span>
+                  <span>数据类型</span>
                   <input
                     className="aos-input"
                     value={p.type || "string"}
@@ -797,7 +830,7 @@ export function ObjectTypeDetailPanel({
               disabled={metaBusy}
               onClick={() => void saveMeta()}
             >
-              {metaBusy ? "保存中…" : "保存 Properties"}
+              {metaBusy ? "保存中…" : "保存属性"}
             </button>
           </div>
           {metaMsg && <p className="bp-prop-ok">{metaMsg}</p>}
@@ -812,17 +845,14 @@ export function ObjectTypeDetailPanel({
               to={`/ontology/action-types/new?ot=${encodeURIComponent(typeId)}`}
               className="btn-nav"
             >
-              ＋ 新建 Action Type
+              ＋ 新建业务动作
             </Link>
           </div>
-          {actions.length === 0 && <p className="muted">该 Object Type 暂无 Action Type</p>}
+          {actions.length === 0 && <p className="muted">该对象类型暂无业务动作</p>}
           <ul className="card-list">
             {actions.map((a) => (
               <li key={a.id} className="card">
                 <strong>{a.name}</strong>
-                <span className="muted" style={{ marginLeft: 8 }}>
-                  {a.id}
-                </span>
                 <Link
                   to={`/ontology/action-types/${encodeURIComponent(a.id)}`}
                   className="bp-action-link"
@@ -843,16 +873,15 @@ export function ObjectTypeDetailPanel({
               to={`/ontology/link-types/new?src=${encodeURIComponent(typeId)}`}
               className="btn-nav"
             >
-              ＋ 新建 Link Type
+              ＋ 新建关系类型
             </Link>
           </div>
           <LinkTypeGraphViz typeId={typeId} links={links} />
           {links.length > 0 && (
             <BpTable
-              columns={["id", "rel", "src", "dst", ""]}
+              columns={["关系名称", "来源对象", "目标对象", ""]}
               rows={links.map((l) => [
-                l.id,
-                l.rel || "—",
+                l.name || l.rel || "未命名关系",
                 l.srcType || "—",
                 l.dstType || "—",
                 <Link key={l.id} to={`/ontology/link-types/${encodeURIComponent(l.id)}`} className="bp-action-link">
@@ -867,19 +896,19 @@ export function ObjectTypeDetailPanel({
       {tab === "dependents" && (
         <>
           {modules.length === 0 && (
-            <p className="muted">暂无绑定该类型的 Workshop Module（objectType 匹配）</p>
+            <p className="muted">暂无绑定该对象类型的工作台应用</p>
           )}
           <BpTable
             columns={["依赖", "类型", ""]}
             rows={[
               ...modules.map((m) => [
                 m.name,
-                "Workshop Module",
+                "工作台应用",
                 <Link key={m.id} to="/workshop/inbox">
                   打开 →
                 </Link>,
               ]),
-              ["Funnel Pipeline", "Data", <Link key="f" to={`/ontology/funnel?type=${encodeURIComponent(typeId)}`}>Pipeline →</Link>],
+              ["业务漏斗", "数据", <Link key="f" to={`/ontology/funnel?type=${encodeURIComponent(typeId)}`}>打开 →</Link>],
             ]}
           />
         </>
@@ -888,30 +917,30 @@ export function ObjectTypeDetailPanel({
       {tab === "data" && (
         <>
           <BpBanner tone="info">
-            <strong>Datasources</strong>
+            <strong>数据来源</strong>
             <p className="muted" style={{ margin: "0.5rem 0 0", fontSize: "0.875rem" }}>
-              Backing 单一原则 · 实例 {instanceCount} · Funnel {funnelStage || "—"}
+              单一承载原则 · 实例 {instanceCount} · 业务漏斗 {businessFunnelLabel(funnelStage)}
             </p>
             <Link
               to={`/ontology/funnel?type=${encodeURIComponent(typeId)}`}
               className="btn-nav"
               style={{ marginTop: 8, display: "inline-block" }}
             >
-              查看 Funnel 四阶段 →
+              查看业务漏斗四阶段 →
             </Link>
           </BpBanner>
           <div className="bp-ws-section-title" style={{ marginTop: "1rem" }}>
-            实例 @ {branchId}
+            实例 · 当前分支
           </div>
           <ul className="card-list">
-            {objects.map((o) => (
+            {objects.map((o, index) => (
               <li key={String(o.id)} className="card">
                 <button
                   type="button"
                   className="nav-link"
                   onClick={() => onOpenInstance(String(o.id))}
                 >
-                  {String(o.id)} · {String(o.title || "")}
+                  {businessObjectLabel(o, typeName, index)}
                 </button>
               </li>
             ))}
@@ -919,16 +948,22 @@ export function ObjectTypeDetailPanel({
           {objects.length === 0 && <p className="muted">该类型暂无实例</p>}
           {detail && detailProps && (
             <div className="bp-object-panel" style={{ marginTop: "0.75rem" }}>
-              <div className="bp-object-title">{String(detail.id)}</div>
+              <div className="bp-object-title">{businessObjectLabel(detail, typeName)}</div>
               <BpPropGrid items={detailProps} />
+              {detailAuditProps && (
+                <details style={{ marginTop: 10 }}>
+                  <summary>原始字段审计</summary>
+                  <BpPropGrid items={detailAuditProps} />
+                </details>
+              )}
               {canEditBranch ? (
                 <div className="ont-branch-edit" style={{ marginTop: "0.75rem" }}>
                   <p className="muted" style={{ margin: "0 0 0.5rem", fontSize: "0.8rem" }}>
-                    开发分支可写 overlay（不经 Draft）。生产/只读分支请走 Action。
+                    当前开发分支允许保存定制内容；生产或只读分支需经草稿审批或业务动作。
                   </p>
                   <div className="ont-form-grid">
                     <label className="ont-form-field">
-                      <span>title</span>
+                      <span>标题</span>
                       <input
                         className="aos-input"
                         value={editTitle}
@@ -936,7 +971,7 @@ export function ObjectTypeDetailPanel({
                       />
                     </label>
                     <label className="ont-form-field">
-                      <span>status</span>
+                      <span>状态</span>
                       <input
                         className="aos-input"
                         value={editStatus}
@@ -958,18 +993,21 @@ export function ObjectTypeDetailPanel({
                 </div>
               ) : (
                 <p className="muted" style={{ marginTop: "0.5rem", fontSize: "0.8rem" }}>
-                  当前分支只读/生产 · 实例写回请走 Draft / Action
+                  当前分支只读或为生产分支，实例变更需经草稿审批或业务动作
                 </p>
               )}
               {neighbors.length > 0 && (
-                <BpTable
-                  columns={["id", "type", "rel"]}
-                  rows={neighbors.map((n) => [
-                    String(n.id ?? "—"),
-                    String(n.type ?? "—"),
-                    String(n.rel ?? "—"),
-                  ])}
-                />
+                <details style={{ marginTop: 10 }}>
+                  <summary>关联对象审计</summary>
+                  <BpTable
+                    columns={["对象标识", "对象类型", "关系"]}
+                    rows={neighbors.map((n) => [
+                      String(n.id ?? "—"),
+                      String(n.type ?? "—"),
+                      String(n.rel ?? "—"),
+                    ])}
+                  />
+                </details>
               )}
             </div>
           )}
@@ -994,19 +1032,19 @@ export function ObjectTypeDetailPanel({
               },
               {
                 value: String(actions.length),
-                label: "Action types",
-                hint: "可写回入口",
+                label: "业务动作",
+                hint: "受控变更入口",
                 tone: "ok",
               },
             ]}
           />
           <p className="muted" style={{ fontSize: "0.75rem" }}>
-            Usage 为进程累计 metrics + 当前分支实例数，非 30 天专属统计。
+            使用统计由进程累计请求与当前分支实例数构成，不代表近 30 天统计。
           </p>
           <BpMetricGrid
             items={[
-              { label: "Workshop 模块", value: modules.length, tone: modules.length ? "ok" : "muted" },
-              { label: "Link types", value: links.length, tone: links.length ? "ok" : "muted" },
+              { label: "工作台应用", value: modules.length, tone: modules.length ? "ok" : "muted" },
+              { label: "关系类型", value: links.length, tone: links.length ? "ok" : "muted" },
             ]}
           />
         </>

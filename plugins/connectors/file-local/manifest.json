@@ -2,7 +2,7 @@
   "id": "file-local",
   "name": "Local File",
   "nameZh": "本地文件",
-  "description": "本地目录探针 + 可选 ingest",
+  "description": "本地目录文件读取 · 支持受控上传、媒体同步与数据入库",
   "kind": "source",
   "version": "0.2.0",
   "author": "aos",

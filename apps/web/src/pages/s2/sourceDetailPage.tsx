@@ -12,9 +12,9 @@ import {
   ConnectorTagLink,
   connectorLabel,
   runtimeLabel,
+  sourceBusinessName,
   sourceSubtitle,
   statusZh,
-  StoragePillLink,
   type SourceRow,
 } from "./dataConnectionUi";
 import { useJsonGet } from "./shared";
@@ -27,7 +27,7 @@ type PipelineRow = {
   objectTypeHint?: string;
 };
 type DatasetRow = { rid: string; sourceId?: string; objectTypeHint?: string; displayName?: string };
-type SyncRow = { id?: string; sourceId?: string; status?: string; finishedAt?: number };
+type SyncRow = { id?: string; sourceId?: string; pipelineId?: string; status?: string; finishedAt?: number };
 type PreviewResult = {
   columns?: string[];
   rows?: Record<string, unknown>[];
@@ -262,6 +262,21 @@ export function formatColumnBadge(col: SchemaColumn): string {
   return parts.join(" · ");
 }
 
+export function selectedDatasetRid(
+  activeSchemaTable: { schema: string; table: string } | null,
+  activeEntry?: { datasetRid?: string },
+): string | undefined {
+  return activeSchemaTable ? undefined : activeEntry?.datasetRid;
+}
+
+export function sourceSyncStatusLabel(status?: string): string {
+  const normalized = (status || "").toUpperCase();
+  if (["SUCCEEDED", "SUCCESS", "OK"].includes(normalized)) return "成功";
+  if (["RUNNING", "IN_PROGRESS"].includes(normalized)) return "运行中";
+  if (["FAILED", "ERROR"].includes(normalized)) return "失败";
+  return status ? statusZh(status) : "未读取";
+}
+
 export function SourceDetailPage() {
   const { sourceId = "" } = useParams();
   const { data: srcData, err: srcErr, reload: reloadSources } = useJsonGet<{ items: SourceRow[] }>("/v1/sources");
@@ -288,7 +303,7 @@ export function SourceDetailPage() {
     () => (syncData?.items || []).filter((s) => s.sourceId === sourceId),
     [syncData?.items, sourceId],
   );
-  const primaryDatasetRid = datasets[0]?.rid || pipelines[0]?.datasetRid;
+  const businessSourceName = sourceBusinessName(source || { id: sourceId }, pluginData?.items);
 
   const [tab, setTab] = useState<"overview" | "explore" | "sync" | "credentials">("overview");
   const [activeTable, setActiveTable] = useState<string>("");
@@ -332,6 +347,7 @@ export function SourceDetailPage() {
   }, [pipelines]);
 
   const activeEntry = tableEntries.find((t) => t.id === activeTable) || tableEntries[0];
+  const activeDatasetRid = selectedDatasetRid(activeSchemaTable, activeEntry);
   const filteredTree = useMemo(
     () => filterSchemaTree(schemaTree, tableSearch),
     [schemaTree, tableSearch],
@@ -622,7 +638,7 @@ export function SourceDetailPage() {
   }
 
   return (
-    <PageChrome title={sourceId || "数据源"} lede={source ? sourceSubtitle(source.type) : "Source 详情 · 连接器"}>
+    <PageChrome title={businessSourceName || "数据源"} lede={source ? sourceSubtitle(source.type) : "数据源详情"}>
       <BpToolbar>
         <Link to="/data" className="btn-nav">
           ← 数据源管理
@@ -630,9 +646,7 @@ export function SourceDetailPage() {
         {source && (
           <ConnectorTagLink sourceId={sourceId} type={source.type} plugins={plugins} />
         )}
-        {primaryDatasetRid && (
-          <StoragePillLink sourceId={sourceId} type={source?.type} datasetRid={primaryDatasetRid} />
-        )}
+        {datasets.length > 0 && <Link to="/data/datasets" className="btn-nav">{datasets.length} 个数据集</Link>}
         <Link to={`/data/pipelines?sourceId=${encodeURIComponent(sourceId)}`} className="btn-nav">
           管道 →
         </Link>
@@ -675,7 +689,7 @@ export function SourceDetailPage() {
                   onChange={(e) => setTableSearch(e.target.value)}
                 />
                 <div className="bp-section-label" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span>{sourceId}</span>
+                  <span>{businessSourceName}</span>
                   <span className={`w3-c6c7-path-badge ${schemaDemo ? "is-demo" : "is-live"}`}>
                     {schemaSourceLabel(schemaSource)}
                   </span>
@@ -790,13 +804,13 @@ export function SourceDetailPage() {
                     </p>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    {primaryDatasetRid && (
+                    {activeDatasetRid && (
                       <Link
-                        to={`/data/datasets?rid=${encodeURIComponent(primaryDatasetRid)}`}
+                        to={`/data/datasets?rid=${encodeURIComponent(activeDatasetRid)}`}
                         className="btn"
                         style={{ textDecoration: "none", fontSize: "0.8rem" }}
                       >
-                        打开数据集
+                        打开当前数据集
                       </Link>
                     )}
                     <Link
@@ -804,7 +818,7 @@ export function SourceDetailPage() {
                       className="btn-primary"
                       style={{ textDecoration: "none", fontSize: "0.8rem" }}
                     >
-                      创建批量同步
+                        配置批量同步
                     </Link>
                     <button
                       type="button"
@@ -821,7 +835,7 @@ export function SourceDetailPage() {
                     <p className="error" role="alert">
                       连接器采样失败：{previewPrimaryErr}；当前来源：
                       {previewSource === "dataset"
-                        ? "Dataset"
+                        ? "业务数据集"
                         : previewSource === "object"
                           ? "对象实例"
                           : "连接器"}
@@ -896,11 +910,11 @@ export function SourceDetailPage() {
               {schemaTree.length > 0 && (
                 <div className="bp-src-detail-schema-stats" style={{ marginTop: 12, padding: 12, background: "var(--bp-surface-muted, #f5f5f5)", borderRadius: 8 }}>
                   <p className="aos-text" style={{ fontSize: "0.85rem", marginBottom: 8 }}>
-                    <strong>Schema 统计</strong>
+                    <strong>数据结构统计</strong>
                   </p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, fontSize: "0.8rem" }}>
                     <div>
-                      <span className="muted">Schema 数量</span>
+                      <span className="muted">数据分区</span>
                       <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>{schemaTree.length}</div>
                     </div>
                     <div>
@@ -948,13 +962,9 @@ export function SourceDetailPage() {
                   else groups[1].fields.push([key, prop]);
                 }
                 return (
-                  <div className="bp-src-detail-config" style={{ marginTop: 16 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                      <p className="aos-text" style={{ fontSize: "0.85rem" }}>
-                        <strong>插件配置实例</strong>
-                      </p>
-                      <span className="muted" style={{ fontSize: "0.7rem" }}>只读展示 · 不可保存</span>
-                    </div>
+                  <details className="bp-src-detail-config" style={{ marginTop: 16 }}>
+                    <summary>技术审计信息 · 连接参数（只读）</summary>
+                    <div style={{ marginTop: 10 }}>
                     {groups.filter((g) => g.fields.length > 0).map((group) => (
                       <div key={group.label} style={{ marginBottom: 12 }}>
                         <p className="muted" style={{ fontSize: "0.75rem", marginBottom: 4 }}>{group.label}</p>
@@ -989,17 +999,16 @@ export function SourceDetailPage() {
                         </div>
                       </div>
                     ))}
-                  </div>
+                    </div>
+                  </details>
                 );
               })()}
               <BpLinkRow
                 links={[
                   { to: `/data/pipelines?sourceId=${encodeURIComponent(sourceId)}`, label: "管道构建" },
                   {
-                    to: primaryDatasetRid
-                      ? `/data/datasets?rid=${encodeURIComponent(primaryDatasetRid)}`
-                      : `/data/datasets?sourceId=${encodeURIComponent(sourceId)}`,
-                    label: "数据集",
+                    to: "/data/datasets",
+                    label: `${datasets.length} 个数据集`,
                   },
                 ]}
               />
@@ -1008,11 +1017,12 @@ export function SourceDetailPage() {
 
           {tab === "sync" && (
             <div className="bp-src-detail-overview">
-              {syncs.length === 0 && <p className="muted">暂无同步 · 可到计划编辑器绑定 ingest</p>}
+              {syncs.length === 0 && <p className="muted">暂无同步记录 · 可到计划编辑器配置数据同步</p>}
               <ul className="card-list">
                 {syncs.map((s) => (
                   <li key={s.id} className="card">
-                    {s.id} · {statusZh(s.status)}
+                    {pipelineDisplayTitle(pipelines.find((pipeline) => pipeline.id === s.pipelineId) || { id: "当前业务数据" })}同步 · {sourceSyncStatusLabel(s.status)}
+                    <details><summary>技术审计信息</summary><code>{s.id || "未返回运行标识"}</code></details>
                   </li>
                 ))}
               </ul>
@@ -1023,7 +1033,7 @@ export function SourceDetailPage() {
           )}
 
           {tab === "credentials" && (
-            <BpBanner tone="info">凭证走密钥引用（vault ref）· 本页不落明文；配置见新建数据源向导。</BpBanner>
+            <BpBanner tone="info">凭证仅保存受控密钥引用，本页不显示或保存秘密正文；如需变更，请从新建数据源向导进入受控配置流程。</BpBanner>
           )}
         </>
       )}

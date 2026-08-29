@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { GraphHealthPage } from "./ontology";
+import { GraphHealthPage, graphHealthIssueLabel } from "./ontology";
 
 const apiMocks = vi.hoisted(() => ({
   apiGet: vi.fn(),
@@ -59,7 +59,7 @@ describe("Wave 3C W3 · Graph Health TTL 两阶段确认", () => {
     });
     await act(async () => root.render(<MemoryRouter><GraphHealthPage /></MemoryRouter>));
     await flush();
-    const run = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "运行 TTL 归档")!;
+    const run = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "预览归档候选")!;
     await act(async () => run.click());
     await flush();
 
@@ -79,7 +79,7 @@ describe("Wave 3C W3 · Graph Health TTL 两阶段确认", () => {
       .mockResolvedValueOnce({ dryRun: false, ttlDays: 90, candidateCount: 1, archivedCount: 1, archivedIds: ["insight-1"], candidates: [{ id: "insight-1" }] });
     await act(async () => root.render(<MemoryRouter><GraphHealthPage /></MemoryRouter>));
     await flush();
-    const run = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "运行 TTL 归档")!;
+    const run = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "预览归档候选")!;
     await act(async () => run.click());
     await flush();
     const confirm = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "确认归档 1 项")!;
@@ -103,7 +103,7 @@ describe("Wave 3C W3 · Graph Health TTL 两阶段确认", () => {
     });
     await act(async () => root.render(<MemoryRouter><GraphHealthPage /></MemoryRouter>));
     await flush();
-    const run = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "运行 TTL 归档")!;
+    const run = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "预览归档候选")!;
     await act(async () => run.click());
     await flush();
 
@@ -116,7 +116,7 @@ describe("Wave 3C W3 · Graph Health TTL 两阶段确认", () => {
     apiMocks.apiPost.mockRejectedValue(new Error("dry-run unavailable"));
     await act(async () => root.render(<MemoryRouter><GraphHealthPage /></MemoryRouter>));
     await flush();
-    const run = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "运行 TTL 归档")!;
+    const run = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "预览归档候选")!;
     await act(async () => run.click());
     await flush();
 
@@ -130,7 +130,7 @@ describe("Wave 3C W3 · Graph Health TTL 两阶段确认", () => {
       .mockResolvedValueOnce({ dryRun: false, ttlDays: 90, candidateCount: 1, archivedCount: 1, archivedIds: ["insight-2"], candidates: [{ id: "insight-2" }] });
     await act(async () => root.render(<MemoryRouter><GraphHealthPage /></MemoryRouter>));
     await flush();
-    const run = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "运行 TTL 归档")!;
+    const run = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "预览归档候选")!;
     await act(async () => run.click());
     await flush();
     const confirm = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "确认归档 1 项")!;
@@ -138,7 +138,7 @@ describe("Wave 3C W3 · Graph Health TTL 两阶段确认", () => {
     await flush();
 
     expect(host.textContent).toContain("执行回包与冻结快照不一致");
-    expect(host.textContent).not.toContain("TTL 归档完成");
+    expect(host.textContent).not.toContain("知识洞察归档完成");
     expect(host.textContent).toContain("insight-1");
     expect(host.querySelector("[data-testid='ttl-confirmation']")).not.toBeNull();
     expect(apiMocks.apiGet).toHaveBeenCalledTimes(1);
@@ -162,11 +162,17 @@ describe("Wave 3C W3 · Graph Health TTL 两阶段确认", () => {
     await act(async () => root.render(<MemoryRouter><GraphHealthPage /></MemoryRouter>));
     await flush();
 
-    expect(host.textContent).toContain("公式=GH-SCORE-v2");
+    expect(host.textContent).toContain("公式：GH-SCORE-v2");
     expect(host.textContent).toContain("兼容别名 8");
     expect(host.textContent).toContain("普通无边对象 237 不直接扣分");
     expect(host.textContent).toContain("20 / 100");
     expect(host.querySelector("select[aria-label='图谱健康问题类型']")).not.toBeNull();
     expect(host.textContent).toContain("问题图谱");
+  });
+
+  it("uses Chinese business labels for health issue codes", () => {
+    expect(graphHealthIssueLabel("GH-01")).toBe("悬空连接");
+    expect(graphHealthIssueLabel("GH-03")).toBe("必需关系缺失");
+    expect(graphHealthIssueLabel("UNKNOWN")).toBe("待确认问题");
   });
 });

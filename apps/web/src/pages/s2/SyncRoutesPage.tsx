@@ -9,6 +9,7 @@ import {
   BpToolbar,
 } from "./blueprintUi";
 import { S2Chrome, useJsonGet } from "./shared";
+import { getPipelineDisplayName, getSourceDisplayName } from "./pipelineMeta";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -86,8 +87,16 @@ export function syncTaskToRoute(t: SyncTaskApi): SyncRoute {
     status,
     nextRunAt: undefined,  // 由后端调度器计算（暂未暴露）
     progress: undefined,
-    conflicts: 0,
+    conflicts: undefined,
   };
+}
+
+export function syncRouteBusinessName(route: Pick<SyncRoute, "name" | "source" | "target">): string {
+  return `栖月汇-${getPipelineDisplayName(route.target, route.name)}同步`;
+}
+
+export function syncRouteTargetLabel(route: Pick<SyncRoute, "name" | "source" | "target">): string {
+  return `${getPipelineDisplayName(route.target, route.name)}数据集`;
 }
 
 // cron_expr + mode → 中文频率标签
@@ -162,6 +171,7 @@ export function SyncRoutesPage() {
   const [tab, setTab] = useState<"all" | "active" | "paused" | "error">("all");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
+  const [pendingToggle, setPendingToggle] = useState<string | null>(null);
 
   // D4 Phase C · C4: 展开时拉取 SyncRun 历史
   const [syncRuns, setSyncRuns] = useState<Record<string, SyncRunApi[]>>({});
@@ -204,6 +214,7 @@ export function SyncRoutesPage() {
 
   async function handleToggle(id: string, current: RouteStatus) {
     setMsg("");
+    setPendingToggle(null);
     try {
       const next = toggleRouteStatus({ status: current } as SyncRoute);
       // D4 Phase C · C4: 后端 update_sync 是 PUT 方法
@@ -220,8 +231,8 @@ export function SyncRoutesPage() {
   return (
     <S2Chrome title="同步路由" lede="管理数据同步分发路径 · 启用/暂停 + 冲突记录">
       <BpToolbar>
-        <Link to="/data/sources/new" className="btn-primary">
-          + 新建同步路由
+        <Link to="/data/schedules" className="btn-primary">
+          + 配置同步计划
         </Link>
         <Link to="/data" className="btn-nav">
           数据源管理 →
@@ -243,7 +254,6 @@ export function SyncRoutesPage() {
           { label: "运行中", value: stats.active, tone: "ok" },
           { label: "已暂停", value: stats.paused, tone: "warn" },
           { label: "异常", value: stats.error, tone: stats.error > 0 ? "bad" : "ok" },
-          { label: "冲突总数", value: stats.conflicts, tone: stats.conflicts > 0 ? "warn" : "ok" },
         ]}
       />
 
@@ -264,33 +274,37 @@ export function SyncRoutesPage() {
           const tone = routeStatusTone(r.status);
           const isExpanded = expanded === r.id;
           return [
-            <button
-              key={r.id}
-              type="button"
-              className="nav-link"
-              style={{ fontWeight: 600 }}
-              onClick={() => setExpanded(isExpanded ? null : r.id)}
-            >
-              {isExpanded ? "▼" : "▶"} {r.name}
-            </button>,
-            <span className="muted">{r.source}</span>,
-            r.target,
+            <span key={r.id} style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-start" }}>
+              <button
+                type="button"
+                className="nav-link"
+                style={{ fontWeight: 600 }}
+                onClick={() => setExpanded(isExpanded ? null : r.id)}
+              >
+                {isExpanded ? "▼" : "▶"} {syncRouteBusinessName(r)}
+              </button>
+              <details><summary>技术审计信息</summary><code>{r.id}</code> · <code>{r.name}</code></details>
+            </span>,
+            <span>{getSourceDisplayName(r.source)}<details><summary>技术审计信息</summary><code>{r.source}</code></details></span>,
+            <span>{syncRouteTargetLabel(r)}<details><summary>技术审计信息</summary><code>{r.target}</code></details></span>,
             r.frequency,
             <span className={`bp-discover-badge bp-discover-badge-${tone}`}>
               {ROUTE_STATUS_LABELS[r.status]}
             </span>,
-            formatNextRun(r.nextRunAt),
+            formatNextRun(r.nextRunAt) === "—" ? "未读取" : formatNextRun(r.nextRunAt),
             <div key="actions" style={{ display: "flex", gap: 4 }}>
-              <button
-                type="button"
-                className="btn"
-                onClick={() => void handleToggle(r.id, r.status)}
-              >
-                {r.status === "active" ? "暂停" : "启用"}
-              </button>
-              <Link to={`/data/sync-routes/${encodeURIComponent(r.id)}`} className="btn-nav">
-                详情
-              </Link>
+              {pendingToggle === r.id ? (
+                <>
+                  <button type="button" className="btn" onClick={() => void handleToggle(r.id, r.status)}>
+                    确认{r.status === "active" ? "暂停" : "启用"}
+                  </button>
+                  <button type="button" className="btn-nav" onClick={() => setPendingToggle(null)}>取消</button>
+                </>
+              ) : (
+                <button type="button" className="btn" onClick={() => setPendingToggle(r.id)}>
+                  {r.status === "active" ? "暂停" : "启用"}
+                </button>
+              )}
             </div>,
           ];
         })}
@@ -311,33 +325,30 @@ export function SyncRoutesPage() {
         return (
           <div className="card" style={{ marginTop: "0.75rem" }}>
             <h2 className="aos-text" style={{ fontSize: "0.9rem" }}>
-              {route.name} · 详情
+              {syncRouteBusinessName(route)} · 详情
             </h2>
             <div className="bp-prop-grid">
               <div>
-                <div className="bp-prop-label">ID</div>
-                <div className="bp-prop-value mono">{route.id}</div>
+                <div className="bp-prop-label">下次运行</div>
+                <div className="bp-prop-value">{formatNextRun(route.nextRunAt) === "—" ? "未读取" : formatNextRun(route.nextRunAt)}</div>
               </div>
               <div>
                 <div className="bp-prop-label">同步进度</div>
                 <div className="bp-prop-value">
-                  <div className="bp-progress" style={{ width: 200 }}>
-                    <div className="bp-progress-bar" style={{ width: `${pct}%` }} />
-                  </div>
-                  <span className="muted" style={{ marginLeft: 8 }}>{pct}%</span>
+                  {route.progress == null ? "未读取" : <><div className="bp-progress" style={{ width: 200 }}><div className="bp-progress-bar" style={{ width: `${pct}%` }} /></div><span className="muted" style={{ marginLeft: 8 }}>{pct}%</span></>}
                 </div>
               </div>
               <div>
                 <div className="bp-prop-label">冲突记录</div>
                 <div className={`bp-prop-value ${route.conflicts ? "bp-prop-warn" : "bp-prop-ok"}`}>
-                  {route.conflicts || 0} 条
+                  {route.conflicts == null ? "未读取" : `${route.conflicts} 条`}
                 </div>
               </div>
             </div>
 
             {/* D4 Phase C · C4: SyncRun 运行历史（真实 API 拉取） */}
             <div style={{ marginTop: "0.75rem" }}>
-              <div className="bp-prop-label">运行历史 · 最近 SyncRun</div>
+              <div className="bp-prop-label">最近运行历史</div>
               {runsLoading ? (
                 <p className="muted" style={{ fontSize: "0.8rem" }}>加载中…</p>
               ) : runsErr ? (
@@ -346,11 +357,11 @@ export function SyncRoutesPage() {
                 <p className="muted" style={{ fontSize: "0.8rem" }}>暂无运行记录</p>
               ) : (
                 <BpTable
-                  columns={["运行ID", "状态", "开始时间", "耗时", "行数", "错误"]}
-                  rows={runs.slice(0, 10).map((r) => {
+                  columns={["运行记录", "状态", "开始时间", "耗时", "行数", "错误"]}
+                  rows={runs.slice(0, 10).map((r, index) => {
                     const tone = runStatusTone(r.status);
                     return [
-                      <span key="id" className="mono" style={{ fontSize: "0.8rem" }}>{r.id}</span>,
+                      <span key="id">第 {index + 1} 次<details><summary>技术审计信息</summary><code>{r.id}</code></details></span>,
                       <span key="status" className={`bp-discover-badge bp-discover-badge-${tone}`}>
                         {formatRunStatus(r.status)}
                       </span>,
@@ -364,7 +375,7 @@ export function SyncRoutesPage() {
                         {r.rows_synced || 0}
                       </span>,
                       <span key="err" className="muted" style={{ fontSize: "0.75rem", color: r.error ? "#cf222e" : "#6e7781" }}>
-                        {r.error ? r.error.slice(0, 60) : "—"}
+                        {r.error ? <>运行失败<details><summary>技术审计信息</summary>{r.error.slice(0, 120)}</details></> : "无"}
                       </span>,
                     ];
                   })}
@@ -379,8 +390,10 @@ export function SyncRoutesPage() {
                   查看冲突详情 →
                 </Link>
               </BpBanner>
-            ) : (
+            ) : route.conflicts === 0 ? (
               <p className="aos-text" style={{ fontSize: "0.8rem" }}>无冲突</p>
+            ) : (
+              <p className="muted" style={{ fontSize: "0.8rem" }}>接口未返回冲突统计</p>
             )}
           </div>
         );

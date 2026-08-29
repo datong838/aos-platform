@@ -5,7 +5,6 @@ import {
   filterVariablesByScope,
   formatInitialValue,
   mapApiVariable,
-  MOCK_VARIABLES,
   normalizeScope,
   normalizeVarType,
   parseInitialValueInput,
@@ -77,6 +76,12 @@ describe("VariablesPage · initialValue 编解码", () => {
 });
 
 describe("VariablesPage · mapApiVariable / filter / stats", () => {
+  const variables = [
+    mapApiVariable({ id: "v-page", name: "query", varType: "string", group: "page", initialValue: "" }),
+    mapApiVariable({ id: "v-app", name: "selection", varType: "object", group: "app", initialValue: null }),
+    mapApiVariable({ id: "v-global", name: "tenant", varType: "string", group: "global", initialValue: "current" }),
+  ];
+
   it("mapApiVariable 映射字段", () => {
     const v = mapApiVariable({
       id: "v1",
@@ -85,25 +90,34 @@ describe("VariablesPage · mapApiVariable / filter / stats", () => {
       group: "page",
       initialValue: "all",
       description: "状态",
+      bindings: ["状态筛选器"],
     });
     expect(v.id).toBe("v1");
     expect(v.name).toBe("selectedStatus");
     expect(v.type).toBe("String");
     expect(v.scope).toBe("page");
     expect(v.initialValue).toBe("all");
-    expect(v.bindings).toEqual(["状态"]);
+    expect(v.bindings).toEqual(["状态筛选器"]);
+    expect(v.description).toBe("状态");
   });
 
-  it("MOCK 覆盖三作用域", () => {
-    const stats = countVariablesByScope(MOCK_VARIABLES);
-    expect(stats.total).toBe(MOCK_VARIABLES.length);
+  it("缺失服务端标识时不生成随机可写 ID", () => {
+    const v = mapApiVariable({ name: "选中状态", description: "当前选择" });
+    expect(v.id).toBe("");
+    expect(v.bindings).toEqual([]);
+    expect(v.readOnlyReason).toBe("标识缺失（只读）");
+  });
+
+  it("统计函数覆盖三作用域", () => {
+    const stats = countVariablesByScope(variables);
+    expect(stats.total).toBe(variables.length);
     expect(stats.page).toBeGreaterThan(0);
     expect(stats.app).toBeGreaterThan(0);
     expect(stats.global).toBeGreaterThan(0);
   });
 
   it("filterVariablesByScope", () => {
-    expect(filterVariablesByScope(MOCK_VARIABLES, "all")).toHaveLength(MOCK_VARIABLES.length);
-    expect(filterVariablesByScope(MOCK_VARIABLES, "global").every((v) => v.scope === "global")).toBe(true);
+    expect(filterVariablesByScope(variables, "all")).toHaveLength(variables.length);
+    expect(filterVariablesByScope(variables, "global").every((v) => v.scope === "global")).toBe(true);
   });
 });

@@ -33,7 +33,7 @@ type ObjectTypeRow = {
 type TypeStats = {
   id: string;
   name: string;
-  instanceCount: number;
+  instanceCount: number | null;
   funnelStage?: string;
   published?: boolean;
 };
@@ -80,7 +80,7 @@ export function OntologyPage() {
   const [propName, setPropName] = useState("code");
   const [publish, setPublish] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [createOpen, setCreateOpen] = useState(true);
+  const [createOpen, setCreateOpen] = useState(false);
   const [recent, setRecent] = useState<RecentEntry[]>(() => loadRecent());
   const [favoriteIds, setFavoriteIds] = useState<string[] | null>(() => loadFavorites());
   const [linkTypes, setLinkTypes] = useState<{ id: string; name: string; rel?: string; srcType?: string; dstType?: string }[]>([]);
@@ -105,13 +105,13 @@ export function OntologyPage() {
   const loadStats = useCallback(async (items: ObjectTypeRow[]) => {
     const stats: TypeStats[] = [];
     for (const t of items) {
-      let instanceCount = 0;
+      let instanceCount: number | null = null;
       let funnelStage: string | undefined;
       try {
         const list = await getOntologyClient().listObjects(t.id);
         instanceCount = list.items?.length ?? 0;
       } catch {
-        instanceCount = 0;
+        instanceCount = null;
       }
       try {
         const f = await apiGet<{ stage?: string }>(`/v1/funnel/${encodeURIComponent(t.id)}/status`);
@@ -197,7 +197,7 @@ export function OntologyPage() {
         display_name: result.displayName, ontology_revision: result.ontologyRevision,
         base_schema_sha256: result.baseSchemaSha256,
       });
-      setMsg(mode === "inherit" ? "已创建 inherit 修订，恢复当前安装模板显示名" : "组织 Overlay 已保存；未修改平台模板");
+      setMsg(mode === "inherit" ? "已创建继承修订，恢复当前安装模板显示名" : "组织定制已保存；未修改平台模板");
       await reloadTypes();
     } catch (error) {
       setErr(String((error as Error).message || error));
@@ -266,11 +266,7 @@ export function OntologyPage() {
       }
       return rows.slice(0, 6);
     }
-    if (typeStats.length > 0) return typeStats.slice(0, 3);
-    return types.slice(0, 3).map((type) => ({
-      id: type.id, name: type.name, instanceCount: 0, published: type.published,
-      funnelStage: undefined,
-    }));
+    return [];
   }, [favoriteIds, typeStats, types]);
 
   const branchReadonly = useMemo(() => {
@@ -325,7 +321,7 @@ export function OntologyPage() {
     const id = newId.trim();
     const name = newName.trim() || id;
     if (!id) {
-      setErr("请填写 Object Type id");
+      setErr("请填写对象类型标识");
       return;
     }
     setBusy(true);
@@ -342,7 +338,7 @@ export function OntologyPage() {
       });
       setMsg(
         `已创建 ${res.id}` +
-          (res.lint && res.lint.ok === false ? " · lint 有告警" : publish ? " · 已发布" : " · 草稿"),
+          (res.lint && res.lint.ok === false ? " · 规则检查有告警" : publish ? " · 已发布" : " · 草稿"),
       );
       setNewId("");
       setNewName("");
@@ -359,9 +355,11 @@ export function OntologyPage() {
 
   function funnelBadge(stage?: string): { label: string; tone: "ok" | "warn" | "bad" } | undefined {
     if (!stage) return { label: "未配置", tone: "warn" };
-    if (/index|live|done/i.test(stage)) return { label: stage, tone: "ok" };
-    if (/error|fail/i.test(stage)) return { label: stage, tone: "bad" };
-    return { label: stage, tone: "warn" };
+    if (/error|fail/i.test(stage)) return { label: "异常", tone: "bad" };
+    if (/index/i.test(stage)) return { label: "索引中", tone: "ok" };
+    if (/live/i.test(stage)) return { label: "已生效", tone: "ok" };
+    if (/done/i.test(stage)) return { label: "已完成", tone: "ok" };
+    return { label: "状态待确认", tone: "warn" };
   }
 
 
@@ -369,7 +367,7 @@ export function OntologyPage() {
   const selectedStats = typeStats.find((s) => s.id === selected);
 
   return (
-    <PageChrome title="本体管理（数字孪生）" lede="发现 · 收藏 / 最近 / 重要 Object。">
+    <PageChrome title="本体管理（数字孪生）" lede="发现、收藏和查看当前工作区的业务对象类型。">
       <div className="ont-page">
       {/* 91 v1.6 · 本页控件边框统一加深 */}
       <h2 className="ont-discover-title ont-discover-title-top">
@@ -383,14 +381,14 @@ export function OntologyPage() {
         <input
           type="search"
           className="aos-input ont-search-input"
-          placeholder="搜索 Object / Link / Action…"
+          placeholder="搜索对象类型、关系类型或业务动作…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <button
           type="button"
           className="btn ont-toolbar-refresh"
-          title="重新拉取 Object Type、分支与图谱健康"
+          title="重新读取对象类型、分支与图谱健康状态"
           onClick={() => void reloadTypes().catch((e) => setErr(String((e as Error).message || e)))}
         >
           ↻ 刷新列表
@@ -402,7 +400,7 @@ export function OntologyPage() {
           <span className="mp-field-label">分支</span>
           <select
             className="aos-input"
-            aria-label="branch"
+            aria-label="选择分支"
             value={branchId}
             onChange={(e) => void onBranchChange(e.target.value)}
           >
@@ -420,31 +418,31 @@ export function OntologyPage() {
           </Link>
         )}
         <Link to="/ontology/okf-funnel" className="btn-nav">
-          OKF 映射
+          行业映射
         </Link>
         <Link
           to="/ontology/branches"
           className="btn-nav"
-          onClick={() => recordRecentLink("branches", "分支与 Overlay", "/ontology/branches")}
+          onClick={() => recordRecentLink("branches", "分支与组织定制", "/ontology/branches")}
         >
-          分支与 Overlay
+          分支与组织定制
         </Link>
         <Link
           to="/workshop/graph"
           className="btn-nav"
-          title="先选择真实 Object，再进入 Funnel"
+          title="先选择真实对象，再进入业务漏斗"
         >
-          从对象进入 Funnel
+          从对象进入业务漏斗
         </Link>
         <Link
           to="/workshop/graph"
           className="btn-nav"
-          title="先选择真实 Object，再进入 Wiki"
+          title="先选择真实对象，再进入知识库"
         >
-          从对象进入 Wiki
+          从对象进入知识库
         </Link>
         <Link to="/ontology/link-types/new" className="btn-nav">
-          新建 Link Type
+          新建关系类型
         </Link>
         <Link to="/ontology/graph-health" className="btn-nav">
           图谱健康度
@@ -458,9 +456,9 @@ export function OntologyPage() {
         {/* ① 收藏 */}
         <section className="ont-layer">
           <h3 className="ont-section-title">⭐ 收藏</h3>
-          {!favoriteIds && (
+          {favorites.length === 0 && (
             <p className="muted" style={{ margin: "0 0 0.5rem", fontSize: "0.8rem" }}>
-              尚未配置收藏 · 下方为预览；在「重要」表点 ⭐ 收藏后会持久化到本机
+              尚未收藏对象类型；可在下方列表点击星标加入收藏
             </p>
           )}
           <div className="bp-discover-grid">
@@ -481,8 +479,8 @@ export function OntologyPage() {
                   accent="muted"
                   title={t.name}
                   badge={funnelBadge(t.funnelStage)}
-                  meta={`${t.instanceCount} 实例 · ${t.id}${t.published ? " · 已发布" : ""}`}
-                  cta="打开 Overview →"
+                  meta={`${t.instanceCount === null ? "实例数未读取" : `${t.instanceCount} 个实例`}${t.published ? " · 已发布" : ""}`}
+                  cta="打开详情 →"
                   onClick={() => openDeep(t.id)}
                 />
               </div>
@@ -490,7 +488,7 @@ export function OntologyPage() {
             {favorites.length === 0 && (
               <div className="ont-block ont-block-empty">
                 <p className="muted" style={{ margin: 0 }}>
-                  暂无 Object Type
+                  暂无收藏
                 </p>
               </div>
             )}
@@ -503,7 +501,7 @@ export function OntologyPage() {
           <ul className="bp-recent-list ont-block">
             {recent.length === 0 && (
               <li>
-                <span className="muted">打开 Object Type 或漏斗/Wiki 后会出现在这里</span>
+                <span className="muted">打开对象类型、业务漏斗或知识页后会出现在这里</span>
               </li>
             )}
             {recent.map((r) => (
@@ -532,15 +530,15 @@ export function OntologyPage() {
           <h3 className="ont-section-title">📌 重要 / 最近修改</h3>
           <div className="ont-block ont-block-table">
             <BpTable
-              columns={["Object Type", "实例", "Funnel", "发布", ""]}
+              columns={["对象类型", "实例", "业务漏斗", "发布状态", ""]}
               rows={filteredTypes.map((t) => {
                 const st = typeStats.find((s) => s.id === t.id);
                 return [
                   t.name,
-                  String(st?.instanceCount ?? "—"),
+                  st?.instanceCount === null || st?.instanceCount === undefined ? "未读取" : String(st.instanceCount),
                   st?.funnelStage ? (
                     <span className={/error/i.test(st.funnelStage) ? "bp-prop-warn" : "bp-prop-ok"}>
-                      {st.funnelStage}
+                      {funnelBadge(st.funnelStage)?.label}
                     </span>
                   ) : (
                     "—"
@@ -575,14 +573,14 @@ export function OntologyPage() {
               {filteredLinks.length > 0 && (
                 <>
                   <h4 className="muted" style={{ margin: "0 0 0.35rem", fontSize: "0.8rem" }}>
-                    Link Type 命中
+                    关系类型命中
                   </h4>
                   <BpTable
-                    columns={["id", "name", "rel", ""]}
+                    columns={["关系名称", "来源对象", "目标对象", ""]}
                     rows={filteredLinks.slice(0, 8).map((l) => [
-                      l.id,
                       l.name,
-                      l.rel || "—",
+                      types.find((type) => type.id === l.srcType)?.name || "未读取",
+                      types.find((type) => type.id === l.dstType)?.name || "未读取",
                       <Link
                         key={l.id}
                         to={`/ontology/link-types/${encodeURIComponent(l.id)}`}
@@ -597,14 +595,13 @@ export function OntologyPage() {
               {filteredActions.length > 0 && (
                 <>
                   <h4 className="muted" style={{ margin: "0.65rem 0 0.35rem", fontSize: "0.8rem" }}>
-                    Action Type 命中
+                    业务动作命中
                   </h4>
                   <BpTable
-                    columns={["id", "name", "objectType", ""]}
+                    columns={["业务动作", "所属对象类型", ""]}
                     rows={filteredActions.slice(0, 8).map((a) => [
-                      a.id,
                       a.name,
-                      a.objectType || "—",
+                      types.find((type) => type.id === a.objectType)?.name || "未读取",
                       <Link
                         key={a.id}
                         to={`/ontology/action-types/${encodeURIComponent(a.id)}`}
@@ -625,49 +622,20 @@ export function OntologyPage() {
           <p className="ont-hydrate-copy">
             <span className="ont-hydrate-label">标准水合</span>
             <span className="ont-hydrate-sep">·</span>
-            <span>OKF 映射 → Overview 确认 → Funnel 四阶段 → Workshop</span>
+            <span>行业映射 → 对象确认 → 业务漏斗四阶段 → 工作台</span>
           </p>
           <div className="ont-hydrate-actions">
             <Link to="/ontology/okf-funnel" className="btn-nav">
-              ① OKF
+              ① 行业映射
             </Link>
-            <Link to="/workshop/graph" className="btn-nav" title="选择 Object Type 后进入 Funnel">
-              ② Funnel
+            <Link to="/workshop/graph" className="btn-nav" title="选择对象类型后进入业务漏斗">
+              ② 业务漏斗
             </Link>
             <Link to="/workshop/inbox" className="btn-nav">
-              ③ Workshop
+              ③ 工作台
             </Link>
           </div>
         </div>
-
-        {/* ⑤ 收藏的群组 */}
-        <section className="ont-layer">
-          <h3 className="ont-section-title">🗂️ 收藏的群组</h3>
-          <div className="bp-discover-grid">
-            <div className="bp-discover-card ont-block" style={{ padding: "16px 18px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>交易域</span>
-                <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>
-                  {types.filter((type) => /Order|Payment|Shipment|Product|Sku/.test(type.id)).length} Object
-                </span>
-              </div>
-              <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
-                {types.filter((type) => /Order|Payment|Shipment|Product|Sku/.test(type.id)).map((type) => type.name).slice(0, 5).join(" · ") || "当前安装未贡献交易域类型"}
-              </p>
-            </div>
-            <div className="bp-discover-card ont-block" style={{ padding: "16px 18px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>客户域</span>
-                <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>
-                  {types.filter((type) => /Customer|Member|Review|Category/.test(type.id)).length} Object
-                </span>
-              </div>
-              <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
-                {types.filter((type) => /Customer|Member|Review|Category/.test(type.id)).map((type) => type.name).slice(0, 5).join(" · ") || "当前安装未贡献客户域类型"}
-              </p>
-            </div>
-          </div>
-        </section>
 
         {/* ⑥ 本体治理入口 */}
         <section className="ont-layer">
@@ -675,17 +643,17 @@ export function OntologyPage() {
           <div className="bp-discover-grid">
             <Link to="/ontology/branches" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>分支与 Overlay</span>
-                <span className="bp-badge bp-badge-blue" style={{ fontSize: 12 }}>Overlay</span>
+                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>分支与组织定制</span>
+                <span className="bp-badge bp-badge-blue" style={{ fontSize: 12 }}>组织定制</span>
               </div>
               <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
-                查看 Installation 绑定的组织定制、不可变修订和当前生效版本。
+                查看当前安装版本绑定的组织定制、不可变修订和生效版本。
               </p>
             </Link>
             <Link to="/ontology/graph-health" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                 <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>图谱健康度</span>
-                <span className="bp-badge bp-badge-green" style={{ fontSize: 12 }}>Health</span>
+                <span className="bp-badge bp-badge-green" style={{ fontSize: 12 }}>健康</span>
               </div>
               <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
                 监控本体图谱的一致性、连通性与告警。
@@ -693,8 +661,8 @@ export function OntologyPage() {
             </Link>
             <Link to="/workshop/graph" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>活知识 Wiki</span>
-                <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>Wiki</span>
+                <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>活知识库</span>
+                <span className="bp-badge bp-badge-gray" style={{ fontSize: 12 }}>知识</span>
               </div>
               <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
                 从真实对象进入，沉淀业务定义、示例与协作笔记。
@@ -703,7 +671,7 @@ export function OntologyPage() {
             <Link to="/workshop/graph" className="bp-discover-card ont-block" style={{ padding: "16px 18px", textDecoration: "none" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                 <span style={{ fontWeight: 600, fontSize: "14px", color: "var(--aos-text)" }}>对象探索</span>
-                <span className="bp-badge bp-badge-amber" style={{ fontSize: 12 }}>Explore</span>
+                <span className="bp-badge bp-badge-amber" style={{ fontSize: 12 }}>探索</span>
               </div>
               <p style={{ margin: 0, fontSize: "12px", color: "var(--aos-muted)", lineHeight: 1.5 }}>
                 以对象为中心浏览实例、关系与时间线。
@@ -761,10 +729,10 @@ export function OntologyPage() {
         <section className="ont-layer ont-block">
           <div className="mp-section-head">
             <div>
-              <h2 className="bp-ws-section-title" style={{ margin: 0 }}>组织定制 Overlay</h2>
+              <h2 className="bp-ws-section-title" style={{ margin: 0 }}>组织定制</h2>
               <p className="muted" style={{ margin: "0.35rem 0" }}>
-                当前组织/工作区专属 · Installation rev {composition.installation_revision} ·
-                Ontology rev {activeOverlay?.ontology_revision || 0} · 不反写平台模板
+                当前组织与工作区专属 · 安装版本 {composition.installation_revision} ·
+                定制修订 {activeOverlay?.ontology_revision || 0} · 不反写平台模板
               </p>
             </div>
           </div>
@@ -809,7 +777,7 @@ export function OntologyPage() {
             <span className="ont-create-icon" aria-hidden>
               ＋
             </span>
-            {createOpen ? "收起 · 新建 Object Type" : "新建 Object Type"}
+            {createOpen ? "收起 · 新建对象类型" : "新建对象类型"}
           </h2>
           <span className="mp-section-hint">{createOpen ? "▲" : "▼"}</span>
         </button>
@@ -817,7 +785,7 @@ export function OntologyPage() {
           <div className="ont-create-panel ont-block">
             <div className="ont-form-grid">
               <label className="ont-form-field">
-                <span>id</span>
+                <span>类型标识（技术字段）</span>
                 <input
                   className="aos-input"
                   value={newId}
@@ -826,15 +794,15 @@ export function OntologyPage() {
                 />
               </label>
               <label className="ont-form-field">
-                <span>name</span>
+                <span>显示名称</span>
                 <input className="aos-input" value={newName} onChange={(e) => setNewName(e.target.value)} />
               </label>
               <label className="ont-form-field ont-form-span">
-                <span>description</span>
+                <span>业务说明</span>
                 <input className="aos-input" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
               </label>
               <label className="ont-form-field">
-                <span>property</span>
+                <span>首个属性标识（技术字段）</span>
                 <input
                   className="aos-input"
                   value={propName}
@@ -854,7 +822,7 @@ export function OntologyPage() {
               disabled={busy}
               onClick={() => void createType()}
             >
-              {busy ? "创建中…" : "创建 Object Type"}
+              {busy ? "创建中…" : "创建对象类型"}
             </button>
           </div>
         )}

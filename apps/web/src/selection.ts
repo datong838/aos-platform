@@ -7,10 +7,18 @@ export function canAddFilter(
   current: SelectionFilter[],
   next: SelectionFilter,
 ): { ok: true } | { ok: false; reason: string } {
+  if (!next.field.trim()) {
+    return { ok: false, reason: "请填写筛选字段" };
+  }
+  if (!next.value.trim()) {
+    return { ok: false, reason: "请填写筛选值" };
+  }
   if (current.length >= SELECTION_LIMIT) {
     return { ok: false, reason: `Selection 维数上限 ${SELECTION_LIMIT}` };
   }
-  if (current.some((f) => f.field === next.field && f.value === next.value)) {
+  const field = next.field.trim();
+  const value = next.value.trim();
+  if (current.some((f) => f.field === field && f.value === value)) {
     return { ok: false, reason: "重复筛选维" };
   }
   return { ok: true };
@@ -24,5 +32,5 @@ export function addFilter(
   if (!gate.ok) {
     throw new Error(gate.reason);
   }
-  return [...current, next];
+  return [...current, { field: next.field.trim(), value: next.value.trim() }];
 }

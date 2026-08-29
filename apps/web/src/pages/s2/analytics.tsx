@@ -375,7 +375,7 @@ export function AnalyticsPage() {
   return (
     <S2Chrome
       title="分析建模"
-      lede="读 Ontology / Dataset · 提交 Draft 写回 · Marking 治理 · 探索分析"
+      lede="读取业务对象与数据集 · 提交草稿写回 · 数据标记治理 · 探索分析"
     >
       <BpToolbar>
         <button type="button" className="btn" onClick={() => { health.reload(); rail.reload(); }}>
@@ -391,7 +391,7 @@ export function AnalyticsPage() {
           查谱系
         </button>
         <button type="button" className="btn" onClick={() => void tryProposeDraft()}>
-          提交为 Draft
+          提交为草稿
         </button>
         <button type="button" className="btn-nav" onClick={() => void tryContour()}>
           分组探索
@@ -409,7 +409,7 @@ export function AnalyticsPage() {
           SQL 预览
         </button>
         <Link to="/aip/drafts" className="btn-nav-accent">
-          Draft 审批台 →
+          草稿审批台 →
         </Link>
         <Link to="/aip/lineage" className="btn-nav">
           决策谱系 →
@@ -420,8 +420,8 @@ export function AnalyticsPage() {
       </BpToolbar>
 
       <BpBanner tone="info">
-        写回须经 Draft 审批台批准后落库；本页不可自批。含 Marking 脱敏字段时导出将被拒绝。
-        分组 / 时序 / 实验为探索子集（[159] 加深），不等于完整 BI / ML 平台，亦不捆绑 Superset/Metabase/Grafana。
+        写回须经草稿审批台批准后落库，本页不可自批；包含受保护字段时导出会被拒绝。
+        分组、时序和实验登记仅用于当前探索分析，不代表完整的数据科学平台。
       </BpBanner>
 
       {health.err && <p className="error">{health.err}</p>}
@@ -887,14 +887,11 @@ export function AnalyticsPage() {
           </>
           )}
 
-          <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 20 }}>
-            /v1/analytics/health
-          </h2>
+          <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: 20 }}>分析服务状态</h2>
           <p className="muted" style={{ fontSize: "0.75rem" }}>
-            status=<strong>{h?.status || "—"}</strong> · sidecar=<strong>{h?.sidecar || "—"}</strong> ·
-            mode=<strong>{h?.mode || "—"}</strong>
+            {h?.status === "ready" ? "服务可用" : "服务待恢复或待核验"}
           </p>
-          {h && <JsonBlock value={h} />}
+          {h && <details><summary>查看技术审计信息</summary><JsonBlock value={h} /></details>}
 
           {lastCreated?.uiUrl && (
             <>
@@ -913,7 +910,7 @@ export function AnalyticsPage() {
             会话列表
           </h2>
           <p className="muted" style={{ fontSize: "0.75rem" }}>
-            items={items.length}
+            当前会话 {items.length} 个
           </p>
           {items.length > 0 && <JsonBlock value={items} />}
         </main>
@@ -921,10 +918,10 @@ export function AnalyticsPage() {
 
       <BpLinkRow
         links={[
-          { to: "/aip/drafts", label: "Draft 审批台（写回正道）" },
+          { to: "/aip/drafts", label: "草稿审批台（受控写回）" },
           { to: "/aip/lineage", label: "决策谱系" },
-          { to: "/data/datasets", label: "Dataset" },
-          { to: "/ontology", label: "Ontology" },
+          { to: "/data/datasets", label: "数据集" },
+          { to: "/ontology", label: "业务本体" },
         ]}
       />
     </S2Chrome>

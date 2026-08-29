@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
@@ -47,6 +49,24 @@ describe("Wave 3B W1 · 页面交互真实性", () => {
     expect(host.textContent).toContain("当前为空态或上次成功快照，仅供只读");
     const save = Array.from(host.querySelectorAll("button")).find((b) => b.textContent?.includes("保存接口"));
     expect(save?.disabled).toBe(true);
+    expect(apiMocks.apiPut).not.toHaveBeenCalled();
+  });
+
+  it("Module Interface 无真实应用时禁用编辑且不补造规划事实", async () => {
+    apiMocks.apiGet.mockResolvedValue({ items: [] });
+    await act(async () => root.render(createElement(MemoryRouter, null, createElement(ModuleInterfacePage))));
+    await flush();
+
+    const inputs = Array.from(host.querySelectorAll<HTMLInputElement>("input"));
+    expect(inputs.every((input) => input.disabled)).toBe(true);
+    const addButtons = Array.from(host.querySelectorAll<HTMLButtonElement>("button"))
+      .filter((button) => button.textContent?.includes("入参") || button.textContent?.includes("出参"));
+    expect(addButtons.every((button) => button.disabled)).toBe(true);
+    expect(host.textContent).toContain("请先新建或选择真实应用");
+    expect(host.textContent).not.toContain("维修 Inbox");
+    expect(host.textContent).not.toContain("风险告警管理");
+    expect(host.textContent).not.toContain("工单列表行");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
     expect(apiMocks.apiPut).not.toHaveBeenCalled();
   });
 

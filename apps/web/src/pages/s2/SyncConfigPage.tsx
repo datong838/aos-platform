@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiPost } from "../../api/client";
+import { apiPatch } from "../../api/client";
 import {
   BpBanner,
   BpMetricGrid,
@@ -60,9 +60,9 @@ export const DEFAULT_CONFIG: SyncConfigForm = {
   customCron: "0 2 * * *",
   incrementalStrategy: "incremental",
   conflictResolution: "skip",
-  notifyOnError: true,
+  notifyOnError: false,
   notifyOnComplete: false,
-  notifyEmail: "ops@example.com",
+  notifyEmail: "",
   parallelism: 4,
   batchSize: 1000,
   timeoutSec: 300,
@@ -142,10 +142,28 @@ export function formatDuration(ms: number): string {
   return `${min} 分 ${sec % 60} 秒`;
 }
 
+type ScheduleItem = {
+  id: string;
+  name?: string;
+  cron?: string;
+  enabled?: boolean;
+  ingest?: { syncConfig?: Partial<SyncConfigForm>; [key: string]: unknown } | null;
+};
+
+export function formFromSchedule(schedule: ScheduleItem): SyncConfigForm {
+  return {
+    ...DEFAULT_CONFIG,
+    ...(schedule.ingest?.syncConfig || {}),
+    frequency: "custom",
+    customCron: schedule.cron || DEFAULT_CONFIG.customCron,
+  };
+}
+
 // ── Page Component ─────────────────────────────────────────────
 
 export function SyncConfigPage() {
-  const schedules = useJsonGet<{ items: { id: string; name?: string; cron?: string; active?: boolean }[] }>("/v1/schedules");
+  const schedules = useJsonGet<{ items: ScheduleItem[] }>("/v1/schedules");
+  const [selectedScheduleId, setSelectedScheduleId] = useState("");
   const [form, setForm] = useState<SyncConfigForm>(DEFAULT_CONFIG);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [errors, setErrors] = useState<ConfigErrors>({});
@@ -153,11 +171,33 @@ export function SyncConfigPage() {
   const [busy, setBusy] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
 
+  const selectedSchedule = schedules.data?.items?.find((item) => item.id === selectedScheduleId);
+
+  useEffect(() => {
+    const first = schedules.data?.items?.[0];
+    if (!first || selectedScheduleId) return;
+    setSelectedScheduleId(first.id);
+    setForm(formFromSchedule(first));
+  }, [schedules.data?.items, selectedScheduleId]);
+
+  function selectSchedule(id: string) {
+    const schedule = schedules.data?.items?.find((item) => item.id === id);
+    setSelectedScheduleId(id);
+    if (schedule) setForm(formFromSchedule(schedule));
+    setErrors({});
+    setMsg("");
+    setTestResult(null);
+  }
+
   function updateField<K extends keyof SyncConfigForm>(key: K, value: SyncConfigForm[K]) {
     setForm({ ...form, [key]: value });
   }
 
   async function handleSave() {
+    if (!selectedSchedule) {
+      setMsg("当前没有可维护的同步计划");
+      return;
+    }
     const errs = validateConfig(form);
     setErrors(errs);
     if (hasErrors(errs)) {
@@ -167,8 +207,15 @@ export function SyncConfigPage() {
     setBusy(true);
     setMsg("");
     try {
-      await apiPost("/v1/sync-config", configToApiPayload(form));
-      setMsg("配置已保存");
+      await apiPatch(`/v1/schedules/${encodeURIComponent(selectedSchedule.id)}`, {
+        cron: form.customCron,
+        ingest: {
+          ...(selectedSchedule.ingest || {}),
+          syncConfig: form,
+        },
+      });
+      setMsg(`已保存「${selectedSchedule.name || selectedSchedule.id}」的同步配置`);
+      schedules.reload();
     } catch (e) {
       setMsg(String((e as Error).message || e));
     } finally {
@@ -176,26 +223,18 @@ export function SyncConfigPage() {
     }
   }
 
-  async function handleTestConnection() {
+  function handleValidateConfig() {
     setMsg("");
     setTestResult(null);
-    setBusy(true);
-    try {
-      const r = await apiPost<{ ok?: boolean; latencyMs?: number; error?: string }>("/v1/sync-config/test", configToApiPayload(form));
-      if (r.ok) {
-        setTestResult(`连接成功 · 延迟 ${r.latencyMs ?? "?"} ms`);
-      } else {
-        setTestResult(`连接失败 · ${r.error || "未知错误"}`);
-      }
-    } catch (e) {
-      setTestResult(`连接失败 · ${String((e as Error).message || e)}`);
-    } finally {
-      setBusy(false);
-    }
+    const nextErrors = validateConfig(form);
+    setErrors(nextErrors);
+    setTestResult(hasErrors(nextErrors)
+      ? "配置校验未通过 · 请修正标记字段"
+      : "配置校验通过 · 未发起外部连接");
   }
 
   function handleReset() {
-    setForm(DEFAULT_CONFIG);
+    setForm(selectedSchedule ? formFromSchedule(selectedSchedule) : DEFAULT_CONFIG);
     setErrors({});
     setMsg("已重置为默认值");
     setTestResult(null);
@@ -217,6 +256,23 @@ export function SyncConfigPage() {
 
       {schedules.err && <p className="error">{schedules.err}</p>}
       {msg && <p className="aos-text">{msg}</p>}
+
+      <label className="muted" style={{ display: "block", fontSize: "0.75rem", margin: "0.75rem 0" }}>
+        当前同步计划
+        <select
+          value={selectedScheduleId}
+          onChange={(event) => selectSchedule(event.target.value)}
+          disabled={!schedules.data?.items?.length}
+          style={{ display: "block", width: "100%", marginTop: 4 }}
+        >
+          {!schedules.data?.items?.length && <option value="">暂无正式同步计划</option>}
+          {(schedules.data?.items || []).map((schedule) => (
+            <option key={schedule.id} value={schedule.id}>
+              {schedule.name || schedule.id} · {schedule.cron || "未配置 Cron"}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <BpMetricGrid
         items={[
@@ -309,7 +365,7 @@ export function SyncConfigPage() {
             type="email"
             value={form.notifyEmail}
             onChange={(e) => updateField("notifyEmail", e.target.value)}
-            placeholder="ops@example.com"
+            placeholder="填写正式通知邮箱"
             style={{ display: "block", width: "100%", marginTop: 4 }}
           />
           {errors.notifyEmail && <span className="error" style={{ fontSize: "0.7rem" }}>{errors.notifyEmail}</span>}
@@ -388,11 +444,11 @@ export function SyncConfigPage() {
 
       {/* Action buttons */}
       <div style={{ display: "flex", gap: 8, marginTop: "1rem", flexWrap: "wrap" }}>
-        <button type="button" className="btn-primary" disabled={busy} onClick={() => void handleSave()}>
+        <button type="button" className="btn-primary" disabled={busy || !selectedSchedule} onClick={() => void handleSave()}>
           {busy ? "保存中…" : "保存配置"}
         </button>
-        <button type="button" className="btn" disabled={busy} onClick={() => void handleTestConnection()}>
-          测试连接
+        <button type="button" className="btn" disabled={!selectedSchedule} onClick={() => handleValidateConfig()}>
+          校验配置
         </button>
         <button type="button" className="btn" onClick={() => handleReset()}>
           重置
@@ -400,7 +456,7 @@ export function SyncConfigPage() {
       </div>
 
       {testResult && (
-        <p className={testResult.startsWith("连接成功") ? "aos-text" : "error"} style={{ marginTop: 8 }}>
+        <p className={testResult.startsWith("配置校验通过") ? "aos-text" : "error"} style={{ marginTop: 8 }}>
           {testResult}
         </p>
       )}

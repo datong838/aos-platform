@@ -2,7 +2,7 @@
   "id": "jdbc-sqlserver",
   "name": "JDBC SQL Server",
   "nameZh": "SQL Server JDBC",
-  "description": "可选探针 + ingest（MOCK 或 HOST）",
+  "description": "SQL Server 结构化入库 · 安装后需配置正式主机参数",
   "kind": "source",
   "version": "0.2.0",
   "author": "aos",

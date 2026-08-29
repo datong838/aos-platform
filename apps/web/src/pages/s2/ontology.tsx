@@ -17,6 +17,7 @@ import {
   BpToolbar,
 } from "./blueprintUi";
 import { S2Chrome, useJsonGet } from "./shared";
+import { businessDetailItems } from "./objectTypeDetail";
 
 type GhIssue = {
   code: string;
@@ -43,6 +44,23 @@ type TtlRunResult = {
   archivedIds: string[];
   candidates: TtlCandidate[];
 };
+
+export function graphHealthIssueLabel(code: string) {
+  return ({
+    "GH-01": "悬空连接",
+    "GH-02": "属性字段冲突",
+    "GH-03": "必需关系缺失",
+    "GH-04": "治理规则问题",
+  } as Record<string, string>)[code] || "待确认问题";
+}
+
+function graphHealthIssueDescription(issue: GhIssue) {
+  if (issue.code === "GH-01") return "关系引用的业务对象端点不存在，需核对来源对象或关系映射。";
+  if (issue.code === "GH-02") return "实例包含对象定义中尚未声明的来源字段；具体样本见问题审计。";
+  if (issue.code === "GH-03") return "只统计已声明必需关系、但当前没有匹配关系的对象；允许独立的对象不计入。";
+  if (issue.code === "GH-04") return "当前对象或关系没有通过已启用的治理规则。";
+  return issue.message || "当前问题尚无业务解释。";
+}
 
 /** 89/94 · 对齐 ontology-graph-health · issues 服务端真源 */
 export function GraphHealthPage() {
@@ -100,8 +118,8 @@ export function GraphHealthPage() {
       setTtlPreview(out);
       setTtlMsg(
         out.candidateCount === 0
-          ? `TTL ${out.ttlDays} 天规则：无归档候选`
-          : `TTL ${out.ttlDays} 天规则：已冻结 ${out.candidateCount} 个软归档候选，等待确认`,
+          ? `知识洞察保留期 ${out.ttlDays} 天：无归档候选`
+          : `知识洞察保留期 ${out.ttlDays} 天：已冻结 ${out.candidateCount} 个软归档候选，等待确认`,
       );
     } catch (e) {
       setTtlMsg(e instanceof Error ? e.message : String(e));
@@ -130,7 +148,7 @@ export function GraphHealthPage() {
         throw new Error("TTL 执行回包与冻结快照不一致，未确认归档成功");
       }
       setTtlPreview(null);
-      setTtlMsg(`TTL 归档完成：已软归档 ${out.archivedCount} · 未物理删除核心对象`);
+      setTtlMsg(`知识洞察归档完成：已软归档 ${out.archivedCount} · 未物理删除核心对象`);
       reload();
     } catch (e) {
       setTtlMsg(e instanceof Error ? e.message : String(e));
@@ -176,7 +194,7 @@ export function GraphHealthPage() {
   return (
     <S2Chrome
       title="图谱健康度"
-      lede="悬空链接 · 属性冲突 · 孤立对象 · Insight TTL 归档候选"
+      lede="悬空连接 · 属性字段冲突 · 必需关系缺失 · 知识洞察归档候选"
     >
       <div className="ont-page">
       <BpToolbar>
@@ -189,7 +207,7 @@ export function GraphHealthPage() {
           disabled={ttlBusy}
           onClick={() => void previewTtl()}
         >
-          {ttlBusy ? "处理中…" : "运行 TTL 归档"}
+          {ttlBusy ? "处理中…" : "预览归档候选"}
         </button>
         <Link to="/data/health" className="btn-nav">
           L1 数据健康 →
@@ -207,10 +225,10 @@ export function GraphHealthPage() {
           data-testid="ttl-confirmation"
           className="bp-banner"
         >
-          <strong>确认 Insight TTL 软归档</strong>
+          <strong>确认知识洞察软归档</strong>
           <p className="muted" style={{ margin: "0.5rem 0" }}>
-            TTL {ttlPreview.ttlDays} 天 · 候选 {ttlPreview.candidateCount} 项。该操作只做可回放的软归档，
-            不会物理删除核心业务 Object。
+            保留期 {ttlPreview.ttlDays} 天 · 候选 {ttlPreview.candidateCount} 项。该操作只做可回放的软归档，
+            不会物理删除核心业务对象。
           </p>
           {ttlPreview.candidates.length > 0 ? (
             <ul className="muted" style={{ fontSize: "0.8rem" }}>
@@ -238,7 +256,7 @@ export function GraphHealthPage() {
               disabled={ttlBusy}
               onClick={() => {
                 setTtlPreview(null);
-                setTtlMsg("已取消 TTL 归档，未执行写操作");
+                setTtlMsg("已取消知识洞察归档，未执行写操作");
               }}
             >
               取消
@@ -247,38 +265,37 @@ export function GraphHealthPage() {
         </section>
       ) : null}
       <p className="muted" style={{ fontSize: "0.8rem" }}>
-        当前 score={data?.scoreStatus === "unknown" ? "不可判定" : (data?.score ?? "—")} · 公式={data?.scoreVersion ?? "—"} ·
-        engine={m?.engine ?? "—"} · instances={m?.instances ?? "—"} · dangling={m?.danglingEdges ?? "—"} · Insight TTL={m?.insightTtlDays ?? "—"} 天
+        当前健康得分：{data?.scoreStatus === "unknown" ? "不可判定" : (data?.score ?? "未读取")} ·
+        业务对象实例：{m?.instances ?? "未读取"} · 知识洞察保留期：{m?.insightTtlDays ?? "未读取"} 天
       </p>
+      <details className="bp-audit-details" style={{ marginBottom: 12 }}>
+        <summary>健康计算审计</summary>
+        <p className="muted">公式：{data?.scoreVersion ?? "未读取"} · 引擎：{m?.engine ?? "未读取"} · 悬空端点：{m?.danglingEdges ?? "未读取"}</p>
+      </details>
 
       <BpMetricGrid
         items={[
           {
-            code: "GH-01",
-            label: "悬空",
+            label: "悬空连接",
             value: m?.danglingEdges ?? gh01,
             tone: (m?.danglingEdges ?? gh01) > 0 ? "bad" : "ok",
           },
           {
-            code: "GH-02",
-            label: "真实属性冲突",
+            label: "属性字段冲突",
             value: gh02,
             tone: gh02 > 0 ? "warn" : "ok",
           },
           {
-            code: "GH-03",
             label: "必需关系缺失",
             value: m?.orphanInstances ?? 0,
             tone: (m?.orphanInstances ?? 0) > 10 ? "warn" : "muted",
           },
           {
-            code: "GH-04",
-            label: "规则",
+            label: "治理规则问题",
             value: gh04,
             tone: gh04 > 0 ? "warn" : "ok",
           },
           {
-            code: "P2",
             label: "归档候选",
             value: m?.archiveCandidates ?? 0,
             tone: "muted",
@@ -287,15 +304,15 @@ export function GraphHealthPage() {
       />
 
       <BpBanner tone={data?.scoreStatus === "unknown" ? "warn" : "info"}>
-        属性分类：Canonical {m?.propertyClassification?.canonical ?? "—"} · 系统字段 {m?.propertyClassification?.system ?? "—"} ·
+        属性分类：标准业务属性 {m?.propertyClassification?.canonical ?? "—"} · 系统字段 {m?.propertyClassification?.system ?? "—"} ·
         兼容别名 {m?.propertyClassification?.compatibilityAlias ?? "—"} · 真实冲突 {m?.propertyClassification?.actualConflict ?? "—"}。
-        普通无边对象 {m?.unlinkedInstances ?? "—"} 不直接扣分；仅 {m?.requiredLinkEligible ?? "—"} 个声明必需关系的对象进入 GH-03 分母。
+        普通无边对象 {m?.unlinkedInstances ?? "—"} 不直接扣分；仅 {m?.requiredLinkEligible ?? "—"} 个声明必需关系的对象进入“必需关系缺失”计算范围。
       </BpBanner>
       {(data?.breakdown?.length ?? 0) > 0 && (
         <BpTable
-          columns={["指标", "受影响 / 分母", "比率 / 阈值", "扣分"]}
+          columns={["健康指标", "受影响 / 分母", "比率 / 阈值", "扣分"]}
           rows={(data?.breakdown || []).map((item) => [
-            item.code,
+            graphHealthIssueLabel(item.code),
             `${item.affectedObjects} / ${item.denominator}`,
             `${(item.rate * 100).toFixed(2)}% / ${(item.threshold * 100).toFixed(0)}%`,
             `${item.deduction} / ${item.maxDeduction}`,
@@ -314,7 +331,7 @@ export function GraphHealthPage() {
           权威图检查器
         </h2>
         <p className="muted" style={{ fontSize: "0.8rem" }}>
-          Domain Graph 与 Operational Lineage 分层读取；每个快照只包含一个图域，不在前端混写事实。
+          领域知识图谱与运行血缘图分层读取；每个快照只包含一个图域，不在页面混写事实。
         </p>
         <BpToolbar>
           <label>
@@ -363,7 +380,7 @@ export function GraphHealthPage() {
       {(data?.archivePreview?.length ?? 0) > 0 ? (
         <>
           <h2 className="aos-text" style={{ fontSize: "0.875rem", marginTop: "1.25rem" }}>
-            Insight 归档候选预览
+            知识洞察归档候选预览
           </h2>
           <ul className="muted" style={{ fontSize: "0.8rem" }}>
             {(data?.archivePreview || []).map((p) => (
@@ -381,10 +398,10 @@ export function GraphHealthPage() {
         问题类型
         <select aria-label="图谱健康问题类型" value={issueCodeFilter} onChange={(event) => setIssueCodeFilter(event.target.value)}>
           <option value="all">全部</option>
-          <option value="GH-01">GH-01 悬空端点</option>
-          <option value="GH-02">GH-02 真实属性冲突</option>
-          <option value="GH-03">GH-03 必需关系缺失</option>
-          <option value="GH-04">GH-04 治理规则</option>
+          <option value="GH-01">悬空连接</option>
+          <option value="GH-02">属性字段冲突</option>
+          <option value="GH-03">必需关系缺失</option>
+          <option value="GH-04">治理规则问题</option>
         </select>
       </label>
       {visibleIssues.length === 0 ? (
@@ -403,11 +420,15 @@ export function GraphHealthPage() {
                     : "bp-tag"
               }
             >
-              {i.code}
+              {graphHealthIssueLabel(i.code)}
             </span>,
             <span key={`o-${i.code}`}>{i.object || "—"}</span>,
             <span key={`m-${i.code}`} className="muted">
-              {i.message || "—"}
+              {graphHealthIssueDescription(i)}
+              <details className="bp-audit-details" style={{ marginTop: 6 }}>
+                <summary>问题审计</summary>
+                <span>代码：{i.code} · {i.message || "无原始说明"}</span>
+              </details>
             </span>,
             i.samples?.[0] ? (
               <button key={`h-${i.code}`} type="button" className="bp-action-link" onClick={() => {
@@ -430,9 +451,9 @@ export function GraphHealthPage() {
       </>}
       <BpLinkRow
         links={[
-          { to: "/ontology/funnel", label: "看 Funnel Merge" },
-          { to: "/aip/drafts", label: "Draft 审批台" },
-          { to: "/ontology/link-types/new", label: "新建 Link Type" },
+          { to: "/ontology/funnel", label: "查看业务漏斗" },
+          { to: "/aip/drafts", label: "草稿审批台" },
+          { to: "/ontology/link-types/new", label: "新建关系类型" },
         ]}
       />
       </div>
@@ -441,6 +462,16 @@ export function GraphHealthPage() {
 }
 
 /** 89/94 · Funnel + 真重跑 · ?type= */
+export function funnelStageLabel(stage?: string): string {
+  if (!stage) return "尚未开始";
+  if (/changelog/i.test(stage)) return "变更识别中";
+  if (/merge/i.test(stage)) return "合并变更中";
+  if (/index/i.test(stage)) return "搜索索引中";
+  if (/hydration|live|done/i.test(stage)) return "语义水合已完成";
+  if (/fail|error/i.test(stage)) return "处理异常";
+  return "状态待确认";
+}
+
 export function FunnelPage() {
   const [sp, setSp] = useSearchParams();
   const objectType = sp.get("type")?.trim() || "";
@@ -456,10 +487,11 @@ export function FunnelPage() {
   const [pipeMode, setPipeMode] = useState<"live" | "replacement">("live");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const selectedTypeName = objectTypes.data?.items.find((item) => item.id === objectType)?.name || "请选择对象类型";
 
   const stages = (worker.data?.stages || []).map((s, i) => {
-    const labels = ["① CHANGELOG JOB", "② MERGE CHANGES JOB", "③ INDEXING JOB", "④ HYDRATION JOB"];
-    const titles = ["算数据差 old→new", "Changelog + Action 用户编辑", "按 Object DB 分片 → index", "index → search nodes"];
+    const labels = ["① 变更识别", "② 合并变更", "③ 搜索索引", "④ 语义水合"];
+    const titles = ["识别新增与变化的业务记录", "合并来源变化与受控业务编辑", "构建业务对象搜索索引", "形成可检索的业务关系节点"];
     const p = s.progress;
     const tone = p >= 1 ? "done" : p > 0 ? "active" : "wait";
     const statusText =
@@ -467,7 +499,7 @@ export function FunnelPage() {
     return {
       step: labels[i] || s.name,
       title: titles[i] || s.name,
-      subtitle: `Funnel 托管 · ${s.name}`,
+      subtitle: "业务漏斗托管",
       status: statusText,
       progress: p,
       tone: tone as "done" | "active" | "wait",
@@ -489,7 +521,7 @@ export function FunnelPage() {
       if (!r.receiptId || verified.detail?.receiptId !== r.receiptId || verified.stage !== r.stage) {
         throw new Error("Funnel 重跑回读与 Receipt 不一致");
       }
-      setMsg(`已重跑并回读 · ${r.mode} · ${r.stage} · Receipt ${r.receiptId.slice(0, 8)}`);
+      setMsg(`已重新处理并完成状态回读 · ${funnelStageLabel(r.stage)}`);
       status.reload();
       worker.reload();
     } catch (e) {
@@ -502,14 +534,14 @@ export function FunnelPage() {
   return (
     <S2Chrome
       title="漏斗管道"
-      lede={`${objectType || "请选择对象类型"} · Changelog → Merge → Index → Hydration`}
+      lede={`${selectedTypeName} · 变更识别 → 合并变更 → 搜索索引 → 语义水合`}
     >
       <div className="ont-page">
       <BpToolbar>
         <label className="muted">
           对象类型
           <select
-            aria-label="选择 Funnel 对象类型"
+            aria-label="选择业务漏斗对象类型"
             value={objectType}
             onChange={(event) => {
               const next = new URLSearchParams(sp);
@@ -535,13 +567,13 @@ export function FunnelPage() {
           刷新
         </button>
         <button type="button" className="btn-primary" disabled={busy || !objectType} onClick={() => void rerun()}>
-          {busy ? "重跑中…" : pipeMode === "replacement" ? "重跑 Replacement" : "重跑 Live"}
+          {busy ? "处理中…" : pipeMode === "replacement" ? "重新全量构建" : "重新处理增量"}
         </button>
         <Link to="/ontology/okf-funnel" className="btn-nav">
-          OKF 映射 →
+          行业映射 →
         </Link>
         <Link to="/data/builds" className="btn-nav">
-          Builds 日志 →
+          构建日志 →
         </Link>
         <Link to="/ontology" className="btn-nav">
           ← 本体管理
@@ -551,22 +583,21 @@ export function FunnelPage() {
       {msg && <p className={msg.startsWith("已") ? "bp-prop-ok" : "error"}>{msg}</p>}
       {!objectType && (
         <BpBanner tone="info">
-          尚未选择 Object Type。请先到 <Link to="/workshop/graph">对象探索</Link> 选择真实对象类型，
-          再进入 Funnel；本页不再默认绑定测试 WorkOrder。
+          尚未选择对象类型。请先到 <Link to="/workshop/graph">对象探索</Link> 选择真实对象类型，
+          再进入业务漏斗；本页不会默认绑定测试对象。
         </BpBanner>
       )}
 
       <div className="card" style={{ marginBottom: "1rem" }}>
         <p>
-          <strong>Funnel Batch · {objectType}</strong> · stage={status.data?.stage || "—"}
+          <strong>{selectedTypeName} · 业务漏斗</strong> · {funnelStageLabel(status.data?.stage)}
         </p>
         <p className="muted" style={{ fontSize: "0.8rem" }}>
-          Backing: <Link to="/data/datasets">查看真实数据集</Link> · PK: object_id · query type={objectType || "未选择"}
+          <Link to="/data/datasets">查看真实数据集</Link>
         </p>
         <div style={{ marginTop: 8 }}>
           <label className="muted" style={{ marginRight: 12 }}>
-            <input type="radio" checked={pipeMode === "live"} onChange={() => setPipeMode("live")} /> Live
-            pipeline
+            <input type="radio" checked={pipeMode === "live"} onChange={() => setPipeMode("live")} /> 增量处理
           </label>
           <label className="muted">
             <input
@@ -574,19 +605,25 @@ export function FunnelPage() {
               checked={pipeMode === "replacement"}
               onChange={() => setPipeMode("replacement")}
             />{" "}
-            Replacement
+            全量替换
           </label>
         </div>
         <p className="muted" style={{ fontSize: "0.75rem", marginTop: 8 }}>
-          切换模式后点「重跑」写入 funnel_status，worker 进度从服务端读取。
+          切换模式后点重新处理；进度和结果均从服务端回读。
         </p>
-        <p className="muted" style={{ fontSize: "0.75rem", marginTop: 8 }}>
-          最近 Receipt: {status.data?.detail?.receiptId || "—"} · 重跑时间: {status.data?.detail?.rerunAt || "—"}
-        </p>
+        <details style={{ marginTop: 8 }}>
+          <summary>运行审计</summary>
+          <p className="muted" style={{ fontSize: "0.75rem" }}>
+            对象类型：{objectType || "未选择"} · 原始阶段：{status.data?.stage || "—"} · 主键：object_id · 查询类型：{objectType || "未选择"}
+          </p>
+          <p className="muted" style={{ fontSize: "0.75rem" }}>
+            最近回执：{status.data?.detail?.receiptId || "—"} · 重新处理时间：{status.data?.detail?.rerunAt || "—"}
+          </p>
+        </details>
       </div>
 
       {!objectType ? (
-        <p className="muted">请选择对象类型后查看权威 Funnel 四阶段状态。</p>
+        <p className="muted">请选择对象类型后查看权威业务漏斗四阶段状态。</p>
       ) : status.loading || worker.loading ? (
         <p className="muted">加载流水线…</p>
       ) : status.err || worker.err ? (
@@ -604,7 +641,7 @@ export function FunnelPage() {
         <Link to="/data/health" className="bp-action-link">数据健康</Link>
       </BpBanner>
       <BpBanner tone="info">
-        Funnel 不是 ETL，而是事务监听器——湖仓每一次 COMMIT，都驱动业务 Object 刷新。
+        业务漏斗监听权威数据提交，在数据变化后驱动业务对象刷新；不会自行制造业务记录。
       </BpBanner>
       </div>
     </S2Chrome>
@@ -650,16 +687,16 @@ export function WikiPage() {
       try {
         fields = JSON.parse(fieldsText || "{}") as Record<string, unknown>;
       } catch {
-        throw new Error("specification 须为合法 JSON");
+        throw new Error("补充知识字段必须是合法 JSON");
       }
-      const d = await getOntologyClient().createDraft({
+      await getOntologyClient().createDraft({
         actionTypeId: "UpdateWikiCard",
         objectType,
         objectId,
         proposed: { wikiBody: { summary, fields } },
         title: `更新 Wiki 知识卡 · ${objectId}`,
       });
-      setMsg(`已创建 Draft ${d.id}（未写生产）。请到审批台通过后生效。`);
+      setMsg(`已创建审批草稿（未写入生产知识）。请到审批台通过后生效。`);
       setDirty(false);
     } catch (e) {
       setErr(String((e as Error).message || e));
@@ -671,7 +708,7 @@ export function WikiPage() {
   return (
     <S2Chrome
       title="活知识 Wiki"
-      lede="可编辑知识卡 · 保存即建 Draft · 审批通过后写 wiki_page（禁止直写 PUT）"
+      lede="可编辑业务知识卡 · 提交审批草稿 · 审批通过后进入生产知识"
     >
       <div className="ont-page">
       <BpToolbar>
@@ -714,13 +751,13 @@ export function WikiPage() {
           disabled={busy || !dirty}
           onClick={() => void submitDraft()}
         >
-          {busy ? "提交中…" : "保存并建 Draft"}
+          {busy ? "提交中…" : "创建审批草稿"}
         </button>
         <Link to="/aip/drafts" className="btn-nav-accent">
-          Draft 审批台 →
+          草稿审批台 →
         </Link>
         <Link to="/aip/tools" className="btn-nav">
-          Agent 工具面板 →
+          智能助手工具 →
         </Link>
         <Link to="/aip/memory-governance" className="btn-nav">
           记忆与知识治理 →
@@ -735,11 +772,11 @@ export function WikiPage() {
       {!objectType || !objectId ? (
         <BpBanner tone="info">
           请在上方选择真实对象类型和业务对象，或从 <Link to="/workshop/graph">对象探索</Link> 深链进入。
-          本页不再默认绑定测试 WorkOrder。
+          本页不会默认绑定任何测试业务对象。
         </BpBanner>
       ) : null}
       {objectType && objectId && wiki.data?.exists === false ? (
-        <BpBanner tone="info">当前业务对象尚无知识卡，这是可补充的知识缺口，不是请求错误。填写后保存将创建 Draft，审批通过才写入生产 Wiki。</BpBanner>
+        <BpBanner tone="info">当前业务对象尚无知识卡，这是可补充的知识缺口，不是请求错误。填写后只创建审批草稿，审批通过才写入生产知识。</BpBanner>
       ) : null}
 
       <BpTabs
@@ -747,8 +784,8 @@ export function WikiPage() {
         onChange={setTab}
         tabs={[
           { id: "card", label: "知识卡片" },
-          { id: "sync", label: "双向绑定" },
-          { id: "agent", label: "Agent 读字段" },
+          { id: "sync", label: "审批同步" },
+          { id: "agent", label: "智能助手读取" },
           { id: "versions", label: "版本" },
         ]}
       />
@@ -757,30 +794,33 @@ export function WikiPage() {
         <BpSplit
           left={
             <>
-              <div className="bp-section-label">Object 挂载</div>
+              <div className="bp-section-label">业务对象</div>
               <h2 className="aos-text" style={{ fontSize: "1rem" }}>
                 {String(obj.data?._displayLabel || `${objectType} · ${objectId}`)}
               </h2>
-              <p className="muted" style={{ fontSize: "0.75rem" }}>
-                实例 PK: {objectId}
-              </p>
               <h3 className="aos-text" style={{ fontSize: "0.8rem", marginTop: 12 }}>
-                Object 属性（只读同步源）
+                业务字段（只读同步源）
               </h3>
               <ul className="card-list">
-                {Object.keys(obj.data || {}).filter((key) => !key.startsWith("_") && key !== "id" && key !== "type").slice(0, 8).map((k) => (
-                  <li key={k} className="card">
-                    <span className="muted">{k}</span>
-                    <div>{String(obj.data?.[k] ?? "—")}</div>
+                {businessDetailItems(obj.data || {}).map((item) => (
+                  <li key={item.label} className="card">
+                    <span className="muted">{item.label}</span>
+                    <div>{item.value}</div>
                   </li>
                 ))}
               </ul>
+              {businessDetailItems(obj.data || {}).length === 0 && <p className="muted">当前对象没有可展示的标准业务字段。</p>}
+              <details className="bp-audit-details" style={{ marginTop: 10 }}>
+                <summary>对象来源审计</summary>
+                <p className="muted">对象类型：{objectType} · 实例主键：{objectId}</p>
+                <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.72rem" }}>{JSON.stringify(obj.data || {}, null, 2)}</pre>
+              </details>
             </>
           }
           right={
             <>
               <h2 className="aos-text" style={{ fontSize: "1rem" }}>
-                LLM Wiki 知识卡片
+                业务知识卡片
               </h2>
               <div className="card">
                 <label className="muted">标题</label>
@@ -794,7 +834,7 @@ export function WikiPage() {
                   placeholder={`${String(obj.data?._displayLabel || objectType)} · 运营知识摘要`}
                 />
                 <label className="muted" style={{ display: "block", marginTop: 8 }}>
-                  specification（JSON）
+                  补充知识字段（JSON）
                 </label>
                 <textarea
                   className="aos-input"
@@ -807,7 +847,7 @@ export function WikiPage() {
                   style={{ width: "100%", fontFamily: "monospace", fontSize: "0.75rem", resize: "vertical" }}
                 />
                 <p className="muted" style={{ fontSize: "0.75rem", marginTop: 8 }}>
-                  {dirty ? "有未提交更改 · 保存将创建 UpdateWikiCard Draft" : "与服务端一致"}
+                  {dirty ? "有未提交更改 · 提交后将进入草稿审批" : "与服务端一致"}
                 </p>
               </div>
             </>
@@ -817,16 +857,16 @@ export function WikiPage() {
 
       {tab === "sync" && (
         <BpBanner tone="info">
-          双向绑定：Object 变更 → Wiki specification 刷新；Wiki 编辑 → Draft → 审批 → wiki_page。
+          审批同步：业务对象变化后刷新知识字段；知识编辑先进入草稿审批，通过后才更新生产知识。
         </BpBanner>
       )}
       {tab === "agent" && (
         <BpBanner tone="info">
-          Agent 经工具读 Wiki 字段（wiki.read / tools.invoke）；进入运行上下文前还须经过 Memory authority 的 scope、freshness、applicability、marking 与 Citation 校验。配置入口：{" "}
+          智能助手通过受控工具读取知识字段；进入运行上下文前仍须通过范围、时效、适用性、标记与引用校验。配置入口：{" "}
           <Link to="/aip/tools" className="bp-action-link">
-            Agent 工具面板
+            智能助手工具
           </Link>
-          {" · "}<Link to="/aip/memory-governance" className="bp-action-link">查看治理与 Citation</Link>
+          {" · "}<Link to="/aip/memory-governance" className="bp-action-link">查看记忆与引用治理</Link>
         </BpBanner>
       )}
       {tab === "versions" && (
@@ -1054,9 +1094,17 @@ function overlayFieldSummary(value: unknown): string {
   return String(value);
 }
 
+export function overlayTargetKindLabel(kind: OverlayHistoryItem["target_kind"]) {
+  return kind === "ObjectType" ? "对象类型" : "关系类型";
+}
+
+export function overlayModeLabel(mode: OverlayHistoryItem["mode"]) {
+  return mode === "override" ? "组织覆盖" : "继承安装模板";
+}
+
 export function overlayDiffRows(current: OverlayHistoryItem, previous: OverlayHistoryItem | null) {
   return [
-    ["模式", current.mode, previous?.mode || "无历史"],
+    ["模式", overlayModeLabel(current.mode), previous ? overlayModeLabel(previous.mode) : "无历史"],
     ["显示名", current.display_name || "继承安装模板", previous?.display_name || (previous ? "继承安装模板" : "无历史")],
     ["可见属性", overlayFieldSummary(current.visible_properties), overlayFieldSummary(previous?.visible_properties)],
     ["扩展属性", overlayFieldSummary(current.extended_properties), overlayFieldSummary(previous?.extended_properties)],
@@ -1134,7 +1182,7 @@ export function BranchesPage() {
       if (!next || next.mode !== "inherit" || next.ontology_revision !== item.ontology_revision + 1) {
         throw new Error("恢复安装模板后回读不一致");
       }
-      setMsg(`已恢复 ${item.target_kind}:${item.target_id} 为安装模板继承 · r${next.ontology_revision}`);
+      setMsg(`已恢复${overlayTargetKindLabel(item.target_kind)}“${item.display_name || item.target_id}”为安装模板继承 · 修订 ${next.ontology_revision}`);
       await reload();
     } catch (error) {
       setErr(String((error as Error).message || error));
@@ -1144,7 +1192,7 @@ export function BranchesPage() {
   }
 
   return (
-    <S2Chrome title="组织定制 Overlay" lede="Installation 绑定 · 组织定制 · 不可变修订历史（不是代码分支）">
+    <S2Chrome title="组织定制历史" lede="安装模板绑定 · 组织定制 · 不可变修订历史">
       <div className="ont-page">
       <BpToolbar>
         <button type="button" className="btn" disabled={busy} onClick={() => void reload()}>
@@ -1159,22 +1207,27 @@ export function BranchesPage() {
       {composition ? (
         <>
           <BpMetricGrid items={[
-            { label: "Installation", value: composition.installation_pk.slice(0, 8) },
+            { label: "当前安装", value: "已绑定" },
             { label: "安装修订", value: composition.installation_revision },
-            { label: "Overlay 修订", value: history.length },
+            { label: "组织定制修订", value: history.length },
             { label: "当前生效", value: active.length },
           ]} />
           <BpBanner tone="info">
-            平台模板保持只读。组织定制通过强 ETag/CAS 与 Idempotency-Key 生成不可变修订；
-            “恢复安装模板”会追加 inherit 修订，不删除历史。当前合成 ETag：
-            <code>{composition.composed_schema_etag}</code>；Overlay 集合：
-            <code>{composition.ontology_overlay_set_hash || "sha256:未返回"}</code>。
+            平台模板保持只读；组织定制每次保存都会生成不可变修订。“恢复安装模板”会追加一条继承修订，不删除历史。
+            <details className="bp-audit-details" style={{ marginTop: 8 }}>
+              <summary>安装组合审计</summary>
+              <p className="muted">安装主键：{composition.installation_pk} · 组合 ETag：{composition.composed_schema_etag}</p>
+              <p className="muted">定制集合哈希：{composition.ontology_overlay_set_hash || "未返回"} · 写入门：强条件与幂等键</p>
+            </details>
           </BpBanner>
           <label className="mp-field" style={{ maxWidth: 360, margin: "1rem 0" }}>
             <span className="mp-field-label">筛选目标</span>
             <select className="aos-input" value={target} onChange={(event) => setTarget(event.target.value)}>
               <option value="all">全部目标</option>
-              {targets.map((value) => <option key={value} value={value}>{value}</option>)}
+              {targets.map((value) => {
+                const item = history.find((candidate) => `${candidate.target_kind}:${candidate.target_id}` === value);
+                return <option key={value} value={value}>{item ? `${overlayTargetKindLabel(item.target_kind)} · ${item.display_name || item.target_id}` : "待识别目标"}</option>;
+              })}
             </select>
           </label>
           {current && (
@@ -1192,11 +1245,17 @@ export function BranchesPage() {
             </div>
           )}
           <BpTable
-            columns={["目标", "修订", "模式", "显示名", "状态", "操作者 / 时间"]}
+            columns={["定制目标", "修订", "模式", "显示名", "状态", "操作者 / 时间"]}
             rows={visible.map((item) => [
-              <strong key={`${item.target_kind}-${item.target_id}`}>{item.target_kind}:{item.target_id}</strong>,
+              <span key={`${item.target_kind}-${item.target_id}`}>
+                <strong>{overlayTargetKindLabel(item.target_kind)} · {item.display_name || item.target_id}</strong>
+                <details className="bp-audit-details" style={{ marginTop: 4 }}>
+                  <summary>目标审计</summary>
+                  <span>{item.target_kind}:{item.target_id}</span>
+                </details>
+              </span>,
               item.ontology_revision,
-              item.mode,
+              overlayModeLabel(item.mode),
               item.display_name || "继承安装模板",
               item.is_active ? <span className="aos-text">当前生效</span> : <span className="muted">历史</span>,
               `${item.actor || "—"} · ${item.created_at ? new Date(item.created_at).toLocaleString() : "—"}`,
@@ -1207,7 +1266,7 @@ export function BranchesPage() {
           )}
         </>
       ) : !busy && !err ? (
-        <BpBanner tone="warn">当前工作区没有可用的电商领域包 Installation，无法创建组织 Overlay。</BpBanner>
+        <BpBanner tone="warn">当前工作区没有可用的电商领域安装包，无法创建组织定制。</BpBanner>
       ) : null}
       <BpLinkRow links={[{ to: "/ontology", label: "本体管理与组织定制" }]} />
       </div>

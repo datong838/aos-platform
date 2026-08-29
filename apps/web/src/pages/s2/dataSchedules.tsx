@@ -9,6 +9,7 @@ import {
   BpToolbar,
 } from "./blueprintUi";
 import { PipelineWorkflowStepper, S2Chrome, useJsonGet } from "./shared";
+import { getPipelineDisplayName } from "./pipelineMeta";
 
 const CRON_PRESETS: { label: string; cron: string; hint: string }[] = [
   { label: "每小时", cron: "0 * * * *", hint: "每小时整点" },
@@ -52,6 +53,19 @@ function formatDuration(ms?: number): string {
   return ms >= 60_000 ? `${Math.floor(ms / 60_000)}分${Math.round((ms % 60_000) / 1000)}秒` : `${Math.round(ms / 1000)}秒`;
 }
 
+export function scheduleRunStatusLabel(status?: string): string {
+  const normalized = (status || "").trim().toUpperCase();
+  if (normalized === "SUCCEEDED" || normalized === "SUCCESS") return "成功";
+  if (normalized === "FAILED" || normalized === "ERROR") return "失败";
+  if (normalized === "RUNNING" || normalized === "IN_PROGRESS") return "运行中";
+  if (normalized === "SCHEDULED" || normalized === "PENDING") return "计划中";
+  return normalized ? "待确认" : "未读取";
+}
+
+export function isValidScheduleDraft(name: string, pipelineId: string, cron: string): boolean {
+  return Boolean(name.trim() && pipelineId.trim() && parseCronFields(cron).every((field) => field.value !== "?"));
+}
+
 /** 85 · 对齐 schedules.html · Cron 预设 + Tab + 表格 */
 export function SchedulesPage() {
   const { data, err, reload } = useJsonGet<{
@@ -64,13 +78,12 @@ export function SchedulesPage() {
       lastRun?: { at?: string };
     }[];
   }>("/v1/schedules");
+  const pipelines = useJsonGet<{ items: { id: string; name?: string; displayName?: string }[] }>("/v1/pipelines?page_size=50");
   const [tab, setTab] = useState<"cron" | "upstream">("cron");
-  const [cron, setCron] = useState("0 2 * * *");
+  const [cron, setCron] = useState("");
   const [pipelineId, setPipelineId] = useState("");
-  const [name, setName] = useState("订单清洗 · 每日增量");
+  const [name, setName] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
-  const [upstreamA, setUpstreamA] = useState(true);
-  const [upstreamB, setUpstreamB] = useState(false);
   const [localErr, setLocalErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const { data: runs, err: runsErr, loading: runsLoading, reload: reloadRuns } = useJsonGet<{
@@ -79,6 +92,14 @@ export function SchedulesPage() {
 
   const nextRun = useMemo(() => nextRunLabel(cron, tab), [tab, cron]);
   const cronFields = useMemo(() => parseCronFields(cron), [cron]);
+  const selectedSchedule = (data?.items || []).find((item) => item.id === editId);
+  const validDraft = isValidScheduleDraft(name, pipelineId, cron);
+
+  function pipelineName(targetId?: string): string {
+    if (!targetId) return "未关联管道";
+    const pipeline = (pipelines.data?.items || []).find((item) => item.id === targetId);
+    return pipeline?.displayName || pipeline?.name || getPipelineDisplayName(targetId);
+  }
 
   async function createSch() {
     setLocalErr(null);
@@ -134,7 +155,7 @@ export function SchedulesPage() {
   }
 
   return (
-    <S2Chrome title="同步计划编辑器" lede="Cron 调度与上游触发 · GET/POST/PATCH /v1/schedules">
+    <S2Chrome title="同步计划编辑器" lede="管理栖月汇业务数据的周期同步计划与真实运行记录">
       <PipelineWorkflowStepper current={2} />
       <BpSplit
         left={
@@ -193,45 +214,46 @@ export function SchedulesPage() {
             ) : (
               <div style={{ fontSize: "0.875rem" }}>
                 <p className="muted" style={{ fontSize: "0.75rem" }}>
-                  当上游数据集或管道构建成功时触发本计划。
+                  上游触发条件尚未由服务端返回，本页不会用客户端固定条件补造。
                 </p>
-                <label style={{ display: "block", marginTop: 8 }}>
-                  <input type="checkbox" checked={upstreamA} onChange={(e) => setUpstreamA(e.target.checked)} />{" "}
-                  栖月汇-订单（P05）· 同步完成
-                </label>
-                <label style={{ display: "block", marginTop: 4 }}>
-                  <input type="checkbox" checked={upstreamB} onChange={(e) => setUpstreamB(e.target.checked)} />{" "}
-                  栖月汇-发货（P07）· 搭建成功触发
-                </label>
               </div>
             )}
 
             <label className="muted" style={{ display: "block", marginTop: "1rem", fontSize: "0.75rem" }}>
-              关联 Pipeline
-              <input
+              关联管道
+              <select
+                aria-label="关联管道"
                 value={pipelineId}
                 onChange={(e) => setPipelineId(e.target.value)}
                 style={{ display: "block", width: "100%", marginTop: 4 }}
-              />
+              >
+                <option value="">— 请选择真实管道 —</option>
+                {(pipelines.data?.items || []).map((pipeline) => (
+                  <option key={pipeline.id} value={pipeline.id}>{pipeline.displayName || pipeline.name || getPipelineDisplayName(pipeline.id)}</option>
+                ))}
+              </select>
             </label>
 
             <BpToolbar>
-              <button type="button" className="btn-primary" onClick={() => void createSch()}>
+              <button type="button" className="btn-primary" disabled={!validDraft || Boolean(editId)} onClick={() => void createSch()}>
                 + 新建计划
               </button>
-              <button type="button" className="btn-primary" onClick={() => void saveSch()}>
+              <button type="button" className="btn-primary" disabled={!editId || !validDraft} onClick={() => void saveSch()}>
                 保存计划
               </button>
               <button type="button" onClick={() => void runNow()} disabled={!editId}>
                 立即真实同步
               </button>
+              <button type="button" className="btn" onClick={() => { reload(); pipelines.reload(); if (editId) reloadRuns(); }}>
+                刷新计划
+              </button>
             </BpToolbar>
 
-            <BpBanner tone="info">{cronHint(cron)}</BpBanner>
+            <BpBanner tone="info">{cron ? cronHint(cron) : "选择已有计划或填写新计划后显示执行周期。"}</BpBanner>
 
             <div className="bp-cron-next-run">
               <div className="bp-cron-next-label">下次运行</div>
-              <div className="bp-cron-next-value">{nextRun}</div>
+              <div className="bp-cron-next-value">{cron ? nextRun : "尚未选择计划"}</div>
             </div>
 
             <BpLinkRow
@@ -245,14 +267,14 @@ export function SchedulesPage() {
         right={
           <>
             <div className="bp-ws-section-title">已注册计划</div>
-            {(err || localErr) && <p className="error">{err || localErr}</p>}
+            {(err || pipelines.err || localErr) && <p className="error">{err || pipelines.err || localErr}</p>}
             {msg && <p className="aos-text">{msg}</p>}
             <BpTable
-              columns={["名称", "Cron", "Pipeline", "最近真实执行", ""]}
+              columns={["名称", "执行周期", "关联管道", "最近真实执行", ""]}
               rows={(data?.items || []).map((s) => [
                 s.name || s.id,
                 s.cron || "—",
-                s.pipelineId || "—",
+                <span>{pipelineName(s.pipelineId)}<details className="bp-audit-details"><summary>计划审计</summary><span className="mono">计划：{s.id} · 管道：{s.pipelineId || "未读取"}</span></details></span>,
                 s.lastRun?.at ? formatRunTime(s.lastRun.at) : "暂无真实记录",
                 <button
                   key={s.id}
@@ -270,7 +292,7 @@ export function SchedulesPage() {
               ])}
             />
             <p className="muted" style={{ fontSize: "0.75rem" }}>
-              当前编辑：{editId || "（未选）"}
+              当前编辑：{selectedSchedule?.name || (editId ? "已选择计划" : "（未选）")}
             </p>
           </>
         }
@@ -300,10 +322,10 @@ export function SchedulesPage() {
         {editId && (runs?.items || []).map((run) => (
           <div key={run.id} style={{ display: "grid", gridTemplateColumns: "150px 90px 100px 100px 1fr", gap: 8, padding: "7px 0", borderTop: "1px solid var(--aos-border, #e2e8f0)", fontSize: "0.75rem" }}>
             <span>{formatRunTime(run.startedAt)}</span>
-            <strong>{run.status}</strong>
+            <strong>{scheduleRunStatusLabel(run.status)}</strong>
             <span>{formatDuration(run.durationMs)}</span>
-            <span>{run.rowsWritten ?? 0} 行</span>
-            <span className="muted">{run.errorCode || run.errorMessage || "—"}</span>
+            <span>{run.rowsWritten == null ? "写入行数未读取" : `${run.rowsWritten} 行`}</span>
+            <details className="bp-audit-details"><summary>运行审计</summary><span className="muted">状态：{run.status || "未读取"} · 错误：{run.errorCode || run.errorMessage || "无"}</span></details>
           </div>
         ))}
       </div>

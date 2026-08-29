@@ -39,7 +39,7 @@ describe("IntegrationCaseTimeline", () => {
     return onRetry;
   }
 
-  it("只按服务端 Stage Event 展示 sequence、snapshot、阶段、cause、reasonRefs 与时间", async () => {
+  it("只按服务端阶段事件展示且审计明细默认折叠", async () => {
     await render();
 
     expect(host.querySelectorAll("[data-event-sequence]")).toHaveLength(2);
@@ -49,14 +49,15 @@ describe("IntegrationCaseTimeline", () => {
     expect(host.textContent).toContain("evidence_added");
     expect(host.textContent).toContain(HASH_A);
     expect(host.textContent).toContain(HASH_B);
-    expect(host.textContent).toContain("事件序列不用于推断未返回的阶段或 Evidence");
+    expect(host.textContent).toContain("事件序列不用于推断未返回的阶段或证据");
+    expect(host.querySelector<HTMLDetailsElement>('details[aria-label="阶段事件审计详情"]')?.open).toBe(false);
     expect(host.querySelectorAll("input, textarea, select")).toHaveLength(0);
   });
 
   it("服务端 ready 空页与请求 empty 是不同状态", async () => {
     await render(state({ data: { ...TIMELINE_FIXTURE, items: [], total: 0 } }));
-    expect(host.textContent).toContain("服务端尚未返回 Stage Event");
-    expect(host.textContent).toContain(TIMELINE_FIXTURE.caseId);
+    expect(host.textContent).toContain("服务端尚未返回阶段事件");
+    expect(host.textContent).not.toContain(TIMELINE_FIXTURE.caseId);
 
     await render(state({ data: null, status: "empty" }));
     expect(host.textContent).toContain("服务端未返回阶段事件时间线");

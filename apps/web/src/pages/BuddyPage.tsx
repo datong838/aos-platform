@@ -9,20 +9,15 @@ type WoRow = { id: string; title?: string; status?: string; site?: string };
 
 /** 95 · 对齐 workshop-aip-chat · 真实 WorkOrder + Inbox/Graph ?order= 上下文 */
 export function BuddyPage({
-  initialSelection = [{ field: "site", value: "DC-East" }],
+  initialSelection = [],
 }: {
   initialSelection?: SelectionFilter[];
 }) {
   const [selection, setSelection] = useState<SelectionFilter[]>(initialSelection);
   const [rows, setRows] = useState<WoRow[]>([]);
-  const [selectedId, setSelectedId] = useState("wo-1001");
+  const [selectedId, setSelectedId] = useState("");
   const [query, setQuery] = useState("这单当前风险与建议下一步？");
-  const [messages, setMessages] = useState<{ role: string; text: string }[]>([
-    {
-      role: "Buddy",
-      text: "已注入 Selection。表格来自 object-sets/query，与 Inbox 同源。",
-    },
-  ]);
+  const [messages, setMessages] = useState<{ role: string; text: string }[]>([]);
   const [assistOpen, setAssistOpen] = useState(false);
   const [buddyOpen, setBuddyOpen] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -48,11 +43,13 @@ export function BuddyPage({
       const pick =
         (preferId && res.items.some((r) => String(r.id) === preferId) && preferId) ||
         res.items[0]?.id ||
-        preferId ||
-        "wo-1001";
+        "";
       if (pick) {
         setSelectedId(String(pick));
         setSelection([{ field: "objectId", value: String(pick) }]);
+      } else {
+        setSelectedId("");
+        setSelection([]);
       }
     } catch (err) {
       setError(String((err as Error).message || err));
@@ -72,6 +69,10 @@ export function BuddyPage({
 
   async function onAsk(e: FormEvent) {
     e.preventDefault();
+    if (!activeRow || !selectedId) {
+      setError("请先选择当前租户的真实工单");
+      return;
+    }
     setError(null);
     try {
       const res = await apiPost<{ answer: string; traceId: string }>("/v1/buddy/ask", {
@@ -99,12 +100,14 @@ export function BuddyPage({
     setAssistOpen(true);
   }
 
-  const buddyShare = `/workshop/buddy?order=${encodeURIComponent(selectedId)}&assist=1`;
+  const buddyShare = selectedId
+    ? `/workshop/buddy?order=${encodeURIComponent(selectedId)}&assist=1`
+    : "/workshop/buddy";
 
   return (
     <PageChrome
-      title="Buddy · Assist"
-      lede="流程内提问 · WorkOrder 与 Inbox 同源 · 写回仍须 Action"
+      title="Buddy · 智能助手"
+      lede="围绕当前运营工单提问，与风险告警使用同一正式业务来源"
     >
       <BpToolbar>
         <button
@@ -121,10 +124,10 @@ export function BuddyPage({
           }
           onClick={() => setAssistOpen((v) => !v)}
         >
-          💡 Assist
+          💡 辅助分析
         </button>
         <Link to="/workshop/inbox" className="btn-nav">
-          Inbox →
+          风险告警 →
         </Link>
         <Link
           to={activeRow ? `/workshop/graph` : "/workshop/graph"} className="btn-nav"
@@ -138,12 +141,7 @@ export function BuddyPage({
         <div className="bp-buddy-main">
           <BpVarBar
             chips={[
-              {
-                label: activeRow
-                  ? `${activeRow.id} · ${activeRow.title || "—"}`
-                  : `Selection=${selectedId}`,
-                tone: "sky",
-              },
+              ...(activeRow ? [{ label: `${activeRow.id} · ${activeRow.title || "—"}`, tone: "sky" as const }] : []),
               ...selection.map((s) => ({
                 label: `${s.field}=${s.value}`,
                 tone: "violet" as const,
@@ -151,7 +149,7 @@ export function BuddyPage({
             ]}
           />
 
-          <div className="bp-ws-section-title">WorkOrder 表 · 选中行 → Assist / Buddy</div>
+          <div className="bp-ws-section-title">运营工单 · 选择后进入辅助分析</div>
 
           <div className="bp-module-frame">
             <div className="bp-module-frame-head">
@@ -216,15 +214,15 @@ export function BuddyPage({
 
         {buddyOpen && (
           <aside className="bp-buddy-panel">
-            <div className="bp-ws-section-title">AIP Chat · WorkBuddy</div>
+            <div className="bp-ws-section-title">智能问答</div>
             <span className="bp-tag bp-tag-warn" style={{ marginBottom: "0.5rem" }}>
-              WorkOrder Buddy
+              运营工单助手
             </span>
             <BpVarBar
-              chips={[
+              chips={activeRow ? [
                 { label: `objectId: ${selectedId}`, tone: "sky" },
                 { label: "Ontology: WorkOrder", tone: "violet" },
-              ]}
+              ] : [{ label: "尚未选择真实工单", tone: "sky" }]}
             />
             <Link to="/aip/lineage" className="nav-link" style={{ fontSize: "0.75rem" }}>
               查看决策谱系 →
@@ -249,9 +247,10 @@ export function BuddyPage({
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={`@Buddy 分析 ${selectedId}…`}
                 aria-label="buddy-query"
+                disabled={!activeRow}
                 style={{ flex: 1, minWidth: 0 }}
               />
-              <button type="submit" className="btn">
+              <button type="submit" className="btn" disabled={!activeRow || query.trim().length < 2}>
                 发送
               </button>
             </form>

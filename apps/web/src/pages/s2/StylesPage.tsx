@@ -311,7 +311,7 @@ export function StylesPage() {
   const [notice, setNotice] = useState("");
   const [serverSnapshot, setServerSnapshot] = useState<ThemeConfig>({ ...LIGHT_CONFIG });
 
-  /* GET /v1/themes：成功时以服务端为准；失败才展示明确标记的只读演示目录。 */
+  /* GET /v1/themes：只以服务端目录为准；失败时保持可信空态。 */
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -330,10 +330,10 @@ export function StylesPage() {
         }
       } catch {
         if (cancelled) return;
-        setThemes(MOCK_THEMES);
-        setActiveThemeId(MOCK_THEMES[0].id);
+        setThemes([]);
+        setActiveThemeId("");
         setReadOnlyDemo(true);
-        setNotice("主题 API 不可用 · 当前为内置演示预览（只读）");
+        setNotice("主题服务暂不可用，当前没有加载任何主题；请稍后重新进入页面。");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -441,7 +441,7 @@ export function StylesPage() {
   const currentFont = FONTS.find((f) => f.id === config.fontId) || FONTS[0];
 
   return (
-    <PageChrome title="主题与样式" lede="订单管理 · 配置主题、颜色、字体和间距">
+    <PageChrome title="主题与样式" lede="当前工作区 · 配置颜色、字体和布局间距">
       <div className="st-page">
         {/* 226 G4：无页内搜索（稿仅顶栏）；动作对齐「返回编辑器 / 保存」 */}
         <BpToolbar
@@ -522,6 +522,11 @@ export function StylesPage() {
                 </div>
               </div>
             ))}
+            {!loading && themes.length === 0 && (
+              <div style={{ fontSize: 12, color: "#6B7280", padding: 12, lineHeight: 1.6 }}>
+                {readOnlyDemo ? "主题服务暂不可用。" : "当前工作区还没有主题，可使用“新建主题”创建第一套样式。"}
+              </div>
+            )}
           </aside>
 
           {/* === 右栏：编辑区 === */}
@@ -785,11 +790,11 @@ export function StylesPage() {
               )}
             </div>
 
-            {/* === CSS 变量输出 === */}
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>
-                全局 CSS 变量（自动生成）
-              </div>
+            {/* === CSS 变量输出（技术审计，默认折叠） === */}
+            <details style={{ marginTop: 16 }}>
+              <summary style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", cursor: "pointer" }}>
+                查看样式变量审计信息
+              </summary>
               <pre style={{
                 background: "#1F2937",
                 color: "#F9FAFB",
@@ -822,7 +827,7 @@ export function StylesPage() {
                   return <div key={i}>{line}</div>;
                 })}
               </pre>
-            </div>
+            </details>
 
             {/* === 实时预览卡片 === */}
             <div style={{ marginTop: 16 }}>
@@ -845,8 +850,8 @@ export function StylesPage() {
                   lineHeight: config.lineHeight,
                 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: config.marginMd }}>
-                    <h3 style={{ fontSize: config.fontSize + 2, fontWeight: 600, color: config.text, margin: 0 }}>订单管理</h3>
-                    <button type="button" disabled title="主题预览示例，不执行新建订单" style={{
+                    <h3 style={{ fontSize: config.fontSize + 2, fontWeight: 600, color: config.text, margin: 0 }}>样式预览</h3>
+                    <button type="button" disabled title="仅用于预览按钮视觉，不执行业务操作" style={{
                       background: config.primary,
                       color: "#fff",
                       border: "none",
@@ -855,15 +860,15 @@ export function StylesPage() {
                       fontSize: config.fontSize - 1,
                       cursor: "not-allowed",
                     }}>
-                      + 新建订单
+                      主要操作
                     </button>
                   </div>
                   <div style={{ display: "flex", gap: 8, marginBottom: config.marginMd }}>
                     {[
-                      { label: "待处理", bg: "#DBEAFE", color: "#1E40AF" },
-                      { label: "已完成", bg: "#D1FAE5", color: "#065F47" },
-                      { label: "退货中", bg: "#FEF3C7", color: "#92400E" },
-                      { label: "异常", bg: "#FEE2E2", color: "#991B1B" },
+                      { label: "信息状态", bg: "#DBEAFE", color: "#1E40AF" },
+                      { label: "成功状态", bg: "#D1FAE5", color: "#065F47" },
+                      { label: "提醒状态", bg: "#FEF3C7", color: "#92400E" },
+                      { label: "风险状态", bg: "#FEE2E2", color: "#991B1B" },
                     ].map((s) => (
                       <span key={s.label} style={{
                         background: s.bg,
@@ -876,33 +881,16 @@ export function StylesPage() {
                       </span>
                     ))}
                   </div>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: config.fontSize - 1 }}>
-                    <thead>
-                      <tr style={{ borderBottom: `2px solid ${config.border}` }}>
-                        <th style={{ textAlign: "left", padding: config.paddingSm, color: config.textMuted, fontWeight: 500 }}>订单号</th>
-                        <th style={{ textAlign: "left", padding: config.paddingSm, color: config.textMuted, fontWeight: 500 }}>客户</th>
-                        <th style={{ textAlign: "left", padding: config.paddingSm, color: config.textMuted, fontWeight: 500 }}>金额</th>
-                        <th style={{ textAlign: "left", padding: config.paddingSm, color: config.textMuted, fontWeight: 500 }}>状态</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        { id: "#20250725-001", name: "张三", amt: "¥1,280.00", st: { label: "退货中", bg: "#FEF3C7", color: "#92400E" } },
-                        { id: "#20250725-002", name: "李四", amt: "¥3,560.00", st: { label: "已完成", bg: "#D1FAE5", color: "#065F47" } },
-                      ].map((r) => (
-                        <tr key={r.id} style={{ borderBottom: `1px solid ${config.border}` }}>
-                          <td style={{ padding: config.paddingSm, color: config.text }}>{r.id}</td>
-                          <td style={{ padding: config.paddingSm, color: config.text }}>{r.name}</td>
-                          <td style={{ padding: config.paddingSm, color: config.text }}>{r.amt}</td>
-                          <td style={{ padding: config.paddingSm }}>
-                            <span style={{ background: r.st.bg, color: r.st.color, padding: "2px 8px", borderRadius: config.radius, fontSize: config.fontSize - 2 }}>
-                              {r.st.label}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: config.spacingBase }}>
+                    <div style={{ padding: config.paddingMd, border: `1px solid ${config.border}`, borderRadius: config.radius }}>
+                      <div style={{ fontWeight: 600, marginBottom: config.marginSm }}>主要表面</div>
+                      <div style={{ color: config.textMuted, fontSize: config.fontSize - 1 }}>用于核对正文、边框和基础间距。</div>
+                    </div>
+                    <div style={{ padding: config.paddingMd, border: `1px solid ${config.border}`, borderRadius: config.radius, background: config.bg }}>
+                      <div style={{ fontWeight: 600, marginBottom: config.marginSm }}>次级表面</div>
+                      <div style={{ color: config.textMuted, fontSize: config.fontSize - 1 }}>用于核对背景层级和卡片圆角。</div>
+                    </div>
+                  </div>
                 </div>
                 <p style={{ fontSize: 11, color: config.textMuted, textAlign: "center", margin: `${config.marginSm}px 0 0` }}>
                   ↑ 以上预览反映了当前主题/颜色/字体/间距的设置效果

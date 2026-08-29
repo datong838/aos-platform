@@ -40,24 +40,27 @@ function TimelineFailure({ state, onRetry }: IntegrationCaseTimelineProps) {
 function TimelineFacts({ timeline }: { timeline: IntegrationCaseTimelineResponse }) {
   return (
     <div data-timeline-case-id={timeline.caseId} data-case-scope={timeline.scope}>
-      <p>Case <code>{timeline.caseId}</code> · {timeline.scope === "current" ? "当前租户" : "脱敏参考"}</p>
-      <p>共 {timeline.total} 个服务端 Stage Event；当前页 {timeline.items.length} 个。</p>
+      <p>共 {timeline.total} 个阶段事件；当前页 {timeline.items.length} 个。</p>
       {timeline.items.length === 0 ? (
-        <p role="status">服务端尚未返回 Stage Event。</p>
+        <p role="status">服务端尚未返回阶段事件。</p>
       ) : (
-        <ol>
-          {timeline.items.map((event) => (
-            <li key={event.sequence} data-event-sequence={event.sequence}>
-              <strong>#{event.sequence} · <code>{event.oldStage ?? "无前序阶段"}</code> → <code>{event.newStage}</code></strong>
-              <dl>
-                <div><dt>Snapshot revision</dt><dd>{event.snapshotRevision}</dd></div>
-                <div><dt>Cause</dt><dd><code>{event.cause}</code></dd></div>
-                <div><dt>原因引用</dt><dd>{event.reasonRefs.length === 0 ? "无" : <ul>{event.reasonRefs.map((ref) => <li key={ref}><code>{ref}</code></li>)}</ul>}</dd></div>
-                <div><dt>创建时间</dt><dd><time dateTime={event.createdAt}>{event.createdAt}</time></dd></div>
-              </dl>
-            </li>
-          ))}
-        </ol>
+        <details aria-label="阶段事件审计详情">
+          <summary>查看阶段事件审计详情</summary>
+          <p>案例标识 <code>{timeline.caseId}</code> · {timeline.scope === "current" ? "当前租户" : "脱敏参考"}</p>
+          <ol>
+            {timeline.items.map((event) => (
+              <li key={event.sequence} data-event-sequence={event.sequence}>
+                <strong>#{event.sequence} · <code>{event.oldStage ?? "无前序阶段"}</code> → <code>{event.newStage}</code></strong>
+                <dl>
+                  <div><dt>快照版本</dt><dd>{event.snapshotRevision}</dd></div>
+                  <div><dt>产生原因</dt><dd><code>{event.cause}</code></dd></div>
+                  <div><dt>原因引用</dt><dd>{event.reasonRefs.length === 0 ? "无" : <ul>{event.reasonRefs.map((ref) => <li key={ref}><code>{ref}</code></li>)}</ul>}</dd></div>
+                  <div><dt>创建时间</dt><dd><time dateTime={event.createdAt}>{event.createdAt}</time></dd></div>
+                </dl>
+              </li>
+            ))}
+          </ol>
+        </details>
       )}
     </div>
   );
@@ -68,8 +71,8 @@ export function IntegrationCaseTimeline({ state, onRetry }: IntegrationCaseTimel
   return (
     <section aria-label="阶段事件时间线" style={panelStyle}>
       <header>
-        <h3 style={{ margin: 0 }}>Stage Event 时间线</h3>
-        <p>只读展示服务端事件；事件序列不用于推断未返回的阶段或 Evidence。</p>
+        <h3 style={{ margin: 0 }}>阶段事件时间线</h3>
+        <p>只读展示服务端事件；事件序列不用于推断未返回的阶段或证据。</p>
       </header>
 
       {state.status === "idle" && <p role="status">请选择一个接入案例以读取阶段事件。</p>}

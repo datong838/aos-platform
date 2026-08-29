@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
@@ -375,6 +377,7 @@ describe("EventsPage · 真实 CRUD 交互", () => {
     action: { type: "showMessage", params: { messageType: "toast", messageContent: "完成" } },
     enabled: true,
   };
+  const serverModule = { id: "mod-real", name: "真实应用" };
 
   async function flush() {
     await act(async () => {
@@ -418,10 +421,17 @@ describe("EventsPage · 真实 CRUD 交互", () => {
   });
 
   it("启停和删除成功后调用真实 API 并重读", async () => {
-    apiMocks.apiGet
-      .mockResolvedValueOnce({ items: [serverEvent] })
-      .mockResolvedValueOnce({ items: [{ ...serverEvent, enabled: false }] })
-      .mockResolvedValueOnce({ items: [] });
+    let reads = 0;
+    apiMocks.apiGet.mockImplementation(async (path: string) => {
+      if (path === "/v1/modules") return { items: [serverModule] };
+      if (path === "/v1/modules/mod-real/events") {
+        reads += 1;
+        if (reads === 1) return { items: [serverEvent] };
+        if (reads === 2) return { items: [{ ...serverEvent, enabled: false }] };
+        return { items: [] };
+      }
+      throw new Error(path);
+    });
     apiMocks.apiPut.mockResolvedValue({ ok: true, item: { ...serverEvent, enabled: false } });
     apiMocks.apiDelete.mockResolvedValue({ ok: true });
 
@@ -432,17 +442,19 @@ describe("EventsPage · 真实 CRUD 交互", () => {
 
     await act(async () => button("暂停").click());
     await flush();
-    expect(apiMocks.apiPut).toHaveBeenCalledWith("/v1/modules/order-mgmt/events/evt-1", { enabled: false });
+    expect(apiMocks.apiPut).toHaveBeenCalledWith("/v1/modules/mod-real/events/evt-1", { enabled: false });
     expect(host.textContent).toContain("已暂停");
 
     await act(async () => button("删除").click());
     await flush();
-    expect(apiMocks.apiDelete).toHaveBeenCalledWith("/v1/modules/order-mgmt/events/evt-1");
+    expect(apiMocks.apiDelete).toHaveBeenCalledWith("/v1/modules/mod-real/events/evt-1");
     expect(host.textContent).toContain("暂无事件");
   });
 
   it("写 API 回包不可信时保留服务端列表并显示错误", async () => {
-    apiMocks.apiGet.mockResolvedValue({ items: [serverEvent] });
+    apiMocks.apiGet.mockImplementation(async (path: string) => path === "/v1/modules"
+      ? { items: [serverModule] }
+      : { items: [serverEvent] });
     apiMocks.apiPut.mockResolvedValue({ ok: true, item: { ...serverEvent, enabled: true } });
 
     await act(async () => {
@@ -454,7 +466,7 @@ describe("EventsPage · 真实 CRUD 交互", () => {
 
     expect(host.textContent).toContain("更新 API 回包与目标状态不一致");
     expect(host.textContent).toContain("运行中");
-    expect(apiMocks.apiGet).toHaveBeenCalledTimes(1);
+    expect(apiMocks.apiGet).toHaveBeenCalledTimes(2);
   });
 
   it("完成向导后 POST 创建并以服务端重读结果展示", async () => {
@@ -466,9 +478,15 @@ describe("EventsPage · 真实 CRUD 交互", () => {
       action: { type: "navigate", params: { targetRoute: "/orders" } },
       enabled: false,
     };
-    apiMocks.apiGet
-      .mockResolvedValueOnce({ items: [] })
-      .mockResolvedValueOnce({ items: [created] });
+    let eventReads = 0;
+    apiMocks.apiGet.mockImplementation(async (path: string) => {
+      if (path === "/v1/modules") return { items: [serverModule] };
+      if (path === "/v1/modules/mod-real/events") {
+        eventReads += 1;
+        return { items: eventReads === 1 ? [] : [created] };
+      }
+      throw new Error(path);
+    });
     apiMocks.apiPost.mockResolvedValue({ ok: true, item: created });
 
     await act(async () => {
@@ -495,7 +513,7 @@ describe("EventsPage · 真实 CRUD 交互", () => {
     await flush();
 
     expect(apiMocks.apiPost).toHaveBeenCalledWith(
-      "/v1/modules/order-mgmt/events",
+      "/v1/modules/mod-real/events",
       expect.objectContaining({
         name: "导航事件",
         trigger: expect.objectContaining({ type: "custom" }),
@@ -505,5 +523,19 @@ describe("EventsPage · 真实 CRUD 交互", () => {
     );
     expect(host.textContent).toContain("已创建并从服务端重读");
     expect(host.textContent).toContain("已暂停");
+  });
+
+  it("无真实应用时添加事件禁用且不发送写请求", async () => {
+    apiMocks.apiGet.mockResolvedValue({ items: [] });
+    await act(async () => {
+      root.render(createElement(MemoryRouter, null, createElement(EventsPage)));
+    });
+    await flush();
+
+    expect(button("添加事件").disabled).toBe(true);
+    expect(host.textContent).toContain("请先新建或选择真实应用");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
+    expect(apiMocks.apiPut).not.toHaveBeenCalled();
+    expect(apiMocks.apiDelete).not.toHaveBeenCalled();
   });
 });

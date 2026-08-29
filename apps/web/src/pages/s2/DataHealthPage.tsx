@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiPost } from "../../api/client";
+import { apiGet } from "../../api/client";
 import {
   BpBanner,
   BpMetricGrid,
@@ -35,6 +35,7 @@ export type HealthIssue = {
   message: string;
   detectedAt: string;
   ruleId?: string;
+  pipelineId?: string;
 };
 
 export type TrendPoint = {
@@ -45,7 +46,7 @@ export type TrendPoint = {
 export type HealthSummary = {
   overallScore: number;
   completeness: number;
-  consistency: number;
+  consistency: number | null;
   timeliness: number;
   totalRules: number;
   passingRules: number;
@@ -166,7 +167,7 @@ export function sortIssuesBySeverity(issues: HealthIssue[]): HealthIssue[] {
 // ── Page Component ─────────────────────────────────────────────
 
 export function DataHealthPage() {
-  const { data, err, loading, reload } = useJsonGet<HealthSummary>("/v1/data-health/summary");
+  const { data, err, loading, setData, setErr } = useJsonGet<HealthSummary>("/v1/data-health/summary");
   const hs = data;
 
   const [tab, setTab] = useState("overview");
@@ -175,6 +176,7 @@ export function DataHealthPage() {
   const [ruleFilter, setRuleFilter] = useState<RuleStatus | "all">("all");
   const [ruleQuery, setRuleQuery] = useState("");
   const [msg, setMsg] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
   const filteredIssues = useMemo(
     () => hs ? sortIssuesBySeverity(filterIssues(hs.issues, issueFilter, issueQuery)) : [],
@@ -187,30 +189,36 @@ export function DataHealthPage() {
   );
 
   const trendMax = useMemo(
-    () => hs ? Math.max(...hs.trend.map((p) => p.score), 1) : 1,
+    () => hs && hs.trend.length ? Math.max(...hs.trend.map((p) => p.score)) : 0,
     [hs],
   );
   const trendMin = useMemo(
-    () => hs ? Math.min(...hs.trend.map((p) => p.score), 0) : 0,
+    () => hs && hs.trend.length ? Math.min(...hs.trend.map((p) => p.score)) : 0,
     [hs],
   );
 
-  async function handleRunChecks() {
+  async function handleRefreshChecks() {
     setMsg("");
+    setRefreshing(true);
     try {
-      await apiPost("/v1/data-health/run-checks", {});
-      setMsg("已触发全量质量检查");
-      reload();
+      const next = await apiGet<HealthSummary>("/v1/data-health/summary");
+      setData(next);
+      setErr(null);
+      setMsg("检查结果已刷新");
     } catch (e) {
-      setMsg(String((e as Error).message || e));
+      const message = String((e as Error).message || e);
+      setErr(message);
+      setMsg(`刷新失败：${message}`);
+    } finally {
+      setRefreshing(false);
     }
   }
 
   return (
     <S2Chrome title="数据健康" lede="数据质量仪表盘 · 栖月汇微商城 12 管道监控">
       <BpToolbar>
-        <button type="button" className="btn-primary" onClick={() => void handleRunChecks()}>
-          运行检查
+        <button type="button" className="btn-primary" disabled={refreshing} onClick={() => void handleRefreshChecks()}>
+          {refreshing ? "正在刷新…" : "刷新检查结果"}
         </button>
         <Link to="/data/lineage" className="btn-nav">数据沿袭</Link>
       </BpToolbar>
@@ -227,8 +235,8 @@ export function DataHealthPage() {
           <BpMetricGrid
             items={[
               { label: "总体评分", value: `${hs.overallScore}/100`, tone: scoreToTone(hs.overallScore) },
-              { label: "完整率", value: formatPercent(hs.completeness), tone: scoreToTone(hs.completeness * 100) },
-              { label: "一致率", value: formatPercent(hs.consistency), tone: scoreToTone(hs.consistency * 100) },
+              { label: "可用率", value: formatPercent(hs.completeness), tone: scoreToTone(hs.completeness * 100) },
+              { label: "一致率", value: hs.consistency == null ? "未知" : formatPercent(hs.consistency), tone: hs.consistency == null ? "muted" : scoreToTone(hs.consistency * 100) },
               { label: "时效率", value: formatPercent(hs.timeliness), tone: scoreToTone(hs.timeliness * 100) },
             ]}
           />
@@ -257,14 +265,17 @@ export function DataHealthPage() {
             <div>
               {hs.issues.length > 0 ? (
                 <BpTable
-                  columns={["严重级别", "表名", "列名", "问题描述", "发现时间"]}
+                  columns={["严重级别", "业务数据", "业务字段", "问题描述", "发现时间"]}
                   rows={filteredIssues.slice(0, 10).map((i) => [
                     <span className={`bp-discover-badge bp-discover-badge-${SEVERITY_TONE[i.severity]}`}>
                       {SEVERITY_LABEL[i.severity]}
                     </span>,
-                    <span className="mono">{i.table}</span>,
-                    <span className="mono">{i.column}</span>,
-                    i.message,
+                    <span>{i.table}</span>,
+                    <span>{i.column}</span>,
+                    <div>
+                      {i.message}
+                      <details><summary>技术审计信息</summary><code>{i.id}</code>{i.pipelineId ? <> · <code>{i.pipelineId}</code></> : null}{i.ruleId ? <> · <code>{i.ruleId}</code></> : null}</details>
+                    </div>,
                     formatTimestamp(i.detectedAt),
                   ])}
                 />
@@ -345,14 +356,17 @@ export function DataHealthPage() {
               </BpToolbar>
               {filteredIssues.length > 0 ? (
                 <BpTable
-                  columns={["严重级别", "表名", "列名", "问题描述", "发现时间"]}
+                  columns={["严重级别", "业务数据", "业务字段", "问题描述", "发现时间"]}
                   rows={filteredIssues.map((i) => [
                     <span className={`bp-discover-badge bp-discover-badge-${SEVERITY_TONE[i.severity]}`}>
                       {SEVERITY_LABEL[i.severity]}
                     </span>,
-                    <span className="mono">{i.table}</span>,
-                    <span className="mono">{i.column}</span>,
-                    i.message,
+                    <span>{i.table}</span>,
+                    <span>{i.column}</span>,
+                    <div>
+                      {i.message}
+                      <details><summary>技术审计信息</summary><code>{i.id}</code>{i.pipelineId ? <> · <code>{i.pipelineId}</code></> : null}{i.ruleId ? <> · <code>{i.ruleId}</code></> : null}</details>
+                    </div>,
                     formatTimestamp(i.detectedAt),
                   ])}
                 />
@@ -365,7 +379,7 @@ export function DataHealthPage() {
           {tab === "trend" && (
             <div>
               <h3 className="aos-text" style={{ fontSize: "0.85rem", marginBottom: "0.5rem" }}>
-                健康评分趋势（最近 14 天）
+                健康评分趋势（有权威运行记录的日期）
               </h3>
               <div className="bp-table-wrap">
                 <BpTable
@@ -397,7 +411,7 @@ export function DataHealthPage() {
                 />
               </div>
               <p className="muted" style={{ fontSize: "0.75rem", marginTop: "0.5rem" }}>
-                最高 {trendMax} · 最低 {trendMin} · 平均{" "}
+                当前返回 {hs.trend.length} 个记录日 · 最高 {trendMax} · 最低 {trendMin} · 平均{" "}
                 {Math.round(hs.trend.reduce((a, b) => a + b.score, 0) / (hs.trend.length || 1))}
               </p>
             </div>

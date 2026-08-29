@@ -7,6 +7,7 @@ import {
   configToApiPayload,
   estimateSyncDuration,
   formatDuration,
+  formFromSchedule,
   hasErrors,
   validateConfig,
   type SyncConfigForm,
@@ -48,6 +49,10 @@ describe("SyncConfigPage · validateConfig · custom cron", () => {
 });
 
 describe("SyncConfigPage · validateConfig · email", () => {
+  it("默认配置不注入演示邮箱或通知副作用", () => {
+    expect(DEFAULT_CONFIG.notifyEmail).toBe("");
+    expect(DEFAULT_CONFIG.notifyOnError).toBe(false);
+  });
   it("开启通知但无邮箱报错", () => {
     const errs = validateConfig(makeForm({ notifyOnError: true, notifyEmail: "" }));
     expect(errs.notifyEmail).toBeDefined();
@@ -63,6 +68,16 @@ describe("SyncConfigPage · validateConfig · email", () => {
   it("不开通知时邮箱可空", () => {
     const errs = validateConfig(makeForm({ notifyOnError: false, notifyOnComplete: false, notifyEmail: "" }));
     expect(errs.notifyEmail).toBeUndefined();
+  });
+});
+
+describe("SyncConfigPage · current schedule", () => {
+  it("从正式计划读取 Cron 和已保存配置", () => {
+    expect(formFromSchedule({
+      id: "sch-current",
+      cron: "15 3 * * *",
+      ingest: { syncConfig: { batchSize: 500 } },
+    })).toMatchObject({ frequency: "custom", customCron: "15 3 * * *", batchSize: 500 });
   });
 });
 

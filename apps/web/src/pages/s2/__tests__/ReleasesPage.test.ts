@@ -30,7 +30,7 @@ describe("ReleasesPage", () => {
     host.remove();
   });
 
-  it("renders Release Channel with MOCK fallback", async () => {
+  it("接口为空时展示可信空态，不注入固定发布事实", async () => {
     const { ReleasesPage } = await import("../ReleasesPage");
     await act(async () => {
       root.render(createElement(MemoryRouter, null, createElement(ReleasesPage)));
@@ -41,18 +41,17 @@ describe("ReleasesPage", () => {
     });
 
     const text = host.textContent || "";
-    expect(text).toContain("Release Channel 管道");
-    expect(text).toContain("2.15.0-rc.5");
-    expect(text).toContain("2.14.2-beta.1");
-    expect(text).toContain("2.14.1");
-    expect(text).toContain("CVE-2026-1842");
-    expect(text).toContain("推送到紧急通道");
-    expect(text).toContain("执行 Recall");
-    expect(text).toContain("Recall 回滚");
-    expect(text).toContain("Hotfix");
+    expect(text).toContain("Release 通道");
+    expect(text).toContain("当前没有可核验的发布记录");
+    expect(text).toContain("当前没有已登记的紧急补丁");
+    expect(text).toContain("当前没有可核验的回滚记录");
+    expect(text).not.toContain("2.15.0-rc.5");
+    expect(text).not.toContain("CVE-2026-1842");
+    expect(text).not.toContain("推送到紧急通道");
+    expect(text).not.toContain("执行 Recall");
   });
 
-  it("shows pipeline stages correctly", async () => {
+  it("只提供审批入口，不提供客户端伪执行按钮", async () => {
     const { ReleasesPage } = await import("../ReleasesPage");
     await act(async () => {
       root.render(createElement(MemoryRouter, null, createElement(ReleasesPage)));
@@ -63,13 +62,8 @@ describe("ReleasesPage", () => {
     });
 
     const text = host.textContent || "";
-    // rc → beta → stable
-    expect(text).toMatch(/rc/);
-    expect(text).toMatch(/beta/);
-    expect(text).toMatch(/stable/);
-    // Push percentages
-    expect(text).toContain("100%");
-    expect(text).toContain("40%");
-    expect(text).toContain("20%");
+    expect(text).toContain("查看或创建变更审批");
+    expect(text).toContain("本页不直接推送");
+    expect(text).toContain("不在历史列表直接执行");
   });
 });

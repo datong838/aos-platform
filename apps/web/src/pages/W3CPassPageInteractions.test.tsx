@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { act } from "react";
 import { createElement, type ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -62,6 +64,7 @@ describe("Wave 3C · six passing pages keep their main interactions honest", () 
   let root: Root;
 
   beforeEach(() => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     host = document.createElement("div");
     document.body.appendChild(host);
     root = createRoot(host);
@@ -273,6 +276,8 @@ describe("Wave 3C · six passing pages keep their main interactions honest", () 
 
   it("Ontology Discover searches and opens objects from the live response", async () => {
     await render(OntologyPage);
+    expect(host.textContent).toContain("暂无收藏");
+    expect(host.textContent).not.toContain("下方为预览");
     const search = host.querySelector('input[type="search"]') as HTMLInputElement;
     await act(async () => {
       search.value = "工作单";
@@ -283,6 +288,14 @@ describe("Wave 3C · six passing pages keep their main interactions honest", () 
     await flushEffects();
     expect(host.textContent).toContain("工作单");
     expect(mocks.listObjects).toHaveBeenCalledWith("WorkOrder", { branch: "main" });
+  });
+
+  it("Ontology Discover 不把对象读取失败折算为零实例", async () => {
+    mocks.listObjects.mockRejectedValue(new Error("objects unavailable"));
+    await render(OntologyPage);
+    await flushEffects();
+    expect(host.textContent).toContain("未读取");
+    expect(host.textContent).not.toContain("0 实例");
   });
 
   it("Local Platform exposes dependency auto-ensure failure", async () => {

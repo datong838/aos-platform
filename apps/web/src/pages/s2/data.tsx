@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { apiDelete, apiGet, apiPatch, apiPost } from "../../api/client";
+import { apiDelete, apiGet, apiPost } from "../../api/client";
 import {
   BpBanner,
   BpMetricGrid,
@@ -9,14 +9,16 @@ import {
   BpTable,
   BpTabs,
   BpToolbar,
-  flattenRecordProps,
 } from "./blueprintUi";
 import { JsonBlock, PipelineWorkflowStepper, S2Chrome, useJsonGet } from "./shared";
 import {
   TABLE_LABELS,
   buildStatusBadge,
+  getPipelineDisplayName,
+  getSourceDisplayName,
   pipelineDisplayTitle,
   pipelineFlowLine,
+  pipelineStatusKey,
   tableKeyFromBlob,
   type PipelineMeta,
 } from "./pipelineMeta";
@@ -50,6 +52,101 @@ type DatasetRow = {
   objectTypeHint?: string;
   sourceId?: string;
 };
+
+export function buildStageLabel(name?: string): string {
+  const normalized = (name || "").trim().toLowerCase();
+  if (normalized === "ingest" || normalized === "extract" || normalized === "source") return "读取数据";
+  if (normalized === "transform" || normalized === "validate") return "处理数据";
+  if (normalized === "sink" || normalized === "load" || normalized === "output") return "写入数据";
+  return name?.trim() || "未命名阶段";
+}
+
+export function buildCountLabel(value?: number): string {
+  return value == null ? "未读取" : value.toLocaleString("zh-CN");
+}
+
+export function datasetStatusLabel(status?: string): string {
+  const normalized = (status || "").trim().toUpperCase();
+  if (normalized === "READY" || normalized === "SUCCEEDED" || normalized === "SUCCESS") return "可读取";
+  if (normalized === "RUNNING" || normalized === "IN_PROGRESS") return "更新中";
+  if (normalized === "FAILED" || normalized === "ERROR") return "读取失败";
+  return normalized ? "待确认" : "未读取";
+}
+
+const DATASET_FIELD_LABELS: Record<string, string> = {
+  id: "业务标识",
+  name: "名称",
+  title: "标题",
+  status: "业务状态",
+  type: "对象类型",
+  code: "业务编码",
+  order_no: "订单号",
+  orderNo: "订单号",
+  goods_id: "商品标识",
+  goods_name: "商品名称",
+  product_id: "商品标识",
+  product_name: "商品名称",
+  productId: "商品标识",
+  shop_id: "店铺标识",
+  shopId: "店铺标识",
+  member_id: "会员标识",
+  memberId: "会员标识",
+  customer_name: "客户名称",
+  amount: "金额",
+  total_amount: "总金额",
+  totalAmount: "订单总额",
+  currency: "币种",
+  currencyScale: "金额精度",
+  pay_status: "支付状态",
+  payStatus: "支付状态",
+  order_status: "订单状态",
+  orderStatus: "订单状态",
+  delivery_status: "发货状态",
+  deliveryStatus: "发货状态",
+  risk_score: "风险评分",
+  review_quality_bucket: "评价质量",
+  is_delete: "删除状态",
+  isDelete: "删除状态",
+  content: "内容",
+  score: "评分",
+  created_at: "创建时间",
+  createdAt: "创建时间",
+  updated_at: "更新时间",
+  updatedAt: "更新时间",
+};
+
+export function datasetFieldLabel(field: string): string {
+  return DATASET_FIELD_LABELS[field] || "业务字段";
+}
+
+const DATASET_AUDIT_ONLY_FIELDS = new Set([
+  "type",
+  "_schemaVersion",
+  "_sourceIdentity",
+  "_sourceUpdatedAt",
+  "createdAtSourceTimezone",
+  "updatedAtSourceTimezone",
+]);
+
+export function datasetBusinessColumns(fields: string[]): string[] {
+  return fields.filter((field) => !DATASET_AUDIT_ONLY_FIELDS.has(field));
+}
+
+export function datasetCellText(field: string, value: unknown): string {
+  if (value == null) return "—";
+  const normalized = String(value).trim().toLowerCase();
+  if (field === "status") {
+    if (normalized === "active") return "正常";
+    if (normalized === "inactive") return "停用";
+  }
+  if (field === "currency" && normalized === "cny") return "人民币";
+  if (field === "review_quality_bucket") {
+    if (normalized === "high") return "高";
+    if (normalized === "medium") return "中";
+    if (normalized === "low") return "低";
+  }
+  return cellText(value);
+}
 
 type PreviewResult = {
   columns?: string[];
@@ -109,7 +206,7 @@ export function PipelinesPage() {
     const all = data?.items || [];
     let filtered = all;
     if (sourceFilter) filtered = filtered.filter((p) => p.sourceId === sourceFilter);
-    if (statusFilter) filtered = filtered.filter((p) => (p.lastBuild?.status || "unknown") === statusFilter);
+    if (statusFilter) filtered = filtered.filter((p) => pipelineStatusKey(p.lastBuild?.status) === statusFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       filtered = filtered.filter((p) =>
@@ -126,9 +223,9 @@ export function PipelinesPage() {
   // Phase 7: 统计卡片
   const stats = useMemo(() => {
     const all = data?.items || [];
-    const success = all.filter((p) => p.lastBuild?.status === "success").length;
-    const failed = all.filter((p) => p.lastBuild?.status === "failed").length;
-    const running = all.filter((p) => p.lastBuild?.status === "running").length;
+    const success = all.filter((p) => pipelineStatusKey(p.lastBuild?.status) === "success").length;
+    const failed = all.filter((p) => pipelineStatusKey(p.lastBuild?.status) === "failed").length;
+    const running = all.filter((p) => pipelineStatusKey(p.lastBuild?.status) === "running").length;
     return { total: all.length, success, failed, running };
   }, [data?.items]);
 
@@ -212,7 +309,7 @@ export function PipelinesPage() {
   const goCanvas = (id: string) => nav(`/data/pipelines/${encodeURIComponent(id)}`);
 
   return (
-    <S2Chrome title="管道构建" lede={`Ecom-Data-Project · ${items.length} / ${stats.total} 个管道`}>
+    <S2Chrome title="管道构建" lede={`栖月汇电商数据项目 · 当前显示 ${items.length} / ${stats.total} 条管道`}>
       <PipelineWorkflowStepper current={0} />
       <BpToolbar>
         {flash && (
@@ -242,7 +339,7 @@ export function PipelinesPage() {
         )}
         {sourceFilter && (
           <Link to="/data/pipelines" className="btn-nav">
-            清除 Source 过滤 ×
+            清除来源筛选 ×
           </Link>
         )}
         {/* Phase 7: 搜索框 */}
@@ -255,6 +352,7 @@ export function PipelinesPage() {
         />
         {/* Phase 7: 状态过滤 */}
         <select
+          aria-label="管道状态"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           style={{ fontSize: "0.8rem", padding: "2px 6px", border: "1px solid var(--aos-border, #cbd5e0)", borderRadius: 3 }}
@@ -285,7 +383,7 @@ export function PipelinesPage() {
 
       {sourceFilter && !search && !statusFilter && (
         <BpBanner tone="info">
-          已按 Source <strong>{sourceFilter}</strong> 过滤
+          已按来源系统筛选；精确来源标识见审计信息。
         </BpBanner>
       )}
       {err && <p className="error">{err}</p>}
@@ -296,7 +394,7 @@ export function PipelinesPage() {
             <div className="bp-section-label">项目</div>
             <div className="bp-pipe-project">
               <span className="bp-pipe-project-icon" aria-hidden />
-              Ecom-Data-Project
+              栖月汇电商数据项目
             </div>
           </div>
           <nav className="bp-pipe-tree-nav">
@@ -346,6 +444,10 @@ export function PipelinesPage() {
                   className="bp-pipe-card"
                   onClick={() => goCanvas(p.id)}
                   role="link"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") goCanvas(p.id);
+                  }}
                   style={{ cursor: "pointer" }}
                 >
                   <div className="bp-pipe-card-top">
@@ -371,10 +473,15 @@ export function PipelinesPage() {
                     <span className={`bp-pipe-badge bp-pipe-badge-${badge.tone}`}>{badge.label}</span>
                   </div>
                   <div className="bp-pipe-card-meta">
-                    <span>分支 master</span>
-                    <span>build {p.lastBuild?.status || "—"}</span>
-                    <span>{p.nodes?.length || 3} 个节点</span>
+                    <span>运行分支：主分支</span>
+                    <span>最近构建：{badge.label}</span>
+                    <span>{p.nodes ? `${p.nodes.length} 个处理节点` : "处理节点未读取"}</span>
                   </div>
+                  <details className="bp-audit-details" onClick={(event) => event.stopPropagation()} style={{ marginTop: 6 }}>
+                    <summary>管道审计</summary>
+                    <p className="muted">管道标识：{p.id} · 来源标识：{p.sourceId || "未读取"}</p>
+                    <p className="muted">数据集：{p.datasetRid || "未读取"} · 原始构建状态：{p.lastBuild?.status || "未读取"}</p>
+                  </details>
                   <div
                     className="bp-pipe-card-actions"
                     onClick={(ev) => {
@@ -440,7 +547,7 @@ export function PipelinesPage() {
           </div>
           {items.length === 0 && (
             <p className="muted">
-              空 · 先到 <Link to="/data">数据源管理</Link> 注册 Source / 跑 ingest
+              当前没有可读取的管道；请先到 <Link to="/data">数据源管理</Link> 配置正式来源并完成安全预检。
             </p>
           )}
         </div>
@@ -457,6 +564,7 @@ export function BuildsPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [executingIds, setExecutingIds] = useState<Set<string>>(new Set());
   const [runMode, setRunMode] = useState<"incremental" | "full">("incremental");
+  const [pendingExecution, setPendingExecution] = useState<string | null>(null);
 
   const builds = data?.items || [];
   const pipelines = pipelinesData?.items || [];
@@ -471,7 +579,7 @@ export function BuildsPage() {
   }
 
   function statusBadge(status?: string): { text: string; cls: string } {
-    switch (status) {
+    switch ((status || "").toUpperCase()) {
       case "SUCCEEDED":
         return { text: "成功", cls: "badge-ok" };
       case "FAILED":
@@ -480,7 +588,7 @@ export function BuildsPage() {
       case "RUNNING":
         return { text: "运行中", cls: "badge-run" };
       default:
-        return { text: status || "—", cls: "badge-muted" };
+        return { text: status ? "待确认" : "未读取", cls: "badge-muted" };
     }
   }
 
@@ -491,8 +599,8 @@ export function BuildsPage() {
 
   function formatDuration(sec?: number): string {
     if (!sec) return "—";
-    if (sec < 60) return `${sec.toFixed(1)}s`;
-    return `${Math.floor(sec / 60)}m ${(sec % 60).toFixed(0)}s`;
+    if (sec < 60) return `${sec.toFixed(1)} 秒`;
+    return `${Math.floor(sec / 60)} 分 ${(sec % 60).toFixed(0)} 秒`;
   }
 
   function findDatasetRid(pipelineId?: string): string | undefined {
@@ -528,8 +636,23 @@ export function BuildsPage() {
     }
   }
 
+  function requestExecution(pipelineId: string) {
+    if (pipelineId) setPendingExecution(pipelineId);
+  }
+
+  async function confirmExecution() {
+    const target = pendingExecution;
+    setPendingExecution(null);
+    if (!target) return;
+    if (target === "__all__") await executeAllActive();
+    else await executePipeline(target);
+  }
+
+  const pendingBuild = builds.find((build) => build.pipelineId === pendingExecution);
+  const pendingPipelineName = pendingBuild?.pipelineName || pendingBuild?.pipelineId || "当前管道";
+
   return (
-    <S2Chrome title="搭建" lede="管道执行工作台：立即执行、查看日志、预览数据">
+    <S2Chrome title="搭建" lede="查看真实数据处理记录、阶段、日志与输出数据">
       <PipelineWorkflowStepper current={3} />
 
       {/* 顶部工具栏 */}
@@ -539,10 +662,11 @@ export function BuildsPage() {
             ← 管道列表
           </Link>
           <button type="button" className="btn" onClick={() => reload()}>
-            🔄 刷新
+            刷新
           </button>
           <div style={{ width: 1, height: 24, background: "var(--aos-border)", margin: "0 4px" }} />
           <select
+            aria-label="执行模式"
             value={runMode}
             onChange={(e) => setRunMode(e.target.value as "incremental" | "full")}
             style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--aos-border)", fontSize: 13 }}
@@ -553,18 +677,18 @@ export function BuildsPage() {
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => active?.pipelineId && executePipeline(active.pipelineId)}
+            onClick={() => active?.pipelineId && requestExecution(active.pipelineId)}
             disabled={!active?.pipelineId || executingIds.has(active.pipelineId || "")}
           >
-            {executingIds.has(active?.pipelineId || "") ? "⏳ 执行中..." : "🚀 执行当前管道"}
+            {executingIds.has(active?.pipelineId || "") ? "执行中..." : "执行当前管道"}
           </button>
           <button
             type="button"
             className="btn"
-            onClick={executeAllActive}
+            onClick={() => setPendingExecution("__all__")}
             disabled={executingIds.size > 0}
           >
-            ⚡ 批量执行全部
+            批量执行全部
           </button>
           {active?.pipelineId && findDatasetRid(active.pipelineId) && (
             <Link
@@ -572,11 +696,22 @@ export function BuildsPage() {
               className="btn btn-nav"
               style={{ background: "var(--aos-blue-50)", color: "var(--aos-blue-600)" }}
             >
-              🔍 查看数据集 →
+              查看数据集 →
             </Link>
           )}
         </div>
       </BpToolbar>
+
+      {pendingExecution && (
+        <BpBanner tone="warn">
+          <strong>{pendingExecution === "__all__" ? "确认批量执行全部可用管道" : `确认执行“${pendingPipelineName}”`}</strong>
+          <p className="muted">执行模式：{runMode === "full" ? "全量（将重新处理完整数据范围）" : "增量（处理新增与变化数据）"}。确认后会产生真实数据处理记录。</p>
+          <BpToolbar>
+            <button type="button" className="btn" onClick={() => setPendingExecution(null)}>取消</button>
+            <button type="button" className="btn-primary" onClick={() => void confirmExecution()}>确认执行</button>
+          </BpToolbar>
+        </BpBanner>
+      )}
 
       {err && <p className="error">{err}</p>}
 
@@ -592,8 +727,8 @@ export function BuildsPage() {
             {builds.length === 0 && (
               <div className="card" style={{ textAlign: "center", padding: "32px 16px", color: "var(--aos-text-muted)" }}>
                 <p>暂无搭建记录</p>
-                <button type="button" className="btn btn-primary" onClick={executeAllActive}>
-                  🚀 立即执行第一个搭建
+                <button type="button" className="btn btn-primary" onClick={() => setPendingExecution("__all__")}>
+                  执行可用管道
                 </button>
               </div>
             )}
@@ -614,6 +749,11 @@ export function BuildsPage() {
                     background: b.id === active?.id ? "var(--aos-blue-50)" : undefined,
                   }}
                   onClick={() => setSelected(b.id || null)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") setSelected(b.id || null);
+                  }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                     <strong style={{ fontSize: "0.9rem" }}>
@@ -632,9 +772,10 @@ export function BuildsPage() {
                     </span>
                   </div>
 
-                  <div className="muted" style={{ fontSize: "0.72rem", marginBottom: 8 }}>
-                    ID: {b.pipelineId}
-                  </div>
+                  <details className="bp-audit-details" style={{ marginBottom: 8 }} onClick={(event) => event.stopPropagation()}>
+                    <summary>搭建审计</summary>
+                    <span className="muted">构建：{b.id || "未读取"} · 管道：{b.pipelineId || "未读取"} · 原始状态：{b.status || "未读取"}</span>
+                  </details>
 
                   {/* 统计信息 */}
                   <div
@@ -650,7 +791,7 @@ export function BuildsPage() {
                       耗时：<span className="aos-text">{formatDuration(b.duration)}</span>
                     </div>
                     <div style={{ color: "var(--aos-text-muted)" }}>
-                      记录：<span className="aos-text">{b.rowsWritten ?? 0}</span>
+                      写入：<span className="aos-text">{buildCountLabel(b.rowsWritten)}</span>
                     </div>
                   </div>
 
@@ -659,11 +800,11 @@ export function BuildsPage() {
                     <button
                       type="button"
                       className="btn btn-small"
-                      onClick={() => b.pipelineId && executePipeline(b.pipelineId)}
+                      onClick={() => b.pipelineId && requestExecution(b.pipelineId)}
                       disabled={isRunning}
                       style={{ padding: "4px 10px", fontSize: 12, flex: 1 }}
                     >
-                      {isRunning ? "⏳ 执行中" : "▶ 执行"}
+                      {isRunning ? "执行中" : "执行"}
                     </button>
                     {dsRid && (
                       <Link
@@ -671,7 +812,7 @@ export function BuildsPage() {
                         className="btn btn-small btn-nav"
                         style={{ padding: "4px 10px", fontSize: 12, flex: 1 }}
                       >
-                        🔍 数据
+                        查看数据
                       </Link>
                     )}
                   </div>
@@ -709,10 +850,10 @@ export function BuildsPage() {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => active.pipelineId && executePipeline(active.pipelineId)}
+                    onClick={() => active.pipelineId && requestExecution(active.pipelineId)}
                     disabled={executingIds.has(active.pipelineId || "")}
                   >
-                    {executingIds.has(active.pipelineId || "") ? "⏳ 执行中..." : "🚀 立即执行"}
+                    {executingIds.has(active.pipelineId || "") ? "执行中..." : "执行当前管道"}
                   </button>
                 </div>
               </div>
@@ -729,8 +870,8 @@ export function BuildsPage() {
                 {[
                   { label: "执行状态", value: statusBadge(active.status).text, highlight: active.status === "SUCCEEDED" },
                   { label: "执行耗时", value: formatDuration(active.duration) },
-                  { label: "读取记录", value: (active.rowsRead ?? 0).toLocaleString() },
-                  { label: "写入记录", value: (active.rowsWritten ?? 0).toLocaleString(), highlight: true },
+                  { label: "读取记录", value: buildCountLabel(active.rowsRead) },
+                  { label: "写入记录", value: buildCountLabel(active.rowsWritten), highlight: true },
                 ].map((s) => (
                   <div
                     key={s.label}
@@ -767,7 +908,7 @@ export function BuildsPage() {
                     borderBottom: "1px solid var(--aos-border)",
                   }}
                 >
-                  📋 执行阶段（3 步流水线）
+                  执行阶段（{(active.tasks || []).length} 步）
                 </h2>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {(active.tasks || []).map((t, idx) => {
@@ -815,13 +956,17 @@ export function BuildsPage() {
                         </div>
                         <div style={{ flex: 1 }}>
                           <strong style={{ fontSize: "0.85rem" }} className="aos-text">
-                            {taskIcon(t)} {t.name}
+                            {taskIcon(t)} {buildStageLabel(t.name)}
                           </strong>
                           <div style={{ fontSize: "0.7rem", color: "var(--aos-text-muted)" }}>
                             {idx === 0 && "从数据源读取原始数据"}
                             {idx === 1 && "清洗、过滤、转换、校验"}
                             {idx === 2 && "写入数据集表并生成索引"}
                           </div>
+                          <details className="bp-audit-details" style={{ marginTop: 4 }}>
+                            <summary>阶段审计</summary>
+                            <span className="muted">原始阶段：{t.name} · 原始状态：{t.status || "未读取"}</span>
+                          </details>
                         </div>
                         <span
                           className="aos-text"
@@ -861,7 +1006,7 @@ export function BuildsPage() {
                     className="aos-text"
                     style={{ fontSize: "0.875rem", fontWeight: 600, margin: 0 }}
                   >
-                    📝 执行日志（{(active.logs || []).length} 条）
+                    执行日志（{(active.logs || []).length} 条）
                   </h2>
                   <span className="muted" style={{ fontSize: "0.72rem" }}>
                     开始：{formatTime(active.startedAt)} · 结束：{formatTime(active.finishedAt)}
@@ -962,23 +1107,21 @@ export function DatasetsPage() {
   async function loadPreviewFor(row: DatasetRow) {
     setLoadingPrev(true);
     setPreviewErr(null);
-    const { title, ot, table } = datasetLabel(row);
+    const { ot, table } = datasetLabel(row);
     try {
-      if (!row.objectTypeHint && ot && ot !== "—") {
-        await apiPatch(`/v1/datasets/${encodeURIComponent(row.rid)}`, {
-          objectTypeHint: ot,
-          displayName: title,
-          name: title,
-        }).catch(() => null);
-      }
       let result: PreviewResult;
       try {
         result = await apiPost<PreviewResult>("/v1/analytics/datasets/preview", {
           datasetRid: row.rid,
           limit: 40,
         });
-      } catch {
-        result = { columns: [], rows: [], total: 0 };
+      } catch (datasetPreviewError) {
+        if (!ot || ot === "—") throw datasetPreviewError;
+        result = await apiPost<PreviewResult>("/v1/analytics/objects/list", {
+          objectType: ot,
+          limit: 40,
+        });
+        result = { ...result, objectType: ot, source: result.source || "objects-list" };
       }
       if ((!result.rows || result.rows.length === 0) && ot && ot !== "—") {
         result = await apiPost<PreviewResult>("/v1/analytics/objects/list", {
@@ -1020,20 +1163,20 @@ export function DatasetsPage() {
   }, [items.length, ridParam, sourceIdParam]);
 
   const previewColumns = useMemo(() => {
-    if (preview?.columns?.length) return preview.columns;
+    if (preview?.columns?.length) return datasetBusinessColumns(preview.columns);
     const row0 = preview?.rows?.[0];
     if (!row0) return ["id"];
-    return Object.keys(row0);
+    return datasetBusinessColumns(Object.keys(row0));
   }, [preview]);
 
   const previewTableRows = useMemo(() => {
     return (preview?.rows || []).map((r) =>
-      previewColumns.map((c) => <span key={c}>{cellText(r[c])}</span>),
+      previewColumns.map((c) => <span key={c}>{datasetCellText(c, r[c])}</span>),
     );
   }, [preview, previewColumns]);
 
   return (
-    <S2Chrome title="数据集预览" lede="左栏选数据集 · 右栏为采样预览（非全表浏览）；总数见指标「预览行数/库内」">
+    <S2Chrome title="数据集预览" lede="选择真实业务数据集，查看采样记录、历史、详情与健康状态">
       <PipelineWorkflowStepper current={4} />
 
       <BpToolbar>
@@ -1057,7 +1200,7 @@ export function DatasetsPage() {
       {err && <p className="error">{err}</p>}
       {sourceIdParam && items.length > 0 && (
         <BpBanner tone="info">
-          已按数据源 <code>{sourceIdParam}</code> 过滤 ·{" "}
+          已按数据源“{getSourceDisplayName(sourceIdParam)}”筛选 ·{" "}
           <Link to="/data/datasets" className="nav-link">
             查看全部数据集
           </Link>
@@ -1066,7 +1209,7 @@ export function DatasetsPage() {
 
       {!items.length && (
         <p className="muted">
-          暂无数据集 · 先到 <Link to="/data">数据源管理</Link> 接入，或跑案例 bootstrap 脚本
+          当前没有可读取的数据集；请先到 <Link to="/data">数据源管理</Link> 完成正式来源配置与安全预检。
         </p>
       )}
 
@@ -1086,8 +1229,7 @@ export function DatasetsPage() {
                     >
                       <span className="nav-link-title">{L.title}</span>
                       <span className="nav-link-meta">
-                        {L.ot}
-                        {L.table ? ` · ${L.table}` : ""} · {d.status || "READY"}
+                        业务数据集 · {datasetStatusLabel(d.status)}
                       </span>
                     </button>
                   </li>
@@ -1114,16 +1256,12 @@ export function DatasetsPage() {
                       {label.title}
                     </h1>
                     <p className="muted" style={{ marginTop: 0 }}>
-                      对象类型 <strong className="aos-text">{label.ot}</strong>
-                      {label.table ? (
-                        <>
-                          {" "}
-                          · 源表 <code>{label.table}</code>
-                        </>
-                      ) : null}
-                      <br />
-                      <span style={{ fontSize: "0.75rem" }}>{rid}</span>
+                      当前展示正式来源的采样记录；精确对象类型、来源表与数据集标识见审计信息。
                     </p>
+                    <details className="bp-audit-details" style={{ marginBottom: 10 }}>
+                      <summary>数据集审计</summary>
+                      <p className="muted">数据集：{rid} · 对象类型：{label.ot} · 来源表：{label.table || "未读取"}</p>
+                    </details>
                     <BpMetricGrid
                       items={[
                         {
@@ -1138,12 +1276,12 @@ export function DatasetsPage() {
                         },
                         {
                           label: "状态",
-                          value: String(detail?.status || active?.status || "READY"),
+                          value: datasetStatusLabel(detail?.status || active?.status),
                           tone: "ok",
                         },
                         {
-                          label: "Pipeline",
-                          value: String(detail?.pipelineId || active?.pipelineId || "—"),
+                          label: "关联管道",
+                          value: getPipelineDisplayName(detail?.pipelineId || active?.pipelineId, detail?.name || active?.name),
                           tone: "muted",
                         },
                       ]}
@@ -1151,11 +1289,17 @@ export function DatasetsPage() {
                     {previewErr && <p className="error">{previewErr}</p>}
                     {loadingPrev && <p className="muted">加载预览…</p>}
                     {!loadingPrev && previewTableRows.length > 0 && (
-                      <BpTable columns={previewColumns} rows={previewTableRows} />
+                      <>
+                        <BpTable columns={previewColumns.map(datasetFieldLabel)} rows={previewTableRows} />
+                        <details className="bp-audit-details" style={{ marginTop: 8 }}>
+                          <summary>字段审计</summary>
+                          <p className="muted">原始字段：{previewColumns.join("、")}</p>
+                        </details>
+                      </>
                     )}
                     {!loadingPrev && !previewTableRows.length && !previewErr && (
                       <BpBanner tone="warn">
-                        该对象类型暂无实例行。确认已在当前工作区完成 ingest，或到{" "}
+                        当前业务数据集暂无实例记录。请核对正式同步状态，或到{" "}
                         <Link to="/ontology/objects">对象浏览</Link> 核对。
                       </BpBanner>
                     )}
@@ -1165,7 +1309,11 @@ export function DatasetsPage() {
                   <ul className="card-list">
                     {(hist?.items || []).map((h, i) => (
                       <li key={i} className="card">
-                        <JsonBlock value={h} />
+                        <strong>第 {i + 1} 条数据集历史</strong>
+                        <details className="bp-audit-details" style={{ marginTop: 6 }}>
+                          <summary>历史记录审计</summary>
+                          <JsonBlock value={h} />
+                        </details>
                       </li>
                     ))}
                     {(hist?.items?.length || 0) === 0 && <p className="muted">无历史版本</p>}
@@ -1173,16 +1321,21 @@ export function DatasetsPage() {
                 )}
                 {tab === "details" && (detail || active) && (
                   <>
-                    <BpPropGrid items={flattenRecordProps((detail || active) as Record<string, unknown>)} />
+                    <BpPropGrid items={[
+                      { label: "数据集名称", value: label.title },
+                      { label: "数据状态", value: datasetStatusLabel((detail || active)?.status) },
+                      { label: "来源系统", value: getSourceDisplayName((detail || active)?.sourceId) },
+                      { label: "关联管道", value: getPipelineDisplayName((detail || active)?.pipelineId, (detail || active)?.name) },
+                    ]} />
                     <details style={{ marginTop: "0.75rem" }}>
-                      <summary className="muted">完整 JSON</summary>
+                      <summary className="muted">数据集审计</summary>
                       <JsonBlock value={detail || active} />
                     </details>
                   </>
                 )}
                 {tab === "health" && (
                   <BpBanner tone="info">
-                    Dataset 健康见 <Link to="/data/health">L1 数据健康</Link> · 图谱见{" "}
+                    数据集连通性与新鲜度见 <Link to="/data/health">数据健康</Link>；业务关系完整性见{" "}
                     <Link to="/ontology/graph-health">图谱健康度</Link>
                   </BpBanner>
                 )}
@@ -1298,10 +1451,17 @@ export function DataHealthPage() {
   );
 }
 
-/** 77 · 对齐 data-connection-agents.html */
+export function edgeAgentSourceCount(items: { runtimeMode?: string }[]): number {
+  return items.filter((item) => item.runtimeMode === "agent" || item.runtimeMode === "worker").length;
+}
+
+/** 边缘代理 · 当前权威只读视图 */
 export function EdgeAgentsPage() {
   const { data, err, reload } = useJsonGet<{ id: string; probeOk?: boolean; outbound?: boolean }>(
     "/v1/edge/agents/local",
+  );
+  const { data: sourceData, err: sourceErr, reload: reloadSources } = useJsonGet<{ items: { runtimeMode?: string }[] }>(
+    "/v1/sources",
   );
   const [selected, setSelected] = useState("edge-local");
 
@@ -1309,9 +1469,9 @@ export function EdgeAgentsPage() {
     ? [
         {
           id: data.id || "edge-local",
-          region: "本机 Dev",
-          sources: 1,
-          version: "lite",
+          name: "本机边缘代理",
+          region: "本机节点",
+          sources: edgeAgentSourceCount(sourceData?.items || []),
           online: data.probeOk !== false,
         },
       ]
@@ -1320,16 +1480,14 @@ export function EdgeAgentsPage() {
   const active = agents.find((a) => a.id === selected) || agents[0];
 
   return (
-    <S2Chrome title="边缘代理" lede="对齐 data-connection-agents · 列表 + 详情">
+    <S2Chrome title="边缘代理" lede="查看本机代理运行状态与当前接入的数据源">
       <BpToolbar>
-        <button type="button" className="btn" onClick={() => reload()}>
+        <button type="button" className="btn" onClick={() => { reload(); reloadSources(); }}>
           刷新
-        </button>
-        <button type="button" className="btn-outline-cyan" disabled title="登记接口规划中">
-          + 注册代理
         </button>
       </BpToolbar>
       {err && <p className="error">{err}</p>}
+      {sourceErr && <p className="error">数据源目录读取失败：{sourceErr}</p>}
 
       <BpSplit
         left={
@@ -1342,7 +1500,7 @@ export function EdgeAgentsPage() {
                   style={{ width: "100%", textAlign: "left" }}
                   onClick={() => setSelected(a.id)}
                 >
-                  <strong>{a.id}</strong>{" "}
+                  <strong>{a.name}</strong>{" "}
                   <span className={a.online ? "aos-text" : "error"}>{a.online ? "在线" : "离线"}</span>
                   <div className="muted" style={{ fontSize: "0.7rem" }}>
                     {a.region} · {a.sources} 数据源
@@ -1356,20 +1514,22 @@ export function EdgeAgentsPage() {
           active ? (
             <>
               <h1 className="aos-text" style={{ fontSize: "1.1rem" }}>
-                {active.id}
+                {active.name}
               </h1>
-              <p className="muted">
-                边缘代理 · outbound={String(data?.outbound)} · probeOk={String(data?.probeOk)}
-              </p>
+              <p className="muted">安全读取当前工作区已登记的内网数据源</p>
               <BpTable
-                columns={["属性", "值"]}
+                columns={["项目", "当前状态"]}
                 rows={[
-                  ["region", active.region],
-                  ["version", active.version],
-                  ["sources", String(active.sources)],
-                  ["status", active.online ? "在线" : "离线"],
+                  ["部署位置", active.region],
+                  ["接入数据源", `${active.sources} 个`],
+                  ["运行状态", active.online ? "在线" : "离线"],
                 ].map(([k, v]) => [<span className="muted">{k}</span>, v])}
               />
+              <details style={{ marginTop: 12 }}>
+                <summary>技术审计信息</summary>
+                <code>{active.id}</code>
+                <p className="muted">探针 {String(data?.probeOk)} · 出站读取 {String(data?.outbound)}</p>
+              </details>
             </>
           ) : (
             <p className="muted">无代理</p>

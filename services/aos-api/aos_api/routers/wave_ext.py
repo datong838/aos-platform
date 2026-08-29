@@ -232,6 +232,11 @@ class MediaIn(BaseModel):
     bytesBase64: str | None = None
 
 
+class MediaMetadataIn(BaseModel):
+    category: Literal["image", "video", "document", "audio"] | None = None
+    tags: list[str] | None = None
+
+
 class ConnectorIn(BaseModel):
     id: str
     type: str = "file"
@@ -1330,6 +1335,41 @@ def list_syncs(principal: Principal = Depends(require_principal)):
         if _scope_visible(s, scope)
         and _source_scope_visible(s.get("sourceId"), scope)
     ]
+    with connect(scope) as conn:
+        rows = conn.execute(
+            """
+            SELECT DISTINCT ON (s.id)
+                   r.id, r.status, r.started_at, r.finished_at, r.rows_written,
+                   s.id AS schedule_id, s.pipeline_id, p.source_id
+              FROM meta_schedule_run r
+              JOIN meta_schedule s
+                ON s.org_id=r.org_id AND s.project_id=r.project_id AND s.id=r.schedule_id
+              LEFT JOIN meta_pipeline p
+                ON p.org_id=s.org_id AND p.project_id=s.project_id AND p.id=s.pipeline_id
+             WHERE r.org_id=%s AND r.project_id=%s
+               AND COALESCE(r.finished_at, r.started_at, r.scheduled_for) >= NOW() - INTERVAL '24 hours'
+             ORDER BY s.id, COALESCE(r.finished_at, r.started_at, r.scheduled_for) DESC
+            """,
+            scope.key,
+        ).fetchall()
+    known_ids = {str(item.get("id")) for item in items}
+    for row in rows:
+        if str(row["id"]) in known_ids:
+            continue
+        items.append(
+            {
+                "id": str(row["id"]),
+                "sourceId": row["source_id"],
+                "pipelineId": row["pipeline_id"],
+                "scheduleId": row["schedule_id"],
+                "status": str(row["status"] or "unknown").upper(),
+                "startedAt": _epoch_seconds(row["started_at"]),
+                "finishedAt": _epoch_seconds(row["finished_at"]),
+                "rowsSynced": int(row["rows_written"] or 0),
+                "orgId": scope.org_id,
+                "projectId": scope.project_id,
+            }
+        )
     return {"items": items}
 
 
@@ -1347,21 +1387,25 @@ def get_sync(sync_id: str, principal: Principal = Depends(require_principal)):
 def list_datasets(principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
-    items = _scoped_values(_datasets, scope)
-    # 用已注册的 8 个管道元数据补齐数据集条目（保证 P01~P08 完整可见，不管 phase5 引擎是否重启）
+    items = [dict(item) for item in _scoped_values(_datasets, scope)]
+    # 用十二条 canonical 管道元数据补齐只读目录；不在 GET 中修改持久化元数据。
     try:
-        _ALL_PIPE_IDS = [
-            ("P01-shop-qyh", "栖月汇-店铺", "店铺基础数据", "Site"),
-            ("P02-product-qyh", "栖月汇-商品", "商品主表（过滤线上已上架）", "Goods"),
-            ("P03-product-sku-qyh", "栖月汇-商品SKU", "商品SKU规格明细", "GoodsSku"),
-            ("P04-category-qyh", "栖月汇-类目", "商品分类层级", "GoodsCategory"),
-            ("P05-order-qyh", "栖月汇-订单", "订单主表", "Order"),
-            ("P06-order-line-qyh", "栖月汇-订单明细", "订单商品明细行", "OrderLine"),
-            ("P07-shipment-qyh", "栖月汇-发货", "物流发货包裹单", "ExpressPackage"),
-            ("P08-customer-lite-qyh", "栖月汇-会员", "会员基础档案（已激活）", "CustomerLite"),
-        ]
+        from aos_api.source_readiness_contracts import (
+            CANONICAL_QYH_OBJECT_TYPE_DISPLAY_NAMES,
+            CANONICAL_QYH_SOURCES,
+            canonical_qyh_source_for_pipeline,
+        )
+
+        for item in items:
+            pipeline_id = str(item.get("pipelineId") or "")
+            canonical = canonical_qyh_source_for_pipeline(pipeline_id)
+            if canonical is not None:
+                item["objectTypeHint"] = canonical.object_type
         _seen = {(d.get("rid") or d.get("id")) for d in items}
-        for _pid, _name, _desc, _ot in _ALL_PIPE_IDS:
+        for canonical in CANONICAL_QYH_SOURCES:
+            _pid = canonical.pipeline_id
+            _ot = canonical.object_type
+            _display_name = CANONICAL_QYH_OBJECT_TYPE_DISPLAY_NAMES[_ot]
             _rid = f"ri.aos.main.dataset.{_pid}"
             if _rid in _seen:
                 continue
@@ -1381,8 +1425,8 @@ def list_datasets(principal: Principal = Depends(require_principal)):
             items.append({
                 "rid": _rid,
                 "id": _rid,
-                "name": _name,
-                "description": f"{_desc} · {_ot} · Pipeline {_pid}",
+                "name": f"栖月汇-{_display_name}",
+                "description": f"栖月汇微商城 · {_display_name}",
                 "rowCount": _row_cnt,
                 "row_count": _row_cnt,
                 "status": "active",
@@ -1391,7 +1435,7 @@ def list_datasets(principal: Principal = Depends(require_principal)):
             })
             _seen.add(_rid)
     except Exception as _e:
-        _log("WARN", f"[datasets] 8管道补齐 err: {_e!r}")
+        _log("WARN", f"[datasets] canonical目录补齐 err: {_e!r}")
     return {"items": items}
 
 
@@ -1523,6 +1567,41 @@ def get_media(rid: str, principal: Principal = Depends(require_principal)):
     if meta is None:
         raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
     return meta
+
+
+@router.patch("/v1/media-sets/{rid}")
+def update_media_metadata(
+    rid: str,
+    body: MediaMetadataIn,
+    principal: Principal = Depends(require_principal),
+):
+    key = _resource_key(_mutation_scope(principal), rid)
+    meta = _media.get(key)
+    if meta is None:
+        raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
+    if body.category is not None:
+        meta["category"] = body.category
+    if body.tags is not None:
+        meta["tags"] = list(dict.fromkeys(tag.strip() for tag in body.tags if tag.strip()))
+    _media[key] = meta
+    return meta
+
+
+@router.delete("/v1/media-sets/{rid}")
+def delete_media_metadata(rid: str, principal: Principal = Depends(require_principal)):
+    key = _resource_key(_mutation_scope(principal), rid)
+    meta = _media.get(key)
+    if meta is None:
+        raise ApiError(code="NOT_FOUND", message="media missing", status_code=404)
+    if meta.get("stored"):
+        raise ApiError(
+            code="OBJECT_DELETE_REQUIRED",
+            message="对象存储原件尚未删除，不能只移除元数据",
+            status_code=409,
+        )
+    _media.pop(key, None)
+    _media_bytes.pop(key, None)
+    return {"deleted": rid}
 
 
 @router.get("/v1/media-sets/{rid}/content")
@@ -1720,7 +1799,12 @@ def patch_dataset(
 def list_pipelines(principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
-    items = [p for p in _pipelines.values() if _scope_visible(p, scope)]
+    items = [
+        p
+        for p in _pipelines.values()
+        if _scope_visible(p, scope)
+        and str(p.get("status") or "").lower() not in {"decommissioned", "deleted", "archived"}
+    ]
     # 合并 phase5 引擎中从 YAML bundle 加载的管道（wave_ext 不持有这些数据）
     try:
         from aos_api.phase5_pipeline_engine import get_engine as _get_engine
@@ -1887,17 +1971,76 @@ def vector_index_get(collection: str, principal: Principal = Depends(require_pri
     return collection_stats(scoped)
 
 
+def _epoch_seconds(value: Any) -> float:
+    if value is None:
+        return 0.0
+    if hasattr(value, "timestamp"):
+        return float(value.timestamp())
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _latest_authoritative_pipeline_runs(scope: TenantScope) -> dict[str, dict[str, Any]]:
+    """Return the latest persisted Cron run for each pipeline in this tenant."""
+    with connect(scope) as conn:
+        rows = conn.execute(
+            """
+            SELECT DISTINCT ON (s.pipeline_id)
+                   s.pipeline_id, r.id, r.status, r.started_at, r.finished_at,
+                   r.duration_ms, r.rows_written, r.trigger, r.error_code, r.error_message
+              FROM meta_schedule_run r
+              JOIN meta_schedule s
+                ON s.org_id=r.org_id AND s.project_id=r.project_id AND s.id=r.schedule_id
+             WHERE r.org_id=%s AND r.project_id=%s
+             ORDER BY s.pipeline_id, r.started_at DESC
+            """,
+            scope.key,
+        ).fetchall()
+    return {
+        str(row["pipeline_id"]): {
+            "id": row["id"],
+            "status": str(row["status"] or "unknown").upper(),
+            "startedAt": _epoch_seconds(row["started_at"]),
+            "finishedAt": _epoch_seconds(row["finished_at"]),
+            "duration": (float(row["duration_ms"]) / 1000.0) if row["duration_ms"] is not None else None,
+            "rowsWritten": int(row["rows_written"] or 0),
+            "mode": row["trigger"] or "cron",
+            "errorCode": row["error_code"],
+            "errorMessage": row["error_message"],
+        }
+        for row in rows
+    }
+
+
 @router.get("/v1/builds")
 def list_builds(principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
+    authoritative_runs = _latest_authoritative_pipeline_runs(scope)
     builds = []
     for pid, p in _pipelines.items():
         if not _scope_visible(p, scope):
             continue
+        if str(p.get("status") or "").lower() in {"decommissioned", "deleted", "archived"}:
+            continue
+        pipeline_id = str(
+            p.get("id")
+            or (pid[2] if isinstance(pid, tuple) and len(pid) >= 3 else pid)
+        )
         build = dict(p.get("lastBuild") or {})
-        build["pipelineId"] = pid
-        build["pipelineName"] = p.get("name", pid)
+        build["pipelineId"] = pipeline_id
+        build["pipelineName"] = p.get("name", pipeline_id)
+        authoritative = authoritative_runs.get(pipeline_id)
+        # 启动阶段的 seed-build 只是兼容缓存，不是一次真实执行；一旦存在
+        # 当前租户的持久化 Cron 记录，必须由后者覆盖，不能被 seed 时间戳抢占。
+        is_seed_build = str(build.get("id") or "").startswith("seed-build-")
+        if authoritative and (
+            is_seed_build
+            or authoritative.get("startedAt", 0) >= float(build.get("startedAt") or 0)
+        ):
+            build.update(authoritative)
         # 补充日志、耗时、记录数等扩展字段
         last_build_id = build.get("id")
         if last_build_id and last_build_id in _build_logs:
@@ -2746,10 +2889,15 @@ def apollo_changes_list(
     principal: Principal = Depends(require_principal),
     limit: int = 50,
 ):
-    _ = principal
     from aos_api.apollo_ops import list_changes
 
-    return {"items": list_changes(limit=limit), "scheme": "160"}
+    items = [
+        item
+        for item in list_changes(limit=max(limit, 200))
+        if (item.get("orgId"), item.get("projectId"))
+        == (principal.org_id, principal.project_id)
+    ]
+    return {"items": items[: max(1, min(200, int(limit)))], "scheme": "160"}
 
 
 @router.post("/v1/apollo/changes")
@@ -2785,6 +2933,8 @@ def apollo_changes_approve(
         approve=True,
         subject=principal.subject,
         note=payload.get("note"),
+        org_id=principal.org_id,
+        project_id=principal.project_id,
     )
 
 
@@ -2802,6 +2952,8 @@ def apollo_changes_reject(
         approve=False,
         subject=principal.subject,
         note=payload.get("note"),
+        org_id=principal.org_id,
+        project_id=principal.project_id,
     )
 
 
@@ -2812,7 +2964,12 @@ def apollo_changes_merge_stable(
 ):
     from aos_api.apollo_ops import merge_hotfix_to_stable
 
-    return merge_hotfix_to_stable(change_id, subject=principal.subject)
+    return merge_hotfix_to_stable(
+        change_id,
+        subject=principal.subject,
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+    )
 
 
 @router.get("/v1/apollo/config")
@@ -2820,8 +2977,10 @@ def apollo_config(principal: Principal = Depends(require_principal)):
     _ = principal
     return {
         "vaultRefsOnly": True,
-        "secrets": {"dbPassword": "vault:secret/data/aos/postgres#password"},
         "plaintextRejected": True,
+        "items": [],
+        "maintenanceWindow": None,
+        "authority": "not_configured",
     }
 
 
@@ -3163,6 +3322,10 @@ def _pg_ot_row_count(scope: TenantScope, ot_name: str) -> int:
 @router.get("/v1/data-lineage/graph")
 def data_lineage_graph(principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     """D6 · 数据沿袭图谱 — 从真实管道/数据集/数据源/OT 组装。"""
+    from aos_api.source_readiness_contracts import (
+        CANONICAL_QYH_OBJECT_TYPE_DISPLAY_NAMES,
+    )
+
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
 
@@ -3179,14 +3342,17 @@ def data_lineage_graph(principal: Principal = Depends(require_principal)) -> dic
         src_id = src.get("id", f"src-{i}")
         nodes.append({
             "id": f"src-{src_id}",
-            "name": src.get("name", src_id),
+            "name": "栖月汇微商城数据源",
             "type": "source",
             "status": "healthy",
             "level": 0,
             "x": 20,
             "y": 20 + i * 60,
             "meta": {
-                "description": f"{src.get('type', 'jdbc-mysql')} · {src.get('status', 'active')}",
+                "description": "微商城正式业务数据 · 已连接",
+                "connectorId": src_id,
+                "connectorType": src.get("type", "jdbc-mysql"),
+                "rawStatus": src.get("status", "active"),
                 "lastUpdated": None,
             },
         })
@@ -3254,13 +3420,13 @@ def data_lineage_graph(principal: Principal = Depends(require_principal)) -> dic
         # OT 节点
         nodes.append({
             "id": f"ot-{ot_name}",
-            "name": f"{ot_name}",
+            "name": CANONICAL_QYH_OBJECT_TYPE_DISPLAY_NAMES.get(ot_name, pdesc),
             "type": "object_type",
             "status": "healthy",
             "level": 3,
             "x": 820,
             "y": y,
-            "meta": {"description": f"对象类型 · {pdesc}"},
+            "meta": {"description": f"业务对象 · {pdesc}", "targetOt": ot_name},
         })
         edges.append({"id": f"e-ds-{pid}", "source": f"ds-{pid}", "target": f"ot-{ot_name}"})
 
@@ -3279,6 +3445,8 @@ def data_health_summary(principal: Principal = Depends(require_principal)) -> di
     rules: list[dict[str, Any]] = []
     issues: list[dict[str, Any]] = []
     now = time.time()
+    authoritative_runs = _latest_authoritative_pipeline_runs(scope)
+    fresh_run_count = 0
 
     for pid, pname, pdesc, ot_name, src_table in _D6_ALL_PIPES:
         ds_rid = f"ri.aos.main.dataset.{pid}"
@@ -3311,17 +3479,24 @@ def data_health_summary(principal: Principal = Depends(require_principal)) -> di
             last_build_status = lb.get("status", "unknown")
             last_build_at = lb.get("finishedAt", last_build_at) or last_build_at
 
+        authoritative = authoritative_runs.get(pid)
+        if authoritative:
+            last_build_status = authoritative["status"]
+            last_build_at = authoritative.get("finishedAt") or authoritative.get("startedAt") or last_build_at
+            if last_build_status == "SUCCEEDED" and last_build_at >= now - (26 * 3600):
+                fresh_run_count += 1
+
         # 规则: 完整性 (行数 > 0)
         is_passing = row_count > 0 and last_build_status != "FAILED"
         rules.append({
             "id": f"hc-{pid}",
-            "name": f"{pname} 数据完整性",
-            "type": "completeness",
+            "name": f"{pname} 当前数据可用性",
+            "type": "validity",
             "target": pname,
             "status": "passing" if is_passing else "failing",
             "lastCheckedAt": (last_build_at if last_build_at > 0 else now),
             "threshold": 0.99,
-            "actual": 1.0 if row_count > 0 else 0.0,
+            "actual": 1.0 if is_passing else 0.0,
         })
 
         # 如果行数为 0，生成一个 warning issue
@@ -3331,9 +3506,10 @@ def data_health_summary(principal: Principal = Depends(require_principal)) -> di
                 "severity": "warning",
                 "table": pname,
                 "column": "—",
-                "message": f"数据集行数为 0（管道 {pid} 可能未执行）",
+                "message": "当前没有可验证的数据，完整性检查未通过",
                 "detectedAt": now,
                 "ruleId": f"hc-{pid}",
+                "pipelineId": pid,
             })
         elif last_build_status == "FAILED":
             issues.append({
@@ -3341,32 +3517,59 @@ def data_health_summary(principal: Principal = Depends(require_principal)) -> di
                 "severity": "critical",
                 "table": pname,
                 "column": "—",
-                "message": f"管道执行失败（{pid}）",
+                "message": "最近一次数据抽取执行失败",
                 "detectedAt": last_build_at or now,
                 "ruleId": f"hc-{pid}",
+                "pipelineId": pid,
             })
 
-    # 趋势: 最近 14 天（当天用真实数据，其余用合理波动模拟）
-    import datetime as _dt
-    trend: list[dict[str, Any]] = []
     passing_count = sum(1 for r in rules if r["status"] == "passing")
-    today_score = int((passing_count / max(len(rules), 1)) * 100)
-    for d_offset in range(13, -1, -1):
-        d = _dt.date.today() - _dt.timedelta(days=d_offset)
-        if d_offset == 0:
-            score = today_score
-        else:
-            score = max(60, min(100, today_score - d_offset * 2 + (hash(str(d)) % 7) - 3))
-        trend.append({"date": d.isoformat(), "score": score})
+    completeness = passing_count / max(len(rules), 1)
+    timeliness = fresh_run_count / max(len(rules), 1)
+    overall_score = round(((completeness + timeliness) / 2) * 100)
+    with connect(scope) as conn:
+        trend_rows = conn.execute(
+            """
+            WITH ranked AS (
+              SELECT (r.started_at AT TIME ZONE 'Asia/Shanghai')::date AS run_day,
+                     s.pipeline_id, r.status,
+                     ROW_NUMBER() OVER (
+                       PARTITION BY (r.started_at AT TIME ZONE 'Asia/Shanghai')::date, s.pipeline_id
+                       ORDER BY r.started_at DESC
+                     ) AS position
+                FROM meta_schedule_run r
+                JOIN meta_schedule s
+                  ON s.org_id=r.org_id AND s.project_id=r.project_id AND s.id=r.schedule_id
+               WHERE r.org_id=%s AND r.project_id=%s
+            )
+            SELECT run_day,
+                   COUNT(*) FILTER (WHERE position=1 AND status='succeeded') AS passed
+              FROM ranked
+             WHERE position=1
+             GROUP BY run_day
+             ORDER BY run_day DESC
+             LIMIT 14
+            """,
+            scope.key,
+        ).fetchall()
+    trend = [
+        {
+            "date": row["run_day"].isoformat(),
+            "score": round((int(row["passed"] or 0) / max(len(rules), 1)) * 100),
+        }
+        for row in reversed(trend_rows)
+    ]
+    if not trend:
+        trend = [{"date": datetime.date.today().isoformat(), "score": overall_score}]
 
     open_issues = len(issues)
     critical_issues = sum(1 for i in issues if i["severity"] == "critical")
 
     return {
-        "overallScore": today_score,
-        "completeness": passing_count / max(len(rules), 1),
-        "consistency": 1.0,
-        "timeliness": 0.85,
+        "overallScore": overall_score,
+        "completeness": completeness,
+        "consistency": None,
+        "timeliness": timeliness,
         "totalRules": len(rules),
         "passingRules": passing_count,
         "openIssues": open_issues,
@@ -3375,6 +3578,36 @@ def data_health_summary(principal: Principal = Depends(require_principal)) -> di
         "issues": issues,
         "trend": trend,
     }
+
+
+def _git_head_top_level_files(project_root: str) -> list[dict[str, Any]]:
+    """Read the fixed repository's committed top-level tree without touching worktree files."""
+    import subprocess
+
+    result = subprocess.run(
+        ["git", "ls-tree", "-l", "HEAD"],
+        capture_output=True,
+        text=True,
+        timeout=3,
+        cwd=project_root,
+    )
+    if result.returncode != 0:
+        return []
+    files: list[dict[str, Any]] = []
+    for raw_line in result.stdout.splitlines():
+        metadata, separator, path = raw_line.partition("\t")
+        parts = metadata.split()
+        if not separator or len(parts) != 4 or not path:
+            continue
+        _mode, object_kind, _object_hash, raw_size = parts
+        files.append(
+            {
+                "path": path,
+                "type": "dir" if object_kind == "tree" else "file",
+                "size": int(raw_size) if raw_size.isdigit() else None,
+            }
+        )
+    return files
 
 
 @router.get("/v1/code-repositories")
@@ -3428,6 +3661,7 @@ def list_code_repositories(principal: Principal = Depends(require_principal)) ->
                         r["lastSyncedAt"] = commit_date.strip()
                         r["commitCount"] = commit_count
                         r["status"] = "synced"
+                        r["files"] = _git_head_top_level_files(project_root)
                         r["readme"] = f"# aos-platform\n\n最新提交: {commit_msg}\n分支: {branch}\n提交数: {commit_count}"
     except Exception:
         pass
@@ -3444,13 +3678,6 @@ _CODE_REPOS = [
         "branch": "main",
         "status": "ready",
     },
-    {
-        "id": "repo-okf-sample",
-        "name": "okf-sample",
-        "url": "local://okf-sample",
-        "branch": "dev",
-        "status": "seed",
-    },
 ]
 
 
@@ -3458,7 +3685,7 @@ _CODE_REPOS = [
 def list_code_repos(principal: Principal = Depends(require_principal)):
     """Dev code-repo catalog (not a git host)."""
     _ = principal
-    return {"items": list(_CODE_REPOS), "store": "dev-seed"}
+    return {"items": list(_CODE_REPOS), "store": "current-local"}
 
 
 @router.get("/v1/apollo/ferry/status")

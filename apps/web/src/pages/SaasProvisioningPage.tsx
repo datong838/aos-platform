@@ -23,8 +23,10 @@ export function SaasProvisioningPage() {
   const [msg, setMsg] = useState("");
   const [orgId, setOrgId] = useState("");
   const [orgName, setOrgName] = useState("");
-  const [owner, setOwner] = useState("alice");
+  const [owner, setOwner] = useState("");
   const [plan, setPlan] = useState("starter");
+  const [provisionConfirmed, setProvisionConfirmed] = useState(false);
+  const [quotaConfirmOrg, setQuotaConfirmOrg] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     setErr("");
@@ -42,6 +44,10 @@ export function SaasProvisioningPage() {
 
   async function onProvision(e: FormEvent) {
     e.preventDefault();
+    if (!provisionConfirmed) {
+      setErr("请先核对当前开发环境与租户信息");
+      return;
+    }
     setMsg("");
     setErr("");
     try {
@@ -54,6 +60,8 @@ export function SaasProvisioningPage() {
       setMsg(`已开通 ${orgId}`);
       setOrgId("");
       setOrgName("");
+      setOwner("");
+      setProvisionConfirmed(false);
       await reload();
     } catch (ex) {
       setErr(ex instanceof Error ? ex.message : String(ex));
@@ -67,6 +75,7 @@ export function SaasProvisioningPage() {
         maxWorkspaces: (t.quota?.maxWorkspaces || 5) + 5,
       });
       setMsg(`已上调 ${t.orgId} 工作区配额`);
+      setQuotaConfirmOrg(null);
       await reload();
     } catch (ex) {
       setErr(ex instanceof Error ? ex.message : String(ex));
@@ -75,8 +84,8 @@ export function SaasProvisioningPage() {
 
   return (
     <PageChrome
-      title="SaaS 开通"
-      lede="我方运维开通租户 Org 与配额 · 计费外置 · 不面向租户业务员"
+      title="租户开通"
+      lede="由运维人员开通组织与配额；计费外置，不面向租户业务人员"
     >
       <BpBanner tone="info">
         属<strong>运维交付面</strong>。业务座舱只做组织/工作区管理；开通台不出现在业务一级推销。
@@ -87,35 +96,39 @@ export function SaasProvisioningPage() {
 
       <form className="aos-saas-form" onSubmit={(e) => void onProvision(e)} data-ui="TWB-6">
         <label>
-          Org Id
+          组织标识
           <input
             value={orgId}
             onChange={(e) => setOrgId(e.target.value)}
-            placeholder="acme-corp"
+            placeholder="例如：qiyuehui"
             required
           />
         </label>
         <label>
-          显示名
+          组织名称
           <input
             value={orgName}
             onChange={(e) => setOrgName(e.target.value)}
-            placeholder="Acme 公司"
+            placeholder="例如：栖月汇商贸"
           />
         </label>
         <label>
-          Owner
-          <input value={owner} onChange={(e) => setOwner(e.target.value)} required />
+          负责人账号
+          <input value={owner} onChange={(e) => setOwner(e.target.value)} placeholder="请输入实际负责人账号" required />
         </label>
         <label>
-          Plan
+          服务套餐
           <select value={plan} onChange={(e) => setPlan(e.target.value)}>
-            <option value="starter">starter</option>
-            <option value="team">team</option>
-            <option value="business">business</option>
+            <option value="starter">起步版</option>
+            <option value="team">团队版</option>
+            <option value="business">企业版</option>
           </select>
         </label>
-        <button type="submit" className="btn-nav">
+        <label>
+          <input type="checkbox" checked={provisionConfirmed} onChange={(event) => setProvisionConfirmed(event.target.checked)} />
+          已核对当前开发环境与租户信息
+        </label>
+        <button type="submit" className="btn-nav" disabled={!orgId.trim() || !owner.trim() || !provisionConfirmed}>
           开通租户
         </button>
       </form>
@@ -130,19 +143,20 @@ export function SaasProvisioningPage() {
               <strong>{t.orgName}</strong>
               <span className="aos-muted">
                 {" "}
-                · {t.orgId} · {t.plan} · owner={t.ownerSubject}
+                · {t.orgId} · {t.plan} · 负责人 {t.ownerSubject}
               </span>
               <div className="aos-muted">
                 配额：工作区 {t.quota.maxWorkspaces} · 成员 {t.quota.maxMembers} · 存储{" "}
                 {t.quota.maxStorageGb}GB
               </div>
-              <button
-                type="button"
-                className="btn-nav"
-                onClick={() => void bumpQuota(t)}
-              >
-                +5 工作区配额
-              </button>
+              {quotaConfirmOrg === t.orgId ? (
+                <span style={{ display: "inline-flex", gap: 8 }}>
+                  <button type="button" className="btn-nav" onClick={() => void bumpQuota(t)}>确认上调 5 个工作区</button>
+                  <button type="button" className="btn" onClick={() => setQuotaConfirmOrg(null)}>取消</button>
+                </span>
+              ) : (
+                <button type="button" className="btn-nav" onClick={() => setQuotaConfirmOrg(t.orgId)}>上调工作区配额</button>
+              )}
             </li>
           ))
         )}

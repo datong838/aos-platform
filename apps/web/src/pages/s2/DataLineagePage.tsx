@@ -30,6 +30,9 @@ export type LineageNode = {
     sourceTable?: string;
     targetOt?: string;
     rid?: string;
+    connectorId?: string;
+    connectorType?: string;
+    rawStatus?: string;
   };
 };
 
@@ -51,8 +54,8 @@ export const NODE_TYPE_LABEL: Record<NodeType, string> = {
   source: "数据源",
   dataset: "数据集",
   pipeline: "管道",
-  object_type: "Object Type",
-  funnel: "Funnel",
+  object_type: "业务对象",
+  funnel: "经营漏斗",
 };
 
 export const NODE_TYPE_TONE: Record<NodeType, "ok" | "warn" | "bad" | "muted"> = {
@@ -172,6 +175,13 @@ export function countByStatus(nodes: LineageNode[]): Record<NodeStatus, number> 
   };
   for (const n of nodes) acc[n.status]++;
   return acc;
+}
+
+export function businessNodeDescription(node: LineageNode): string {
+  if (node.meta?.description) return node.meta.description;
+  if (node.type === "dataset") return "业务数据集";
+  if (node.type === "pipeline") return "业务数据抽取链路";
+  return "—";
 }
 
 function statusColor(status: NodeStatus): string {
@@ -322,7 +332,16 @@ export function DataLineagePage() {
                     return (
                       <g
                         key={n.id}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`查看${n.name}详情`}
                         onClick={() => setSelectedId(isSelected ? "" : n.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setSelectedId(isSelected ? "" : n.id);
+                          }
+                        }}
                         style={{ cursor: "pointer" }}
                       >
                         <rect
@@ -378,19 +397,20 @@ export function DataLineagePage() {
                       {selected.meta?.rowCount != null && (
                         <div>行数: <strong>{selected.meta.rowCount.toLocaleString()}</strong></div>
                       )}
-                      {selected.meta?.sourceTable && (
-                        <div>源表: <code>{selected.meta.sourceTable}</code></div>
-                      )}
-                      {selected.meta?.targetOt && (
-                        <div>目标 OT: <strong>{selected.meta.targetOt}</strong></div>
-                      )}
-                      {selected.meta?.rid && (
-                        <div>RID: <code style={{ fontSize: "0.7rem" }}>{selected.meta.rid}</code></div>
-                      )}
                       {selected.meta?.lastUpdated && (
                         <div>更新时间: {formatTimestamp(selected.meta.lastUpdated)}</div>
                       )}
                     </div>
+                    <details style={{ marginTop: "0.75rem", fontSize: "0.72rem" }}>
+                      <summary>技术审计信息</summary>
+                      <div>节点标识: <code>{selected.id}</code></div>
+                      {selected.meta?.sourceTable && <div>源表: <code>{selected.meta.sourceTable}</code></div>}
+                      {selected.meta?.targetOt && <div>对象类型: <code>{selected.meta.targetOt}</code></div>}
+                      {selected.meta?.rid && <div>数据集标识: <code>{selected.meta.rid}</code></div>}
+                      {selected.meta?.connectorId && <div>连接器标识: <code>{selected.meta.connectorId}</code></div>}
+                      {selected.meta?.connectorType && <div>连接器类型: <code>{selected.meta.connectorType}</code></div>}
+                      {selected.meta?.rawStatus && <div>原始状态: <code>{selected.meta.rawStatus}</code></div>}
+                    </details>
                     {impact && (
                       <div style={{ marginTop: "0.75rem", fontSize: "0.75rem" }}>
                         <h4 className="aos-text">影响范围</h4>
@@ -409,9 +429,18 @@ export function DataLineagePage() {
 
           {tab === "list" && (
             <BpTable
-              columns={["节点名", "类型", "状态", "层级", "行数", "源表/描述"]}
+              columns={["业务节点", "类型", "状态", "层级", "行数", "业务说明"]}
               rows={filteredNodes.map((n) => [
-                <span className="mono">{n.name}</span>,
+                <button
+                  type="button"
+                  className="btn-link"
+                  onClick={() => {
+                    setSelectedId(n.id);
+                    setTab("graph");
+                  }}
+                >
+                  {n.name}
+                </button>,
                 <span className={`bp-discover-badge bp-discover-badge-${NODE_TYPE_TONE[n.type]}`}>
                   {NODE_TYPE_LABEL[n.type]}
                 </span>,
@@ -421,7 +450,7 @@ export function DataLineagePage() {
                 n.level,
                 n.meta?.rowCount != null && n.meta.rowCount > 0 ? n.meta.rowCount.toLocaleString() : "—",
                 <span className="muted" style={{ fontSize: "0.75rem" }}>
-                  {n.meta?.sourceTable || n.meta?.description || "—"}
+                  {businessNodeDescription(n)}
                 </span>,
               ])}
             />
@@ -450,7 +479,7 @@ export function DataLineagePage() {
                   <BpTable
                     columns={["节点名", "类型", "状态"]}
                     rows={upstreamNodes(graph, selected.id).map((n) => [
-                      <span className="mono">{n.name}</span>,
+                      <span>{n.name}</span>,
                       NODE_TYPE_LABEL[n.type],
                       <span className={`bp-discover-badge bp-discover-badge-${NODE_STATUS_TONE[n.status]}`}>
                         {NODE_STATUS_LABEL[n.status]}
@@ -461,7 +490,7 @@ export function DataLineagePage() {
                   <BpTable
                     columns={["节点名", "类型", "状态"]}
                     rows={downstreamNodes(graph, selected.id).map((n) => [
-                      <span className="mono">{n.name}</span>,
+                      <span>{n.name}</span>,
                       NODE_TYPE_LABEL[n.type],
                       <span className={`bp-discover-badge bp-discover-badge-${NODE_STATUS_TONE[n.status]}`}>
                         {NODE_STATUS_LABEL[n.status]}

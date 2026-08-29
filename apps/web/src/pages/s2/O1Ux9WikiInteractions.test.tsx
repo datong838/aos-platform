@@ -53,5 +53,9 @@ describe("O1-UX9 · Wiki 业务工作流", () => {
     expect(host.textContent).toContain("商品 · 栖月汇精选茶");
     expect(host.textContent).toContain("源记录 #8");
     expect(host.textContent).toContain("知识缺口");
+    const cardLink = Array.from(host.querySelectorAll("a")).find((node) => node.textContent?.includes("商品 · 栖月汇精选茶"));
+    expect(cardLink?.textContent).toContain("栖月汇-商品 · 知识缺口");
+    expect(cardLink?.textContent).not.toContain("Product");
+    expect(cardLink?.textContent).not.toContain("Wiki");
   });
 });

@@ -16,8 +16,8 @@ describe("pagination guard", () => {
 });
 
 describe("canvas layout", () => {
-  it("has default tree nodes", () => {
-    expect(layoutNodeCount()).toBeGreaterThanOrEqual(3);
+  it("does not invent default business nodes before a real app is selected", () => {
+    expect(layoutNodeCount()).toBe(0);
   });
 
   it("upgrades legacy string widgets", () => {

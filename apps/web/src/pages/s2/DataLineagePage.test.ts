@@ -11,6 +11,7 @@ import {
   computeImpact,
   countByType,
   countByStatus,
+  businessNodeDescription,
   type LineageNode,
   type LineageGraph,
 } from "./DataLineagePage";
@@ -41,6 +42,29 @@ describe("DataLineagePage · NODE_TYPE_LABEL", () => {
   });
   it("has 5 types", () => {
     expect(Object.keys(NODE_TYPE_LABEL)).toHaveLength(5);
+  });
+  it("keeps business labels Chinese", () => {
+    expect(NODE_TYPE_LABEL.object_type).toBe("业务对象");
+    expect(NODE_TYPE_LABEL.funnel).toBe("经营漏斗");
+  });
+});
+
+describe("DataLineagePage · businessNodeDescription", () => {
+  it("never promotes source table ids into the business list", () => {
+    const node: LineageNode = {
+      id: "pl-P05", name: "栖月汇-订单", type: "pipeline", status: "healthy",
+      level: 1, x: 0, y: 0, meta: { sourceTable: "ns_order", targetOt: "Order" },
+    };
+    expect(businessNodeDescription(node)).toBe("业务数据抽取链路");
+    expect(businessNodeDescription(node)).not.toContain("ns_order");
+  });
+
+  it("uses the server-provided Chinese business description", () => {
+    const node: LineageNode = {
+      id: "ot-Order", name: "订单", type: "object_type", status: "healthy",
+      level: 3, x: 0, y: 0, meta: { description: "业务对象 · 订单主表", targetOt: "Order" },
+    };
+    expect(businessNodeDescription(node)).toBe("业务对象 · 订单主表");
   });
 });
 

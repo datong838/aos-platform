@@ -1,355 +1,61 @@
-import { useState } from "react";
-import { S2Chrome, useJsonGet, apiPost } from "./shared";
-import {
-  BpToolbar,
-  BpSplit,
-  BpTable,
-  BpKvList,
-  BpBanner,
-  BpStagePipeline,
-  BpMetricGrid,
-} from "./blueprintUi";
+import { Link } from "react-router-dom";
+import { S2Chrome, useJsonGet } from "./shared";
+import { BpBanner, BpKvList, BpLinkRow, BpTable, BpToolbar } from "./blueprintUi";
 
-/* ──────────────── Types ──────────────── */
+type FerryStatus = {
+  exportImport?: string; skopeo?: boolean; skopeoMode?: string;
+  cosign?: boolean; cosignCliMode?: string; cosignKeyConfigured?: boolean;
+  cosignPubConfigured?: boolean; skopeoArchiveEnabled?: boolean;
+  imagesManifest?: string | null;
+};
 
-export interface FerryBundle {
-  id: string;
-  name: string;
-  size: string;
-  signed: boolean;
-  signable: boolean;
-  contents: { component: string; version: string; type: string }[];
-  signature: { algorithm: string; signedBy: string; signedAt: string; fingerprint: string };
-  targetSpokes: string[];
-}
+type FerryAsset = {
+  bundleId: string; platformVersion?: string; contents?: string[];
+  compatibleChannels?: string[]; validated?: boolean; createdAt?: string;
+};
 
-interface FerrySubmitProgress {
-  stage: string;
-  message: string;
-  progress: number;
-}
-
-/* ──────────────── MOCK fallback ──────────────── */
-
-export const MOCK_FERRY_BUNDLES: FerryBundle[] = [
-  {
-    id: "bundle-apollo-core-2.14.1",
-    name: "apollo-core-2.14.1",
-    size: "248 MB",
-    signed: true,
-    signable: true,
-    contents: [
-      { component: "platform-core", version: "2.14.1", type: "runtime" },
-      { component: "ontology-engine", version: "2.14.1", type: "runtime" },
-      { component: "pipeline-runner", version: "2.14.0", type: "runtime" },
-      { component: "aip-gateway", version: "2.14.1", type: "service" },
-    ],
-    signature: {
-      algorithm: "cosign-ed25519",
-      signedBy: "release-bot@aos-platform",
-      signedAt: "2026-07-20T03:15:00Z",
-      fingerprint: "sha256:a1b2c3d4e5f6...",
-    },
-    targetSpokes: ["spoke-prod-sh", "spoke-prod-bj", "spoke-staging-gz"],
-  },
-  {
-    id: "bundle-fde-repair-1.8.0-rc.2",
-    name: "fde-维修派单-1.8.0-rc.2",
-    size: "87 MB",
-    signed: false,
-    signable: true,
-    contents: [
-      { component: "fde-repair-workshop", version: "1.8.0-rc.2", type: "module" },
-      { component: "fde-repair-rules", version: "1.8.0-rc.2", type: "ruleset" },
-      { component: "dispatch-widget", version: "1.5.0", type: "widget" },
-    ],
-    signature: {
-      algorithm: "—",
-      signedBy: "—",
-      signedAt: "—",
-      fingerprint: "—",
-    },
-    targetSpokes: ["spoke-staging-gz", "spoke-prod-sh"],
-  },
-];
-
-/* ──────────────── Page ──────────────── */
-
+/** Ferry 只读准备面：实际导出/导入必须从受控变更流程发起。 */
 export function FerryPage() {
-  const bundlesResp = useJsonGet<{ items: FerryBundle[] } | FerryBundle[]>("/v1/ferry/bundles");
-  const rawBundles = bundlesResp.data;
-  const bundles =
-    rawBundles && Array.isArray(rawBundles)
-      ? rawBundles.length > 0
-        ? rawBundles
-        : MOCK_FERRY_BUNDLES
-      : MOCK_FERRY_BUNDLES;
-
-  const SPOKE_LABEL: Record<string, string> = {
-    "spoke-prod-sh": "上海生产运行节点",
-    "spoke-prod-bj": "北京生产运行节点",
-    "spoke-staging-gz": "广州预发布运行节点",
-  };
-  const spokeLabel = (id: string) => SPOKE_LABEL[id] ?? id;
-
-  const [selectedId, setSelectedId] = useState<string>("");
-  const [targetSpoke, setTargetSpoke] = useState<string>("");
-  const [submitting, setSubmitting] = useState(false);
-  const [progress, setProgress] = useState<FerrySubmitProgress | null>(null);
-
-  const selected = bundles.find((b) => b.id === selectedId) || bundles[0] || null;
-
-  function selectBundle(id: string) {
-    setSelectedId(id);
-    const b = bundles.find((x) => x.id === id);
-    if (b && b.targetSpokes.length > 0) setTargetSpoke(b.targetSpokes[0]);
-  }
-
-  async function submitFerry() {
-    if (!selected || !targetSpoke) return;
-    setSubmitting(true);
-    setProgress({ stage: "export", message: "正在导出介质…", progress: 0.2 });
-    try {
-      await apiPost("/v1/ferry/submit", { bundleId: selected.id, targetSpoke });
-      setProgress({ stage: "done", message: `已提交到 ${targetSpoke}`, progress: 1 });
-    } catch {
-      setProgress({ stage: "error", message: "提交失败", progress: 1 });
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  const ferryStages = selected
-    ? [
-        {
-          step: "①",
-          title: "选择 Bundle",
-          subtitle: selected.name,
-          status: "done",
-          tone: "done" as const,
-        },
-        {
-          step: "②",
-          title: "校验签名",
-          subtitle: selected.signed ? "已签名 ✓" : "未签名",
-          status: selected.signed ? "已校验" : "待签名",
-          tone: selected.signed ? ("done" as const) : ("active" as const),
-        },
-        {
-          step: "③",
-          title: "导出介质",
-          subtitle: selected.size,
-          status: submitting ? "导出中…" : "待导出",
-          tone: submitting ? ("active" as const) : ("wait" as const),
-        },
-        {
-          step: "④",
-          title: "目标 Spoke 导入",
-          subtitle: targetSpoke || "未选择",
-          status: progress?.stage === "done" ? "已完成" : "待执行",
-          tone: progress?.stage === "done" ? ("done" as const) : ("wait" as const),
-        },
-      ]
-    : [];
-
+  const status = useJsonGet<FerryStatus>("/v1/apollo/ferry/status");
+  const assets = useJsonGet<{ items?: FerryAsset[] }>("/v1/apollo/assets");
+  const rows = Array.isArray(assets.data?.items) ? assets.data.items : [];
+  const err = status.err || assets.err;
   return (
-    <S2Chrome title="Ferry 摆渡" lede="管理 Bundle 从 Hub 到 Spoke 的跨网 Ferry 导出与导入流程">
-      {/* Step indicator */}
-      <BpStagePipeline stages={ferryStages} />
-
-      {selected && !selected.signed && (
-        <div style={{ marginTop: "0.75rem" }}>
-          <BpBanner tone="warn">
-            该 Bundle 尚未签名。建议在 Ferry 前通过 cosign 完成签名，确保目标 Spoke 可验证完整性。
-          </BpBanner>
-        </div>
-      )}
-
-      <div style={{ marginTop: "0.75rem" }}>
-        <BpSplit
-          left={
-            <div>
-              <BpToolbar>
-                <span className="muted" style={{ fontSize: "0.75rem" }}>
-                  可 Ferry 的 Bundle（{bundles.length}）
-                </span>
-              </BpToolbar>
-              <BpTable
-                columns={["", "Bundle 名称", "大小", "签名", "可签名"]}
-                rows={bundles.map((b) => {
-                  const isSel = (selected?.id || "") === b.id;
-                  return [
-                    <input
-                      key="radio"
-                      type="radio"
-                      checked={isSel}
-                      onChange={() => selectBundle(b.id)}
-                    />,
-                    <span key="name" style={{ fontWeight: isSel ? 600 : 400 }}>
-                      {b.name}
-                    </span>,
-                    <span key="size" className="mono">
-                      {b.size}
-                    </span>,
-                    <span
-                      key="signed"
-                      className={b.signed ? "status-ok" : "status-warn"}
-                    >
-                      {b.signed ? "✓ 已签名" : "未签名"}
-                    </span>,
-                    <span key="signable" className="muted">
-                      {b.signable ? "是" : "—"}
-                    </span>,
-                  ];
-                })}
-              />
-            </div>
-          }
-          right={
-            selected ? (
-              <div>
-                <h3 style={{ marginBottom: "0.5rem" }}>Bundle 详情</h3>
-                <BpKvList
-                  rows={[
-                    { key: "名称", value: selected.name },
-                    { key: "大小", value: selected.size, mono: true },
-                    {
-                      key: "签名状态",
-                      value: selected.signed ? "已签名 ✓" : "未签名",
-                    },
-                    { key: "签名算法", value: selected.signature.algorithm, mono: true },
-                    { key: "签名者", value: selected.signature.signedBy, mono: true },
-                    { key: "签名时间", value: selected.signature.signedAt, mono: true },
-                    {
-                      key: "指纹",
-                      value: selected.signature.fingerprint,
-                      mono: true,
-                    },
-                  ]}
-                />
-
-                <h4 style={{ marginTop: "1rem", marginBottom: "0.5rem" }}>内容清单</h4>
-                <BpTable
-                  columns={["组件", "版本", "类型"]}
-                  rows={selected.contents.map((c) => [
-                    <span key="c">{c.component}</span>,
-                    <span key="v" className="mono">
-                      {c.version}
-                    </span>,
-                    <span key="t" className="muted">
-                      {c.type}
-                    </span>,
-                  ])}
-                />
-
-                <h4 style={{ marginTop: "1rem", marginBottom: "0.5rem" }}>
-                  目标 Spoke
-                </h4>
-                <select
-                  value={targetSpoke}
-                  onChange={(e) => setTargetSpoke(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "0.4rem 0.6rem",
-                    borderRadius: 4,
-                    border: "1px solid var(--border-color, #d0d5dd)",
-                  }}
-                >
-                  {selected.targetSpokes.map((s) => (
-                    <option key={s} value={s}>
-                      {spokeLabel(s)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div className="muted">请选择左侧的 Bundle</div>
-            )
-          }
-        />
-      </div>
-
-      {/* Bottom: Ferry submit + progress */}
-      <div
-        style={{
-          marginTop: "1rem",
-          padding: "0.75rem 1rem",
-          borderTop: "1px solid var(--border-color, #e0e0e0)",
-          display: "flex",
-          alignItems: "center",
-          gap: "1rem",
-          flexWrap: "wrap",
-        }}
-      >
-        <button
-          type="button"
-          className="btn-primary"
-          disabled={!selected || !targetSpoke || submitting}
-          onClick={submitFerry}
-          style={{
-            padding: "0.5rem 1.5rem",
-            borderRadius: 4,
-            border: "none",
-            cursor: !selected || !targetSpoke || submitting ? "not-allowed" : "pointer",
-            fontWeight: 600,
-          }}
-        >
-          {submitting ? "Ferry 进行中…" : "Ferry 提交"}
-        </button>
-        {progress && (
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <div className="muted" style={{ fontSize: "0.75rem", marginBottom: 4 }}>
-              {progress.message}
-            </div>
-            <div
-              style={{
-                height: 6,
-                borderRadius: 3,
-                background: "#e0e0e0",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  width: `${Math.round(progress.progress * 100)}%`,
-                  height: "100%",
-                  background: progress.stage === "error" ? "#e74c3c" : "#3b82f6",
-                  transition: "width 0.3s",
-                }}
-              />
-            </div>
-          </div>
+    <S2Chrome title="Ferry 摆渡" lede="核验可摆渡资产和本机签名、镜像工具准备状态">
+      <BpToolbar>
+        <button type="button" className="btn" onClick={() => { status.reload(); assets.reload(); }}>重新读取</button>
+        <Link to="/apollo/assets" className="btn-nav">资产包管理 →</Link>
+        <Link to="/apollo/change" className="btn-nav">变更审批 →</Link>
+      </BpToolbar>
+      {err && <BpBanner tone="warn">Ferry 权威读取失败：{err}</BpBanner>}
+      <section className="bp-domain bp-domain-apollo">
+        <h2 className="bp-domain-heading">本机准备状态</h2>
+        <BpKvList rows={[
+          { key: "导出与导入合同", value: status.data?.exportImport === "200" ? "已注册" : "待核验" },
+          { key: "镜像归档工具", value: status.data?.skopeo ? `可用（${status.data.skopeoMode || "已探测"}）` : "不可用" },
+          { key: "签名校验工具", value: status.data?.cosign ? `可用（${status.data.cosignCliMode || "已探测"}）` : "不可用" },
+          { key: "签名私钥引用", value: status.data?.cosignKeyConfigured ? "已配置" : "未配置" },
+          { key: "签名公钥引用", value: status.data?.cosignPubConfigured ? "已配置" : "未配置" },
+          { key: "镜像归档", value: status.data?.skopeoArchiveEnabled ? "已启用" : "未启用" },
+          { key: "镜像清单", value: status.data?.imagesManifest ? "已配置" : "未配置" },
+        ]} />
+      </section>
+      <section className="bp-domain bp-domain-apollo">
+        <h2 className="bp-domain-heading">当前可审计资产（{rows.length}）</h2>
+        {rows.length === 0 ? (
+          <p className="muted">当前没有已登记资产包；页面不会生成示例 Bundle。请先在资产包管理完成登记和校验。</p>
+        ) : (
+          <BpTable columns={["资产包", "平台版本", "内容", "兼容通道", "校验"]} rows={rows.map((item) => [
+            <span key="id" className="mono">{item.bundleId}</span>,
+            <span key="version">{item.platformVersion || "未知"}</span>,
+            <span key="contents">{item.contents?.join("、") || "未登记"}</span>,
+            <span key="channels">{item.compatibleChannels?.join("、") || "未登记"}</span>,
+            <span key="validated">{item.validated ? "已通过" : "待核验"}</span>,
+          ])} />
         )}
-      </div>
-
-      <div style={{ marginTop: "1rem" }}>
-        <BpMetricGrid
-          items={[
-            {
-              label: "可用 Bundle",
-              value: String(bundles.length),
-              tone: "ok",
-            },
-            {
-              label: "已签名",
-              value: String(bundles.filter((b) => b.signed).length),
-              tone: "ok",
-            },
-            {
-              label: "待签名",
-              value: String(bundles.filter((b) => !b.signed && b.signable).length),
-              tone: "warn",
-            },
-            {
-              label: "目标 Spoke 总数",
-              value: String(
-                new Set(bundles.flatMap((b) => b.targetSpokes)).size,
-              ),
-              tone: "muted",
-            },
-          ]}
-        />
-      </div>
+      </section>
+      <BpBanner tone="info">导出、签名、离线传递和目标导入会产生受控运行记录；本页不绕过变更审批直接执行。</BpBanner>
+      <BpLinkRow links={[{ to: "/apollo/assets", label: "资产包管理" }, { to: "/apollo/change", label: "变更审批" }, { to: "/apollo", label: "Hub 舰队" }]} />
     </S2Chrome>
   );
 }

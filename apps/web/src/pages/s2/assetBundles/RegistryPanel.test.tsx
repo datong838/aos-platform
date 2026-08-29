@@ -13,7 +13,7 @@ import {
   REGISTRY_VERSION_DETAIL_FIXTURE,
 } from "../../../api/assetControl/registryFixtures";
 import type { AssetReadState } from "./model";
-import { RegistryPanel, type RegistryPanelProps } from "./RegistryPanel";
+import { assetBusinessName, RegistryPanel, type RegistryPanelProps } from "./RegistryPanel";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -64,6 +64,11 @@ describe("RegistryPanel", () => {
       <RegistryPanel state={readState()} selected={null} onSelect={vi.fn()} {...props} />,
     ));
   }
+
+  it("资产主名清理开发编号但保留业务含义", () => {
+    expect(assetBusinessName("电商增长方案包（D3：W03 客户与私域运营台 + L05 分润异常检测）"))
+      .toBe("电商增长方案包（客户与私域运营台与分润异常检测）");
+  });
 
   it("展示真实 Registry 字段并以 publisher 与 bundleId 受控选择", async () => {
     const onSelect = vi.fn();

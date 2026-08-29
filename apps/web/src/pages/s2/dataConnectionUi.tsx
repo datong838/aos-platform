@@ -76,10 +76,18 @@ export function sourceSubtitle(t?: string): string {
 
 export function runtimeLabel(s: SourceRow): string {
   const mode = (s.runtimeMode || "").toLowerCase();
-  if (mode === "agent") return "代理 · agent-local";
+  if (mode === "agent") return "本机边缘代理";
   if (mode === "worker") return "代理工作者";
   if (mode === "direct") return "直接连接";
   return "历史数据 · 未设置";
+}
+
+export function sourceBusinessName(source: SourceRow, plugins?: ConnectorPlugin[]): string {
+  const explicit = [source.nameZh, source.displayName, source.name]
+    .find((value) => typeof value === "string" && value.trim()) as string | undefined;
+  if (explicit) return explicit.trim();
+  if (source.id === "niushop-qyh") return "栖月汇微商城";
+  return `${connectorLabel(source.type, plugins)}数据源`;
 }
 
 export function statusZh(s?: string): string {
@@ -143,11 +151,12 @@ export function StoragePillLink({
   );
 }
 
-export function SourceNameLink({ sourceId, subtitle }: { sourceId: string; subtitle: string }) {
+export function SourceNameLink({ sourceId, displayName, subtitle }: { sourceId: string; displayName: string; subtitle: string }) {
   return (
-    <Link to={`/data/sources/${encodeURIComponent(sourceId)}`} className="data-src-name">
-      <span className="data-src-title">{sourceId}</span>
+    <span className="data-src-name">
+      <Link to={`/data/sources/${encodeURIComponent(sourceId)}`} className="data-src-title">{displayName}</Link>
       <span className="data-src-sub">{subtitle}</span>
-    </Link>
+      <details><summary>技术审计信息</summary><code>{sourceId}</code></details>
+    </span>
   );
 }

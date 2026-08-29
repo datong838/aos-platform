@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
@@ -59,34 +61,17 @@ describe("Wave 3C W1 · Variables 交互诚实反馈", () => {
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  async function renderDemo() {
+  async function renderUnavailable() {
     api.apiGet.mockRejectedValue(new Error("variables unavailable"));
     await act(async () => root.render(createElement(MemoryRouter, null, createElement(VariablesPage))));
     await flush();
   }
 
-  it("演示新建、编辑、删除每次都明确仅当前演示", async () => {
-    await renderDemo();
-    expect(host.querySelectorAll('[data-testid="demo-binding-source"]').length).toBeGreaterThan(0);
-
-    await act(async () => button("新建变量").click());
-    await act(async () => setInput("名称", "w3c_demo"));
-    await act(async () => button("保存", true).click());
-    expect(host.textContent).toContain("已在仅当前演示中新建变量，不写服务端");
-
-    const row = Array.from(host.querySelectorAll("tr")).find((item) => item.textContent?.includes("w3c_demo"));
-    const edit = row?.querySelector("button.vr-edit") as HTMLButtonElement | null;
-    if (!edit) throw new Error("demo edit button not found");
-    await act(async () => edit.click());
-    await act(async () => setInput("名称", "w3c_demo_updated"));
-    await act(async () => button("保存", true).click());
-    expect(host.textContent).toContain("已在仅当前演示中编辑变量，不写服务端");
-
-    const updatedRow = Array.from(host.querySelectorAll("tr")).find((item) => item.textContent?.includes("w3c_demo_updated"));
-    const remove = updatedRow?.querySelector("button.vr-delete") as HTMLButtonElement | null;
-    if (!remove) throw new Error("demo delete button not found");
-    await act(async () => remove.click());
-    expect(host.textContent).toContain("已在仅当前演示中删除变量，不写服务端");
+  it("权威不可用时保持可信空态且不提供本地演示写入", async () => {
+    await renderUnavailable();
+    expect(host.textContent).toContain("变量权威读取失败：variables unavailable");
+    expect(host.textContent).not.toContain("all_orders");
+    expect(button("新建变量").disabled).toBe(true);
     expect(api.apiPost).not.toHaveBeenCalled();
     expect(api.apiPut).not.toHaveBeenCalled();
     expect(api.apiDelete).not.toHaveBeenCalled();

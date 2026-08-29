@@ -18,12 +18,12 @@ type MetricSpec = {
 };
 
 const METRICS: readonly MetricSpec[] = [
-  { key: "caseCount", code: "CASE", label: "当前案例" },
-  { key: "productionActiveCount", code: "ACTIVE", label: "生产运行" },
-  { key: "connectorCount", code: "CONN", label: "连接器" },
-  { key: "pipelineCount", code: "PIPE", label: "Pipeline" },
-  { key: "datasetRowCount", code: "ROWS", label: "数据集行数" },
-  { key: "latencyMs", code: "LAT", label: "最大延迟", suffix: " ms" },
+  { key: "caseCount", code: "案例", label: "当前案例" },
+  { key: "productionActiveCount", code: "运行", label: "生产运行" },
+  { key: "connectorCount", code: "连接", label: "连接器数量" },
+  { key: "pipelineCount", code: "管道", label: "数据管道数量" },
+  { key: "datasetRowCount", code: "数据", label: "数据集行数" },
+  { key: "latencyMs", code: "延迟", label: "最大延迟", suffix: " 毫秒" },
 ];
 
 const NUMBER_FORMAT = new Intl.NumberFormat("zh-CN", {

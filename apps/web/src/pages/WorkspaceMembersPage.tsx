@@ -18,6 +18,13 @@ type Member = {
 type AuditRow = { id: string; ts: string; action: string; actorId: string };
 
 const ROLES = ["owner", "admin", "editor", "viewer"] as const;
+const ROLE_LABELS: Record<string, string> = { owner: "负责人", admin: "管理员", editor: "编辑者", viewer: "查看者" };
+const AUDIT_LABELS: Record<string, string> = {
+  "org.enter": "进入组织",
+  "member.add": "添加成员",
+  "member.remove": "移除成员",
+  "member.import": "导入通讯录",
+};
 
 function looksLikeEmail(v: string): boolean {
   return v.includes("@");
@@ -44,6 +51,7 @@ export function WorkspaceMembersPage() {
   const [csvText, setCsvText] = useState("");
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
+  const [removeConfirmSubject, setRemoveConfirmSubject] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     setErr("");
@@ -146,6 +154,7 @@ export function WorkspaceMembersPage() {
       await apiDelete(
         `/v1/workspaces/${encodeURIComponent(getTenant().projectId)}/members/${encodeURIComponent(sub)}`,
       );
+      setRemoveConfirmSubject(null);
       await reload();
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -209,7 +218,7 @@ export function WorkspaceMembersPage() {
         >
           {ROLES.map((r) => (
             <option key={r} value={r}>
-              {r}
+              {ROLE_LABELS[r]}
             </option>
           ))}
         </select>
@@ -247,7 +256,7 @@ export function WorkspaceMembersPage() {
         onChange={(e) => setCsvText(e.target.value)}
         rows={5}
         style={{ width: "100%", fontFamily: "monospace" }}
-        placeholder={"email,phone,displayName,role\nalice@acme.example,,Alice,viewer"}
+        placeholder={"email,phone,displayName,role\n请在此粘贴真实通讯录内容"}
         aria-label="通讯录 CSV"
       />
       <div className="aos-members-form" style={{ marginTop: "0.5rem" }}>
@@ -278,30 +287,33 @@ export function WorkspaceMembersPage() {
               <td>{m.displayName || m.displayLabel || m.subject}</td>
               <td>{m.email || "—"}</td>
               <td>{m.phone || "—"}</td>
-              <td>{m.role}</td>
-              <td className="aos-muted">{m.title || <code>{m.subject}</code>}</td>
+              <td>{ROLE_LABELS[m.role] || "未识别角色"}</td>
+              <td className="aos-muted">{m.title || "系统账号"}</td>
               <td>
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => void onRemove(m.subject)}
-                >
-                  移除
-                </button>
+                {removeConfirmSubject === m.subject ? (
+                  <span style={{ display: "inline-flex", gap: 8 }}>
+                    <button type="button" className="btn" onClick={() => void onRemove(m.subject)}>确认移除</button>
+                    <button type="button" className="btn" onClick={() => setRemoveConfirmSubject(null)}>取消</button>
+                  </span>
+                ) : (
+                  <button type="button" className="btn" onClick={() => setRemoveConfirmSubject(m.subject)}>移除</button>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <h3 className="aos-h3">最近审计</h3>
-      <ul className="aos-audit-list">
-        {audit.map((a) => (
-          <li key={a.id}>
-            <code>{a.action}</code> · {a.actorId} · {a.ts}
-          </li>
-        ))}
-      </ul>
+      <details>
+        <summary>查看最近审计</summary>
+        <ul className="aos-audit-list">
+          {audit.map((a) => (
+            <li key={a.id}>
+              {AUDIT_LABELS[a.action] || "其他操作"} · {a.actorId} · {a.ts}
+            </li>
+          ))}
+        </ul>
+      </details>
     </PageChrome>
   );
 }

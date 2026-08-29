@@ -394,28 +394,10 @@ export function CopPage() {
     },
   ];
 
-  const mockFactories = [
-    { id: "f1", name: "华东 F1 · 上海", status: "正常" as const, desc: "在产 1,247 件 · 产能 92% · 交期 3.2d", warn: false },
-    { id: "f2", name: "华东 F2 · 苏州", status: "正常" as const, desc: "在产 892 件 · 产能 87% · 交期 4.1d", warn: false },
-    { id: "f3", name: "华南 F3 · 深圳", status: "预警" as const, desc: "在产 621 件 · 产能 64% · SLA 缺口 23%", warn: true },
-  ];
-
-  const riskItems = [
-    { name: "华南 F3 · 深圳", tag: "SLA 缺口 23%", desc: "电容组件缺料 · 预计 7 天恢复", tone: "bad" as const },
-    { name: "华北前置仓 FD-2", tag: "周转 24d", desc: "库存积压 · 建议调拨华南", tone: "warn" as const },
-    { name: "华东 CDC-3", tag: "出库延迟 2.1h", desc: "WMS 批次作业排队中", tone: "warn" as const },
-  ];
-
-  const eventItems: { title: string; desc: string; time: string; tone: "ok" | "warn" | "bad" | "default" }[] = [
-    { title: "调拨完成", desc: "F1 → 华南仓 · 电容组件 500 件", time: "2 分钟前", tone: "ok" },
-    { title: "SLA 预警", desc: "华南 F3 · 交期超时 12 单", time: "8 分钟前", tone: "warn" },
-    { title: "库存盘点", desc: "CDC-1 · 差异率 0.03% · 通过", time: "25 分钟前", tone: "ok" },
-    { title: "订单履约", desc: "ORD-8821 · 发货完成 · 物流 SF", time: "42 分钟前", tone: "ok" },
-    { title: "AIP 决策", desc: "Buddy 建议对华南 F3 发起调拨", time: "1 小时前", tone: "default" },
-  ];
+  const currentTypes = types.data?.items || [];
 
   return (
-    <S2Chrome title="态势大屏" lede="对齐 workshop-cop · KPI 来自 graph-health / metrics / evals">
+    <S2Chrome title="态势大屏" lede="汇总当前图谱健康、服务指标与评测状态">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
         <button
           type="button"
@@ -472,7 +454,7 @@ export function CopPage() {
       <div className="p-cop-main">
         <div className="p-cop-map">
           <div className="p-cop-map-header">
-            <h2 className="p-cop-map-title">供应链网络态势</h2>
+            <h2 className="p-cop-map-title">当前业务对象态势</h2>
             <span className="p-cop-map-subtitle">
               {types.data?.items?.length || 0} 对象类型 · {hm?.edges ?? 0} 关系边 · 健康度 {health.data?.score ?? "—"}
             </span>
@@ -489,29 +471,29 @@ export function CopPage() {
 
               {/* Hub node (CDC) */}
               <circle cx="200" cy="130" r="35" fill="rgba(43,108,176,0.08)" stroke="rgba(43,108,176,0.4)" strokeWidth="2" />
-              <text x="200" y="126" textAnchor="middle" fill="currentColor" fontSize="12" fontWeight="500">CDCs</text>
-              <text x="200" y="142" textAnchor="middle" fill="var(--aos-text-tertiary)" fontSize="10">3 中央仓</text>
+              <text x="200" y="126" textAnchor="middle" fill="currentColor" fontSize="12" fontWeight="500">图谱实例</text>
+              <text x="200" y="142" textAnchor="middle" fill="var(--aos-text-tertiary)" fontSize="10">{hm?.instances ?? "—"} 条</text>
 
               {/* Pipeline node */}
               <circle cx="340" cy="130" r="35" fill="rgba(56,161,105,0.08)" stroke="rgba(56,161,105,0.4)" strokeWidth="2" />
-              <text x="340" y="126" textAnchor="middle" fill="currentColor" fontSize="12" fontWeight="500">FDs</text>
-              <text x="340" y="142" textAnchor="middle" fill="var(--aos-text-tertiary)" fontSize="10">4 前置仓</text>
+              <text x="340" y="126" textAnchor="middle" fill="currentColor" fontSize="12" fontWeight="500">图谱关系</text>
+              <text x="340" y="142" textAnchor="middle" fill="var(--aos-text-tertiary)" fontSize="10">{hm?.edges ?? "—"} 条</text>
 
-              {/* Source factories */}
+              {/* Current authority nodes; no sample factories or warehouses. */}
               <rect x="20" y="55" width="60" height="36" rx="8" fill="rgba(43,108,176,0.08)" stroke="rgba(43,108,176,0.3)" strokeWidth="1.5" />
-              <text x="50" y="78" textAnchor="middle" fill="currentColor" fontSize="10">华东 F1</text>
+              <text x="50" y="78" textAnchor="middle" fill="currentColor" fontSize="10">当前对象</text>
               <rect x="20" y="120" width="60" height="36" rx="8" fill="rgba(56,161,105,0.08)" stroke="rgba(56,161,105,0.3)" strokeWidth="1.5" />
-              <text x="50" y="143" textAnchor="middle" fill="currentColor" fontSize="10">华东 F2</text>
+              <text x="50" y="143" textAnchor="middle" fill="currentColor" fontSize="10">图谱关系</text>
               <rect x="20" y="185" width="60" height="36" rx="8" fill="rgba(214,158,46,0.08)" stroke="rgba(214,158,46,0.3)" strokeWidth="1.5" />
-              <text x="50" y="208" textAnchor="middle" fill="currentColor" fontSize="10">华南 F3</text>
+              <text x="50" y="208" textAnchor="middle" fill="currentColor" fontSize="10">健康指标</text>
 
               {/* Destinations */}
               <rect x="410" y="55" width="56" height="36" rx="8" fill="rgba(56,161,105,0.08)" stroke="rgba(56,161,105,0.3)" strokeWidth="1.5" />
-              <text x="438" y="78" textAnchor="middle" fill="currentColor" fontSize="10">华东仓</text>
+              <text x="438" y="78" textAnchor="middle" fill="currentColor" fontSize="10">对象类型</text>
               <rect x="410" y="120" width="56" height="36" rx="8" fill="rgba(43,108,176,0.08)" stroke="rgba(43,108,176,0.3)" strokeWidth="1.5" />
-              <text x="438" y="143" textAnchor="middle" fill="currentColor" fontSize="10">华北仓</text>
+              <text x="438" y="143" textAnchor="middle" fill="currentColor" fontSize="10">关系类型</text>
               <rect x="410" y="185" width="56" height="36" rx="8" fill="rgba(229,62,62,0.08)" stroke="rgba(229,62,62,0.3)" strokeWidth="1.5" />
-              <text x="438" y="208" textAnchor="middle" fill="currentColor" fontSize="10">华南仓</text>
+              <text x="438" y="208" textAnchor="middle" fill="currentColor" fontSize="10">风险信号</text>
 
               {/* Object type nodes */}
               {(types.data?.items || []).slice(0, 5).map((t, i) => {
@@ -551,20 +533,21 @@ export function CopPage() {
           <h2 className="p-cop-sidebar-title">钻取详情 · {focusMeta ? focusMeta.name : "选择节点"}</h2>
 
           <div className="p-cop-factory-list">
-            {mockFactories.map((f) => (
+            {currentTypes.slice(0, 6).map((item) => (
               <button
-                key={f.id}
+                key={item.id}
                 type="button"
-                className={`p-cop-factory-card${f.warn ? " is-warn" : ""}${focusType === f.id ? " is-active" : ""}`}
-                onClick={() => setFocusType(f.id)}
+                className={`p-cop-factory-card${focusType === item.id ? " is-active" : ""}`}
+                onClick={() => setFocusType(item.id)}
               >
                 <div className="p-cop-factory-head">
-                  <span className="p-cop-factory-name">{f.name}</span>
-                  <span className="p-cop-factory-status">{f.status}</span>
+                  <span className="p-cop-factory-name">{item.name}</span>
+                  <span className="p-cop-factory-status">当前权威</span>
                 </div>
-                <div className="p-cop-factory-desc">{f.desc}</div>
+                <div className="p-cop-factory-desc">点击查看当前图谱健康与评测状态</div>
               </button>
             ))}
+            {!currentTypes.length && <p className="muted">当前租户没有可钻取的对象类型。</p>}
           </div>
 
           {focusMeta && (
@@ -580,11 +563,8 @@ export function CopPage() {
           )}
 
           <div className="p-cop-sidebar-actions">
-            <button type="button" className="p-cop-action-btn" disabled title="调拨动作契约规划中">
-              🟡 调拨 · 华南紧急补货
-            </button>
             <Link to="/workshop/inbox" className="p-cop-action-btn is-secondary">
-              打开运营 Inbox →
+              打开风险告警管理 →
             </Link>
           </div>
         </div>
@@ -595,39 +575,22 @@ export function CopPage() {
         {/* Risk factory detail */}
         <div className="p-cop-panel is-bad">
           <div className="p-cop-panel-head">
-            <h2 className="p-cop-panel-title">风险工厂详情</h2>
-            <span className="p-cop-map-subtitle">{riskItems.length} 家须关注</span>
+            <h2 className="p-cop-panel-title">当前风险信号</h2>
+            <span className="p-cop-map-subtitle">{riskCount} 项须关注</span>
           </div>
           <div className="p-cop-risk-list">
-            {riskItems.map((r, i) => (
-              <div key={i} className={`p-cop-risk-item${r.tone === "bad" ? " is-bad" : " is-warn"}`}>
-                <div>
-                  <span className="p-cop-risk-name">{r.name}</span>
-                  <span className="p-cop-risk-tag">{r.tag}</span>
-                </div>
-                <span className="p-cop-risk-desc">{r.desc}</span>
-              </div>
-            ))}
+            {riskCount > 0 ? <div className="p-cop-risk-item is-warn"><div><span className="p-cop-risk-name">系统观测发现风险信号</span><span className="p-cop-risk-tag">{riskCount} 项</span></div><span className="p-cop-risk-desc">进入风险告警管理读取可追溯的业务对象明细。</span></div> : <p className="muted">当前观测未返回风险信号。</p>}
           </div>
         </div>
 
         {/* Recent events */}
         <div className="p-cop-panel">
           <div className="p-cop-panel-head">
-            <h2 className="p-cop-panel-title">实时事件 · Action 记录</h2>
+            <h2 className="p-cop-panel-title">实时业务事件</h2>
             <Link to="/workshop/events" className="p-cop-panel-link">全部事件 →</Link>
           </div>
           <div className="p-cop-event-list">
-            {eventItems.map((e, i) => (
-              <div key={i} className="p-cop-event-item">
-                <span className={`p-cop-event-dot${e.tone === "ok" ? " is-ok" : e.tone === "warn" ? " is-warn" : e.tone === "bad" ? " is-bad" : ""}`} />
-                <div className="p-cop-event-body">
-                  <span className="p-cop-event-title">{e.title}</span>
-                  <span className="p-cop-event-desc">{e.desc}</span>
-                </div>
-                <span className="p-cop-event-time">{e.time}</span>
-              </div>
-            ))}
+            <p className="muted">当前接口未提供可追溯的业务事件明细；页面不会使用演示事件填充。</p>
           </div>
         </div>
       </div>

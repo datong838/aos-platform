@@ -140,6 +140,19 @@ describe("PublishPage · 真实发布与部署阶段", () => {
     await flushEffects();
   }
 
+  async function confirmPublish() {
+    const prepareButton = Array.from(host.querySelectorAll("button")).find((item) =>
+      item.textContent?.includes("准备发布到预发布"),
+    );
+    await act(async () => prepareButton?.click());
+    expect(apiMocks.post).not.toHaveBeenCalled();
+    const confirmButton = Array.from(host.querySelectorAll("button")).find((item) =>
+      item.textContent?.includes("确认发布到预发布"),
+    );
+    await act(async () => confirmButton?.click());
+    await flushEffects();
+  }
+
   it("发布、幂等重放与部署均确认后才显示全成功", async () => {
     let publishCalls = 0;
     apiMocks.post.mockImplementation(async (path: string) => {
@@ -162,11 +175,7 @@ describe("PublishPage · 真实发布与部署阶段", () => {
     });
     await renderPage();
 
-    const button = Array.from(host.querySelectorAll("button")).find((item) =>
-      item.textContent?.includes("发布到预发布"),
-    );
-    await act(async () => button?.click());
-    await flushEffects();
+    await confirmPublish();
 
     expect(host.textContent).toContain("发布与部署成功");
     expect(host.textContent).toContain("发布：已接受");
@@ -191,12 +200,7 @@ describe("PublishPage · 真实发布与部署阶段", () => {
     });
     await renderPage();
 
-    const button = Array.from(host.querySelectorAll("button")).find((item) =>
-      item.textContent?.includes("发布到预发布"),
-    );
-    expect(button).toBeTruthy();
-    await act(async () => button?.click());
-    await flushEffects();
+    await confirmPublish();
 
     expect(host.textContent).toContain("发布已接受，但部署失败");
     expect(host.textContent).toContain("发布：已接受");
@@ -218,11 +222,7 @@ describe("PublishPage · 真实发布与部署阶段", () => {
     });
     await renderPage();
 
-    const button = Array.from(host.querySelectorAll("button")).find((item) =>
-      item.textContent?.includes("发布到预发布"),
-    );
-    await act(async () => button?.click());
-    await flushEffects();
+    await confirmPublish();
 
     expect(host.textContent).toContain("发布已接受，但幂等校验失败");
     expect(host.textContent).toContain("幂等重放校验失败");
@@ -265,15 +265,27 @@ describe("PublishPage · 真实发布与部署阶段", () => {
     });
     await renderPage();
 
-    const button = Array.from(host.querySelectorAll("button")).find((item) =>
-      item.textContent?.includes("发布到预发布"),
-    );
-    await act(async () => button?.click());
-    await flushEffects();
+    await confirmPublish();
 
     expect(host.textContent).toContain("发布已接受，但幂等校验失败");
     expect(host.textContent).toContain(error);
     expect(apiMocks.post.mock.calls.some(([path]) => String(path).endsWith("/deploy"))).toBe(false);
+  });
+
+  it("当前工作区没有真实应用时失败关闭且不产生任何写请求", async () => {
+    apiMocks.get.mockImplementation(async (path: string) => {
+      if (path === "/v1/modules") return { items: [] };
+      throw new Error(`unexpected GET ${path}`);
+    });
+    await renderPage();
+
+    const button = Array.from(host.querySelectorAll("button")).find((item) =>
+      item.textContent?.includes("请选择可发布应用"),
+    ) as HTMLButtonElement | undefined;
+    expect(button?.disabled).toBe(true);
+    expect(host.textContent).toContain("当前工作区暂无可发布应用");
+    expect(host.textContent).not.toContain("发布时自动创建");
+    expect(apiMocks.post).not.toHaveBeenCalled();
   });
 
   it("部署历史加载失败时显式显示错误，而不是伪装成尚未部署", async () => {

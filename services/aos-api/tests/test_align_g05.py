@@ -97,3 +97,41 @@ def test_apollo_config_plaintext_rejected(client, auth_headers):
     )
     assert r.status_code == 400
     assert r.json()["code"] == "SECRET_PLAINTEXT_REJECTED"
+
+
+def test_apollo_config_get_is_honest_and_never_returns_secret_payload(client, auth_headers):
+    r = client.get("/v1/apollo/config", headers=auth_headers)
+    assert r.status_code == 200
+    body = r.json()
+    assert body == {
+        "vaultRefsOnly": True,
+        "plaintextRejected": True,
+        "items": [],
+        "maintenanceWindow": None,
+        "authority": "not_configured",
+    }
+    assert "vault:secret/" not in r.text
+    assert "apiKey" not in r.text
+
+
+def test_apollo_change_list_and_decision_are_tenant_scoped(client, auth_headers, monkeypatch):
+    from aos_api import apollo_ops
+
+    current_id = "chg-current"
+    other_change_id = "chg-other"
+    mixed = [
+        {"id": current_id, "title": "当前租户变更", "status": "pending", "orgId": "dev-org", "projectId": "dev-project"},
+        {"id": other_change_id, "title": "其他租户变更", "status": "pending", "orgId": "other-org", "projectId": "other-project"},
+    ]
+    monkeypatch.setattr(apollo_ops, "list_changes", lambda limit=50: list(mixed))
+
+    hidden = client.get("/v1/apollo/changes", headers=auth_headers)
+    assert hidden.status_code == 200
+    assert [item["id"] for item in hidden.json()["items"]] == [current_id]
+    assert all(item["id"] != other_change_id for item in hidden.json()["items"])
+    denied = client.post(
+        f"/v1/apollo/changes/{other_change_id}/approve",
+        headers=auth_headers,
+        json={"note": "越权尝试"},
+    )
+    assert denied.status_code == 404

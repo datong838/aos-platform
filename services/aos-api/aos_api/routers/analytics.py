@@ -585,48 +585,48 @@ def _get_object_table(
 
 def _lookup_dataset(principal: Principal, rid: str) -> dict[str, Any] | None:
     from aos_api.routers import wave_ext
+    from aos_api.source_readiness_contracts import (
+        CANONICAL_QYH_OBJECT_TYPE_DISPLAY_NAMES,
+        canonical_qyh_source_for_pipeline,
+    )
 
     scope = TenantScope(principal.org_id, principal.project_id)
     ds = getattr(wave_ext, "_datasets", {}).get(wave_ext._resource_key(scope, rid))
     if ds is not None:
-        return dict(ds)
+        out = dict(ds)
+        pipeline_id = str(out.get("pipelineId") or rid.removeprefix("ri.aos.main.dataset."))
+        canonical = canonical_qyh_source_for_pipeline(pipeline_id)
+        if canonical is not None:
+            # Read-time projection only: never PATCH or mutate dataset metadata on GET.
+            out["objectTypeHint"] = canonical.object_type
+        return out
 
-    # 补齐逻辑：与 list_datasets 对齐，支持 8 个预置管道的数据集查找
-    _ALL_PIPE_IDS = [
-        ("P01-shop-qyh", "栖月汇-店铺", "Site"),
-        ("P02-product-qyh", "栖月汇-商品", "Goods"),
-        ("P03-product-sku-qyh", "栖月汇-商品SKU", "GoodsSku"),
-        ("P04-category-qyh", "栖月汇-类目", "GoodsCategory"),
-        ("P05-order-qyh", "栖月汇-订单", "Order"),
-        ("P06-order-line-qyh", "栖月汇-订单明细", "OrderLine"),
-        ("P07-shipment-qyh", "栖月汇-发货", "ExpressPackage"),
-        ("P08-customer-lite-qyh", "栖月汇-会员", "CustomerLite"),
-    ]
-    for _pid, _name, _ot in _ALL_PIPE_IDS:
-        _rid = f"ri.aos.main.dataset.{_pid}"
-        if _rid != rid:
-            continue
-        _row_cnt = 0
-        try:
-            from aos_api.phase5_pipeline_engine import get_engine as _get_eng
-            _eng = _get_eng()
-            _ds = _eng.get_dataset(scope, _rid)
-            if _ds is not None:
-                _row_cnt = getattr(_ds, "row_count", 0) or 0
-        except Exception:
-            pass
-        return {
-            "rid": _rid,
-            "id": _rid,
-            "name": _name,
-            "description": f"{_ot} · Pipeline {_pid}",
-            "rowCount": _row_cnt,
-            "row_count": _row_cnt,
-            "status": "active",
-            "pipelineId": _pid,
-            "objectTypeHint": _ot,
-        }
-    return None
+    # Deterministic read-only projection for all twelve canonical Qiyuehui datasets.
+    pipeline_id = rid.removeprefix("ri.aos.main.dataset.")
+    canonical = canonical_qyh_source_for_pipeline(pipeline_id)
+    if canonical is None or rid != f"ri.aos.main.dataset.{pipeline_id}":
+        return None
+    row_count = 0
+    try:
+        from aos_api.phase5_pipeline_engine import get_engine as _get_eng
+
+        dataset = _get_eng().get_dataset(scope, rid)
+        if dataset is not None:
+            row_count = getattr(dataset, "row_count", 0) or 0
+    except Exception:
+        pass
+    display_name = CANONICAL_QYH_OBJECT_TYPE_DISPLAY_NAMES[canonical.object_type]
+    return {
+        "rid": rid,
+        "id": rid,
+        "name": f"栖月汇-{display_name}",
+        "description": f"栖月汇微商城 · {display_name}",
+        "rowCount": row_count,
+        "row_count": row_count,
+        "status": "active",
+        "pipelineId": pipeline_id,
+        "objectTypeHint": canonical.object_type,
+    }
 
 
 def _dataset_preview_table(

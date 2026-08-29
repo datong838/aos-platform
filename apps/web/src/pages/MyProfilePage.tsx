@@ -21,11 +21,27 @@ type MeResp = {
   title?: string | null;
 };
 
+type ProfileForm = Pick<Profile, "displayName" | "email" | "phone" | "title">;
+
+function businessTitle(value: string) {
+  return value.replace(/\s*\bBearer\b\s*/gi, "").trim();
+}
+
+function normalizedForm(form: ProfileForm) {
+  return {
+    displayName: (form.displayName || "").trim(),
+    email: (form.email || "").trim(),
+    phone: (form.phone || "").trim(),
+    title: (form.title || "").trim(),
+  };
+}
+
 export function MyProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [title, setTitle] = useState("");
+  const [initial, setInitial] = useState<ProfileForm | null>(null);
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -35,14 +51,24 @@ export function MyProfilePage() {
     try {
       const me = await apiGet<MeResp>("/v1/me");
       const p = me.profile || me;
-      setDisplayName(p.displayName || me.displayName || "");
-      setEmail(p.email || me.email || "");
-      setPhone(p.phone || me.phone || "");
-      setTitle(p.title || me.title || "");
+      const next = {
+        displayName: p.displayName || me.displayName || "",
+        email: p.email || me.email || "",
+        phone: p.phone || me.phone || "",
+        title: businessTitle(p.title || me.title || ""),
+      };
+      setDisplayName(next.displayName);
+      setEmail(next.email);
+      setPhone(next.phone);
+      setTitle(next.title);
+      setInitial(next);
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     }
   }, []);
+
+  const current = normalizedForm({ displayName, email, phone, title });
+  const dirty = initial !== null && JSON.stringify(current) !== JSON.stringify(normalizedForm(initial));
 
   useEffect(() => {
     void reload();
@@ -54,10 +80,7 @@ export function MyProfilePage() {
     setMsg("");
     try {
       await apiPatch("/v1/me/profile", {
-        displayName: displayName.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        title: title.trim(),
+        ...current,
       });
       setMsg("已保存");
       await reload();
@@ -113,14 +136,14 @@ export function MyProfilePage() {
             className="aos-input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="例如 本机 Bearer 登录账号"
+            placeholder="例如 本机登录账号"
             aria-label="职务"
           />
         </label>
         <button
           type="button"
           className="btn-primary"
-          disabled={busy}
+          disabled={busy || !dirty}
           onClick={() => void onSave()}
         >
           {busy ? "保存中…" : "保存"}

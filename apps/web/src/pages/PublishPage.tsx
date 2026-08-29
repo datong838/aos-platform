@@ -151,6 +151,7 @@ export function PublishPage() {
     deploymentStatus?: string;
   } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     apiGet<{ items?: ModuleListItem[] }>("/v1/modules")
@@ -196,22 +197,15 @@ export function PublishPage() {
   const byEnv = pickLatestByEnv(deployments);
   const selectedMod = modules.find((m) => m.id === moduleId);
 
-  async function ensureModuleId(): Promise<string> {
-    if (moduleId) return moduleId;
-    const created = await apiPost<ModuleListItem>("/v1/modules", {
-      name: `发布 Module · ${env}`,
-      entryPath: "/workshop/inbox",
-      objectType: "WorkOrder",
-    });
-    const mid = created.id;
-    setModules((prev) => [...prev, created]);
-    setModuleId(mid);
-    return mid;
-  }
-
   async function onPublish() {
     if (busy) return;
+    if (!moduleId || !modules.some((item) => item.id === moduleId)) {
+      setPubState("err");
+      setMsg("请先选择当前工作区中可核验的应用，再进入发布确认。");
+      return;
+    }
     setBusy(true);
+    setConfirming(false);
     setPubState("idle");
     setPublishPhase("running");
     setDeployPhase("idle");
@@ -221,7 +215,7 @@ export function PublishPage() {
     let publishAccepted = false;
     let idempotencyVerified = false;
     try {
-      const mid = await ensureModuleId();
+      const mid = moduleId;
       const path = `/v1/modules/${encodeURIComponent(mid)}/publish`;
       const pub1 = await apiPost<PublishApiResponse>(path, {}, headers);
       assertPublishAccepted(pub1, mid);
@@ -286,8 +280,10 @@ export function PublishPage() {
     }
   }
 
+  const selectedEnvLabel = PUBLISH_ENVS.find((item) => item.id === env)?.label || env;
+
   return (
-    <PageChrome title="发布入口" lede="订单管理 · 发布入口">
+    <PageChrome title="发布入口" lede="当前应用 · 版本发布与部署记录">
       <div className="w2-b4-publish" style={{ maxWidth: 640, margin: "0 auto" }}>
         <div
           style={{
@@ -298,20 +294,29 @@ export function PublishPage() {
           }}
         >
           <div style={{ fontSize: 16, fontWeight: 500, color: "#111827", marginBottom: 4 }}>
-            发布 · {selectedMod?.name || "选择 Module"}
+            发布 · {selectedMod?.name || "尚未选择应用"}
           </div>
           <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px 0", lineHeight: 1.5 }}>
-            步骤与 <code style={{ fontSize: 11 }}>POST /v1/modules/:id/publish</code> 对齐；部署记录写{" "}
-            <code style={{ fontSize: 11 }}>/deploy</code>。
+            仅发布当前工作区已存在且可核验的应用；发布前必须再次确认目标环境。
           </p>
+
+          <details style={{ marginBottom: 16, fontSize: 11, color: "#6B7280" }}>
+            <summary style={{ cursor: "pointer" }}>查看发布接口审计信息</summary>
+            <div style={{ marginTop: 6, lineHeight: 1.6 }}>
+              发布：<code>POST /v1/modules/:id/publish</code>；部署：<code>POST /v1/modules/:id/deploy</code>。
+            </div>
+          </details>
 
           {/* 模块选择 */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 6 }}>目标模块</div>
+            <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 6 }}>目标应用</div>
             <select
               aria-label="publish-module"
               value={moduleId}
-              onChange={(e) => setModuleId(e.target.value)}
+              onChange={(e) => {
+                setModuleId(e.target.value);
+                setConfirming(false);
+              }}
               style={{
                 width: "100%",
                 padding: "8px 10px",
@@ -321,10 +326,10 @@ export function PublishPage() {
                 background: "#fff",
               }}
             >
-              {modules.length === 0 && <option value="">（无模块 · 发布时自动创建）</option>}
+              {modules.length === 0 && <option value="">当前工作区暂无可发布应用</option>}
               {modules.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.name || m.id} {m.status ? `· ${m.status}` : ""}
+                  {m.name || "未命名应用"} {m.status === "published" ? "· 已发布" : m.status === "draft" ? "· 草稿" : ""}
                 </option>
               ))}
             </select>
@@ -402,7 +407,10 @@ export function PublishPage() {
                   key={e.id}
                   type="button"
                   className={`w2-b4-env-card${selected ? " is-selected" : ""}`}
-                  onClick={() => setEnv(e.id)}
+                  onClick={() => {
+                    setEnv(e.id);
+                    setConfirming(false);
+                  }}
                   aria-pressed={selected}
                   style={{
                     textAlign: "left",
@@ -455,7 +463,7 @@ export function PublishPage() {
                 textDecoration: "none",
               }}
             >
-              打开 Release 通道 →
+              查看发布审批与记录 →
             </Link>
             <Link
               to="/workshop/canvas"
@@ -473,25 +481,47 @@ export function PublishPage() {
             </Link>
           </div>
 
-          <button
-            type="button"
-            onClick={() => void onPublish()}
-            disabled={busy}
-            style={{
-              width: "100%",
-              padding: "10px 16px",
-              fontSize: 13,
-              fontWeight: 500,
-              border: "none",
-              borderRadius: 2,
-              background: busy ? "#E5E7EB" : "var(--aos-accent)",
-              color: busy ? "#9CA3AF" : "#fff",
-              cursor: busy ? "not-allowed" : "pointer",
-              marginBottom: 12,
-            }}
-          >
-            {busy ? "提交中…" : `发布到${PUBLISH_ENVS.find((e) => e.id === env)?.label || env}`}
-          </button>
+          {!confirming && (
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              disabled={busy || !moduleId}
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                fontSize: 13,
+                fontWeight: 500,
+                border: "none",
+                borderRadius: 2,
+                background: busy || !moduleId ? "#E5E7EB" : "var(--aos-accent)",
+                color: busy || !moduleId ? "#9CA3AF" : "#fff",
+                cursor: busy || !moduleId ? "not-allowed" : "pointer",
+                marginBottom: 12,
+              }}
+            >
+              {busy ? "提交中…" : moduleId ? `准备发布到${selectedEnvLabel}` : "请选择可发布应用"}
+            </button>
+          )}
+
+          {confirming && (
+            <div
+              role="alertdialog"
+              aria-label="发布确认"
+              style={{ border: "1px solid #F59E0B", background: "#FFFBEB", padding: 12, marginBottom: 12 }}
+            >
+              <div style={{ fontSize: 12, color: "#92400E", marginBottom: 10 }}>
+                确认将“{selectedMod?.name || "当前应用"}”发布并部署到{selectedEnvLabel}环境吗？
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => setConfirming(false)} disabled={busy}>
+                  取消
+                </button>
+                <button type="button" onClick={() => void onPublish()} disabled={busy}>
+                  {busy ? "提交中…" : `确认发布到${selectedEnvLabel}`}
+                </button>
+              </div>
+            </div>
+          )}
 
           {(publishPhase !== "idle" || deployPhase !== "idle") && (
             <div

@@ -43,6 +43,28 @@ CANONICAL_QYH_SOURCES: tuple[CanonicalSource, ...] = (
     CanonicalSource("P12-payment-qyh", "Payment", "p12-payment.yaml"),
 )
 CANONICAL_QYH_PIPELINE_IDS = tuple(source.pipeline_id for source in CANONICAL_QYH_SOURCES)
+CANONICAL_QYH_SOURCE_BY_PIPELINE_ID = {
+    source.pipeline_id: source for source in CANONICAL_QYH_SOURCES
+}
+CANONICAL_QYH_OBJECT_TYPE_DISPLAY_NAMES: dict[str, str] = {
+    "Shop": "店铺",
+    "Product": "商品",
+    "ProductSku": "商品SKU",
+    "Category": "类目",
+    "Order": "订单",
+    "OrderLine": "订单明细",
+    "Shipment": "发货",
+    "CustomerLite": "会员",
+    "Weapp": "小程序",
+    "SystemConfig": "系统配置",
+    "ProductReview": "商品评价",
+    "Payment": "支付",
+}
+
+
+def canonical_qyh_source_for_pipeline(pipeline_id: str | None) -> CanonicalSource | None:
+    """Return the single canonical Qiyuehui source mapping for a pipeline."""
+    return CANONICAL_QYH_SOURCE_BY_PIPELINE_ID.get(str(pipeline_id or "").strip())
 
 
 class SourceReadinessStatus(StrEnum):

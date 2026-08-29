@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildGraphNodes, resolveObjectSelectionId } from "./workshop";
+import { buildGraphNodes, buildObjectTimeline, resolveObjectSelectionId } from "./workshop";
 import {
   buildExplorerSearchParams,
   filterOperationalObjects,
@@ -37,6 +37,25 @@ describe("O1-UX0 · Object Explorer graph identity", () => {
       ),
     ).toBe("2");
     expect(resolveObjectSelectionId([{ id: "1" }, { id: "2" }], "niushop:1:2")).toBe("2");
+  });
+});
+
+describe("对象探索 · 权威时间线", () => {
+  it("只从对象真实时间字段形成中文时间线", () => {
+    expect(buildObjectTimeline({
+      createdAt: "2026-08-28T04:55:49Z",
+      updatedAt: "2026-08-28T04:56:00Z",
+      _sourceUpdatedAt: "2026-08-28T22:00:04Z",
+      fakeTime: "2026-01-01",
+    })).toEqual([
+      { label: "业务记录创建", value: "2026-08-28T04:55:49Z" },
+      { label: "业务记录更新", value: "2026-08-28T04:56:00Z" },
+      { label: "来源数据同步", value: "2026-08-28T22:00:04Z" },
+    ]);
+  });
+
+  it("无真实时间字段时保持可信空", () => {
+    expect(buildObjectTimeline({ id: "internal-1" })).toEqual([]);
   });
 });
 

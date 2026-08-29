@@ -5,12 +5,20 @@ import {
 } from "./StylesPage";
 import {
   apiItemToWidgetItem,
+  businessWidgetDescription,
   canvasUsePath,
 } from "./WidgetRegistryPage";
 import {
   sourceCreatePayload,
+  datasetRidForSync,
+  firstInstalledConnectorId,
+  filterSources,
+  scheduleBusinessDisplay,
+  scheduleForSync,
+  requestedInstalledConnectorId,
   verifyCreatedSource,
 } from "../DataPage";
+import { runtimeLabel, sourceBusinessName } from "./dataConnectionUi";
 import { isBreakerTripConfirmed } from "./extras";
 import { resolveRequestedPaletteItem } from "../CanvasPage";
 
@@ -66,6 +74,15 @@ describe("Wave3B W4 · Widget 目录到画布契约", () => {
     expect(canvasUsePath(item)).toBeNull();
   });
 
+  it("面向业务页面的组件说明不暴露方案号和实现术语", () => {
+    expect(businessWidgetDescription("ObjectSet Widget · scheme 223 · source=object-sets（非 G6 · 106）"))
+      .toBe("对象集 组件");
+    expect(businessWidgetDescription("AIP Assist overlay 触发 Action（106）"))
+      .toBe("智能助手 浮层 触发 业务动作");
+    expect(businessWidgetDescription("Tabs + Selection + Wiki · count/sum，trend 按 dateField 聚合 N 天"))
+      .toBe("分类标签 + 选择联动 + 知识说明 · 计数与汇总，趋势 按 日期字段 聚合 指定天数");
+  });
+
   it("画布只接受目录中 pluginId 与 canvasKind 同时匹配的已安装项", () => {
     const palette = [{ kind: "metric" as const, label: "+ 指标卡", pluginId: "metric-card" }];
     expect(resolveRequestedPaletteItem(palette, "?pluginId=metric-card&canvasKind=metric")).toEqual(palette[0]);
@@ -87,6 +104,57 @@ describe("Wave3B W4 · Source 运行时持久化与写后重读", () => {
     expect(verifyCreatedSource([{ id: "src-1", runtimeMode: "agent" }], "src-1", "agent")).toBe(true);
     expect(verifyCreatedSource([{ id: "src-1" }], "src-1", "agent")).toBe(false);
     expect(verifyCreatedSource([{ id: "src-2", runtimeMode: "agent" }], "src-1", "agent")).toBe(false);
+  });
+
+  it("数据源类型与状态筛选会真实改变当前集合", () => {
+    const rows = [
+      { id: "niushop-qyh", type: "jdbc-mysql-ssh", status: "active" },
+      { id: "upload", type: "file-local", status: "error" },
+    ];
+    expect(filterSources(rows, "jdbc", "online").map((item) => item.id)).toEqual(["niushop-qyh"]);
+    expect(filterSources(rows, "file", "attention").map((item) => item.id)).toEqual(["upload"]);
+  });
+
+  it("栖月汇数据源与本机代理在业务主视图使用中文名称", () => {
+    expect(sourceBusinessName({ id: "niushop-qyh", type: "jdbc-mysql-ssh" })).toBe("栖月汇微商城");
+    expect(runtimeLabel({ id: "niushop-qyh", runtimeMode: "agent" })).toBe("本机边缘代理");
+  });
+
+  it("新建向导只从服务端目录选择首个已安装连接器", () => {
+    expect(firstInstalledConnectorId([
+      { id: "unavailable", installed: false },
+      { id: "file-local", installed: true },
+      { id: "jdbc-mysql", installed: true },
+    ])).toBe("file-local");
+    expect(firstInstalledConnectorId([{ id: "unavailable", installed: false }])).toBe("");
+    expect(requestedInstalledConnectorId([
+      { id: "file-local", installed: true },
+      { id: "jdbc-mysql", installed: true },
+    ], "jdbc-mysql")).toBe("jdbc-mysql");
+    expect(requestedInstalledConnectorId([
+      { id: "file-local", installed: true },
+      { id: "jdbc-postgres", installed: false },
+    ], "jdbc-postgres")).toBe("file-local");
+  });
+
+  it("每条同步精确关联自身管道的数据集与计划", () => {
+    const sync = { id: "run-1", pipelineId: "pipe-2", scheduleId: "schedule-2", sourceId: "source-1" };
+    expect(datasetRidForSync(sync, [
+      { rid: "dataset-1", pipelineId: "pipe-1", sourceId: "source-1" },
+      { rid: "dataset-2", pipelineId: "pipe-2", sourceId: "source-1" },
+    ])).toBe("dataset-2");
+    expect(scheduleForSync(sync, [
+      { id: "schedule-1", pipelineId: "pipe-1", cron: "0 9 * * *" },
+      { id: "schedule-2", pipelineId: "pipe-2", cron: "30 11 * * *" },
+    ])?.id).toBe("schedule-2");
+    expect(scheduleBusinessDisplay({ cron: "30 11 * * *" })).toEqual({ business: "每日 11:30", raw: "30 11 * * *" });
+  });
+
+  it("没有精确管道或计划关联时保持未读取，不借用同源记录", () => {
+    const sync = { id: "run-1", pipelineId: "missing", sourceId: "source-1" };
+    expect(datasetRidForSync(sync, [{ rid: "dataset-1", pipelineId: "pipe-1", sourceId: "source-1" }])).toBeUndefined();
+    expect(scheduleForSync(sync, [{ id: "schedule-1", pipelineId: "pipe-1", cron: "0 9 * * *" }])).toBeUndefined();
+    expect(scheduleBusinessDisplay()).toEqual({ business: "未读取" });
   });
 });
 

@@ -38,8 +38,8 @@ const StudioPage = lazy(() =>
 const DataPage = lazy(() =>
   import("./pages/DataPage").then((m) => ({ default: m.DataPage })),
 );
-const ApolloPage = lazy(() =>
-  import("./pages/ApolloPage").then((m) => ({ default: m.ApolloPage })),
+const HubFleetPage = lazy(() =>
+  import("./pages/s2/HubFleetPage").then((m) => ({ default: m.HubFleetPage })),
 );
 const ModelCatalogPage = lazy(() =>
   import("./pages/s2/ModelCatalogPage").then((m) => ({ default: m.ModelCatalogPage })),
@@ -294,7 +294,7 @@ export function App() {
             path="apollo"
             element={
               <Suspense fallback={<PageFallback />}>
-                <ApolloPage />
+                <HubFleetPage />
               </Suspense>
             }
           />

@@ -117,8 +117,8 @@ export function IntegrationCasesPage() {
 
   return (
     <S2Chrome
-      title="接入案例 · Evidence 驱动的真实阶段"
-      lede="案例阶段、统计、阻塞项与时间线均来自服务端不可变 Evidence 投影"
+      title="接入案例"
+      lede="案例阶段、统计、待处理事项与时间线均来自服务端权威记录"
     >
       <BpToolbar>
         <button
@@ -194,11 +194,11 @@ export function IntegrationCasesPage() {
           <IntegrationCaseTimeline state={model.timeline} onRetry={model.refreshTimeline} />
         </div>
       ) : (
-        <BpBanner tone="info">选择一个服务端案例后查看 Evidence 门、阻塞项和阶段事件。</BpBanner>
+        <BpBanner tone="info">选择一个接入案例后查看阶段门、待处理事项和阶段事件。</BpBanner>
       )}
 
       <BpBanner tone="info">
-        本页不推断生产状态，也不接收客户端 Evidence；过期、撤销和负向证据由服务端重投影并保留历史。
+        本页不推断生产状态，也不接收客户端证据；过期、撤销和负向证据由服务端重新计算并保留历史。
       </BpBanner>
     </S2Chrome>
   );

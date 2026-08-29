@@ -36,6 +36,12 @@ type DataSummary = {
   workspaceCount?: number;
 };
 
+function joinPolicyLabel(policy?: string) {
+  if (policy === "invite_only") return "仅限邀请";
+  if (policy === "closed") return "暂不开放";
+  return "可申请加入";
+}
+
 export function OrgMembershipPage() {
   const [directory, setDirectory] = useState<DirOrg[]>([]);
   const [pending, setPending] = useState<JoinReq[]>([]);
@@ -307,7 +313,7 @@ export function OrgMembershipPage() {
   return (
     <PageChrome
       title="组织与加入"
-      lede={`${orgName} · 新建 / 邀请 / 申请 · 清数据与删除`}
+      lede={`${orgName} · 管理工作区、邀请与加入申请`}
     >
       {err ? <p className="aos-error">{err}</p> : null}
       {msg ? <p className="aos-muted">{msg}</p> : null}
@@ -347,57 +353,55 @@ export function OrgMembershipPage() {
         </div>
       ) : null}
 
-      <h3 className="aos-h3">清数据与删除（管理员）</h3>
-      <p className="aos-muted">
-        当前组织 <code>{tenantLabel.orgId}</code> · 工作区{" "}
-        <code>{tenantLabel.projectId}</code>（{tenantLabel.workspaceName}）
-      </p>
-      <p className="aos-muted" data-testid="org-ws-data-summary">
-        工作区数据：
-        {wsData == null
-          ? "加载中…"
-          : wsData.empty
-            ? "空（可删）"
-            : `共 ${wsData.total} · ${wsCounts}`}
-      </p>
-      <p className="aos-muted" data-testid="org-org-data-summary">
-        组织数据合计：
-        {orgData == null
-          ? "加载中…"
-          : orgData.empty
-            ? "空（可删）"
-            : `共 ${orgData.total}（${orgData.workspaceCount ?? "?"} 个工作区）`}
-      </p>
-      <div className="aos-members-form">
-        <button type="button" className="btn" onClick={() => void onClearWorkspace()}>
-          清理当前工作区数据
-        </button>
-        <button
-          type="button"
-          className="btn btn-danger"
-          onClick={() => void onDeleteWorkspace()}
-          disabled={wsData != null && !wsData.empty}
-          title={
-            wsData != null && !wsData.empty ? "请先清理工作区数据" : "删除工作区"
-          }
-        >
-          删除当前工作区
-        </button>
-        <button type="button" className="btn" onClick={() => void onClearOrg()}>
-          清理当前组织数据
-        </button>
-        <button
-          type="button"
-          className="btn btn-danger"
-          onClick={() => void onDeleteOrg()}
-          disabled={orgData != null && !orgData.empty}
-          title={
-            orgData != null && !orgData.empty ? "请先清理组织数据" : "删除组织"
-          }
-        >
-          删除当前组织
-        </button>
-      </div>
+      <details className="aos-card" data-testid="org-admin-danger-zone">
+        <summary>管理员数据维护与删除</summary>
+        <p className="aos-muted">
+          当前组织 <code>{tenantLabel.orgId}</code> · 工作区{" "}
+          <code>{tenantLabel.projectId}</code>（{tenantLabel.workspaceName}）
+        </p>
+        <p className="aos-muted" data-testid="org-ws-data-summary">
+          工作区数据：
+          {wsData == null
+            ? "加载中…"
+            : wsData.empty
+              ? "空（可删）"
+              : `共 ${wsData.total} · ${wsCounts}`}
+        </p>
+        <p className="aos-muted" data-testid="org-org-data-summary">
+          组织数据合计：
+          {orgData == null
+            ? "加载中…"
+            : orgData.empty
+              ? "空（可删）"
+              : `共 ${orgData.total}（${orgData.workspaceCount ?? "?"} 个工作区）`}
+        </p>
+        <div className="aos-members-form">
+          <button type="button" className="btn" onClick={() => void onClearWorkspace()}>
+            清理当前工作区数据
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger"
+            onClick={() => void onDeleteWorkspace()}
+            disabled={wsData != null && !wsData.empty}
+            title={wsData != null && !wsData.empty ? "请先清理工作区数据" : "删除工作区"}
+          >
+            删除当前工作区
+          </button>
+          <button type="button" className="btn" onClick={() => void onClearOrg()}>
+            清理当前组织数据
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger"
+            onClick={() => void onDeleteOrg()}
+            disabled={orgData != null && !orgData.empty}
+            title={orgData != null && !orgData.empty ? "请先清理组织数据" : "删除组织"}
+          >
+            删除当前组织
+          </button>
+        </div>
+      </details>
 
       <h3 className="aos-h3">待审批加入申请（当前组织）</h3>
       {pending.length === 0 ? (
@@ -462,9 +466,12 @@ export function OrgMembershipPage() {
             <tr key={o.id}>
               <td>
                 {o.name}
-                <span className="aos-muted"> · {o.id}</span>
+                <details className="aos-inline-audit">
+                  <summary>审计信息</summary>
+                  <code>{o.id}</code>
+                </details>
               </td>
-              <td>{o.member ? "已加入" : o.joinPolicy || "可申请"}</td>
+              <td>{o.member ? "已加入" : joinPolicyLabel(o.joinPolicy)}</td>
               <td>
                 {o.member ? (
                   "—"

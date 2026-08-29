@@ -4,7 +4,7 @@
  * Wave 3A：文件、抽取、修正、入库、删除、重处理全部以后端响应为准；失败不生成 MOCK。
  * W4-E1：pipeline-doc-intel 并入本页（不新建侧栏）；说明条 + 轻量管道试运行。
  */
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { apiDelete, apiGet, apiPost, apiPut } from "../../api/client";
 import { getApiBase } from "../../api/apiBase";
 import { tenantAuthHeaders } from "../../api/tenant";
@@ -80,7 +80,7 @@ export const MAX_FILE_SIZE = 50 * 1024 * 1024;
 export const STATE_META: Record<DocState, { label: string; color: string; bg: string }> = {
   uploaded: { label: "已上传", color: "#3B82F6", bg: "#DBEAFE" },
   processing_ocr: { label: "OCR 识别中", color: "#F59E0B", bg: "#FEF3C7" },
-  extracting: { label: "LLM 提取中", color: "#8B5CF6", bg: "#EDE9FE" },
+  extracting: { label: "智能提取中", color: "#8B5CF6", bg: "#EDE9FE" },
   review: { label: "待审核", color: "#10B981", bg: "#D1FAE5" },
   failed: { label: "失败", color: "#EF4444", bg: "#FEE2E2" },
   needs_correction: { label: "需人工修正", color: "#F59E0B", bg: "#FEF3C7" },
@@ -271,10 +271,10 @@ export const DOCINTEL_PIPELINE_TEMPLATES = [
 ] as const;
 
 export function pathLabel(mode: DocIntelDataMode): string {
-  if (mode === "live") return "真 API";
+  if (mode === "live") return "权威回包";
   if (mode === "loading") return "加载中";
   if (mode === "idle") return "未运行";
-  return "演示路径";
+  return "非权威数据";
 }
 
 export function normalizeExtractFields(raw: unknown): ExtractField[] {
@@ -292,7 +292,7 @@ export function normalizeExtractFields(raw: unknown): ExtractField[] {
       type: String(o.type ?? "文本"),
       value,
       confidence: Math.min(1, Math.max(0, confidence)),
-      source: String(o.source ?? `API L${i + 1}`),
+      source: String(o.source ?? `来源片段 ${i + 1}`),
     });
   });
   return out;
@@ -433,7 +433,7 @@ function StateStepper({ state, errorMessage }: { state: DocState; errorMessage?:
   const labels = [
     { key: "uploaded", title: "上传" },
     { key: "processing_ocr", title: "OCR 识别" },
-    { key: "extracting", title: "LLM 提取" },
+    { key: "extracting", title: "智能提取" },
     { key: "review", title: "审核" },
   ];
 
@@ -512,6 +512,7 @@ function StateStepper({ state, errorMessage }: { state: DocState; errorMessage?:
 function UploadDropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = useCallback(
     (fileList: FileList | null) => {
@@ -532,6 +533,9 @@ function UploadDropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label="选择待导入文档"
       onDragOver={(e) => {
         e.preventDefault();
         setDragOver(true);
@@ -542,7 +546,13 @@ function UploadDropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
         setDragOver(false);
         handleFiles(e.dataTransfer.files);
       }}
-      onClick={() => document.getElementById("doc-file-input")?.click()}
+      onClick={() => inputRef.current?.click()}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          inputRef.current?.click();
+        }
+      }}
       style={{
         border: dragOver ? "2px dashed var(--aos-accent)" : "2px dashed var(--aos-border-strong)",
         borderRadius: 2,
@@ -563,13 +573,17 @@ function UploadDropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
         支持 PDF / Word / Excel / 图片 / PPT，单个文件最大 {Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB
       </div>
       <input
+        ref={inputRef}
         id="doc-file-input"
         aria-label="选择待导入文档"
         type="file"
         multiple
         style={{ display: "none" }}
         accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.ppt,.pptx"
-        onChange={(e) => handleFiles(e.target.files)}
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = "";
+        }}
       />
       {error && (
         <div style={{ marginTop: 8, fontSize: 12, color: "var(--aos-red)" }}>⚠ {error}</div>
@@ -695,7 +709,7 @@ function ExtractionPanel({
     <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 8, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>LLM 结构化提取结果</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>结构化提取结果</h3>
           <span
             className={`w4-e1-path-badge${dataMode === "demo" ? " is-demo" : dataMode === "live" ? " is-live" : ""}`}
             data-testid="extract-path-badge"
@@ -856,15 +870,15 @@ function ReviewPanel({
 
       {/* 操作按钮 */}
       <label style={{ display: "block", marginBottom: 8, fontSize: 12, color: "var(--aos-text-secondary)" }}>
-        写入目标 Object Type
+        写入目标本体对象类型
         <select
-          aria-label="写入目标 Object Type"
+          aria-label="写入目标本体对象类型"
           data-testid="ontology-type-select"
           value={objectTypeId}
           onChange={(event) => onObjectTypeChange(event.target.value)}
           style={{ display: "block", width: "100%", marginTop: 4, padding: "6px 8px" }}
         >
-          <option value="">请选择后端已有 Object Type</option>
+          <option value="">请选择当前已有的本体对象类型</option>
           {objectTypes.map((item) => <option key={item.id} value={item.id}>{item.name}（{item.id}）</option>)}
         </select>
       </label>
@@ -1033,7 +1047,7 @@ export function DocumentIntelligencePage() {
       );
       const mapped = replaceDocument(requireMatchingDocument(res, doc.id, "抽取"));
       setDataMode("live");
-      await reportWriteSuccess(`抽取完成 · 真 API · ${mapped.extractedFields?.length || 0} 字段`);
+      await reportWriteSuccess(`抽取完成 · 权威回包 · ${mapped.extractedFields?.length || 0} 字段`);
     } catch (e) {
       setDataMode(doc.extractedFields?.length ? "live" : "idle");
       setStatusMsg(`抽取失败，未生成演示结果：${String((e as Error).message || e)}`);
@@ -1066,7 +1080,8 @@ export function DocumentIntelligencePage() {
         setDocs((prev) => prev.map((d) => (d.id === doc.id ? { ...d, ocrText } : d)));
       }
       if (!res.batchOk && !res.parsed && !ocrText) throw new Error("后端未返回成功证据");
-      setStatusMsg(`管道试运行成功 · 真 API · 模板 ${pipelineTpl}`);
+      const templateLabel = DOCINTEL_PIPELINE_TEMPLATES.find((template) => template.id === pipelineTpl)?.label || pipelineTpl;
+      setStatusMsg(`管道试运行成功 · 权威回包 · ${templateLabel}`);
     } catch (e) {
       setStatusMsg(`管道试运行失败，未生成演示结果：${String((e as Error).message || e)}`);
     } finally {
@@ -1104,7 +1119,7 @@ export function DocumentIntelligencePage() {
     try {
       const res = await apiPut<ApiDocument>(`/api/datasource/documents/${encodeURIComponent(selectedDoc.id)}`, { extracted_fields: next });
       replaceDocument(requireMatchingDocument(res, selectedDoc.id, "字段保存"));
-      await reportWriteSuccess("字段修正已保存 · 真 API");
+      await reportWriteSuccess("字段修正已保存 · 权威回包");
     } catch (error) {
       setStatusMsg(`字段保存失败，原值未改变：${String((error as Error).message || error)}`);
     } finally {
@@ -1118,7 +1133,7 @@ export function DocumentIntelligencePage() {
     try {
       const res = await apiPut<ApiDocument>(`/api/datasource/documents/${encodeURIComponent(selectedDoc.id)}`, { ocr_text: text });
       replaceDocument(requireMatchingDocument(res, selectedDoc.id, "OCR 保存"));
-      await reportWriteSuccess("OCR 校正已保存 · 真 API");
+      await reportWriteSuccess("文字识别校正已保存 · 权威回包");
     } catch (error) {
       setStatusMsg(`OCR 保存失败，原文未改变：${String((error as Error).message || error)}`);
     } finally {
@@ -1135,7 +1150,7 @@ export function DocumentIntelligencePage() {
         { object_type_id: objectTypeId },
       );
       replaceDocument(requireMatchingDocument(res.document, selectedDoc.id, "本体写入"));
-      await reportWriteSuccess(`本体写入成功 · Object ${res.object.id}`);
+      await reportWriteSuccess("本体写入成功 · 已生成业务对象");
     } catch (error) {
       setStatusMsg(`本体写入失败，文档状态未伪造：${String((error as Error).message || error)}`);
     } finally {
@@ -1149,7 +1164,7 @@ export function DocumentIntelligencePage() {
     try {
       const res = await apiPost<ApiDocument>(`/api/datasource/documents/${encodeURIComponent(selectedDoc.id)}/review`, { action: "reject" });
       replaceDocument(requireMatchingDocument(res, selectedDoc.id, "退回修正"));
-      await reportWriteSuccess("已退回修正 · 真 API");
+      await reportWriteSuccess("已退回修正 · 权威回包");
     } catch (error) {
       setStatusMsg(`退回失败，状态未改变：${String((error as Error).message || error)}`);
     } finally {
@@ -1225,18 +1240,18 @@ export function DocumentIntelligencePage() {
 
   return (
     <PageChrome title="文档智能" lede="导入文档、配置提取模板，自动识别并结构化关键字段">
-      {/* E1：DocIntel 管道并入说明 */}
+      {/* 文档处理能力说明 */}
       <div className="w4-e1-notice" data-testid="docintel-merge-notice">
-        <strong>DocIntel 管道能力收敛于此页</strong>
-        <span>（原 pipeline-doc-intel 视觉稿，不单独建侧栏菜单；抽取与流水线试运行在本页完成）</span>
+        <strong>文档处理能力统一在此页完成</strong>
+        <span>导入、文字识别、结构化提取、审核与试运行使用同一份当前租户文档。</span>
       </div>
 
       {/* E1：轻量管道能力条 */}
       <div className="w4-e1-pipeline-strip" data-testid="docintel-pipeline-strip">
-        <div className="w4-e1-pipeline-nodes" aria-label="DocIntel 迷你管道">
+        <div className="w4-e1-pipeline-nodes" aria-label="文档处理流程">
           <span className="w4-e1-node">输入</span>
           <span className="w4-e1-arrow">→</span>
-          <span className="w4-e1-node is-llm">Use LLM</span>
+          <span className="w4-e1-node is-llm">智能识别</span>
           <span className="w4-e1-arrow">→</span>
           <span className="w4-e1-node">输出</span>
         </div>
@@ -1271,10 +1286,10 @@ export function DocumentIntelligencePage() {
 
       {/* 顶部统计卡片 */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
-        <StatCard value={String(stats.total)} label="文档总数" trend="来自文档 API" />
+        <StatCard value={String(stats.total)} label="文档总数" trend="来自当前文档服务" />
         <StatCard value={stats.average_confidence == null ? "—" : `${(stats.average_confidence * 100).toFixed(1)}%`} label="平均提取置信度" trend="按后端提取字段计算" />
         <StatCard value={String(stats.processing)} label="处理中" trend="按后端状态计算" />
-        <StatCard value={String(stats.template_count)} label="提取模板" trend="来自模板 API" />
+        <StatCard value={String(stats.template_count)} label="提取模板" trend="来自当前模板服务" />
       </div>
 
       {/* 拖拽上传区 */}
@@ -1297,7 +1312,7 @@ export function DocumentIntelligencePage() {
         {/* 文件列表 */}
         <div style={{ flex: "0 0 400px" }}>
           {/* 全选 */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "0 4px" }}>
+          {docs.length > 0 ? <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "0 4px" }}>
             <input
               type="checkbox"
               aria-label="选择全部文档"
@@ -1306,7 +1321,7 @@ export function DocumentIntelligencePage() {
               style={{ cursor: "pointer" }}
             />
             <span style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>全选 ({docs.length})</span>
-          </div>
+          </div> : null}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {docs.map((doc) => {

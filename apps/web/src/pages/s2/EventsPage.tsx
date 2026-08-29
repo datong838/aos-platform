@@ -55,8 +55,6 @@ type ActionId =
   | "openOverlay"
   | "exportData";
 
-const EVENTS_MODULE_ID = "order-mgmt";
-
 /* ============================================================================
  * 常量 & 纯函数（便于测试）
  * ========================================================================== */
@@ -419,7 +417,9 @@ export const MOCK_EVENTS: EventItem[] = [
  * ========================================================================== */
 
 export function EventsPage() {
-  const moduleId = EVENTS_MODULE_ID;
+  const [modules, setModules] = useState<Array<{ id: string; name?: string }>>([]);
+  const [moduleId, setModuleId] = useState("");
+  const [moduleLoading, setModuleLoading] = useState(true);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -437,7 +437,31 @@ export function EventsPage() {
   const [enableIdempotency, setEnableIdempotency] = useState(true);
   const [idempotencyKey, setIdempotencyKey] = useState("");
 
+  useEffect(() => {
+    let cancelled = false;
+    setModuleLoading(true);
+    apiGet<{ items?: Array<{ id: string; name?: string }> }>("/v1/modules")
+      .then((result) => {
+        if (cancelled) return;
+        const items = (result.items || []).filter((item) => item.id);
+        setModules(items);
+        setModuleId((current) => current && items.some((item) => item.id === current) ? current : items[0]?.id || "");
+      })
+      .catch((e) => {
+        if (!cancelled) setErr(`应用目录加载失败：${String((e as Error).message || e)}`);
+      })
+      .finally(() => {
+        if (!cancelled) setModuleLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   const reloadEvents = useCallback(async () => {
+    if (!moduleId) {
+      setEvents([]);
+      setLoading(false);
+      return [];
+    }
     setLoading(true);
     setErr("");
     try {
@@ -454,10 +478,12 @@ export function EventsPage() {
   }, [moduleId]);
 
   useEffect(() => {
+    if (moduleLoading) return;
     void reloadEvents().catch(() => undefined);
-  }, [reloadEvents]);
+  }, [moduleLoading, reloadEvents]);
 
   function openWizard() {
+    if (!moduleId) return;
     setWizardOpen(true);
     setStep(1);
     setName("");
@@ -566,14 +592,32 @@ export function EventsPage() {
   const paramFields = useMemo(() => getParamFields(triggerId, actionId), [triggerId, actionId]);
 
   return (
-    <PageChrome title="事件配置" lede="Widget 事件绑定、变量写入与幂等键配置">
+    <PageChrome title="事件配置" lede="当前应用 · 组件事件、业务动作与重复提交保护">
       <div className="ev-page">
         {/* 226 G4：无页内搜索；表头侧放 + 添加事件（对齐稿） */}
         <BpToolbar
           actions={
-            <button type="button" className="p-btn p-btn-primary p-btn-sm" onClick={openWizard}>
-              + 添加事件
-            </button>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <label style={{ fontSize: 12, color: "#6B7280" }}>
+                目标应用{" "}
+                <select
+                  aria-label="事件目标应用"
+                  value={moduleId}
+                  disabled={moduleLoading || modules.length === 0}
+                  onChange={(event) => {
+                    setEvents([]);
+                    setModuleId(event.target.value);
+                    setWizardOpen(false);
+                  }}
+                >
+                  {modules.length === 0 && <option value="">当前工作区暂无应用</option>}
+                  {modules.map((item) => <option key={item.id} value={item.id}>{item.name || "未命名应用"}</option>)}
+                </select>
+              </label>
+              <button type="button" className="p-btn p-btn-primary p-btn-sm" onClick={openWizard} disabled={!moduleId || moduleLoading}>
+                + 添加事件
+              </button>
+            </div>
           }
           count={events.length}
         />
@@ -662,7 +706,11 @@ export function EventsPage() {
               {events.length === 0 && (
                 <tr>
                   <td colSpan={5} style={{ padding: 32, textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
-                    {loading ? "加载事件列表中…" : "暂无事件，点击右上角「+ 新建事件」创建"}
+                    {loading || moduleLoading
+                      ? "加载事件列表中…"
+                      : moduleId
+                        ? "当前应用暂无事件，可使用右上角“添加事件”创建停用草稿"
+                        : "请先新建或选择真实应用，再配置事件"}
                   </td>
                 </tr>
               )}
@@ -672,9 +720,16 @@ export function EventsPage() {
 
         {/* 幂等护栏提示 */}
         <div style={{ marginTop: 12, padding: 12, borderRadius: 2, background: "var(--aos-amber-bg)", border: "1px solid var(--aos-amber-border)", fontSize: 12 }}>
-          <strong style={{ color: "#92400E" }}>幂等护栏（ACT-07）：</strong>
-          <span style={{ color: "#78350F" }}>写操作事件（调用 API / 更新数据）须配置幂等键，防止双击或重试导致重复提交。</span>
+          <strong style={{ color: "#92400E" }}>重复提交保护：</strong>
+          <span style={{ color: "#78350F" }}>写操作事件（调用服务或更新数据）须配置唯一键，防止双击或重试导致重复提交。</span>
         </div>
+
+        {moduleId && (
+          <details style={{ marginTop: 12, fontSize: 11, color: "#6B7280" }}>
+            <summary style={{ cursor: "pointer" }}>查看事件接口审计信息</summary>
+            <div style={{ marginTop: 6 }}>/v1/modules/{moduleId}/events</div>
+          </details>
+        )}
 
         {/* === 下半区：5 步创建向导 === */}
         {wizardOpen && (

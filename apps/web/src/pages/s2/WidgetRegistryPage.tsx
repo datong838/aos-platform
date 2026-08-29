@@ -9,7 +9,7 @@ export type WidgetItem = {
   description: string;
   source: "builtin" | "market" | "custom";
   version: string;
-  usedBy: number;
+  usedBy?: number;
   icon: string;
   installed: boolean;
   canvasKind?: string;
@@ -51,14 +51,44 @@ export function apiItemToWidgetItem(it: {
   return {
     id: it.id,
     name: it.nameZh || it.name || it.id,
-    description: it.description || "",
+    description: businessWidgetDescription(it.description || ""),
     source,
     version: it.version || "0.1.0",
-    usedBy: 0,
+    usedBy: undefined,
     icon: KIND_TO_ICON_KEY[it.canvasKind || ""] || "table",
     installed: it.installed === true,
     canvasKind: it.canvasKind,
   };
+}
+
+/** 把服务端目录中的实现术语收拢为面向业务人员的中文说明。 */
+export function businessWidgetDescription(input: string): string {
+  return input
+    .replace(/Object\s*Set/gi, "对象集")
+    .replace(/Object\s*Type/gi, "对象类型")
+    .replace(/AIP\s*Assist/gi, "智能助手")
+    .replace(/\bAIP\b/gi, "智能能力")
+    .replace(/\bAction\b/gi, "业务动作")
+    .replace(/\bWidget\b/gi, "组件")
+    .replace(/\boverlay\b/gi, "浮层")
+    .replace(/\bvalidate\b/gi, "安全校验")
+    .replace(/\bsection\b/gi, "内容分区")
+    .replace(/\bTabs?\b/gi, "分类标签")
+    .replace(/\bSelection\b/gi, "选择联动")
+    .replace(/\bWiki\b/gi, "知识说明")
+    .replace(/\bcount\s*\/\s*sum\b/gi, "计数与汇总")
+    .replace(/\btrend\b/gi, "趋势")
+    .replace(/\bdateField\b/gi, "日期字段")
+    .replace(/\bN\s*天/gi, "指定天数")
+    .replace(/\b1-hop\b/gi, "单层")
+    .replace(/adjacency_table/gi, "邻接列表")
+    .replace(/（非\s*G6\s*[·・]\s*\d+）/gi, "")
+    .replace(/（\s*\d+\s*）/g, "")
+    .replace(/[·・]?\s*scheme\s*\d+/gi, "")
+    .replace(/[·・]?\s*source\s*=\s*[^，。；;（）()]+/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([，。；;、])/g, "$1")
+    .trim();
 }
 
 const CANVAS_KINDS = new Set(Object.keys(KIND_TO_ICON_KEY));
@@ -67,25 +97,6 @@ export function canvasUsePath(item: WidgetItem): string | null {
   if (!item.installed || !item.canvasKind || !CANVAS_KINDS.has(item.canvasKind)) return null;
   return `/workshop/canvas?pluginId=${encodeURIComponent(item.id)}&canvasKind=${encodeURIComponent(item.canvasKind)}`;
 }
-
-const WIDGETS: WidgetItem[] = [
-  { id: "table", name: "数据表格", description: "展示 ObjectSet 的行数据，支持排序、筛选、分页、行内编辑", source: "builtin", version: "v3.2.1", usedBy: 8, icon: "table", installed: false },
-  { id: "chart", name: "趋势图", description: "折线/面积/柱状/组合图，绑定 ObjectType 数值字段和分组维度", source: "builtin", version: "v3.2.1", usedBy: 6, icon: "chart", installed: false },
-  { id: "form", name: "编辑表单", description: "基于 ObjectType 自动生成字段表单，支持 Action 提交", source: "builtin", version: "v3.1.0", usedBy: 5, icon: "form", installed: false },
-  { id: "objectset", name: "对象集视图", description: "ObjectSet 的多视图容器（表格/卡片/地图切换），核心交互组件", source: "builtin", version: "v3.2.1", usedBy: 12, icon: "objectset", installed: false },
-  { id: "navbar", name: "导航栏", description: "顶部/侧边导航，Tab 切换，绑定页面路由", source: "builtin", version: "v3.0.0", usedBy: 10, icon: "navbar", installed: false },
-  { id: "hero", name: "Hero 区", description: "大标题 + 描述 + 背景图，页面顶部视觉入口", source: "builtin", version: "v3.0.0", usedBy: 4, icon: "hero", installed: false },
-  { id: "container", name: "容器", description: "嵌套布局容器，支持栅格/堆叠/选项卡排列子组件", source: "builtin", version: "v3.2.1", usedBy: 14, icon: "container", installed: false },
-  { id: "map", name: "地图", description: "地理可视化，绑定 ObjectType 的经纬度字段，支持标记/热力图/路径", source: "builtin", version: "v2.8.0", usedBy: 3, icon: "map", installed: false },
-  { id: "timeline", name: "时间线", description: "按时间排序的事件列表，支持双向滚动、筛选节点", source: "builtin", version: "v2.5.0", usedBy: 2, icon: "timeline", installed: false },
-  { id: "button", name: "按钮", description: "触发 Action 或跳转，支持主/次/文字三种样式", source: "builtin", version: "v3.2.1", usedBy: 15, icon: "button", installed: false },
-  { id: "stat", name: "统计卡片", description: "KPI 数值展示，支持趋势小图、目标对比", source: "builtin", version: "v3.1.0", usedBy: 7, icon: "stat", installed: false },
-  { id: "filter", name: "筛选器", description: "多维度筛选面板，输出 ObjectSet Filter 变量", source: "builtin", version: "v3.0.0", usedBy: 9, icon: "filter", installed: false },
-  { id: "kanban", name: "看板", description: "按状态分列的卡片看板，支持拖拽排序", source: "market", version: "v1.2.0", usedBy: 2, icon: "kanban", installed: false },
-  { id: "gantt", name: "甘特图", description: "项目时间线可视化，绑定开始/结束时间字段", source: "market", version: "v1.0.0", usedBy: 1, icon: "gantt", installed: false },
-  { id: "calendar", name: "日历", description: "月/周/日视图，绑定日期字段和事件标题", source: "market", version: "v1.1.0", usedBy: 3, icon: "calendar", installed: false },
-  { id: "custom-chart", name: "自定义图表", description: "基于 ECharts 的完全自定义图表，支持 JSON 配置", source: "custom", version: "v0.9.0", usedBy: 1, icon: "custom", installed: false },
-];
 
 const SOURCE_LABELS: Record<string, string> = {
   all: "全部",
@@ -187,7 +198,7 @@ function WidgetIcon({ name }: { name: string }) {
 export function WidgetRegistryPage() {
   const [source, setSource] = useState<string>("all");
   const [query] = useState("");
-  const [widgets, setWidgets] = useState<WidgetItem[]>(WIDGETS);
+  const [widgets, setWidgets] = useState<WidgetItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<WidgetItem | null>(null);
   const [catalogNote, setCatalogNote] = useState("");
@@ -212,11 +223,11 @@ export function WidgetRegistryPage() {
         if (cancelled) return;
         const items = (res.items || []).map(apiItemToWidgetItem);
         setWidgets(items);
-        setCatalogNote(items.length ? "目录来自 widget-plugins 实时契约" : "组件目录为空");
+        setCatalogNote(items.length ? "组件目录已从当前服务读取" : "当前服务没有返回可用组件");
       } catch {
         if (!cancelled) {
-          setWidgets(WIDGETS);
-          setCatalogNote("Widget API 不可用 · 当前为内置演示目录（只读）");
+          setWidgets([]);
+          setCatalogNote("组件目录服务暂不可用，页面未注入演示组件");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -244,14 +255,19 @@ export function WidgetRegistryPage() {
   ];
 
   return (
-    <PageChrome title="组件注册表" lede="画布编辑器中所有可用 Widget 的统一目录。来源分三类：平台内置 / 市场安装 / 代码开发。安装新组件后画布编辑器自动发现并列出。">
+    <PageChrome title="组件注册表" lede="画布可用组件的统一目录，按平台内置、市场安装和代码开发三类展示。">
       <div className="wr-page">
         <div className="wr-tabs">
           {sourceTabs.map((tab) => (
             <button
               key={tab.id}
               className={source === tab.id ? "wr-tab is-active" : "wr-tab"}
-              onClick={() => setSource(tab.id)}
+              onClick={() => {
+                setSource(tab.id);
+                if (widgets.length > 0) {
+                  setCatalogNote(tab.id === "market" ? "已筛选市场来源目录；当前未开放安装入口" : "组件目录已从当前服务读取");
+                }
+              }}
             >
               {SOURCE_LABELS[tab.id]}
               <span className="wr-tab-count">({tab.count})</span>
@@ -288,9 +304,7 @@ export function WidgetRegistryPage() {
               <h3>{w.name}</h3>
               <p className="wr-card-desc">{w.description}</p>
               <div className="wr-card-meta">
-                <span>{w.version}</span>
-                <span>·</span>
-                <span>{w.usedBy > 0 ? `被 ${w.usedBy} 个应用使用` : "暂无应用使用"}</span>
+                <span>{typeof w.usedBy === "number" ? (w.usedBy > 0 ? `被 ${w.usedBy} 个应用使用` : "暂无应用使用") : "使用情况未读取"}</span>
                 <span>·</span>
                 <span>{w.installed ? "已安装" : "未安装"}</span>
               </div>
@@ -322,7 +336,7 @@ export function WidgetRegistryPage() {
             </button>
           </div>
           <p className="wr-callout-hint">
-            自定义组件使用 React + TypeScript + Workshop Widget SDK 开发，提交到代码仓库后自动注册到本页面
+            自定义组件从代码仓库接入，注册成功后会出现在当前目录
           </p>
           {catalogNote && <p className="wr-callout-hint">{catalogNote}</p>}
         </div>
@@ -369,16 +383,8 @@ export function WidgetRegistryPage() {
               <p className="wr-modal-desc">{selected.description}</p>
               <dl className="wr-modal-meta">
                 <div>
-                  <dt>组件 ID</dt>
-                  <dd><code>{selected.id}</code></dd>
-                </div>
-                <div>
-                  <dt>版本</dt>
-                  <dd>{selected.version}</dd>
-                </div>
-                <div>
                   <dt>使用次数</dt>
-                  <dd>{selected.usedBy > 0 ? `${selected.usedBy} 个应用` : "暂未使用"}</dd>
+                  <dd>{typeof selected.usedBy === "number" ? (selected.usedBy > 0 ? `${selected.usedBy} 个应用` : "暂未使用") : "当前未读取"}</dd>
                 </div>
                 <div>
                   <dt>来源</dt>
@@ -391,6 +397,23 @@ export function WidgetRegistryPage() {
                   </dd>
                 </div>
               </dl>
+              <details>
+                <summary>审计信息</summary>
+                <dl className="wr-modal-meta">
+                  <div>
+                    <dt>组件标识</dt>
+                    <dd><code>{selected.id}</code></dd>
+                  </div>
+                  <div>
+                    <dt>版本</dt>
+                    <dd>{selected.version}</dd>
+                  </div>
+                  <div>
+                    <dt>画布类型</dt>
+                    <dd>{selected.canvasKind || "未声明"}</dd>
+                  </div>
+                </dl>
+              </details>
             </div>
             <div className="wr-modal-footer">
               <button className="wr-modal-btn wr-modal-btn-secondary" onClick={() => setSelected(null)}>

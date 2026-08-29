@@ -2,7 +2,7 @@ import { act, createElement, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useNavigate, type NavigateFunction } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { SourceDetailPage } from "./sourceDetailPage";
+import { selectedDatasetRid, sourceSyncStatusLabel, SourceDetailPage } from "./sourceDetailPage";
 
 const api = vi.hoisted(() => ({ apiGet: vi.fn(), apiPost: vi.fn() }));
 vi.mock("../../api/client", () => ({ ...api, apiPut: vi.fn(), apiDelete: vi.fn() }));
@@ -67,6 +67,18 @@ describe("Wave 3C W1 · Source Detail 全量刷新与竞态", () => {
     }
     return { items: [] };
   }
+
+  it("源表不借用管道数据集，管道派生表只打开自身数据集", () => {
+    expect(selectedDatasetRid({ schema: "shop", table: "orders" }, { datasetRid: "dataset-orders" })).toBeUndefined();
+    expect(selectedDatasetRid(null, { datasetRid: "dataset-orders" })).toBe("dataset-orders");
+  });
+
+  it("同步运行状态使用运行结果口径，不把成功翻译为在线", () => {
+    expect(sourceSyncStatusLabel("SUCCEEDED")).toBe("成功");
+    expect(sourceSyncStatusLabel("RUNNING")).toBe("运行中");
+    expect(sourceSyncStatusLabel("FAILED")).toBe("失败");
+    expect(sourceSyncStatusLabel()).toBe("未读取");
+  });
 
   it("Schema 失败时诚实显示空状态，不回落本地演示数据", async () => {
     api.apiGet.mockImplementation((path: string) => {

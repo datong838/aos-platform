@@ -392,8 +392,8 @@ describe("DocumentIntelligencePage · TYPE_META", () => {
  * ================================================================ */
 describe("DocumentIntelligencePage · W4 pathLabel / extract helpers", () => {
   it("pathLabel 映射 live/demo/loading/idle", () => {
-    expect(pathLabel("live")).toBe("真 API");
-    expect(pathLabel("demo")).toBe("演示路径");
+    expect(pathLabel("live")).toBe("权威回包");
+    expect(pathLabel("demo")).toBe("非权威数据");
     expect(pathLabel("loading")).toBe("加载中");
     expect(pathLabel("idle")).toBe("未运行");
   });

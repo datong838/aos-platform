@@ -8,7 +8,8 @@ import { EcommerceWorkshopCatalogProvider } from "../components/workshop";
 import { workshopCatalogFixture } from "../components/workshop/workshopTestFixtures";
 import { WorkshopListPage } from "./WorkshopListPage";
 
-vi.mock("../api/client", () => ({ apiPost: vi.fn() }));
+const apiPost = vi.hoisted(() => vi.fn());
+vi.mock("../api/client", () => ({ apiPost }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -51,6 +52,14 @@ describe("WorkshopListPage · installed ecommerce projection", () => {
     expect(installed.querySelector<HTMLAnchorElement>("a")?.getAttribute("href")).toBe("/workshop/operations");
     expect(host.querySelector("a[href='/workshop/orders']")).toBeNull();
     expect(host.textContent).toContain("平台辅助模块");
+    expect(host.textContent).toContain("可使用");
+    const audits = installed.querySelectorAll<HTMLDetailsElement>(".aos-inline-audit");
+    expect(audits.length).toBeGreaterThan(0);
+    expect(Array.from(audits).every((item) => !item.open)).toBe(true);
+
+    const platformLink = host.querySelector<HTMLAnchorElement>("a[href='/workshop/inbox']")!;
+    await act(async () => platformLink.click());
+    expect(apiPost).not.toHaveBeenCalled();
   });
 
   it("未安装时不伪造八 Module，旧平台只读订单入口仍保留", async () => {

@@ -74,10 +74,19 @@ def create_change(
     return row
 
 
-def _get_change(change_id: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def _get_change(
+    change_id: str,
+    *,
+    org_id: str | None = None,
+    project_id: str | None = None,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     items = list_changes(limit=500)
     hit = next((x for x in items if x.get("id") == change_id), None)
-    if not hit:
+    if not hit or (
+        org_id is not None
+        and project_id is not None
+        and (hit.get("orgId"), hit.get("projectId")) != (org_id, project_id)
+    ):
         raise ApiError(code="NOT_FOUND", message="change missing", status_code=404)
     return hit, items
 
@@ -88,8 +97,10 @@ def decide_change(
     approve: bool,
     subject: str,
     note: str | None = None,
+    org_id: str | None = None,
+    project_id: str | None = None,
 ) -> dict[str, Any]:
-    hit, items = _get_change(change_id)
+    hit, items = _get_change(change_id, org_id=org_id, project_id=project_id)
     if hit.get("status") != "pending":
         raise ApiError(code="CHANGE_NOT_PENDING", message="change not pending", status_code=400)
     hit["status"] = "approved" if approve else "rejected"
@@ -101,8 +112,14 @@ def decide_change(
     return hit
 
 
-def merge_hotfix_to_stable(change_id: str, *, subject: str) -> dict[str, Any]:
-    hit, items = _get_change(change_id)
+def merge_hotfix_to_stable(
+    change_id: str,
+    *,
+    subject: str,
+    org_id: str | None = None,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    hit, items = _get_change(change_id, org_id=org_id, project_id=project_id)
     if hit.get("kind") != "hotfix":
         raise ApiError(code="CHANGE_NOT_HOTFIX", message="merge-stable only for hotfix", status_code=400)
     if hit.get("status") != "approved":

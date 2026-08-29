@@ -21,14 +21,6 @@ type ExecuteOut = {
   idempotentReplay?: boolean;
 };
 
-type ActivityLog = {
-  id: string;
-  text: string;
-  actor: string;
-  time: string;
-  color: string;
-};
-
 const PRESET_FILTERS: { id: string; label: string; field: string; value: string; group: string }[] = [
   { id: "status-open", label: "异常", field: "status", value: "open", group: "状态" },
   { id: "status-handled", label: "已处理", field: "status", value: "handled", group: "状态" },
@@ -49,8 +41,8 @@ function priorityBadge(v: string) {
 export function InboxPage() {
   const [filters, setFilters] = useState<SelectionFilter[]>([]);
   const [presetOn, setPresetOn] = useState<Record<string, boolean>>({});
-  const [field, setField] = useState("site");
-  const [value, setValue] = useState("DC-East");
+  const [field, setField] = useState("");
+  const [value, setValue] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -74,15 +66,6 @@ export function InboxPage() {
     }
     return selectedRows[0] || rows[0] || null;
   }, [activeId, rows, selectedRows]);
-
-  const activityLog: ActivityLog[] = useMemo(() => {
-    if (!activeRow) return [];
-    return [
-      { id: "a1", text: "风控告警触发", actor: "系统", time: "18:32", color: "#DC2626" },
-      { id: "a2", text: "Wiki 规则匹配", actor: "Agent", time: "18:33", color: "#F59E0B" },
-      { id: "a3", text: "等待人工审核", actor: "系统", time: "18:34", color: "#3B82F6" },
-    ];
-  }, [activeRow]);
 
   async function runQuery(nextFilters: SelectionFilter[]) {
     setError(null);
@@ -239,7 +222,7 @@ export function InboxPage() {
   return (
     <PageChrome
       title="风险告警管理"
-      lede="Filter · Object Table · Object View · Action→Draft HITL"
+      lede="筛选告警 · 查看业务详情 · 受控提交人工复核"
     >
       <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
         {/* Top bar */}
@@ -257,7 +240,7 @@ export function InboxPage() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="1.5">
               <path d="M4 4h6l2 3h8v13H4V4z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>风险告警管理 · Risk Alert Manager</span>
+            <span style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>风险告警管理</span>
             <span style={{ fontSize: 11, color: "#6B7280", padding: "2px 8px", background: "#F3F4F6", borderRadius: 4 }}>v2 · 已发布</span>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -302,13 +285,15 @@ export function InboxPage() {
                   <input
                     value={field}
                     onChange={(e) => setField(e.target.value)}
-                    placeholder="field"
+                    placeholder="字段名称"
+                    aria-label="筛选字段"
                     style={{ width: "100%", padding: "4px 6px", fontSize: 11, border: "1px solid #D1D5DB", borderRadius: 4, marginBottom: 4 }}
                   />
                   <input
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    placeholder="value"
+                    placeholder="筛选值"
+                    aria-label="筛选值"
                     style={{ width: "100%", padding: "4px 6px", fontSize: 11, border: "1px solid #D1D5DB", borderRadius: 4, marginBottom: 6 }}
                   />
                   <button type="submit" style={{ width: "100%", padding: "4px 8px", fontSize: 11, border: "none", borderRadius: 4, background: "#3B82F6", color: "#fff", cursor: "pointer" }}>
@@ -318,7 +303,7 @@ export function InboxPage() {
               </div>
             </div>
             <div style={{ marginTop: 16, padding: 8, background: "var(--aos-accent-light)", borderRadius: 2, fontSize: 11, color: "var(--aos-blue-600)" }}>
-              输出 → Object Set Filter
+              当前筛选条件
               <br />
               维数 {filters.length}/{SELECTION_LIMIT}
             </div>
@@ -375,7 +360,7 @@ export function InboxPage() {
                   {rows.length === 0 && !error && (
                     <tr>
                       <td colSpan={4} style={{ padding: "24px 12px", textAlign: "center", color: "#9CA3AF", fontSize: 12 }}>
-                        无行 · 改 Filter 或到数据源管理接入源后刷新
+                        当前筛选没有告警；可调整条件或到数据源管理核对正式来源
                       </td>
                     </tr>
                   )}
@@ -383,7 +368,7 @@ export function InboxPage() {
               </table>
             </div>
             <div style={{ marginTop: 8, fontSize: 11, color: "#9CA3AF" }}>
-              Active / Selected → 右栏 Object View · 已选 {selected.size}
+              当前选中 {selected.size} 项，详情显示在右侧
             </div>
           </div>
 
@@ -400,7 +385,7 @@ export function InboxPage() {
                     {String(activeRow.id)}
                   </div>
                   <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 16 }}>
-                    类型：WorkOrder · 状态：{activeRow.status || "—"}
+                    业务类型：运营工单 · 状态：{activeRow.status || "—"}
                   </div>
 
                   {/* Detail grid */}
@@ -455,7 +440,7 @@ export function InboxPage() {
                         cursor: busy ? "not-allowed" : "pointer",
                       }}
                     >
-                      发起申诉 · HITL
+                      发起人工复核
                     </button>
                     <button
                       type="button"
@@ -485,7 +470,7 @@ export function InboxPage() {
                         textDecoration: "none",
                       }}
                     >
-                      Assist
+                      智能助手
                     </Link>
                   </div>
                 </div>
@@ -493,21 +478,11 @@ export function InboxPage() {
                 {/* Activity log */}
                 <div style={{ marginTop: 16, border: "1px solid var(--aos-border)", borderRadius: 2, background: "var(--aos-surface)", padding: 16 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", marginBottom: 12 }}>活动日志</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {activityLog.map((log) => (
-                      <div key={log.id} style={{ display: "flex", gap: 8, fontSize: 12 }}>
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: log.color, marginTop: 5, flexShrink: 0 }} />
-                        <div>
-                          <span style={{ color: "#111827" }}>{log.text}</span>
-                          <span style={{ color: "#6B7280" }}> · {log.actor} · {log.time}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="aos-muted">当前查询接口未返回可追溯的活动日志，页面不使用演示记录填充。</p>
                 </div>
               </>
             ) : (
-              <p style={{ color: "#9CA3AF", fontSize: 12, textAlign: "center", paddingTop: 40 }}>选择左侧行查看 Object View</p>
+              <p style={{ color: "#9CA3AF", fontSize: 12, textAlign: "center", paddingTop: 40 }}>选择左侧告警查看业务详情</p>
             )}
           </div>
         </div>

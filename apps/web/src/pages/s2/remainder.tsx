@@ -35,6 +35,46 @@ type OkfMapping = {
   impact?: { requiresRebuild?: boolean; affectedObjectType?: string; mappedFieldCount?: number };
 };
 
+export type PipelineProposalItem = {
+  id: string;
+  pipeline_id: string;
+  title: string;
+  description: string;
+  proposed_by: string;
+  status: "pending" | "approved" | "merged" | "discarded" | "rejected";
+  diff_summary: string;
+  created_at?: number;
+  updated_at?: number;
+  pipelineName?: string;
+};
+
+export function pipelineProposalStatusLabel(status: PipelineProposalItem["status"]): string {
+  return (
+    {
+      pending: "待审",
+      approved: "已审批",
+      merged: "已合并",
+      discarded: "已作废",
+      rejected: "已驳回",
+    }[status] || "待确认"
+  );
+}
+
+export function buildPipelineProposalPreview(p: PipelineProposalItem, pipelineName: string): string {
+  const lines = [
+    `# ${p.title || "管道变更提案"}`,
+    "",
+    `所属业务管道：${pipelineName}`,
+    `处理状态：${pipelineProposalStatusLabel(p.status)}`,
+  ];
+  if (p.diff_summary?.trim()) lines.push("", "## 变更摘要", p.diff_summary.trim());
+  if (p.description?.trim()) lines.push("", "## 变更说明", p.description.trim());
+  lines.push("", "## 提案审计", `提案标识：${p.id}`, `管道标识：${p.pipeline_id}`);
+  if (p.proposed_by?.trim()) lines.push(`提交人：${p.proposed_by.trim()}`);
+  lines.push(`原始状态：${p.status}`);
+  return lines.join("\n");
+}
+
 type OkfTypeOverview = {
   industry: string;
   items: OkfMapping[];
@@ -51,6 +91,24 @@ function requiredCoverage(mapping: OkfMapping | null | undefined) {
   const coverage = mapping?.coverage;
   if (!coverage) return { mapped: 0, total: 0, percent: 0 };
   return "required" in coverage ? coverage.required : coverage;
+}
+
+export function okfFunnelStageLabel(stage: unknown) {
+  const value = String(stage || "").trim().toLowerCase();
+  return (
+    {
+      source: "来源读取",
+      extraction: "变更识别",
+      merge: "合并变更",
+      index: "搜索索引",
+      indexing: "搜索索引",
+      hydration: "语义水合",
+      ready: "已就绪",
+      completed: "已完成",
+      blocked: "待补条件",
+      failed: "处理失败",
+    }[value] || (value ? "待确认" : "未读取")
+  );
 }
 
 export const ECOM_ORDER_MAPPING: OkfMapping = {
@@ -76,6 +134,9 @@ export function OkfFunnelPage() {
   const initialIndustry = ["ecom", "env", "bio"].includes(requestedIndustry) ? requestedIndustry : "ecom";
   const requestedObjectType = searchParams.get("type") || "Order";
   const modules = useJsonGet<{ items: { id: string; name?: string }[] }>("/v1/modules");
+  const objectTypes = useJsonGet<{ items: { id: string; name?: string; display_name?: string }[] }>(
+    "/v1/ontology/object-types",
+  );
   const [industry, setIndustry] = useState(initialIndustry);
   const [mapping, setMapping] = useState<OkfMapping | null>(null);
   const [objectType, setObjectType] = useState(requestedObjectType);
@@ -120,13 +181,23 @@ export function OkfFunnelPage() {
   const funnel = useJsonGet<Record<string, unknown>>(
     mapping?.objectType ? `/v1/funnel/${encodeURIComponent(mapping.objectType)}/status` : null,
   );
+  const typeDisplayName = (id: string | null | undefined) => {
+    if (!id) return "未选择";
+    const matched = objectTypes.data?.items?.find((item) => item.id === id);
+    return matched?.display_name || matched?.name || id;
+  };
+  const mappingDisplayName = typeDisplayName(mapping?.objectType || objectType);
 
   function chooseIndustry(next: string) {
+    setLint(null);
+    setMsg("");
     setIndustry(next);
     setSearchParams(next === "ecom" ? { industry: next, type: objectType } : { industry: next }, { replace: true });
   }
 
   function chooseObjectType(next: string) {
+    setLint(null);
+    setMsg("");
     setObjectType(next);
     setSearchParams({ industry: "ecom", type: next }, { replace: true });
   }
@@ -148,7 +219,7 @@ export function OkfFunnelPage() {
       },
     );
     setLint(r);
-    setMsg(r.ok ? "Lint 通过" : `Lint 有告警 · ${r.errors?.length ?? 0} 条`);
+    setMsg(r.ok ? "规则检查通过" : `规则检查发现 ${r.errors?.length ?? 0} 条问题`);
   }
 
   async function saveMapping() {
@@ -172,7 +243,7 @@ export function OkfFunnelPage() {
         throw new Error("OKF 保存回读不一致");
       }
       setMapping(verified);
-      setMsg(`已保存并回读 ${industry} 映射 · r${verified.revision} · ${verified.columns.length} 列`);
+      setMsg(`映射已保存并回读 · 修订 ${verified.revision ?? 0} · ${verified.columns.length} 个字段`);
     } catch (e) {
       setErr(String((e as Error).message || e));
     } finally {
@@ -189,7 +260,7 @@ export function OkfFunnelPage() {
   return (
     <S2Chrome
       title="OKF 行业漏斗"
-      lede="行业模板 · 列 → Object Type 映射（可保存）· Constitution Lint"
+      lede="行业模板 · 来源字段到业务属性映射 · 规则检查"
     >
       <div className="ont-page">
       <BpToolbar>
@@ -198,7 +269,7 @@ export function OkfFunnelPage() {
           className="btn-outline-cyan"
           onClick={() => void runLint().catch((e) => setErr(String(e)))}
         >
-          Lint 检查
+          规则检查
         </button>
         <button type="button" className="btn-primary" disabled={busy || !mapping} onClick={() => void saveMapping()}>
           {busy ? "保存中…" : "保存映射"}
@@ -222,8 +293,8 @@ export function OkfFunnelPage() {
         </Link>
       </BpToolbar>
       {msg && <p className="bp-prop-ok">{msg}</p>}
-      {(modules.err || err) && (
-        <p className="error">{modules.err || err}</p>
+      {(modules.err || objectTypes.err || err) && (
+        <p className="error">{modules.err || objectTypes.err || err}</p>
       )}
 
       <BpSplit
@@ -238,7 +309,7 @@ export function OkfFunnelPage() {
             </select>
             {industry === "ecom" ? (
               <>
-                <p className="okf-industry-hint">具备真实 source dataset 的 Object Type</p>
+                <p className="okf-industry-hint">已连接真实来源数据的业务对象</p>
                 {(typeOverview?.items || []).map((item) => (
                   <button
                     key={item.objectType}
@@ -246,8 +317,8 @@ export function OkfFunnelPage() {
                     className={`okf-industry-item${objectType === item.objectType ? " is-active" : ""}`}
                     onClick={() => chooseObjectType(item.objectType || "")}
                   >
-                    <span>{item.label || item.objectType}</span>
-                    <small>{item.status === "configured" ? `r${item.revision ?? 0}` : "未配置"}</small>
+                    <span>微商城电商 · {typeDisplayName(item.objectType)}</span>
+                    <small>{item.status === "configured" ? `修订 ${item.revision ?? 0}` : "未配置"}</small>
                   </button>
                 ))}
               </>
@@ -255,10 +326,14 @@ export function OkfFunnelPage() {
               <button type="button" disabled className="okf-industry-item is-active">{mapping?.label || industry}</button>
             )}
             <p className="muted" style={{ fontSize: "0.75rem", marginTop: 12 }}>
-              源 Dataset: <Link to="/data/datasets">从真实数据集选择</Link>
+              来源数据：<Link to="/data/datasets">查看真实数据集</Link>
               <br />
-              Object Type: <span className="aos-text">{mapping?.objectType || "—"}</span>
+              业务对象：<span className="aos-text">{mappingDisplayName}</span>
             </p>
+            <details className="bp-audit-details" style={{ marginTop: 10 }}>
+              <summary>映射审计</summary>
+              <p className="muted">对象标识：{mapping?.objectType || "未读取"}</p>
+            </details>
           </aside>
         }
         right={
@@ -267,7 +342,7 @@ export function OkfFunnelPage() {
               <h2 className="aos-text" style={{ fontSize: "0.95rem", margin: 0 }}>
                 列映射工作台
               </h2>
-              <span className="mp-section-hint">{mapping?.label || industry}</span>
+              <span className="mp-section-hint">{industry === "ecom" ? `微商城电商 · ${mappingDisplayName}` : mapping?.label || industry}</span>
             </div>
             <BpMetricGrid
               items={[
@@ -276,23 +351,23 @@ export function OkfFunnelPage() {
                   value: mapping?.status === "unconfigured" ? "未配置" : `${requiredCoverage(mapping).percent}%`,
                   tone: "ok",
                 },
-                { label: "Funnel stage", value: String(funnel.data?.stage || "—"), tone: "muted" },
+                { label: "业务漏斗阶段", value: okfFunnelStageLabel(funnel.data?.stage), tone: "muted" },
                 { label: "真实源对象", value: mapping?.source?.count ?? "—", tone: "muted" },
-                { label: "Mapping revision", value: mapping?.revision ?? 0, tone: "muted" },
+                { label: "映射修订", value: mapping?.revision ?? 0, tone: "muted" },
                 { label: "阻断字段", value: mapping?.blockedFields?.length ?? columns.filter((c) => !c.ok).length, tone: "muted" },
               ]}
             />
             <BpBanner tone={(mapping?.blockedFields?.length ?? columns.filter((c) => !c.ok).length) > 0 ? "warn" : "info"}>
               {mapping?.status === "unconfigured" ? (
-                <>当前 Object Type 尚未配置映射；必填覆盖率不可作为完成声明，请先建立真实源列映射。</>
+                <>当前业务对象尚未配置映射；必填覆盖率不可作为完成声明，请先建立真实来源字段映射。</>
               ) : (
-                <>影响分析 · Object Type={mapping?.impact?.affectedObjectType || mapping?.objectType || "—"} ·
+                <>影响分析 · 业务对象={typeDisplayName(mapping?.impact?.affectedObjectType || mapping?.objectType)} ·
                   必填覆盖率={requiredCoverage(mapping).percent}% ·
                   {mapping?.impact?.requiresRebuild ? "存在阻断字段，发布前须重建/影子对账" : "无阻断字段，可进入影子对账"}</>
               )}
             </BpBanner>
             <BpTable
-              columns={["源列", "目标 Property", "状态", ""]}
+              columns={["来源字段", "目标业务属性", "状态", ""]}
               rows={columns.map((c, idx) => [
                 c.src,
                 c.dst,
@@ -309,7 +384,7 @@ export function OkfFunnelPage() {
             />
             {lint && (
               <BpBanner tone={lint.ok ? "info" : "warn"}>
-                Constitution lint ok={String(lint.ok)} · errors={lint.errors?.length ?? 0}
+                规则检查{lint.ok ? "通过" : "未通过"} · {lint.errors?.length ?? 0} 条问题
                 {(lint.errors || []).length > 0 && (
                   <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.1rem", fontSize: "0.8rem" }}>
                     {lint.errors!.map((e, i) => (
@@ -319,6 +394,10 @@ export function OkfFunnelPage() {
                     ))}
                   </ul>
                 )}
+                <details className="bp-audit-details" style={{ marginTop: 8 }}>
+                  <summary>检查审计</summary>
+                  <p className="muted">constitution ok={String(lint.ok)} · errors={lint.errors?.length ?? 0}</p>
+                </details>
               </BpBanner>
             )}
             <BpLinkRow links={[{ to: "/workshop/module-interface", label: "模块接口 →" }]} />
@@ -337,7 +416,7 @@ export function PipelineProposalsPage() {
     "/v1/pipelines?page_size=50",
   );
   // 提案列表（聚合所有管道的提案）
-  const [proposals, setProposals] = useState<ProposalItem[]>([]);
+  const [proposals, setProposals] = useState<PipelineProposalItem[]>([]);
   const [proposalsLoading, setProposalsLoading] = useState(false);
   const [tab, setTab] = useState<"proposals" | "history">("proposals");
   const [msg, setMsg] = useState("");
@@ -360,20 +439,6 @@ export function PipelineProposalsPage() {
     tags?: string[];
   };
 
-  type ProposalItem = {
-    id: string;
-    pipeline_id: string;
-    title: string;
-    description: string;
-    proposed_by: string;
-    status: "pending" | "approved" | "merged" | "discarded" | "rejected";
-    diff_summary: string;
-    created_at?: number;
-    updated_at?: number;
-    // 前端填充
-    pipelineName?: string;
-  };
-
   // 管道 ID → 中文业务名称映射
   const PIPELINE_NAME_MAP: Record<string, string> = {
     "P01-shop": "店铺基础信息",
@@ -386,20 +451,8 @@ export function PipelineProposalsPage() {
     "P08-customer-lite": "会员基础档案",
     "P09-member": "会员详细信息",
     "P10-stock": "库存台账",
-  };
-
-  // 管道 ID → 变更摘要映射
-  const PIPELINE_DIFF_MAP: Record<string, string> = {
-    "P01-shop": "新增店铺营业状态字段 · 按站点过滤有效数据",
-    "P02-product": "新增商品状态过滤（仅上架） · 补充缩略图字段",
-    "P03-product-sku": "新增SKU级库存字段 · 关联商品主表",
-    "P04-category": "新增类目层级字段 · 排序规则调整",
-    "P05-order": "新增订单状态流转字段 · 支付方式补充",
-    "P06-order-line": "新增实付金额拆分 · 商品SKU关联",
-    "P07-shipment": "新增物流公司编码 · 配送地址脱敏",
-    "P08-customer-lite": "新增会员等级字段 · 注册来源补充",
-    "P09-member": "新增会员标签字段 · 消费频次统计",
-    "P10-stock": "新增库存预警阈值 · 出入库明细",
+    "P11-product-review": "商品评价",
+    "P12-payment": "支付记录",
   };
 
   function getPipelineDisplayName(id: string, fallback?: string): string {
@@ -413,53 +466,18 @@ export function PipelineProposalsPage() {
     return pl?.name || getPipelineDisplayName(pipelineId);
   }
 
-  function getProposalTitle(p: ProposalItem): string {
+  function getProposalTitle(p: PipelineProposalItem): string {
     const plName = p.pipelineName || getPipelineNameById(p.pipeline_id);
     return `${p.title} · ${plName}`;
   }
 
-  function getChangeSummary(p: ProposalItem): string {
-    if (p.diff_summary) return p.diff_summary;
-    const baseId = p.pipeline_id.replace(/-qyh$/, "");
-    return PIPELINE_DIFF_MAP[baseId] ?? "字段映射优化 · 数据质量提升";
+  function getChangeSummary(p: PipelineProposalItem): string {
+    return p.diff_summary?.trim() || "服务端未返回变更摘要";
   }
 
-  function getProposalDiff(p: ProposalItem): string {
-    const baseId = p.pipeline_id.replace(/-qyh$/, "");
-    const summary = p.diff_summary || PIPELINE_DIFF_MAP[baseId] || "字段映射优化 · 数据质量提升";
+  function getProposalDiff(p: PipelineProposalItem): string {
     const plName = p.pipelineName || getPipelineNameById(p.pipeline_id);
-    const lines = [
-      `# 提案 Diff · ${plName}`,
-      "",
-      `## 提案信息`,
-      `- 提案 ID: ${p.id}`,
-      `- 提交人: ${p.proposed_by || "system"}`,
-      `- 状态: ${p.status}`,
-      "",
-      `## 变更摘要`,
-      summary,
-      "",
-      `## 字段映射变更`,
-      "```diff",
-      `- field_mappings: 原 5 列 → 新 30 列`,
-      `+ 新增: nickname, mobile, email, memberLevel...`,
-      `- 移除: 敏感字段 (password, pay_password)`,
-      "```",
-      "",
-      `## PII 脱敏变更`,
-      "```diff",
-      `- pii_exclusion: 原 8 个 → 新 15 个`,
-      `+ 新增: wx_openid, ali_openid...`,
-      "```",
-      "",
-      `## 影响范围`,
-      `- 所属管道: ${plName} (${p.pipeline_id})`,
-      `- 数据源: 栖月汇微商城`,
-    ];
-    if (p.description) {
-      lines.push("", `## 提案说明`, p.description);
-    }
-    return lines.join("\n");
+    return buildPipelineProposalPreview(p, plName);
   }
 
   // 加载所有管道的提案
@@ -467,11 +485,11 @@ export function PipelineProposalsPage() {
     setProposalsLoading(true);
     setErrMsg("");
     try {
-      const all: ProposalItem[] = [];
+      const all: PipelineProposalItem[] = [];
       const items = pipelinesData?.items || [];
       for (const pl of items) {
         try {
-          const resp = await apiGet<{ items: ProposalItem[] }>(
+          const resp = await apiGet<{ items: PipelineProposalItem[] }>(
             `/v1/pipelines/${encodeURIComponent(pl.id)}/proposals`,
           );
           for (const pp of resp.items || []) {
@@ -516,7 +534,7 @@ export function PipelineProposalsPage() {
     setErrMsg("");
     setMsg("");
     try {
-      const summary = PIPELINE_DIFF_MAP[newPropPipelineId.replace(/-qyh$/, "")] || "管道配置变更";
+      const summary = newPropDesc.trim() || newPropTitle.trim();
       await apiPost(
         `/v1/pipelines/${encodeURIComponent(newPropPipelineId)}/proposals`,
         {
@@ -592,7 +610,7 @@ export function PipelineProposalsPage() {
     }
   }
 
-  function handlePreviewDiff(p: ProposalItem) {
+  function handlePreviewDiff(p: PipelineProposalItem) {
     setDiffId(p.id);
     setDiffContent(getProposalDiff(p));
   }
@@ -612,18 +630,12 @@ export function PipelineProposalsPage() {
     }
   }
 
-  const historyRows = [
-    ["v12 · 合并提案 #prop-115", "7 天前 · 张三"],
-    ["v11 · 修复空值过滤", "14 天前 · 李四"],
-    ["v10 · 初始上线", "30 天前 · 系统"],
-  ];
-
   // 过滤：待审提案 tab 显示 pending + approved；历史 tab 显示 merged + discarded
   const pendingProposals = proposals.filter((p) => p.status === "pending" || p.status === "approved");
   const doneProposals = proposals.filter((p) => p.status === "merged" || p.status === "discarded" || p.status === "rejected");
 
   return (
-    <S2Chrome title="管道提案与历史" lede="变更提案审阅与版本回溯 · 管道即提案">
+    <S2Chrome title="管道提案与历史" lede="审阅真实管道变更，并回溯已处理记录">
       <PipelineWorkflowStepper current={1} />
       <BpToolbar>
         <button
@@ -672,9 +684,9 @@ export function PipelineProposalsPage() {
         <BpBanner tone="info">
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <strong>Diff 预览 · 提案 #{diffId}</strong>
+              <strong>差异预览</strong>
               <button type="button" className="btn" onClick={() => { setDiffId(null); setDiffContent(null); }}>
-                关闭 Diff
+                关闭预览
               </button>
             </div>
             <pre style={{
@@ -716,6 +728,7 @@ export function PipelineProposalsPage() {
               <label>
                 <span style={{ fontSize: "0.8rem", color: "var(--aos-text-muted)" }}>所属管道 *</span>
                 <select
+                  aria-label="所属管道"
                   value={newPropPipelineId}
                   onChange={(e) => {
                     setNewPropPipelineId(e.target.value);
@@ -729,7 +742,7 @@ export function PipelineProposalsPage() {
                   <option value="">— 请选择管道 —</option>
                   {(pipelinesData?.items || []).map((pl) => (
                     <option key={pl.id} value={pl.id}>
-                      {pl.name || getPipelineDisplayName(pl.id)} ({pl.id})
+                      {pl.name || getPipelineDisplayName(pl.id)}
                     </option>
                   ))}
                 </select>
@@ -737,6 +750,7 @@ export function PipelineProposalsPage() {
               <label>
                 <span style={{ fontSize: "0.8rem", color: "var(--aos-text-muted)" }}>提案标题 *</span>
                 <input
+                  aria-label="提案标题"
                   value={newPropTitle}
                   onChange={(e) => setNewPropTitle(e.target.value)}
                   placeholder="例如：字段映射优化 & 敏感字段脱敏"
@@ -746,6 +760,7 @@ export function PipelineProposalsPage() {
               <label>
                 <span style={{ fontSize: "0.8rem", color: "var(--aos-text-muted)" }}>变更说明</span>
                 <textarea
+                  aria-label="变更说明"
                   value={newPropDesc}
                   onChange={(e) => setNewPropDesc(e.target.value)}
                   placeholder="描述本提案变更的背景、目的和影响范围..."
@@ -880,9 +895,9 @@ export function PipelineProposalsPage() {
         <>
           {doneProposals.length > 0 ? (
             <BpTable
-              columns={["提案 ID", "标题", "管道", "状态", "说明"]}
+              columns={["提案", "标题", "管道", "状态", "说明"]}
               rows={doneProposals.map((p) => [
-                <span className="mono">{p.id}</span>,
+                <details className="bp-audit-details"><summary>提案审计</summary><span className="mono">{p.id}</span></details>,
                 p.title,
                 p.pipelineName || getPipelineNameById(p.pipeline_id),
                 (() => {
@@ -893,7 +908,7 @@ export function PipelineProposalsPage() {
               ])}
             />
           ) : (
-            <BpTable columns={["版本", "说明"]} rows={historyRows} />
+            <p className="muted">暂无已处理提案；本页不会用演示版本填充历史。</p>
           )}
         </>
       )}
@@ -1539,32 +1554,29 @@ export function ApolloChangePage() {
 /** 本体 · 数字孪生 · OKF 概览 — 行业模板与映射活动概览 */
 export function OkfOverviewPage() {
   const ecom = useJsonGet<OkfTypeOverview>("/v1/ontology/okf-mappings/ecom/types");
-  const env = useJsonGet<OkfMapping>("/v1/ontology/okf-mappings/env");
-  const bio = useJsonGet<OkfMapping>("/v1/ontology/okf-mappings/bio");
-  const requests = { ecom, env, bio };
-  const industries = [
-    { id: "env", name: "环境", request: env },
-    { id: "bio", name: "生物", request: bio },
-  ].map(({ id, name, request }) => ({
-    id, name, mapping: request.data,
-    mapped: Boolean(request.data?.columns?.length) && (request.data?.blockedFields?.length ?? request.data!.columns.filter((column) => !column.ok).length) === 0,
-  }));
-  const overviewError = Object.values(requests).map((request) => request.err).find(Boolean);
+  const objectTypes = useJsonGet<{ items: { id: string; name?: string; display_name?: string }[] }>(
+    "/v1/ontology/object-types",
+  );
+  const displayName = (id: string | undefined, fallbackIndex?: number) => {
+    const matched = objectTypes.data?.items?.find((item) => item.id === id);
+    return matched?.display_name || matched?.name || `待识别业务对象${fallbackIndex === undefined ? "" : ` ${fallbackIndex + 1}`}`;
+  };
+  const unknownNames = (ecom.data?.overall.unknown || []).map((id, index) => displayName(id, index));
 
   return (
-    <S2Chrome title="OKF 概览" lede="行业漏斗模板与映射活动概览 · 选择行业查看详情">
+    <S2Chrome title="行业对象映射概览" lede="电商业务对象与正式来源字段的映射状态">
       <BpToolbar>
         <Link to="/ontology/okf-funnel" className="btn-nav">
-          OKF 行业漏斗 →
+          行业映射工作台 →
         </Link>
         <Link to="/ontology/funnel" className="btn-nav">
           漏斗管道 →
         </Link>
-        <button type="button" className="btn" onClick={() => Object.values(requests).forEach((request) => request.reload())}>
+        <button type="button" className="btn" onClick={() => { ecom.reload(); objectTypes.reload(); }}>
           刷新
         </button>
       </BpToolbar>
-      {overviewError && <p className="error">{overviewError}</p>}
+      {(ecom.err || objectTypes.err) && <p className="error">{ecom.err || objectTypes.err}</p>}
 
       <div className="bp-ws-section-title">电商整体</div>
       <BpMetricGrid
@@ -1577,54 +1589,37 @@ export function OkfOverviewPage() {
       />
       <BpBanner tone={ecom.data?.overall.complete ? "info" : "warn"}>
         加权口径：所有具备真实 source dataset 的类型，按 required properties 分子/分母汇总。
-        {ecom.data?.overall.unknown.length ? ` 未配置：${ecom.data.overall.unknown.join("、")}；行业不得宣告完整。` : " 当前范围已完整。"}
+        {unknownNames.length ? ` 未配置：${unknownNames.join("、")}；当前行业范围不能宣告完整。` : " 当前范围已完整。"}
       </BpBanner>
 
-      <div className="bp-ws-section-title">电商 Object Type</div>
+      <div className="bp-ws-section-title">电商业务对象</div>
       <div className="bp-index-grid bp-index-grid-4" style={{ marginBottom: "1rem" }}>
-        {(ecom.data?.items || []).map((mapping) => {
+        {(ecom.data?.items || []).map((mapping, index) => {
           const required = requiredCoverage(mapping);
           return (
-            <Link key={mapping.objectType} to={`/ontology/okf-funnel?industry=ecom&type=${encodeURIComponent(mapping.objectType || "")}`} className="bp-discover-card bp-discover-violet" style={{ textDecoration: "none" }}>
-              <div className="bp-discover-head">
-                <span className="bp-discover-title">{mapping.label || mapping.objectType}</span>
-                <span className={`bp-tag ${mapping.status === "configured" ? "bp-tag-ok" : "bp-tag-warn"}`}>{mapping.status === "configured" ? "已配置" : "未配置"}</span>
-              </div>
-              <p className="bp-discover-meta">必填覆盖 {required.mapped}/{required.total} · {required.percent}%</p>
-              <p className="bp-discover-meta">源对象 {mapping.source?.count ?? 0} · r{mapping.revision ?? 0} · 水位 {mapping.source?.watermark || "未知"}</p>
-            </Link>
+            <article key={mapping.objectType || index} className="bp-discover-card bp-discover-violet">
+              <Link to={`/ontology/okf-funnel?industry=ecom&type=${encodeURIComponent(mapping.objectType || "")}`} style={{ textDecoration: "none", color: "inherit" }}>
+                <div className="bp-discover-head">
+                  <span className="bp-discover-title">微商城电商 · {displayName(mapping.objectType, index)}</span>
+                  <span className={`bp-tag ${mapping.status === "configured" ? "bp-tag-ok" : "bp-tag-warn"}`}>{mapping.status === "configured" ? "已配置" : "未配置"}</span>
+                </div>
+                <p className="bp-discover-meta">必填覆盖 {required.mapped}/{required.total} · {required.percent}%</p>
+                <p className="bp-discover-meta">真实来源对象 {mapping.source?.count ?? "未读取"}</p>
+              </Link>
+              <details className="bp-audit-details" style={{ marginTop: 8 }}>
+                <summary>映射审计</summary>
+                <p className="muted">对象标识：{mapping.objectType || "未读取"}</p>
+                <p className="muted">映射修订：{mapping.revision ?? 0}</p>
+                <p className="muted">来源水位：{mapping.source?.watermark || "未读取"}</p>
+              </details>
+            </article>
           );
         })}
       </div>
 
-      <div className="bp-ws-section-title">其他行业兼容模板</div>
-      <div className="bp-index-grid bp-index-grid-4" style={{ marginBottom: "1rem" }}>
-        {industries.map((ind) => (
-          <Link
-            key={ind.id}
-            to={`/ontology/okf-funnel?industry=${ind.id}`}
-            className="bp-discover-card bp-discover-violet"
-            style={{ textDecoration: "none" }}
-          >
-            <div className="bp-discover-head">
-              <span className="bp-discover-title">{ind.name}</span>
-              <span className={`bp-tag ${ind.mapped ? "bp-tag-ok" : "bp-tag-warn"}`}>
-                {ind.mapped ? "已映射" : "待映射"}
-              </span>
-            </div>
-            <p className="bp-discover-meta">
-              {ind.mapping?.objectType || "未配置 Object Type"} · {ind.mapping?.columns?.length || 0} 个字段
-            </p>
-            <p className="bp-discover-meta">
-              覆盖率 {requiredCoverage(ind.mapping).percent}% · 阻断 {ind.mapping?.blockedFields?.length ?? 0} · r{ind.mapping?.revision ?? 0}
-            </p>
-          </Link>
-        ))}
-      </div>
-
       <BpBanner tone="info">
-        OKF（Ontology Kernel Framework）行业漏斗将外部数据模型映射为本体属性；
-        每个行业有预置模板，可在「OKF 行业漏斗」页面编辑映射规则。
+        当前安装的电商行业模板把正式来源字段映射为业务对象属性；
+        可在「行业映射工作台」逐个业务对象查看和维护映射规则。
       </BpBanner>
     </S2Chrome>
   );

@@ -54,7 +54,7 @@ describe("O1-UX9 · Funnel 状态与类型选择", () => {
     await act(async () => root.render(<MemoryRouter initialEntries={["/ontology/funnel"]}><FunnelPage /></MemoryRouter>));
     await flush();
 
-    expect(host.querySelector("select[aria-label='选择 Funnel 对象类型']")).not.toBeNull();
+    expect(host.querySelector("select[aria-label='选择业务漏斗对象类型']")).not.toBeNull();
     expect(host.textContent).toContain("请选择对象类型");
     expect(host.textContent).not.toContain("加载流水线…");
   });
