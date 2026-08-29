@@ -129,6 +129,44 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
   });
 
+  it("Studio 点击数字同事后切换到目标实例配置且不产生写操作", async () => {
+    apiMocks.apiGet.mockImplementation(async (path: string) => {
+      if (path === "/v1/aip/agents") return {
+        items: [
+          { id: "agent-private", name: "私域管家", status: "active", tags: ["L2"] },
+          { id: "agent-service", name: "客服专员", status: "active", tags: ["L2"] },
+        ],
+      };
+      if (path === "/v1/aip/models") return { defaultTextModel: "—" };
+      if (path === "/v1/aip/tools") return { items: [] };
+      if (path.endsWith("/prompt")) {
+        const agentId = path.includes("agent-service") ? "agent-service" : "agent-private";
+        return { agent_id: agentId, prompt: agentId === "agent-service" ? "客服专员提示词" : "私域管家提示词" };
+      }
+      if (path.endsWith("/tools") || path.endsWith("/guardrails")) {
+        const agentId = path.includes("agent-service") ? "agent-service" : "agent-private";
+        return { agent_id: agentId, items: [] };
+      }
+      if (path === "/v1/aip/operational-projection") throw new Error("projection unavailable");
+      throw new Error(`unexpected ${path}`);
+    });
+
+    await act(async () => root.render(<MemoryRouter initialEntries={["/aip/studio"]}><StudioPage /></MemoryRouter>));
+    await flush();
+    expect(host.querySelector("h2")?.textContent).toBe("私域管家");
+
+    const target = Array.from(host.querySelectorAll<HTMLElement>("div,button")).find((element) =>
+      element.textContent?.trim() === "客服专员",
+    )!;
+    await act(async () => target.click());
+    await flush();
+
+    expect(host.querySelector("h2")?.textContent).toBe("客服专员");
+    expect(host.querySelector<HTMLTextAreaElement>("[aria-label='system-prompt']")?.value).toBe("客服专员提示词");
+    expect(apiMocks.apiPut).not.toHaveBeenCalled();
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
+  });
+
   it("Studio Try chat 失败保持失败，不显示示意答案", async () => {
     apiMocks.apiGet.mockImplementation(async (path: string) => {
       if (path === "/v1/aip/agents") return { items: [{ id: "a1", name: "真实 Agent", status: "draft", tags: ["L2"] }] };

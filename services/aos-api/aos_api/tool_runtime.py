@@ -61,14 +61,22 @@ def invoke_tool(
 
     if tool_id == "query.objects":
         object_type = str(payload.get("objectType") or "WorkOrder")
+        object_id = str(payload.get("objectId") or "").strip()
         # 只走真实 PG；不再降级到 mock_data 假数据
         try:
             with connect(scope) as conn:
-                rows = conn.execute(
-                    "SELECT object_id, props FROM obj_instance WHERE object_type=%s "
-                    "AND org_id=%s AND project_id=%s ORDER BY object_id LIMIT 20",
-                    (object_type, *scope.key),
-                ).fetchall()
+                if object_id:
+                    rows = conn.execute(
+                        "SELECT object_id, props FROM obj_instance WHERE object_type=%s "
+                        "AND object_id=%s AND org_id=%s AND project_id=%s LIMIT 1",
+                        (object_type, object_id, *scope.key),
+                    ).fetchall()
+                else:
+                    rows = conn.execute(
+                        "SELECT object_id, props FROM obj_instance WHERE object_type=%s "
+                        "AND org_id=%s AND project_id=%s ORDER BY object_id LIMIT 20",
+                        (object_type, *scope.key),
+                    ).fetchall()
             items = [
                 {"id": r["object_id"], "type": object_type, **(r["props"] or {})}
                 for r in rows

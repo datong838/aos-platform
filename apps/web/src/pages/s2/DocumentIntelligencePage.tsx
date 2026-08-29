@@ -1044,7 +1044,10 @@ export function DocumentIntelligencePage() {
 
   const runPipelineTrial = useCallback(async () => {
     const doc = docs.find((d) => d.id === selectedId) ?? docs[0];
-    if (!doc) return;
+    if (!doc) {
+      setStatusMsg("请先上传并选择文档后再试运行");
+      return;
+    }
     setPipelineRunning(true);
     setStatusMsg("");
     try {

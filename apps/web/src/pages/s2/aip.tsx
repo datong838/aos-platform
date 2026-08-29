@@ -31,6 +31,7 @@ import {
   buildToolsInvokePayload,
   parseToolsInvokeContext,
   toolsInvokeBlocker,
+  validateExactObjectQueryResult,
 } from "./toolsInvokeContext";
 import {
   businessDisplayName,
@@ -326,6 +327,14 @@ export function ToolsPage() {
         setInvokeSummary(`诚实失败 · ${id} · ${msg}`);
         setLocalErr(msg);
       } else {
+        if (id === "query.objects") {
+          const exactError = validateExactObjectQueryResult(r, payload.objectId);
+          if (exactError) {
+            setInvokeSummary(`诚实失败 · ${id} · ${exactError}`);
+            setLocalErr(exactError);
+            return;
+          }
+        }
         setInvokeSummary(`试跑完成 · ${id} · ${payload.objectType}/${payload.objectId}`);
       }
     } catch (e) {

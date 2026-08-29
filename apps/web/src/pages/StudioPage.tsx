@@ -235,19 +235,17 @@ export function StudioPage() {
   }
 
   useEffect(() => {
-    if (!activeId) return;
-    const current = String(searchParams.get("instance") || "").trim();
-    if (current === activeId) return;
-    const next = new URLSearchParams(searchParams);
-    next.set("instance", activeId);
-    setSearchParams(next, { replace: true });
-  }, [activeId, searchParams, setSearchParams]);
-
-  useEffect(() => {
     const fromUrl = String(searchParams.get("instance") || "").trim();
     if (!fromUrl || !agents.some((agent) => agent.id === fromUrl)) return;
     if (fromUrl !== activeId) setActiveId(fromUrl);
   }, [searchParams, agents, activeId]);
+
+  function selectAgent(agentId: string) {
+    if (!agentId || agentId === activeId) return;
+    const next = new URLSearchParams(searchParams);
+    next.set("instance", agentId);
+    setSearchParams(next, { replace: true });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -586,12 +584,19 @@ export function StudioPage() {
             const active = a.id === activeId;
             const sb = statusBadge(a.status);
             return (
-              <div
+              <button
+                type="button"
                 key={a.id}
-                onClick={() => setActiveId(a.id)}
+                data-testid={`studio-agent-${a.id}`}
+                aria-pressed={active}
+                onClick={() => selectAgent(a.id)}
                 style={{
+                  display: "block",
+                  width: "100%",
                   padding: 12,
+                  border: "none",
                   borderBottom: "1px solid var(--aos-surface-hover)",
+                  textAlign: "left",
                   cursor: "pointer",
                   background: active ? "var(--aos-indigo-bg)" : "var(--aos-surface)",
                   borderLeft: active ? "2px solid var(--aos-indigo)" : "2px solid transparent",
@@ -656,7 +661,7 @@ export function StudioPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

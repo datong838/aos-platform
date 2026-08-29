@@ -104,6 +104,18 @@ describe("DocumentIntelligencePage · real interaction", () => {
     expect(host.textContent).toContain("失败文件未加入列表");
   });
 
+  it("shows actionable feedback and does not call the pipeline when no document exists", async () => {
+    await act(async () => root.render(<DocumentIntelligencePage />));
+    await flush();
+
+    const trial = host.querySelector<HTMLButtonElement>("[data-testid='pipeline-trial-btn']")!;
+    await act(async () => trial.click());
+    await flush();
+
+    expect(host.textContent).toContain("请先上传并选择文档后再试运行");
+    expect(apiPost).not.toHaveBeenCalled();
+  });
+
   it("uses API responses for ontology write, reprocess and delete", async () => {
     vi.mocked(apiGet).mockImplementation(async (path: string) => {
       if (path.includes("/documents/stats")) return { total: 1, processing: 0, average_confidence: 0.9, template_count: 3 };

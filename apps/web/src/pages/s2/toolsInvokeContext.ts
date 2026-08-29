@@ -49,3 +49,18 @@ export function buildToolsInvokePayload(
   if (ctx?.agentRunId) payload.agentRunId = ctx.agentRunId;
   return payload;
 }
+
+export function validateExactObjectQueryResult(
+  response: unknown,
+  expectedObjectId: string,
+): string | null {
+  const result = (response as { result?: { items?: Array<{ id?: unknown }>; total?: unknown } } | null)?.result;
+  const items = Array.isArray(result?.items) ? result.items : null;
+  if (!items || items.length !== 1 || Number(result?.total) !== 1) {
+    return "对象查询未返回唯一精确对象；本次试跑不计为成功";
+  }
+  if (String(items[0]?.id || "") !== expectedObjectId) {
+    return "对象查询回包与请求的真实对象标识不一致";
+  }
+  return null;
+}

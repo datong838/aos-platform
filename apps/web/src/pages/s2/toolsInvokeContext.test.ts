@@ -3,6 +3,7 @@ import {
   buildToolsInvokePayload,
   parseToolsInvokeContext,
   toolsInvokeBlocker,
+  validateExactObjectQueryResult,
 } from "./toolsInvokeContext";
 
 describe("toolsInvokeContext W-T3", () => {
@@ -32,5 +33,17 @@ describe("toolsInvokeContext W-T3", () => {
       objectId: "wo-real-9",
       taskId: "task-1",
     });
+  });
+
+  it("accepts only a unique exact object-query result", () => {
+    expect(validateExactObjectQueryResult({
+      result: { items: [{ id: "order-1" }], total: 1 },
+    }, "order-1")).toBeNull();
+    expect(validateExactObjectQueryResult({
+      result: { items: [{ id: "order-1" }, { id: "order-2" }], total: 2 },
+    }, "order-1")).toMatch(/精确对象/);
+    expect(validateExactObjectQueryResult({
+      result: { items: [{ id: "order-2" }], total: 1 },
+    }, "order-1")).toMatch(/不一致/);
   });
 });

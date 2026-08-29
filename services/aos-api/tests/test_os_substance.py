@@ -31,6 +31,26 @@ def test_tool_invoke_query_objects(client, auth_headers):
     assert body["result"]["total"] >= 1
 
 
+def test_tool_invoke_query_objects_honors_exact_object_id(client, auth_headers):
+    listed = client.post(
+        "/v1/aip/tools/query.objects/invoke",
+        headers=auth_headers,
+        json={"objectType": "WorkOrder"},
+    )
+    assert listed.status_code == 200
+    target_id = listed.json()["result"]["items"][0]["id"]
+
+    exact = client.post(
+        "/v1/aip/tools/query.objects/invoke",
+        headers=auth_headers,
+        json={"objectType": "WorkOrder", "objectId": target_id},
+    )
+    assert exact.status_code == 200
+    result = exact.json()["result"]
+    assert result["total"] == 1
+    assert [item["id"] for item in result["items"]] == [target_id]
+
+
 def test_chat_with_tools_executes(client, auth_headers):
     r = client.post(
         "/v1/aip/chat",
