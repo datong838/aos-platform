@@ -24,6 +24,7 @@ from aos_api.ecommerce_workshop_catalog import (
     ActiveWorkshopBundle,
     EcommerceWorkshopCatalog,
     PersistedBundleVersion,
+    PostgresWorkshopAipFeatureAuthoritySource,
     PostgresWorkshopCatalogSource,
     _filter_effective_rows_by_markings,
     _fresh_capability_refs,
@@ -71,6 +72,16 @@ class FakeCapabilitySource:
         self.calls = []
 
     def read_capability_refs(self, **kwargs):
+        self.calls.append(kwargs)
+        return self.refs
+
+
+class FakeAipFeatureSource:
+    def __init__(self, refs):
+        self.refs = refs
+        self.calls = []
+
+    def read_feature_refs(self, **kwargs):
         self.calls.append(kwargs)
         return self.refs
 
@@ -125,6 +136,28 @@ class _ReadOnlyConnection:
             )
         if "FROM bundle_installation i" in normalized:
             return _QueryResult(many=())
+        return _QueryResult()
+
+
+class _FeatureAuthorityConnection:
+    def __init__(self, *, table="aip_feature_activation", rows=()):
+        self.table = table
+        self.rows = rows
+        self.calls = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return False
+
+    def execute(self, statement, params=None):
+        normalized = " ".join(statement.split())
+        self.calls.append((normalized, params))
+        if "to_regclass('aip_feature_activation')" in normalized:
+            return _QueryResult(one={"feature": self.table})
+        if "FROM aip_feature_activation" in normalized:
+            return _QueryResult(many=self.rows)
         return _QueryResult()
 
 
@@ -315,12 +348,15 @@ def _active_row(
     }
 
 
-def _catalog(source, *, object_source=None, capability_source=None):
+def _catalog(
+    source, *, object_source=None, capability_source=None, aip_feature_source=None
+):
     return EcommerceWorkshopCatalog(
         source=source,
         loader=ManifestLoader({"catalog": REPOSITORY_ROOT / "bundles"}),
         object_source=object_source,
         capability_source=capability_source,
+        aip_feature_source=aip_feature_source,
         clock=lambda: NOW,
     )
 
@@ -565,6 +601,118 @@ def test_catalog_resolves_only_fresh_active_capability_binding() -> None:
         for blocker in item.blockers
     )
     assert capability_source.calls[0]["evaluated_at"] == NOW
+
+
+def test_catalog_resolves_only_exact_active_aip_feature() -> None:
+    persisted = _persisted(_loaded_growth())
+    feature_source = FakeAipFeatureSource(
+        {
+            "aip.task-runtime": WorkshopDependencyRef.model_validate(
+                {
+                    "resourceType": "AipFeatureActivationRevision",
+                    "resourceId": "aip.task-runtime",
+                    "revision": "4",
+                    "contentHash": "sha256:" + "9" * 64,
+                    "authority": "postgres:aip_feature_activation",
+                }
+            )
+        }
+    )
+    catalog = _catalog(
+        FakeSource({("org-org", "dev-project"): (_active(persisted),)}),
+        aip_feature_source=feature_source,
+    )
+
+    response = catalog.list_modules(
+        org_id="org-org",
+        project_id="dev-project",
+        roles=["operator"],
+        markings=["public"],
+    )
+
+    assert all(
+        any(
+            ref.resource_type == "AipFeatureActivationRevision"
+            and ref.resource_id == "aip.task-runtime"
+            for ref in item.dependency_refs
+        )
+        for item in response.items
+    )
+    assert all(
+        not any(
+            blocker.dependency_type.value == "aip_feature"
+            and blocker.dependency_id == "aip.task-runtime"
+            for blocker in item.blockers
+        )
+        for item in response.items
+    )
+    assert any(
+        blocker.dependency_type.value == "aip_feature"
+        and blocker.dependency_id == "aip.production.task-brief"
+        for item in response.items
+        for blocker in item.blockers
+    )
+    assert feature_source.calls == [
+        {
+            "org_id": "org-org",
+            "project_id": "dev-project",
+            "evaluated_at": NOW,
+        }
+    ]
+
+
+def test_postgres_aip_feature_reader_fails_closed_when_authority_is_absent() -> None:
+    connection = _FeatureAuthorityConnection(table=None)
+
+    with patch(
+        "aos_api.ecommerce_workshop_catalog.connect",
+        lambda _scope: connection,
+    ):
+        refs = PostgresWorkshopAipFeatureAuthoritySource().read_feature_refs(
+            org_id="org-org",
+            project_id="dev-project",
+            evaluated_at=NOW,
+        )
+
+    assert refs == {}
+    assert len(connection.calls) == 1
+
+
+def test_postgres_aip_feature_reader_returns_latest_exact_revision() -> None:
+    connection = _FeatureAuthorityConnection(
+        rows=(
+            {
+                "feature_id": "aip.task-runtime",
+                "revision": 4,
+                "content_hash": "sha256:" + "9" * 64,
+                "activated_at": NOW - timedelta(days=1),
+                "expires_at": NOW + timedelta(days=1),
+            },
+            {
+                "feature_id": "aip.task-runtime",
+                "revision": 3,
+                "content_hash": "sha256:" + "8" * 64,
+                "activated_at": NOW - timedelta(days=2),
+                "expires_at": NOW + timedelta(days=1),
+            },
+        )
+    )
+
+    with patch(
+        "aos_api.ecommerce_workshop_catalog.connect",
+        lambda _scope: connection,
+    ):
+        refs = PostgresWorkshopAipFeatureAuthoritySource().read_feature_refs(
+            org_id="org-org",
+            project_id="dev-project",
+            evaluated_at=NOW,
+        )
+
+    ref = refs["aip.task-runtime"]
+    assert ref.resource_type == "AipFeatureActivationRevision"
+    assert ref.revision == "4"
+    assert ref.content_hash == "sha256:" + "9" * 64
+    assert connection.calls[1][1] == ("org-org", "dev-project", NOW)
 
 
 def test_catalog_fails_closed_on_content_hash_drift_or_duplicate_active_modules() -> None:

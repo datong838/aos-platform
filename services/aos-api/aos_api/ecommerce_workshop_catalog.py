@@ -95,6 +95,12 @@ class WorkshopCapabilityAuthoritySource(Protocol):
     ) -> dict[str, WorkshopDependencyRef]: ...
 
 
+class WorkshopAipFeatureAuthoritySource(Protocol):
+    def read_feature_refs(
+        self, *, org_id: str, project_id: str, evaluated_at: datetime
+    ) -> dict[str, WorkshopDependencyRef]: ...
+
+
 class PostgresWorkshopObjectAuthoritySource:
     """Read published ObjectTypes through the active tenant composition boundary."""
 
@@ -159,6 +165,50 @@ class PostgresWorkshopCapabilityAuthoritySource:
         except Exception:
             return {}
         return _fresh_capability_refs(bindings, evaluated_at=evaluated_at)
+
+
+class PostgresWorkshopAipFeatureAuthoritySource:
+    """Read tenant-bound AIP feature activations; missing schema remains unknown."""
+
+    def read_feature_refs(
+        self, *, org_id: str, project_id: str, evaluated_at: datetime
+    ) -> dict[str, WorkshopDependencyRef]:
+        scope = TenantScope(
+            _normalized_text(org_id, "org_id"),
+            _normalized_text(project_id, "project_id"),
+        )
+        try:
+            with connect(scope) as conn:
+                table = conn.execute(
+                    "SELECT to_regclass('aip_feature_activation') AS feature"
+                ).fetchone()
+                if table is None or table["feature"] is None:
+                    return {}
+                rows = conn.execute(
+                    "SELECT feature_id, revision, content_hash, activated_at, expires_at "
+                    "FROM aip_feature_activation "
+                    "WHERE org_id=%s AND project_id=%s AND status='active' "
+                    "AND (expires_at IS NULL OR expires_at>%s) "
+                    "ORDER BY feature_id, revision DESC",
+                    (*scope.key, evaluated_at),
+                ).fetchall()
+            result: dict[str, WorkshopDependencyRef] = {}
+            for row in rows:
+                feature_id = str(row["feature_id"])
+                if feature_id in result:
+                    continue
+                result[feature_id] = WorkshopDependencyRef.model_validate(
+                    {
+                        "resourceType": "AipFeatureActivationRevision",
+                        "resourceId": feature_id,
+                        "revision": str(row["revision"]),
+                        "contentHash": str(row["content_hash"]),
+                        "authority": "postgres:aip_feature_activation",
+                    }
+                )
+            return result
+        except (psycopg.Error, KeyError, TypeError, ValueError):
+            return {}
 
 
 class PostgresWorkshopCatalogSource:
@@ -368,12 +418,14 @@ class EcommerceWorkshopCatalog:
         loader: WorkshopBundleLoader,
         object_source: WorkshopObjectAuthoritySource | None = None,
         capability_source: WorkshopCapabilityAuthoritySource | None = None,
+        aip_feature_source: WorkshopAipFeatureAuthoritySource | None = None,
         clock: Clock | None = None,
     ) -> None:
         self._source = source
         self._loader = loader
         self._object_source = object_source
         self._capability_source = capability_source
+        self._aip_feature_source = aip_feature_source
         self._clock = clock or (lambda: datetime.now(UTC))
 
     def list_modules(
@@ -390,6 +442,7 @@ class EcommerceWorkshopCatalog:
             project_id=project_id,
             roles=roles,
             markings=markings,
+            evaluated_at=evaluated_at,
         )
         return EcommerceWorkshopModuleListResponse.model_validate(
             {
@@ -418,6 +471,7 @@ class EcommerceWorkshopCatalog:
             project_id=project_id,
             roles=roles,
             markings=markings,
+            evaluated_at=evaluated_at,
         )
         item = next((item for item in modules if item.module_id == checked_module_id), None)
         if item is None:
@@ -439,6 +493,7 @@ class EcommerceWorkshopCatalog:
         project_id: str,
         roles: Collection[str],
         markings: Collection[str],
+        evaluated_at: datetime,
     ) -> tuple[list[EcommerceWorkshopModuleProjection], datetime | None]:
         active = self._source.read_active_bundles(
             org_id=org_id,
@@ -457,9 +512,18 @@ class EcommerceWorkshopCatalog:
             self._capability_source.read_capability_refs(
                 org_id=org_id,
                 project_id=project_id,
-                evaluated_at=self._aware_now(),
+                evaluated_at=evaluated_at,
             )
             if self._capability_source is not None
+            else {}
+        )
+        aip_feature_refs = (
+            self._aip_feature_source.read_feature_refs(
+                org_id=org_id,
+                project_id=project_id,
+                evaluated_at=evaluated_at,
+            )
+            if self._aip_feature_source is not None
             else {}
         )
         projections: list[EcommerceWorkshopModuleProjection] = []
@@ -521,6 +585,7 @@ class EcommerceWorkshopCatalog:
                         persisted=bundle,
                         object_refs=object_refs,
                         capability_refs=capability_refs,
+                        aip_feature_refs=aip_feature_refs,
                     )
                 )
         _require_unique_catalog(projections)
@@ -551,6 +616,7 @@ def build_ecommerce_workshop_catalog(
         ),
         object_source=PostgresWorkshopObjectAuthoritySource(),
         capability_source=PostgresWorkshopCapabilityAuthoritySource(),
+        aip_feature_source=PostgresWorkshopAipFeatureAuthoritySource(),
     )
 
 
@@ -678,6 +744,7 @@ def _module_projection(
     persisted: PersistedBundleVersion,
     object_refs: dict[str, WorkshopDependencyRef],
     capability_refs: dict[str, WorkshopDependencyRef],
+    aip_feature_refs: dict[str, WorkshopDependencyRef],
 ) -> EcommerceWorkshopModuleProjection:
     artifact_path = next(
         (
@@ -701,6 +768,7 @@ def _module_projection(
         lock_hash=installed.lock.lock_hash,
         object_refs=object_refs,
         capability_refs=capability_refs,
+        aip_feature_refs=aip_feature_refs,
     )
     readiness = _readiness_from(blockers)
     return EcommerceWorkshopModuleProjection.model_validate(
@@ -765,6 +833,7 @@ def _initial_dependencies(
     lock_hash: str,
     object_refs: dict[str, WorkshopDependencyRef],
     capability_refs: dict[str, WorkshopDependencyRef],
+    aip_feature_refs: dict[str, WorkshopDependencyRef],
 ) -> tuple[list[WorkshopReadinessBlocker], list[WorkshopDependencyRef]]:
     if bundle_status in {"deprecated", "revoked"}:
         reason = "BUNDLE_REVOKED" if bundle_status == "revoked" else "BUNDLE_DEPRECATED"
@@ -793,13 +862,10 @@ def _initial_dependencies(
         for dependency_id in module.required_capabilities
         if dependency_id in capability_refs
     )
-    groups = (
-        (
-            WorkshopDependencyType.AIP_FEATURE,
-            module.required_aip_features,
-            "AIP_FEATURE_UNVERIFIED",
-            "等待对应 AIP authority 集成并由 canonical reader 回读",
-        ),
+    dependency_refs.extend(
+        aip_feature_refs[dependency_id]
+        for dependency_id in module.required_aip_features
+        if dependency_id in aip_feature_refs
     )
     blockers.extend(
         WorkshopReadinessBlocker.model_validate(
@@ -819,6 +885,21 @@ def _initial_dependencies(
     blockers.extend(
         WorkshopReadinessBlocker.model_validate(
             {
+                "dependencyType": WorkshopDependencyType.AIP_FEATURE.value,
+                "dependencyId": dependency_id,
+                "state": WorkshopDependencyState.UNKNOWN.value,
+                "reasonCode": "AIP_FEATURE_UNVERIFIED",
+                "recoverable": True,
+                "requiredAction": "由同租户 active AIP FeatureActivation exact ref 闭合后重新评估",
+                "ref": None,
+            }
+        )
+        for dependency_id in module.required_aip_features
+        if dependency_id not in aip_feature_refs
+    )
+    blockers.extend(
+        WorkshopReadinessBlocker.model_validate(
+            {
                 "dependencyType": WorkshopDependencyType.OBJECT.value,
                 "dependencyId": dependency_id,
                 "state": WorkshopDependencyState.UNKNOWN.value,
@@ -831,21 +912,6 @@ def _initial_dependencies(
         for dependency_id in module.required_objects
         if dependency_id not in object_refs
     )
-    for dependency_type, dependency_ids, reason_code, required_action in groups:
-        blockers.extend(
-            WorkshopReadinessBlocker.model_validate(
-                {
-                    "dependencyType": dependency_type.value,
-                    "dependencyId": dependency_id,
-                    "state": WorkshopDependencyState.UNKNOWN.value,
-                    "reasonCode": reason_code,
-                    "recoverable": True,
-                    "requiredAction": required_action,
-                    "ref": None,
-                }
-            )
-            for dependency_id in dependency_ids
-        )
     granted_scope_set = set(granted_data_scopes)
     dependency_refs.extend(
         WorkshopDependencyRef.model_validate(
