@@ -54,6 +54,7 @@ export type EcommerceWorkshopModule = {
   moduleRef: WorkshopModuleRef;
   readiness: WorkshopReadiness;
   blockers: WorkshopReadinessBlocker[];
+  dependencyRefs: WorkshopDependencyRef[];
   permissions: WorkshopPermissions;
   requiredObjects: string[];
   requiredCapabilities: string[];

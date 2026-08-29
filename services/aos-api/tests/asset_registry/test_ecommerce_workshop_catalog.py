@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Collection
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -25,8 +26,15 @@ from aos_api.ecommerce_workshop_catalog import (
     PersistedBundleVersion,
     PostgresWorkshopCatalogSource,
     _filter_effective_rows_by_markings,
+    _fresh_capability_refs,
     build_ecommerce_workshop_catalog,
 )
+from aos_api.aip_agent_registry_contracts import (
+    BindingHealth,
+    CapabilityReadiness,
+    VersionedAssetRef,
+)
+from aos_api.ecommerce_workshop_contracts import WorkshopDependencyRef
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 SHA_A = "sha256:" + "a" * 64
@@ -45,6 +53,26 @@ class FakeSource:
     def read_active_bundles(self, **kwargs):
         self.calls.append(kwargs)
         return self.by_tenant.get((kwargs["org_id"], kwargs["project_id"]), ())
+
+
+class FakeObjectSource:
+    def __init__(self, refs):
+        self.refs = refs
+        self.calls = []
+
+    def read_object_refs(self, **kwargs):
+        self.calls.append(kwargs)
+        return self.refs
+
+
+class FakeCapabilitySource:
+    def __init__(self, refs):
+        self.refs = refs
+        self.calls = []
+
+    def read_capability_refs(self, **kwargs):
+        self.calls.append(kwargs)
+        return self.refs
 
 
 class _QueryResult:
@@ -287,10 +315,12 @@ def _active_row(
     }
 
 
-def _catalog(source):
+def _catalog(source, *, object_source=None, capability_source=None):
     return EcommerceWorkshopCatalog(
         source=source,
         loader=ManifestLoader({"catalog": REPOSITORY_ROOT / "bundles"}),
+        object_source=object_source,
+        capability_source=capability_source,
         clock=lambda: NOW,
     )
 
@@ -399,6 +429,17 @@ def test_catalog_resolves_data_scope_only_from_exact_active_lock() -> None:
         for item in response.items
     )
     assert all(
+        [ref.resource_type for ref in item.dependency_refs] == ["DataScopeGrant"]
+        for item in response.items
+    )
+    assert all(
+        item.dependency_refs[0].resource_id == "ecommerce.workshop.read"
+        and item.dependency_refs[0].revision == "installation:5/lock:1"
+        and item.dependency_refs[0].content_hash == item.installation_ref.lock_hash
+        and item.dependency_refs[0].authority == "postgres:bundle_composition_lock"
+        for item in response.items
+    )
+    assert all(
         {blocker.reason_code for blocker in item.blockers}
         >= {
             "AIP_FEATURE_UNVERIFIED",
@@ -407,6 +448,123 @@ def test_catalog_resolves_data_scope_only_from_exact_active_lock() -> None:
         }
         for item in response.items
     )
+
+
+def test_catalog_resolves_only_exact_objects_from_tenant_composition() -> None:
+    persisted = _persisted(_loaded_growth())
+    object_source = FakeObjectSource(
+        {
+            "Product": WorkshopDependencyRef.model_validate(
+                {
+                    "resourceType": "ObjectTypeComposition",
+                    "resourceId": "Product",
+                    "revision": "composed-schema-v1:sha256:" + "d" * 64,
+                    "contentHash": "sha256:" + "e" * 64,
+                    "authority": "postgres:integration_instance+bundle_composition_lock+ontology_overlay+meta_object_type",
+                }
+            )
+        }
+    )
+    catalog = _catalog(
+        FakeSource({("org-org", "dev-project"): (_active(persisted),)}),
+        object_source=object_source,
+    )
+
+    response = catalog.list_modules(
+        org_id="org-org",
+        project_id="dev-project",
+        roles=["operator"],
+        markings=["public"],
+    )
+
+    assert object_source.calls == [{"org_id": "org-org", "project_id": "dev-project"}]
+    assert all(
+        any(
+            ref.resource_type == "ObjectTypeComposition"
+            and ref.resource_id == "Product"
+            for ref in item.dependency_refs
+        )
+        for item in response.items
+        if "Product" in item.required_objects
+    )
+    assert all(
+        not any(
+            blocker.dependency_type.value == "object"
+            and blocker.dependency_id == "Product"
+            for blocker in item.blockers
+        )
+        for item in response.items
+    )
+    assert any(
+        blocker.dependency_type.value == "object"
+        and blocker.dependency_id == "CampaignRevision"
+        for item in response.items
+        for blocker in item.blockers
+    )
+
+
+def test_catalog_resolves_only_fresh_active_capability_binding() -> None:
+    persisted = _persisted(_loaded_growth())
+    active = SimpleNamespace(
+        binding_id="performance-review-qyh",
+        version=3,
+        capability=VersionedAssetRef(
+            assetType="CapabilityRevision",
+            assetId="performance.review",
+            revision=2,
+            contentHash="f" * 64,
+        ),
+        health=BindingHealth.HEALTHY,
+        operational_readiness=CapabilityReadiness.AVAILABLE,
+        dependencies=SimpleNamespace(allow_degraded=False),
+        dependency_snapshot_hash="a" * 64,
+        readiness_expires_at=NOW + timedelta(minutes=10),
+        status="active",
+        updated_at=NOW,
+    )
+    stale = SimpleNamespace(
+        **{
+            **active.__dict__,
+            "binding_id": "strategy-plan-stale",
+            "capability": VersionedAssetRef(
+                assetType="CapabilityRevision",
+                assetId="strategy.plan",
+                revision=1,
+                contentHash="b" * 64,
+            ),
+            "readiness_expires_at": NOW - timedelta(seconds=1),
+        }
+    )
+    refs = _fresh_capability_refs([active, stale], evaluated_at=NOW)
+    capability_source = FakeCapabilitySource(refs)
+    catalog = _catalog(
+        FakeSource({("org-org", "dev-project"): (_active(persisted),)}),
+        capability_source=capability_source,
+    )
+
+    response = catalog.list_modules(
+        org_id="org-org",
+        project_id="dev-project",
+        roles=["operator"],
+        markings=["public"],
+    )
+
+    assert set(refs) == {"performance.review"}
+    assert all(
+        not any(
+            blocker.dependency_type.value == "capability"
+            and blocker.dependency_id == "performance.review"
+            for blocker in item.blockers
+        )
+        for item in response.items
+    )
+    assert any(
+        blocker.dependency_type.value == "capability"
+        and blocker.dependency_id == "strategy.plan"
+        for item in response.items
+        for blocker in item.blockers
+    )
+    assert capability_source.calls[0]["evaluated_at"] == NOW
 
 
 def test_catalog_fails_closed_on_content_hash_drift_or_duplicate_active_modules() -> None:

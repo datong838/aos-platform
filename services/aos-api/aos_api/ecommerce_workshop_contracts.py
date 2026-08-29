@@ -144,6 +144,9 @@ class EcommerceWorkshopModuleProjection(StrictContract):
     module_ref: WorkshopModuleRef = Field(alias="moduleRef")
     readiness: WorkshopReadiness = Field(strict=False)
     blockers: list[WorkshopReadinessBlocker] = Field(max_length=2_000)
+    dependency_refs: list[WorkshopDependencyRef] = Field(
+        default_factory=list, alias="dependencyRefs", max_length=2_000
+    )
     permissions: BundlePermissions
     required_objects: list[str] = Field(alias="requiredObjects", max_length=500)
     required_capabilities: list[str] = Field(
@@ -227,6 +230,19 @@ class EcommerceWorkshopModuleProjection(StrictContract):
             sorted(
                 self.blockers,
                 key=lambda item: (item.dependency_type.value, item.dependency_id),
+            ),
+        )
+        ref_identities = [
+            (item.resource_type, item.resource_id) for item in self.dependency_refs
+        ]
+        if len(ref_identities) != len(set(ref_identities)):
+            raise ValueError("Workshop dependency refs must be unique")
+        object.__setattr__(
+            self,
+            "dependency_refs",
+            sorted(
+                self.dependency_refs,
+                key=lambda item: (item.resource_type, item.resource_id),
             ),
         )
         return self

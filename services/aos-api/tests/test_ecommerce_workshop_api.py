@@ -62,6 +62,7 @@ def _module():
                 "ref": None,
             }
         ],
+        "dependencyRefs": [],
         "permissions": {
             "roles": [],
             "markings": [],

@@ -14,6 +14,7 @@ import psycopg
 from pydantic import ValidationError
 
 from aos_api.asset_registry.composition_contracts import StoredCompositionLock
+from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.contracts import (
     BundleManifest,
     LoadedBundle,
@@ -34,11 +35,13 @@ from aos_api.ecommerce_workshop_contracts import (
     EcommerceWorkshopModuleProjection,
     EcommerceWorkshopModuleReadinessResponse,
     WorkshopDependencyState,
+    WorkshopDependencyRef,
     WorkshopDependencyType,
     WorkshopReadiness,
     WorkshopReadinessBlocker,
 )
 from aos_api.tenant_scope import ORG_GUC, PROJECT_GUC
+from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[[], AbstractContextManager[Any]]
 Clock = Callable[[], datetime]
@@ -78,6 +81,84 @@ class WorkshopCatalogSource(Protocol):
 
 class WorkshopBundleLoader(Protocol):
     def load(self, source_ref: str) -> LoadedBundle: ...
+
+
+class WorkshopObjectAuthoritySource(Protocol):
+    def read_object_refs(
+        self, *, org_id: str, project_id: str
+    ) -> dict[str, WorkshopDependencyRef]: ...
+
+
+class WorkshopCapabilityAuthoritySource(Protocol):
+    def read_capability_refs(
+        self, *, org_id: str, project_id: str, evaluated_at: datetime
+    ) -> dict[str, WorkshopDependencyRef]: ...
+
+
+class PostgresWorkshopObjectAuthoritySource:
+    """Read published ObjectTypes through the active tenant composition boundary."""
+
+    def read_object_refs(
+        self, *, org_id: str, project_id: str
+    ) -> dict[str, WorkshopDependencyRef]:
+        from aos_api.ontology_compose import filter_object_type_rows
+
+        scope = TenantScope(
+            _normalized_text(org_id, "org_id"),
+            _normalized_text(project_id, "project_id"),
+        )
+        try:
+            with connect(scope) as conn:
+                rows = conn.execute(
+                    "SELECT id, name, description, published, properties "
+                    "FROM meta_object_type ORDER BY id"
+                ).fetchall()
+                visible, composition = filter_object_type_rows(conn, scope, list(rows))
+            if composition is None:
+                return {}
+            revision = str(composition["composed_schema_etag"])
+            return {
+                str(row["id"]): WorkshopDependencyRef.model_validate(
+                    {
+                        "resourceType": "ObjectTypeComposition",
+                        "resourceId": str(row["id"]),
+                        "revision": revision,
+                        "contentHash": canonical_sha256(
+                            {
+                                "composition": composition,
+                                "objectType": dict(row),
+                            }
+                        ),
+                        "authority": (
+                            "postgres:integration_instance+bundle_composition_lock+"
+                            "ontology_overlay+meta_object_type"
+                        ),
+                    }
+                )
+                for row in visible
+                if bool(row.get("published"))
+            }
+        except (psycopg.Error, KeyError, RuntimeError, TypeError, ValueError):
+            return {}
+
+
+class PostgresWorkshopCapabilityAuthoritySource:
+    """Resolve fresh active AIP CapabilityBindings without exposing secret refs."""
+
+    def read_capability_refs(
+        self, *, org_id: str, project_id: str, evaluated_at: datetime
+    ) -> dict[str, WorkshopDependencyRef]:
+        from aos_api.aip_capability_binding_service import AipCapabilityBindingService
+
+        scope = TenantScope(
+            _normalized_text(org_id, "org_id"),
+            _normalized_text(project_id, "project_id"),
+        )
+        try:
+            bindings = AipCapabilityBindingService().list_bindings(scope, limit=200)
+        except Exception:
+            return {}
+        return _fresh_capability_refs(bindings, evaluated_at=evaluated_at)
 
 
 class PostgresWorkshopCatalogSource:
@@ -285,10 +366,14 @@ class EcommerceWorkshopCatalog:
         *,
         source: WorkshopCatalogSource,
         loader: WorkshopBundleLoader,
+        object_source: WorkshopObjectAuthoritySource | None = None,
+        capability_source: WorkshopCapabilityAuthoritySource | None = None,
         clock: Clock | None = None,
     ) -> None:
         self._source = source
         self._loader = loader
+        self._object_source = object_source
+        self._capability_source = capability_source
         self._clock = clock or (lambda: datetime.now(UTC))
 
     def list_modules(
@@ -360,6 +445,23 @@ class EcommerceWorkshopCatalog:
             project_id=project_id,
             markings=markings,
         )
+        object_refs = (
+            self._object_source.read_object_refs(
+                org_id=org_id,
+                project_id=project_id,
+            )
+            if self._object_source is not None
+            else {}
+        )
+        capability_refs = (
+            self._capability_source.read_capability_refs(
+                org_id=org_id,
+                project_id=project_id,
+                evaluated_at=self._aware_now(),
+            )
+            if self._capability_source is not None
+            else {}
+        )
         projections: list[EcommerceWorkshopModuleProjection] = []
         loaded_cache: dict[tuple[str, str, str], LoadedBundle] = {}
         principal_roles = set(roles)
@@ -417,6 +519,8 @@ class EcommerceWorkshopCatalog:
                         loaded=loaded,
                         module=module,
                         persisted=bundle,
+                        object_refs=object_refs,
+                        capability_refs=capability_refs,
                     )
                 )
         _require_unique_catalog(projections)
@@ -445,6 +549,8 @@ def build_ecommerce_workshop_catalog(
                 "d3-catalog": bundle_root,
             }
         ),
+        object_source=PostgresWorkshopObjectAuthoritySource(),
+        capability_source=PostgresWorkshopCapabilityAuthoritySource(),
     )
 
 
@@ -570,6 +676,8 @@ def _module_projection(
     loaded: LoadedBundle,
     module: WorkshopModuleContribution,
     persisted: PersistedBundleVersion,
+    object_refs: dict[str, WorkshopDependencyRef],
+    capability_refs: dict[str, WorkshopDependencyRef],
 ) -> EcommerceWorkshopModuleProjection:
     artifact_path = next(
         (
@@ -584,10 +692,15 @@ def _module_projection(
     if artifact_path is None:
         raise RegistryIntegrityCorruptError()
     artifact = next(item for item in loaded.artifacts if item.relative_path == artifact_path)
-    blockers = _initial_blockers(
+    blockers, dependency_refs = _initial_dependencies(
         module=module,
         bundle_status=persisted.status,
         granted_data_scopes=installed.lock.payload.permission_diff.target.data_scopes,
+        installation_revision=installed.active_revision,
+        lock_revision=installed.lock.revision,
+        lock_hash=installed.lock.lock_hash,
+        object_refs=object_refs,
+        capability_refs=capability_refs,
     )
     readiness = _readiness_from(blockers)
     return EcommerceWorkshopModuleProjection.model_validate(
@@ -616,6 +729,7 @@ def _module_projection(
             },
             "readiness": readiness,
             "blockers": blockers,
+            "dependencyRefs": dependency_refs,
             "permissions": module.permissions,
             "requiredObjects": module.required_objects,
             "requiredCapabilities": module.required_capabilities,
@@ -641,12 +755,17 @@ def _artifact_contains_module(
     return expected.startswith(source_ref + "/") and Path(relative_path).stem == module.module_id
 
 
-def _initial_blockers(
+def _initial_dependencies(
     *,
     module: WorkshopModuleContribution,
     bundle_status: str,
     granted_data_scopes: Collection[str] = (),
-) -> list[WorkshopReadinessBlocker]:
+    installation_revision: int,
+    lock_revision: int,
+    lock_hash: str,
+    object_refs: dict[str, WorkshopDependencyRef],
+    capability_refs: dict[str, WorkshopDependencyRef],
+) -> tuple[list[WorkshopReadinessBlocker], list[WorkshopDependencyRef]]:
     if bundle_status in {"deprecated", "revoked"}:
         reason = "BUNDLE_REVOKED" if bundle_status == "revoked" else "BUNDLE_DEPRECATED"
         return [
@@ -661,28 +780,56 @@ def _initial_blockers(
                     "ref": None,
                 }
             )
-        ]
+        ], []
 
     blockers: list[WorkshopReadinessBlocker] = []
+    dependency_refs: list[WorkshopDependencyRef] = [
+        object_refs[dependency_id]
+        for dependency_id in module.required_objects
+        if dependency_id in object_refs
+    ]
+    dependency_refs.extend(
+        capability_refs[dependency_id]
+        for dependency_id in module.required_capabilities
+        if dependency_id in capability_refs
+    )
     groups = (
-        (
-            WorkshopDependencyType.OBJECT,
-            module.required_objects,
-            "OBJECT_READINESS_UNVERIFIED",
-            "接入 canonical 对象 readiness reader 后重新评估",
-        ),
-        (
-            WorkshopDependencyType.CAPABILITY,
-            module.required_capabilities,
-            "CAPABILITY_BINDING_UNVERIFIED",
-            "完成组织 CapabilityBinding 并由 canonical reader 回读",
-        ),
         (
             WorkshopDependencyType.AIP_FEATURE,
             module.required_aip_features,
             "AIP_FEATURE_UNVERIFIED",
             "等待对应 AIP authority 集成并由 canonical reader 回读",
         ),
+    )
+    blockers.extend(
+        WorkshopReadinessBlocker.model_validate(
+            {
+                "dependencyType": WorkshopDependencyType.CAPABILITY.value,
+                "dependencyId": dependency_id,
+                "state": WorkshopDependencyState.UNKNOWN.value,
+                "reasonCode": "CAPABILITY_BINDING_UNVERIFIED",
+                "recoverable": True,
+                "requiredAction": "完成组织 CapabilityBinding 并由 canonical reader 回读",
+                "ref": None,
+            }
+        )
+        for dependency_id in module.required_capabilities
+        if dependency_id not in capability_refs
+    )
+    blockers.extend(
+        WorkshopReadinessBlocker.model_validate(
+            {
+                "dependencyType": WorkshopDependencyType.OBJECT.value,
+                "dependencyId": dependency_id,
+                "state": WorkshopDependencyState.UNKNOWN.value,
+                "reasonCode": "OBJECT_READINESS_UNVERIFIED",
+                "recoverable": True,
+                "requiredAction": "由当前租户 canonical ObjectType composition 提供 exact 定义后重新评估",
+                "ref": None,
+            }
+        )
+        for dependency_id in module.required_objects
+        if dependency_id not in object_refs
     )
     for dependency_type, dependency_ids, reason_code, required_action in groups:
         blockers.extend(
@@ -700,6 +847,19 @@ def _initial_blockers(
             for dependency_id in dependency_ids
         )
     granted_scope_set = set(granted_data_scopes)
+    dependency_refs.extend(
+        WorkshopDependencyRef.model_validate(
+            {
+                "resourceType": "DataScopeGrant",
+                "resourceId": dependency_id,
+                "revision": f"installation:{installation_revision}/lock:{lock_revision}",
+                "contentHash": lock_hash,
+                "authority": "postgres:bundle_composition_lock",
+            }
+        )
+        for dependency_id in module.permissions.data_scopes
+        if dependency_id in granted_scope_set
+    )
     blockers.extend(
         WorkshopReadinessBlocker.model_validate(
             {
@@ -728,8 +888,8 @@ def _initial_blockers(
                     "ref": None,
                 }
             )
-        ]
-    return blockers
+        ], dependency_refs
+    return blockers, dependency_refs
 
 
 def _readiness_from(blockers: Collection[WorkshopReadinessBlocker]) -> WorkshopReadiness:
@@ -743,6 +903,62 @@ def _readiness_from(blockers: Collection[WorkshopReadinessBlocker]) -> WorkshopR
     if WorkshopDependencyState.DEGRADED in states:
         return WorkshopReadiness.DEGRADED
     return WorkshopReadiness.AVAILABLE
+
+
+def _fresh_capability_refs(
+    bindings: Collection[Any], *, evaluated_at: datetime
+) -> dict[str, WorkshopDependencyRef]:
+    candidates: dict[str, list[Any]] = {}
+    for binding in bindings:
+        usable = binding.operational_readiness.value == "available" or (
+            binding.operational_readiness.value == "degraded"
+            and binding.dependencies.allow_degraded
+        )
+        if (
+            binding.status != "active"
+            or binding.health.value not in {"healthy", "degraded"}
+            or not usable
+            or binding.dependency_snapshot_hash is None
+            or binding.readiness_expires_at is None
+            or binding.readiness_expires_at <= evaluated_at
+        ):
+            continue
+        candidates.setdefault(binding.capability.asset_id, []).append(binding)
+
+    result: dict[str, WorkshopDependencyRef] = {}
+    for capability_id, options in candidates.items():
+        binding = max(
+            options,
+            key=lambda item: (
+                item.updated_at,
+                item.capability.revision,
+                item.version,
+                item.binding_id,
+            ),
+        )
+        result[capability_id] = WorkshopDependencyRef.model_validate(
+            {
+                "resourceType": "CapabilityBindingRevision",
+                "resourceId": capability_id,
+                "revision": f"{binding.binding_id}:{binding.version}",
+                "contentHash": canonical_sha256(
+                    {
+                        "bindingId": binding.binding_id,
+                        "bindingVersion": binding.version,
+                        "capability": binding.capability.model_dump(
+                            mode="json", by_alias=True
+                        ),
+                        "health": binding.health.value,
+                        "operationalReadiness": binding.operational_readiness.value,
+                        "dependencySnapshotHash": binding.dependency_snapshot_hash,
+                        "readinessExpiresAt": binding.readiness_expires_at.isoformat(),
+                        "status": binding.status,
+                    }
+                ),
+                "authority": "postgres:aip_capability_binding+aip_capability_revision",
+            }
+        )
+    return result
 
 
 def _require_unique_catalog(
