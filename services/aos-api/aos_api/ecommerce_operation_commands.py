@@ -56,7 +56,7 @@ class EcommerceOperationCommands:
             ),
             (
                 OperationCommandId.MANAGE_SLA,
-                "管理 SLA",
+                "管理服务时限",
                 OperationCommandRisk.CONTROLLED,
                 _REQUEST_GOVERNANCE_BLOCKER,
             ),
@@ -76,7 +76,7 @@ class EcommerceOperationCommands:
             [
                 OperationCommandDescriptor(
                     command_id=OperationCommandId.AUTOMATION_KILL,
-                    label="自动化 Kill",
+                    label="停止自动化",
                     status=OperationCommandStatus.BLOCKED,
                     risk=OperationCommandRisk.HIGH,
                     side_effect=OperationCommandSideEffect.INTERNAL_AUTHORITY,

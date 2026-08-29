@@ -122,12 +122,17 @@ describe("TaskCockpitPage", () => {
     expect(cards).toHaveLength(6);
     for (const name of ["客服专员", "私域管家", "导购顾问", "数据参谋", "内容官", "活动策划师"]) expect(host.textContent).toContain(name);
     expect(host.textContent).not.toMatch(/\d+\/\d+\s*(?:进行中|已派发)|六数字同事在线/);
+    host.className = "content";
+    host.scrollTop = 116;
     await act(async () => cards[2]?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })));
     expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')?.textContent).toContain("购物决策支持与转化优化专家");
     expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')?.textContent).toContain("常用 Agent");
     expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')?.textContent).toContain("尚无个人级归因");
     await act(async () => cards[2]?.click());
+    expect(host.scrollTop).toBe(0);
     expect(cards[2]?.getAttribute("aria-expanded")).toBe("true");
+    await act(async () => cards[1]?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })));
+    expect(host.querySelector('[role="dialog"]')?.getAttribute("aria-label")).toBe("导购顾问介绍");
     await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')).toBeNull();
   });

@@ -91,11 +91,11 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
   const [commandNotice, setCommandNotice] = useState("");
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [activeColleague, setActiveColleague] = useState<CockpitColleague | null>(null);
-  const [colleaguePinned, setColleaguePinned] = useState(false);
   const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({});
   const surfaceRef = useRef<HTMLElement | null>(null);
   const colleagueTriggerRef = useRef<HTMLButtonElement | null>(null);
   const colleaguePopoverRef = useRef<HTMLDivElement | null>(null);
+  const colleaguePinnedRef = useRef(false);
   useEffect(() => {
     const toggleCalendar = () => setCalendarVisible((value) => !value);
     window.addEventListener("aos-workshop-cockpit-calendar", toggleCalendar);
@@ -125,7 +125,7 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
     };
     const frame = window.requestAnimationFrame(place);
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { setActiveColleague(null); setColleaguePinned(false); }
+      if (event.key === "Escape") { colleaguePinnedRef.current = false; setActiveColleague(null); }
     };
     window.addEventListener("resize", place);
     window.addEventListener("scroll", place, true);
@@ -143,10 +143,17 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
   const dependencies = [...new Set(blockers.map((item) => item.dependency))];
   const businessDependencyLabel = (dependency: string) => dependency.includes("source-readiness") ? "业务数据准备" : dependency.includes("production") ? "内容生产编排" : dependency.includes("binding") ? "数字同事配置" : "业务协作能力";
   const value = (current: number | undefined) => current === undefined ? "未知" : String(current);
-  const showColleague = (profile: CockpitColleague, trigger: HTMLButtonElement, pinned: boolean) => {
+  const showColleague = (profile: CockpitColleague, trigger: HTMLButtonElement, pinned: boolean, resetViewport = false) => {
+    if (resetViewport) {
+      const scroller = surfaceRef.current?.closest<HTMLElement>(".content");
+      if (scroller) {
+        scroller.scrollTop = 0;
+        scroller.scrollLeft = 0;
+      }
+    }
     colleagueTriggerRef.current = trigger;
+    colleaguePinnedRef.current = pinned;
     setActiveColleague(profile);
-    setColleaguePinned(pinned);
   };
   const renderColleague = (profile: CockpitColleague) => <button
     type="button"
@@ -155,13 +162,13 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
     aria-haspopup="dialog"
     aria-expanded={activeColleague?.id === profile.id}
     aria-controls="task-cockpit-colleague-popover"
-    onMouseEnter={(event) => showColleague(profile, event.currentTarget, false)}
-    onMouseLeave={() => { if (!colleaguePinned) setActiveColleague(null); }}
-    onFocus={(event) => showColleague(profile, event.currentTarget, false)}
-    onBlur={() => { if (!colleaguePinned) setActiveColleague(null); }}
+    onMouseEnter={(event) => { if (!colleaguePinnedRef.current) showColleague(profile, event.currentTarget, false); }}
+    onMouseLeave={() => { if (!colleaguePinnedRef.current) setActiveColleague(null); }}
+    onFocus={(event) => { if (!colleaguePinnedRef.current) showColleague(profile, event.currentTarget, false); }}
+    onBlur={() => { if (!colleaguePinnedRef.current) setActiveColleague(null); }}
     onClick={(event) => {
-      if (activeColleague?.id === profile.id && colleaguePinned) { setActiveColleague(null); setColleaguePinned(false); return; }
-      showColleague(profile, event.currentTarget, true);
+      if (activeColleague?.id === profile.id && colleaguePinnedRef.current) { colleaguePinnedRef.current = false; setActiveColleague(null); return; }
+      showColleague(profile, event.currentTarget, true, true);
     }}
   >
     <span aria-hidden="true"><NavIcon name={profile.icon} /></span>
@@ -227,9 +234,8 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
       aria-label={`${activeColleague.name}介绍`}
       aria-modal="false"
       style={popoverStyle}
-      onMouseEnter={() => { if (colleaguePinned) setColleaguePinned(true); }}
     >
-      <header><div><strong>{activeColleague.name}</strong><span>{activeColleague.subtitle}</span></div><b>数字同事</b><button type="button" aria-label="关闭数字同事介绍" onClick={() => { setActiveColleague(null); setColleaguePinned(false); }}>×</button></header>
+      <header><div><strong>{activeColleague.name}</strong><span>{activeColleague.subtitle}</span></div><b>数字同事</b><button type="button" aria-label="关闭数字同事介绍" onClick={() => { colleaguePinnedRef.current = false; setActiveColleague(null); }}>×</button></header>
       <dl>
         <div><dt>专业能力</dt><dd>{activeColleague.capability}</dd></div>
         <div><dt>工作边界</dt><dd>{activeColleague.boundary}</dd></div>

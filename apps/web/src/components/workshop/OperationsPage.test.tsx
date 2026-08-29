@@ -9,7 +9,7 @@ import { OperationsPage } from "./OperationsPage";
 const ids = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"] as const;
 const response = { schemaVersion: "aos.ecommerce-workshop.operations-view/v1" as const, tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded" as const, slices: ids.map((sliceId, index) => ({ sliceId, status: (index === 5 ? "blocked" : "ready") as "ready" | "blocked", dataCutoff: "2026-08-24T08:00:00Z", authorityRefs: index === 5 ? [] : [{ resourceType: "ReadAuthority", resourceId: sliceId, revision: 1, contentHash: `sha256:${"a".repeat(64)}`, receiptId: "receipt-1" }], blockers: index === 5 ? [{ code: "AFTERSALE_EVENTS_READ_FAILED_CLOSED", dependency: "data.aftersale", requiredAction: "检查 canonical reader" }] : [], countLedger: { sourceTotal: index === 5 ? 0 : 1, attached: index === 5 ? 0 : 1, unmatched: 0, conflicted: 0 } })), page: { limit: 50, count: 6, hasMore: false, nextCursor: null } };
 const commandIds = ["classify", "createCase", "changeMembership", "manageSla", "automationKill", "refund"] as const;
-const commands = { schemaVersion: "aos.ecommerce-workshop.operation-command-readiness/v1" as const, tenant: response.tenant, evaluatedAt: "2026-08-24T08:00:00Z", commands: commandIds.map((commandId, index) => ({ commandId, label: ["分类事件", "创建运营工单", "调整工单成员", "管理 SLA", "自动化 Kill", "退款"][index], status: "blocked" as const, risk: (index > 3 ? "high" : "controlled") as "high" | "controlled", sideEffect: (index === 5 ? "external" : "internalAuthority") as "external" | "internalAuthority", blockers: [{ code: index === 5 ? "EXTERNAL_ACTION_GATE_NOT_BOUND" : "OPERATION_COMMAND_HANDLER_NOT_BOUND", dependency: "W3-12B2", requiredAction: "完成 exact command gate" }] })) };
+const commands = { schemaVersion: "aos.ecommerce-workshop.operation-command-readiness/v1" as const, tenant: response.tenant, evaluatedAt: "2026-08-24T08:00:00Z", commands: commandIds.map((commandId, index) => ({ commandId, label: ["分类事件", "创建运营工单", "调整工单成员", "管理服务时限", "停止自动化", "退款"][index], status: "blocked" as const, risk: (index > 3 ? "high" : "controlled") as "high" | "controlled", sideEffect: (index === 5 ? "external" : "internalAuthority") as "external" | "internalAuthority", blockers: [{ code: index === 5 ? "EXTERNAL_ACTION_GATE_NOT_BOUND" : "OPERATION_COMMAND_HANDLER_NOT_BOUND", dependency: "W3-12B2", requiredAction: "完成 exact command gate" }] })) };
 const observation = { schemaVersion: "aos.ecommerce-workshop.operation-command-observation/v1" as const, tenant: response.tenant, proposalId: "proposal-1", leaseId: "lease-1", commandId: "classify" as const, status: "applied" as const, proposalHash: "a".repeat(64), receiptId: "receipt-1", requestFingerprint: "b".repeat(64), operationReceiptId: "operation-receipt-1", replayAllowed: false as const };
 
 describe("OperationsPage", () => {
@@ -25,6 +25,10 @@ describe("OperationsPage", () => {
     expect(host.textContent).toContain("只读分诊");
     expect(host.textContent).toContain("动作安全预检");
     expect(host.querySelectorAll(".operations-command")).toHaveLength(6);
+    expect(host.textContent).toContain("管理服务时限");
+    expect(host.textContent).toContain("停止自动化");
+    expect(host.textContent).not.toContain("管理 SLA");
+    expect(host.textContent).not.toContain("自动化 Kill");
     const operationCommands = [...host.querySelectorAll<HTMLButtonElement>(".operations-command")];
     expect(operationCommands.every((item) => !item.disabled)).toBe(true);
     act(() => operationCommands[0]?.click());
