@@ -153,6 +153,23 @@ def test_all_legacy_route_writes_fail_closed_but_reads_remain(client) -> None:
         assert response.json()["code"] == "AIP_MODEL_LEGACY_WRITE_DISABLED"
 
 
+def test_compatibility_route_draft_is_writable_without_activating_runtime(client) -> None:
+    current = client.get("/api/models/router/draft", headers=headers())
+    assert current.status_code == 200, current.text
+    payload = current.json()
+    response = client.put(
+        "/api/models/router/draft",
+        headers=headers(),
+        json={"items": payload["items"], "expectedVersion": payload["version"]},
+    )
+    assert response.status_code == 200, response.text
+    saved = response.json()
+    assert saved["version"] == payload["version"] + 1
+    runtime = client.get("/v1/aip/model-runtime/overview", headers=headers())
+    assert runtime.status_code == 200, runtime.text
+    assert all(item["ref"]["revision"] >= 1 for item in runtime.json()["routes"])
+
+
 def test_openapi_registers_canonical_model_runtime_paths(client) -> None:
     paths = client.get("/openapi.json").json()["paths"]
     assert "/v1/aip/model-runtime/provider-plugins/{plugin_id}" in paths

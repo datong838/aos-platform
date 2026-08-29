@@ -16,6 +16,8 @@ from aos_api.ecommerce_workshop_contracts import (
     WorkshopFeatureActivationCommandReceipt,
     WorkshopFeatureActivationCommandRequest,
     WorkshopFeatureActivationCommandResponse,
+    WorkshopFeatureActivationListResponse,
+    WorkshopFeatureActivationProjection,
     WorkshopTenant,
 )
 from aos_api.tenant_scope import TenantScope
@@ -115,6 +117,41 @@ class EcommerceWorkshopFeatureActivationService:
                 row["receipt_data"]
             ),
             replayed=bool(row["replayed"]),
+        )
+
+    def list_current(self, *, principal: Principal) -> WorkshopFeatureActivationListResponse:
+        scope = TenantScope(principal.org_id, principal.project_id)
+        evaluated_at = datetime.now(UTC)
+        try:
+            with self._connect_factory(scope) as conn:
+                rows = conn.execute(
+                    "SELECT DISTINCT ON(feature_id) feature_id,revision,content_hash,status,"
+                    "activated_at,expires_at FROM aip_feature_activation "
+                    "WHERE org_id=%s AND project_id=%s ORDER BY feature_id,revision DESC",
+                    scope.key,
+                ).fetchall()
+        except psycopg.Error as exc:
+            if exc.sqlstate in {"42P01", "42501"}:
+                raise WorkshopFeatureActivationUnavailable(
+                    "FeatureActivation authority is not installed"
+                ) from exc
+            raise WorkshopFeatureActivationError(
+                "FeatureActivation projection failed closed"
+            ) from exc
+        return WorkshopFeatureActivationListResponse(
+            tenant=WorkshopTenant(orgId=principal.org_id, projectId=principal.project_id),
+            evaluatedAt=evaluated_at,
+            items=[
+                WorkshopFeatureActivationProjection(
+                    featureId=row["feature_id"],
+                    revision=row["revision"],
+                    contentHash=row["content_hash"],
+                    status=row["status"],
+                    activatedAt=row["activated_at"],
+                    expiresAt=row["expires_at"],
+                )
+                for row in rows
+            ],
         )
 
 

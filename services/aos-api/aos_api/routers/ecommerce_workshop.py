@@ -21,6 +21,7 @@ from aos_api.ecommerce_workshop_contracts import (
     EcommerceWorkshopModuleReadinessResponse,
     WorkshopFeatureActivationCommandRequest,
     WorkshopFeatureActivationCommandResponse,
+    WorkshopFeatureActivationListResponse,
 )
 from aos_api.ecommerce_workshop_feature_activation import (
     EcommerceWorkshopFeatureActivationService,
@@ -984,6 +985,24 @@ def _execute_feature_activation_command(
         raise ApiError(code=exc.code, message=str(exc), status_code=503) from exc
     except ValueError as exc:
         raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
+
+
+@router.get(
+    "/aip-features",
+    response_model=WorkshopFeatureActivationListResponse,
+    operation_id="ecommerceWorkshopAipFeaturesList",
+    responses=_ERRORS,
+)
+def list_ecommerce_workshop_aip_features(
+    principal: PrincipalDependency,
+    service: FeatureActivationServiceDependency,
+) -> WorkshopFeatureActivationListResponse:
+    try:
+        return service.list_current(principal=principal)
+    except WorkshopFeatureActivationUnavailable as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=503) from exc
+    except WorkshopFeatureActivationError as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=503) from exc
 
 
 @router.post(

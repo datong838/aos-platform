@@ -24,6 +24,9 @@ class _Result:
     def fetchone(self):
         return self._row
 
+    def fetchall(self):
+        return self._row
+
 
 class _Connection:
     def __init__(self, row):
@@ -160,3 +163,26 @@ def test_revoke_rejects_activation_content_and_preserves_replay_flag() -> None:
     assert response.replayed is True
     assert response.receipt.status == "revoked"
     assert len(conn.calls) == 1
+
+
+def test_list_current_is_tenant_bound_and_returns_latest_projection() -> None:
+    activated_at = datetime(2026, 8, 29, 9, tzinfo=UTC)
+    service, conn = _service(
+        [
+            {
+                "feature_id": "aip.analysis",
+                "revision": 2,
+                "content_hash": HASH,
+                "status": "active",
+                "activated_at": activated_at,
+                "expires_at": activated_at + timedelta(hours=2),
+            }
+        ]
+    )
+    response = service.list_current(principal=_principal("developer"))
+    assert response.tenant.org_id == "org-org"
+    assert response.items[0].feature_id == "aip.analysis"
+    assert response.items[0].revision == 2
+    statement, params = conn.calls[0]
+    assert "DISTINCT ON(feature_id)" in statement
+    assert params == ("org-org", "dev-project")

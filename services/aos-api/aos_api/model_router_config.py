@@ -26,6 +26,7 @@ from aos_api.aip_kv_store import (
 )
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.model_router_config")
 
@@ -179,6 +180,114 @@ def replace_router_config_v2(
         conn.commit()
     log.info("router_v2_replaced rows=%d version=%d", len(migrated), saved["version"])
     return saved
+
+
+def get_tenant_route_draft(scope: TenantScope) -> dict[str, Any]:
+    """Read a tenant-isolated staging draft without changing runtime authority."""
+    with connect(scope) as conn:
+        row = conn.execute(
+            "SELECT version,payload,updated_at FROM aip_model_route_draft "
+            "WHERE org_id=%s AND project_id=%s",
+            scope.key,
+        ).fetchone()
+    if row is None:
+        legacy = get_router_config_v2()
+        return {
+            "items": legacy["items"],
+            "version": 1,
+            "updatedAt": legacy["updatedAt"],
+            "activated": False,
+        }
+    payload = row["payload"]
+    if isinstance(payload, str):
+        payload = json.loads(payload)
+    return {
+        "items": [_migrate_route_row(dict(item)) for item in payload],
+        "version": int(row["version"]),
+        "updatedAt": row["updated_at"].isoformat(),
+        "activated": False,
+    }
+
+
+def replace_tenant_route_draft(
+    scope: TenantScope,
+    actor: str,
+    items: list[dict[str, Any]],
+    expected_version: int,
+) -> dict[str, Any]:
+    """CAS-replace the tenant draft; never mutate canonical runtime revisions."""
+    migrated = [_migrate_route_row(dict(row)) for row in items]
+    ids = [row["id"] for row in migrated]
+    if len(ids) != len(set(ids)):
+        raise ValueError("route ids must be unique")
+    try:
+        with connect(scope) as conn:
+            row = conn.execute(
+                "SELECT aip_replace_model_route_draft(%s,%s,%s::jsonb,%s,%s) AS result",
+                (*scope.key, json.dumps(migrated, ensure_ascii=False), expected_version, actor),
+            ).fetchone()
+            conn.commit()
+    except Exception as exc:
+        if getattr(exc, "sqlstate", None) == "40001":
+            raise RouterConfigVersionConflict(str(exc).splitlines()[0]) from exc
+        raise
+    result = row["result"]
+    if isinstance(result, str):
+        result = json.loads(result)
+    log.info("tenant_route_draft_replaced rows=%d version=%d", len(migrated), result["version"])
+    return result
+
+
+def get_tenant_circuit_draft(scope: TenantScope) -> dict[str, Any]:
+    """Read tenant circuit settings staged separately from runtime policy."""
+    with connect(scope) as conn:
+        row = conn.execute(
+            "SELECT version,payload,updated_at FROM aip_model_circuit_draft "
+            "WHERE org_id=%s AND project_id=%s",
+            scope.key,
+        ).fetchone()
+    if row is None:
+        return {
+            "config": get_global_circuit_config(),
+            "version": 1,
+            "updatedAt": _now_iso(),
+            "activated": False,
+        }
+    payload = row["payload"]
+    if isinstance(payload, str):
+        payload = json.loads(payload)
+    return {
+        "config": _validate_circuit_config(dict(payload)),
+        "version": int(row["version"]),
+        "updatedAt": row["updated_at"].isoformat(),
+        "activated": False,
+    }
+
+
+def replace_tenant_circuit_draft(
+    scope: TenantScope,
+    actor: str,
+    config: dict[str, Any],
+    expected_version: int,
+) -> dict[str, Any]:
+    """CAS-replace tenant circuit settings without activating runtime policy."""
+    validated = _validate_circuit_config(config)
+    try:
+        with connect(scope) as conn:
+            row = conn.execute(
+                "SELECT aip_replace_model_circuit_draft(%s,%s,%s::jsonb,%s,%s) AS result",
+                (*scope.key, json.dumps(validated, ensure_ascii=False), expected_version, actor),
+            ).fetchone()
+            conn.commit()
+    except Exception as exc:
+        if getattr(exc, "sqlstate", None) == "40001":
+            raise RouterConfigVersionConflict(str(exc).splitlines()[0]) from exc
+        raise
+    result = row["result"]
+    if isinstance(result, str):
+        result = json.loads(result)
+    log.info("tenant_circuit_draft_replaced version=%d", result["version"])
+    return result
 
 
 def get_route_rule_v2(route_id: str) -> dict[str, Any] | None:

@@ -242,24 +242,25 @@ class TestRouterConfigAPI:
         assert data["updatedAt"]
 
     def test_bulk_replace_uses_optimistic_version_and_get_confirms(self, client):
-        current = client.get("/api/models/router").json()
+        current = client.get("/api/models/router/draft").json()
         changed = [{**row, "egress": "审批后"} for row in current["items"]]
         saved = client.put(
-            "/api/models/router",
+            "/api/models/router/draft",
             json={"items": changed, "expectedVersion": current["version"]},
         )
         assert saved.status_code == 200, saved.text
         body = saved.json()
         assert body["version"] == current["version"] + 1
-        assert body["items"] == client.get("/api/models/router").json()["items"]
+        assert body["activated"] is False
+        assert body["items"] == client.get("/api/models/router/draft").json()["items"]
 
         stale = client.put(
-            "/api/models/router",
+            "/api/models/router/draft",
             json={"items": changed, "expectedVersion": current["version"]},
         )
         assert stale.status_code == 409
         restored = client.put(
-            "/api/models/router",
+            "/api/models/router/draft",
             json={"items": current["items"], "expectedVersion": body["version"]},
         )
         assert restored.status_code == 200, restored.text
@@ -305,8 +306,8 @@ class TestRouterConfigAPI:
             "strategy": "weighted",
             "weights": [{"model": "gpt-4o", "pct": 100}],
         })
-        assert resp.status_code == 200
-        assert resp.json()["strategy"] == "weighted"
+        assert resp.status_code == 410
+        assert resp.json()["code"] == "AIP_MODEL_LEGACY_WRITE_DISABLED"
 
     def test_route_test_returns_evaluated_version_and_rejects_stale_version(self, client):
         config = client.get("/api/models/router").json()
@@ -331,13 +332,10 @@ class TestRouterConfigAPI:
             "primary": "gpt-4o",
             "strategy": "failover",
         })
-        assert resp.status_code == 200
-        assert resp.json()["id"] == "test_create_new"
+        assert resp.status_code == 410
 
-        # Delete
         resp = client.delete("/api/models/router/test_create_new")
-        assert resp.status_code == 200
-        assert resp.json()["deleted"] is True
+        assert resp.status_code == 410
 
     def test_circuit_config(self, client):
         # Get
@@ -345,9 +343,24 @@ class TestRouterConfigAPI:
         assert resp.status_code == 200
         assert "error_rate_threshold_pct" in resp.json()
 
-        # Update
-        resp = client.put("/api/models/router/circuit-config", json={
+        legacy = client.put("/api/models/router/circuit-config", json={
             "error_rate_threshold_pct": 20,
         })
-        assert resp.status_code == 200
-        assert resp.json()["error_rate_threshold_pct"] == 20
+        assert legacy.status_code == 410
+
+        current = client.get("/api/models/router/draft/circuit-config")
+        assert current.status_code == 200, current.text
+        draft = current.json()
+        saved = client.put("/api/models/router/draft/circuit-config", json={
+            "config": {**draft["config"], "error_rate_threshold_pct": 20},
+            "expectedVersion": draft["version"],
+        })
+        assert saved.status_code == 200, saved.text
+        assert saved.json()["config"]["error_rate_threshold_pct"] == 20
+        assert saved.json()["activated"] is False
+
+        stale = client.put("/api/models/router/draft/circuit-config", json={
+            "config": draft["config"],
+            "expectedVersion": draft["version"],
+        })
+        assert stale.status_code == 409

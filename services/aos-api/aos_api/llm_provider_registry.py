@@ -243,6 +243,12 @@ def get_plugin_config(plugin_id: str) -> dict[str, Any]:
 def put_plugin_config(plugin_id: str, body: dict[str, Any]) -> dict[str, Any]:
     from aos_api.errors import ApiError
 
+    if str(body.get("apiKey") or body.get("newSecret") or "").strip():
+        raise ApiError(
+            code="PLAINTEXT_SECRET_REJECTED",
+            message="provider config accepts only an opaque secretRef; store the secret in an approved backend first",
+            status_code=400,
+        )
     catalog = {i["id"]: i for i in list_llm_provider_plugins()["items"]}
     if plugin_id not in catalog:
         raise ApiError(code="NOT_FOUND", message=f"plugin not found: {plugin_id}", status_code=404)
@@ -251,27 +257,41 @@ def put_plugin_config(plugin_id: str, body: dict[str, Any]) -> dict[str, Any]:
     _save_installed(inst)
 
     man = catalog[plugin_id]
+    all_cfg = _configs()
+    previous = dict(all_cfg.get(plugin_id) or {})
     models = body.get("models")
     if not isinstance(models, list) or not models:
-        models = list(man.get("defaultModels") or [])
+        models = list(previous.get("models") or man.get("defaultModels") or [])
         if not models:
             models = [plugin_id]
     models = [str(m) for m in models if str(m).strip()]
+    current_revision = max(0, int(previous.get("revision") or 0))
+    expected_revision = body.get("expectedVersion")
+    if expected_revision is not None and int(expected_revision) != current_revision:
+        raise ApiError(
+            code="VERSION_CONFLICT",
+            message=f"provider config version conflict: expected {expected_revision}, current {current_revision}",
+            status_code=409,
+        )
+    supplied_ref = body.get("secretRef") if "secretRef" in body else body.get("apiKeyRef")
+    secret_ref = str(previous.get("secretRef") if supplied_ref is None else supplied_ref or "").strip()
+    if secret_ref and not re.match(r"^(?:vault:|secret://|keychain://)[^\s]+$", secret_ref):
+        raise ApiError(
+            code="INVALID_SECRET_REF",
+            message="only opaque vault, secret, or keychain references are accepted",
+            status_code=400,
+        )
     cfg = {
-        "displayName": str(body.get("displayName") or man.get("nameZh") or man.get("name") or plugin_id),
-        "baseUrl": str(body.get("baseUrl") or ""),
-        "secretRef": str(body.get("secretRef") or body.get("apiKeyRef") or ""),
+        "displayName": str(body.get("displayName") or previous.get("displayName") or man.get("nameZh") or man.get("name") or plugin_id),
+        "baseUrl": str(body.get("baseUrl") or previous.get("baseUrl") or ""),
+        "secretRef": secret_ref,
         "models": models,
         "formFamily": man.get("formFamily") or "openai_compatible",
         "modalities": list(man.get("modalities") or ["text"]),
+        "revision": current_revision + 1,
     }
-    all_cfg = _configs()
     all_cfg[plugin_id] = cfg
     _save_configs(all_cfg)
-
-    api_key = str(body.get("apiKey") or body.get("newSecret") or "").strip()
-    if api_key:
-        put_plugin_secret(plugin_id, api_key)
 
     make_ready = body.get("ready")
     if make_ready is None:
@@ -282,7 +302,7 @@ def put_plugin_config(plugin_id: str, body: dict[str, Any]) -> dict[str, Any]:
     else:
         ready.discard(plugin_id)
     _save_ready(ready)
-    log.info("llm_plugin_config id=%s ready=%s models=%s has_secret=%s", plugin_id, bool(make_ready), models, bool(api_key))
+    log.info("llm_plugin_config id=%s ready=%s models=%s secret_ref_bound=%s", plugin_id, bool(make_ready), models, bool(secret_ref))
     return {
         "id": plugin_id,
         "installed": True,
@@ -293,7 +313,19 @@ def put_plugin_config(plugin_id: str, body: dict[str, Any]) -> dict[str, Any]:
 
 
 def enable_plugin(plugin_id: str) -> dict[str, Any]:
-    return put_plugin_config(plugin_id, {"ready": True})
+    from aos_api.errors import ApiError
+
+    catalog = {i["id"]: i for i in list_llm_provider_plugins()["items"]}
+    if plugin_id not in catalog:
+        raise ApiError(code="NOT_FOUND", message=f"plugin not found: {plugin_id}", status_code=404)
+    installed = _installed_ids()
+    installed.add(plugin_id)
+    _save_installed(installed)
+    ready = _ready_ids()
+    ready.add(plugin_id)
+    _save_ready(ready)
+    log.info("llm_plugin_enable id=%s", plugin_id)
+    return {"id": plugin_id, "installed": True, "ready": True}
 
 
 def disable_plugin(plugin_id: str) -> dict[str, Any]:

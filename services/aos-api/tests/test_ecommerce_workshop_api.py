@@ -302,6 +302,10 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/modules/{module_id}/readiness",
             "get",
         ),
+        "ecommerceWorkshopAipFeaturesList": (
+            "/v1/ecommerce-workshop/aip-features",
+            "get",
+        ),
         "ecommerceWorkshopAipFeatureActivate": (
             "/v1/ecommerce-workshop/aip-features/{feature_id}/activate",
             "post",

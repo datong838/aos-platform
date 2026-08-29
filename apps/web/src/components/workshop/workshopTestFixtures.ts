@@ -53,6 +53,7 @@ export function workshopModuleFixture(
     legacyAssetRefs: ["W01"],
     legacyRoutes: ["/s2/orders", "/workshop/inventory", "/workshop/orders"],
     minimumRuntimeVersion: "1.0.0",
+    dependencyRefs: [],
     lastReceiptRef: null,
     ...overrides,
   };

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiGet, apiPost } from "../../api/client";
 import { aipModelRuntime, type ModelPriceAuthoritySummary } from "../../api/aipModelRuntime";
+import { aipFeatureActivation, type AipFeatureActivationList } from "../../api/aipFeatureActivation";
 import { PageChrome } from "../../components/PageChrome";
 import {
   BpArchitectureBar,
@@ -25,14 +26,6 @@ export type CatalogModel = {
   registered: boolean;
   providerModelId?: string;
   priceAuthorityStatus?: ModelPriceAuthoritySummary["status"];
-};
-
-type ModelFamily = {
-  id: string;
-  name: string;
-  provider: string;
-  status: "enabled" | "disabled";
-  models: string[];
 };
 
 type TabId = "settings" | "enablement" | "registered" | "catalog";
@@ -253,14 +246,6 @@ export const CATALOG_MODELS: CatalogModel[] = [
   },
 ];
 
-const MODEL_FAMILIES: ModelFamily[] = [
-  { id: "openai", name: "OpenAI GPT", provider: "Azure", status: "enabled", models: ["GPT-5.4 Pro", "GPT-5.5", "GPT-5.4 mini"] },
-  { id: "anthropic", name: "Anthropic Claude", provider: "AWS Bedrock", status: "enabled", models: ["Claude Opus 4.7", "Claude Sonnet 4.6", "Claude Haiku 4.5"] },
-  { id: "xai", name: "xAI Grok", provider: "Palantir Hub", status: "enabled", models: ["Grok 4.3"] },
-  { id: "meta", name: "Meta Llama", provider: "Palantir Hub", status: "disabled", models: ["Llama 4 Maverick 17B"] },
-  { id: "embedding", name: "Embedding Models", provider: "Azure", status: "enabled", models: ["text-embedding-ada-002", "Text Embedding 3 Large"] },
-];
-
 // ── Pure functions (extracted for testing) ────────────────────
 
 export function extractAllProviders(models: CatalogModel[]): string[] {
@@ -438,17 +423,13 @@ export function validateRegistrationResponse(
 export function ModelCatalogPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabId>("catalog");
-  const [aipEnabled, setAipEnabled] = useState(true);
-  const [orgRestricted, setOrgRestricted] = useState(true);
-  const [orgs, setOrgs] = useState<Record<string, boolean>>({
-    "组织 Alpha": true,
-    "组织 Beta": false,
-    "组织 Gamma": false,
-    "组织 Delta": false,
-    "组织 Epsilon": false,
-    "组织 Zeta": false,
-  });
-  const [orgSearch, setOrgSearch] = useState("");
+  const [activation, setActivation] = useState<AipFeatureActivationList | null>(null);
+  const [activationError, setActivationError] = useState<string | null>(null);
+  const [activationBusy, setActivationBusy] = useState<string | null>(null);
+  const [activationMessage, setActivationMessage] = useState<string | null>(null);
+  const [featureId, setFeatureId] = useState("aip.analysis");
+  const [featureHash, setFeatureHash] = useState("");
+  const [featureExpiry, setFeatureExpiry] = useState("");
 
   // Catalog tab state
   const [catalogFilter, setCatalogFilter] = useState<CatalogFilter>({
@@ -504,6 +485,18 @@ export function ModelCatalogPage() {
     void loadCatalog();
   }, [loadCatalog]);
 
+  const loadActivations = useCallback(async () => {
+    try {
+      setActivation(await aipFeatureActivation.list());
+      setActivationError(null);
+    } catch (error) {
+      setActivation(null);
+      setActivationError(String((error as Error).message || error));
+    }
+  }, []);
+
+  useEffect(() => { void loadActivations(); }, [loadActivations]);
+
   const allProviders = useMemo(() => extractAllProviders(catalogModels), [catalogModels]);
   const allCapabilities = useMemo(() => extractAllCapabilities(catalogModels), [catalogModels]);
   const filteredModels = useMemo(
@@ -520,9 +513,43 @@ export function ModelCatalogPage() {
     return [];
   }, [sourceMode, catalogModels]);
 
-  const filteredOrgs = Object.entries(orgs).filter(([name]) =>
-    name.toLowerCase().includes(orgSearch.toLowerCase()),
-  );
+  const providerFamilies = useMemo(() => Array.from(new Set(catalogModels.map((model) => model.provider))).map((provider) => ({
+    provider,
+    models: catalogModels.filter((model) => model.provider === provider),
+  })), [catalogModels]);
+
+  async function handleActivateFeature() {
+    const current = activation?.items.find((item) => item.featureId === featureId);
+    if (!/^aip\.[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(featureId) || !/^sha256:[0-9a-f]{64}$/.test(featureHash) || !featureExpiry) {
+      setActivationMessage("请填写合法功能标识、已评审内容哈希和到期时间");
+      return;
+    }
+    setActivationBusy(featureId);
+    setActivationMessage(null);
+    try {
+      const response = await aipFeatureActivation.activate({ featureId, expectedRevision: current?.revision || 0, contentHash: featureHash, expiresAt: new Date(featureExpiry).toISOString() }, crypto.randomUUID());
+      await loadActivations();
+      setActivationMessage(`功能授权已保存并重读 · v${response.receipt.revision} · Receipt ${response.receipt.receiptId}`);
+    } catch (error) {
+      setActivationMessage(`保存失败：${String((error as Error).message || error)}`);
+    } finally {
+      setActivationBusy(null);
+    }
+  }
+
+  async function handleRevokeFeature(targetFeatureId: string, revision: number) {
+    setActivationBusy(targetFeatureId);
+    setActivationMessage(null);
+    try {
+      const response = await aipFeatureActivation.revoke({ featureId: targetFeatureId, expectedRevision: revision }, crypto.randomUUID());
+      await loadActivations();
+      setActivationMessage(`功能授权已撤销并重读 · Receipt ${response.receipt.receiptId}`);
+    } catch (error) {
+      setActivationMessage(`撤销失败：${String((error as Error).message || error)}`);
+    } finally {
+      setActivationBusy(null);
+    }
+  }
 
   function toggleCompare(id: string) {
     setCompareSet((prev) => {
@@ -846,67 +873,40 @@ export function ModelCatalogPage() {
             <div className="mc-panel">
               <div className="mc-panel-header">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" strokeLinecap="round" /></svg>
-                <h2 className="mc-panel-title">AIP 启用</h2>
+                <h2 className="mc-panel-title">当前租户 AIP 功能授权</h2>
               </div>
               <div className="mc-panel-body">
-                <div className="mc-setting-row">
-                  <div className="mc-setting-text">
-                    <h3 className="mc-setting-title">启用初始 AIP 功能</h3>
-                    <p className="mc-setting-desc">
-                      Palantir AIP 将生成式 AI 与业务运营连接。这些功能和辅助服务利用托管在 Palantir Microsoft Azure 环境中的大语言模型。启用这些功能即表示您同意遵守 Palantir 的 AIP 补充协议。
-                    </p>
-                  </div>
-                  <ToggleSwitch checked={aipEnabled} onChange={setAipEnabled} disabled />
+                <p className="mc-setting-desc">
+                  {activation ? `组织 ${activation.tenant.orgId} · 工作区 ${activation.tenant.projectId} · ${activation.items.filter((item) => item.status === "active" && (!item.expiresAt || Date.parse(item.expiresAt) > Date.now())).length} 项有效授权` : "正在读取当前租户的功能授权"}
+                </p>
+                {activationError && <div className="w2-a6a7-demo-banner" role="alert">功能授权读取失败 · {activationError}</div>}
+                <div className="mc-family-list">
+                  {(activation?.items || []).length === 0 && !activationError ? <div className="mc-empty"><p>当前租户尚无 AIP 功能授权</p></div> : null}
+                  {(activation?.items || []).map((item) => {
+                    const active = item.status === "active" && (!item.expiresAt || Date.parse(item.expiresAt) > Date.now());
+                    return <div key={item.featureId} className="mc-family-item">
+                      <div><div className="mc-family-name">{item.featureId}</div><div className="mc-family-provider">版本 {item.revision} · {item.expiresAt ? `有效至 ${new Date(item.expiresAt).toLocaleString("zh-CN")}` : "无到期时间"}</div></div>
+                      <div className="mc-family-actions"><span className={`mc-status-badge ${active ? "enabled" : "disabled"}`}>{active ? "已授权" : item.status === "revoked" ? "已撤销" : "已过期"}</span>{active && <button type="button" className="mc-manage-btn" disabled={activationBusy === item.featureId} onClick={() => void handleRevokeFeature(item.featureId, item.revision)}>{activationBusy === item.featureId ? "处理中…" : "撤销授权"}</button>}</div>
+                    </div>;
+                  })}
                 </div>
-
-                <div className="mc-setting-row">
-                  <div className="mc-setting-text">
-                    <h3 className="mc-setting-title">限制 AIP 到指定组织</h3>
-                    <p className="mc-setting-desc">
-                      将 AIP 启用限制到特定组织。如果启用此设置，则只有下方选中的组织才能使用 AIP，其他组织将无法使用。
-                    </p>
+                <details style={{ marginTop: 16 }}>
+                  <summary>新增或续期功能授权</summary>
+                  <p className="mc-setting-desc">仅接受已评审内容的精确哈希；保存产生版本化 Receipt，不代表模型供应商已经可调用。</p>
+                  <div className="mc-org-list">
+                    <label className="mc-org-item">功能标识<input aria-label="功能标识" value={featureId} onChange={(event) => setFeatureId(event.target.value)} placeholder="aip.analysis" /></label>
+                    <label className="mc-org-item">评审内容哈希<input aria-label="评审内容哈希" value={featureHash} onChange={(event) => setFeatureHash(event.target.value)} placeholder="sha256:…" /></label>
+                    <label className="mc-org-item">授权到期时间<input type="datetime-local" aria-label="授权到期时间" value={featureExpiry} onChange={(event) => setFeatureExpiry(event.target.value)} /></label>
                   </div>
-                  <ToggleSwitch checked={orgRestricted} onChange={setOrgRestricted} disabled />
-                </div>
-
-                {orgRestricted && (
-                  <div className="mc-org-section">
-                    <div className="mc-org-search">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="7" /><path d="M20 20l-3-3" strokeLinecap="round" />
-                      </svg>
-                      <input
-                        type="search"
-                        aria-label="搜索组织"
-                        placeholder="搜索组织..."
-                        value={orgSearch}
-                        onChange={(e) => setOrgSearch(e.target.value)}
-                        className="mc-org-search-input"
-                      />
-                    </div>
-                    <div className="mc-org-list">
-                      {filteredOrgs.map(([name, checked]) => (
-                        <label key={name} className="mc-org-item">
-                          <input
-                            type="checkbox"
-                            aria-label={`组织 ${name} 启用状态`}
-                            checked={checked}
-                            disabled
-                            onChange={() => setOrgs((prev) => ({ ...prev, [name]: !prev[name] }))}
-                          />
-                          {name}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                </details>
               </div>
             </div>
 
             <div className="mc-settings-actions">
-              <button type="button" className="mc-btn-default" disabled title="组织 enrollment 契约未提供">取消（只读）</button>
-              <button type="button" className="mc-btn-primary" disabled title="组织 enrollment 契约未提供">保存（契约未提供）</button>
+              <button type="button" className="mc-btn-default" onClick={() => void loadActivations()}>重新读取</button>
+              <button type="button" className="mc-btn-primary" disabled={Boolean(activationBusy) || Boolean(activationError)} onClick={() => void handleActivateFeature()}>{activationBusy ? "保存中…" : "保存功能授权"}</button>
             </div>
+            {activationMessage && <div className="w2-a6a7-msg" role="status">{activationMessage}</div>}
 
             <div className="mc-related-links">
               <span className="mc-related-label">相关:</span>
@@ -921,27 +921,26 @@ export function ModelCatalogPage() {
           <div className="mc-enablement-col">
             <div className="mc-notice">
               <p>
-                本页面反映的是从法律角度已启用的模型家族。实际可用的模型可能是这些模型的子集，具体取决于与 Palantir Hub 的连接情况以及地理限制对某些模型可用性的影响。
+                本页只显示当前租户权威目录中的模型和注册状态。已注册不等于可调用；最终运行状态仍由供应商健康、路由、价格、容量与评测共同决定。
               </p>
             </div>
             <div className="mc-family-list">
               <div className="mc-family-header">
-                模型家族 ({MODEL_FAMILIES.length})
+                当前供应商 ({providerFamilies.length})
               </div>
-              {MODEL_FAMILIES.map((f) => (
-                <div key={f.id} className="mc-family-item">
+              {providerFamilies.map((family) => (
+                <div key={family.provider} className="mc-family-item">
                   <div>
-                    <div className="mc-family-name">{f.name}</div>
-                    <div className="mc-family-provider">{f.provider}</div>
+                    <div className="mc-family-name">{family.provider}</div>
+                    <div className="mc-family-provider">{family.models.map((model) => model.name).join("、")}</div>
                   </div>
                   <div className="mc-family-actions">
-                    <span className={`mc-status-badge ${f.status}`}>
-                      {f.status === "enabled" ? "已启用" : "未启用"}
-                    </span>
-                    <button type="button" className="mc-manage-btn" disabled title="法律启用契约未提供">管理（只读）</button>
+                    <span className={`mc-status-badge ${family.models.every((model) => model.registered) ? "enabled" : "disabled"}`}>{family.models.filter((model) => model.registered).length}/{family.models.length} 已注册</span>
+                    <button type="button" className="mc-manage-btn" onClick={() => navigate("/aip/model-router")}>配置路由</button>
                   </div>
                 </div>
               ))}
+              {providerFamilies.length === 0 && <div className="mc-empty"><p>{sourceMode === "error" ? "权威模型目录不可用" : "当前租户尚无模型"}</p></div>}
             </div>
           </div>
         )}
@@ -992,40 +991,5 @@ export function ModelCatalogPage() {
         )}
       </div>
     </PageChrome>
-  );
-}
-
-function ToggleSwitch({ checked, onChange, disabled = false }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      title={disabled ? "组织 enrollment 契约未提供" : undefined}
-      onClick={() => onChange(!checked)}
-      style={{
-        width: 48,
-        height: 24,
-        borderRadius: 2,
-        background: checked ? "var(--aos-accent)" : "var(--aos-border-strong)",
-        position: "relative",
-        border: "none",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.55 : 1,
-        transition: "background 0.15s",
-        flexShrink: 0,
-      }}
-    >
-      <div style={{
-        position: "absolute",
-        top: 2,
-        left: checked ? 26 : 2,
-        width: 20,
-        height: 20,
-        borderRadius: "50%",
-        background: "var(--aos-surface)",
-        transition: "left 0.15s",
-        boxShadow: "var(--shadow-sm)",
-      }} />
-    </button>
   );
 }

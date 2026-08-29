@@ -663,7 +663,12 @@ def put_llm_provider_plugin_config(
     principal: Principal = Depends(require_principal),
 ):
     """84 · 保存配置并可选标就绪（进入可路由模型目录）。"""
-    _ = principal
+    if not _role_has_admin(principal):
+        raise ApiError(
+            code="FORBIDDEN",
+            message="provider credential references may only be managed by an administrator",
+            status_code=403,
+        )
     from aos_api.llm_provider_registry import put_plugin_config
 
     return put_plugin_config(plugin_id, body or {})

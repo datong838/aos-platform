@@ -863,6 +863,13 @@ type LlmPlugin = {
   installed?: boolean;
   ready?: boolean;
   enabledModels?: string[];
+  config?: {
+    displayName?: string;
+    baseUrl?: string;
+    secretRef?: string;
+    models?: string[];
+    revision?: number;
+  };
   source?: string;
   configSchema?: {
     properties?: {
@@ -1021,9 +1028,18 @@ export function ProvidersPage() {
   const pluginItems = pluginsApi.data?.items || [];
   const installedPlugins = pluginItems.filter((p) => p.installed);
   const catalogPlugins = pluginItems.filter((p) => !p.installed);
+  const credentialPlugin = activePluginId
+    ? pluginItems.find((p) => p.id === activePluginId) || null
+    : selectedId
+      ? pluginItems.find(
+          (p) =>
+            p.installed &&
+            [...(p.enabledModels || []), ...(p.defaultModels || [])].includes(selectedId),
+        ) || null
+      : null;
   const boundLabel = keyUpdatedAt
     ? `已更新 · ${new Date(keyUpdatedAt).toLocaleString()}`
-    : secretBoundLabel(secretRef || selected?.apiKeyRef || apiVaultRef);
+    : secretBoundLabel(secretRef || credentialPlugin?.config?.secretRef || selected?.apiKeyRef || apiVaultRef);
   const canProbe = !catalogType || agnesReady || Boolean(baseUrl);
 
   useEffect(() => {
@@ -1118,7 +1134,7 @@ export function ProvidersPage() {
     setSonnetOn(draft?.modelsAnthropic?.sonnet !== false);
     setOpusOn(Boolean(draft?.modelsAnthropic?.opus));
     const defaultRef = plugin
-      ? `vault:secret/data/aos/llm#${plugin.id}`
+      ? plugin.config?.secretRef || `vault:secret/data/aos/llm#${plugin.id}`
       : row?.apiKeyRef || data?.apiKeyRef || apiVaultRef;
     setSecretRef(draft?.secretRef || (plugin ? defaultRef : row?.apiKeyRef || data?.apiKeyRef || apiVaultRef));
     setKeyUpdatedAt(draft?.keyUpdatedAt || null);
@@ -1320,23 +1336,30 @@ export function ProvidersPage() {
     setKeyUpdatedAt(stamped);
     const ref = secretRef.trim() || (activePluginId ? `vault:secret/data/aos/llm#${activePluginId}` : apiVaultRef);
 
-    if (activePluginId) {
+    const targetPlugin = credentialPlugin;
+    if (targetPlugin) {
       try {
-        await apiPut(`/v1/aip/llm-provider-plugins/${encodeURIComponent(activePluginId)}/config`, {
-          displayName,
-          baseUrl: formKind === "vllm" ? localUrl : baseUrl,
+        const saved = await apiPut<{ config?: LlmPlugin["config"] }>(
+          `/v1/aip/llm-provider-plugins/${encodeURIComponent(targetPlugin.id)}/config`, {
+          displayName: targetPlugin.config?.displayName || displayName,
+          baseUrl: targetPlugin.config?.baseUrl || (formKind === "vllm" ? localUrl : baseUrl),
           secretRef: ref,
-          models:
-            formKind === "openai" || formKind === "azure"
-              ? modelOn && modelId
-                ? [modelId]
-                : []
-              : [],
-          ready: true,
+          models: targetPlugin.config?.models || targetPlugin.enabledModels || targetPlugin.defaultModels || [],
+          ready: Boolean(targetPlugin.ready),
+          expectedVersion: targetPlugin.config?.revision || 0,
         });
+        const reread = await apiGet<{ items: LlmPlugin[] }>("/v1/aip/llm-provider-plugins");
+        const confirmed = reread.items.find((item) => item.id === targetPlugin.id);
+        if (
+          confirmed?.config?.secretRef !== ref ||
+          confirmed.config.revision !== saved.config?.revision
+        ) {
+          throw new Error("凭据引用写入后重读不一致");
+        }
         setSecretRef(ref);
-        setSaveMsg("opaque 凭据引用已保存并启用 · 页面不接收或传输明文密钥");
-        pluginsApi.reload();
+        setKeyUpdatedAt(new Date().toISOString());
+        pluginsApi.setData(reread);
+        setSaveMsg(`opaque 凭据引用已保存并重读确认 · v${confirmed.config.revision} · 未触发模型调用`);
       } catch (e) {
         setMsg(String((e as Error).message || e));
       }
@@ -1348,7 +1371,7 @@ export function ProvidersPage() {
       secretRef: ref,
       keyUpdatedAt: stamped,
     });
-    setSaveMsg("opaque 凭据引用草稿已更新");
+    setSaveMsg("当前供应商未匹配到已安装插件，凭据引用仅保留为会话草稿");
   }
 
   async function testConnectivity() {
@@ -1486,7 +1509,7 @@ export function ProvidersPage() {
             </label>
           </div>
           <p className="muted" style={{ fontSize: "0.75rem", marginTop: "0.75rem" }}>
-            请先在企业密钥库、AOS 安全存储或本机钥匙串中维护密钥，再在此绑定不透明引用。服务端写入能力未就绪前，草稿只保留在当前会话。
+            请先在企业密钥库、AOS 安全存储或本机钥匙串中维护密钥，再在此绑定不透明引用。已匹配安装插件时采用版本校验保存并重读；不会读取密钥正文或触发模型调用。
           </p>
           <div className="mp-cfg-actions">
             <button type="button" className="btn-primary" onClick={() => void saveCredentials()}>
@@ -2058,6 +2081,13 @@ type GlobalCircuitConfig = {
   half_open_probes?: number;
 };
 
+type CircuitDraft = {
+  config: GlobalCircuitConfig;
+  version: number;
+  updatedAt: string;
+  activated: false;
+};
+
 /** Phase B — Route test result */
 type RouteTestResult = {
   route_id: string;
@@ -2078,8 +2108,23 @@ type RouterConfig = {
   updatedAt: string;
 };
 
+function sameCanonicalJson(left: unknown, right: unknown): boolean {
+  const canonical = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonical);
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, item]) => [key, canonical(item)]),
+      );
+    }
+    return value;
+  };
+  return JSON.stringify(canonical(left)) === JSON.stringify(canonical(right));
+}
+
 function sameRouterItems(left: V2RouteRule[], right: V2RouteRule[]): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
+  return sameCanonicalJson(left, right);
 }
 
 function egressTone(egress: string): "ok" | "warn" | "bad" | "muted" {
@@ -2094,7 +2139,7 @@ export function ModelRouterPage() {
   const models = useJsonGet<{ items: ModelItem[]; sidecar?: string; defaultTextModel?: string }>(
     "/v1/aip/models",
   );
-  const routerApi = useJsonGet<RouterConfig>("/api/models/router");
+  const routerApi = useJsonGet<RouterConfig>("/api/models/router/draft");
   const warm = useJsonGet<{
     ready?: boolean;
     models?: { id: string; state?: string }[];
@@ -2115,6 +2160,7 @@ export function ModelRouterPage() {
   const [drillMsg, setDrillMsg] = useState("");
   const [localErr, setLocalErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const configEditable = confirmedVersion != null && routeRows.length > 0 && !routerApi.err;
 
   const items = models.data?.items || [];
   const modelOptions = useMemo(() => {
@@ -2140,29 +2186,29 @@ export function ModelRouterPage() {
   }
 
   async function saveRoutes() {
-    if (confirmedVersion == null || !runtimeProjection.isReady) {
-      setLocalErr("权威模型运行链尚未全部就绪，禁止写入兼容路由");
+    if (!configEditable || confirmedVersion == null) {
+      setLocalErr("路由配置尚未完成权威读取，暂不能保存");
       return;
     }
     setSaving(true);
     setLocalErr(null);
     setSaveMsg("");
     try {
-      const saved = await apiPut<RouterConfig>("/api/models/router", {
+      const saved = await apiPut<RouterConfig>("/api/models/router/draft", {
         items: routeRows,
         expectedVersion: confirmedVersion,
       });
       if (saved.version <= confirmedVersion) {
         throw new Error("保存回包版本未递增，未确认成功");
       }
-      const reread = await apiGet<RouterConfig>("/api/models/router");
+      const reread = await apiGet<RouterConfig>("/api/models/router/draft");
       if (reread.version !== saved.version || !sameRouterItems(reread.items, saved.items)) {
         throw new Error("写入已提交，但配置重读与保存回包不一致");
       }
       setRouteRows(reread.items);
       setConfirmedVersion(reread.version);
       routerApi.setData(reread);
-      setSaveMsg(`路由策略已保存并重读确认 · v${reread.version}`);
+      setSaveMsg(`路由配置草稿已保存并重读确认 · v${reread.version} · 未激活运行`);
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
     } finally {
@@ -2409,20 +2455,20 @@ export function ModelRouterPage() {
             {runtimeProjection.blockers.length
               ? ` 阻断：${formatBlockers(runtimeProjection.blockers)}。`
               : " 当前没有可核验的就绪解析结果。"}
-            {" "}本页旧路由配置只读，禁止保存、演练和试聊；审计导出仍可使用。
+            {" "}路由配置仍可编辑并保存；熔断演练、路由测试和试聊继续失败关闭。
           </>
         )}
       </BpBanner>
 
       <p className="mr-hint">
-        本页保留兼容路由快照。只有权威路由解析结果全部就绪时才允许编辑；插件页的“就绪”不等于完整运行链已经就绪。
+        本页配置与运行分门：配置完成权威读取后即可维护；只有 Provider Health、价格、评测等运行证据全部就绪时，才允许演练、路由测试和试聊。
       </p>
 
       <div className="mr-rules-card">
         <div className="mr-rules-head">
           <h2 className="mr-rules-title">路由规则</h2>
           <span className="mr-rules-meta">
-            任务类型 / 回退 / 出境 · {runtimeProjection.isReady ? "可编辑" : "兼容只读"} · 配置版本 v{confirmedVersion ?? "—"}
+            任务类型 / 回退 / 出境 · {configEditable ? "草稿可编辑" : "等待草稿读取"} · 草稿版本 v{confirmedVersion ?? "—"}
           </span>
         </div>
         <table className="mr-table">
@@ -2446,7 +2492,7 @@ export function ModelRouterPage() {
                       <select
                         className="mr-select"
                         value={r.primary}
-                        disabled={!runtimeProjection.isReady}
+                        disabled={!configEditable}
                         onChange={(e) => patchRow(r.id, { primary: e.target.value })}
                         aria-label={`${r.task}-degrade`}
                       >
@@ -2466,7 +2512,7 @@ export function ModelRouterPage() {
                         <select
                           className="mr-select mr-select-primary"
                           value={r.primary}
-                          disabled={!runtimeProjection.isReady}
+                          disabled={!configEditable}
                           onChange={(e) => patchRow(r.id, { primary: e.target.value })}
                           aria-label={`${r.task}-primary`}
                         >
@@ -2483,7 +2529,7 @@ export function ModelRouterPage() {
                         <select
                           className="mr-select"
                           value={r.fallback || "—"}
-                          disabled={!runtimeProjection.isReady}
+                          disabled={!configEditable}
                           onChange={(e) => patchRow(r.id, { fallback: e.target.value })}
                           aria-label={`${r.task}-fallback`}
                         >
@@ -2516,7 +2562,7 @@ export function ModelRouterPage() {
                     <select
                       className="mr-select"
                       value={r.egress}
-                      disabled={!runtimeProjection.isReady}
+                      disabled={!configEditable}
                       onChange={(e) => patchRow(r.id, { egress: e.target.value })}
                       aria-label={`${r.task}-egress`}
                     >
@@ -2543,11 +2589,11 @@ export function ModelRouterPage() {
               saving ||
               routeRows.length === 0 ||
               confirmedVersion == null ||
-              !runtimeProjection.isReady
+              !configEditable
             }
             onClick={() => void saveRoutes()}
           >
-            {saving ? "保存中…" : "保存策略"}
+            {saving ? "保存中…" : "保存配置草稿"}
           </button>
           <button
             type="button"
@@ -2595,8 +2641,9 @@ function ModelRouterPanels({
   const [activePanel, setActivePanel] = useState<"weights" | "circuit" | "fallback" | "test">(
     "weights",
   );
-  const circuitApi = useJsonGet<GlobalCircuitConfig>("/api/models/router/circuit-config");
+  const circuitApi = useJsonGet<CircuitDraft>("/api/models/router/draft/circuit-config");
   const [circuitDraft, setCircuitDraft] = useState<GlobalCircuitConfig | null>(null);
+  const [circuitVersion, setCircuitVersion] = useState<number | null>(null);
   const [circuitSaving, setCircuitSaving] = useState(false);
   const [circuitMsg, setCircuitMsg] = useState("");
   const [testRouteId, setTestRouteId] = useState("");
@@ -2606,7 +2653,7 @@ function ModelRouterPanels({
   const [testErr, setTestErr] = useState<string | null>(null);
 
   const v2Rules = routeRows;
-  const circuitCfg = circuitDraft || circuitApi.data || {
+  const circuitCfg = circuitDraft || circuitApi.data?.config || {
     error_rate_threshold_pct: 10,
     latency_p99_ms: 3000,
     cooldown_seconds: 30,
@@ -2615,7 +2662,8 @@ function ModelRouterPanels({
 
   useEffect(() => {
     if (!circuitDraft && circuitApi.data) {
-      setCircuitDraft(circuitApi.data);
+      setCircuitDraft(circuitApi.data.config);
+      setCircuitVersion(circuitApi.data.version);
     }
   }, [circuitApi.data]);
 
@@ -2626,16 +2674,28 @@ function ModelRouterPanels({
   }, [v2Rules]);
 
   async function saveCircuitConfig() {
-    if (!circuitDraft || !runtimeReady) {
-      setCircuitMsg("权威模型运行链尚未全部就绪，禁止保存熔断配置");
+    if (!circuitDraft || circuitVersion == null || circuitApi.err) {
+      setCircuitMsg("熔断配置尚未完成权威读取，暂不能保存");
       return;
     }
     setCircuitSaving(true);
     setCircuitMsg("");
     try {
-      await apiPut("/api/models/router/circuit-config", circuitDraft);
-      setCircuitMsg("全局熔断配置已保存");
-      circuitApi.reload();
+      const saved = await apiPut<CircuitDraft>("/api/models/router/draft/circuit-config", {
+        config: circuitDraft,
+        expectedVersion: circuitVersion,
+      });
+      const reread = await apiGet<CircuitDraft>("/api/models/router/draft/circuit-config");
+      if (
+        reread.version !== saved.version ||
+        !sameCanonicalJson(reread.config, saved.config)
+      ) {
+        throw new Error("熔断配置写入后重读不一致");
+      }
+      setCircuitDraft(reread.config);
+      setCircuitVersion(reread.version);
+      circuitApi.setData(reread);
+      setCircuitMsg(`熔断配置草稿已保存并重读确认 · v${reread.version} · 未激活运行`);
     } catch (e) {
       setCircuitMsg(String((e as Error).message || e));
     } finally {
@@ -2801,7 +2861,7 @@ function ModelRouterPanels({
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input
                   type="range"
-                  disabled={!runtimeReady}
+                  disabled={Boolean(circuitApi.err)}
                   min={1}
                   max={50}
                   value={circuitCfg.error_rate_threshold_pct ?? 10}
@@ -2813,9 +2873,16 @@ function ModelRouterPanels({
                   }
                   style={{ flex: 1, accentColor: "#4f46e5" }}
                 />
-                <span style={{ fontWeight: 600, width: "2rem", textAlign: "right" }}>
-                  {circuitCfg.error_rate_threshold_pct ?? 10}%
-                </span>
+                <input
+                  type="number"
+                  aria-label="5xx 错误率阈值数值"
+                  min={1}
+                  max={50}
+                  value={circuitCfg.error_rate_threshold_pct ?? 10}
+                  onChange={(e) => setCircuitDraft({ ...circuitCfg, error_rate_threshold_pct: Number(e.target.value) })}
+                  style={{ width: "4rem", textAlign: "right" }}
+                />
+                <span>%</span>
               </div>
             </label>
             <label style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
@@ -2823,7 +2890,7 @@ function ModelRouterPanels({
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input
                   type="range"
-                  disabled={!runtimeReady}
+                  disabled={Boolean(circuitApi.err)}
                   min={500}
                   max={10000}
                   step={500}
@@ -2836,9 +2903,17 @@ function ModelRouterPanels({
                   }
                   style={{ flex: 1, accentColor: "#4f46e5" }}
                 />
-                <span style={{ fontWeight: 600, width: "3rem", textAlign: "right" }}>
-                  {circuitCfg.latency_p99_ms ?? 3000}ms
-                </span>
+                <input
+                  type="number"
+                  aria-label="延迟 p99 阈值数值"
+                  min={500}
+                  max={10000}
+                  step={500}
+                  value={circuitCfg.latency_p99_ms ?? 3000}
+                  onChange={(e) => setCircuitDraft({ ...circuitCfg, latency_p99_ms: Number(e.target.value) })}
+                  style={{ width: "5rem", textAlign: "right" }}
+                />
+                <span>ms</span>
               </div>
             </label>
             <label style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
@@ -2846,7 +2921,7 @@ function ModelRouterPanels({
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input
                   type="range"
-                  disabled={!runtimeReady}
+                  disabled={Boolean(circuitApi.err)}
                   min={10}
                   max={300}
                   step={10}
@@ -2859,9 +2934,17 @@ function ModelRouterPanels({
                   }
                   style={{ flex: 1, accentColor: "#4f46e5" }}
                 />
-                <span style={{ fontWeight: 600, width: "2.5rem", textAlign: "right" }}>
-                  {circuitCfg.cooldown_seconds ?? 30}s
-                </span>
+                <input
+                  type="number"
+                  aria-label="熔断时长数值"
+                  min={10}
+                  max={300}
+                  step={10}
+                  value={circuitCfg.cooldown_seconds ?? 30}
+                  onChange={(e) => setCircuitDraft({ ...circuitCfg, cooldown_seconds: Number(e.target.value) })}
+                  style={{ width: "4.5rem", textAlign: "right" }}
+                />
+                <span>s</span>
               </div>
             </label>
             <label style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
@@ -2869,7 +2952,7 @@ function ModelRouterPanels({
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input
                   type="range"
-                  disabled={!runtimeReady}
+                  disabled={Boolean(circuitApi.err)}
                   min={1}
                   max={20}
                   value={circuitCfg.half_open_probes ?? 3}
@@ -2881,9 +2964,15 @@ function ModelRouterPanels({
                   }
                   style={{ flex: 1, accentColor: "#4f46e5" }}
                 />
-                <span style={{ fontWeight: 600, width: "1.5rem", textAlign: "right" }}>
-                  {circuitCfg.half_open_probes ?? 3}
-                </span>
+                <input
+                  type="number"
+                  aria-label="半开探测请求数值"
+                  min={1}
+                  max={20}
+                  value={circuitCfg.half_open_probes ?? 3}
+                  onChange={(e) => setCircuitDraft({ ...circuitCfg, half_open_probes: Number(e.target.value) })}
+                  style={{ width: "4rem", textAlign: "right" }}
+                />
               </div>
             </label>
           </div>
@@ -2910,10 +2999,10 @@ function ModelRouterPanels({
             <button
               type="button"
               className="btn-nav-accent"
-              disabled={circuitSaving || !runtimeReady}
+              disabled={circuitSaving || Boolean(circuitApi.err) || circuitVersion == null}
               onClick={() => void saveCircuitConfig()}
             >
-              {circuitSaving ? "保存中…" : "保存熔断配置"}
+              {circuitSaving ? "保存中…" : "保存熔断配置草稿"}
             </button>
             {circuitMsg && (
               <span style={{ fontSize: "0.7rem", color: circuitMsg.includes("失败") ? "#ef4444" : "#059669" }}>

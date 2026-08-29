@@ -196,6 +196,81 @@ describe("Wave 3C · six passing pages keep their main interactions honest", () 
     expect(host.querySelector('input[type="password"]')).toBeNull();
   });
 
+  it("Model Providers persists a matched plugin credential reference and confirms the reread version", async () => {
+    let plugin = {
+      id: "agnes-text",
+      name: "Agnes Text",
+      nameZh: "Agnes 文本",
+      installed: true,
+      ready: true,
+      defaultModels: ["agnes-2.5-flash"],
+      enabledModels: ["agnes-2.5-flash"],
+      config: {
+        displayName: "Agnes Text",
+        baseUrl: "https://api.agnes-ai.cn/v1",
+        secretRef: "keychain://aos/agnes",
+        models: ["agnes-2.5-flash"],
+        revision: 2,
+      },
+    };
+    mocks.apiGet.mockImplementation(async (path: string) => {
+      if (path === "/v1/aip/providers") {
+        return {
+          items: [
+            {
+              id: "agnes-2.5-flash",
+              name: "Agnes 文本",
+              kind: "openai",
+              ready: true,
+              apiKeyRef: "keychain://aos/agnes",
+            },
+          ],
+        };
+      }
+      if (path === "/v1/aip/llm-provider-plugins") {
+        return { items: [plugin], totals: { installed: 1 } };
+      }
+      if (path === "/v1/aip/gateway-default") return { options: [] };
+      if (path === "/v1/aip/model-runtime/overview") {
+        return {
+          providers: [],
+          resolutions: [{ readiness: "blocked", blockerCodes: ["PROVIDER_HEALTH_EXPIRED"] }],
+        };
+      }
+      return {};
+    });
+    mocks.apiPut.mockImplementation(async (path: string, body: Record<string, unknown>) => {
+      if (path === "/v1/aip/llm-provider-plugins/agnes-text/config") {
+        plugin = {
+          ...plugin,
+          config: {
+            ...plugin.config,
+            secretRef: String(body.secretRef),
+            revision: 3,
+          },
+        };
+        return { config: plugin.config };
+      }
+      return { ok: true };
+    });
+
+    await render(ProvidersPage);
+    await act(async () => buttonByText(host, "管理凭据").click());
+    await act(async () => buttonByText(host, "保存凭据引用").click());
+    await flushEffects();
+
+    expect(mocks.apiPut).toHaveBeenCalledWith(
+      "/v1/aip/llm-provider-plugins/agnes-text/config",
+      expect.objectContaining({
+        secretRef: "keychain://aos/agnes",
+        expectedVersion: 2,
+        ready: true,
+      }),
+    );
+    expect(host.textContent).toContain("已保存并重读确认 · v3");
+    expect(host.textContent).toContain("未触发模型调用");
+  });
+
   it("Ontology Discover searches and opens objects from the live response", async () => {
     await render(OntologyPage);
     const search = host.querySelector('input[type="search"]') as HTMLInputElement;

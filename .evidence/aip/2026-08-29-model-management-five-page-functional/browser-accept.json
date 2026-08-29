@@ -1,0 +1,43 @@
+{
+  "schema": "aos-browser-acceptance/v1",
+  "accepted_at": "2026-08-29T19:45:20+08:00",
+  "tenant": {
+    "org_id": "org-org",
+    "project_id": "dev-project"
+  },
+  "task_id": "AIP-MODEL-MANAGEMENT-FIVE-PAGE-FUNCTIONAL-20260829",
+  "browser": "codex-built-in",
+  "pages": [
+    {
+      "path": "/aip/model-catalog",
+      "checks": ["真实目录与搜索", "当前租户平台设置", "真实模型启用投影", "无虚构组织或模型家族"]
+    },
+    {
+      "path": "/aip/model-providers",
+      "checks": ["供应商与插件列表", "配置入口", "opaque secretRef 保存", "管理员门", "明文凭据字段显式拒绝", "CAS v2 重读确认", "未触发模型调用"]
+    },
+    {
+      "path": "/aip/model-router",
+      "checks": ["路由草稿 CAS v3", "熔断草稿 CAS v3", "保存后重读", "运行调用继续失败关闭"]
+    },
+    {
+      "path": "/aip/capacity",
+      "checks": ["用量页签", "项目限额原值保存与重读", "用户限额编辑入口", "精确容量池", "预留池诚实未开通"]
+    },
+    {
+      "path": "/aip/model-runtime",
+      "checks": ["刷新权威快照", "刷新行动卡", "生成时间更新到 2026-08-29 19:32:02 +08:00", "0/3 路由与 Health 过期原因一致"]
+    }
+  ],
+  "safety": {
+    "external_provider_call": false,
+    "secret_payload_read_or_write": false,
+    "business_data_mutation": false,
+    "release": false
+  },
+  "verification": {
+    "api": "38 passed + 10 passed",
+    "web": "17 passed",
+    "build": "GREEN_WITH_TYPESCRIPT"
+  }
+}

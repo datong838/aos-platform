@@ -77,8 +77,8 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
       }
       if (path === "/v1/aip/models/warmup") return { ready: true, models: [] };
       if (path === "/v1/aip/model-runtime/overview") return runtimeReady;
-      if (path === "/api/models/router") return routeConfig;
-      if (path === "/api/models/router/circuit-config") return {};
+      if (path === "/api/models/router/draft") return routeConfig;
+      if (path === "/api/models/router/draft/circuit-config") return { config: {}, version: 1, updatedAt: "2026-08-29T00:00:00Z", activated: false };
       throw new Error(`unexpected ${path}`);
     });
   });
@@ -92,9 +92,9 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
     await act(async () => root.render(<MemoryRouter><ModelRouterPage /></MemoryRouter>));
     await flush();
 
-    expect(apiMocks.apiGet).toHaveBeenCalledWith("/api/models/router");
+    expect(apiMocks.apiGet).toHaveBeenCalledWith("/api/models/router/draft");
     expect(apiMocks.apiGet).not.toHaveBeenCalledWith("/v1/aip/model-routes");
-    expect(host.textContent).toContain("配置版本 v7");
+    expect(host.textContent).toContain("草稿版本 v7");
     expect(host.textContent).toContain("摘要 / 分类");
   });
 
@@ -112,8 +112,8 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
       }
       if (path === "/v1/aip/models/warmup") return { ready: true, models: [] };
       if (path === "/v1/aip/model-runtime/overview") return runtimeReady;
-      if (path === "/api/models/router/circuit-config") return {};
-      if (path === "/api/models/router") return apiMocks.apiPut.mock.calls.length > 0 ? saved : routeConfig;
+      if (path === "/api/models/router/draft/circuit-config") return { config: {}, version: 1, updatedAt: "2026-08-29T00:00:00Z", activated: false };
+      if (path === "/api/models/router/draft") return apiMocks.apiPut.mock.calls.length > 0 ? saved : routeConfig;
       throw new Error(`unexpected ${path}`);
     });
     await act(async () => root.render(<MemoryRouter><ModelRouterPage /></MemoryRouter>));
@@ -122,16 +122,16 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
     const primary = host.querySelector<HTMLSelectElement>("[aria-label='摘要 / 分类-primary']")!;
     Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set?.call(primary, "model-b");
     await act(async () => primary.dispatchEvent(new Event("change", { bubbles: true })));
-    const save = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "保存策略")!;
+    const save = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "保存配置草稿")!;
     await act(async () => save.click());
     await flush();
 
     expect(apiMocks.apiPut).toHaveBeenCalledWith(
-      "/api/models/router",
+      "/api/models/router/draft",
       expect.objectContaining({ expectedVersion: 7 }),
     );
-    expect(apiMocks.apiGet.mock.calls.filter(([path]) => path === "/api/models/router")).toHaveLength(2);
-    expect(host.textContent).toContain("路由策略已保存并重读确认 · v8");
+    expect(apiMocks.apiGet.mock.calls.filter(([path]) => path === "/api/models/router/draft")).toHaveLength(2);
+    expect(host.textContent).toContain("路由配置草稿已保存并重读确认 · v8 · 未激活运行");
   });
 
   it("路由测试携带当前版本且 evaluatedVersion 不一致时 fail-closed", async () => {
@@ -163,7 +163,7 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
     expect(host.textContent).not.toContain("路由测试结果");
   });
 
-  it("canonical 路由未就绪时兼容配置只读且不允许写入或演练", async () => {
+  it("运行链未就绪时仍允许维护配置，但演练与调用继续失败关闭", async () => {
     apiMocks.apiGet.mockImplementation(async (path: string) => {
       if (path === "/v1/aip/models") {
         return { items: [{ id: "model-a", kind: "chat", ready: true }], defaultTextModel: "model-a" };
@@ -179,20 +179,20 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
           ],
         };
       }
-      if (path === "/api/models/router") return routeConfig;
-      if (path === "/api/models/router/circuit-config") return {};
+      if (path === "/api/models/router/draft") return routeConfig;
+      if (path === "/api/models/router/draft/circuit-config") return { config: {}, version: 1, updatedAt: "2026-08-29T00:00:00Z", activated: false };
       throw new Error(`unexpected ${path}`);
     });
     await act(async () => root.render(<MemoryRouter><ModelRouterPage /></MemoryRouter>));
     await flush();
 
     expect(host.textContent).toContain("0/3 条路由已就绪");
-    expect(host.textContent).toContain("兼容只读");
+    expect(host.textContent).toContain("草稿可编辑");
     expect(host.textContent).toContain("存在尚未归类的运行阻断");
-    expect(host.querySelector<HTMLSelectElement>("[aria-label='摘要 / 分类-primary']")?.disabled).toBe(true);
-    const save = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "保存策略")!;
+    expect(host.querySelector<HTMLSelectElement>("[aria-label='摘要 / 分类-primary']")?.disabled).toBe(false);
+    const save = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "保存配置草稿")!;
     const drill = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "熔断演练")!;
-    expect(save.disabled).toBe(true);
+    expect(save.disabled).toBe(false);
     expect(drill.disabled).toBe(true);
     expect(apiMocks.apiPut).not.toHaveBeenCalled();
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
@@ -205,8 +205,8 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
       if (path === "/v1/aip/models") return { items: [{ id: "model-a", kind: "chat", ready: true }, { id: "model-b", kind: "chat", ready: true }] };
       if (path === "/v1/aip/models/warmup") return { ready: true, models: [] };
       if (path === "/v1/aip/model-runtime/overview") return runtimeReady;
-      if (path === "/api/models/router/circuit-config") return {};
-      if (path === "/api/models/router") {
+      if (path === "/api/models/router/draft/circuit-config") return { config: {}, version: 1, updatedAt: "2026-08-29T00:00:00Z", activated: false };
+      if (path === "/api/models/router/draft") {
         return apiMocks.apiPut.mock.calls.length > 0
           ? { ...saved, items: [{ ...saved.items[0], primary: "model-a" }] }
           : routeConfig;
@@ -218,7 +218,7 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
     const primary = host.querySelector<HTMLSelectElement>("[aria-label='摘要 / 分类-primary']")!;
     Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set?.call(primary, "model-b");
     await act(async () => primary.dispatchEvent(new Event("change", { bubbles: true })));
-    const save = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "保存策略")!;
+    const save = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "保存配置草稿")!;
     await act(async () => save.click());
     await flush();
 

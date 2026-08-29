@@ -319,6 +319,38 @@ class WorkshopFeatureActivationCommandResponse(StrictContract):
     replayed: bool
 
 
+class WorkshopFeatureActivationProjection(StrictContract):
+    feature_id: str = Field(alias="featureId", pattern=r"^aip[.][a-z0-9]+(?:[.-][a-z0-9]+)*$")
+    revision: int = Field(ge=1)
+    content_hash: str = Field(alias="contentHash", pattern=SHA256_PATTERN)
+    status: Literal["active", "superseded", "revoked"]
+    activated_at: datetime = Field(alias="activatedAt")
+    expires_at: datetime | None = Field(default=None, alias="expiresAt")
+
+    @field_validator("activated_at", "expires_at")
+    @classmethod
+    def _aware_activation_time(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.utcoffset() is None:
+            raise ValueError("FeatureActivation projection time requires a timezone")
+        return value
+
+
+class WorkshopFeatureActivationListResponse(StrictContract):
+    schema_version: Literal["aos.ecommerce-workshop.feature-activation-list/v1"] = Field(
+        default="aos.ecommerce-workshop.feature-activation-list/v1", alias="schemaVersion"
+    )
+    tenant: WorkshopTenant
+    evaluated_at: datetime = Field(alias="evaluatedAt")
+    items: list[WorkshopFeatureActivationProjection]
+
+    @field_validator("evaluated_at")
+    @classmethod
+    def _aware_evaluated_at(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("FeatureActivation evaluatedAt requires a timezone")
+        return value
+
+
 class EcommerceWorkshopModuleReadinessResponse(StrictContract):
     schema_version: Literal[ECOMMERCE_WORKSHOP_SCHEMA_VERSION] = Field(
         default=ECOMMERCE_WORKSHOP_SCHEMA_VERSION, alias="schemaVersion"
