@@ -21,3 +21,19 @@ def test_feature_activation_migration_is_tenant_scoped_and_read_only() -> None:
     assert "GRANT SELECT ON aip_feature_activation TO aos_runtime" in text
     assert "REVOKE INSERT,UPDATE,DELETE,TRUNCATE" in text
     assert "cannot downgrade wcat_001 with AIP feature authority" in text
+
+
+def test_feature_activation_writes_are_function_only_and_receipt_first() -> None:
+    text = MIGRATION.read_text(encoding="utf-8")
+
+    assert "CREATE TABLE aip_feature_activation_command_receipt" in text
+    assert "UNIQUE(org_id,project_id,idempotency_key)" in text
+    assert "ecommerce_workshop_feature_activation_command_wcat_001" in text
+    assert "LANGUAGE plpgsql SECURITY DEFINER" in text
+    assert "SET search_path=pg_catalog,public" in text
+    assert "pg_advisory_xact_lock" in text
+    assert "feature activation expected revision conflict" in text
+    assert "feature activation idempotency conflict" in text
+    assert "GRANT EXECUTE ON FUNCTION" in text
+    assert "REVOKE ALL ON FUNCTION" in text
+    assert "GRANT INSERT" not in text

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from functools import lru_cache
 from datetime import UTC, datetime
-from typing import Annotated, TypeVar
+from typing import Annotated, Literal, TypeVar
 
 from fastapi import APIRouter, Depends, Header, Path, Query, Request, Security
 from fastapi.security import HTTPBearer
@@ -19,6 +19,15 @@ from aos_api.ecommerce_workshop_catalog import (
 from aos_api.ecommerce_workshop_contracts import (
     EcommerceWorkshopModuleListResponse,
     EcommerceWorkshopModuleReadinessResponse,
+    WorkshopFeatureActivationCommandRequest,
+    WorkshopFeatureActivationCommandResponse,
+)
+from aos_api.ecommerce_workshop_feature_activation import (
+    EcommerceWorkshopFeatureActivationService,
+    WorkshopFeatureActivationConflict,
+    WorkshopFeatureActivationError,
+    WorkshopFeatureActivationForbidden,
+    WorkshopFeatureActivationUnavailable,
 )
 from aos_api.ecommerce_workshop_prepare_contracts import (
     EcommerceWorkshopPrepareRequest,
@@ -288,6 +297,14 @@ ModuleIdPath = Annotated[
         pattern=r"^ecommerce[.][a-z0-9]+(?:[.-][a-z0-9]+)*$",
     ),
 ]
+FeatureIdPath = Annotated[
+    str,
+    Path(
+        min_length=1,
+        max_length=160,
+        pattern=r"^aip[.][a-z0-9]+(?:[.-][a-z0-9]+)*$",
+    ),
+]
 RunIdPath = Annotated[
     str,
     Path(
@@ -306,6 +323,11 @@ ResultT = TypeVar("ResultT")
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_catalog() -> EcommerceWorkshopCatalog:
     return build_ecommerce_workshop_catalog()
+
+
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_feature_activation_service() -> EcommerceWorkshopFeatureActivationService:
+    return EcommerceWorkshopFeatureActivationService()
 
 
 @lru_cache(maxsize=1)
@@ -485,6 +507,10 @@ def get_ecommerce_operation_command_observation_service() -> EcommerceOperationC
 
 CatalogDependency = Annotated[
     EcommerceWorkshopCatalog, Depends(get_ecommerce_workshop_catalog)
+]
+FeatureActivationServiceDependency = Annotated[
+    EcommerceWorkshopFeatureActivationService,
+    Depends(get_ecommerce_workshop_feature_activation_service),
 ]
 TaskCockpitDependency = Annotated[
     EcommerceWorkshopTaskCockpit, Depends(get_ecommerce_workshop_task_cockpit)
@@ -928,6 +954,81 @@ def get_ecommerce_workshop_module_readiness(
             roles=principal.roles,
             markings=principal.markings,
         )
+    )
+
+
+def _execute_feature_activation_command(
+    *,
+    operation: Literal["activate", "revoke"],
+    feature_id: str,
+    body: WorkshopFeatureActivationCommandRequest,
+    idempotency_key: str,
+    principal: Principal,
+    service: EcommerceWorkshopFeatureActivationService,
+) -> WorkshopFeatureActivationCommandResponse:
+    try:
+        return service.execute(
+            principal=principal,
+            feature_id=feature_id,
+            operation=operation,
+            body=body,
+            idempotency_key=idempotency_key,
+        )
+    except WorkshopFeatureActivationForbidden as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=403) from exc
+    except WorkshopFeatureActivationConflict as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=409) from exc
+    except WorkshopFeatureActivationUnavailable as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=503) from exc
+    except WorkshopFeatureActivationError as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=503) from exc
+    except ValueError as exc:
+        raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
+
+
+@router.post(
+    "/aip-features/{feature_id}/activate",
+    response_model=WorkshopFeatureActivationCommandResponse,
+    operation_id="ecommerceWorkshopAipFeatureActivate",
+    responses=_ERRORS,
+)
+def activate_ecommerce_workshop_aip_feature(
+    feature_id: FeatureIdPath,
+    body: WorkshopFeatureActivationCommandRequest,
+    principal: PrincipalDependency,
+    service: FeatureActivationServiceDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> WorkshopFeatureActivationCommandResponse:
+    return _execute_feature_activation_command(
+        operation="activate",
+        feature_id=feature_id,
+        body=body,
+        idempotency_key=idempotency_key,
+        principal=principal,
+        service=service,
+    )
+
+
+@router.post(
+    "/aip-features/{feature_id}/revoke",
+    response_model=WorkshopFeatureActivationCommandResponse,
+    operation_id="ecommerceWorkshopAipFeatureRevoke",
+    responses=_ERRORS,
+)
+def revoke_ecommerce_workshop_aip_feature(
+    feature_id: FeatureIdPath,
+    body: WorkshopFeatureActivationCommandRequest,
+    principal: PrincipalDependency,
+    service: FeatureActivationServiceDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> WorkshopFeatureActivationCommandResponse:
+    return _execute_feature_activation_command(
+        operation="revoke",
+        feature_id=feature_id,
+        body=body,
+        idempotency_key=idempotency_key,
+        principal=principal,
+        service=service,
     )
 
 

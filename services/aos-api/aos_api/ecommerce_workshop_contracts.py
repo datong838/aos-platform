@@ -280,6 +280,45 @@ class EcommerceWorkshopModuleListResponse(StrictContract):
         return self
 
 
+class WorkshopFeatureActivationCommandRequest(StrictContract):
+    expected_revision: int = Field(alias="expectedRevision", ge=0)
+    content_hash: str | None = Field(default=None, alias="contentHash", pattern=SHA256_PATTERN)
+    expires_at: datetime | None = Field(default=None, alias="expiresAt")
+
+    @field_validator("expires_at")
+    @classmethod
+    def _aware_expiry(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.utcoffset() is None:
+            raise ValueError("FeatureActivation expiry requires a timezone")
+        return value
+
+
+class WorkshopFeatureActivationCommandReceipt(StrictContract):
+    schema_version: Literal[
+        "aos.ecommerce-workshop.feature-activation-command-receipt/v1"
+    ] = Field(alias="schemaVersion")
+    receipt_id: str = Field(alias="receiptId", min_length=1, max_length=120)
+    feature_id: str = Field(alias="featureId", pattern=r"^aip[.][a-z0-9]+(?:[.-][a-z0-9]+)*$")
+    operation: Literal["activate", "revoke"]
+    revision: int = Field(ge=1)
+    status: Literal["active", "revoked"]
+    content_hash: str = Field(alias="contentHash", pattern=SHA256_PATTERN)
+    created_at: datetime = Field(alias="createdAt")
+
+    @field_validator("created_at")
+    @classmethod
+    def _aware_created_at(cls, value: datetime) -> datetime:
+        if value.utcoffset() is None:
+            raise ValueError("FeatureActivation receipt time requires a timezone")
+        return value
+
+
+class WorkshopFeatureActivationCommandResponse(StrictContract):
+    tenant: WorkshopTenant
+    receipt: WorkshopFeatureActivationCommandReceipt
+    replayed: bool
+
+
 class EcommerceWorkshopModuleReadinessResponse(StrictContract):
     schema_version: Literal[ECOMMERCE_WORKSHOP_SCHEMA_VERSION] = Field(
         default=ECOMMERCE_WORKSHOP_SCHEMA_VERSION, alias="schemaVersion"
