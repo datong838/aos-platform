@@ -67,6 +67,7 @@ from aos_api.ecommerce_workshop_handoff_service import (
     ModuleHandoffCompilerError,
 )
 from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
+from aos_api.ecommerce_workshop_analyst_source_reader import EcommerceWorkshopAnalystSourceReader
 from aos_api.ecommerce_workshop_growth_scenario import EcommerceWorkshopGrowthScenario
 from aos_api.ecommerce_workshop_dispatch_scenario import EcommerceWorkshopDispatchScenario
 from aos_api.ecommerce_workshop_dispatch_scenario_contracts import DispatchScenarioContribution
@@ -442,7 +443,7 @@ def get_ecommerce_workshop_media_studio() -> EcommerceWorkshopMediaStudio:
 
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_analyst() -> EcommerceWorkshopAnalyst:
-    return EcommerceWorkshopAnalyst(growth_scenario=EcommerceWorkshopGrowthScenario())
+    return EcommerceWorkshopAnalyst(reader=EcommerceWorkshopAnalystSourceReader(), growth_scenario=EcommerceWorkshopGrowthScenario())
 
 
 @lru_cache(maxsize=1)

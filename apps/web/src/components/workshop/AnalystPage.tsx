@@ -30,7 +30,7 @@ const CONTRIBUTIONS: Record<AnalystViewId, string> = {
 const SCENARIO_LABELS = { insight: "洞察", growth_plan: "GrowthPlan", content: "内容", creator: "达人", media: "媒体", publication: "发布", effect_review: "效果复盘", memory_candidate: "记忆候选" } as const;
 const LEARNING_STAGE_LABELS = { effect_review: "效果复盘", maturity: "成熟度", memory_candidate: "记忆候选", governance: "治理审查", promotion: "知识晋升", knowledge_query: "查询复验", revocation_impact: "撤销影响" } as const;
 const stateFor = (phase: Phase): AsyncState => phase === "ready" || phase === "empty" ? "ready" : phase;
-const STATUS_LABELS: Record<string, string> = { ready: "可读取", blocked: "等待条件", unknown: "待核对", partial: "部分可用", failed: "读取失败", forbidden: "无权访问", running: "执行中", succeeded: "已完成", cancelled: "已取消", "read-only": "只读" };
+const STATUS_LABELS: Record<string, string> = { ready: "可读取", blocked: "等待条件", unknown: "待核对", not_applicable: "不适用", partial: "部分可用", failed: "读取失败", forbidden: "无权访问", running: "执行中", succeeded: "已完成", cancelled: "已取消", "read-only": "只读" };
 const labelStatus = (value: string) => STATUS_LABELS[value] ?? value;
 const analystNextAction = (viewId: AnalystViewId) => ({
   overview: "补充同租户、同数据截止的经营指标与证据",
@@ -52,14 +52,28 @@ const VIEW_SLOTS: Record<AnalystViewId, readonly string[]> = {
   evidence: ["指标证据", "模型证据", "评价证据"],
   quality: ["分母完整性", "新鲜度", "冲突与对账"],
 };
+const METRIC_LABELS: Record<string, string> = {
+  shop_count: "店铺数",
+  product_count: "商品数",
+  product_sku_count: "商品SKU数",
+  category_count: "类目数",
+  order_count: "订单数",
+  order_line_count: "订单明细数",
+  customer_count: "会员数",
+  weapp_count: "小程序数",
+  product_review_count: "商品评价数",
+  ready_source_count: "可读取数据源",
+  failed_source_count: "失败数据源",
+  stale_source_count: "过期数据源",
+};
 
 function metricValue(view: AnalystViewSlice, index: number) {
   const metric = view.metrics[index];
   return {
-    label: metric?.metricId ?? VIEW_SLOTS[view.viewId][index] ?? `指标槽位 ${index + 1}`,
+    label: metric ? METRIC_LABELS[metric.metricId] ?? "经营指标" : VIEW_SLOTS[view.viewId][index] ?? `指标槽位 ${index + 1}`,
     value: metric?.status === "ready" && metric.value !== null ? `${metric.value}${metric.unit ? ` ${metric.unit}` : ""}` : "未知",
     status: metric?.status ?? "blocked",
-    note: metric?.status === "ready" ? `${metric.window ?? "窗口未知"} · ${metric.grain ?? "粒度未知"}` : "等待同截止面 exact authority",
+    note: metric?.status === "ready" ? `${metric.grain ?? "粒度未知"} · 当前数据截止已回链` : "等待同截止面精确数据来源",
   };
 }
 
@@ -87,15 +101,16 @@ function AnalystExactView({ view, selected }: { view: AnalystViewSlice; selected
     <header className="analyst-exact-visually-hidden"><span>{LABELS[view.viewId]}</span><h2>{LABELS[view.viewId]}</h2></header>
     <section className="analyst-exact-cadence" aria-label="每日经营节奏">{[...view.readinessAxes, { axis: "same_cutoff" as const, status: view.status, exactRef: null }].map((axis, index) => <article className={`is-${axis.status}`} key={axis.axis}><span>{index + 1}</span><strong>{axis.axis === "same_cutoff" ? "同截止面复核" : AXIS_LABELS[axis.axis]}</strong><small>{axis.status === "ready" ? "已回读" : "待补证"}</small></article>)}</section>
     <div className="analyst-exact-overview-grid"><article><header><strong>当前经营摘要</strong><span className={`is-${view.status}`}>{labelStatus(view.status)}</span></header><dl><div><dt>可信指标</dt><dd>{view.countLedger.ready}/{view.countLedger.denominator}</dd></div><div><dt>待核对</dt><dd>{view.countLedger.unknown + view.countLedger.blocked}</dd></div><div><dt>资源版本</dt><dd>r{view.resourceRevision}</dd></div><div><dt>业务写入</dt><dd>0</dd></div></dl><p>{view.status === "ready" ? "同一截止面的经营指标与数据来源可读。" : "正式数据来源尚未闭合，经营结论保持可信空。"}</p></article><aside><header><strong>待补证 / 待关注</strong><span>{view.blockers.length}</span></header>{blockers.slice(0, 3).map((item) => <div key={item.code}><strong>{analystNextAction(view.viewId)}</strong><details><summary>查看审计状态码</summary><code>{item.code}</code><p>{item.requiredAction}</p></details></div>)}</aside></div>
+    <section className="analyst-exact-driver-cards analyst-exact-overview-metrics" aria-label="当前经营指标">{metrics.map((metric) => <article className={`is-${metric.status}`} key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.note}</small><div className="analyst-exact-empty-chart">正式只读投影 · 同截止面</div></article>)}</section>
     <section className="analyst-exact-coworkers" aria-label="数字同事只读协作状态">{["数据参谋", "经营参谋", "专业工作台"].map((label, index) => <article key={label}><span>{index + 1}</span><div><strong>{label}</strong><p>{index === 0 ? "指标与证据读取" : index === 1 ? "决策摘要与归因边界" : "未授权 Handoff"}</p></div><small>{view.status === "ready" ? "只读" : "等待"}</small></article>)}</section>{common}
   </section>;
 
   if (view.viewId === "drivers") return <section {...panelProps}>
-    <header className="analyst-exact-visually-hidden"><h2>{LABELS[view.viewId]}</h2></header><section className="analyst-exact-driver-cards">{metrics.map((metric) => <article className={`is-${metric.status}`} key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.note}</small><div className="analyst-exact-empty-chart">等待 observation</div></article>)}</section><div className="analyst-exact-driver-lower"><article><header><strong>驱动贡献分布</strong><span>同截止面</span></header>{VIEW_SLOTS.drivers.map((slot, index) => <div key={slot}><span>{slot}</span><strong>{metricValue(view, index).value}</strong><small>{metricValue(view, index).status}</small></div>)}</article><aside><header><strong>实时经营事件流</strong><span>只读</span></header><div className="analyst-exact-trusted-empty"><strong>当前没有可回链事件</strong><p>没有 exact observation 时不生成趋势、归因或因果结论。</p></div></aside></div>{common}
+    <header className="analyst-exact-visually-hidden"><h2>{LABELS[view.viewId]}</h2></header><section className="analyst-exact-driver-cards">{metrics.map((metric) => <article className={`is-${metric.status}`} key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.note}</small><div className="analyst-exact-empty-chart">{metric.status === "ready" ? "当前经营观察 · 非归因、非因果" : "等待经营观察"}</div></article>)}</section><div className="analyst-exact-driver-lower"><article><header><strong>经营观察分布</strong><span>同截止面 · 非归因</span></header>{VIEW_SLOTS.drivers.map((slot, index) => <div key={slot}><span>{slot}</span><strong>{metricValue(view, index).value}</strong><small>{labelStatus(metricValue(view, index).status)}</small></div>)}</article><aside><header><strong>实时经营事件流</strong><span>只读</span></header><div className="analyst-exact-trusted-empty"><strong>当前没有可回链事件</strong><p>当前计数只说明经营观察，不生成趋势、归因或因果结论。</p></div></aside></div>{common}
   </section>;
 
   if (view.viewId === "diagnosis") return <section {...panelProps}>
-    <header className="analyst-exact-visually-hidden"><h2>{LABELS[view.viewId]}</h2></header><nav className="analyst-exact-subtabs" aria-label="问题诊断分视图"><span className="is-active">指标对比</span><span>异常检测</span><span>归因分析</span><span>AI 洞察</span></nav><article className="analyst-exact-diagnosis-table"><header><strong>指标深度对比 · 环比 / 同比 / 目标达成</strong><span>数据钻取只读</span></header><table><thead><tr><th>指标</th><th>当前值</th><th>对照</th><th>环比</th><th>同比</th><th>目标达成</th></tr></thead><tbody>{[...metrics, ...view.readinessAxes.slice(0, 3).map((axis) => ({ label: AXIS_LABELS[axis.axis], value: "未知", status: axis.status, note: "等待精确数据来源" }))].map((metric) => <tr key={metric.label}><th>{metric.label}</th><td>{metric.value}</td><td>未知</td><td>{labelStatus(metric.status)}</td><td>未知</td><td>待验证</td></tr>)}</tbody></table></article><div className="analyst-exact-diagnosis-lower"><article><header><strong>来源 × 指标覆盖</strong><span>只读</span></header><p>当前没有可安全展示的来源分布；分母、缺失和冲突保持显式。</p></article><aside><header><strong>异常与证据热区</strong><span>{view.blockers.length} 项待补证</span></header><p>{analystNextAction(view.viewId)}</p></aside></div>{common}
+    <header className="analyst-exact-visually-hidden"><h2>{LABELS[view.viewId]}</h2></header><nav className="analyst-exact-subtabs" aria-label="问题诊断分视图"><span className="is-active">指标对比</span><span>异常检测</span><span>归因分析</span><span>AI 洞察</span></nav><article className="analyst-exact-diagnosis-table"><header><strong>指标深度对比 · 当前经营观察</strong><span>只读 · 尚未形成对照与归因</span></header><table><thead><tr><th>指标</th><th>当前值</th><th>对照</th><th>环比</th><th>同比</th><th>目标达成</th></tr></thead><tbody>{[...metrics, ...view.readinessAxes.slice(0, 3).map((axis) => ({ label: AXIS_LABELS[axis.axis], value: "未知", status: axis.status, note: "等待精确数据来源" }))].map((metric) => <tr key={metric.label}><th>{metric.label}</th><td>{metric.value}</td><td>未知</td><td>{labelStatus(metric.status)}</td><td>未知</td><td>待验证</td></tr>)}</tbody></table><p>当前值来自同租户正式只读投影；没有模型与评价证据时，不把计数解释为异常、归因或因果。</p></article><div className="analyst-exact-diagnosis-lower"><article><header><strong>来源 × 指标覆盖</strong><span>只读</span></header><p>当前值已回链正式数据源；对照分母、趋势窗口和归因证据未闭合前保持未知。</p></article><aside><header><strong>异常与证据热区</strong><span>{view.blockers.length} 项待补证</span></header><p>{analystNextAction(view.viewId)}</p></aside></div>{common}
   </section>;
 
   if (view.viewId === "plan") return <section {...panelProps}>
@@ -111,7 +126,7 @@ function AnalystExactView({ view, selected }: { view: AnalystViewSlice; selected
   </section>;
 
   return <section {...panelProps}>
-    <header className="analyst-exact-visually-hidden"><h2>{LABELS[view.viewId]}</h2></header><div className="analyst-exact-quality-grid"><article><header><strong>增长护栏 · 数据质量门</strong><span>{labelStatus(view.status)}</span></header>{view.readinessAxes.map((axis) => <div key={axis.axis}><span>{AXIS_LABELS[axis.axis]}</span><progress value={axis.status === "ready" ? 1 : 0} max={1} /><small>{labelStatus(axis.status)}</small></div>)}</article><aside><header><strong>先行指标 · 同截止面巡检</strong><span>只读</span></header><div className="analyst-exact-quality-metrics">{metrics.slice(0, 2).map((metric) => <section key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{labelStatus(metric.status)}</small></section>)}</div><p>未知不显示为 0；没有精确质量引用时保持失败关闭。</p></aside><article aria-label="分母与新鲜度"><header><strong>分母与新鲜度</strong><span>{qualityLedgerValue(view, view.countLedger.denominator)}</span></header><dl><div><dt>可读取</dt><dd>{qualityLedgerValue(view, view.countLedger.ready)}</dd></div><div><dt>待核对</dt><dd>{qualityLedgerValue(view, view.countLedger.unknown)}</dd></div><div><dt>等待条件</dt><dd>{qualityLedgerValue(view, view.countLedger.blocked)}</dd></div></dl></article><aside><header><strong>异常与待补条件</strong><span>{view.blockers.length}</span></header>{blockers.slice(0, 3).map((item) => <div key={item.code}><p>{analystNextAction(view.viewId)}</p><details><summary>查看审计状态码</summary><code>{item.code}</code><span>{item.requiredAction}</span></details></div>)}</aside></div>{common}
+    <header className="analyst-exact-visually-hidden"><h2>{LABELS[view.viewId]}</h2></header><div className="analyst-exact-quality-grid"><article><header><strong>增长护栏 · 数据质量门</strong><span>{labelStatus(view.status)}</span></header>{view.readinessAxes.map((axis) => <div key={axis.axis}><span>{AXIS_LABELS[axis.axis]}</span><progress value={axis.status === "ready" ? 1 : 0} max={1} /><small>{labelStatus(axis.status)}</small></div>)}</article><aside><header><strong>当前数据源 · 同截止面巡检</strong><span>只读</span></header><div className="analyst-exact-quality-metrics">{metrics.slice(0, 3).map((metric) => <section key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{labelStatus(metric.status)}</small></section>)}</div><p>未知不显示为 0；失败或过期来源不贡献经营指标，只展示来源质量分布。</p></aside><article aria-label="分母与新鲜度"><header><strong>质量指标账本</strong><span>{qualityLedgerValue(view, view.countLedger.denominator)}</span></header><dl><div><dt>可读取</dt><dd>{qualityLedgerValue(view, view.countLedger.ready)}</dd></div><div><dt>待核对</dt><dd>{qualityLedgerValue(view, view.countLedger.unknown)}</dd></div><div><dt>等待条件</dt><dd>{qualityLedgerValue(view, view.countLedger.blocked)}</dd></div></dl></article><aside><header><strong>异常与待补条件</strong><span>{view.blockers.length}</span></header>{blockers.slice(0, 3).map((item) => <div key={item.code}><p>{analystNextAction(view.viewId)}</p><details><summary>查看审计状态码</summary><code>{item.code}</code><span>{item.requiredAction}</span></details></div>)}</aside></div>{common}
   </section>;
 }
 
