@@ -3270,6 +3270,18 @@
       "module": "aos_api.routers.ecommerce_business_investigations",
       "attribute": "router",
       "order": 544
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_logic_automations",
+      "attribute": "router",
+      "order": 545
+    },
+    {
+      "domain": "aip",
+      "module": "aos_api.routers.aip_logic_automations",
+      "attribute": "summary_router",
+      "order": 546
     }
   ]
 }

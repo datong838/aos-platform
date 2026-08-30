@@ -39,6 +39,7 @@ export const AIP_OPERATIONS = {
   listLogicPublications: { method: "GET", path: "/v1/aip/logic/graphs/{graph_id}/publications", mutation: false },
   getLogicPublication: { method: "GET", path: "/v1/aip/logic/graphs/{graph_id}/publications/{publication_id}", mutation: false },
   publishLogicGraph: { method: "POST", path: "/v1/aip/logic/graphs/{graph_id}/publish", mutation: true },
+  restoreLogicPublication: { method: "POST", path: "/v1/aip/logic/graphs/{graph_id}/publications/{publication_id}/restore", mutation: true },
   listMemoryCandidates: { method: "GET", path: "/v1/aip/memory-authority/candidates", mutation: false },
   getMemoryCandidate: { method: "GET", path: "/v1/aip/memory-authority/candidates/{candidate_id}", mutation: false },
   listMemoryCandidateEvents: { method: "GET", path: "/v1/aip/memory-authority/candidates/{candidate_id}/events", mutation: false },

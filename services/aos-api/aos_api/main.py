@@ -48,6 +48,13 @@ def _qyh_cron_worker_enabled() -> bool:
     }
 
 
+def _aip_logic_automation_worker_enabled() -> bool:
+    """Internal-only scheduler; an explicit switch is available for isolated tests."""
+    return os.getenv("AOS_AIP_LOGIC_AUTOMATION_ENABLED", "true").strip().lower() not in {
+        "0", "false", "no", "off",
+    }
+
+
 @dataclass(frozen=True)
 class _ProviderHealthLoopSelection:
     maintainer: Any | None
@@ -128,6 +135,8 @@ def _prebuild_jdbc_ssh_tunnels() -> None:
 async def lifespan(_app: FastAPI):
     cron_stop = asyncio.Event()
     cron_task: asyncio.Task[None] | None = None
+    logic_automation_stop = asyncio.Event()
+    logic_automation_task: asyncio.Task[None] | None = None
     provider_health_stop = asyncio.Event()
     provider_health_task: asyncio.Task[None] | None = None
     # Migration mode owns its failure policy. Keep it outside the best-effort
@@ -356,6 +365,30 @@ async def lifespan(_app: FastAPI):
     else:
         log.info("startup_qyh_real_cron_worker_disabled explicit=true")
 
+    async def _logic_automation_loop() -> None:
+        """Check minute policies without invoking Provider or writing business systems."""
+        while not logic_automation_stop.is_set():
+            try:
+                from aos_api.aip_logic_automation_scheduler import run_due_logic_automations
+
+                result = await asyncio.to_thread(run_due_logic_automations)
+                if result["matched"] or result["failed"]:
+                    log.info("aip_logic_automation_tick %s", result)
+            except Exception:
+                log.exception("aip_logic_automation_tick_failed_closed")
+            try:
+                await asyncio.wait_for(logic_automation_stop.wait(), timeout=15)
+            except TimeoutError:
+                continue
+
+    if _aip_logic_automation_worker_enabled():
+        logic_automation_task = asyncio.create_task(
+            _logic_automation_loop(), name="aip-logic-automation"
+        )
+        log.info("startup_aip_logic_automation_worker_started interval_seconds=15")
+    else:
+        log.info("startup_aip_logic_automation_worker_disabled explicit=true")
+
     from aos_api.aip_provider_health_maintenance import maintenance_interval_seconds
 
     provider_health_selection = _select_provider_health_maintenance()
@@ -403,11 +436,16 @@ async def lifespan(_app: FastAPI):
         )
     yield
     cron_stop.set()
+    logic_automation_stop.set()
     provider_health_stop.set()
     if cron_task is not None:
         cron_task.cancel()
         with suppress(asyncio.CancelledError):
             await cron_task
+    if logic_automation_task is not None:
+        logic_automation_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await logic_automation_task
     if provider_health_task is not None:
         provider_health_task.cancel()
         with suppress(asyncio.CancelledError):

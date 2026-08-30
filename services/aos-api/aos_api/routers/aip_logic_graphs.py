@@ -101,6 +101,21 @@ def list_logic_graphs(
     return LogicGraphListResponse(items=items, count=len(items))
 
 
+@router.get("/{graph_id}/revisions", response_model=LogicGraphListResponse)
+def list_logic_graph_revisions(
+    graph_id: str,
+    principal: Principal = Depends(require_principal),
+    store: LogicGraphStore = Depends(get_logic_graph_store),
+) -> LogicGraphListResponse:
+    try:
+        items = store.list_revisions(principal.org_id, principal.project_id, graph_id)
+    except LogicGraphNotFound as exc:
+        raise _not_found(exc) from exc
+    except LogicGraphIntegrityError as exc:
+        raise _integrity_error(exc) from exc
+    return LogicGraphListResponse(items=items, count=len(items))
+
+
 @router.post("/validate", response_model=LogicGraphValidationResult)
 def validate_logic_graph_draft(
     body: ValidateLogicGraphRequest,

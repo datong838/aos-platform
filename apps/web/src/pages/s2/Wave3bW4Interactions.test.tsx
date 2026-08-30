@@ -120,19 +120,25 @@ describe("Wave3B W4 · DOM 真实性闭环", () => {
     expect(apiMocks.post).not.toHaveBeenCalled();
   });
 
-  it("成熟度页以真实 Eval/Draft 数据展示条件，并核验服务端熔断响应", async () => {
+  it("成熟度页以四维真实证据展示状态并可重新读取", async () => {
     apiMocks.get.mockImplementation(async (path: string) => {
       if (path === "/v1/aip/evals/status") return { green: true, l4Allowed: true };
       if (path === "/v1/aip/drafts") return { count: 2, items: [{}, {}] };
+      if (path === "/v1/aip/agents") return { items: [{ instanceId: "content_officer", name: "内容官" }] };
+      if (path === "/v1/aip/tools") return { items: [{ id: "query.objects", kind: "Query", blocked: false }] };
+      if (path === "/v1/aip/logic/automation-policies") return { items: [{ status: "active" }] };
+      if (path === "/v1/evals/suites") return { items: [{ id: "suite-1" }] };
       throw new Error(path);
     });
-    apiMocks.post.mockResolvedValue({ open: true, mode: "L3" });
     await act(async () => root.render(<MemoryRouter><MaturityPage /></MemoryRouter>));
     await flush();
-    expect(host.textContent).toContain("审批台 2 项");
-    expect(host.textContent).toContain("查看自动化申请条件");
-    await act(async () => byText(host, "模拟熔断降级").click());
+    expect(host.textContent).toContain("业务能力");
+    expect(host.textContent).toContain("1 位数字同事 · 1/1 个工具可受控使用");
+    expect(host.textContent).toContain("1 条活动自动化");
+    expect(host.textContent).toContain("2 项草稿");
+    await act(async () => byText(host, "重新读取全部证据").click());
     await flush();
-    expect(host.textContent).toContain("服务端已确认熔断");
+    expect(apiMocks.get).toHaveBeenCalledWith("/v1/aip/logic/automation-policies");
+    expect(apiMocks.post).not.toHaveBeenCalled();
   });
 });

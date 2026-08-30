@@ -31,6 +31,13 @@ class PublishLogicGraphRequest(_StrictModel):
         return normalized
 
 
+class RestoreLogicPublicationRequest(_StrictModel):
+    """CAS guard for restoring an immutable publication as a new draft revision."""
+
+    expected_revision: int = Field(ge=1, le=MAX_SAFE_INTEGER)
+    expected_graph_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
 class LogicEvalEvidence(_StrictModel):
     """Immutable Evals result returned by the injected durable evidence provider."""
 

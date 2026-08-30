@@ -13,6 +13,7 @@ const graphApi = vi.hoisted(() => ({
   getLogicGraph: vi.fn(),
   createLogicGraph: vi.fn(),
   replaceLogicGraph: vi.fn(),
+  listLogicGraphRevisions: vi.fn(),
 }));
 
 vi.mock("./logicGraphApi", () => graphApi);
@@ -32,6 +33,16 @@ const publicationApi = vi.hoisted(() => ({
 }));
 
 vi.mock("./logicPublicationApi", () => publicationApi);
+
+const automationApi = vi.hoisted(() => ({
+  listLogicAutomations: vi.fn(),
+  createLogicAutomation: vi.fn(),
+  updateLogicAutomation: vi.fn(),
+  triggerLogicAutomation: vi.fn(),
+  listLogicAutomationRuns: vi.fn(),
+}));
+
+vi.mock("./logicAutomationApi", () => automationApi);
 
 const clientApi = vi.hoisted(() => ({ apiGet: vi.fn() }));
 
@@ -227,13 +238,17 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     Object.values(graphApi).forEach((mock) => mock.mockReset());
     Object.values(runApi).forEach((mock) => mock.mockReset());
     Object.values(publicationApi).forEach((mock) => mock.mockReset());
+    Object.values(automationApi).forEach((mock) => mock.mockReset());
     clientApi.apiGet.mockReset();
     productionContracts.listStageTemplates.mockClear();
     productionContracts.listResponsibilityPlans.mockClear();
     agentControl.runtimeReadiness.mockClear();
     graphApi.listLogicGraphs.mockResolvedValue({ items: [], count: 0 });
+    graphApi.listLogicGraphRevisions.mockResolvedValue({ items: [], count: 0 });
     runApi.listLogicRuns.mockResolvedValue({ items: [], count: 0, next_cursor: null });
     publicationApi.listLogicPublications.mockResolvedValue({ items: [], count: 0 });
+    automationApi.listLogicAutomations.mockResolvedValue({ items: [], count: 0 });
+    automationApi.listLogicAutomationRuns.mockResolvedValue({ items: [], count: 0 });
     clientApi.apiGet.mockResolvedValue({ items: [] });
     productionContracts.listStageTemplates.mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 });
     productionContracts.listResponsibilityPlans.mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 });
@@ -345,8 +360,8 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     expect(currentSearch).toBe("?tab=automation");
     expect(host.querySelector('[role="tabpanel"]')?.id).toBe("logic-panel-automation");
     expect(host.textContent).toContain("tabs@2");
-    expect(host.textContent).toContain("当前组织的自动化使用关系尚未接入权威数据源");
-    expect(host.textContent).not.toContain("已登记 Uses0");
+    expect(host.textContent).toContain("当前业务逻辑尚未建立自动化规则");
+    expect(automationApi.listLogicAutomations).toHaveBeenCalledWith("tabs");
 
     await act(async () => button("自动化").dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true })));
     await flush();

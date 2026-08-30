@@ -176,4 +176,15 @@ describe("LogicPublicationPanel", () => {
     expect(automation?.title).toContain("生产调度");
     expect(host.textContent).toContain("仅可绑定不可变的正式发布版本");
   });
+
+  it("对比前后发布评测，并将历史版本恢复为受控的新草稿修订", async () => {
+    const onRestorePublication = vi.fn();
+    await render(props({ onRestorePublication }));
+    expect(host.textContent).toContain("评测结果对比");
+    expect(host.textContent).toContain("修订 6");
+    expect(host.textContent).toContain("质量未回退");
+    await act(async () => button(host, "恢复为新草稿修订").click());
+    expect(onRestorePublication).toHaveBeenCalledWith("pub-1");
+    expect(host.textContent).toContain("保留本条不可变发布记录");
+  });
 });

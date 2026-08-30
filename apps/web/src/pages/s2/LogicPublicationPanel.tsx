@@ -16,6 +16,7 @@ export interface LogicPublicationPanelProps {
   evalGate?: LogicPublicationEvalGate | null;
   publishDisabledReason: string;
   publishing: boolean;
+  restoring?: boolean;
   publication: LogicPublication | null;
   publicationState: LogicPublicationLoadState;
   publicationError?: string | null;
@@ -25,6 +26,7 @@ export interface LogicPublicationPanelProps {
   selectedPublicationId?: string | null;
   automationDisabledReason?: string;
   onPublish: () => void;
+  onRestorePublication?: (publicationId: string) => void;
   onSelectPublication: (publicationId: string) => void;
   onRetryPublication?: () => void;
   onRetryPublications?: () => void;
@@ -104,13 +106,37 @@ function ErrorState({
   );
 }
 
-function PublicationDetail({ publication }: { publication: LogicPublication }) {
+function PublicationDetail({
+  publication,
+  previous,
+  restoring,
+  onRestore,
+}: {
+  publication: LogicPublication;
+  previous: LogicPublication | null;
+  restoring: boolean;
+  onRestore?: () => void;
+}) {
+  const passRateDelta = previous ? publication.eval_gate.pass_rate - previous.eval_gate.pass_rate : null;
   return (
     <div data-publication-id={publication.publication_id}>
       <p style={{ margin: "8px 0", color: "var(--aos-text-secondary)", fontSize: "0.75rem" }}>
         业务逻辑修订 {publication.graph_revision} 已完成正式发布和证据回读 · <Timestamp value={publication.created_at} />
       </p>
       <GateFacts gate={publication.eval_gate} />
+      <section style={{ ...panelStyle, marginTop: 8 }} aria-label="评测结果对比">
+        <strong style={{ fontSize: "0.75rem" }}>评测结果对比</strong>
+        {previous ? (
+          <dl style={factsStyle}>
+            <Fact label="对比发布">修订 {previous.graph_revision}</Fact>
+            <Fact label="通过率变化">{passRateDelta! >= 0 ? "+" : ""}{percent(passRateDelta!)}</Fact>
+            <Fact label="失败用例变化">{publication.eval_gate.failed - previous.eval_gate.failed}</Fact>
+            <Fact label="结论">{passRateDelta! >= 0 && publication.eval_gate.failed <= previous.eval_gate.failed ? "质量未回退" : "存在质量回退，需复核"}</Fact>
+          </dl>
+        ) : (
+          <p style={{ margin: "6px 0 0", color: "var(--aos-muted)", fontSize: "0.72rem" }}>这是首条正式发布记录，暂无前序版本可对比。</p>
+        )}
+      </section>
       <details style={{ marginTop: 8 }}>
         <summary>发布技术标识（审计用）</summary>
         <dl style={factsStyle}>
@@ -126,6 +152,16 @@ function PublicationDetail({ publication }: { publication: LogicPublication }) {
       <p style={{ margin: "8px 0 0", color: "var(--aos-muted)", fontSize: "0.7rem" }}>
         发布详情来自服务端不可变快照；查看历史发布不会修改当前画布或运行记录。
       </p>
+      {onRestore && (
+        <div style={{ marginTop: 8 }}>
+          <button type="button" className="btn" disabled={restoring} onClick={onRestore}>
+            {restoring ? "恢复中…" : "恢复为新草稿修订"}
+          </button>
+          <span style={{ display: "block", marginTop: 4, color: "var(--aos-muted)", fontSize: "0.68rem" }}>
+            保留本条不可变发布记录，仅复制其内容生成新的草稿修订；恢复后必须重新试跑、评测和发布。
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -145,6 +181,10 @@ export function LogicPublicationPanel(props: LogicPublicationPanelProps) {
   const disabledReason = intrinsicDisabledReason(props);
   const publishDisabled = props.publishing || Boolean(disabledReason);
   const automationReason = props.automationDisabledReason || DEFAULT_AUTOMATION_DISABLED_REASON;
+  const selectedIndex = props.publications.findIndex((item) => item.publication_id === props.publication?.publication_id);
+  const previousPublication = selectedIndex >= 0
+    ? props.publications.slice(selectedIndex + 1).find((item) => item.graph_revision < (props.publication?.graph_revision ?? 0)) ?? null
+    : null;
 
   return (
     <section style={panelStyle} aria-label="Logic 发布治理">
@@ -237,7 +277,12 @@ export function LogicPublicationPanel(props: LogicPublicationPanelProps) {
             />
           )}
           {props.publicationState === "ready" && props.publication && (
-            <PublicationDetail publication={props.publication} />
+            <PublicationDetail
+              publication={props.publication}
+              previous={previousPublication}
+              restoring={Boolean(props.restoring)}
+              onRestore={props.onRestorePublication ? () => props.onRestorePublication!(props.publication!.publication_id) : undefined}
+            />
           )}
           {props.publicationState === "ready" && !props.publication && (
             <p style={{ color: "var(--aos-muted)", fontSize: "0.75rem" }}>服务端未返回发布详情。</p>

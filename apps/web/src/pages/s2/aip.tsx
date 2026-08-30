@@ -75,6 +75,32 @@ function toolSubtitle(kind: string): string {
   return "只读 / 可提案";
 }
 
+function toolBusinessGroup(kind: string): string {
+  const cat = toolCategory(kind);
+  if (cat === "query" || cat === "wiki") return "经营事实读取";
+  if (cat === "function") return "业务规则与分析";
+  if (cat === "action") return "受控业务写回";
+  if (cat === "capability") return "内容与媒体生产";
+  return "任务协作";
+}
+
+function toolRiskLabel(kind: string): string {
+  const cat = toolCategory(kind);
+  if (cat === "action") return "写操作 · 必须审批";
+  if (cat === "capability") return "外部能力 · 沙箱门控";
+  return "只读 / 沙箱安全";
+}
+
+function toolIoLabel(kind: string): string {
+  const cat = toolCategory(kind);
+  if (cat === "query") return "对象标识 → 授权业务属性";
+  if (cat === "wiki") return "业务对象 → 结构化知识字段";
+  if (cat === "function") return "业务输入 → 规则计算结果";
+  if (cat === "action") return "变更意图 → 提案与待审草稿";
+  if (cat === "capability") return "生产需求 → 受控能力产物";
+  return "任务上下文 → 澄清结果";
+}
+
 /** 智能体工具配置：三栏目录、实例配置和受控试跑。 */
 export function ToolsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -104,7 +130,7 @@ export function ToolsPage() {
     [],
   );
   const [cats, setCats] = useState<Set<string>>(() => new Set(defaultCats));
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => String(searchParams.get("tool") || "").trim() || null);
   const [hitl, setHitl] = useState<ToolsPanelHitl>("form");
   const [invokeSummary, setInvokeSummary] = useState("");
   const [invokePayload, setInvokePayload] = useState<unknown>(null);
@@ -240,6 +266,18 @@ export function ToolsPage() {
   const selectedCat = selected ? toolCategory(selected.kind) : null;
   const currentAgent = agentItems.find((a) => a.id === activeInstanceId) || null;
 
+  function toolsLink(path: string, toolId = selected?.id || "") {
+    const next = new URLSearchParams();
+    if (activeInstanceId) next.set("instance", activeInstanceId);
+    if (toolId) next.set("tool", toolId);
+    const objectType = urlInvokeCtx?.objectType || draftObjectType;
+    const objectId = urlInvokeCtx?.objectId || draftObjectId;
+    if (objectType) next.set("objectType", objectType);
+    if (objectId) next.set("objectId", objectId);
+    const query = next.toString();
+    return query ? `${path}?${query}` : path;
+  }
+
   function selectInstance(id: string) {
     setActiveInstanceId(id);
     const next = new URLSearchParams(searchParams);
@@ -319,7 +357,12 @@ export function ToolsPage() {
         payload,
       );
       setInvokePayload(r);
-      if (r.ok === false || r.blocked === true || r.requiresDraft === true) {
+      if (r.requiresDraft === true) {
+        const proposal = r.proposal as { actionTypeId?: string; objectType?: string; objectId?: string; status?: string } | undefined;
+        setInvokeSummary(
+          `写回提案已形成 · ${proposal?.actionTypeId || id} · ${proposal?.objectType || payload.objectType}/${proposal?.objectId || payload.objectId} · 下一步进入草稿审批`,
+        );
+      } else if (r.ok === false || r.blocked === true) {
         const msg =
           typeof (r.result as { message?: string } | undefined)?.message === "string"
             ? String((r.result as { message?: string }).message)
@@ -403,10 +446,15 @@ export function ToolsPage() {
           </fieldset>
           <div className="mp-cfg-actions" style={{ marginTop: "0.75rem" }}>
             <InvokeButton toolId={selected.id} />
-            <Link to="/aip/drafts" className="btn-nav" data-testid="tools-action-drafts-link">
-              打开草稿审批台 →
+            <Link to={toolsLink("/aip/drafts")} className="btn-nav" data-testid="tools-action-drafts-link">
+              进入草稿审批 →
             </Link>
           </div>
+          <ol className="aos-text" style={{ fontSize: "0.72rem", paddingLeft: 18 }}>
+            <li>工具试跑形成精确写回提案，不修改生产对象</li>
+            <li>草稿审批台补充变更字段并提交职责分离审批</li>
+            <li>批准后才允许执行，并以交付凭证确认结果</li>
+          </ol>
         </>
       );
     }
@@ -447,7 +495,7 @@ export function ToolsPage() {
             </p>
           )}
           <div className="mp-cfg-actions">
-            <Link to="/aip/logic" className="btn-nav-accent">
+            <Link to={toolsLink("/aip/logic")} className="btn-nav-accent">
               打开业务逻辑编排 →
             </Link>
             <InvokeButton toolId={selected.id} />
@@ -642,10 +690,10 @@ export function ToolsPage() {
         <Link to="/aip/capabilities" className="btn-nav">
           重能力 →
         </Link>
-        <Link to="/aip/maturity" className="btn-nav">
+        <Link to={toolsLink("/aip/maturity")} className="btn-nav">
           ← 成熟度
         </Link>
-        <Link to="/aip/logic" className="btn-nav-accent">
+        <Link to={toolsLink("/aip/logic")} className="btn-nav-accent">
           业务逻辑编排 →
         </Link>
         <Link
@@ -752,6 +800,10 @@ export function ToolsPage() {
                   className={`bp-tool-item${active ? " is-active" : ""}${cat === "capability" ? " is-capability" : ""}`}
                   onClick={() => {
                     setSelectedId(t.id);
+                    const next = new URLSearchParams(searchParams);
+                    next.set("tool", t.id);
+                    if (activeInstanceId) next.set("instance", activeInstanceId);
+                    setSearchParams(next, { replace: true });
                     setInvokeSummary("");
                     setInvokePayload(null);
                     setAdvancedOpen(false);
@@ -768,7 +820,7 @@ export function ToolsPage() {
                       color: cat === "action" && active ? "#fde68a" : undefined,
                     }}
                   >
-                    {toolSubtitle(t.kind)}
+                    {toolSubtitle(t.kind)} · {toolBusinessGroup(t.kind)} · {toolRiskLabel(t.kind)}
                   </div>
                 </button>
               );
@@ -796,6 +848,15 @@ export function ToolsPage() {
               </div>
             </div>
             {renderDetail()}
+            {selected && (
+              <div className="card" data-testid="tools-business-contract" style={{ padding: 10, marginTop: 10, fontSize: "0.72rem" }}>
+                <strong>业务能力合同</strong>
+                <div style={{ marginTop: 6 }}>能力域：{toolBusinessGroup(selected.kind)}</div>
+                <div>风险：{toolRiskLabel(selected.kind)}</div>
+                <div>输入输出：{toolIoLabel(selected.kind)}</div>
+                <div>适用数字同事：{currentAgent?.label || "请选择数字同事实例"}</div>
+              </div>
+            )}
             {invokeSummary && (
               <p className="aos-text" style={{ fontSize: "0.8rem", marginTop: "0.75rem" }}>
                 {invokeSummary}

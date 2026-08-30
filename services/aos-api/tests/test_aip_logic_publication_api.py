@@ -17,6 +17,7 @@ from aos_api.aip_logic_publication_store import (
     LogicPublicationVersionConflict,
 )
 from aos_api.routers.aip_logic_publications import (
+    get_logic_graph_store,
     get_logic_eval_evidence_reader,
     get_logic_publication_store,
     router,
@@ -179,3 +180,69 @@ def test_publish_requires_authentication(publication_api) -> None:
         json=_request(),
     )
     assert response.status_code in {401, 403}
+
+
+def test_restore_publication_creates_new_draft_revision_without_mutating_release(publication_api) -> None:
+    client, _store, _reader, headers, publication = publication_api
+
+    class FakeGraphStore:
+        replace_args: tuple | None = None
+
+        def get(self, *_args):
+            return publication.graph_snapshot
+
+        def replace(self, *args):
+            self.replace_args = args
+            request = args[-1]
+            return publication.graph_snapshot.model_copy(
+                update={
+                    "status": "draft",
+                    "revision": publication.graph_snapshot.revision + 1,
+                    "graph_hash": "c" * 64,
+                }
+            )
+
+    graph_store = FakeGraphStore()
+    client.app.dependency_overrides[get_logic_graph_store] = lambda: graph_store
+    try:
+        response = client.post(
+            "/v1/aip/logic/graphs/logic-api/publications/logic-pub-api/restore",
+            headers=headers,
+            json={"expected_revision": 1, "expected_graph_hash": "a" * 64},
+        )
+    finally:
+        client.app.dependency_overrides.pop(get_logic_graph_store, None)
+
+    assert response.status_code == 200
+    assert response.json()["revision"] == 2
+    assert response.json()["status"] == "draft"
+    assert graph_store.replace_args[:4] == (
+        "dev-org",
+        "dev-project",
+        "logic-api",
+        "user:dev",
+    )
+    request = graph_store.replace_args[-1]
+    assert request.expected_revision == 1
+    assert request.nodes == publication.graph_snapshot.nodes
+    assert publication.graph_revision == 1
+
+
+def test_restore_publication_rejects_stale_current_hash(publication_api) -> None:
+    client, _store, _reader, headers, publication = publication_api
+
+    class FakeGraphStore:
+        def get(self, *_args):
+            return publication.graph_snapshot.model_copy(update={"graph_hash": "d" * 64})
+
+    client.app.dependency_overrides[get_logic_graph_store] = lambda: FakeGraphStore()
+    try:
+        response = client.post(
+            "/v1/aip/logic/graphs/logic-api/publications/logic-pub-api/restore",
+            headers=headers,
+            json={"expected_revision": 1, "expected_graph_hash": "a" * 64},
+        )
+    finally:
+        client.app.dependency_overrides.pop(get_logic_graph_store, None)
+    assert response.status_code == 409
+    assert response.json()["code"] == "LOGIC_GRAPH_VERSION_CONFLICT"

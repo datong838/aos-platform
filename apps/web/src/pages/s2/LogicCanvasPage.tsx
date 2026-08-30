@@ -23,6 +23,7 @@ import {
   getLogicPublication,
   listLogicPublications,
   publishLogicGraph,
+  restoreLogicPublication,
 } from "./logicPublicationApi";
 import type {
   LogicPublication,
@@ -30,6 +31,8 @@ import type {
 } from "./logicPublicationContracts";
 import { LogicRunPanel, type LogicRunLoadState } from "./LogicRunPanel";
 import { CanonicalTaskRunPanel } from "./CanonicalTaskRunPanel";
+import { LogicAutomationPanel } from "./LogicAutomationPanel";
+import { LogicRevisionHistoryPanel } from "./LogicRevisionHistoryPanel";
 import {
   dryRunLogicGraph,
   getLogicRun,
@@ -218,6 +221,8 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
   const tabRefs = useRef<Partial<Record<ShellTab, HTMLButtonElement | null>>>({});
   const [graph, setGraph] = useState<LogicGraphSnapshot | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [undoStack, setUndoStack] = useState<LogicGraphSnapshot[]>([]);
+  const [redoStack, setRedoStack] = useState<LogicGraphSnapshot[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState("");
@@ -259,6 +264,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
   const [publicationError, setPublicationError] = useState("");
   const [selectedPublicationId, setSelectedPublicationId] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
+  const [restoringPublication, setRestoringPublication] = useState(false);
   const requestGeneration = useRef(0);
   const runRequestGeneration = useRef(0);
   const detailRequestGeneration = useRef(0);
@@ -342,6 +348,8 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
     runRequestGeneration.current += 1;
     detailRequestGeneration.current += 1;
     setSelectedNodeId("");
+    setUndoStack([]);
+    setRedoStack([]);
     setError("");
     setMessage("");
     setSaving(false);
@@ -544,10 +552,39 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
                     : "";
 
   function mutateGraph(mutator: (current: LogicGraphSnapshot) => LogicGraphSnapshot): void {
-    setGraph((current) => current ? mutator(current) : current);
+    setGraph((current) => {
+      if (!current) return current;
+      const next = mutator(current);
+      if (JSON.stringify(next) === JSON.stringify(current)) return current;
+      setUndoStack((stack) => [...stack.slice(-49), cloneGraph(current)]);
+      setRedoStack([]);
+      return next;
+    });
     setDirty(true);
     setError("");
     setMessage("");
+  }
+
+  function undoGraph(): void {
+    const previous = undoStack.at(-1);
+    if (!graph || !previous) return;
+    setRedoStack((stack) => [...stack.slice(-49), cloneGraph(graph)]);
+    setUndoStack((stack) => stack.slice(0, -1));
+    setGraph(cloneGraph(previous));
+    setDirty(true);
+    setError("");
+    setMessage("已撤销最近一次画布修改");
+  }
+
+  function redoGraph(): void {
+    const next = redoStack.at(-1);
+    if (!graph || !next) return;
+    setUndoStack((stack) => [...stack.slice(-49), cloneGraph(graph)]);
+    setRedoStack((stack) => stack.slice(0, -1));
+    setGraph(cloneGraph(next));
+    setDirty(true);
+    setError("");
+    setMessage("已重做最近一次画布修改");
   }
 
   async function saveGraph(): Promise<void> {
@@ -571,6 +608,8 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       if (requestGeneration.current !== generation) return;
       setGraph(saved);
       setDirty(false);
+      setUndoStack([]);
+      setRedoStack([]);
       setMessage(`已保存并回读确认 · revision ${saved.revision}`);
       if (!wasPersisted) navigate(`/aip/logic/${encodeURIComponent(saved.id)}`, { replace: true });
       else void refreshHistory();
@@ -609,6 +648,8 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       if (requestGeneration.current !== generation) return;
       setGraph(loaded);
       setDirty(false);
+      setUndoStack([]);
+      setRedoStack([]);
       setMessage(`已从服务端刷新 · revision ${loaded.revision}`);
       void refreshHistory();
     } catch (loadError: unknown) {
@@ -889,6 +930,35 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
     }
   }
 
+  async function restorePublicationAsDraft(publicationId: string): Promise<void> {
+    if (!graph?.persisted || dirty || saving || running || publishing || restoringPublication) return;
+    const generation = ++requestGeneration.current;
+    setRestoringPublication(true);
+    setError("");
+    setMessage("");
+    try {
+      const restored = await restoreLogicPublication(graph.id, publicationId, graph);
+      if (requestGeneration.current !== generation) return;
+      setGraph(restored);
+      setDirty(false);
+      setUndoStack([]);
+      setRedoStack([]);
+      setEvalReport(null);
+      setEvalEvidenceState("idle");
+      setEvalEvidenceError("");
+      setRun(null);
+      setRunState("idle");
+      setSelectedRunId(null);
+      setMessage(`已从不可变发布记录恢复为新草稿修订 · revision ${restored.revision}`);
+      void refreshHistory();
+    } catch (restoreError: unknown) {
+      if (requestGeneration.current !== generation) return;
+      setError(`恢复失败：${errorMessage(restoreError)}`);
+    } finally {
+      if (requestGeneration.current === generation) setRestoringPublication(false);
+    }
+  }
+
   return (
     <PageChrome
       title="逻辑编排"
@@ -1047,6 +1117,8 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         <button type="button" className="btn" disabled={!graph || loading || saving || running} onClick={() => void refreshGraph()}>
           {loading ? "读取中…" : "刷新"}
         </button>
+        <button type="button" className="btn" disabled={!graph || loading || saving || running || undoStack.length === 0} onClick={undoGraph}>撤销</button>
+        <button type="button" className="btn" disabled={!graph || loading || saving || running || redoStack.length === 0} onClick={redoGraph}>重做</button>
         <button
           type="button"
           className="btn"
@@ -1149,8 +1221,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           zoom={zoom}
           inspectorCollapsed={inspectorCollapsed}
           disabled={loading || saving || running}
-          onNodesChange={(nodes) => setGraph((current) => {
-            if (!current) return current;
+          onNodesChange={(nodes) => mutateGraph((current) => {
             const nodeIds = new Set(nodes.map((node) => node.id));
             const retainedEntries = current.entry_node_ids.filter((nodeId) => nodeIds.has(nodeId));
             const fallbackEntry = nodes.find((node) => node.kind === "input")?.id ?? nodes[0]?.id;
@@ -1160,7 +1231,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
               entry_node_ids: retainedEntries.length > 0 || !fallbackEntry ? retainedEntries : [fallbackEntry],
             };
           })}
-          onEdgesChange={(edges) => setGraph((current) => current ? { ...current, edges } : current)}
+          onEdgesChange={(edges) => mutateGraph((current) => ({ ...current, edges }))}
           onSelectNode={setSelectedNodeId}
           onDirty={() => {
             setDirty(true);
@@ -1175,14 +1246,14 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
               selectedNode={selectedNode}
               entryNodeIds={graph.entry_node_ids}
               disabled={loading || saving || running}
-              onNodeChange={(node) => setGraph((current) => current ? {
+              onNodeChange={(node) => mutateGraph((current) => ({
                 ...current,
                 nodes: current.nodes.map((candidate) => candidate.id === node.id ? node : candidate),
-              } : current)}
-              onEntryNodeIdsChange={(entryNodeIds) => setGraph((current) => current ? {
+              }))}
+              onEntryNodeIdsChange={(entryNodeIds) => mutateGraph((current) => ({
                 ...current,
                 entry_node_ids: entryNodeIds,
-              } : current)}
+              }))}
               onDirty={() => {
                 setDirty(true);
                 setError("");
@@ -1236,6 +1307,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
               evalGate={publicationEvalGate}
               publishDisabledReason={publicationDisabledReason}
               publishing={publishing}
+              restoring={restoringPublication}
               publication={publication}
               publicationState={publicationState}
               publicationError={publicationError}
@@ -1244,6 +1316,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
               publicationsError={publicationsError}
               selectedPublicationId={selectedPublicationId}
               onPublish={() => void publishCurrentRevision()}
+              onRestorePublication={(publicationId) => void restorePublicationAsDraft(publicationId)}
               onSelectPublication={(publicationId) => void loadPublication(publicationId)}
               onRetryPublication={selectedPublicationId ? () => void loadPublication(selectedPublicationId) : undefined}
               onRetryPublications={() => void refreshPublications()}
@@ -1273,6 +1346,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
             )}
             <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }}>评测门控 →</Link>
           </div>
+          {graph?.persisted && <LogicRevisionHistoryPanel graphId={graph.id} />}
           {graph?.persisted ? (
             <LogicRunPanel
               run={run}
@@ -1300,45 +1374,13 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       ) : null}
 
       {shellTab === "automation" ? (
-        <section className="card" style={{ padding: 18 }} role="tabpanel" id="logic-panel-automation" aria-labelledby="logic-tab-automation" data-testid="logic-automation-panel">
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "start" }}>
-            <div>
-              <h2 style={{ marginTop: 0, marginBottom: 6 }}>自动化</h2>
-              <p style={{ margin: 0, color: "var(--aos-text-secondary)", maxWidth: 560 }}>
-                Uses / 触发器以权威登记为准。当前尚未接入 Uses 列表真源，不把“未观测”展示为 0，也不提供演示触发。
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <Link to="/aip/drafts" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-drafts">草稿审批台 →</Link>
-              <Link to="/aip/evals" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-evals">评测门控 →</Link>
-              <Link to="/aip/production-contracts" className="btn" style={{ textDecoration: "none" }} data-testid="automation-jump-contracts">上线执行审批 →</Link>
-            </div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, margin: "14px 0" }}>
-            {[
-              ["Exact Graph", graph?.persisted ? graph.id : "未选择"],
-              ["Revision", graph?.persisted ? String(graph.revision) : "—"],
-              ["Uses 观测", "未接入"],
-              ["最近触发", "未观测"],
-            ].map(([k, v]) => (
-              <div key={k} className="notice" style={{ padding: "10px 12px" }}>
-                <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{k}</div>
-                <div style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{v}</div>
-              </div>
-            ))}
-          </div>
-          {graph?.persisted && (
-            <div className="notice" style={{ padding: 12 }} data-testid="automation-exact-revision">
-              当前自动化只读绑定已保存业务逻辑。<details><summary>技术标识（审计用）</summary><code>{graph.id}@{graph.revision}</code> · 摘要 <code>{graph.graph_hash.slice(0, 12)}…</code></details>后续使用必须引用这一精确修订或独立发布版本。
-            </div>
-          )}
-          <div className="notice" style={{ padding: 12 }} role="status" data-testid="automation-empty">
-            当前组织的自动化使用关系尚未接入权威数据源。请依次完成草稿审批、正式评测和上线执行审批门控；本页不把未知计数显示为 0，也不伪造触发成功。
-          </div>
-          <Link to="/aip/production-contracts" className="btn" style={{ marginTop: 12, textDecoration: "none", display: "inline-block" }}>
-            进入上线执行审批补齐自动化条件 →
-          </Link>
-        </section>
+        <LogicAutomationPanel
+          graphId={graph?.id || ""}
+          graphRevision={graph?.revision || 0}
+          graphHash={graph?.graph_hash || ""}
+          persisted={Boolean(graph?.persisted)}
+          publications={publications}
+        />
       ) : null}
     </PageChrome>
   );

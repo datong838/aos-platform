@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiPost, S2Chrome, useJsonGet } from "./shared";
-import { BpMaturityStairs } from "./blueprintUi";
+import { S2Chrome, useJsonGet } from "./shared";
 import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
 
 export { ModuleInterfacePage } from "./ModuleInterfacePage";
@@ -10,7 +9,16 @@ export function isBreakerTripConfirmed(value: { open?: boolean; mode?: string })
   return value.open === true && value.mode === "L3";
 }
 
-/** 81 · 对齐 aip-maturity.html · L1～L4 楼梯 */
+type MaturityEvidenceCard = {
+  dimension: string;
+  state: string;
+  evidence: string;
+  gap: string;
+  href: string;
+  action: string;
+};
+
+/** 81 · 基于当前租户权威读取的四维成熟度证据，不允许本地预览冒充状态。 */
 export function MaturityPage() {
   const evals = useJsonGet<{ green?: boolean; l4Allowed?: boolean }>("/v1/aip/evals/status");
   const drafts = useJsonGet<{ count?: number; items?: unknown[] }>("/v1/aip/drafts");
@@ -22,19 +30,10 @@ export function MaturityPage() {
       overlay?: { displayName?: string };
     }>;
   }>("/v1/aip/agents");
-  const [level, setLevel] = useState(2);
-  const [toast, setToast] = useState("");
-
-  async function simBreaker() {
-    try {
-      const result = await apiPost<{ open?: boolean; mode?: string }>("/v1/aip/circuit/trip", { failureRate: 0.06 });
-      if (!isBreakerTripConfirmed(result)) throw new Error("服务端未确认降级到智能协作模式");
-      setToast("服务端已确认熔断 · 失败率超过 5% → 降级为智能协作模式");
-      evals.reload();
-    } catch (e) {
-      setToast(String((e as Error).message || e));
-    }
-  }
+  const tools = useJsonGet<{ items?: Array<{ id?: string; kind?: string; blocked?: boolean }> }>("/v1/aip/tools");
+  const automations = useJsonGet<{ items?: Array<{ status?: string; updated_at?: string }> }>("/v1/aip/logic/automation-policies");
+  const suites = useJsonGet<{ items?: unknown[] }>("/v1/evals/suites");
+  const cutoff = useMemo(() => new Date().toISOString(), [evals.data, drafts.data, agents.data, tools.data, automations.data, suites.data]);
 
   const green = evals.data?.green === true;
   const workspaceAgentLabel = useMemo(() => {
@@ -45,12 +44,60 @@ export function MaturityPage() {
     return preferred.overlay?.displayName || preferred.name || preferred.instanceId || preferred.id || null;
   }, [agents.data]);
 
-  const levelLabel = level === 1 ? "临时分析" : level === 2 ? "任务智能体" : level === 3 ? "智能协作应用" : "自动化智能体";
+  const draftCount = drafts.data?.count ?? drafts.data?.items?.length ?? 0;
+  const agentCount = agents.data?.items?.length ?? 0;
+  const toolItems = tools.data?.items ?? [];
+  const runnableTools = toolItems.filter((item) => !item.blocked).length;
+  const activeAutomations = (automations.data?.items ?? []).filter((item) => item.status === "active").length;
+  const suiteCount = suites.data?.items?.length ?? 0;
+  const cards: MaturityEvidenceCard[] = [
+    {
+      dimension: "业务能力",
+      state: agentCount > 0 && runnableTools > 0 ? "已有可消费能力" : "需要补齐绑定",
+      evidence: `${agentCount} 位数字同事 · ${runnableTools}/${toolItems.length} 个工具可受控使用`,
+      gap: agentCount === 0 ? "尚无数字同事实例" : runnableTools === 0 ? "尚无可运行工具" : "继续核对角色、工具与业务逻辑的适配范围",
+      href: "/aip/tools",
+      action: "核对工具与同事绑定",
+    },
+    {
+      dimension: "可运行性",
+      state: activeAutomations > 0 ? "存在活动自动化" : "可人工试跑",
+      evidence: `${activeAutomations} 条活动自动化 · 评测门 ${evals.data?.l4Allowed === true ? "允许申请" : "未允许自动化"}`,
+      gap: activeAutomations > 0 ? "继续核验最近运行与凭证" : "先从业务逻辑安全试跑，再按需建立自动化",
+      href: "/aip/logic?tab=automation",
+      action: "查看业务逻辑运行",
+    },
+    {
+      dimension: "质量",
+      state: evals.data?.green === true ? "当前评测通过" : "需要运行评测",
+      evidence: `${suiteCount} 个评测套件 · 当前门控 ${evals.data?.green === true ? "GREEN" : "未通过"}`,
+      gap: suiteCount === 0 ? "缺少真实评测套件" : evals.data?.green === true ? "持续核对精确修订与报告截止时间" : "运行绑定当前 Logic 修订的真实套件",
+      href: "/aip/evals",
+      action: "查看评测证据",
+    },
+    {
+      dimension: "治理",
+      state: draftCount > 0 ? "存在待审业务变更" : "审批队列为空",
+      evidence: `${draftCount} 项草稿 · 写操作保持提案、草稿、审批、凭证链`,
+      gap: "任何写操作都必须保留职责分离、幂等键和交付凭证",
+      href: "/aip/drafts",
+      action: "查看草稿审批",
+    },
+  ];
+
+  function reloadAll() {
+    evals.reload();
+    drafts.reload();
+    agents.reload();
+    tools.reload();
+    automations.reload();
+    suites.reload();
+  }
 
   return (
     <S2Chrome
       title="智能体成熟度楼梯"
-      lede="先完成临时分析，再固化任务智能体、嵌入业务应用，最后才进入受控自动化；页面预览不冒充真实上线门控。"
+      lede="从业务能力、可运行性、质量和治理四个维度读取当前租户证据；每项结论都可追溯到配置、评测或审批入口。"
     >
       <AipOperationalProjectionStrip />
       <div style={{ marginBottom: 12, fontSize: 13 }}>
@@ -65,11 +112,11 @@ export function MaturityPage() {
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}
       >
         {[
-          { label: "当前成熟度", value: levelLabel },
+          { label: "业务能力", value: `${agentCount} 位同事` },
           { label: "评测", value: green ? "通过" : "未运行" },
           { label: "审批草稿", value: String(drafts.data?.count ?? drafts.data?.items?.length ?? 0) },
           { label: "同事数", value: String(agents.data?.items?.length ?? 0) },
-          { label: "自动化门控", value: evals.data?.l4Allowed === true ? "允许申请" : "尚未开放" },
+          { label: "自动化", value: `${activeAutomations} 条活动` },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -77,7 +124,6 @@ export function MaturityPage() {
           </div>
         ))}
       </div>
-      {/* 顶部状态条 · 对齐 aip-maturity.html 黄色背景卡片 */}
       <div
         style={{
           borderRadius: 2,
@@ -103,232 +149,44 @@ export function MaturityPage() {
           ) : null}
         </div>
         <div>
-          <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 2 }}>判定层</div>
-          <div style={{ color: "var(--aos-amber-700)", fontWeight: 500 }}>◆ {levelLabel}</div>
+          <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 2 }}>证据截止</div>
+          <div style={{ color: "var(--aos-amber-700)", fontWeight: 500 }}>{cutoff}</div>
         </div>
         <div style={{ fontSize: 12, color: "var(--aos-muted)", lineHeight: 1.6 }}>
           <div>
             评测 <span style={{ color: green ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>{green ? "● 通过" : "○ 未运行"}</span>
             {" · "}
-            草稿 <span style={{ color: "var(--aos-green-700)" }}>审批台 {drafts.data?.count ?? drafts.data?.items?.length ?? "—"} 项</span>
+            草稿 <span style={{ color: "var(--aos-green-700)" }}>审批台 {draftCount} 项</span>
           </div>
           <div>
-            执行范围 <span style={{ color: "var(--aos-text)" }}>● 用户范围</span>
+            执行范围 <span style={{ color: "var(--aos-text)" }}>● 当前组织与工作区</span>
           </div>
         </div>
       </div>
 
-      {/* 楼梯卡片网格 */}
-      <BpMaturityStairs
-        active={level}
-        onSelect={setLevel}
-        steps={[
-          {
-            level: 1,
-            label: "探索",
-            title: "临时分析",
-            desc: "临时对话 · 拖入文档即可分析问答",
-            foot: <span style={{ fontSize: 11, color: "var(--aos-indigo-600)" }}>沙箱 / 售前</span>,
-          },
-          {
-            level: 2,
-            label: "专用",
-            title: "任务专用智能体",
-            desc: "智能体配置 · 指令 · 工具 · 本体与知识库",
-            foot: (
-              <Link to="/aip/tools" style={{ fontSize: 11, color: "var(--aos-amber-700)", textDecoration: "none" }}>
-                打开工具面板 →
-              </Link>
-            ),
-          },
-          {
-            level: 3,
-            label: "协作",
-            title: "智能协作应用",
-            desc: "工作台 · 智能体组件 · 业务变量绑定",
-            foot: (
-              <Link to="/workshop" style={{ fontSize: 11, color: "var(--aos-blue-600)", textDecoration: "none" }}>
-                打开工作台 →
-              </Link>
-            ),
-          },
-          {
-            level: 4,
-            label: "自动化 · 须门控",
-            title: "自动化智能体",
-            desc: "发布为受控业务能力 · 须通过评测与草稿审批 · 失败率超过阈值自动降级",
-            tone: "rose",
-            foot: (
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "var(--aos-red)",
-                  padding: "2px 6px",
-                  borderRadius: 4,
-                  border: "1px solid var(--aos-red-border)",
-                  background: "var(--aos-red-bg)",
-                }}
-              >
-                私有模 · 预热中
-              </span>
-            ),
-          },
-        ]}
-      />
-
-      {/* 下一推荐 + 熔断护栏整合卡片 */}
-      <div
-        style={{
-          marginTop: "1rem",
-          borderRadius: 2,
-          border: "1px solid var(--aos-border)",
-          background: "rgba(255, 255, 255, 0.4)",
-          padding: "20px",
-        }}
-      >
-        <h2 style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: "0 0 12px" }}>下一推荐</h2>
-        <p style={{ fontSize: 14, color: "var(--aos-text-secondary)", margin: "0 0 12px" }}>
-          {level < 3
-            ? "嵌入工作台智能体组件后进入智能协作应用阶段；不要越级开启自动化。"
-            : level === 3
-              ? "评测通过且草稿审批流程稳定后，再申请受控自动化。"
-              : "受控自动化必须通过评测门控并启用熔断护栏；完整运行时仍按权威状态开放。"}
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: toast ? 8 : 0 }}>
-          <button
-            type="button"
-            onClick={() => { setLevel(3); setToast("仅切换本页智能协作阶段预览，不修改服务端成熟度"); }}
-            style={{
-              padding: "6px 12px",
-              fontSize: 12,
-              fontWeight: 500,
-              borderRadius: 2,
-              border: "none",
-              background: "var(--aos-amber)",
-              color: "var(--text-on-brand)",
-              cursor: "pointer",
-            }}
-          >
-            预览智能协作阶段
-          </button>
-          <button
-            type="button"
-            onClick={() => setToast(`自动化申请条件：评测${green ? "已通过" : "未通过"} · 草稿审批台 ${drafts.data?.count ?? drafts.data?.items?.length ?? "未知"} 项 · 必须启用熔断护栏`)}
-            style={{
-              padding: "6px 12px",
-              fontSize: 12,
-              borderRadius: 2,
-              border: "1px solid var(--aos-red-border)",
-              background: "transparent",
-              color: "var(--aos-red)",
-              cursor: "pointer",
-            }}
-          >
-            查看自动化申请条件
-          </button>
-          <Link
-            to="/aip/logic"
-            style={{
-              padding: "6px 12px",
-              fontSize: 12,
-              borderRadius: 2,
-              border: "1px solid var(--aos-border)",
-              background: "transparent",
-              color: "var(--aos-text)",
-              cursor: "pointer",
-              textDecoration: "none",
-            }}
-          >
-            打开业务逻辑编排
-          </Link>
-        </div>
-        {toast && <p style={{ fontSize: 11, color: "var(--aos-muted)", margin: "4px 0 0" }}>{toast}</p>}
-
-        {/* 熔断护栏子卡片 */}
-        <div
-          style={{
-            marginTop: 12,
-            borderRadius: 2,
-            border: "1px solid var(--aos-red-border)",
-            background: "var(--aos-red-bg)",
-            padding: "16px",
-          }}
-        >
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 8 }}>
-            <span style={{ color: "var(--aos-red)", fontWeight: 500, fontSize: 12 }}>自动化熔断护栏</span>
-            <span
-              style={{
-                fontSize: 11,
-                padding: "2px 8px",
-                borderRadius: 4,
-                border: "1px solid var(--aos-red-border)",
-                color: "var(--aos-red)",
-              }}
-            >
-              失败率超过 5% 时自动降级为智能协作
-            </span>
-            <span
-              style={{
-                fontSize: 11,
-                padding: "2px 8px",
-                borderRadius: 4,
-                border: "1px solid var(--aos-amber-border)",
-                color: "var(--aos-amber-700)",
-              }}
-            >
-              私有模 · 预热中
-            </span>
-          </div>
-          <p style={{ fontSize: 12, color: "var(--aos-muted)", margin: "0 0 12px" }}>
-            上线前须评测通过且写操作默认进入草稿审批；模型预热完成前禁止全量自动化。
-          </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <Link
-              to="/aip/evals"
-              style={{
-                fontSize: 11,
-                padding: "4px 8px",
-                borderRadius: 4,
-                border: "1px solid var(--aos-border)",
-                color: "var(--aos-amber-700)",
-                textDecoration: "none",
-              }}
-            >
-              评测门控
-            </Link>
-            <Link
-              to="/aip/model-router"
-              style={{
-                fontSize: 11,
-                padding: "4px 8px",
-                borderRadius: 4,
-                border: "1px solid var(--aos-border)",
-                color: "var(--aos-text)",
-                textDecoration: "none",
-              }}
-            >
-              模型路由
-            </Link>
-            <button
-              type="button"
-              onClick={() => void simBreaker()}
-              style={{
-                fontSize: 11,
-                padding: "4px 8px",
-                borderRadius: 4,
-                border: "1px solid var(--aos-red-border)",
-                background: "transparent",
-                color: "var(--aos-red)",
-                cursor: "pointer",
-              }}
-            >
-              模拟熔断降级
-            </button>
-          </div>
-        </div>
+      <div data-testid="maturity-evidence-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 12 }}>
+        {cards.map((card) => (
+          <section key={card.dimension} className="card" style={{ padding: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+              <h2 style={{ margin: 0, fontSize: 16 }}>{card.dimension}</h2>
+              <strong>{card.state}</strong>
+            </div>
+            <p className="aos-text"><strong>当前证据：</strong>{card.evidence}</p>
+            <p className="muted" style={{ fontSize: 12 }}><strong>证据截止：</strong>{cutoff}</p>
+            <p className="aos-text"><strong>待提升项：</strong>{card.gap}</p>
+            <Link to={card.href} className="btn-nav">{card.action} →</Link>
+          </section>
+        ))}
       </div>
-
-      {(evals.err || drafts.err) && <p className="error">{evals.err || drafts.err}</p>}
+      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+        <button type="button" className="btn" onClick={reloadAll}>重新读取全部证据</button>
+        <Link to="/aip/studio" className="btn-nav">智能体配置 →</Link>
+        <Link to="/aip/logic" className="btn-nav">业务逻辑 →</Link>
+        <Link to="/aip/evals" className="btn-nav">评测门控 →</Link>
+      </div>
+      {(evals.err || drafts.err || agents.err || tools.err || automations.err || suites.err) && (
+        <p className="error">{evals.err || drafts.err || agents.err || tools.err || automations.err || suites.err}</p>
+      )}
     </S2Chrome>
   );
 }

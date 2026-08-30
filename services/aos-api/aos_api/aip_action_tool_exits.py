@@ -24,12 +24,27 @@ def list_action_tool_exits() -> list[dict[str, Any]]:
 
 
 def invoke_action_tool(tool_id: str, *, payload: dict[str, Any] | None = None) -> dict[str, Any]:
-    _ = payload
+    payload = payload or {}
+    object_type = str(payload.get("objectType") or "").strip()
+    object_id = str(payload.get("objectId") or "").strip()
     return {
         "toolId": tool_id,
         "ok": False,
         "blocked": True,
         "kind": "Action",
         "requiresDraft": True,
-        "result": {"message": ACTION_BLOCKED_REASON},
+        "productionWritten": False,
+        "proposal": {
+            "actionTypeId": "CloseWorkOrder" if tool_id == ACTION_CLOSE_ID else tool_id,
+            "objectType": object_type,
+            "objectId": object_id,
+            "proposed": {},
+            "status": "proposal",
+        },
+        "controlChain": ["proposal", "draft", "approval", "receipt"],
+        "nextStage": "draft",
+        "result": {
+            "message": ACTION_BLOCKED_REASON,
+            "nextAction": "请在草稿审批台补充写回字段并提交审批",
+        },
     }

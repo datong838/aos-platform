@@ -8,6 +8,7 @@ import {
   type LogicPublicationListResponse,
   type LogicPublishRequest,
 } from "./logicPublicationContracts";
+import { normalizeLogicGraph, type LogicGraphSnapshot } from "./logicCanvasGraph";
 
 function resourceId(value: string, label: string): string {
   if (typeof value !== "string" || !value.trim()) throw new Error(`${label} 必须是非空字符串`);
@@ -60,4 +61,17 @@ export async function publishLogicGraph(
   );
   assertLogicPublicationDetailMatches(posted, reread);
   return reread;
+}
+
+export async function restoreLogicPublication(
+  graphId: string,
+  publicationId: string,
+  current: Pick<LogicGraphSnapshot, "revision" | "graph_hash">,
+): Promise<LogicGraphSnapshot> {
+  const safeGraphId = resourceId(graphId, "graphId");
+  const safePublicationId = resourceId(publicationId, "publicationId");
+  return normalizeLogicGraph(await aipClient.request<LogicGraphSnapshot>("restoreLogicPublication", {
+    params: { graph_id: safeGraphId, publication_id: safePublicationId },
+    body: { expected_revision: current.revision, expected_graph_hash: current.graph_hash },
+  }));
 }

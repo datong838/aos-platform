@@ -81,6 +81,16 @@ export async function getLogicGraph(graphId: string): Promise<LogicGraphSnapshot
   return normalizeLogicGraph(await apiGet<LogicGraphSnapshot>(`/v1/aip/logic/graphs/${encodeURIComponent(graphId)}`));
 }
 
+export async function listLogicGraphRevisions(graphId: string): Promise<LogicGraphListResponse> {
+  const response = await apiGet<LogicGraphListResponse>(
+    `/v1/aip/logic/graphs/${encodeURIComponent(graphId)}/revisions`,
+  );
+  if (!response || !Array.isArray(response.items) || response.count !== response.items.length) {
+    throw new Error("Logic Graph 修订历史响应不完整");
+  }
+  return { items: response.items.map(normalizeLogicGraph), count: response.count };
+}
+
 export async function createLogicGraph(draft: LogicGraphDraft): Promise<LogicGraphSnapshot> {
   const saved = normalizeLogicGraph(await apiPost<LogicGraphSnapshot>("/v1/aip/logic/graphs", {
     id: draft.id,
