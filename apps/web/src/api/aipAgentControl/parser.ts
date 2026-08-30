@@ -5,6 +5,7 @@ import type {
   AgentInstallResponse,
   AgentRuntimeReadinessResponse,
   AgentRun,
+  AgentRunListResponse,
   AssetRef,
   BindingHealth,
   BindingReadiness,
@@ -233,7 +234,17 @@ export function parseCapabilities(value: unknown, expectedTenant?: Tenant): Capa
   const items = array(raw.items, "items").map((value, index) => {
     const item = obj(value, `items[${index}]`);
     exact(item, `items[${index}]`, ["capabilityId", "revision", "displayName", "lifecycle", "parentRef", "aliases", "inputSchemaRef", "outputSchemaRef", "riskLevel", "requiredDataRefs", "requiredToolRefs", "requiredCapabilityRefs", "evalPackRef", "memoryPolicyRef", "handoffPolicyRef", "effectReviewSchemaRef", "licensePolicyRef", "readinessPolicyRef", "readiness", "readinessReasons", "sourceRef", "sourceLicense", "contentHash", "createdBy", "createdAt"], ["capabilityId", "revision", "displayName", "lifecycle", "aliases", "riskLevel", "readiness", "readinessReasons", "contentHash"]);
-    return { capabilityId: str(item.capabilityId, "capabilityId"), revision: integer(item.revision, "revision", 1), displayName: str(item.displayName, "displayName"), lifecycle: enumeration(item.lifecycle, "lifecycle", ["published"] as const), aliases: strings(item.aliases, "aliases"), riskLevel: str(item.riskLevel, "riskLevel"), readiness: enumeration(item.readiness, "readiness", readinessValues), readinessReasons: strings(item.readinessReasons, "readinessReasons"), contentHash: sha256(item.contentHash, "contentHash") };
+    return {
+      capabilityId: str(item.capabilityId, "capabilityId"), revision: integer(item.revision, "revision", 1), displayName: str(item.displayName, "displayName"), lifecycle: enumeration(item.lifecycle, "lifecycle", ["published"] as const), aliases: strings(item.aliases, "aliases"),
+      inputSchemaRef: item.inputSchemaRef == null ? null : ref(item.inputSchemaRef, "inputSchemaRef"),
+      outputSchemaRef: item.outputSchemaRef == null ? null : ref(item.outputSchemaRef, "outputSchemaRef"),
+      riskLevel: str(item.riskLevel, "riskLevel"),
+      requiredDataRefs: item.requiredDataRefs == null ? [] : array(item.requiredDataRefs, "requiredDataRefs").map((entry, entryIndex) => ref(entry, `requiredDataRefs[${entryIndex}]`)),
+      requiredToolRefs: item.requiredToolRefs == null ? [] : array(item.requiredToolRefs, "requiredToolRefs").map((entry, entryIndex) => ref(entry, `requiredToolRefs[${entryIndex}]`)),
+      requiredCapabilityRefs: item.requiredCapabilityRefs == null ? [] : array(item.requiredCapabilityRefs, "requiredCapabilityRefs").map((entry, entryIndex) => ref(entry, `requiredCapabilityRefs[${entryIndex}]`, "CapabilityRevision")),
+      evalPackRef: item.evalPackRef == null ? null : ref(item.evalPackRef, "evalPackRef"),
+      readiness: enumeration(item.readiness, "readiness", readinessValues), readinessReasons: strings(item.readinessReasons, "readinessReasons"), contentHash: sha256(item.contentHash, "contentHash")
+    };
   });
   return { tenant: scope, items, count: integer(raw.count, "count"), availableCount: integer(raw.availableCount, "availableCount") };
 }
@@ -283,6 +294,17 @@ export function parseAgentRun(value: unknown, expectedTenant: Tenant): AgentRun 
     status: enumeration(raw.status, "AgentRun.status", ["queued", "running", "paused", "succeeded", "failed", "cancelled", "unknown"] as const),
     version: integer(raw.version, "AgentRun.version", 1), createdAt: iso(raw.createdAt, "AgentRun.createdAt"), updatedAt: iso(raw.updatedAt, "AgentRun.updatedAt"),
   };
+}
+
+export function parseAgentRuns(value: unknown, expectedTenant: Tenant): AgentRunListResponse {
+  const raw = obj(value, "AgentRunListResponse");
+  exact(raw, "AgentRunListResponse", ["tenant", "items", "count"]);
+  const scope = tenant(raw.tenant, "AgentRunListResponse.tenant");
+  sameTenant(scope, expectedTenant, "AgentRunListResponse");
+  const items = array(raw.items, "AgentRunListResponse.items").map((item) => parseAgentRun(item, scope));
+  const count = integer(raw.count, "AgentRunListResponse.count");
+  if (count !== items.length) throw new Error("AgentRunListResponse.count 与 items 不一致");
+  return { tenant: scope, items, count };
 }
 
 export function parseAgentRunCommand(value: unknown, expectedTenant: Tenant, operation: "agent_run.create" | "agent_run.cancel_queued") {

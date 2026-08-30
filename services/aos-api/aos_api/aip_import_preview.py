@@ -43,7 +43,7 @@ def preview_import(principal: Principal, request: ImportPreviewRequest) -> Impor
         "fileHashes": {item.path: hashlib.sha256(item.content.encode("utf-8")).hexdigest() for item in request.source.files}
     }
     steps = [
-        _step("source", ImportEvidenceStatus.PASSED, source_payload, "来源、版本、许可证与 SBOM 引用已内容寻址"),
+        _step("source", ImportEvidenceStatus.PASSED, source_payload, "来源、版本、签名、许可证、依赖与 SBOM 引用已内容寻址"),
         _step(
             "scan",
             ImportEvidenceStatus.PASSED if scan.accepted else ImportEvidenceStatus.BLOCKED,

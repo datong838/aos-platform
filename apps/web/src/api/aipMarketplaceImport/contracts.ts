@@ -38,7 +38,9 @@ export type ImportPreviewRequest = {
     sourceRef: ResourceRef;
     sourceCommit: string;
     licenseId: string;
+    signatureRef: ResourceRef;
     sbomRef: ResourceRef;
+    dependencyRefs: ResourceRef[];
     files: ImportSourceFile[];
   };
   mapping: {
@@ -62,3 +64,21 @@ export type ImportPreview = {
   tenant: Tenant; previewId: string; kind: ImportKind; status: "blocked" | "external_required"; contentHash: string;
   steps: ImportStepEvidence[]; scanArtifact: ScanArtifact; importJobAuthority: "not_created"; approvalRequired: true;
 };
+export type ImportJobStatus = "awaiting_approval" | "approved" | "applied" | "rolled_back";
+export type ImportJob = {
+  tenant: Tenant; jobId: string; previewId: string; previewContentHash: string; kind: ImportKind;
+  targetId: string; displayName: string; status: ImportJobStatus; conflictDecisions: Record<string, string>;
+  approvalEvidenceRef: ResourceRef | null; approvalReason: string | null; rollbackReason: string | null;
+  createdRefs: ResourceRef[]; compensatedRefs: ResourceRef[];
+  version: number; createdBy: string; approvedBy: string | null; appliedBy: string | null;
+  createdAt: string; updatedAt: string;
+};
+export type ImportCandidate = {
+  tenant: Tenant; candidateId: string; jobId: string; kind: ImportKind; targetId: string; displayName: string;
+  status: "active" | "rolled_back"; sourceRef: ResourceRef; contentHash: string; createdAt: string; rolledBackAt: string | null;
+};
+export type ImportJobReceipt = {
+  receiptId: string; operation: string; idempotencyKey: string; requestHash: string;
+  status: string; createdBy: string; createdAt: string;
+};
+export type ImportJobMutation = { job: ImportJob; candidate: ImportCandidate | null; receipt: ImportJobReceipt };

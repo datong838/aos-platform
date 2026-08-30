@@ -4,9 +4,19 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from aos_api.aip_import_preview import preview_import
-from aos_api.aip_marketplace_import_contracts import ImportPreviewRequest
+from aos_api.aip_import_job_service import AipImportJobService
+from aos_api.aip_marketplace_import_contracts import (
+    ApplyImportJobRequest,
+    ApproveImportJobRequest,
+    CreateImportJobRequest,
+    ImportPreviewRequest,
+    RollbackImportJobRequest,
+)
+from aos_api.aip_contracts import ResourceRef
 from aos_api.auth import Principal, require_principal
-from aos_api.routers.phase3_aip_agents import router
+from aos_api.errors import ApiError
+from aos_api.routers.phase3_aip_agents import _require_import_role, router
+from aos_api.tenant_scope import TenantScope
 
 
 def _principal(org_id: str = "org-org") -> Principal:
@@ -26,12 +36,19 @@ def _request(*, kind: str = "agent", content: str = "def run(value):\n    return
                 },
                 "sourceCommit": "abcdef1",
                 "licenseId": "MIT",
+                "signatureRef": {
+                    "resourceType": "PackageSignatureVerification",
+                    "resourceId": "signature/ecommerce-agent",
+                    "revision": "1",
+                    "authority": "user-supplied",
+                },
                 "sbomRef": {
                     "resourceType": "SBOM",
                     "resourceId": "sbom/ecommerce-agent",
                     "revision": "1",
                     "authority": "user-supplied",
                 },
+                "dependencyRefs": [],
                 "files": [{"path": "agent.py", "content": content}],
             },
             "mapping": {
@@ -129,3 +146,143 @@ def test_import_preview_http_contract_remains_preview_only() -> None:
     assert body["importJobAuthority"] == "not_created"
     assert body["approvalRequired"] is True
     assert body["steps"][-1]["status"] == "external_required"
+
+
+def test_import_job_full_control_plane_lifecycle_is_receipted_and_reversible() -> None:
+    principal = _principal("dev-org")
+    request = _request()
+    preview = preview_import(principal, request)
+    service = AipImportJobService()
+
+    created = service.create(
+        principal,
+        CreateImportJobRequest(
+            preview_request=request,
+            expected_preview_id=preview.preview_id,
+            expected_content_hash=preview.content_hash,
+        ),
+        idempotency_key="pytest-create-import-job",
+    )
+    assert created.job.status.value == "awaiting_approval"
+    assert created.candidate is None
+    assert created.receipt.operation == "import_job.create"
+
+    approved = service.approve(
+        TenantScope("dev-org", "dev-project"),
+        created.job.job_id,
+        ApproveImportJobRequest(
+            expected_version=created.job.version,
+            test_evidence_ref=ResourceRef(
+                resource_type="ImportTestEvidence",
+                resource_id="pytest/import-test/evidence",
+                revision=preview.content_hash,
+                authority="pytest",
+            ),
+            decision_reason="deterministic integration test reviewed",
+        ),
+        actor="pytest-reviewer",
+        idempotency_key="pytest-approve-import-job",
+    )
+    assert approved.job.status.value == "approved"
+    assert approved.job.approval_reason == "deterministic integration test reviewed"
+
+    applied = service.apply(
+        TenantScope("dev-org", "dev-project"),
+        created.job.job_id,
+        ApplyImportJobRequest(expected_version=approved.job.version),
+        actor="pytest-executor",
+        idempotency_key="pytest-apply-import-job",
+    )
+    assert applied.job.status.value == "applied"
+    assert applied.candidate is not None
+    assert applied.candidate.status == "active"
+    assert applied.job.created_refs[0].resource_id == applied.candidate.candidate_id
+
+    rolled_back = service.rollback(
+        TenantScope("dev-org", "dev-project"),
+        created.job.job_id,
+        RollbackImportJobRequest(expected_version=applied.job.version, reason="pytest acceptance rollback"),
+        actor="pytest-executor",
+        idempotency_key="pytest-rollback-import-job",
+    )
+    assert rolled_back.job.status.value == "rolled_back"
+    assert rolled_back.candidate is not None
+    assert rolled_back.candidate.status == "rolled_back"
+    assert rolled_back.job.compensated_refs == rolled_back.job.created_refs
+    assert rolled_back.job.rollback_reason == "pytest acceptance rollback"
+
+
+def test_import_job_http_lifecycle_enforces_roles_and_exact_readback() -> None:
+    active = {"roles": ["developer"]}
+
+    def principal() -> Principal:
+        return Principal(
+            subject="pytest-http",
+            org_id="dev-org",
+            project_id="dev-project",
+            roles=active["roles"],
+        )
+
+    request = _request(kind="capability")
+    preview = preview_import(principal(), request)
+    app = FastAPI()
+    app.include_router(router)
+    app.dependency_overrides[require_principal] = principal
+    with TestClient(app) as client:
+        created = client.post(
+            "/v1/aip/import-jobs",
+            headers={"Idempotency-Key": "pytest-http-create-import"},
+            json=CreateImportJobRequest(
+                preview_request=request,
+                expected_preview_id=preview.preview_id,
+                expected_content_hash=preview.content_hash,
+                conflict_decisions={"ecommerce.capability.external": "create-new"},
+            ).model_dump(mode="json", by_alias=True),
+        )
+        assert created.status_code == 201
+        body = created.json()
+        job_id = body["job"]["jobId"]
+        assert body["job"]["conflictDecisions"] == {"ecommerce.capability.external": "create-new"}
+
+        active["roles"] = ["developer"]
+        with pytest.raises(ApiError) as denied:
+            _require_import_role(principal(), approval=True)
+        assert denied.value.status_code == 403
+
+        active["roles"] = ["reviewer"]
+        approved = client.post(
+            f"/v1/aip/import-jobs/{job_id}/approval",
+            headers={"Idempotency-Key": "pytest-http-approve-import"},
+            json=ApproveImportJobRequest(
+                expected_version=body["job"]["version"],
+                test_evidence_ref=ResourceRef(
+                    resource_type="ImportTestEvidence",
+                    resource_id="pytest/http/evidence",
+                    revision=preview.content_hash,
+                    authority="pytest",
+                ),
+                decision_reason="http evidence reviewed",
+            ).model_dump(mode="json", by_alias=True),
+        )
+        assert approved.status_code == 200
+        assert approved.json()["job"]["approvalReason"] == "http evidence reviewed"
+
+        active["roles"] = ["developer"]
+        applied = client.post(
+            f"/v1/aip/import-jobs/{job_id}/apply",
+            headers={"Idempotency-Key": "pytest-http-apply-import"},
+            json={"expectedVersion": approved.json()["job"]["version"]},
+        )
+        assert applied.status_code == 200
+        assert applied.json()["candidate"]["status"] == "active"
+        assert client.get(f"/v1/aip/import-jobs/{job_id}").json()["status"] == "applied"
+        assert client.get("/v1/aip/import-jobs").json()["count"] >= 1
+
+        rolled_back = client.post(
+            f"/v1/aip/import-jobs/{job_id}/rollback",
+            headers={"Idempotency-Key": "pytest-http-rollback-import"},
+            json={"expectedVersion": applied.json()["job"]["version"], "reason": "http acceptance rollback"},
+        )
+        assert rolled_back.status_code == 200
+        assert rolled_back.json()["job"]["rollbackReason"] == "http acceptance rollback"
+        assert rolled_back.json()["candidate"]["status"] == "rolled_back"

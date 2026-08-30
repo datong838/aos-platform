@@ -296,7 +296,11 @@ const CONTRACT_SECTION_NAMES: Record<string, string> = {
 };
 
 const STATUS_NAMES: Record<string, string> = {
+  queued: "等待执行",
   running: "运行中",
+  paused: "已暂停",
+  succeeded: "已成功",
+  cancelled: "已取消",
   active: "已启用",
   ready: "就绪",
   available: "可使用",

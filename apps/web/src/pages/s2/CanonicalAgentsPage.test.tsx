@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const sdk = vi.hoisted(() => ({ listInstances: vi.fn(), runtimeReadiness: vi.fn() }));
+const sdk = vi.hoisted(() => ({ listInstances: vi.fn(), runtimeReadiness: vi.fn(), listAgentRuns: vi.fn() }));
 vi.mock("../../api/aipAgentControl", () => ({ aipAgentControl: sdk }));
 import { CanonicalAgentsPage } from "./CanonicalAgentsPage";
 
@@ -59,6 +59,7 @@ describe("CanonicalAgentsPage", () => {
     document.body.appendChild(host);
     sdk.listInstances.mockReset().mockResolvedValue({ tenant, items: [instance], count: 1 });
     sdk.runtimeReadiness.mockReset().mockResolvedValue(blockedRuntime);
+    sdk.listAgentRuns.mockReset().mockResolvedValue({ tenant, items: [], count: 0 });
   });
 
   afterEach(() => host.remove());
@@ -70,6 +71,8 @@ describe("CanonicalAgentsPage", () => {
     expect(host.textContent).toContain("内容官");
     expect(host.textContent).toContain("待配置");
     expect(host.textContent).toContain("技能绑定状态需要刷新");
+    expect(host.textContent).toContain("最近运行");
+    expect(host.textContent).toContain("尚无运行记录");
     expect(host.textContent).toContain("概览");
     expect(host.textContent).toContain("工具箱");
     expect(host.textContent).not.toContain("MOCK_AGENTS");
@@ -91,8 +94,8 @@ describe("CanonicalAgentsPage", () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><CanonicalAgentsPage /></MemoryRouter>));
     await act(async () => undefined);
-    expect(host.textContent).toContain("可派发（目录 runnable");
-    expect(host.textContent).toContain("可派发 1/1");
+    expect(host.textContent).toContain("当前运行条件已通过");
+    expect(host.textContent).toContain("可承接任务 1/1");
     const tryTab = Array.from(host.querySelectorAll("button")).find((b) => b.textContent === "试运行");
     expect(tryTab).toBeTruthy();
     await act(async () => { tryTab!.click(); });
@@ -111,14 +114,25 @@ describe("CanonicalAgentsPage", () => {
     await act(async () => root.unmount());
   });
 
-  it("运行条件待补齐时提供目录修复入口而不是死按钮", async () => {
+  it("运行准备需要核验时提供目录入口而不是死按钮", async () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><CanonicalAgentsPage /></MemoryRouter>));
     await act(async () => undefined);
     const tryTab = Array.from(host.querySelectorAll("button")).find((b) => b.textContent === "试运行");
     await act(async () => { tryTab!.click(); });
-    const repair = Array.from(host.querySelectorAll("a")).find((link) => link.textContent?.includes("补齐运行条件"));
-    expect(repair?.getAttribute("href")).toBe("/aip/agent-registry");
+    const repair = Array.from(host.querySelectorAll("a")).find((link) => link.textContent?.includes("核验运行准备"));
+    expect(repair?.getAttribute("href")).toContain("/aip/agent-registry?instanceId=");
+    await act(async () => root.unmount());
+  });
+
+  it("展示选中数字同事的真实最近运行并支持精确运行入口", async () => {
+    sdk.listAgentRuns.mockResolvedValue({ tenant, count: 1, items: [{ tenant, agentRunId: "run-1", taskId: "task-1", taskRunId: "task-run-1", instanceId: instance.instanceId, instanceVersion: 1, skillBindingId: "binding-1", request: {}, status: "succeeded", version: 1, createdAt: "2026-08-30T10:00:00Z", updatedAt: "2026-08-30T10:01:00Z" }] });
+    const root = createRoot(host);
+    await act(async () => root.render(<MemoryRouter><CanonicalAgentsPage /></MemoryRouter>));
+    await act(async () => undefined);
+    expect(sdk.listAgentRuns).toHaveBeenCalledWith(instance.instanceId, 5);
+    expect(host.textContent).toContain("任务 task-1");
+    expect(host.textContent).toContain("已成功");
     await act(async () => root.unmount());
   });
 });

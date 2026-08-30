@@ -157,6 +157,12 @@ class AgentRunAuthority:
         self.scope = scope
         return agent_run(scope.org_id)
 
+    def list(self, scope, *, instance_id, limit):
+        self.scope = scope
+        assert instance_id == "instance-1"
+        assert limit == 3
+        return [agent_run(scope.org_id)]
+
     def cancel_queued(self, scope, agent_run_id, request, *, idempotency_key, actor, occurred_at):
         self.scope = scope
         cancelled = agent_run(scope.org_id).model_copy(update={"status": AgentRunStatus.CANCELLED, "version": request.expected_version + 1})
@@ -195,6 +201,11 @@ def test_agent_run_create_get_are_principal_scoped(client) -> None:
         assert service.scope.key == ("org-org", "dev-project")
         got = client.get("/v1/aip/agent-runs/run-1", headers=headers())
         assert got.status_code == 200 and got.json()["agentRunId"] == "run-1"
+        recent = client.get("/v1/aip/agent-runs?instance_id=instance-1&limit=3", headers=headers())
+        assert recent.status_code == 200
+        assert recent.json()["count"] == 1
+        assert recent.json()["items"][0]["instanceId"] == "instance-1"
+        assert recent.json()["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
         cancelled = client.post(
             "/v1/aip/agent-runs/run-1/cancel-queued",
             headers=headers(**{"Idempotency-Key": "cancel-1"}),

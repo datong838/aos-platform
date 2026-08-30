@@ -5,6 +5,7 @@ import {
   parseCapabilities,
   parseInstall,
   parseAgentRun,
+  parseAgentRuns,
   parseHandoff,
   parseHandoffDecisions,
   parseRuntimeReadiness,
@@ -111,6 +112,13 @@ describe("aipAgentControl strict parser", () => {
     expect(parsed.request.logic.assetType).toBe("LogicRevision");
     expect(parsed.instanceVersion).toBe(2);
     expect(() => parseAgentRun({...parsed,tenant:{orgId:"dev-org",projectId:"dev-project"}},tenant)).toThrow("tenant echo 不一致");
+  });
+
+  it("严格解析租户隔离的 AgentRun 最近运行列表", () => {
+    const tenant = {orgId:"org-org",projectId:"dev-project"};
+    const run = {tenant,agentRunId:"agent-run-1",taskId:"task-1",taskRunId:"run-1",instanceId:"agent-1",instanceVersion:2,skillBindingId:"binding-1",request:{taskRef:{resourceType:"Task",resourceId:"task-1",revision:"1",authority:"aip"},planRef:{resourceType:"PlanRevision",resourceId:"plan-1",revision:"1",authority:"aip"},agentInstance:{assetType:"AgentInstance",assetId:"agent-1",revision:2,contentHash:hash},skill:{assetType:"SkillTemplate",assetId:"skill-1",revision:1,contentHash:hash},logic:{assetType:"LogicRevision",assetId:"logic-1",revision:1,contentHash:hash},modelRoute:{assetType:"ModelRouteRevision",assetId:"route-1",revision:1,contentHash:hash},policy:{assetType:"RuntimePolicyRevision",assetId:"policy-1",revision:1,contentHash:hash},inputRefs:[]},status:"succeeded",version:3,createdAt:"2026-08-30T10:00:00Z",updatedAt:"2026-08-30T10:01:00Z"};
+    expect(parseAgentRuns({tenant,items:[run],count:1},tenant).items[0].taskId).toBe("task-1");
+    expect(() => parseAgentRuns({tenant,items:[run],count:2},tenant)).toThrow("count 与 items 不一致");
   });
 
   it("严格解析 Handoff 与独立 Decision，并拒绝数量漂移", () => {

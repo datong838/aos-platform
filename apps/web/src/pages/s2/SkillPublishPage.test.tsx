@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../api/client", () => ({
   apiGet: vi.fn(),
+  apiPost: vi.fn(),
 }));
+vi.mock("../../api/aipAgentControl", () => ({ aipAgentControl: { runtimeReadiness: vi.fn().mockResolvedValue({ catalog: { items: [] } }) } }));
 vi.mock("../../api/tenant", () => ({
   getTenant: () => ({ orgId: "org-org", projectId: "dev-project" }),
 }));
@@ -80,7 +82,7 @@ describe("SkillPublishPage W-F4 batch stats", () => {
     const strip = host.querySelector('[data-testid="skill-publish-batch-stats"]');
     expect(strip?.textContent).toContain("已发布技能");
     expect(strip?.textContent).toContain("1");
-    expect(strip?.textContent).toContain("仍待业务逻辑进入权威存储");
-    expect(strip?.textContent).toContain("不在此页伪造发布");
+    expect(strip?.textContent).toContain("需核验业务逻辑权威");
+    expect(strip?.textContent).toContain("精确版本");
   });
 });

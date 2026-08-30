@@ -21,6 +21,15 @@ function freshAt(expiresAt: string | null, now = Date.now()): boolean {
   return expiresAt !== null && Date.parse(expiresAt) > now;
 }
 
+const roleEntrances: Record<string, Array<{ label: string; href: string }>> = {
+  data_advisor: [{ label: "进入经营参谋", href: "/workshop/analyst" }],
+  content_officer: [{ label: "进入内容与活动", href: "/workshop/content-campaign" }, { label: "进入多媒体生产", href: "/workshop/media-studio" }],
+  shopping_advisor: [{ label: "进入日常任务总控", href: "/workshop/cockpit" }],
+  customer_service: [{ label: "进入客户关系", href: "/workshop/customer" }],
+  private_domain_manager: [{ label: "进入客户关系", href: "/workshop/customer" }],
+  campaign_planner: [{ label: "进入内容与活动", href: "/workshop/content-campaign" }, { label: "进入经营参谋", href: "/workshop/analyst" }],
+};
+
 function ReadinessLadderStrip({ ladder }: { ladder: ReturnType<typeof deriveAgentReadinessLadder> }) {
   return (
     <div data-testid="agent-readiness-ladder" aria-label="分栏就绪阶梯" style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10, fontSize: 12 }}>
@@ -63,6 +72,10 @@ export function CanonicalAgentRegistryPage() {
   const [busy, setBusy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [precheckedTemplateId, setPrecheckedTemplateId] = useState<string | null>(null);
+  const [confirmingInstanceId, setConfirmingInstanceId] = useState<string | null>(null);
+  const [actionInstanceId, setActionInstanceId] = useState<string | null>(null);
+  const selectedCapabilityId = useMemo(() => new URLSearchParams(window.location.search).get("capabilityId"), []);
+  const activationIntent = useMemo(() => new URLSearchParams(window.location.search).get("intent") === "activate", []);
   const load = useCallback(async () => {
     try { setData(await aipAgentControl.runtimeReadiness()); setError(""); }
     catch (e) { setData(null); setError(String((e as Error).message || e)); }
@@ -83,6 +96,19 @@ export function CanonicalAgentRegistryPage() {
       setError(String((e as Error).message || e));
     } finally {
       setRefreshing(false);
+    }
+  }
+  async function changeLifecycle(instanceId: string, version: number, mode: "activate" | "suspend", capabilityBindingIds: string[]) {
+    setActionInstanceId(instanceId);
+    try {
+      if (mode === "activate") await aipAgentControl.activateAgent(instanceId, version, capabilityBindingIds, `agent-activate-${crypto.randomUUID()}`);
+      else await aipAgentControl.suspendAgent(instanceId, version, "目录人工暂停；保留现有配置与审计记录", `agent-suspend-${crypto.randomUUID()}`);
+      setConfirmingInstanceId(null);
+      await load();
+    } catch (e) {
+      setError(String((e as Error).message || e));
+    } finally {
+      setActionInstanceId(null);
     }
   }
   const stale = useMemo(() => data ? runtimeSnapshotStale(data.evaluatedAt) : false, [data]);
@@ -150,6 +176,9 @@ export function CanonicalAgentRegistryPage() {
         actionDisabledReason={refreshing || busy ? "正在核验目录、绑定与模型运行状态，请等待当前请求完成。" : undefined}
         technicalCodes={readinessSummary?.codes}
       /> : null}
+      {selectedCapabilityId ? <div className="notice" role="status" style={{marginBottom:14}}>
+        当前从专业能力“{selectedCapabilityId}”进入；下方已标出使用该能力的数字同事。{activationIntent ? "只有依赖快照、健康状态与版本校验同时通过时，才会开放激活确认。" : ""}
+      </div> : null}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(360px,1fr))",gap:14}}>
         {data.catalog.items.map(item => {
           const instanceId = item.instance?.instanceId;
@@ -171,6 +200,17 @@ export function CanonicalAgentRegistryPage() {
               && binding.operationalReadiness === "available"
               && freshAt(binding.readinessExpiresAt)
             )));
+          const exactCapabilityBindings = requiredCapabilityIds.map((capId) => data.capabilityBindings.find((binding) => (
+            binding.capability.assetId === capId
+            && binding.status === "active"
+            && binding.health === "healthy"
+            && binding.operationalReadiness === "available"
+            && Boolean(binding.dependencySnapshotHash)
+            && freshAt(binding.readinessExpiresAt)
+          )));
+          const activationReady = Boolean(item.instance?.status === "provisioning" && exactCapabilityBindings.length > 0 && exactCapabilityBindings.every(Boolean));
+          const selectedForCapability = Boolean(selectedCapabilityId && requiredCapabilityIds.includes(selectedCapabilityId));
+          const entrances = roleEntrances[item.template.roleKey] || [{ label: "进入日常任务总控", href: "/workshop/cockpit" }];
           const ladder = deriveAgentReadinessLadder({
             templatePublished: item.template.lifecycle === "published",
             installed: Boolean(item.instance),
@@ -193,11 +233,11 @@ export function CanonicalAgentRegistryPage() {
           const earliestExpiry = readinessExpiries.length
             ? readinessExpiries.reduce((earliest, value) => Date.parse(value) < Date.parse(earliest) ? value : earliest)
             : null;
-          return <article key={item.template.templateId} className="card" style={{padding:18}}>
+          return <article key={item.template.templateId} className="card" data-capability-match={selectedForCapability ? "1" : "0"} style={{padding:18,border:selectedForCapability ? "2px solid var(--aos-blue-600, #2563eb)" : undefined}}>
             <div style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"start"}}>
               <div>
                 <h3 style={{margin:0}}>{item.template.displayName}</h3>
-                <small style={{color:"var(--aos-text-secondary)"}}>{responsibilityDisplayName(item.template.manifest.responsibility)}</small>
+                <small style={{color:"var(--aos-text-secondary)"}}>{responsibilityDisplayName(item.template.manifest.responsibility)} · 模板 v{item.template.revision}</small>
               </div>
               <strong style={{color:item.instance?.status === "active" ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>{statusLabel(item.instance?.status)}</strong>
             </div>
@@ -206,6 +246,9 @@ export function CanonicalAgentRegistryPage() {
             <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8,fontSize:13,marginTop:10}}>
               <div className="notice">技能 {activeSkillIds.size}/{item.skills.length} 已绑定</div>
               <div className="notice">专业能力 {activeCapabilityIds.size}/{requiredCapabilityIds.length} 已绑定</div>
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:10,fontSize:13}}>
+              {requiredCapabilityIds.map(capabilityId => <Link key={capabilityId} to={`/aip/capabilities?capabilityId=${encodeURIComponent(capabilityId)}`}>{capabilityId}</Link>)}
             </div>
             <details style={{marginTop:12}}><summary>查看 {item.skills.length} 个技能状态</summary>
               <ul>{item.skills.map(skill => {
@@ -246,6 +289,25 @@ export function CanonicalAgentRegistryPage() {
               权威截止 {new Date(data.evaluatedAt).toLocaleString()} · 最早到期 {earliestExpiry ? new Date(earliestExpiry).toLocaleString() : "未提供"}<br />
               本操作未触发 Provider、AgentRun 或生产 Action。
             </div>}
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:12}}>
+              {entrances.map(entrance => <Link key={entrance.href} className="btn" to={entrance.href}>{entrance.label}</Link>)}
+              <Link className="btn" to={`/aip/agents?instanceId=${encodeURIComponent(instanceId || item.template.templateId)}`}>查看绑定与最近运行</Link>
+            </div>
+            {item.instance ? <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid var(--aos-border)"}}>
+              {confirmingInstanceId !== item.instance.instanceId ? <button
+                className="btn"
+                disabled={actionInstanceId !== null || (item.instance.status === "provisioning" ? !activationReady : item.instance.status !== "active")}
+                title={item.instance.status === "provisioning" && !activationReady ? "需先补齐全部专业能力的健康、运行就绪与新鲜依赖快照" : item.instance.status === "active" ? "暂停后保留配置、版本与审计记录" : "当前状态不支持此操作"}
+                onClick={() => setConfirmingInstanceId(item.instance?.instanceId || null)}
+              >{item.instance.status === "active" ? "暂停使用" : "激活此数字同事"}</button> : <div className="notice" role="group" aria-label={`${item.template.displayName}生命周期确认`}>
+                <strong>{item.instance.status === "active" ? "确认暂停该数字同事？" : "确认按当前精确绑定激活？"}</strong>
+                <p style={{margin:"6px 0"}}>实例 {item.instance.instanceId} · 当前版本 {item.instance.version}；操作成功后将立即回读权威状态。</p>
+                <div style={{display:"flex",gap:8}}>
+                  <button className="btn primary" disabled={actionInstanceId !== null} onClick={() => void changeLifecycle(item.instance!.instanceId, item.instance!.version, item.instance!.status === "active" ? "suspend" : "activate", exactCapabilityBindings.filter((binding): binding is NonNullable<typeof binding> => Boolean(binding)).map(binding => binding.bindingId))}>{actionInstanceId === item.instance.instanceId ? "提交中…" : "确认提交"}</button>
+                  <button className="btn" disabled={actionInstanceId !== null} onClick={() => setConfirmingInstanceId(null)}>取消</button>
+                </div>
+              </div>}
+            </div> : null}
           </article>;
         })}
       </div>

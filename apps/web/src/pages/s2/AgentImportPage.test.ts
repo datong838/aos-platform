@@ -6,6 +6,7 @@ const valid: ImportForm = {
   sourceId: "approved/agent",
   sourceCommit: "abcdef1",
   licenseId: "MIT",
+  signatureId: "signature/agent",
   sbomId: "sbom/agent",
   targetId: "ecommerce.agent.external",
   displayName: "外部智能体",
@@ -24,6 +25,7 @@ describe("AgentImportPage · governed preview", () => {
     const request = buildImportPreviewRequest("agent", valid);
     expect(request.kind).toBe("agent");
     expect(request.source.sourceCommit).toBe("abcdef1");
+    expect(request.source.signatureRef.resourceId).toBe("signature/agent");
     expect(request.source.files).toEqual([{ path: "agent.py", content: valid.sourceContent }]);
     expect(request.mapping.toolMappings).toEqual({});
     expect("importJob" in request).toBe(false);

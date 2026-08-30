@@ -6,6 +6,7 @@ const valid: ImportForm = {
   sourceId: "approved/capability",
   sourceCommit: "1234abc",
   licenseId: "Apache-2.0",
+  signatureId: "signature/capability",
   sbomId: "sbom/capability",
   targetId: "ecommerce.capability.external",
   displayName: "外部能力",

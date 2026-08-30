@@ -1,17 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   aipAgentControl,
   type AgentInstanceListResponse,
   type AgentRuntimeReadinessResponse,
+  type AgentRunListResponse,
 } from "../../api/aipAgentControl";
 import { aipMarketplaceImport, type MarketplaceAgentReadiness } from "../../api/aipMarketplaceImport";
 import { PageChrome } from "../../components/PageChrome";
-import { formatBlockers, instanceStatusDisplayName, responsibilityDisplayName } from "../../lib/aipChineseLabels";
+import { capabilityDisplayName, formatBlockers, instanceStatusDisplayName, responsibilityDisplayName, statusDisplayName } from "../../lib/aipChineseLabels";
 
 type DetailTab = "overview" | "tools" | "try" | "publish";
 
 export function CanonicalAgentsPage() {
+  const [searchParams] = useSearchParams();
   const [data, setData] = useState<AgentInstanceListResponse | null>(null);
   const [runtime, setRuntime] = useState<AgentRuntimeReadinessResponse | null>(null);
   const [repairs, setRepairs] = useState<Map<string, MarketplaceAgentReadiness>>(new Map());
@@ -19,6 +21,8 @@ export function CanonicalAgentsPage() {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tab, setTab] = useState<DetailTab>("overview");
+  const [recentRuns, setRecentRuns] = useState<AgentRunListResponse | null>(null);
+  const [runError, setRunError] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -32,6 +36,8 @@ export function CanonicalAgentsPage() {
       setRepairs(new Map((marketplace?.items || []).flatMap((item) => item.agents).map((item) => [item.templateId, item])));
       setError("");
       setSelectedId((prev) => {
+        const requested = searchParams.get("instanceId");
+        if (requested && instances.items.some((item) => item.instanceId === requested)) return requested;
         if (prev && instances.items.some((item) => item.instanceId === prev)) return prev;
         return instances.items[0]?.instanceId ?? null;
       });
@@ -41,7 +47,7 @@ export function CanonicalAgentsPage() {
       setRepairs(new Map());
       setError(String((e as Error).message || e));
     }
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     void load();
@@ -70,8 +76,20 @@ export function CanonicalAgentsPage() {
   const repair = selected ? repairs.get(selected.template.assetId) : undefined;
   const runnable = catalogItem?.runtimeReadiness === "runnable";
 
+  useEffect(() => {
+    if (!selected?.instanceId) { setRecentRuns(null); setRunError(""); return; }
+    let active = true;
+    setRecentRuns(null);
+    aipAgentControl.listAgentRuns(selected.instanceId, 5).then((value) => {
+      if (active) { setRecentRuns(value); setRunError(""); }
+    }).catch((value) => {
+      if (active) { setRecentRuns(null); setRunError(String((value as Error).message || value)); }
+    });
+    return () => { active = false; };
+  }, [selected?.instanceId]);
+
   return (
-    <PageChrome title="智能体列表" lede="已安装数字同事 · 左列表右配置壳（对齐蓝图密度，权威不写演示样例）">
+    <PageChrome title="智能体列表" lede="管理已安装数字同事的职责、能力、工具与真实运行记录">
       <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
         <button className="btn" type="button" onClick={() => void load()}>刷新</button>
         <Link className="btn" to="/aip/agent-registry">智能体目录</Link>
@@ -81,7 +99,7 @@ export function CanonicalAgentsPage() {
           <>
             <span className="notice" style={{ padding: "6px 10px" }}>实例 {data?.count ?? 0}</span>
             <span className="notice" style={{ padding: "6px 10px" }} data-testid="agents-dispatchable-ratio">
-              可派发 {runtime.catalog.stats.runnableCount}/{runtime.catalog.stats.installedCount}（已安装≠可派发）
+              可承接任务 {runtime.catalog.stats.runnableCount}/{runtime.catalog.stats.installedCount}
             </span>
           </>
         ) : null}
@@ -140,7 +158,7 @@ export function CanonicalAgentsPage() {
                       <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                         <span className="notice" style={{ padding: "2px 6px", fontSize: 11 }}>{instanceStatusDisplayName(item.status)}</span>
                         <span className="notice" style={{ padding: "2px 6px", fontSize: 11, color: isRun ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>
-                          {isRun ? "运行条件已通过" : "运行条件待补齐"}
+                          {isRun ? "可承接任务" : "需核验运行准备"}
                         </span>
                       </div>
                     </button>
@@ -168,7 +186,7 @@ export function CanonicalAgentsPage() {
                       {instanceStatusDisplayName(selected.status)}
                     </strong>
                     <strong style={{ color: runnable ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>
-                      {runnable ? "目录运行条件已通过" : "目录运行条件待补齐"}
+                      {runnable ? "可承接任务" : "需核验运行准备"}
                     </strong>
                   </div>
                 </div>
@@ -202,17 +220,27 @@ export function CanonicalAgentsPage() {
                 <div style={{ marginTop: 16 }}>
                   {tab === "overview" && (
                     <div>
-                      <p style={{ color: runnable ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 10 }}>
+                        <article className="notice"><strong>主要职责</strong><p>{catalogItem ? responsibilityDisplayName(catalogItem.template.manifest.responsibility) : "请从目录核验职责定义"}</p></article>
+                        <article className="notice"><strong>当前版本</strong><p>实例 v{selected.version} · 模板 r{selected.template.revision}</p><small>{new Date(selected.updatedAt).toLocaleString("zh-CN", { hour12: false })}</small></article>
+                        <article className="notice"><strong>授权范围</strong><p>{selected.overlay.allowedCapabilityIds.length ? selected.overlay.allowedCapabilityIds.map(capabilityDisplayName).join("、") : "遵循模板所需能力与组织绑定"}</p></article>
+                        <article className="notice"><strong>专业能力</strong><p>{catalogItem?.requiredCapabilityIds.length ? catalogItem.requiredCapabilityIds.map(capabilityDisplayName).join("、") : "由职责模板决定"}</p></article>
+                      </div>
+                      <p style={{ color: runnable ? "var(--aos-green-700)" : "var(--aos-amber-700)", marginTop: 14 }}>
                         {!catalogItem
-                          ? "运行就绪尚未对账；请打开智能体目录刷新"
+                          ? "运行准备尚未对账；请打开智能体目录刷新"
                           : runnable
-                            ? "可派发（目录 runnable；本页不直接外呼）"
+                            ? "当前运行条件已通过；需绑定真实任务后才会产生运行记录。"
                             : catalogItem.blockers.length
-                              ? `已安装≠可派发：${formatBlockers(catalogItem.blockers)}`
-                              : "已安装≠可派发：缺少完整能力/技能绑定与依赖快照"}
+                              ? `需要处理：${formatBlockers(catalogItem.blockers)}`
+                              : "需要核验完整能力、技能绑定与依赖快照。"}
                       </p>
+                      <section style={{ marginTop: 16 }} aria-label="最近运行">
+                        <h3>最近运行</h3>
+                        {runError ? <div className="notice bad">运行记录读取失败：{runError}</div> : !recentRuns ? <p>正在读取真实运行记录…</p> : recentRuns.count === 0 ? <div className="notice">当前数字同事尚无运行记录；绑定真实任务并通过安全预检后，记录会在这里出现。</div> : recentRuns.items.map((run) => <article key={run.agentRunId} style={{ borderTop: "1px solid var(--aos-border)", padding: "10px 0" }}><strong>{statusDisplayName(run.status)}</strong><span> · 任务 {run.taskId}</span><small style={{ display: "block" }}>{new Date(run.updatedAt).toLocaleString("zh-CN", { hour12: false })}</small><details><summary>审计引用</summary><code>{run.agentRunId}</code> · <code>{run.taskRunId}</code></details></article>)}
+                      </section>
                       <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-                        <Link className="btn" to={repair?.repairHref || "/aip/agent-registry"}>{repair?.repairLabel || "去目录重评就绪"}</Link>
+                        <Link className="btn" to={repair?.repairHref || `/aip/agent-registry?instanceId=${encodeURIComponent(selected.instanceId)}`}>{repair?.repairLabel || "核验运行准备"}</Link>
                         <Link className="btn" to="/aip/studio">智能体配置</Link>
                       </div>
                     </div>
@@ -220,23 +248,23 @@ export function CanonicalAgentsPage() {
                   {tab === "tools" && (
                     <div>
                       <p>工具配置以实例 Overlay 为准，完整三栏见工具面板。本页不伪造「N 个工具已开启」。</p>
-                      <Link className="btn primary" to="/aip/tools" style={{ marginTop: 12, display: "inline-flex" }}>打开完整工具面板</Link>
+                      <Link className="btn primary" to={`/aip/tools?instanceId=${encodeURIComponent(selected.instanceId)}`} style={{ marginTop: 12, display: "inline-flex" }}>打开完整工具面板</Link>
                     </div>
                   )}
                   {tab === "try" && (
                     <div>
                       <p>{runnable ? "目录运行条件已通过。试跑须绑定真实任务与智能体运行上下文，本页不发起外呼。" : "已安装不代表运行条件已经通过；请先完成目录重评，再进入工具面板绑定真实上下文。"}</p>
-                      <Link className="btn" to={runnable ? "/aip/tools" : "/aip/agent-registry"} title={runnable ? "到工具面板绑定真实上下文后试跑" : "到智能体目录补齐依赖并刷新运行准备"}>
-                        {runnable ? "前往工具面板试跑" : "补齐运行条件"}
+                      <Link className="btn" to={runnable ? `/aip/tools?instanceId=${encodeURIComponent(selected.instanceId)}&intent=trial` : `/aip/agent-registry?instanceId=${encodeURIComponent(selected.instanceId)}`} title={runnable ? "到工具面板绑定真实上下文后试跑" : "到智能体目录核验依赖并刷新运行准备"}>
+                        {runnable ? "前往工具面板试跑" : "核验运行准备"}
                       </Link>
                     </div>
                   )}
                   {tab === "publish" && (
                     <div>
-                      <p>实例发布/导入不在本列表伪造成功。技能发布见独立发布台；安装与绑定见目录。</p>
+                      <p>版本启停、回退与重新安装必须在目录中核对精确版本并人工确认；本列表不会绕过审批。</p>
                       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                        <Link className="btn" to="/aip/agent-registry">智能体目录</Link>
-                        <Link className="btn" to="/aip/agent-import">智能体导入</Link>
+                        <Link className="btn" to={`/aip/agent-registry?instanceId=${encodeURIComponent(selected.instanceId)}&intent=lifecycle`}>启停与版本管理</Link>
+                        <Link className="btn" to="/aip/agent-marketplace">查找可用版本</Link>
                       </div>
                     </div>
                   )}

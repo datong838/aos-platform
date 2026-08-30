@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Header, Query, status
 
 from aos_api.aip_agent_registry_contracts import (
     AgentRun,
+    AgentRunListResponse,
     AgentRunCommandResponse,
     CancelAgentRunRequest,
     CreateAgentRunRequest,
@@ -87,6 +88,20 @@ def _map_error(exc: AipAgentRegistryError) -> ApiError:
             status_code=503,
         )
     return ApiError(code=exc.code, message="agent run execution authority failed", status_code=503)
+
+
+@router.get("", response_model=AgentRunListResponse)
+def list_agent_runs(
+    instance_id: str | None = Query(default=None, min_length=1, max_length=200),
+    limit: int = Query(default=20, ge=1, le=100),
+    principal: Principal = Depends(require_principal),
+    service: AipAgentRunService = Depends(get_agent_run_service),
+) -> AgentRunListResponse:
+    try:
+        items = service.list(_scope(principal), instance_id=instance_id, limit=limit)
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    return AgentRunListResponse(tenant=_tenant(principal), items=items, count=len(items))
 
 
 @router.post("/{agent_run_id}/execute", response_model=ExecuteAgentRunResponse)

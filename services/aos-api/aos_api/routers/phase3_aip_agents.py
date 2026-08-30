@@ -35,11 +35,26 @@ from aos_api.aip_agent_registry_store import (
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_ecommerce_agent_installer import AipEcommerceAgentInstaller
 from aos_api.aip_import_preview import preview_import
+from aos_api.aip_import_job_service import (
+    AipImportJobBlocked,
+    AipImportJobConflict,
+    AipImportJobError,
+    AipImportJobNotFound,
+    AipImportJobPersistenceError,
+    AipImportJobService,
+)
 from aos_api.aip_marketplace_catalog import AipMarketplaceCatalog
 from aos_api.aip_marketplace_import_contracts import (
+    ApplyImportJobRequest,
+    ApproveImportJobRequest,
+    CreateImportJobRequest,
+    ImportJob,
+    ImportJobListResponse,
+    ImportJobMutationResponse,
     ImportPreviewRequest,
     ImportPreviewResponse,
     MarketplaceCatalogResponse,
+    RollbackImportJobRequest,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -52,6 +67,7 @@ _INSTALLER = AipEcommerceAgentInstaller(agents=_STORE)
 _ACTIVATION = AipAgentInstanceActivationService(store=_STORE)
 _OVERLAY = AipAgentOverlayStore(agents=_STORE)
 _MARKETPLACE = AipMarketplaceCatalog(installer=_INSTALLER)
+_IMPORT_JOBS = AipImportJobService()
 
 
 class PromptBody(BaseModel):
@@ -89,6 +105,10 @@ def get_marketplace_catalog() -> AipMarketplaceCatalog:
     return _MARKETPLACE
 
 
+def get_import_job_service() -> AipImportJobService:
+    return _IMPORT_JOBS
+
+
 @router.get("/marketplace/catalog", response_model=MarketplaceCatalogResponse)
 def list_marketplace_catalog(
     principal: Principal = Depends(require_principal),
@@ -106,6 +126,110 @@ def create_import_preview(
     principal: Principal = Depends(require_principal),
 ) -> ImportPreviewResponse:
     return preview_import(principal, body)
+
+
+def _require_import_role(principal: Principal, *, approval: bool = False) -> None:
+    roles = {role.lower() for role in principal.roles}
+    allowed = {"admin", "aip_executor", "executor", "developer"}
+    if approval:
+        allowed = {"admin", "reviewer", "approver"}
+    if not roles.intersection(allowed):
+        raise ApiError(code="AIP_SCOPE_FORBIDDEN", message="trusted import control role required", status_code=403)
+
+
+def _map_import_error(exc: AipImportJobError) -> ApiError:
+    if isinstance(exc, AipImportJobNotFound):
+        return ApiError(code=exc.code, message=str(exc), status_code=404)
+    if isinstance(exc, AipImportJobConflict):
+        return ApiError(code=exc.code, message=str(exc), status_code=409)
+    if isinstance(exc, AipImportJobBlocked):
+        return ApiError(code=exc.code, message=str(exc), status_code=422)
+    if isinstance(exc, AipImportJobPersistenceError):
+        return ApiError(code=exc.code, message="import job persistence failed", status_code=503)
+    return ApiError(code=exc.code, message="import job failed", status_code=500)
+
+
+@router.get("/import-jobs", response_model=ImportJobListResponse)
+def list_import_jobs(
+    limit: int = Query(default=100, ge=1, le=200),
+    principal: Principal = Depends(require_principal),
+    service: AipImportJobService = Depends(get_import_job_service),
+) -> ImportJobListResponse:
+    try:
+        return service.list(_scope(principal), limit=limit)
+    except AipImportJobError as exc:
+        raise _map_import_error(exc) from exc
+
+
+@router.get("/import-jobs/{job_id}", response_model=ImportJob)
+def get_import_job(
+    job_id: str,
+    principal: Principal = Depends(require_principal),
+    service: AipImportJobService = Depends(get_import_job_service),
+) -> ImportJob:
+    try:
+        return service.get(_scope(principal), job_id)
+    except AipImportJobError as exc:
+        raise _map_import_error(exc) from exc
+
+
+@router.post("/import-jobs", response_model=ImportJobMutationResponse, status_code=status.HTTP_201_CREATED)
+def create_import_job(
+    body: CreateImportJobRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=8, max_length=200),
+    principal: Principal = Depends(require_principal),
+    service: AipImportJobService = Depends(get_import_job_service),
+) -> ImportJobMutationResponse:
+    _require_import_role(principal)
+    try:
+        return service.create(principal, body, idempotency_key=idempotency_key)
+    except AipImportJobError as exc:
+        raise _map_import_error(exc) from exc
+
+
+@router.post("/import-jobs/{job_id}/approval", response_model=ImportJobMutationResponse)
+def approve_import_job(
+    job_id: str,
+    body: ApproveImportJobRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=8, max_length=200),
+    principal: Principal = Depends(require_principal),
+    service: AipImportJobService = Depends(get_import_job_service),
+) -> ImportJobMutationResponse:
+    _require_import_role(principal, approval=True)
+    try:
+        return service.approve(_scope(principal), job_id, body, actor=principal.subject, idempotency_key=idempotency_key)
+    except AipImportJobError as exc:
+        raise _map_import_error(exc) from exc
+
+
+@router.post("/import-jobs/{job_id}/apply", response_model=ImportJobMutationResponse)
+def apply_import_job(
+    job_id: str,
+    body: ApplyImportJobRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=8, max_length=200),
+    principal: Principal = Depends(require_principal),
+    service: AipImportJobService = Depends(get_import_job_service),
+) -> ImportJobMutationResponse:
+    _require_import_role(principal)
+    try:
+        return service.apply(_scope(principal), job_id, body, actor=principal.subject, idempotency_key=idempotency_key)
+    except AipImportJobError as exc:
+        raise _map_import_error(exc) from exc
+
+
+@router.post("/import-jobs/{job_id}/rollback", response_model=ImportJobMutationResponse)
+def rollback_import_job(
+    job_id: str,
+    body: RollbackImportJobRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key", min_length=8, max_length=200),
+    principal: Principal = Depends(require_principal),
+    service: AipImportJobService = Depends(get_import_job_service),
+) -> ImportJobMutationResponse:
+    _require_import_role(principal)
+    try:
+        return service.rollback(_scope(principal), job_id, body, actor=principal.subject, idempotency_key=idempotency_key)
+    except AipImportJobError as exc:
+        raise _map_import_error(exc) from exc
 
 
 def _scope(principal: Principal) -> TenantScope:

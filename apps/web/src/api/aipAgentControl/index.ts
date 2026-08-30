@@ -1,6 +1,6 @@
 import { apiGet, apiPost } from "../client";
 import { getTenant } from "../tenant";
-import { parseAgentCatalog, parseAgentInstances, parseAgentRun, parseAgentRunCommand, parseCapabilities, parseDecidedHandoff, parseHandoff, parseHandoffDecisions, parseInstall, parseIssuedHandoff, parseRuntimeReadiness } from "./parser";
+import { parseAgentCatalog, parseAgentInstances, parseAgentRun, parseAgentRunCommand, parseAgentRuns, parseCapabilities, parseDecidedHandoff, parseHandoff, parseHandoffDecisions, parseInstall, parseIssuedHandoff, parseRuntimeReadiness } from "./parser";
 import type { AgentInstanceActivationResponse, ConsumeHandoffInput, CreateAgentRunInput, CreateHandoffDecisionInput, IssueHandoffInput } from "./contracts";
 
 function segment(value: string, label: string): string {
@@ -20,6 +20,12 @@ export const aipAgentControl = {
   async listCapabilities() { return parseCapabilities(await apiGet<unknown>("/v1/aip/capability-catalog"), getTenant()); },
   async runtimeReadiness() { return parseRuntimeReadiness(await apiGet<unknown>("/v1/aip/agent-registry/runtime-readiness"), getTenant()); },
   async getAgentRun(agentRunId: string) { return parseAgentRun(await apiGet<unknown>(`/v1/aip/agent-runs/${segment(agentRunId, "agentRunId")}`), getTenant()); },
+  async listAgentRuns(instanceId?: string, limit = 10) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new TypeError("limit 非法");
+    const query = new URLSearchParams({ limit: String(limit) });
+    if (instanceId !== undefined) query.set("instance_id", segment(instanceId, "instanceId"));
+    return parseAgentRuns(await apiGet<unknown>(`/v1/aip/agent-runs?${query.toString()}`), getTenant());
+  },
   async createAgentRun(input: CreateAgentRunInput, idempotencyKey: string) {
     return parseAgentRunCommand(await apiPost<unknown>("/v1/aip/agent-runs", input, keyHeaders(idempotencyKey)), getTenant(), "agent_run.create");
   },

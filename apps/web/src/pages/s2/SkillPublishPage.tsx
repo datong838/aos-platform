@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { apiGet } from "../../api/client";
+import { apiGet, apiPost } from "../../api/client";
+import { aipAgentControl, type AgentRuntimeReadinessResponse } from "../../api/aipAgentControl";
 import { getTenant } from "../../api/tenant";
 import { PageChrome } from "../../components/PageChrome";
 import { logicDisplayName } from "../../lib/aipChineseLabels";
@@ -11,6 +12,7 @@ type SkillItem = {
   lifecycle: string;
   contentHash: string;
   canonicalLogicId: string;
+  logicRevisionRef?: { assetType: string; assetId: string; revision: number; contentHash: string } | null;
 };
 
 type SkillListResponse = {
@@ -18,6 +20,14 @@ type SkillListResponse = {
   items: SkillItem[];
   count: number;
 };
+
+type ExactPublicationForm = {
+  publicationId: string; releaseGateDecisionId: string;
+  routeId: string; routeRevision: string; routeHash: string;
+  policyId: string; policyRevision: string; policyHash: string;
+  logicRevision: string; logicHash: string;
+};
+const EMPTY_PUBLICATION: ExactPublicationForm = { publicationId: "", releaseGateDecisionId: "", routeId: "", routeRevision: "", routeHash: "", policyId: "", policyRevision: "", policyHash: "", logicRevision: "", logicHash: "" };
 
 function lifecycleLabel(lifecycle: string): string {
   return (
@@ -40,13 +50,17 @@ export function SkillPublishPage() {
   const [bindStep, setBindStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
+  const [runtime, setRuntime] = useState<AgentRuntimeReadinessResponse | null>(null);
+  const [publication, setPublication] = useState<ExactPublicationForm>(EMPTY_PUBLICATION);
+  const [receiptId, setReceiptId] = useState("");
 
   const load = useCallback(async () => {
     try {
       const qs = filter === "all" ? "" : `?lifecycle=${filter}`;
-      const [body, all] = await Promise.all([
+      const [body, all, readiness] = await Promise.all([
         apiGet<SkillListResponse>(`/v1/aip/skills${qs}`),
         apiGet<SkillListResponse>(`/v1/aip/skills?limit=200`),
+        aipAgentControl.runtimeReadiness(),
       ]);
       const tenant = getTenant();
       if (body.tenant.orgId !== tenant.orgId || body.tenant.projectId !== tenant.projectId) {
@@ -54,6 +68,7 @@ export function SkillPublishPage() {
       }
       setData(body);
       setAllItems(all.items);
+      setRuntime(readiness);
       setError("");
       setSelectedId((prev) => {
         if (prev && body.items.some((item) => `${item.skillId}@${item.revision}` === prev)) return prev;
@@ -63,6 +78,7 @@ export function SkillPublishPage() {
     } catch (e) {
       setData(null);
       setAllItems([]);
+      setRuntime(null);
       setError(String((e as Error).message || e));
     }
   }, [filter]);
@@ -92,9 +108,28 @@ export function SkillPublishPage() {
     if (!selected || selected.lifecycle !== "evaluated") return;
     setBusy(true);
     setNote("");
+    setReceiptId("");
     try {
-      setNote("发布需齐备正式评测放行、模型路由、运行策略与业务逻辑精确版本。请先在“评测门控”确认通过；缺少任一权威引用时，本页将保持关闭，不会伪造发布成功。");
+      const revision = (value: string, label: string) => { const parsed = Number(value); if (!Number.isInteger(parsed) || parsed < 1) throw new Error(`${label}必须为正整数`); return parsed; };
+      const hash = (value: string, label: string) => { const cleaned = value.trim(); if (!/^[0-9a-f]{64}$/.test(cleaned)) throw new Error(`${label}必须为 64 位 SHA-256`); return cleaned; };
+      if (!publication.publicationId.trim() || !publication.releaseGateDecisionId.trim() || !publication.routeId.trim() || !publication.policyId.trim()) throw new Error("发布事件、评测放行、模型路由和运行策略均需精确引用");
+      const idempotencyKey = `skill-publish-${selected.skillId}-${selected.revision}-${crypto.randomUUID()}`;
+      const response = await apiPost<{ tenant: { orgId: string; projectId: string }; skill: SkillItem; receiptId: string; operation: string }>("/v1/aip/skills/publish-evaluated", {
+        sourceSkill: { assetType: "SkillTemplate", assetId: selected.skillId, revision: selected.revision, contentHash: selected.contentHash },
+        publicationId: publication.publicationId.trim(), releaseGateDecisionId: publication.releaseGateDecisionId.trim(),
+        modelRouteRef: { assetType: "ModelRouteRevision", assetId: publication.routeId.trim(), revision: revision(publication.routeRevision, "路由修订"), contentHash: hash(publication.routeHash, "路由摘要") },
+        runtimePolicyRef: { assetType: "RuntimePolicyRevision", assetId: publication.policyId.trim(), revision: revision(publication.policyRevision, "策略修订"), contentHash: hash(publication.policyHash, "策略摘要") },
+        logicRevisionRef: { assetType: "LogicRevision", assetId: selected.canonicalLogicId, revision: revision(publication.logicRevision, "逻辑修订"), contentHash: hash(publication.logicHash, "逻辑摘要") },
+        idempotencyKey,
+      }, { "Idempotency-Key": idempotencyKey });
+      const tenant = getTenant();
+      if (response.tenant.orgId !== tenant.orgId || response.tenant.projectId !== tenant.projectId || response.skill.skillId !== selected.skillId || !response.receiptId) throw new Error("发布回读与当前租户或精确技能不一致");
+      setReceiptId(response.receiptId);
+      setNote(`已发布修订 ${response.skill.revision}，并回读发布回执。`);
       setBindStep(1);
+      await load();
+    } catch (value) {
+      setNote(`发布未执行：${String((value as Error).message || value)}`);
     } finally {
       setBusy(false);
     }
@@ -121,8 +156,8 @@ export function SkillPublishPage() {
       {allItems.length > 0 ? (
         <div className="notice" style={{ padding: 12, marginBottom: 12 }} role="status" data-testid="skill-publish-batch-stats">
           首批发布对账：已发布技能 <strong>{batchStats.published}</strong> 个 ·
-          仍待业务逻辑进入权威存储 <strong>{batchStats.waitingLogic}</strong> 个 ·
-          列表共 {batchStats.total} 条修订。缺少业务逻辑时保持关闭，不在此页伪造发布。
+          需核验业务逻辑权威 <strong>{batchStats.waitingLogic}</strong> 个 ·
+          列表共 {batchStats.total} 条修订。发布必须引用当前评测、路由、策略和 Logic 精确版本。
         </div>
       ) : null}
       {!data ? (
@@ -172,6 +207,9 @@ export function SkillPublishPage() {
                 <p style={{ color: "var(--aos-text-secondary)" }}>
                   生命周期：{lifecycleLabel(selected.lifecycle)} · 修订 {selected.revision}
                 </p>
+                {selected.lifecycle === "evaluated" ? <details open style={{ marginTop: 14 }}><summary><strong>精确发布证据</strong></summary><div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, marginTop: 10 }}>{([
+                  ["publicationId", "发布事件 ID"], ["releaseGateDecisionId", "评测放行决定 ID"], ["routeId", "模型路由 ID"], ["routeRevision", "模型路由修订"], ["routeHash", "模型路由 SHA-256"], ["policyId", "运行策略 ID"], ["policyRevision", "运行策略修订"], ["policyHash", "运行策略 SHA-256"], ["logicRevision", "业务逻辑修订"], ["logicHash", "业务逻辑 SHA-256"],
+                ] as const).map(([key, label]) => <label key={key} style={{ display: "grid", gap: 5 }}>{label}<input className="input" value={publication[key]} onChange={(event) => setPublication((current) => ({ ...current, [key]: event.target.value }))} /></label>)}</div></details> : null}
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
                   <button
                     className="btn primary"
@@ -185,21 +223,20 @@ export function SkillPublishPage() {
                   <Link className="btn" to="/aip/evals">去评测确认门绿</Link>
                 </div>
                 {note && <div className="notice" style={{ marginTop: 12, padding: 10 }} role="status">{note}</div>}
+                {receiptId ? <details><summary>发布回执（审计用）</summary><code>{receiptId}</code></details> : null}
 
                 <div style={{ marginTop: 20, borderTop: "1px solid var(--aos-border,#e5e7eb)", paddingTop: 14 }}>
-                  <h3 style={{ marginTop: 0 }}>绑定向导（发布后）</h3>
+                  <h3 style={{ marginTop: 0 }}>组织消费与绑定</h3>
                   <ol style={{ color: "var(--aos-text-secondary)", paddingLeft: 18 }}>
                     <li style={{ opacity: bindStep >= 0 ? 1 : 0.5 }}>确认技能修订已经发布</li>
-                    <li style={{ opacity: bindStep >= 1 ? 1 : 0.5 }}>在目录为对应数字同事创建或激活技能绑定</li>
-                    <li style={{ opacity: bindStep >= 1 ? 1 : 0.5 }}>目录「刷新」重评就绪快照</li>
+                    <li style={{ opacity: bindStep >= 1 || selected.lifecycle === "published" ? 1 : 0.5 }}>由目录权威命令创建、评估并激活技能绑定</li>
+                    <li style={{ opacity: bindStep >= 1 || selected.lifecycle === "published" ? 1 : 0.5 }}>回读绑定 Receipt 与当前运行准备快照</li>
                   </ol>
+                  <div className="notice"><strong>当前消费方</strong><p>{runtime?.catalog.items.filter((item) => item.skills.some((skill) => skill.skillId === selected.skillId && skill.revision === selected.revision)).map((item) => item.template.displayName).join("、") || "当前组织没有消费此精确修订的数字同事"}</p></div>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <Link className="btn" to="/aip/agent-registry">打开智能体目录绑定</Link>
-                    <button className="btn" type="button" disabled={bindStep < 1} title={bindStep < 1 ? "请先发布当前技能修订，再到智能体目录完成绑定" : "确认目录绑定已完成"} onClick={() => setBindStep(2)}>
-                      我已完成绑定
-                    </button>
+                    <Link className="btn" to={`/aip/agent-registry?skillId=${encodeURIComponent(selected.skillId)}&revision=${selected.revision}&intent=bind`}>打开权威绑定流程</Link>
+                    <Link className="btn" to={`/aip/logic?logicId=${encodeURIComponent(selected.canonicalLogicId)}`}>查看业务逻辑</Link>
                   </div>
-                  {bindStep >= 2 && <p style={{ color: "var(--aos-green-700)" }}>请回目录确认可运行状态；本页不写入演示绑定。</p>}
                 </div>
               </>
             )}

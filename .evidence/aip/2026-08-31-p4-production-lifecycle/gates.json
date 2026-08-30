@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "aos.aip.p4-gates/v1",
+  "taskId": "AIP-P4-PRODUCTION-LIFECYCLE",
+  "tenant": "org-org/dev-project",
+  "migrationHead": "aip_p4_001",
+  "openapi": {
+    "paths": 2718,
+    "routeRows": 4514,
+    "uniqueOperations": 4504,
+    "gate": "GREEN_16_OF_16"
+  },
+  "web": {
+    "fullSingleThread": "GREEN_EXIT_0",
+    "resourceContentionRerun": "GREEN_39_OF_39",
+    "productionBuild": "GREEN"
+  },
+  "api": {
+    "p4Targeted": "GREEN_15_OF_15",
+    "routerManifest": "GREEN_8_OF_8_PLUS_2_SUBTESTS",
+    "compileall": "GREEN"
+  },
+  "runtime": {
+    "health": "ok",
+    "ready": "ready",
+    "runtimeOwner": "EXACT"
+  },
+  "realTenantControlPlaneAcceptance": {
+    "tenant": "org-org/dev-project",
+    "jobId": "aip-import-115e74fa308d40858cfb98d6585250cd",
+    "previewStatus": "external_required",
+    "createdStatus": "awaiting_approval",
+    "approvedStatus": "approved",
+    "appliedReadbackStatus": "applied",
+    "rollbackStatus": "rolled_back",
+    "candidateStatus": "rolled_back",
+    "isolationCanary": "dev-org/dev-project_GET_404",
+    "externalEffects": 0
+  },
+  "browserAcceptance": "PENDING_BROWSER_SURFACE_UNAVAILABLE",
+  "sideEffects": {
+    "providerCalls": 0,
+    "businessWrites": 0,
+    "releases": 0
+  },
+  "decision": "CODE_CONTRACT_GREEN_BROWSER_ACCEPTANCE_PENDING"
+}

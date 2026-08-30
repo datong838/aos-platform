@@ -1,6 +1,7 @@
 """R18 read-only marketplace and deterministic import preview contracts."""
 from __future__ import annotations
 
+from datetime import datetime
 from enum import StrEnum
 
 from pydantic import Field, field_validator, model_validator
@@ -59,7 +60,9 @@ class ImportSourceInput(AipContractModel):
     source_ref: ResourceRef
     source_commit: str = Field(pattern=r"^[0-9a-f]{7,64}$")
     license_id: str = Field(min_length=1, max_length=120)
+    signature_ref: ResourceRef
     sbom_ref: ResourceRef
+    dependency_refs: list[ResourceRef] = Field(default_factory=list, max_length=256)
     files: list[SkillSourceFile] = Field(min_length=1, max_length=256)
 
 
@@ -130,8 +133,105 @@ class ImportPreviewResponse(AipContractModel):
         return self
 
 
+class ImportJobStatus(StrEnum):
+    AWAITING_APPROVAL = "awaiting_approval"
+    APPROVED = "approved"
+    APPLIED = "applied"
+    ROLLED_BACK = "rolled_back"
+
+
+class CreateImportJobRequest(AipContractModel):
+    preview_request: ImportPreviewRequest
+    expected_preview_id: str = Field(min_length=1, max_length=200)
+    expected_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    conflict_decisions: dict[str, str] = Field(default_factory=dict)
+
+
+class ApproveImportJobRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    test_evidence_ref: ResourceRef
+    decision_reason: str = Field(min_length=3, max_length=1000)
+
+
+class ApplyImportJobRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+
+
+class RollbackImportJobRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    reason: str = Field(min_length=3, max_length=1000)
+
+
+class ImportJobReceipt(AipContractModel):
+    receipt_id: str
+    operation: str
+    idempotency_key: str
+    request_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    status: str
+    created_by: str
+    created_at: datetime
+
+
+class ImportCandidate(AipContractModel):
+    tenant: TenantContext
+    candidate_id: str
+    job_id: str
+    kind: ImportPreviewKind
+    target_id: str
+    display_name: str
+    status: str
+    source_ref: ResourceRef
+    content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_at: datetime
+    rolled_back_at: datetime | None = None
+
+
+class ImportJob(AipContractModel):
+    tenant: TenantContext
+    job_id: str
+    preview_id: str
+    preview_content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    kind: ImportPreviewKind
+    target_id: str
+    display_name: str
+    status: ImportJobStatus
+    conflict_decisions: dict[str, str] = Field(default_factory=dict)
+    approval_evidence_ref: ResourceRef | None = None
+    approval_reason: str | None = None
+    rollback_reason: str | None = None
+    created_refs: list[ResourceRef] = Field(default_factory=list)
+    compensated_refs: list[ResourceRef] = Field(default_factory=list)
+    version: int = Field(ge=1)
+    created_by: str
+    approved_by: str | None = None
+    applied_by: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class ImportJobMutationResponse(AipContractModel):
+    job: ImportJob
+    candidate: ImportCandidate | None = None
+    receipt: ImportJobReceipt
+
+
+class ImportJobListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[ImportJob]
+    count: int = Field(ge=0)
+
+
 __all__ = [
     "ImportEvidenceStatus",
+    "ApplyImportJobRequest",
+    "ApproveImportJobRequest",
+    "CreateImportJobRequest",
+    "ImportCandidate",
+    "ImportJob",
+    "ImportJobListResponse",
+    "ImportJobMutationResponse",
+    "ImportJobReceipt",
+    "ImportJobStatus",
     "ImportMappingInput",
     "ImportPreviewKind",
     "ImportPreviewRequest",
@@ -139,6 +239,7 @@ __all__ = [
     "ImportSecurityInput",
     "ImportSourceInput",
     "ImportStepEvidence",
+    "RollbackImportJobRequest",
     "MarketplaceAgentReadiness",
     "MarketplaceCatalogResponse",
     "MarketplacePackage",

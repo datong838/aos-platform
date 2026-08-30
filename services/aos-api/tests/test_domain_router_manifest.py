@@ -39,7 +39,7 @@ DOMAIN_COUNTS = {
     "agent": 3,
     "workshop": 117,
     "ontology": 72,
-    "aip": 92,
+    "aip": 94,
     "data": 201,
     "model": 15,
     "apollo": 9,
@@ -216,8 +216,8 @@ class RouterManifestStaticTests(unittest.TestCase):
         cls.routers = cls.generator.load_manifest(MANIFEST_PATH)
 
     def test_manifest_count_order_domains_and_unique_keys(self) -> None:
-        self.assertEqual(545, len(self.routers))
-        self.assertEqual(list(range(545)), [entry["order"] for entry in self.routers])
+        self.assertEqual(547, len(self.routers))
+        self.assertEqual(list(range(547)), [entry["order"] for entry in self.routers])
         self.assertEqual(
             DOMAIN_COUNTS,
             {
@@ -226,7 +226,7 @@ class RouterManifestStaticTests(unittest.TestCase):
             },
         )
         keys = {(entry["module"], entry["attribute"]) for entry in self.routers}
-        self.assertEqual(545, len(keys))
+        self.assertEqual(547, len(keys))
 
     def test_main_exposes_control_plane_etag_to_browser_clients(self) -> None:
         tree = ast.parse(MAIN_PATH.read_text(encoding="utf-8"))
@@ -387,12 +387,12 @@ class RouterManifestRuntimeTests(unittest.TestCase):
         # BI-W10 exact case selection added one canonical GET route after the
         # previous manifest seal; keep the runtime checksum pinned to the
         # current reviewed inventory rather than silently ignoring drift.
-        self.assertEqual(4490, result["count"])
+        self.assertEqual(4518, result["count"])
         self.assertEqual(
-            "9dc2875e8b30e08ccbb0eda165423486c90b7d750393ed51f97e5faccdbdd515",
+            "bf873b042198a869e85f42040e1a1a2163105a95b7f41ceb034b78bf8f957913",
             result["sha256"],
         )
-        self.assertEqual(2697, result["openapi_paths"])
+        self.assertEqual(2718, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],

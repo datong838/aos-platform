@@ -97,6 +97,17 @@ function contractBusinessText(value: string): string {
     .replace(/unknown/g, "未知");
 }
 
+function briefTitle(item: { briefType: string; spec: Record<string, unknown> }): string {
+  const value = item.spec.title ?? item.spec.name ?? item.spec.purpose ?? item.spec.objective;
+  return typeof value === "string" && value.trim() ? contractBusinessText(value.trim()) : businessDisplayName(item.briefType);
+}
+
+function lifecycleText(value: string): string {
+  if (value === "withdrawn") return "已撤回";
+  if (value === "superseded") return "已被新版本替代";
+  return label[value] ?? statusDisplayName(value);
+}
+
 export function ProductionContractsPage() {
   const [state, setState] = useState<AuthorityState | null>(null);
   const [error, setError] = useState("");
@@ -212,6 +223,11 @@ export function ProductionContractsPage() {
   };
   const startProduction=()=>{if(!selectedPreview||!selectedProductionContext||!selectedActionProposal||startDisabledReason)return;const proposal=selectedActionProposal.proposal;void run("production:start",()=>aipProductionContracts.startProduction({taskId:selectedPreview.taskId,expectedTaskVersion:Number(startTaskVersion),productionContextRef:{resourceType:"ProductionContextRevision",resourceId:selectedProductionContext.contextId,revision:selectedProductionContext.revision,contentHash:selectedProductionContext.contentHash},planRef:selectedPreview.planRef,previewRef:{resourceType:"ImpactPreviewRevision",resourceId:selectedPreview.previewId,revision:selectedPreview.revision,contentHash:selectedPreview.contentHash},actionProposalRef:{proposalId:proposal.id,version:proposal.version,proposalHash:proposal.proposalHash},logicGraphId:logicGraphId.trim(),logicRevision:Number(logicRevision),logicGraphHash:logicGraphHash.trim()},`w2-ui-production-start-${crypto.randomUUID()}`));};
 
+  const sourceParams = new URLSearchParams(window.location.search);
+  const sourceTaskId = sourceParams.get("taskId")?.trim() ?? "";
+  const sourceLogicId = sourceParams.get("logicId")?.trim() ?? "";
+  const sourceAgentId = sourceParams.get("agentId")?.trim() ?? "";
+
   return <PageChrome title="上线执行审批" lede="统一查看任务目标、证据、评测、职责、阶段、产物关系和评审；审批资料冻结只表示内容不可变，不代表已经启动运行。">
     {error && <div role="alert" className="notice bad">上线执行审批读取或操作失败：{error}</div>}
     {loading ? <div role="status" className="card">正在读取上线执行审批权威记录…</div> : null}
@@ -241,9 +257,52 @@ export function ProductionContractsPage() {
       </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
         <button className="btn" onClick={() => void load()}>刷新权威状态</button>
-        <button className="btn primary" disabled title="必须从真实 Task 与权威依赖创建；本页不生成样例或隐式权威">创建契约（需真实依赖）</button>
-        <span className="notice" style={{ padding: "6px 10px" }}>权威记录只读汇总 · 信息不足时禁止启动</span>
+        <a className="btn primary" href="/aip/assist">选择业务任务并准备上线资料</a>
+        <a className="btn" href="/aip/evals">维护评测标准</a>
+        <a className="btn" href="/aip/drafts">处理执行提案</a>
+        <span className="notice" style={{ padding: "6px 10px" }}>所有操作都基于当前组织真实记录；本页不创建演示合同</span>
       </div>
+      {(sourceTaskId || sourceLogicId || sourceAgentId) ? <section className="notice" aria-label="上线审批来源上下文" data-testid="production-source-context" style={{marginBottom:16}}>
+        <strong>已保留来源上下文</strong>
+        <span style={{marginLeft:10}}>从上游业务对象进入时，本页只消费其精确引用，不重新猜测对象。</span>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:8}}>
+          {sourceTaskId ? <a href={`/aip/assist?taskId=${encodeURIComponent(sourceTaskId)}`}>返回业务任务</a> : null}
+          {sourceLogicId ? <a href={`/aip/logic/${encodeURIComponent(sourceLogicId)}`}>返回业务逻辑</a> : null}
+          {sourceAgentId ? <a href={`/aip/agents?agentId=${encodeURIComponent(sourceAgentId)}`}>返回数字同事</a> : null}
+        </div>
+      </section> : null}
+      <section className="card" aria-label="上线业务场景总览" style={{padding:18,marginBottom:16}} data-testid="production-business-overview">
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"start",gap:16,flexWrap:"wrap"}}>
+          <div><h2 style={{margin:0}}>业务场景与上线资料</h2><p style={{marginBottom:0}}>先按业务任务检查当前版本、必需依赖、消费方和退出状态，再进入影响评估、计划编译或问题处置。</p></div>
+          <nav aria-label="上线审批工作区导航" style={{display:"flex",gap:8,flexWrap:"wrap"}}><a className="btn" href="#contract-versions">合同版本</a><a className="btn" href="#impact-start">影响与启动</a><a className="btn" href="#plan-compile">计划编译</a><a className="btn" href="#review-actions">评审处置</a></nav>
+        </div>
+        {state.briefs.count === 0 ? <div className="notice" style={{marginTop:14}}>还没有可归入上线审批的业务任务。请先在任务协作助手选择或创建真实业务任务，再补齐证据与评测资料。</div> : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(290px,1fr))",gap:12,marginTop:16}}>
+          {state.briefs.items.map(item => {
+            const briefRef = {resourceType:"TaskBriefRevision",resourceId:item.briefId,revision:item.revision,contentHash:item.contentHash};
+            const bundle = state.bundles.items.find(candidate => sameExact(candidate.briefRef, briefRef));
+            const context = state.contexts.items.find(candidate => candidate.taskId === item.taskId);
+            const preview = state.previews.items.find(candidate => candidate.taskId === item.taskId);
+            const start = state.starts.items.find(candidate => candidate.taskId === item.taskId);
+            const readyCount = [item.lifecycle === "frozen", Boolean(bundle && bundle.coverage === "complete" && bundle.freshness === "fresh"), Boolean(context && context.lifecycle === "frozen" && context.readiness === "ready"), Boolean(preview && preview.lifecycle === "frozen" && preview.readiness === "ready")].filter(Boolean).length;
+            return <article key={`${item.briefId}@${item.revision}`} style={{border:"1px solid var(--aos-border)",borderRadius:8,padding:14}} data-testid={`production-scenario-${item.briefId}`}>
+              <div style={{display:"flex",justifyContent:"space-between",gap:12}}><strong>{briefTitle(item)}</strong><span>{start?.status === "started" ? "已创建运行记录" : readyCount === 4 ? "资料可提交" : `资料 ${readyCount}/4`}</span></div>
+              <p style={{color:"var(--aos-text-secondary)"}}>当前修订 {item.revision} · {lifecycleText(item.lifecycle)}</p>
+              <dl style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"6px 10px",margin:0}}>
+                <dt>证据</dt><dd style={{margin:0}}>{bundle ? `${label[bundle.coverage] ?? statusDisplayName(bundle.coverage)} · ${statusDisplayName(bundle.freshness)}` : "需从真实来源整理"}</dd>
+                <dt>职责与阶段</dt><dd style={{margin:0}}>{context ? `${businessDisplayName(context.profile)} · ${label[context.readiness] ?? statusDisplayName(context.readiness)}` : "需选择职责档位并形成生产上下文"}</dd>
+                <dt>影响评估</dt><dd style={{margin:0}}>{preview ? `${lifecycleText(preview.lifecycle)} · ${label[preview.readiness] ?? statusDisplayName(preview.readiness)}` : "需形成影响预览"}</dd>
+                <dt>消费方</dt><dd style={{margin:0}}>执行计划、数字同事与工作台任务流</dd>
+                <dt>退出状态</dt><dd style={{margin:0}}>{item.lifecycle === "withdrawn" || item.lifecycle === "superseded" ? lifecycleText(item.lifecycle) : "当前版本有效；历史修订保留审计"}</dd>
+              </dl>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:12}}><a href={`/aip/assist?taskId=${encodeURIComponent(item.taskId)}`}>查看业务任务</a>{preview ? <a href="#impact-start">检查影响与启动条件</a> : <a href={`/aip/evals?taskId=${encodeURIComponent(item.taskId)}`}>补齐评测与证据</a>}</div>
+              <details style={{marginTop:8}}><summary>精确版本（审计用）</summary><code>{item.briefId}@{item.revision}</code> · 摘要 <code>{item.contentHash.slice(0,12)}…</code></details>
+            </article>;
+          })}
+        </div>}
+      </section>
+      <details className="card" id="contract-versions" style={{padding:18,marginBottom:16}}>
+      <summary style={{fontSize:18,fontWeight:700,cursor:"pointer"}}>查看全部合同版本、媒体档位与审计资料</summary>
+      <div style={{marginTop:16}}>
       <section className="card" style={{ padding:18,marginBottom:16 }} aria-label="媒体生产档位建议与成本预检">
         <h2 style={{marginTop:0}}>媒体生产档位建议与成本预检</h2>
         <p>原子 Skill 成本快照经 Logic 与策略形成 LITE、STANDARD、FULL 建议，再由用户确认数字同事职责档位；确认只固定建议和预计区间，不启动模型、智能体或外部动作。</p>
@@ -316,6 +375,10 @@ export function ProductionContractsPage() {
           {state.reviews.count === 0 ? <div className="notice">当前组织尚无评审问题。问题必须绑定真实产物、评测报告和证据。</div> : state.reviews.items.map(item => <article key={item.issueId} style={itemStyle}><div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><strong>{item.severity === "warning" ? "警告级问题" : `${statusDisplayName(item.severity)}级问题`}</strong><span>{statusDisplayName(item.status)}</span></div><p>{contractBusinessText(item.suggestedFix)}</p><p>需要退回：{capabilityDisplayName(item.returnStage)}</p><details><summary>技术标识（审计用）</summary><code>{item.issueId}</code> · 版本 {item.version}</details></article>)}
         </div>
       </section>
+      </div>
+      </details>
+      <details className="card" id="impact-start" style={{padding:18,marginTop:16}}>
+      <summary style={{fontSize:18,fontWeight:700,cursor:"pointer"}}>影响评估与受控启动</summary>
       <section className="card" style={{ padding:18,marginTop:16 }} aria-label="影响预览与启动组合门">
         <h2 style={{marginTop:0}}>影响预览与启动组合门</h2>
         <p>影响预览只呈现权威评估；未知项不会显示为零。只有已冻结且就绪的精确修订才能提交，成功也只代表创建任务运行记录，不代表智能体或模型已经运行。</p>
@@ -346,6 +409,9 @@ export function ProductionContractsPage() {
         <h3>启动决策审计记录</h3>
         {state.starts.count===0?<div className="notice">当前组织尚无启动决策；这表示没有提交过组合门，不等于运行成功。</div>:state.starts.items.map(item=><article key={item.decisionId} style={itemStyle}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><strong>启动决策</strong><span>{item.status==="started"?"已创建任务运行记录（尚未启动智能体）":label[item.status]??statusDisplayName(item.status)}</span></div><details><summary>技术标识（审计用）</summary>决策 <code>{item.decisionId}</code><br/>任务 <code>{item.taskId}</code> · 影响预览 <code>{item.previewRef.resourceId}@{item.previewRef.revision}</code><br/>{item.productionContextRef?<>生产上下文 <code>{item.productionContextRef.resourceId}@{item.productionContextRef.revision}</code></>:<>历史决策未记录生产上下文精确引用</>}{item.taskRunRef?<><br/>任务运行 <code>{item.taskRunRef.resourceId}</code></>:null}</details><Blockers items={item.blockers}/></article>)}
       </section>
+      </details>
+      <details className="card" id="plan-compile" style={{padding:18,marginTop:16}}>
+      <summary style={{fontSize:18,fontWeight:700,cursor:"pointer"}}>执行计划编译</summary>
       <section className="card" style={{ padding: 18, marginTop: 16 }} aria-label="阶段模板编译命令">
         <h2 style={{ marginTop: 0 }}>从阶段模板编译执行计划草稿</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
@@ -359,6 +425,9 @@ export function ProductionContractsPage() {
         <button className="btn primary" disabled={!canCompile || busy === "stage:compile"} title={canCompile ? "只创建执行计划草稿，不启动任务" : governedCompileDisabledReason||"需选择同一任务、业务场景与职责计划下已冻结且就绪的生产上下文、阶段模板和职责计划"} onClick={compile} style={{ marginTop: 12 }}>{busy === "stage:compile" ? "编译中…" : "编译为执行计划草稿"}</button>
         {lastCompilation?<div className="notice" role="status" style={{marginTop:12}} data-testid="stage-compilation-result"><strong>执行计划草稿已编译，未创建任务运行。</strong><br/>规范化阶段 {lastCompilation.normalizedStageIds.length} 项 · 适用 {lastCompilation.applicableStageIds.length} 项 · 跳过 {lastCompilation.notApplicableStageIds.length} 项<details><summary>技术摘要（审计用）</summary>输入 <code>{lastCompilation.inputHash}</code><br/>编译 <code>{lastCompilation.compilationHash}</code><br/>Plan <code>{lastCompilation.planRef.resourceId}@{lastCompilation.planRef.revision}</code></details></div>:null}
       </section>
+      </details>
+      <details className="card" id="review-actions" style={{padding:18,marginTop:16}}>
+      <summary style={{fontSize:18,fontWeight:700,cursor:"pointer"}}>评审问题处置</summary>
       <section className="card" style={{ padding: 18, marginTop: 16 }} aria-label="评审问题处置命令">
         <h2 style={{ marginTop: 0 }}>评审问题处置</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
@@ -368,6 +437,7 @@ export function ProductionContractsPage() {
         </div>
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}><button className="btn" disabled={!canReviewCommand || Boolean(busy)} title={busy ? "正在提交处置，请稍候" : canReviewCommand ? "将当前问题标记为已解决并写入审计事件" : "请选择待处置问题并填写处置原因"} onClick={resolveReview}>标记已解决</button><button className="btn primary" disabled={!canReviewCommand || !reviewRunId.trim() || Boolean(busy)} title="只向真实运行任务的目标阶段追加排队中的尝试" onClick={returnReview}>退回目标阶段</button></div>
       </section>
+      </details>
       <div className="notice" style={{ marginTop: 16 }}>影响预览与启动组合门已接入权威数据源；即使启动决策通过，也只创建任务运行记录。智能体运行、模型路由、供应商、绑定与容量仍由独立服务端门禁控制。</div>
       {evidenceDrawerBundle ? <EvidenceBundleDrawer
         title="受控证据披露"

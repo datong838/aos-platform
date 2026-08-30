@@ -270,6 +270,24 @@ class AipAgentRunService(AipAgentRegistryStore):
             raise AipAgentRegistryNotFound("agent run not found")
         return self._from_row(scope, row)
 
+    def list(self, scope: TenantScope, *, instance_id: str | None = None, limit: int = 20) -> list[AgentRun]:
+        with self._connect_factory(scope) as conn:
+            if instance_id is None:
+                rows = conn.execute(
+                    """SELECT * FROM aip_agent_run
+                       WHERE org_id=%s AND project_id=%s
+                       ORDER BY updated_at DESC,agent_run_id DESC LIMIT %s""",
+                    (*scope.key, limit),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    """SELECT * FROM aip_agent_run
+                       WHERE org_id=%s AND project_id=%s AND instance_id=%s
+                       ORDER BY updated_at DESC,agent_run_id DESC LIMIT %s""",
+                    (*scope.key, instance_id, limit),
+                ).fetchall()
+        return [self._from_row(scope, row) for row in rows]
+
     @staticmethod
     def _row(conn, scope: TenantScope, agent_run_id: str):
         return conn.execute("""SELECT * FROM aip_agent_run

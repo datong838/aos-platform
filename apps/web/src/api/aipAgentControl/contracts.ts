@@ -60,7 +60,13 @@ export type CapabilityRevision = {
   displayName: string;
   lifecycle: "published";
   aliases: string[];
+  inputSchemaRef?: AssetRef | null;
+  outputSchemaRef?: AssetRef | null;
   riskLevel: string;
+  requiredDataRefs?: AssetRef[];
+  requiredToolRefs?: AssetRef[];
+  requiredCapabilityRefs?: AssetRef[];
+  evalPackRef?: AssetRef | null;
   readiness: "available" | "degraded" | "disabled" | "blocked" | "unknown";
   readinessReasons: string[];
   contentHash: string;
@@ -167,6 +173,8 @@ export type AgentRun = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type AgentRunListResponse = { tenant: Tenant; items: AgentRun[]; count: number };
 
 export type AgentRunCommandResponse = {
   tenant: Tenant;

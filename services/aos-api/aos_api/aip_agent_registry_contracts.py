@@ -572,6 +572,12 @@ class AgentRun(AipContractModel):
     updated_at: datetime
 
 
+class AgentRunListResponse(AipContractModel):
+    tenant: TenantContext
+    items: list[AgentRun]
+    count: int = Field(ge=0)
+
+
 class IssueHandoffRequest(AipContractModel):
     handoff_id: str = Field(min_length=1, max_length=200)
     envelope: HandoffEnvelopeRequest

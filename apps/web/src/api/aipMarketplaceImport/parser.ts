@@ -1,4 +1,4 @@
-import type { ImportPreview, MarketplaceCatalog, ResourceRef, Tenant } from "./contracts";
+import type { ImportCandidate, ImportJob, ImportJobMutation, ImportPreview, MarketplaceCatalog, ResourceRef, Tenant } from "./contracts";
 
 const obj = (value: unknown, label: string): Record<string, unknown> => {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`);
@@ -80,4 +80,53 @@ export function parseImportPreview(value: unknown, expected?: Tenant): ImportPre
   const status = oneOf(raw.status, "status", ["blocked", "external_required"] as const);
   if (raw.importJobAuthority !== "not_created" || raw.approvalRequired !== true) throw new Error("导入预检越权声明");
   return { tenant: tenant(raw.tenant, expected), previewId: str(raw.previewId, "previewId"), kind: oneOf(raw.kind, "kind", ["agent", "capability"] as const), status, contentHash: sha(raw.contentHash, "contentHash"), steps, scanArtifact: { scannerId: str(scan.scannerId, "scannerId"), scannerVersion: str(scan.scannerVersion, "scannerVersion"), ruleSetHash: sha(scan.ruleSetHash, "ruleSetHash"), sourceRef: ref(scan.sourceRef, "scan.sourceRef"), sourceCommit: str(scan.sourceCommit, "sourceCommit"), sourceContentHash: sha(scan.sourceContentHash, "sourceContentHash"), licenseId: str(scan.licenseId, "licenseId"), sbomRef: ref(scan.sbomRef, "scan.sbomRef"), findings, status: oneOf(scan.status, "scan.status", ["passed", "blocked"] as const), accepted: bool(scan.accepted, "scan.accepted"), artifactHash: sha(scan.artifactHash, "artifactHash") }, importJobAuthority: "not_created", approvalRequired: true };
+}
+
+const nullableString = (value: unknown, label: string): string | null => value === null ? null : str(value, label);
+const iso = (value: unknown, label: string): string => {
+  const result = str(value, label);
+  if (Number.isNaN(Date.parse(result))) throw new Error(`${label} 非法`);
+  return result;
+};
+const record = (value: unknown, label: string): Record<string, string> => {
+  const raw = obj(value, label);
+  return Object.fromEntries(Object.entries(raw).map(([key, item]) => [key, str(item, `${label}.${key}`)]));
+};
+const parseImportJob = (value: unknown, expected?: Tenant): ImportJob => {
+  const raw = obj(value, "ImportJob");
+  exact(raw, "ImportJob", ["tenant", "jobId", "previewId", "previewContentHash", "kind", "targetId", "displayName", "status", "conflictDecisions", "approvalEvidenceRef", "approvalReason", "rollbackReason", "createdRefs", "compensatedRefs", "version", "createdBy", "approvedBy", "appliedBy", "createdAt", "updatedAt"]);
+  return {
+    tenant: tenant(raw.tenant, expected), jobId: str(raw.jobId, "jobId"), previewId: str(raw.previewId, "previewId"),
+    previewContentHash: sha(raw.previewContentHash, "previewContentHash"), kind: oneOf(raw.kind, "kind", ["agent", "capability"] as const),
+    targetId: str(raw.targetId, "targetId"), displayName: str(raw.displayName, "displayName"),
+    status: oneOf(raw.status, "status", ["awaiting_approval", "approved", "applied", "rolled_back"] as const),
+    conflictDecisions: record(raw.conflictDecisions, "conflictDecisions"),
+    approvalEvidenceRef: raw.approvalEvidenceRef === null ? null : ref(raw.approvalEvidenceRef, "approvalEvidenceRef"),
+    approvalReason: nullableString(raw.approvalReason, "approvalReason"), rollbackReason: nullableString(raw.rollbackReason, "rollbackReason"),
+    createdRefs: arr(raw.createdRefs, "createdRefs").map((item, index) => ref(item, `createdRefs[${index}]`)),
+    compensatedRefs: arr(raw.compensatedRefs, "compensatedRefs").map((item, index) => ref(item, `compensatedRefs[${index}]`)),
+    version: integer(raw.version, "version"), createdBy: str(raw.createdBy, "createdBy"),
+    approvedBy: nullableString(raw.approvedBy, "approvedBy"), appliedBy: nullableString(raw.appliedBy, "appliedBy"),
+    createdAt: iso(raw.createdAt, "createdAt"), updatedAt: iso(raw.updatedAt, "updatedAt"),
+  };
+};
+const parseCandidate = (value: unknown, expected?: Tenant): ImportCandidate => {
+  const raw = obj(value, "ImportCandidate");
+  exact(raw, "ImportCandidate", ["tenant", "candidateId", "jobId", "kind", "targetId", "displayName", "status", "sourceRef", "contentHash", "createdAt", "rolledBackAt"]);
+  return {
+    tenant: tenant(raw.tenant, expected), candidateId: str(raw.candidateId, "candidateId"), jobId: str(raw.jobId, "jobId"),
+    kind: oneOf(raw.kind, "kind", ["agent", "capability"] as const), targetId: str(raw.targetId, "targetId"),
+    displayName: str(raw.displayName, "displayName"), status: oneOf(raw.status, "status", ["active", "rolled_back"] as const),
+    sourceRef: ref(raw.sourceRef, "sourceRef"), contentHash: sha(raw.contentHash, "contentHash"),
+    createdAt: iso(raw.createdAt, "createdAt"), rolledBackAt: raw.rolledBackAt === null ? null : iso(raw.rolledBackAt, "rolledBackAt"),
+  };
+};
+export function parseImportJobMutation(value: unknown, expected?: Tenant): ImportJobMutation {
+  const raw = obj(value, "ImportJobMutation"); exact(raw, "ImportJobMutation", ["job", "candidate", "receipt"]);
+  const receipt = obj(raw.receipt, "receipt");
+  exact(receipt, "receipt", ["receiptId", "operation", "idempotencyKey", "requestHash", "status", "createdBy", "createdAt"]);
+  return {
+    job: parseImportJob(raw.job, expected), candidate: raw.candidate === null ? null : parseCandidate(raw.candidate, expected),
+    receipt: { receiptId: str(receipt.receiptId, "receiptId"), operation: str(receipt.operation, "operation"), idempotencyKey: str(receipt.idempotencyKey, "idempotencyKey"), requestHash: sha(receipt.requestHash, "requestHash"), status: str(receipt.status, "receipt.status"), createdBy: str(receipt.createdBy, "receipt.createdBy"), createdAt: iso(receipt.createdAt, "receipt.createdAt") },
+  };
 }
