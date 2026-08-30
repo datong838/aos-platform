@@ -3327,6 +3327,135 @@ type EvalGateResult = {
   run_at: string;
 };
 
+export type EvalTargetInventoryItem = {
+  key: string;
+  targetType: "业务逻辑" | "原子技能" | "数字同事" | "模型";
+  displayName: string;
+  assetId: string;
+  revision: string;
+  contentHash: string;
+  evidenceState: "可直接评测" | "需独立执行" | "缺精确版本";
+  executionPlan: string;
+  costEvidence: string;
+  href: string;
+};
+
+type EvalTargetInventorySources = {
+  graphs: Array<{ id: string; name: string; revision: number; graph_hash: string }>;
+  skills: unknown[];
+  agents: unknown[];
+  models: unknown[];
+};
+
+function evalRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function evalExactHash(value: unknown): string {
+  const candidate = String(value || "").trim();
+  return /^[0-9a-f]{64}$/i.test(candidate) ? candidate : "";
+}
+
+export function buildEvalTargetInventory(sources: EvalTargetInventorySources): EvalTargetInventoryItem[] {
+  const rows: EvalTargetInventoryItem[] = sources.graphs.map((graph) => ({
+    key: `logic:${graph.id}@${graph.revision}`,
+    targetType: "业务逻辑",
+    displayName: businessDisplayName(graph.name),
+    assetId: graph.id,
+    revision: String(graph.revision),
+    contentHash: evalExactHash(graph.graph_hash),
+    evidenceState: evalExactHash(graph.graph_hash) ? "可直接评测" : "缺精确版本",
+    executionPlan: evalExactHash(graph.graph_hash)
+      ? "选择套件后由内部确定性执行器运行并检查门控"
+      : "先回到业务逻辑编排保存精确修订与 SHA-256",
+    costEvidence: "内部确定性 Logic；不调用模型供应商，模型费用不适用",
+    href: "/aip/logic",
+  }));
+
+  for (const raw of sources.skills) {
+    const skill = evalRecord(raw);
+    const id = String(skill.skillId || "").trim();
+    const revision = Number(skill.revision || 0);
+    if (!id) continue;
+    const hash = evalExactHash(skill.contentHash);
+    rows.push({
+      key: `skill:${id}@${revision || "unknown"}`,
+      targetType: "原子技能",
+      displayName: businessDisplayName(String(skill.displayName || skill.canonicalLogicId || id)),
+      assetId: id,
+      revision: revision > 0 ? String(revision) : "",
+      contentHash: hash,
+      evidenceState: revision > 0 && hash ? "需独立执行" : "缺精确版本",
+      executionPlan: revision > 0 && hash
+        ? "在技能发布前绑定评测套件、数据集和裁判版本，形成不可变 EvalRun"
+        : "先补齐技能精确修订和 SHA-256，再建立 EvalRun",
+      costEvidence: "尚无该技能 EvalRun usage 证据；不得显示为零费用",
+      href: "/aip/skill-publish",
+    });
+  }
+
+  for (const raw of sources.agents) {
+    const item = evalRecord(raw);
+    const template = evalRecord(item.template);
+    const id = String(template.templateId || "").trim();
+    const revision = Number(template.revision || 0);
+    if (!id) continue;
+    const hash = evalExactHash(template.contentHash);
+    rows.push({
+      key: `agent:${id}@${revision || "unknown"}`,
+      targetType: "数字同事",
+      displayName: businessDisplayName(String(template.displayName || id)),
+      assetId: id,
+      revision: revision > 0 ? String(revision) : "",
+      contentHash: hash,
+      evidenceState: revision > 0 && hash ? "需独立执行" : "缺精确版本",
+      executionPlan: revision > 0 && hash
+        ? "按模板精确版本执行角色任务集，记录样本、失败项、工具调用与 EvalRun"
+        : "先补齐数字同事模板精确修订和 SHA-256",
+      costEvidence: "尚无该数字同事 EvalRun usage 证据；不得推算费用",
+      href: "/aip/agent-registry",
+    });
+  }
+
+  for (const raw of sources.models) {
+    const model = evalRecord(raw);
+    const registration = evalRecord(model.registration);
+    const id = String(model.id || model.model || "").trim();
+    if (!id) continue;
+    const revision = String(model.revision || registration.revision || "").trim();
+    const hash = evalExactHash(model.contentHash || registration.contentHash);
+    rows.push({
+      key: `model:${id}@${revision || "unknown"}`,
+      targetType: "模型",
+      displayName: businessDisplayName(String(model.displayName || model.model || id)),
+      assetId: id,
+      revision,
+      contentHash: hash,
+      evidenceState: revision && hash ? "需独立执行" : "缺精确版本",
+      executionPlan: revision && hash
+        ? "通过受控模型路由执行质量、延迟和费用评测，保存供应商回包证据"
+        : "模型目录仅证明发现；需先形成注册修订、SHA-256 与受控路由",
+      costEvidence: "缺同次运行 usage 与价格权威；不展示虚假费用数字",
+      href: "/aip/model-catalog",
+    });
+  }
+  return rows;
+}
+
+export function exactEvalRegressionHistory(
+  history: EvalReport[],
+  target: { id: string; revision: number; graph_hash: string },
+): EvalReport[] {
+  return history.filter((item) => (
+    item.target_type === "logic_graph"
+    && item.target_id === target.id
+    && item.target_revision === target.revision
+    && item.target_hash === target.graph_hash
+  ));
+}
+
 export const QUICK_START_EVAL_SUITE = {
   name: "快速开始：加一函数",
   cases: [
@@ -3413,6 +3542,12 @@ export function EvalsPage() {
   const [authorityRun, setAuthorityRun] = useState<EvalRunAuthority | null>(null);
   const [authorityState, setAuthorityState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
   const [authorityError, setAuthorityError] = useState("");
+  const [targetInventory, setTargetInventory] = useState<EvalTargetInventoryItem[]>([]);
+  const [inventoryState, setInventoryState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
+  const [inventoryMessage, setInventoryMessage] = useState("");
+  const [regressionHistory, setRegressionHistory] = useState<EvalReport[]>([]);
+  const [historyState, setHistoryState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
+  const [historyMessage, setHistoryMessage] = useState("");
 
   const suites = suitesApi.data?.items || [];
   const graphs = graphsApi.data?.items || [];
@@ -3549,6 +3684,65 @@ export function EvalsPage() {
     }
   }
 
+  async function loadTargetInventory() {
+    setInventoryState("loading");
+    setInventoryMessage("");
+    try {
+      const results = await Promise.allSettled([
+        apiGet<{ items?: unknown[] }>("/v1/aip/skills?limit=200"),
+        apiGet<{ items?: unknown[] }>("/v1/aip/agent-registry"),
+        (async () => {
+          try {
+            const admin = await apiGet<{ items?: unknown[] }>("/v1/aip/model-admin/models");
+            if ((admin.items || []).length > 0) return admin;
+          } catch {
+            // 权威管理目录不可读时继续读取发现目录；两者都失败才由 allSettled 记录缺证。
+          }
+          return apiGet<{ items?: unknown[] }>("/v1/aip/model-catalog");
+        })(),
+      ]);
+      const failed = results.filter((item) => item.status === "rejected").length;
+      const items = buildEvalTargetInventory({
+        graphs,
+        skills: results[0].status === "fulfilled" ? results[0].value.items || [] : [],
+        agents: results[1].status === "fulfilled" ? results[1].value.items || [] : [],
+        models: results[2].status === "fulfilled" ? results[2].value.items || [] : [],
+      });
+      setTargetInventory(items);
+      setInventoryState(failed === results.length ? "error" : "loaded");
+      setInventoryMessage(
+        failed > 0
+          ? `已读取 ${items.length} 个目标；${failed} 类权威目录读取失败，缺失部分保持缺证。`
+          : `已读取 ${items.length} 个真实评测目标。`,
+      );
+    } catch (error) {
+      setTargetInventory([]);
+      setInventoryState("error");
+      setInventoryMessage(`评测目标读取失败：${String((error as Error).message || error)}`);
+    }
+  }
+
+  async function loadRegressionHistory() {
+    if (!suiteId || !selectedGraph) return;
+    setHistoryState("loading");
+    setHistoryMessage("");
+    setRegressionHistory([]);
+    try {
+      const response = await apiGet<{ items?: EvalReport[] }>(`/v1/evals/${encodeURIComponent(suiteId)}/history`);
+      const exact = exactEvalRegressionHistory(response.items || [], selectedGraph);
+      setRegressionHistory(exact);
+      setHistoryState("loaded");
+      setHistoryMessage(
+        exact.length > 0
+          ? `已读取当前 Logic 精确修订的 ${exact.length} 次回归。`
+          : "该套件尚无绑定当前 Logic 精确修订的回归记录。",
+      );
+    } catch (error) {
+      setHistoryState("error");
+      setHistoryMessage(`回归历史读取失败：${String((error as Error).message || error)}`);
+    }
+  }
+
   return (
     <S2Chrome title="评测门控" lede="自动化业务逻辑上线前必须通过真实评测；未达标时禁止发布或自动执行。">
       <AipOperationalProjectionStrip />
@@ -3580,6 +3774,9 @@ export function EvalsPage() {
             setReport(null);
             setGate(null);
             setMsg("");
+            setRegressionHistory([]);
+            setHistoryState("idle");
+            setHistoryMessage("");
           }}
         >
           <option value="">选择评测套件</option>
@@ -3596,6 +3793,9 @@ export function EvalsPage() {
             setReport(null);
             setGate(null);
             setMsg("");
+            setRegressionHistory([]);
+            setHistoryState("idle");
+            setHistoryMessage("");
           }}
         >
           <option value="">选择已保存业务逻辑</option>
@@ -3617,6 +3817,12 @@ export function EvalsPage() {
         </button>
         <button type="button" className="btn" disabled={busy} onClick={() => void createQuickStartSuite()}>
           创建基础评测套件
+        </button>
+        <button type="button" className="btn" disabled={inventoryState === "loading"} onClick={() => void loadTargetInventory()}>
+          {inventoryState === "loading" ? "读取目标中…" : "读取全部评测目标"}
+        </button>
+        <button type="button" className="btn" disabled={!suiteId || !selectedGraph || historyState === "loading"} onClick={() => void loadRegressionHistory()}>
+          {historyState === "loading" ? "读取历史中…" : "加载回归历史"}
         </button>
         <Link to="/aip/maturity" className="btn-nav">
           ← 成熟度
@@ -3668,6 +3874,56 @@ export function EvalsPage() {
           result.detail || "—",
         ])}
       />
+
+      <section style={{ border: "1px solid var(--aos-border)", padding: 16, marginTop: 16 }} data-testid="eval-target-inventory">
+        <h3 style={{ marginTop: 0 }}>全量评测目标与执行计划</h3>
+        <p className="aos-text">
+          业务逻辑、原子技能、数字同事和模型分别核验精确版本。只有当前内部执行器支持的 Logic 可在本页直接运行；其他目标必须形成独立 EvalRun，不能以目录登记替代评测。
+        </p>
+        {inventoryMessage && <p className={inventoryState === "error" ? "error" : "aos-text"} role="status">{inventoryMessage}</p>}
+        {targetInventory.length > 0 ? (
+          <BpTable
+            columns={["目标类型", "业务名称", "精确版本", "评测状态", "执行计划", "费用证据", "治理入口"]}
+            rows={targetInventory.map((item) => [
+              item.targetType,
+              item.displayName,
+              item.revision && item.contentHash
+                ? <>修订 {item.revision}<details><summary>SHA-256</summary><code>{item.contentHash}</code></details></>
+                : "缺精确修订或 SHA-256",
+              item.evidenceState,
+              item.executionPlan,
+              item.costEvidence,
+              <Link to={item.href}>处理 →</Link>,
+            ])}
+          />
+        ) : (
+          <BpBanner tone="info">点击“读取全部评测目标”后，从四类权威目录构建执行清单；页面不会预置演示目标。</BpBanner>
+        )}
+      </section>
+
+      <section style={{ border: "1px solid var(--aos-border)", padding: 16, marginTop: 16 }} data-testid="eval-regression-history">
+        <h3 style={{ marginTop: 0 }}>精确版本回归比较</h3>
+        {historyMessage && <p className={historyState === "error" ? "error" : "aos-text"} role="status">{historyMessage}</p>}
+        {regressionHistory.length > 0 ? (
+          <BpTable
+            columns={["运行时间", "通过率", "失败用例", "门控结论", "变化"]}
+            rows={regressionHistory.map((item, index) => {
+              const previous = index > 0 ? regressionHistory[index - 1] : null;
+              const delta = previous ? item.pass_rate - previous.pass_rate : null;
+              return [
+                item.run_at,
+                `${(item.pass_rate * 100).toFixed(1)}%`,
+                String(item.failed),
+                item.gate_passed ? "通过" : "未通过",
+                delta == null ? "基线" : `${delta >= 0 ? "+" : ""}${(delta * 100).toFixed(1)} 个百分点`,
+              ];
+            })}
+          />
+        ) : (
+          <BpBanner tone="info">选择评测套件和已保存业务逻辑后加载历史；只比较相同 target revision/hash，禁止跨版本混算。</BpBanner>
+        )}
+        <p className="aos-text">评测失败须回到业务逻辑、技能、数字同事或模型治理入口整改后再跑；豁免必须来自权威审批记录，本页不提供手工豁免或绿灯。</p>
+      </section>
 
       <BpBanner tone="warn">
         <span data-testid="evals-chain-banner">

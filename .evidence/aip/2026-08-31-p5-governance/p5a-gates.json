@@ -1,0 +1,20 @@
+{
+  "schema": "aos-aip-p5a-gates/v1",
+  "authorityRevision": "AOS-000437",
+  "tenant": "org-org/dev-project",
+  "typescriptDiagnostics": 0,
+  "apiRuntimeOwner": "RUNTIME_OWNER_EXACT",
+  "apiHealth": "GREEN",
+  "apiReady": "GREEN",
+  "inventory": {
+    "evalSuites": 39,
+    "logicGraphs": 40,
+    "skillRevisions": 80,
+    "agentTemplates": 6,
+    "modelCatalogItems": 3
+  },
+  "historyContract": "EXACT_TARGET_REVISION_HASH_GREEN",
+  "vitest": "NOT_RUN_NATIVE_MODULE_SIGNATURE_ISOLATION",
+  "browser": "PENDING_NO_IN_APP_BROWSER_INSTANCE",
+  "externalEffects": 0
+}

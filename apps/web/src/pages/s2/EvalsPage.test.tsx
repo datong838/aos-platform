@@ -2,7 +2,13 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { assertEvalResultConsistency, EvalsPage, QUICK_START_EVAL_SUITE } from "./aip";
+import {
+  assertEvalResultConsistency,
+  buildEvalTargetInventory,
+  EvalsPage,
+  exactEvalRegressionHistory,
+  QUICK_START_EVAL_SUITE,
+} from "./aip";
 
 const apiMocks = vi.hoisted(() => ({
   apiGet: vi.fn(),
@@ -118,6 +124,29 @@ describe("EvalsPage · 真实运行与门控", () => {
       report,
       gate,
     )).toThrow("最新报告不是本次运行生成的报告");
+  });
+
+  it("按四类权威资产生成评测执行清单且不把目录登记冒充评测", () => {
+    const rows = buildEvalTargetInventory({
+      graphs: [graph],
+      skills: [{ skillId: "skill-1", revision: 2, contentHash: "b".repeat(64), canonicalLogicId: "内容经营" }],
+      agents: [{ template: { templateId: "agent-1", revision: 4, contentHash: "c".repeat(64), displayName: "内容官" } }],
+      models: [{ id: "model-1", displayName: "经营分析模型" }],
+    });
+    expect(rows.map((item) => item.targetType)).toEqual(["业务逻辑", "原子技能", "数字同事", "模型"]);
+    expect(rows[0].evidenceState).toBe("可直接评测");
+    expect(rows[1].evidenceState).toBe("需独立执行");
+    expect(rows[2].costEvidence).toContain("尚无");
+    expect(rows[3].evidenceState).toBe("缺精确版本");
+    expect(rows[3].costEvidence).not.toContain("零费用");
+  });
+
+  it("回归历史只接受同一 Logic 精确修订与摘要", () => {
+    expect(exactEvalRegressionHistory([
+      report,
+      { ...report, report_id: "wrong-revision", target_revision: graph.revision + 1 },
+      { ...report, report_id: "wrong-hash", target_hash: "f".repeat(64) },
+    ], graph).map((item) => item.report_id)).toEqual([report.report_id]);
   });
 
   it("无套件时通过真实 POST 创建基础套件，重读后自动选中且不伪造报告", async () => {
@@ -343,5 +372,32 @@ describe("EvalsPage · 真实运行与门控", () => {
     expect(host.textContent).toContain("logic-1@3");
     expect(host.textContent).toContain("succeeded");
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
+  });
+
+  it("显式读取四类目标和精确版本回归历史", async () => {
+    apiMocks.apiGet.mockImplementation((path: string) => {
+      if (path === "/v1/evals/suites") return Promise.resolve({ items: [{ id: "suite-1", name: "真实回归", gate_threshold: 0.8, cases: [{}] }] });
+      if (path === "/v1/aip/logic/graphs") return Promise.resolve(graphList);
+      if (path === "/v1/aip/skills?limit=200") return Promise.resolve({ items: [{ skillId: "skill-1", revision: 2, contentHash: "b".repeat(64), canonicalLogicId: "内容经营" }] });
+      if (path === "/v1/aip/agent-registry") return Promise.resolve({ items: [{ template: { templateId: "agent-1", revision: 4, contentHash: "c".repeat(64), displayName: "内容官" } }] });
+      if (path === "/v1/aip/model-admin/models") return Promise.resolve({ items: [{ id: "model-1", displayName: "经营分析模型" }] });
+      if (path === "/v1/evals/suite-1/history") return Promise.resolve({ items: [report, { ...report, report_id: "report-2", run_at: "2026-08-02T00:00:00Z", pass_rate: 1, passed: 1, failed: 0, gate_passed: true }] });
+      return Promise.reject(new Error(`unexpected path ${path}`));
+    });
+
+    await act(async () => root.render(createElement(MemoryRouter, null, createElement(EvalsPage))));
+    await flush();
+    const inventory = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "读取全部评测目标")!;
+    await act(async () => inventory.click());
+    await flush();
+    expect(host.textContent).toContain("已读取 4 个真实评测目标");
+    expect(host.textContent).toContain("经营分析模型");
+    expect(host.textContent).toContain("缺精确修订或 SHA-256");
+
+    const history = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "加载回归历史")!;
+    await act(async () => history.click());
+    await flush();
+    expect(host.textContent).toContain("已读取当前 Logic 精确修订的 2 次回归");
+    expect(host.textContent).toContain("+100.0 个百分点");
   });
 });
