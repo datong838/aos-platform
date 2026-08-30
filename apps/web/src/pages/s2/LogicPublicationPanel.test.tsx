@@ -97,7 +97,7 @@ describe("LogicPublicationPanel", () => {
     await render(props({ onSelectPublication }));
 
     expect(host.textContent).toContain("发布治理");
-    expect(host.textContent).toContain("revision 7");
+    expect(host.textContent).toContain("修订 7");
     expect(host.textContent).toContain(HASH);
     expect(host.textContent).toContain("suite-1");
     expect(host.textContent).toContain("report-1");
@@ -106,7 +106,7 @@ describe("LogicPublicationPanel", () => {
     expect(host.textContent).toContain("pub-1");
     expect(host.textContent).toContain("user-1");
 
-    const older = button(host, "pub-older");
+    const older = button(host, "正式发布记录 2");
     expect(older.getAttribute("aria-pressed")).toBe("false");
     await act(async () => older.click());
     expect(onSelectPublication).toHaveBeenCalledWith("pub-older");
@@ -116,11 +116,11 @@ describe("LogicPublicationPanel", () => {
   it("禁用原因可见，发布中阻止重复点击；满足门禁时只调用受控回调", async () => {
     const onPublish = vi.fn();
     await render(props({ publication: null, publicationState: "idle", publishDisabledReason: "存在未保存更改", onPublish }));
-    expect(button(host, "发布当前 revision").disabled).toBe(true);
+    expect(button(host, "发布当前修订").disabled).toBe(true);
     expect(host.textContent).toContain("存在未保存更改");
 
     await render(props({ publication: null, publicationState: "idle", onPublish }));
-    await act(async () => button(host, "发布当前 revision").click());
+    await act(async () => button(host, "发布当前修订").click());
     expect(onPublish).toHaveBeenCalledTimes(1);
 
     await render(props({ publication: null, publicationState: "loading", publishing: true, onPublish }));
@@ -129,15 +129,15 @@ describe("LogicPublicationPanel", () => {
 
   it("缺失报告、报告失败和目标错配均前置禁用并展示具体原因", async () => {
     await render(props({ evalReportId: null, evalGate: null, publishDisabledReason: "" }));
-    expect(button(host, "发布当前 revision").disabled).toBe(true);
-    expect(host.textContent).toContain("请选择与当前 revision 绑定的 Eval report");
+    expect(button(host, "发布当前修订").disabled).toBe(true);
+    expect(host.textContent).toContain("请选择与当前修订绑定的评测报告");
 
     await render(props({ publishDisabledReason: "Eval report 门控未通过" }));
-    expect(button(host, "发布当前 revision").disabled).toBe(true);
+    expect(button(host, "发布当前修订").disabled).toBe(true);
     expect(host.textContent).toContain("门控未通过");
 
     await render(props({ publishDisabledReason: "Eval report 目标 revision/hash 与当前图不一致" }));
-    expect(button(host, "发布当前 revision").disabled).toBe(true);
+    expect(button(host, "发布当前修订").disabled).toBe(true);
     expect(host.textContent).toContain("目标 revision/hash 与当前图不一致");
   });
 
@@ -169,11 +169,11 @@ describe("LogicPublicationPanel", () => {
     expect(onRetryPublications).toHaveBeenCalledTimes(1);
   });
 
-  it("自动化始终禁用且明确仅能绑定 publication，不能触发回调", async () => {
+  it("自动化条件未齐时提供上线执行审批入口，不触发本地绑定", async () => {
     await render(props());
-    const automation = button(host, "绑定自动化");
-    expect(automation.disabled).toBe(true);
-    expect(automation.title).toContain("生产调度");
-    expect(host.textContent).toContain("仅可绑定不可变 publication");
+    const automation = [...host.querySelectorAll<HTMLAnchorElement>("a")].find((item) => item.textContent?.includes("进入上线执行审批补齐自动化条件"));
+    expect(automation?.getAttribute("href")).toBe("/aip/production-contracts");
+    expect(automation?.title).toContain("生产调度");
+    expect(host.textContent).toContain("仅可绑定不可变的正式发布版本");
   });
 });

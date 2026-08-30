@@ -96,7 +96,7 @@ const OBJECT_TYPE_NAMES: Record<string, string> = {
 
 const DEFINITION_READINESS_NAMES: Record<string, string> = {
   available: "定义可用",
-  blocked: "定义未就绪",
+  blocked: "定义条件待补齐",
   degraded: "定义降级",
 };
 
@@ -127,26 +127,26 @@ const RESPONSIBILITY_NAMES: Record<string, string> = {
 };
 
 const BLOCKER_NAMES: Record<string, string> = {
-  roles_not_fully_runnable: "数字同事尚未全部可派发",
-  capabilities_not_fully_runnable: "当前方案所需专业能力尚未全部可派发",
-  tools_not_fully_runnable: "当前方案所需工具尚未全部可派发",
-  routes_not_fully_runnable: "模型路由尚未全部可派发",
+  roles_not_fully_runnable: "部分数字同事仍需补齐运行条件",
+  capabilities_not_fully_runnable: "当前方案所需专业能力仍需补齐运行条件",
+  tools_not_fully_runnable: "当前方案所需工具仍需补齐运行条件",
+  routes_not_fully_runnable: "部分模型路由仍需补齐运行条件",
   eval_gates_not_fully_passed: "评测门尚未全部通过",
   capability_binding_readiness_stale: "能力绑定状态需要刷新",
   skill_binding_readiness_stale: "技能绑定状态需要刷新",
-  skill_binding_unavailable: "技能绑定不可用",
-  capability_bindings_unavailable: "能力绑定不可用",
+  skill_binding_unavailable: "缺少有效技能绑定",
+  capability_bindings_unavailable: "缺少有效能力绑定",
   agent_instance_not_installed: "尚未安装数字同事实例",
   agent_instance_not_active: "数字同事实例未启用",
   skill_templates_not_published: "技能模板尚未发布",
   provider_unknown: "模型供应商未知",
-  eval_pack_unavailable: "评测包不可用",
-  w0b_contracts_unavailable: "公共上线审批记录尚未就绪",
-  aip7_route_authority_unavailable: "模型路由权威尚未就绪",
-  provider_health_unavailable_or_stale: "供应商健康检查不可用或已过期",
+  eval_pack_unavailable: "缺少有效评测包",
+  w0b_contracts_unavailable: "缺少公共上线审批记录",
+  aip7_route_authority_unavailable: "缺少模型路由权威记录",
+  provider_health_unavailable_or_stale: "供应商健康检查缺失或已过期",
   CAPABILITY_BINDING_NOT_ACTIVE: "能力绑定未激活",
   MODEL_ROUTE_BLOCKED: "模型路由被阻断",
-  PROVIDER_HEALTH_UNAVAILABLE: "供应商健康检查不可用",
+  PROVIDER_HEALTH_UNAVAILABLE: "缺少供应商健康检查",
   price_unit_mismatch: "计价单位与用量凭证不一致",
   pricing_unit_mismatch: "计价单位与用量凭证不一致",
 };
@@ -227,6 +227,7 @@ export function businessDisplayName(value: string, fallback = "未命名业务�
     "w-t2-v1": "当前智能体默认工具包",
     "w-j3 sample chain: closeworkorder after eval gate": "评测通过后的工单关闭申请",
     "电商增长方案包（d3：w03 客户与私域运营台 + l05 分润异常检测）": "电商增长与客户运营方案包",
+    "provider 不可用": "模型供应商故障回退",
   };
   const raw = String(value || "").trim();
   if (exactNames[raw.toLowerCase()]) return exactNames[raw.toLowerCase()];

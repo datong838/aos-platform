@@ -42,7 +42,7 @@ describe("AipAssistPage exact subject", () => {
     expect(host.textContent).toContain("任务协作助手");
     expect(host.textContent).toContain("选择最近真实任务");
     expect(host.textContent).toContain("新品内容策划");
-    expect(host.textContent).toContain("仍需从真实运行流程补齐任务运行和智能体运行引用");
+    expect(host.textContent).toContain("还需从真实运行流程补齐任务运行和智能体运行引用");
     expect((host.querySelector("input[aria-label='向当前智能体运行提问']") as HTMLInputElement).disabled).toBe(true);
   });
 
@@ -63,8 +63,18 @@ describe("AipAssistPage exact subject", () => {
   it("uses the exact TaskRun ref for the lineage deep link and never guesses a lineageId", async () => {
     const client = { createThread: vi.fn(), streamTurn: vi.fn(), cancelTaskRun: vi.fn(), newKey: vi.fn(() => "key") };
     await act(async () => root.render(<MemoryRouter><AipAssistPage client={client} /></MemoryRouter>));
-    expect(host.querySelector<HTMLAnchorElement>("[data-testid='assist-jump-lineage']")?.getAttribute("href"))
-      .toBe("/aip/lineage?rootType=task_run&rootId=run-1");
+    const lineageHref = host.querySelector<HTMLAnchorElement>("[data-testid='assist-jump-lineage']")?.getAttribute("href") || "";
+    const lineageUrl = new URL(lineageHref, "http://aos.local");
+    expect(lineageUrl.pathname).toBe("/aip/lineage");
+    expect(Object.fromEntries(lineageUrl.searchParams.entries())).toMatchObject({
+      rootType: "task_run",
+      rootId: "run-1",
+      taskRunType: "TaskRun",
+      taskRunId: "run-1",
+      taskRunRevision: "2",
+      taskRunAuthority: "aip-task-run",
+      cutoffAt: "2026-08-16T00:00:00.000Z",
+    });
     expect(host.innerHTML).not.toContain("lineageId=");
 
     act(() => root.unmount());
@@ -145,7 +155,7 @@ describe("AipAssistPage exact subject", () => {
     await act(async () => root.render(<MemoryRouter><AipAssistPage client={client} /></MemoryRouter>));
     const cancel = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "取消任务运行")!;
     expect(cancel.disabled).toBe(true);
-    expect(cancel.title).toContain("版本不可用于并发安全校验");
+    expect(cancel.title).toContain("版本不能通过并发安全校验");
     expect(client.cancelTaskRun).not.toHaveBeenCalled();
   });
 

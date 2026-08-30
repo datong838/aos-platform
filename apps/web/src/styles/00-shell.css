@@ -297,6 +297,7 @@ body,
 .aside.is-collapsed { width: 48px; }
 .aside.is-collapsed .aos-nav-label,
 .aside.is-collapsed .aos-nav-section-toggle,
+.aside.is-collapsed .aos-nav-subgroup,
 .aside.is-collapsed .ecommerce-workshop-readiness-dot,
 .aside.is-collapsed .ecommerce-workshop-nav-message,
 .aside.is-collapsed .ecommerce-workshop-nav-retry,
@@ -350,7 +351,11 @@ body,
 
 .nav {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   padding: 8px;
   display: flex;
   flex-direction: column;
@@ -436,6 +441,12 @@ body,
 }
 
 .aos-nav-link:hover { background: var(--aos-surface-hover); color: var(--aos-text); }
+.aos-nav-link:focus-visible,
+.aos-nav-section-toggle:focus-visible,
+.aside-toggle:focus-visible {
+  outline: 2px solid var(--aos-accent);
+  outline-offset: -2px;
+}
 
 .aos-nav-link.is-active {
   color: var(--aos-accent);

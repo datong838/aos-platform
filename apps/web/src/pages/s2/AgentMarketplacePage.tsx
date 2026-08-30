@@ -30,8 +30,11 @@ export function AgentMarketplacePage() {
       {!catalog && !error ? <div className="card" role="status">正在读取组织市场目录…</div> : catalog?.count === 0 ? (
         <div className="card"><h3>暂无可发现资产包</h3><p>目录返回为空；没有用演示包填充。</p></div>
       ) : catalog ? <>{blockerCodes.length ? <AipReadinessActionCard
-        status="方案包已安装，但运行准备尚未完成"
+        status="方案包已发现，正在补齐运行条件"
         owner="AIP 智能体运行平台 / 模型供应商"
+        ownerHref="/aip/agent-registry"
+        impact="当前方案包可以查看和审计，但不会直接承接新的业务任务。"
+        missingConditions={[formatBlockers(blockerCodes)]}
         reasons={[formatBlockers(blockerCodes)]}
         actionLabel="进入智能体目录刷新运行准备"
         actionHref="/aip/agent-registry"
@@ -57,7 +60,7 @@ export function AgentMarketplacePage() {
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                   <strong>{businessDisplayName(agent.displayName, "未命名智能体")}</strong><span>{agent.runtimeReadiness === "runnable" ? "可派发" : agent.installed ? "已安装·受阻" : "未安装"}</span>
                 </div>
-                <p style={{ minHeight: 38, color: "var(--aos-text-secondary)", fontSize: 13 }}>{agent.blockers.length ? "当前不可派发；请按页面上方处理指引完成运行准备。" : "运行准备已完成"}</p>
+                <p style={{ minHeight: 38, color: "var(--aos-text-secondary)", fontSize: 13 }}>{agent.blockers.length ? "仍需补齐运行条件；请按页面上方处理指引继续。" : "运行准备已完成"}</p>
               </article>
             ))}
           </div>

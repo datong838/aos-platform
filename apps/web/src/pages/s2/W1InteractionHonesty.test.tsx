@@ -84,7 +84,7 @@ describe("Wave 3B W1 · 页面交互真实性", () => {
     const listLogicGraphs = vi.fn().mockResolvedValue([]);
     await act(async () => root.render(<MemoryRouter><AipAnalystPage listObjectTypes={listObjectTypes} listLogicGraphs={listLogicGraphs} /></MemoryRouter>));
     await flush();
-    expect(host.textContent).toContain("尚未运行查询");
+    expect(host.textContent).toContain("选择业务对象开始查询");
     expect(host.textContent).toContain("不接受任意 SQL");
     expect(host.textContent).not.toContain("Walter and Sons");
     expect(host.textContent).not.toContain("Northampton");

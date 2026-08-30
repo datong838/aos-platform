@@ -116,6 +116,19 @@ function useCollapsedSections() {
   return { collapsed, toggle, expand };
 }
 
+function findSectionForPage(pageId: string | undefined) {
+  if (!pageId) return null;
+  let currentSection: string | null = null;
+  for (const item of NAV_ITEMS) {
+    if (!isNavPage(item) && !isNavSubgroup(item)) {
+      currentSection = item.section;
+      continue;
+    }
+    if (isNavPage(item) && item.id === pageId) return currentSection;
+  }
+  return null;
+}
+
 /** 全局深色导航栏 —— 左侧 48px 窄条，上半部分功能图标，下半部分帮助+用户 */
 function GlobalNav({
   onToggleSidebar,
@@ -185,6 +198,7 @@ function GlobalNav({
             type="button"
             className={`p-nav-g-item${it.active ? " is-active" : ""}`}
             title={it.label}
+            aria-label={it.label}
             onClick={it.onClick}
           >
             <NavIcon name={it.icon} />
@@ -376,6 +390,7 @@ export function AppShell() {
   );
   const location = useLocation();
   const contentRef = useRef<HTMLDivElement>(null);
+  const navigationRef = useRef<HTMLElement>(null);
   const workshopCatalog = useEcommerceWorkshopCatalog();
   const activeWorkshop = findInstalledWorkshopRoute(
     workshopCatalog.modules,
@@ -403,6 +418,7 @@ export function AppShell() {
     useSidebarCollapsed();
   const { collapsed: collapsedSections, toggle: toggleSection, expand: expandSection } =
     useCollapsedSections();
+  const activeSection = useMemo(() => findSectionForPage(active?.id), [active?.id]);
 
   const [systemDark, setSystemDark] = useState(
     () =>
@@ -475,6 +491,22 @@ export function AppShell() {
     }
   }, [onApolloRoute, expandSection]);
 
+  // 深链进入时，当前页不能被用户之前保存的分组折叠状态隐藏。
+  useLayoutEffect(() => {
+    if (activeSection) expandSection(activeSection);
+  }, [activeSection, expandSection]);
+
+  // 只滚动侧栏到当前菜单，不抢占正文键盘焦点。
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const current = navigationRef.current?.querySelector<HTMLElement>(
+        ".aos-nav-link.is-active",
+      );
+      current?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+    });
+    return () => window.cancelAnimationFrame?.(frame);
+  }, [active?.id, sidebarCollapsed]);
+
   const crumbs = useMemo(
     () => active?.crumbs ?? (
       unresolvedWorkshopRoute
@@ -504,20 +536,26 @@ export function AppShell() {
     let currentSectionKey: string | null = null;
     let currentSectionPages: ReactNode[] = [];
 
+    let sectionIndex = 0;
     const flushSection = (key: string, pages: ReactNode[]) => {
-      const isCollapsed = collapsedSections.has(key);
+      // 整体侧栏折叠后仍呈现全部图标，避免分组折叠状态把整组入口二次隐藏。
+      const isCollapsed =
+        !sidebarCollapsed && collapsedSections.has(key) && key !== activeSection;
+      const contentId = `aos-nav-section-${sectionIndex++}`;
       nodes.push(
         <div key={`sec-${key}`} className="aos-nav-section-wrap">
           <button
             type="button"
             className={`aos-nav-section-toggle${isCollapsed ? " is-collapsed" : ""}`}
             aria-expanded={!isCollapsed}
+            aria-controls={contentId}
             onClick={() => toggleSection(key)}
           >
             <span>{key}</span>
             <NavIcon name="chevron" className="aos-nav-section-arrow" />
           </button>
           <div
+            id={contentId}
             className={`aos-nav-section-content${isCollapsed ? " is-collapsed" : ""}`}
           >
             {pages}
@@ -528,15 +566,15 @@ export function AppShell() {
     };
 
     const renderPage = (item: NavPage) => (
-      <NavLink
+      <Link
         key={item.id}
         to={item.path}
         data-nav-id={item.id}
         data-nav-status={item.status}
-        end
-        className={() =>
-          active?.id === item.id ? "aos-nav-link is-active" : "aos-nav-link"
-        }
+        aria-label={item.label}
+        aria-current={active?.id === item.id ? "page" : undefined}
+        title={sidebarCollapsed ? item.label : undefined}
+        className={active?.id === item.id ? "aos-nav-link is-active" : "aos-nav-link"}
       >
         <NavIcon name={item.icon} />
         <span className="aos-nav-label">{item.label}</span>
@@ -545,7 +583,7 @@ export function AppShell() {
             占位
           </span>
         ) : null}
-      </NavLink>
+      </Link>
     );
 
     const renderSubgroup = (label: string) => (
@@ -587,7 +625,7 @@ export function AppShell() {
     }
 
     return nodes;
-  }, [collapsedSections, toggleSection, active?.id, workshopCatalog.modules]);
+  }, [collapsedSections, toggleSection, active?.id, activeSection, workshopCatalog.modules, sidebarCollapsed]);
 
   return (
     <div className={`p-app${workshopFocusMode ? " is-workshop-focus" : ""}${onWorkshopPrimaryVisualRoute ? " is-workshop-primary-visual" : ""}${onAnalystVisualRoute ? " is-analyst-visual" : ""}${onTaskCockpitVisualRoute ? " is-task-cockpit-visual" : ""}`}>
@@ -671,7 +709,7 @@ export function AppShell() {
                 <div className="brand-sub">AOS 企业AI转型方案</div>
               </div>
             </div>}
-            {onWorkshopFullSidebarVisualRoute ? <AnalystVisualNavigation /> : <nav className="nav" aria-label="主导航">
+            {onWorkshopFullSidebarVisualRoute ? <AnalystVisualNavigation /> : <nav ref={navigationRef} className="nav" aria-label="主导航">
               {navNodes}
             </nav>}
             {onWorkshopFullSidebarVisualRoute ? null : <div className="aside-foot">AOS · {DEMO_VERSION}</div>}

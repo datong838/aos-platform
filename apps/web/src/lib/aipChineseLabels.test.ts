@@ -31,8 +31,8 @@ describe("aipChineseLabels", () => {
     expect(capabilityDisplayName("strategy.plan")).toBe("策略规划");
     expect(responsibilityDisplayName("service.escalation")).toBe("售后服务与升级");
     expect(blockerDisplayName("skill_binding_readiness_stale")).toContain("技能绑定");
-    expect(blockerDisplayName("capabilities_not_fully_runnable")).toBe("当前方案所需专业能力尚未全部可派发");
-    expect(blockerDisplayName("tools_not_fully_runnable")).toBe("当前方案所需工具尚未全部可派发");
+    expect(blockerDisplayName("capabilities_not_fully_runnable")).toBe("当前方案所需专业能力仍需补齐运行条件");
+    expect(blockerDisplayName("tools_not_fully_runnable")).toBe("当前方案所需工具仍需补齐运行条件");
     expect(blockerDisplayName("skill_revision_not_published:C01")).toContain("热点竞品");
     expect(formatBlockers(["capability_binding_readiness_stale", "skill_binding_readiness_stale"])).toContain("；");
   });
@@ -40,9 +40,13 @@ describe("aipChineseLabels", () => {
   it("实例状态与八维标签中文", () => {
     expect(instanceStatusDisplayName("active")).toBe("已启用");
     expect(riskDisplayName("high")).toBe("高");
-    expect(definitionReadinessDisplayName("blocked")).toBe("定义未就绪");
+    expect(definitionReadinessDisplayName("blocked")).toBe("定义条件待补齐");
     expect(dimensionDisplayName("providerRef")).toBe("供应商");
     expect(templateDisplayName("ecommerce.content_officer")).toBe("内容官");
+  });
+
+  it("把模型供应商故障场景转换为业务可读标题", () => {
+    expect(businessDisplayName("Provider 不可用")).toBe("模型供应商故障回退");
   });
 
   it("W-L1 已安装不等于可派发", () => {

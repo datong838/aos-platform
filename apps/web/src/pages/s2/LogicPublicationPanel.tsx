@@ -31,7 +31,7 @@ export interface LogicPublicationPanelProps {
 }
 
 const HASH_RE = /^[0-9a-f]{64}$/;
-const DEFAULT_AUTOMATION_DISABLED_REASON = "生产调度与执行器尚未闭环；自动化只能绑定不可变 publication，当前保持禁用";
+const DEFAULT_AUTOMATION_DISABLED_REASON = "请先完成正式发布，并在上线执行审批中补齐生产调度与执行器条件；自动化只绑定不可变发布版本";
 
 const panelStyle = {
   border: "1px solid var(--aos-border)",
@@ -107,19 +107,24 @@ function ErrorState({
 function PublicationDetail({ publication }: { publication: LogicPublication }) {
   return (
     <div data-publication-id={publication.publication_id}>
-      <dl style={factsStyle}>
-        <Fact label="Publication ID"><code>{publication.publication_id}</code></Fact>
-        <Fact label="已发布 Graph">{publication.graph_id} · revision {publication.graph_revision}</Fact>
-        <Fact label="Graph hash"><code>{publication.graph_hash}</code></Fact>
-        <Fact label="成功 Dry-Run"><code>{publication.dry_run_id}</code></Fact>
-        <Fact label="Eval suite"><code>{publication.eval_suite_id}</code></Fact>
-        <Fact label="Eval report"><code>{publication.eval_report_id}</code></Fact>
-        <Fact label="发布人">{publication.actor}</Fact>
-        <Fact label="发布时间"><Timestamp value={publication.created_at} /></Fact>
-      </dl>
+      <p style={{ margin: "8px 0", color: "var(--aos-text-secondary)", fontSize: "0.75rem" }}>
+        业务逻辑修订 {publication.graph_revision} 已完成正式发布和证据回读 · <Timestamp value={publication.created_at} />
+      </p>
       <GateFacts gate={publication.eval_gate} />
+      <details style={{ marginTop: 8 }}>
+        <summary>发布技术标识（审计用）</summary>
+        <dl style={factsStyle}>
+          <Fact label="发布记录 ID"><code>{publication.publication_id}</code></Fact>
+          <Fact label="业务逻辑图">{publication.graph_id} · 修订 {publication.graph_revision}</Fact>
+          <Fact label="内容摘要"><code>{publication.graph_hash}</code></Fact>
+          <Fact label="安全试跑记录"><code>{publication.dry_run_id}</code></Fact>
+          <Fact label="评测套件"><code>{publication.eval_suite_id}</code></Fact>
+          <Fact label="评测报告"><code>{publication.eval_report_id}</code></Fact>
+          <Fact label="发布人">{publication.actor}</Fact>
+        </dl>
+      </details>
       <p style={{ margin: "8px 0 0", color: "var(--aos-muted)", fontSize: "0.7rem" }}>
-        发布详情来自服务端不可变快照；查看旧 publication 不会修改当前画布或运行历史。
+        发布详情来自服务端不可变快照；查看历史发布不会修改当前画布或运行记录。
       </p>
     </div>
   );
@@ -127,12 +132,12 @@ function PublicationDetail({ publication }: { publication: LogicPublication }) {
 
 function intrinsicDisabledReason(props: LogicPublicationPanelProps): string {
   if (props.publishDisabledReason) return props.publishDisabledReason;
-  if (!props.graphId.trim()) return "Logic Graph 尚未加载";
-  if (!Number.isSafeInteger(props.graphRevision) || props.graphRevision < 1) return "服务端 revision 无效";
-  if (!HASH_RE.test(props.graphHash)) return "服务端 graph hash 无效";
-  if (!props.evalSuiteId?.trim()) return "请选择与当前 revision 绑定的 Eval suite";
-  if (!props.evalReportId?.trim()) return "请选择与当前 revision 绑定的 Eval report";
-  if (!props.evalGate) return "尚未读取真实 Eval 门控证据";
+  if (!props.graphId.trim()) return "请先选择或新建业务逻辑";
+  if (!Number.isSafeInteger(props.graphRevision) || props.graphRevision < 1) return "当前业务逻辑修订号无效，请刷新后重试";
+  if (!HASH_RE.test(props.graphHash)) return "当前业务逻辑内容摘要无效，请重新保存并回读";
+  if (!props.evalSuiteId?.trim()) return "请选择与当前修订绑定的评测套件";
+  if (!props.evalReportId?.trim()) return "请选择与当前修订绑定的评测报告";
+  if (!props.evalGate) return "请先读取当前修订的真实评测门控证据";
   return "";
 }
 
@@ -147,33 +152,36 @@ export function LogicPublicationPanel(props: LogicPublicationPanelProps) {
         <div>
           <h3 style={{ margin: 0, fontSize: "0.84rem" }}>发布治理</h3>
           <p style={{ margin: "3px 0 0", color: "var(--aos-muted)", fontSize: "0.72rem" }}>
-            只发布服务端已保存的精确 revision/hash；POST 后必须完成 publication 详情回读才算成功。
+            只发布已保存并通过评测的精确修订；发布后必须回读确认正式记录才算成功。
           </p>
         </div>
         <button
           type="button"
           className="btn btn-primary"
           disabled={publishDisabled}
-          title={props.publishing ? "发布请求正在处理，请勿重复提交" : disabledReason || "发布当前已确认 revision"}
+          title={props.publishing ? "发布请求正在处理，请勿重复提交" : disabledReason || "发布当前已确认修订"}
           onClick={() => {
             if (!publishDisabled) props.onPublish();
           }}
         >
-          {props.publishing ? "发布中…" : "发布当前 revision"}
+          {props.publishing ? "发布中…" : "发布当前修订"}
         </button>
       </div>
 
-      <dl style={factsStyle}>
-        <Fact label="当前 Graph">{props.graphId || "未加载"} · revision {props.graphRevision || "—"}</Fact>
-        <Fact label="当前 Graph hash"><code>{props.graphHash || "—"}</code></Fact>
-        <Fact label="Eval suite"><code>{props.evalSuiteId || "未选择"}</code></Fact>
-        <Fact label="Eval report"><code>{props.evalReportId || "未选择"}</code></Fact>
-      </dl>
+      <details style={{ marginTop: 8 }}>
+        <summary>当前修订技术标识（审计用）</summary>
+        <dl style={factsStyle}>
+          <Fact label="业务逻辑图">{props.graphId || "未加载"} · 修订 {props.graphRevision || "—"}</Fact>
+          <Fact label="内容摘要"><code>{props.graphHash || "—"}</code></Fact>
+          <Fact label="评测套件"><code>{props.evalSuiteId || "未选择"}</code></Fact>
+          <Fact label="评测报告"><code>{props.evalReportId || "未选择"}</code></Fact>
+        </dl>
+      </details>
       {props.evalGate ? <GateFacts gate={props.evalGate} /> : (
-        <p style={{ margin: "8px 0 0", color: "var(--aos-muted)", fontSize: "0.72rem" }}>尚未读取与当前 revision/hash 绑定的真实 Eval 门控证据。</p>
+        <p style={{ margin: "8px 0 0", color: "var(--aos-muted)", fontSize: "0.72rem" }}>请先读取与当前修订和内容摘要绑定的真实评测门控证据。</p>
       )}
       <div role="status" data-testid="logic-publish-gate-reason" style={{ marginTop: 8, color: disabledReason ? "var(--aos-amber-700)" : "var(--aos-green-700)", fontSize: "0.72rem" }}>
-        {props.publishing ? "发布请求处理中；等待 POST 与 GET 回读完成" : disabledReason || "已满足受治理发布门禁"}
+        {props.publishing ? "发布请求处理中；正在等待提交与回读完成" : disabledReason || "已满足受治理发布门禁"}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 0.8fr) minmax(280px, 1.2fr)", gap: 10, marginTop: 12 }}>
@@ -193,7 +201,7 @@ export function LogicPublicationPanel(props: LogicPublicationPanelProps) {
           )}
           {props.publications.length > 0 && (
             <ol style={{ display: "grid", gap: 6, margin: "8px 0 0", padding: 0, listStyle: "none" }}>
-              {props.publications.map((item) => {
+              {props.publications.map((item, index) => {
                 const selected = item.publication_id === props.selectedPublicationId;
                 return (
                   <li key={item.publication_id}>
@@ -204,9 +212,9 @@ export function LogicPublicationPanel(props: LogicPublicationPanelProps) {
                       style={{ display: "block", width: "100%", textAlign: "left" }}
                       onClick={() => props.onSelectPublication(item.publication_id)}
                     >
-                      <strong>{item.publication_id}</strong>
+                      <strong>正式发布记录 {index + 1}</strong>
                       <span style={{ display: "block", marginTop: 2, fontSize: "0.7rem", color: "var(--aos-muted)" }}>
-                        revision {item.graph_revision} · <Timestamp value={item.created_at} />
+                        修订 {item.graph_revision} · <Timestamp value={item.created_at} />
                       </span>
                     </button>
                   </li>
@@ -242,10 +250,10 @@ export function LogicPublicationPanel(props: LogicPublicationPanelProps) {
           <div>
             <h4 style={{ margin: 0, fontSize: "0.78rem" }}>自动化</h4>
             <p style={{ margin: "3px 0 0", color: "var(--aos-muted)", fontSize: "0.72rem" }}>
-              自动化仅可绑定不可变 publication；不能绑定当前可编辑草稿 revision。
+              自动化仅可绑定不可变的正式发布版本；不能绑定当前可编辑草稿。
             </p>
           </div>
-          <button type="button" className="btn" disabled title={automationReason}>绑定自动化（禁用）</button>
+          <a className="btn" href="/aip/production-contracts" title={automationReason}>进入上线执行审批补齐自动化条件 →</a>
         </div>
         <p style={{ margin: "6px 0 0", color: "var(--aos-amber-700)", fontSize: "0.7rem" }}>{automationReason}</p>
       </section>

@@ -27,7 +27,7 @@ describe("CanonicalCapabilityPage", () => {
     expect(orgBindingStatusLabel(1, 0)).not.toContain("未绑定");
   });
 
-  it("显示组织绑定空态并禁用没有依赖快照的操作", async () => {
+  it("显示组织绑定空态并引导到可完成的绑定流程", async () => {
     const root = createRoot(host); await act(async () => root.render(<MemoryRouter><CanonicalCapabilityPage /></MemoryRouter>)); await act(async () => undefined);
     expect(host.textContent).toContain("文案生成"); expect(host.textContent).toMatch(/组织绑定\s*0/);
     expect(host.textContent).toContain("组织绑定：未绑定");
@@ -40,8 +40,9 @@ describe("CanonicalCapabilityPage", () => {
     expect(host.textContent).not.toContain("Capability");
     for (const dimension of ["供应商", "路由", "评测门", "许可", "数据依赖", "工具依赖", "预算策略"]) expect(host.textContent).toContain(`${dimension} —`);
     expect(host.textContent).not.toContain("Provider —");
-    const action = Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("预检")) as HTMLButtonElement;
-    expect(action.disabled).toBe(true);
+    const action = Array.from(host.querySelectorAll("a")).find((link) => link.textContent?.includes("补齐预检条件"));
+    expect(action?.getAttribute("href")).toBe("/aip/agent-registry");
+    expect(host.textContent).toContain("进入激活确认");
     await act(async () => root.unmount());
   });
 

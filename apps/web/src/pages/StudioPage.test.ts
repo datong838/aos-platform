@@ -37,7 +37,7 @@ describe("StudioPage · 真实模型路由门禁", () => {
   it("canonical 路由 0/3 时禁止试运行并不暴露 mock-llm", () => {
     const gate = studioModelRouteGate("mock-llm", projection);
     expect(gate.ready).toBe(false);
-    expect(gate.label).toContain("未就绪");
+    expect(gate.label).toContain("已核验 0/3 条路由");
     expect(gate.label).not.toContain("mock-llm");
   });
 

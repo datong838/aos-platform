@@ -140,7 +140,7 @@ export function CanonicalAgentsPage() {
                       <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                         <span className="notice" style={{ padding: "2px 6px", fontSize: 11 }}>{instanceStatusDisplayName(item.status)}</span>
                         <span className="notice" style={{ padding: "2px 6px", fontSize: 11, color: isRun ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>
-                          {isRun ? "可派发" : "不可派发"}
+                          {isRun ? "运行条件已通过" : "运行条件待补齐"}
                         </span>
                       </div>
                     </button>
@@ -168,7 +168,7 @@ export function CanonicalAgentsPage() {
                       {instanceStatusDisplayName(selected.status)}
                     </strong>
                     <strong style={{ color: runnable ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>
-                      {runnable ? "目录可派发" : "目录不可派发"}
+                      {runnable ? "目录运行条件已通过" : "目录运行条件待补齐"}
                     </strong>
                   </div>
                 </div>
@@ -225,11 +225,10 @@ export function CanonicalAgentsPage() {
                   )}
                   {tab === "try" && (
                     <div>
-                      <p>{runnable ? "目录可派发。试跑须绑定真实 Task/AgentRun 上下文（见工具面板试跑轨），本页不发起外呼。" : "目录不可派发（已安装≠可派发），试运行禁用。"}</p>
-                      <button className="btn" type="button" disabled={!runnable} title={runnable ? "请到工具面板绑定真实上下文后试跑" : "依赖未齐，不可派发"}>
-                        {runnable ? "前往工具面板试跑" : "试运行（不可派发）"}
-                      </button>
-                      {runnable ? <div style={{ marginTop: 10 }}><Link to="/aip/tools">打开工具面板 →</Link></div> : null}
+                      <p>{runnable ? "目录运行条件已通过。试跑须绑定真实任务与智能体运行上下文，本页不发起外呼。" : "已安装不代表运行条件已经通过；请先完成目录重评，再进入工具面板绑定真实上下文。"}</p>
+                      <Link className="btn" to={runnable ? "/aip/tools" : "/aip/agent-registry"} title={runnable ? "到工具面板绑定真实上下文后试跑" : "到智能体目录补齐依赖并刷新运行准备"}>
+                        {runnable ? "前往工具面板试跑" : "补齐运行条件"}
+                      </Link>
                     </div>
                   )}
                   {tab === "publish" && (

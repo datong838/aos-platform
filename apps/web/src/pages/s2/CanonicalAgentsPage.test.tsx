@@ -111,14 +111,14 @@ describe("CanonicalAgentsPage", () => {
     await act(async () => root.unmount());
   });
 
-  it("未就绪时试运行按钮禁用", async () => {
+  it("运行条件待补齐时提供目录修复入口而不是死按钮", async () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><CanonicalAgentsPage /></MemoryRouter>));
     await act(async () => undefined);
     const tryTab = Array.from(host.querySelectorAll("button")).find((b) => b.textContent === "试运行");
     await act(async () => { tryTab!.click(); });
-    const tryBtn = Array.from(host.querySelectorAll("button")).find((b) => b.textContent?.includes("试运行（不可派发）")) as HTMLButtonElement;
-    expect(tryBtn?.disabled).toBe(true);
+    const repair = Array.from(host.querySelectorAll("a")).find((link) => link.textContent?.includes("补齐运行条件"));
+    expect(repair?.getAttribute("href")).toBe("/aip/agent-registry");
     await act(async () => root.unmount());
   });
 });

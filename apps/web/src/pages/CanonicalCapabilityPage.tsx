@@ -28,7 +28,7 @@ function present(value: OperationalBindingDependencies[keyof OperationalBindingD
 export function orgBindingStatusLabel(bindingsLength: number, activeCount: number): string {
   if (bindingsLength === 0) return "未绑定";
   if (activeCount > 0) return bindingStatusDisplayName("active");
-  return "未就绪";
+  return "待激活";
 }
 
 export function CanonicalCapabilityPage() {
@@ -77,7 +77,7 @@ export function CanonicalCapabilityPage() {
       <span className="notice" style={{ padding: "6px 10px" }}>密表卡片 · 组织绑定 ≠ 定义八维</span>
     </div>
     <div className="notice" style={{marginBottom:14,padding:10}} role="note">
-      两层状态请分开看：<strong>组织绑定</strong>表示本租户是否已创建 Binding；<strong>定义就绪</strong>是目录八维投影，blocked 不等于「未绑定」。
+      两层状态请分开看：<strong>组织绑定</strong>表示本租户是否已创建绑定记录；<strong>定义就绪</strong>表示供应商、路由、评测、许可、数据、工具与预算条件是否齐备。条件待补齐不等于「未绑定」。
     </div>
     {error && <div role="alert" className="notice bad">专业能力权威读取失败：{error}</div>}
     {!catalog || !runtime ? <div role="status" className="card">正在读取专业能力目录与组织绑定…</div> : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(340px,1fr))",gap:14}}>
@@ -116,8 +116,10 @@ export function CanonicalCapabilityPage() {
           </div>
           <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap",alignItems:"center"}}>
             {unbound ? <Link className="btn" to="/aip/agent-registry">去目录绑定</Link> : null}
-            <button className="btn" disabled={!precheckOk} title={!binding ? "需先创建组织专业能力绑定" : missing.length ? `缺少 ${missing.join(" / ")}` : !snapshotReady ? "依赖快照过期，请刷新绑定就绪度" : "当前只读页尚未取得命令确认"}>预检{precheckOk ? "" : unbound ? "（未绑定）" : missing.length ? "（依赖未齐）" : "（快照不可用）"}</button>
-            <button className="btn" disabled title={snapshotReady ? "写命令需在专用确认流执行" : "缺少新鲜依赖快照"}>激活{snapshotReady ? "（待确认）" : "（快照不可用）"}</button>
+            {precheckOk
+              ? <button className="btn" title="核对当前专业能力依赖快照">核对运行条件</button>
+              : <Link className="btn" to="/aip/agent-registry" title={!binding ? "需先创建组织专业能力绑定" : missing.length ? `缺少 ${missing.join(" / ")}` : "依赖快照过期，请刷新绑定状态"}>补齐预检条件</Link>}
+            <Link className="btn" to="/aip/production-contracts" title={snapshotReady ? "进入专用确认流" : "先补齐新鲜依赖快照，再进入确认流"}>进入激活确认</Link>
           </div>
         </article>;
       })}

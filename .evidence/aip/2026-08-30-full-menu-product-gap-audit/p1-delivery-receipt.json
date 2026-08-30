@@ -1,0 +1,54 @@
+{
+  "schema": "aip-product-remediation-delivery-receipt/v1",
+  "taskId": "AIP-P1-SHARED-SHELL-BUSINESS-CONTRACT",
+  "completedAt": "2026-08-30T13:21:35+08:00",
+  "result": "AIP_P1_SHARED_SHELL_BUSINESS_CONTRACT_GREEN",
+  "branch": "m1",
+  "sourceCommitBeforeReceipt": "aa26aa0f1b57397f343313e92890ddeffd38333c",
+  "tenantEvidence": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "note": "P1 changes presentation, navigation and exact context only; it creates no tenant data or runtime readiness fact"
+  },
+  "scope": [
+    "apps/web/src/shell/AppShell.tsx",
+    "apps/web/src/styles/00-shell.css",
+    "apps/web/src/shell/AppShell.navigation.test.tsx",
+    "apps/web/src/components/aip/AipReadinessActionCard.tsx",
+    "apps/web/src/components/aip/AipReadinessActionCard.test.tsx",
+    "apps/web/src/lib/aipChineseLabels.ts",
+    "apps/web/src/lib/aipChineseLabels.test.ts",
+    "apps/web/src/lib/aipExactContext.ts",
+    "apps/web/src/lib/aipExactContext.test.ts",
+    "apps/web/src/pages/CanonicalCapabilityPage.tsx",
+    "apps/web/src/pages/StudioPage.tsx",
+    "apps/web/src/pages/s2/AipAssistPage.tsx",
+    "apps/web/src/pages/s2/AipAnalystPage.tsx",
+    "apps/web/src/pages/s2/LogicCanvasPage.tsx",
+    "apps/web/src/pages/s2/LogicPublicationPanel.tsx",
+    "apps/web/src/pages/s2/CanonicalAgentRegistryPage.tsx",
+    "apps/web/src/pages/s2/CanonicalAgentsPage.tsx",
+    "apps/web/src/pages/s2/AgentMarketplacePage.tsx",
+    "apps/web/src/pages/s2/ModelRuntimePage.tsx",
+    "apps/web/src/pages/s2/SkillPublishPage.tsx",
+    "apps/web/src/pages/s2/aip.tsx",
+    ".evidence/aip/2026-08-30-full-menu-product-gap-audit/acceptance.md",
+    ".evidence/aip/2026-08-30-full-menu-product-gap-audit/p1-shared-shell-business-contract.md"
+  ],
+  "verification": {
+    "web": "268 files / 2350 tests passed",
+    "typecheckAndProductionBuild": "GREEN",
+    "diffCheck": "GREEN",
+    "inAppBrowser": "25 of 25 AIP routes; no missing active route, forbidden terminal copy, unexplained stable disabled control or document-level horizontal overflow",
+    "responsive": "1280x720, 1440x900 and 1920x1080; 200 percent root text scaling; no document-level horizontal overflow"
+  },
+  "safety": {
+    "apiChanged": false,
+    "databaseChanged": false,
+    "providerCalled": false,
+    "businessDataWritten": false,
+    "externalEffect": false,
+    "releasePerformed": false
+  },
+  "nextTask": "AIP-P2-015"
+}

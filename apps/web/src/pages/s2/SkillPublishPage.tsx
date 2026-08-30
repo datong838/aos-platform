@@ -195,7 +195,7 @@ export function SkillPublishPage() {
                   </ol>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                     <Link className="btn" to="/aip/agent-registry">打开智能体目录绑定</Link>
-                    <button className="btn" type="button" disabled={bindStep < 1} onClick={() => setBindStep(2)}>
+                    <button className="btn" type="button" disabled={bindStep < 1} title={bindStep < 1 ? "请先发布当前技能修订，再到智能体目录完成绑定" : "确认目录绑定已完成"} onClick={() => setBindStep(2)}>
                       我已完成绑定
                     </button>
                   </div>

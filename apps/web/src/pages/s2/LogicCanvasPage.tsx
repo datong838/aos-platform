@@ -836,7 +836,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           : publishing
             ? "发布请求正在处理"
             : !evalReport
-              ? evalEvidenceError || "请读取与当前 revision/hash 绑定且通过的 Eval report"
+              ? evalEvidenceError || "请读取与当前修订和内容摘要绑定且通过的评测报告"
               : "";
 
   const publicationEvalGate: LogicPublicationEvalGate | null = evalReport ? {
@@ -1035,7 +1035,13 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
         )}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-        <button type="button" className="btn btn-primary" disabled={!graph || loading || saving || running || !dirty} onClick={() => void saveGraph()}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={!graph || loading || saving || running || !dirty}
+          title={!graph ? "请先新建或选择业务逻辑草稿" : loading ? "正在读取权威业务逻辑" : saving ? "正在保存并回读确认" : running ? "安全试跑结束后可继续保存" : !dirty ? "当前没有需要保存的更改" : "保存并回读确认当前修订"}
+          onClick={() => void saveGraph()}
+        >
           {saving ? "保存并回读中…" : `保存${dirty ? " *" : ""}`}
         </button>
         <button type="button" className="btn" disabled={!graph || loading || saving || running} onClick={() => void refreshGraph()}>
@@ -1045,7 +1051,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           type="button"
           className="btn"
           disabled={Boolean(dryRunDisabledReason)}
-          title={dryRunDisabledReason || "使用已确认 revision/hash 进行只读安全试跑"}
+          title={dryRunDisabledReason || "使用已确认修订和内容摘要进行只读安全试跑"}
           onClick={() => void runDryRun()}
         >
           {running ? "安全试跑中…" : "安全试跑"}
@@ -1329,9 +1335,9 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
           <div className="notice" style={{ padding: 12 }} role="status" data-testid="automation-empty">
             当前组织的自动化使用关系尚未接入权威数据源。请依次完成草稿审批、正式评测和上线执行审批门控；本页不把未知计数显示为 0，也不伪造触发成功。
           </div>
-          <button type="button" className="btn" disabled title="缺少权威使用关系前，禁止绑定演示自动化" style={{ marginTop: 12 }}>
-            绑定自动化（禁用）
-          </button>
+          <Link to="/aip/production-contracts" className="btn" style={{ marginTop: 12, textDecoration: "none", display: "inline-block" }}>
+            进入上线执行审批补齐自动化条件 →
+          </Link>
         </section>
       ) : null}
     </PageChrome>

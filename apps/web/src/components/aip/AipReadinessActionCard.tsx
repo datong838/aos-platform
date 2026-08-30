@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 type Props = {
   status: string;
   owner: string;
+  ownerHref?: string;
+  impact?: string;
+  missingConditions?: string[];
   reasons: string[];
   observedAt?: string | null;
   expiresAt?: string | null;
@@ -10,6 +13,7 @@ type Props = {
   actionHref?: string;
   onAction?: () => void;
   actionDisabled?: boolean;
+  actionDisabledReason?: string;
   technicalCodes?: string[];
   testId?: string;
 };
@@ -26,6 +30,9 @@ function timeLabel(value?: string | null): string {
 export function AipReadinessActionCard({
   status,
   owner,
+  ownerHref,
+  impact,
+  missingConditions = [],
   reasons,
   observedAt,
   expiresAt,
@@ -33,24 +40,29 @@ export function AipReadinessActionCard({
   actionHref,
   onAction,
   actionDisabled = false,
+  actionDisabledReason,
   technicalCodes = [],
   testId = "aip-readiness-action-card",
 }: Props) {
   const businessReasons = unique(reasons);
+  const conditions = unique(missingConditions);
   const codes = unique(technicalCodes);
   return (
     <section className="notice" role="note" data-testid={testId} style={{ padding: 14, marginBottom: 16 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10 }}>
         <div><strong>当前状态</strong><div>{status}</div></div>
-        <div><strong>责任方</strong><div>{owner}</div></div>
+        <div><strong>责任方</strong><div>{owner}</div>{ownerHref ? <Link to={ownerHref}>联系责任方 →</Link> : null}</div>
         <div><strong>证据时间</strong><div>生成 {timeLabel(observedAt)}<br />证据到期 {timeLabel(expiresAt)}</div></div>
       </div>
+      {impact ? <div style={{ marginTop: 10 }}><strong>业务影响</strong><p style={{ margin: "6px 0 0" }}>{impact}</p></div> : null}
+      {conditions.length ? <div style={{ marginTop: 10 }}><strong>缺失条件</strong><ul style={{ margin: "6px 0 0", paddingLeft: 20 }}>{conditions.map((condition) => <li key={condition}>{condition}</li>)}</ul></div> : null}
       <div style={{ marginTop: 10 }}>
         <strong>需要处理</strong>
         {businessReasons.length ? <ul style={{ margin: "6px 0 0", paddingLeft: 20 }}>{businessReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : <p style={{ marginBottom: 0 }}>尚无可归因的业务原因，请刷新权威状态后再判断。</p>}
       </div>
       <div style={{ marginTop: 12 }}>
-        {actionHref ? <Link className="btn primary" to={actionHref}>{actionLabel}</Link> : <button className="btn primary" type="button" onClick={onAction} disabled={actionDisabled}>{actionLabel}</button>}
+        {actionHref && !actionDisabled ? <Link className="btn primary" to={actionHref}>{actionLabel}</Link> : <button className="btn primary" type="button" onClick={onAction} disabled={actionDisabled}>{actionLabel}</button>}
+        {actionDisabled && actionDisabledReason ? <p role="status" style={{ margin: "8px 0 0", color: "var(--aos-text-secondary)" }}>{actionDisabledReason}</p> : null}
       </div>
       {codes.length ? <details style={{ marginTop: 10 }}><summary>技术标识（审计用）</summary><code>{codes.join(" · ")}</code></details> : null}
     </section>

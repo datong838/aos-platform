@@ -1860,6 +1860,7 @@ export function ProvidersPage() {
               className="mp-input"
               value={gwChoice}
               onChange={(e) => setGwChoice(e.target.value)}
+              title={!runtimeProjection.isReady ? "请先在模型路由页补齐权威供应商、路由和健康证据" : gwBusy ? "正在保存默认网关" : !(gatewayApi.data?.options || []).length ? "当前没有可选择的兼容网关" : "选择兼容默认网关"}
               disabled={
                 gwBusy ||
                 !(gatewayApi.data?.options || []).length ||
@@ -1880,6 +1881,7 @@ export function ProvidersPage() {
             type="button"
             className="btn-nav-accent"
             disabled={gwBusy || !gwChoice || !runtimeProjection.isReady}
+            title={!runtimeProjection.isReady ? "请先在模型路由页补齐权威供应商、路由和健康证据" : gwBusy ? "正在保存默认网关" : !gwChoice ? "请先选择兼容默认网关" : "保存兼容默认网关"}
             onClick={() => void saveGatewayDefault()}
           >
             {gwBusy ? "保存中…" : "保存为默认"}
@@ -2449,7 +2451,7 @@ export function ModelRouterPage() {
       {(models.err || warm.err || routerApi.err || localErr) && (
         <p className="error">
           {routerApi.err === "Not Found"
-            ? "路由配置接口未就绪（/api/models/router 404）· 请重启 aos-api 后点刷新"
+            ? "路由配置服务尚未响应；请重启 AOS 服务后点刷新"
             : models.err || warm.err || routerApi.err || localErr}
         </p>
       )}
@@ -2612,6 +2614,7 @@ export function ModelRouterPage() {
               routeRows.length === 0 ||
               !runtimeProjection.isReady
             }
+            title={!runtimeProjection.isReady ? "请先补齐权威模型供应商、路由和健康证据" : confirmedVersion == null ? "请先读取权威路由配置" : routeRows.length === 0 ? "当前没有可演练的路由规则" : "按当前精确配置执行隔离熔断演练"}
             onClick={() => void runCircuitDrill()}
           >
             熔断演练
@@ -3204,7 +3207,7 @@ function ModelRouterPanels({
 
       {circuitApi.err && (
         <p className="error" style={{ margin: "0.5rem 1rem" }}>
-          {circuitApi.err === "Not Found" ? "熔断配置 API 未就绪" : circuitApi.err}
+          {circuitApi.err === "Not Found" ? "熔断配置服务尚未响应；请刷新或检查 AOS 服务" : circuitApi.err}
         </p>
       )}
     </div>

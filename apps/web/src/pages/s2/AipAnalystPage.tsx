@@ -13,6 +13,7 @@ import {
   type QueryResultRevision,
   type ResourceRef,
 } from "../../api/aipWorkbench";
+import { readExactRef } from "../../lib/aipExactContext";
 
 type View = "table" | "chart" | "map" | "raw";
 type QueryKind = AnalystQuery["kind"];
@@ -85,11 +86,6 @@ function activateToggle(event: KeyboardEvent<HTMLButtonElement>, action: () => v
   if (event.key !== "Enter" && event.key !== " ") return;
   event.preventDefault();
   action();
-}
-
-function refFromSearch(search: URLSearchParams, prefix: string): ResourceRef | null {
-  const resourceType = search.get(`${prefix}Type`), resourceId = search.get(`${prefix}Id`), revision = search.get(`${prefix}Revision`), authority = search.get(`${prefix}Authority`);
-  return resourceType && resourceId && revision && authority ? { resourceType, resourceId, revision, authority } : null;
 }
 
 export function buildGovernedQuery(input: { kind: QueryKind; objectType: string; prompt: string; cutoffAt: string; taskRef: ResourceRef | null; skillRef: ResourceRef | null; metricRef: ResourceRef | null }): AnalystQuery | null {
@@ -221,9 +217,9 @@ export function AipAnalystPage({
   listRoleTemplates?: () => Promise<AnalystRoleQueryTemplateList>;
 } = {}) {
   const search = useMemo(() => new URLSearchParams(window.location.search), []);
-  const taskRef = refFromSearch(search, "task");
-  const skillRef = refFromSearch(search, "skill");
-  const metricRef = refFromSearch(search, "metric");
+  const taskRef = readExactRef(search, "task");
+  const skillRef = readExactRef(search, "skill");
+  const metricRef = readExactRef(search, "metric");
   const preferredType = search.get("objectType") || "";
   const preferredTemplateId = search.get("roleTemplateId") || "";
   const preferredLogic = {
@@ -567,7 +563,7 @@ export function AipAnalystPage({
             </div>
             {result && <strong data-testid="analyst-result-meta">{statusDisplayName(result.status)} · {result.rows.length} 行 · 修订 {result.revision}</strong>}
           </div>
-          {result ? <ResultBody result={result} view={view} /> : <Empty title="尚未运行查询" text="选择治理查询类型后读取真实 authority；服务不可用时保持失败关闭。" />}
+          {result ? <ResultBody result={result} view={view} /> : <Empty title="选择业务对象开始查询" text="页面只读取当前租户的权威业务对象；读取失败时不展示推测结果，并提供重新查询入口。" />}
         </main>
         <aside style={{ ...panel, overflow: "auto", display: focus || !rightOpen ? "none" : "block" }}>
           <h3>证据详情</h3>

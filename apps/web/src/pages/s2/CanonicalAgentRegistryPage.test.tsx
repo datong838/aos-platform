@@ -104,7 +104,7 @@ describe("CanonicalAgentRegistryPage", () => {
     expect(host.textContent).toContain("数据参谋");
     expect(host.textContent).toContain("可派发（runnable）");
     expect(host.textContent).not.toContain("Pilot");
-    const precheck = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "预检（可派发）");
+    const precheck = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "查看运行预检");
     expect(precheck).toBeTruthy();
     await act(async () => { precheck!.click(); });
     expect(host.querySelector('[role="status"]')?.textContent).toContain("只读预检通过");

@@ -820,12 +820,12 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     publicationApi.publishLogicGraph.mockResolvedValue(publication);
 
     await renderPage(loaded.id);
-    expect(button("发布当前 revision").disabled).toBe(true);
+    expect(button("发布当前修订").disabled).toBe(true);
     await act(async () => button("读取当前版本 Eval 证据").click());
     await flush();
-    expect(button("发布当前 revision").disabled).toBe(false);
+    expect(button("发布当前修订").disabled).toBe(false);
 
-    await act(async () => button("发布当前 revision").click());
+    await act(async () => button("发布当前修订").click());
     await flush();
 
     expect(publicationApi.publishLogicGraph).toHaveBeenCalledWith(loaded.id, expect.objectContaining({
@@ -838,6 +838,7 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     expect(graphApi.getLogicGraph).toHaveBeenCalledTimes(2);
     expect(host.textContent).toContain("已发布并回读确认");
     expect(host.textContent).toContain(publication.publication_id);
-    expect(button("绑定自动化（禁用）").disabled).toBe(true);
+    const automationLink = [...host.querySelectorAll<HTMLAnchorElement>("a")].find((item) => item.textContent?.includes("进入上线执行审批补齐自动化条件"));
+    expect(automationLink?.getAttribute("href")).toBe("/aip/production-contracts");
   });
 });

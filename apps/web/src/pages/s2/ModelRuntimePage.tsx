@@ -76,7 +76,7 @@ export function ModelRuntimePage() {
           { label: "模型", value: String(data.models.length) },
           { label: "路由", value: String(data.routes.length) },
           { label: "路由就绪", value: data.resolutions.length ? `${readyResolutionCount}/${data.resolutions.length}` : "0/0" },
-          { label: "未就绪", value: String(blockedResolutions.length) },
+          { label: "待补齐条件", value: String(blockedResolutions.length) },
           { label: "容量池", value: String(data.capacityPools.length) },
           { label: "健康记录", value: String(data.healthObservations.length) },
           { label: "评测门", value: String(data.evalGates.length) },
@@ -98,14 +98,18 @@ export function ModelRuntimePage() {
       </div>
       {state === "empty" ? <div className="notice">当前组织没有精确的供应商、模型、路由或策略配置。页面不会从旧配置、静态目录或其他租户自动回填；请通过受控配置流程建立权威修订。</div> : null}
       {state === "partial" || state === "blocked" ? <AipReadinessActionCard
-        status={state === "partial" ? "部分模型路由可用" : "模型调用暂不可用"}
+        status={state === "partial" ? "部分模型路由可用" : "需要补齐模型运行条件"}
         owner="模型供应商运行负责人 / AIP 模型平台"
+        ownerHref="/aip/model-providers"
+        impact={state === "partial" ? "只有已完成核验的路由可以承接新任务；其他路由不会被系统选用。" : "新的智能体运行不会进入模型调用，已有运行证据仍可只读审计。"}
+        missingConditions={blockerCodes.length ? [formatBlockers(blockerCodes)] : ["有效的路由、模型供应商健康状态与评测门"]}
         reasons={blockerCodes.length ? [formatBlockers(blockerCodes)] : ["路由运行准备未达到要求"]}
         observedAt={data.generatedAt}
         expiresAt={earliestHealthExpiry}
         actionLabel="刷新模型运行状态"
         onAction={() => void load()}
         actionDisabled={loading}
+        actionDisabledReason={loading ? "正在读取最新模型运行状态，本次请求返回后可再次核验。" : undefined}
         technicalCodes={blockerCodes}
       /> : null}
       <section style={grid} aria-label="模型运行权威分层">
@@ -114,12 +118,12 @@ export function ModelRuntimePage() {
         <div className="card" style={{ padding: 16 }}><h2 style={{ marginTop: 0 }}>容量池 · {data.capacityPools.length}</h2>{data.capacityPools.length ? data.capacityPools.map(pool => <article key={pool.poolId}><strong>并发容量 {pool.activeReservations}/{pool.maxConcurrency}</strong><p>已预留用量 {pool.reservedTokenUnits}/{pool.maxTokenUnits}</p><details><summary>技术标识（审计用）</summary><code>{pool.poolId}@{pool.revision}</code></details></article>) : <div className="notice">尚无精确容量池；智能体运行门将保持关闭。</div>}</div>
         <div className="card" style={{ padding: 16 }}><h2 style={{ marginTop: 0 }}>供应商健康状态 · {data.healthObservations.length}</h2>{data.healthObservations.length ? data.healthObservations.map(item => <article key={item.observationId}><strong>健康检查：{Date.parse(item.expiresAt) > Date.now() ? "有效" : "已过期"}</strong><p>{statusDisplayName(item.status)} · 中位响应时间 {item.p50LatencyMs ?? "—"} 毫秒</p><details><summary>供应商技术标识（审计用）</summary><code>{item.provider.assetId}@{item.provider.revision}</code></details></article>) : <div className="notice">尚无供应商健康检查记录；相关路由必须保持关闭。</div>}</div>
       </section>
-      <section className="card" style={{ padding: 18, marginTop: 16 }}><h2 style={{ marginTop: 0 }}>路由运行就绪</h2>{data.resolutions.length ? data.resolutions.map(item => <article key={item.route.assetId} style={{ padding: "12px 0", borderTop: "1px solid var(--aos-border)" }}><strong>{item.readiness === "ready" ? "路由已就绪" : "路由暂不可用"}</strong><p>{item.readiness === "ready" ? "已选择可用模型与供应商" : "处理负责人和下一步见页面上方“运行准备行动卡”。"}</p><details><summary>技术标识（审计用）</summary><code>{item.route.assetId}@{item.route.revision}</code>{item.selectedModel ? <> · 模型 <code>{item.selectedModel.assetId}</code></> : null}{item.selectedProvider ? <> · 供应商 <code>{item.selectedProvider.assetId}</code></> : null}{item.selectedPriceSnapshot ? <> · 价格快照 <code>{item.selectedPriceSnapshot.assetId}</code></> : null}{item.blockerCodes.length ? <><br /><code>{item.blockerCodes.join(" · ")}</code></> : null}</details></article>) : <div className="notice">没有精确路由，因此没有可解析的运行就绪结果。</div>}</section>
+      <section className="card" style={{ padding: 18, marginTop: 16 }}><h2 style={{ marginTop: 0 }}>路由运行准备</h2>{data.resolutions.length ? data.resolutions.map(item => <article key={item.route.assetId} style={{ padding: "12px 0", borderTop: "1px solid var(--aos-border)" }}><strong>{item.readiness === "ready" ? "路由运行条件已通过" : "路由运行条件待补齐"}</strong><p>{item.readiness === "ready" ? "已选择有效模型与供应商" : "处理负责人和下一步见页面上方“运行准备行动卡”。"}</p><details><summary>技术标识（审计用）</summary><code>{item.route.assetId}@{item.route.revision}</code>{item.selectedModel ? <> · 模型 <code>{item.selectedModel.assetId}</code></> : null}{item.selectedProvider ? <> · 供应商 <code>{item.selectedProvider.assetId}</code></> : null}{item.selectedPriceSnapshot ? <> · 价格快照 <code>{item.selectedPriceSnapshot.assetId}</code></> : null}{item.blockerCodes.length ? <><br /><code>{item.blockerCodes.join(" · ")}</code></> : null}</details></article>) : <div className="notice">当前没有精确路由；请先在模型路由页建立并保存权威修订。</div>}</section>
       {cost ? <section className="card" style={{ padding: 18, marginTop: 16 }} aria-label="成本与预算权威">
         <h2 style={{ marginTop: 0 }}>成本与预算权威</h2>
         <p>用量：{cost.usage.state === "unobserved" ? "尚未观测，不能按 0 成本解释" : `${cost.usage.receiptCount} 条用量凭证（实测 ${cost.usage.measuredCount} / 估算 ${cost.usage.estimatedCount} / 未知 ${cost.usage.unknownCount}）`} · 调整单 {cost.usage.adjustmentCount}</p>
         {Object.keys(cost.usage.costTotals).length ? <p>成本合计：{Object.entries(cost.usage.costTotals).map(([currency, amount]) => `${currency} ${amount}`).join(" · ")}</p> : <p>成本合计：尚无实际模型调用记录（不代表免费或零成本）</p>}
-        <div style={grid}>{cost.modelPrices.map(item => <article className="notice" key={item.modelRef.assetId}><strong>{item.providerModelId}</strong><div>{item.status === "priced" ? "已定价" : item.status === "approved_zero" ? "审批零价" : item.status === "unit_mismatch" ? "计价单位不匹配" : "价格未就绪"}</div>{item.blockerCodes.length ? <small>{formatBlockers(item.blockerCodes)}</small> : null}</article>)}</div>
+        <div style={grid}>{cost.modelPrices.map(item => <article className="notice" key={item.modelRef.assetId}><strong>{item.providerModelId}</strong><div>{item.status === "priced" ? "已定价" : item.status === "approved_zero" ? "审批零价" : item.status === "unit_mismatch" ? "计价单位不匹配" : "价格条件待补齐"}</div>{item.blockerCodes.length ? <small>{formatBlockers(item.blockerCodes)}</small> : null}</article>)}</div>
       </section> : null}
       <div className="notice" style={{ marginTop: 16 }}>本页从不显示密钥引用或凭据正文。供应商是否可运行、真实调用和成本对账，仍必须以精确健康检查、用量凭证与追加调整记录为准。</div>
     </> : null}

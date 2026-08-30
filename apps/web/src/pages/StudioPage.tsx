@@ -157,13 +157,13 @@ export function studioModelRouteGate(
   const modelId = defaultModel.trim();
   const isMock = /(^|[-_])(mock|fallback)([-_]|$)/i.test(modelId) || /^mock/i.test(modelId);
   if (!projection) {
-    return { ready: false, label: "未就绪（等待权威运行状态）", reason: "真实模型路由状态尚未可用" };
+    return { ready: false, label: "等待模型运行状态", reason: "需要读取真实模型路由状态" };
   }
   if (!modelId || modelId === "—" || isMock || projection.routes.runnable < 1) {
     return {
       ready: false,
-      label: `未就绪（${projection.routes.runnable}/${projection.routes.definition} 可派发）`,
-      reason: "真实模型路由未就绪，禁止回落 Mock 冒充试运行",
+      label: `已核验 ${projection.routes.runnable}/${projection.routes.definition} 条路由`,
+      reason: "需要先补齐真实模型路由条件；系统不会用模拟路由代替",
     };
   }
   return { ready: true, label: modelId, reason: "" };

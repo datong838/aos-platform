@@ -110,12 +110,12 @@ export function CanonicalAgentRegistryPage() {
           <div className="notice" style={{padding:10}}><div style={{fontSize:12,color:"var(--aos-text-secondary)"}}>专业能力类</div><strong>{data.catalog.stats.capabilityDefinitionCount}</strong></div>
         </div>
         <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-          <button className="btn primary" disabled={busy || refreshing || data.catalog.stats.installedCount === data.catalog.stats.definitionCount} onClick={() => void install()}>{busy ? "安装中…" : data.catalog.stats.installedCount === data.catalog.stats.definitionCount ? "六数字同事已安装（≠可派发）" : "安装电商六数字同事"}</button>
+          <button className="btn primary" disabled={busy || refreshing || data.catalog.stats.installedCount === data.catalog.stats.definitionCount} title={busy ? "正在安装并回读确认" : refreshing ? "正在刷新并重评绑定" : data.catalog.stats.installedCount === data.catalog.stats.definitionCount ? "六数字同事角色定义已全部安装；请继续补齐绑定、评测和运行证据" : "安装电商六数字同事角色定义"} onClick={() => void install()}>{busy ? "安装中…" : data.catalog.stats.installedCount === data.catalog.stats.definitionCount ? "六数字同事已安装（≠可派发）" : "安装电商六数字同事"}</button>
           <button className="btn" disabled={refreshing || busy} onClick={() => void refresh()} title="刷新并重评绑定就绪">{refreshing ? "重评中…" : "刷新"}</button>
           <Link className="btn" to="/aip/agent-marketplace">市场发现（只读）</Link>
         </div>
         <div className="notice" role="note" data-testid="install-not-dispatchable" style={{marginTop:10,fontSize:13}}>
-          已安装 ≠ 可派发。可派发须完整通过 published → installed → binding → evaluated → operational → runnable。
+          已安装 ≠ 可派发。可派发须依次完成角色发布、组织安装、技能与专业能力绑定、正式评测、运行证据核验和派发确认。
         </div>
         <div style={{marginTop:10,fontSize:13,color:stale ? "var(--aos-amber-700)" : "var(--aos-text-secondary)"}}>
           快照 {new Date(data.evaluatedAt).toLocaleString()} · {stale ? "已过期，请点「刷新」重评绑定" : "15 分钟有效期内"}
@@ -130,8 +130,14 @@ export function CanonicalAgentRegistryPage() {
         </nav>
       </section>
       {(stale || readinessSummary?.codes.length) ? <AipReadinessActionCard
-        status={stale ? "运行准备快照已过期" : "部分智能体暂不可派发"}
+        status={stale ? "需要重新核验运行准备" : "部分智能体需要补齐运行条件"}
         owner="AIP 智能体运行平台 / 模型供应商"
+        ownerHref="/aip/model-runtime"
+        impact="只有通过当前运行准备核验的智能体会出现在可选执行入口；目录和历史证据仍可查看。"
+        missingConditions={[
+          ...(stale ? ["15 分钟有效期内的运行准备快照"] : []),
+          ...(readinessSummary?.codes.length ? [formatBlockers(readinessSummary.codes)] : []),
+        ]}
         reasons={[
           ...(stale ? ["目录运行快照已超过 15 分钟，需要重新核验当前依赖"] : []),
           ...(readinessSummary?.codes.length ? [formatBlockers(readinessSummary.codes)] : []),
@@ -141,6 +147,7 @@ export function CanonicalAgentRegistryPage() {
         actionLabel={refreshing ? "正在刷新…" : "刷新运行准备"}
         onAction={() => void refresh()}
         actionDisabled={refreshing || busy}
+        actionDisabledReason={refreshing || busy ? "正在核验目录、绑定与模型运行状态，请等待当前请求完成。" : undefined}
         technicalCodes={readinessSummary?.codes}
       /> : null}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(360px,1fr))",gap:14}}>
@@ -213,19 +220,18 @@ export function CanonicalAgentRegistryPage() {
               })}</ul>
             </details>
             <div style={{marginTop:10,padding:10,background:ladder.dispatchable ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-amber-bg)",color:ladder.dispatchable ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>
-              {ladder.dispatchable ? "可派发" : "当前不可派发；请按页面上方“刷新运行准备”完成重评。"}
+              {ladder.dispatchable ? "运行条件已通过" : "仍需补齐运行条件；请按页面上方“刷新运行准备”完成重评。"}
             </div>
-            <button
+            {ladder.dispatchable ? <button
               className="btn"
-              disabled={!ladder.dispatchable}
               aria-expanded={precheckOpen}
               aria-controls={`agent-precheck-${item.template.templateId}`}
               title={ladder.dispatchable ? "查看本次目录就绪摘要；不触发外部调用" : blockedTitle}
               style={{marginTop:12}}
               onClick={() => setPrecheckedTemplateId(precheckOpen ? null : item.template.templateId)}
             >
-              {precheckOpen ? "收起预检" : ladder.dispatchable ? "预检（可派发）" : "预检（不可派发）"}
-            </button>
+              {precheckOpen ? "收起预检" : "查看运行预检"}
+            </button> : <Link className="btn" to="/aip/model-runtime" style={{marginTop:12}}>补齐运行条件</Link>}
             {precheckOpen && <div
               id={`agent-precheck-${item.template.templateId}`}
               role="status"
