@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from aos_api.aip_agent_registry_contracts import AgentRun, RegistryReceipt, VersionedAssetRef
+from aos_api.aip_agent_registry_contracts import AgentRun, AgentRunStatus, RegistryReceipt, VersionedAssetRef
 from aos_api.aip_agent_run_execution_contracts import (
     AgentRunExecutionAttempt,
     AgentRunExecutionStatus,
@@ -142,6 +142,7 @@ def test_openapi_registers_execution_attempt_authority(client) -> None:
     assert "/v1/aip/agent-runs/{agent_run_id}/execute" in paths
     assert "/v1/aip/agent-runs" in paths
     assert "/v1/aip/agent-runs/{agent_run_id}" in paths
+    assert "/v1/aip/agent-runs/{agent_run_id}/cancel-queued" in paths
 
 
 class AgentRunAuthority:
@@ -155,6 +156,16 @@ class AgentRunAuthority:
     def get(self, scope, agent_run_id):
         self.scope = scope
         return agent_run(scope.org_id)
+
+    def cancel_queued(self, scope, agent_run_id, request, *, idempotency_key, actor, occurred_at):
+        self.scope = scope
+        cancelled = agent_run(scope.org_id).model_copy(update={"status": AgentRunStatus.CANCELLED, "version": request.expected_version + 1})
+        result_receipt = receipt(scope.org_id).model_copy(update={
+            "operation": "agent_run.cancel_queued",
+            "resource_ref": ResourceRef(resourceType="AgentRun", resourceId=agent_run_id, authority="postgresql"),
+            "result_ref": ResourceRef(resourceType="AgentRun", resourceId=agent_run_id, authority="postgresql"),
+        })
+        return cancelled, result_receipt
 
 
 def test_agent_run_create_get_are_principal_scoped(client) -> None:
@@ -184,6 +195,14 @@ def test_agent_run_create_get_are_principal_scoped(client) -> None:
         assert service.scope.key == ("org-org", "dev-project")
         got = client.get("/v1/aip/agent-runs/run-1", headers=headers())
         assert got.status_code == 200 and got.json()["agentRunId"] == "run-1"
+        cancelled = client.post(
+            "/v1/aip/agent-runs/run-1/cancel-queued",
+            headers=headers(**{"Idempotency-Key": "cancel-1"}),
+            json={"expectedVersion": 3, "reason": "deterministic studio trial complete"},
+        )
+        assert cancelled.status_code == 200
+        assert cancelled.json()["agentRun"]["status"] == "cancelled"
+        assert cancelled.json()["receipt"]["operation"] == "agent_run.cancel_queued"
         # static execution-attempts path must not be stolen by /{agent_run_id}
         listed = client.get("/v1/aip/agent-runs/execution-attempts", headers=headers())
         assert listed.status_code == 200

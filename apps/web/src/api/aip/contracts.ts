@@ -35,6 +35,8 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 export const TASK_RUN_STATUSES = [
   "queued",
   "running",
+  "pausing",
+  "paused",
   "succeeded",
   "failed",
   "cancelled",
@@ -79,4 +81,3 @@ export function assertKnownStatus<T extends readonly string[]>(
   }
   return value as T[number];
 }
-

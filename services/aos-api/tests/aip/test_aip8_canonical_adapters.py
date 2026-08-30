@@ -200,6 +200,63 @@ def test_semantic_numeric_sort_uses_schema_type_instead_of_lexical_order() -> No
     assert [row.row_id for row in result.rows] == ["Order/future", "Order/new"]
 
 
+class EmptyProductSchemaConn:
+    def execute(self, sql, params=()):
+        normalized = " ".join(str(sql).split())
+        if "FROM meta_object_type" in normalized:
+            return SimpleNamespace(
+                fetchone=lambda: {
+                    "id": "Product", "name": "栖月汇-商品", "properties": [],
+                }
+            )
+        if "FROM ecom_object" in normalized:
+            assert params[:3] == (*SCOPE.key, "Product")
+            return SimpleNamespace(
+                fetchall=lambda: [{
+                    "external_id": "niushop:1:7",
+                    "properties": {
+                        "title": "山茶花保湿面霜", "status": "active",
+                        "price": "199.00", "saleNum": "28",
+                        "mobile": "13800000000",
+                    },
+                    "source_updated_at": NOW - timedelta(hours=1),
+                    "payload_hash": "e" * 64,
+                }]
+            )
+        raise AssertionError(normalized)
+
+
+@contextmanager
+def empty_product_schema_connect(scope):
+    assert scope == SCOPE
+    yield EmptyProductSchemaConn()
+
+
+def test_semantic_adapter_uses_frozen_ecommerce_contract_for_legacy_empty_schema() -> None:
+    adapter = CanonicalSemanticReadAdapter(
+        connect_factory=empty_product_schema_connect,
+        assert_visible=lambda conn, scope, object_type: None,
+        can_access=lambda principal, conn, object_type, object_id: True,
+        project=lambda principal, conn, object_type, object_id, props, schema: {
+            "id": object_id, "type": object_type,
+            **{item["name"]: props[item["name"]] for item in schema if item["name"] in props},
+        },
+        markings_for=lambda conn, scope, object_type, object_id: ["public"],
+    )
+    result = adapter.execute(
+        SCOPE,
+        PRINCIPAL,
+        SemanticQueryRequest(object_type="Product", cutoff_at=NOW),
+    )
+    assert result.status == AnalystQueryStatus.COMPLETE
+    assert result.rows[0].values["title"] == "山茶花保湿面霜"
+    assert result.rows[0].values["price"] == "199.00"
+    assert "mobile" not in result.rows[0].values
+    labels = {column.key: column.label for column in result.columns}
+    assert labels["title"] == "商品名称"
+    assert labels["price"] == "销售价"
+
+
 class FakeKnowledgeSearch:
     def __init__(self, *, blocked: bool = False) -> None:
         self.blocked = blocked

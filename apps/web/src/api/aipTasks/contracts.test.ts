@@ -29,8 +29,10 @@ describe("aipTasks contracts", () => {
     expect(timeline.plan.contentHash).toHaveLength(64);
   });
 
-  it("未知状态和跨资源引用不一致均失败关闭", () => {
-    expect(() => parseTaskRun({ ...run, status: "paused" })).toThrow("unknown status");
+  it("接受权威暂停中间态，同时对未知状态和跨资源引用失败关闭", () => {
+    expect(parseTaskRun({ ...run, status: "pausing" }).status).toBe("pausing");
+    expect(parseTaskRun({ ...run, status: "paused" }).status).toBe("paused");
+    expect(() => parseTaskRun({ ...run, status: "mostly-done" })).toThrow("unknown status");
     expect(() => parseTimeline({ task, plan, run: { ...run, taskId: "other" }, steps: [], checkpoints: [], artifacts: [], evidence: [] }))
       .toThrow("资源引用不一致");
   });

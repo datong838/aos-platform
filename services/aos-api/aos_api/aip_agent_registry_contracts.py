@@ -544,6 +544,19 @@ class CreateAgentRunRequest(AipContractModel):
         return self
 
 
+class CancelAgentRunRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    reason: str = Field(min_length=1, max_length=240)
+
+    @field_validator("reason")
+    @classmethod
+    def _reason_non_blank(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("cancel reason must not be blank")
+        return cleaned
+
+
 class AgentRun(AipContractModel):
     tenant: TenantContext
     agent_run_id: str

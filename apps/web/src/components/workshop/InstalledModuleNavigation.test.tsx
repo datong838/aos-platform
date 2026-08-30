@@ -34,7 +34,7 @@ describe("InstalledModuleNavigation", () => {
     host.remove();
   });
 
-  it("只显示 API 返回的 active installed Module，当前项唯一 aria-current 且状态有文字", async () => {
+  it("只显示 API 返回的 active installed Module，当前项唯一 aria-current 且菜单不泄露技术 readiness", async () => {
     const modules = [
       workshopModuleFixture(),
       moduleWithReadiness("unknown"),
@@ -64,9 +64,10 @@ describe("InstalledModuleNavigation", () => {
 
     const links = [...host.querySelectorAll<HTMLAnchorElement>("a")];
     expect(links.map((link) => link.textContent?.replace(/\s+/g, "").trim())).toEqual([
-      "统一运营驾驶舱可用",
-      "价格治理驾驶舱待验证",
+      "统一运营驾驶舱",
+      "价格治理驾驶舱",
     ]);
+    expect(host.querySelector(".ecommerce-workshop-readiness-status")).toBeNull();
     expect(links.filter((link) => link.getAttribute("aria-current") === "page")).toHaveLength(1);
     expect(host.textContent).not.toContain("达人邀约驾驶舱");
   });

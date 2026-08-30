@@ -112,6 +112,11 @@ class ActivateAgentInstanceRequest(AipContractModel):
     capability_binding_ids: list[str] = Field(min_length=1, max_length=128)
 
 
+class SuspendAgentInstanceRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    reason: str = Field(min_length=2, max_length=500)
+
+
 class AgentInstanceActivationResponse(AipContractModel):
     tenant: TenantContext
     instance: AgentInstance

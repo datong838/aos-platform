@@ -43,22 +43,24 @@ class AipAgentOverlayStore:
 
     def get_prompt(self, scope: TenantScope, instance_id: str) -> dict[str, Any]:
         snap = self._read(scope, instance_id)
-        return {"agent_id": instance_id, "prompt": snap.prompt}
+        return _response(snap, prompt=snap.prompt)
 
     def put_prompt(
-        self, scope: TenantScope, instance_id: str, *, prompt: str, actor: str
+        self, scope: TenantScope, instance_id: str, *, prompt: str, actor: str,
+        expected_revision: int | None = None,
     ) -> dict[str, Any]:
         cleaned = str(prompt or "")
         if len(cleaned) > 8000:
             raise ValueError("prompt exceeds 8000 characters")
         snap = self._write(
-            scope, instance_id, prompt=cleaned, tools=None, guardrails=None, actor=actor
+            scope, instance_id, prompt=cleaned, tools=None, guardrails=None, actor=actor,
+            expected_revision=expected_revision,
         )
-        return {"ok": True, "agent_id": instance_id, "prompt": snap.prompt}
+        return _response(snap, ok=True, prompt=snap.prompt)
 
     def get_tools(self, scope: TenantScope, instance_id: str) -> dict[str, Any]:
         snap = self._read(scope, instance_id)
-        return {"agent_id": instance_id, "items": snap.tools}
+        return _response(snap, items=snap.tools)
 
     def put_tools(
         self,
@@ -67,16 +69,18 @@ class AipAgentOverlayStore:
         *,
         items: list[dict[str, Any]],
         actor: str,
+        expected_revision: int | None = None,
     ) -> dict[str, Any]:
         normalized = _normalize_tools(items)
         snap = self._write(
-            scope, instance_id, prompt=None, tools=normalized, guardrails=None, actor=actor
+            scope, instance_id, prompt=None, tools=normalized, guardrails=None, actor=actor,
+            expected_revision=expected_revision,
         )
-        return {"agent_id": instance_id, "items": snap.tools}
+        return _response(snap, items=snap.tools)
 
     def get_guardrails(self, scope: TenantScope, instance_id: str) -> dict[str, Any]:
         snap = self._read(scope, instance_id)
-        return {"agent_id": instance_id, "items": snap.guardrails}
+        return _response(snap, items=snap.guardrails)
 
     def put_guardrails(
         self,
@@ -85,12 +89,14 @@ class AipAgentOverlayStore:
         *,
         items: list[dict[str, Any]],
         actor: str,
+        expected_revision: int | None = None,
     ) -> dict[str, Any]:
         normalized = _normalize_guardrails(items)
         snap = self._write(
-            scope, instance_id, prompt=None, tools=None, guardrails=normalized, actor=actor
+            scope, instance_id, prompt=None, tools=None, guardrails=normalized, actor=actor,
+            expected_revision=expected_revision,
         )
-        return {"agent_id": instance_id, "items": snap.guardrails}
+        return _response(snap, items=snap.guardrails)
 
     def _require_instance(self, scope: TenantScope, instance_id: str) -> None:
         try:
@@ -146,6 +152,7 @@ class AipAgentOverlayStore:
         tools: list[dict[str, Any]] | None,
         guardrails: list[dict[str, Any]] | None,
         actor: str,
+        expected_revision: int | None,
     ) -> OverlaySnapshot:
         checked = instance_id.strip()
         if not checked or not actor.strip():
@@ -163,7 +170,12 @@ class AipAgentOverlayStore:
                 """,
                 (*scope.key, checked),
             ).fetchone()
-            next_revision = int(current["revision"]) + 1 if current else 1
+            current_revision = int(current["revision"]) if current else 0
+            if expected_revision is not None and current_revision != expected_revision:
+                raise AipAgentRegistryConflict(
+                    f"agent instance overlay revision conflict: expected {expected_revision}, current {current_revision}"
+                )
+            next_revision = current_revision + 1
             next_prompt = (
                 prompt
                 if prompt is not None
@@ -259,6 +271,15 @@ def _as_list(raw: Any) -> list[dict[str, Any]]:
     if isinstance(raw, str):
         raw = json.loads(raw)
     return list(raw or [])
+
+
+def _response(snapshot: OverlaySnapshot, **payload: Any) -> dict[str, Any]:
+    return {
+        "agent_id": snapshot.instance_id,
+        "revision": snapshot.revision or 0,
+        "content_hash": snapshot.content_hash,
+        **payload,
+    }
 
 
 def _normalize_tools(items: list[dict[str, Any]]) -> list[dict[str, Any]]:

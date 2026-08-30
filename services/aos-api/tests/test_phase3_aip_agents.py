@@ -27,8 +27,8 @@ class _FakeOverlayStore:
             raise AipAgentRegistryNotFound("agent instance not found")
         return {"agent_id": instance_id, "prompt": self.prompts.get(instance_id, "")}
 
-    def put_prompt(self, scope, instance_id: str, *, prompt: str, actor: str) -> dict:
-        _ = scope, actor
+    def put_prompt(self, scope, instance_id: str, *, prompt: str, actor: str, expected_revision=None) -> dict:
+        _ = scope, actor, expected_revision
         if instance_id == "missing":
             raise AipAgentRegistryNotFound("agent instance not found")
         self.prompts[instance_id] = prompt
@@ -40,8 +40,8 @@ class _FakeOverlayStore:
             raise AipAgentRegistryNotFound("agent instance not found")
         return {"agent_id": instance_id, "items": list(self.tools.get(instance_id, []))}
 
-    def put_tools(self, scope, instance_id: str, *, items: list[dict], actor: str) -> dict:
-        _ = scope, actor
+    def put_tools(self, scope, instance_id: str, *, items: list[dict], actor: str, expected_revision=None) -> dict:
+        _ = scope, actor, expected_revision
         if instance_id == "missing":
             raise AipAgentRegistryNotFound("agent instance not found")
         self.tools[instance_id] = list(items)
@@ -53,8 +53,8 @@ class _FakeOverlayStore:
             raise AipAgentRegistryNotFound("agent instance not found")
         return {"agent_id": instance_id, "items": list(self.guardrails.get(instance_id, []))}
 
-    def put_guardrails(self, scope, instance_id: str, *, items: list[dict], actor: str) -> dict:
-        _ = scope, actor
+    def put_guardrails(self, scope, instance_id: str, *, items: list[dict], actor: str, expected_revision=None) -> dict:
+        _ = scope, actor, expected_revision
         if instance_id == "missing":
             raise AipAgentRegistryNotFound("agent instance not found")
         self.guardrails[instance_id] = list(items)
@@ -165,6 +165,20 @@ def test_activate_agent_requires_idempotency_key():
         response = client.post(
             "/v1/aip/agents/ecommerce.data_advisor.default/activate",
             json={"expectedVersion": 1, "capabilityBindingIds": ["binding-1"]},
+        )
+    assert response.status_code == 400
+    assert response.json()["code"] == "VALIDATION"
+
+
+def test_suspend_agent_requires_idempotency_key():
+    app = FastAPI()
+    app.include_router(router)
+    app.dependency_overrides[require_principal] = _principal
+    register_exception_handlers(app)
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/aip/agents/ecommerce.data_advisor.default/suspend",
+            json={"expectedVersion": 2, "reason": "operator rollback"},
         )
     assert response.status_code == 400
     assert response.json()["code"] == "VALIDATION"

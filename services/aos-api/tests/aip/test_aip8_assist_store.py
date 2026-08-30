@@ -92,6 +92,12 @@ def test_store_create_replay_turn_cas_and_tenant_isolation() -> None:
     ]
     assert outcome.events[-1].blocker
     assert outcome.events[-1].blocker.code == "ASSIST_RUNTIME_NOT_INSTALLED"
+    history = store.get_history(SCOPE, created.thread_id)
+    assert history.thread.version == 2
+    assert history.participants == ["user:dev"]
+    assert len(history.turns) == 1
+    assert history.turns[0].message == "核查当前订单风险"
+    assert history.event_cursor == "1:2"
     assert store.create_blocked_turn(
         SCOPE,
         created.thread_id,

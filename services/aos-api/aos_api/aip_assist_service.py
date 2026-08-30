@@ -14,6 +14,8 @@ from aos_api.aip_assist_contracts import (
     AssistEventType,
     AssistStreamEvent,
     AssistThreadSnapshot,
+    AssistThreadHistory,
+    AssistSubjectOptionList,
     CreateAssistThreadRequest,
     CreateAssistTurnRequest,
 )
@@ -32,6 +34,8 @@ class AipAssistAuthorityUnavailable(RuntimeError):
 
 
 class AipAssistService(Protocol):
+    def list_subjects(self, scope: TenantScope, *, limit: int = 50) -> AssistSubjectOptionList: ...
+
     def create_thread(
         self,
         scope: TenantScope,
@@ -42,6 +46,8 @@ class AipAssistService(Protocol):
     ) -> AssistThreadSnapshot: ...
 
     def get_thread(self, scope: TenantScope, thread_id: str) -> AssistThreadSnapshot: ...
+
+    def get_history(self, scope: TenantScope, thread_id: str) -> AssistThreadHistory: ...
 
     def stream_turn(
         self,
@@ -64,7 +70,13 @@ class UnavailableAipAssistService:
     def create_thread(self, *args, **kwargs) -> AssistThreadSnapshot:
         self._unavailable()
 
+    def list_subjects(self, *args, **kwargs) -> AssistSubjectOptionList:
+        self._unavailable()
+
     def get_thread(self, *args, **kwargs) -> AssistThreadSnapshot:
+        self._unavailable()
+
+    def get_history(self, *args, **kwargs) -> AssistThreadHistory:
         self._unavailable()
 
     def stream_turn(self, *args, **kwargs) -> Iterable[AssistStreamEvent]:
@@ -97,8 +109,14 @@ class PostgresAipAssistService:
             actor=principal.subject,
         )
 
+    def list_subjects(self, scope: TenantScope, *, limit: int = 50) -> AssistSubjectOptionList:
+        return self.store.list_subjects(scope, limit=limit)
+
     def get_thread(self, scope: TenantScope, thread_id: str) -> AssistThreadSnapshot:
         return self.store.get_thread(scope, thread_id)
+
+    def get_history(self, scope: TenantScope, thread_id: str) -> AssistThreadHistory:
+        return self.store.get_history(scope, thread_id)
 
     def stream_turn(
         self,

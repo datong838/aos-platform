@@ -2,7 +2,9 @@ import type {
   AssistContext,
   AssistEvent,
   AssistSubject,
+  AssistSubjectOptionList,
   AssistThread,
+  AssistThreadHistory,
   AnalystRoleQueryTemplateList,
   Blocker,
   QueryColumn,
@@ -178,6 +180,31 @@ export function parseAssistThread(value: unknown, expectedTenant?: Tenant): Assi
   const scope = tenant(raw.tenant); assertTenant(scope, expectedTenant);
   const subjectRaw = object(raw.subject, "subject"); exact(subjectRaw, "subject", ["taskRef", "taskRunRef", "agentRunRef", "selectionRefs", "cutoffAt"]);
   return { tenant: scope, threadId: string(raw.threadId, "threadId"), subject: subject(subjectRaw, "subject"), status: enumeration(raw.status, "status", ["open", "blocked", "closed"] as const), version: integer(raw.version, "version"), createdBy: string(raw.createdBy, "createdBy"), createdAt: iso(raw.createdAt, "createdAt") };
+}
+export function parseAssistSubjectOptions(value: unknown, expectedTenant?: Tenant): AssistSubjectOptionList {
+  const raw = object(value, "AssistSubjectOptionList"); exact(raw, "AssistSubjectOptionList", ["tenant", "items", "count"]);
+  const scope = tenant(raw.tenant); assertTenant(scope, expectedTenant);
+  const items = array(raw.items, "items").map((value, index) => {
+    const item = object(value, `items[${index}]`);
+    exact(item, `items[${index}]`, ["subject", "taskTitle", "taskDescription", "owner", "taskStatus", "runStatus", "agentStatus", "source", "updatedAt"]);
+    const subjectRaw = object(item.subject, `items[${index}].subject`);
+    exact(subjectRaw, `items[${index}].subject`, ["taskRef", "taskRunRef", "agentRunRef", "selectionRefs", "cutoffAt"]);
+    return { subject: subject(subjectRaw, `items[${index}].subject`), taskTitle: string(item.taskTitle, "taskTitle"), taskDescription: text(item.taskDescription, "taskDescription"), owner: string(item.owner, "owner"), taskStatus: string(item.taskStatus, "taskStatus"), runStatus: string(item.runStatus, "runStatus"), agentStatus: string(item.agentStatus, "agentStatus"), source: string(item.source, "source"), updatedAt: iso(item.updatedAt, "updatedAt") };
+  });
+  const count = integer(raw.count, "count", 0);
+  if (count !== items.length) throw new Error("AssistSubjectOptionList count 不一致");
+  return { tenant: scope, items, count };
+}
+export function parseAssistThreadHistory(value: unknown, expectedTenant?: Tenant): AssistThreadHistory {
+  const raw = object(value, "AssistThreadHistory"); exact(raw, "AssistThreadHistory", ["thread", "participants", "turns", "eventCursor"]);
+  const thread = parseAssistThread(raw.thread, expectedTenant);
+  const participants = array(raw.participants, "participants").map((item) => string(item, "participant"));
+  const turns = array(raw.turns, "turns").map((value, index) => {
+    const item = object(value, `turns[${index}]`); exact(item, `turns[${index}]`, ["turnId", "turnSequence", "message", "attachmentRefs", "referenceRefs", "createdBy", "createdAt", "events"]);
+    const events = array(item.events, `turns[${index}].events`).map(parseAssistEvent);
+    return { turnId: string(item.turnId, "turnId"), turnSequence: integer(item.turnSequence, "turnSequence"), message: string(item.message, "message"), attachmentRefs: refs(item.attachmentRefs, "attachmentRefs"), referenceRefs: refs(item.referenceRefs, "referenceRefs"), createdBy: string(item.createdBy, "createdBy"), createdAt: iso(item.createdAt, "createdAt"), events };
+  });
+  return { thread, participants, turns, eventCursor: string(raw.eventCursor, "eventCursor") };
 }
 export function parseTaskRunControlResult(value: unknown): TaskRunControlResult {
   const raw = object(value, "TaskRunControlResult");

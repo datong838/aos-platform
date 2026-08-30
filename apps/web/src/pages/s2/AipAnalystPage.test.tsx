@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AipAnalystPage, buildGovernedQuery, matchLogicMount } from "./AipAnalystPage";
+import { AipAnalystPage, buildGovernedQuery, businessRowLabel, matchLogicMount, summarizeResult } from "./AipAnalystPage";
 import type { AnalystRoleQueryTemplateList, QueryResultRevision } from "../../api/aipWorkbench";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -37,6 +37,16 @@ describe("AipAnalystPage governed query", () => {
     const query = buildGovernedQuery({ kind: "semantic", objectType: "Order", prompt: "", cutoffAt: "2026-08-16T00:00:00Z", taskRef: null, skillRef: null, metricRef: null });
     expect(query).toEqual(expect.objectContaining({ kind: "semantic", objectType: "Order" }));
     expect(JSON.stringify(query)).not.toMatch(/sql|orgId|projectId|Northampton/i);
+  });
+
+  it("builds governed filters and presents business labels instead of raw object ids", () => {
+    const query = buildGovernedQuery({ kind: "semantic", objectType: "Product", prompt: "", cutoffAt: "2026-08-30T00:00:00Z", taskRef: null, skillRef: null, metricRef: null, filterField: "status", filterOperator: "eq", filterValue: "在售", pageSize: 20 });
+    expect(query).toEqual(expect.objectContaining({ filters: [{ field: "status", operator: "eq", value: "在售" }], pageSize: 20 }));
+    const result: QueryResultRevision = { tenant: { orgId: "org-org", projectId: "dev-project" }, queryId: "q", revision: 1, kind: "semantic", status: "complete", columns: [{ key: "product_name", label: "商品名称", valueType: "string", marking: null }, { key: "sales", label: "销量", valueType: "number", marking: null }], rows: [{ rowId: "niushop:1:27", values: { product_name: "栖月汇桂花糕", sales: 18 } }], sourceRefs: [{ ref: { resourceType: "ObjectType", resourceId: "Product", revision: "1", authority: "ontology" }, contentHash: "a".repeat(64), cutoffAt: "2026-08-30T00:00:00Z", freshness: "fresh", markings: ["public"] }], lineageRefs: [], blockers: [], uncertainties: [], confidence: { status: "measured", score: .9, basis: ["canonical"] }, cutoffAt: "2026-08-30T00:00:00Z", contentHash: "b".repeat(64), createdAt: "2026-08-30T00:00:01Z" };
+    expect(businessRowLabel(result.rows[0], result.columns)).toBe("栖月汇桂花糕");
+    expect(businessRowLabel({ rowId: "niushop:1:108", values: { objectId: "niushop:1:108", status: "active" } }, [{ key: "objectId", label: "对象 ID", valueType: "string", marking: null }, { key: "status", label: "状态", valueType: "string", marking: null }], "订单")).toBe("订单 108");
+    expect(summarizeResult(result, "哪些商品值得关注？").summary).toContain("1 条业务记录");
+    expect(summarizeResult(result, "哪些商品值得关注？").comparison).toContain("因果");
   });
 
   it("fails closed when knowledge or metric exact refs are absent", () => {
@@ -118,6 +128,15 @@ describe("AipAnalystPage governed query", () => {
     expect((host.querySelector('[data-testid="analyst-run-query"]') as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it("disables a query when the user clears the exact cutoff", async () => {
+    await act(async () => root.render(<MemoryRouter><AipAnalystPage listObjectTypes={listObjectTypes} listLogicGraphs={listLogicGraphs} listRoleTemplates={listRoleTemplates} listSaved={() => Promise.resolve([])} /></MemoryRouter>));
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    const cutoff = host.querySelector<HTMLInputElement>('input[type="datetime-local"]')!;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    await act(async () => { setter.call(cutoff, ""); cutoff.dispatchEvent(new Event("input", { bubbles: true })); });
+    expect((host.querySelector('[data-testid="analyst-run-query"]') as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it("mounts exact Logic revision and blocks when no saved graphs", async () => {
     expect(matchLogicMount([logicGraph], { id: "ecommerce.logic.A02", revision: "1", hash: "a".repeat(64) })?.id).toBe("ecommerce.logic.A02");
     await act(async () => root.render(<MemoryRouter><AipAnalystPage listObjectTypes={listObjectTypes} listLogicGraphs={listLogicGraphs} listRoleTemplates={listRoleTemplates} /></MemoryRouter>));
@@ -126,7 +145,7 @@ describe("AipAnalystPage governed query", () => {
     expect(host.querySelector('[data-testid="analyst-jump-logic"]')?.getAttribute("href")).toContain("/aip/logic?graph=ecommerce.logic.A02");
     await act(async () => root.render(<MemoryRouter><AipAnalystPage listObjectTypes={listObjectTypes} listLogicGraphs={emptyLogic} listRoleTemplates={listRoleTemplates} /></MemoryRouter>));
     await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-    expect(host.textContent).toContain("当前租户暂无已保存业务逻辑；经营参谋挂载保持阻断");
+    expect(host.textContent).toContain("当前租户暂无已保存业务逻辑；本次仅执行受控查询");
   });
 
   it("renders six role templates and selects a role without inventing readiness", async () => {
@@ -144,7 +163,7 @@ describe("AipAnalystPage governed query", () => {
     const roleCard = host.querySelector('[data-testid="analyst-role-data_advisor"]') as HTMLButtonElement;
     expect(roleCard.style.background).toBe("var(--aos-accent-light)");
     expect(roleCard.style.color).toBe("var(--aos-text)");
-    expect(host.textContent).toContain("有阻断");
+    expect(host.textContent).toContain("需补充条件");
     expect(host.textContent).toContain("OBJECT_TYPE_NOT_INSTALLED");
     expect((host.querySelector('[data-testid="analyst-run-query"]') as HTMLButtonElement).disabled).toBe(true);
   });

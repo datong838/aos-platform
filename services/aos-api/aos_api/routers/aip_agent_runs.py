@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Header, Query, status
 from aos_api.aip_agent_registry_contracts import (
     AgentRun,
     AgentRunCommandResponse,
+    CancelAgentRunRequest,
     CreateAgentRunRequest,
 )
 from aos_api.aip_agent_registry_store import (
@@ -224,3 +225,25 @@ def get_agent_run(
         return service.get(_scope(principal), agent_run_id)
     except AipAgentRegistryError as exc:
         raise _map_error(exc) from exc
+
+
+@router.post("/{agent_run_id}/cancel-queued", response_model=AgentRunCommandResponse)
+def cancel_queued_agent_run(
+    agent_run_id: str,
+    body: CancelAgentRunRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipAgentRunService = Depends(get_agent_run_service),
+) -> AgentRunCommandResponse:
+    try:
+        agent_run, receipt = service.cancel_queued(
+            _scope(principal),
+            agent_run_id,
+            body,
+            idempotency_key=_idem(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    return AgentRunCommandResponse(tenant=_tenant(principal), agent_run=agent_run, receipt=receipt)

@@ -1,8 +1,8 @@
 import { getApiBase } from "../apiBase";
 import { apiGet, apiPost, apiPostReadOnly } from "../client";
 import { getTenant, tenantAuthHeaders } from "../tenant";
-import type { AnalystQuery, AnalystRoleQueryTemplateList, AssistEvent, AssistThread, CancelTaskRunRequest, CreateAssistThread, CreateAssistTurn, QueryResultRevision, TaskRunControlResult } from "./contracts";
-import { parseAnalystRoleQueryTemplates, parseAssistEvent, parseAssistThread, parseQueryResult, parseTaskRunControlResult, validateAssistStream } from "./parser";
+import type { AnalystQuery, AnalystRoleQueryTemplateList, AssistEvent, AssistSubjectOptionList, AssistThread, AssistThreadHistory, CancelTaskRunRequest, CreateAssistThread, CreateAssistTurn, QueryResultRevision, TaskRunControlResult } from "./contracts";
+import { parseAnalystRoleQueryTemplates, parseAssistEvent, parseAssistSubjectOptions, parseAssistThread, parseAssistThreadHistory, parseQueryResult, parseTaskRunControlResult, validateAssistStream } from "./parser";
 
 function scope() { const { orgId, projectId } = getTenant(); return { orgId, projectId }; }
 export function newIdempotencyKey(): string { return globalThis.crypto.randomUUID(); }
@@ -16,8 +16,14 @@ export async function listAnalystRoleQueryTemplates(): Promise<AnalystRoleQueryT
 export async function createAssistThread(body: CreateAssistThread, key = newIdempotencyKey()): Promise<AssistThread> {
   return parseAssistThread(await apiPost<unknown>("/v1/aip/assist/threads", body, { "Idempotency-Key": key }), scope());
 }
+export async function listAssistSubjects(limit = 50): Promise<AssistSubjectOptionList> {
+  return parseAssistSubjectOptions(await apiGet<unknown>(`/v1/aip/assist/subjects?limit=${limit}`), scope());
+}
 export async function getAssistThread(threadId: string): Promise<AssistThread> {
   return parseAssistThread(await apiGet<unknown>(`/v1/aip/assist/threads/${encodeURIComponent(threadId)}`), scope());
+}
+export async function getAssistThreadHistory(threadId: string): Promise<AssistThreadHistory> {
+  return parseAssistThreadHistory(await apiGet<unknown>(`/v1/aip/assist/threads/${encodeURIComponent(threadId)}/history`), scope());
 }
 export async function cancelAssistTaskRun(runId: string, body: CancelTaskRunRequest, key = newIdempotencyKey()): Promise<TaskRunControlResult> {
   const payload = await apiPost<unknown>(`/v1/aip/task-runs/${encodeURIComponent(runId)}/cancel`, body, { "Idempotency-Key": key });

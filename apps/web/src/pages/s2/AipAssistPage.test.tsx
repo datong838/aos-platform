@@ -29,6 +29,11 @@ describe("AipAssistPage exact subject", () => {
   it("accepts only a complete exact upstream subject", () => {
     expect(subjectFromSearch(params())).toEqual(expect.objectContaining({ taskRef: expect.objectContaining({ resourceType: "Task", revision: "1" }), taskRunRef: expect.objectContaining({ resourceType: "TaskRun", revision: "2" }), agentRunRef: expect.objectContaining({ resourceType: "AgentRun", revision: "3" }) }));
   });
+  it("carries the exact Analyst query result into selection refs", () => {
+    const value = params();
+    value.set("queryResultId", "query-1"); value.set("queryResultRevision", "7"); value.set("queryResultAuthority", "aip-analyst");
+    expect(subjectFromSearch(value)?.selectionRefs).toEqual([{ resourceType: "QueryResultRevision", resourceId: "query-1", revision: "7", authority: "aip-analyst" }]);
+  });
   it("does not invent a default AgentRun", () => { const value = params(); value.delete("agentRunAuthority"); expect(subjectFromSearch(value)).toBeNull(); });
 
   it("使用任务协作助手业务名称，并只把真实近期任务作为上游入口", async () => {

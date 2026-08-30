@@ -55,4 +55,33 @@ describe("aipAgentControl read-only exact-ref client", () => {
     await expect(aipAgentControl.consumeHandoff("handoff-1", { bearerToken: " bad ", receiverInstance: asset("AgentInstance", "agent-2") })).rejects.toThrow("bearerToken 非法");
     await expect(aipAgentControl.issueHandoff({ handoffId: "handoff-1", envelope: {} as never }, " bad ")).rejects.toThrow("Idempotency-Key 非法");
   });
+
+  it("发布与停用命令始终携带精确实例版本和幂等键", async () => {
+    const instance = { tenant, instanceId: "agent-1", instanceRef: asset("AgentInstance", "agent-1"), template: asset("AgentTemplate", "template-1"), status: "active", overlay: { displayName: "数据参谋", allowedCapabilityIds: [] }, version: 2, updatedAt: "2026-08-30T00:00:00Z" };
+    const receipt = { tenant, receiptId: "receipt-1", operation: "agent.activate", idempotencyKey: "activate-1", requestHash: "b".repeat(64), resourceRef: resource("AgentInstance", "agent-1"), resultRef: resource("AgentInstance", "agent-1"), status: "applied", createdBy: "user:dev", createdAt: "2026-08-30T00:00:00Z" };
+    apiPost.mockResolvedValueOnce({ tenant, instance, capabilityBindingIds: ["binding-1"], receipt });
+    await aipAgentControl.activateAgent("agent-1", 1, ["binding-1"], "activate-1");
+    expect(apiPost).toHaveBeenLastCalledWith("/v1/aip/agents/agent-1/activate", { expectedVersion: 1, capabilityBindingIds: ["binding-1"] }, { "Idempotency-Key": "activate-1" });
+    apiPost.mockResolvedValueOnce({ tenant, instance: { ...instance, status: "suspended", version: 3 }, capabilityBindingIds: [], receipt: { ...receipt, operation: "agent.suspend" } });
+    await aipAgentControl.suspendAgent("agent-1", 2, "工作台人工停用回滚", "suspend-1");
+    expect(apiPost).toHaveBeenLastCalledWith("/v1/aip/agents/agent-1/suspend", { expectedVersion: 2, reason: "工作台人工停用回滚" }, { "Idempotency-Key": "suspend-1" });
+  });
+
+  it("AgentRun 安全关联使用精确引用并在 queued 状态形成取消 Receipt", async () => {
+    const request = {
+      taskRef: resource("Task", "task-1"), planRef: resource("PlanRevision", "plan-1"),
+      agentInstance: asset("AgentInstance", "agent-1"), skill: asset("SkillTemplate", "skill-1"),
+      logic: asset("LogicRevision", "logic-1"), modelRoute: asset("ModelRouteRevision", "route-1"),
+      policy: asset("RuntimePolicyRevision", "policy-1"), inputRefs: [],
+    };
+    const run = { tenant, agentRunId: "agent-run-1", taskId: "task-1", taskRunId: "task-run-1", instanceId: "agent-1", instanceVersion: 1, skillBindingId: "binding-1", request, status: "queued", version: 1, createdAt: "2026-08-30T00:00:00Z", updatedAt: "2026-08-30T00:00:00Z" };
+    const receipt = (operation: string, idempotencyKey: string) => ({ tenant, receiptId: `receipt-${operation}`, operation, idempotencyKey, requestHash: "b".repeat(64), resourceRef: resource("AgentRun", "agent-run-1"), resultRef: resource("AgentRun", "agent-run-1"), status: "applied", createdBy: "user:dev", createdAt: "2026-08-30T00:00:00Z" });
+    const createInput = { agentRunId: "agent-run-1", taskRunRef: resource("TaskRun", "task-run-1"), skillBindingId: "binding-1", run: request };
+    apiPost.mockResolvedValueOnce({ tenant, agentRun: run, receipt: receipt("agent_run.create", "create-run-1") });
+    await expect(aipAgentControl.createAgentRun(createInput, "create-run-1")).resolves.toMatchObject({ agentRun: { status: "queued" } });
+    expect(apiPost).toHaveBeenLastCalledWith("/v1/aip/agent-runs", createInput, { "Idempotency-Key": "create-run-1" });
+    apiPost.mockResolvedValueOnce({ tenant, agentRun: { ...run, status: "cancelled", version: 2 }, receipt: receipt("agent_run.cancel_queued", "cancel-run-1") });
+    await expect(aipAgentControl.cancelQueuedAgentRun("agent-run-1", 1, "确定性沙箱验收完成", "cancel-run-1")).resolves.toMatchObject({ agentRun: { status: "cancelled" }, receipt: { operation: "agent_run.cancel_queued" } });
+    expect(apiPost).toHaveBeenLastCalledWith("/v1/aip/agent-runs/agent-run-1/cancel-queued", { expectedVersion: 1, reason: "确定性沙箱验收完成" }, { "Idempotency-Key": "cancel-run-1" });
+  });
 });

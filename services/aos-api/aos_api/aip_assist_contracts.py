@@ -86,6 +86,8 @@ class CreateAssistThreadRequest(AssistSubjectRefs):
 
 class CreateAssistTurnRequest(AipContractModel):
     message: str = Field(min_length=2, max_length=8_000)
+    attachment_refs: list[ResourceRef] = Field(default_factory=list, max_length=20)
+    reference_refs: list[ResourceRef] = Field(default_factory=list, max_length=50)
     expected_thread_version: int = Field(ge=1)
     cutoff_at: datetime
 
@@ -96,6 +98,12 @@ class CreateAssistTurnRequest(AipContractModel):
         if len(cleaned) < 2:
             raise ValueError("assist message is too short")
         return cleaned
+
+    @model_validator(mode="after")
+    def _exact_message_refs(self) -> "CreateAssistTurnRequest":
+        _require_exact_list(self.attachment_refs, field="attachmentRefs")
+        _require_exact_list(self.reference_refs, field="referenceRefs")
+        return self
 
 
 class AssistAuthorityContext(AipContractModel):
@@ -236,6 +244,51 @@ class AssistTurnRecord(AipContractModel):
         return self
 
 
+class AssistHistoryTurn(AipContractModel):
+    turn_id: str = Field(min_length=1, max_length=240)
+    turn_sequence: int = Field(ge=1)
+    message: str = Field(min_length=2, max_length=8_000)
+    attachment_refs: list[ResourceRef] = Field(default_factory=list, max_length=20)
+    reference_refs: list[ResourceRef] = Field(default_factory=list, max_length=50)
+    created_by: str = Field(min_length=1, max_length=240)
+    created_at: datetime
+    events: list[AssistStreamEvent] = Field(default_factory=list, max_length=10_000)
+
+    @model_validator(mode="after")
+    def _exact_history_refs(self) -> "AssistHistoryTurn":
+        _require_exact_list(self.attachment_refs, field="attachmentRefs")
+        _require_exact_list(self.reference_refs, field="referenceRefs")
+        for sequence, event in enumerate(self.events, start=1):
+            if event.turn_id != self.turn_id or event.sequence != sequence:
+                raise ValueError("history events must be contiguous and belong to the turn")
+        return self
+
+
+class AssistThreadHistory(AipContractModel):
+    thread: AssistThreadSnapshot
+    participants: list[str] = Field(min_length=1, max_length=100)
+    turns: list[AssistHistoryTurn] = Field(default_factory=list, max_length=1_000)
+    event_cursor: str = Field(min_length=3, max_length=80)
+
+
+class AssistSubjectOption(AipContractModel):
+    subject: AssistSubjectRefs
+    task_title: str = Field(min_length=1, max_length=500)
+    task_description: str = Field(default="", max_length=8_000)
+    owner: str = Field(min_length=1, max_length=240)
+    task_status: str = Field(min_length=1, max_length=80)
+    run_status: str = Field(min_length=1, max_length=80)
+    agent_status: str = Field(min_length=1, max_length=80)
+    source: str = Field(min_length=1, max_length=160)
+    updated_at: datetime
+
+
+class AssistSubjectOptionList(AipContractModel):
+    tenant: TenantContext
+    items: list[AssistSubjectOption] = Field(default_factory=list, max_length=200)
+    count: int = Field(ge=0, le=200)
+
+
 __all__ = [
     "AssistAuthorityContext",
     "AssistBlocker",
@@ -243,6 +296,10 @@ __all__ = [
     "AssistEventType",
     "AssistStreamEvent",
     "AssistSubjectRefs",
+    "AssistSubjectOption",
+    "AssistSubjectOptionList",
+    "AssistHistoryTurn",
+    "AssistThreadHistory",
     "AssistThreadSnapshot",
     "AssistThreadStatus",
     "AssistTurnRecord",

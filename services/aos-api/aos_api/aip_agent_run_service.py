@@ -7,6 +7,7 @@ from typing import Protocol
 from aos_api.aip_agent_registry_contracts import (
     AgentRun,
     AgentRunStatus,
+    CancelAgentRunRequest,
     CreateAgentRunRequest,
     RegistryReceipt,
     VersionedAssetRef,
@@ -177,6 +178,58 @@ class AipAgentRunService(AipAgentRegistryStore):
                         exc_info=True,
                     )
             return self._from_row(scope, row)
+
+    def cancel_queued(
+        self,
+        scope: TenantScope,
+        agent_run_id: str,
+        request: CancelAgentRunRequest,
+        *,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> tuple[AgentRun, RegistryReceipt]:
+        """Cancel a never-started AgentRun without resolving Provider or secrets."""
+        self._validate_command(scope, idempotency_key, actor)
+        operation = "agent_run.cancel_queued"
+        request_hash = self._command_hash(request, actor)
+        try:
+            with self._connect_factory(scope) as conn:
+                self._lock(conn, scope, operation, idempotency_key)
+                replay = self._receipt_row(conn, scope, operation, idempotency_key)
+                if replay:
+                    self._require_replay_hash(replay, request_hash)
+                    return self._from_row(scope, self._row(conn, scope, agent_run_id)), self._receipt_from_row(scope, replay)
+                row = conn.execute(
+                    """UPDATE aip_agent_run SET status='cancelled',version=version+1,updated_at=%s
+                       WHERE org_id=%s AND project_id=%s AND agent_run_id=%s
+                        AND version=%s AND status='queued' RETURNING *""",
+                    (occurred_at, *scope.key, agent_run_id, request.expected_version),
+                ).fetchone()
+                if row is None:
+                    current = self._row(conn, scope, agent_run_id)
+                    if current is None:
+                        raise AipAgentRegistryNotFound("agent run not found")
+                    raise AipAgentRegistryConflict("queued agent run version or status changed")
+                receipt = self._insert_receipt(
+                    conn,
+                    scope,
+                    operation,
+                    idempotency_key,
+                    request_hash,
+                    "AgentRun",
+                    agent_run_id,
+                    "AgentRun",
+                    agent_run_id,
+                    actor,
+                    occurred_at,
+                )
+                conn.commit()
+                return self._from_row(scope, row), receipt
+        except (AipAgentRegistryConflict, AipAgentRegistryNotFound, AipAgentRegistryTransitionBlocked):
+            raise
+        except Exception as exc:
+            raise AipAgentRegistryPersistenceError("agent run cancellation persistence failed") from exc
 
     def _resolve_start(self, scope: TenantScope, current) -> ModelRouteResolution:
         route_ref = current["model_route_ref"]

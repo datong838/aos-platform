@@ -13,6 +13,7 @@ from aos_api.aip_agent_control_contracts import (
     AipOperationalProjectionResponse,
     AgentInstallResponse,
     AgentInstanceActivationResponse,
+    SuspendAgentInstanceRequest,
     AgentInstanceListResponse,
     AgentRuntimeReadinessResponse,
     OperationalProjectionSources,
@@ -55,14 +56,17 @@ _MARKETPLACE = AipMarketplaceCatalog(installer=_INSTALLER)
 
 class PromptBody(BaseModel):
     prompt: str = Field(default="", max_length=8000)
+    expected_revision: int | None = Field(default=None, ge=0, alias="expectedRevision")
 
 
 class ToolsBody(BaseModel):
     items: list[dict] = Field(default_factory=list)
+    expected_revision: int | None = Field(default=None, ge=0, alias="expectedRevision")
 
 
 class GuardrailsBody(BaseModel):
     items: list[dict] = Field(default_factory=list)
+    expected_revision: int | None = Field(default=None, ge=0, alias="expectedRevision")
 
 
 def get_agent_store() -> AipAgentRegistryStore:
@@ -530,6 +534,41 @@ def activate_agent(
     )
 
 
+@router.post(
+    "/agents/{instance_id}/suspend",
+    response_model=AgentInstanceActivationResponse,
+)
+def suspend_agent(
+    instance_id: str,
+    body: SuspendAgentInstanceRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipAgentInstanceActivationService = Depends(
+        get_agent_activation_service
+    ),
+) -> AgentInstanceActivationResponse:
+    try:
+        instance, receipt = service.suspend(
+            _scope(principal),
+            instance_id,
+            body,
+            idempotency_key=_idem(idempotency_key),
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+        )
+    except AipAgentRegistryError as exc:
+        raise _map_error(exc) from exc
+    return AgentInstanceActivationResponse(
+        tenant=TenantContext(
+            org_id=principal.org_id,
+            project_id=principal.project_id,
+        ),
+        instance=instance,
+        capability_binding_ids=[],
+        receipt=receipt,
+    )
+
+
 @router.get("/agents/{instance_id}/prompt")
 def get_prompt(
     instance_id: str,
@@ -557,6 +596,7 @@ def update_prompt(
             instance_id,
             prompt=body.prompt,
             actor=principal.subject,
+            expected_revision=body.expected_revision,
         )
     except AipAgentRegistryError as exc:
         raise _map_error(exc) from exc
@@ -591,6 +631,7 @@ def update_tools(
             instance_id,
             items=list(body.items or []),
             actor=principal.subject,
+            expected_revision=body.expected_revision,
         )
     except AipAgentRegistryError as exc:
         raise _map_error(exc) from exc
@@ -625,6 +666,7 @@ def update_guardrails(
             instance_id,
             items=list(body.items or []),
             actor=principal.subject,
+            expected_revision=body.expected_revision,
         )
     except AipAgentRegistryError as exc:
         raise _map_error(exc) from exc

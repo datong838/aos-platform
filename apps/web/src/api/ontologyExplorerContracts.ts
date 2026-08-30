@@ -33,6 +33,16 @@ export type ExplorationCreate = {
   query: Record<string, unknown>;
   columns: Record<string, unknown>[];
   graph: Record<string, unknown>;
+  analystQuery?: Record<string, unknown>;
+  resultRef?: { resourceType: string; resourceId: string; revision: string; authority: string };
+  cutoffAt?: string;
+  sourceRefs?: Array<{
+    ref: { resourceType: string; resourceId: string; revision: string; authority: string };
+    contentHash: string;
+    cutoffAt: string;
+    freshness: "fresh" | "stale" | "unknown";
+    markings: string[];
+  }>;
 };
 
 export type ObjectRef = { objectType: string; objectId: string };

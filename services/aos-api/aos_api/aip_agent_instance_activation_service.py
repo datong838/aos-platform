@@ -6,7 +6,7 @@ from contextlib import AbstractContextManager
 from datetime import datetime
 from typing import Any
 
-from aos_api.aip_agent_control_contracts import ActivateAgentInstanceRequest
+from aos_api.aip_agent_control_contracts import ActivateAgentInstanceRequest, SuspendAgentInstanceRequest
 from aos_api.aip_agent_registry_contracts import (
     AgentInstance,
     AgentInstanceStatus,
@@ -73,6 +73,40 @@ class AipAgentInstanceActivationService:
             current,
             binding_ids,
             evaluated_at=occurred_at,
+        )
+        return self._store.update_instance(
+            scope,
+            instance_id,
+            transition,
+            idempotency_key=idempotency_key,
+            actor=actor,
+            occurred_at=occurred_at,
+        )
+
+    def suspend(
+        self,
+        scope: TenantScope,
+        instance_id: str,
+        request: SuspendAgentInstanceRequest,
+        *,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> tuple[AgentInstance, RegistryReceipt]:
+        current = self._store.get_instance(scope, instance_id)
+        if current.status is not AgentInstanceStatus.ACTIVE:
+            raise AipAgentRegistryTransitionBlocked(
+                "only active AgentInstance can be suspended"
+            )
+        if current.version != request.expected_version:
+            raise AipAgentRegistryTransitionBlocked(
+                "AgentInstance version changed before suspension"
+            )
+        transition = UpdateAgentInstanceRequest(
+            expected_version=request.expected_version,
+            from_status=AgentInstanceStatus.ACTIVE,
+            to_status=AgentInstanceStatus.SUSPENDED,
+            overlay=current.overlay,
         )
         return self._store.update_instance(
             scope,

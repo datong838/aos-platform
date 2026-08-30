@@ -133,6 +133,34 @@ export type AssistThread = {
   createdBy: string;
   createdAt: string;
 };
+export type AssistSubjectOption = {
+  subject: AssistSubject;
+  taskTitle: string;
+  taskDescription: string;
+  owner: string;
+  taskStatus: string;
+  runStatus: string;
+  agentStatus: string;
+  source: string;
+  updatedAt: string;
+};
+export type AssistSubjectOptionList = { tenant: Tenant; items: AssistSubjectOption[]; count: number };
+export type AssistHistoryTurn = {
+  turnId: string;
+  turnSequence: number;
+  message: string;
+  attachmentRefs: ResourceRef[];
+  referenceRefs: ResourceRef[];
+  createdBy: string;
+  createdAt: string;
+  events: AssistEvent[];
+};
+export type AssistThreadHistory = {
+  thread: AssistThread;
+  participants: string[];
+  turns: AssistHistoryTurn[];
+  eventCursor: string;
+};
 export type CancelTaskRunRequest = {
   expectedRunVersion: number;
   expectedTaskVersion: number;
@@ -173,4 +201,10 @@ export type AssistEvent = {
 };
 
 export type CreateAssistThread = AssistSubject & { title?: string };
-export type CreateAssistTurn = { message: string; expectedThreadVersion: number; cutoffAt: string };
+export type CreateAssistTurn = {
+  message: string;
+  attachmentRefs?: ResourceRef[];
+  referenceRefs?: ResourceRef[];
+  expectedThreadVersion: number;
+  cutoffAt: string;
+};

@@ -121,7 +121,9 @@ def test_stream_boundary_emits_only_typed_sse(client, auth_headers) -> None:
 def test_openapi_exposes_only_canonical_assist_control_boundary(client) -> None:
     schema = client.get("/openapi.json").json()
     paths = schema["paths"]
+    assert "/v1/aip/assist/subjects" in paths
     assert "/v1/aip/assist/threads" in paths
+    assert "/v1/aip/assist/threads/{thread_id}/history" in paths
     assert "/v1/aip/assist/threads/{thread_id}/turns:stream" in paths
     assert "/v1/aip/assist/chat" not in paths
     assert "/v1/aip/assist/welcome" not in paths

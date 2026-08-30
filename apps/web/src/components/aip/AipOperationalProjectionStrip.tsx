@@ -51,18 +51,18 @@ export function AipOperationalProjectionStrip({ onProjection }: AipOperationalPr
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
         <strong>智能体运行总览</strong>
         <span style={{ color: data.overallReadiness === "ready" ? "var(--aos-green-700)" : "var(--aos-amber-700)" }}>
-          {data.overallReadiness === "ready" ? "全链就绪" : "存在阻断"}
+          {data.overallReadiness === "ready" ? "可自动执行" : "需人工确认"}
         </span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 8 }}>
         {labels.map(([key, label]) => {
           const item = data[key];
-          return <div key={key} className="notice" style={{ padding: "8px 10px" }}><div style={{ fontSize: 12 }}>{label}</div><strong>{item.runnable}/{item.definition} 可派发</strong><div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>绑定 {item.bound} · 启用 {item.enabled}</div></div>;
+          return <div key={key} className="notice" style={{ padding: "8px 10px" }}><div style={{ fontSize: 12 }}>{label}</div><strong>{item.runnable}/{item.definition} 可自动执行</strong><div style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>已绑定 {item.bound} · 已启用 {item.enabled}</div></div>;
         })}
       </div>
       {data.blockerCodes.length ? (
         <div style={{ marginTop: 8, fontSize: 12, color: "var(--aos-amber-700)" }}>
-          阻断原因：{formatBlockers(data.blockerCodes)}
+          自动执行前需确认：{formatBlockers(data.blockerCodes)}
           <details style={{ marginTop: 4 }}>
             <summary>技术标识（审计用）</summary>
             <code>{data.blockerCodes.join(" / ")}</code> · 快照 <code>{data.snapshotHash.slice(0, 12)}…</code>

@@ -13,7 +13,7 @@
       "requiredObjectTypes": ["Order", "Payment"],
       "requiredLogicIds": ["D01", "D02", "D03", "D04", "D05", "D06"],
       "sourceDataTypes": ["order", "payment"],
-      "purpose": "读取订单与支付事实，识别经营变化；指标权威缺失时保持阻断。",
+      "purpose": "读取订单与支付事实，识别经营变化；缺少权威指标时不生成经营结论。",
       "policy": "canonical-read-only"
     },
     {

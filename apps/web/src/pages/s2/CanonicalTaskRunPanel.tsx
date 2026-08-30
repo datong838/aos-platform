@@ -8,7 +8,7 @@ import {
 } from "../../api/aipTasks";
 import "./CanonicalTaskRunPanel.css";
 
-type VisibleStatus = "queued" | "running" | "paused" | "succeeded" | "failed" | "cancelled" | "unknown";
+type VisibleStatus = "queued" | "running" | "pausing" | "paused" | "succeeded" | "failed" | "cancelled" | "unknown";
 type Control = "start" | "pause" | "resume" | "cancel" | "rollback";
 
 export interface CanonicalTaskRunPanelProps {
@@ -16,10 +16,11 @@ export interface CanonicalTaskRunPanelProps {
   graphRevision: number;
   graphName: string;
   sdk?: AipTasksSdk;
+  onTimelineChange?: (timeline: TaskTimeline | null) => void;
 }
 
 const STATUS_LABELS: Record<VisibleStatus, string> = {
-  queued: "等待启动", running: "运行中", paused: "已暂停", succeeded: "已完成",
+  queued: "等待启动", running: "运行中", pausing: "暂停处理中", paused: "已暂停", succeeded: "已完成",
   failed: "失败", cancelled: "已取消", unknown: "结果待对账",
 };
 
@@ -60,7 +61,7 @@ function EvidenceCollection({ title, items, fields }: {
   );
 }
 
-export function CanonicalTaskRunPanel({ graphId, graphRevision, graphName, sdk = aipTasksSdk }: CanonicalTaskRunPanelProps) {
+export function CanonicalTaskRunPanel({ graphId, graphRevision, graphName, sdk = aipTasksSdk, onTimelineChange }: CanonicalTaskRunPanelProps) {
   const [timeline, setTimeline] = useState<TaskTimeline | null>(null);
   const [history, setHistory] = useState<TaskRunSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,19 +81,21 @@ export function CanonicalTaskRunPanel({ graphId, graphRevision, graphName, sdk =
       const runId = preferredRunId ?? runs.items[0]?.id;
       if (!runId) {
         setTimeline(null);
+        onTimelineChange?.(null);
         return;
       }
       const next = await sdk.timeline(runId);
       if (current !== generation.current) return;
       if (next.run.logicGraphId !== graphId) throw new Error("服务端返回的 TaskRun 不属于当前 Logic Graph");
       setTimeline(next);
+      onTimelineChange?.(next);
     } catch (loadError) {
       if (current !== generation.current) return;
       setError(message(loadError));
     } finally {
       if (current === generation.current) setLoading(false);
     }
-  }, [graphId, sdk]);
+  }, [graphId, onTimelineChange, sdk]);
 
   useEffect(() => {
     setTimeline(null);
@@ -192,7 +195,7 @@ export function CanonicalTaskRunPanel({ graphId, graphRevision, graphName, sdk =
             <button type="button" disabled={busy || status !== "queued"} onClick={() => void control("start")}>启动</button>
             <button type="button" disabled={busy || status !== "running"} onClick={() => void control("pause")}>暂停</button>
             <button type="button" disabled={busy || status !== "paused"} onClick={() => void control("resume")}>恢复</button>
-            <button type="button" disabled={busy || !["queued", "running", "paused"].includes(status)} onClick={() => void control("cancel")}>取消</button>
+            <button type="button" disabled={busy || !["queued", "running", "pausing", "paused"].includes(status)} onClick={() => void control("cancel")}>取消</button>
             <button type="button" disabled={busy || status !== "succeeded"} onClick={() => void control("rollback")}>回滚</button>
             <a href={`/aip/drafts?taskId=${encodeURIComponent(timeline.task.id)}&runId=${encodeURIComponent(timeline.run.id)}`}>
               查看本次受控业务动作

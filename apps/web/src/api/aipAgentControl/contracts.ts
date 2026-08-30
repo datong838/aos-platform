@@ -52,6 +52,7 @@ export type AgentCatalogResponse = {
 };
 
 export type AgentInstanceListResponse = { tenant: Tenant; items: AgentInstance[]; count: number };
+export type AgentInstanceActivationResponse = { tenant: Tenant; instance: AgentInstance; capabilityBindingIds: string[]; receipt: RegistryReceipt };
 
 export type CapabilityRevision = {
   capabilityId: string;
@@ -165,6 +166,19 @@ export type AgentRun = {
   version: number;
   createdAt: string;
   updatedAt: string;
+};
+
+export type AgentRunCommandResponse = {
+  tenant: Tenant;
+  agentRun: AgentRun;
+  receipt: RegistryReceipt;
+};
+
+export type CreateAgentRunInput = {
+  agentRunId: string;
+  taskRunRef: ResourceRef;
+  skillBindingId: string;
+  run: AgentRunRequest;
 };
 
 export type HandoffEnvelope = {

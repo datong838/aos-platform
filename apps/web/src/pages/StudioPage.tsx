@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { aipAgentControl } from "../api/aipAgentControl";
+import { aipAgentControl, type AgentCatalogItem, type AgentRun, type AssetRef, type SkillBinding } from "../api/aipAgentControl";
+import type { TaskTimeline } from "../api/aipTasks";
 import type { AipOperationalProjection } from "../api/aipOperationalProjection";
 import { apiGet, apiPost, apiPut } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
 import { AipOperationalProjectionStrip } from "../components/aip/AipOperationalProjectionStrip";
 import { templateDisplayName, toolKindDisplayName } from "../lib/aipChineseLabels";
 import { NavIcon } from "../shell/icons";
+import { CanonicalTaskRunPanel } from "./s2/CanonicalTaskRunPanel";
 
 type AgentItem = {
   id: string;
@@ -19,6 +21,20 @@ type AgentItem = {
   iconBg: string;
   iconColor: string;
   iconPath: string;
+};
+
+type RoleDetail = {
+  responsibility: string;
+  logicIds: string[];
+  logicRefs: Array<{ id: string; revision: number; contentHash: string }>;
+  skills: AgentCatalogItem["skills"];
+  capabilityIds: string[];
+  readiness: AgentCatalogItem["runtimeReadiness"];
+  instanceVersion: number;
+  instanceStatus: "provisioning" | "active" | "suspended" | "deleted";
+  capabilityBindingIds: string[];
+  instanceRef: AssetRef;
+  skillBindings: SkillBinding[];
 };
 
 export function toggleToolId(enabledIds: string[], toolId: string): string[] {
@@ -180,6 +196,7 @@ export function StudioPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState("prompt");
   const [agents, setAgents] = useState<AgentItem[]>([]);
+  const [roleDetails, setRoleDetails] = useState<Record<string, RoleDetail>>({});
   const [activeId, setActiveId] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
   const [enabledTools, setEnabledTools] = useState<string[]>([]);
@@ -202,17 +219,41 @@ export function StudioPage() {
   const [enabledGuardrails, setEnabledGuardrails] = useState<string[]>(
     STUDIO_GUARDRAIL_CATALOG.map((item) => item.id),
   );
+  const [overlayRevision, setOverlayRevision] = useState(0);
+  const [discarding, setDiscarding] = useState(false);
   const [overlayBlocked, setOverlayBlocked] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
   const [installBusy, setInstallBusy] = useState(false);
   const [installMsg, setInstallMsg] = useState<string | null>(null);
+  const [lifecycleBusy, setLifecycleBusy] = useState(false);
+  const [lifecycleMsg, setLifecycleMsg] = useState<string | null>(null);
+  const [trialTimeline, setTrialTimeline] = useState<TaskTimeline | null>(null);
+  const [trialAgentRun, setTrialAgentRun] = useState<AgentRun | null>(null);
+  const [trialAgentRunMsg, setTrialAgentRunMsg] = useState<string | null>(null);
+  const [trialAgentRunBusy, setTrialAgentRunBusy] = useState(false);
   const loadGeneration = useRef(0);
   const activeAgent = agents.find((a) => a.id === activeId) || null;
+  const activeRoleDetail = activeId ? roleDetails[activeId] : undefined;
+  const safeTrialSelection = useMemo(() => {
+    if (!activeRoleDetail) return null;
+    const binding = activeRoleDetail.skillBindings.find((item) =>
+      item.status === "active" &&
+      item.readiness === "available" &&
+      item.capabilityBindingIds.length === 0 &&
+      item.dependencies.modelRouteRef &&
+      item.dependencies.runtimePolicyRef,
+    );
+    const skill = binding
+      ? activeRoleDetail.skills.find((item) => item.skillId === binding.skill.assetId && item.revision === binding.skill.revision)
+      : null;
+    if (!binding || !skill?.logicRevisionRef || !binding.dependencies.modelRouteRef || !binding.dependencies.runtimePolicyRef) return null;
+    return { binding, skill };
+  }, [activeRoleDetail]);
+  const trialLogicRef = safeTrialSelection?.skill.logicRevisionRef || activeRoleDetail?.logicRefs[0] || null;
   const displayAgent: AgentItem = activeAgent || {
     id: "", name: "未选择智能体", category: "—", level: "—", levelLabel: "—", status: "stopped", toolCount: 0,
     iconBg: "var(--aos-gray-100)", iconColor: "var(--aos-text-secondary)", iconPath: "",
   };
-  const selectedTools = enabledTools;
   const selectedToolItems = useMemo(() => toolCatalog.filter((tool) => enabledTools.includes(tool.id)), [enabledTools, toolCatalog]);
   const modelRouteGate = useMemo(
     () => studioModelRouteGate(defaultModel, operationalProjection),
@@ -257,11 +298,134 @@ export function StudioPage() {
         setLoadState("error");
         setResourceError(String((error as Error).message || error));
       });
+    aipAgentControl.runtimeReadiness().then((runtime) => {
+      if (cancelled) return;
+      const next: Record<string, RoleDetail> = {};
+      for (const item of runtime.catalog.items) {
+        if (!item.instance) continue;
+        next[item.instance.instanceId] = {
+          responsibility: item.template.manifest.responsibility,
+          logicIds: item.template.manifest.logicIds,
+          logicRefs: item.skills.flatMap((skill) => skill.logicRevisionRef ? [{
+            id: skill.canonicalLogicId,
+            revision: skill.logicRevisionRef.revision,
+            contentHash: skill.logicRevisionRef.contentHash,
+          }] : []),
+          skills: item.skills,
+          capabilityIds: item.requiredCapabilityIds,
+          readiness: item.runtimeReadiness,
+          instanceVersion: item.instance.version,
+          instanceStatus: item.instance.status,
+          capabilityBindingIds: runtime.capabilityBindings
+            .filter((binding) => item.requiredCapabilityIds.includes(binding.capability.assetId))
+            .filter((binding) => binding.status === "active" && binding.health === "healthy" && binding.operationalReadiness === "available")
+            .map((binding) => binding.bindingId),
+          instanceRef: item.instance.instanceRef,
+          skillBindings: runtime.skillBindings.filter((binding) => binding.instanceId === item.instance?.instanceId),
+        };
+      }
+      setRoleDetails(next);
+    }).catch(() => { if (!cancelled) setRoleDetails({}); });
     apiGet<{ defaultTextModel?: string }>("/v1/aip/models")
       .then((r) => { if (!cancelled) setDefaultModel(r.defaultTextModel || "—"); })
       .catch(() => { if (!cancelled) setDefaultModel("—"); });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    setTrialTimeline(null);
+    setTrialAgentRun(null);
+    setTrialAgentRunMsg(null);
+  }, [activeId]);
+
+  const handleTrialTimeline = useCallback((timeline: TaskTimeline | null) => {
+    setTrialTimeline(timeline);
+  }, []);
+
+  async function bindSafeAgentRun() {
+    if (!activeRoleDetail || !trialTimeline || trialAgentRunBusy) return;
+    if (!safeTrialSelection) {
+      setTrialAgentRunMsg("当前数字同事没有满足无外部能力约束的精确 SkillBinding；安全关联不会降级到模拟 AgentRun。");
+      return;
+    }
+    const { binding, skill } = safeTrialSelection;
+    const logicRef = skill.logicRevisionRef;
+    const modelRouteRef = binding.dependencies.modelRouteRef;
+    const policyRef = binding.dependencies.runtimePolicyRef;
+    if (!logicRef || !modelRouteRef || !policyRef) {
+      setTrialAgentRunMsg("当前精确绑定缺少 Logic、模型路由或运行策略修订；已拒绝建立 AgentRun。");
+      return;
+    }
+    if (
+      trialTimeline.run.logicGraphId !== logicRef.assetId ||
+      trialTimeline.run.logicRevision !== logicRef.revision
+    ) {
+      setTrialAgentRunMsg("上方 TaskRun 与 SkillBinding 的 LogicRevision 不一致；已拒绝建立关联，请重新创建精确试跑。");
+      return;
+    }
+    setTrialAgentRunBusy(true);
+    setTrialAgentRunMsg("正在建立精确 AgentRun 关联…");
+    const agentRunId = `agent-run-${crypto.randomUUID().replaceAll("-", "")}`;
+    try {
+      const created = await aipAgentControl.createAgentRun({
+        agentRunId,
+        taskRunRef: { resourceType: "TaskRun", resourceId: trialTimeline.run.id, revision: String(trialTimeline.run.version), authority: "postgresql" },
+        skillBindingId: binding.bindingId,
+        run: {
+          taskRef: { resourceType: "Task", resourceId: trialTimeline.task.id, revision: String(trialTimeline.task.version), authority: "postgresql" },
+          planRef: { resourceType: "PlanRevision", resourceId: trialTimeline.plan.id, revision: String(trialTimeline.plan.revision), authority: "postgresql" },
+          agentInstance: activeRoleDetail.instanceRef,
+          skill: binding.skill,
+          logic: logicRef,
+          modelRoute: modelRouteRef,
+          policy: policyRef,
+          inputRefs: [],
+        },
+      }, `studio-agent-run-create-${agentRunId}`);
+      setTrialAgentRunMsg(`AgentRun 已创建（Receipt ${created.receipt.receiptId}），正在执行无 Provider 的 CAS 取消…`);
+      const cancelled = await aipAgentControl.cancelQueuedAgentRun(
+        agentRunId,
+        created.agentRun.version,
+        "Studio 确定性沙箱验收完成；禁止进入 Provider 执行",
+        `studio-agent-run-cancel-${agentRunId}`,
+      );
+      setTrialAgentRun(cancelled.agentRun);
+      setTrialAgentRunMsg(`安全关联完成：AgentRun 已取消，创建与取消均有 Receipt；未进入 Provider 执行。取消 Receipt ${cancelled.receipt.receiptId}`);
+    } catch (error) {
+      setTrialAgentRun(null);
+      setTrialAgentRunMsg(`安全关联失败：${String((error as Error).message || error)}`);
+    } finally {
+      setTrialAgentRunBusy(false);
+    }
+  }
+
+  async function onChat(e: FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    setAnswer("");
+    setToolCalls([]);
+    setLastRoute(null);
+    if (!query.trim()) {
+      setErr("请输入真实测试问题");
+      return;
+    }
+    if (!modelRouteGate.ready) {
+      setErr(modelRouteGate.reason);
+      return;
+    }
+    try {
+      const res = await apiPost<{ answer: string; toolCalls: unknown[]; route?: string; provider?: string }>("/v1/aip/chat", {
+        query: `【System】${systemPrompt}\n\n【User】${query}`,
+        withTools: enabledTools.length > 0,
+        tools: enabledTools,
+      });
+      setAnswer(res.answer);
+      setLastRoute(`${res.route || "?"} · ${res.provider || "?"}`);
+      setToolCalls(res.toolCalls || []);
+    } catch (ex) {
+      setErr(String((ex as Error).message || ex));
+    }
+  }
 
   useEffect(() => {
     if (!activeId) {
@@ -281,9 +445,9 @@ export function StudioPage() {
     setResourceError(null);
     setOverlayBlocked(false);
     Promise.all([
-      apiGet<{ agent_id?: string; prompt?: string }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/prompt`),
-      apiGet<{ agent_id?: string; items?: StudioTool[] }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/tools`),
-      apiGet<{ agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }> }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/guardrails`),
+      apiGet<{ agent_id?: string; prompt?: string; revision?: number }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/prompt`),
+      apiGet<{ agent_id?: string; items?: StudioTool[]; revision?: number }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/tools`),
+      apiGet<{ agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }>; revision?: number }>(`/v1/aip/agents/${encodeURIComponent(activeId)}/guardrails`),
       apiGet<{ items?: Array<{ id?: string; name?: string; kind?: string }> }>("/v1/aip/tools"),
     ]).then(([prompt, assigned, guardrails, catalog]) => {
       if (generation !== loadGeneration.current) return;
@@ -291,6 +455,7 @@ export function StudioPage() {
         throw new Error("Agent 资源响应目标错配");
       }
       setSystemPrompt(String(prompt.prompt || ""));
+      setOverlayRevision(Math.max(Number(prompt.revision || 0), Number(assigned.revision || 0), Number(guardrails.revision || 0)));
       const assignedItems = assigned.items || [];
       setEnabledTools(assignedItems.map((tool) => tool.id));
       const catalogItems = (catalog.items || []).filter((tool) => tool.id).map((tool) => ({
@@ -319,6 +484,34 @@ export function StudioPage() {
     });
   }, [activeId]);
 
+  async function discardConfiguration() {
+    if (!activeId || discarding) return;
+    const targetId = activeId;
+    setDiscarding(true);
+    setResourceError(null);
+    try {
+      const [prompt, assigned, guardrails] = await Promise.all([
+        apiGet<{ agent_id?: string; prompt?: string; revision?: number }>(`/v1/aip/agents/${encodeURIComponent(targetId)}/prompt`),
+        apiGet<{ agent_id?: string; items?: StudioTool[]; revision?: number }>(`/v1/aip/agents/${encodeURIComponent(targetId)}/tools`),
+        apiGet<{ agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }>; revision?: number }>(`/v1/aip/agents/${encodeURIComponent(targetId)}/guardrails`),
+      ]);
+      if (targetId !== activeId || prompt.agent_id !== targetId || assigned.agent_id !== targetId || guardrails.agent_id !== targetId) {
+        throw new Error("智能体配置重读目标错配");
+      }
+      setSystemPrompt(String(prompt.prompt || ""));
+      setEnabledTools((assigned.items || []).map((item) => item.id));
+      setEnabledGuardrails((guardrails.items || []).filter((item) => item.enabled !== false).map((item) => String(item.id || "")).filter(Boolean));
+      setOverlayRevision(Math.max(Number(prompt.revision || 0), Number(assigned.revision || 0), Number(guardrails.revision || 0)));
+      setPromptSaveMsg("已取消本地修改并重读服务端配置");
+      setToolsSaveMsg(null);
+      setGuardrailsSaveMsg(null);
+    } catch (error) {
+      setResourceError(`取消修改失败：${String((error as Error).message || error)}`);
+    } finally {
+      setDiscarding(false);
+    }
+  }
+
   async function savePrompt() {
     if (promptSaving || !activeId || overlayBlocked) return;
     const targetId = activeId;
@@ -327,8 +520,9 @@ export function StudioPage() {
     setPromptSaveMsg(null);
     setErr(null);
     try {
-      const written = await apiPut<{ ok?: boolean; agent_id?: string; prompt?: string }>(`/v1/aip/agents/${encodeURIComponent(targetId)}/prompt`, {
+      const written = await apiPut<{ ok?: boolean; agent_id?: string; prompt?: string; revision?: number }>(`/v1/aip/agents/${encodeURIComponent(targetId)}/prompt`, {
         prompt: snapshot,
+        expectedRevision: overlayRevision,
       });
       if (!validatePromptResponse(written, targetId, snapshot)) throw new Error("Prompt 写回响应与目标不一致");
       let reread: { agent_id?: string; prompt?: string };
@@ -343,6 +537,7 @@ export function StudioPage() {
         return;
       }
       if (activeId === targetId) setSystemPrompt(reread.prompt);
+      setOverlayRevision(Number(written.revision || overlayRevision + 1));
       setPromptSaveMsg(formatStudioSaveMsg(true, "agents/prompt"));
     } catch (ex) {
       setPromptSaveMsg(`保存失败 · ${String((ex as Error).message || ex).slice(0, 120)}`);
@@ -359,8 +554,9 @@ export function StudioPage() {
     setToolsSaveMsg(null);
     setErr(null);
     try {
-      const written = await apiPut<{ agent_id?: string; items?: Array<{ id?: string }> }>(`/v1/aip/agents/${encodeURIComponent(targetId)}/tools`, {
+      const written = await apiPut<{ agent_id?: string; items?: Array<{ id?: string }>; revision?: number }>(`/v1/aip/agents/${encodeURIComponent(targetId)}/tools`, {
         items: selectedToolItems.map((tool) => ({ id: tool.id, name: tool.name, category: tool.category, enabled: true })),
+        expectedRevision: overlayRevision,
       });
       if (!validateAgentToolsResponse(written, targetId, snapshot)) throw new Error("Tools 写回响应与目标不一致");
       let reread: { agent_id?: string; items?: Array<{ id?: string }> };
@@ -375,6 +571,7 @@ export function StudioPage() {
         return;
       }
       setToolsSaveMsg(formatStudioSaveMsg(true, "agents/{id}/tools"));
+      setOverlayRevision(Number(written.revision || overlayRevision + 1));
     } catch (ex) {
       setToolsSaveMsg(`保存失败 · ${String((ex as Error).message || ex).slice(0, 120)}`);
     } finally {
@@ -395,9 +592,9 @@ export function StudioPage() {
         name: item.name,
         enabled: snapshot.includes(item.id),
       }));
-      const written = await apiPut<{ agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }> }>(
+      const written = await apiPut<{ agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }>; revision?: number }>(
         `/v1/aip/agents/${encodeURIComponent(targetId)}/guardrails`,
-        { items },
+        { items, expectedRevision: overlayRevision },
       );
       if (!validateGuardrailsResponse(written, targetId, snapshot)) throw new Error("Guardrails 写回响应与目标不一致");
       let reread: { agent_id?: string; items?: Array<{ id?: string; enabled?: boolean }> };
@@ -412,6 +609,7 @@ export function StudioPage() {
         return;
       }
       setGuardrailsSaveMsg(formatStudioSaveMsg(true, "agents/{id}/guardrails"));
+      setOverlayRevision(Number(written.revision || overlayRevision + 1));
     } catch (ex) {
       setGuardrailsSaveMsg(`保存失败 · ${String((ex as Error).message || ex).slice(0, 120)}`);
     } finally {
@@ -435,37 +633,23 @@ export function StudioPage() {
     }
   }
 
-  async function onChat(e: FormEvent) {
-    e.preventDefault();
-    setErr(null);
-    setAnswer("");
-    setToolCalls([]);
-    setLastRoute(null);
-    if (!query.trim()) {
-      setErr("请输入真实测试问题");
-      return;
-    }
-    if (!modelRouteGate.ready) {
-      setErr(modelRouteGate.reason);
-      return;
-    }
+  async function changeLifecycle(action: "activate" | "suspend") {
+    if (!activeAgent || !activeRoleDetail || lifecycleBusy) return;
+    setLifecycleBusy(true);
+    setLifecycleMsg(null);
     try {
-      const res = await apiPost<{
-        answer: string;
-        toolCalls: unknown[];
-        route?: string;
-        provider?: string;
-      }>("/v1/aip/chat", {
-        query: `【System】${systemPrompt}\n\n【User】${query}`,
-        withTools: selectedTools.length > 0,
-        tools: selectedTools,
-      });
-      setAnswer(res.answer);
-      setLastRoute(`${res.route || "?"} · ${res.provider || "?"}`);
-      setToolCalls(res.toolCalls || []);
-      setTab("try");
-    } catch (ex) {
-      setErr(String((ex as Error).message || ex));
+      const response = action === "activate"
+        ? await aipAgentControl.activateAgent(activeAgent.id, activeRoleDetail.instanceVersion, activeRoleDetail.capabilityBindingIds, `studio-activate-${crypto.randomUUID()}`)
+        : await aipAgentControl.suspendAgent(activeAgent.id, activeRoleDetail.instanceVersion, "工作台人工停用回滚", `studio-suspend-${crypto.randomUUID()}`);
+      const reread = await aipAgentControl.runtimeReadiness();
+      const exact = reread.catalog.items.find((item) => item.instance?.instanceId === activeAgent.id)?.instance;
+      if (!exact || exact.version !== response.instance.version || exact.status !== response.instance.status) throw new Error("操作后实例重读不一致");
+      setLifecycleMsg(`${action === "activate" ? "已激活" : "已停用回滚"} · 实例修订 ${exact.version} · Receipt ${response.receipt.receiptId}`);
+      window.location.reload();
+    } catch (cause) {
+      setLifecycleMsg(`操作未完成 · ${String((cause as Error).message || cause).slice(0, 180)}`);
+    } finally {
+      setLifecycleBusy(false);
     }
   }
 
@@ -656,7 +840,7 @@ export function StudioPage() {
                           color: "var(--aos-text-secondary)",
                         }}
                       >
-                        {a.toolCount} 工具
+                        {roleDetails[a.id] ? `${roleDetails[a.id].skills.length} 技能 · ${roleDetails[a.id].capabilityIds.length} 能力` : `${a.toolCount} 已分配工具`}
                       </span>
                     </div>
                   </div>
@@ -676,10 +860,14 @@ export function StudioPage() {
                   {displayAgent.name}
                 </h2>
                 <p style={{ fontSize: 13, color: "var(--aos-text-secondary)", margin: "4px 0 0", lineHeight: 1.5 }}>
-                  配置智能体指令、工具、本体与知识上下文；自动化能力须通过正式评测和草稿审批
+                  {activeRoleDetail?.responsibility || "配置智能体指令、工具、本体与知识上下文；自动化能力须通过正式评测和草稿审批"}
                 </p>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>配置修订 {overlayRevision}</span>
+                <button type="button" onClick={() => void discardConfiguration()} disabled={!activeAgent || discarding}>
+                  {discarding ? "重读中…" : "取消修改"}
+                </button>
                 <span
                   style={{
                     padding: "2px 8px",
@@ -706,6 +894,24 @@ export function StudioPage() {
                 </span>
               </div>
             </div>
+
+            {activeRoleDetail && (
+              <section data-testid="studio-role-contract" className="card" style={{ padding: 14, marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                  <strong>职责与能力组合</strong>
+                  <span style={{ color: activeRoleDetail.readiness === "runnable" ? "var(--aos-green-700)" : "var(--aos-amber-700)", fontSize: 12 }}>
+                    {activeRoleDetail.readiness === "runnable" ? "当前组合可运行" : "当前组合需核验"}
+                  </span>
+                </div>
+                <p style={{ margin: "8px 0", fontSize: 12 }}>业务编排 {activeRoleDetail.logicIds.length} 项 · 原子技能 {activeRoleDetail.skills.length} 项 · 受控能力 {activeRoleDetail.capabilityIds.length} 项</p>
+                <details style={{ fontSize: 12 }}>
+                  <summary>查看精确绑定（审计用）</summary>
+                  <p>业务编排：{activeRoleDetail.logicIds.join("、")}</p>
+                  <p>原子技能：{activeRoleDetail.skills.map((item) => `${item.skillId}@${item.revision}`).join("、")}</p>
+                  <p>受控能力：{activeRoleDetail.capabilityIds.join("、")}</p>
+                </details>
+              </section>
+            )}
 
             {/* Tab 导航 */}
             <div style={{ borderBottom: "1px solid var(--aos-border)", marginBottom: 16 }}>
@@ -1029,119 +1235,68 @@ export function StudioPage() {
                   padding: 20,
                 }}
               >
-                <div
-                  style={{
-                    borderRadius: 2,
-                    background: "var(--aos-surface-hover)",
-                    border: "1px solid var(--aos-border)",
-                    padding: 12,
-                    fontSize: 13,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  <div style={{ color: "var(--aos-blue-600)", fontSize: 11, fontWeight: 500, marginBottom: 4 }}>用户</div>
-                  <div style={{ color: "var(--aos-text)" }}>{query}</div>
-                  <div style={{ color: "var(--aos-amber-600)", fontSize: 11, fontWeight: 500, marginTop: 12, marginBottom: 4 }}>
-                    Buddy
+                <section aria-label="交互问答兼容试跑" style={{ marginBottom: 16 }}>
+                  <div style={{ borderRadius: 2, background: "var(--aos-surface-hover)", border: "1px solid var(--aos-border)", padding: 12, fontSize: 13, lineHeight: 1.6 }}>
+                    <div style={{ color: "var(--aos-blue-600)", fontSize: 11, fontWeight: 500, marginBottom: 4 }}>用户</div>
+                    <div style={{ color: "var(--aos-text)" }}>{query}</div>
+                    <div style={{ color: "var(--aos-amber-600)", fontSize: 11, fontWeight: 500, marginTop: 12, marginBottom: 4 }}>Buddy</div>
+                    <div style={{ color: "var(--aos-text)" }}>{answer || "尚未运行；发送后仅展示真实 API 回包。"}</div>
+                    {lastRoute && <div style={{ fontSize: 10, color: "var(--aos-text-tertiary)", marginTop: 8 }}>路由：{lastRoute}</div>}
                   </div>
-                  <div style={{ color: "var(--aos-text)" }}>
-                    {answer || "尚未运行；发送后仅展示真实 API 回包。"}
-                  </div>
-                  {lastRoute && (
-                    <div style={{ fontSize: 10, color: "var(--aos-text-tertiary)", marginTop: 8 }}>
-                      路由：{lastRoute}
-                    </div>
-                  )}
-                </div>
-                <form
-                  onSubmit={onChat}
-                  style={{ display: "flex", gap: 8, marginTop: 12 }}
-                >
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    style={{
-                      flex: 1,
-                      padding: "8px 12px",
-                      fontSize: 13,
-                      borderRadius: 2,
-                      border: "1px solid var(--aos-border)",
-                      background: "var(--aos-surface)",
-                    }}
-                    placeholder="输入测试问题…"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!query.trim() || !modelRouteGate.ready}
-                    title={!modelRouteGate.ready ? modelRouteGate.reason : undefined}
-                    style={{
-                      padding: "8px 16px",
-                      borderRadius: 2,
-                      background: "var(--aos-indigo-600)",
-                      color: "var(--text-on-brand)",
-                      border: "none",
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: !query.trim() || !modelRouteGate.ready ? "not-allowed" : "pointer",
-                      opacity: !query.trim() || !modelRouteGate.ready ? 0.55 : 1,
-                    }}
-                  >
-                    发送
-                  </button>
-                </form>
-                {err && <p style={{ color: "var(--aos-red)", fontSize: 12, marginTop: 8 }}>{err}</p>}
-                <Link
-                  to="/aip/assist"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                    marginTop: 12,
-                    fontSize: 12,
-                    color: "var(--aos-blue-600)",
-                    textDecoration: "none",
-                  }}
-                >
-                  在工作台预览 Buddy 组件 →
-                </Link>
-                {toolCalls.length > 0 && (
-                  <div style={{ marginTop: 16 }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--aos-text)", marginBottom: 8 }}>
-                      工具调用
-                    </div>
-                    <table
-                      style={{
-                        width: "100%",
-                        fontSize: 11,
-                        borderCollapse: "collapse",
-                        borderRadius: 2,
-                        overflow: "hidden",
-                        border: "1px solid var(--aos-border)",
-                      }}
-                    >
-                      <thead>
-                        <tr style={{ background: "var(--aos-surface-hover)", textAlign: "left" }}>
-                          <th style={{ padding: "6px 10px", fontWeight: 500, color: "var(--aos-text-secondary)", fontSize: 10 }}>工具</th>
-                          <th style={{ padding: "6px 10px", fontWeight: 500, color: "var(--aos-text-secondary)", fontSize: 10 }}>状态</th>
-                          <th style={{ padding: "6px 10px", fontWeight: 500, color: "var(--aos-text-secondary)", fontSize: 10 }}>详情</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {toolCalls.map((tc, i) => {
-                          const t = tc as Record<string, unknown>;
-                          return (
-                            <tr key={i} style={{ borderTop: "1px solid var(--aos-gray-100)" }}>
-                              <td style={{ padding: "6px 10px", fontFamily: "monospace" }}>
-                                {String(t.id || t.tool || `#${i + 1}`)}
-                              </td>
-                              <td style={{ padding: "6px 10px" }}>{String(t.status || "—")}</td>
-                              <td style={{ padding: "6px 10px" }}>{String(t.summary || t.result || "—")}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
+                  <form onSubmit={onChat} style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                    <input
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      style={{ flex: 1, padding: "8px 12px", fontSize: 13, borderRadius: 2, border: "1px solid var(--aos-border)", background: "var(--aos-surface)" }}
+                      placeholder="输入测试问题…"
+                    />
+                    <button type="submit" disabled={!query.trim() || !modelRouteGate.ready} title={!modelRouteGate.ready ? modelRouteGate.reason : undefined} className="btn primary">发送</button>
+                  </form>
+                  {err && <p style={{ color: "var(--aos-red)", fontSize: 12, marginTop: 8 }}>{err}</p>}
+                  <Link to="/aip/assist" style={{ display: "inline-flex", marginTop: 12, fontSize: 12, color: "var(--aos-blue-600)", textDecoration: "none" }}>在任务协作助手中继续 →</Link>
+                  {toolCalls.length > 0 && (
+                    <table style={{ width: "100%", marginTop: 12, fontSize: 11, borderCollapse: "collapse", border: "1px solid var(--aos-border)" }}>
+                      <thead><tr><th>工具</th><th>状态</th><th>详情</th></tr></thead>
+                      <tbody>{toolCalls.map((item, index) => {
+                        const call = item as Record<string, unknown>;
+                        return <tr key={index}><td>{String(call.id || call.tool || `#${index + 1}`)}</td><td>{String(call.status || "—")}</td><td>{String(call.summary || call.result || "—")}</td></tr>;
+                      })}</tbody>
                     </table>
+                  )}
+                </section>
+                <p style={{ margin: "0 0 12px", fontSize: 12, color: "var(--aos-text-secondary)" }}>
+                  安全试跑使用服务端权威 Task、PlanRevision 与 TaskRun；刷新后可恢复，运行事件、产物、证据和控制回执均来自同一运行记录。
+                </p>
+                {trialLogicRef ? (
+                  <CanonicalTaskRunPanel
+                    graphId={"assetId" in trialLogicRef ? trialLogicRef.assetId : trialLogicRef.id}
+                    graphRevision={trialLogicRef.revision}
+                    graphName={`${displayAgent.name}业务编排`}
+                    onTimelineChange={handleTrialTimeline}
+                  />
+                ) : (
+                  <div role="alert" style={{ padding: 12, border: "1px solid var(--aos-amber-border)", background: "var(--aos-amber-bg)" }}>
+                    当前数字同事没有可核验的业务编排修订，已从试跑入口撤下。请在“职责与能力组合”中完成精确绑定后再试跑。
                   </div>
+                )}
+                {trialLogicRef && (
+                  <section style={{ marginTop: 12, padding: 14, border: "1px solid var(--aos-border)", background: "var(--aos-gray-50)" }} aria-label="AgentRun 安全关联与评测">
+                    <h3 style={{ margin: "0 0 6px", fontSize: 14 }}>AgentRun 安全关联与评测</h3>
+                    <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--aos-text-secondary)" }}>
+                      将上方权威 TaskRun 绑定到当前数字同事的 exact Skill/Logic。只创建 queued AgentRun 后立即 CAS 取消，不启动 Provider；TaskRun 产物是确定性沙箱结果，不冒充模型效果。
+                    </p>
+                    <button type="button" className="btn" disabled={!trialTimeline || trialAgentRunBusy} onClick={() => void bindSafeAgentRun()}>
+                      {trialAgentRunBusy ? "安全关联中…" : "建立 AgentRun 安全关联"}
+                    </button>
+                    {trialAgentRunMsg && <p role="status" style={{ margin: "8px 0 0", fontSize: 12 }}>{trialAgentRunMsg}</p>}
+                    {trialAgentRun && (
+                      <dl style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 8, margin: "10px 0 0", fontSize: 12 }}>
+                        <div><dt>AgentRun</dt><dd><code>{trialAgentRun.agentRunId}</code></dd></div>
+                        <div><dt>最终状态</dt><dd>已取消（未启动 Provider）</dd></div>
+                        <div><dt>安全评测</dt><dd>TaskRun exact ref 一致 · 外部副作用 0</dd></div>
+                      </dl>
+                    )}
+                  </section>
                 )}
               </div>
             )}
@@ -1157,25 +1312,19 @@ export function StudioPage() {
                 }}
               >
                 <h2 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-amber-700)", margin: "0 0 8px" }}>
-                  受控自动化门控
+                  实例发布与回滚
                 </h2>
                 <p style={{ fontSize: 12, color: "var(--aos-amber-700)", margin: "0 0 12px", lineHeight: 1.6 }}>
                   {STUDIO_UNASSESSED_COPY}
                 </p>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    fontSize: 12,
-                    color: "var(--aos-amber-700)",
-                    opacity: 0.6,
-                    cursor: "not-allowed",
-                  }}
-                >
-                  <input type="checkbox" disabled style={{ width: 14, height: 14 }} />
-                  启用无人值守写回
-                </label>
+                {activeRoleDetail && <div className="card" style={{ padding: 12, marginBottom: 12 }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 12 }}>精确实例：{displayAgent.name} · 修订 {activeRoleDetail.instanceVersion}</p>
+                  <p style={{ margin: "0 0 10px", fontSize: 12 }}>当前状态：{statusBadge(displayAgent.status).label} · 新鲜能力绑定 {activeRoleDetail.capabilityBindingIds.length}/{activeRoleDetail.capabilityIds.length}</p>
+                  {activeRoleDetail.instanceStatus === "provisioning" && <button type="button" className="btn primary" disabled={lifecycleBusy || activeRoleDetail.readiness !== "runnable" || activeRoleDetail.capabilityBindingIds.length !== activeRoleDetail.capabilityIds.length || activeRoleDetail.capabilityBindingIds.length === 0} onClick={() => void changeLifecycle("activate")}>激活当前精确修订</button>}
+                  {activeRoleDetail.instanceStatus === "active" && <button type="button" className="btn" disabled={lifecycleBusy} onClick={() => void changeLifecycle("suspend")}>停用并回滚运行入口</button>}
+                  {activeRoleDetail.instanceStatus === "suspended" && <p role="status" style={{ margin: 0, fontSize: 12 }}>实例已停用；重新激活必须重新形成新鲜 Binding 证据和新的实例修订。</p>}
+                  {lifecycleMsg && <p role="status" style={{ margin: "8px 0 0", fontSize: 12 }}>{lifecycleMsg}</p>}
+                </div>}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
                   <Link
                     to="/aip/evals"

@@ -4,12 +4,14 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable
 
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Query
 from fastapi.responses import StreamingResponse
 
 from aos_api.aip_assist_contracts import (
     AssistStreamEvent,
     AssistThreadSnapshot,
+    AssistThreadHistory,
+    AssistSubjectOptionList,
     CreateAssistThreadRequest,
     CreateAssistTurnRequest,
 )
@@ -45,6 +47,15 @@ def _call(operation):
         ) from exc
 
 
+@router.get("/subjects", response_model=AssistSubjectOptionList)
+def list_assist_subjects(
+    limit: int = Query(default=50, ge=1, le=200),
+    principal: Principal = Depends(require_principal),
+    service: AipAssistService = Depends(get_aip_assist_service),
+) -> AssistSubjectOptionList:
+    return _call(lambda: service.list_subjects(_scope(principal), limit=limit))
+
+
 @router.post("/threads", response_model=AssistThreadSnapshot)
 def create_assist_thread(
     body: CreateAssistThreadRequest,
@@ -69,6 +80,15 @@ def get_assist_thread(
     service: AipAssistService = Depends(get_aip_assist_service),
 ) -> AssistThreadSnapshot:
     return _call(lambda: service.get_thread(_scope(principal), thread_id))
+
+
+@router.get("/threads/{thread_id}/history", response_model=AssistThreadHistory)
+def get_assist_thread_history(
+    thread_id: str,
+    principal: Principal = Depends(require_principal),
+    service: AipAssistService = Depends(get_aip_assist_service),
+) -> AssistThreadHistory:
+    return _call(lambda: service.get_history(_scope(principal), thread_id))
 
 
 def _sse(events: Iterable[AssistStreamEvent]):

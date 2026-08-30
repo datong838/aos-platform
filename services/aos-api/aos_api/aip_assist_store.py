@@ -10,8 +10,12 @@ from typing import Any, Callable
 from aos_api.aip_assist_contracts import (
     AssistBlocker,
     AssistEventType,
+    AssistHistoryTurn,
+    AssistSubjectOption,
+    AssistSubjectOptionList,
     AssistStreamEvent,
     AssistSubjectRefs,
+    AssistThreadHistory,
     AssistThreadSnapshot,
     AssistThreadStatus,
     AssistTurnRecord,
@@ -114,6 +118,103 @@ class AipAssistStore:
     def get_thread(self, scope: TenantScope, thread_id: str) -> AssistThreadSnapshot:
         with connect(scope) as conn:
             return self._snapshot(conn, scope, thread_id)
+
+    def list_subjects(self, scope: TenantScope, *, limit: int = 50) -> AssistSubjectOptionList:
+        """Return only canonical Task/TaskRun/AgentRun triples owned by this tenant."""
+        with connect(scope) as conn:
+            rows = conn.execute(
+                """SELECT ar.task_ref,ar.task_run_ref,ar.agent_run_id,
+                          ar.version AS agent_run_version,ar.status AS agent_status,
+                          ar.updated_at AS agent_updated_at,t.title,t.description,
+                          t.status AS task_status,t.created_by,r.status AS run_status
+                   FROM aip_agent_run ar
+                   JOIN aip_task t ON t.org_id=ar.org_id AND t.project_id=ar.project_id
+                     AND t.task_id=ar.task_id
+                   JOIN aip_task_run r ON r.org_id=ar.org_id AND r.project_id=ar.project_id
+                     AND r.run_id=ar.task_run_id
+                   WHERE ar.org_id=%s AND ar.project_id=%s
+                   ORDER BY ar.updated_at DESC,ar.agent_run_id DESC LIMIT %s""",
+                (*scope.key, limit),
+            ).fetchall()
+        items = []
+        for row in rows:
+            actor = row["created_by"] or {}
+            owner = actor.get("actorId") if isinstance(actor, dict) else None
+            task_ref = row["task_ref"]
+            task_run_ref = row["task_run_ref"]
+            items.append(
+                AssistSubjectOption(
+                    subject=AssistSubjectRefs(
+                        task_ref=task_ref,
+                        task_run_ref=task_run_ref,
+                        agent_run_ref={
+                            "resourceType": "AgentRun",
+                            "resourceId": row["agent_run_id"],
+                            "revision": str(row["agent_run_version"]),
+                            "authority": "aip-agent-registry",
+                        },
+                        selection_refs=[],
+                        cutoff_at=row["agent_updated_at"],
+                    ),
+                    task_title=row["title"],
+                    task_description=row["description"] or "",
+                    owner=owner or "系统运行账户",
+                    task_status=row["task_status"],
+                    run_status=row["run_status"],
+                    agent_status=row["agent_status"],
+                    source="AIP 任务运行权威",
+                    updated_at=row["agent_updated_at"],
+                )
+            )
+        return AssistSubjectOptionList(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            items=items,
+            count=len(items),
+        )
+
+    def get_history(self, scope: TenantScope, thread_id: str) -> AssistThreadHistory:
+        with connect(scope) as conn:
+            thread = self._snapshot(conn, scope, thread_id)
+            rows = conn.execute(
+                """SELECT turn_id,turn_sequence,request_json,created_by,created_at
+                   FROM aip_assist_turn
+                   WHERE org_id=%s AND project_id=%s AND thread_id=%s
+                   ORDER BY turn_sequence""",
+                (*scope.key, thread_id),
+            ).fetchall()
+            participants = {thread.created_by}
+            turns: list[AssistHistoryTurn] = []
+            last_sequence = 0
+            for row in rows:
+                request = row["request_json"] or {}
+                participants.add(row["created_by"])
+                events = self._events(conn, scope, thread_id, row["turn_id"])
+                actor_rows = conn.execute(
+                    """SELECT DISTINCT actor FROM aip_assist_event
+                       WHERE org_id=%s AND project_id=%s AND thread_id=%s AND turn_id=%s""",
+                    (*scope.key, thread_id, row["turn_id"]),
+                ).fetchall()
+                participants.update(item["actor"] for item in actor_rows if item["actor"])
+                last_sequence = events[-1].sequence if events else 0
+                turns.append(
+                    AssistHistoryTurn(
+                        turn_id=row["turn_id"],
+                        turn_sequence=row["turn_sequence"],
+                        message=request.get("message", "历史消息"),
+                        attachment_refs=request.get("attachmentRefs", []),
+                        reference_refs=request.get("referenceRefs", []),
+                        created_by=row["created_by"],
+                        created_at=row["created_at"],
+                        events=events,
+                    )
+                )
+        cursor = f"{len(turns)}:{last_sequence}"
+        return AssistThreadHistory(
+            thread=thread,
+            participants=sorted(participants),
+            turns=turns,
+            event_cursor=cursor,
+        )
 
     def create_blocked_turn(
         self,

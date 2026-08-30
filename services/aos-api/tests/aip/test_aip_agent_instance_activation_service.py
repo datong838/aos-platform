@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from aos_api.aip_agent_control_contracts import ActivateAgentInstanceRequest
+from aos_api.aip_agent_control_contracts import ActivateAgentInstanceRequest, SuspendAgentInstanceRequest
 from aos_api.aip_agent_instance_activation_service import (
     AipAgentInstanceActivationService,
 )
@@ -59,13 +59,15 @@ class _Store:
     def __init__(self, instance=None):
         self.instance = instance or _instance()
         self.updated = False
+        self.transition = None
 
     def get_instance(self, *_args):
         return self.instance
 
-    def update_instance(self, *_args, **_kwargs):
+    def update_instance(self, _scope, _instance_id, request, **_kwargs):
         self.updated = True
-        return _instance(AgentInstanceStatus.ACTIVE), SimpleNamespace(receipt_id="r1")
+        self.transition = request
+        return _instance(request.to_status), SimpleNamespace(receipt_id="r1")
 
 
 class _Connection:
@@ -172,3 +174,30 @@ def test_active_instance_delegates_to_registry_receipt_replay() -> None:
     )
     assert instance.status is AgentInstanceStatus.ACTIVE
     assert store.updated is True
+
+
+def test_suspend_active_instance_writes_exact_versioned_transition() -> None:
+    store = _Store(_instance(AgentInstanceStatus.ACTIVE))
+    service = AipAgentInstanceActivationService(connect_factory=_connect([]), store=store)
+    instance, _ = service.suspend(
+        SCOPE,
+        "ecommerce.data_advisor.default",
+        SuspendAgentInstanceRequest(expected_version=2, reason="operator rollback"),
+        idempotency_key="suspend-d03",
+        actor="pytest",
+        occurred_at=NOW,
+    )
+    assert instance.status is AgentInstanceStatus.SUSPENDED
+    assert store.transition.expected_version == 2
+    assert store.transition.from_status is AgentInstanceStatus.ACTIVE
+    assert store.transition.to_status is AgentInstanceStatus.SUSPENDED
+
+
+def test_suspend_rejects_non_active_or_stale_instance() -> None:
+    service = AipAgentInstanceActivationService(connect_factory=_connect([]), store=_Store())
+    with pytest.raises(AipAgentRegistryTransitionBlocked, match="only active"):
+        service.suspend(SCOPE, "ecommerce.data_advisor.default", SuspendAgentInstanceRequest(expected_version=1, reason="operator rollback"), idempotency_key="suspend-d03", actor="pytest", occurred_at=NOW)
+
+    service = AipAgentInstanceActivationService(connect_factory=_connect([]), store=_Store(_instance(AgentInstanceStatus.ACTIVE)))
+    with pytest.raises(AipAgentRegistryTransitionBlocked, match="version changed"):
+        service.suspend(SCOPE, "ecommerce.data_advisor.default", SuspendAgentInstanceRequest(expected_version=1, reason="operator rollback"), idempotency_key="suspend-d03", actor="pytest", occurred_at=NOW)

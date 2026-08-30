@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 from aos_api.aip_agent_overlay_store import AipAgentOverlayStore
-from aos_api.aip_agent_registry_store import AipAgentRegistryNotFound, AipAgentRegistryStore
+from aos_api.aip_agent_registry_store import AipAgentRegistryConflict, AipAgentRegistryNotFound, AipAgentRegistryStore
 from aos_api.tenant_scope import TenantScope
 
 PRIMARY = TenantScope("org-org", "dev-project")
@@ -33,10 +33,20 @@ def test_overlay_empty_then_prompt_roundtrip(instance_id: str):
     assert empty["agent_id"] == instance_id
     assert isinstance(empty["prompt"], str)
     written = overlay.put_prompt(
-        PRIMARY, instance_id, prompt=marker, actor="pytest-overlay"
+        PRIMARY, instance_id, prompt=marker, actor="pytest-overlay", expected_revision=empty["revision"]
     )
     assert written["ok"] is True
     assert written["prompt"] == marker
+    assert written["revision"] == empty["revision"] + 1
+    assert len(written["content_hash"]) == 64
+    with pytest.raises(AipAgentRegistryConflict):
+        overlay.put_prompt(
+            PRIMARY,
+            instance_id,
+            prompt=f"{marker}-stale",
+            actor="pytest-overlay",
+            expected_revision=empty["revision"],
+        )
     reread = overlay.get_prompt(PRIMARY, instance_id)
     assert reread["prompt"] == marker
     agents = AipAgentRegistryStore()

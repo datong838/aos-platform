@@ -285,6 +285,17 @@ export function parseAgentRun(value: unknown, expectedTenant: Tenant): AgentRun 
   };
 }
 
+export function parseAgentRunCommand(value: unknown, expectedTenant: Tenant, operation: "agent_run.create" | "agent_run.cancel_queued") {
+  const raw = obj(value, "AgentRunCommandResponse");
+  exact(raw, "AgentRunCommandResponse", ["tenant", "agentRun", "receipt"]);
+  const scope = tenant(raw.tenant, "AgentRunCommandResponse.tenant");
+  sameTenant(scope, expectedTenant, "AgentRunCommandResponse");
+  const agentRun = parseAgentRun(raw.agentRun, expectedTenant);
+  const receipt = parseRegistryReceipt(raw.receipt, expectedTenant, operation, "AgentRunCommandResponse.receipt");
+  if (receipt.resultRef.resourceType !== "AgentRun" || receipt.resultRef.resourceId !== agentRun.agentRunId) throw new Error("AgentRun receipt resultRef 漂移");
+  return { tenant: scope, agentRun, receipt };
+}
+
 export function parseHandoff(value: unknown, expectedTenant: Tenant): HandoffEnvelope {
   const raw = obj(value, "HandoffEnvelope"); exact(raw, "HandoffEnvelope", ["tenant", "handoffId", "envelope", "status", "version", "consumedAt", "createdAt"]);
   const scope = tenant(raw.tenant, "HandoffEnvelope.tenant"); sameTenant(scope, expectedTenant, "HandoffEnvelope");

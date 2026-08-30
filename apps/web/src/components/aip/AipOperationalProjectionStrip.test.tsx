@@ -22,7 +22,7 @@ describe("AipOperationalProjectionStrip", () => {
     const onProjection = vi.fn();
     const host = document.createElement("div"); document.body.append(host); const root = createRoot(host);
     await act(async () => root.render(<AipOperationalProjectionStrip onProjection={onProjection} />)); await act(async () => undefined);
-    expect(host.textContent).toContain("数字同事"); expect(host.textContent).toContain("6/6 可派发"); expect(host.textContent).toContain("8/20 可派发");
+    expect(host.textContent).toContain("数字同事"); expect(host.textContent).toContain("6/6 可自动执行"); expect(host.textContent).toContain("8/20 可自动执行");
     expect(onProjection).toHaveBeenCalledWith(expect.objectContaining({ snapshotHash: H }));
     await act(async () => root.unmount());
   });

@@ -26,6 +26,11 @@ from aos_api.aip_memory_contracts import KnowledgeSearch
 from aos_api.aip_memory_search import AipMemoryKnowledgeSearch
 from aos_api.auth import Principal
 from aos_api.db import connect as db_connect
+from aos_api.ecom_core_models import (
+    DERIVED_PROPERTIES,
+    OPTIONAL_PROPERTIES,
+    REQUIRED_PROPERTIES,
+)
 from aos_api.marking import apply_field_redaction, can_access_object, effective_markings
 from aos_api.ontology_compose import assert_object_type_visible
 from aos_api.ontology_object_redaction import redact_ecommerce_pii
@@ -34,6 +39,48 @@ from aos_api.tenant_scope import TenantScope
 
 MAX_SEMANTIC_SOURCE_ROWS = 10_000
 _RESERVED_FIELDS = {"id", "type"}
+
+_ECOMMERCE_FIELD_LABELS = {
+    "name": "名称", "title": "商品名称", "status": "业务状态",
+    "orderNo": "订单号", "totalAmount": "订单金额", "currency": "币种",
+    "price": "销售价", "marketPrice": "市场价", "costPrice": "成本价",
+    "stock": "库存", "stockAlarm": "库存预警值", "saleNum": "销量",
+    "unit": "单位", "goodsClassName": "商品类型", "categoryId": "商品类目",
+    "shopId": "店铺", "productId": "商品", "memberLevel": "会员等级",
+    "order_count": "订单数", "last_order_days": "距最近下单天数",
+    "quality_score": "质量分", "stock_health": "库存健康度",
+    "createdAt": "创建时间", "updatedAt": "更新时间",
+}
+_ECOMMERCE_NUMBER_FIELDS = {
+    "costPrice", "last_order_days", "lineAmount", "marketPrice", "order_count",
+    "overdue_hours", "pay_duration_min", "price", "quality_score", "quantity",
+    "risk_score", "saleNum", "score", "stock", "stockAlarm", "totalAmount",
+    "unitPrice",
+}
+
+
+def _canonical_ecommerce_properties(object_type: str) -> list[dict[str, Any]]:
+    """Compose the frozen P01-P12 non-PII field contract for old empty OT schemas."""
+    if object_type not in REQUIRED_PROPERTIES:
+        return []
+    fields = sorted(
+        REQUIRED_PROPERTIES.get(object_type, frozenset())
+        | OPTIONAL_PROPERTIES.get(object_type, frozenset())
+        | DERIVED_PROPERTIES.get(object_type, frozenset())
+    )
+    return [
+        {
+            "name": name,
+            "label": _ECOMMERCE_FIELD_LABELS.get(name, name),
+            "type": (
+                "number" if name in _ECOMMERCE_NUMBER_FIELDS
+                else "datetime" if name.endswith("At")
+                else "boolean" if name.startswith("is")
+                else "string"
+            ),
+        }
+        for name in fields
+    ]
 
 
 def _canonical_hash(value: object) -> str:
@@ -188,7 +235,17 @@ class CanonicalSemanticReadAdapter:
                     code="OBJECT_TYPE_UNAVAILABLE",
                     message="installed Object Type schema is unavailable",
                 )
-            schema = list(schema_row["properties"] or [])
+            stored_schema = list(schema_row["properties"] or [])
+            schema_by_name = {
+                name: value
+                for value in stored_schema
+                if (name := _property_name(value)) is not None
+            }
+            for value in _canonical_ecommerce_properties(request.object_type):
+                name = _property_name(value)
+                if name is not None:
+                    schema_by_name.setdefault(name, value)
+            schema = list(schema_by_name.values())
             definitions = {
                 name: value
                 for value in schema
@@ -251,7 +308,9 @@ class CanonicalSemanticReadAdapter:
         _sort_rows(values, request.sort, definitions)
         by_id = {str(item["id"]): (row, markings) for item, row, markings in projected}
         values = values[: request.page_size]
-        schema_hash = _canonical_hash(dict(schema_row))
+        schema_hash = _canonical_hash(
+            {"stored": dict(schema_row), "effectiveProperties": schema}
+        )
         sources = [
             QuerySourceRef(
                 ref=ResourceRef(

@@ -2,14 +2,6 @@ import { NavLink } from "react-router-dom";
 
 import { useEcommerceWorkshopCatalog } from "./EcommerceWorkshopCatalogContext";
 
-const READINESS_LABEL = {
-  available: "可用",
-  degraded: "降级",
-  disabled: "停用",
-  blocked: "阻断",
-  unknown: "待验证",
-} as const;
-
 export function InstalledModuleNavigation() {
   const catalog = useEcommerceWorkshopCatalog();
 
@@ -67,13 +59,6 @@ export function InstalledModuleNavigation() {
         >
           <span className="ecommerce-workshop-nav-glyph" aria-hidden="true" />
           <span className="aos-nav-label">{module.menuLabel}</span>
-          <span
-            className={`ecommerce-workshop-readiness-status is-${module.readiness}`}
-            title={`就绪状态：${READINESS_LABEL[module.readiness]}`}
-          >
-            <span className="ecommerce-workshop-readiness-dot" aria-hidden="true" />
-            <span>{READINESS_LABEL[module.readiness]}</span>
-          </span>
         </NavLink>
       ))}
     </div>

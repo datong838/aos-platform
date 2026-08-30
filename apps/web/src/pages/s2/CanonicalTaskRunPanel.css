@@ -12,7 +12,7 @@
 .canonical-task-run__status-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: var(--aos-muted); font-size: .72rem; }
 .canonical-task-run__status { padding: 3px 8px; border-radius: 999px; background: var(--aos-surface-muted); font-weight: 700; }
 .canonical-task-run__status.is-running, .canonical-task-run__status.is-succeeded { background: var(--aos-green-bg, #ecfdf3); color: var(--aos-green-700, #166534); }
-.canonical-task-run__status.is-paused, .canonical-task-run__status.is-queued { background: var(--aos-amber-bg, #fffaeb); color: var(--aos-amber-700, #92400e); }
+.canonical-task-run__status.is-pausing, .canonical-task-run__status.is-paused, .canonical-task-run__status.is-queued { background: var(--aos-amber-bg, #fffaeb); color: var(--aos-amber-700, #92400e); }
 .canonical-task-run__status.is-failed, .canonical-task-run__status.is-cancelled, .canonical-task-run__status.is-unknown { background: var(--aos-red-bg, #fef3f2); color: var(--aos-red, #b42318); }
 .canonical-task-run__facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .canonical-task-run__facts > div { display: grid; gap: 3px; min-width: 0; padding: 9px; border: 1px solid var(--aos-border); }

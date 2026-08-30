@@ -1,7 +1,7 @@
 import { apiGet, apiPost } from "../client";
 import { getTenant } from "../tenant";
-import { parseAgentCatalog, parseAgentInstances, parseAgentRun, parseCapabilities, parseDecidedHandoff, parseHandoff, parseHandoffDecisions, parseInstall, parseIssuedHandoff, parseRuntimeReadiness } from "./parser";
-import type { ConsumeHandoffInput, CreateHandoffDecisionInput, IssueHandoffInput } from "./contracts";
+import { parseAgentCatalog, parseAgentInstances, parseAgentRun, parseAgentRunCommand, parseCapabilities, parseDecidedHandoff, parseHandoff, parseHandoffDecisions, parseInstall, parseIssuedHandoff, parseRuntimeReadiness } from "./parser";
+import type { AgentInstanceActivationResponse, ConsumeHandoffInput, CreateAgentRunInput, CreateHandoffDecisionInput, IssueHandoffInput } from "./contracts";
 
 function segment(value: string, label: string): string {
   const cleaned = value.trim();
@@ -20,6 +20,12 @@ export const aipAgentControl = {
   async listCapabilities() { return parseCapabilities(await apiGet<unknown>("/v1/aip/capability-catalog"), getTenant()); },
   async runtimeReadiness() { return parseRuntimeReadiness(await apiGet<unknown>("/v1/aip/agent-registry/runtime-readiness"), getTenant()); },
   async getAgentRun(agentRunId: string) { return parseAgentRun(await apiGet<unknown>(`/v1/aip/agent-runs/${segment(agentRunId, "agentRunId")}`), getTenant()); },
+  async createAgentRun(input: CreateAgentRunInput, idempotencyKey: string) {
+    return parseAgentRunCommand(await apiPost<unknown>("/v1/aip/agent-runs", input, keyHeaders(idempotencyKey)), getTenant(), "agent_run.create");
+  },
+  async cancelQueuedAgentRun(agentRunId: string, expectedVersion: number, reason: string, idempotencyKey: string) {
+    return parseAgentRunCommand(await apiPost<unknown>(`/v1/aip/agent-runs/${segment(agentRunId, "agentRunId")}/cancel-queued`, { expectedVersion, reason }, keyHeaders(idempotencyKey)), getTenant(), "agent_run.cancel_queued");
+  },
   async getHandoff(handoffId: string) { return parseHandoff(await apiGet<unknown>(`/v1/aip/handoffs/${segment(handoffId, "handoffId")}`), getTenant()); },
   async listHandoffDecisions(handoffId: string) { return parseHandoffDecisions(await apiGet<unknown>(`/v1/aip/handoffs/${segment(handoffId, "handoffId")}/decisions`), getTenant()); },
   async issueHandoff(input: IssueHandoffInput, idempotencyKey: string) {
@@ -43,6 +49,12 @@ export const aipAgentControl = {
   async installEcommerce(idempotencyKey: string) {
     if (!idempotencyKey.trim()) throw new Error("Idempotency-Key 不能为空");
     return parseInstall(await apiPost<unknown>("/v1/aip/agents/install-ecommerce", {}, { "Idempotency-Key": idempotencyKey }), getTenant());
+  },
+  async activateAgent(instanceId: string, expectedVersion: number, capabilityBindingIds: string[], idempotencyKey: string) {
+    return apiPost<AgentInstanceActivationResponse>(`/v1/aip/agents/${segment(instanceId, "instanceId")}/activate`, { expectedVersion, capabilityBindingIds }, keyHeaders(idempotencyKey));
+  },
+  async suspendAgent(instanceId: string, expectedVersion: number, reason: string, idempotencyKey: string) {
+    return apiPost<AgentInstanceActivationResponse>(`/v1/aip/agents/${segment(instanceId, "instanceId")}/suspend`, { expectedVersion, reason }, keyHeaders(idempotencyKey));
   },
 };
 export * from "./contracts";
