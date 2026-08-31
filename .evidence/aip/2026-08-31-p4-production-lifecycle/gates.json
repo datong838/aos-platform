@@ -12,6 +12,8 @@
   "web": {
     "fullSingleThread": "GREEN_EXIT_0",
     "resourceContentionRerun": "GREEN_39_OF_39",
+    "recoveryCumulative": "GREEN_268_FILES_2376_TESTS_AFTER_ISOLATED_RERUN",
+    "importPageDomRender": "GREEN_8_OF_8",
     "productionBuild": "GREEN"
   },
   "api": {
