@@ -73,6 +73,9 @@ describe("MemoryGovernancePage", () => {
     await act(async () => undefined);
     expect(host.textContent).toContain("当前没有待治理知识");
     expect(host.textContent).not.toContain("示例知识候选");
+    await act(async () => (host.querySelector('[data-testid="memory-tab-query"]') as HTMLButtonElement).click());
+    expect(host.querySelector('[data-testid="memory-contribution-context"]')?.textContent).toContain("原子 Skill：选择后显示");
+    expect(host.querySelector('[data-testid="memory-contribution-context"]')?.textContent).not.toContain("未绑定");
     await act(async () => root.unmount());
   });
 
@@ -142,10 +145,11 @@ describe("MemoryGovernancePage", () => {
     const tab = host.querySelector('[data-testid="memory-tab-pipelines"]') as HTMLButtonElement;
     await act(async () => tab.click());
     expect(host.textContent).toContain("种子知识导入");
-    expect(host.textContent).toContain("未注册 Schedule");
-    expect(host.textContent).toContain("未配置");
-    expect(host.textContent).toContain("dependency_review_unknown");
-    expect((Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "等待权威配置") as HTMLButtonElement).disabled).toBe(true);
+    expect(host.textContent).toContain("尚无运行计划");
+    expect(host.textContent).toContain("等待运行计划");
+    expect(host.textContent).toContain("依赖评审尚无权威结论");
+    expect(host.textContent).toContain("审计原因码");
+    expect((Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "提交权威计划后可启用") as HTMLButtonElement).disabled).toBe(true);
     await act(async () => root.unmount());
   });
 
@@ -173,7 +177,8 @@ describe("MemoryGovernancePage", () => {
     expect(host.textContent).toContain("org-org / dev-project");
     expect(host.textContent).toContain("权威映射尚未建立");
     expect(host.textContent).toContain("0 条");
-    expect(host.textContent).toContain("trusted_search_provider_unavailable");
+    expect(host.textContent).toContain("可信检索服务当前不可用");
+    expect(host.textContent).toContain("审计原因码");
     expect(host.textContent).not.toContain("美妆知识已安装");
     await act(async () => root.unmount());
   });
@@ -194,10 +199,10 @@ describe("MemoryGovernancePage", () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><MemoryGovernancePage /></MemoryRouter>)); await act(async () => undefined);
     await act(async () => (host.querySelector('[data-testid="memory-tab-agents"]') as HTMLButtonElement).click()); await act(async () => undefined);
-    expect(host.textContent).toContain("当前租户有 1 个真实数字同事实例，但尚无 active 实例");
+    expect(host.textContent).toContain("当前租户有 1 个真实数字同事实例，但尚无生效实例");
     expect(host.textContent).toContain("内容官 · 准备中");
     expect(host.textContent).toContain("v1 · 准备中");
-    expect(host.textContent).toContain("当前实例状态为 provisioning，尚不可创建记忆投影");
+    expect(host.textContent).toContain("当前实例处于准备中状态，尚不可创建记忆引用");
     const create = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "创建个人引用") as HTMLButtonElement;
     expect(create.disabled).toBe(true);
     await act(async () => root.unmount());
@@ -212,8 +217,8 @@ describe("MemoryGovernancePage", () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><MemoryGovernancePage /></MemoryRouter>)); await act(async () => undefined);
     await act(async () => (host.querySelector('[data-testid="memory-tab-agents"]') as HTMLButtonElement).click()); await act(async () => undefined);
-    expect(host.textContent).toContain("内容官"); expect(host.textContent).toContain("v2"); expect(host.textContent).toContain("Memory/实例 exact ref 已漂移");
-    expect(host.textContent).toContain("证据不足（unknown）· 不可判定提升"); expect(host.textContent).not.toContain("baseline 0.0%");
+    expect(host.textContent).toContain("内容官"); expect(host.textContent).toContain("v2"); expect(host.textContent).toContain("正式记忆或实例的精确引用已漂移");
+    expect(host.textContent).toContain("证据不足 · 不可判定提升"); expect(host.textContent).not.toContain("原基线 0.0%");
     await act(async () => root.unmount());
   });
 });

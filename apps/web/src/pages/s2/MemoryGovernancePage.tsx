@@ -62,8 +62,43 @@ const statusLabels: Record<string, string> = {
   queued: "排队中", running: "运行中", paused: "已暂停", succeeded: "已成功", partial: "部分成功",
   failed: "已失败", cancelled: "已取消", unknown: "状态未知", disabled: "已停用",
   complete: "完整", degraded: "降级回源", blocked: "已阻断",
-  ready: "运行就绪", unconfigured: "未配置",
+  ready: "运行就绪", unconfigured: "等待运行计划", unbuilt: "尚未构建", authority_unavailable: "尚无权威映射",
 };
+
+const pipelineTriggerLabels: Record<string, string> = {
+  manual: "人工触发", scheduled: "周期计划", domain_event: "业务事件", task_event: "任务事件", version_event: "版本事件",
+};
+
+const dependencyLabels: Record<string, string> = {
+  applicability: "适用范围", author: "责任人", aggregate_redaction: "聚合脱敏", freshness: "新鲜度",
+  license: "授权许可", memory_governance: "记忆治理", review_due: "复审周期", source_version: "来源版本",
+  task_run_authority: "任务运行权威", trusted_adapter: "可信适配器", authorized_source: "授权来源",
+  effect_evidence: "效果证据", prompt_injection_guard: "提示注入防护", source_allowlist: "来源白名单",
+  summary_only: "仅保留摘要",
+};
+
+const governanceReasonLabels: Record<string, string> = {
+  dependency_review_unknown: "依赖评审尚无权威结论",
+  schedule_not_registered: "尚无权威运行计划",
+  trusted_adapter_not_registered: "可信数据适配器尚未登记",
+  successful_receipt_missing: "尚无成功运行凭证",
+  knowledge_package_installation_authority_unavailable: "知识包安装权威映射尚未建立",
+  knowledge_source_missing: "尚无可用知识来源",
+  capability_not_registered: "检索能力尚未登记",
+  degraded_vector_unavailable: "向量检索服务当前不可用",
+  trusted_search_provider_unavailable: "可信检索服务当前不可用",
+  search_reference_missing: "尚无可检索的正式记忆引用",
+  gold_set_registry_authority_unavailable: "评测基准权威尚未建立",
+};
+
+function governanceReasonLabel(code: string): string {
+  return governanceReasonLabels[code] || "需要查看审计原因";
+}
+
+function auditReasonCodes(codes: string[]) {
+  if (!codes.length) return null;
+  return <details style={{ marginTop: 5 }}><summary>审计原因码</summary><code style={blockerText}>{codes.join("、")}</code></details>;
+}
 
 const pipelineKindLabels: Record<string, string> = {
   seed_import: "种子知识导入",
@@ -226,7 +261,7 @@ export function MemoryGovernancePage() {
       });
       await reloadPipelines();
     } catch (caught) {
-      setPipelineError(`Schedule 状态变更被阻断：${String((caught as Error).message || caught)}`);
+      setPipelineError(`运行计划状态变更未通过：${String((caught as Error).message || caught)}`);
     } finally {
       setBusyScheduleId("");
     }
@@ -249,7 +284,7 @@ export function MemoryGovernancePage() {
       setSelectedCheckpoint(checkpoint);
       setSelectedAlerts(alerts);
     } catch (caught) {
-      setPipelineError(`Pipeline 证据读取失败：${String((caught as Error).message || caught)}`);
+      setPipelineError(`知识管道证据读取失败：${String((caught as Error).message || caught)}`);
     }
   }
 
@@ -489,10 +524,10 @@ export function MemoryGovernancePage() {
         <div data-testid="memory-contribution-context" className="callout info" style={{ marginBottom: 14 }}>
           <strong>工作台贡献上下文</strong>
           <div style={{ marginTop: 6, overflowWrap: "anywhere" }}>
-            原子 Skill：{skillId || "待指定"} → Logic 编排：{contributionContext.logicId || "未绑定"} → 数字同事：{contributionContext.coworkerId || "未绑定"} → 工作台模块：{contributionContext.moduleId || "通用治理视图"}
+            原子 Skill：{skillId || "选择后显示"} → Logic 编排：{contributionContext.logicId || "选择后显示"} → 数字同事：{contributionContext.coworkerId || "选择后显示"} → 工作台模块：{contributionContext.moduleId || "通用治理视图"}
           </div>
           <div className="muted" style={{ marginTop: 4 }}>
-            此处只消费精确引用并展示贡献；MemoryCandidate 提交、评测、批准和晋升仍由服务端权威链裁决。
+            此处只消费精确引用并展示贡献；知识候选提交、评测、批准和晋升仍由服务端权威链裁决。
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
@@ -500,7 +535,7 @@ export function MemoryGovernancePage() {
           <label>主体 ID<input value={subjectId} onChange={(event) => setSubjectId(event.target.value)} aria-label="memory-subject-id" placeholder="真实 Object ID" /></label>
           <label>任务标识<input value={taskId} onChange={(event) => setTaskId(event.target.value)} aria-label="memory-task-id" placeholder="输入权威任务标识" /></label>
           <label>技能 ID<input value={skillId} onChange={(event) => setSkillId(event.target.value)} aria-label="memory-skill-id" placeholder="例如 content.strategy" /></label>
-          <label>请求 markings<input value={markings} onChange={(event) => setMarkings(event.target.value)} aria-label="memory-markings" /></label>
+          <label>数据标记<input value={markings} onChange={(event) => setMarkings(event.target.value)} aria-label="memory-markings" /></label>
         </div>
         <button type="button" className="btn primary" style={{ marginTop: 14 }} onClick={() => void runKnowledgeQuery()} disabled={queryState === "loading"}>{queryState === "loading" ? "检索中…" : "执行权威检索"}</button>
         {queryState === "idle" && !queryError && <div data-testid="memory-query-idle" className="callout info" style={{ marginTop: 14 }}>填写真实任务、技能和主体后检索；页面不会在未查询时展示示例结果。</div>}
@@ -508,12 +543,13 @@ export function MemoryGovernancePage() {
         {queryError && queryState === "idle" && <div className="callout warning" style={{ marginTop: 14 }}>{queryError}</div>}
         {queryResult && <div data-testid={`memory-query-${queryResult.status}`} className={`callout ${queryResult.status === "complete" ? "info" : "warning"}`} style={{ marginTop: 14 }}>
           状态：{memoryStatusLabel(queryResult.status)} · {queryResult.citations.length} 条来源引用 · {queryResult.assembledTokens} 个模型用量单位
-          {queryResult.blockedReasons.length ? ` · 原因：${queryResult.blockedReasons.join("、")}` : ""}
+          {queryResult.blockedReasons.length ? ` · 原因：${queryResult.blockedReasons.map(governanceReasonLabel).join("、")}` : ""}
+          {auditReasonCodes(queryResult.blockedReasons)}
         </div>}
         {queryResult?.chunks.map((chunk) => <article key={`${chunk.citation.memoryItemId}:${chunk.citation.revision}`} style={{ ...panel, marginTop: 12 }}>
           <strong>{authoritySubjectLabel(chunk.citation.subject)}</strong> · {chunk.citation.scope} · r{chunk.citation.revision}
           <p style={{ whiteSpace: "pre-wrap" }}>{chunk.content}</p>
-          <div className="muted">来源：{chunk.citation.source.provider} · hash {chunk.citation.contentHash.slice(0, 12)}… · freshness {memoryStatusLabel(chunk.citation.freshness)}</div>
+          <div className="muted">来源：{chunk.citation.source.provider} · 内容摘要 {chunk.citation.contentHash.slice(0, 12)}… · 新鲜度 {memoryStatusLabel(chunk.citation.freshness)}</div>
         </article>)}
       </section>}
 
@@ -533,20 +569,20 @@ export function MemoryGovernancePage() {
                   <strong>{pipelineKindLabels[policy.pipelineKind] || policy.pipelineKind}</strong>
                   <span className="tag" data-testid={`pipeline-operational-${policy.pipelineKind}`}>{operational ? memoryStatusLabel(operational.operationalStatus) : "权威未返回"}</span>
                 </div>
-                <div className="muted" style={{ marginTop: 5 }}>触发：{policy.allowedTriggers.join(" / ")} · 默认：{memoryStatusLabel(policy.defaultStatus)}</div>
-                <div className="muted">必需依赖：{policy.requiredDependencies.join("、")}</div>
+                <div className="muted" style={{ marginTop: 5 }}>触发方式：{policy.allowedTriggers.map((item) => pipelineTriggerLabels[item] || item).join(" / ")} · 默认状态：{memoryStatusLabel(policy.defaultStatus)}</div>
+                <div className="muted">运行条件：{policy.requiredDependencies.map((item) => dependencyLabels[item] || item).join("、")}</div>
                 {operational && <div data-testid={`pipeline-blockers-${policy.pipelineKind}`} style={{ marginTop: 8 }}>
-                  <div className="muted">Schedule：{operational.scheduleCounts.map(item => `${memoryStatusLabel(item.status)} ${item.count}`).join(" / ") || "0"} · Run：{operational.runCounts.map(item => `${memoryStatusLabel(item.status)} ${item.count}`).join(" / ") || "0"} · Alert：{operational.alertCount}</div>
-                  <div className="muted">Adapter：{operational.adapterRequired ? (operational.adapterRegistered ? "已注册" : "未注册") : "不要求"} · 最近 Receipt：{operational.lastReceipt ? memoryStatusLabel(operational.lastReceipt.status) : "无"}</div>
-                  {!!operational.blockerCodes.length && <div className="callout warning" style={{ marginTop: 8, padding: 8 }}>阻断：{operational.blockerCodes.join("、")}</div>}
+                  <div className="muted">运行计划：{operational.scheduleCounts.map(item => `${memoryStatusLabel(item.status)} ${item.count}`).join(" / ") || "暂无"} · 运行记录：{operational.runCounts.map(item => `${memoryStatusLabel(item.status)} ${item.count}`).join(" / ") || "暂无"} · 告警：{operational.alertCount}</div>
+                  <div className="muted">数据适配器：{operational.adapterRequired ? (operational.adapterRegistered ? "已登记" : "尚未登记") : "本管道不要求"} · 最近运行凭证：{operational.lastReceipt ? memoryStatusLabel(operational.lastReceipt.status) : "暂无"}</div>
+                  {!!operational.blockerCodes.length && <div className="callout warning" style={{ marginTop: 8, padding: 8 }}>运行前需补齐：{operational.blockerCodes.map(governanceReasonLabel).join("、")}{auditReasonCodes(operational.blockerCodes)}</div>}
                 </div>}
                 {!schedules.length ? <div style={{ marginTop: 10 }}>
-                  <span className="tag">未注册 Schedule</span>
-                  <button type="button" className="btn" style={{ marginTop: 8, width: "100%" }} disabled title="需管理员提交带精确 revision/hash 的权威 config Artifact">等待权威配置</button>
-                  <small className="muted">需管理员提交精确 config Artifact；页面不会临时拼装配置或伪造就绪状态。</small>
+                  <span className="tag">尚无运行计划</span>
+                  <button type="button" className="btn" style={{ marginTop: 8, width: "100%" }} disabled title="需管理员提交带精确修订和内容摘要的权威配置产物">提交权威计划后可启用</button>
+                  <small className="muted">需管理员提交精确配置产物；页面不会临时拼装配置或伪造可运行状态。</small>
                 </div> : schedules.map((schedule) => <div key={schedule.scheduleId} data-testid={`pipeline-schedule-${schedule.scheduleId}`} style={{ marginTop: 10, borderTop: "1px solid var(--aos-border)", paddingTop: 10 }}>
                   <div><span className="tag">{memoryStatusLabel(schedule.status)}</span> · {schedule.scheduleId} · v{schedule.version}</div>
-                  <div className="muted">checkpoint v{schedule.checkpointVersion}{schedule.nextRunAt ? ` · 下次 ${new Date(schedule.nextRunAt).toLocaleString()}` : ""}</div>
+                  <div className="muted">检查点第 {schedule.checkpointVersion} 版{schedule.nextRunAt ? ` · 下次 ${new Date(schedule.nextRunAt).toLocaleString()}` : ""}</div>
                   <button type="button" className="btn" style={{ marginTop: 8 }} onClick={() => void transitionSchedule(schedule)} disabled={busyScheduleId === schedule.scheduleId}>
                     {busyScheduleId === schedule.scheduleId ? "提交中…" : schedule.status === "active" ? "暂停" : schedule.status === "paused" ? "尝试启用" : "恢复为暂停"}
                   </button>
@@ -560,7 +596,7 @@ export function MemoryGovernancePage() {
           {!pipelineRuns.length ? <div data-testid="pipeline-runs-empty" className="callout info">当前组织没有权威知识管道运行；未以示例运行填充页面。</div> : <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead><tr><th>运行</th><th>计划</th><th>状态</th><th>任务 / 运行</th><th>计划时间</th><th>证据</th></tr></thead>
             <tbody>{pipelineRuns.map((run) => <tr key={run.pipelineRunId}>
-              <td>{run.pipelineRunId}<br /><span className="muted">attempt {run.attempt} · v{run.version}</span></td>
+              <td>{run.pipelineRunId}<br /><span className="muted">第 {run.attempt} 次执行 · 第 {run.version} 版</span></td>
               <td>{run.scheduleId}</td><td>{memoryStatusLabel(run.status)}</td><td>{run.taskId}<br />{run.runId}</td><td>{new Date(run.scheduledFor).toLocaleString()}</td>
               <td><button type="button" className="btn" onClick={() => void inspectPipelineRun(run)}>查看证据</button></td>
             </tr>)}</tbody>
@@ -569,9 +605,9 @@ export function MemoryGovernancePage() {
           {selectedRun && <div data-testid="pipeline-run-evidence" style={{ ...panel, marginTop: 16 }}>
             <strong>{selectedRun.pipelineRunId} 权威证据</strong>
             <dl style={{ display: "grid", gridTemplateColumns: "140px 1fr", gap: "6px 12px" }}>
-              <dt>Receipt</dt><dd>{selectedReceipt ? `${selectedReceipt.receiptId} · ${memoryStatusLabel(selectedReceipt.status)} · 产出 ${selectedReceipt.producedCount}` : "尚未生成"}</dd>
-              <dt>Checkpoint</dt><dd>{selectedCheckpoint ? `r${selectedCheckpoint.revision} · ${selectedCheckpoint.checkpoint.artifactId}` : "尚未推进"}</dd>
-              <dt>Alert</dt><dd>{selectedAlerts.length ? selectedAlerts.map((alert) => `${alert.severity}:${alert.code}`).join("、") : "无"}</dd>
+              <dt>运行凭证</dt><dd>{selectedReceipt ? `${selectedReceipt.receiptId} · ${memoryStatusLabel(selectedReceipt.status)} · 产出 ${selectedReceipt.producedCount}` : "尚未生成"}</dd>
+              <dt>检查点</dt><dd>{selectedCheckpoint ? `第 ${selectedCheckpoint.revision} 次修订 · ${selectedCheckpoint.checkpoint.artifactId}` : "尚未推进"}</dd>
+              <dt>告警</dt><dd>{selectedAlerts.length ? selectedAlerts.map((alert) => `${alert.severity}:${alert.code}`).join("、") : "无"}</dd>
             </dl>
           </div>}
         </>}
@@ -579,23 +615,23 @@ export function MemoryGovernancePage() {
 
       {view === "readiness" && <section data-testid="memory-readiness" style={panel}>
         <h2 style={{ marginTop: 0, fontSize: 17 }}>知识冷启动与检索就绪度</h2>
-        <p className="muted">只读展示当前组织与工作区的真实权威状态；缺少 package/Eval registry 时明确显示权威缺口，不以 0 或示例数据代替。</p>
+        <p className="muted">只读展示当前组织与工作区的真实权威状态；缺少知识包或评测基准权威时明确显示缺口，不以 0 或示例数据代替。</p>
         {readinessState === "loading" && <div className="callout info">正在读取知识就绪度…</div>}
         {readinessState === "error" && <div data-testid="readiness-error" className="callout warning">知识就绪度读取失败：{readinessError}</div>}
         {readiness && <>
           <div className="callout info">租户：{readiness.tenant.orgId} / {readiness.tenant.projectId} · 观测时间：{new Date(readiness.observedAt).toLocaleString()}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 12, marginTop: 14 }}>
-            <article style={panel}><strong>知识包安装权威</strong><p>{readiness.package.status === "available" ? `${readiness.package.count} 个` : "权威映射尚未建立"}</p><span className="muted" style={blockerText}>{readiness.package.blocker || "无阻断"}</span></article>
-            <article style={panel}><strong>知识 Source</strong><p>{readiness.sources.length} 组来源策略</p><span className="muted" style={blockerText}>{readiness.sourceBlockers.join("、") || "已读取真实来源"}</span></article>
-            <article style={panel}><strong>检索 Reference</strong><p>{readiness.search.referenceCount} 条</p><span className="muted">fulltext provider：{readiness.search.providerConfigured ? "capability 已确认" : "未就绪"}</span></article>
-            <article style={panel}><strong>检索 Eval</strong><p>{readiness.eval.status === "available" ? `${readiness.eval.count} 条 Gold` : "GoldSet 权威尚未建立"}</p><span className="muted" style={blockerText}>{readiness.eval.blocker || "无阻断"}</span></article>
+            <article style={panel}><strong>知识包安装权威</strong><p>{readiness.package.status === "available" ? `${readiness.package.count} 个` : "权威映射尚未建立"}</p><span className="muted" style={blockerText}>{readiness.package.blocker ? governanceReasonLabel(readiness.package.blocker) : "当前无缺口"}</span>{readiness.package.blocker ? auditReasonCodes([readiness.package.blocker]) : null}</article>
+            <article style={panel}><strong>知识来源</strong><p>{readiness.sources.length} 组来源策略</p><span className="muted" style={blockerText}>{readiness.sourceBlockers.map(governanceReasonLabel).join("、") || "已读取真实来源"}</span>{auditReasonCodes(readiness.sourceBlockers)}</article>
+            <article style={panel}><strong>检索引用</strong><p>{readiness.search.referenceCount} 条</p><span className="muted">全文检索服务：{readiness.search.providerConfigured ? "已确认" : "尚未登记"}</span></article>
+            <article style={panel}><strong>检索评测</strong><p>{readiness.eval.status === "available" ? `${readiness.eval.count} 条评测基准` : "评测基准权威尚未建立"}</p><span className="muted" style={blockerText}>{readiness.eval.blocker ? governanceReasonLabel(readiness.eval.blocker) : "当前无缺口"}</span>{readiness.eval.blocker ? auditReasonCodes([readiness.eval.blocker]) : null}</article>
           </div>
           <h3 style={{ fontSize: 16, marginTop: 22 }}>检索通道</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(180px, 1fr))", gap: 12 }}>
-            {readiness.search.capabilities.map((item) => <article key={item.lane} style={panel}><strong>{item.lane}</strong><p><span className="tag">{memoryStatusLabel(item.status)}</span></p><span className="muted" style={blockerText}>{item.provider ? `${item.provider} · ${item.providerRevision}` : item.reasonCode}</span></article>)}
+            {readiness.search.capabilities.map((item) => <article key={item.lane} style={panel}><strong>{({ fulltext: "全文检索", vector: "向量检索", rerank: "结果重排" } as Record<string, string>)[item.lane] || item.lane}</strong><p><span className="tag">{memoryStatusLabel(item.status)}</span></p><span className="muted" style={blockerText}>{item.provider ? `${item.provider} · ${item.providerRevision}` : governanceReasonLabel(item.reasonCode || "capability_not_registered")}</span>{!item.provider ? auditReasonCodes([item.reasonCode || "capability_not_registered"]) : null}</article>)}
           </div>
           {!!readiness.sources.length && <><h3 style={{ fontSize: 16, marginTop: 22 }}>来源与使用政策</h3>{readiness.sources.map((source) => <article key={`${source.provider}:${source.providerVersion}:${source.licenseId}:${source.usagePolicy}`} style={{ borderTop: "1px solid var(--aos-border)", padding: "10px 0" }}><strong>{source.provider} · {source.providerVersion}</strong><div>license：{source.licenseId} · usage：{source.usagePolicy}</div><span className="muted">revision {source.revisionCount} · stale {source.staleCount}</span></article>)}</>}
-          {!!readiness.search.blockers.length && <div data-testid="readiness-blockers" className="callout warning" style={{ marginTop: 14 }}>当前阻断：{readiness.search.blockers.join("、")}</div>}
+          {!!readiness.search.blockers.length && <div data-testid="readiness-blockers" className="callout warning" style={{ marginTop: 14 }}>检索前需补齐：{readiness.search.blockers.map(governanceReasonLabel).join("、")}{auditReasonCodes(readiness.search.blockers)}</div>}
         </>}
       </section>}
     </PageChrome>
@@ -645,7 +681,7 @@ function AgentMemoryPanel({ memories }: { memories: MemoryAuthorityItem[] }) {
   const shared = selectedProjections.filter((item) => item.kind === "shared");
   const selectedExposures = exposures.filter((item) => item.agentInstanceRef.assetId === selectedId);
   const selectedObservations = observations.filter((item) => item.agentInstanceRef.assetId === selectedId);
-  const disabledReason = !selected ? "当前租户没有真实数字同事实例" : selected.status !== "active" ? `当前实例状态为 ${selected.status}，尚不可创建记忆投影` : !selectedMemory ? "请选择当前租户的生效 Memory exact revision" : kind === "shared" && !recipient ? "共享必须选择另一位生效中的真实接收实例" : !purpose.trim() ? "必须填写用途 allowlist" : "";
+  const disabledReason = !selected ? "当前租户没有真实数字同事实例" : selected.status !== "active" ? `当前实例处于${memoryStatusLabel(selected.status)}状态，尚不可创建记忆引用` : !selectedMemory ? "请选择当前租户生效中的正式记忆精确修订" : kind === "shared" && !recipient ? "共享必须选择另一位生效中的真实接收实例" : !purpose.trim() ? "必须填写允许用途" : "";
 
   async function createProjection() {
     if (disabledReason || !selected || !selectedMemory) return;
@@ -675,12 +711,12 @@ function AgentMemoryPanel({ memories }: { memories: MemoryAuthorityItem[] }) {
 
   return <section data-testid="agent-memory-panel" style={panel}>
     <h2 style={{ marginTop: 0, fontSize: 17 }}>数字同事个人记忆与共享投影</h2>
-    <p className="muted">投影只保存 exact Memory citation 与授权范围，不复制正文；实例、状态、版本和改进事实均来自当前租户权威 API。</p>
-    {state === "loading" && <div data-testid="agent-memory-loading" className="callout info">正在读取真实数字同事实例、投影、Exposure 与 Observation…</div>}
+    <p className="muted">引用关系只保存正式记忆的精确引用与授权范围，不复制正文；实例、状态、版本和改进事实均来自当前租户权威服务。</p>
+    {state === "loading" && <div data-testid="agent-memory-loading" className="callout info">正在读取真实数字同事实例、引用关系、使用记录与效果观察…</div>}
     {state === "error" && <div data-testid="agent-memory-error" className="callout warning">数字同事记忆读取失败：{error}</div>}
     {state === "loaded" && <>
       {!instances.length ? <div data-testid="agent-memory-empty" className="callout info">当前租户没有真实数字同事实例；不以六角色静态卡片或测试组织数据替代。</div> : <>
-        {!activeInstances.length && <div data-testid="agent-memory-no-active" className="callout warning">当前租户有 {instances.length} 个真实数字同事实例，但尚无 active 实例；页面展示权威状态并禁用投影写操作。</div>}
+        {!activeInstances.length && <div data-testid="agent-memory-no-active" className="callout warning">当前租户有 {instances.length} 个真实数字同事实例，但尚无生效实例；页面展示权威状态并禁用记忆引用写操作。</div>}
         <div style={{ display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap" }}>
           <label>数字同事实例<select aria-label="agent-memory-instance" value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{instances.map((item) => <option key={item.instanceId} value={item.instanceId}>{item.overlay.displayName || item.instanceId} · {memoryStatusLabel(item.status)}</option>)}</select></label>
           {selected && <div className="callout info">{selected.tenant.orgId} / {selected.tenant.projectId} · {selected.instanceId} · v{selected.version} · {memoryStatusLabel(selected.status)}<br /><code>{selected.instanceRef.contentHash.slice(0, 12)}…</code></div>}
@@ -691,7 +727,7 @@ function AgentMemoryPanel({ memories }: { memories: MemoryAuthorityItem[] }) {
           <strong>创建引用投影</strong>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 10, marginTop: 10 }}>
             <label>类型<select aria-label="agent-memory-kind" value={kind} onChange={(event) => setKind(event.target.value as "personal" | "shared")}><option value="personal">个人记忆</option><option value="shared">显式共享</option></select></label>
-            <label>正式 Memory<select aria-label="agent-memory-authority" value={memoryId} onChange={(event) => setMemoryId(event.target.value)}><option value="">请选择</option>{memories.filter((item) => item.item.status === "active").map((item) => <option key={item.item.memoryItemId} value={item.item.memoryItemId}>{item.item.memoryItemId} · r{item.revision.revision}</option>)}</select></label>
+            <label>正式记忆<select aria-label="agent-memory-authority" value={memoryId} onChange={(event) => setMemoryId(event.target.value)}><option value="">请选择</option>{memories.filter((item) => item.item.status === "active").map((item) => <option key={item.item.memoryItemId} value={item.item.memoryItemId}>{item.item.memoryItemId} · 第 {item.revision.revision} 次修订</option>)}</select></label>
             {kind === "shared" && <label>接收实例<select aria-label="agent-memory-recipient" value={recipientId} onChange={(event) => setRecipientId(event.target.value)}><option value="">请选择</option>{activeInstances.filter((item) => item.instanceId !== selectedId).map((item) => <option key={item.instanceId} value={item.instanceId}>{item.overlay.displayName || item.instanceId} · v{item.version}</option>)}</select></label>}
             <label>允许用途<input aria-label="agent-memory-purpose" value={purpose} onChange={(event) => setPurpose(event.target.value)} /></label>
           </div>
@@ -703,18 +739,18 @@ function AgentMemoryPanel({ memories }: { memories: MemoryAuthorityItem[] }) {
           <ProjectionColumn title="个人记忆" items={personal} selectedId={selectedId} busy={busy} onImpact={loadImpact} onRevoke={revokeProjection} />
           <ProjectionColumn title="共享记忆" items={shared} selectedId={selectedId} busy={busy} onImpact={loadImpact} onRevoke={revokeProjection} />
         </div>
-        {impact && <div data-testid="agent-memory-impact" className="callout info" style={{ marginTop: 14 }}>撤回影响：recipient {impact.recipientCount} · Exposure {impact.exposureCount} · AgentRun {impact.affectedAgentRunCount} · 重评估 {impact.reEvaluationStatus}{impact.blockerCodes.length ? ` · ${impact.blockerCodes.join("、")}` : ""}</div>}
+        {impact && <div data-testid="agent-memory-impact" className="callout info" style={{ marginTop: 14 }}>撤回影响：接收同事 {impact.recipientCount} 位 · 引用使用 {impact.exposureCount} 次 · 受影响任务运行 {impact.affectedAgentRunCount} 次 · 重新评估状态 {memoryStatusLabel(impact.reEvaluationStatus)}{impact.blockerCodes.length ? <> · {impact.blockerCodes.map((code) => governanceReasonLabel(code)).join("、")} <details><summary>审计原因码</summary><code>{impact.blockerCodes.join(" · ")}</code></details></> : ""}</div>}
 
         <h3 style={{ fontSize: 16, marginTop: 22 }}>改进度量</h3>
-        {!selectedObservations.length ? <div data-testid="agent-memory-observations-empty" className="callout info">当前实例没有权威 Observation；不以 0 或“已提升”替代未知。</div> : selectedObservations.map((item) => <article key={item.observationId} style={{ borderTop: "1px solid var(--aos-border)", padding: "10px 0" }}>
-          <strong>{item.quality === "unknown" ? "证据不足（unknown）· 不可判定提升" : `${item.quality} · ${item.conclusion}`}</strong>
-          <div className="muted">{item.observationId} · {new Date(item.observedAt).toLocaleString()} · Exposure ref {item.exposureRefs.length}</div>
-          {item.metrics.map((metric) => <div key={metric.metricName}>{metric.metricName}：baseline {(metric.baselineValue * 100).toFixed(1)}% / treatment {(metric.treatmentValue * 100).toFixed(1)}% · n={metric.baselineSampleSize}/{metric.treatmentSampleSize}</div>)}
+        {!selectedObservations.length ? <div data-testid="agent-memory-observations-empty" className="callout info">当前实例没有权威效果观察；不以 0 或“已提升”替代未知。</div> : selectedObservations.map((item) => <article key={item.observationId} style={{ borderTop: "1px solid var(--aos-border)", padding: "10px 0" }}>
+          <strong>{item.quality === "unknown" ? "证据不足 · 不可判定提升" : `${memoryStatusLabel(item.quality)} · ${governanceReasonLabel(item.conclusion)}`}</strong>
+          <div className="muted">观察记录 {item.observationId} · {new Date(item.observedAt).toLocaleString()} · 关联使用记录 {item.exposureRefs.length} 条</div>
+          {item.metrics.map((metric) => <div key={metric.metricName}>{metric.metricName}：原基线 {(metric.baselineValue * 100).toFixed(1)}% / 应用后 {(metric.treatmentValue * 100).toFixed(1)}% · 样本量 {metric.baselineSampleSize}/{metric.treatmentSampleSize}</div>)}
           {!!item.limitations.length && <div className="muted">限制：{item.limitations.join("、")}</div>}
         </article>)}
 
         <h3 style={{ fontSize: 16, marginTop: 22 }}>最近接受的引用</h3>
-        {!selectedExposures.length ? <div className="callout info">当前实例没有 Memory Exposure；页面不会创建或模拟使用记录。</div> : selectedExposures.map((item) => <div key={item.exposureId} style={{ borderTop: "1px solid var(--aos-border)", padding: "8px 0" }}>{item.memoryRef.memoryItemId} · r{item.memoryRef.revision} · AgentRun {item.agentRunRef.resourceId} · Skill {item.skillRef.assetId}<br /><span className="muted">accepted {new Date(item.acceptedAt).toLocaleString()} · hash {item.exposureHash.slice(0, 12)}…</span></div>)}
+        {!selectedExposures.length ? <div className="callout info">当前实例没有正式记忆引用使用记录；页面不会创建或模拟记录。</div> : selectedExposures.map((item) => <div key={item.exposureId} style={{ borderTop: "1px solid var(--aos-border)", padding: "8px 0" }}>{item.memoryRef.memoryItemId} · 第 {item.memoryRef.revision} 次修订 · 任务运行 {item.agentRunRef.resourceId} · 原子技能 {item.skillRef.assetId}<br /><span className="muted">接受时间 {new Date(item.acceptedAt).toLocaleString()} · 内容摘要 {item.exposureHash.slice(0, 12)}…</span></div>)}
       </>}
       {error && <div className="callout warning" style={{ marginTop: 14 }}>{error}</div>}
     </>}
@@ -724,11 +760,11 @@ function AgentMemoryPanel({ memories }: { memories: MemoryAuthorityItem[] }) {
 function ProjectionColumn({ title, items, selectedId, busy, onImpact, onRevoke }: { title: string; items: MemoryAgentProjection[]; selectedId: string; busy: string; onImpact: (item: MemoryAgentProjection) => Promise<void>; onRevoke: (item: MemoryAgentProjection) => Promise<void> }) {
   return <section style={panel}><h3 style={{ marginTop: 0, fontSize: 16 }}>{title}（{items.length}）</h3>{!items.length ? <div className="muted">没有真实投影。</div> : items.map((item) => {
     const direction = item.ownerInstanceRef.assetId === selectedId ? "我创建" : "共享给我";
-    const blocker = item.status === "stale" ? "Memory/实例 exact ref 已漂移" : item.status === "revoked" ? "投影已撤回，仅保留历史审计" : item.status === "expired" ? "授权有效期已结束" : item.status === "suspended" ? "投影已暂停" : "";
+    const blocker = item.status === "stale" ? "正式记忆或实例的精确引用已漂移" : item.status === "revoked" ? "引用关系已撤回，仅保留历史审计" : item.status === "expired" ? "授权有效期已结束" : item.status === "suspended" ? "引用关系已暂停" : "";
     return <article key={item.projectionRef.projectionId} data-testid={`agent-projection-${item.projectionRef.projectionId}`} style={{ borderTop: "1px solid var(--aos-border)", padding: "10px 0" }}>
       <strong>{item.memoryRef.memoryItemId} · r{item.memoryRef.revision}</strong> <span className="tag">{memoryStatusLabel(item.status)}</span>
-      <div>{direction} · owner {item.ownerInstanceRef.assetId} · recipient {item.recipientInstanceRefs.map((ref) => ref.assetId).join("、") || "无"}</div>
-      <div className="muted">marking {item.allowedMarkings.join("、")} · applicability {item.allowedPurposes.join("、")} · {item.disclosure}</div>
+      <div>{direction} · 创建实例 {item.ownerInstanceRef.assetId} · 接收实例 {item.recipientInstanceRefs.map((ref) => ref.assetId).join("、") || "无"}</div>
+      <div className="muted">数据标记 {item.allowedMarkings.join("、")} · 允许用途 {item.allowedPurposes.join("、")} · 披露方式 {item.disclosure === "citation_only" ? "仅引用" : item.disclosure}</div>
       <div className="muted">有效 {new Date(item.effectiveAt).toLocaleString()} → {new Date(item.expiresAt).toLocaleString()} · v{item.projectionRef.version} · {item.projectionRef.contentHash.slice(0, 12)}…</div>
       {blocker && <div className="callout warning" style={{ marginTop: 6 }}>{blocker}</div>}
       <div style={{ display: "flex", gap: 8, marginTop: 8 }}><button type="button" className="btn" onClick={() => void onImpact(item)} disabled={busy === `impact:${item.projectionRef.projectionId}`}>查看撤回影响</button><button type="button" className="btn" onClick={() => void onRevoke(item)} disabled={!(["active", "suspended"] as string[]).includes(item.status) || busy === item.projectionRef.projectionId} title={!(["active", "suspended"] as string[]).includes(item.status) ? "当前状态不可撤回" : "提交真实撤回 API"}>撤回</button></div>
