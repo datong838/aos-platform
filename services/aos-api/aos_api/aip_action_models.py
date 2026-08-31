@@ -139,6 +139,28 @@ class DecideActionProposalRequest(AipContractModel):
         return normalized
 
 
+class WithdrawActionProposalRequest(AipContractModel):
+    expected_proposal_version: int = Field(ge=1)
+    expected_proposal_hash: str
+    reason: str
+
+    @field_validator("expected_proposal_hash")
+    @classmethod
+    def _withdraw_hash(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if len(normalized) != 64 or any(ch not in "0123456789abcdef" for ch in normalized):
+            raise ValueError("expectedProposalHash must be a sha256 digest")
+        return normalized
+
+    @field_validator("reason")
+    @classmethod
+    def _withdraw_reason(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("withdraw reason must not be empty")
+        return cleaned
+
+
 class ActionProposalTimeline(AipContractModel):
     bundle: ActionDraftBundle
     events: list[dict[str, Any]] = Field(default_factory=list)
@@ -347,5 +369,6 @@ __all__ = [
     "ReconcileActionReceiptRequest",
     "ReviseActionDraftRequest",
     "SubmitActionDraftRequest",
+    "WithdrawActionProposalRequest",
     "actor",
 ]

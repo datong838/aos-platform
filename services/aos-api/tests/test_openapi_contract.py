@@ -83,8 +83,8 @@ def test_committed_artifacts_are_canonical_and_structurally_valid() -> None:
     assert INVENTORY_PATH.read_bytes() == exporter.canonical_json(inventory)
     exporter.validate_openapi(schema)
     assert schema["openapi"] == "3.1.0"
-    assert len(schema["paths"]) == 2718
-    assert len(schema.get("components", {}).get("schemas", {})) == 2559
+    assert len(schema["paths"]) == 2719
+    assert len(schema.get("components", {}).get("schemas", {})) == 2560
 
 
 def test_batch_scenario_is_principal_scoped_and_get_only() -> None:
@@ -308,6 +308,10 @@ def test_aip3_action_control_contract_is_explicit_and_complete() -> None:
             "decide_action_proposal_v1_aip_action_proposals__proposal_id__decision_post",
             "200",
         ),
+        ("/v1/aip/action-proposals/{proposal_id}/withdraw", "post"): (
+            "withdraw_action_proposal_v1_aip_action_proposals__proposal_id__withdraw_post",
+            "200",
+        ),
         ("/v1/aip/action-proposals/{proposal_id}/timeline", "get"): (
             "get_action_proposal_timeline_v1_aip_action_proposals__proposal_id__timeline_get",
             "200",
@@ -337,7 +341,7 @@ def test_aip3_action_control_contract_is_explicit_and_complete() -> None:
             (item["name"], item["in"]): item for item in operation.get("parameters", [])
         }
         if method == "post" and (
-            path.endswith(("/lease", "/compensation", "/decision"))
+            path.endswith(("/lease", "/compensation", "/decision", "/withdraw"))
             or path == "/v1/aip/action-proposals"
         ):
             assert parameters[("Idempotency-Key", "header")]["required"] is True

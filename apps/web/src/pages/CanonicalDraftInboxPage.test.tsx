@@ -4,13 +4,13 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ActionDraftBundle, ActionExecutionView, ActionProposalTimeline, AipActionsSdk } from "../api/aipActions";
-import { CanonicalDraftInboxPage, actionStatusTab, filterCanonicalProposals } from "./CanonicalDraftInboxPage";
+import { CanonicalDraftInboxPage, actionStatusTab, businessChangeRows, effectiveProposalStatus, filterCanonicalProposals } from "./CanonicalDraftInboxPage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const hash = "a".repeat(64);
 function bundle(status: ActionDraftBundle["proposal"]["status"] = "approved"): ActionDraftBundle {
   return {
-    proposal: { id: "proposal-1", actionType: { actionTypeId: "send_notice", revisionHash: hash, objectType: "Order" }, taskId: "task-1", runId: "run-1", objectRef: null, impactPreviewRef: null, purpose: "发送已审订单通知", riskLevel: "R2", payload: {}, proposalHash: hash, status, expiresAt: "2026-08-12T00:00:00Z", version: 3, createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-08-11T00:00:00Z", updatedAt: "2026-08-11T01:00:00Z" },
+    proposal: { id: "proposal-1", actionType: { actionTypeId: "send_notice", revisionHash: hash, objectType: "Order" }, taskId: "task-1", runId: "run-1", objectRef: { resourceType: "Order", resourceId: "order-1", revision: "3", authority: "orders" }, impactPreviewRef: null, purpose: "发送已审订单通知", riskLevel: "R2", payload: {}, proposalHash: hash, status, expiresAt: "2027-08-12T00:00:00Z", version: 3, createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-08-11T00:00:00Z", updatedAt: "2026-08-11T01:00:00Z", clientRiskHint: null, policySnapshot: { minimumApprovals: 1, makerChecker: true, executionAllowed: true }, diff: { status: { from: "待处理", to: "已通知" } }, evidenceRefs: [], actionBindingHash: null, approvalPolicyHash: null, sourceDraftRef: null, compensationOriginalProposalId: null, compensationOriginalReceiptId: null, compensationPolicyRef: null, compensationEffect: null, compensationResidualEffect: null },
     draft: { id: "draft-1", proposalId: "proposal-1", proposalVersion: 1, proposalHash: hash, diff: { status: "notified" }, evidenceRefs: [], status, createdAt: "2026-08-11T00:00:00Z" },
     approvals: [{ id: "approval-1", proposalId: "proposal-1", proposalVersion: 2, proposalHash: hash, decision: "approved", actor: { actorType: "user", actorId: "checker" }, reason: "通过", expiresAt: null, createdAt: "2026-08-11T00:30:00Z" }],
   };
@@ -57,6 +57,15 @@ describe("CanonicalDraftInboxPage", () => {
     const other = { ...bundle("unknown"), proposal: { ...bundle("unknown").proposal, id: "proposal-2", taskId: "task-2" }, draft: { ...bundle("unknown").draft, id: "draft-2", proposalId: "proposal-2" } };
     expect(actionStatusTab("unknown")).toBe("execution");
     expect(filterCanonicalProposals([approved, other], "approved", "", "task-1", "run-1")).toEqual([approved]);
+    expect(actionStatusTab("withdrawn")).toBe("closed");
+  });
+
+  it("到期提案在读模型中关闭写操作，业务差异使用可读前后值", () => {
+    const expired = { ...bundle("drafted").proposal, expiresAt: "2026-08-01T00:00:00Z" };
+    expect(effectiveProposalStatus(expired, new Date("2026-08-02T00:00:00Z").getTime())).toBe("expired");
+    expect(businessChangeRows({ status: { from: "open", to: "closed" } })).toEqual([
+      { field: "业务状态", before: "open", after: "closed" },
+    ]);
   });
 
   it("切换到不含当前 Proposal 的分栏后不保留隐藏详情和写按钮", async () => {

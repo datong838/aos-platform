@@ -9,6 +9,7 @@ from aos_api.aip_action_models import (
     DecideActionProposalRequest,
     ReviseActionDraftRequest,
     SubmitActionDraftRequest,
+    WithdrawActionProposalRequest,
 )
 from aos_api.aip_action_policy import classify_action_risk
 from aos_api.aip_action_store import AipActionStore
@@ -152,4 +153,19 @@ class AipActionService:
             idempotency_key,
             body,
             tuple(principal.roles),
+        )
+
+    def withdraw(
+        self,
+        principal: Principal,
+        proposal_id: str,
+        idempotency_key: str,
+        body: WithdrawActionProposalRequest,
+    ) -> ActionDraftBundle:
+        return self._store.withdraw(
+            TenantScope(principal.org_id, principal.project_id),
+            principal.subject,
+            proposal_id,
+            idempotency_key,
+            body,
         )

@@ -20,6 +20,7 @@ from aos_api.aip_action_models import (
     ReconcileActionReceiptRequest,
     ReviseActionDraftRequest,
     SubmitActionDraftRequest,
+    WithdrawActionProposalRequest,
 )
 from aos_api.aip_action_adapters import ACTION_ADAPTERS
 from aos_api.aip_action_execution import (
@@ -186,6 +187,20 @@ def decide_action_proposal(
 ) -> ActionDraftBundle:
     try:
         return service.decide(principal, proposal_id, _idem(idempotency_key), body)
+    except AipActionStoreError as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/action-proposals/{proposal_id}/withdraw", response_model=ActionDraftBundle)
+def withdraw_action_proposal(
+    proposal_id: str,
+    body: WithdrawActionProposalRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    service: AipActionService = Depends(get_aip_action_service),
+) -> ActionDraftBundle:
+    try:
+        return service.withdraw(principal, proposal_id, _idem(idempotency_key), body)
     except AipActionStoreError as exc:
         raise _map_error(exc) from exc
 

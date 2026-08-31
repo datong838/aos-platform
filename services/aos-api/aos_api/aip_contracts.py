@@ -157,6 +157,7 @@ class ActionProposalStatus(StrEnum):
     UNKNOWN = "unknown"
     RECONCILED = "reconciled"
     COMPENSATED = "compensated"
+    WITHDRAWN = "withdrawn"
 
 
 class ApprovalDecision(StrEnum):

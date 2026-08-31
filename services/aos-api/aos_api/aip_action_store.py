@@ -20,6 +20,7 @@ from aos_api.aip_action_models import (
     DecideActionProposalRequest,
     ReviseActionDraftRequest,
     SubmitActionDraftRequest,
+    WithdrawActionProposalRequest,
     actor,
 )
 from aos_api.aip_action_policy import RiskDecision
@@ -1016,6 +1017,74 @@ class AipActionStore:
                 (*scope.key, f"action-event-{uuid.uuid4().hex[:20]}", proposal_id,
                  body.decision.value, actor_id, int(row["version"]) + 1, row["proposal_hash"],
                  self._json({"reason": body.reason, "status": next_status})),
+            )
+            conn.commit()
+            return self._bundle(conn, scope, proposal_id)
+
+    def withdraw(
+        self,
+        scope: TenantScope,
+        actor_id: str,
+        proposal_id: str,
+        idempotency_key: str,
+        body: WithdrawActionProposalRequest,
+    ) -> ActionDraftBundle:
+        request_hash = canonical_hash(body.model_dump(mode="json", by_alias=True))
+        with self._connect(scope) as conn:
+            self._idempotency_lock(conn, scope, "withdrawal", idempotency_key)
+            replay = conn.execute(
+                """SELECT proposal_id,request_hash FROM aip_action_withdrawal_event
+                   WHERE org_id=%s AND project_id=%s AND idempotency_key=%s""",
+                (*scope.key, idempotency_key),
+            ).fetchone()
+            if replay is not None:
+                if replay["proposal_id"] != proposal_id or replay["request_hash"] != request_hash:
+                    raise AipActionIdempotencyConflict("idempotency key reused for different withdrawal")
+                return self._bundle(conn, scope, proposal_id)
+            row = conn.execute(
+                """SELECT * FROM aip_action_proposal
+                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s FOR UPDATE""",
+                (*scope.key, proposal_id),
+            ).fetchone()
+            if row is None:
+                raise AipActionNotFound("proposal not found in scope")
+            if row["created_by"] != actor_id:
+                raise AipActionTransitionBlocked("only the proposal maker may withdraw it")
+            if row["status"] not in {"drafted", "approved"}:
+                raise AipActionTransitionBlocked(f"proposal is not withdrawable while {row['status']}")
+            if row["expires_at"] <= datetime.now(timezone.utc):
+                raise AipActionTransitionBlocked("expired proposal cannot be withdrawn")
+            if int(row["version"]) != body.expected_proposal_version or row["proposal_hash"] != body.expected_proposal_hash:
+                raise AipActionConflict("proposal revision or hash changed before withdrawal")
+            event_id = f"withdrawal-{uuid.uuid4().hex[:20]}"
+            next_version = int(row["version"]) + 1
+            updated = conn.execute(
+                """UPDATE aip_action_proposal SET status='withdrawn',version=version+1,updated_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s AND version=%s""",
+                (*scope.key, proposal_id, row["version"]),
+            )
+            if getattr(updated, "rowcount", 1) != 1:
+                raise AipActionConflict("proposal changed before withdrawal")
+            conn.execute(
+                """UPDATE aip_action_draft SET status='withdrawn',updated_at=NOW()
+                   WHERE org_id=%s AND project_id=%s AND proposal_id=%s""",
+                (*scope.key, proposal_id),
+            )
+            conn.execute(
+                """INSERT INTO aip_action_withdrawal_event
+                   (org_id,project_id,withdrawal_event_id,proposal_id,proposal_version,
+                    proposal_hash,actor_id,reason,idempotency_key,request_hash)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (*scope.key, event_id, proposal_id, next_version, row["proposal_hash"],
+                 actor_id, body.reason, idempotency_key, request_hash),
+            )
+            conn.execute(
+                """INSERT INTO aip_action_event
+                   (org_id,project_id,event_id,proposal_id,event_type,actor_id,
+                    proposal_version,proposal_hash,payload)
+                   VALUES (%s,%s,%s,%s,'withdrawn',%s,%s,%s,%s::jsonb)""",
+                (*scope.key, f"action-event-{uuid.uuid4().hex[:20]}", proposal_id,
+                 actor_id, next_version, row["proposal_hash"], self._json({"reason": body.reason})),
             )
             conn.commit()
             return self._bundle(conn, scope, proposal_id)

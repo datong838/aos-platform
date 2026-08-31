@@ -1,6 +1,6 @@
 export const ACTION_PROPOSAL_STATUSES = [
   "proposed", "drafted", "approved", "rejected", "expired", "leased", "executing",
-  "applied", "failed", "unknown", "reconciled", "compensated",
+  "applied", "failed", "unknown", "reconciled", "compensated", "withdrawn",
 ] as const;
 export type ActionProposalStatus = (typeof ACTION_PROPOSAL_STATUSES)[number];
 export type ActionRiskLevel = "R0" | "R1" | "R2" | "R3" | "R4";
@@ -28,6 +28,18 @@ export type ActionProposal = {
   createdBy: ActorRef;
   createdAt: string;
   updatedAt: string;
+  clientRiskHint?: ActionRiskLevel | null;
+  policySnapshot?: Record<string, unknown>;
+  diff?: Record<string, unknown>;
+  evidenceRefs?: ResourceRef[];
+  actionBindingHash?: string | null;
+  approvalPolicyHash?: string | null;
+  sourceDraftRef?: ExactRevisionRef | null;
+  compensationOriginalProposalId?: string | null;
+  compensationOriginalReceiptId?: string | null;
+  compensationPolicyRef?: ExactRevisionRef | null;
+  compensationEffect?: Record<string, unknown> | null;
+  compensationResidualEffect?: Record<string, unknown> | null;
 };
 
 export type ActionDraft = {
@@ -54,6 +66,20 @@ export type ApprovalEvent = {
 };
 
 export type ActionDraftBundle = { proposal: ActionProposal; draft: ActionDraft; approvals: ApprovalEvent[] };
+export type ActionDraftRevisionSnapshot = {
+  draftId: string;
+  revision: number;
+  version: number;
+  lifecycle: string;
+  request: Record<string, unknown>;
+  actionTypeRevisionHash: string;
+  riskLevel: ActionRiskLevel;
+  approvalPolicyHash: string;
+  contentHash: string;
+  submittedProposalId: string | null;
+  createdBy: ActorRef;
+  createdAt: string;
+};
 export type ActionProposalList = { items: ActionDraftBundle[]; count: number };
 export type ActionTimelineEvent = {
   id: string; type: string; actorId: string; proposalVersion: number;
@@ -95,6 +121,9 @@ function hash(value: unknown, label: string): string {
   const result = stringValue(value, label).toLowerCase();
   if (!/^[0-9a-f]{64}$/.test(result)) throw new TypeError(`${label} 不是 sha256`);
   return result;
+}
+function nullableHash(value: unknown, label: string): string | null {
+  return value === null || value === undefined ? null : hash(value, label);
 }
 function actor(value: unknown, label: string): ActorRef {
   const item = record(value, label);
@@ -153,6 +182,28 @@ export function parseActionProposal(value: unknown): ActionProposal {
     createdBy: actor(item.createdBy, "ActionProposal.createdBy"),
     createdAt: stringValue(item.createdAt, "ActionProposal.createdAt"),
     updatedAt: stringValue(item.updatedAt, "ActionProposal.updatedAt"),
+    clientRiskHint: item.clientRiskHint === null || item.clientRiskHint === undefined
+      ? null
+      : stringValue(item.clientRiskHint, "ActionProposal.clientRiskHint") as ActionRiskLevel,
+    policySnapshot: objectValue(item.policySnapshot, "ActionProposal.policySnapshot"),
+    diff: objectValue(item.diff, "ActionProposal.diff"),
+    evidenceRefs: resources(item.evidenceRefs ?? [], "ActionProposal.evidenceRefs"),
+    actionBindingHash: nullableHash(item.actionBindingHash, "ActionProposal.actionBindingHash"),
+    approvalPolicyHash: nullableHash(item.approvalPolicyHash, "ActionProposal.approvalPolicyHash"),
+    sourceDraftRef: item.sourceDraftRef === null || item.sourceDraftRef === undefined
+      ? null
+      : exactRevision(item.sourceDraftRef, "ActionProposal.sourceDraftRef"),
+    compensationOriginalProposalId: nullableString(item.compensationOriginalProposalId, "ActionProposal.compensationOriginalProposalId"),
+    compensationOriginalReceiptId: nullableString(item.compensationOriginalReceiptId, "ActionProposal.compensationOriginalReceiptId"),
+    compensationPolicyRef: item.compensationPolicyRef === null || item.compensationPolicyRef === undefined
+      ? null
+      : exactRevision(item.compensationPolicyRef, "ActionProposal.compensationPolicyRef"),
+    compensationEffect: item.compensationEffect === null || item.compensationEffect === undefined
+      ? null
+      : objectValue(item.compensationEffect, "ActionProposal.compensationEffect"),
+    compensationResidualEffect: item.compensationResidualEffect === null || item.compensationResidualEffect === undefined
+      ? null
+      : objectValue(item.compensationResidualEffect, "ActionProposal.compensationResidualEffect"),
   };
 }
 
@@ -184,6 +235,26 @@ export function parseActionDraftBundle(value: unknown): ActionDraftBundle {
     return result;
   });
   return { proposal, draft, approvals };
+}
+
+export function parseActionDraftRevisionSnapshot(value: unknown): ActionDraftRevisionSnapshot {
+  const item = record(value, "ActionDraftRevisionSnapshot");
+  const risk = stringValue(item.riskLevel, "ActionDraftRevisionSnapshot.riskLevel");
+  if (!/R[0-4]/.test(risk)) throw new TypeError("ActionDraftRevisionSnapshot.riskLevel 未知");
+  return {
+    draftId: stringValue(item.draftId, "ActionDraftRevisionSnapshot.draftId"),
+    revision: positiveInt(item.revision, "ActionDraftRevisionSnapshot.revision"),
+    version: positiveInt(item.version, "ActionDraftRevisionSnapshot.version"),
+    lifecycle: stringValue(item.lifecycle, "ActionDraftRevisionSnapshot.lifecycle"),
+    request: objectValue(item.request, "ActionDraftRevisionSnapshot.request"),
+    actionTypeRevisionHash: hash(item.actionTypeRevisionHash, "ActionDraftRevisionSnapshot.actionTypeRevisionHash"),
+    riskLevel: risk as ActionRiskLevel,
+    approvalPolicyHash: hash(item.approvalPolicyHash, "ActionDraftRevisionSnapshot.approvalPolicyHash"),
+    contentHash: hash(item.contentHash, "ActionDraftRevisionSnapshot.contentHash"),
+    submittedProposalId: nullableString(item.submittedProposalId, "ActionDraftRevisionSnapshot.submittedProposalId"),
+    createdBy: actor(item.createdBy, "ActionDraftRevisionSnapshot.createdBy"),
+    createdAt: stringValue(item.createdAt, "ActionDraftRevisionSnapshot.createdAt"),
+  };
 }
 
 export function parseActionProposalList(value: unknown): ActionProposalList {
