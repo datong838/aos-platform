@@ -25,6 +25,7 @@ export type UsageBucket = {
   estimatedCount?: number;
   unknownCount?: number;
   providerCounts?: Record<string, number>;
+  timeZone?: string;
 };
 
 export type QuotaUsage = {
@@ -209,6 +210,7 @@ export function usageBucketsFromAuthority(cost: ModelRuntimeCostOverview): Usage
       estimatedCount: item?.estimatedCount ?? 0,
       unknownCount: item?.unknownCount ?? 0,
       providerCounts: item?.providerCounts ?? {},
+      timeZone: item?.timeZone,
     };
   });
 }
@@ -459,6 +461,9 @@ export function CapacityPage() {
                 );
               })}
             </div>
+            <p style={{ margin: "-8px 0 0", fontSize: 11, color: "var(--aos-faint)" }}>
+              业务时区 {currentBucket?.timeZone || "待权威返回"} · 周/月为滚动 7/30 天
+            </p>
 
             {/* Metrics cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>

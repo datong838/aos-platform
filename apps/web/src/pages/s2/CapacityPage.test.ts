@@ -238,7 +238,7 @@ describe("CapacityPage · exact runtime authority", () => {
   it("按权威周期汇总 Token，缺少凭证时保留未观测", () => {
     const cost = { tenant: { orgId: "org-org", projectId: "dev-project" }, modelPrices: [], budgets: [], usage: { state: "measured" as const, receiptCount: 2, measuredCount: 2, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: "2026-08-21T00:00:00Z", truncated: false, periods: [{ period: "today" as const, timeZone: "Asia/Shanghai", startsAt: "2026-08-21T00:00:00Z", endsAt: "2026-08-21T12:00:00Z", receiptCount: 2, measuredCount: 2, estimatedCount: 0, unknownCount: 0, quantityTotals: { "input_token:token": 12, "output_token:token": 8 }, providerCounts: { agnes: 2 } }] }, generatedAt: "2026-08-21T12:00:00Z" };
     const buckets = usageBucketsFromAuthority(cost);
-    expect(buckets[0]).toMatchObject({ observed: true, receiptCount: 2, totalTokens: 20 });
+    expect(buckets[0]).toMatchObject({ observed: true, receiptCount: 2, totalTokens: 20, timeZone: "Asia/Shanghai" });
     expect(buckets[1]).toMatchObject({ observed: false, totalTokens: 0 });
   });
 });
