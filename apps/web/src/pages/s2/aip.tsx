@@ -13,7 +13,11 @@ import {
 } from "./blueprintUi";
 import { BpArchitectureBar } from "../../components/bp/BpArchitectureBar";
 import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
-import type { ModelRuntimeOverview } from "../../api/aipModelRuntime";
+import {
+  parseModelRouteRevision,
+  type ModelRouteRevision,
+  type ModelRuntimeOverview,
+} from "../../api/aipModelRuntime";
 import { MODEL_CONFIG_NO_VAULT } from "../../lib/productCopy";
 import {
   aipEvidenceSdk,
@@ -2258,6 +2262,10 @@ export function ModelRouterPage() {
   const [drillMsg, setDrillMsg] = useState("");
   const [localErr, setLocalErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [routeHistories, setRouteHistories] = useState<Record<string, ModelRouteRevision[]>>({});
+  const [routeHistoryErr, setRouteHistoryErr] = useState<string | null>(null);
+  const [selectedCanonicalRoute, setSelectedCanonicalRoute] = useState("");
+  const [lifecycleMsg, setLifecycleMsg] = useState("");
   const configEditable = confirmedVersion != null && routeRows.length > 0 && !routerApi.err;
 
   const items = models.data?.items || [];
@@ -2277,6 +2285,83 @@ export function ModelRouterPage() {
       setConfirmedVersion(routerApi.data.version);
     }
   }, [routerApi.data]);
+
+  const canonicalRouteKey = useMemo(
+    () => (runtimeApi.data?.routes || []).map((item) => `${item.ref.assetId}@${item.ref.revision}`).join("|"),
+    [runtimeApi.data?.routes],
+  );
+
+  useEffect(() => {
+    const routes = runtimeApi.data?.routes || [];
+    if (!routes.length) {
+      setRouteHistories({});
+      return;
+    }
+    let cancelled = false;
+    setRouteHistoryErr(null);
+    Promise.all(
+      routes.map(async (item) => {
+        const path = `/v1/aip/model-runtime/routes/${encodeURIComponent(item.ref.assetId)}/revisions`;
+        const value = await apiGet<unknown>(path);
+        if (!Array.isArray(value)) throw new Error("路由历史必须是数组");
+        return [item.ref.assetId, value.map(parseModelRouteRevision)] as const;
+      }),
+    )
+      .then((items) => {
+        if (cancelled) return;
+        setRouteHistories(Object.fromEntries(items));
+        setSelectedCanonicalRoute((current) => current || items[0]?.[0] || "");
+      })
+      .catch((error) => {
+        if (!cancelled) setRouteHistoryErr(String((error as Error).message || error));
+      });
+    return () => {
+      cancelled = true;
+    };
+    // canonicalRouteKey is the exact route-head set; re-read only when it changes.
+  }, [canonicalRouteKey]);
+
+  const allCanonicalRevisions = useMemo(
+    () => Object.values(routeHistories).flat(),
+    [routeHistories],
+  );
+  const selectedHistory = routeHistories[selectedCanonicalRoute] || [];
+  const selectedHead = selectedHistory[0] || null;
+
+  function validateDraft() {
+    const invalid = routeRows.filter(
+      (row) => !row.id || !row.task || !row.egress || (!row.span && (!row.primary || row.primary === "—")),
+    );
+    if (invalid.length) {
+      setLifecycleMsg(`草稿校验未通过：${invalid.map((row) => businessDisplayName(row.task, row.id)).join("、")} 缺少首选模型或策略字段`);
+      return;
+    }
+    setLifecycleMsg(`草稿 v${confirmedVersion ?? "—"} 结构校验通过；仍需 exact Eval 批准后才能生成生效 revision`);
+  }
+
+  async function createRollbackDraft(source: ModelRouteRevision) {
+    if (!selectedHead || source.revision === selectedHead.revision) return;
+    setLifecycleMsg("");
+    try {
+      const created = await apiPost<unknown>(
+        `/v1/aip/model-runtime/routes/${encodeURIComponent(source.routeId)}/rollback-draft`,
+        { sourceRevision: source.revision, expectedRevision: selectedHead.revision },
+        { "Idempotency-Key": `rollback-${source.routeId}-${source.revision}-${selectedHead.revision}` },
+      );
+      const parsed = parseModelRouteRevision(created);
+      const reread = await apiGet<unknown[]>(
+        `/v1/aip/model-runtime/routes/${encodeURIComponent(source.routeId)}/revisions`,
+      );
+      const history = reread.map(parseModelRouteRevision);
+      if (history[0]?.revision !== parsed.revision || history[0]?.contentHash !== parsed.contentHash) {
+        throw new Error("回滚草稿写入后重读不一致");
+      }
+      setRouteHistories((current) => ({ ...current, [source.routeId]: history }));
+      setLifecycleMsg(`已从 r${source.revision} 生成新的配置草稿 r${parsed.revision}；未批准、未激活、未切换流量`);
+    } catch (error) {
+      setLifecycleMsg(`生成回滚草稿失败：${String((error as Error).message || error)}`);
+    }
+  }
 
   function patchRow(id: string, patch: Partial<RouteRule>) {
     setRouteRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -2561,6 +2646,70 @@ export function ModelRouterPage() {
       <p className="mr-hint">
         本页配置与运行分门：配置完成权威读取后即可维护；只有 Provider Health、价格、评测等运行证据全部就绪时，才允许演练、路由测试和试聊。
       </p>
+
+      <section className="mp-section" aria-label="路由生命周期工作区">
+        <div className="mp-section-head">
+          <div>
+            <h2 className="mp-section-title">路由生命周期工作区</h2>
+            <p className="mp-section-hint">配置草稿、批准版本、当前生效与不可变历史严格分层</p>
+          </div>
+          <Link to="/aip/evals" className="btn-nav">提交评测与审批 →</Link>
+        </div>
+        <div className="mp-card-grid">
+          <article className="mp-provider-card">
+            <strong>配置草稿</strong>
+            <div className="mp-provider-meta">draft authority · v{confirmedVersion ?? "—"}</div>
+            <button type="button" className="btn-nav" onClick={validateDraft}>校验当前草稿</button>
+          </article>
+          <article className="mp-provider-card">
+            <strong>已批准版本</strong>
+            <div className="mp-provider-meta">validated · {allCanonicalRevisions.filter((item) => item.lifecycle === "validated").length} 个 revision</div>
+            <span className="tag">exact Eval 批准</span>
+          </article>
+          <article className="mp-provider-card">
+            <strong>当前生效路由</strong>
+            <div className="mp-provider-meta">active · {(runtimeApi.data?.routes || []).filter((item) => item.lifecycle === "active").length} 条</div>
+            <span className={runtimeProjection.isReady ? "bp-prop-ok" : "bp-prop-warn"}>
+              {runtimeProjection.isReady ? "同截面运行门已满足" : "当前只读展示，未切换流量"}
+            </span>
+          </article>
+          <article className="mp-provider-card">
+            <strong>历史版本</strong>
+            <div className="mp-provider-meta">immutable · {allCanonicalRevisions.length} 个 revision</div>
+            <span className="tag">回滚只追加新草稿</span>
+          </article>
+        </div>
+        {routeHistoryErr && <p className="error">路由历史读取失败：{routeHistoryErr}</p>}
+        {Object.keys(routeHistories).length > 0 && (
+          <div className="filter-bar" style={{ marginTop: "0.75rem" }}>
+            <label htmlFor="canonical-route-select">查看 canonical 路由</label>
+            <select id="canonical-route-select" value={selectedCanonicalRoute} onChange={(event) => setSelectedCanonicalRoute(event.target.value)}>
+              {Object.keys(routeHistories).map((routeId) => <option key={routeId} value={routeId}>{routeId}</option>)}
+            </select>
+          </div>
+        )}
+        {selectedHistory.length > 0 && (
+          <table className="mr-table" aria-label="canonical 路由版本历史">
+            <thead><tr><th>版本</th><th>阶段</th><th>策略与候选</th><th>评测 / 策略证据</th><th>操作</th></tr></thead>
+            <tbody>
+              {selectedHistory.map((item, index) => (
+                <tr key={`${item.routeId}-${item.revision}`}>
+                  <td>r{item.revision}<br /><code>{item.contentHash.slice(0, 12)}…</code></td>
+                  <td>{item.lifecycle === "draft" ? "配置草稿" : item.lifecycle === "validated" ? "已批准" : item.lifecycle === "active" ? "当前生效" : item.lifecycle === "suspended" ? "已暂停" : "已撤销"}</td>
+                  <td>{item.strategy} · {item.candidates.map((candidate) => `${candidate.model.assetId} ${candidate.weight}%`).join("、")}</td>
+                  <td>Eval r{item.evalGateRef.revision} · Policy r{item.runtimePolicyRef.revision}</td>
+                  <td>
+                    {index === 0 ? <span className="tag">当前头</span> : (
+                      <button type="button" className="btn-nav" onClick={() => void createRollbackDraft(item)}>生成回滚草稿</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        {lifecycleMsg && <p className={lifecycleMsg.includes("失败") || lifecycleMsg.includes("未通过") ? "error" : "bp-prop-ok"}>{lifecycleMsg}</p>}
+      </section>
 
       <div className="mr-rules-card">
         <div className="mr-rules-head">

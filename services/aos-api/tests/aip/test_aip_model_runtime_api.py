@@ -37,6 +37,10 @@ class CapturingStore:
         self.scope = scope
         raise ModelRuntimeNotFound("model_route not found")
 
+    def list_route_revisions(self, scope, route_id):
+        self.scope = scope
+        raise ModelRuntimeNotFound("model_route not found")
+
 
 class ExactReadStore:
     def __init__(self) -> None:
@@ -67,6 +71,23 @@ class PricePublishStore:
         return item
 
 
+class RollbackDraftStore:
+    call = None
+
+    def create_route_rollback_draft(
+        self, scope, actor, key, route_id, source_revision, *, expected_revision
+    ):
+        self.call = (
+            scope.key,
+            actor,
+            key,
+            route_id,
+            source_revision,
+            expected_revision,
+        )
+        raise ModelRuntimeNotFound("test capture")
+
+
 def test_canonical_route_read_uses_principal_scope_and_never_cross_tenant(client) -> None:
     store = CapturingStore()
     client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
@@ -82,10 +103,53 @@ def test_canonical_route_read_uses_principal_scope_and_never_cross_tenant(client
         client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
 
 
+def test_canonical_route_history_is_principal_scoped_and_never_synthesizes_drafts(client) -> None:
+    store = CapturingStore()
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
+    try:
+        response = client.get(
+            "/v1/aip/model-runtime/routes/missing/revisions", headers=headers()
+        )
+        assert response.status_code == 404
+        assert response.json()["code"] == "AIP_RESOURCE_NOT_FOUND"
+        assert store.scope.key == ("org-org", "dev-project")
+
+        response = client.get(
+            "/v1/aip/model-runtime/routes/missing/revisions",
+            headers=headers("dev-org"),
+        )
+        assert response.status_code == 404
+        assert store.scope.key == ("dev-org", "dev-project")
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
+
+
 def test_canonical_write_requires_idempotency_and_if_match(client) -> None:
     response = client.post("/v1/aip/model-runtime/routes", headers=headers(), json={})
     assert response.status_code == 400
     assert response.json()["code"] == "VALIDATION"
+
+
+def test_route_rollback_draft_is_tenant_scoped_idempotent_and_never_activates(client) -> None:
+    store = RollbackDraftStore()
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
+    try:
+        response = client.post(
+            "/v1/aip/model-runtime/routes/route-a/rollback-draft",
+            headers=headers(**{"Idempotency-Key": "rollback-route-a-2"}),
+            json={"sourceRevision": 2, "expectedRevision": 7},
+        )
+        assert response.status_code == 404
+        assert store.call == (
+            ("org-org", "dev-project"),
+            "user:dev",
+            "rollback-route-a-2",
+            "route-a",
+            2,
+            7,
+        )
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
 
 
 def test_exact_runtime_asset_reads_are_principal_scoped_and_revision_aware(client) -> None:
@@ -182,6 +246,8 @@ def test_openapi_registers_canonical_model_runtime_paths(client) -> None:
     assert "/v1/aip/model-runtime/price-snapshots" in paths
     assert "/v1/aip/model-runtime/price-snapshots/{price_snapshot_id}" in paths
     assert "/v1/aip/model-runtime/routes/{route_id}/resolution" in paths
+    assert "/v1/aip/model-runtime/routes/{route_id}/revisions" in paths
+    assert "/v1/aip/model-runtime/routes/{route_id}/rollback-draft" in paths
     assert "/v1/aip/model-runtime/overview" in paths
     assert "/v1/aip/model-runtime/cost-overview" in paths
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision } from "./parser";
+import { parseModelRouteRevision, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision } from "./parser";
 
 const H = "a".repeat(64);
 const ref = (assetType: string, assetId: string) => ({ assetType, assetId, revision: 1, contentHash: H });
@@ -27,6 +27,17 @@ describe("AIP-7 exact model runtime parser", () => {
     const model = parseRegisteredModelRevision({ tenant: empty.tenant, registeredModelId: "model-1", revision: 1, contentHash: H, provider: ref("ProviderInstanceRevision", "provider-1"), providerModelId: "agnes-2.5-flash", inputModalities: ["text"], outputModalities: ["text"], capabilities: ["chat", "function-calling"], contextWindow: 128000, quotaPolicyRef: ref("QuotaPolicyRevision", "quota-1"), budgetPolicyRef: ref("BudgetPolicyRevision", "budget-1"), priceSnapshotRef: ref("ModelPriceSnapshotRevision", "price-1"), evalGateRef: ref("EvalGateDecision", "gate-1"), lifecycle: "active", createdBy: "fde", createdAt: empty.generatedAt });
     expect(model.providerModelId).toBe("agnes-2.5-flash");
     expect(model.evalGateRef.assetId).toBe("gate-1");
+  });
+  it("解析不可变路由 revision 与 exact Eval/Policy 关系", () => {
+    const route = parseModelRouteRevision({ tenant: empty.tenant, routeId: "route-1", revision: 3, contentHash: H, taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text", requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model-1"), weight: 100 }], strategy: "failover", runtimePolicyRef: ref("RuntimePolicyRevision", "policy-1"), evalGateRef: ref("EvalGateDecision", "gate-1"), lifecycle: "active", createdBy: "fde", createdAt: empty.generatedAt });
+    expect(route.lifecycle).toBe("active");
+    expect(route.candidates[0].model.assetId).toBe("model-1");
+  });
+  it("拒绝错误 exact ref、重复候选和不守恒权重", () => {
+    const base = { tenant: empty.tenant, routeId: "route-1", revision: 3, contentHash: H, taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text", requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model-1"), weight: 60 }, { model: ref("RegisteredModelRevision", "model-2"), weight: 30 }], strategy: "weighted", runtimePolicyRef: ref("RuntimePolicyRevision", "policy-1"), evalGateRef: ref("EvalGateDecision", "gate-1"), lifecycle: "validated", createdBy: "fde", createdAt: empty.generatedAt };
+    expect(() => parseModelRouteRevision(base)).toThrow("权重总和必须为 100");
+    expect(() => parseModelRouteRevision({ ...base, candidates: [{ model: ref("RegisteredModelRevision", "model-1"), weight: 50 }, { model: ref("RegisteredModelRevision", "model-1"), weight: 50 }] })).toThrow("不能重复引用同一模型");
+    expect(() => parseModelRouteRevision({ ...base, candidates: [{ model: ref("RegisteredModelRevision", "model-1"), weight: 100 }], strategy: "failover", runtimePolicyRef: ref("RegisteredModelRevision", "policy-1") })).toThrow("runtimePolicyRef 类型非法");
   });
 });
 

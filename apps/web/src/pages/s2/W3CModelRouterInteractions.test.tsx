@@ -225,4 +225,73 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
     expect(host.textContent).toContain("配置重读与保存回包不一致");
     expect(host.textContent).not.toContain("已保存并重读确认");
   });
+
+  it("把草稿、批准、生效和不可变历史分层展示且不把读取当激活", async () => {
+    const H = "a".repeat(64);
+    const ref = (assetType: string, assetId: string, revision = 1) => ({ assetType, assetId, revision, contentHash: H });
+    const revisions = [
+      { tenant: { orgId: "org-org", projectId: "dev-project" }, routeId: "route-text", revision: 3, contentHash: H, taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text", requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model-a"), weight: 100 }], strategy: "failover", runtimePolicyRef: ref("RuntimePolicyRevision", "policy-a"), evalGateRef: ref("EvalGateDecision", "eval-a"), lifecycle: "active", createdBy: "fde", createdAt: "2026-08-29T00:00:00Z" },
+      { tenant: { orgId: "org-org", projectId: "dev-project" }, routeId: "route-text", revision: 2, contentHash: H, taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text", requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model-a"), weight: 100 }], strategy: "failover", runtimePolicyRef: ref("RuntimePolicyRevision", "policy-a"), evalGateRef: ref("EvalGateDecision", "eval-a"), lifecycle: "validated", createdBy: "reviewer", createdAt: "2026-08-28T00:00:00Z" },
+    ];
+    apiMocks.apiGet.mockImplementation(async (path: string) => {
+      if (path === "/v1/aip/models") return { items: [{ id: "model-a", kind: "chat", ready: true }] };
+      if (path === "/v1/aip/models/warmup") return { ready: true, models: [] };
+      if (path === "/api/models/router/draft") return routeConfig;
+      if (path === "/api/models/router/draft/circuit-config") return { config: {}, version: 1, updatedAt: "2026-08-29T00:00:00Z", activated: false };
+      if (path === "/v1/aip/model-runtime/overview") return { ...runtimeReady, routes: [{ ref: ref("ModelRouteRevision", "route-text", 3), lifecycle: "active", dependencyRefs: [] }] };
+      if (path === "/v1/aip/model-runtime/routes/route-text/revisions") return revisions;
+      throw new Error(`unexpected ${path}`);
+    });
+    await act(async () => root.render(<MemoryRouter><ModelRouterPage /></MemoryRouter>));
+    await flush();
+
+    expect(host.textContent).toContain("路由生命周期工作区");
+    expect(host.textContent).toContain("配置草稿");
+    expect(host.textContent).toContain("已批准版本");
+    expect(host.textContent).toContain("当前生效路由");
+    expect(host.textContent).toContain("历史版本");
+    expect(host.textContent).toContain("生成回滚草稿");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
+  });
+
+  it("回滚只追加新草稿并以权威重读确认，绝不自动批准或切流", async () => {
+    const H = "a".repeat(64);
+    const B = "b".repeat(64);
+    const ref = (assetType: string, assetId: string, revision = 1) => ({ assetType, assetId, revision, contentHash: H });
+    const head = { tenant: { orgId: "org-org", projectId: "dev-project" }, routeId: "route-text", revision: 3, contentHash: H, taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text", requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model-a"), weight: 100 }], strategy: "failover", runtimePolicyRef: ref("RuntimePolicyRevision", "policy-a"), evalGateRef: ref("EvalGateDecision", "eval-a"), lifecycle: "active", createdBy: "fde", createdAt: "2026-08-29T00:00:00Z" };
+    const source = { ...head, revision: 2, lifecycle: "validated", createdBy: "reviewer", createdAt: "2026-08-28T00:00:00Z" };
+    const draft = { ...source, revision: 4, contentHash: B, lifecycle: "draft", createdBy: "user:dev", createdAt: "2026-08-30T00:00:00Z" };
+    let rollbackWritten = false;
+    apiMocks.apiGet.mockImplementation(async (path: string) => {
+      if (path === "/v1/aip/models") return { items: [{ id: "model-a", kind: "chat", ready: true }] };
+      if (path === "/v1/aip/models/warmup") return { ready: true, models: [] };
+      if (path === "/api/models/router/draft") return routeConfig;
+      if (path === "/api/models/router/draft/circuit-config") return { config: {}, version: 1, updatedAt: "2026-08-29T00:00:00Z", activated: false };
+      if (path === "/v1/aip/model-runtime/overview") return { ...runtimeReady, routes: [{ ref: ref("ModelRouteRevision", "route-text", 3), lifecycle: "active", dependencyRefs: [] }] };
+      if (path === "/v1/aip/model-runtime/routes/route-text/revisions") return rollbackWritten ? [draft, head, source] : [head, source];
+      throw new Error(`unexpected ${path}`);
+    });
+    apiMocks.apiPost.mockImplementation(async (path: string) => {
+      if (path === "/v1/aip/model-runtime/routes/route-text/rollback-draft") {
+        rollbackWritten = true;
+        return draft;
+      }
+      throw new Error(`unexpected ${path}`);
+    });
+    await act(async () => root.render(<MemoryRouter><ModelRouterPage /></MemoryRouter>));
+    await flush();
+
+    const rollback = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "生成回滚草稿")!;
+    await act(async () => rollback.click());
+    await flush();
+
+    expect(apiMocks.apiPost).toHaveBeenCalledWith(
+      "/v1/aip/model-runtime/routes/route-text/rollback-draft",
+      { sourceRevision: 2, expectedRevision: 3 },
+      { "Idempotency-Key": "rollback-route-text-2-3" },
+    );
+    expect(apiMocks.apiGet.mock.calls.filter(([path]) => path === "/v1/aip/model-runtime/routes/route-text/revisions")).toHaveLength(2);
+    expect(host.textContent).toContain("已从 r2 生成新的配置草稿 r4；未批准、未激活、未切换流量");
+    expect(host.textContent).toContain("r4");
+  });
 });

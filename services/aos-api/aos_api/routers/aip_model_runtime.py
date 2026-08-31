@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Header, Query, status
+from pydantic import BaseModel, Field
 
 from aos_api.aip_model_runtime_contracts import (
     ModelPriceAuthoritySummary, ModelPriceSnapshotRevision, ModelRouteResolution,
@@ -49,6 +50,11 @@ _BUDGET_AUTHORITY_STORE = AipBudgetAuthorityStore()
 _POLICY_AUTHORITY_STORE = AipModelGovernancePolicyStore(
     budget_store=_BUDGET_AUTHORITY_STORE
 )
+
+
+class RouteRollbackDraftRequest(BaseModel):
+    source_revision: int = Field(alias="sourceRevision", ge=1)
+    expected_revision: int = Field(alias="expectedRevision", ge=1)
 
 
 def get_store() -> AipModelRuntimeStore:
@@ -367,6 +373,43 @@ def record_health(body: ProviderHealthObservation, idempotency_key: str = Header
 @router.get("/routes/{route_id}", response_model=ModelRouteRevision)
 def get_route(route_id: str, revision: int | None = Query(default=None, ge=1), principal: Principal = Depends(require_principal), store: AipModelRuntimeStore = Depends(get_store)):
     return _get("route", route_id, revision, principal, store)
+
+
+@router.get("/routes/{route_id}/revisions", response_model=list[ModelRouteRevision])
+def list_route_revisions(
+    route_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipModelRuntimeStore = Depends(get_store),
+):
+    try:
+        return store.list_route_revisions(_scope(principal), route_id)
+    except ModelRuntimeStoreError as exc:
+        raise _map(exc) from exc
+
+
+@router.post(
+    "/routes/{route_id}/rollback-draft",
+    response_model=ModelRouteRevision,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_route_rollback_draft(
+    route_id: str,
+    body: RouteRollbackDraftRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    store: AipModelRuntimeStore = Depends(get_store),
+):
+    try:
+        return store.create_route_rollback_draft(
+            _scope(principal),
+            principal.subject,
+            _key(idempotency_key),
+            route_id,
+            body.source_revision,
+            expected_revision=body.expected_revision,
+        )
+    except ModelRuntimeStoreError as exc:
+        raise _map(exc) from exc
 
 
 @router.get("/routes/{route_id}/resolution", response_model=ModelRouteResolution)

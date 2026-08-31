@@ -14,6 +14,7 @@ from aos_api.aip_model_runtime_contracts import (
     ModelRuntimeAssetSummary,
     ModelRuntimeCapacityPoolSummary,
     ModelRuntimeEvalGateSummary,
+    ModelRuntimeLifecycle,
     ModelRouteRevision,
     ModelPriceSnapshotRevision,
     ProviderHealthObservation,
@@ -186,6 +187,72 @@ class AipModelRuntimeStore:
 
     def get_route(self, scope: TenantScope, asset_id: str, revision: int | None = None) -> ModelRouteRevision:
         return self._get("model_route", scope, asset_id, revision)
+
+    def list_route_revisions(
+        self, scope: TenantScope, asset_id: str
+    ) -> list[ModelRouteRevision]:
+        """Read immutable route history for one tenant-scoped route.
+
+        History is ordered newest first and never changes the route head.  An
+        empty result is a genuine not-found condition rather than a synthetic
+        draft.
+        """
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT payload FROM aip_model_route_revision
+                WHERE org_id=%s AND project_id=%s AND model_route_id=%s
+                ORDER BY revision DESC""",
+                (*scope.key, asset_id),
+            ).fetchall()
+        if not rows:
+            raise ModelRuntimeNotFound("model_route not found")
+        return [ModelRouteRevision.model_validate(self._load(row["payload"])) for row in rows]
+
+    def create_route_rollback_draft(
+        self,
+        scope: TenantScope,
+        actor: str,
+        key: str,
+        asset_id: str,
+        source_revision: int,
+        *,
+        expected_revision: int,
+    ) -> ModelRouteRevision:
+        """Append a draft copied from an immutable historical revision.
+
+        The command never activates runtime traffic.  It uses the observed
+        head revision as the optimistic concurrency token and delegates the
+        write to the normal idempotent revision publisher.
+        """
+        with self._connect_factory(scope) as conn:
+            head_row = conn.execute(
+                """SELECT current_revision,version FROM aip_model_route_head
+                WHERE org_id=%s AND project_id=%s AND model_route_id=%s""",
+                (*scope.key, asset_id),
+            ).fetchone()
+        if not head_row:
+            raise ModelRuntimeNotFound("model_route not found")
+        current_revision = int(head_row["current_revision"])
+        head_version = int(head_row["version"])
+        if current_revision != expected_revision:
+            raise ModelRuntimeConflict("stale route head revision")
+        head = self.get_route(scope, asset_id, current_revision)
+        source = self.get_route(scope, asset_id, source_revision)
+        payload = source.model_dump(mode="json", by_alias=True)
+        payload.update(
+            revision=head.revision + 1,
+            lifecycle=ModelRuntimeLifecycle.DRAFT.value,
+            createdBy=actor,
+            createdAt=datetime.now(UTC),
+        )
+        content = {
+            name: value for name, value in payload.items() if name not in self._META_FIELDS
+        }
+        payload["contentHash"] = canonical_hash(content)
+        draft = ModelRouteRevision.model_validate(payload)
+        return self.publish_route(
+            scope, actor, key, draft, expected_version=head_version
+        )
 
     def get_price_snapshot(self, scope: TenantScope, asset_id: str, revision: int | None = None) -> ModelPriceSnapshotRevision:
         return self._get("model_price_snapshot", scope, asset_id, revision)

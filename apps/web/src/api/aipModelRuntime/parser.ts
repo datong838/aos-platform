@@ -1,4 +1,4 @@
-import type { ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeReadiness, RuntimeResolution, RuntimeUsageAuthoritySummary } from "./contracts";
+import type { ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRouteRevision, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeReadiness, RuntimeResolution, RuntimeUsageAuthoritySummary } from "./contracts";
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }
 function array(value: unknown, label: string): unknown[] { if (!Array.isArray(value)) throw new Error(`${label} 必须是数组`); return value; }
@@ -43,6 +43,39 @@ export function parseRegisteredModelRevision(value: unknown): RegisteredModelRev
     contextWindow: integer(raw.contextWindow, "contextWindow", 1), quotaPolicyRef: ref(raw.quotaPolicyRef, "quotaPolicyRef"),
     budgetPolicyRef: ref(raw.budgetPolicyRef, "budgetPolicyRef"), priceSnapshotRef: ref(raw.priceSnapshotRef, "priceSnapshotRef"),
     evalGateRef: ref(raw.evalGateRef, "evalGateRef"), lifecycle: enumeration<RuntimeLifecycle>(raw.lifecycle, "lifecycle", ["draft", "validated", "active", "suspended", "revoked"]),
+    createdBy: string(raw.createdBy, "createdBy"), createdAt: iso(raw.createdAt, "createdAt"),
+  };
+}
+
+export function parseModelRouteRevision(value: unknown): ModelRouteRevision {
+  const raw = object(value, "ModelRouteRevision");
+  const candidates = array(raw.candidates, "candidates").map((item, index) => {
+    const candidate = object(item, `candidates[${index}]`);
+    const model = ref(candidate.model, `candidates[${index}].model`);
+    if (model.assetType !== "RegisteredModelRevision") throw new Error(`candidates[${index}].model 类型非法`);
+    const weight = integer(candidate.weight, `candidates[${index}].weight`);
+    if (weight > 100) throw new Error(`candidates[${index}].weight 不能超过 100`);
+    return { model, weight };
+  });
+  if (!candidates.length) throw new Error("candidates 不能为空");
+  const candidateIds = candidates.map((item) => item.model.assetId);
+  if (new Set(candidateIds).size !== candidateIds.length) throw new Error("candidates 不能重复引用同一模型");
+  const runtimePolicyRef = ref(raw.runtimePolicyRef, "runtimePolicyRef");
+  const evalGateRef = ref(raw.evalGateRef, "evalGateRef");
+  if (runtimePolicyRef.assetType !== "RuntimePolicyRevision") throw new Error("runtimePolicyRef 类型非法");
+  if (evalGateRef.assetType !== "EvalGateDecision") throw new Error("evalGateRef 类型非法");
+  const strategy = enumeration(raw.strategy, "strategy", ["failover", "weighted", "lowest_latency", "lowest_cost"] as const);
+  if (strategy === "weighted" && candidates.reduce((total, item) => total + item.weight, 0) !== 100) throw new Error("weighted candidates 权重总和必须为 100");
+  if (strategy !== "weighted" && candidates.some((item) => item.weight !== 100)) throw new Error("非 weighted candidates 权重必须为 100");
+  return {
+    tenant: tenant(raw.tenant, "tenant"), routeId: string(raw.routeId, "routeId"),
+    revision: integer(raw.revision, "revision", 1), contentHash: sha(raw.contentHash, "contentHash"),
+    taskTypes: strings(raw.taskTypes, "taskTypes"), requiredInputModality: string(raw.requiredInputModality, "requiredInputModality"),
+    requiredOutputModality: string(raw.requiredOutputModality, "requiredOutputModality"),
+    requiredCapabilities: strings(raw.requiredCapabilities, "requiredCapabilities"), candidates,
+    strategy,
+    runtimePolicyRef, evalGateRef,
+    lifecycle: enumeration<RuntimeLifecycle>(raw.lifecycle, "lifecycle", ["draft", "validated", "active", "suspended", "revoked"]),
     createdBy: string(raw.createdBy, "createdBy"), createdAt: iso(raw.createdAt, "createdAt"),
   };
 }

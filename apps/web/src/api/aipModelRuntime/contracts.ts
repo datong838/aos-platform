@@ -90,6 +90,24 @@ export type RegisteredModelRevision = {
   createdAt: string;
 };
 
+export type ModelRouteRevision = {
+  tenant: { orgId: string; projectId: string };
+  routeId: string;
+  revision: number;
+  contentHash: string;
+  taskTypes: string[];
+  requiredInputModality: string;
+  requiredOutputModality: string;
+  requiredCapabilities: string[];
+  candidates: Array<{ model: ExactRuntimeRef; weight: number }>;
+  strategy: "failover" | "weighted" | "lowest_latency" | "lowest_cost";
+  runtimePolicyRef: ExactRuntimeRef;
+  evalGateRef: ExactRuntimeRef;
+  lifecycle: RuntimeLifecycle;
+  createdBy: string;
+  createdAt: string;
+};
+
 export type ProviderPluginRevision = {
   providerPluginId: string;
   revision: number;
