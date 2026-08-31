@@ -25,7 +25,9 @@
 
 ## 自动化验证
 
-- `parser.test.ts`、`ModelCatalogPage.test.ts`、`ProviderDetailPage.test.tsx`：53/53 GREEN。
+- `parser.test.ts`、`ModelCatalogPage.test.ts`、`ProviderDetailPage.test.tsx`：54/54 GREEN。
+- `test_llm_provider_plugins_83.py`：3/3 GREEN，覆盖 opaque 凭据引用保存、CAS 冲突、明文拒绝和撤销后取消就绪。
+- TypeScript `--noEmit` 与 `apps/web` 生产构建 GREEN；生产构建仅保留既有大 chunk 提示。
 - Web TypeScript：`tsc --noEmit` GREEN。
 - `git diff --check` GREEN。
 
@@ -33,6 +35,7 @@
 
 - `p6a-model-catalog.png`：真实模型目录、中文模态/许可、平台授权与模型启用视图可工作。
 - `p6a-provider-detail.png`：exact Provider、凭据安全摘要、3/3 探针截止面、模型/容量/路由关系与跨页入口可工作。
+- 本轮后段新增的“轮换至新引用 / 撤销凭据引用”由单元与 API 测试闭合；收口时内置浏览器连接列表为空，因此未执行真实凭据保存、轮换或撤销，也不把其他浏览器结果冒充内置浏览器证据。
 - 两页完整侧栏均包含八个已安装工作台和全部 AIP/模型管理入口，可折叠、可滚动。
 
 ## 结论

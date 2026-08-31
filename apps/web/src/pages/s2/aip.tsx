@@ -1402,12 +1402,12 @@ export function ProvidersPage() {
     }
   }
 
-  async function saveCredentials() {
+  async function persistCredentialRef(nextRef: string, action: "保存" | "轮换" | "撤销") {
     setSaveMsg("");
     setMsg("");
     const stamped = keyUpdatedAt || new Date().toISOString();
     setKeyUpdatedAt(stamped);
-    const ref = secretRef.trim() || (activePluginId ? `vault:secret/data/aos/llm#${activePluginId}` : apiVaultRef);
+    const ref = nextRef.trim();
 
     const targetPlugin = credentialPlugin;
     if (targetPlugin) {
@@ -1418,7 +1418,7 @@ export function ProvidersPage() {
           baseUrl: targetPlugin.config?.baseUrl || (formKind === "vllm" ? localUrl : baseUrl),
           secretRef: ref,
           models: targetPlugin.config?.models || targetPlugin.enabledModels || targetPlugin.defaultModels || [],
-          ready: Boolean(targetPlugin.ready),
+          ready: action === "撤销" ? false : Boolean(targetPlugin.ready),
           expectedVersion: targetPlugin.config?.revision || 0,
         });
         const reread = await apiGet<{ items: LlmPlugin[] }>("/v1/aip/llm-provider-plugins");
@@ -1432,7 +1432,7 @@ export function ProvidersPage() {
         setSecretRef(ref);
         setKeyUpdatedAt(new Date().toISOString());
         pluginsApi.setData(reread);
-        setSaveMsg(`opaque 凭据引用已保存并重读确认 · v${confirmed.config.revision} · 未触发模型调用`);
+        setSaveMsg(`opaque 凭据引用已${action}并重读确认 · v${confirmed.config.revision} · 未触发模型调用${action === "撤销" ? " · Provider 已取消就绪" : ""}`);
       } catch (e) {
         setMsg(String((e as Error).message || e));
       }
@@ -1444,7 +1444,24 @@ export function ProvidersPage() {
       secretRef: ref,
       keyUpdatedAt: stamped,
     });
-    setSaveMsg("当前供应商未匹配到已安装插件，凭据引用仅保留为会话草稿");
+    setSaveMsg(`当前供应商未匹配到已安装插件，凭据引用${action}仅保留为会话草稿`);
+  }
+
+  async function saveCredentials() {
+    const ref = secretRef.trim() || (activePluginId ? `vault:secret/data/aos/llm#${activePluginId}` : apiVaultRef);
+    await persistCredentialRef(ref, "保存");
+  }
+
+  async function rotateCredentials() {
+    if (!secretRef.trim()) {
+      setMsg("请先填写密钥库生成的新 opaque 引用，再执行轮换");
+      return;
+    }
+    await persistCredentialRef(secretRef, "轮换");
+  }
+
+  async function revokeCredentials() {
+    await persistCredentialRef("", "撤销");
   }
 
   async function testConnectivity() {
@@ -1587,6 +1604,12 @@ export function ProvidersPage() {
           <div className="mp-cfg-actions">
             <button type="button" className="btn-primary" onClick={() => void saveCredentials()}>
               保存凭据引用
+            </button>
+            <button type="button" className="btn-nav" onClick={() => void rotateCredentials()}>
+              轮换至新引用
+            </button>
+            <button type="button" className="btn-nav" onClick={() => void revokeCredentials()}>
+              撤销凭据引用
             </button>
             <button type="button" className="btn-nav" onClick={reopenConfigureFromCredentials}>
               去配置页测连通 →

@@ -100,3 +100,17 @@ def test_provider_config_accepts_only_versioned_opaque_secret_ref(client, auth_h
     )
     assert plaintext.status_code == 400
     assert plaintext.json()["code"] == "PLAINTEXT_SECRET_REJECTED"
+
+    revoked = client.put(
+        "/v1/aip/llm-provider-plugins/agnes-text/config",
+        headers=auth_headers,
+        json={
+            "secretRef": "",
+            "ready": False,
+            "expectedVersion": version + 1,
+        },
+    )
+    assert revoked.status_code == 200, revoked.text
+    assert revoked.json()["config"]["revision"] == version + 2
+    assert revoked.json()["config"]["secretRef"] == ""
+    assert revoked.json()["ready"] is False
