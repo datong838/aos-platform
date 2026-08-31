@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision } from "./parser";
+import { parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision } from "./parser";
 
 const H = "a".repeat(64);
 const ref = (assetType: string, assetId: string) => ({ assetType, assetId, revision: 1, contentHash: H });
@@ -22,6 +22,11 @@ describe("AIP-7 exact model runtime parser", () => {
   it("解析 Provider 插件审批权威", () => {
     const plugin = parseProviderPluginRevision({ providerPluginId: "agnes-text", revision: 1, contentHash: H, manifestVersion: "1.0.0", manifestSourceHash: H, sourceRef: "plugins/llm-providers/agnes-text/manifest.json", owner: "AOS/FDE", usageBasis: "internal", approvedCapabilities: ["text", "llm", "chat"], deniedCapabilities: ["image", "audio", "video", "tool_execution"], modalities: ["text"], defaultModels: ["agnes-2.5-flash"], allowedTenants: [empty.tenant], approvalStatus: "approved", approvedBy: "owner", approvedAt: empty.generatedAt });
     expect(plugin.approvalStatus).toBe("approved");
+  });
+  it("解析模型到 Provider、价格、容量和 Eval 的 exact 关系", () => {
+    const model = parseRegisteredModelRevision({ tenant: empty.tenant, registeredModelId: "model-1", revision: 1, contentHash: H, provider: ref("ProviderInstanceRevision", "provider-1"), providerModelId: "agnes-2.5-flash", inputModalities: ["text"], outputModalities: ["text"], capabilities: ["chat", "function-calling"], contextWindow: 128000, quotaPolicyRef: ref("QuotaPolicyRevision", "quota-1"), budgetPolicyRef: ref("BudgetPolicyRevision", "budget-1"), priceSnapshotRef: ref("ModelPriceSnapshotRevision", "price-1"), evalGateRef: ref("EvalGateDecision", "gate-1"), lifecycle: "active", createdBy: "fde", createdAt: empty.generatedAt });
+    expect(model.providerModelId).toBe("agnes-2.5-flash");
+    expect(model.evalGateRef.assetId).toBe("gate-1");
   });
 });
 

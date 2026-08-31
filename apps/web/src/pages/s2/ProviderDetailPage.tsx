@@ -39,6 +39,16 @@ function resolvesProvider(summary: ModelRuntimeOverview["providers"][number], re
     );
 }
 
+export function threeProbeSummary(observation: ModelRuntimeOverview["healthObservations"][number] | null, fresh: boolean) {
+  const authorizedWriter = Boolean(observation && [
+    "health-agnes-text-qyh-r2-",
+    "health-agnes-image-qyh-r2-",
+    "health-agnes-video-qyh-r2-",
+  ].some((prefix) => observation.observationId.startsWith(prefix)));
+  const complete = Boolean(authorizedWriter && fresh && observation?.status === "healthy" && observation.availabilityPct === 100);
+  return { complete, label: complete ? "3/3 受控探针聚合通过" : authorizedWriter ? (fresh ? "3/3 聚合结果未满足" : "3/3 聚合证据已过期") : "没有可核验的 3/3 聚合证据" };
+}
+
 export function ProviderDetailPage({ client = aipModelRuntime }: { client?: ProviderDetailClient }) {
   const { providerId = "" } = useParams<{ providerId: string }>();
   const [provider, setProvider] = useState<ProviderInstanceRevision | null>(null);
@@ -88,6 +98,7 @@ export function ProviderDetailPage({ client = aipModelRuntime }: { client?: Prov
       && item.provider.contentHash === provider.contentHash
   ) ?? null, [overview, provider]);
   const healthFresh = Boolean(health && Date.parse(health.expiresAt) > Date.now());
+  const probes = threeProbeSummary(health, healthFresh);
   const models = useMemo(() => overview?.models.filter((item) => item.dependencyRefs.some((ref) =>
     provider
       && ref.assetType === "ProviderInstanceRevision"
@@ -114,6 +125,8 @@ export function ProviderDetailPage({ client = aipModelRuntime }: { client?: Prov
         <Link to="/aip/model-runtime" className="btn btn-nav">模型运行就绪 →</Link>
         <Link to="/aip/model-router" className="btn btn-nav">模型路由 →</Link>
         <Link to="/aip/evals" className="btn btn-nav">Evals 门控 →</Link>
+        <Link to="/aip/capacity" className="btn btn-nav">容量与用量 →</Link>
+        <Link to="/aip/agents" className="btn btn-nav">受影响数字同事 →</Link>
       </div>
 
       {loading ? <div role="status" className="card">正在读取当前组织的 exact Provider 权威…</div> : null}
@@ -154,6 +167,7 @@ export function ProviderDetailPage({ client = aipModelRuntime }: { client?: Prov
                 <p>P50 {health.p50LatencyMs ?? "—"} ms</p>
                 <p>观察 {new Date(health.observedAt).toLocaleString()}</p>
                 <p>失效 {new Date(health.expiresAt).toLocaleString()}</p>
+                <p><strong>{probes.label}</strong></p>
               </> : <div className="notice">当前 exact Provider 尚无 Health observation，运行门必须失败关闭。</div>}
             </article>
             <article className="card" style={{ padding: 16 }}>
@@ -163,6 +177,16 @@ export function ProviderDetailPage({ client = aipModelRuntime }: { client?: Prov
               <p>允许：{plugin.approvedCapabilities.join("、")}</p>
               <p>禁止：{plugin.deniedCapabilities.join("、") || "—"}</p>
             </article>
+          </section>
+
+          <section className="card" style={{ padding: 18, marginTop: 16 }} aria-label="3/3 探针诊断">
+            <h2 style={{ marginTop: 0 }}>3/3 Health 探针诊断</h2>
+            <p>模型与模态：{plugin.defaultModels.join("、")} · {plugin.modalities.join("、")}；仅认可同一 exact Provider 和当前截止面。</p>
+            <div className={`notice ${probes.complete ? "good" : "bad"}`}>
+              <strong>{probes.label}</strong><br />
+              {probes.complete ? "受控 R2 writer 只在三次单次尝试全部成功后写入本条聚合 observation。" : "当前 observation 不能证明三次受控探针全部成功。"}
+            </div>
+            <p className="muted">当前权威只保存聚合结果，不保存三条逐探针明细；页面不虚构单条延迟或响应，也不展示提示词、响应正文、Header 或 Secret。</p>
           </section>
 
           <section className="card" style={{ padding: 18, marginTop: 16 }}>

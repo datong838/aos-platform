@@ -1,19 +1,31 @@
+// @vitest-environment jsdom
+
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ProviderDetailPage } from "./ProviderDetailPage";
+import { ProviderDetailPage, threeProbeSummary } from "./ProviderDetailPage";
 
 const H = "a".repeat(64);
 const ref = (assetType: string, assetId: string) => ({ assetType, assetId, revision: 1, contentHash: H });
 const tenant = { orgId: "org-org", projectId: "dev-project" };
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 describe("canonical Provider detail", () => {
   let host: HTMLDivElement;
   let root: ReturnType<typeof createRoot>;
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
   afterEach(() => { act(() => root.unmount()); host.remove(); });
+
+  it("only accepts fresh exact R2 writer metadata as aggregate 3/3 probe evidence", () => {
+    const observation = { tenant, observationId: "health-agnes-text-qyh-r2-20260820000000000000", provider: ref("ProviderInstanceRevision", "agnes-text-qyh-dev"), status: "healthy" as const, availabilityPct: 100, p50LatencyMs: 88, observedAt: "2026-08-20T00:00:00Z", expiresAt: "2099-08-20T00:05:00Z" };
+    expect(threeProbeSummary(observation, true)).toEqual({ complete: true, label: "3/3 受控探针聚合通过" });
+    expect(threeProbeSummary({ ...observation, observationId: "health-agnes-image-qyh-r2-20260820000000000000" }, true).complete).toBe(true);
+    expect(threeProbeSummary({ ...observation, observationId: "health-agnes-video-qyh-r2-20260820000000000000" }, true).complete).toBe(true);
+    expect(threeProbeSummary({ ...observation, observationId: "health-external" }, true).complete).toBe(false);
+    expect(threeProbeSummary(observation, false).label).toContain("已过期");
+  });
 
   it("shows exact authority and never renders a secret reference or plaintext editor", async () => {
     const client = {

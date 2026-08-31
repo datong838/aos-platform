@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiGet, apiPost } from "../../api/client";
-import { aipModelRuntime, type ModelPriceAuthoritySummary } from "../../api/aipModelRuntime";
+import { aipModelRuntime, type ExactRuntimeRef, type ModelPriceAuthoritySummary } from "../../api/aipModelRuntime";
 import { aipFeatureActivation, type AipFeatureActivationList } from "../../api/aipFeatureActivation";
 import { PageChrome } from "../../components/PageChrome";
 import {
@@ -26,6 +26,19 @@ export type CatalogModel = {
   registered: boolean;
   providerModelId?: string;
   priceAuthorityStatus?: ModelPriceAuthoritySummary["status"];
+  description?: string;
+  status?: string;
+  inputModalities?: string[];
+  outputModalities?: string[];
+  usageBasis?: string;
+  limitations?: string[];
+  runtimeModelRef?: ExactRuntimeRef;
+  providerRef?: ExactRuntimeRef;
+  routeRefs?: ExactRuntimeRef[];
+  evalGateRef?: ExactRuntimeRef;
+  healthLabel?: string;
+  healthExpiresAt?: string;
+  capacityPoolCount?: number;
 };
 
 type TabId = "settings" | "enablement" | "registered" | "catalog";
@@ -51,6 +64,8 @@ export type ApiCatalogRow = {
   registered?: boolean;
   registration?: { alias?: string; status?: string } | null;
   parameters?: string;
+  description?: string;
+  status?: string;
 };
 
 // ── Capability color map ──────────────────────────────────────
@@ -72,6 +87,45 @@ const CAPABILITY_LABELS: Record<Capability, string> = {
   reasoning: "复杂推理",
   "function-calling": "工具调用",
 };
+
+const BUSINESS_TOKEN_LABELS: Record<string, string> = {
+  internal: "内部开发环境使用",
+  development_only: "仅开发环境使用",
+  tool_execution: "工具执行",
+  structured_output: "结构化输出",
+  image: "图像",
+  audio: "音频",
+  video: "视频",
+  text: "文本",
+  chat: "对话",
+  llm: "大语言模型",
+  priced: "计价已确认",
+  approved_zero: "零价已审批",
+  unit_mismatch: "计价单位不匹配",
+  unknown: "尚无可验证计价结论",
+};
+
+export function businessTokenLabel(value: string): string {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized.includes("aos self-developed adapter") && normalized.includes("development pilot and demo only")) {
+    return "AOS 自研适配器；仅限已授权的开发试点与演示";
+  }
+  return BUSINESS_TOKEN_LABELS[normalized] || value || "未声明";
+}
+
+export function featureActivationImpactPreview(
+  current: AipFeatureActivationList["items"][number] | undefined,
+  featureId: string,
+) {
+  const revision = current?.revision || 0;
+  return {
+    nextRevision: revision + 1,
+    summary: current
+      ? `${featureId} 将从 v${revision} 续期为 v${revision + 1}`
+      : `${featureId || "待填写功能"} 将创建 v1 授权`,
+    boundary: "仅变更当前租户的功能授权；不安装 Provider、不切换路由、不触发模型调用",
+  };
+}
 
 // ── Mock catalog data ──────────────────────────────────────────
 
@@ -378,6 +432,8 @@ export function mapApiCatalogRow(row: ApiCatalogRow): CatalogModel {
     capabilities: caps.length ? caps : ["chat"],
     registered: Boolean(row.registered ?? row.registration),
     providerModelId: String(row.model || row.id || ""),
+    description: String(row.description || ""),
+    status: String(row.status || "unknown"),
   };
 }
 
@@ -445,6 +501,7 @@ export function ModelCatalogPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [registerBusy, setRegisterBusy] = useState<string | null>(null);
   const [registerMsg, setRegisterMsg] = useState<string | null>(null);
+  const [expandedModel, setExpandedModel] = useState<string | null>(null);
 
   const loadCatalog = useCallback(async () => {
     try {
@@ -470,8 +527,42 @@ export function ModelCatalogPage() {
           registered: regSet.has(String(c.id || "")),
         }));
       }
-      const cost = await aipModelRuntime.costOverview();
-      setCatalogModels(applyPriceAuthority(items.map(mapApiCatalogRow).filter((m) => m.id), cost.modelPrices));
+      const [cost, overview] = await Promise.all([aipModelRuntime.costOverview(), aipModelRuntime.overview()]);
+      const runtimeModels = await Promise.all(overview.models.map((item) => aipModelRuntime.model(item.ref.assetId, item.ref.revision)));
+      const providers = await Promise.all(overview.providers.map((item) => aipModelRuntime.provider(item.ref.assetId)));
+      const plugins = await Promise.all(providers.map((item) => aipModelRuntime.providerPlugin(item.pluginRef.assetId, item.pluginRef.revision)));
+      const enriched = items.map(mapApiCatalogRow).filter((model) => model.id).map((model) => {
+        const runtimeModel = runtimeModels.find((item) => item.providerModelId === model.providerModelId);
+        if (!runtimeModel) return model;
+        const provider = providers.find((item) => item.providerInstanceId === runtimeModel.provider.assetId);
+        const plugin = provider ? plugins.find((item) => item.providerPluginId === provider.pluginRef.assetId && item.revision === provider.pluginRef.revision) : undefined;
+        const routes = overview.routes.filter((item) => item.dependencyRefs.some((ref) => ref.assetType === "RegisteredModelRevision" && ref.assetId === runtimeModel.registeredModelId));
+        const health = overview.healthObservations.find((item) => item.provider.assetId === runtimeModel.provider.assetId && item.provider.revision === runtimeModel.provider.revision && item.provider.contentHash === runtimeModel.provider.contentHash);
+        const price = cost.modelPrices.find((item) => item.providerModelId === runtimeModel.providerModelId);
+        const limitations = [
+          ...(plugin?.deniedCapabilities || []).map((item) => `禁止能力：${businessTokenLabel(item)}`),
+          ...(price && price.status !== "priced" && price.status !== "approved_zero" ? [`计价权威：${businessTokenLabel(price.status)}`] : []),
+          ...(!health || Date.parse(health.expiresAt) <= Date.now() ? ["当前 Health 缺失或已过期，运行必须失败关闭"] : []),
+        ];
+        return {
+          ...model,
+          parameters: "供应商未披露",
+          contextWindow: formatContextWindow(runtimeModel.contextWindow),
+          capabilities: runtimeModel.capabilities.map(normalizeCapability).filter((item): item is Capability => item != null),
+          inputModalities: runtimeModel.inputModalities,
+          outputModalities: runtimeModel.outputModalities,
+          usageBasis: businessTokenLabel(plugin?.usageBasis || ""),
+          limitations,
+          runtimeModelRef: { assetType: "RegisteredModelRevision", assetId: runtimeModel.registeredModelId, revision: runtimeModel.revision, contentHash: runtimeModel.contentHash },
+          providerRef: runtimeModel.provider,
+          routeRefs: routes.map((item) => item.ref),
+          evalGateRef: runtimeModel.evalGateRef,
+          healthLabel: health ? (Date.parse(health.expiresAt) > Date.now() ? health.status : "已过期") : "缺失",
+          healthExpiresAt: health?.expiresAt,
+          capacityPoolCount: overview.capacityPools.filter((item) => item.modelRef.assetId === runtimeModel.registeredModelId && item.modelRef.revision === runtimeModel.revision && item.modelRef.contentHash === runtimeModel.contentHash).length,
+        };
+      });
+      setCatalogModels(applyPriceAuthority(enriched, cost.modelPrices));
       setSourceMode("live");
       setLoadError(null);
     } catch (e) {
@@ -517,6 +608,10 @@ export function ModelCatalogPage() {
     provider,
     models: catalogModels.filter((model) => model.provider === provider),
   })), [catalogModels]);
+  const activationPreview = useMemo(() => featureActivationImpactPreview(
+    activation?.items.find((item) => item.featureId === featureId),
+    featureId,
+  ), [activation, featureId]);
 
   async function handleActivateFeature() {
     const current = activation?.items.find((item) => item.featureId === featureId);
@@ -792,6 +887,10 @@ export function ModelCatalogPage() {
                         })}
                       </div>
 
+                      <div className="muted" style={{ marginTop: 10 }}>
+                        输入模态：{m.inputModalities?.map(businessTokenLabel).join("、") || "未声明"} · 输出模态：{m.outputModalities?.map(businessTokenLabel).join("、") || "未声明"} · 使用许可：{m.usageBasis || "未声明"}
+                      </div>
+
                       <div className="mc-card-actions">
                         <label className="mc-compare-label">
                           <input
@@ -814,14 +913,26 @@ export function ModelCatalogPage() {
                             {registerBusy === m.id ? "注册中…" : "注册到供应商"}
                           </button>
                         ) : (
-                          <Link
-                            to="/aip/model-router"
-                            className="mc-secondary-link"
-                          >
-                            路由配置 →
-                          </Link>
+                          <button type="button" className="mc-secondary-link" onClick={() => setExpandedModel(expandedModel === m.id ? null : m.id)}>
+                            {expandedModel === m.id ? "收起运行关系" : "查看运行关系"}
+                          </button>
                         )}
                       </div>
+                      {expandedModel === m.id ? <div className="notice" style={{ marginTop: 12 }} role="region" aria-label={`${m.name} 运行关系`}>
+                        <strong>运行关系与边界</strong>
+                        <p>{m.description || "当前目录未提供业务描述"}</p>
+                        <p>目录状态：{m.status || "未知"} · 模型版本：{m.runtimeModelRef ? `${m.runtimeModelRef.assetId}@${m.runtimeModelRef.revision}` : "未发布"}</p>
+                        <p>Provider：{m.providerRef?.assetId || "未绑定"} · Route：{m.routeRefs?.map((item) => `${item.assetId}@${item.revision}`).join("、") || "未绑定"}</p>
+                        <p>Eval：{m.evalGateRef ? `${m.evalGateRef.assetId}@${m.evalGateRef.revision}` : "未绑定"} · Health：{m.healthLabel || "未知"}{m.healthExpiresAt ? `（截止 ${new Date(m.healthExpiresAt).toLocaleString("zh-CN")}）` : ""} · Capacity：{m.capacityPoolCount ?? 0} 个 exact 池</p>
+                        <p>限制：{m.limitations?.join("；") || "当前权威未声明额外限制"}</p>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                          {m.providerRef ? <Link className="btn btn-nav" to={`/aip/model-providers/${encodeURIComponent(m.providerRef.assetId)}`}>供应商权威</Link> : null}
+                          <Link className="btn btn-nav" to="/aip/model-router">路由与策略</Link>
+                          <Link className="btn btn-nav" to="/aip/evals">评测门控</Link>
+                          <Link className="btn btn-nav" to="/aip/capacity">容量与用量</Link>
+                          <Link className="btn btn-nav" to={`/aip/agents?modelId=${encodeURIComponent(m.runtimeModelRef?.assetId || m.id)}`}>消费数字同事</Link>
+                        </div>
+                      </div> : null}
                     </div>
                   );
                 })}
@@ -897,6 +1008,11 @@ export function ModelCatalogPage() {
                     <label className="mc-org-item">功能标识<input aria-label="功能标识" value={featureId} onChange={(event) => setFeatureId(event.target.value)} placeholder="aip.analysis" /></label>
                     <label className="mc-org-item">评审内容哈希<input aria-label="评审内容哈希" value={featureHash} onChange={(event) => setFeatureHash(event.target.value)} placeholder="sha256:…" /></label>
                     <label className="mc-org-item">授权到期时间<input type="datetime-local" aria-label="授权到期时间" value={featureExpiry} onChange={(event) => setFeatureExpiry(event.target.value)} /></label>
+                  </div>
+                  <div className="notice" role="status" style={{ marginTop: 12 }}>
+                    <strong>影响预览 · {activationPreview.summary}</strong>
+                    <div>{activationPreview.boundary}</div>
+                    <div>保存采用当前 revision 的 CAS；冲突时失败关闭并要求重新读取。</div>
                   </div>
                 </details>
               </div>

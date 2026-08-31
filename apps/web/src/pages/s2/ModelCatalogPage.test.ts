@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   buildComparisonRows,
+  businessTokenLabel,
+  featureActivationImpactPreview,
   applyPriceAuthority,
   computeCatalogStats,
   extractAllCapabilities,
@@ -15,6 +17,36 @@ import {
   validateRegistrationResponse,
   type CatalogModel,
 } from "./ModelCatalogPage";
+
+describe("ModelCatalogPage · 业务中文表达", () => {
+  it("把运行合同枚举转成运营人员可理解的中文", () => {
+    expect(businessTokenLabel("internal")).toBe("内部开发环境使用");
+    expect(businessTokenLabel("tool_execution")).toBe("工具执行");
+    expect(businessTokenLabel("unit_mismatch")).toBe("计价单位不匹配");
+    expect(businessTokenLabel("AGNES internal authorized model service; AOS self-developed adapter; development pilot and demo only"))
+      .toBe("AOS 自研适配器；仅限已授权的开发试点与演示");
+  });
+
+  it("未知扩展值保持原值，避免篡改权威事实", () => {
+    expect(businessTokenLabel("future_contract_value")).toBe("future_contract_value");
+  });
+});
+
+describe("ModelCatalogPage · 功能授权影响预览", () => {
+  it("明确 revision 推进与无外部副作用边界", () => {
+    const preview = featureActivationImpactPreview({
+      featureId: "aip.analysis",
+      revision: 3,
+      contentHash: `sha256:${"a".repeat(64)}`,
+      status: "active",
+      activatedAt: "2026-08-31T00:00:00Z",
+      expiresAt: "2026-09-30T00:00:00Z",
+    }, "aip.analysis");
+    expect(preview.nextRevision).toBe(4);
+    expect(preview.summary).toContain("v3");
+    expect(preview.boundary).toContain("不触发模型调用");
+  });
+});
 
 const MOCK_MODELS: CatalogModel[] = [
   {

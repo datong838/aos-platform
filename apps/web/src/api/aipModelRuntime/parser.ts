@@ -1,4 +1,4 @@
-import type { ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeReadiness, RuntimeResolution, RuntimeUsageAuthoritySummary } from "./contracts";
+import type { ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeReadiness, RuntimeResolution, RuntimeUsageAuthoritySummary } from "./contracts";
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }
 function array(value: unknown, label: string): unknown[] { if (!Array.isArray(value)) throw new Error(`${label} 必须是数组`); return value; }
@@ -29,6 +29,22 @@ export function parseProviderInstanceRevision(value: unknown): ProviderInstanceR
   const secretRef = string(raw.secretRef, "secretRef"); const match = /^(vault|secret|keychain):\/\//.exec(secretRef); if (!match) throw new Error("secretRef 必须是 opaque 引用");
   const pluginRef = ref(raw.pluginRef, "pluginRef"); if (pluginRef.assetType !== "ProviderPluginRevision") throw new Error("pluginRef 类型非法");
   return { tenant: tenant(raw.tenant, "tenant"), providerInstanceId: string(raw.providerInstanceId, "providerInstanceId"), revision: integer(raw.revision, "revision", 1), contentHash: sha(raw.contentHash, "contentHash"), pluginRef, endpointProfile: { baseUrl: string(endpoint.baseUrl, "endpointProfile.baseUrl"), region: string(endpoint.region, "endpointProfile.region"), timeoutMs: integer(endpoint.timeoutMs, "endpointProfile.timeoutMs", 100), metadata: Object.fromEntries(Object.entries(object(endpoint.metadata ?? {}, "endpointProfile.metadata")).map(([key, item]) => [key, string(item, `endpointProfile.metadata.${key}`)])) }, secretBackend: match[1] as "vault" | "secret" | "keychain", secretVersion: string(raw.secretVersion, "secretVersion"), egressPolicyRef: ref(raw.egressPolicyRef, "egressPolicyRef"), dataClassificationPolicyRef: ref(raw.dataClassificationPolicyRef, "dataClassificationPolicyRef"), lifecycle: enumeration<RuntimeLifecycle>(raw.lifecycle, "lifecycle", ["draft", "validated", "active", "suspended", "revoked"]), createdBy: string(raw.createdBy, "createdBy"), createdAt: iso(raw.createdAt, "createdAt") };
+}
+
+export function parseRegisteredModelRevision(value: unknown): RegisteredModelRevision {
+  const raw = object(value, "RegisteredModelRevision");
+  const provider = ref(raw.provider, "provider");
+  if (provider.assetType !== "ProviderInstanceRevision") throw new Error("provider 类型非法");
+  return {
+    tenant: tenant(raw.tenant, "tenant"), registeredModelId: string(raw.registeredModelId, "registeredModelId"),
+    revision: integer(raw.revision, "revision", 1), contentHash: sha(raw.contentHash, "contentHash"), provider,
+    providerModelId: string(raw.providerModelId, "providerModelId"), inputModalities: strings(raw.inputModalities, "inputModalities"),
+    outputModalities: strings(raw.outputModalities, "outputModalities"), capabilities: strings(raw.capabilities, "capabilities"),
+    contextWindow: integer(raw.contextWindow, "contextWindow", 1), quotaPolicyRef: ref(raw.quotaPolicyRef, "quotaPolicyRef"),
+    budgetPolicyRef: ref(raw.budgetPolicyRef, "budgetPolicyRef"), priceSnapshotRef: ref(raw.priceSnapshotRef, "priceSnapshotRef"),
+    evalGateRef: ref(raw.evalGateRef, "evalGateRef"), lifecycle: enumeration<RuntimeLifecycle>(raw.lifecycle, "lifecycle", ["draft", "validated", "active", "suspended", "revoked"]),
+    createdBy: string(raw.createdBy, "createdBy"), createdAt: iso(raw.createdAt, "createdAt"),
+  };
 }
 
 export function parseProviderPluginRevision(value: unknown): ProviderPluginRevision {

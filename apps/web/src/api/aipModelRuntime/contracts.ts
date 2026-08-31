@@ -70,6 +70,26 @@ export type ProviderInstanceRevision = {
   createdAt: string;
 };
 
+export type RegisteredModelRevision = {
+  tenant: { orgId: string; projectId: string };
+  registeredModelId: string;
+  revision: number;
+  contentHash: string;
+  provider: ExactRuntimeRef;
+  providerModelId: string;
+  inputModalities: string[];
+  outputModalities: string[];
+  capabilities: string[];
+  contextWindow: number;
+  quotaPolicyRef: ExactRuntimeRef;
+  budgetPolicyRef: ExactRuntimeRef;
+  priceSnapshotRef: ExactRuntimeRef;
+  evalGateRef: ExactRuntimeRef;
+  lifecycle: RuntimeLifecycle;
+  createdBy: string;
+  createdAt: string;
+};
+
 export type ProviderPluginRevision = {
   providerPluginId: string;
   revision: number;
