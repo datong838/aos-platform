@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Header, Query, status
 from pydantic import BaseModel, Field
@@ -43,6 +44,8 @@ from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/model-runtime", tags=["aip-model-runtime"])
+_USAGE_TIME_ZONE_NAME = "Asia/Shanghai"
+_USAGE_TIME_ZONE = ZoneInfo(_USAGE_TIME_ZONE_NAME)
 _STORE = AipModelRuntimeStore()
 _PLUGIN_AUTHORITY = ProviderPluginAuthority()
 _EVAL_AUTHORITY_STORE = AipEvalAuthorityStore()
@@ -536,8 +539,9 @@ def get_cost_overview(
         ):
             cost_totals[receipt.currency] += receipt.quantity + deltas[receipt.receipt_id]
 
+    local_now = now.astimezone(_USAGE_TIME_ZONE)
     period_specs = (
-        ("today", now.replace(hour=0, minute=0, second=0, microsecond=0)),
+        ("today", local_now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)),
         ("week", now - timedelta(days=7)),
         ("month", now - timedelta(days=30)),
     )
@@ -569,6 +573,7 @@ def get_cost_overview(
         periods.append(
             RuntimeUsagePeriodSummary(
                 period=period,
+                timeZone=_USAGE_TIME_ZONE_NAME,
                 startsAt=starts_at,
                 endsAt=now,
                 receiptCount=len(period_receipts),

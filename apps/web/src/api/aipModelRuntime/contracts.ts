@@ -197,6 +197,7 @@ export type RuntimeUsageAuthoritySummary = {
 
 export type RuntimeUsagePeriodSummary = {
   period: "today" | "week" | "month";
+  timeZone: string;
   startsAt: string;
   endsAt: string;
   receiptCount: number;

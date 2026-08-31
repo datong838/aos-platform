@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import nullcontext
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
+from zoneinfo import ZoneInfo
 
 from aos_api.aip_provider_plugin_authority import ProviderPluginAuthorityError
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
@@ -351,6 +352,9 @@ def test_cost_overview_reports_unobserved_instead_of_fake_zero(client) -> None:
             "truncated": False,
         }
         assert [item["period"] for item in payload["usage"]["periods"]] == ["today", "week", "month"]
+        assert {item["timeZone"] for item in payload["usage"]["periods"]} == {"Asia/Shanghai"}
+        today_start = datetime.fromisoformat(payload["usage"]["periods"][0]["startsAt"])
+        assert today_start.astimezone(ZoneInfo("Asia/Shanghai")).time() == datetime.min.time()
         assert all(item["receiptCount"] == 0 for item in payload["usage"]["periods"])
         assert {item[1] for item in usage.scopes} == {("org-org", "dev-project")}
         assert "secret" not in response.text.lower()

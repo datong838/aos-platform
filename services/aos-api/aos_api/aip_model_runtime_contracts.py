@@ -417,9 +417,10 @@ class RuntimeBudgetAuthoritySummary(AipContractModel):
 
 
 class RuntimeUsagePeriodSummary(AipContractModel):
-    """Receipt-only usage projection for one bounded UTC observation window."""
+    """Receipt-only usage projection for one bounded business-time window."""
 
     period: str = Field(pattern=r"^(today|week|month)$")
+    time_zone: str = Field(min_length=1, max_length=64)
     starts_at: datetime
     ends_at: datetime
     receipt_count: int = Field(ge=0)

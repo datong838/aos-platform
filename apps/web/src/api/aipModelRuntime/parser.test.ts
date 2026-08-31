@@ -46,7 +46,7 @@ describe("AIP-7 cost authority parser", () => {
     tenant: empty.tenant,
     modelPrices: [],
     budgets: [],
-    usage: { state: "unobserved", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false, periods: [{ period: "today", startsAt: "2026-08-14T00:00:00Z", endsAt: "2026-08-14T12:00:00Z", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, quantityTotals: {}, providerCounts: {} }] },
+    usage: { state: "unobserved", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false, periods: [{ period: "today", timeZone: "Asia/Shanghai", startsAt: "2026-08-14T00:00:00Z", endsAt: "2026-08-14T12:00:00Z", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, quantityTotals: {}, providerCounts: {} }] },
     generatedAt: empty.generatedAt,
   };
   it("保留未观测而非伪造零成本", () => {

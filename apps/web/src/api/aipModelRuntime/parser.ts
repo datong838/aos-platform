@@ -156,6 +156,7 @@ function usageAuthority(value: unknown, label: string): RuntimeUsageAuthoritySum
       const providerCounts = Object.fromEntries(Object.entries(object(periodRaw.providerCounts, `${label}.periods[${index}].providerCounts`)).map(([key, amount]) => [key, integer(amount, `${label}.periods[${index}].providerCounts.${key}`)]));
       const period = {
         period: enumeration(periodRaw.period, `${label}.periods[${index}].period`, ["today", "week", "month"] as const),
+        timeZone: string(periodRaw.timeZone, `${label}.periods[${index}].timeZone`),
         startsAt: iso(periodRaw.startsAt, `${label}.periods[${index}].startsAt`),
         endsAt: iso(periodRaw.endsAt, `${label}.periods[${index}].endsAt`),
         receiptCount: integer(periodRaw.receiptCount, `${label}.periods[${index}].receiptCount`),
