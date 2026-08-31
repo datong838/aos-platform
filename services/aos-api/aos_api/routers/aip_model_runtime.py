@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Header, Query, status
 from pydantic import BaseModel, Field
@@ -12,7 +12,7 @@ from aos_api.aip_model_runtime_contracts import (
     ModelRouteRevision, ModelRuntimeCostOverview, ModelRuntimeLifecycle,
     ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision,
     RegisteredModelRevision, RuntimeBudgetAuthoritySummary,
-    RuntimePolicyRevision, RuntimeUsageAuthoritySummary,
+    RuntimePolicyRevision, RuntimeUsageAuthoritySummary, RuntimeUsagePeriodSummary,
 )
 from aos_api.aip_budget_contracts import BudgetLifecycle
 from aos_api.aip_budget_store import AipBudgetAuthorityStore, BudgetNotFound
@@ -536,6 +536,50 @@ def get_cost_overview(
         ):
             cost_totals[receipt.currency] += receipt.quantity + deltas[receipt.receipt_id]
 
+    period_specs = (
+        ("today", now.replace(hour=0, minute=0, second=0, microsecond=0)),
+        ("week", now - timedelta(days=7)),
+        ("month", now - timedelta(days=30)),
+    )
+    periods: list[RuntimeUsagePeriodSummary] = []
+    for period, starts_at in period_specs:
+        period_receipts = [
+            receipt for receipt in receipts
+            if starts_at <= receipt.observed_at <= now
+        ]
+        period_quality = {
+            EvidenceQuality.MEASURED: 0,
+            EvidenceQuality.ESTIMATED: 0,
+            EvidenceQuality.UNKNOWN: 0,
+        }
+        quantity_totals = defaultdict(float)
+        provider_counts = defaultdict(int)
+        for receipt in period_receipts:
+            period_quality[receipt.quality] += 1
+            provider_counts[receipt.provider] += 1
+            if receipt.quantity is None:
+                continue
+            quantity = receipt.quantity + deltas[receipt.receipt_id]
+            quantity_key = (
+                f"cost:{receipt.currency}"
+                if receipt.usage_kind is UsageKind.COST
+                else f"{receipt.usage_kind.value}:{receipt.unit}"
+            )
+            quantity_totals[quantity_key] += quantity
+        periods.append(
+            RuntimeUsagePeriodSummary(
+                period=period,
+                startsAt=starts_at,
+                endsAt=now,
+                receiptCount=len(period_receipts),
+                measuredCount=period_quality[EvidenceQuality.MEASURED],
+                estimatedCount=period_quality[EvidenceQuality.ESTIMATED],
+                unknownCount=period_quality[EvidenceQuality.UNKNOWN],
+                quantityTotals=dict(quantity_totals),
+                providerCounts=dict(provider_counts),
+            )
+        )
+
     return ModelRuntimeCostOverview(
         tenant={"orgId": scope.org_id, "projectId": scope.project_id},
         modelPrices=model_prices,
@@ -552,6 +596,7 @@ def get_cost_overview(
                 (receipt.observed_at for receipt in receipts), default=None
             ),
             truncated=(len(receipts) >= receipt_limit or len(adjustments) >= receipt_limit),
+            periods=periods,
         ),
         generatedAt=now,
     )

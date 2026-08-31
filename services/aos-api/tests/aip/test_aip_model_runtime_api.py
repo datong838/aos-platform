@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import nullcontext
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
@@ -10,14 +11,16 @@ from aos_api.aip_contracts import TenantContext
 from aos_api.aip_eval_contracts import UsageAdjustment, UsageReceipt
 from aos_api.aip_model_governance_policy_contracts import ModelGovernancePolicyLifecycle
 from aos_api.aip_model_runtime_contracts import (
+    ModelRouteRevision,
     ModelPriceSnapshotRevision,
     ModelRuntimeAssetSummary,
     ModelRuntimeLifecycle,
     ProviderHealthObservation,
     RegisteredModelRevision,
 )
-from aos_api.aip_model_runtime_store import ModelRuntimeNotFound
+from aos_api.aip_model_runtime_store import AipModelRuntimeStore, ModelRuntimeNotFound, canonical_hash
 from aos_api.routers import aip_model_runtime
+from aos_api.tenant_scope import TenantScope
 
 
 def headers(org_id: str = "org-org", **extra: str) -> dict[str, str]:
@@ -152,6 +155,66 @@ def test_route_rollback_draft_is_tenant_scoped_idempotent_and_never_activates(cl
         client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
 
 
+def test_store_rollback_copies_history_into_new_draft_without_mutating_source() -> None:
+    scope = TenantScope(org_id="org-org", project_id="dev-project")
+    ref = lambda asset_type, asset_id: {
+        "assetType": asset_type,
+        "assetId": asset_id,
+        "revision": 1,
+        "contentHash": "a" * 64,
+    }
+    common = {
+        "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+        "routeId": "route-a",
+        "contentHash": "a" * 64,
+        "taskTypes": ["summary"],
+        "requiredInputModality": "text",
+        "requiredOutputModality": "text",
+        "requiredCapabilities": ["chat"],
+        "candidates": [{"model": ref("RegisteredModelRevision", "model-a"), "weight": 100}],
+        "strategy": "failover",
+        "runtimePolicyRef": ref("RuntimePolicyRevision", "policy-a"),
+        "evalGateRef": ref("EvalGateDecision", "eval-a"),
+        "createdBy": "reviewer",
+        "createdAt": datetime(2026, 8, 29, tzinfo=UTC),
+    }
+    head = ModelRouteRevision.model_validate({**common, "revision": 3, "lifecycle": "active"})
+    source = ModelRouteRevision.model_validate({**common, "revision": 2, "lifecycle": "validated"})
+    store = object.__new__(AipModelRuntimeStore)
+    store._connect_factory = lambda read_scope: nullcontext(
+        SimpleNamespace(execute=lambda *args, **kwargs: SimpleNamespace(fetchone=lambda: {"current_revision": 3, "version": 7}))
+    )
+    store.get_route = lambda read_scope, asset_id, revision=None: source if revision == 2 else head
+    captured = {}
+
+    def publish_route(read_scope, actor, key, item, *, expected_version=0):
+        captured.update(scope=read_scope, actor=actor, key=key, item=item, expected_version=expected_version)
+        return item
+
+    store.publish_route = publish_route
+    draft = store.create_route_rollback_draft(
+        scope,
+        "user:dev",
+        "rollback-route-a-2-3",
+        "route-a",
+        2,
+        expected_revision=3,
+    )
+
+    assert source.lifecycle is ModelRuntimeLifecycle.VALIDATED
+    assert head.lifecycle is ModelRuntimeLifecycle.ACTIVE
+    assert draft.revision == 4
+    assert draft.lifecycle is ModelRuntimeLifecycle.DRAFT
+    assert draft.created_by == "user:dev"
+    assert captured["expected_version"] == 7
+    content = {
+        name: value
+        for name, value in draft.model_dump(mode="json", by_alias=True).items()
+        if name not in AipModelRuntimeStore._META_FIELDS
+    }
+    assert draft.content_hash == canonical_hash(content)
+
+
 def test_exact_runtime_asset_reads_are_principal_scoped_and_revision_aware(client) -> None:
     store = ExactReadStore()
     client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: store
@@ -276,7 +339,7 @@ def test_cost_overview_reports_unobserved_instead_of_fake_zero(client) -> None:
         assert payload["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
         assert payload["modelPrices"] == []
         assert payload["budgets"] == []
-        assert payload["usage"] == {
+        assert {key: value for key, value in payload["usage"].items() if key != "periods"} == {
             "state": "unobserved",
             "receiptCount": 0,
             "measuredCount": 0,
@@ -287,6 +350,8 @@ def test_cost_overview_reports_unobserved_instead_of_fake_zero(client) -> None:
             "latestObservedAt": None,
             "truncated": False,
         }
+        assert [item["period"] for item in payload["usage"]["periods"]] == ["today", "week", "month"]
+        assert all(item["receiptCount"] == 0 for item in payload["usage"]["periods"])
         assert {item[1] for item in usage.scopes} == {("org-org", "dev-project")}
         assert "secret" not in response.text.lower()
     finally:
@@ -435,7 +500,7 @@ class MixedUsageAuthorityStore(EmptyUsageAuthorityStore):
             "provider": "agnes",
             "lineageId": "lineage-1",
             "sourceHash": "9" * 64,
-            "observedAt": datetime(2026, 8, 21, tzinfo=UTC),
+            "observedAt": datetime.now(UTC) - timedelta(minutes=5),
         }
         return [
             UsageReceipt(receiptId="cost-measured", providerReceiptId="p-1", usageKind="cost", quantity=1.5, unit="currency", currency="CNY", quality="measured", **common),
@@ -469,6 +534,13 @@ def test_cost_overview_aggregates_adjustments_without_hiding_usage_quality(clien
         assert (usage["measuredCount"], usage["estimatedCount"], usage["unknownCount"]) == (1, 1, 1)
         assert usage["adjustmentCount"] == 1
         assert usage["costTotals"] == {"CNY": 1.75}
+        assert [item["period"] for item in usage["periods"]] == ["today", "week", "month"]
+        assert usage["periods"][0]["receiptCount"] == 3
+        assert usage["periods"][0]["quantityTotals"] == {
+            "cost:CNY": 1.75,
+            "input_token:token": 12.0,
+        }
+        assert usage["periods"][0]["providerCounts"] == {"agnes": 3}
     finally:
         client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
         client.app.dependency_overrides.pop(aip_model_runtime.get_eval_authority_store, None)

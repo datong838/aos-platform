@@ -192,6 +192,19 @@ export type RuntimeUsageAuthoritySummary = {
   costTotals: Record<string, number>;
   latestObservedAt: string | null;
   truncated: boolean;
+  periods: RuntimeUsagePeriodSummary[];
+};
+
+export type RuntimeUsagePeriodSummary = {
+  period: "today" | "week" | "month";
+  startsAt: string;
+  endsAt: string;
+  receiptCount: number;
+  measuredCount: number;
+  estimatedCount: number;
+  unknownCount: number;
+  quantityTotals: Record<string, number>;
+  providerCounts: Record<string, number>;
 };
 
 export type ModelRuntimeCostOverview = {

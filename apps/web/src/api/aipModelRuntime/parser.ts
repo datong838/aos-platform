@@ -146,6 +146,28 @@ function usageAuthority(value: unknown, label: string): RuntimeUsageAuthoritySum
     costTotals,
     latestObservedAt: isoOrNull(raw.latestObservedAt, `${label}.latestObservedAt`),
     truncated: typeof raw.truncated === "boolean" ? raw.truncated : (() => { throw new Error(`${label}.truncated 必须是布尔值`); })(),
+    periods: array(raw.periods, `${label}.periods`).map((item, index) => {
+      const periodRaw = object(item, `${label}.periods[${index}]`);
+      const quantityTotals = Object.fromEntries(Object.entries(object(periodRaw.quantityTotals, `${label}.periods[${index}].quantityTotals`)).map(([key, amount]) => {
+        const parsed = numberOrNull(amount, `${label}.periods[${index}].quantityTotals.${key}`);
+        if (parsed === null) throw new Error(`${label}.periods[${index}].quantityTotals.${key} 不能为空`);
+        return [key, parsed];
+      }));
+      const providerCounts = Object.fromEntries(Object.entries(object(periodRaw.providerCounts, `${label}.periods[${index}].providerCounts`)).map(([key, amount]) => [key, integer(amount, `${label}.periods[${index}].providerCounts.${key}`)]));
+      const period = {
+        period: enumeration(periodRaw.period, `${label}.periods[${index}].period`, ["today", "week", "month"] as const),
+        startsAt: iso(periodRaw.startsAt, `${label}.periods[${index}].startsAt`),
+        endsAt: iso(periodRaw.endsAt, `${label}.periods[${index}].endsAt`),
+        receiptCount: integer(periodRaw.receiptCount, `${label}.periods[${index}].receiptCount`),
+        measuredCount: integer(periodRaw.measuredCount, `${label}.periods[${index}].measuredCount`),
+        estimatedCount: integer(periodRaw.estimatedCount, `${label}.periods[${index}].estimatedCount`),
+        unknownCount: integer(periodRaw.unknownCount, `${label}.periods[${index}].unknownCount`),
+        quantityTotals,
+        providerCounts,
+      };
+      if (period.measuredCount + period.estimatedCount + period.unknownCount !== period.receiptCount) throw new Error(`${label}.periods[${index}] 用量质量计数不一致`);
+      return period;
+    }),
   };
   if (result.measuredCount + result.estimatedCount + result.unknownCount !== result.receiptCount) throw new Error(`${label} 用量质量计数不一致`);
   if ((result.state === "unobserved") !== (result.receiptCount === 0)) throw new Error(`${label} 未观测状态与回执数量不一致`);

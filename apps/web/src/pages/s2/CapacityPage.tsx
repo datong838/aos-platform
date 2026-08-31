@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet, apiPut } from "../../api/client";
+import { apiGet } from "../../api/client";
 import { aipModelRuntime, type ModelRuntimeCostOverview, type RuntimeCapacityPoolSummary } from "../../api/aipModelRuntime";
 import { PageChrome } from "../../components/PageChrome";
 
@@ -19,6 +19,12 @@ export type UsageBucket = {
   totalRequests: number;
   totalTokens: number;
   totalCostUsd: number;
+  observed?: boolean;
+  receiptCount?: number;
+  measuredCount?: number;
+  estimatedCount?: number;
+  unknownCount?: number;
+  providerCounts?: Record<string, number>;
 };
 
 export type QuotaUsage = {
@@ -34,8 +40,8 @@ export type UserLimit = {
   team: string;
   rpmLimit: number;
   tpmLimit: number;
-  dailyBudgetUsd: number;
-  usedTodayUsd: number;
+  dailyBudgetUsd: number | null;
+  usedTodayUsd: number | null;
 };
 
 export type ProjectLimit = {
@@ -178,9 +184,33 @@ export function mapApiLimitToUserLimit(row: ApiLimitItem): UserLimit {
     team: "—",
     rpmLimit: Number(row.rpmLimit ?? 60),
     tpmLimit: Number(row.tpmLimit ?? 60000),
-    dailyBudgetUsd: 0,
-    usedTodayUsd: 0,
+    dailyBudgetUsd: null,
+    usedTodayUsd: null,
   };
+}
+
+export function usageBucketsFromAuthority(cost: ModelRuntimeCostOverview): UsageBucket[] {
+  const labels = { today: "今日", week: "近 7 天", month: "近 30 天" } as const;
+  return (["today", "week", "month"] as const).map((period) => {
+    const item = cost.usage.periods.find((candidate) => candidate.period === period);
+    const totals = item?.quantityTotals ?? {};
+    const tokenTotal = Object.entries(totals)
+      .filter(([key]) => /^(input_token|output_token|cached_token):/.test(key))
+      .reduce((sum, [, amount]) => sum + amount, 0);
+    return {
+      period,
+      label: labels[period],
+      totalRequests: 0,
+      totalTokens: tokenTotal,
+      totalCostUsd: totals["cost:USD"] ?? 0,
+      observed: Boolean(item?.receiptCount),
+      receiptCount: item?.receiptCount ?? 0,
+      measuredCount: item?.measuredCount ?? 0,
+      estimatedCount: item?.estimatedCount ?? 0,
+      unknownCount: item?.unknownCount ?? 0,
+      providerCounts: item?.providerCounts ?? {},
+    };
+  });
 }
 
 /** Build a single project TPM quota bar for live mode. */
@@ -220,7 +250,7 @@ export function rateLimitsFromRuntimePools(pools: RuntimeCapacityPoolSummary[]):
   return pools.map((pool) => ({
     model: pool.modelRef.assetId,
     provider: pool.providerRef.assetId,
-    tokensPerMin: `每次租约 ${formatTokenCount(pool.maxTokenUnits)} 个模型用量单位`,
+    tokensPerMin: `每次租约 ${formatTokenCount(pool.tokenUnitPerReservation)} 个模型用量单位`,
     requestsPerMin: `当前并发 ${pool.activeReservations}/${pool.maxConcurrency}`,
   }));
 }
@@ -245,27 +275,22 @@ export function CapacityPage() {
   const [userLimits, setUserLimits] = useState<UserLimit[]>([]);
   const [projectLimit, setProjectLimit] = useState<ProjectLimit | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [editor, setEditor] = useState<"project" | "user" | null>(null);
-  const [projectDraft, setProjectDraft] = useState({ rpmLimit: 60, tpmLimit: 60000 });
-  const [userDraft, setUserDraft] = useState({ userId: "", rpmLimit: 60, tpmLimit: 60000 });
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [runtimeCost, setRuntimeCost] = useState<ModelRuntimeCostOverview | null>(null);
   const [runtimeLimits, setRuntimeLimits] = useState<RateLimit[]>([]);
+  const [runtimePools, setRuntimePools] = useState<RuntimeCapacityPoolSummary[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [usageRes, projectRes, usersRes, runtime, cost] = await Promise.all([
-          apiGet<{ items?: ApiUsageItem[]; summary?: { totalTokens?: number } }>("/v1/aip/capacity/usage?limit=30"),
+        const [projectRes, usersRes, runtime, cost] = await Promise.all([
           apiGet<ApiLimitItem>("/v1/aip/capacity/project-limits"),
           apiGet<{ items?: ApiLimitItem[] } | ApiLimitItem>("/v1/aip/capacity/user-limits").catch(() => ({ items: [] as ApiLimitItem[] })),
           aipModelRuntime.overview(),
           aipModelRuntime.costOverview(),
         ]);
         if (cancelled) return;
-        const buckets = mapUsageItemsToBuckets(usageRes.items || []);
+        const buckets = usageBucketsFromAuthority(cost);
         const pl: ProjectLimit = {
           rpmLimit: Number(projectRes.rpmLimit ?? 60),
           tpmLimit: Number(projectRes.tpmLimit ?? 60000),
@@ -277,12 +302,11 @@ export function CapacityPage() {
         const todayTokens = buckets.find((b) => b.period === "today")?.totalTokens ?? 0;
         setUsageBuckets(buckets);
         setProjectLimit(pl);
-        setProjectDraft({ rpmLimit: pl.rpmLimit, tpmLimit: pl.tpmLimit });
-        setQuotaUsage(projectQuotaFromLimit(pl, Math.min(todayTokens, pl.tpmLimit)));
+        setQuotaUsage(buckets.find((b) => b.period === "today")?.observed ? projectQuotaFromLimit(pl, Math.min(todayTokens, pl.tpmLimit)) : []);
         setUserLimits(userItems.map(mapApiLimitToUserLimit));
         setRuntimeLimits(rateLimitsFromRuntimePools(runtime.capacityPools));
+        setRuntimePools(runtime.capacityPools);
         setRuntimeCost(cost);
-        if (userItems[0]) setUserDraft({ userId: String(userItems[0].scopeKey || ""), rpmLimit: Number(userItems[0].rpmLimit ?? 60), tpmLimit: Number(userItems[0].tpmLimit ?? 60000) });
         setSourceMode("live");
         setLoadError(null);
       } catch (e) {
@@ -292,6 +316,7 @@ export function CapacityPage() {
         setUserLimits([]);
         setProjectLimit(null);
         setRuntimeLimits([]);
+        setRuntimePools([]);
         setRuntimeCost(null);
         setSourceMode("error");
         setLoadError(String((e as Error).message || e));
@@ -323,57 +348,6 @@ export function CapacityPage() {
     [userLimits],
   );
 
-  function cancelEditor() {
-    if (editor === "project" && projectLimit) setProjectDraft({ rpmLimit: projectLimit.rpmLimit, tpmLimit: projectLimit.tpmLimit });
-    if (editor === "user") {
-      const snapshot = userLimits.find((u) => u.user === userDraft.userId);
-      setUserDraft(snapshot ? { userId: snapshot.user, rpmLimit: snapshot.rpmLimit, tpmLimit: snapshot.tpmLimit } : { userId: "", rpmLimit: 60, tpmLimit: 60000 });
-    }
-    setEditor(null);
-    setSaveMsg(null);
-  }
-
-  async function saveLimit(scope: "project" | "user") {
-    if (saving) return;
-    const targetKey = scope === "project" ? String(projectLimit?.scopeKey || "default") : userDraft.userId.trim();
-    const draft = scope === "project" ? { ...projectDraft } : { rpmLimit: userDraft.rpmLimit, tpmLimit: userDraft.tpmLimit };
-    if (!targetKey) return;
-    const path = scope === "project"
-      ? "/v1/aip/capacity/project-limits"
-      : `/v1/aip/capacity/user-limits?userId=${encodeURIComponent(targetKey)}`;
-    setSaving(true);
-    setSaveMsg(null);
-    try {
-      const written = await apiPut<ApiLimitItem>(path, draft);
-      if (!validateLimitSnapshot(written, scope, targetKey, draft)) throw new Error("写回响应 scope/目标/限额错配");
-      let reread: ApiLimitItem;
-      try {
-        reread = await apiGet<ApiLimitItem>(path);
-      } catch (e) {
-        setSaveMsg(`写入已提交但重读核验失败：${String((e as Error).message || e)}`);
-        return;
-      }
-      if (!validateLimitSnapshot(reread, scope, targetKey, draft)) {
-        setSaveMsg("写入已提交但重读核验失败：服务端限额不一致");
-        return;
-      }
-      if (scope === "project") {
-        setProjectLimit({ ...draft, scopeKey: targetKey });
-      } else {
-        setUserLimits((prev) => {
-          const next = mapApiLimitToUserLimit(reread);
-          return prev.some((u) => u.user === targetKey) ? prev.map((u) => u.user === targetKey ? next : u) : [...prev, next];
-        });
-      }
-      setSaveMsg("限额已保存并完成重读核验");
-      setEditor(null);
-    } catch (e) {
-      setSaveMsg(`限额写入失败：${String((e as Error).message || e)}`);
-    } finally {
-      setSaving(false);
-    }
-  }
-
   const todayBucket = usageBuckets.find((b) => b.period === "today");
   const warnQuotaCount = quotaUsage.filter((q) => usageTone(usagePercent(q.used, q.quota)) !== "ok").length;
 
@@ -401,8 +375,8 @@ export function CapacityPage() {
         >
           {[
             { label: "数据源", value: sourceMode === "live" ? "实时" : sourceMode === "error" ? "读取失败" : "读取中" },
-            { label: "今日请求", value: (todayBucket?.totalRequests ?? 0).toLocaleString() },
-            { label: "今日模型用量", value: formatTokenCount(todayBucket?.totalTokens ?? 0) },
+            { label: "今日 Usage Receipt", value: todayBucket?.observed ? String(todayBucket.receiptCount) : "未观测" },
+            { label: "今日模型用量", value: todayBucket?.observed ? formatTokenCount(todayBucket.totalTokens) : "缺少凭证" },
             { label: "用户限额条", value: String(userLimits.length) },
             { label: "配额告警", value: String(warnQuotaCount) },
             { label: "权威成本", value: authoritativeCostLabel(runtimeCost) },
@@ -489,14 +463,14 @@ export function CapacityPage() {
             {/* Metrics cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
               <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
-                <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>总请求数</div>
-                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-indigo-600)" }}>{(currentBucket?.totalRequests ?? 0).toLocaleString()}</div>
-                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket?.label}累计</div>
+                <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>Usage Receipt</div>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-indigo-600)" }}>{currentBucket?.observed ? currentBucket.receiptCount : "未观测"}</div>
+                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket?.observed ? `实测 ${currentBucket.measuredCount} · 估算 ${currentBucket.estimatedCount} · 未知 ${currentBucket.unknownCount}` : "没有权威用量凭证，不解释为 0"}</div>
               </div>
               <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>模型用量</div>
-                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-purple-600)" }}>{formatTokenCount(currentBucket?.totalTokens ?? 0)}</div>
-                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{(currentBucket?.totalTokens ?? 0).toLocaleString()} 个模型用量单位</div>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--aos-purple-600)" }}>{currentBucket?.observed ? formatTokenCount(currentBucket.totalTokens) : "缺少凭证"}</div>
+                <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 4 }}>{currentBucket?.observed ? `${currentBucket.totalTokens.toLocaleString()} 个 Token 用量单位` : "只汇总 input/output/cached token Receipt"}</div>
               </div>
               <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 20 }}>
                 <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginBottom: 4 }}>成本汇总</div>
@@ -540,7 +514,7 @@ export function CapacityPage() {
                   );
                 })}
                 {quotaUsage.length === 0 && (
-                  <p style={{ fontSize: 12, color: "var(--aos-faint)", margin: 0 }}>暂无配额数据</p>
+                  <p style={{ fontSize: 12, color: "var(--aos-faint)", margin: 0 }}>缺少今日 Usage Receipt，暂不计算配额消耗比例。</p>
                 )}
               </div>
             </div>
@@ -569,10 +543,7 @@ export function CapacityPage() {
                   </div>
                 </div>
                 <div style={{ marginTop: 16 }}>
-                  <button type="button" data-testid="manage-project-limit" disabled={sourceMode !== "live"} onClick={() => { setEditor("project"); setSaveMsg(null); }} style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: "var(--aos-indigo-600)", border: 0, background: "transparent", cursor: sourceMode === "live" ? "pointer" : "not-allowed" }}>
-                    管理
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginLeft: 4 }}><path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </button>
+                  <Link data-testid="manage-project-limit" to="/aip/model-router" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: "var(--aos-indigo-600)", textDecoration: "none" }}>进入版本化运行策略 →</Link>
                 </div>
               </div>
 
@@ -593,27 +564,10 @@ export function CapacityPage() {
                   </div>
                 </div>
                 <div style={{ marginTop: 16 }}>
-                  <button type="button" data-testid="manage-user-limit" disabled={sourceMode !== "live"} onClick={() => { setEditor("user"); setSaveMsg(null); }} style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: "var(--aos-indigo-600)", border: 0, background: "transparent", cursor: sourceMode === "live" ? "pointer" : "not-allowed" }}>
-                    管理
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ marginLeft: 4 }}><path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </button>
+                  <Link data-testid="manage-user-limit" to="/aip/model-router" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: "var(--aos-indigo-600)", textDecoration: "none" }}>进入版本化运行策略 →</Link>
                 </div>
               </div>
             </div>
-
-            {editor && (
-              <div data-testid={`capacity-editor-${editor}`} style={{ border: "1px solid var(--aos-border)", background: "var(--aos-surface)", padding: 16, marginBottom: 20 }}>
-                <h3 style={{ marginTop: 0 }}>{editor === "project" ? "编辑项目速率限制" : "编辑用户速率限制"}</h3>
-                {editor === "user" && <label>用户 ID <input aria-label="capacity-user-id" value={userDraft.userId} onChange={(e) => setUserDraft((d) => ({ ...d, userId: e.target.value }))} /></label>}
-                <label style={{ marginLeft: editor === "user" ? 12 : 0 }}>RPM <input aria-label="capacity-rpm" type="number" min={1} value={editor === "project" ? projectDraft.rpmLimit : userDraft.rpmLimit} onChange={(e) => editor === "project" ? setProjectDraft((d) => ({ ...d, rpmLimit: Number(e.target.value) })) : setUserDraft((d) => ({ ...d, rpmLimit: Number(e.target.value) }))} /></label>
-                <label style={{ marginLeft: 12 }}>TPM <input aria-label="capacity-tpm" type="number" min={1} value={editor === "project" ? projectDraft.tpmLimit : userDraft.tpmLimit} onChange={(e) => editor === "project" ? setProjectDraft((d) => ({ ...d, tpmLimit: Number(e.target.value) })) : setUserDraft((d) => ({ ...d, tpmLimit: Number(e.target.value) }))} /></label>
-                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                  <button type="button" onClick={cancelEditor} disabled={saving}>取消</button>
-                  <button type="button" data-testid="save-capacity-limit" onClick={() => void saveLimit(editor)} disabled={saving || (editor === "user" && !userDraft.userId.trim())}>{saving ? "保存中…" : "保存并重读"}</button>
-                </div>
-              </div>
-            )}
-            {saveMsg && <p role="status">{saveMsg}</p>}
 
             {/* 登记限制表 */}
             <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, overflow: "hidden", marginBottom: 24 }}>
@@ -667,7 +621,7 @@ export function CapacityPage() {
               <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--aos-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--aos-text)", margin: 0 }}>用户限制</h3>
-                  <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>仅用户 RPM/TPM 可写；团队与日预算 API 未提供，保持只读</p>
+                  <p style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 4, margin: "4px 0 0" }}>兼容 RPM/TPM 只读；预算与消耗只在存在权威预算和 Usage Receipt 时展示</p>
                 </div>
                 <select
                   value={teamFilter}
@@ -695,12 +649,13 @@ export function CapacityPage() {
                     {filteredUsers.length === 0 ? (
                       <tr>
                         <td colSpan={6} style={{ padding: "16px 20px", color: "var(--aos-faint)", fontSize: 12 }}>
-                          {sourceMode === "live" ? "暂无用户限额（可在 API PUT /user-limits 写入）" : "无数据"}
+                          {sourceMode === "live" ? "当前没有单独用户限额，统一继承项目默认限额。" : "用户限额读取失败。"}
                         </td>
                       </tr>
                     ) : filteredUsers.map((u) => {
-                      const budgetPct = usagePercent(u.usedTodayUsd, u.dailyBudgetUsd);
-                      const tone = usageTone(budgetPct);
+                      const hasBudgetEvidence = u.usedTodayUsd !== null && u.dailyBudgetUsd !== null;
+                      const budgetPct = hasBudgetEvidence ? usagePercent(u.usedTodayUsd!, u.dailyBudgetUsd!) : null;
+                      const tone = budgetPct === null ? "warn" : usageTone(budgetPct);
                       return (
                         <tr key={u.user} style={{ borderBottom: "1px solid var(--aos-divider)" }}>
                           <td style={{ padding: "10px 20px", fontWeight: 500, color: "var(--aos-text)" }}>{u.user}</td>
@@ -709,15 +664,15 @@ export function CapacityPage() {
                           </td>
                           <td style={{ padding: "10px 20px", color: "var(--aos-text)" }}>{u.rpmLimit}</td>
                           <td style={{ padding: "10px 20px", color: "var(--aos-text)" }}>{formatTokenCount(u.tpmLimit)}</td>
-                          <td style={{ padding: "10px 20px", color: "var(--aos-text)" }}>${u.dailyBudgetUsd}</td>
+                          <td style={{ padding: "10px 20px", color: "var(--aos-text)" }}>{u.dailyBudgetUsd === null ? "缺少预算权威" : formatUsd(u.dailyBudgetUsd)}</td>
                           <td style={{ padding: "10px 20px" }}>
                             <span style={{
                               fontWeight: 600,
                               color: tone === "danger" ? "var(--aos-red)" : tone === "warn" ? "var(--aos-amber)" : "var(--aos-green-600)",
                             }}>
-                              ${u.usedTodayUsd.toFixed(2)}
+                              {u.usedTodayUsd === null ? "缺少 Usage Receipt" : formatUsd(u.usedTodayUsd)}
                             </span>
-                            <span style={{ fontSize: 11, color: "var(--aos-faint)", marginLeft: 4 }}>({budgetPct}%)</span>
+                            {budgetPct !== null && <span style={{ fontSize: 11, color: "var(--aos-faint)", marginLeft: 4 }}>({budgetPct}%)</span>}
                           </td>
                         </tr>
                       );
@@ -735,8 +690,10 @@ export function CapacityPage() {
             <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 28 }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, marginBottom: 16 }}>
                 {[
-                  { label: "交互保留比例", value: "20%" },
-                  { label: "预留池状态", value: "未开通" },
+                  { label: "exact 容量池", value: String(runtimePools.length) },
+                  { label: "活动容量池", value: String(runtimePools.filter((pool) => pool.lifecycle === "active").length) },
+                  { label: "活动租约", value: String(runtimePools.reduce((sum, pool) => sum + pool.activeReservations, 0)) },
+                  { label: "已预留用量", value: formatTokenCount(runtimePools.reduce((sum, pool) => sum + pool.reservedTokenUnits, 0)) },
                   { label: "项目 RPM", value: projectLimit ? String(projectLimit.rpmLimit) : "—" },
                   { label: "项目 TPM", value: projectLimit ? formatTokenCount(projectLimit.tpmLimit) : "—" },
                 ].map((s) => (
@@ -746,10 +703,25 @@ export function CapacityPage() {
                   </div>
                 ))}
               </div>
-              <p style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: 0 }}>预留容量</p>
-              <p style={{ fontSize: 12, color: "var(--aos-faint)", marginTop: 8, margin: "8px 0 0" }}>
-                预留池控制面尚未开通；当前仅展示保留比例与项目限额快照，不伪造可用预留额度。
-              </p>
+              <p style={{ fontSize: 14, fontWeight: 500, color: "var(--aos-text)", margin: 0 }}>预留容量 · exact CapacityPool</p>
+              <p style={{ fontSize: 12, color: "var(--aos-faint)", margin: "8px 0 16px" }}>池、模型、供应商和路由均按精确 revision/hash 读取；达到并发或用量上限时必须回到版本化路由策略选择排队或降级。</p>
+              <div data-testid="runtime-capacity-pools" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 12 }}>
+                {runtimePools.map((pool) => {
+                  const concurrencyPct = usagePercent(pool.activeReservations, pool.maxConcurrency);
+                  const tokenPct = usagePercent(pool.reservedTokenUnits, pool.maxTokenUnits);
+                  const saturated = concurrencyPct >= 100 || tokenPct >= 100;
+                  return (
+                    <article key={`${pool.poolId}@${pool.revision}`} style={{ border: `1px solid ${saturated ? "var(--aos-amber)" : "var(--aos-border)"}`, padding: 16, borderRadius: 2 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><strong>{pool.modelRef.assetId}</strong><span style={{ color: saturated ? "var(--aos-amber-600)" : "var(--aos-green-600)" }}>{saturated ? "容量已满" : pool.lifecycle === "active" ? "可分配" : "只读"}</span></div>
+                      <p style={{ margin: "8px 0", color: "var(--aos-text-secondary)", fontSize: 12 }}>{pool.providerRef.assetId} · 租约 {pool.leaseSeconds} 秒 · 每次 {pool.tokenUnitPerReservation} 单位</p>
+                      <p style={{ margin: "4px 0", fontSize: 12 }}>并发 {pool.activeReservations}/{pool.maxConcurrency}（{concurrencyPct}%）</p>
+                      <p style={{ margin: "4px 0", fontSize: 12 }}>用量 {pool.reservedTokenUnits}/{pool.maxTokenUnits}（{tokenPct}%）</p>
+                      <details><summary>精确引用与安全处置</summary><code>{pool.poolId}@{pool.revision}</code><p style={{ fontSize: 12 }}>route {pool.routeRef.assetId}@{pool.routeRef.revision}；容量已满时不自动扩大，进入版本化路由策略选择排队、降级或预算硬停。</p></details>
+                    </article>
+                  );
+                })}
+                {runtimePools.length === 0 && <div className="notice">当前租户没有已发布的 exact 容量池，因此不会取得模型容量租约；请在模型运行时登记并验证容量池后再执行。</div>}
+              </div>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <Link to="/aip/model-catalog" style={{ padding: "6px 12px", borderRadius: 2, border: "1px solid var(--aos-border)", color: "var(--aos-text)", textDecoration: "none", fontSize: 12 }}>模型目录 →</Link>

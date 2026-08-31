@@ -416,6 +416,28 @@ class RuntimeBudgetAuthoritySummary(AipContractModel):
     blocker_codes: list[str] = Field(default_factory=list, max_length=32)
 
 
+class RuntimeUsagePeriodSummary(AipContractModel):
+    """Receipt-only usage projection for one bounded UTC observation window."""
+
+    period: str = Field(pattern=r"^(today|week|month)$")
+    starts_at: datetime
+    ends_at: datetime
+    receipt_count: int = Field(ge=0)
+    measured_count: int = Field(ge=0)
+    estimated_count: int = Field(ge=0)
+    unknown_count: int = Field(ge=0)
+    quantity_totals: dict[str, float] = Field(default_factory=dict, max_length=64)
+    provider_counts: dict[str, int] = Field(default_factory=dict, max_length=64)
+
+    @model_validator(mode="after")
+    def _period_counts_are_consistent(self) -> RuntimeUsagePeriodSummary:
+        if self.starts_at >= self.ends_at:
+            raise ValueError("usage period start must precede end")
+        if self.measured_count + self.estimated_count + self.unknown_count != self.receipt_count:
+            raise ValueError("usage period quality counts must total receipt_count")
+        return self
+
+
 class RuntimeUsageAuthoritySummary(AipContractModel):
     state: str = Field(pattern=r"^(unobserved|measured|partial|unknown)$")
     receipt_count: int = Field(ge=0)
@@ -426,6 +448,7 @@ class RuntimeUsageAuthoritySummary(AipContractModel):
     cost_totals: dict[str, float] = Field(default_factory=dict, max_length=16)
     latest_observed_at: datetime | None = None
     truncated: bool = False
+    periods: list[RuntimeUsagePeriodSummary] = Field(default_factory=list, max_length=3)
 
     @model_validator(mode="after")
     def _counts_are_consistent(self) -> ModelRuntimeUsageAuthoritySummary:

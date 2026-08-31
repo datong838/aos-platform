@@ -13,6 +13,7 @@ import {
   sumUsage,
   usagePercent,
   usageTone,
+  usageBucketsFromAuthority,
   validateLimitSnapshot,
   type RateLimit,
   type UsageBucket,
@@ -225,13 +226,19 @@ describe("CapacityPage · 限额写后重读严格核验", () => {
 
 describe("CapacityPage · exact runtime authority", () => {
   it("无 Usage Receipt 时显示未观测而非 $0", () => {
-    expect(authoritativeCostLabel({ tenant: { orgId: "org-org", projectId: "dev-project" }, modelPrices: [], budgets: [], usage: { state: "unobserved", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false }, generatedAt: "2026-08-21T00:00:00Z" })).toBe("未观测");
+    expect(authoritativeCostLabel({ tenant: { orgId: "org-org", projectId: "dev-project" }, modelPrices: [], budgets: [], usage: { state: "unobserved", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false, periods: [] }, generatedAt: "2026-08-21T00:00:00Z" })).toBe("未观测");
   });
   it("已有状态但没有成本凭证时说明尚无实际调用，不误导成零成本", () => {
-    expect(authoritativeCostLabel({ tenant: { orgId: "org-org", projectId: "dev-project" }, modelPrices: [], budgets: [], usage: { state: "measured", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false }, generatedAt: "2026-08-21T00:00:00Z" })).toBe("尚无实际模型调用记录");
+    expect(authoritativeCostLabel({ tenant: { orgId: "org-org", projectId: "dev-project" }, modelPrices: [], budgets: [], usage: { state: "measured", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false, periods: [] }, generatedAt: "2026-08-21T00:00:00Z" })).toBe("尚无实际模型调用记录");
   });
   it("容量表来自 exact pool，不使用静态供应商模型", () => {
     const limits = rateLimitsFromRuntimePools([{ poolId: "pool-1", revision: 1, contentHash: "a".repeat(64), routeRef: { assetType: "ModelRouteRevision", assetId: "route-1", revision: 1, contentHash: "a".repeat(64) }, modelRef: { assetType: "RegisteredModelRevision", assetId: "agnes-text", revision: 1, contentHash: "a".repeat(64) }, providerRef: { assetType: "ProviderInstanceRevision", assetId: "agnes-provider", revision: 1, contentHash: "a".repeat(64) }, maxConcurrency: 2, maxTokenUnits: 8, tokenUnitPerReservation: 1, leaseSeconds: 60, activeReservations: 1, reservedTokenUnits: 1, lifecycle: "active" }]);
-    expect(limits).toEqual([{ model: "agnes-text", provider: "agnes-provider", tokensPerMin: "每次租约 8 个模型用量单位", requestsPerMin: "当前并发 1/2" }]);
+    expect(limits).toEqual([{ model: "agnes-text", provider: "agnes-provider", tokensPerMin: "每次租约 1 个模型用量单位", requestsPerMin: "当前并发 1/2" }]);
+  });
+  it("按权威周期汇总 Token，缺少凭证时保留未观测", () => {
+    const cost = { tenant: { orgId: "org-org", projectId: "dev-project" }, modelPrices: [], budgets: [], usage: { state: "measured" as const, receiptCount: 2, measuredCount: 2, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: "2026-08-21T00:00:00Z", truncated: false, periods: [{ period: "today" as const, startsAt: "2026-08-21T00:00:00Z", endsAt: "2026-08-21T12:00:00Z", receiptCount: 2, measuredCount: 2, estimatedCount: 0, unknownCount: 0, quantityTotals: { "input_token:token": 12, "output_token:token": 8 }, providerCounts: { agnes: 2 } }] }, generatedAt: "2026-08-21T12:00:00Z" };
+    const buckets = usageBucketsFromAuthority(cost);
+    expect(buckets[0]).toMatchObject({ observed: true, receiptCount: 2, totalTokens: 20 });
+    expect(buckets[1]).toMatchObject({ observed: false, totalTokens: 0 });
   });
 });

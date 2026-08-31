@@ -46,7 +46,7 @@ describe("AIP-7 cost authority parser", () => {
     tenant: empty.tenant,
     modelPrices: [],
     budgets: [],
-    usage: { state: "unobserved", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false },
+    usage: { state: "unobserved", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false, periods: [{ period: "today", startsAt: "2026-08-14T00:00:00Z", endsAt: "2026-08-14T12:00:00Z", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, quantityTotals: {}, providerCounts: {} }] },
     generatedAt: empty.generatedAt,
   };
   it("保留未观测而非伪造零成本", () => {
@@ -58,5 +58,8 @@ describe("AIP-7 cost authority parser", () => {
   it("解析单位不匹配的图像价格权威", () => {
     const parsed = parseModelRuntimeCostOverview({ ...cost, modelPrices: [{ modelRef: ref("RegisteredModelRevision", "image"), providerModelId: "agnes-image-2.1-flash", outputModalities: ["image"], priceSnapshotRef: ref("ModelPriceSnapshotRevision", "price-image"), status: "unit_mismatch", currency: "CNY", inputTokenPrice: 0, outputTokenPrice: 0, cachedTokenPrice: null, tokenUnit: 1000, effectiveFrom: empty.generatedAt, effectiveUntil: null, zeroPriceApprovalRef: null, blockerCodes: ["TOKEN_PRICE_UNIT_MISMATCH"] }] });
     expect(parsed.modelPrices[0].status).toBe("unit_mismatch");
+  });
+  it("拒绝周期内质量计数不守恒", () => {
+    expect(() => parseModelRuntimeCostOverview({ ...cost, usage: { ...cost.usage, periods: [{ ...cost.usage.periods[0], receiptCount: 1 }] } })).toThrow(/用量质量计数不一致/);
   });
 });
