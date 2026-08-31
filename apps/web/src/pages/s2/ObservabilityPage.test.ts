@@ -7,11 +7,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TelemetrySpan, UsageReceipt } from "../../api/aipEvidence/contracts";
 import { filterAuthoritySpans, formatSpanDuration, formatUsageQuantity, missingAuthorityReason, ObservabilityPage, parseObservabilityDeepLink, summarizeAuthority } from "./ObservabilityPage";
 
-const evidenceMocks = vi.hoisted(() => ({ spans: vi.fn(), usage: vi.fn() }));
+const evidenceMocks = vi.hoisted(() => ({ spans: vi.fn(), usage: vi.fn(), evidenceChain: vi.fn() }));
+const actionMocks = vi.hoisted(() => ({ list: vi.fn() }));
+const workbenchMocks = vi.hoisted(() => ({ listAssistSubjects: vi.fn() }));
 vi.mock("../../api/aipEvidence", async (importOriginal) => {
   const original = await importOriginal<typeof import("../../api/aipEvidence")>();
-  return { ...original, aipEvidenceSdk: { spans: evidenceMocks.spans, usage: evidenceMocks.usage } };
+  return { ...original, aipEvidenceSdk: { spans: evidenceMocks.spans, usage: evidenceMocks.usage, evidenceChain: evidenceMocks.evidenceChain } };
 });
+vi.mock("../../api/aipActions", () => ({ aipActionsSdk: actionMocks }));
+vi.mock("../../api/aipWorkbench", () => ({ listAssistSubjects: workbenchMocks.listAssistSubjects }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -61,6 +65,11 @@ describe("AIP 权威可观测性", () => {
     root = createRoot(host);
     evidenceMocks.spans.mockReset();
     evidenceMocks.usage.mockReset();
+    evidenceMocks.evidenceChain.mockReset();
+    actionMocks.list.mockReset();
+    actionMocks.list.mockResolvedValue({ items: [], count: 0 });
+    workbenchMocks.listAssistSubjects.mockReset();
+    workbenchMocks.listAssistSubjects.mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 });
     window.history.replaceState({}, "", "/aip/observability");
   });
 
@@ -130,5 +139,29 @@ describe("AIP 权威可观测性", () => {
     expect(host.querySelector<HTMLAnchorElement>("[data-testid='observability-back-lineage']")?.getAttribute("href"))
       .toBe("/aip/lineage?rootType=task_run&rootId=run-1");
     expect(host.querySelector<HTMLButtonElement>("[data-testid='observability-export']")?.disabled).toBe(false);
+  });
+
+  it("从最近任务运行解析 exact lineage 并展示业务诊断入口", async () => {
+    workbenchMocks.listAssistSubjects.mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [{
+      subject: {
+        taskRef: { resourceType: "Task", resourceId: "task-1", revision: "1", authority: "aip-task-store" },
+        taskRunRef: { resourceType: "TaskRun", resourceId: "run-1", revision: "1", authority: "aip-task-store" },
+        agentRunRef: { resourceType: "AgentRun", resourceId: "agent-run-1", revision: "1", authority: "aip-agent-run-store" },
+        selectionRefs: [], cutoffAt: "2026-08-31T01:00:00Z",
+      }, taskTitle: "复核价格异常", taskDescription: "", owner: "价格运营", taskStatus: "executing", runStatus: "running", agentStatus: "running", source: "task", updatedAt: "2026-08-31T01:00:00Z",
+    }], count: 1 });
+    evidenceMocks.evidenceChain.mockResolvedValue({ rootType: "task_run", rootId: "run-1", lineageId: "lin-1", events: [], spans: [span()], usageReceipts: [receipt()] });
+    await act(async () => root.render(createElement(MemoryRouter, null, createElement(ObservabilityPage))));
+    await vi.waitFor(() => expect(host.textContent).toContain("复核价格异常"));
+    const picker = host.querySelector<HTMLSelectElement>("[aria-label='observability-task-run-record']")!;
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set?.call(picker, "run-1");
+    await act(async () => picker.dispatchEvent(new Event("change", { bubbles: true })));
+    const query = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent === "查看运行证据")!;
+    await act(async () => query.click());
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(evidenceMocks.evidenceChain).toHaveBeenCalledWith("task_run", "run-1");
+    expect(host.textContent).toContain("预算约束");
+    expect(host.textContent).toContain("告警处置");
+    expect(host.querySelector<HTMLAnchorElement>("[data-testid='observability-back-lineage']")?.getAttribute("href")).toBe("/aip/lineage?rootType=task_run&rootId=run-1");
   });
 });

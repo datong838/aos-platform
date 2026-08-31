@@ -2,8 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { aipEvidenceSdk } from "../../api/aipEvidence";
+import { aipActionsSdk, type ActionDraftBundle } from "../../api/aipActions";
+import { listAssistSubjects, type AssistSubjectOption } from "../../api/aipWorkbench";
 import { LINEAGE_ROOT_TYPES, type EvidenceQuality, type LineageRootType, type TelemetrySpan, type UsageReceipt } from "../../api/aipEvidence/contracts";
 import { PageChrome } from "../../components/PageChrome";
+import { actionDisplayName, businessDisplayName, statusDisplayName } from "../../lib/aipChineseLabels";
 
 export type AuthorityObservabilitySummary = {
   spanCount: number;
@@ -92,11 +95,38 @@ function qualityTone(quality: EvidenceQuality): string {
   return "var(--aos-muted)";
 }
 
+function qualityLabel(quality: EvidenceQuality): string {
+  return quality === "measured" ? "权威实测" : quality === "estimated" ? "估算证据" : "质量待核验";
+}
+
+function spanKindLabel(kind: TelemetrySpan["kind"]): string {
+  return ({ internal: "内部处理", server: "服务端处理", client: "客户端调用", producer: "生产者", consumer: "消费者", model: "模型调用", tool: "工具调用" } as Record<string, string>)[kind] || kind;
+}
+
+function spanStatusLabel(status: TelemetrySpan["status"]): string {
+  return status === "ok" ? "成功" : status === "error" ? "错误" : "状态未设置";
+}
+
+function usageKindLabel(kind: UsageReceipt["usageKind"]): string {
+  return ({ input_token: "输入 Token", output_token: "输出 Token", cached_token: "缓存 Token", cost: "调用成本", latency: "调用时延", tool_unit: "工具计量单位" } as Record<string, string>)[kind] || kind;
+}
+
+function spanBusinessName(name: string): string {
+  const labels: Record<string, string> = { "model.invoke": "模型生成", "tool.call": "业务工具调用", "queue.wait": "队列等待", retry: "执行重试" };
+  return labels[name.toLowerCase()] || businessDisplayName(name, name);
+}
+
 export function ObservabilityPage() {
   const deepLink = useMemo(() => parseObservabilityDeepLink(window.location.search), []);
   const [lineageId, setLineageId] = useState(deepLink.lineageId);
+  const [rootContext, setRootContext] = useState<{ rootType: LineageRootType; rootId: string } | null>(deepLink.rootType ? { rootType: deepLink.rootType, rootId: deepLink.rootId } : null);
   const [spans, setSpans] = useState<TelemetrySpan[]>([]);
   const [receipts, setReceipts] = useState<UsageReceipt[]>([]);
+  const [recentActions, setRecentActions] = useState<ActionDraftBundle[]>([]);
+  const [recentRuns, setRecentRuns] = useState<AssistSubjectOption[]>([]);
+  const [selectionType, setSelectionType] = useState<"task_run" | "action">("task_run");
+  const [selectionId, setSelectionId] = useState("");
+  const [selectionState, setSelectionState] = useState<"loading" | "loaded" | "error">("loading");
   const [view, setView] = useState<View>("overview");
   const [query, setQuery] = useState("");
   const [loadState, setLoadState] = useState<LoadState>("idle");
@@ -104,6 +134,26 @@ export function ObservabilityPage() {
 
   const summary = useMemo(() => summarizeAuthority(spans, receipts), [spans, receipts]);
   const filteredSpans = useMemo(() => filterAuthoritySpans(spans, query), [spans, query]);
+  const retrySpans = useMemo(() => spans.filter((span) => span.name.toLowerCase().includes("retry")), [spans]);
+  const queueSpans = useMemo(() => spans.filter((span) => span.name.toLowerCase().includes("queue")), [spans]);
+  const tokenReceipts = useMemo(() => receipts.filter((receipt) => receipt.usageKind.includes("token")), [receipts]);
+  const costReceipts = useMemo(() => receipts.filter((receipt) => receipt.usageKind === "cost"), [receipts]);
+
+  useEffect(() => {
+    let active = true;
+    void Promise.all([aipActionsSdk.list(30), listAssistSubjects(30)]).then(([actions, runs]) => {
+      if (!active) return;
+      setRecentActions(actions.items);
+      setRecentRuns(runs.items);
+      setSelectionState("loaded");
+    }).catch(() => {
+      if (!active) return;
+      setRecentActions([]);
+      setRecentRuns([]);
+      setSelectionState("error");
+    });
+    return () => { active = false; };
+  }, []);
 
   const load = useCallback(async (requestedLineageId?: string) => {
     const target = (requestedLineageId ?? lineageId).trim();
@@ -130,6 +180,35 @@ export function ObservabilityPage() {
     }
   }, [lineageId]);
 
+  const loadFromBusinessRecord = useCallback(async () => {
+    const target = selectionId.trim();
+    if (!target) {
+      setError("请选择真实任务运行或受控动作");
+      return;
+    }
+    setError(null);
+    setSpans([]);
+    setReceipts([]);
+    setLoadState("loading");
+    try {
+      const chain = await aipEvidenceSdk.evidenceChain(selectionType, target);
+      if (!chain.lineageId) {
+        setLineageId("");
+        setRootContext({ rootType: selectionType, rootId: target });
+        setLoadState("loaded");
+        return;
+      }
+      setLineageId(chain.lineageId);
+      setRootContext({ rootType: selectionType, rootId: target });
+      setSpans(chain.spans);
+      setReceipts(chain.usageReceipts);
+      setLoadState("loaded");
+    } catch (caught) {
+      setError(String((caught as Error).message || caught));
+      setLoadState("error");
+    }
+  }, [selectionId, selectionType]);
+
   useEffect(() => {
     if (!deepLink.lineageId) return;
     void load(deepLink.lineageId);
@@ -141,7 +220,7 @@ export function ObservabilityPage() {
     if (loadState !== "loaded") return;
     const blob = new Blob([JSON.stringify({
       lineageId: lineageId.trim(),
-      root: deepLink.rootType ? { rootType: deepLink.rootType, rootId: deepLink.rootId } : null,
+      root: rootContext,
       spans,
       usageReceipts: receipts,
       missingEvidence: {
@@ -166,10 +245,10 @@ export function ObservabilityPage() {
         {[
           { label: "加载态", value: loadState === "loaded" ? "已载" : loadState === "loading" ? "读取中" : loadState === "error" ? "失败" : "空闲" },
           { label: "视图", value: view === "overview" ? "概览" : view === "spans" ? "调用轨迹" : "用量凭证" },
-          { label: "调用轨迹", value: String(spans.length) },
-          { label: "用量凭证", value: String(receipts.length) },
-          { label: "筛选命中", value: String(filteredSpans.length) },
-          { label: "输入", value: lineageId.trim() ? "已填" : "待填" },
+          { label: "调用轨迹", value: loadState !== "loaded" ? "—" : spans.length ? String(spans.length) : "缺证" },
+          { label: "用量凭证", value: loadState !== "loaded" ? "—" : receipts.length ? String(receipts.length) : "缺证" },
+          { label: "筛选命中", value: loadState !== "loaded" ? "—" : spans.length ? String(filteredSpans.length) : "缺证" },
+          { label: "谱系来源", value: rootContext ? "业务记录" : lineageId.trim() ? "高级定位" : "待选择" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -177,7 +256,26 @@ export function ObservabilityPage() {
           </div>
         ))}
       </div>
-      <div className="bp5-card" style={{ ...cardStyle, display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap" }}>
+      <section className="bp5-card" style={{ ...cardStyle, marginBottom: 12 }} data-testid="observability-business-selector">
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div><strong>选择要诊断的业务运行</strong><div className="muted" style={{ marginTop: 4 }}>从真实任务运行或受控动作解析服务端 exact lineageId，不接受前端猜测。</div></div>
+          <span className="muted">{selectionState === "loading" ? "读取中…" : selectionState === "error" ? "最近记录读取失败，可使用高级定位" : `任务运行 ${recentRuns.length} 条 · 受控动作 ${recentActions.length} 条`}</span>
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+          <select aria-label="observability-task-run-record" value={selectionType === "task_run" ? selectionId : ""} onChange={(event) => { setSelectionType("task_run"); setSelectionId(event.target.value); }} style={{ minWidth: "min(26rem, 100%)", flex: "1 1 22rem" }}>
+            <option value="">请选择最近任务运行</option>
+            {recentRuns.map((item) => <option key={item.subject.taskRunRef.resourceId} value={item.subject.taskRunRef.resourceId}>{item.taskTitle} · {statusDisplayName(item.runStatus)} · {item.owner}</option>)}
+          </select>
+          <select aria-label="observability-action-record" value={selectionType === "action" ? selectionId : ""} onChange={(event) => { setSelectionType("action"); setSelectionId(event.target.value); }} style={{ minWidth: "min(26rem, 100%)", flex: "1 1 22rem" }}>
+            <option value="">请选择最近受控动作</option>
+            {recentActions.map((item) => <option key={item.proposal.id} value={item.proposal.id}>{actionDisplayName(item.proposal.actionType.actionTypeId)} · {item.proposal.purpose} · {statusDisplayName(item.proposal.status)}</option>)}
+          </select>
+          <button type="button" className="btn primary" onClick={() => void loadFromBusinessRecord()} disabled={loadState === "loading" || !selectionId.trim()}>{loadState === "loading" ? "读取中…" : "查看运行证据"}</button>
+        </div>
+      </section>
+      <details className="bp5-card" style={{ ...cardStyle, marginBottom: 12 }} data-testid="observability-advanced-locator">
+        <summary style={{ cursor: "pointer", fontWeight: 600 }}>高级定位：exact lineageId</summary>
+      <div style={{ display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap", marginTop: 12 }}>
         <label style={{ display: "grid", gap: 6, minWidth: 320 }}>
           <span className="muted">谱系标识</span>
           <input
@@ -204,10 +302,10 @@ export function ObservabilityPage() {
         >
           {loadState === "loaded" ? "导出当前证据" : "导出（需先读取）"}
         </button>
-        {deepLink.rootType && (
+        {rootContext && (
           <Link
             className="btn"
-            to={`/aip/lineage?rootType=${encodeURIComponent(deepLink.rootType)}&rootId=${encodeURIComponent(deepLink.rootId)}`}
+            to={`/aip/lineage?rootType=${encodeURIComponent(rootContext.rootType)}&rootId=${encodeURIComponent(rootContext.rootId)}`}
             data-testid="observability-back-lineage"
             style={{ textDecoration: "none" }}
           >
@@ -215,6 +313,7 @@ export function ObservabilityPage() {
           </Link>
         )}
       </div>
+      </details>
 
       <div style={{ display: "flex", gap: 8, margin: "16px 0" }}>
         {(["overview", "spans", "usage"] as const).map((item) => (
@@ -249,15 +348,20 @@ export function ObservabilityPage() {
         <div data-testid="observability-authority-summary">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
             {[
-              ["Span", summary.spanCount],
-              ["错误 Span", summary.errorSpanCount],
-              ["用量凭证", summary.usageReceiptCount],
-              ["实测", summary.measuredCount],
-              ["估算", summary.estimatedCount],
-              ["未知", summary.unknownCount],
+              ["运行步骤", spans.length ? summary.spanCount : "缺证"],
+              ["错误步骤", spans.length ? summary.errorSpanCount : "缺证"],
+              ["执行重试", spans.length ? retrySpans.length : "缺证"],
+              ["队列等待", spans.length ? queueSpans.length : "缺证"],
+              ["Token 凭证", receipts.length ? tokenReceipts.length : "缺证"],
+              ["成本凭证", receipts.length ? costReceipts.length : "缺证"],
             ].map(([label, value]) => <div key={label} style={cardStyle}><div className="muted">{label}</div><strong style={{ fontSize: 28 }}>{value}</strong></div>)}
           </div>
           <div className="callout info" style={{ marginTop: 14 }}>所有数量均由当前权威回包直接计数；未知用量保持 unknown，不折算为 0。</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 12, marginTop: 14 }} data-testid="observability-operating-meaning">
+            <div style={cardStyle}><strong>预算约束</strong><p className="muted">当前 lineage 回包未包含预算快照，因此不展示余额或消耗比例。</p><Link to="/aip/capacity">到容量与预算核对 →</Link></div>
+            <div style={cardStyle}><strong>告警处置</strong><p className="muted">仅错误 Span 不能冒充业务告警；需到告警 authority 读取关联对象后处置。</p><Link to="/workshop/inbox">进入风险告警管理 →</Link></div>
+            <div style={cardStyle}><strong>质量与问题</strong><p className="muted">从同一业务记录进入评测和草稿审批，保留问题整改上下文。</p><Link to={rootContext ? `/aip/evals?rootType=${encodeURIComponent(rootContext.rootType)}&rootId=${encodeURIComponent(rootContext.rootId)}` : "/aip/evals"}>查看评测与问题 →</Link></div>
+          </div>
         </div>
       )}
 
@@ -269,12 +373,12 @@ export function ObservabilityPage() {
           </div>
           {spans.length === 0 ? <div className="muted">暂无权威运行片段。</div> : (
             <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr><th style={thStyle}>名称</th><th style={thStyle}>供应商</th><th style={thStyle}>链路 / 片段标识</th><th style={thStyle}>类型 / 状态</th><th style={thStyle}>时长</th><th style={thStyle}>质量</th><th style={thStyle}>观测时间</th></tr></thead>
+              <thead><tr><th style={thStyle}>业务步骤</th><th style={thStyle}>执行方</th><th style={thStyle}>类型 / 状态</th><th style={thStyle}>时长</th><th style={thStyle}>质量</th><th style={thStyle}>观测时间</th><th style={thStyle}>审计详情</th></tr></thead>
               <tbody>{filteredSpans.map((span) => <tr key={span.spanRecordId}>
-                <td style={tdStyle}>{span.name}</td><td style={tdStyle}>{span.provider}</td>
-                <td style={{ ...tdStyle, fontFamily: "monospace" }}>{span.traceId}<br />{span.spanId}</td>
-                <td style={tdStyle}>{span.kind} / {span.status}</td><td style={tdStyle}>{formatSpanDuration(span)}</td>
-                <td style={{ ...tdStyle, color: qualityTone(span.quality) }}>{span.quality}</td><td style={tdStyle}>{new Date(span.observedAt).toLocaleString()}</td>
+                <td style={tdStyle}>{spanBusinessName(span.name)}</td><td style={tdStyle}>{businessDisplayName(span.provider, span.provider)}</td>
+                <td style={tdStyle}>{spanKindLabel(span.kind)} / {spanStatusLabel(span.status)}</td><td style={tdStyle}>{formatSpanDuration(span)}</td>
+                <td style={{ ...tdStyle, color: qualityTone(span.quality) }}>{qualityLabel(span.quality)}</td><td style={tdStyle}>{new Date(span.observedAt).toLocaleString()}</td>
+                <td style={tdStyle}><details><summary>技术标识</summary><code style={{ overflowWrap: "anywhere" }}>trace={span.traceId}<br />span={span.spanId}<br />receipt={span.providerReceiptId}</code></details></td>
               </tr>)}</tbody>
             </table></div>
           )}
@@ -286,11 +390,11 @@ export function ObservabilityPage() {
           <strong>用量凭证（{receipts.length}）</strong>
           {receipts.length === 0 ? <div className="muted" style={{ marginTop: 10 }}>暂无权威用量凭证。</div> : (
             <div style={{ overflowX: "auto", marginTop: 10 }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr><th style={thStyle}>类型</th><th style={thStyle}>数量</th><th style={thStyle}>供应商</th><th style={thStyle}>用量凭证</th><th style={thStyle}>质量</th><th style={thStyle}>观测时间</th></tr></thead>
+              <thead><tr><th style={thStyle}>业务计量</th><th style={thStyle}>数量</th><th style={thStyle}>执行方</th><th style={thStyle}>质量</th><th style={thStyle}>观测时间</th><th style={thStyle}>审计详情</th></tr></thead>
               <tbody>{receipts.map((receipt) => <tr key={receipt.receiptId}>
-                <td style={tdStyle}>{receipt.usageKind}</td><td style={tdStyle}>{formatUsageQuantity(receipt)}</td><td style={tdStyle}>{receipt.provider}</td>
-                <td style={{ ...tdStyle, fontFamily: "monospace" }}>{receipt.receiptId}<br />{receipt.providerReceiptId}</td>
-                <td style={{ ...tdStyle, color: qualityTone(receipt.quality) }}>{receipt.quality}</td><td style={tdStyle}>{new Date(receipt.observedAt).toLocaleString()}</td>
+                <td style={tdStyle}>{usageKindLabel(receipt.usageKind)}</td><td style={tdStyle}>{formatUsageQuantity(receipt)}</td><td style={tdStyle}>{businessDisplayName(receipt.provider, receipt.provider)}</td>
+                <td style={{ ...tdStyle, color: qualityTone(receipt.quality) }}>{qualityLabel(receipt.quality)}</td><td style={tdStyle}>{new Date(receipt.observedAt).toLocaleString()}</td>
+                <td style={tdStyle}><details><summary>技术标识</summary><code style={{ overflowWrap: "anywhere" }}>receipt={receipt.receiptId}<br />providerReceipt={receipt.providerReceiptId}</code></details></td>
               </tr>)}</tbody>
             </table></div>
           )}
