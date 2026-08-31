@@ -18,10 +18,12 @@ import { MODEL_CONFIG_NO_VAULT } from "../../lib/productCopy";
 import {
   aipEvidenceSdk,
   LINEAGE_ROOT_TYPES,
-  type LineageEvent,
+  type AuthorityEvidenceChain,
   type LineageRootType,
   type EvalRunAuthority,
 } from "../../api/aipEvidence";
+import { aipActionsSdk, type ActionDraftBundle } from "../../api/aipActions";
+import { listAssistSubjects, type AssistSubjectOption } from "../../api/aipWorkbench";
 import {
   decodeToolsPanelOverlay,
   encodeToolsPanelOverlay,
@@ -35,6 +37,7 @@ import {
 } from "./toolsInvokeContext";
 import {
   businessDisplayName,
+  actionDisplayName,
   formatBlockers,
   runtimeModeDisplayName,
   statusDisplayName,
@@ -4008,6 +4011,60 @@ export function EvalsPage() {
   );
 }
 
+const LINEAGE_EVENT_LABELS: Record<string, string> = {
+  input: "接收业务输入",
+  planned: "形成执行计划",
+  proposed: "提出受控动作",
+  drafted: "生成待审草稿",
+  approved: "审批通过",
+  rejected: "审批驳回",
+  withdrawn: "发起人撤回",
+  leased: "取得执行租约",
+  executing: "开始受控执行",
+  applied: "业务结果已确认",
+  failed: "执行失败",
+  unknown: "结果待对账",
+  reconciled: "完成结果对账",
+  compensated: "完成补偿处置",
+  evaluated: "完成质量评测",
+  published: "完成受控发布",
+};
+
+function lineageEventDisplayName(value: string): string {
+  return LINEAGE_EVENT_LABELS[value.toLowerCase()] || businessDisplayName(value, "业务事件");
+}
+
+function lineageSourceDisplayName(value: string | null): string {
+  if (!value) return "权威业务记录";
+  const labels: Record<string, string> = {
+    task: "经营任务",
+    task_run: "任务运行",
+    action: "受控动作",
+    action_proposal: "受控动作提案",
+    approval: "审批记录",
+    lease: "执行租约",
+    receipt: "交付凭证",
+    evidence: "业务证据",
+    eval_run: "评测运行",
+    usage: "资源用量凭证",
+    publication: "发布记录",
+    research_job: "研究任务",
+  };
+  return labels[value.toLowerCase()] || businessDisplayName(value, "权威业务记录");
+}
+
+function lineageQualityDisplayName(value: string): string {
+  return value === "measured" ? "权威实测" : value === "estimated" ? "估算证据" : "质量待核验";
+}
+
+function lineageSubjectSummary(subject: Record<string, unknown>): string {
+  for (const key of ["displayName", "name", "title", "purpose", "objectType", "resourceType"]) {
+    const value = subject[key];
+    if (typeof value === "string" && value.trim()) return businessDisplayName(value, value);
+  }
+  return "关联业务对象";
+}
+
 export function DecisionLineagePage() {
   const [searchParams] = useSearchParams();
   const rootTypeFromUrl = String(searchParams.get("rootType") || "").trim();
@@ -4018,9 +4075,14 @@ export function DecisionLineagePage() {
     : "task_run") as LineageRootType;
   const [rootType, setRootType] = useState<LineageRootType>(initialRootType);
   const [rootId, setRootId] = useState(rootIdFromUrl);
-  const [events, setEvents] = useState<LineageEvent[]>([]);
+  const [chain, setChain] = useState<AuthorityEvidenceChain | null>(null);
+  const [recentActions, setRecentActions] = useState<ActionDraftBundle[]>([]);
+  const [recentRuns, setRecentRuns] = useState<AssistSubjectOption[]>([]);
+  const [recentState, setRecentState] = useState<"loading" | "loaded" | "error">("loading");
   const [loadState, setLoadState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
   const [localErr, setLocalErr] = useState<string | null>(null);
+  const [keyword, setKeyword] = useState("");
+  const [eventFilter, setEventFilter] = useState("all");
 
   async function load(nextType: LineageRootType = rootType, nextId: string = rootId) {
     const target = nextId.trim();
@@ -4030,16 +4092,33 @@ export function DecisionLineagePage() {
       return;
     }
     setLocalErr(null);
-    setEvents([]);
+    setChain(null);
     setLoadState("loading");
     try {
-      setEvents(await aipEvidenceSdk.lineage(nextType, target));
+      setChain(await aipEvidenceSdk.evidenceChain(nextType, target));
       setLoadState("loaded");
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
       setLoadState("error");
     }
   }
+
+  useEffect(() => {
+    let active = true;
+    setRecentState("loading");
+    void Promise.all([aipActionsSdk.list(30), listAssistSubjects(30)]).then(([actions, runs]) => {
+      if (!active) return;
+      setRecentActions(actions.items);
+      setRecentRuns(runs.items);
+      setRecentState("loaded");
+    }).catch(() => {
+      if (!active) return;
+      setRecentActions([]);
+      setRecentRuns([]);
+      setRecentState("error");
+    });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (rootTypeFromUrl && LINEAGE_ROOT_TYPES.includes(rootTypeFromUrl as LineageRootType)) {
@@ -4058,11 +4137,26 @@ export function DecisionLineagePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rootTypeFromUrl, rootIdFromUrl]);
 
-  const lineageId = events[0]?.lineageId ?? null;
+  const events = chain?.events ?? [];
+  const lineageId = chain?.lineageId ?? null;
+  const eventTypes = useMemo(() => Array.from(new Set(events.map((event) => event.eventType))).sort(), [events]);
+  const filteredEvents = useMemo(() => {
+    const query = keyword.trim().toLowerCase();
+    return events.filter((event) => {
+      if (eventFilter !== "all" && event.eventType !== eventFilter) return false;
+      if (!query) return true;
+      return [event.eventType, event.sourceKind, event.sourceId, event.subject && JSON.stringify(event.subject), event.artifact && JSON.stringify(event.artifact)]
+        .filter(Boolean).join(" ").toLowerCase().includes(query);
+    });
+  }, [eventFilter, events, keyword]);
   const chainProposalId =
     rootType === "action" && rootId.trim()
       ? rootId.trim()
       : proposalFromUrl || "";
+  const selectedAction = recentActions.find((item) => item.proposal.id === (rootType === "action" ? rootId : ""));
+  const rootLabel = selectedAction
+    ? `${actionDisplayName(selectedAction.proposal.actionType.actionTypeId)} · ${selectedAction.proposal.purpose}`
+    : rootType === "task_run" ? "任务运行" : rootType === "action" ? "受控动作" : rootType === "eval_run" ? "评测运行" : rootType === "publication" ? "发布记录" : rootType === "research_job" ? "研究任务" : "历史决策谱系";
 
   return (
     <S2Chrome
@@ -4074,12 +4168,12 @@ export function DecisionLineagePage() {
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, margin: "0 0 12px" }}
       >
         {[
-          { label: "起点类型", value: rootType === "task_run" ? "任务运行" : rootType === "action" ? "受控动作" : rootType === "eval_run" ? "评测运行" : rootType === "publication" ? "发布记录" : rootType === "research_job" ? "研究任务" : "历史决策谱系" },
+          { label: "当前业务记录", value: rootLabel },
           { label: "加载态", value: loadState === "loaded" ? "已载" : loadState === "loading" ? "读取中" : loadState === "error" ? "失败" : "空闲" },
           { label: "事件数", value: String(events.length) },
-          { label: "谱系标识", value: lineageId ? "已生成" : "—" },
-          { label: "输入", value: rootId.trim() ? "已填" : "待填" },
-          { label: "错误", value: localErr ? "有" : "无" },
+          { label: "观测记录", value: chain ? String(chain.spans.length) : "—" },
+          { label: "用量凭证", value: chain ? String(chain.usageReceipts.length) : "—" },
+          { label: "证据闭环", value: lineageId && chain?.spans.length && chain?.usageReceipts.length ? "完整" : "待补证" },
         ].map((s) => (
           <div key={s.label} className="card" style={{ padding: "10px 12px" }}>
             <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{s.label}</div>
@@ -4095,6 +4189,65 @@ export function DecisionLineagePage() {
           </span>
         </BpBanner>
       )}
+      <section className="card" style={{ padding: 16, marginBottom: 12 }} data-testid="lineage-business-selector">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <strong>选择最近业务记录</strong>
+            <div className="muted" style={{ marginTop: 4 }}>从真实任务运行或受控动作进入因果链，技术标识不占用主阅读层。</div>
+          </div>
+          <span className="muted">{recentState === "loading" ? "读取中…" : recentState === "error" ? "最近记录读取失败，可用高级定位" : `任务运行 ${recentRuns.length} 条 · 受控动作 ${recentActions.length} 条`}</span>
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+          <select
+            aria-label="lineage-task-run-record"
+            value={rootType === "task_run" ? rootId : ""}
+            onChange={(event) => {
+              setRootType("task_run");
+              setRootId(event.target.value);
+              setChain(null);
+              setLoadState("idle");
+            }}
+            style={{ minWidth: "min(26rem, 100%)", flex: "1 1 22rem" }}
+          >
+            <option value="">请选择最近任务运行</option>
+            {recentRuns.map((item) => (
+              <option key={item.subject.taskRunRef.resourceId} value={item.subject.taskRunRef.resourceId}>
+                {item.taskTitle} · {statusDisplayName(item.runStatus)} · {item.owner}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="lineage-business-record"
+            value={rootType === "action" ? rootId : ""}
+            onChange={(event) => {
+              setRootType("action");
+              setRootId(event.target.value);
+              setChain(null);
+              setLoadState("idle");
+            }}
+            style={{ minWidth: "min(26rem, 100%)", flex: "1 1 22rem" }}
+          >
+            <option value="">请选择最近受控动作</option>
+            {recentActions.map((item) => (
+              <option key={item.proposal.id} value={item.proposal.id}>
+                {actionDisplayName(item.proposal.actionType.actionTypeId)} · {item.proposal.purpose} · {statusDisplayName(item.proposal.status)}
+              </option>
+            ))}
+          </select>
+          <button type="button" className="btn" onClick={() => void load(rootType, rootId)} disabled={loadState === "loading" || !rootId.trim()}>
+            {loadState === "loading" ? "读取中…" : "查看业务因果链"}
+          </button>
+        </div>
+        {selectedAction && (
+          <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }} data-testid="lineage-selected-action-links">
+            <Link to={`/aip/drafts?proposal=${encodeURIComponent(selectedAction.proposal.id)}`}>查看审批与结果 →</Link>
+            {selectedAction.proposal.taskId && <Link to={`/aip/assist?taskId=${encodeURIComponent(selectedAction.proposal.taskId)}${selectedAction.proposal.runId ? `&runId=${encodeURIComponent(selectedAction.proposal.runId)}` : ""}`}>返回业务任务 →</Link>}
+            {selectedAction.proposal.taskId && <Link to={`/aip/logic?taskId=${encodeURIComponent(selectedAction.proposal.taskId)}${selectedAction.proposal.runId ? `&runId=${encodeURIComponent(selectedAction.proposal.runId)}` : ""}`}>查看业务逻辑与运行 →</Link>}
+          </div>
+        )}
+      </section>
+      <details className="card" style={{ padding: "12px 16px", marginBottom: 12 }} data-testid="lineage-advanced-locator">
+        <summary style={{ cursor: "pointer", fontWeight: 600 }}>高级定位：Task、Run、评测、发布或研究记录</summary>
       <BpToolbar>
         <label className="muted">
           起点类型{" "}
@@ -4116,10 +4269,34 @@ export function DecisionLineagePage() {
           {loadState === "loading" ? "查询中…" : "查询权威谱系"}
         </button>
       </BpToolbar>
+      </details>
 
-      {loadState === "idle" && !localErr && <BpBanner tone="info">请选择起点类型并输入真实业务记录标识；页面不会展示示例链路或固定步骤。</BpBanner>}
+      {loadState === "idle" && !localErr && <BpBanner tone="info">请选择最近业务动作，或展开高级定位读取真实 Task、Run、评测、发布或研究记录；页面不会展示示例链路或固定步骤。</BpBanner>}
       {loadState === "loaded" && events.length === 0 && <BpBanner tone="warn"><span data-testid="lineage-empty">该业务记录暂无权威谱系事件。</span></BpBanner>}
       {localErr && <BpBanner tone="warn"><span data-testid="lineage-error">谱系读取失败：{localErr}</span></BpBanner>}
+
+      {chain && events.length > 0 && (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 10, marginTop: 12 }} data-testid="lineage-evidence-segments">
+            {[
+              { label: "权威业务事件", value: `${events.length} 条`, ok: true, note: "目标、任务、审批与结果的不可变事实" },
+              { label: "运行观测证据", value: chain.spans.length ? `${chain.spans.length} 条` : "缺少观测证据", ok: chain.spans.length > 0, note: "仅接受服务端 exact lineageId 对应的 Span" },
+              { label: "资源用量凭证", value: chain.usageReceipts.length ? `${chain.usageReceipts.length} 条` : "缺少用量凭证", ok: chain.usageReceipts.length > 0, note: "Token、成本、时延或工具单位 Receipt" },
+            ].map((segment) => (
+              <div key={segment.label} className="card" style={{ padding: 14, borderLeft: `3px solid ${segment.ok ? "var(--aos-green-600)" : "var(--aos-amber)"}` }}>
+                <div className="muted" style={{ fontSize: 12 }}>{segment.label}</div>
+                <strong style={{ display: "block", marginTop: 4 }}>{segment.value}</strong>
+                <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>{segment.note}</div>
+              </div>
+            ))}
+          </div>
+          <BpToolbar>
+            <label className="muted">搜索因果节点 <input aria-label="lineage-keyword" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="业务名称、来源或对象" /></label>
+            <label className="muted">事件类型 <select aria-label="lineage-event-filter" value={eventFilter} onChange={(event) => setEventFilter(event.target.value)}><option value="all">全部事件</option>{eventTypes.map((type) => <option key={type} value={type}>{lineageEventDisplayName(type)}</option>)}</select></label>
+            <span className="muted">显示 {filteredEvents.length}/{events.length} 条</span>
+          </BpToolbar>
+        </>
+      )}
 
       {events.length > 0 && (
       <div
@@ -4133,12 +4310,12 @@ export function DecisionLineagePage() {
         }}
       >
         <div style={{ fontSize: 12, color: "var(--aos-muted)", marginBottom: 16 }}>
-          {events.length} 个权威事件
+          {filteredEvents.length} 个权威事件
           <details><summary>谱系技术标识（审计用）</summary><code>{lineageId}</code> · {rootType}/{rootId}</details>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {events.map((event) => (
+          {filteredEvents.map((event) => (
             <div
               key={event.eventId}
               style={{
@@ -4160,16 +4337,17 @@ export function DecisionLineagePage() {
                   letterSpacing: "0.05em",
                 }}
               >
-                #{event.sequence} {event.eventType}
+                步骤 {event.sequence}<br />{lineageEventDisplayName(event.eventType)}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: "var(--aos-text)", fontSize: 14 }}>{event.sourceKind || "无权威源类型"} · {event.sourceId || "无权威源 ID"}</div>
+                <div style={{ color: "var(--aos-text)", fontSize: 14 }}>{lineageSourceDisplayName(event.sourceKind)}{event.subject ? ` · ${lineageSubjectSummary(event.subject)}` : ""}</div>
                 <div style={{ fontSize: 12, color: "var(--aos-muted)", marginTop: 4 }}>
-                  {event.quality} · 发生 {new Date(event.occurredAt).toLocaleString()} · 观测 {new Date(event.observedAt).toLocaleString()}
+                  {lineageQualityDisplayName(event.quality)} · 发生 {new Date(event.occurredAt).toLocaleString()} · 观测 {new Date(event.observedAt).toLocaleString()}
                 </div>
-                <div style={{ fontSize: 11, color: "var(--aos-muted)", marginTop: 4, fontFamily: "monospace", overflowWrap: "anywhere" }}>
-                  event={event.eventId} · payload={event.payloadHash.slice(0, 12)}…{event.sourceHash ? ` · source=${event.sourceHash.slice(0, 12)}…` : ""}
-                </div>
+                <details style={{ fontSize: 11, color: "var(--aos-muted)", marginTop: 4, overflowWrap: "anywhere" }}>
+                  <summary>技术标识（审计用）</summary>
+                  <code>source={event.sourceId || "—"} · event={event.eventId} · payload={event.payloadHash.slice(0, 12)}…{event.sourceHash ? ` · sourceHash=${event.sourceHash.slice(0, 12)}…` : ""}</code>
+                </details>
               </div>
             </div>
           ))}
