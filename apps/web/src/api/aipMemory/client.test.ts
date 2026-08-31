@@ -22,16 +22,22 @@ describe("AipMemorySdk", () => {
     expect(clientRequest).toHaveBeenNthCalledWith(2, "listMemoryItems");
   });
 
-  it("事件、审批、晋升全部沿用唯一 client 与严格解析", async () => {
+  it("事件、审批、驳回、晋升与撤销全部沿用唯一 client 与严格解析", async () => {
     const event = { tenant, eventId: "event-1", candidateId: "candidate-1", sequence: 1, eventType: "submitted", fromStatus: null, toStatus: "pending", reasonCodes: [], evidenceRef: null, eventHash: "b".repeat(64), actor: "system", occurredAt: "2026-08-12T00:00:00Z" };
-    const clientRequest = vi.fn().mockResolvedValueOnce([event]).mockResolvedValueOnce(candidate).mockResolvedValueOnce(memory);
+    const rejected = { ...candidate, status: "rejected", version: 2 };
+    const revoked = { ...memory, item: { ...memory.item, status: "revoked", version: 2 } };
+    const clientRequest = vi.fn().mockResolvedValueOnce([event]).mockResolvedValueOnce(candidate).mockResolvedValueOnce(rejected).mockResolvedValueOnce(memory).mockResolvedValueOnce(revoked);
     const sdk = new AipMemorySdk({ request: clientRequest } as unknown as AipClient);
     await expect(sdk.candidateEvents("candidate-1")).resolves.toHaveLength(1);
     await expect(sdk.approveCandidate("candidate-1", { expectedVersion: 1, governance: { evalReport: artifact("eval-1"), draft: ref("Draft", "draft-1", "1"), approvalEvent: ref("ApprovalEvent", "approval-1", "1") }, requiredApplicability: ["skill:content"] })).resolves.toMatchObject({ candidateId: "candidate-1" });
+    await expect(sdk.rejectCandidate("candidate-1", { expectedVersion: 1, reasonCodes: ["quality_review_failed"] })).resolves.toMatchObject({ status: "rejected" });
     await expect(sdk.promoteCandidate("candidate-1", { memoryItemId: "memory-1", expectedVersion: 2, requiredApplicability: ["skill:content"] })).resolves.toMatchObject({ item: { memoryItemId: "memory-1" } });
+    await expect(sdk.revokeMemory("memory-1", { expectedVersion: 1, reasonCode: "contamination_confirmed" })).resolves.toMatchObject({ item: { status: "revoked" } });
     expect(clientRequest).toHaveBeenNthCalledWith(1, "listMemoryCandidateEvents", { params: { candidate_id: "candidate-1" } });
     expect(clientRequest).toHaveBeenNthCalledWith(2, "approveMemoryCandidate", expect.objectContaining({ params: { candidate_id: "candidate-1" } }));
-    expect(clientRequest).toHaveBeenNthCalledWith(3, "promoteMemoryCandidate", expect.objectContaining({ params: { candidate_id: "candidate-1" } }));
+    expect(clientRequest).toHaveBeenNthCalledWith(3, "rejectMemoryCandidate", expect.objectContaining({ params: { candidate_id: "candidate-1" }, body: { expectedVersion: 1, reasonCodes: ["quality_review_failed"] } }));
+    expect(clientRequest).toHaveBeenNthCalledWith(4, "promoteMemoryCandidate", expect.objectContaining({ params: { candidate_id: "candidate-1" } }));
+    expect(clientRequest).toHaveBeenNthCalledWith(5, "revokeMemoryItem", { params: { memory_item_id: "memory-1" }, body: { expectedVersion: 1, reasonCode: "contamination_confirmed" } });
   });
 
   it("缺失 tenant/source/governance 的成功响应失败关闭", () => {

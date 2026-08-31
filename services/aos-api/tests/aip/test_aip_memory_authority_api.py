@@ -161,6 +161,16 @@ def memory_api(client):
                 update={"status": MemoryItemStatus.REVOKED, "version": 2}
             ), revision
 
+        def transition_candidate(self, scope, candidate_id, **kwargs):
+            self._record(scope)
+            assert candidate_id == "candidate-1"
+            assert kwargs["to_status"] is MemoryCandidateStatus.REJECTED
+            assert kwargs["expected_version"] == 1
+            assert kwargs["reason_codes"] == ["quality_review_failed"]
+            return candidate().model_copy(
+                update={"status": MemoryCandidateStatus.REJECTED, "version": 2}
+            )
+
     class FakeRetrieval:
         def __init__(self) -> None:
             self.call = None
@@ -256,6 +266,36 @@ def test_revoke_api_uses_authenticated_scope_and_reviewer_role(memory_api) -> No
     assert response.status_code == 200
     assert response.json()["item"]["status"] == "revoked"
     assert store.scopes == [SCOPE]
+
+
+def test_reject_candidate_uses_authenticated_scope_exact_version_and_reason(memory_api) -> None:
+    client, store, _retrieval, _search = memory_api
+    response = client.post(
+        "/v1/aip/memory-authority/candidates/candidate-1/reject",
+        json={"expectedVersion": 1, "reasonCodes": ["quality_review_failed"]},
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "rejected"
+    assert response.json()["version"] == 2
+    assert store.scopes == [SCOPE]
+
+
+def test_reject_candidate_rejects_non_reviewer_before_store(memory_api) -> None:
+    client, store, _retrieval, _search = memory_api
+    client.app.dependency_overrides[require_principal] = lambda: Principal(
+        subject="reader",
+        org_id=SCOPE.org_id,
+        project_id=SCOPE.project_id,
+        roles=["developer"],
+        markings=["internal"],
+    )
+    response = client.post(
+        "/v1/aip/memory-authority/candidates/candidate-1/reject",
+        json={"expectedVersion": 1, "reasonCodes": ["quality_review_failed"]},
+    )
+    assert response.status_code == 403
+    assert response.json()["code"] == "AIP_SCOPE_FORBIDDEN"
+    assert store.scopes == []
 
 
 def test_revoke_api_rejects_non_reviewer_before_store(memory_api) -> None:

@@ -105,6 +105,11 @@ class ApproveCandidateRequest(AipContractModel):
     required_applicability: list[str] = Field(min_length=1, max_length=64)
 
 
+class RejectCandidateRequest(AipContractModel):
+    expected_version: int = Field(ge=1)
+    reason_codes: list[str] = Field(min_length=1, max_length=16)
+
+
 class PromoteCandidateRequest(AipContractModel):
     memory_item_id: str = Field(min_length=1, max_length=200)
     expected_version: int = Field(ge=1)
@@ -312,6 +317,28 @@ def approve_candidate(
             required_applicability=body.required_applicability,
             actor=principal.subject,
             occurred_at=datetime.now(UTC),
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post("/candidates/{candidate_id}/reject", response_model=MemoryCandidate)
+def reject_candidate(
+    candidate_id: str,
+    body: RejectCandidateRequest,
+    principal: Principal = Depends(require_principal),
+    store: AipMemoryStore = Depends(get_aip_memory_store),
+) -> MemoryCandidate:
+    _require_role(principal, {"admin", "reviewer"})
+    try:
+        return store.transition_candidate(
+            _scope(principal),
+            candidate_id,
+            to_status=MemoryCandidateStatus.REJECTED,
+            expected_version=body.expected_version,
+            actor=principal.subject,
+            occurred_at=datetime.now(UTC),
+            reason_codes=body.reason_codes,
         )
     except Exception as exc:
         raise _map_error(exc) from exc

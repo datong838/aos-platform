@@ -92,6 +92,24 @@ export function authoritySubjectLabel(subject: { resourceType: string; resourceI
   return `${subject.resourceType} · ${subject.resourceId}`;
 }
 
+function memoryLayerLabel(layer: string): string {
+  return ({ semantic: "事实与概念", episodic: "经验与事件", procedural: "流程与做法" } as Record<string, string>)[layer] || layer;
+}
+
+function memorySubjectTypeLabel(type: string): string {
+  const normalized = type.toLowerCase();
+  if (normalized.includes("product")) return "商品";
+  if (normalized.includes("customer")) return "客户";
+  if (normalized.includes("campaign")) return "活动";
+  if (normalized.includes("order")) return "订单";
+  if (normalized.includes("content")) return "内容";
+  return "业务对象";
+}
+
+function sourceKindLabel(kind: string): string {
+  return ({ authorized_document: "授权文档", human_observation: "人工经验", operational_receipt: "运营凭证", trusted_adapter: "可信适配器" } as Record<string, string>)[kind] || kind;
+}
+
 export function MemoryGovernancePage() {
   const [searchParams] = useSearchParams();
   const contributionContext = parseMemoryContributionContext(searchParams);
@@ -129,6 +147,20 @@ export function MemoryGovernancePage() {
   const [readiness, setReadiness] = useState<KnowledgeReadiness | null>(null);
   const [readinessState, setReadinessState] = useState<LoadState>("loading");
   const [readinessError, setReadinessError] = useState("");
+  const [governanceBusy, setGovernanceBusy] = useState("");
+  const [governanceMessage, setGovernanceMessage] = useState("");
+  const [requiredApplicability, setRequiredApplicability] = useState("");
+  const [evalReportId, setEvalReportId] = useState("");
+  const [evalReportRevision, setEvalReportRevision] = useState("");
+  const [evalReportHash, setEvalReportHash] = useState("");
+  const [draftId, setDraftId] = useState("");
+  const [draftRevision, setDraftRevision] = useState("");
+  const [approvalEventId, setApprovalEventId] = useState("");
+  const [approvalEventRevision, setApprovalEventRevision] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("quality_review_failed");
+  const [memoryItemId, setMemoryItemId] = useState("");
+  const [memoryExpiresAt, setMemoryExpiresAt] = useState("");
+  const [revocationReason, setRevocationReason] = useState("contamination_confirmed");
 
   async function reload() {
     setLoadState("loading");
@@ -225,10 +257,81 @@ export function MemoryGovernancePage() {
     setSelectedCandidate(candidate);
     setEvents([]);
     setError("");
+    setGovernanceMessage("");
+    setRequiredApplicability(candidate.request.source.applicability.join(","));
+    setMemoryItemId(`memory-${candidate.candidateId}`);
     try {
       setEvents(await aipMemorySdk.candidateEvents(candidate.candidateId));
     } catch (caught) {
       setError(`Candidate 事件读取失败：${String((caught as Error).message || caught)}`);
+    }
+  }
+
+  function applicabilityList(): string[] {
+    return requiredApplicability.split(",").map((value) => value.trim()).filter(Boolean);
+  }
+
+  async function governCandidate(operation: "approve" | "reject" | "promote") {
+    if (!selectedCandidate) return;
+    const applicability = applicabilityList();
+    if (!applicability.length) {
+      setGovernanceMessage("请填写至少一个适用范围。");
+      return;
+    }
+    setGovernanceBusy(operation);
+    setGovernanceMessage("");
+    try {
+      let updatedCandidate: MemoryCandidate | null = null;
+      if (operation === "approve") {
+        if (!evalReportId.trim() || !evalReportRevision.trim() || !/^[0-9a-f]{64}$/.test(evalReportHash.trim()) || !draftId.trim() || !draftRevision.trim() || !approvalEventId.trim() || !approvalEventRevision.trim()) {
+          throw new Error("批准前必须完整填写评测报告、草稿和审批事件的精确引用及评测内容摘要");
+        }
+        updatedCandidate = await aipMemorySdk.approveCandidate(selectedCandidate.candidateId, {
+          expectedVersion: selectedCandidate.version,
+          governance: {
+            evalReport: { artifactType: "aip.eval_report", artifactId: evalReportId.trim(), revision: evalReportRevision.trim(), contentHash: evalReportHash.trim() },
+            draft: { resourceType: "aip.draft", resourceId: draftId.trim(), revision: draftRevision.trim(), authority: "postgresql" },
+            approvalEvent: { resourceType: "aip.approval_event", resourceId: approvalEventId.trim(), revision: approvalEventRevision.trim(), authority: "postgresql" },
+          },
+          requiredApplicability: applicability,
+        });
+      } else if (operation === "reject") {
+        if (!rejectionReason.trim()) throw new Error("驳回必须填写原因");
+        updatedCandidate = await aipMemorySdk.rejectCandidate(selectedCandidate.candidateId, { expectedVersion: selectedCandidate.version, reasonCodes: [rejectionReason.trim()] });
+      } else {
+        if (!memoryItemId.trim()) throw new Error("晋升必须填写正式记忆标识");
+        await aipMemorySdk.promoteCandidate(selectedCandidate.candidateId, {
+          memoryItemId: memoryItemId.trim(), expectedVersion: selectedCandidate.version, requiredApplicability: applicability,
+          ...(memoryExpiresAt ? { expiresAt: new Date(memoryExpiresAt).toISOString() } : {}),
+        });
+      }
+      await reload();
+      if (updatedCandidate) {
+        setSelectedCandidate(updatedCandidate);
+        setEvents(await aipMemorySdk.candidateEvents(updatedCandidate.candidateId));
+      } else {
+        setView("memories");
+      }
+      setGovernanceMessage(operation === "approve" ? "候选已提交批准并重新读取权威事件。" : operation === "reject" ? "候选已驳回并保留不可变事件。" : "候选已晋升为正式记忆并重新读取权威修订。");
+    } catch (caught) {
+      setGovernanceMessage(`治理操作未完成：${String((caught as Error).message || caught)}`);
+    } finally {
+      setGovernanceBusy("");
+    }
+  }
+
+  async function revokeMemory(memory: MemoryAuthorityItem) {
+    if (!revocationReason.trim() || memory.item.status !== "active") return;
+    setGovernanceBusy(`revoke:${memory.item.memoryItemId}`);
+    setGovernanceMessage("");
+    try {
+      await aipMemorySdk.revokeMemory(memory.item.memoryItemId, { expectedVersion: memory.item.version, reasonCode: revocationReason.trim() });
+      await reload();
+      setGovernanceMessage("正式记忆已撤销；历史修订继续保留用于审计，后续检索将按权威状态排除。");
+    } catch (caught) {
+      setGovernanceMessage(`撤销未完成：${String((caught as Error).message || caught)}`);
+    } finally {
+      setGovernanceBusy("");
     }
   }
 
@@ -306,14 +409,15 @@ export function MemoryGovernancePage() {
             <h2 style={{ marginTop: 0, fontSize: 17 }}>知识候选</h2>
             {!candidates.length ? (
               <div data-testid="memory-candidates-empty" className="callout info">
-                <strong>空态策略：</strong>
-                当前租户没有待治理或历史知识候选。页面<strong>不</strong>注入静态或演示候选；有真实来源写入后再出现条目，再经审批晋升为正式记忆。
+                <strong>当前没有待治理知识</strong>
+                <p>可从运营复盘、客户反馈或经营分析生成真实候选；页面不注入演示知识。</p>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button type="button" className="btn primary" onClick={() => setView("pipelines")}>查看知识生成管道</button><Link to="/aip/evals" className="btn">进入评测与复盘</Link></div>
               </div>
             ) : candidates.map((candidate) => (
               <button key={candidate.candidateId} type="button" className="btn" onClick={() => void inspectCandidate(candidate)} style={{ width: "100%", display: "grid", textAlign: "left", gap: 5, marginBottom: 8, padding: 12 }}>
-                <strong>{authoritySubjectLabel(candidate.request.subject)}</strong>
-                <span>{memoryStatusLabel(candidate.status)} · {candidate.scope} · v{candidate.version}</span>
-                <span className="muted">{candidate.candidateId}</span>
+                <strong>{memorySubjectTypeLabel(candidate.request.subject.resourceType)}{memoryLayerLabel(candidate.request.candidateLayer)}候选</strong>
+                <span>{memoryStatusLabel(candidate.status)} · 来源 {candidate.request.source.provider} · 可信度 {(candidate.request.confidence * 100).toFixed(0)}%</span>
+                <span className="muted">用途 {candidate.request.source.applicability.join("、")} · 敏感标记 {candidate.request.marking.join("、")}</span>
               </button>
             ))}
           </section>
@@ -321,18 +425,39 @@ export function MemoryGovernancePage() {
             <h2 style={{ marginTop: 0, fontSize: 17 }}>治理证据与事件</h2>
             {!selectedCandidate ? <div className="muted">选择记忆候选项，查看内容摘要、来源、新鲜度、适用范围及不可变事件。</div> : <>
               <dl style={{ display: "grid", gridTemplateColumns: "150px 1fr", gap: "8px 12px", margin: 0 }}>
-                <dt>租户</dt><dd>{selectedCandidate.tenant.orgId} / {selectedCandidate.tenant.projectId}</dd>
-                <dt>Payload</dt><dd>{selectedCandidate.request.payload.artifactId} · {selectedCandidate.request.payload.revision}<br /><code>{selectedCandidate.request.payload.contentHash}</code></dd>
-                <dt>来源</dt><dd>{selectedCandidate.request.source.provider} · {selectedCandidate.request.source.sourceKind}</dd>
-                <dt>Freshness</dt><dd>{new Date(selectedCandidate.request.source.freshnessExpiresAt).toLocaleString()}</dd>
-                <dt>Applicability</dt><dd>{selectedCandidate.request.source.applicability.join("、")}</dd>
+                <dt>业务主体</dt><dd>{memorySubjectTypeLabel(selectedCandidate.request.subject.resourceType)}</dd>
+                <dt>知识类型</dt><dd>{memoryLayerLabel(selectedCandidate.request.candidateLayer)}</dd>
+                <dt>来源</dt><dd>{selectedCandidate.request.source.provider} · {sourceKindLabel(selectedCandidate.request.source.sourceKind)}</dd>
+                <dt>可信度</dt><dd>{(selectedCandidate.request.confidence * 100).toFixed(0)}%</dd>
+                <dt>敏感标记</dt><dd>{selectedCandidate.request.marking.join("、")}</dd>
+                <dt>适用范围</dt><dd>{selectedCandidate.request.source.applicability.join("、")}</dd>
+                <dt>有效期</dt><dd>{new Date(selectedCandidate.request.source.freshnessExpiresAt).toLocaleString()}</dd>
                 <dt>隔离原因</dt><dd>{selectedCandidate.quarantineReasons.join("、") || "无"}</dd>
               </dl>
+              <details style={{ marginTop: 12 }}><summary>审计技术标识</summary><div style={{ overflowWrap: "anywhere", marginTop: 8 }}>租户 {selectedCandidate.tenant.orgId}/{selectedCandidate.tenant.projectId}<br />候选 {selectedCandidate.candidateId} · v{selectedCandidate.version}<br />主体 {authoritySubjectLabel(selectedCandidate.request.subject)}<br />载荷 {selectedCandidate.request.payload.artifactId} · {selectedCandidate.request.payload.revision}<br /><code>{selectedCandidate.request.payload.contentHash}</code></div></details>
               <h3 style={{ fontSize: 15 }}>事件时间线</h3>
               {!events.length ? <div className="muted">暂无可见事件，或事件仍在读取。</div> : events.map((event) => <div key={event.eventId} style={{ borderTop: "1px solid var(--aos-border)", padding: "10px 0" }}>
                 <strong>#{event.sequence} {memoryStatusLabel(event.toStatus)}</strong> · {event.actor}<br /><span className="muted">{new Date(event.occurredAt).toLocaleString()} · {event.reasonCodes.join("、") || "无原因码"}</span>
               </div>)}
-              <div className="callout info" style={{ marginTop: 12 }}>批准或晋升必须绑定精确的评测报告、草稿与审批事件；本页不会用不完整表单绕过治理服务。</div>
+              <details style={{ ...panel, marginTop: 12 }} data-testid="memory-candidate-governance"><summary style={{ cursor: "pointer", fontWeight: 700 }}>治理操作</summary>
+                <p className="muted">系统自动提交当前候选版本；CAS 冲突、引用不完整或评测未通过时服务端会拒绝，不会覆盖新版本。</p>
+                <label>适用范围（逗号分隔）<input aria-label="memory-required-applicability" value={requiredApplicability} onChange={(event) => setRequiredApplicability(event.target.value)} /></label>
+                {(selectedCandidate.status === "pending" || selectedCandidate.status === "quarantined") && <>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 8, marginTop: 10 }}>
+                    <label>评测报告标识<input aria-label="memory-eval-report-id" value={evalReportId} onChange={(event) => setEvalReportId(event.target.value)} /></label>
+                    <label>评测修订<input aria-label="memory-eval-report-revision" value={evalReportRevision} onChange={(event) => setEvalReportRevision(event.target.value)} /></label>
+                    <label>评测内容摘要<input aria-label="memory-eval-report-hash" value={evalReportHash} onChange={(event) => setEvalReportHash(event.target.value)} /></label>
+                    <label>草稿标识<input aria-label="memory-draft-id" value={draftId} onChange={(event) => setDraftId(event.target.value)} /></label>
+                    <label>草稿修订<input aria-label="memory-draft-revision" value={draftRevision} onChange={(event) => setDraftRevision(event.target.value)} /></label>
+                    <label>审批事件标识<input aria-label="memory-approval-event-id" value={approvalEventId} onChange={(event) => setApprovalEventId(event.target.value)} /></label>
+                    <label>审批事件修订<input aria-label="memory-approval-event-revision" value={approvalEventRevision} onChange={(event) => setApprovalEventRevision(event.target.value)} /></label>
+                    <label>驳回原因<select aria-label="memory-rejection-reason" value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)}><option value="quality_review_failed">质量评审未通过</option><option value="source_not_trusted">来源不可信</option><option value="sensitive_scope_mismatch">敏感范围不匹配</option><option value="applicability_incomplete">适用范围不完整</option></select></label>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, marginTop: 10 }}><button type="button" className="btn primary" disabled={!!governanceBusy} onClick={() => void governCandidate("approve")}>批准候选</button><button type="button" className="btn" disabled={!!governanceBusy} onClick={() => void governCandidate("reject")}>驳回候选</button></div>
+                </>}
+                {selectedCandidate.status === "approved" && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 8, marginTop: 10 }}><label>正式记忆标识<input aria-label="memory-promote-id" value={memoryItemId} onChange={(event) => setMemoryItemId(event.target.value)} /></label><label>有效期（可选）<input aria-label="memory-promote-expires" type="datetime-local" value={memoryExpiresAt} onChange={(event) => setMemoryExpiresAt(event.target.value)} /></label><button type="button" className="btn primary" disabled={!!governanceBusy} onClick={() => void governCandidate("promote")}>晋升为正式记忆</button></div>}
+                {governanceMessage && <div className="callout info" style={{ marginTop: 10 }}>{governanceMessage}</div>}
+              </details>
             </>}
           </section>
         </div>
@@ -345,14 +470,15 @@ export function MemoryGovernancePage() {
             <strong>空态策略：</strong>
             当前租户尚无正式记忆。冷启动或知识候选治理晋升完成后才会出现；不以知识库示例或本地种子数据冒充权威记忆。
           </div>
-        ) : <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead><tr><th>主体</th><th>状态 / Scope</th><th>Revision</th><th>来源</th><th>适用范围</th><th>生效时间</th></tr></thead>
+        ) : <><div style={{ display: "flex", gap: 8, alignItems: "end", marginBottom: 12 }}><label>撤销原因<select aria-label="memory-revocation-reason" value={revocationReason} onChange={(event) => setRevocationReason(event.target.value)}><option value="contamination_confirmed">确认知识污染</option><option value="source_withdrawn">来源已撤回</option><option value="applicability_changed">适用范围已变化</option><option value="manual_governance_revoke">人工治理撤销</option></select></label>{governanceMessage && <span className="muted">{governanceMessage}</span>}</div><div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead><tr><th>主体</th><th>状态 / 范围</th><th>修订</th><th>来源</th><th>适用范围</th><th>有效期</th><th>治理</th></tr></thead>
           <tbody>{memories.map(({ item, revision }) => <tr key={item.memoryItemId}>
-            <td>{authoritySubjectLabel(item.subject)}<br /><span className="muted">{item.memoryItemId}</span></td>
-            <td>{memoryStatusLabel(item.status)} / {item.scope}</td><td>r{revision.revision}<br /><code>{revision.contentHash.slice(0, 12)}…</code></td>
-            <td>{revision.sourceId} · r{revision.sourceRevision}</td><td>{revision.applicability.join("、")}</td><td>{new Date(revision.effectiveAt).toLocaleString()}</td>
+            <td>{memorySubjectTypeLabel(item.subject.resourceType)}{memoryLayerLabel(item.memoryLayer)}记忆<details><summary>审计标识</summary>{authoritySubjectLabel(item.subject)}<br />{item.memoryItemId}</details></td>
+            <td>{memoryStatusLabel(item.status)} / {item.scope}</td><td>r{revision.revision}<details><summary>内容摘要</summary><code>{revision.contentHash}</code></details></td>
+            <td>{revision.sourceId} · r{revision.sourceRevision}</td><td>{revision.applicability.join("、")}</td><td>{new Date(revision.effectiveAt).toLocaleString()}{revision.expiresAt ? ` → ${new Date(revision.expiresAt).toLocaleString()}` : " · 长期有效"}</td>
+            <td><button type="button" className="btn" disabled={item.status !== "active" || governanceBusy === `revoke:${item.memoryItemId}`} onClick={() => void revokeMemory({ item, revision })}>{governanceBusy === `revoke:${item.memoryItemId}` ? "提交中…" : "撤销/污染处置"}</button></td>
           </tr>)}</tbody>
-        </table></div>}
+        </table></div></>}
       </section>}
 
       {loadState === "loaded" && view === "agents" && <AgentMemoryPanel memories={memories} />}

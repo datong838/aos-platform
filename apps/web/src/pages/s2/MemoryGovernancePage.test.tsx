@@ -4,8 +4,11 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
 const sdk = vi.hoisted(() => ({
   candidates: vi.fn(), memories: vi.fn(), candidateEvents: vi.fn(), query: vi.fn(),
+  approveCandidate: vi.fn(), rejectCandidate: vi.fn(), promoteCandidate: vi.fn(), revokeMemory: vi.fn(),
   pipelinePolicies: vi.fn(), pipelineSchedules: vi.fn(), pipelineRuns: vi.fn(),
   pipelineReadiness: vi.fn(),
   transitionPipelineSchedule: vi.fn(), pipelineReceipt: vi.fn(), pipelineCheckpoint: vi.fn(), pipelineAlerts: vi.fn(),
@@ -68,8 +71,55 @@ describe("MemoryGovernancePage", () => {
     const root = createRoot(host);
     await act(async () => root.render(<MemoryRouter><MemoryGovernancePage /></MemoryRouter>));
     await act(async () => undefined);
-    expect(host.textContent).toContain("当前租户没有待治理或历史知识候选");
+    expect(host.textContent).toContain("当前没有待治理知识");
     expect(host.textContent).not.toContain("示例知识候选");
+    await act(async () => root.unmount());
+  });
+
+  it("候选治理展示业务语义并以 exact 版本驳回后回读不可变事件", async () => {
+    const candidate = {
+      tenant: { orgId: "org-org", projectId: "dev-project" }, candidateId: "candidate-1", status: "pending", scope: "workspace",
+      request: {
+        candidateLayer: "semantic", taskId: "task-1", runId: "run-1",
+        subject: { resourceType: "ecom.product", resourceId: "product-1", revision: "1", authority: "postgresql" },
+        payload: { artifactType: "memory_payload", artifactId: "payload-1", revision: "1", contentHash: "a".repeat(64) },
+        source: { sourceKind: "authorized_document", sourceUri: "urn:source:1", observedAt: "2026-08-12T00:00:00Z", freshnessExpiresAt: "2026-09-12T00:00:00Z", licenseId: "internal", usagePolicy: "summary-and-citation", contentHash: "b".repeat(64), provider: "栖月汇经营复盘", providerVersion: "1", applicability: ["skill:content"] },
+        confidence: 0.9, marking: ["internal"],
+      },
+      quarantineReasons: [], version: 1, createdAt: "2026-08-12T00:00:00Z", updatedAt: "2026-08-12T00:00:00Z",
+    };
+    const rejected = { ...candidate, status: "rejected", version: 2 };
+    const event = { tenant: candidate.tenant, eventId: "event-2", candidateId: "candidate-1", sequence: 2, eventType: "rejected", fromStatus: "pending", toStatus: "rejected", reasonCodes: ["quality_review_failed"], evidenceRef: null, eventHash: "c".repeat(64), actor: "reviewer", occurredAt: "2026-08-12T00:01:00Z" };
+    sdk.candidates.mockResolvedValueOnce([candidate]).mockResolvedValueOnce([rejected]);
+    sdk.memories.mockResolvedValue([]);
+    sdk.candidateEvents.mockResolvedValueOnce([]).mockResolvedValueOnce([event]);
+    sdk.rejectCandidate.mockResolvedValue(rejected);
+    const root = createRoot(host);
+    await act(async () => root.render(<MemoryRouter><MemoryGovernancePage /></MemoryRouter>)); await act(async () => undefined);
+    expect(host.textContent).toContain("商品事实与概念候选");
+    expect(host.textContent).toContain("栖月汇经营复盘");
+    await act(async () => (Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("商品事实与概念候选")) as HTMLButtonElement).click());
+    await act(async () => (host.querySelector('[data-testid="memory-candidate-governance"] summary') as HTMLElement).click());
+    await act(async () => (Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "驳回候选") as HTMLButtonElement).click());
+    expect(sdk.rejectCandidate).toHaveBeenCalledWith("candidate-1", { expectedVersion: 1, reasonCodes: ["quality_review_failed"] });
+    expect(host.textContent).toContain("#2 已拒绝");
+    expect(host.textContent).toContain("候选已驳回并保留不可变事件");
+    await act(async () => root.unmount());
+  });
+
+  it("正式记忆撤销提交 exact 版本和治理原因", async () => {
+    const memory = {
+      item: { tenant: { orgId: "org-org", projectId: "dev-project" }, memoryItemId: "memory-1", memoryLayer: "semantic", scope: "workspace", status: "active", subject: { resourceType: "ecom.product", resourceId: "product-1", revision: "1", authority: "postgresql" }, currentRevision: 1, version: 3, createdAt: "2026-08-12T00:00:00Z", updatedAt: "2026-08-12T00:00:00Z" },
+      revision: { tenant: { orgId: "org-org", projectId: "dev-project" }, memoryItemId: "memory-1", revision: 1, candidateId: "candidate-1", sourceId: "source-1", sourceRevision: 1, payload: { artifactType: "memory_payload", artifactId: "payload-1", revision: "1", contentHash: "a".repeat(64) }, contentHash: "a".repeat(64), confidence: 0.9, applicability: ["skill:content"], markings: ["internal"], effectiveAt: "2026-08-12T00:00:00Z", expiresAt: null, createdBy: "reviewer", createdAt: "2026-08-12T00:00:00Z" },
+    };
+    sdk.candidates.mockResolvedValue([]); sdk.memories.mockResolvedValueOnce([memory]).mockResolvedValueOnce([{ ...memory, item: { ...memory.item, status: "revoked", version: 4 } }]);
+    sdk.revokeMemory.mockResolvedValue({ ...memory, item: { ...memory.item, status: "revoked", version: 4 } });
+    const root = createRoot(host);
+    await act(async () => root.render(<MemoryRouter><MemoryGovernancePage /></MemoryRouter>)); await act(async () => undefined);
+    await act(async () => (host.querySelector('[data-testid="memory-tab-memories"]') as HTMLButtonElement).click());
+    await act(async () => (Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "撤销/污染处置") as HTMLButtonElement).click());
+    expect(sdk.revokeMemory).toHaveBeenCalledWith("memory-1", { expectedVersion: 3, reasonCode: "contamination_confirmed" });
+    expect(host.textContent).toContain("正式记忆已撤销");
     await act(async () => root.unmount());
   });
 
