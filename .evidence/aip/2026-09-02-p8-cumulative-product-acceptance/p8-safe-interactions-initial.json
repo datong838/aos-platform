@@ -1,0 +1,212 @@
+{
+  "recordedAt": "2026-09-01T20:05:25.839Z",
+  "tenant": "org-org/dev-project",
+  "pages": [
+    {
+      "id": "01-assist",
+      "route": "/aip/assist",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "02-studio",
+      "route": "/aip/studio",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "03-analyst",
+      "route": "/aip/analyst",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": [
+        "专注模式"
+      ]
+    },
+    {
+      "id": "04-logic",
+      "route": "/aip/logic",
+      "collapse": true,
+      "restore": true,
+      "tabs": [
+        "编辑",
+        "运行历史",
+        "自动化"
+      ],
+      "safeToggles": []
+    },
+    {
+      "id": "05-tools",
+      "route": "/aip/tools",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "06-maturity",
+      "route": "/aip/maturity",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "07-production-contracts",
+      "route": "/aip/production-contracts",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "08-capabilities",
+      "route": "/aip/capabilities",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "09-agent-registry",
+      "route": "/aip/agent-registry",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "10-agent-marketplace",
+      "route": "/aip/agent-marketplace",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "11-agents",
+      "route": "/aip/agents",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "12-skill-publish",
+      "route": "/aip/skill-publish",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "13-agent-import",
+      "route": "/aip/agent-import",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "14-capability-import",
+      "route": "/aip/capability-import",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "15-evals",
+      "route": "/aip/evals",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "16-drafts",
+      "route": "/aip/drafts",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "17-lineage",
+      "route": "/aip/lineage",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "18-observability",
+      "route": "/aip/observability",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "19-memory-governance",
+      "route": "/aip/memory-governance",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "20-model-catalog",
+      "route": "/aip/model-catalog",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "21-model-providers",
+      "route": "/aip/model-providers",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "22-model-router",
+      "route": "/aip/model-router",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "23-capacity",
+      "route": "/aip/capacity",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "24-model-runtime",
+      "route": "/aip/model-runtime",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    },
+    {
+      "id": "25-doc-intelligence",
+      "route": "/aip/doc-intelligence",
+      "collapse": true,
+      "restore": true,
+      "tabs": [],
+      "safeToggles": []
+    }
+  ]
+}

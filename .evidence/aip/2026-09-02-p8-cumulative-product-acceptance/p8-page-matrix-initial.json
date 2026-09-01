@@ -1,0 +1,7987 @@
+{
+  "recordedAt": "2026-09-01T18:30:24.267Z",
+  "tenant": "org-org/dev-project",
+  "pages": [
+    {
+      "id": "01-assist",
+      "route": "/aip/assist",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "选择真实任务运行"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "INPUT",
+          "text": "向当前智能体运行提问"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "发送"
+        }
+      ],
+      "forbidden": [],
+      "heading": "任务协作助手",
+      "horizontalOverflow": false,
+      "mainTextLength": 487,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/assist"
+      ],
+      "navLinks": [
+        {
+          "current": "page",
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "任务协作助手 · AOS",
+      "url": "http://127.0.0.1:5173/aip/assist",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "02-studio",
+      "route": "/aip/studio",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装数字同事…"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "私域管家 任务专用 · 运行中 运行中 5 技能 · 4 能力"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "客服专员 任务专用 · 运行中 运行中 6 技能 · 4 能力"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "导购顾问 任务专用 · 运行中 运行中 6 技能 · 3 能力"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "活动策划师 任务专用 · 运行中 运行中 6 技能 · 3 能力"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "数据参谋 任务专用 · 运行中 运行中 6 技能 · 3 能力"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "内容官 任务专用 · 运行中 运行中 8 技能 · 7 能力"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "取消修改"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "提示词"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "工具箱"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "护栏"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "试运行"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "发布"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "保存提示词"
+        }
+      ],
+      "forbidden": [],
+      "heading": "智能体配置",
+      "horizontalOverflow": false,
+      "mainTextLength": 729,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/studio"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": "page",
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "智能体配置 · AOS",
+      "url": "http://127.0.0.1:5173/aip/studio",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "03-analyst",
+      "route": "/aip/analyst",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "数据参谋 可查询 读取订单与支付事实，识别经营变化；缺少权威指标时不生成经营结论。 订单 · 6 项业务逻辑"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "内容官 可查询 读取真实商品与评价事实，为内容选题和复盘提供证据。 商品 · 8 项业务逻辑"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "导购顾问 可查询 读取在售商品和 SKU 事实，支撑选品与导购建议。 商品 · 6 项业务逻辑"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "客服专员 可查询 读取脱敏订单与客户事实，支撑服务诊断和升级判断。 订单 · 6 项业务逻辑"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "私域管家 可查询 读取脱敏客户与订单事实，支撑关系分层和触达准备。 客户 · 5 项业务逻辑"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "活动策划师 可查询 读取商品与订单事实，支撑活动节奏和复盘准备。 商品 · 6 项业务逻辑"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "收起查询"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "收起证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "专注模式"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "analyst-saved-exploration"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "analyst-query-kind"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "analyst-object-type"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "例如 status"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "等于 不等于 大于 大于等于 小于 小于等于 包含 属于集合"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "留空表示不筛选"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "20 条 50 条 100 条 200 条"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "analyst-logic-mount"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "打开业务逻辑画布 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "运行真实查询"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "表格"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "图表"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "地图"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "原始结果"
+        }
+      ],
+      "forbidden": [],
+      "heading": "AIP 分析师",
+      "horizontalOverflow": false,
+      "mainTextLength": 1598,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/analyst"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": "page",
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "AIP 分析师 · AOS",
+      "url": "http://127.0.0.1:5173/aip/analyst?logicId=ecommerce.logic.C08&logicRevision=1&logicHash=fae407244f715bdaa826005d115636ae73911542df6d2cf75b1a7d158dfced7c",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "04-logic",
+      "route": "/aip/logic",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "tab",
+          "tag": "BUTTON",
+          "text": "编辑"
+        },
+        {
+          "disabled": false,
+          "role": "tab",
+          "tag": "BUTTON",
+          "text": "运行历史"
+        },
+        {
+          "disabled": false,
+          "role": "tab",
+          "tag": "BUTTON",
+          "text": "自动化"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "新建业务逻辑草稿"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "草稿审批台"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "评测门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "上线执行审批"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "打开智能体目录"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "打开上线执行审批 →"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "保存"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "撤销"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "重做"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安全试跑"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "草稿审批台"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "评测门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "业务逻辑名称"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "业务逻辑描述"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "应用试跑输入"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "缩小画布"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "放大画布"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "重置画布缩放"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "折叠属性面板"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "添加 输入"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "添加 创建变量"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "添加 获取属性"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "添加 使用大模型"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "添加 使用工具"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "添加 数据变换"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "添加 应用动作"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "添加 执行"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "添加 分支"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "添加 汇聚"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "删除连接 draft-to-contract"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "删除连接 input-to-draft"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "拖动 contract"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "连接到 contract 的 in 端口"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "从 contract 的 out 端口建立连接"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "删除节点 contract"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "拖动 draft"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "连接到 draft 的 in 端口"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "从 draft 的 out 端口建立连接"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "删除节点 draft"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "BUTTON",
+          "text": "拖动 input"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "连接到 input 的 in 端口"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "从 input 的 out 端口建立连接"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "删除节点 input"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新 / 对账"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "新建一次权威运行"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "启动"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "暂停"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "恢复"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "取消"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "回滚"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看本次受控业务动作"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "发布 Eval suite"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "读取当前版本 Eval 证据"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "发布当前修订"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "正式发布记录 1 修订 1 · 2026/8/21 15:50:34"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入上线执行审批补齐自动化条件 →"
+        }
+      ],
+      "forbidden": [],
+      "heading": "逻辑编排",
+      "horizontalOverflow": false,
+      "mainTextLength": 4184,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/logic"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": "page",
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "逻辑编排 · AOS",
+      "url": "http://127.0.0.1:5173/aip/logic/ecommerce.logic.C08",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "05-tools",
+      "route": "/aip/tools",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "tools-object-type"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "tools-object-id"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "试跑当前工具"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "从智能助手带入任务上下文 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "tools-instance"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "tool-mode"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "重能力 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "← 成熟度"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "业务逻辑编排 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "智能体配置 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "返回智能体列表"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "写回动作（须人工确认）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "对象查询（属性子集查询）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "业务逻辑（已发布流程）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "应用变量（更新应用变量）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "命令（命令类工具）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "澄清（向用户澄清）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "专业能力（平台代调重能力）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "Wiki 字段（结构化 Wiki）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "登记专业能力 → 平台代调 · 写回须人工确认"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "业务对象查询 属性子集 · 含 Wiki 字段 · 经营事实读取 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "知识字段读取 结构化字段优先 · 经营事实读取 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "连通性校验 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "内容到成交归因与优化 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "互动线索识别与交接 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "事实品牌与合规审核 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "多平台适配 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "短视频策划 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "文案与种草内容生产 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "热点竞品与获客机会研究 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "活动复盘 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "执行监控与止损 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "跨同事任务编排 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "预算与毛利模拟 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "活动机会与目标 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "满意度与问题反哺 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "投诉与人工升级 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "物流查询与异常分诊 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "身份与订单安全查询 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "意图与情绪识别 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "促单与成交交接 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "异议识别与处理 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "成分分析 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "产品检索与推荐 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "需求诊断 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "关系反馈 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "沉默客户与复购机会 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "跟进与触达排期 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "客户身份沉淀 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "效果归因与复盘 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "执行监控与调整建议 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "审批后任务拆解 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "内外机会研究 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "数据与经营健康巡检 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "视频草稿方案生成 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "视觉草稿方案生成 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "人群商品与机制设计 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "客户标签与分层 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "售后资格与工单草拟 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "产品对比 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "人群与内容策略 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "增长方案生成 已发布的业务逻辑 · 业务规则与分析 · 只读 / 沙箱安全"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "关闭或写回（需人工确认） 人工确认后执行 · 受控业务写回 · 写操作 · 必须审批"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "素材采集 写回经受控业务动作 · 由平台代为调用 · 内容与媒体生产 · 外部能力 · 沙箱门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "策略规划 写回经受控业务动作 · 由平台代为调用 · 内容与媒体生产 · 外部能力 · 沙箱门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "文案生成 写回经受控业务动作 · 由平台代为调用 · 内容与媒体生产 · 外部能力 · 沙箱门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "脚本撰写 写回经受控业务动作 · 由平台代为调用 · 内容与媒体生产 · 外部能力 · 沙箱门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "语音合成 写回经受控业务动作 · 由平台代为调用 · 内容与媒体生产 · 外部能力 · 沙箱门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "视频合成 写回经受控业务动作 · 由平台代为调用 · 内容与媒体生产 · 外部能力 · 沙箱门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "内容审核 写回经受控业务动作 · 由平台代为调用 · 内容与媒体生产 · 外部能力 · 沙箱门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "直播编排 写回经受控业务动作 · 由平台代为调用 · 内容与媒体生产 · 外部能力 · 沙箱门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "平台适配 写回经受控业务动作 · 由平台代为调用 · 内容与媒体生产 · 外部能力 · 沙箱门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "数据复盘 写回经受控业务动作 · 由平台代为调用 · 内容与媒体生产 · 外部能力 · 沙箱门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "评测门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "打开知识库 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "智能体配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "保存当前实例配置"
+        }
+      ],
+      "forbidden": [],
+      "heading": "智能体工具配置",
+      "horizontalOverflow": false,
+      "mainTextLength": 3173,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/tools"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": "page",
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "智能体工具配置 · AOS",
+      "url": "http://127.0.0.1:5173/aip/tools",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "06-maturity",
+      "route": "/aip/maturity",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "知识候选治理 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "知识就绪门 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "核对工具与同事绑定 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看业务逻辑运行 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看评测证据 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看草稿审批 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "重新读取全部证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "智能体配置 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "业务逻辑 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "评测门控 →"
+        }
+      ],
+      "forbidden": [],
+      "heading": "智能体成熟度楼梯",
+      "horizontalOverflow": false,
+      "mainTextLength": 899,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/maturity"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": "page",
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "智能体成熟度楼梯 · AOS",
+      "url": "http://127.0.0.1:5173/aip/maturity",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "07-production-contracts",
+      "route": "/aip/production-contracts",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新权威状态"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "选择业务任务并准备上线资料"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "维护评测标准"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "处理执行提案"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "合同版本"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "影响与启动"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "计划编译"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "评审处置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看业务任务"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "检查影响与启动条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看业务任务"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐评测与证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看业务任务"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐评测与证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看业务任务"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐评测与证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看业务任务"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐评测与证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看业务任务"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐评测与证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看业务任务"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐评测与证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看业务任务"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐评测与证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "影响预览修订"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "生产上下文修订"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "启动 Task version"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "执行提案修订"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "业务逻辑标识"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "Logic revision"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "业务逻辑内容摘要"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "已发布 Logic"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "阶段模板修订"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "职责计划修订"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "编译生产上下文修订"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "编译真实 Task ID"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "编译 Task version"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "待处置 Open Issue"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "Review 真实运行 ID"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "Review 处置原因"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        }
+      ],
+      "forbidden": [],
+      "heading": "上线执行审批",
+      "horizontalOverflow": false,
+      "mainTextLength": 1559,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/production-contracts"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": "page",
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "上线执行审批 · AOS",
+      "url": "http://127.0.0.1:5173/aip/production-contracts",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "08-capabilities",
+      "route": "/aip/capabilities",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "智能体目录 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "能力导入 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐预检条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入激活确认"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐预检条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入激活确认"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐预检条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入激活确认"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐预检条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入激活确认"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐预检条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入激活确认"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐预检条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入激活确认"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐预检条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入激活确认"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐预检条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入激活确认"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐预检条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入激活确认"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐预检条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入激活确认"
+        }
+      ],
+      "forbidden": [],
+      "heading": "智能体插件",
+      "horizontalOverflow": false,
+      "mainTextLength": 3154,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/capabilities"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": "page",
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "智能体插件 · AOS",
+      "url": "http://127.0.0.1:5173/aip/capabilities",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "09-agent-registry",
+      "route": "/aip/agent-registry",
+      "controls": [
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "六数字同事已安装（≠可派发）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "市场发现（只读）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "市场发现"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "成熟度"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "智能体插件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "运行就绪"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "逻辑画布"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "联系责任方 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新运行准备"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "material.collect"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "performance.review"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "strategy.plan"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入业务工作台"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "回读工作台贡献"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐运行条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入内容与活动"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入经营参谋"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看绑定与最近运行"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "暂停使用"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "content.review"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "copy.generate"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "material.collect"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "performance.review"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "platform.adapt"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "script.compose"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "strategy.plan"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入业务工作台"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "回读工作台贡献"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐运行条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入内容与活动"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入多媒体生产"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看绑定与最近运行"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "暂停使用"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "copy.generate"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "material.collect"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "performance.review"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "strategy.plan"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入业务工作台"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "回读工作台贡献"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐运行条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入客户关系"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看绑定与最近运行"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "暂停使用"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "material.collect"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "performance.review"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "strategy.plan"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入业务工作台"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "回读工作台贡献"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐运行条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入经营参谋"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看绑定与最近运行"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "暂停使用"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "copy.generate"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "material.collect"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "performance.review"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "strategy.plan"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入业务工作台"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "回读工作台贡献"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐运行条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入客户关系"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看绑定与最近运行"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "暂停使用"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "copy.generate"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "material.collect"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "strategy.plan"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入业务工作台"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "回读工作台贡献"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "补齐运行条件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入日常任务总控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看绑定与最近运行"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "暂停使用"
+        }
+      ],
+      "forbidden": [],
+      "heading": "智能体目录",
+      "horizontalOverflow": false,
+      "mainTextLength": 2950,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/agent-registry"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": "page",
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "智能体目录 · AOS",
+      "url": "http://127.0.0.1:5173/aip/agent-registry",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "10-agent-marketplace",
+      "route": "/aip/agent-marketplace",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新目录"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "智能体目录"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "智能体列表"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "外部智能体预检"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "搜索数字同事"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "筛选安装状态"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "联系责任方 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入智能体目录刷新运行准备"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "管理实例"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "管理实例"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "管理实例"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "管理实例"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "管理实例"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "管理实例"
+        }
+      ],
+      "forbidden": [],
+      "heading": "智能体市场",
+      "horizontalOverflow": false,
+      "mainTextLength": 684,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/agent-marketplace"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": "page",
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "智能体市场 · AOS",
+      "url": "http://127.0.0.1:5173/aip/agent-marketplace",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "11-agents",
+      "route": "/aip/agents",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "智能体目录"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "市场发现"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "工具面板"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "筛选智能体"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "私域管家 私域关系经营 已启用 需核验运行准备"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "客服专员 售后服务与升级 已启用 需核验运行准备"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "导购顾问 导购与成交顾问 已启用 需核验运行准备"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "活动策划师 活动策划协同 已启用 需核验运行准备"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "数据参谋 增长协同 已启用 需核验运行准备"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "内容官 内容生产协同 已启用 需核验运行准备"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "概览"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "工具箱"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "试运行"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "发布"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "检查目录与绑定"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "智能体配置"
+        }
+      ],
+      "forbidden": [],
+      "heading": "智能体列表",
+      "horizontalOverflow": false,
+      "mainTextLength": 484,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/agents"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": "page",
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "智能体列表 · AOS",
+      "url": "http://127.0.0.1:5173/aip/agents",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "12-skill-publish",
+      "route": "/aip/skill-publish",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "仅已评测 已发布 全部"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "评测门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "智能体目录"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "成熟度"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "活动机会与目标 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "人群商品与机制设计 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "预算与毛利模拟 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "跨同事任务编排 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "执行监控与止损 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "活动复盘 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "热点竞品与获客机会研究 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "人群与内容策略 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "文案与种草内容生产 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "短视频策划 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "多平台适配 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "事实品牌与合规审核 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "互动线索识别与交接 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "内容到成交归因与优化 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "数据与经营健康巡检 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "内外机会研究 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "增长方案生成 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "审批后任务拆解 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "执行监控与调整建议 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "效果归因与复盘 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "需求诊断 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "产品检索与推荐 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "成分分析 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "产品对比 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "异议识别与处理 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "促单与成交交接 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "视觉草稿方案生成 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "客户身份沉淀 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "客户标签与分层 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "跟进与触达排期 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "沉默客户与复购机会 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "关系反馈 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "意图与情绪识别 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "身份与订单安全查询 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "物流查询与异常分诊 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "售后资格与工单草拟 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "投诉与人工升级 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "满意度与问题反哺 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "视频草稿方案生成 修订 1 · 仅已评测"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "发布此修订"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "去评测确认门绿"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "打开权威绑定流程"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看业务逻辑"
+        }
+      ],
+      "forbidden": [],
+      "heading": "技能发布",
+      "horizontalOverflow": false,
+      "mainTextLength": 1195,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/skill-publish"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": "page",
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "技能发布 · AOS",
+      "url": "http://127.0.0.1:5173/aip/skill-publish",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "13-agent-import",
+      "route": "/aip/agent-import",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "来源资源 ID"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "精确提交号"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "许可证"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "签名验证记录"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "软件物料清单标识"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "依赖标识（逗号分隔）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "目标标识"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "显示名称"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "源码相对路径"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "风险等级"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "网络策略引用"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "Secret ref"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "生成预检证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "返回智能体目录"
+        }
+      ],
+      "forbidden": [],
+      "heading": "智能体受控导入",
+      "horizontalOverflow": false,
+      "mainTextLength": 299,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/agent-import"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": "page",
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "智能体受控导入 · AOS",
+      "url": "http://127.0.0.1:5173/aip/agent-import",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "14-capability-import",
+      "route": "/aip/capability-import",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "来源资源 ID"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "精确提交号"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "许可证"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "签名验证记录"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "软件物料清单标识"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "依赖标识（逗号分隔）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "目标标识"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "显示名称"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "源码相对路径"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "风险等级"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "网络策略引用"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "Secret ref"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "生成预检证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "返回能力目录"
+        }
+      ],
+      "forbidden": [],
+      "heading": "能力受控导入",
+      "horizontalOverflow": false,
+      "mainTextLength": 329,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/capability-import"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": "page",
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "能力受控导入 · AOS",
+      "url": "http://127.0.0.1:5173/aip/capability-import",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "15-evals",
+      "route": "/aip/evals",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "评测套件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "Eval Logic 目标"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "运行套件并检查门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "读取最新报告"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "创建基础评测套件"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "读取全部评测目标"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "加载回归历史"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "← 成熟度"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "查看草稿审批 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "eval-authority-run-id"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "读取权威评测运行"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "成熟度楼梯"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "业务逻辑编排"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "草稿审批台"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "决策谱系"
+        }
+      ],
+      "forbidden": [],
+      "heading": "评测门控",
+      "horizontalOverflow": false,
+      "mainTextLength": 2585,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/evals"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": "page",
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "评测门控 · AOS",
+      "url": "http://127.0.0.1:5173/aip/evals",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "16-drafts",
+      "route": "/aip/drafts",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "搜索受控业务动作"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新 / 对账"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "待审批 0"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "已批准 0"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "执行与对账 0"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "已结束 1"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "决策谱系 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "评测门控 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "业务逻辑编排 →"
+        }
+      ],
+      "forbidden": [],
+      "heading": "草稿审批台",
+      "horizontalOverflow": false,
+      "mainTextLength": 296,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/drafts"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": "page",
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "草稿审批台 · AOS",
+      "url": "http://127.0.0.1:5173/aip/drafts",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "17-lineage",
+      "route": "/aip/lineage",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "lineage-task-run-record"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "lineage-business-record"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看业务因果链"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "lineage-root-type"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "lineage-root-id"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "图谱健康 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "评测门控"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "草稿审批台 →"
+        }
+      ],
+      "forbidden": [],
+      "heading": "决策谱系",
+      "horizontalOverflow": false,
+      "mainTextLength": 1132,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/lineage"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": "page",
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "决策谱系 · AOS",
+      "url": "http://127.0.0.1:5173/aip/lineage",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "18-observability",
+      "route": "/aip/observability",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "observability-task-run-record"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "observability-action-record"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看运行证据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "observability-lineage-id"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "概览"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "调用轨迹"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "用量凭证"
+        }
+      ],
+      "forbidden": [],
+      "heading": "运行可观测性",
+      "horizontalOverflow": false,
+      "mainTextLength": 1070,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/observability"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": "page",
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "运行可观测性 · AOS",
+      "url": "http://127.0.0.1:5173/aip/observability",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "19-memory-governance",
+      "route": "/aip/memory-governance",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "知识候选（0）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "正式记忆（0）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "数字同事记忆"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "知识检索"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "知识管道（0）"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "冷启动与检索"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新权威状态"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "活知识 Wiki →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看知识生成管道"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "进入评测与复盘"
+        }
+      ],
+      "forbidden": [],
+      "heading": "记忆与知识治理",
+      "horizontalOverflow": false,
+      "mainTextLength": 274,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/memory-governance"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": "page",
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "记忆与知识治理 · AOS",
+      "url": "http://127.0.0.1:5173/aip/memory-governance",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "20-model-catalog",
+      "route": "/aip/model-catalog",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "DIV",
+          "text": "供应商配置 模型供应商 凭证管理 进入 →"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "DIV",
+          "text": "路由策略 模型路由 流量策略 · 熔断 进入 →"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "DIV",
+          "text": "模型目录 · 当前 模型目录 可发现 → 注册"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "DIV",
+          "text": "智能体应用 智能体调用 选模型 → 推理"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "目录浏览 (3)"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "平台设置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "模型启用"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "已注册 (3)"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "catalog-search"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "filter-provider"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "filter-capability"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "filter-price"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "将 Agnes 2.5 Flash（文本） 加入模型对比"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看运行关系"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "将 Agnes Image 2.1 Flash 加入模型对比"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看运行关系"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "将 Agnes Video v2.0 加入模型对比"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "查看运行关系"
+        }
+      ],
+      "forbidden": [],
+      "heading": "模型目录",
+      "horizontalOverflow": false,
+      "mainTextLength": 706,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/model-catalog"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": "page",
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "模型目录 · AOS",
+      "url": "http://127.0.0.1:5173/aip/model-catalog",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "21-model-providers",
+      "route": "/aip/model-providers",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "插件工作室"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "适配器管理"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "路由策略 →"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "SELECT",
+          "text": "Agnes（环境）· agnes-2.5-flash Agnes Image（内网）（插件就绪）· agnes-image-2.1-flash Agnes Text（内网）（插件就绪）· agnes-"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "保存为默认"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "管理凭据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "管理凭据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "管理凭据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "取消插件就绪"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "管理凭据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "取消插件就绪"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "管理凭据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "启用插件就绪"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "管理凭据"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "启用插件就绪"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "▾ 可安装插件 38 / 共 42 · DeepSeek 必选 · 文本/图片/视频"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "安装并配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "详情"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "插件工作室"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "模型路由"
+        }
+      ],
+      "forbidden": [],
+      "heading": "模型供应商",
+      "horizontalOverflow": false,
+      "mainTextLength": 2619,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/model-providers"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": "page",
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "模型供应商 · AOS",
+      "url": "http://127.0.0.1:5173/aip/model-providers",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "22-model-router",
+      "route": "/aip/model-router",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "大模型接入(插件)"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "工具面板 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "预热与试聊 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "提交评测与审批 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "校验当前草稿"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "route-qyh-image-dev route-qyh-text-dev route-qyh-video-dev"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "摘要 / 分类-primary"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "摘要 / 分类-fallback"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "摘要 / 分类-egress"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "业务问答 + Wiki-primary"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "业务问答 + Wiki-fallback"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "业务问答 + Wiki-egress"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "Logic 长上下文 (>32k)-primary"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "Logic 长上下文 (>32k)-fallback"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "Logic 长上下文 (>32k)-egress"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "Chatbot 日常对话-primary"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "Chatbot 日常对话-fallback"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "Chatbot 日常对话-egress"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "含 PII 字段-primary"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "含 PII 字段-fallback"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "含 PII 字段-egress"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "Provider 不可用-degrade"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "Provider 不可用-egress"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "保存配置草稿"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "熔断演练"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "导出审计快照"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "权重分配"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "熔断器配置"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "故障回退链"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "路由测试"
+        }
+      ],
+      "forbidden": [],
+      "heading": "模型路由策略",
+      "horizontalOverflow": false,
+      "mainTextLength": 2039,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/model-router"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": "page",
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "模型路由策略 · AOS",
+      "url": "http://127.0.0.1:5173/aip/model-router",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "23-capacity",
+      "route": "/aip/capacity",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "用量仪表盘"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "速率限制"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "预留容量"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "今日"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "近 7 天"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "近 30 天"
+        }
+      ],
+      "forbidden": [],
+      "heading": "容量管理",
+      "horizontalOverflow": false,
+      "mainTextLength": 606,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/capacity"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": "page",
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "容量管理 · AOS",
+      "url": "http://127.0.0.1:5173/aip/capacity",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "24-model-runtime",
+      "route": "/aip/model-runtime",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新权威快照"
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "当前链路不可试聊"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "当前链路不可试聊"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": true,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "当前链路不可试聊"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "A",
+          "text": "联系责任方 →"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "刷新模型运行状态"
+        }
+      ],
+      "forbidden": [],
+      "heading": "模型运行就绪",
+      "horizontalOverflow": false,
+      "mainTextLength": 3869,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/model-runtime"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": "page",
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": null,
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "模型运行就绪 · AOS",
+      "url": "http://127.0.0.1:5173/aip/model-runtime",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    },
+    {
+      "id": "25-doc-intelligence",
+      "route": "/aip/doc-intelligence",
+      "controls": [
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "分类"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "总结"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "翻译"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "情感"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "实体提取"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "空模板"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "管道试运行"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "BUTTON",
+          "text": "新建合同模板"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "INPUT",
+          "text": "业务来源"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "业务文档类型"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "敏感级别"
+        },
+        {
+          "disabled": false,
+          "role": "",
+          "tag": "SELECT",
+          "text": "保留策略"
+        },
+        {
+          "disabled": false,
+          "role": "button",
+          "tag": "DIV",
+          "text": "选择待导入文档"
+        }
+      ],
+      "forbidden": [],
+      "heading": "文档智能",
+      "horizontalOverflow": false,
+      "mainTextLength": 416,
+      "navAipCount": 25,
+      "navCurrent": [
+        "/aip/doc-intelligence"
+      ],
+      "navLinks": [
+        {
+          "current": null,
+          "href": "/aip/assist",
+          "text": "任务协作助手"
+        },
+        {
+          "current": null,
+          "href": "/aip/studio",
+          "text": "智能体配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/analyst",
+          "text": "AIP 分析师"
+        },
+        {
+          "current": null,
+          "href": "/aip/logic",
+          "text": "业务逻辑编排"
+        },
+        {
+          "current": null,
+          "href": "/aip/tools",
+          "text": "智能体工具配置"
+        },
+        {
+          "current": null,
+          "href": "/aip/maturity",
+          "text": "成熟度楼梯"
+        },
+        {
+          "current": null,
+          "href": "/aip/production-contracts",
+          "text": "上线执行审批"
+        },
+        {
+          "current": null,
+          "href": "/aip/capabilities",
+          "text": "智能体插件"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-registry",
+          "text": "智能体目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-marketplace",
+          "text": "智能体市场"
+        },
+        {
+          "current": null,
+          "href": "/aip/agents",
+          "text": "智能体列表"
+        },
+        {
+          "current": null,
+          "href": "/aip/skill-publish",
+          "text": "技能发布"
+        },
+        {
+          "current": null,
+          "href": "/aip/agent-import",
+          "text": "智能体导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/capability-import",
+          "text": "能力导入"
+        },
+        {
+          "current": null,
+          "href": "/aip/evals",
+          "text": "评测门控"
+        },
+        {
+          "current": null,
+          "href": "/aip/drafts",
+          "text": "草稿审批台"
+        },
+        {
+          "current": null,
+          "href": "/aip/lineage",
+          "text": "决策谱系"
+        },
+        {
+          "current": null,
+          "href": "/aip/observability",
+          "text": "可观测性"
+        },
+        {
+          "current": null,
+          "href": "/aip/memory-governance",
+          "text": "记忆与知识治理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-catalog",
+          "text": "模型目录"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-providers",
+          "text": "模型供应商"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-router",
+          "text": "模型路由"
+        },
+        {
+          "current": null,
+          "href": "/aip/capacity",
+          "text": "容量管理"
+        },
+        {
+          "current": null,
+          "href": "/aip/model-runtime",
+          "text": "运行就绪"
+        },
+        {
+          "current": "page",
+          "href": "/aip/doc-intelligence",
+          "text": "文档智能"
+        }
+      ],
+      "title": "文档智能 · AOS",
+      "url": "http://127.0.0.1:5173/aip/doc-intelligence",
+      "mainBottomVisible": true,
+      "sideBottomVisible": true
+    }
+  ]
+}

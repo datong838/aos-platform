@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-09-02T06:14:00+08:00",
+  "mode": "read-only-http",
+  "apiHealth": {
+    "path": "/v1/health",
+    "status": 200,
+    "body": {"status": "ok"}
+  },
+  "positiveTenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "responses": [
+      {"path": "/v1/aip/agent-registry", "status": 200, "returnedTenant": {"orgId": "org-org", "projectId": "dev-project"}, "itemCount": 6},
+      {"path": "/v1/aip/capability-catalog", "status": 200, "returnedTenant": {"orgId": "org-org", "projectId": "dev-project"}, "itemCount": 10},
+      {"path": "/v1/aip/analyst/query-templates", "status": 200, "returnedTenant": {"orgId": "org-org", "projectId": "dev-project"}, "itemCount": 6},
+      {"path": "/v1/aip/model-runtime/overview", "status": 200, "returnedTenant": {"orgId": "org-org", "projectId": "dev-project"}, "providerCount": 3, "routeCount": 3, "modelCount": 3}
+    ]
+  },
+  "isolationCanary": {
+    "orgId": "dev-org",
+    "projectId": "dev-project",
+    "responses": [
+      {"path": "/v1/aip/agent-registry", "status": 200, "returnedTenant": {"orgId": "dev-org", "projectId": "dev-project"}, "itemCount": 6},
+      {"path": "/v1/aip/capability-catalog", "status": 200, "returnedTenant": {"orgId": "dev-org", "projectId": "dev-project"}, "itemCount": 10},
+      {"path": "/v1/aip/analyst/query-templates", "status": 200, "returnedTenant": {"orgId": "dev-org", "projectId": "dev-project"}, "itemCount": 6},
+      {"path": "/v1/aip/model-runtime/overview", "status": 200, "returnedTenant": {"orgId": "dev-org", "projectId": "dev-project"}, "providerCount": 0, "routeCount": 0, "modelCount": 0}
+    ]
+  },
+  "assertions": {
+    "responseTenantMatchesRequest": true,
+    "realTenantModelRuntimeDoesNotLeakToCanary": true,
+    "externalSideEffectCount": 0,
+    "businessMutationCount": 0
+  },
+  "notes": [
+    "数字同事、能力目录和分析模板是租户投影的公共产品定义；隔离判定依赖响应 tenant 回显与租户业务运行数据，不以公共定义条目数必须为零作为条件。",
+    "本探针只做 GET，不执行 Provider、发布、安装、导入、业务写入或外部动作。"
+  ]
+}
