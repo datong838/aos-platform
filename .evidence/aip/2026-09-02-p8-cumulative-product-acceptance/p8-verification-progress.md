@@ -51,11 +51,18 @@
 
 证据：`p8-viewport-accessibility.json`、`p8-safe-interactions-final.json`、`p8-real-browser-scenarios.json`。
 
-## 正在闭合
-
 ### P8F · 交付闭环
 
-- P8A～P8E 已闭合；正在执行差异复核、清单封板、Delivery Receipt、安全提交、authority CAS、memory sync/validate/gate 与 Prime exact readback。
+- 安全提交：`d957745b`（25 页清单/合同/初始浏览器证据）与 `8a6c551c`（多视口、语义、真实场景与最终交互证据）。
+- Delivery Receipt：`AIP-P8-CUMULATIVE-PRODUCT-ACCEPTANCE.json`。
+- authority CAS：`AOS-000447 → AOS-000448`。
+- memory status：强一致投影（01、06、project、WorkBuddy、Prime 三项）全部 `CURRENT`；Codex note 为 eventual `PENDING_ASYNC`。
+- memory validate：`GREEN`；memory gate：`can_change_state=true`、`GREEN_WITH_WARNINGS`。
+- Prime exact readback：`aos-current-delivery` version 458，`project_revision=AOS-000448`，P8 completed 与 `132_OF_132` delivery status 一致。
+
+## 最终结论
+
+P8A～P8F 以及总控 AIP-P0～P8 共 132/132 项在本次范围内闭合。该结论是代码、浏览器、合同追溯与双租户产品验收 GREEN，不授权 Provider、密钥解析、真实客户触达、业务发布/改价/发送、迁移、路由切换或 Release。
 
 ## 一致性与安全复审
 
