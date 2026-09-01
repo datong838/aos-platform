@@ -1,6 +1,6 @@
 # AIP-P8 累计产品验收进度证据
 
-> cutoff：2026-09-02T06:30:00+08:00
+> cutoff：2026-09-02T06:52:00+08:00
 > branch：`m1`
 > baseline：`6b843d87`
 > Task：`AIP-P8-CUMULATIVE-PRODUCT-ACCEPTANCE`
@@ -37,21 +37,28 @@
 ### P8D · 累计质量门
 
 - Web 全量：270 files / 2410 tests GREEN。第一次默认高并发执行出现 11 个 UI 时序/超时失败；将 worker 限制为 4 后同一 2410 项全部通过，失败集合单跑 20/20 通过，判定为测试资源竞争而非产品回归。
-- API AIP 核心累计：106 passed，覆盖 Assist、Analyst、六数字同事/能力、文档智能、模型运行权威。
+- API AIP 核心累计现场重跑：114 passed，覆盖 Assist、Analyst、六数字同事/能力、文档智能、模型运行权威。
 - TypeScript `tsc --noEmit`：GREEN。
 - Vite production build：GREEN（367 modules）。
 - `git diff --check`：GREEN。
 
-## 正在闭合
-
 ### P8E · 多视口、缩放、键盘与可访问性
 
-- 本 episode 已完成 1280×720 的 25 页逐页浏览、滚动、折叠恢复和安全交互证据。
-- 在继续 1440/1920、200% 文本和键盘焦点复验时，Codex 内置浏览器运行时返回 `Browser is not available: iab`；已按 Browser skill 重试，未改用 Chrome/CDP/普通 Playwright 冒充内置浏览器证据。
-- P8E 未封板，P8F 不提前写 Delivery Receipt、不推进 authority 完成态。
+- Codex 内置浏览器完成 1280×720、1440×900、1920×1080 三档 25/25 页面稳定态复验。
+- 200% 页面缩放在分析师页实测通过，主区与侧栏可见、无文档级横溢、无超大固定浮层。
+- 25 页累计审计 3317 个可交互控件；无名称控件 0、错误 roving tabindex 0、主区/侧栏缺失 0、横向溢出 0。
+- 两类导入预检、谱系/可观测可信空态、模型目录/运行就绪和文档模板版本交互均补充实测。
+
+证据：`p8-viewport-accessibility.json`、`p8-safe-interactions-final.json`、`p8-real-browser-scenarios.json`。
+
+## 正在闭合
+
+### P8F · 交付闭环
+
+- P8A～P8E 已闭合；正在执行差异复核、清单封板、Delivery Receipt、安全提交、authority CAS、memory sync/validate/gate 与 Prime exact readback。
 
 ## 一致性与安全复审
 
 1. 本波产品代码仅修改诚实交互清单及其覆盖测试；未改变业务数据、租户、安全、迁移、Provider、发布或外部副作用逻辑。
 2. P6D 验证文档、`ModelRuntimePage.test.tsx`、`plugins/ops` 和历史未跟踪证据保持原状且不进入本提交。
-3. 当前可以安全提交 P8A～P8D 进度证据；只有 P8E 浏览器证据闭合后才能执行 P8F Delivery Receipt、authority CAS 和 Prime 完成态回读。
+3. P8E 已由本 episode 的内置浏览器证据闭合；P8F 仍必须按 Receipt → 安全提交 → authority CAS → memory/Prime 回读顺序完成，不能用本文件提前外推完成态。

@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-09-02T06:46:00+08:00",
+  "browser": "Codex in-app Browser",
+  "routeCount": 25,
+  "viewports": [
+    {"width": 1280, "height": 720, "result": "25/25 GREEN"},
+    {"width": 1440, "height": 900, "result": "25/25 GREEN after 900ms settled-state retry"},
+    {"width": 1920, "height": 1080, "result": "25/25 GREEN after 900ms settled-state retry"}
+  ],
+  "zoom": {
+    "route": "/aip/analyst",
+    "scale": 2,
+    "result": "GREEN",
+    "assertions": ["main visible", "sidebar visible", "no document-level horizontal overflow", "no oversized fixed overlay"]
+  },
+  "semanticAudit": {
+    "interactiveControls": 3317,
+    "namelessControls": 0,
+    "invalidRovingTabs": 0,
+    "missingMain": 0,
+    "missingSidebar": 0,
+    "horizontalOverflowRoutes": 0,
+    "result": "25/25 GREEN"
+  },
+  "notes": [
+    "控件名称按 aria-label、title、关联 label、可见文本与 placeholder 顺序判定。",
+    "未选中 role=tab 使用 tabindex=-1 属于正确 roving tabindex，不记为不可键盘访问。",
+    "1440 与 1920 首次极短等待的单页加载态经 900ms 稳定态复验通过，不当作产品缺陷。"
+  ]
+}

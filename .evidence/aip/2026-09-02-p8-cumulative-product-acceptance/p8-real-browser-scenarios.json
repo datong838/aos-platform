@@ -1,0 +1,58 @@
+{
+  "checkedAt": "2026-09-02T06:52:00+08:00",
+  "browser": "Codex in-app Browser",
+  "positiveTenant": "org-org/dev-project",
+  "negativeTenant": "dev-org/dev-project",
+  "scenarios": [
+    {
+      "id": "analyst-real-query",
+      "route": "/aip/analyst",
+      "result": "GREEN",
+      "evidence": "运行真实查询返回 50 行当前租户订单事实；表格、图表、地图、原始结果均可切换，地图在无坐标时明确说明不适用。"
+    },
+    {
+      "id": "assist-real-run",
+      "route": "/aip/assist",
+      "result": "GREEN",
+      "evidence": "选择数据参谋权威运行后展示 TaskRun、exact lineage 深链、4 条证据和 4 条控制回执；输入框可编辑，未发送消息或调用 Provider。"
+    },
+    {
+      "id": "negative-tenant-isolation",
+      "route": "/aip/analyst",
+      "result": "GREEN",
+      "evidence": "切换 dev-org/dev-project 后仅见该租户 3 类对象，无 org-org 探索资产，查询因缺 Order/Payment 权威而失败关闭；随后恢复 org-org/dev-project。"
+    },
+    {
+      "id": "document-template-versioning",
+      "route": "/aip/doc-intelligence",
+      "result": "GREEN_WITH_DURABILITY_BOUNDARY",
+      "evidence": "创建合同字段模板、保存新版本、比较并回滚到 v1，页面回读 v3 和回滚审计说明；当前模板 authority 为进程运行时，API 重启后不保证持久，未绕过迁移门。"
+    },
+    {
+      "id": "six-colleague-contributions",
+      "route": "/aip/agent-registry",
+      "result": "GREEN",
+      "evidence": "六位数字同事均展示原子业务输入、版本化 Logic、输出和工作台贡献；6 条贡献深链全部实际打开并保留 colleague/focus 上下文。"
+    },
+    {
+      "id": "governed-import-preflight",
+      "routes": ["/aip/agent-import", "/aip/capability-import"],
+      "result": "GREEN",
+      "evidence": "空表单点击生成预检证据后明确要求来源、精确版本、签名、许可证、SBOM、目标、名称与源码快照；未创建导入作业。"
+    },
+    {
+      "id": "lineage-observability-honesty",
+      "routes": ["/aip/lineage", "/aip/observability"],
+      "result": "GREEN",
+      "evidence": "真实 TaskRun 无服务端 exact lineageId 时显示暂无权威谱系事件/请输入真实谱系标识；没有用 traceId 或前端参数伪造事件、Span 或 UsageReceipt。"
+    }
+  ],
+  "sideEffects": {
+    "providerCalls": 0,
+    "secretResolution": 0,
+    "realCustomerContact": 0,
+    "businessPublishRepriceSend": 0,
+    "migration": 0,
+    "release": 0
+  }
+}

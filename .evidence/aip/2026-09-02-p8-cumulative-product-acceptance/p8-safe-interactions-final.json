@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-09-02T06:45:00+08:00",
+  "routeCount": 25,
+  "result": "GREEN",
+  "coverage": {
+    "sidebarCollapseRestore": "25/25",
+    "mainAndSidebarFullScroll": "25/25",
+    "liveSidebarLinks": "25/25",
+    "uniqueCurrentRoute": "25/25",
+    "forbiddenPlaceholderCopy": 0,
+    "documentHorizontalOverflow": 0
+  },
+  "sampledControls": [
+    "逻辑编排角色页签",
+    "分析师专注模式与结果视图",
+    "公共生产合同刷新",
+    "智能体市场详情",
+    "评测门控目标/历史/权威",
+    "草稿审批结束态",
+    "记忆治理三页签",
+    "模型供应商详情",
+    "模型路由四页签",
+    "容量管理周期视图",
+    "两类导入预检",
+    "文档模板创建/版本比较/回滚"
+  ],
+  "blockedSideEffectControls": [
+    "Provider 调用",
+    "真实发布/发送/改价",
+    "密钥解析",
+    "正式导入应用",
+    "Release"
+  ]
+}
