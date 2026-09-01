@@ -50,6 +50,25 @@ def test_quota_daily_limit_must_cover_hourly_limit() -> None:
         QuotaPolicyRevisionCreate.model_validate(body)
 
 
+def test_quota_rpm_and_tpm_limits_must_be_configured_together() -> None:
+    rpm_only = quota_body()
+    rpm_only["rpmLimit"] = 120
+    with pytest.raises(ValidationError, match="configured together"):
+        QuotaPolicyRevisionCreate.model_validate(rpm_only)
+
+    tpm_only = quota_body()
+    tpm_only["tpmLimit"] = 240_000
+    with pytest.raises(ValidationError, match="configured together"):
+        QuotaPolicyRevisionCreate.model_validate(tpm_only)
+
+    paired = quota_body()
+    paired.update({"rpmLimit": 120, "tpmLimit": 240_000})
+    quota = QuotaPolicyRevisionCreate.model_validate(paired)
+
+    assert quota.rpm_limit == 120
+    assert quota.tpm_limit == 240_000
+
+
 @pytest.mark.parametrize(("field", "value"), [
     ("currency", "USD"), ("hardStop", False), ("unknownUsageBehavior", "reconcile"),
     ("unknownPriceBehavior", "reconcile"),

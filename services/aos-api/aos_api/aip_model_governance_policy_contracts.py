@@ -48,6 +48,8 @@ class ModelGovernancePolicyCreate(AipContractModel):
 
 
 class QuotaPolicyRevisionCreate(ModelGovernancePolicyCreate):
+    rpm_limit: int | None = Field(default=None, ge=1, le=10_000)
+    tpm_limit: int | None = Field(default=None, ge=1, le=10_000_000)
     max_concurrency: int = Field(ge=1, le=2)
     max_input_tokens: int = Field(ge=1, le=8000)
     max_output_tokens: int = Field(ge=1, le=2000)
@@ -62,6 +64,8 @@ class QuotaPolicyRevisionCreate(ModelGovernancePolicyCreate):
     def _daily_covers_hourly(self) -> "QuotaPolicyRevisionCreate":
         if self.daily_request_limit < self.hourly_request_limit:
             raise ValueError("dailyRequestLimit must be at least hourlyRequestLimit")
+        if (self.rpm_limit is None) != (self.tpm_limit is None):
+            raise ValueError("rpmLimit and tpmLimit must be configured together")
         return self
 
 

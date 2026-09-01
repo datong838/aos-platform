@@ -9,6 +9,7 @@ from aos_api.aip_budget_store import AipBudgetAuthorityStore
 from aos_api.aip_model_governance_policy_contracts import BudgetPolicyRevisionCreate, QuotaPolicyRevisionCreate
 from aos_api.aip_model_governance_policy_store import (
     AipModelGovernancePolicyStore, ModelGovernancePolicyDependencyBlocked,
+    ModelGovernancePolicyConflict,
     ModelGovernancePolicyIdempotencyConflict, ModelGovernancePolicyNotFound,
 )
 from aos_api.tenant_scope import TenantScope
@@ -19,12 +20,13 @@ NOW = datetime.now(UTC)
 SUFFIX = uuid.uuid4().hex
 
 
-def quota(revision=1, daily=100, *, name="primary", lifecycle="active", start=None, until=None):
+def quota(revision=1, daily=100, *, name="primary", lifecycle="active", start=None, until=None, rpm=None, tpm=None):
     return QuotaPolicyRevisionCreate(policyId=f"test:quota:{name}:{SUFFIX}", revision=revision, environment="development",
         effectiveFrom=start or NOW - timedelta(hours=1), effectiveUntil=until or NOW + timedelta(days=30), owner="test",
         approvalRef="approval:test", lifecycle=lifecycle, maxConcurrency=2, maxInputTokens=8000,
         maxOutputTokens=2000, hourlyRequestLimit=50, dailyRequestLimit=daily,
-        reservationLeaseSeconds=60, overflowBehavior="queue", allowPublicProviderFallback=False, allowAutoScale=False)
+        rpmLimit=rpm, tpmLimit=tpm, reservationLeaseSeconds=60, overflowBehavior="queue",
+        allowPublicProviderFallback=False, allowAutoScale=False)
 
 
 def publish_budget_revision():
@@ -56,6 +58,36 @@ def test_store_cas_replay_exact_read_and_tenant_isolation() -> None:
     with pytest.raises(ModelGovernancePolicyNotFound):
         store.get_quota(CANARY, first.policy_id)
     store.require_exact_active(SCOPE, ref("QuotaPolicyRevision", first), now=NOW)
+
+
+def test_quota_head_exposes_versioned_rpm_tpm_without_rewriting_old_revision() -> None:
+    store = AipModelGovernancePolicyStore()
+    first = store.publish_quota(
+        SCOPE, "test", f"quota-head-v1:{SUFFIX}", quota(name="head"), expected_version=0
+    )
+    assert first.rpm_limit is None and first.tpm_limit is None
+    current, version = store.get_quota_head(SCOPE, first.policy_id)
+    assert current.revision == 1 and version == 1
+
+    second = store.publish_quota(
+        SCOPE,
+        "test",
+        f"quota-head-v2:{SUFFIX}",
+        quota(name="head", revision=2, rpm=40, tpm=40_000),
+        expected_version=1,
+    )
+    head, version = store.get_quota_head(SCOPE, first.policy_id)
+    assert (head.revision, head.rpm_limit, head.tpm_limit, version) == (2, 40, 40_000, 2)
+    assert store.get_quota(SCOPE, first.policy_id, 1).rpm_limit is None
+    assert store.get_quota(SCOPE, first.policy_id, 2) == second
+    with pytest.raises(ModelGovernancePolicyConflict):
+        store.publish_quota(
+            SCOPE,
+            "test",
+            f"quota-head-v3-stale:{SUFFIX}",
+            quota(name="head", revision=3, rpm=45, tpm=45_000),
+            expected_version=1,
+        )
 
 
 def test_exact_policy_gate_blocks_missing_drift_inactive_and_expired() -> None:

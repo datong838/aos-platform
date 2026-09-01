@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet } from "../../api/client";
-import { aipModelRuntime, type ModelRuntimeCostOverview, type RuntimeCapacityPoolSummary } from "../../api/aipModelRuntime";
+import { apiPost } from "../../api/client";
+import { aipModelRuntime, type ModelRuntimeCostOverview, type RuntimeCapacityPoolSummary, type RuntimeQuotaAuthoritySummary, type RuntimeUsageAttributionDimension } from "../../api/aipModelRuntime";
 import { PageChrome } from "../../components/PageChrome";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -264,6 +264,41 @@ export function authoritativeCostLabel(cost: ModelRuntimeCostOverview | null): s
   return totals.map(([currency, amount]) => `${currency} ${amount.toFixed(2)}`).join(" · ");
 }
 
+export function attributionDimensionLabel(dimension: RuntimeUsageAttributionDimension["dimension"]): string {
+  return ({ tenant: "租户总览", task: "经营任务", agent: "数字同事", logic: "业务逻辑", model: "模型" } as const)[dimension];
+}
+
+export function nextQuotaRevisionBody(quota: RuntimeQuotaAuthoritySummary, rpmLimit: number, tpmLimit: number) {
+  if (!quota.headRef || !quota.headVersion || !quota.owner || !quota.approvalRef || !quota.lifecycle
+    || !quota.effectiveFrom || !quota.effectiveUntil || !quota.maxConcurrency || !quota.maxInputTokens
+    || !quota.maxOutputTokens || !quota.hourlyRequestLimit || !quota.dailyRequestLimit
+    || !quota.reservationLeaseSeconds || !quota.overflowBehavior
+    || quota.allowPublicProviderFallback === null || quota.allowAutoScale === null) {
+    throw new Error("当前配额版本缺少创建下一版本所需的精确字段");
+  }
+  return {
+    policyId: quota.headRef.assetId,
+    revision: quota.headRef.revision + 1,
+    environment: "development",
+    effectiveFrom: quota.effectiveFrom,
+    effectiveUntil: quota.effectiveUntil,
+    owner: quota.owner,
+    approvalRef: quota.approvalRef,
+    lifecycle: quota.lifecycle,
+    rpmLimit,
+    tpmLimit,
+    maxConcurrency: quota.maxConcurrency,
+    maxInputTokens: quota.maxInputTokens,
+    maxOutputTokens: quota.maxOutputTokens,
+    hourlyRequestLimit: quota.hourlyRequestLimit,
+    dailyRequestLimit: quota.dailyRequestLimit,
+    reservationLeaseSeconds: quota.reservationLeaseSeconds,
+    overflowBehavior: quota.overflowBehavior,
+    allowPublicProviderFallback: quota.allowPublicProviderFallback,
+    allowAutoScale: quota.allowAutoScale,
+  };
+}
+
 // ── Component ──────────────────────────────────────────────────
 
 export function CapacityPage() {
@@ -280,35 +315,36 @@ export function CapacityPage() {
   const [runtimeCost, setRuntimeCost] = useState<ModelRuntimeCostOverview | null>(null);
   const [runtimeLimits, setRuntimeLimits] = useState<RateLimit[]>([]);
   const [runtimePools, setRuntimePools] = useState<RuntimeCapacityPoolSummary[]>([]);
+  const [quotaRpmDraft, setQuotaRpmDraft] = useState("");
+  const [quotaTpmDraft, setQuotaTpmDraft] = useState("");
+  const [quotaSaveState, setQuotaSaveState] = useState<string | null>(null);
+  const [quotaSaving, setQuotaSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [projectRes, usersRes, runtime, cost] = await Promise.all([
-          apiGet<ApiLimitItem>("/v1/aip/capacity/project-limits"),
-          apiGet<{ items?: ApiLimitItem[] } | ApiLimitItem>("/v1/aip/capacity/user-limits").catch(() => ({ items: [] as ApiLimitItem[] })),
+        const [runtime, cost] = await Promise.all([
           aipModelRuntime.overview(),
           aipModelRuntime.costOverview(),
         ]);
         if (cancelled) return;
         const buckets = usageBucketsFromAuthority(cost);
-        const pl: ProjectLimit = {
-          rpmLimit: Number(projectRes.rpmLimit ?? 60),
-          tpmLimit: Number(projectRes.tpmLimit ?? 60000),
-          scopeKey: projectRes.scopeKey,
-        };
-        const userItems = Array.isArray((usersRes as { items?: ApiLimitItem[] }).items)
-          ? (usersRes as { items: ApiLimitItem[] }).items
-          : [];
-        const todayTokens = buckets.find((b) => b.period === "today")?.totalTokens ?? 0;
+        const quota = cost.quotas.find((item) => item.rpmLimit !== null && item.tpmLimit !== null);
+        const pl: ProjectLimit | null = quota ? {
+          rpmLimit: quota.rpmLimit!,
+          tpmLimit: quota.tpmLimit!,
+          scopeKey: quota.headRef?.assetId || quota.quotaPolicyRef.assetId,
+        } : null;
         setUsageBuckets(buckets);
         setProjectLimit(pl);
-        setQuotaUsage(buckets.find((b) => b.period === "today")?.observed ? projectQuotaFromLimit(pl, Math.min(todayTokens, pl.tpmLimit)) : []);
-        setUserLimits(userItems.map(mapApiLimitToUserLimit));
+        setQuotaUsage([]);
+        setUserLimits([]);
         setRuntimeLimits(rateLimitsFromRuntimePools(runtime.capacityPools));
         setRuntimePools(runtime.capacityPools);
         setRuntimeCost(cost);
+        setQuotaRpmDraft(quota?.rpmLimit ? String(quota.rpmLimit) : "");
+        setQuotaTpmDraft(quota?.tpmLimit ? String(quota.tpmLimit) : "");
         setSourceMode("live");
         setLoadError(null);
       } catch (e) {
@@ -333,6 +369,10 @@ export function CapacityPage() {
     () => usageBuckets.find((b) => b.period === usagePeriod) || usageBuckets[0],
     [usagePeriod, usageBuckets],
   );
+  const currentAttributions = useMemo(
+    () => runtimeCost?.usage.periods.find((item) => item.period === usagePeriod)?.attributionDimensions ?? [],
+    [runtimeCost, usagePeriod],
+  );
   const filteredLimits = useMemo(
     () => filterRateLimits(runtimeLimits, providerFilter),
     [providerFilter, runtimeLimits],
@@ -352,6 +392,38 @@ export function CapacityPage() {
 
   const todayBucket = usageBuckets.find((b) => b.period === "today");
   const warnQuotaCount = quotaUsage.filter((q) => usageTone(usagePercent(q.used, q.quota)) !== "ok").length;
+  const editableQuota = runtimeCost?.quotas.find((item) => item.headRef && item.headVersion) ?? null;
+
+  async function saveQuotaRevision() {
+    if (!editableQuota) return;
+    const rpm = Number(quotaRpmDraft);
+    const tpm = Number(quotaTpmDraft);
+    if (!Number.isInteger(rpm) || rpm < 1 || !Number.isInteger(tpm) || tpm < 1) {
+      setQuotaSaveState("RPM 与 TPM 必须是正整数");
+      return;
+    }
+    setQuotaSaving(true);
+    setQuotaSaveState(null);
+    try {
+      const body = nextQuotaRevisionBody(editableQuota, rpm, tpm);
+      await apiPost("/v1/aip/model-governance-policies/quotas", body, {
+        "Idempotency-Key": `capacity-quota-${editableQuota.headRef!.assetId}-${body.revision}-${rpm}-${tpm}`,
+        "If-Match": String(editableQuota.headVersion),
+      });
+      const refreshed = await aipModelRuntime.costOverview();
+      const reread = refreshed.quotas.find((item) => item.headRef?.assetId === editableQuota.headRef?.assetId);
+      if (!reread || reread.headRef?.revision !== body.revision || reread.rpmLimit !== rpm || reread.tpmLimit !== tpm) {
+        throw new Error("新版本已提交，但精确重读不一致");
+      }
+      setRuntimeCost(refreshed);
+      setProjectLimit({ rpmLimit: rpm, tpmLimit: tpm, scopeKey: reread.headRef.assetId });
+      setQuotaSaveState(`配额版本 ${body.revision} 已保存并精确重读；运行绑定仍保持 ${reread.quotaPolicyRef.assetId}@${reread.quotaPolicyRef.revision}`);
+    } catch (error) {
+      setQuotaSaveState(`保存失败：${(error as Error).message}`);
+    } finally {
+      setQuotaSaving(false);
+    }
+  }
 
   return (
     <PageChrome title="容量管理" lede="查看用量、项目与用户限速及预留容量；数据来自容量权威接口，读取失败时不回落到本地演示数据">
@@ -407,13 +479,12 @@ export function CapacityPage() {
                   padding: "12px 16px",
                   fontSize: 13,
                   fontWeight: tab === t.id ? 500 : 400,
-                  borderBottom: tab === t.id ? "2px solid var(--aos-indigo-600)" : "2px solid transparent",
                   color: tab === t.id ? "var(--aos-indigo-600)" : "var(--aos-text-secondary)",
                   background: "none",
-                  border: "none",
                   borderTop: "none",
                   borderLeft: "none",
                   borderRight: "none",
+                  borderBottom: tab === t.id ? "2px solid var(--aos-indigo-600)" : "2px solid transparent",
                   cursor: "pointer",
                 }}
               >
@@ -484,6 +555,35 @@ export function CapacityPage() {
               </div>
             </div>
 
+            <section data-testid="usage-attribution-dimensions" style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+                <h3 style={{ margin: 0, fontSize: 14 }}>用量归因</h3>
+                <span style={{ fontSize: 11, color: "var(--aos-faint)" }}>租户与任务来自权威范围/谱系；其余维度只认显式归因凭证</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 10 }}>
+                {currentAttributions.map((dimension) => (
+                  <article key={dimension.dimension} style={{ border: "1px solid var(--aos-border)", borderRadius: 2, padding: 12, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, color: "var(--aos-text-secondary)" }}>{attributionDimensionLabel(dimension.dimension)}</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, marginTop: 3 }}>{dimension.attributedReceiptCount}</div>
+                    <div style={{ fontSize: 11, color: dimension.missingReceiptCount ? "var(--aos-amber-600)" : "var(--aos-green-600)", marginTop: 3 }}>
+                      {dimension.missingReceiptCount ? `${dimension.missingReceiptCount} 条暂无归因凭证` : "本周期凭证已覆盖"}
+                    </div>
+                    {dimension.entries.slice(0, 2).map((entry, index) => (
+                      <details key={`${entry.subjectId}:${entry.subjectRevision}`} style={{ marginTop: 8, fontSize: 11 }}>
+                        <summary style={{ cursor: "pointer", color: "var(--aos-text)" }}>
+                          {dimension.dimension === "tenant" ? "栖月汇微商城" : `${attributionDimensionLabel(dimension.dimension)} ${index + 1}`} · {entry.receiptCount} 条
+                        </summary>
+                        <div style={{ color: "var(--aos-faint)", overflowWrap: "anywhere", marginTop: 4 }}>
+                          权威引用 {entry.subjectId}@{entry.subjectRevision}
+                        </div>
+                      </details>
+                    ))}
+                    {!dimension.entries.length && <div style={{ fontSize: 11, color: "var(--aos-faint)", marginTop: 8 }}>暂无可展示记录</div>}
+                  </article>
+                ))}
+              </div>
+            </section>
+
             {/* Quota progress bars */}
             <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, overflow: "hidden" }}>
               <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--aos-border)" }}>
@@ -547,8 +647,21 @@ export function CapacityPage() {
                     </div>
                   </div>
                 </div>
-                <div style={{ marginTop: 16 }}>
-                  <Link data-testid="manage-project-limit" to="/aip/model-router" style={{ display: "inline-flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: "var(--aos-indigo-600)", textDecoration: "none" }}>进入版本化运行策略 →</Link>
+                {editableQuota && (
+                  <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, alignItems: "end" }}>
+                    <label style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>RPM
+                      <input aria-label="quota-rpm" value={quotaRpmDraft} onChange={(event) => setQuotaRpmDraft(event.target.value)} inputMode="numeric" style={{ display: "block", width: "100%", boxSizing: "border-box", marginTop: 4, padding: "7px 8px", border: "1px solid var(--aos-border)" }} />
+                    </label>
+                    <label style={{ fontSize: 11, color: "var(--aos-text-secondary)" }}>TPM
+                      <input aria-label="quota-tpm" value={quotaTpmDraft} onChange={(event) => setQuotaTpmDraft(event.target.value)} inputMode="numeric" style={{ display: "block", width: "100%", boxSizing: "border-box", marginTop: 4, padding: "7px 8px", border: "1px solid var(--aos-border)" }} />
+                    </label>
+                    <button type="button" data-testid="save-quota-revision" disabled={quotaSaving} onClick={saveQuotaRevision} style={{ padding: "8px 12px" }}>{quotaSaving ? "保存中" : "保存新版本"}</button>
+                  </div>
+                )}
+                {quotaSaveState && <p role="status" style={{ margin: "10px 0 0", fontSize: 11, color: quotaSaveState.startsWith("保存失败") ? "var(--aos-red)" : "var(--aos-green-600)" }}>{quotaSaveState}</p>}
+                <div style={{ marginTop: 12, display: "flex", gap: 14, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 11, color: "var(--aos-faint)" }}>当前 head {editableQuota?.headRef ? `${editableQuota.headRef.assetId}@${editableQuota.headRef.revision}` : "缺少精确版本"}</span>
+                  <Link data-testid="manage-project-limit" to="/aip/model-router" style={{ display: "inline-flex", alignItems: "center", fontSize: 12, fontWeight: 500, color: "var(--aos-indigo-600)", textDecoration: "none" }}>查看运行绑定与路由 →</Link>
                 </div>
               </div>
 

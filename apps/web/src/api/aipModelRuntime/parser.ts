@@ -1,4 +1,4 @@
-import type { ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRouteRevision, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeReadiness, RuntimeResolution, RuntimeUsageAuthoritySummary } from "./contracts";
+import type { ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRouteRevision, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeQuotaAuthoritySummary, RuntimeReadiness, RuntimeResolution, RuntimeUsageAttributionDimension, RuntimeUsageAuthoritySummary } from "./contracts";
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }
 function array(value: unknown, label: string): unknown[] { if (!Array.isArray(value)) throw new Error(`${label} 必须是数组`); return value; }
@@ -129,6 +129,57 @@ function budgetAuthority(value: unknown, label: string): RuntimeBudgetAuthorityS
   };
 }
 
+function quotaAuthority(value: unknown, label: string): RuntimeQuotaAuthoritySummary {
+  const raw = object(value, label);
+  return {
+    quotaPolicyRef: ref(raw.quotaPolicyRef, `${label}.quotaPolicyRef`),
+    headRef: raw.headRef === null ? null : ref(raw.headRef, `${label}.headRef`),
+    headVersion: integerOrNull(raw.headVersion, `${label}.headVersion`, 1),
+    status: enumeration(raw.status, `${label}.status`, ["active", "inactive", "out_of_window", "drifted", "unknown"] as const),
+    lifecycle: raw.lifecycle === null ? null : enumeration(raw.lifecycle, `${label}.lifecycle`, ["draft", "blocked", "active", "suspended", "revoked", "expired"] as const),
+    owner: stringOrNull(raw.owner, `${label}.owner`),
+    approvalRef: stringOrNull(raw.approvalRef, `${label}.approvalRef`),
+    rpmLimit: integerOrNull(raw.rpmLimit, `${label}.rpmLimit`, 1),
+    tpmLimit: integerOrNull(raw.tpmLimit, `${label}.tpmLimit`, 1),
+    maxConcurrency: integerOrNull(raw.maxConcurrency, `${label}.maxConcurrency`, 1),
+    maxInputTokens: integerOrNull(raw.maxInputTokens, `${label}.maxInputTokens`, 1),
+    maxOutputTokens: integerOrNull(raw.maxOutputTokens, `${label}.maxOutputTokens`, 1),
+    hourlyRequestLimit: integerOrNull(raw.hourlyRequestLimit, `${label}.hourlyRequestLimit`, 1),
+    dailyRequestLimit: integerOrNull(raw.dailyRequestLimit, `${label}.dailyRequestLimit`, 1),
+    overflowBehavior: stringOrNull(raw.overflowBehavior, `${label}.overflowBehavior`),
+    reservationLeaseSeconds: integerOrNull(raw.reservationLeaseSeconds, `${label}.reservationLeaseSeconds`, 1),
+    allowPublicProviderFallback: booleanOrNull(raw.allowPublicProviderFallback, `${label}.allowPublicProviderFallback`),
+    allowAutoScale: booleanOrNull(raw.allowAutoScale, `${label}.allowAutoScale`),
+    effectiveFrom: isoOrNull(raw.effectiveFrom, `${label}.effectiveFrom`),
+    effectiveUntil: isoOrNull(raw.effectiveUntil, `${label}.effectiveUntil`),
+    blockerCodes: strings(raw.blockerCodes, `${label}.blockerCodes`),
+  };
+}
+
+function attributionDimension(value: unknown, label: string): RuntimeUsageAttributionDimension {
+  const raw = object(value, label);
+  return {
+    dimension: enumeration(raw.dimension, `${label}.dimension`, ["tenant", "task", "agent", "logic", "model"] as const),
+    source: enumeration(raw.source, `${label}.source`, ["tenant_scope", "lineage", "explicit"] as const),
+    attributedReceiptCount: integer(raw.attributedReceiptCount, `${label}.attributedReceiptCount`),
+    missingReceiptCount: integer(raw.missingReceiptCount, `${label}.missingReceiptCount`),
+    entries: array(raw.entries, `${label}.entries`).map((entryValue, index) => {
+      const entry = object(entryValue, `${label}.entries[${index}]`);
+      const quantityTotals = Object.fromEntries(Object.entries(object(entry.quantityTotals, `${label}.entries[${index}].quantityTotals`)).map(([key, amount]) => {
+        const parsed = numberOrNull(amount, `${label}.entries[${index}].quantityTotals.${key}`);
+        if (parsed === null) throw new Error(`${label}.entries[${index}].quantityTotals.${key} 不能为空`);
+        return [key, parsed];
+      }));
+      return {
+        subjectId: string(entry.subjectId, `${label}.entries[${index}].subjectId`),
+        subjectRevision: string(entry.subjectRevision, `${label}.entries[${index}].subjectRevision`),
+        receiptCount: integer(entry.receiptCount, `${label}.entries[${index}].receiptCount`),
+        quantityTotals,
+      };
+    }),
+  };
+}
+
 function usageAuthority(value: unknown, label: string): RuntimeUsageAuthoritySummary {
   const raw = object(value, label);
   const costTotals = Object.fromEntries(Object.entries(object(raw.costTotals, `${label}.costTotals`)).map(([currency, amount]) => {
@@ -165,6 +216,7 @@ function usageAuthority(value: unknown, label: string): RuntimeUsageAuthoritySum
         unknownCount: integer(periodRaw.unknownCount, `${label}.periods[${index}].unknownCount`),
         quantityTotals,
         providerCounts,
+        attributionDimensions: array(periodRaw.attributionDimensions, `${label}.periods[${index}].attributionDimensions`).map((dimension, dimensionIndex) => attributionDimension(dimension, `${label}.periods[${index}].attributionDimensions[${dimensionIndex}]`)),
       };
       if (period.measuredCount + period.estimatedCount + period.unknownCount !== period.receiptCount) throw new Error(`${label}.periods[${index}] 用量质量计数不一致`);
       return period;
@@ -181,6 +233,7 @@ export function parseModelRuntimeCostOverview(value: unknown): ModelRuntimeCostO
     tenant: tenant(raw.tenant, "tenant"),
     modelPrices: array(raw.modelPrices, "modelPrices").map((item, index) => priceAuthority(item, `modelPrices[${index}]`)),
     budgets: array(raw.budgets, "budgets").map((item, index) => budgetAuthority(item, `budgets[${index}]`)),
+    quotas: array(raw.quotas, "quotas").map((item, index) => quotaAuthority(item, `quotas[${index}]`)),
     usage: usageAuthority(raw.usage, "usage"),
     generatedAt: iso(raw.generatedAt, "generatedAt"),
   };

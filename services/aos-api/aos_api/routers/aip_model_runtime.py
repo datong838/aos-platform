@@ -13,7 +13,9 @@ from aos_api.aip_model_runtime_contracts import (
     ModelRouteRevision, ModelRuntimeCostOverview, ModelRuntimeLifecycle,
     ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision,
     RegisteredModelRevision, RuntimeBudgetAuthoritySummary,
-    RuntimePolicyRevision, RuntimeUsageAuthoritySummary, RuntimeUsagePeriodSummary,
+    RuntimePolicyRevision, RuntimeQuotaAuthoritySummary,
+    RuntimeUsageAttributionDimension, RuntimeUsageAttributionEntry,
+    RuntimeUsageAuthoritySummary, RuntimeUsagePeriodSummary,
 )
 from aos_api.aip_budget_contracts import BudgetLifecycle
 from aos_api.aip_budget_store import AipBudgetAuthorityStore, BudgetNotFound
@@ -303,6 +305,141 @@ def _budget_summary(scope, ref, governance_store, budget_store, now):
     )
 
 
+def _quota_summary(scope, ref, governance_store, now):
+    """Project an exact bound quota and its independently versioned current head."""
+    blockers: list[str] = []
+    bound = None
+    head = None
+    head_version = None
+    status_value = "unknown"
+    try:
+        bound = governance_store.get_quota(scope, ref.asset_id, ref.revision)
+    except ModelGovernancePolicyNotFound:
+        blockers.append("QUOTA_POLICY_UNAVAILABLE")
+    try:
+        head, head_version = governance_store.get_quota_head(scope, ref.asset_id)
+    except ModelGovernancePolicyNotFound:
+        blockers.append("QUOTA_POLICY_HEAD_UNAVAILABLE")
+    if bound is None:
+        status_value = "unknown"
+    elif not _ref_matches(ref, bound):
+        status_value = "drifted"
+        blockers.append("QUOTA_POLICY_REF_DRIFTED")
+    elif bound.lifecycle is not ModelGovernancePolicyLifecycle.ACTIVE:
+        status_value = "inactive"
+        blockers.append("QUOTA_POLICY_NOT_ACTIVE")
+    elif not _is_effective(bound.effective_from, bound.effective_until, now):
+        status_value = "out_of_window"
+        blockers.append("QUOTA_POLICY_OUT_OF_WINDOW")
+    else:
+        status_value = "active"
+    projected = head or bound
+    head_ref = None
+    if head is not None:
+        head_ref = {
+            "assetType": "QuotaPolicyRevision",
+            "assetId": head.policy_id,
+            "revision": head.revision,
+            "contentHash": head.content_hash,
+        }
+    return RuntimeQuotaAuthoritySummary(
+        quotaPolicyRef=ref,
+        headRef=head_ref,
+        headVersion=head_version,
+        status=status_value,
+        lifecycle=projected.lifecycle.value if projected else None,
+        owner=projected.owner if projected else None,
+        approvalRef=projected.approval_ref if projected else None,
+        rpmLimit=projected.rpm_limit if projected else None,
+        tpmLimit=projected.tpm_limit if projected else None,
+        maxConcurrency=projected.max_concurrency if projected else None,
+        maxInputTokens=projected.max_input_tokens if projected else None,
+        maxOutputTokens=projected.max_output_tokens if projected else None,
+        hourlyRequestLimit=projected.hourly_request_limit if projected else None,
+        dailyRequestLimit=projected.daily_request_limit if projected else None,
+        overflowBehavior=projected.overflow_behavior if projected else None,
+        reservationLeaseSeconds=projected.reservation_lease_seconds if projected else None,
+        allowPublicProviderFallback=projected.allow_public_provider_fallback if projected else None,
+        allowAutoScale=projected.allow_auto_scale if projected else None,
+        effectiveFrom=projected.effective_from if projected else None,
+        effectiveUntil=projected.effective_until if projected else None,
+        blockerCodes=blockers,
+    )
+
+
+def _usage_quantity_key(receipt) -> str:
+    return (
+        f"cost:{receipt.currency}"
+        if receipt.usage_kind is UsageKind.COST
+        else f"{receipt.usage_kind.value}:{receipt.unit}"
+    )
+
+
+def _usage_attribution_dimensions(period_receipts, deltas, attributions, task_bindings, scope):
+    """Build honest per-dimension projections; missing attribution stays missing."""
+    receipt_by_id = {item.receipt_id: item for item in period_receipts}
+
+    def aggregate(dimension, source, rows):
+        grouped: dict[tuple[str, str], dict[str, object]] = {}
+        attributed_ids: set[str] = set()
+        for receipt_id, subject_id, subject_revision, weight in rows:
+            receipt = receipt_by_id.get(receipt_id)
+            if receipt is None:
+                continue
+            attributed_ids.add(receipt_id)
+            key = (subject_id, subject_revision)
+            item = grouped.setdefault(
+                key, {"receipt_ids": set(), "quantity_totals": defaultdict(float)}
+            )
+            item["receipt_ids"].add(receipt_id)
+            if receipt.quantity is not None:
+                effective = receipt.quantity + deltas[receipt.receipt_id]
+                item["quantity_totals"][_usage_quantity_key(receipt)] += effective * weight
+        entries = [
+            RuntimeUsageAttributionEntry(
+                subjectId=subject_id,
+                subjectRevision=subject_revision,
+                receiptCount=len(value["receipt_ids"]),
+                quantityTotals=dict(value["quantity_totals"]),
+            )
+            for (subject_id, subject_revision), value in sorted(grouped.items())
+        ]
+        return RuntimeUsageAttributionDimension(
+            dimension=dimension,
+            source=source,
+            attributedReceiptCount=len(attributed_ids),
+            missingReceiptCount=len(period_receipts) - len(attributed_ids),
+            entries=entries,
+        )
+
+    tenant_rows = [
+        (receipt.receipt_id, f"{scope.org_id}/{scope.project_id}", "tenant-scope", 1.0)
+        for receipt in period_receipts
+    ]
+    task_rows = [
+        (receipt.receipt_id, task[0], task[1], 1.0)
+        for receipt in period_receipts
+        if (task := task_bindings.get(receipt.lineage_id)) is not None
+    ]
+    explicit = {"agent": [], "logic": [], "model": []}
+    for attribution in attributions:
+        dimension = attribution.subject_type.value
+        if dimension in explicit:
+            explicit[dimension].append(
+                (
+                    attribution.receipt_id,
+                    attribution.subject.resource_id,
+                    attribution.subject.revision,
+                    attribution.weight,
+                )
+            )
+    return [
+        aggregate("tenant", "tenant_scope", tenant_rows),
+        aggregate("task", "lineage", task_rows),
+        *(aggregate(dimension, "explicit", explicit[dimension]) for dimension in ("agent", "logic", "model")),
+    ]
+
+
 @router.get("/provider-plugins/{plugin_id}", response_model=ProviderPluginRevision)
 def get_provider_plugin(
     plugin_id: str,
@@ -499,9 +636,29 @@ def get_cost_overview(
             _budget_summary(scope, ref, governance_store, budget_store, now)
             for ref in budget_refs.values()
         ]
+        quota_refs = {
+            (
+                ref.asset_type,
+                ref.asset_id,
+                ref.revision,
+                ref.content_hash,
+            ): ref
+            for ref in [
+                *(model.quota_policy_ref for model in models),
+                *(policy.quota_policy_ref for policy in policies),
+            ]
+        }
+        quotas = [
+            _quota_summary(scope, ref, governance_store, now)
+            for ref in quota_refs.values()
+        ]
         receipt_limit = 1000
         receipts = eval_store.list_scope_usage_receipts(scope, limit=receipt_limit)
         adjustments = eval_store.list_scope_usage_adjustments(scope, limit=receipt_limit)
+        attributions = eval_store.list_scope_usage_attributions(scope, limit=5000)
+        task_bindings = eval_store.resolve_lineage_task_bindings(
+            scope, [receipt.lineage_id for receipt in receipts]
+        )
     except ModelRuntimeStoreError as exc:
         raise _map(exc) from exc
     except AipEvalAuthorityPersistenceError as exc:
@@ -582,6 +739,13 @@ def get_cost_overview(
                 unknownCount=period_quality[EvidenceQuality.UNKNOWN],
                 quantityTotals=dict(quantity_totals),
                 providerCounts=dict(provider_counts),
+                attributionDimensions=_usage_attribution_dimensions(
+                    period_receipts,
+                    deltas,
+                    attributions,
+                    task_bindings,
+                    scope,
+                ),
             )
         )
 
@@ -589,6 +753,7 @@ def get_cost_overview(
         tenant={"orgId": scope.org_id, "projectId": scope.project_id},
         modelPrices=model_prices,
         budgets=budgets,
+        quotas=quotas,
         usage=RuntimeUsageAuthoritySummary(
             state=usage_state,
             receiptCount=len(receipts),

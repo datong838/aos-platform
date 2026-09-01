@@ -182,6 +182,45 @@ export type RuntimeBudgetAuthoritySummary = {
   blockerCodes: string[];
 };
 
+export type RuntimeQuotaAuthoritySummary = {
+  quotaPolicyRef: ExactRuntimeRef;
+  headRef: ExactRuntimeRef | null;
+  headVersion: number | null;
+  status: "active" | "inactive" | "out_of_window" | "drifted" | "unknown";
+  lifecycle: "draft" | "blocked" | "active" | "suspended" | "revoked" | "expired" | null;
+  owner: string | null;
+  approvalRef: string | null;
+  rpmLimit: number | null;
+  tpmLimit: number | null;
+  maxConcurrency: number | null;
+  maxInputTokens: number | null;
+  maxOutputTokens: number | null;
+  hourlyRequestLimit: number | null;
+  dailyRequestLimit: number | null;
+  overflowBehavior: string | null;
+  reservationLeaseSeconds: number | null;
+  allowPublicProviderFallback: boolean | null;
+  allowAutoScale: boolean | null;
+  effectiveFrom: string | null;
+  effectiveUntil: string | null;
+  blockerCodes: string[];
+};
+
+export type RuntimeUsageAttributionEntry = {
+  subjectId: string;
+  subjectRevision: string;
+  receiptCount: number;
+  quantityTotals: Record<string, number>;
+};
+
+export type RuntimeUsageAttributionDimension = {
+  dimension: "tenant" | "task" | "agent" | "logic" | "model";
+  source: "tenant_scope" | "lineage" | "explicit";
+  attributedReceiptCount: number;
+  missingReceiptCount: number;
+  entries: RuntimeUsageAttributionEntry[];
+};
+
 export type RuntimeUsageAuthoritySummary = {
   state: "unobserved" | "measured" | "partial" | "unknown";
   receiptCount: number;
@@ -206,12 +245,14 @@ export type RuntimeUsagePeriodSummary = {
   unknownCount: number;
   quantityTotals: Record<string, number>;
   providerCounts: Record<string, number>;
+  attributionDimensions: RuntimeUsageAttributionDimension[];
 };
 
 export type ModelRuntimeCostOverview = {
   tenant: { orgId: string; projectId: string };
   modelPrices: ModelPriceAuthoritySummary[];
   budgets: RuntimeBudgetAuthoritySummary[];
+  quotas: RuntimeQuotaAuthoritySummary[];
   usage: RuntimeUsageAuthoritySummary;
   generatedAt: string;
 };

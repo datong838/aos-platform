@@ -65,7 +65,7 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
   });
 
-  it("Capacity Cancel 恢复服务端项目快照且不产生 PUT", async () => {
+  it("Capacity 只从精确 quota head 打开版本编辑，未保存不产生写请求", async () => {
     apiMocks.apiGet.mockImplementation(async (path: string) => {
       if (path.includes("/usage")) return { items: [] };
       if (path.includes("/project-limits")) return { scope: "project", scopeKey: "default", rpmLimit: 60, tpmLimit: 60000 };
@@ -78,11 +78,18 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
       };
       if (path === "/v1/aip/model-runtime/cost-overview") return {
         tenant: { orgId: "org-org", projectId: "dev-project" },
-        modelPrices: [], budgets: [],
+        modelPrices: [], budgets: [], quotas: [{
+          quotaPolicyRef: { assetType: "QuotaPolicyRevision", assetId: "quota-1", revision: 1, contentHash: "a".repeat(64) },
+          headRef: { assetType: "QuotaPolicyRevision", assetId: "quota-1", revision: 1, contentHash: "a".repeat(64) }, headVersion: 1,
+          status: "active", lifecycle: "active", owner: "fde", approvalRef: "approval:quota", rpmLimit: 60, tpmLimit: 60000,
+          maxConcurrency: 2, maxInputTokens: 8000, maxOutputTokens: 2000, hourlyRequestLimit: 50, dailyRequestLimit: 200,
+          overflowBehavior: "reject", reservationLeaseSeconds: 60, allowPublicProviderFallback: false, allowAutoScale: false,
+          effectiveFrom: "2026-08-01T00:00:00Z", effectiveUntil: "2026-09-30T00:00:00Z", blockerCodes: [],
+        }],
         usage: {
           state: "unobserved", receiptCount: 0, measuredCount: 0,
           estimatedCount: 0, unknownCount: 0, adjustmentCount: 0,
-          costTotals: {}, latestObservedAt: null, truncated: false,
+          costTotals: {}, latestObservedAt: null, truncated: false, periods: [],
         },
         generatedAt: "2026-08-21T00:00:00Z",
       };
@@ -92,13 +99,10 @@ describe("Wave 3B W2 · DOM 负向交互", () => {
     await flush();
     const rateTab = Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("速率限制"))!;
     await act(async () => rateTab.click());
-    await act(async () => host.querySelector<HTMLButtonElement>("[data-testid='manage-project-limit']")!.click());
-    const rpm = host.querySelector<HTMLInputElement>("[aria-label='capacity-rpm']")!;
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(rpm, "99");
-    await act(async () => rpm.dispatchEvent(new Event("input", { bubbles: true })));
-    const cancel = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "取消")!;
-    await act(async () => cancel.click());
-    expect(host.querySelector("[data-testid='capacity-editor-project']")).toBeNull();
+    expect(host.querySelector<HTMLInputElement>("[aria-label='quota-rpm']")?.value).toBe("60");
+    expect(host.querySelector<HTMLInputElement>("[aria-label='quota-tpm']")?.value).toBe("60000");
+    expect(host.querySelector("[data-testid='save-quota-revision']")).not.toBeNull();
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
     expect(apiMocks.apiPut).not.toHaveBeenCalled();
   });
 

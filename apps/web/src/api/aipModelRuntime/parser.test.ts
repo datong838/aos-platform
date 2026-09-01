@@ -46,11 +46,23 @@ describe("AIP-7 cost authority parser", () => {
     tenant: empty.tenant,
     modelPrices: [],
     budgets: [],
-    usage: { state: "unobserved", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false, periods: [{ period: "today", timeZone: "Asia/Shanghai", startsAt: "2026-08-14T00:00:00Z", endsAt: "2026-08-14T12:00:00Z", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, quantityTotals: {}, providerCounts: {} }] },
+    quotas: [],
+    usage: { state: "unobserved", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false, periods: [{ period: "today", timeZone: "Asia/Shanghai", startsAt: "2026-08-14T00:00:00Z", endsAt: "2026-08-14T12:00:00Z", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, quantityTotals: {}, providerCounts: {}, attributionDimensions: [] }] },
     generatedAt: empty.generatedAt,
   };
   it("保留未观测而非伪造零成本", () => {
     expect(parseModelRuntimeCostOverview(cost).usage.state).toBe("unobserved");
+  });
+  it("解析配额 head 与运行绑定，并保留缺失的旧版 RPM/TPM", () => {
+    const quota = {
+      quotaPolicyRef: ref("QuotaPolicyRevision", "quota-1"), headRef: { ...ref("QuotaPolicyRevision", "quota-1"), revision: 2 }, headVersion: 2,
+      status: "active", lifecycle: "active", owner: "fde", approvalRef: "approval:quota", rpmLimit: null, tpmLimit: null,
+      maxConcurrency: 2, maxInputTokens: 8000, maxOutputTokens: 2000, hourlyRequestLimit: 50, dailyRequestLimit: 200,
+      overflowBehavior: "reject", reservationLeaseSeconds: 60, allowPublicProviderFallback: false, allowAutoScale: false,
+      effectiveFrom: "2026-08-01T00:00:00Z", effectiveUntil: "2026-09-30T00:00:00Z", blockerCodes: [],
+    };
+    const parsed = parseModelRuntimeCostOverview({ ...cost, quotas: [quota] });
+    expect(parsed.quotas[0]).toMatchObject({ headVersion: 2, rpmLimit: null, tpmLimit: null });
   });
   it("拒绝质量计数与 Receipt 总数不一致", () => {
     expect(() => parseModelRuntimeCostOverview({ ...cost, usage: { ...cost.usage, state: "partial", receiptCount: 2, measuredCount: 1 } })).toThrow(/计数不一致/);

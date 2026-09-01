@@ -1122,6 +1122,59 @@ class AipEvalAuthorityStore:
                 "cost attribution read failed"
             ) from exc
 
+    def list_scope_usage_attributions(
+        self, scope: TenantScope, *, limit: int = 5000
+    ) -> list[UsageAttribution]:
+        """Read append-only attribution facts without inventing missing dimensions."""
+        self._require_scope(scope)
+        bounded_limit = max(1, min(limit, 10_000))
+        try:
+            with self._connect(scope) as conn:
+                rows = conn.execute(
+                    """SELECT * FROM aip_usage_attribution
+                       WHERE org_id=%s AND project_id=%s
+                       ORDER BY created_at DESC,attribution_id DESC
+                       LIMIT %s""",
+                    (*scope.key, bounded_limit),
+                ).fetchall()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "usage attribution read failed"
+            ) from exc
+        return [self._attribution_from_row(scope, row) for row in rows]
+
+    def resolve_lineage_task_bindings(
+        self, scope: TenantScope, lineage_ids: list[str]
+    ) -> dict[str, tuple[str, str]]:
+        """Resolve receipt lineages to canonical Task/Plan revisions in one scope."""
+        self._require_scope(scope)
+        exact_ids = sorted({value.strip() for value in lineage_ids if value.strip()})
+        if not exact_ids:
+            return {}
+        try:
+            with self._connect(scope) as conn:
+                rows = conn.execute(
+                    """SELECT DISTINCT e.lineage_id,r.task_id,r.plan_revision_id
+                       FROM aip_lineage_event e
+                       JOIN aip_task_run r
+                         ON r.org_id=e.org_id AND r.project_id=e.project_id
+                        AND r.run_id=e.root_id
+                       WHERE e.org_id=%s AND e.project_id=%s
+                         AND e.root_type='task_run' AND e.lineage_id=ANY(%s)""",
+                    (*scope.key, exact_ids),
+                ).fetchall()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "usage lineage task binding read failed"
+            ) from exc
+        return {
+            str(row["lineage_id"]): (
+                str(row["task_id"]),
+                str(row["plan_revision_id"]),
+            )
+            for row in rows
+        }
+
     def _span_from_row(self, scope: TenantScope, row: Any) -> TelemetrySpan:
         return TelemetrySpan(
             tenant=self._tenant(scope),

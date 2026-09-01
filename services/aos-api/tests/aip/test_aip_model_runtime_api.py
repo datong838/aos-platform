@@ -8,8 +8,8 @@ from zoneinfo import ZoneInfo
 from aos_api.aip_provider_plugin_authority import ProviderPluginAuthorityError
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_budget_contracts import BudgetLifecycle
-from aos_api.aip_contracts import TenantContext
-from aos_api.aip_eval_contracts import UsageAdjustment, UsageReceipt
+from aos_api.aip_contracts import ResourceRef, TenantContext
+from aos_api.aip_eval_contracts import UsageAdjustment, UsageAttribution, UsageReceipt
 from aos_api.aip_model_governance_policy_contracts import ModelGovernancePolicyLifecycle
 from aos_api.aip_model_runtime_contracts import (
     ModelRouteRevision,
@@ -327,6 +327,14 @@ class EmptyUsageAuthorityStore:
         self.scopes.append(("adjustments", scope.key, limit))
         return []
 
+    def list_scope_usage_attributions(self, scope, *, limit=5000):
+        self.scopes.append(("attributions", scope.key, limit))
+        return []
+
+    def resolve_lineage_task_bindings(self, scope, lineage_ids):
+        self.scopes.append(("task-bindings", scope.key, len(lineage_ids)))
+        return {}
+
 
 def test_cost_overview_reports_unobserved_instead_of_fake_zero(client) -> None:
     runtime = EmptyOverviewStore()
@@ -340,6 +348,7 @@ def test_cost_overview_reports_unobserved_instead_of_fake_zero(client) -> None:
         assert payload["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
         assert payload["modelPrices"] == []
         assert payload["budgets"] == []
+        assert payload["quotas"] == []
         assert {key: value for key, value in payload["usage"].items() if key != "periods"} == {
             "state": "unobserved",
             "receiptCount": 0,
@@ -356,6 +365,11 @@ def test_cost_overview_reports_unobserved_instead_of_fake_zero(client) -> None:
         today_start = datetime.fromisoformat(payload["usage"]["periods"][0]["startsAt"])
         assert today_start.astimezone(ZoneInfo("Asia/Shanghai")).time() == datetime.min.time()
         assert all(item["receiptCount"] == 0 for item in payload["usage"]["periods"])
+        assert all(
+            [dimension["dimension"] for dimension in item["attributionDimensions"]]
+            == ["tenant", "task", "agent", "logic", "model"]
+            for item in payload["usage"]["periods"]
+        )
         assert {item[1] for item in usage.scopes} == {("org-org", "dev-project")}
         assert "secret" not in response.text.lower()
     finally:
@@ -394,6 +408,7 @@ def registered_model(model_id: str, modality: str, price_id: str) -> RegisteredM
 
 class CostRuntimeStore:
     def __init__(self) -> None:
+        now = datetime.now(UTC)
         self.models = {
             "text-model": registered_model("text-model", "text", "price-text"),
             "image-model": registered_model("image-model", "image", "price-image"),
@@ -408,8 +423,8 @@ class CostRuntimeStore:
                 inputTokenPrice=0,
                 outputTokenPrice=0,
                 tokenUnit=1000,
-                effectiveFrom=datetime(2026, 8, 1, tzinfo=UTC),
-                effectiveUntil=datetime(2026, 9, 1, tzinfo=UTC),
+                effectiveFrom=now - timedelta(days=30),
+                effectiveUntil=now + timedelta(days=30),
                 lifecycle="active",
                 createdBy="test",
                 createdAt=datetime(2026, 8, 1, tzinfo=UTC),
@@ -438,12 +453,15 @@ class CostRuntimeStore:
 
 class ApprovedZeroGovernanceStore:
     def get_budget(self, scope, policy_id, revision=None):
+        now = datetime.now(UTC)
         return SimpleNamespace(
             revision=1,
             content_hash="5" * 64,
             lifecycle=ModelGovernancePolicyLifecycle.ACTIVE,
-            effective_from=datetime(2026, 8, 1, tzinfo=UTC),
-            effective_until=datetime(2026, 9, 1, tzinfo=UTC),
+            owner="test",
+            approval_ref="approval:test",
+            effective_from=now - timedelta(days=30),
+            effective_until=now + timedelta(days=30),
             allow_zero_price=True,
             zero_price_approval_ref="approval://zero-price/dev",
             budget_revision_ref=exact_ref("BudgetRevision", "budget-1", "8" * 64),
@@ -453,15 +471,47 @@ class ApprovedZeroGovernanceStore:
             unknown_price_behavior="block",
         )
 
+    def get_quota(self, scope, policy_id, revision=None):
+        return self._quota(revision or 1)
+
+    def get_quota_head(self, scope, policy_id):
+        return self._quota(1), 1
+
+    @staticmethod
+    def _quota(revision):
+        now = datetime.now(UTC)
+        return SimpleNamespace(
+            policy_id="quota-1",
+            revision=revision,
+            content_hash="4" * 64,
+            lifecycle=ModelGovernancePolicyLifecycle.ACTIVE,
+            owner="test",
+            approval_ref="approval:test",
+            effective_from=now - timedelta(days=30),
+            effective_until=now + timedelta(days=30),
+            rpm_limit=40,
+            tpm_limit=40_000,
+            max_concurrency=2,
+            max_input_tokens=8000,
+            max_output_tokens=2000,
+            hourly_request_limit=50,
+            daily_request_limit=200,
+            overflow_behavior="reject",
+            reservation_lease_seconds=60,
+            allow_public_provider_fallback=False,
+            allow_auto_scale=False,
+        )
+
 
 class ActiveBudgetStore:
     def get(self, scope, budget_id, revision=None):
+        now = datetime.now(UTC)
         return SimpleNamespace(
             revision=1,
             content_hash="8" * 64,
             lifecycle=BudgetLifecycle.ACTIVE,
-            effective_from=datetime(2026, 8, 1, tzinfo=UTC),
-            effective_until=datetime(2026, 9, 1, tzinfo=UTC),
+            effective_from=now - timedelta(days=30),
+            effective_until=now + timedelta(days=30),
             currency="CNY",
             daily_limit_minor=10_000,
             monthly_limit_minor=100_000,
@@ -485,6 +535,8 @@ def test_cost_overview_requires_exact_zero_price_approval_and_rejects_token_unit
         assert prices["image-model"]["status"] == "unit_mismatch"
         assert prices["image-model"]["blockerCodes"] == ["TOKEN_PRICE_UNIT_MISMATCH"]
         assert response.json()["budgets"][0]["status"] == "active"
+        assert response.json()["quotas"][0]["rpmLimit"] == 40
+        assert response.json()["quotas"][0]["headVersion"] == 1
 
         canary = client.get("/v1/aip/model-runtime/cost-overview", headers=headers("dev-org"))
         assert canary.status_code == 200
@@ -525,6 +577,30 @@ class MixedUsageAuthorityStore(EmptyUsageAuthorityStore):
             )
         ]
 
+    def resolve_lineage_task_bindings(self, scope, lineage_ids):
+        return {"lineage-1": ("task-qyh-sales-review", "plan-qyh-sales-review@3")}
+
+    def list_scope_usage_attributions(self, scope, *, limit=5000):
+        tenant = TenantContext(orgId=scope.org_id, projectId=scope.project_id)
+        common = {
+            "tenant": tenant,
+            "receiptId": "cost-measured",
+            "lineageId": "lineage-1",
+            "quality": "measured",
+            "weight": 1,
+            "sourceHash": "b" * 64,
+            "createdAt": datetime.now(UTC),
+        }
+        return [
+            UsageAttribution(
+                attributionId=f"attribution-{kind}",
+                subjectType=kind,
+                subject=ResourceRef(resourceType=kind, resourceId=subject_id, revision="rev-1", authority="aip"),
+                **common,
+            )
+            for kind, subject_id in (("agent", "数据参谋"), ("logic", "经营复盘"), ("model", "agnes-2.5-flash"))
+        ]
+
 
 def test_cost_overview_aggregates_adjustments_without_hiding_usage_quality(client) -> None:
     runtime = EmptyOverviewStore()
@@ -545,6 +621,14 @@ def test_cost_overview_aggregates_adjustments_without_hiding_usage_quality(clien
             "input_token:token": 12.0,
         }
         assert usage["periods"][0]["providerCounts"] == {"agnes": 3}
+        dimensions = {item["dimension"]: item for item in usage["periods"][0]["attributionDimensions"]}
+        assert dimensions["tenant"]["attributedReceiptCount"] == 3
+        assert dimensions["tenant"]["missingReceiptCount"] == 0
+        assert dimensions["task"]["attributedReceiptCount"] == 3
+        assert dimensions["task"]["missingReceiptCount"] == 0
+        assert dimensions["agent"]["attributedReceiptCount"] == 1
+        assert dimensions["logic"]["entries"][0]["subjectId"] == "经营复盘"
+        assert dimensions["model"]["entries"][0]["quantityTotals"] == {"cost:CNY": 1.75}
     finally:
         client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
         client.app.dependency_overrides.pop(aip_model_runtime.get_eval_authority_store, None)

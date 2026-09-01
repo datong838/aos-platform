@@ -416,6 +416,45 @@ class RuntimeBudgetAuthoritySummary(AipContractModel):
     blocker_codes: list[str] = Field(default_factory=list, max_length=32)
 
 
+class RuntimeQuotaAuthoritySummary(AipContractModel):
+    quota_policy_ref: VersionedAssetRef
+    head_ref: VersionedAssetRef | None = None
+    head_version: int | None = Field(default=None, ge=1)
+    status: str = Field(pattern=r"^(active|inactive|out_of_window|drifted|unknown)$")
+    lifecycle: str | None = Field(default=None, pattern=r"^(draft|blocked|active|suspended|revoked|expired)$")
+    owner: str | None = None
+    approval_ref: str | None = None
+    rpm_limit: int | None = Field(default=None, ge=1)
+    tpm_limit: int | None = Field(default=None, ge=1)
+    max_concurrency: int | None = Field(default=None, ge=1)
+    max_input_tokens: int | None = Field(default=None, ge=1)
+    max_output_tokens: int | None = Field(default=None, ge=1)
+    hourly_request_limit: int | None = Field(default=None, ge=1)
+    daily_request_limit: int | None = Field(default=None, ge=1)
+    overflow_behavior: str | None = None
+    reservation_lease_seconds: int | None = Field(default=None, ge=1)
+    allow_public_provider_fallback: bool | None = None
+    allow_auto_scale: bool | None = None
+    effective_from: datetime | None = None
+    effective_until: datetime | None = None
+    blocker_codes: list[str] = Field(default_factory=list, max_length=32)
+
+
+class RuntimeUsageAttributionEntry(AipContractModel):
+    subject_id: str = Field(min_length=1, max_length=240)
+    subject_revision: str = Field(min_length=1, max_length=240)
+    receipt_count: int = Field(ge=0)
+    quantity_totals: dict[str, float] = Field(default_factory=dict, max_length=64)
+
+
+class RuntimeUsageAttributionDimension(AipContractModel):
+    dimension: str = Field(pattern=r"^(tenant|task|agent|logic|model)$")
+    source: str = Field(pattern=r"^(tenant_scope|lineage|explicit)$")
+    attributed_receipt_count: int = Field(ge=0)
+    missing_receipt_count: int = Field(ge=0)
+    entries: list[RuntimeUsageAttributionEntry] = Field(default_factory=list, max_length=500)
+
+
 class RuntimeUsagePeriodSummary(AipContractModel):
     """Receipt-only usage projection for one bounded business-time window."""
 
@@ -429,6 +468,9 @@ class RuntimeUsagePeriodSummary(AipContractModel):
     unknown_count: int = Field(ge=0)
     quantity_totals: dict[str, float] = Field(default_factory=dict, max_length=64)
     provider_counts: dict[str, int] = Field(default_factory=dict, max_length=64)
+    attribution_dimensions: list[RuntimeUsageAttributionDimension] = Field(
+        default_factory=list, max_length=5
+    )
 
     @model_validator(mode="after")
     def _period_counts_are_consistent(self) -> RuntimeUsagePeriodSummary:
@@ -466,5 +508,6 @@ class ModelRuntimeCostOverview(AipContractModel):
     tenant: TenantContext
     model_prices: list[ModelPriceAuthoritySummary]
     budgets: list[RuntimeBudgetAuthoritySummary]
+    quotas: list[RuntimeQuotaAuthoritySummary]
     usage: RuntimeUsageAuthoritySummary
     generated_at: datetime

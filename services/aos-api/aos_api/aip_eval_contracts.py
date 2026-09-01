@@ -164,6 +164,7 @@ class AttributionSubjectType(StrEnum):
     CAPABILITY = "capability"
     TASK = "task"
     AGENT = "agent"
+    LOGIC = "logic"
 
 
 class CapabilityReceiptStatus(StrEnum):

@@ -87,6 +87,12 @@ class AipModelGovernancePolicyStore:
     def get_budget(self, scope, policy_id, revision=None):
         return self._get("budget", scope, policy_id, revision)
 
+    def get_quota_head(self, scope: TenantScope, policy_id: str):
+        return self._get_head("quota", scope, policy_id)
+
+    def get_budget_head(self, scope: TenantScope, policy_id: str):
+        return self._get_head("budget", scope, policy_id)
+
     def require_exact_active(self, scope: TenantScope, ref: VersionedAssetRef, *, now: datetime | None = None):
         kind = {"QuotaPolicyRevision": "quota", "BudgetPolicyRevision": "budget"}.get(ref.asset_type)
         if kind is None:
@@ -212,6 +218,26 @@ class AipModelGovernancePolicyStore:
             return read(conn)
         with self._connect_factory(scope) as connection:
             return read(connection)
+
+    def _get_head(self, kind: str, scope: TenantScope, policy_id: str):
+        with self._connect_factory(scope) as connection:
+            row = connection.execute(
+                "SELECT current_revision,version FROM aip_model_governance_policy_head "
+                "WHERE org_id=%s AND project_id=%s AND policy_kind=%s AND policy_id=%s",
+                (*scope.key, kind, policy_id),
+            ).fetchone()
+            if not row:
+                raise ModelGovernancePolicyNotFound(
+                    "model governance policy not found"
+                )
+            item = self._get(
+                kind,
+                scope,
+                policy_id,
+                int(row["current_revision"]),
+                conn=connection,
+            )
+            return item, int(row["version"])
 
     def _replay(self, conn, scope, operation, key, request_hash):
         row = conn.execute(
