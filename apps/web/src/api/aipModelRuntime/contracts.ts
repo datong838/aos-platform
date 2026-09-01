@@ -141,6 +141,62 @@ export type ModelRuntimeOverview = {
   generatedAt: string;
 };
 
+export type RuntimeChainStage = "provider" | "secret_ref" | "policy" | "eval" | "health" | "capacity";
+
+export type RuntimeChainNode = {
+  stage: RuntimeChainStage;
+  status: RuntimeReadiness;
+  title: string;
+  exactRef: ExactRuntimeRef | null;
+  observedAt: string | null;
+  expiresAt: string | null;
+  blockerCode: string | null;
+  impact: string;
+  ownerEntry: string;
+  recheckAction: string;
+};
+
+export type RuntimeTraceRef = {
+  resourceType: "task" | "agent" | "logic" | "model";
+  resourceId: string;
+  revision: string;
+};
+
+export type RuntimeTaskModelTrace = {
+  task: RuntimeTraceRef;
+  receiptCount: number;
+  models: RuntimeTraceRef[];
+  agents: RuntimeTraceRef[];
+  logics: RuntimeTraceRef[];
+  missingDimensions: Array<"model" | "agent" | "logic">;
+};
+
+export type RuntimeModelImpactTrace = {
+  model: RuntimeTraceRef;
+  receiptCount: number;
+  tasks: RuntimeTraceRef[];
+  agents: RuntimeTraceRef[];
+  logics: RuntimeTraceRef[];
+};
+
+export type RuntimeRouteChain = {
+  route: ExactRuntimeRef;
+  candidateModel: ExactRuntimeRef | null;
+  taskTypes: string[];
+  readiness: RuntimeReadiness;
+  nodes: RuntimeChainNode[];
+  controlledTrialAllowed: boolean;
+  resolvedAt: string;
+};
+
+export type ModelRuntimeChainOverview = {
+  tenant: { orgId: string; projectId: string };
+  chains: RuntimeRouteChain[];
+  taskTraces: RuntimeTaskModelTrace[];
+  modelImpacts: RuntimeModelImpactTrace[];
+  generatedAt: string;
+};
+
 export type ModelPriceAuthorityStatus =
   | "priced"
   | "approved_zero"

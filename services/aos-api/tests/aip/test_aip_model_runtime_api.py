@@ -313,6 +313,7 @@ def test_openapi_registers_canonical_model_runtime_paths(client) -> None:
     assert "/v1/aip/model-runtime/routes/{route_id}/revisions" in paths
     assert "/v1/aip/model-runtime/routes/{route_id}/rollback-draft" in paths
     assert "/v1/aip/model-runtime/overview" in paths
+    assert "/v1/aip/model-runtime/chain-overview" in paths
     assert "/v1/aip/model-runtime/cost-overview" in paths
 
 
@@ -602,6 +603,40 @@ class MixedUsageAuthorityStore(EmptyUsageAuthorityStore):
         ]
 
 
+def test_chain_overview_traces_only_same_receipt_facts_and_preserves_missing_dimensions(client) -> None:
+    runtime = EmptyOverviewStore()
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: runtime
+    client.app.dependency_overrides[aip_model_runtime.get_eval_authority_store] = lambda: MixedUsageAuthorityStore()
+    try:
+        response = client.get("/v1/aip/model-runtime/chain-overview", headers=headers())
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["chains"] == []
+        task_trace = payload["taskTraces"][0]
+        assert task_trace["task"] == {
+            "resourceType": "task",
+            "resourceId": "task-qyh-sales-review",
+            "revision": "plan-qyh-sales-review@3",
+        }
+        assert task_trace["receiptCount"] == 3
+        assert task_trace["models"] == [
+            {"resourceType": "model", "resourceId": "agnes-2.5-flash", "revision": "rev-1"}
+        ]
+        assert task_trace["agents"][0]["resourceId"] == "数据参谋"
+        assert task_trace["logics"][0]["resourceId"] == "经营复盘"
+        assert task_trace["missingDimensions"] == []
+
+        impact = payload["modelImpacts"][0]
+        assert impact["model"]["resourceId"] == "agnes-2.5-flash"
+        assert impact["receiptCount"] == 1
+        assert impact["tasks"][0]["resourceId"] == "task-qyh-sales-review"
+        assert impact["agents"][0]["resourceId"] == "数据参谋"
+        assert impact["logics"][0]["resourceId"] == "经营复盘"
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
+        client.app.dependency_overrides.pop(aip_model_runtime.get_eval_authority_store, None)
+
+
 def test_cost_overview_aggregates_adjustments_without_hiding_usage_quality(client) -> None:
     runtime = EmptyOverviewStore()
     client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: runtime
@@ -795,6 +830,33 @@ def test_overview_is_secret_free_empty_and_tenant_scoped(client) -> None:
         }
     finally:
         client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
+
+
+def test_chain_overview_is_secret_free_empty_and_tenant_scoped(client) -> None:
+    runtime = EmptyOverviewStore()
+    usage = EmptyUsageAuthorityStore()
+    runtime.scopes = []
+    usage.scopes = []
+    client.app.dependency_overrides[aip_model_runtime.get_store] = lambda: runtime
+    client.app.dependency_overrides[aip_model_runtime.get_eval_authority_store] = lambda: usage
+    try:
+        response = client.get("/v1/aip/model-runtime/chain-overview", headers=headers())
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
+        assert payload["chains"] == []
+        assert payload["taskTraces"] == []
+        assert payload["modelImpacts"] == []
+        assert "secretref" not in response.text.lower()
+        assert runtime.scopes[-1] == (("org-org", "dev-project"), "model_route")
+        assert usage.scopes == [
+            ("receipts", ("org-org", "dev-project"), 1000),
+            ("attributions", ("org-org", "dev-project"), 5000),
+            ("task-bindings", ("org-org", "dev-project"), 0),
+        ]
+    finally:
+        client.app.dependency_overrides.pop(aip_model_runtime.get_store, None)
+        client.app.dependency_overrides.pop(aip_model_runtime.get_eval_authority_store, None)
 
 
 class CurrentHealthOverviewStore(EmptyOverviewStore):

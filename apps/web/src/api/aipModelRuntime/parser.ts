@@ -1,4 +1,4 @@
-import type { ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRouteRevision, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeQuotaAuthoritySummary, RuntimeReadiness, RuntimeResolution, RuntimeUsageAttributionDimension, RuntimeUsageAuthoritySummary } from "./contracts";
+import type { ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRouteRevision, ModelRuntimeChainOverview, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeChainNode, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeModelImpactTrace, RuntimeQuotaAuthoritySummary, RuntimeReadiness, RuntimeResolution, RuntimeRouteChain, RuntimeTaskModelTrace, RuntimeTraceRef, RuntimeUsageAttributionDimension, RuntimeUsageAuthoritySummary } from "./contracts";
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }
 function array(value: unknown, label: string): unknown[] { if (!Array.isArray(value)) throw new Error(`${label} 必须是数组`); return value; }
@@ -12,6 +12,7 @@ function integerOrNull(value: unknown, label: string, min = 0): number | null { 
 function isoOrNull(value: unknown, label: string): string | null { return value === null ? null : iso(value, label); }
 function stringOrNull(value: unknown, label: string): string | null { return value === null ? null : string(value, label); }
 function booleanOrNull(value: unknown, label: string): boolean | null { if (value === null) return null; if (typeof value !== "boolean") throw new Error(`${label} 必须是布尔值`); return value; }
+function boolean(value: unknown, label: string): boolean { if (typeof value !== "boolean") throw new Error(`${label} 必须是布尔值`); return value; }
 function tenant(value: unknown, label: string) { const raw = object(value, label); return { orgId: string(raw.orgId, `${label}.orgId`), projectId: string(raw.projectId, `${label}.projectId`) }; }
 function strings(value: unknown, label: string): string[] { return array(value, label).map((item, index) => string(item, `${label}[${index}]`)); }
 function forbidCredentialPayload(raw: Record<string, unknown>, label: string) { const forbidden = ["apiKey", "api_key", "token", "secret", "password", "authorization", "apiKeyMasked", "api_key_masked"]; const found = forbidden.find((key) => key in raw); if (found) throw new Error(`${label} 含禁止的明文凭据字段 ${found}`); }
@@ -89,6 +90,79 @@ export function parseModelRuntimeOverview(value: unknown): ModelRuntimeOverview 
   const raw = object(value, "ModelRuntimeOverview"); const tenantRaw = object(raw.tenant, "tenant");
   const map = <T>(key: string, parser: (item: unknown, label: string) => T) => array(raw[key], key).map((item, index) => parser(item, `${key}[${index}]`));
   return { tenant: { orgId: string(tenantRaw.orgId, "tenant.orgId"), projectId: string(tenantRaw.projectId, "tenant.projectId") }, providers: map("providers", asset), models: map("models", asset), routes: map("routes", asset), policies: map("policies", asset), priceSnapshots: map("priceSnapshots", asset), evalGates: map("evalGates", gate), capacityPools: map("capacityPools", pool), healthObservations: map("healthObservations", health), resolutions: map("resolutions", resolution), generatedAt: iso(raw.generatedAt, "generatedAt") };
+}
+
+function traceRef(value: unknown, label: string): RuntimeTraceRef {
+  const raw = object(value, label);
+  return {
+    resourceType: enumeration(raw.resourceType, `${label}.resourceType`, ["task", "agent", "logic", "model"] as const),
+    resourceId: string(raw.resourceId, `${label}.resourceId`),
+    revision: string(raw.revision, `${label}.revision`),
+  };
+}
+
+function chainNode(value: unknown, label: string): RuntimeChainNode {
+  const raw = object(value, label); forbidCredentialPayload(raw, label);
+  if (["secretRef", "secretVersion", "credentialRef"].some((key) => key in raw)) throw new Error(`${label} 含禁止的运行凭据引用字段`);
+  const status = enumeration<RuntimeReadiness>(raw.status, `${label}.status`, ["ready", "blocked", "unknown"]);
+  const blockerCode = stringOrNull(raw.blockerCode, `${label}.blockerCode`);
+  if ((status === "ready") !== (blockerCode === null)) throw new Error(`${label} 状态与阻断事实不一致`);
+  const observedAt = isoOrNull(raw.observedAt, `${label}.observedAt`);
+  const expiresAt = isoOrNull(raw.expiresAt, `${label}.expiresAt`);
+  if (expiresAt && !observedAt) throw new Error(`${label} 有效期缺少观测时间`);
+  return {
+    stage: enumeration(raw.stage, `${label}.stage`, ["provider", "secret_ref", "policy", "eval", "health", "capacity"] as const),
+    status,
+    title: string(raw.title, `${label}.title`),
+    exactRef: raw.exactRef === null ? null : ref(raw.exactRef, `${label}.exactRef`),
+    observedAt,
+    expiresAt,
+    blockerCode,
+    impact: string(raw.impact, `${label}.impact`),
+    ownerEntry: string(raw.ownerEntry, `${label}.ownerEntry`),
+    recheckAction: string(raw.recheckAction, `${label}.recheckAction`),
+  };
+}
+
+function routeChain(value: unknown, label: string): RuntimeRouteChain {
+  const raw = object(value, label); forbidCredentialPayload(raw, label);
+  const nodes = array(raw.nodes, `${label}.nodes`).map((item, index) => chainNode(item, `${label}.nodes[${index}]`));
+  const expected = ["provider", "secret_ref", "policy", "eval", "health", "capacity"];
+  if (nodes.length !== expected.length || nodes.some((node, index) => node.stage !== expected[index])) throw new Error(`${label} 运行链阶段顺序不完整`);
+  const readiness = enumeration<RuntimeReadiness>(raw.readiness, `${label}.readiness`, ["ready", "blocked", "unknown"]);
+  const controlledTrialAllowed = boolean(raw.controlledTrialAllowed, `${label}.controlledTrialAllowed`);
+  if (controlledTrialAllowed !== (readiness === "ready" && nodes.every((node) => node.status === "ready"))) throw new Error(`${label} 受控试运行门与同截止运行链不一致`);
+  return {
+    route: ref(raw.route, `${label}.route`),
+    candidateModel: raw.candidateModel === null ? null : ref(raw.candidateModel, `${label}.candidateModel`),
+    taskTypes: strings(raw.taskTypes, `${label}.taskTypes`), readiness, nodes, controlledTrialAllowed,
+    resolvedAt: iso(raw.resolvedAt, `${label}.resolvedAt`),
+  };
+}
+
+function taskTrace(value: unknown, label: string): RuntimeTaskModelTrace {
+  const raw = object(value, label);
+  const refs = (key: string) => array(raw[key], `${label}.${key}`).map((item, index) => traceRef(item, `${label}.${key}[${index}]`));
+  const missingDimensions = array(raw.missingDimensions, `${label}.missingDimensions`).map((item, index) => enumeration(item, `${label}.missingDimensions[${index}]`, ["model", "agent", "logic"] as const));
+  if (new Set(missingDimensions).size !== missingDimensions.length) throw new Error(`${label}.missingDimensions 不能重复`);
+  return { task: traceRef(raw.task, `${label}.task`), receiptCount: integer(raw.receiptCount, `${label}.receiptCount`, 1), models: refs("models"), agents: refs("agents"), logics: refs("logics"), missingDimensions };
+}
+
+function modelImpact(value: unknown, label: string): RuntimeModelImpactTrace {
+  const raw = object(value, label);
+  const refs = (key: string) => array(raw[key], `${label}.${key}`).map((item, index) => traceRef(item, `${label}.${key}[${index}]`));
+  return { model: traceRef(raw.model, `${label}.model`), receiptCount: integer(raw.receiptCount, `${label}.receiptCount`, 1), tasks: refs("tasks"), agents: refs("agents"), logics: refs("logics") };
+}
+
+export function parseModelRuntimeChainOverview(value: unknown): ModelRuntimeChainOverview {
+  const raw = object(value, "ModelRuntimeChainOverview"); forbidCredentialPayload(raw, "ModelRuntimeChainOverview");
+  return {
+    tenant: tenant(raw.tenant, "tenant"),
+    chains: array(raw.chains, "chains").map((item, index) => routeChain(item, `chains[${index}]`)),
+    taskTraces: array(raw.taskTraces, "taskTraces").map((item, index) => taskTrace(item, `taskTraces[${index}]`)),
+    modelImpacts: array(raw.modelImpacts, "modelImpacts").map((item, index) => modelImpact(item, `modelImpacts[${index}]`)),
+    generatedAt: iso(raw.generatedAt, "generatedAt"),
+  };
 }
 
 function priceAuthority(value: unknown, label: string): ModelPriceAuthoritySummary {

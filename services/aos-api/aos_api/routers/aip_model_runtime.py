@@ -9,11 +9,14 @@ from fastapi import APIRouter, Depends, Header, Query, status
 from pydantic import BaseModel, Field
 
 from aos_api.aip_model_runtime_contracts import (
+    ModelRuntimeChainOverview,
     ModelPriceAuthoritySummary, ModelPriceSnapshotRevision, ModelRouteResolution,
     ModelRouteRevision, ModelRuntimeCostOverview, ModelRuntimeLifecycle,
-    ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision,
+    ModelRuntimeOverview, ModelRuntimeReadiness, ProviderHealthObservation, ProviderInstanceRevision,
     RegisteredModelRevision, RuntimeBudgetAuthoritySummary,
+    RuntimeChainNode, RuntimeModelImpactTrace, RuntimeRouteChain,
     RuntimePolicyRevision, RuntimeQuotaAuthoritySummary,
+    RuntimeTaskModelTrace, RuntimeTraceRef,
     RuntimeUsageAttributionDimension, RuntimeUsageAttributionEntry,
     RuntimeUsageAuthoritySummary, RuntimeUsagePeriodSummary,
 )
@@ -23,7 +26,7 @@ from aos_api.aip_eval_authority_store import (
     AipEvalAuthorityPersistenceError,
     AipEvalAuthorityStore,
 )
-from aos_api.aip_eval_contracts import EvidenceQuality, UsageKind
+from aos_api.aip_eval_contracts import AttributionSubjectType, EvidenceQuality, UsageKind
 from aos_api.aip_model_governance_policy_contracts import (
     ModelGovernancePolicyLifecycle,
 )
@@ -590,6 +593,305 @@ def get_overview(principal: Principal = Depends(require_principal), store: AipMo
         )
     except ModelRuntimeStoreError as exc:
         raise _map(exc) from exc
+
+
+def _trace_ref(resource_type: str, resource_id: str, revision: str) -> RuntimeTraceRef:
+    return RuntimeTraceRef(
+        resourceType=resource_type,
+        resourceId=resource_id,
+        revision=revision,
+    )
+
+
+def _runtime_impact_traces(receipts, attributions, task_bindings):
+    """Correlate only facts that share one exact Usage Receipt."""
+    receipt_by_id = {receipt.receipt_id: receipt for receipt in receipts}
+    subjects_by_receipt = defaultdict(lambda: defaultdict(set))
+    for attribution in attributions:
+        subjects_by_receipt[attribution.receipt_id][attribution.subject_type.value].add(
+            (attribution.subject.resource_id, str(attribution.subject.revision))
+        )
+
+    tasks = defaultdict(lambda: {"receipts": set(), "model": set(), "agent": set(), "logic": set()})
+    models = defaultdict(lambda: {"receipts": set(), "task": set(), "agent": set(), "logic": set()})
+    for receipt_id, receipt in receipt_by_id.items():
+        task_binding = task_bindings.get(receipt.lineage_id)
+        dimensions = subjects_by_receipt.get(receipt_id, {})
+        if task_binding:
+            task_key = (task_binding[0], task_binding[1])
+            tasks[task_key]["receipts"].add(receipt_id)
+            for kind in ("model", "agent", "logic"):
+                tasks[task_key][kind].update(dimensions.get(kind, set()))
+        for model_key in dimensions.get(AttributionSubjectType.MODEL.value, set()):
+            models[model_key]["receipts"].add(receipt_id)
+            if task_binding:
+                models[model_key]["task"].add(task_binding)
+            for kind in ("agent", "logic"):
+                models[model_key][kind].update(dimensions.get(kind, set()))
+
+    def refs(kind, values):
+        return [_trace_ref(kind, item[0], item[1]) for item in sorted(values)]
+
+    task_traces = []
+    for task_key, value in sorted(tasks.items()):
+        missing = [kind for kind in ("model", "agent", "logic") if not value[kind]]
+        task_traces.append(RuntimeTaskModelTrace(
+            task=_trace_ref("task", task_key[0], task_key[1]),
+            receiptCount=len(value["receipts"]),
+            models=refs("model", value["model"]),
+            agents=refs("agent", value["agent"]),
+            logics=refs("logic", value["logic"]),
+            missingDimensions=missing,
+        ))
+    model_impacts = [
+        RuntimeModelImpactTrace(
+            model=_trace_ref("model", model_key[0], model_key[1]),
+            receiptCount=len(value["receipts"]),
+            tasks=refs("task", value["task"]),
+            agents=refs("agent", value["agent"]),
+            logics=refs("logic", value["logic"]),
+        )
+        for model_key, value in sorted(models.items())
+    ]
+    return task_traces, model_impacts
+
+
+def _chain_node(
+    stage: str,
+    status_value: ModelRuntimeReadiness,
+    title: str,
+    *,
+    now: datetime,
+    impact: str,
+    owner_entry: str,
+    recheck_action: str,
+    exact_ref=None,
+    blocker_code: str | None = None,
+    observed_at: datetime | None = None,
+    expires_at: datetime | None = None,
+) -> RuntimeChainNode:
+    return RuntimeChainNode(
+        stage=stage,
+        status=status_value,
+        title=title,
+        exactRef=exact_ref,
+        observedAt=observed_at or now,
+        expiresAt=expires_at,
+        blockerCode=blocker_code,
+        impact=impact,
+        ownerEntry=owner_entry,
+        recheckAction=recheck_action,
+    )
+
+
+def _same_exact_ref(left, right) -> bool:
+    return bool(
+        left
+        and right
+        and left.asset_id == right.asset_id
+        and left.revision == right.revision
+        and left.content_hash == right.content_hash
+    )
+
+
+def _runtime_route_chain(scope, route_summary, candidate_ref, resolution, store, now):
+    route = store.get_route(scope, route_summary.ref.asset_id, route_summary.ref.revision)
+    model = provider = policy = None
+    if candidate_ref is not None:
+        try:
+            model = store.get_model(scope, candidate_ref.asset_id, candidate_ref.revision)
+        except ModelRuntimeStoreError:
+            model = None
+    if model is not None:
+        try:
+            provider = store.get_provider(scope, model.provider.asset_id, model.provider.revision)
+        except ModelRuntimeStoreError:
+            provider = None
+    try:
+        policy = store.get_policy(scope, route.runtime_policy_ref.asset_id, route.runtime_policy_ref.revision)
+    except ModelRuntimeStoreError:
+        policy = None
+
+    provider_ready = bool(
+        provider
+        and provider.content_hash == model.provider.content_hash
+        and provider.lifecycle is ModelRuntimeLifecycle.ACTIVE
+    )
+    provider_ref = model.provider if model is not None else None
+    latest_health = next((
+        item for item in store.list_latest_provider_health(scope)
+        if provider_ref is not None
+        and item.provider.asset_id == provider_ref.asset_id
+        and item.provider.revision == provider_ref.revision
+        and item.provider.content_hash == provider_ref.content_hash
+    ), None)
+    health_ready = bool(
+        latest_health
+        and latest_health.status == "healthy"
+        and latest_health.expires_at > now
+    )
+    secret_ready = provider_ready and health_ready
+    policy_ready = bool(
+        policy
+        and policy.content_hash == route.runtime_policy_ref.content_hash
+        and policy.lifecycle is ModelRuntimeLifecycle.ACTIVE
+        and not policy.kill_switch_enabled
+    )
+    eval_refs = [route.eval_gate_ref]
+    if model is not None:
+        eval_refs.append(model.eval_gate_ref)
+    eval_gates = store.list_eval_gates(scope, eval_refs)
+    eval_ready = len(eval_gates) == len({(ref.asset_id, ref.revision, ref.content_hash) for ref in eval_refs}) and all(
+        item.status == "passed" for item in eval_gates
+    )
+    matching_pool = next((
+        pool for pool in store.list_capacity_pools(scope)
+        if candidate_ref is not None and provider_ref is not None
+        and pool.route_ref.asset_id == route.route_id
+        and pool.route_ref.revision == route.revision
+        and pool.route_ref.content_hash == route.content_hash
+        and pool.model_ref.asset_id == candidate_ref.asset_id
+        and pool.model_ref.revision == candidate_ref.revision
+        and pool.model_ref.content_hash == candidate_ref.content_hash
+        and pool.provider_ref.asset_id == provider_ref.asset_id
+        and pool.provider_ref.revision == provider_ref.revision
+        and pool.provider_ref.content_hash == provider_ref.content_hash
+    ), None)
+    capacity_ready = bool(
+        matching_pool
+        and matching_pool.lifecycle is ModelRuntimeLifecycle.ACTIVE
+        and matching_pool.active_reservations < matching_pool.max_concurrency
+        and matching_pool.reserved_token_units + matching_pool.token_unit_per_reservation
+        <= matching_pool.max_token_units
+    )
+    impact = "、".join(route.task_types) or "当前路由承接的经营任务"
+    nodes = [
+        _chain_node(
+            "provider", ModelRuntimeReadiness.READY if provider_ready else ModelRuntimeReadiness.BLOCKED,
+            "供应商精确版本可用" if provider_ready else "供应商版本待核验", now=now,
+            exact_ref=provider_ref, blocker_code=None if provider_ready else "PROVIDER_EXACT_REVISION_UNAVAILABLE",
+            impact=f"影响 {impact} 的模型调用", owner_entry="/aip/model-providers",
+            recheck_action="回到模型供应商页核对租户内精确版本、生命周期和哈希后刷新本链。",
+        ),
+        _chain_node(
+            "secret_ref", ModelRuntimeReadiness.READY if secret_ready else ModelRuntimeReadiness.BLOCKED,
+            (
+                f"{provider.secret_ref.split(':', 1)[0]} 后端已由同版本健康回执验证 · {provider.secret_version}"
+                if secret_ready and provider else "SecretRef 仅已绑定，尚无同版本新鲜健康回执"
+            ), now=now, blocker_code=None if secret_ready else "SECRET_REF_RUNTIME_EVIDENCE_UNAVAILABLE",
+            impact=f"影响 {impact} 的受控预热与试聊", owner_entry="/aip/model-providers",
+            recheck_action="在授权健康维护窗口生成同版本 Provider 的新鲜健康回执；禁止在页面解析 Secret 正文。",
+            observed_at=latest_health.observed_at if latest_health else now,
+            expires_at=latest_health.expires_at if latest_health else None,
+        ),
+        _chain_node(
+            "policy", ModelRuntimeReadiness.READY if policy_ready else ModelRuntimeReadiness.BLOCKED,
+            "运行策略已生效且 Kill Switch 关闭" if policy_ready else "运行策略未满足生效条件", now=now,
+            exact_ref=route.runtime_policy_ref, blocker_code=None if policy_ready else "RUNTIME_POLICY_NOT_READY",
+            impact=f"影响 {impact} 的网络、数据、预算与限额裁决", owner_entry="/aip/model-router",
+            recheck_action="核对精确策略引用、生命周期与 Kill Switch，再重新解析路由。",
+        ),
+        _chain_node(
+            "eval", ModelRuntimeReadiness.READY if eval_ready else ModelRuntimeReadiness.BLOCKED,
+            "路由与模型评测门均通过" if eval_ready else "路由或模型评测门未通过", now=now,
+            exact_ref=route.eval_gate_ref, blocker_code=None if eval_ready else "EVAL_GATE_NOT_PASSED",
+            impact=f"影响 {impact} 的模型选择", owner_entry="/aip/evals",
+            recheck_action="在评测门页核对同一候选版本的通过结论与有效窗口后刷新本链。",
+        ),
+        _chain_node(
+            "health", ModelRuntimeReadiness.READY if health_ready else ModelRuntimeReadiness.BLOCKED,
+            "供应商健康回执新鲜有效" if health_ready else "供应商健康回执缺失、过期或非健康", now=now,
+            exact_ref=provider_ref, blocker_code=None if health_ready else "PROVIDER_HEALTH_UNAVAILABLE_OR_STALE",
+            impact=f"影响 {impact} 的新运行准入", owner_entry="/aip/model-providers",
+            recheck_action="仅在授权窗口执行 3/3 健康核验并回读 exact Provider 回执；不得重放旧探针。",
+            observed_at=latest_health.observed_at if latest_health else now,
+            expires_at=latest_health.expires_at if latest_health else None,
+        ),
+        _chain_node(
+            "capacity", ModelRuntimeReadiness.READY if capacity_ready else ModelRuntimeReadiness.BLOCKED,
+            "容量池可接受新预留" if capacity_ready else "容量池缺失、非生效或已无可用配额", now=now,
+            blocker_code=None if capacity_ready else "CAPACITY_POOL_NOT_READY",
+            impact=f"影响 {impact} 的并发与 Token 预留", owner_entry="/aip/capacity",
+            recheck_action="在容量管理页核对 exact route/model/provider 绑定和剩余容量后刷新本链。",
+        ),
+    ]
+    selected_candidate = _same_exact_ref(candidate_ref, resolution.selected_model)
+    chain_readiness = (
+        resolution.readiness
+        if selected_candidate
+        else ModelRuntimeReadiness.UNKNOWN
+    )
+    return RuntimeRouteChain(
+        route=route_summary.ref,
+        candidateModel=candidate_ref,
+        taskTypes=route.task_types,
+        readiness=chain_readiness,
+        nodes=nodes,
+        controlledTrialAllowed=(
+            selected_candidate
+            and resolution.readiness is ModelRuntimeReadiness.READY
+            and all(node.status is ModelRuntimeReadiness.READY for node in nodes)
+        ),
+        resolvedAt=now,
+    )
+
+
+@router.get("/chain-overview", response_model=ModelRuntimeChainOverview)
+def get_chain_overview(
+    principal: Principal = Depends(require_principal),
+    runtime_store: AipModelRuntimeStore = Depends(get_store),
+    eval_store: AipEvalAuthorityStore = Depends(get_eval_authority_store),
+):
+    """Return a Secret-free, same-cutoff route chain and receipt-grounded impacts."""
+    scope = _scope(principal)
+    now = datetime.now(UTC)
+    try:
+        route_heads = runtime_store.list_current_assets(scope, "model_route")
+        chains = []
+        for route_summary in route_heads:
+            route = runtime_store.get_route(
+                scope, route_summary.ref.asset_id, route_summary.ref.revision
+            )
+            resolution = AipModelRuntimeResolver(runtime_store).resolve(
+                scope, route.route_id, now=now
+            )
+            candidate_refs = [candidate.model for candidate in route.candidates]
+            if not candidate_refs:
+                candidate_refs = [None]
+            chains.extend(
+                _runtime_route_chain(
+                    scope,
+                    route_summary,
+                    candidate_ref,
+                    resolution,
+                    runtime_store,
+                    now,
+                )
+                for candidate_ref in candidate_refs
+            )
+        receipts = eval_store.list_scope_usage_receipts(scope, limit=1000)
+        attributions = eval_store.list_scope_usage_attributions(scope, limit=5000)
+        task_bindings = eval_store.resolve_lineage_task_bindings(
+            scope, [receipt.lineage_id for receipt in receipts]
+        )
+        task_traces, model_impacts = _runtime_impact_traces(
+            receipts, attributions, task_bindings
+        )
+        return ModelRuntimeChainOverview(
+            tenant={"orgId": scope.org_id, "projectId": scope.project_id},
+            chains=chains,
+            taskTraces=task_traces,
+            modelImpacts=model_impacts,
+            generatedAt=now,
+        )
+    except ModelRuntimeStoreError as exc:
+        raise _map(exc) from exc
+    except AipEvalAuthorityPersistenceError as exc:
+        raise ApiError(
+            code="AIP_USAGE_AUTHORITY_UNAVAILABLE",
+            message="usage authority is unavailable",
+            status_code=503,
+        ) from exc
 
 
 @router.get("/cost-overview", response_model=ModelRuntimeCostOverview)

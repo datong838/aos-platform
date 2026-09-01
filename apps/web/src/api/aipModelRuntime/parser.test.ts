@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseModelRouteRevision, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision } from "./parser";
+import { parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision } from "./parser";
 
 const H = "a".repeat(64);
 const ref = (assetType: string, assetId: string) => ({ assetType, assetId, revision: 1, contentHash: H });
@@ -73,5 +73,52 @@ describe("AIP-7 cost authority parser", () => {
   });
   it("拒绝周期内质量计数不守恒", () => {
     expect(() => parseModelRuntimeCostOverview({ ...cost, usage: { ...cost.usage, periods: [{ ...cost.usage.periods[0], receiptCount: 1 }] } })).toThrow(/用量质量计数不一致/);
+  });
+});
+
+describe("AIP-7 runtime chain parser", () => {
+  const node = (stage: string, status: "ready" | "blocked" = "ready") => ({
+    stage,
+    status,
+    title: `${stage} 核验`,
+    exactRef: stage === "capacity" ? null : ref("RuntimeAssetRevision", stage),
+    observedAt: empty.generatedAt,
+    expiresAt: null,
+    blockerCode: status === "ready" ? null : `${stage.toUpperCase()}_NOT_READY`,
+    impact: "影响经营任务的新运行准入",
+    ownerEntry: "/aip/model-runtime",
+    recheckAction: "刷新当前链路并核对精确版本。",
+  });
+  const chain = {
+    tenant: empty.tenant,
+    chains: [{
+      route: ref("ModelRouteRevision", "route-1"),
+      candidateModel: ref("RegisteredModelRevision", "model-1"),
+      taskTypes: ["经营复盘"],
+      readiness: "ready",
+      nodes: ["provider", "secret_ref", "policy", "eval", "health", "capacity"].map((stage) => node(stage)),
+      controlledTrialAllowed: true,
+      resolvedAt: empty.generatedAt,
+    }],
+    taskTraces: [],
+    modelImpacts: [],
+    generatedAt: empty.generatedAt,
+  };
+  it("接受严格六节点同截止面运行链", () => {
+    expect(parseModelRuntimeChainOverview(chain).chains[0].controlledTrialAllowed).toBe(true);
+  });
+  it("拒绝缺失节点或错序链路", () => {
+    const nodes = [...chain.chains[0].nodes].reverse();
+    expect(() => parseModelRuntimeChainOverview({ ...chain, chains: [{ ...chain.chains[0], nodes }] })).toThrow(/阶段顺序不完整/);
+  });
+  it("拒绝受控试运行门越过失败节点", () => {
+    const nodes = chain.chains[0].nodes.map((item) => item.stage === "health" ? node("health", "blocked") : item);
+    expect(() => parseModelRuntimeChainOverview({ ...chain, chains: [{ ...chain.chains[0], nodes }] })).toThrow(/受控试运行门/);
+  });
+  it("拒绝链路节点返回 SecretRef 或凭据字段", () => {
+    const secretNodes = chain.chains[0].nodes.map((item) => item.stage === "secret_ref" ? { ...item, secret: "plaintext" } : item);
+    expect(() => parseModelRuntimeChainOverview({ ...chain, chains: [{ ...chain.chains[0], nodes: secretNodes }] })).toThrow(/凭据字段/);
+    const referenceNodes = chain.chains[0].nodes.map((item) => item.stage === "secret_ref" ? { ...item, secretRef: "vault://forbidden" } : item);
+    expect(() => parseModelRuntimeChainOverview({ ...chain, chains: [{ ...chain.chains[0], nodes: referenceNodes }] })).toThrow(/凭据引用/);
   });
 });

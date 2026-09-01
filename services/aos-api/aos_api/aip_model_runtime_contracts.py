@@ -380,6 +380,90 @@ class ModelRuntimeOverview(AipContractModel):
     generated_at: datetime
 
 
+class RuntimeChainNode(AipContractModel):
+    stage: str = Field(pattern=r"^(provider|secret_ref|policy|eval|health|capacity)$")
+    status: ModelRuntimeReadiness
+    title: str = Field(min_length=1, max_length=240)
+    exact_ref: VersionedAssetRef | None = None
+    observed_at: datetime | None = None
+    expires_at: datetime | None = None
+    blocker_code: str | None = Field(default=None, min_length=1, max_length=160)
+    impact: str = Field(min_length=1, max_length=500)
+    owner_entry: str = Field(min_length=1, max_length=240)
+    recheck_action: str = Field(min_length=1, max_length=500)
+
+    @model_validator(mode="after")
+    def _honest_status(self) -> "RuntimeChainNode":
+        if self.status is ModelRuntimeReadiness.READY and self.blocker_code is not None:
+            raise ValueError("ready chain node cannot carry a blocker")
+        if self.status is not ModelRuntimeReadiness.READY and self.blocker_code is None:
+            raise ValueError("blocked/unknown chain node requires a blocker")
+        if self.expires_at is not None and self.observed_at is None:
+            raise ValueError("chain node expiry requires an observation cutoff")
+        return self
+
+
+class RuntimeTraceRef(AipContractModel):
+    resource_type: str = Field(pattern=r"^(task|agent|logic|model)$")
+    resource_id: str = Field(min_length=1, max_length=240)
+    revision: str = Field(min_length=1, max_length=240)
+
+
+class RuntimeTaskModelTrace(AipContractModel):
+    task: RuntimeTraceRef
+    receipt_count: int = Field(ge=1)
+    models: list[RuntimeTraceRef] = Field(default_factory=list, max_length=100)
+    agents: list[RuntimeTraceRef] = Field(default_factory=list, max_length=100)
+    logics: list[RuntimeTraceRef] = Field(default_factory=list, max_length=100)
+    missing_dimensions: list[str] = Field(default_factory=list, max_length=3)
+
+    @field_validator("missing_dimensions")
+    @classmethod
+    def _honest_missing_dimensions(cls, values: list[str]) -> list[str]:
+        allowed = {"model", "agent", "logic"}
+        if any(value not in allowed for value in values) or len(values) != len(set(values)):
+            raise ValueError("missing dimensions must be unique model/agent/logic values")
+        return values
+
+
+class RuntimeModelImpactTrace(AipContractModel):
+    model: RuntimeTraceRef
+    receipt_count: int = Field(ge=1)
+    tasks: list[RuntimeTraceRef] = Field(default_factory=list, max_length=100)
+    agents: list[RuntimeTraceRef] = Field(default_factory=list, max_length=100)
+    logics: list[RuntimeTraceRef] = Field(default_factory=list, max_length=100)
+
+
+class RuntimeRouteChain(AipContractModel):
+    route: VersionedAssetRef
+    candidate_model: VersionedAssetRef | None = None
+    task_types: list[str] = Field(default_factory=list, max_length=64)
+    readiness: ModelRuntimeReadiness
+    nodes: list[RuntimeChainNode] = Field(min_length=6, max_length=6)
+    controlled_trial_allowed: bool
+    resolved_at: datetime
+
+    @model_validator(mode="after")
+    def _trial_gate_is_exact(self) -> "RuntimeRouteChain":
+        stages = [node.stage for node in self.nodes]
+        if stages != ["provider", "secret_ref", "policy", "eval", "health", "capacity"]:
+            raise ValueError("runtime chain requires the canonical six-stage order")
+        all_ready = all(node.status is ModelRuntimeReadiness.READY for node in self.nodes)
+        if self.controlled_trial_allowed != (
+            self.readiness is ModelRuntimeReadiness.READY and all_ready
+        ):
+            raise ValueError("controlled trial gate must match the same-cutoff route chain")
+        return self
+
+
+class ModelRuntimeChainOverview(AipContractModel):
+    tenant: TenantContext
+    chains: list[RuntimeRouteChain]
+    task_traces: list[RuntimeTaskModelTrace]
+    model_impacts: list[RuntimeModelImpactTrace]
+    generated_at: datetime
+
+
 class ModelPriceAuthoritySummary(AipContractModel):
     """Secret-free operational price interpretation for one exact model."""
 
