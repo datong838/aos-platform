@@ -267,15 +267,27 @@ describe("AIP Logic Stage A2 · canonical graph 页面集成", () => {
     host.remove();
   });
 
-  async function renderPage(flowId?: string) {
+  async function renderPage(flowId?: string, search = "") {
     await act(async () => root.render(
-      <MemoryRouter initialEntries={[flowId ? `/aip/logic/${flowId}` : "/aip/logic"]}>
+      <MemoryRouter initialEntries={[`${flowId ? `/aip/logic/${flowId}` : "/aip/logic"}${search}`]}>
         <LogicCanvasPage flowId={flowId} />
         <LocationProbe />
       </MemoryRouter>,
     ));
     await flush();
   }
+
+  it("消费文档交付上下文但不自动创建或保存 Logic", async () => {
+    graphApi.listLogicGraphs.mockResolvedValueOnce({ items: [], count: 0 });
+    await renderPage(undefined, "?documentId=doc-1&lineageRef=document-lineage%3Adoc-1%3Asha256");
+    const context = host.querySelector("[data-testid='logic-document-context']");
+    expect(context?.textContent).toContain("已接收文档智能交付");
+    expect(context?.textContent).toContain("doc-1");
+    expect(context?.textContent).toContain("document-lineage:doc-1:sha256");
+    expect(host.textContent).toContain("尚无已保存业务逻辑");
+    expect(graphApi.createLogicGraph).not.toHaveBeenCalled();
+    expect(graphApi.replaceLogicGraph).not.toHaveBeenCalled();
+  });
 
   async function openHistoryTab() {
     await act(async () => button("运行历史").click());

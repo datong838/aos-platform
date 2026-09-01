@@ -82,13 +82,19 @@ class DocintelExtractEngine:
         template_id: str = "finance_report",
         text: str = "",
         name: str | None = None,
+        field_names: list[str] | None = None,
+        template_revision: str = "v1",
     ) -> dict[str, Any]:
         """W4-A8：按模板启发式抽取字段（真 API，非 LLM）。"""
-        tid = template_id if template_id in _TEMPLATE_FIELDS else "finance_report"
-        field_names = _TEMPLATE_FIELDS[tid]
+        if field_names:
+            tid = template_id
+            selected_fields = [str(field).strip() for field in field_names if str(field).strip()]
+        else:
+            tid = template_id if template_id in _TEMPLATE_FIELDS else "finance_report"
+            selected_fields = _TEMPLATE_FIELDS[tid]
         lines = [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
         fields: list[dict[str, Any]] = []
-        for i, fname in enumerate(field_names):
+        for i, fname in enumerate(selected_fields):
             value = ""
             for ln in lines:
                 if fname in ln or (":" in ln and ln.split(":", 1)[0].strip() in fname):
@@ -116,6 +122,7 @@ class DocintelExtractEngine:
             "demo": False,
             "source": "aip-docintel-extract/run",
             "template_id": tid,
+            "template_revision": template_revision,
             "name": name or "",
             "fields": fields,
             "char_count": len(text or ""),

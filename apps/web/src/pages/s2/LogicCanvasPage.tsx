@@ -215,6 +215,9 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
     ? requestedTab as ShellTab
     : "edit";
   const explicitNewDraft = !activeFlowId && searchParams.get("new") === "1";
+  const documentId = searchParams.get("documentId")?.trim() || "";
+  const documentLineageRef = searchParams.get("lineageRef")?.trim() || "";
+  const documentHandoff = documentId && documentLineageRef ? { documentId, lineageRef: documentLineageRef } : null;
   const templateRef = useRef<LogicGraphSnapshot | null>(null);
   if (!templateRef.current) templateRef.current = createTemplate();
 
@@ -964,6 +967,7 @@ export function LogicCanvasPage({ flowId }: LogicCanvasPageProps = {}) {
       title="逻辑编排"
       lede="用自由画布编排权威业务逻辑；保存后必须与服务端严格回读一致。编辑、运行历史和自动化分区各司其职。"
     >
+      {documentHandoff && <section className="notice" data-testid="logic-document-context" style={{ marginBottom: 12 }}><strong>已接收文档智能交付</strong><p>该文档是待绑定的逻辑输入候选。只有显式选择或新建业务逻辑并完成保存后才会形成绑定；页面不会自动创建节点或保存草稿。</p><details><summary>交付审计信息</summary><code>{documentHandoff.documentId} · {documentHandoff.lineageRef}</code></details><Link to={`/aip/doc-intelligence?documentId=${encodeURIComponent(documentHandoff.documentId)}`}>返回文档智能 →</Link></section>}
       <div role="tablist" aria-label="逻辑页分区" style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
         {(
           [

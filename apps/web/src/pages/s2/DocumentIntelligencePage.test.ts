@@ -20,6 +20,7 @@ import {
   pathLabel,
   normalizeExtractFields,
   requireMatchingDocument,
+  parseApiDocument,
   DOCINTEL_PIPELINE_TEMPLATES,
   type DocState,
   type ExtractField,
@@ -411,9 +412,16 @@ describe("DocumentIntelligencePage · W4 pathLabel / extract helpers", () => {
   });
 
   it("requireMatchingDocument 对响应 id 错配 fail-closed", () => {
-    const document = { id: "doc-1", name: "a.pdf" };
+    const document = { id: "doc-1", name: "a.pdf", org_id: "org-org", project_id: "dev-project", receipt_ref: "receipt-1", lineage_ref: "lineage-1" };
     expect(requireMatchingDocument(document, "doc-1", "测试")).toBe(document);
     expect(() => requireMatchingDocument(document, "doc-2", "测试")).toThrow("响应文档错配");
+  });
+
+  it("parseApiDocument 对未知字段及缺失 Receipt fail-closed", () => {
+    const base = { id: "doc-1", name: "a.pdf", org_id: "org-org", project_id: "dev-project", receipt_ref: "receipt-1", lineage_ref: "lineage-1" };
+    expect(parseApiDocument(base).id).toBe("doc-1");
+    expect(() => parseApiDocument({ ...base, surprise: true })).toThrow("未知字段");
+    expect(() => parseApiDocument({ ...base, receipt_ref: "" })).toThrow("receipt_ref");
   });
 
   it("DOCINTEL_PIPELINE_TEMPLATES 含 6 个视觉稿模板", () => {

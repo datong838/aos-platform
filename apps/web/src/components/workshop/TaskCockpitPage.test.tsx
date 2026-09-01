@@ -46,7 +46,7 @@ const unreadDetails = { listTaskCockpitRunSteps: vi.fn(), listTaskCockpitRunChec
 describe("TaskCockpitPage", () => {
   let host: HTMLDivElement; let root: Root;
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
-  afterEach(() => { act(() => root.unmount()); host.remove(); });
+  afterEach(() => { act(() => root.unmount()); host.remove(); window.history.replaceState({}, "", "/"); });
 
   it("shows the W8-12 release decision as NO_GO without approval flag or release controls", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
@@ -135,6 +135,15 @@ describe("TaskCockpitPage", () => {
     expect(host.querySelector('[role="dialog"]')?.getAttribute("aria-label")).toBe("导购顾问介绍");
     await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')).toBeNull();
+  });
+
+  it("从数字同事目录进入时定位角色并保留返回治理页和贡献回读语义", async () => {
+    window.history.replaceState({}, "", "/workshop/cockpit?colleague=shopping_advisor&focus=contribution");
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')).not.toBeNull();
+    expect(host.textContent).toContain("正在回读导购顾问的工作台贡献");
+    expect(host.querySelector<HTMLAnchorElement>('[data-testid="colleague-return-registry"]')?.getAttribute("href")).toBe("/aip/agent-registry");
   });
 
   it("独立呈现 W8-03 四层贡献、七阶段与五轴，所有命令保持关闭", async () => {

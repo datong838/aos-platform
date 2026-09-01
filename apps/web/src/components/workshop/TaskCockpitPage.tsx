@@ -46,6 +46,7 @@ const DEVELOPMENT_TASK_PATTERN = /(?:^|\s)(?:R\d+(?:-[0-9A-Z]+)?|W\d+(?:-[0-9A-Z
 
 type CockpitColleague = {
   id: string;
+  roleKey: string;
   name: string;
   group: "execution" | "planning";
   icon: IconName;
@@ -56,12 +57,12 @@ type CockpitColleague = {
 };
 
 const COCKPIT_COLLEAGUES: readonly CockpitColleague[] = [
-  { id: "service-specialist", name: "客服专员", group: "execution", icon: "chat", subtitle: "客户服务与售后风险处置专家", capability: "意图与情绪识别、订单与物流安全查询、售后分诊、投诉升级、满意度反哺", boundary: "最小验证后读取脱敏事实；输出回复或工单草稿，高风险事项转人工", agents: "素材采集、文案生成" },
-  { id: "private-domain-steward", name: "私域管家", group: "execution", icon: "heart", subtitle: "客户关系沉淀与生命周期运营专家", capability: "授权身份关联、可解释标签分层、触达排期、沉默召回、关系反馈", boundary: "仅使用受限客户投影；遵守渠道授权、频控与退订边界", agents: "素材采集、文案生成" },
-  { id: "shopping-advisor", name: "导购顾问", group: "execution", icon: "user", subtitle: "购物决策支持与转化优化专家", capability: "需求诊断、约束下商品推荐、成分属性解释、商品对比搭配、异议处理与促单", boundary: "推荐必须可解释并受库存、价格、禁忌与承诺边界约束；越界转人工", agents: "素材采集、策略规划、脚本撰写、直播编排" },
-  { id: "data-advisor", name: "数据参谋", group: "planning", icon: "graph", subtitle: "经营洞察、任务编排与效果复盘专家", capability: "经营健康巡检、内外机会研究、增长方案、审批后任务拆解、执行监控、归因复盘", boundary: "建议必须有证据和时效；审批前只产出草稿，派活须可追溯到经营事实或记忆", agents: "素材采集、策略规划、数据复盘" },
-  { id: "content-officer", name: "内容官", group: "planning", icon: "film", subtitle: "全平台内容策略与生产编排专家", capability: "选题研究、人群与内容策略、图文文案、短视频策划、多平台适配、事实品牌合规审核、线索识别与归因", boundary: "所有内容先形成草稿；事实、品牌、版权与平台规则通过审核后才能发布", agents: "素材采集、策略规划、文案生成、脚本撰写、内容审核、平台适配" },
-  { id: "campaign-planner", name: "活动策划师", group: "planning", icon: "spark", subtitle: "增长活动设计、协同与止损专家", capability: "机会目标、人群商品机制、预算毛利模拟、跨同事任务编排、执行监控止损、增量复盘", boundary: "方案受库存、毛利、预算、投诉与履约护栏约束；外部合作和高风险动作需审批", agents: "素材采集、策略规划、平台适配、数据复盘" },
+  { id: "service-specialist", roleKey: "customer_service", name: "客服专员", group: "execution", icon: "chat", subtitle: "客户服务与售后风险处置专家", capability: "意图与情绪识别、订单与物流安全查询、售后分诊、投诉升级、满意度反哺", boundary: "最小验证后读取脱敏事实；输出回复或工单草稿，高风险事项转人工", agents: "素材采集、文案生成" },
+  { id: "private-domain-steward", roleKey: "private_domain_manager", name: "私域管家", group: "execution", icon: "heart", subtitle: "客户关系沉淀与生命周期运营专家", capability: "授权身份关联、可解释标签分层、触达排期、沉默召回、关系反馈", boundary: "仅使用受限客户投影；遵守渠道授权、频控与退订边界", agents: "素材采集、文案生成" },
+  { id: "shopping-advisor", roleKey: "shopping_advisor", name: "导购顾问", group: "execution", icon: "user", subtitle: "购物决策支持与转化优化专家", capability: "需求诊断、约束下商品推荐、成分属性解释、商品对比搭配、异议处理与促单", boundary: "推荐必须可解释并受库存、价格、禁忌与承诺边界约束；越界转人工", agents: "素材采集、策略规划、脚本撰写、直播编排" },
+  { id: "data-advisor", roleKey: "data_advisor", name: "数据参谋", group: "planning", icon: "graph", subtitle: "经营洞察、任务编排与效果复盘专家", capability: "经营健康巡检、内外机会研究、增长方案、审批后任务拆解、执行监控、归因复盘", boundary: "建议必须有证据和时效；审批前只产出草稿，派活须可追溯到经营事实或记忆", agents: "素材采集、策略规划、数据复盘" },
+  { id: "content-officer", roleKey: "content_officer", name: "内容官", group: "planning", icon: "film", subtitle: "全平台内容策略与生产编排专家", capability: "选题研究、人群与内容策略、图文文案、短视频策划、多平台适配、事实品牌合规审核、线索识别与归因", boundary: "所有内容先形成草稿；事实、品牌、版权与平台规则通过审核后才能发布", agents: "素材采集、策略规划、文案生成、脚本撰写、内容审核、平台适配" },
+  { id: "campaign-planner", roleKey: "campaign_planner", name: "活动策划师", group: "planning", icon: "spark", subtitle: "增长活动设计、协同与止损专家", capability: "机会目标、人群商品机制、预算毛利模拟、跨同事任务编排、执行监控止损、增量复盘", boundary: "方案受库存、毛利、预算、投诉与履约护栏约束；外部合作和高风险动作需审批", agents: "素材采集、策略规划、平台适配、数据复盘" },
 ];
 
 function errorPhase(error: unknown): CorePhase {
@@ -87,10 +88,14 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
   onStatusChange: (status: "" | TaskCockpitTaskStatus) => void;
   onReload: () => void;
 }) {
+  const entryContext = useRef(() => {
+    const search = new URLSearchParams(window.location.search);
+    return { roleKey: search.get("colleague"), contribution: search.get("focus") === "contribution" };
+  }).current();
   const [commandText, setCommandText] = useState("");
   const [commandNotice, setCommandNotice] = useState("");
   const [calendarVisible, setCalendarVisible] = useState(false);
-  const [activeColleague, setActiveColleague] = useState<CockpitColleague | null>(null);
+  const [activeColleague, setActiveColleague] = useState<CockpitColleague | null>(() => COCKPIT_COLLEAGUES.find((profile) => profile.roleKey === entryContext.roleKey) ?? null);
   const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({});
   const surfaceRef = useRef<HTMLElement | null>(null);
   const colleagueTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -177,6 +182,10 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
     <em>个人运行状态待核对</em>
   </button>;
   return <section ref={surfaceRef} className={`task-cockpit-visual-surface is-${phase}`} aria-label="日常任务总控大屏">
+    {entryContext.roleKey && activeColleague ? <div className="notice" role="status" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, margin: "0 12px 10px" }}>
+      <span>{entryContext.contribution ? `正在回读${activeColleague.name}的工作台贡献` : `已定位${activeColleague.name}的业务协作入口`}；正式任务和贡献只从当前租户权威记录读取。</span>
+      <a className="btn" href="/aip/agent-registry" data-testid="colleague-return-registry">返回数字同事目录</a>
+    </div> : null}
     <div className="task-cockpit-visual-metrics" aria-label="实时经营与任务概览">
       <div><strong>{response ? items.length : "待核对"}</strong><span>今日经营任务</span><small>已排除系统验收记录</small></div>
       <div><strong>{value(active)}</strong><span>执行中</span><small>活跃状态</small></div>

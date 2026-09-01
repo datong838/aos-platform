@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AipAssistPage, recentTaskBusinessTitle, subjectFromSearch } from "./AipAssistPage";
+import { AipAssistPage, documentHandoffFromSearch, recentTaskBusinessTitle, subjectFromSearch } from "./AipAssistPage";
 import type { AssistEvent, AssistThread } from "../../api/aipWorkbench";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -35,6 +35,21 @@ describe("AipAssistPage exact subject", () => {
     expect(subjectFromSearch(value)?.selectionRefs).toEqual([{ resourceType: "QueryResultRevision", resourceId: "query-1", revision: "7", authority: "aip-analyst" }]);
   });
   it("does not invent a default AgentRun", () => { const value = params(); value.delete("agentRunAuthority"); expect(subjectFromSearch(value)).toBeNull(); });
+
+  it("接收文档交付时保留精确谱系，但不伪造任务运行", async () => {
+    const handoff = new URLSearchParams({ documentId: "doc-1", lineageRef: "document-lineage:doc-1:sha256" });
+    expect(documentHandoffFromSearch(handoff)).toEqual({ documentId: "doc-1", lineageRef: "document-lineage:doc-1:sha256" });
+    window.history.replaceState({}, "", `/aip/assist?${handoff.toString()}`);
+    const client = { createThread: vi.fn(), streamTurn: vi.fn(), cancelTaskRun: vi.fn(), newKey: vi.fn(() => "key"), listRecentTasks: vi.fn().mockResolvedValue([]) };
+    await act(async () => root.render(<MemoryRouter><AipAssistPage client={client} /></MemoryRouter>));
+    await act(async () => undefined);
+    const context = host.querySelector("[data-testid='assist-document-context']");
+    expect(context?.textContent).toContain("已接收文档智能交付");
+    expect(context?.textContent).toContain("doc-1");
+    expect(context?.textContent).toContain("document-lineage:doc-1:sha256");
+    expect(host.textContent).toContain("选择正在协作的真实任务");
+    expect((host.querySelector("input[aria-label='向当前智能体运行提问']") as HTMLInputElement).disabled).toBe(true);
+  });
 
   it("使用任务协作助手业务名称，并只把真实近期任务作为上游入口", async () => {
     window.history.replaceState({}, "", "/aip/assist");

@@ -44,6 +44,39 @@ export type DocItem = {
   extractedFields?: ExtractField[];
   ontologyObjectId?: string;
   contentSha256?: string;
+  sourceLabel: string;
+  documentKind: string;
+  sensitivity: string;
+  retentionPolicy: string;
+  templateRevision?: string;
+  processingProgress: number;
+  currentPage: number;
+  totalPages: number;
+  extractionConfidence?: number;
+  usageUnits: number;
+  processingAttempts: number;
+  runEvidenceRef?: string;
+  lineageRef?: string;
+  receiptRef?: string;
+  receiptRefs: string[];
+  reviewStatus: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  downstreamRef?: string;
+};
+
+export type DocumentGovernanceInput = {
+  sourceLabel: string;
+  documentKind: string;
+  sensitivity: "public" | "internal" | "restricted";
+  retentionPolicy: "project_default" | "30_days" | "180_days" | "permanent";
+};
+
+export const DEFAULT_DOCUMENT_GOVERNANCE: DocumentGovernanceInput = {
+  sourceLabel: "人工业务文档导入",
+  documentKind: "business_document",
+  sensitivity: "internal",
+  retentionPolicy: "project_default",
 };
 
 /** 提取字段 */
@@ -318,13 +351,79 @@ export type ApiDocument = {
   extracted_fields?: Record<string, unknown>;
   history?: Array<{ state?: string; timestamp?: number | string; note?: string }>;
   created_at?: number;
+  source_label?: string;
+  document_kind?: string;
+  sensitivity?: string;
+  retention_policy?: string;
+  template_revision?: string;
+  processing_progress?: number;
+  current_page?: number;
+  total_pages?: number;
+  extraction_confidence?: number | null;
+  usage_units?: number;
+  processing_attempts?: number;
+  run_evidence_ref?: string;
+  lineage_ref?: string;
+  receipt_ref?: string;
+  receipt_refs?: string[];
+  review_status?: string;
+  reviewed_by?: string;
+  reviewed_at?: number | null;
+  downstream_ref?: string;
+  org_id?: string;
+  project_id?: string;
+  source_id?: string;
+  template_id?: string;
+  content_type?: string;
+  parser?: string;
+  updated_at?: number;
 };
+
+const API_DOCUMENT_KEYS = new Set([
+  "id", "name", "source_id", "template_id", "file_type", "status", "extracted_fields",
+  "size_bytes", "content_type", "content_sha256", "ocr_text", "parser", "error_message",
+  "ontology_object_id", "history", "org_id", "project_id", "source_label", "document_kind",
+  "sensitivity", "retention_policy", "template_revision", "processing_progress", "current_page",
+  "total_pages", "extraction_confidence", "usage_units", "run_evidence_ref", "lineage_ref",
+  "processing_attempts",
+  "receipt_ref", "receipt_refs", "review_status", "reviewed_by", "reviewed_at", "downstream_ref",
+  "created_at", "updated_at",
+]);
+
+export function parseApiDocument(value: unknown): ApiDocument {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("文档回包不是对象");
+  const record = value as Record<string, unknown>;
+  const unknown = Object.keys(record).filter((key) => !API_DOCUMENT_KEYS.has(key));
+  if (unknown.length) throw new Error(`文档回包含未知字段：${unknown.join(", ")}`);
+  for (const key of ["id", "name", "org_id", "project_id", "receipt_ref", "lineage_ref"] as const) {
+    if (typeof record[key] !== "string" || !(record[key] as string).trim()) throw new Error(`文档回包缺少 ${key}`);
+  }
+  if (record.receipt_refs !== undefined && (!Array.isArray(record.receipt_refs) || record.receipt_refs.some((item) => typeof item !== "string"))) {
+    throw new Error("文档回包 receipt_refs 非法");
+  }
+  return record as ApiDocument;
+}
 
 export type DocumentStats = {
   total: number;
   processing: number;
   average_confidence: number | null;
   template_count: number;
+};
+
+export type ManagedExtractionTemplate = {
+  id: string;
+  name: string;
+  description: string;
+  fields: Array<{ name?: string; label?: string }>;
+  doc_type: string;
+  revision: number;
+  validation_rules: Array<{ field?: string; rule?: string }>;
+  model_route: string;
+  estimated_cost_units: number;
+  approval_gate: string;
+  active: boolean;
+  change_note: string;
 };
 
 function normalizeDocState(status?: string): DocState {
@@ -363,25 +462,53 @@ export function mapApiDocument(doc: ApiDocument): DocItem {
       timestamp: formatTimestamp(entry.timestamp),
       note: String(entry.note || ""),
     })),
+    sourceLabel: doc.source_label || "来源未标注",
+    documentKind: doc.document_kind || "business_document",
+    sensitivity: doc.sensitivity || "internal",
+    retentionPolicy: doc.retention_policy || "project_default",
+    templateRevision: doc.template_revision || undefined,
+    processingProgress: Number(doc.processing_progress || 0),
+    currentPage: Number(doc.current_page || 0),
+    totalPages: Number(doc.total_pages || 0),
+    extractionConfidence: typeof doc.extraction_confidence === "number" ? doc.extraction_confidence : undefined,
+    usageUnits: Number(doc.usage_units || 0),
+    processingAttempts: Number(doc.processing_attempts || 0),
+    runEvidenceRef: doc.run_evidence_ref || undefined,
+    lineageRef: doc.lineage_ref || undefined,
+    receiptRef: doc.receipt_ref || undefined,
+    receiptRefs: doc.receipt_refs || [],
+    reviewStatus: doc.review_status || "pending",
+    reviewedBy: doc.reviewed_by || undefined,
+    reviewedAt: doc.reviewed_at == null ? undefined : formatTimestamp(doc.reviewed_at),
+    downstreamRef: doc.downstream_ref || undefined,
   };
 }
 
 export function requireMatchingDocument(
-  document: ApiDocument,
+  document: unknown,
   expectedId: string,
   operation: string,
 ): ApiDocument {
-  if (!document || document.id !== expectedId) {
-    throw new Error(`${operation}响应文档错配：期望 ${expectedId}，实际 ${document?.id || "缺失"}`);
+  const parsed = parseApiDocument(document);
+  if (parsed.id !== expectedId) {
+    throw new Error(`${operation}响应文档错配：期望 ${expectedId}，实际 ${parsed.id}`);
   }
-  return document;
+  return parsed;
 }
 
 export async function uploadDocumentFile(
   file: File,
   fetchImpl: typeof fetch = fetch,
+  governance: DocumentGovernanceInput = DEFAULT_DOCUMENT_GOVERNANCE,
 ): Promise<ApiDocument> {
-  const path = `/api/datasource/documents/upload?name=${encodeURIComponent(file.name)}`;
+  const params = new URLSearchParams({
+    name: file.name,
+    source_label: governance.sourceLabel,
+    document_kind: governance.documentKind,
+    sensitivity: governance.sensitivity,
+    retention_policy: governance.retentionPolicy,
+  });
+  const path = `/api/datasource/documents/upload?${params.toString()}`;
   const response = await fetchImpl(`${getApiBase()}${path}`, {
     method: "POST",
     headers: {
@@ -394,7 +521,7 @@ export async function uploadDocumentFile(
     const body = await response.json().catch(() => ({})) as { detail?: string; message?: string };
     throw new Error(body.detail || body.message || `上传失败 HTTP ${response.status}`);
   }
-  return response.json() as Promise<ApiDocument>;
+  return parseApiDocument(await response.json());
 }
 
 /* =========================================================================
@@ -627,24 +754,14 @@ function OcrPanel({ doc, onCorrectText }: { doc: DocItem; onCorrectText: (text: 
       </div>
 
       <div style={{ display: "flex", gap: 16 }}>
-        {/* 左侧：文档原图模拟 */}
-        <div style={{ flex: "0 0 200px", height: 240, background: "var(--aos-surface-hover)", border: "1px solid var(--aos-border)", borderRadius: 4, position: "relative", overflow: "hidden" }}>
-          <svg width="100%" height="100%" viewBox="0 0 200 240">
-            {/* 模拟文档背景 */}
-            <rect x="10" y="10" width="180" height="220" fill="var(--aos-surface)" stroke="var(--aos-border)" />
-            {/* 模拟 OCR 识别框 */}
-            <rect x="20" y="25" width="120" height="12" fill="none" stroke="var(--aos-green)" strokeWidth="1" strokeDasharray="3 2" />
-            <rect x="20" y="50" width="80" height="12" fill="none" stroke="var(--aos-amber)" strokeWidth="1" strokeDasharray="3 2" />
-            <rect x="20" y="75" width="140" height="12" fill="none" stroke="var(--aos-green)" strokeWidth="1" strokeDasharray="3 2" />
-            <rect x="20" y="100" width="100" height="12" fill="none" stroke="var(--aos-red)" strokeWidth="1" strokeDasharray="3 2" />
-            <rect x="20" y="125" width="110" height="12" fill="none" stroke="var(--aos-green)" strokeWidth="1" strokeDasharray="3 2" />
-            {/* 标注 */}
-            <text x="150" y="33" fontSize="7" fill="var(--aos-green)">98%</text>
-            <text x="110" y="58" fontSize="7" fill="var(--aos-amber)">85%</text>
-            <text x="170" y="83" fontSize="7" fill="var(--aos-green)">92%</text>
-            <text x="130" y="108" fontSize="7" fill="var(--aos-red)">65%</text>
-            <text x="140" y="133" fontSize="7" fill="var(--aos-green)">91%</text>
-          </svg>
+        <div style={{ flex: "0 0 230px", minHeight: 240, padding: 12, background: "var(--aos-surface-hover)", border: "1px solid var(--aos-border)", borderRadius: 4 }}>
+          <strong style={{ display: "block", fontSize: 12, marginBottom: 8 }}>原文对照 · 服务端解析</strong>
+          <div style={{ fontSize: 11, color: "var(--aos-text-secondary)", marginBottom: 8 }}>
+            {doc.totalPages > 0 ? `第 ${doc.currentPage || 1}/${doc.totalPages} 页` : "页码以服务端回包为准"}
+          </div>
+          <pre style={{ whiteSpace: "pre-wrap", maxHeight: 190, overflow: "auto", fontSize: 11, lineHeight: 1.55, margin: 0 }}>
+            {doc.ocrText || "服务端尚未返回可对照原文"}
+          </pre>
         </div>
 
         {/* 右侧：识别文本 */}
@@ -675,12 +792,72 @@ function OcrPanel({ doc, onCorrectText }: { doc: DocItem; onCorrectText: (text: 
               {doc.ocrText || "（暂无识别文本）"}
             </pre>
           )}
-          <div style={{ marginTop: 8, fontSize: 11, color: "var(--aos-text-tertiary)" }}>
-            绿色框 = 高置信度 · 橙色框 = 中置信度 · 红色框 = 低置信度（需人工校正）
-          </div>
+          <div style={{ marginTop: 8, fontSize: 11, color: "var(--aos-text-tertiary)" }}>人工校正只在服务端确认保存后生效。</div>
         </div>
       </div>
     </div>
+  );
+}
+
+function DocumentGovernancePanel({ doc }: { doc: DocItem }) {
+  const confidence = doc.extractionConfidence == null ? "尚无" : `${(doc.extractionConfidence * 100).toFixed(1)}%`;
+  return <section data-testid="document-governance-panel" style={{ border: "1px solid var(--aos-border)", background: "var(--aos-surface)", padding: 12, marginBottom: 12 }}>
+    <strong style={{ display: "block", marginBottom: 8 }}>来源、治理与运行证据</strong>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8, fontSize: 12 }}>
+      <span>来源：{doc.sourceLabel}</span><span>文档类型：{doc.documentKind}</span><span>敏感级别：{doc.sensitivity}</span><span>保留策略：{doc.retentionPolicy}</span>
+      <span>模板版本：{doc.templateRevision || "尚未抽取"}</span><span>处理进度：{doc.processingProgress}%</span><span>页码：{doc.totalPages ? `${doc.currentPage}/${doc.totalPages}` : "尚无"}</span><span>最低置信度：{confidence}</span><span>安全处理次数：{doc.processingAttempts}</span>
+      <span>用量：{doc.usageUnits ? `${doc.usageUnits} 字符` : "尚无"}</span><span>上传/抽取 Receipt：{doc.receiptRef ? "已取得" : "尚未取得"}</span><span>谱系：{doc.lineageRef ? "已取得" : "尚未取得"}</span><span>运行证据：{doc.runEvidenceRef ? "已取得" : "尚未抽取"}</span>
+      <span>复核状态：{doc.reviewStatus}</span><span>复核人：{doc.reviewedBy || "尚未复核"}</span><span>复核时间：{doc.reviewedAt || "尚未复核"}</span><span>下游交付：{doc.downstreamRef || "尚未交付"}</span>
+    </div>
+    <details style={{ marginTop: 8, fontSize: 11 }}><summary>技术标识（审计用）</summary><pre style={{ whiteSpace: "pre-wrap" }}>{[doc.receiptRef, doc.lineageRef, doc.runEvidenceRef].filter(Boolean).join("\n") || "暂无"}</pre></details>
+  </section>;
+}
+
+function TemplateGovernancePanel({
+  templates,
+  busy,
+  onCreate,
+  onRevise,
+  onCompare,
+  onRollback,
+}: {
+  templates: ManagedExtractionTemplate[];
+  busy: boolean;
+  onCreate: () => void;
+  onRevise: (template: ManagedExtractionTemplate) => void;
+  onCompare: (template: ManagedExtractionTemplate) => void;
+  onRollback: (template: ManagedExtractionTemplate) => void;
+}) {
+  return (
+    <section data-testid="template-governance-panel" style={{ border: "1px solid var(--aos-border)", background: "var(--aos-surface)", padding: 14, marginBottom: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 10 }}>
+        <div><strong>提取模板治理</strong><div style={{ fontSize: 12, color: "var(--aos-text-secondary)", marginTop: 3 }}>模板字段、校验、模型路由、成本与审批门均由当前租户服务端版本控制。</div></div>
+        <button type="button" disabled={busy} onClick={onCreate} style={batchBtnStyle}>新建合同模板</button>
+      </div>
+      {templates.length === 0 ? (
+        <div style={{ padding: 12, border: "1px dashed var(--aos-border)", color: "var(--aos-text-secondary)", fontSize: 13 }}>当前租户尚无自定义模板；可新建模板，不会注入示例文档。</div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 10 }}>
+          {templates.map((template) => (
+            <article key={template.id} data-testid={`managed-template-${template.id}`} style={{ border: "1px solid var(--aos-border)", padding: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><strong>{template.name}</strong><span>v{template.revision}</span></div>
+              <p style={{ margin: "8px 0", fontSize: 13 }}>{template.description || "无说明"}</p>
+              <div style={{ fontSize: 12, color: "var(--aos-text-secondary)", lineHeight: 1.8 }}>
+                <div>中文字段：{(template.fields || []).map((field) => field.label || field.name).filter(Boolean).join("、") || "未配置"}</div>
+                <div>校验：{(template.validation_rules || []).map((rule) => `${rule.field || "字段"} ${rule.rule || "规则"}`).join("；") || "未配置"}</div>
+                <div>模型路由：{template.model_route} · 预计成本 {template.estimated_cost_units} 单位</div>
+                <div>审批门：{template.approval_gate} · 变更：{template.change_note}</div>
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <button type="button" disabled={busy} onClick={() => onRevise(template)} style={batchBtnStyle}>保存新版本</button>
+                <button type="button" disabled={busy} onClick={() => onCompare(template)} style={batchBtnStyle}>比较版本</button>
+                <button type="button" disabled={busy || template.revision <= 1} onClick={() => onRollback(template)} style={batchBtnStyle}>回滚到 v1</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -843,6 +1020,15 @@ function ReviewPanel({
   busy: boolean;
 }) {
   const avgConf = fields.length > 0 ? fields.reduce((s, f) => s + f.confidence, 0) / fields.length : 0;
+  const exportFields = () => {
+    const blob = new Blob([JSON.stringify({ document: doc.title, receiptRef: doc.receiptRef, lineageRef: doc.lineageRef, fields }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${doc.title.replace(/\.[^.]+$/, "")}-提取结果.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div style={{ background: "var(--aos-surface)", border: "1px solid var(--aos-border)", borderRadius: 2, padding: 16 }}>
@@ -923,6 +1109,12 @@ function ReviewPanel({
         </button>
       </div>
 
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }} aria-label="结果交付">
+        <button type="button" onClick={exportFields} disabled={!doc.receiptRef || fields.length === 0} data-testid="document-export-btn" style={batchBtnStyle}>导出审核结果</button>
+        <a className="btn" data-testid="document-task-handoff" aria-disabled={!doc.receiptRef} href={doc.receiptRef ? `/aip/assist?documentId=${encodeURIComponent(doc.id)}&lineageRef=${encodeURIComponent(doc.lineageRef || "")}` : undefined}>交付任务协作</a>
+        <a className="btn" data-testid="document-logic-handoff" aria-disabled={!doc.receiptRef} href={doc.receiptRef ? `/aip/logic?documentId=${encodeURIComponent(doc.id)}&lineageRef=${encodeURIComponent(doc.lineageRef || "")}` : undefined}>交付业务逻辑</a>
+      </div>
+
       {/* 历史时间线 */}
       {doc.history && doc.history.length > 0 && (
         <div>
@@ -964,6 +1156,7 @@ function ReviewPanel({
  * ========================================================================= */
 
 export function DocumentIntelligencePage() {
+  const requestedDocumentId = useMemo(() => new URLSearchParams(window.location.search).get("documentId")?.trim() || "", []);
   const [docs, setDocs] = useState<DocItem[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>("finance_report");
@@ -978,6 +1171,8 @@ export function DocumentIntelligencePage() {
   const [stats, setStats] = useState<DocumentStats>({ total: 0, processing: 0, average_confidence: null, template_count: 0 });
   const [objectTypes, setObjectTypes] = useState<Array<{ id: string; name: string }>>([]);
   const [objectTypeId, setObjectTypeId] = useState("");
+  const [governance, setGovernance] = useState<DocumentGovernanceInput>(DEFAULT_DOCUMENT_GOVERNANCE);
+  const [managedTemplates, setManagedTemplates] = useState<ManagedExtractionTemplate[]>([]);
 
   const selectedDoc = useMemo(() => docs.find((d) => d.id === selectedId) ?? docs[0], [docs, selectedId]);
 
@@ -1007,15 +1202,22 @@ export function DocumentIntelligencePage() {
     void (async () => {
       setStatusMsg("");
       try {
-        const [documents, currentStats] = await Promise.all([
+        const [documents, currentStats, templateCatalog] = await Promise.all([
           apiGet<{ items: ApiDocument[]; total: number }>("/api/datasource/documents?page=1&page_size=100"),
           apiGet<DocumentStats>("/api/datasource/documents/stats"),
+          apiGet<{ items: ManagedExtractionTemplate[] }>("/api/datasource/extraction-templates"),
         ]);
         if (cancelled) return;
-        const mapped = documents.items.map(mapApiDocument);
+        const mapped = documents.items.map((item) => mapApiDocument(parseApiDocument(item)));
         setDocs(mapped);
         setStats(currentStats);
-        if (mapped[0]) setSelectedId(mapped[0].id);
+        setManagedTemplates((templateCatalog.items || []).filter((item) => (
+          typeof item.id === "string" && typeof item.name === "string" && typeof item.revision === "number"
+        )));
+        const requestedDocument = requestedDocumentId ? mapped.find((item) => item.id === requestedDocumentId) : undefined;
+        if (requestedDocument) setSelectedId(requestedDocument.id);
+        else if (mapped[0]) setSelectedId(mapped[0].id);
+        if (requestedDocumentId && !requestedDocument) setStatusMsg("交付文档在当前租户中不存在或不可见；未切换到其他租户数据。");
         try {
           const types = await apiGet<{ items: Array<{ id: string; name?: string; display_name?: string }> }>("/v1/ontology/object-types?page=1&page_size=100");
           if (!cancelled) setObjectTypes(types.items.map((item) => ({ id: item.id, name: item.display_name || item.name || item.id })));
@@ -1027,6 +1229,87 @@ export function DocumentIntelligencePage() {
       }
     })();
     return () => { cancelled = true; };
+  }, [requestedDocumentId]);
+
+  const createManagedTemplate = useCallback(async () => {
+    setActionBusy(true);
+    try {
+      const created = await apiPost<ManagedExtractionTemplate>("/api/datasource/extraction-templates", {
+        name: "供应商合同字段模板",
+        description: "提取合同主体、合同金额、有效期和续签日",
+        doc_type: "supplier_contract",
+        fields: [
+          { name: "party_a", label: "甲方" },
+          { name: "party_b", label: "乙方" },
+          { name: "contract_amount", label: "合同金额" },
+          { name: "effective_period", label: "有效期" },
+          { name: "renewal_date", label: "续签日" },
+        ],
+        validation_rules: [{ field: "合同金额", rule: "required" }, { field: "有效期", rule: "required" }],
+        model_route: "deterministic_document_parser",
+        estimated_cost_units: 2,
+        approval_gate: "manual_review",
+      });
+      setManagedTemplates((current) => [...current, created]);
+      await reportWriteSuccess(`模板已保存 · ${created.name} v${created.revision}`);
+    } catch (error) {
+      setStatusMsg(`模板保存失败，未生成本地替代：${String((error as Error).message || error)}`);
+    } finally {
+      setActionBusy(false);
+    }
+  }, [reportWriteSuccess]);
+
+  const reviseManagedTemplate = useCallback(async (template: ManagedExtractionTemplate) => {
+    setActionBusy(true);
+    try {
+      const updated = await apiPut<ManagedExtractionTemplate>(`/api/datasource/extraction-templates/${encodeURIComponent(template.id)}`, {
+        expected_revision: template.revision,
+        description: `${template.description.replace(/（第 \d+ 次修订）$/, "")}（第 ${template.revision} 次修订）`,
+        change_note: "人工保存新版本",
+      });
+      setManagedTemplates((current) => current.map((item) => item.id === updated.id ? updated : item));
+      setStatusMsg(`模板新版本已保存 · ${updated.name} v${updated.revision}`);
+    } catch (error) {
+      setStatusMsg(`模板保存失败：${String((error as Error).message || error)}`);
+    } finally {
+      setActionBusy(false);
+    }
+  }, []);
+
+  const rollbackManagedTemplate = useCallback(async (template: ManagedExtractionTemplate) => {
+    setActionBusy(true);
+    try {
+      const updated = await apiPost<ManagedExtractionTemplate>(`/api/datasource/extraction-templates/${encodeURIComponent(template.id)}/rollback`, {
+        expected_revision: template.revision,
+        target_revision: 1,
+      });
+      setManagedTemplates((current) => current.map((item) => item.id === updated.id ? updated : item));
+      setStatusMsg(`模板已回滚并生成审计版本 · ${updated.name} v${updated.revision}`);
+    } catch (error) {
+      setStatusMsg(`模板回滚失败：${String((error as Error).message || error)}`);
+    } finally {
+      setActionBusy(false);
+    }
+  }, []);
+
+  const compareManagedTemplate = useCallback(async (template: ManagedExtractionTemplate) => {
+    setActionBusy(true);
+    try {
+      const response = await apiGet<{ items: ManagedExtractionTemplate[] }>(`/api/datasource/extraction-templates/${encodeURIComponent(template.id)}/versions`);
+      const versions = response.items || [];
+      if (!versions.length) throw new Error("服务端未返回模板历史版本");
+      const first = versions[0];
+      const latest = versions[versions.length - 1];
+      const firstFields = (first.fields || []).map((field) => field.label || field.name).filter(Boolean);
+      const latestFields = (latest.fields || []).map((field) => field.label || field.name).filter(Boolean);
+      const added = latestFields.filter((field) => !firstFields.includes(field));
+      const removed = firstFields.filter((field) => !latestFields.includes(field));
+      setStatusMsg(`版本比较 v${first.revision} → v${latest.revision} · 新增字段 ${added.join("、") || "无"} · 移除字段 ${removed.join("、") || "无"} · 共 ${versions.length} 个审计版本`);
+    } catch (error) {
+      setStatusMsg(`模板版本比较失败：${String((error as Error).message || error)}`);
+    } finally {
+      setActionBusy(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -1093,7 +1376,7 @@ export function DocumentIntelligencePage() {
     setActionBusy(true);
     setStatusMsg("");
     try {
-      const results = await Promise.allSettled(files.map((file) => uploadDocumentFile(file)));
+      const results = await Promise.allSettled(files.map((file) => uploadDocumentFile(file, fetch, governance)));
       const uploaded = results
         .filter((result): result is PromiseFulfilledResult<ApiDocument> => result.status === "fulfilled")
         .map((result) => mapApiDocument(result.value));
@@ -1110,7 +1393,7 @@ export function DocumentIntelligencePage() {
     } finally {
       setActionBusy(false);
     }
-  }, [reportWriteSuccess]);
+  }, [governance, reportWriteSuccess]);
 
   const handleEditField = useCallback(async (id: string, value: string) => {
     if (!selectedDoc) return;
@@ -1200,9 +1483,10 @@ export function DocumentIntelligencePage() {
       let deleted = deletedByResponse;
       try {
         const current = await apiGet<{ items: ApiDocument[]; total: number }>("/api/datasource/documents?page=1&page_size=100");
-        const currentIds = new Set(current.items.map((doc) => doc.id));
+        const parsed = current.items.map(parseApiDocument);
+        const currentIds = new Set(parsed.map((doc) => doc.id));
         deleted = new Set(ids.filter((id) => deletedByResponse.has(id) || !currentIds.has(id)));
-        setDocs(current.items.filter((doc) => !deleted.has(doc.id)).map(mapApiDocument));
+        setDocs(parsed.filter((doc) => !deleted.has(doc.id)).map(mapApiDocument));
       } catch {
         setDocs((prev) => prev.filter((doc) => !deletedByResponse.has(doc.id)));
       }
@@ -1292,7 +1576,22 @@ export function DocumentIntelligencePage() {
         <StatCard value={String(stats.template_count)} label="提取模板" trend="来自当前模板服务" />
       </div>
 
+      <TemplateGovernancePanel
+        templates={managedTemplates}
+        busy={actionBusy}
+        onCreate={() => void createManagedTemplate()}
+        onRevise={(template) => void reviseManagedTemplate(template)}
+        onCompare={(template) => void compareManagedTemplate(template)}
+        onRollback={(template) => void rollbackManagedTemplate(template)}
+      />
+
       {/* 拖拽上传区 */}
+      <section data-testid="document-import-governance" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 10, padding: 12, marginBottom: 12, border: "1px solid var(--aos-border)", background: "var(--aos-surface)" }}>
+        <label style={{ fontSize: 12 }}>业务来源<input aria-label="业务来源" value={governance.sourceLabel} onChange={(event) => setGovernance((current) => ({ ...current, sourceLabel: event.target.value }))} style={{ display: "block", width: "100%", marginTop: 4, padding: 7 }} /></label>
+        <label style={{ fontSize: 12 }}>文档类型<select aria-label="业务文档类型" value={governance.documentKind} onChange={(event) => setGovernance((current) => ({ ...current, documentKind: event.target.value }))} style={{ display: "block", width: "100%", marginTop: 4, padding: 7 }}><option value="business_document">通用业务文档</option><option value="supplier_contract">供应商合同</option><option value="invoice">发票</option><option value="finance_report">经营报告</option><option value="purchase_order">采购单</option></select></label>
+        <label style={{ fontSize: 12 }}>敏感级别<select aria-label="敏感级别" value={governance.sensitivity} onChange={(event) => setGovernance((current) => ({ ...current, sensitivity: event.target.value as DocumentGovernanceInput["sensitivity"] }))} style={{ display: "block", width: "100%", marginTop: 4, padding: 7 }}><option value="public">公开</option><option value="internal">内部</option><option value="restricted">受限</option></select></label>
+        <label style={{ fontSize: 12 }}>保留策略<select aria-label="保留策略" value={governance.retentionPolicy} onChange={(event) => setGovernance((current) => ({ ...current, retentionPolicy: event.target.value as DocumentGovernanceInput["retentionPolicy"] }))} style={{ display: "block", width: "100%", marginTop: 4, padding: 7 }}><option value="project_default">项目默认</option><option value="30_days">30 天</option><option value="180_days">180 天</option><option value="permanent">长期保留</option></select></label>
+      </section>
       <UploadDropZone onFiles={handleFiles} />
 
       {/* 批量操作栏 */}
@@ -1306,6 +1605,7 @@ export function DocumentIntelligencePage() {
 
       {/* 状态步骤条 */}
       {selectedDoc ? <StateStepper state={selectedDoc.status} errorMessage={selectedDoc.errorMessage} /> : null}
+      {selectedDoc ? <DocumentGovernancePanel doc={selectedDoc} /> : null}
 
       {/* 主体：左文件列表 + 右提取面板 */}
       <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
@@ -1388,6 +1688,7 @@ export function DocumentIntelligencePage() {
         {/* 右侧：OCR + 提取 + 审核 */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
           {!selectedDoc ? <div data-testid="documents-empty">暂无文档。上传成功后才会加入列表。</div> : null}
+          {selectedDoc ? <DocumentGovernancePanel doc={selectedDoc} /> : null}
           {selectedDoc ? <OcrPanel doc={selectedDoc} onCorrectText={(text) => void handleCorrectOcr(text)} /> : null}
           {selectedDoc ? (
           <ExtractionPanel

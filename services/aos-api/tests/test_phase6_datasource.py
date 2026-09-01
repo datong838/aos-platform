@@ -332,10 +332,8 @@ def test_list_documents_filter() -> None:
 def test_extract_document() -> None:
     eng = get_engine()
     d = eng.create_document(name="invoice.pdf", status="pending")
-    extracted = eng.extract_document(d.id, fields=["vendor", "amount"])
-    assert extracted.status == "extracted"
-    assert "vendor" in extracted.extracted_fields
-    assert "amount" in extracted.extracted_fields
+    with pytest.raises(ValueError, match="真实文件字节"):
+        eng.extract_document(d.id, fields=["vendor", "amount"])
 
 
 def test_import_document() -> None:

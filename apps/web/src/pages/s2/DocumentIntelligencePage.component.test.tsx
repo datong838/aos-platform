@@ -25,6 +25,23 @@ const rawDocument = (overrides: Record<string, unknown> = {}) => ({
     "xf-1": { id: "xf-1", name: "发票号码", value: "INV-1", type: "文本", confidence: 0.9, source: "P1 L1" },
   },
   history: [],
+  source_label: "栖月汇合同归档",
+  document_kind: "supplier_contract",
+  sensitivity: "restricted",
+  retention_policy: "180_days",
+  template_revision: "v3",
+  processing_progress: 100,
+  current_page: 2,
+  total_pages: 2,
+  extraction_confidence: 0.9,
+  usage_units: 128,
+  run_evidence_ref: "document-run:doc-1:v3",
+  lineage_ref: "document-lineage:doc-1:extract:v3",
+  receipt_ref: "document-extract:doc-1:v3",
+  receipt_refs: ["document-upload:doc-1:abc", "document-extract:doc-1:v3"],
+  org_id: "org-org",
+  project_id: "dev-project",
+  review_status: "pending",
   ...overrides,
 });
 
@@ -44,6 +61,7 @@ describe("DocumentIntelligencePage · real interaction", () => {
     host = document.createElement("div");
     document.body.appendChild(host);
     root = createRoot(host);
+    window.history.replaceState({}, "", "/aip/doc-intelligence");
     vi.mocked(apiGet).mockImplementation(async (path: string) => {
       if (path.includes("/documents/stats")) return { total: 0, processing: 0, average_confidence: null, template_count: 3 };
       if (path.includes("/ontology/object-types")) return { items: [{ id: "Invoice", display_name: "发票" }] };
@@ -52,6 +70,20 @@ describe("DocumentIntelligencePage · real interaction", () => {
     vi.mocked(apiPost).mockReset();
     vi.mocked(apiPut).mockReset();
     vi.mocked(apiDelete).mockReset();
+  });
+
+  it("从下游返回时按精确 documentId 定位原文档", async () => {
+    window.history.replaceState({}, "", "/aip/doc-intelligence?documentId=doc-2");
+    vi.mocked(apiGet).mockImplementation(async (path: string) => {
+      if (path.includes("/documents/stats")) return { total: 2, processing: 0, average_confidence: 0.9, template_count: 3 };
+      if (path.includes("/ontology/object-types")) return { items: [] };
+      if (path.includes("/extraction-templates")) return { items: [] };
+      return { items: [rawDocument(), rawDocument({ id: "doc-2", name: "contract.pdf", source_label: "栖月汇供应商合同" })], total: 2 };
+    });
+    await act(async () => root.render(<DocumentIntelligencePage />));
+    await flush();
+    expect(host.querySelector("[data-testid='document-governance-panel']")?.textContent).toContain("栖月汇供应商合同");
+    expect(host.querySelector("[data-testid='document-governance-panel']")?.textContent).not.toContain("栖月汇合同归档");
   });
 
   afterEach(() => {
@@ -80,9 +112,13 @@ describe("DocumentIntelligencePage · real interaction", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, init] = vi.mocked(fetchMock).mock.calls[0];
+    const [requestUrl] = vi.mocked(fetchMock).mock.calls[0];
     expect(init?.body).toBe(file);
+    expect(String(requestUrl)).toContain("source_label=%E4%BA%BA%E5%B7%A5%E4%B8%9A%E5%8A%A1%E6%96%87%E6%A1%A3%E5%AF%BC%E5%85%A5");
+    expect(String(requestUrl)).toContain("sensitivity=internal");
     expect(host.textContent).toContain("invoice.pdf");
     expect(host.textContent).toContain("服务端已接收 1 个文件的真实字节");
+    expect(host.textContent).toContain("来源、治理与运行证据");
   });
 
   it("keeps the list unchanged when upload fails", async () => {
@@ -116,6 +152,61 @@ describe("DocumentIntelligencePage · real interaction", () => {
     expect(apiPost).not.toHaveBeenCalled();
   });
 
+  it("creates, versions and rolls back a tenant-governed extraction template", async () => {
+    const template = {
+      id: "tpl-1",
+      name: "供应商合同字段模板",
+      description: "提取合同主体、合同金额、有效期和续签日",
+      fields: [{ name: "party_a", label: "甲方" }, { name: "contract_amount", label: "合同金额" }],
+      doc_type: "supplier_contract",
+      revision: 1,
+      validation_rules: [{ field: "合同金额", rule: "required" }],
+      model_route: "deterministic_document_parser",
+      estimated_cost_units: 2,
+      approval_gate: "manual_review",
+      active: true,
+      change_note: "首次创建",
+    };
+    vi.mocked(apiPost).mockImplementation(async (path: string) => {
+      if (path === "/api/datasource/extraction-templates") return template;
+      if (path.endsWith("/rollback")) return { ...template, revision: 3, change_note: "回滚到 v1" };
+      throw new Error(`unexpected ${path}`);
+    });
+    vi.mocked(apiPut).mockResolvedValue({ ...template, revision: 2, change_note: "人工保存新版本" });
+    vi.mocked(apiGet).mockImplementation(async (path: string) => {
+      if (path.includes("/documents/stats")) return { total: 0, processing: 0, average_confidence: null, template_count: 1 };
+      if (path.includes("/ontology/object-types")) return { items: [] };
+      if (path.endsWith("/versions")) return { items: [template, { ...template, revision: 2, fields: [...template.fields, { name: "renewal_date", label: "续签日" }] }] };
+      return { items: [], total: 0 };
+    });
+
+    await act(async () => root.render(<DocumentIntelligencePage />));
+    await flush();
+    const create = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "新建合同模板") as HTMLButtonElement;
+    await act(async () => create.click());
+    await flush();
+    expect(apiPost).toHaveBeenCalledWith("/api/datasource/extraction-templates", expect.objectContaining({ approval_gate: "manual_review" }));
+    expect(host.querySelector("[data-testid='template-governance-panel']")?.textContent).toContain("中文字段：甲方、合同金额");
+
+    const revise = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "保存新版本") as HTMLButtonElement;
+    await act(async () => revise.click());
+    await flush();
+    expect(apiPut).toHaveBeenCalledWith("/api/datasource/extraction-templates/tpl-1", expect.objectContaining({ expected_revision: 1 }));
+    expect(host.textContent).toContain("v2");
+
+    const compare = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "比较版本") as HTMLButtonElement;
+    await act(async () => compare.click());
+    await flush();
+    expect(apiGet).toHaveBeenCalledWith("/api/datasource/extraction-templates/tpl-1/versions");
+    expect(host.textContent).toContain("新增字段 续签日");
+
+    const rollback = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "回滚到 v1") as HTMLButtonElement;
+    await act(async () => rollback.click());
+    await flush();
+    expect(apiPost).toHaveBeenCalledWith("/api/datasource/extraction-templates/tpl-1/rollback", { expected_revision: 2, target_revision: 1 });
+    expect(host.textContent).toContain("回滚到 v1");
+  });
+
   it("uses API responses for ontology write, reprocess and delete", async () => {
     vi.mocked(apiGet).mockImplementation(async (path: string) => {
       if (path.includes("/documents/stats")) return { total: 1, processing: 0, average_confidence: 0.9, template_count: 3 };
@@ -131,6 +222,9 @@ describe("DocumentIntelligencePage · real interaction", () => {
 
     await act(async () => root.render(<DocumentIntelligencePage />));
     await flush();
+    expect(host.querySelector("[data-testid='document-governance-panel']")?.textContent).toContain("栖月汇合同归档");
+    expect(host.querySelector("[data-testid='document-governance-panel']")?.textContent).toContain("已取得");
+    expect(host.querySelector("[data-testid='document-task-handoff']")?.getAttribute("href")).toContain("documentId=doc-1");
     const select = host.querySelector<HTMLSelectElement>("[data-testid='ontology-type-select']")!;
     select.value = "Invoice";
     await act(async () => select.dispatchEvent(new Event("change", { bubbles: true })));
@@ -219,5 +313,17 @@ describe("DocumentIntelligencePage · real interaction", () => {
     expect(host.textContent).toContain("抽取完成 · 权威回包");
     expect(host.textContent).toContain("写入成功但统计刷新失败");
     expect(host.textContent).not.toContain("抽取失败，未生成演示结果");
+  });
+
+  it("fails closed when the service adds an unknown document field", async () => {
+    vi.mocked(apiGet).mockImplementation(async (path: string) => {
+      if (path.includes("/documents/stats")) return { total: 1, processing: 0, average_confidence: null, template_count: 3 };
+      if (path.includes("/ontology/object-types")) return { items: [] };
+      return { items: [rawDocument({ unexpected_contract_field: true })], total: 1 };
+    });
+    await act(async () => root.render(<DocumentIntelligencePage />));
+    await flush();
+    expect(host.querySelector("[data-testid^='doc-item-']")).toBeNull();
+    expect(host.textContent).toContain("文档回包含未知字段");
   });
 });

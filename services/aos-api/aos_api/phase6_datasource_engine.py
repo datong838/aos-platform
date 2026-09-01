@@ -180,6 +180,27 @@ class Document(BaseModel):
     error_message: str = ""
     ontology_object_id: str = ""
     history: list[dict[str, Any]] = Field(default_factory=list)
+    org_id: str = ""
+    project_id: str = ""
+    source_label: str = "manual_upload"
+    document_kind: str = "business_document"
+    sensitivity: str = "internal"
+    retention_policy: str = "project_default"
+    template_revision: str = ""
+    processing_progress: int = 0
+    current_page: int = 0
+    total_pages: int = 0
+    extraction_confidence: float | None = None
+    usage_units: int = 0
+    processing_attempts: int = 0
+    run_evidence_ref: str = ""
+    lineage_ref: str = ""
+    receipt_ref: str = ""
+    receipt_refs: list[str] = Field(default_factory=list)
+    review_status: str = "pending"
+    reviewed_by: str = ""
+    reviewed_at: float | None = None
+    downstream_ref: str = ""
     created_at: float = Field(default_factory=lambda: time.time())
     updated_at: float = Field(default_factory=lambda: time.time())
 
@@ -190,7 +211,18 @@ class ExtractionTemplate(BaseModel):
     description: str = ""
     fields: list[dict[str, Any]] = Field(default_factory=list)
     doc_type: str = "invoice"  # invoice|contract|receipt|form|custom
+    org_id: str = ""
+    project_id: str = ""
+    revision: int = 1
+    validation_rules: list[dict[str, Any]] = Field(default_factory=list)
+    model_route: str = "deterministic_document_parser"
+    estimated_cost_units: int = 0
+    approval_gate: str = "manual_review"
+    active: bool = True
+    change_note: str = "首次创建"
+    previous_revision: int | None = None
     created_at: float = Field(default_factory=lambda: time.time())
+    updated_at: float = Field(default_factory=lambda: time.time())
 
 
 class DataProject(BaseModel):
@@ -235,6 +267,7 @@ class DataSourceEngine:
                     inst._documents: dict[str, Document] = {}
                     inst._document_bytes: dict[str, bytes] = {}
                     inst._templates: dict[str, ExtractionTemplate] = {}
+                    inst._template_versions: dict[str, list[ExtractionTemplate]] = {}
                     inst._projects: dict[str, DataProject] = {}
                     cls._instance = inst
         return cls._instance
@@ -712,7 +745,19 @@ class DataSourceEngine:
             self._documents[d.id] = d
             return d
 
-    def upload_document(self, name: str, data: bytes, content_type: str) -> Document:
+    def upload_document(
+        self,
+        name: str,
+        data: bytes,
+        content_type: str,
+        *,
+        org_id: str = "",
+        project_id: str = "",
+        source_label: str = "manual_upload",
+        document_kind: str = "business_document",
+        sensitivity: str = "internal",
+        retention_policy: str = "project_default",
+    ) -> Document:
         """保存调用方实际提交的文件字节；空内容必须拒绝。"""
         if not data:
             raise ValueError("文件内容为空")
@@ -727,20 +772,48 @@ class DataSourceEngine:
                 size_bytes=len(data),
                 content_type=content_type or "application/octet-stream",
                 content_sha256=hashlib.sha256(data).hexdigest(),
+                org_id=org_id,
+                project_id=project_id,
+                source_label=source_label,
+                document_kind=document_kind,
+                sensitivity=sensitivity,
+                retention_policy=retention_policy,
+                processing_progress=100,
                 history=[{"state": "uploaded", "timestamp": now, "note": "服务端已接收文件字节"}],
             )
+            d.receipt_ref = f"document-upload:{d.id}:{d.content_sha256[:16]}"
+            d.receipt_refs.append(d.receipt_ref)
+            d.lineage_ref = f"document-lineage:{d.id}:upload"
             self._documents[d.id] = d
             self._document_bytes[d.id] = bytes(data)
             return d
 
-    def get_document(self, did: str) -> Document | None:
-        return self._documents.get(did)
+    @staticmethod
+    def _matches_scope(document: Document, org_id: str | None, project_id: str | None) -> bool:
+        if org_id is None and project_id is None:
+            return True
+        return document.org_id == (org_id or "") and document.project_id == (project_id or "")
+
+    def get_document(self, did: str, org_id: str | None = None, project_id: str | None = None) -> Document | None:
+        document = self._documents.get(did)
+        if document is None or not self._matches_scope(document, org_id, project_id):
+            return None
+        return document
+
+    def _require_document(self, did: str, org_id: str | None, project_id: str | None) -> Document:
+        document = self.get_document(did, org_id, project_id)
+        if document is None:
+            raise KeyError(f"Document {did} not found")
+        return document
 
     def list_documents(
         self, search: str | None = None, status: str | None = None,
         page: int = 1, page_size: int = 20,
+        org_id: str | None = None, project_id: str | None = None,
     ) -> tuple[list[Document], int]:
         items = list(self._documents.values())
+        if org_id is not None or project_id is not None:
+            items = [d for d in items if self._matches_scope(d, org_id, project_id)]
         if status:
             items = [d for d in items if d.status == status]
         if search:
@@ -750,28 +823,24 @@ class DataSourceEngine:
         start = (page - 1) * page_size
         return items[start : start + page_size], total
 
-    def extract_document(self, did: str, fields: list[str] | None = None) -> Document:
-        with _LOCK:
-            d = self._documents.get(did)
-            if d is None:
-                raise KeyError(f"Document {did} not found")
-            extracted = {}
-            target_fields = fields or ["vendor", "amount", "date", "invoice_number"]
-            for f in target_fields:
-                extracted[f] = f"value_{f}"
-            d.extracted_fields = extracted
-            d.status = "extracted"
-            d.updated_at = time.time()
-            return d
+    def extract_document(
+        self,
+        did: str,
+        fields: list[str] | None = None,
+        org_id: str | None = None,
+        project_id: str | None = None,
+    ) -> Document:
+        self._require_document(did, org_id, project_id)
+        raise ValueError("必须指定抽取模板并使用服务端保存的真实文件字节")
 
-    def process_document(self, did: str, template_id: str) -> Document:
+    def process_document(
+        self, did: str, template_id: str, org_id: str | None = None, project_id: str | None = None,
+    ) -> Document:
         """从服务端保存的原始字节重新解析并执行现有 DocIntel 抽取。"""
         from aos_api.aip_docintel_extract import get_engine as get_extract_engine
         from aos_api.file_parsers import extract
 
-        d = self._documents.get(did)
-        if d is None:
-            raise KeyError(f"Document {did} not found")
+        d = self._require_document(did, org_id, project_id)
         data = self._document_bytes.get(did)
         if not data:
             raise ValueError("文档没有可重处理的服务端文件字节")
@@ -781,7 +850,26 @@ class DataSourceEngine:
         text = str(parsed.get("text") or "")
         if not text.strip():
             raise ValueError("文档解析结果为空")
-        result = get_extract_engine().run_extract(template_id=template_id, text=text, name=d.name)
+        managed_template = self.get_template(template_id, org_id, project_id)
+        managed_field_names = None
+        managed_revision = "v1"
+        if managed_template is not None:
+            managed_field_names = [
+                str(field.get("label") or field.get("name") or "").strip()
+                for field in managed_template.fields
+                if isinstance(field, dict)
+            ]
+            managed_field_names = [field for field in managed_field_names if field]
+            if not managed_field_names:
+                raise ValueError("当前模板没有可执行的业务字段")
+            managed_revision = f"v{managed_template.revision}"
+        result = get_extract_engine().run_extract(
+            template_id=template_id,
+            text=text,
+            name=d.name,
+            field_names=managed_field_names,
+            template_revision=managed_revision,
+        )
         raw_fields = result.get("fields") or []
         extracted_fields = {
             str(field.get("id") or field.get("name") or index): dict(field)
@@ -789,10 +877,9 @@ class DataSourceEngine:
             if isinstance(field, dict)
         }
         with _LOCK:
-            current = self._documents.get(did)
-            if current is None:
-                raise KeyError(f"Document {did} not found")
+            current = self._require_document(did, org_id, project_id)
             current.template_id = str(result.get("template_id") or template_id)
+            current.template_revision = str(result.get("template_revision") or "v1")
             current.ocr_text = text
             current.parser = str(parsed.get("parser") or "")
             current.extracted_fields = extracted_fields
@@ -802,12 +889,23 @@ class DataSourceEngine:
                 if isinstance(field.get("confidence"), (int, float))
             ]
             current.status = "needs_correction" if confidences and min(confidences) < 0.7 else "review"
+            current.processing_progress = 100
+            current.current_page = int(parsed.get("page_count") or 1)
+            current.total_pages = current.current_page
+            current.extraction_confidence = min(confidences) if confidences else None
+            current.usage_units = len(text)
+            current.processing_attempts += 1
+            attempt = current.processing_attempts
+            current.run_evidence_ref = f"document-run:{current.id}:{current.template_revision}:attempt-{attempt}:{current.content_sha256[:16]}"
+            current.lineage_ref = f"document-lineage:{current.id}:extract:{current.template_revision}"
+            current.receipt_ref = f"document-extract:{current.id}:{current.template_revision}:attempt-{attempt}:{current.content_sha256[:16]}"
+            current.receipt_refs.append(current.receipt_ref)
             current.error_message = ""
             current.updated_at = time.time()
             current.history.append({
                 "state": current.status,
                 "timestamp": current.updated_at,
-                "note": f"服务端解析并抽取 {len(extracted_fields)} 个字段",
+                "note": f"第 {attempt} 次服务端解析并抽取 {len(extracted_fields)} 个字段",
             })
             return current
 
@@ -817,11 +915,11 @@ class DataSourceEngine:
         *,
         ocr_text: str | None = None,
         extracted_fields: list[dict[str, Any]] | None = None,
+        org_id: str | None = None,
+        project_id: str | None = None,
     ) -> Document:
         with _LOCK:
-            d = self._documents.get(did)
-            if d is None:
-                raise KeyError(f"Document {did} not found")
+            d = self._require_document(did, org_id, project_id)
             if ocr_text is not None:
                 d.ocr_text = ocr_text
             if extracted_fields is not None:
@@ -832,26 +930,41 @@ class DataSourceEngine:
             d.updated_at = time.time()
             return d
 
-    def review_document(self, did: str, action: str) -> Document:
+    def review_document(
+        self,
+        did: str,
+        action: str,
+        org_id: str | None = None,
+        project_id: str | None = None,
+        reviewed_by: str = "",
+    ) -> Document:
         if action != "reject":
             raise ValueError("仅支持 reject；入库请调用 ontology-write")
         with _LOCK:
-            d = self._documents.get(did)
-            if d is None:
-                raise KeyError(f"Document {did} not found")
+            d = self._require_document(did, org_id, project_id)
             d.status = "needs_correction"
             d.updated_at = time.time()
+            d.review_status = "rejected"
+            d.reviewed_by = reviewed_by
+            d.reviewed_at = d.updated_at
+            d.receipt_ref = f"document-review:{d.id}:rejected:{int(d.updated_at)}"
+            d.receipt_refs.append(d.receipt_ref)
             d.history.append({"state": d.status, "timestamp": d.updated_at, "note": "审核退回修正"})
             return d
 
-    def write_document_to_ontology(self, did: str, object_type_id: str) -> tuple[Document, Any]:
+    def write_document_to_ontology(
+        self,
+        did: str,
+        object_type_id: str,
+        org_id: str | None = None,
+        project_id: str | None = None,
+        reviewed_by: str = "",
+    ) -> tuple[Document, Any]:
         from aos_api.ontology_engine import get_engine as get_ontology_engine
 
         # 查重、创建 Object、回写 document 必须处于同一临界区；否则并发审核会各自创建对象。
         with _LOCK:
-            document = self._documents.get(did)
-            if document is None:
-                raise KeyError(f"Document {did} not found")
+            document = self._require_document(did, org_id, project_id)
             if not document.extracted_fields:
                 raise ValueError("没有可写入本体的提取字段")
             ontology = get_ontology_engine()
@@ -869,11 +982,22 @@ class DataSourceEngine:
                 str(field.get("name") or key): field.get("value")
                 for key, field in document.extracted_fields.items()
             }
-            properties.update({"document_id": document.id, "content_sha256": document.content_sha256})
+            properties.update({
+                "document_id": document.id,
+                "content_sha256": document.content_sha256,
+                "source_org_id": document.org_id,
+                "source_project_id": document.project_id,
+            })
             obj = ontology.create_object(object_type_id, document.name, properties=properties)
             document.ontology_object_id = obj.id
             document.status = "review"
             document.updated_at = time.time()
+            document.review_status = "approved"
+            document.reviewed_by = reviewed_by
+            document.reviewed_at = document.updated_at
+            document.downstream_ref = f"ontology-object:{obj.id}"
+            document.receipt_ref = f"document-ontology-write:{document.id}:{obj.id}"
+            document.receipt_refs.append(document.receipt_ref)
             document.history.append({
                 "state": "review",
                 "timestamp": document.updated_at,
@@ -881,14 +1005,18 @@ class DataSourceEngine:
             })
             return document, obj
 
-    def delete_document(self, did: str) -> bool:
+    def delete_document(self, did: str, org_id: str | None = None, project_id: str | None = None) -> bool:
         with _LOCK:
+            if self.get_document(did, org_id, project_id) is None:
+                return False
             deleted = self._documents.pop(did, None)
             self._document_bytes.pop(did, None)
             return deleted is not None
 
-    def document_stats(self) -> dict[str, Any]:
+    def document_stats(self, org_id: str | None = None, project_id: str | None = None) -> dict[str, Any]:
         items = list(self._documents.values())
+        if org_id is not None or project_id is not None:
+            items = [d for d in items if self._matches_scope(d, org_id, project_id)]
         confidences: list[float] = []
         for d in items:
             for field in d.extracted_fields.values():
@@ -905,6 +1033,9 @@ class DataSourceEngine:
     def import_document(self, name: str, **kwargs: Any) -> Document:
         with _LOCK:
             d = Document(name=name, **kwargs)
+            d.receipt_ref = f"document-import:{d.id}"
+            d.receipt_refs.append(d.receipt_ref)
+            d.lineage_ref = f"document-lineage:{d.id}:import"
             self._documents[d.id] = d
             return d
 
@@ -912,10 +1043,97 @@ class DataSourceEngine:
         with _LOCK:
             t = ExtractionTemplate(name=name, **kwargs)
             self._templates[t.id] = t
+            self._template_versions[t.id] = [t.model_copy(deep=True)]
             return t
 
-    def list_templates(self) -> list[ExtractionTemplate]:
-        return list(self._templates.values())
+    def list_templates(
+        self, org_id: str | None = None, project_id: str | None = None,
+    ) -> list[ExtractionTemplate]:
+        items = list(self._templates.values())
+        if org_id is not None and project_id is not None:
+            items = [t for t in items if self._matches_scope(t, org_id, project_id)]
+        return items
+
+    def get_template(
+        self, template_id: str, org_id: str | None = None, project_id: str | None = None,
+    ) -> ExtractionTemplate | None:
+        template = self._templates.get(template_id)
+        if template is None:
+            return None
+        if org_id is not None and project_id is not None and not self._matches_scope(template, org_id, project_id):
+            return None
+        return template
+
+    def update_template(
+        self,
+        template_id: str,
+        expected_revision: int,
+        org_id: str,
+        project_id: str,
+        **changes: Any,
+    ) -> ExtractionTemplate:
+        with _LOCK:
+            current = self.get_template(template_id, org_id, project_id)
+            if current is None:
+                raise KeyError(f"ExtractionTemplate {template_id} not found")
+            if current.revision != expected_revision:
+                raise ValueError(
+                    f"模板版本冲突：期望 v{expected_revision}，当前为 v{current.revision}"
+                )
+            allowed = {
+                "name", "description", "fields", "doc_type", "validation_rules",
+                "model_route", "estimated_cost_units", "approval_gate", "active", "change_note",
+            }
+            payload = current.model_dump()
+            payload.update({key: value for key, value in changes.items() if key in allowed and value is not None})
+            payload["revision"] = current.revision + 1
+            payload["previous_revision"] = current.revision
+            payload["updated_at"] = time.time()
+            updated = ExtractionTemplate(**payload)
+            self._templates[template_id] = updated
+            self._template_versions.setdefault(template_id, []).append(updated.model_copy(deep=True))
+            return updated
+
+    def list_template_versions(
+        self, template_id: str, org_id: str, project_id: str,
+    ) -> list[ExtractionTemplate]:
+        if self.get_template(template_id, org_id, project_id) is None:
+            raise KeyError(f"ExtractionTemplate {template_id} not found")
+        return [item.model_copy(deep=True) for item in self._template_versions.get(template_id, [])]
+
+    def rollback_template(
+        self,
+        template_id: str,
+        target_revision: int,
+        expected_revision: int,
+        org_id: str,
+        project_id: str,
+    ) -> ExtractionTemplate:
+        current = self.get_template(template_id, org_id, project_id)
+        if current is None:
+            raise KeyError(f"ExtractionTemplate {template_id} not found")
+        target = next(
+            (item for item in self._template_versions.get(template_id, []) if item.revision == target_revision),
+            None,
+        )
+        if target is None:
+            raise KeyError(f"ExtractionTemplate {template_id} revision {target_revision} not found")
+        return self.update_template(
+            template_id,
+            expected_revision,
+            org_id,
+            project_id,
+            name=target.name,
+            description=target.description,
+            fields=target.fields,
+            doc_type=target.doc_type,
+            validation_rules=target.validation_rules,
+            model_route=target.model_route,
+            estimated_cost_units=target.estimated_cost_units,
+            approval_gate=target.approval_gate,
+            active=target.active,
+            change_note=f"回滚到 v{target_revision}",
+        )
 
     def create_project(self, name: str, **kwargs: Any) -> DataProject:
         with _LOCK:
@@ -945,6 +1163,7 @@ class DataSourceEngine:
             self._documents.clear()
             self._document_bytes.clear()
             self._templates.clear()
+            self._template_versions.clear()
             self._projects.clear()
 
 

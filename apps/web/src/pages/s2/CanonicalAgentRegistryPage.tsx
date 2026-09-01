@@ -4,6 +4,7 @@ import { aipAgentControl, type AgentRuntimeReadinessResponse } from "../../api/a
 import { PageChrome } from "../../components/PageChrome";
 import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
 import { AipReadinessActionCard } from "../../components/aip/AipReadinessActionCard";
+import { ColleagueBusinessLoopCard } from "../../components/aip/ColleagueBusinessLoopCard";
 import {
   agentReadinessLadderSummary,
   bindingStatusDisplayName,
@@ -265,6 +266,7 @@ export function CanonicalAgentRegistryPage() {
             <div style={{marginTop:10,padding:10,background:ladder.dispatchable ? "var(--aos-green-bg, #ecfdf3)" : "var(--aos-amber-bg)",color:ladder.dispatchable ? "var(--aos-green-700)" : "var(--aos-amber-700)"}}>
               {ladder.dispatchable ? "运行条件已通过" : "仍需补齐运行条件；请按页面上方“刷新运行准备”完成重评。"}
             </div>
+            <ColleagueBusinessLoopCard roleKey={item.template.roleKey} logicIds={item.template.manifest.logicIds} runtimeReadiness={item.runtimeReadiness} />
             {ladder.dispatchable ? <button
               className="btn"
               aria-expanded={precheckOpen}
