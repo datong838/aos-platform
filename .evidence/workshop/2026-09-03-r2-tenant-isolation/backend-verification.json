@@ -1,0 +1,31 @@
+{
+  "taskId": "WORKSHOP-R2-06-TENANT-ISOLATION",
+  "verifiedAt": "2026-09-03T06:53:06+08:00",
+  "scope": "backend-principal-derived-tenant-and-command-fail-closed",
+  "positiveTenant": "org-org/dev-project",
+  "negativeCanary": "dev-org/dev-project",
+  "externalEffects": 0,
+  "results": [
+    {
+      "suite": "eight-page-principal-scope-matrix",
+      "tests": 24,
+      "status": "passed"
+    },
+    {
+      "suite": "operation-command-and-existing-tenant-regression",
+      "tests": 59,
+      "status": "passed"
+    }
+  ],
+  "total": {
+    "tests": 83,
+    "passed": 83,
+    "failed": 0
+  },
+  "notes": [
+    "所有八个工作台 canonical GET 均只从登录 Principal 取得 org/project。",
+    "orgId/projectId 查询注入在 catalog 与页面服务调用前失败关闭。",
+    "既有内部命令嵌套 tenant ref、命令体注入、proposal/lease 漂移回归保持通过。",
+    "未执行真实业务写入、外部发送、发布、退款或自动重试。"
+  ]
+}
