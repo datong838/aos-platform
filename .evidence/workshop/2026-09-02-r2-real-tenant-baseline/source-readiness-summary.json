@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "aos.workshop.r2-source-readiness-summary/v1",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "checkedAt": "2026-09-02T13:03:22.840394Z",
+  "cutoffAt": "2026-09-02T13:03:22.840394Z",
+  "status": "failed",
+  "receiptRefPresent": false,
+  "statusCounts": {
+    "ready": 9,
+    "failed": 3,
+    "stale": 0,
+    "blocked": 0,
+    "unknown": 0,
+    "empty": 0,
+    "degraded": 0
+  },
+  "sources": [
+    {"pipelineId":"P01-shop-qyh","objectType":"Shop","status":"ready","sourceTotal":1,"projectionTotal":1,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true},
+    {"pipelineId":"P02-product-qyh","objectType":"Product","status":"failed","sourceTotal":57,"projectionTotal":57,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true,"reasonCodes":["LATEST_RUN_NOT_SUCCEEDED","SOURCE_QUALITY_FAILED"]},
+    {"pipelineId":"P03-product-sku-qyh","objectType":"ProductSku","status":"failed","sourceTotal":62,"projectionTotal":62,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true,"reasonCodes":["LATEST_RUN_NOT_SUCCEEDED","SOURCE_QUALITY_FAILED"]},
+    {"pipelineId":"P04-category-qyh","objectType":"Category","status":"ready","sourceTotal":11,"projectionTotal":11,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true},
+    {"pipelineId":"P05-order-qyh","objectType":"Order","status":"ready","sourceTotal":124,"projectionTotal":124,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true},
+    {"pipelineId":"P06-order-line-qyh","objectType":"OrderLine","status":"ready","sourceTotal":234,"projectionTotal":234,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true},
+    {"pipelineId":"P07-shipment-qyh","objectType":"Shipment","status":"failed","sourceTotal":19,"projectionTotal":19,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true,"reasonCodes":["LATEST_RUN_NOT_SUCCEEDED","SOURCE_QUALITY_FAILED"]},
+    {"pipelineId":"P08-customer-lite-qyh","objectType":"CustomerLite","status":"ready","sourceTotal":54,"projectionTotal":54,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true},
+    {"pipelineId":"P09-weapp-qyh","objectType":"Weapp","status":"ready","sourceTotal":3,"projectionTotal":3,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true},
+    {"pipelineId":"P10-system-config-qyh","objectType":"SystemConfig","status":"ready","sourceTotal":39,"projectionTotal":39,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true},
+    {"pipelineId":"P11-product-review-qyh","objectType":"ProductReview","status":"ready","sourceTotal":5,"projectionTotal":5,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true},
+    {"pipelineId":"P12-payment-qyh","objectType":"Payment","status":"ready","sourceTotal":210,"projectionTotal":210,"unexplainedDelta":0,"exactContractRefs":true,"runReceiptPresent":true}
+  ],
+  "safety": {
+    "readOnly": true,
+    "businessRecordsIncluded": false,
+    "credentialsIncluded": false,
+    "externalEffects": 0
+  }
+}

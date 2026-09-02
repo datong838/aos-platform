@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "aos.workshop.r2-negative-tenant-isolation-summary/v1",
+  "tenant": {"orgId":"dev-org","projectId":"dev-project"},
+  "observedAt": "2026-09-02T21:17:00+08:00",
+  "requests": [
+    {"path":"/v1/ecommerce-workshop/source-readiness","status":404},
+    {"path":"/v1/ecommerce-workshop/views/task-cockpit","status":404},
+    {"path":"/v1/ecommerce-workshop/views/operations","status":404},
+    {"path":"/v1/ecommerce-workshop/views/content-campaign","status":404},
+    {"path":"/v1/ecommerce-workshop/views/creator-growth","status":404},
+    {"path":"/v1/ecommerce-workshop/views/media-studio","status":404},
+    {"path":"/v1/ecommerce-workshop/views/analyst","status":404},
+    {"path":"/v1/ecommerce-workshop/views/price-governance","status":404},
+    {"path":"/v1/ecommerce-workshop/views/customer","status":404}
+  ],
+  "interpretation": "negative isolation canary only; not positive business completion evidence",
+  "safety": {"readOnly":true,"businessRecordsIncluded":false,"credentialsIncluded":false,"externalEffects":0}
+}

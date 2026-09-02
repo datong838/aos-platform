@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "aos.workshop.r2-eight-page-traceability-summary/v1",
+  "tenant": {"orgId":"org-org","projectId":"dev-project"},
+  "observedAt": "2026-09-02T13:03:23Z",
+  "pages": [
+    {"page":"task-cockpit","httpStatus":200,"readiness":"degraded","visibleCount":3,"authorityRefTypes":[],"gapCodes":["TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT","TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPED"]},
+    {"page":"operations","httpStatus":200,"readiness":"degraded","visibleCount":210,"readySlices":6,"blockedSlices":1,"authorityRefTypes":["OrderReadAuthority","OrderLineReadAuthority","ProductSku","ShipmentReadAuthority","PaymentReadAuthority","AfterSalesEvent"],"gapCodes":["OPERATION_CASES_AUTHORITY_NOT_READY"]},
+    {"page":"content-campaign","httpStatus":200,"readiness":"degraded","visibleCount":0,"readySlices":0,"blockedSlices":3,"authorityRefTypes":[],"gapCodes":["CANONICAL_CAMPAIGN_REVISION_AUTHORITY_NOT_AVAILABLE","CANONICAL_CALENDAR_ENTRY_AUTHORITY_NOT_AVAILABLE","CANONICAL_MASTER_CONTENT_INTENT_AUTHORITY_NOT_AVAILABLE"]},
+    {"page":"creator-growth","httpStatus":200,"readiness":"degraded","visibleCount":0,"readySlices":0,"blockedSlices":5,"authorityRefTypes":[],"gapCodes":["CANONICAL_CREATOR_CANDIDATE_AUTHORITY_NOT_AVAILABLE","CANONICAL_CREATOR_OUTREACH_AUTHORITY_NOT_AVAILABLE","CANONICAL_CREATOR_CONTRACT_AUTHORITY_NOT_AVAILABLE","CANONICAL_CREATOR_DELIVERY_AUTHORITY_NOT_AVAILABLE","CANONICAL_CREATOR_RELATIONSHIP_AUTHORITY_NOT_AVAILABLE"]},
+    {"page":"media-studio","httpStatus":200,"readiness":"degraded","visibleCount":0,"readySlices":0,"blockedSlices":3,"authorityRefTypes":["EvidencePack"],"gapCodes":["MEDIA_CONTEXT_AUTHORITY_NOT_AVAILABLE","MEDIA_EXECUTION_AUTHORITY_NOT_AVAILABLE","MEDIA_DELIVERY_AUTHORITY_NOT_AVAILABLE","MEDIA_LIFECYCLE_AUTHORITY_NOT_AVAILABLE","MEDIA_PUBLISH_ACTION_PROPOSAL_NOT_AVAILABLE"]},
+    {"page":"analyst","httpStatus":200,"readiness":"degraded","visibleCount":10,"readySlices":2,"blockedSlices":5,"authorityRefTypes":["SourceReadinessSnapshot","MetricDefinitionRevision","MetricObservation","QualityPolicy","QualityObservationSet","ReconciliationPolicy","ReconciliationObservationSet","SourceRunObservation","SourceRunSetObservation"],"gapCodes":["ANALYST_DRIVERS_AUTHORITY_NOT_AVAILABLE","ANALYST_DIAGNOSIS_AUTHORITY_NOT_AVAILABLE","ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE","ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE","ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE","GROWTH_PLAN_EXACT_ROOT_REQUIRED"]},
+    {"page":"price-governance","httpStatus":200,"readiness":"degraded","visibleCount":0,"readySlices":0,"blockedSlices":3,"authorityRefTypes":[],"gapCodes":["PRICE_CASE_EXACT_ROOT_REQUIRED","PRICE_GOVERNANCE_AUTHORITY_NOT_AVAILABLE","PRICE_COMPETITOR_AUTHORITY_NOT_AVAILABLE","PRICE_SCHEDULE_AUTHORITY_NOT_AVAILABLE"]},
+    {"page":"customer","httpStatus":200,"readiness":"degraded","visibleCount":0,"sourceInputCount":54,"readySlices":0,"blockedSlices":4,"authorityRefTypes":["CustomerLiteSourceWindow"],"gapCodes":["CUSTOMER_CONSENT_AUTHORITY_NOT_AVAILABLE","CUSTOMER_SEGMENT_AUTHORITY_NOT_AVAILABLE","CUSTOMER_JOURNEY_AUTHORITY_NOT_AVAILABLE","CUSTOMER_DIALOGUE_AUTHORITY_NOT_AVAILABLE","CUSTOMER_OUTREACH_BATCH_AUTHORITY_NOT_AVAILABLE"]}
+  ],
+  "safety": {"readOnly":true,"businessRecordsIncluded":false,"credentialsIncluded":false,"externalEffects":0}
+}
