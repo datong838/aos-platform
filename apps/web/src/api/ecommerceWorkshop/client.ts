@@ -9,6 +9,20 @@ import { parseCreatorLifecycleView } from "./parser";
 
 type FetchImplementation = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 export type EcommerceWorkshopClientOptions = { fetch?: FetchImplementation; getBaseUrl?: () => string; getAuthHeaders?: () => Record<string, string> };
+function requestTenant(auth: Record<string, string>): { orgId: string; projectId: string } | null {
+  const headers = new Headers(auth);
+  const orgId = headers.get("X-Org-Id");
+  const projectId = headers.get("X-Project-Id");
+  if ((orgId && !projectId) || (!orgId && projectId)) throw new TypeError("request tenant headers 不完整");
+  return orgId && projectId ? { orgId, projectId } : null;
+}
+function assertResponseTenant(payload: unknown, expectedTenant: { orgId: string; projectId: string } | null): void {
+  if (!expectedTenant || typeof payload !== "object" || payload === null || !("tenant" in payload)) return;
+  const tenant = (payload as { tenant?: unknown }).tenant;
+  if (typeof tenant !== "object" || tenant === null) return;
+  const responseTenant = tenant as { orgId?: unknown; projectId?: unknown };
+  if (responseTenant.orgId !== expectedTenant.orgId || responseTenant.projectId !== expectedTenant.projectId) throw new TypeError("response tenant 漂移");
+}
 export class EcommerceWorkshopClientError extends Error {
   constructor(message: string, readonly options: { status: number; body: EcommerceWorkshopApiErrorBody; operationId: string }) { super(message); this.name = "EcommerceWorkshopClientError"; }
   get status(): number { return this.options.status; }
@@ -40,12 +54,12 @@ export class EcommerceWorkshopClient {
   private readonly fetchImpl: FetchImplementation; private readonly baseUrl: () => string; private readonly authHeaders: () => Record<string, string>;
   constructor(options: EcommerceWorkshopClientOptions = {}) { this.fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis); this.baseUrl = options.getBaseUrl ?? getApiBase; this.authHeaders = options.getAuthHeaders ?? tenantAuthHeaders; }
   private async get(operationId: string, path: string): Promise<unknown> {
-    let response: Response; try { response = await this.fetchImpl(`${this.baseUrl().replace(/\/$/, "")}${path}`, { method: "GET", headers: { ...this.authHeaders(), Accept: "application/json" } }); } catch (cause) { const message = cause instanceof Error ? cause.message : String(cause); throw new EcommerceWorkshopClientError(message, { status: 0, body: { code: "NETWORK", message, details: null, traceId: "" }, operationId }); }
-    const payload: unknown = await response.json().catch(() => undefined); if (!response.ok) { const body = parseEcommerceWorkshopApiError(payload, response.statusText || `HTTP ${response.status}`); throw new EcommerceWorkshopClientError(body.message, { status: response.status, body, operationId }); } if (payload === undefined) throw new EcommerceWorkshopClientError("canonical API returned non-JSON success", { status: 0, body: { code: "INVALID_SUCCESS_RESPONSE", message: "canonical API returned non-JSON success", details: null, traceId: "" }, operationId }); return payload;
+    const auth = this.authHeaders(); const expectedTenant = requestTenant(auth); let response: Response; try { response = await this.fetchImpl(`${this.baseUrl().replace(/\/$/, "")}${path}`, { method: "GET", headers: { ...auth, Accept: "application/json" } }); } catch (cause) { const message = cause instanceof Error ? cause.message : String(cause); throw new EcommerceWorkshopClientError(message, { status: 0, body: { code: "NETWORK", message, details: null, traceId: "" }, operationId }); }
+    const payload: unknown = await response.json().catch(() => undefined); if (!response.ok) { const body = parseEcommerceWorkshopApiError(payload, response.statusText || `HTTP ${response.status}`); throw new EcommerceWorkshopClientError(body.message, { status: response.status, body, operationId }); } if (payload === undefined) throw new EcommerceWorkshopClientError("canonical API returned non-JSON success", { status: 0, body: { code: "INVALID_SUCCESS_RESPONSE", message: "canonical API returned non-JSON success", details: null, traceId: "" }, operationId }); assertResponseTenant(payload, expectedTenant); return payload;
   }
   private async post(operationId: string, path: string, body: unknown, headers: Record<string, string> = {}): Promise<unknown> {
-    let response: Response; try { response = await this.fetchImpl(`${this.baseUrl().replace(/\/$/, "")}${path}`, { method: "POST", headers: { ...this.authHeaders(), Accept: "application/json", "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) }); } catch (cause) { const message = cause instanceof Error ? cause.message : String(cause); throw new EcommerceWorkshopClientError(message, { status: 0, body: { code: "NETWORK", message, details: null, traceId: "" }, operationId }); }
-    const payload: unknown = await response.json().catch(() => undefined); if (!response.ok) { const parsed = parseEcommerceWorkshopApiError(payload, response.statusText || `HTTP ${response.status}`); throw new EcommerceWorkshopClientError(parsed.message, { status: response.status, body: parsed, operationId }); } if (payload === undefined) throw new EcommerceWorkshopClientError("canonical API returned non-JSON success", { status: 0, body: { code: "INVALID_SUCCESS_RESPONSE", message: "canonical API returned non-JSON success", details: null, traceId: "" }, operationId }); return payload;
+    const auth = this.authHeaders(); const expectedTenant = requestTenant(auth); let response: Response; try { response = await this.fetchImpl(`${this.baseUrl().replace(/\/$/, "")}${path}`, { method: "POST", headers: { ...auth, Accept: "application/json", "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) }); } catch (cause) { const message = cause instanceof Error ? cause.message : String(cause); throw new EcommerceWorkshopClientError(message, { status: 0, body: { code: "NETWORK", message, details: null, traceId: "" }, operationId }); }
+    const payload: unknown = await response.json().catch(() => undefined); if (!response.ok) { const parsed = parseEcommerceWorkshopApiError(payload, response.statusText || `HTTP ${response.status}`); throw new EcommerceWorkshopClientError(parsed.message, { status: response.status, body: parsed, operationId }); } if (payload === undefined) throw new EcommerceWorkshopClientError("canonical API returned non-JSON success", { status: 0, body: { code: "INVALID_SUCCESS_RESPONSE", message: "canonical API returned non-JSON success", details: null, traceId: "" }, operationId }); assertResponseTenant(payload, expectedTenant); return payload;
   }
   async listModules(): Promise<EcommerceWorkshopModuleListResponse> { return parseEcommerceWorkshopModuleList(await this.get("ecommerceWorkshopModulesList", "/v1/ecommerce-workshop/modules")); }
   async getModuleReadiness(moduleId: string): Promise<EcommerceWorkshopModuleReadinessResponse> { if (!MODULE_ID.test(moduleId)) throw new TypeError("moduleId 无效"); return parseEcommerceWorkshopModuleReadiness(await this.get("ecommerceWorkshopModuleReadinessGet", `/v1/ecommerce-workshop/modules/${encodeURIComponent(moduleId)}/readiness`)); }

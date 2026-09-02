@@ -1,0 +1,36 @@
+{
+  "taskId": "WORKSHOP-R2-06B-FRONTEND-TENANT-BINDING",
+  "verifiedAt": "2026-09-03T07:43:42+08:00",
+  "result": "FRONTEND_CANONICAL_RESPONSE_TENANT_BINDING_GREEN",
+  "tenantMatrix": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "canonicalPages": 8
+  },
+  "implementation": {
+    "requestTenantSnapshot": "single-read-per-request",
+    "partialTenantHeaders": "fail-before-fetch",
+    "responseTenantMismatch": "fail-closed-for-get-and-post"
+  },
+  "verification": {
+    "focusedClientAndParser": "50 passed",
+    "workshopFrontendMatrix": "57 files, 330 passed",
+    "webCumulative": "271 files, 2422 passed",
+    "productionBuild": "passed",
+    "browserPositive": {
+      "page": "/workshop/operations",
+      "tenant": "org-org/dev-project",
+      "facts": "7 views ready; source 219; attached 210; unmatched 9; conflict 0",
+      "screenshot": "operations-org-org-browser.png"
+    },
+    "browserNegative": {
+      "page": "/workshop/operations",
+      "tenant": "dev-org/dev-project",
+      "result": "module not installed; no org-org business data rendered",
+      "screenshot": "operations-dev-org-browser.png"
+    }
+  },
+  "externalEffects": 0,
+  "businessMutations": 0,
+  "notes": "Browser tenant changes used only the visible organization selector and were restored to org-org/dev-project after the canary check."
+}

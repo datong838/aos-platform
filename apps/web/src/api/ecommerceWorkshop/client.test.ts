@@ -39,6 +39,45 @@ const contextRef = { authority: "task-authority", resourceType: "TaskRevision", 
 const sharedContextResponse = { schemaVersion: "aos.ecommerce-workshop.shared-context/v1", tenant: envelope.tenant, context: { contextId: contextToken, status: "ready", sourceModuleId: "ecommerce.task-cockpit", sourceViewId: "task", sourceRoute: "/workshop/task-cockpit", primaryRef: contextRef, relatedRefs: [], purpose: "review", permissionDecisionRef: { ...contextRef, resourceId: "permission-1" }, disclosurePolicyRef: { ...contextRef, resourceId: "policy-1" }, markings: ["public"], disclosure: "allowed", evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", expiresAt: "2026-08-24T09:00:00Z", freshness: "fresh", readiness: "ready", filterSummary: null, lineageRefs: [], blockers: [] }, timeline: [], navigationTargets: [], page: { limit: 100, count: 0, hasMore: false, nextCursor: null } };
 
 describe("EcommerceWorkshopClient", () => {
+  it("每次请求只读取一次会话租户快照，且拒绝半套租户头", async () => {
+    const getAuthHeaders = vi.fn(() => ({ "X-Org-Id": "org-org", "X-Project-Id": "dev-project" }));
+    const client = new EcommerceWorkshopClient({
+      fetch: vi.fn().mockResolvedValue(ok(operations)),
+      getBaseUrl: () => "http://api.test",
+      getAuthHeaders,
+    });
+    await expect(client.getOperationsView()).resolves.toMatchObject({ tenant: envelope.tenant });
+    expect(getAuthHeaders).toHaveBeenCalledTimes(1);
+
+    const partialFetch = vi.fn().mockResolvedValue(ok(operations));
+    const partial = new EcommerceWorkshopClient({
+      fetch: partialFetch,
+      getBaseUrl: () => "http://api.test",
+      getAuthHeaders: () => ({ "X-Org-Id": "org-org" }),
+    });
+    await expect(partial.getOperationsView()).rejects.toThrow("request tenant headers 不完整");
+    expect(partialFetch).not.toHaveBeenCalled();
+  });
+  it("八个工作台 canonical GET 均拒绝与鉴权头不一致的租户回显", async () => {
+    const calls = [
+      (client: EcommerceWorkshopClient) => client.getTaskCockpitCore(),
+      (client: EcommerceWorkshopClient) => client.getContentCampaignView(),
+      (client: EcommerceWorkshopClient) => client.getOperationsView(),
+      (client: EcommerceWorkshopClient) => client.getCreatorGrowthView(),
+      (client: EcommerceWorkshopClient) => client.getMediaStudioView(),
+      (client: EcommerceWorkshopClient) => client.getAnalystView(),
+      (client: EcommerceWorkshopClient) => client.getPriceGovernanceView(),
+      (client: EcommerceWorkshopClient) => client.getCustomerView(),
+    ];
+    for (const call of calls) {
+      const client = new EcommerceWorkshopClient({
+        fetch: vi.fn().mockResolvedValue(ok({ tenant: { orgId: "dev-org", projectId: "dev-project" } })),
+        getBaseUrl: () => "http://api.test",
+        getAuthHeaders: () => ({ "X-Org-Id": "org-org", "X-Project-Id": "dev-project" }),
+      });
+      await expect(call(client)).rejects.toThrow("response tenant 漂移");
+    }
+  });
   it("只发两个 canonical GET，并沿用会话鉴权头", async () => {
     const fetch = vi.fn().mockResolvedValueOnce(ok({ ...envelope, items: [module], count: 1 })).mockResolvedValueOnce(ok({ ...envelope, item: module }));
     const client = new EcommerceWorkshopClient({ fetch, getBaseUrl: () => "http://api.test", getAuthHeaders: () => ({ Authorization: "Bearer test" }) });
