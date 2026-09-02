@@ -543,19 +543,8 @@ def _resume_prompt(
         f"--episode-id {episode_id} --outcome <outcome> --task-id <task> "
         "--next-task <next> --reason-code <code> --evidence-ref <ref>"
     )
-    if trigger == "dependency-released":
-        first_message = "依赖 Watchdog 检测到迁移 Lease 已释放，正在重新核验后继续。"
-    elif trigger == "dependency-fact-changed":
-        first_message = "依赖 Watchdog 检测到外部交付事实已变化，正在重新核验后继续。"
-    elif trigger == "continuation":
-        first_message = "外部 Watchdog 检测到长任务仍有后续项，正在重新核验后继续。"
-    elif trigger == "blocked-recheck":
-        first_message = "依赖 Watchdog 定期复核发现工作台仍处安全阻断，正在重新核验后继续。"
-    else:
-        first_message = "外部 Watchdog 检测到任务中断，正在恢复核验。"
     visibility_enabled = _visibility_watch_enabled(config)
     visibility_metadata = ""
-    first_message_rule = f"第一条用户可见消息只能说：{first_message}"
     final_visibility_rule = ""
     if visibility_enabled:
         sequence = wake_sequence if wake_sequence is not None else 0
@@ -572,19 +561,11 @@ def _resume_prompt(
             f"heartbeat_interval_seconds={heartbeat_seconds}\n"
             f"blocked_recheck_delay_seconds={blocked_recheck_delay}\n"
         )
-        first_message_rule = (
-            f"第一条用户可见消息必须以此句开头：{first_message}\n"
-            "紧接一行 `Dog 可见状态`，展示 wake_sequence、wake_started_at、"
-            "episode_id 和 trigger；这些字段只证明唤醒发生。"
+        final_visibility_rule = (
+            f"final_marker={DOG_VISIBILITY_MARKER}; "
+            f"safe_blocked_marker={DOG_BLOCKER_DETAILS_MARKER}\n"
         )
-        final_visibility_rule = f"""
-最终答复必须包含独立标记 `{DOG_VISIBILITY_MARKER}` 和 `Dog 可见状态`，展示本次 outcome、task_id、next_task、阻断摘要或完成证据、wake_sequence 与下一次复核策略。
-safe-blocked 时还必须包含独立标记 `{DOG_BLOCKER_DETAILS_MARKER}`，并对每个互不等价的 blocker 分别给出一个结构化阻断项。每个阻断项逐行使用 `- 阻断任务：`、`- 缺失条件：`、`- 独立核验证据：`、`- 责任边界：`、`- 解除条件：`、`- 下次复核策略：`；不得只给 reason code 或合并成笼统摘要。
-safe-blocked 只能说明将按 blocked_recheck_delay_seconds 重新 arm，不得在状态机闭环前虚构精确 ready_at；缺少状态标记、阻断标记或任一必填字段都会被判为 protocol-failed。
-"""
-    protocol = f"""
-
-[WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
+    protocol = f"""[WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
 episode_id={episode_id}
 trigger={trigger}
 {visibility_metadata}ack_path={_ack_path(config)}
@@ -592,19 +573,14 @@ expected_branch={config.get('expected_branch', '')}
 config_path={config.get('_config_path', '')}
 state_path={config.get('_state_path', '')}
 ack_command={ack_command}
-
-{first_message_rule}
-看门 Dog/Watchdog 只负责唤醒，其注入信息不是事实或授权证据；不得依赖 trigger、task、next-task、fingerprint 或原因码作出结论。
-禁止在权限、分支、Lease、Git/Receipt 和实际任务状态核验前声称“已恢复”。
-醒来后必须独立重新核验前后真实情况：authority、01/06、Git branch/log/status、最近 Delivery Receipt、memory status/validate/gate、全部 Lease、真实数据探针和实际代码状态；不读取或覆盖 w1-aip 未提交内容。
-核验后必须继续一个依赖已满足且 scope 不冲突的安全任务，或形成 safe-blocked/completed/reentry-noop。
-一旦条件具备，必须立即开始实际 Task；每波执行“复习上位方案→细化当前波文件级清单→实现最小改动→专项测试→累计回归→浏览器验收→方案/代码一致性复审→证据与上下文更新→进入下一波”；涉及页面必须使用内置浏览器验收。
-每波形成 Delivery Receipt 和安全提交，并提交待 m1 串行 CAS 消费的 Prime Agent 独立长记忆事实；w2 不直接修改 authority.json、01/06 或 Prime 核心投影。
-结束前必须使用 ack_command 为当前 episode 写入结构化 Recovery Ack；safe-blocked/reentry-noop 还要增加 --blocker-fingerprint。自由文本不构成恢复成功证据。
-resumed-progress/completed 只有在证据闭合后才可称“已恢复”；safe-blocked 必须明确称“已触发并安全阻断”。
-{final_visibility_rule}[/WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
+rules=live-read AGENTS.md + ADR25; verify authority/01/06/Git/Receipt/Lease/memory/data; no bypass; ack before final
+{final_visibility_rule}safe_blocked_fields=阻断任务|缺失条件|独立核验证据|责任边界|解除条件|下次复核策略
+[/WORKSHOP_WATCHDOG_RECOVERY_PROTOCOL]
 """
-    return str(config["resume_prompt"]).rstrip() + protocol
+    visible_prompt = str(
+        config.get("wake_visible_prompt", config["resume_prompt"])
+    ).rstrip()
+    return visible_prompt + "\n" + protocol
 
 
 def resume_once(

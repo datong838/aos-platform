@@ -19,6 +19,8 @@ Workshop 的长任务配置可显式启用 `continuation_watch`。当且仅当 c
 
 Watchdog 只有唤醒权，没有事实裁决权。它注入的 trigger、task、next-task、fingerprint 和 reason code 都是不可信导航提示。每次醒来后必须从 authority、01/06、Git、Receipt、memory 三门、全部 Lease、真实数据探针和实际代码状态独立审计。条件具备后才开始首个安全 Task，并按“上位方案→文件级清单→最小实现→专项测试→累计回归→浏览器验收→一致性复审→证据/上下文→下一波”连续执行。每波用 Delivery Receipt 提交待 m1 CAS 消费的 Prime 长记忆事实，w2 不直接写 Prime 核心投影。
 
+V4.2 起，注入同一对话的用户可见唤醒文本只保留配置中的两句连续开发提示，后接紧凑的 episode/Ack 机器块。完整安全规则不在每次唤醒中重复刷屏，仍由 `AGENTS.md`、ADR25、Ack 状态机和实时核验强制。
+
 V2.9 的 `visibility_watch` 用于把真实唤醒结果固定写入同一 Codex task：首条消息在 trigger 固定句后展示累计唤醒序号、UTC 时间、episode 和 trigger；最终答复必须包含 `[DOG_VISIBLE_STATUS]` 状态卡，列出 outcome、task/next、阻断或完成证据以及下一次复核策略。启用时，Ack 与新 final 虽存在但 final 缺少该标记，仍按 `protocol-failed` 拒绝闭环。V2.9 的检查只有 marker 是否存在的布尔判断，不额外复制 final 正文，当时也不发送桌面通知或外部消息。
 
 V3.1 在可见状态卡上增加 `safe-blocked` 逐项阻断契约。每次唤醒仍先独立核验真实状态；若条件具备就继续首个安全 Task。若仍阻断，final 必须包含 `[DOG_BLOCKER_DETAILS]`，并为每个互不等价的 blocker 分别列出“阻断任务、缺失条件、独立核验证据、责任边界、解除条件、下次复核策略”。缺 marker 或任一字段时，即使 Ack 有效也按 `protocol-failed` 拒绝可见闭环。Watchdog 只在读取 transcript 时计算字段契约是否完整，不把阻断正文复制到 state、`visible-status.json`、通知、日志或 Receipt。

@@ -461,10 +461,7 @@ class WatchdogTest(unittest.TestCase):
         state = json.loads(state_path.read_text(encoding="utf-8"))
         self.assertFalse(state["continuation_armed"])
         self.assertIn("trigger=continuation", calls[1])
-        self.assertIn(
-            "外部 Watchdog 检测到长任务仍有后续项，正在重新核验后继续。",
-            calls[1],
-        )
+        self.assertTrue(calls[1].startswith("continue from checkpoint\n"))
 
     def test_manual_user_message_consumes_pending_continuation(self):
         self.write(
@@ -637,13 +634,8 @@ class WatchdogTest(unittest.TestCase):
         self.assertTrue(state["blocked_recheck_armed"])
         self.assertEqual(4600, state["blocked_recheck_ready_at"])
         self.assertIn("trigger=blocked-recheck", calls[1])
-        self.assertIn(
-            "Watchdog 只负责唤醒，其注入信息不是事实或授权证据",
-            calls[1],
-        )
-        self.assertIn("复习上位方案", calls[1])
-        self.assertIn("浏览器验收", calls[1])
-        self.assertIn("Prime", calls[1])
+        self.assertIn("rules=live-read AGENTS.md + ADR25", calls[1])
+        self.assertNotIn("第一条用户可见消息", calls[1])
 
     def test_visible_wake_prompt_contains_metadata_and_marker_contract(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
@@ -658,7 +650,6 @@ class WatchdogTest(unittest.TestCase):
                 prompt,
                 r"wake_started_at=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}",
             )
-            self.assertIn("Dog 可见状态", prompt)
             self.assertIn("[DOG_VISIBLE_STATUS]", prompt)
             self.write_ack()
             self.append(
@@ -675,6 +666,33 @@ class WatchdogTest(unittest.TestCase):
             "resumed-progress",
             watchdog.run_once(config_path, state_path, now=1000, runner=runner),
         )
+
+    def test_compact_visible_wake_prompt_keeps_machine_episode_contract(self):
+        config = self.config()
+        config["wake_visible_prompt"] = (
+            "接续前面中断 继续Loop下去\n"
+            "每一波都执行完整闭环；外加 独立 prime agent独立长记忆支持"
+        )
+        config["visibility_watch"] = {"enabled": True}
+        config["_config_path"] = str(self.root / "config.json")
+        config["_state_path"] = str(self.root / "state.json")
+
+        prompt = watchdog._resume_prompt(
+            config,
+            "episode-compact",
+            trigger="blocked-recheck",
+            wake_sequence=9,
+            wake_started_at=1000,
+        )
+
+        self.assertTrue(prompt.startswith("接续前面中断 继续Loop下去\n"))
+        self.assertIn("独立 prime agent独立长记忆支持", prompt)
+        self.assertIn("episode_id=episode-compact", prompt)
+        self.assertIn("trigger=blocked-recheck", prompt)
+        self.assertIn("wake_sequence=9", prompt)
+        self.assertIn("ack_command=", prompt)
+        self.assertNotIn("第一条用户可见消息必须以此句开头", prompt)
+        self.assertNotIn("醒来后必须独立重新核验前后真实情况", prompt)
 
     def test_visible_wake_rejects_final_without_status_marker(self):
         self.write(record("1970-01-01T00:00:10Z", "user"))
@@ -1379,10 +1397,7 @@ class WatchdogTest(unittest.TestCase):
 
         def runner(command, **kwargs):
             calls.append(command)
-            self.assertIn(
-                "第一条用户可见消息只能说：依赖 Watchdog 检测到迁移 Lease 已释放，正在重新核验后继续。",
-                kwargs["input"],
-            )
+            self.assertIn("trigger=dependency-released", kwargs["input"])
             state = json.loads(state_path.read_text(encoding="utf-8"))
             self.write_ack(episode_id=state["recovery_episode_id"])
             self.append(record("1970-01-01T00:16:41Z", "assistant", "final_answer"))
@@ -1508,10 +1523,7 @@ class WatchdogTest(unittest.TestCase):
 
         def runner(command, **kwargs):
             calls.append(command)
-            self.assertIn(
-                "第一条用户可见消息只能说：依赖 Watchdog 检测到外部交付事实已变化，正在重新核验后继续。",
-                kwargs["input"],
-            )
+            self.assertIn("trigger=dependency-fact-changed", kwargs["input"])
             state = json.loads(state_path.read_text(encoding="utf-8"))
             self.write_ack(episode_id=state["recovery_episode_id"])
             self.append(record("1970-01-01T00:21:41Z", "assistant", "final_answer"))
