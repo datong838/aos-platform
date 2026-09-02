@@ -14,6 +14,7 @@ from typing import Any, Generic, TypeVar
 import psycopg
 
 from aos_api.db import connect as db_connect
+from aos_api.db import connect_read_only as db_read_only_connect
 from aos_api.ecommerce_content_campaign_authority_contracts import (
     CalendarDecisionRevision,
     CalendarEntryRevision,
@@ -100,8 +101,15 @@ def canonical_hash(value: Any) -> str:
 
 
 class EcommerceContentCampaignAuthorityStore:
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(
+        self,
+        connect_factory: ConnectFactory | None = None,
+        read_connect_factory: ConnectFactory | None = None,
+    ) -> None:
         self._connect_factory = connect_factory or db_connect
+        self._read_connect_factory = read_connect_factory or (
+            connect_factory if connect_factory is not None else db_read_only_connect
+        )
 
     def publish_campaign(
         self,
@@ -291,10 +299,7 @@ class EcommerceContentCampaignAuthorityStore:
         if not 1 <= limit <= 100:
             raise ValueError("ContentVariant read limit must be between 1 and 100")
         try:
-            with self._connect_factory(scope) as conn:
-                conn.execute(
-                    "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
-                )
+            with self._read_connect_factory(scope) as conn:
                 rows = conn.execute(
                     "SELECT relation.org_id,relation.project_id,relation.relation_id,"
                     "relation.relation_type,relation.from_artifact_id,"
@@ -354,10 +359,7 @@ class EcommerceContentCampaignAuthorityStore:
         self, scope: TenantScope, *, operation: str, idempotency_key: str
     ) -> ContentCampaignAuthorityReceipt:
         try:
-            with self._connect_factory(scope) as conn:
-                conn.execute(
-                    "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
-                )
+            with self._read_connect_factory(scope) as conn:
                 row = conn.execute(
                     "SELECT receipt_id,operation,idempotency_key,request_hash,"
                     "result_ref,created_by,created_at "
@@ -498,10 +500,7 @@ class EcommerceContentCampaignAuthorityStore:
         if not 1 <= limit <= 100:
             raise ValueError("authority read limit must be between 1 and 100")
         try:
-            with self._connect_factory(scope) as conn:
-                conn.execute(
-                    "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
-                )
+            with self._read_connect_factory(scope) as conn:
                 rows = conn.execute(
                     f"SELECT revision.org_id,revision.project_id,"
                     f"revision.receipt_id,revision.authority_data FROM {head_table} head "

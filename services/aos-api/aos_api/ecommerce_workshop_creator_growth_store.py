@@ -12,6 +12,7 @@ from typing import Any, Generic, TypeVar
 import psycopg
 
 from aos_api.db import connect as db_connect
+from aos_api.db import connect_read_only as db_read_only_connect
 from aos_api.ecommerce_workshop_creator_growth_authorities import (
     CreatorCandidateRevision,
     CreatorContractRevision,
@@ -52,8 +53,15 @@ class CreatorAuthorityReadError(CreatorAuthorityStoreError):
 class EcommerceWorkshopCreatorGrowthStore:
     """Append new immutable rows and read bounded same-tenant observations."""
 
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(
+        self,
+        connect_factory: ConnectFactory | None = None,
+        read_connect_factory: ConnectFactory | None = None,
+    ) -> None:
         self._connect_factory = connect_factory or db_connect
+        self._read_connect_factory = read_connect_factory or (
+            connect_factory if connect_factory is not None else db_read_only_connect
+        )
 
     def append_candidate(self, scope: TenantScope, item: CreatorCandidateRevision, receipt_id: str) -> None:
         self._append(scope, "ecommerce_creator_candidate_revision", "candidate_id", item.candidate_id, item, receipt_id)
@@ -125,8 +133,7 @@ class EcommerceWorkshopCreatorGrowthStore:
         if cutoff.utcoffset() is None or not 1 <= limit <= 100:
             raise ValueError("creator authority read requires aware cutoff and bounded limit")
         try:
-            with self._connect_factory(scope) as conn:
-                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+            with self._read_connect_factory(scope) as conn:
                 rows = conn.execute(
                     f"SELECT org_id,project_id,receipt_id,authority_data FROM {table} "
                     "WHERE org_id=%s AND project_id=%s AND created_at<=%s ORDER BY created_at DESC LIMIT %s",

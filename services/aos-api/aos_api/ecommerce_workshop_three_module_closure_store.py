@@ -6,6 +6,7 @@ from collections.abc import Callable
 from typing import Any
 
 from aos_api.db import connect
+from aos_api.db import connect_read_only, connect_serializable
 from aos_api.ecommerce_workshop_three_module_closure import (
     CanonicalItemOutcome,
     ClosureExactRef,
@@ -38,8 +39,19 @@ _STATUS = {
 
 
 class EcommerceWorkshopThreeModuleClosureStore:
-    def __init__(self, connect_factory: Callable[[TenantScope], Any] = connect) -> None:
+    def __init__(
+        self,
+        connect_factory: Callable[[TenantScope], Any] = connect,
+        read_connect_factory: Callable[[TenantScope], Any] | None = None,
+        serializable_connect_factory: Callable[[TenantScope], Any] | None = None,
+    ) -> None:
         self._connect = connect_factory
+        self._read_connect = read_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_read_only
+        )
+        self._serial_connect = serializable_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_serializable
+        )
 
     @staticmethod
     def _json(value: Any) -> str:
@@ -75,8 +87,7 @@ class EcommerceWorkshopThreeModuleClosureStore:
     def _append(self, scope: TenantScope, table: str, identity: str, item: Any, created_at: Any) -> Any:
         self._assert_tenant(scope, item)
         content_hash = item.content_hash
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+        with self._serial_connect(scope) as conn:
             conn.execute(
                 f"INSERT INTO {table}(org_id,project_id,binding_id,revision,module,closure_id,content_hash,authority_data,created_at) VALUES (%s,%s,%s,1,%s,%s,%s,%s::jsonb,%s) ON CONFLICT DO NOTHING",
                 (*scope.key, identity, getattr(item, "module", None), getattr(item, "closure_id", None) or item.closure_ref.resource_id, content_hash, self._json(item.model_dump(mode="json", by_alias=True)), created_at),
@@ -92,8 +103,7 @@ class EcommerceWorkshopThreeModuleClosureStore:
 
     def append_closure(self, scope: TenantScope, item: ThreeModuleClosureRevision) -> ThreeModuleClosureRevision:
         self._assert_tenant(scope, item)
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+        with self._serial_connect(scope) as conn:
             conn.execute(
                 "INSERT INTO ecommerce_three_module_closure_revision(org_id,project_id,closure_id,revision,module,source_id,content_hash,authority_data,created_at) VALUES (%s,%s,%s,1,%s,%s,%s,%s::jsonb,%s) ON CONFLICT DO NOTHING",
                 (*scope.key, item.closure_id, item.module.value, item.source_ref.resource_id, item.content_hash, self._json(item.model_dump(mode="json", by_alias=True)), item.compiled_at),
@@ -117,8 +127,7 @@ class EcommerceWorkshopThreeModuleClosureStore:
         return self._append(scope, "ecommerce_three_module_handoff_binding_revision", item.binding_id, item, item.bound_at)
 
     def _source_row(self, scope: TenantScope, table: str, identity: str, source: ClosureExactRef) -> dict[str, Any]:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity}=%s AND revision=%s",
                 (*scope.key, source.resource_id, source.revision),
@@ -128,8 +137,7 @@ class EcommerceWorkshopThreeModuleClosureStore:
         return self._value(row["authority_data"])
 
     def _observations(self, scope: TenantScope, table: str, decision_column: str, decision_id: str, item_column: str) -> dict[str, dict[str, Any]]:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             rows = conn.execute(
                 f"SELECT authority_data FROM {table} WHERE org_id=%s AND project_id=%s AND {decision_column}=%s ORDER BY created_at,revision",
                 (*scope.key, decision_id),
@@ -153,8 +161,7 @@ class EcommerceWorkshopThreeModuleClosureStore:
                 raw.append((key, status, receipt))
         elif module is ThreeModule.PRICE:
             data = self._source_row(scope, "ecommerce_price_disposition_revision", "disposition_id", source)
-            with self._connect(scope) as conn:
-                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+            with self._read_connect(scope) as conn:
                 row = conn.execute(
                     "SELECT authority_data FROM ecommerce_price_disposition_observation WHERE org_id=%s AND project_id=%s AND authority_data->'dispositionRef'->>'resourceId'=%s ORDER BY created_at DESC LIMIT 1",
                     (*scope.key, source.resource_id),

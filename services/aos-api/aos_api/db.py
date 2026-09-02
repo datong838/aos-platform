@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 import psycopg
+from psycopg import IsolationLevel
 from psycopg.rows import dict_row
 
 from aos_api.logging_facade import get_logger
@@ -25,14 +26,23 @@ def get_dsn() -> str:
 
 
 @contextmanager
-def connect(
+def _connect(
     scope: TenantScope | None = None,
     *,
     inherit_scope: bool = True,
+    read_only: bool = False,
+    isolation_level: IsolationLevel | None = None,
 ) -> Iterator[psycopg.Connection]:
     dsn = get_dsn()
     log.debug("db_connect host_port_from_env=%s", "AOS_DATABASE_URL" in os.environ)
     with psycopg.connect(dsn, row_factory=dict_row) as conn:
+        # psycopg applies these characteristics when the transaction starts.
+        # They must be configured before client encoding or tenant RLS executes
+        # the first SQL statement; issuing SET TRANSACTION afterwards fails.
+        if isolation_level is not None:
+            conn.isolation_level = isolation_level
+        if read_only:
+            conn.read_only = True
         # 强制 UTF-8，避免客户端/驱动默认编码把中文写成 ???
         conn.execute("SET client_encoding TO 'UTF8'")
         effective_scope = (
@@ -43,6 +53,43 @@ def connect(
         if effective_scope is not None:
             apply_transaction_scope(conn, effective_scope)
         yield conn
+
+
+def connect(
+    scope: TenantScope | None = None,
+    *,
+    inherit_scope: bool = True,
+) -> Iterator[psycopg.Connection]:
+    """Open the existing read-write tenant transaction."""
+    return _connect(scope, inherit_scope=inherit_scope, read_only=False)
+
+
+def connect_read_only(
+    scope: TenantScope | None = None,
+    *,
+    inherit_scope: bool = True,
+) -> Iterator[psycopg.Connection]:
+    """Open a repeatable-read, read-only transaction before applying RLS scope."""
+    return _connect(
+        scope,
+        inherit_scope=inherit_scope,
+        read_only=True,
+        isolation_level=IsolationLevel.REPEATABLE_READ,
+    )
+
+
+def connect_serializable(
+    scope: TenantScope | None = None,
+    *,
+    inherit_scope: bool = True,
+) -> Iterator[psycopg.Connection]:
+    """Open a serializable read-write transaction before applying RLS scope."""
+    return _connect(
+        scope,
+        inherit_scope=inherit_scope,
+        read_only=False,
+        isolation_level=IsolationLevel.SERIALIZABLE,
+    )
 
 
 SCHEMA_SQL = """

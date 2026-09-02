@@ -11,7 +11,7 @@ from typing import Any
 
 import psycopg
 
-from aos_api.db import connect
+from aos_api.db import connect_read_only
 from aos_api.ecommerce_inventory_reader_contracts import (
     InventoryHealth,
     InventoryObjectRevision,
@@ -47,7 +47,7 @@ def _optional_non_negative_integer(value: object, *, field: str) -> int | None:
 class EcommerceInventoryReader:
     def __init__(self, *, connect_factory: ConnectFactory | None = None) -> None:
         self._connect_factory = connect_factory or partial(
-            connect,
+            connect_read_only,
             inherit_scope=False,
         )
 
@@ -67,7 +67,6 @@ class EcommerceInventoryReader:
 
         try:
             with self._connect_factory() as conn:
-                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
                 apply_transaction_scope(conn, scope)
                 rows = conn.execute(
                     """SELECT external_id,properties,source_updated_at,payload_hash

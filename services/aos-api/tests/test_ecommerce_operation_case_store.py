@@ -192,11 +192,15 @@ def test_publish_sla_policy_uses_versioned_head() -> None:
 def test_list_cases_is_bounded_read_only_and_tenant_scoped() -> None:
     payload = operation_case().model_dump(mode="json", by_alias=True)
     connection = Connection(rows=[[{"payload": payload}]])
-    store = OperationAuthorityStore(factory(connection))
+    write_connection = Connection()
+    store = OperationAuthorityStore(
+        factory(write_connection), factory(connection)
+    )
     items = store.list_cases(SCOPE, limit=1)
     assert [item.case_id for item in items] == ["case-1"]
     sql = "\n".join(call[0] for call in connection.calls)
-    assert "REPEATABLE READ READ ONLY" in sql
+    assert "SELECT revision.payload" in sql
+    assert write_connection.calls == []
     assert "WHERE head.org_id=%s AND head.project_id=%s" in sql
     assert connection.calls[-1][1] == ("org-org", "dev-project", 1)
 
@@ -219,7 +223,10 @@ def test_get_receipt_returns_exact_tenant_bound_immutable_receipt() -> None:
             },
         ]
     )
-    store = OperationAuthorityStore(factory(connection))
+    write_connection = Connection()
+    store = OperationAuthorityStore(
+        factory(write_connection), factory(connection)
+    )
     receipt = store.get_receipt(
         SCOPE,
         operation="operation_case.create",
@@ -228,8 +235,9 @@ def test_get_receipt_returns_exact_tenant_bound_immutable_receipt() -> None:
 
     assert receipt.receipt_id == "op-receipt-1"
     assert receipt.tenant.org_id == "org-org"
-    assert "REPEATABLE READ READ ONLY" in connection.calls[0][0]
-    assert connection.calls[1][1] == (
+    assert "FROM ecommerce_operation_authority_receipt" in connection.calls[0][0]
+    assert write_connection.calls == []
+    assert connection.calls[0][1] == (
         "org-org",
         "dev-project",
         "operation_case.create",

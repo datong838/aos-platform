@@ -17,6 +17,9 @@ from aos_api.ecommerce_workshop_content_campaign import (
     EcommerceWorkshopContentCampaign,
 )
 from aos_api.ecommerce_workshop_creator_growth import EcommerceWorkshopCreatorGrowth
+from aos_api.ecommerce_workshop_creator_growth_store import (
+    EcommerceWorkshopCreatorGrowthStore,
+)
 from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
 from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
 from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
@@ -270,6 +273,12 @@ def test_creator_growth_fails_closed_when_module_is_not_installed() -> None:
 
     assert response.status_code == 404
     assert response.json()["code"] == "NOT_FOUND"
+
+
+def test_creator_growth_default_dependency_reads_canonical_store() -> None:
+    ecommerce_workshop.get_ecommerce_workshop_creator_growth.cache_clear()
+    service = ecommerce_workshop.get_ecommerce_workshop_creator_growth()
+    assert isinstance(service._store, EcommerceWorkshopCreatorGrowthStore)
 
 
 def test_media_studio_shell_is_get_only_tenant_bound_and_scope_safe() -> None:

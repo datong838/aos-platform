@@ -1,0 +1,39 @@
+{
+  "taskId": "WORKSHOP-R2-03-CANONICAL-READ-TRANSACTION",
+  "tenant": "org-org/dev-project",
+  "result": "GREEN",
+  "rootCause": "Tenant RLS setup emitted SQL before callers attempted SET TRANSACTION ISOLATION LEVEL, so PostgreSQL rejected the late transaction-mode change.",
+  "repair": {
+    "readConnection": "REPEATABLE READ plus READ ONLY configured before the first SQL statement",
+    "serializableConnection": "SERIALIZABLE configured before the first SQL statement",
+    "defaultConnection": "Existing read-write behavior preserved"
+  },
+  "tests": {
+    "focusedStoreAndReader": "75 passed",
+    "contentCampaignContract": "8 passed",
+    "workshopCumulative": "250 passed",
+    "compileall": "passed",
+    "diffCheck": "passed"
+  },
+  "liveReadProbe": {
+    "ecommerce_operation_case_head": 0,
+    "ecommerce_operation_case_revision": 0,
+    "ecommerce_operation_authority_receipt": 0,
+    "aip_workshop_preparation_intent": 0,
+    "aip_workshop_preparation_result": 0,
+    "interpretation": "Canonical tables are readable and legitimately empty; empty is not a read failure."
+  },
+  "browserAcceptance": {
+    "systemHealth": "API, Web, PostgreSQL, MinIO, LiteLLM, OCR and Analytics healthy",
+    "pages": [
+      "统一运营驾驶舱",
+      "内容与活动工作台",
+      "达人邀约驾驶舱",
+      "价格治理驾驶舱",
+      "客户关系工作台"
+    ],
+    "result": "Pages rendered canonical business data or trustworthy empty states without transaction read errors."
+  },
+  "externalSideEffects": 0,
+  "businessDataMutations": 0
+}

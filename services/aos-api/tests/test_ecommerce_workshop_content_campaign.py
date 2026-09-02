@@ -189,20 +189,16 @@ def test_orphan_variant_blocks_only_content_slice() -> None:
     assert body["page"]["count"] == 2
 
 
-def test_shell_is_tenant_bound_canonical_and_honestly_blocked() -> None:
+def test_shell_is_tenant_bound_canonical_and_honestly_empty() -> None:
     envelope = WorkshopContentCampaignViewEnvelope.model_validate(_body())
     assert envelope.tenant.org_id == "org-org"
     assert [item.slice_id for item in envelope.slices] == list(
         ContentCampaignSliceId
     )
-    assert [item.status.value for item in envelope.slices] == ["blocked"] * 3
+    assert [item.status.value for item in envelope.slices] == ["ready"] * 3
     assert [item.count_ledger.eligible for item in envelope.slices] == [0, 0, 0]
     assert [item.items for item in envelope.slices] == [[], [], []]
-    assert [item.blockers[0].code for item in envelope.slices] == [
-        "CANONICAL_CAMPAIGN_REVISION_AUTHORITY_NOT_AVAILABLE",
-        "CANONICAL_CALENDAR_ENTRY_AUTHORITY_NOT_AVAILABLE",
-        "CANONICAL_MASTER_CONTENT_INTENT_AUTHORITY_NOT_AVAILABLE",
-    ]
+    assert [item.blockers for item in envelope.slices] == [[], [], []]
 
 
 def test_contract_rejects_naive_time_wrong_order_and_count_drift() -> None:
@@ -222,9 +218,15 @@ def test_contract_rejects_naive_time_wrong_order_and_count_drift() -> None:
         WorkshopContentCampaignViewEnvelope.model_validate(drift)
 
 
-def test_contract_rejects_false_ready_unverified_items_and_extra_fields() -> None:
+def test_contract_rejects_ready_with_blockers_unverified_items_and_extra_fields() -> None:
     false_ready = _body()
-    false_ready["slices"][0]["status"] = "ready"  # type: ignore[index]
+    false_ready["slices"][0]["blockers"] = [  # type: ignore[index]
+        {
+            "code": "CANONICAL_CAMPAIGN_REVISION_AUTHORITY_NOT_AVAILABLE",
+            "dependency": "CampaignRevision authority",
+            "requiredAction": "restore canonical authority access",
+        }
+    ]
     with pytest.raises(ValidationError):
         WorkshopContentCampaignViewEnvelope.model_validate(false_ready)
 

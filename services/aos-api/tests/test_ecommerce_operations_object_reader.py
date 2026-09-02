@@ -42,7 +42,7 @@ def test_reader_is_tenant_scoped_read_only_and_excludes_payload() -> None:
     )
     assert items[0].object_id == "order-1"
     sql = "\n".join(call[0] for call in connection.calls)
-    assert "REPEATABLE READ READ ONLY" in sql
+    assert "SET TRANSACTION" not in sql
     assert "properties" not in sql
     assert connection.calls[-1][1][:3] == ("org-org", "dev-project", "Order")
 

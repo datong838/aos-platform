@@ -8,6 +8,7 @@ from typing import Any
 import psycopg
 
 from aos_api.db import connect
+from aos_api.db import connect_read_only
 from aos_api.ecommerce_workshop_creator_growth_authorities import CreatorExactRef
 from aos_api.ecommerce_workshop_creator_prepare import (
     CreatorBatchPreparationRevision,
@@ -21,8 +22,15 @@ from aos_api.tenant_scope import TenantScope
 
 
 class EcommerceWorkshopCreatorPrepareStore:
-    def __init__(self, connect_factory: Callable[[TenantScope], Any] = connect) -> None:
+    def __init__(
+        self,
+        connect_factory: Callable[[TenantScope], Any] = connect,
+        read_connect_factory: Callable[[TenantScope], Any] | None = None,
+    ) -> None:
         self._connect = connect_factory
+        self._read_connect = read_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_read_only
+        )
 
     @staticmethod
     def _json(value: Any) -> str:
@@ -67,8 +75,7 @@ class EcommerceWorkshopCreatorPrepareStore:
         return self._append(scope, "ecommerce_creator_batch_preparation_revision", "batch_id", item.batch_id, item.revision, item.content_hash, item, item.created_at)
 
     def _require(self, scope: TenantScope, table: str, identity_column: str, ref: CreatorExactRef, model: type[Any]) -> Any:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s",
                 (*scope.key, ref.resource_id, ref.revision),
@@ -89,7 +96,7 @@ class EcommerceWorkshopCreatorPrepareStore:
         return self._require(scope, "ecommerce_creator_prepared_match_decision", "decision_id", ref, CreatorPreparedMatchDecision)
 
     def next_batch_revision(self, scope: TenantScope, batch_id: str) -> int:
-        with self._connect(scope) as conn:
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 "SELECT COALESCE(MAX(revision),0) AS revision FROM ecommerce_creator_batch_preparation_revision WHERE org_id=%s AND project_id=%s AND batch_id=%s",
                 (*scope.key, batch_id),
@@ -97,8 +104,7 @@ class EcommerceWorkshopCreatorPrepareStore:
         return int(row["revision"]) + 1
 
     def latest_batch(self, scope: TenantScope, batch_id: str) -> CreatorBatchPreparationRevision:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 "SELECT authority_data FROM ecommerce_creator_batch_preparation_revision WHERE org_id=%s AND project_id=%s AND batch_id=%s ORDER BY revision DESC LIMIT 1",
                 (*scope.key, batch_id),
@@ -119,8 +125,7 @@ class EcommerceWorkshopCreatorPrepareStore:
 
     def latest_batch_or_none(self, scope: TenantScope) -> CreatorBatchPreparationRevision | None:
         try:
-            with self._connect(scope) as conn:
-                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+            with self._read_connect(scope) as conn:
                 row = conn.execute(
                     "SELECT authority_data FROM ecommerce_creator_batch_preparation_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,revision DESC LIMIT 1",
                     scope.key,

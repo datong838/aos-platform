@@ -60,7 +60,7 @@ def test_reader_preserves_real_count_and_suppresses_customer_identities() -> Non
     assert value.readiness_axes[0].status == "ready"
     assert all(item.status == "blocked" for item in value.readiness_axes[1:])
     sql = "\n".join(call[0] for call in connection.calls)
-    assert "REPEATABLE READ READ ONLY" in sql
+    assert "SET TRANSACTION" not in sql
     assert "properties" not in sql and "external_id" not in str(value)
     object_query = next(call for call in connection.calls if "FROM ecom_object" in call[0])
     assert object_query[1][:2] == ("org-org", "dev-project")

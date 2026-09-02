@@ -60,7 +60,7 @@ def test_reader_is_bounded_tenant_read_only_and_payload_free() -> None:
     assert items[0].order_ref.resource_id == "order-1"
     assert items[0].order_line_ref is None
     sql = "\n".join(call[0] for call in connection.calls)
-    assert "REPEATABLE READ READ ONLY" in sql
+    assert "SET TRANSACTION" not in sql
     assert "FROM ecommerce_aftersale_event" in sql
     assert "ORDER BY occurred_at DESC,event_id DESC,source_revision DESC" in sql
     assert "payload" not in sql.lower()

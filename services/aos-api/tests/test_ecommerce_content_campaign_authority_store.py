@@ -269,13 +269,17 @@ def test_bounded_readers_are_repeatable_read_tenant_scoped(
             ]
         ]
     )
-    store = EcommerceContentCampaignAuthorityStore(factory(connection))
+    write_connection = Connection()
+    store = EcommerceContentCampaignAuthorityStore(
+        factory(write_connection), factory(connection)
+    )
     rows = getattr(store, method)(SCOPE, cutoff=NOW, limit=1)
     assert len(rows) == 1
     assert identity in str(rows[0].revision.model_dump())
     assert rows[0].receipt_id == "receipt-1"
-    assert "REPEATABLE READ READ ONLY" in connection.calls[0][0]
-    assert connection.calls[1][1] == ("org-org", "dev-project", NOW, 1)
+    assert connection.calls[0][0].startswith("SELECT")
+    assert write_connection.calls == []
+    assert connection.calls[0][1] == ("org-org", "dev-project", NOW, 1)
 
 
 def test_reader_fails_closed_on_row_tenant_drift() -> None:
@@ -318,16 +322,18 @@ def variant_row(**updates):
 
 def test_variant_reader_uses_exact_relation_artifacts_and_receipt() -> None:
     connection = Connection(rows=[[variant_row()]])
+    write_connection = Connection()
     observations = EcommerceContentCampaignAuthorityStore(
-        factory(connection)
+        factory(write_connection), factory(connection)
     ).list_content_variants(SCOPE, cutoff=NOW, limit=1)
     assert len(observations) == 1
     assert observations[0].variant_artifact_id == "variant-1"
     assert observations[0].master_artifact_id == "master-1"
     assert observations[0].receipt_id == "w2r-relation-1"
-    assert "REPEATABLE READ READ ONLY" in connection.calls[0][0]
-    assert "receipt.operation='artifact_relation.create'" in connection.calls[1][0]
-    assert connection.calls[1][1] == ("org-org", "dev-project", NOW, 1)
+    assert connection.calls[0][0].startswith("SELECT")
+    assert write_connection.calls == []
+    assert "receipt.operation='artifact_relation.create'" in connection.calls[0][0]
+    assert connection.calls[0][1] == ("org-org", "dev-project", NOW, 1)
 
 
 @pytest.mark.parametrize(

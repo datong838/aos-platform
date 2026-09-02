@@ -12,7 +12,7 @@ import psycopg
 from pydantic import Field, field_validator
 
 from aos_api.aip_contracts import AipContractModel
-from aos_api.db import connect
+from aos_api.db import connect_read_only
 from aos_api.tenant_scope import TenantScope, apply_transaction_scope
 
 
@@ -41,7 +41,9 @@ class OperationsObjectReadError(RuntimeError):
 
 class EcommerceOperationsObjectReader:
     def __init__(self, *, connect_factory: ConnectFactory | None = None) -> None:
-        self._connect_factory = connect_factory or partial(connect, inherit_scope=False)
+        self._connect_factory = connect_factory or partial(
+            connect_read_only, inherit_scope=False
+        )
 
     def read(
         self,
@@ -61,7 +63,6 @@ class EcommerceOperationsObjectReader:
         scope = TenantScope(org_id=org_id, project_id=project_id)
         try:
             with self._connect_factory() as conn:
-                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
                 apply_transaction_scope(conn, scope)
                 rows = conn.execute(
                     "SELECT object_type,external_id,source_updated_at,payload_hash "

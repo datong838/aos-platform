@@ -12,6 +12,7 @@ from typing import Any
 import psycopg
 
 from aos_api.db import connect as db_connect
+from aos_api.db import connect_read_only as db_read_only_connect
 from aos_api.ecommerce_operation_case_contracts import (
     AggregationPolicyRevision,
     AutomationKillDecisionRevision,
@@ -58,8 +59,15 @@ def canonical_hash(value: Any) -> str:
 
 
 class OperationAuthorityStore:
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(
+        self,
+        connect_factory: ConnectFactory | None = None,
+        read_connect_factory: ConnectFactory | None = None,
+    ) -> None:
         self._connect_factory = connect_factory or db_connect
+        self._read_connect_factory = read_connect_factory or (
+            connect_factory if connect_factory is not None else db_read_only_connect
+        )
 
     def publish_policy(
         self,
@@ -134,10 +142,7 @@ class OperationAuthorityStore:
         if not 1 <= limit <= 50:
             raise ValueError("operation case limit must be between 1 and 50")
         try:
-            with self._connect_factory(scope) as conn:
-                conn.execute(
-                    "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
-                )
+            with self._read_connect_factory(scope) as conn:
                 rows = conn.execute(
                     "SELECT revision.payload FROM ecommerce_operation_case_head head "
                     "JOIN ecommerce_operation_case_revision revision "
@@ -224,10 +229,7 @@ class OperationAuthorityStore:
     ) -> OperationAuthorityReceipt:
         """Read the exact immutable Receipt created by a successful command."""
         try:
-            with self._connect_factory(scope) as conn:
-                conn.execute(
-                    "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
-                )
+            with self._read_connect_factory(scope) as conn:
                 row = conn.execute(
                     "SELECT receipt_id,operation,idempotency_key,request_hash,"
                     "result_ref,created_by,created_at "

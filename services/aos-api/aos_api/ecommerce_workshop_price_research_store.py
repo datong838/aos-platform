@@ -8,6 +8,7 @@ from typing import Any
 import psycopg
 
 from aos_api.db import connect
+from aos_api.db import connect_read_only
 from aos_api.ecommerce_workshop_price_governance_contracts import PriceExactRef
 from aos_api.ecommerce_workshop_price_research import (
     MonitoringPolicyRevision,
@@ -22,8 +23,15 @@ from aos_api.tenant_scope import TenantScope
 
 
 class EcommerceWorkshopPriceResearchStore:
-    def __init__(self, connect_factory: Callable[[TenantScope], Any] = connect) -> None:
+    def __init__(
+        self,
+        connect_factory: Callable[[TenantScope], Any] = connect,
+        read_connect_factory: Callable[[TenantScope], Any] | None = None,
+    ) -> None:
         self._connect = connect_factory
+        self._read_connect = read_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_read_only
+        )
 
     @staticmethod
     def _json(value: Any) -> str:
@@ -49,8 +57,7 @@ class EcommerceWorkshopPriceResearchStore:
         return type(item).model_validate(row["authority_data"])
 
     def _require(self, scope: TenantScope, table: str, identity_column: str, ref: PriceExactRef, model: type[Any]) -> Any:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s", (*scope.key, ref.resource_id, ref.revision)).fetchone()
         if row is None or f"sha256:{row['content_hash']}" != ref.content_hash:
             raise PriceResearchBlocked(f"{ref.resource_type.upper()}_MISSING_OR_DRIFTED")
@@ -92,8 +99,7 @@ class EcommerceWorkshopPriceResearchStore:
         return self._require(scope, "ecommerce_price_monitoring_policy_revision", "policy_id", ref, MonitoringPolicyRevision)
 
     def latest_batch(self, scope: TenantScope, batch_id: str) -> PriceResearchBatchRevision:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute("SELECT authority_data FROM ecommerce_price_research_batch_revision WHERE org_id=%s AND project_id=%s AND batch_id=%s ORDER BY revision DESC LIMIT 1", (*scope.key, batch_id)).fetchone()
         if row is None:
             raise PriceResearchBlocked("PRICE_RESEARCH_BATCH_NOT_FOUND")
@@ -111,8 +117,7 @@ class EcommerceWorkshopPriceResearchStore:
 
     def latest_batch_or_none(self, scope: TenantScope) -> PriceResearchBatchRevision | None:
         try:
-            with self._connect(scope) as conn:
-                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+            with self._read_connect(scope) as conn:
                 row = conn.execute("SELECT authority_data FROM ecommerce_price_research_batch_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,revision DESC LIMIT 1", scope.key).fetchone()
         except psycopg.Error as exc:
             raise PriceResearchBlocked("PRICE_RESEARCH_AUTHORITY_UNAVAILABLE") from exc

@@ -8,6 +8,7 @@ from typing import Any
 import psycopg
 
 from aos_api.db import connect
+from aos_api.db import connect_read_only
 from aos_api.ecommerce_workshop_price_disposition import (
     PriceCaseRevision,
     PriceDispositionBlocked,
@@ -20,8 +21,15 @@ from aos_api.tenant_scope import TenantScope
 
 
 class EcommerceWorkshopPriceDispositionStore:
-    def __init__(self, connect_factory: Callable[[TenantScope], Any] = connect) -> None:
+    def __init__(
+        self,
+        connect_factory: Callable[[TenantScope], Any] = connect,
+        read_connect_factory: Callable[[TenantScope], Any] | None = None,
+    ) -> None:
         self._connect = connect_factory
+        self._read_connect = read_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_read_only
+        )
 
     @staticmethod
     def _json(value: Any) -> str:
@@ -50,8 +58,7 @@ class EcommerceWorkshopPriceDispositionStore:
         return type(item).model_validate(row["authority_data"])
 
     def _require(self, scope: TenantScope, table: str, identity_column: str, ref: PriceExactRef, model: type[Any]) -> Any:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s",
                 (*scope.key, ref.resource_id, ref.revision),
@@ -84,8 +91,7 @@ class EcommerceWorkshopPriceDispositionStore:
         return self._require(scope, "ecommerce_price_disposition_revision", "disposition_id", ref, PriceDispositionRevision)
 
     def latest_disposition(self, scope: TenantScope, disposition_id: str) -> PriceDispositionRevision:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 "SELECT authority_data FROM ecommerce_price_disposition_revision WHERE org_id=%s AND project_id=%s AND disposition_id=%s ORDER BY revision DESC LIMIT 1",
                 (*scope.key, disposition_id),
@@ -106,8 +112,7 @@ class EcommerceWorkshopPriceDispositionStore:
 
     def _list(self, scope: TenantScope, table: str, model: type[Any]) -> list[Any]:
         try:
-            with self._connect(scope) as conn:
-                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+            with self._read_connect(scope) as conn:
                 rows = conn.execute(
                     f"SELECT authority_data FROM {table} WHERE org_id=%s AND project_id=%s ORDER BY created_at,revision",
                     scope.key,
@@ -142,8 +147,7 @@ class EcommerceWorkshopPriceDispositionStore:
     def require_outcome_receipt(self, scope: TenantScope, ref: PriceExactRef, binding_hash: str) -> None:
         if ref.resource_type != "ActionReceipt":
             raise PriceDispositionBlocked("PRICE_DISPOSITION_RECEIPT_AUTHORITY_RESOLVER_UNAVAILABLE")
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 "SELECT receipt_content_hash,action_binding_hash FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND receipt_id=%s",
                 (*scope.key, ref.resource_id),

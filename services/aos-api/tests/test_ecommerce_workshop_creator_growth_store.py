@@ -50,12 +50,18 @@ def test_append_is_tenant_bound_and_never_updates() -> None:
 def test_bounded_read_is_repeatable_and_fails_closed_on_tenant_drift() -> None:
     payload = candidate().model_dump(mode="json", by_alias=True)
     connection = Connection(rows=[[{"org_id": "org-org", "project_id": "dev-project", "receipt_id": "receipt-1", "authority_data": payload}]])
-    rows = EcommerceWorkshopCreatorGrowthStore(factory(connection)).list_candidates(SCOPE, cutoff=NOW, limit=1)
+    write_connection = Connection()
+    rows = EcommerceWorkshopCreatorGrowthStore(
+        factory(write_connection), factory(connection)
+    ).list_candidates(SCOPE, cutoff=NOW, limit=1)
     assert rows[0].receipt_id == "receipt-1"
-    assert "REPEATABLE READ READ ONLY" in connection.calls[0][0]
+    assert connection.calls[0][0].startswith("SELECT")
+    assert write_connection.calls == []
     drift = Connection(rows=[[{"org_id": "dev-org", "project_id": "dev-project", "receipt_id": "receipt-1", "authority_data": payload}]])
     with pytest.raises(CreatorAuthorityReadError):
-        EcommerceWorkshopCreatorGrowthStore(factory(drift)).list_candidates(SCOPE, cutoff=NOW)
+        EcommerceWorkshopCreatorGrowthStore(
+            factory(Connection()), factory(drift)
+        ).list_candidates(SCOPE, cutoff=NOW)
 
 
 def test_start_ledger_append_has_no_provider_or_update_side_effect() -> None:

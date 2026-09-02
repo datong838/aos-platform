@@ -8,6 +8,7 @@ from typing import Any
 import psycopg
 
 from aos_api.db import connect
+from aos_api.db import connect_read_only
 from aos_api.ecommerce_workshop_customer_contracts import CustomerExactRef
 from aos_api.ecommerce_workshop_customer_lifecycle import (
     CustomerConsentPolicyRevision,
@@ -21,8 +22,15 @@ from aos_api.tenant_scope import TenantScope
 
 
 class EcommerceWorkshopCustomerLifecycleStore:
-    def __init__(self, connect_factory: Callable[[TenantScope], Any] = connect) -> None:
+    def __init__(
+        self,
+        connect_factory: Callable[[TenantScope], Any] = connect,
+        read_connect_factory: Callable[[TenantScope], Any] | None = None,
+    ) -> None:
         self._connect = connect_factory
+        self._read_connect = read_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_read_only
+        )
 
     @staticmethod
     def _json(value: Any) -> str:
@@ -51,8 +59,7 @@ class EcommerceWorkshopCustomerLifecycleStore:
         return type(item).model_validate(row["authority_data"])
 
     def _require(self, scope: TenantScope, table: str, identity_column: str, ref: CustomerExactRef, model: type[Any]) -> Any:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s",
                 (*scope.key, ref.resource_id, ref.revision),
@@ -91,8 +98,7 @@ class EcommerceWorkshopCustomerLifecycleStore:
         return self._require(scope, "ecommerce_customer_dialogue_strategy_revision", "dialogue_id", ref, CustomerDialogueStrategyRevision)
 
     def latest_batch(self, scope: TenantScope, batch_id: str) -> CustomerDialogueBatchRevision:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 "SELECT authority_data FROM ecommerce_customer_dialogue_batch_revision WHERE org_id=%s AND project_id=%s AND batch_id=%s ORDER BY revision DESC LIMIT 1",
                 (*scope.key, batch_id),
@@ -113,8 +119,7 @@ class EcommerceWorkshopCustomerLifecycleStore:
 
     def latest_batch_or_none_any(self, scope: TenantScope) -> CustomerDialogueBatchRevision | None:
         try:
-            with self._connect(scope) as conn:
-                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+            with self._read_connect(scope) as conn:
                 row = conn.execute(
                     "SELECT authority_data FROM ecommerce_customer_dialogue_batch_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,revision DESC LIMIT 1",
                     scope.key,
@@ -135,8 +140,7 @@ class EcommerceWorkshopCustomerLifecycleStore:
             "dialogue": "ecommerce_customer_dialogue_strategy_revision",
         }
         try:
-            with self._connect(scope) as conn:
-                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+            with self._read_connect(scope) as conn:
                 return {key: conn.execute(f"SELECT COUNT(*) AS count FROM {table} WHERE org_id=%s AND project_id=%s", scope.key).fetchone()["count"] for key, table in tables.items()}
         except psycopg.Error as exc:
             raise CustomerLifecycleBlocked("CUSTOMER_LIFECYCLE_AUTHORITY_UNAVAILABLE") from exc

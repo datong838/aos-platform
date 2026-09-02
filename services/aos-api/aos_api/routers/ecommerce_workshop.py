@@ -88,6 +88,9 @@ from aos_api.ecommerce_workshop_creator_growth import EcommerceWorkshopCreatorGr
 from aos_api.ecommerce_workshop_creator_growth_contracts import (
     WorkshopCreatorGrowthViewEnvelope,
 )
+from aos_api.ecommerce_workshop_creator_growth_store import (
+    EcommerceWorkshopCreatorGrowthStore,
+)
 from aos_api.ecommerce_workshop_creator_prepare import (
     CreateCreatorMatchObservationRequest,
     CreatorBatchPreparationRevision,
@@ -387,7 +390,7 @@ def get_ecommerce_workshop_content_campaign() -> EcommerceWorkshopContentCampaig
 
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_creator_growth() -> EcommerceWorkshopCreatorGrowth:
-    return EcommerceWorkshopCreatorGrowth()
+    return EcommerceWorkshopCreatorGrowth(store=EcommerceWorkshopCreatorGrowthStore())
 
 
 @lru_cache(maxsize=1)

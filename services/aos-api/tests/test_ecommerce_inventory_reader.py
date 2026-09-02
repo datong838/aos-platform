@@ -76,7 +76,7 @@ def test_inventory_reader_is_tenant_bound_read_only_and_exact() -> None:
 
     connection = queue.connections[0]
     sql = " ".join(call[0] for call in connection.calls).upper()
-    assert "REPEATABLE READ READ ONLY" in sql
+    assert "SET TRANSACTION" not in sql
     assert "SET LOCAL ROLE AOS_RUNTIME" in sql
     assert "FROM ECOM_OBJECT" in sql
     assert "ORDER BY SOURCE_UPDATED_AT DESC, EXTERNAL_ID DESC" in sql

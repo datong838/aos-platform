@@ -8,6 +8,7 @@ from typing import Any
 import psycopg
 
 from aos_api.db import connect
+from aos_api.db import connect_read_only
 from aos_api.ecommerce_workshop_creator_growth_authorities import CreatorExactRef
 from aos_api.ecommerce_workshop_creator_lifecycle import (
     CreatorActionLaneRequest,
@@ -22,8 +23,15 @@ from aos_api.tenant_scope import TenantScope
 
 
 class EcommerceWorkshopCreatorLifecycleStore:
-    def __init__(self, connect_factory: Callable[[TenantScope], Any] = connect) -> None:
+    def __init__(
+        self,
+        connect_factory: Callable[[TenantScope], Any] = connect,
+        read_connect_factory: Callable[[TenantScope], Any] | None = None,
+    ) -> None:
         self._connect = connect_factory
+        self._read_connect = read_connect_factory or (
+            connect_factory if connect_factory is not connect else connect_read_only
+        )
 
     @staticmethod
     def _json(value: Any) -> str:
@@ -58,8 +66,7 @@ class EcommerceWorkshopCreatorLifecycleStore:
         return self._append(scope, "ecommerce_creator_batch_start_decision_revision", "decision_id", item.decision_id, item.revision, item.content_hash, item, item.started_at, extra_columns="batch_id", extra_values=(batch_id,))
 
     def latest_start_or_none(self, scope: TenantScope, batch_id: str) -> CreatorBatchStartDecisionRevision | None:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 "SELECT authority_data FROM ecommerce_creator_batch_start_decision_revision WHERE org_id=%s AND project_id=%s AND batch_id=%s ORDER BY revision DESC LIMIT 1",
                 (*scope.key, batch_id),
@@ -68,8 +75,7 @@ class EcommerceWorkshopCreatorLifecycleStore:
 
     def latest_start_for_tenant_or_none(self, scope: TenantScope) -> CreatorBatchStartDecisionRevision | None:
         try:
-            with self._connect(scope) as conn:
-                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+            with self._read_connect(scope) as conn:
                 row = conn.execute(
                     "SELECT authority_data FROM ecommerce_creator_batch_start_decision_revision WHERE org_id=%s AND project_id=%s ORDER BY created_at DESC,revision DESC LIMIT 1",
                     scope.key,
@@ -79,8 +85,7 @@ class EcommerceWorkshopCreatorLifecycleStore:
         return None if row is None else CreatorBatchStartDecisionRevision.model_validate(row["authority_data"])
 
     def require_start(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorBatchStartDecisionRevision:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 "SELECT authority_data,content_hash FROM ecommerce_creator_batch_start_decision_revision WHERE org_id=%s AND project_id=%s AND decision_id=%s AND revision=%s",
                 (*scope.key, ref.resource_id, ref.revision),
@@ -90,8 +95,7 @@ class EcommerceWorkshopCreatorLifecycleStore:
         return CreatorBatchStartDecisionRevision.model_validate(row["authority_data"])
 
     def require_action_receipt(self, scope: TenantScope, ref: CreatorExactRef, binding_hash: str) -> None:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 "SELECT receipt_content_hash,action_binding_hash FROM aip_action_receipt WHERE org_id=%s AND project_id=%s AND receipt_id=%s",
                 (*scope.key, ref.resource_id),
@@ -113,8 +117,7 @@ class EcommerceWorkshopCreatorLifecycleStore:
         return self._append(scope, "ecommerce_creator_lane_observation", "observation_id", item.observation_id, item.revision, item.content_hash, item, item.observed_at, extra_columns="decision_id,lane_id", extra_values=(item.start_decision_ref.resource_id, item.lane_id))
 
     def list_lane_observations(self, scope: TenantScope, decision_id: str) -> list[CreatorLaneObservation]:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             rows = conn.execute(
                 "SELECT authority_data FROM ecommerce_creator_lane_observation WHERE org_id=%s AND project_id=%s AND decision_id=%s ORDER BY observed_at,observation_id",
                 (*scope.key, decision_id),
@@ -125,8 +128,7 @@ class EcommerceWorkshopCreatorLifecycleStore:
         return self._append(scope, "ecommerce_creator_contract_revision", "collaboration_id", item.collaboration_id, item.revision, item.content_hash, item, item.created_at)
 
     def require_contract(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorContractRevision:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 "SELECT authority_data,content_hash FROM ecommerce_creator_contract_revision WHERE org_id=%s AND project_id=%s AND collaboration_id=%s AND revision=%s",
                 (*scope.key, ref.resource_id, ref.revision),
@@ -139,8 +141,7 @@ class EcommerceWorkshopCreatorLifecycleStore:
         return self._append(scope, "ecommerce_creator_delivery_observation", "observation_id", item.observation_id, 1, item.content_hash, item, item.observed_at)
 
     def require_delivery(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorDeliveryObservation:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 "SELECT authority_data,content_hash FROM ecommerce_creator_delivery_observation WHERE org_id=%s AND project_id=%s AND observation_id=%s AND revision=%s",
                 (*scope.key, ref.resource_id, ref.revision),
@@ -153,8 +154,7 @@ class EcommerceWorkshopCreatorLifecycleStore:
         return self._append(scope, "ecommerce_creator_relationship_revision", "relationship_id", item.relationship_id, item.revision, item.content_hash, item, item.created_at)
 
     def latest_relationship_or_none(self, scope: TenantScope, relationship_id: str) -> CreatorRelationshipRevision | None:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             row = conn.execute(
                 "SELECT authority_data FROM ecommerce_creator_relationship_revision WHERE org_id=%s AND project_id=%s AND relationship_id=%s ORDER BY revision DESC LIMIT 1",
                 (*scope.key, relationship_id),
@@ -162,8 +162,7 @@ class EcommerceWorkshopCreatorLifecycleStore:
         return None if row is None else CreatorRelationshipRevision.model_validate(row["authority_data"])
 
     def _list(self, scope: TenantScope, table: str, model: type[Any]) -> list[Any]:
-        with self._connect(scope) as conn:
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        with self._read_connect(scope) as conn:
             rows = conn.execute(f"SELECT authority_data FROM {table} WHERE org_id=%s AND project_id=%s ORDER BY created_at", scope.key).fetchall()
         return [model.model_validate(row["authority_data"]) for row in rows]
 
