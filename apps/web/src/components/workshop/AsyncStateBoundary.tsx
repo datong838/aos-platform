@@ -9,6 +9,7 @@ export type AsyncState =
   | "failed"
   | "unknown"
   | "blocked"
+  | "conflict"
   | "not-installed"
   | "ready";
 
@@ -21,6 +22,7 @@ const DEFAULT_COPY: Record<AsyncState, { title: string; description: string }> =
   failed: { title: "读取失败", description: "正式服务未返回可验证结果。" },
   unknown: { title: "状态待核对", description: "当前数据来源尚未提供可验证结论。" },
   blocked: { title: "等待必要条件", description: "页面保持可浏览；补齐所需数据后可继续处理。" },
+  conflict: { title: "数据存在冲突", description: "页面保留可核对内容；冲突来源必须逐项复核后才能形成结论。" },
   "not-installed": { title: "模块未安装", description: "当前工作区的 active installation 中没有此模块。" },
   ready: { title: "已就绪", description: "资源已通过当前边界检查。" },
 };
@@ -42,8 +44,8 @@ export function AsyncStateBoundary({
 }) {
   if (state === "ready") return <>{children}</>;
   const copy = DEFAULT_COPY[state];
-  const preservesContent = state === "stale" || state === "partial";
-  const role = state === "failed" || state === "forbidden" || state === "blocked"
+  const preservesContent = ["empty", "stale", "partial", "unknown", "blocked", "conflict"].includes(state);
+  const role = state === "failed" || state === "forbidden" || state === "blocked" || state === "conflict"
     ? "alert"
     : "status";
 

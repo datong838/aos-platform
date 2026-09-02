@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type OperationCommandObservationResponse, type OperationCommandReadinessResponse, type OperationsSlice, type OperationsSliceId, type OperationsViewResponse } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { ContributionLineage } from "./production";
+import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopViewState";
 
 type OperationsClient = Pick<typeof ecommerceWorkshopClient, "getOperationsView" | "getOperationCommandReadiness" | "getOperationCommandObservation">;
-type Phase = "loading" | "ready" | "empty" | "forbidden" | "failed";
+type Phase = AsyncState;
 const LABELS: Record<OperationsSliceId, string> = { orders: "订单", orderLines: "订单明细", inventory: "库存", shipments: "履约", payments: "支付", aftersaleEvents: "售后事件", operationCases: "运营工单" };
 const CONTRIBUTIONS: Record<OperationsSliceId, string> = {
   orders: "以正式订单数据支撑跨域运营分诊",
@@ -17,7 +18,7 @@ const CONTRIBUTIONS: Record<OperationsSliceId, string> = {
   operationCases: "以正式运营事件聚合支撑可逆分诊与时效观察",
 };
 
-function stateFor(phase: Phase): AsyncState { return phase === "ready" || phase === "empty" ? "ready" : phase; }
+function stateFor(phase: Phase): AsyncState { return phase; }
 function formatTime(value: string): string { return new Date(value).toLocaleString("zh-CN", { hour12: false }); }
 function short(value: string): string { return value.length > 30 ? `${value.slice(0, 14)}…${value.slice(-10)}` : value; }
 function phaseFor(error: unknown): Phase { return error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"; }
@@ -45,7 +46,7 @@ export function OperationsPage({ client = ecommerceWorkshopClient }: { client?: 
   const request = useRef(0);
   const load = () => {
     const id = ++request.current; setPhase("loading"); setResponse(null); setCommandReadiness(null); setObservation(null); setObservationState("idle"); setObservationError("");
-    void Promise.all([client.getOperationsView(), client.getOperationCommandReadiness()]).then(([next, nextCommands]) => { if (id !== request.current) return; if (next.tenant.orgId !== nextCommands.tenant.orgId || next.tenant.projectId !== nextCommands.tenant.projectId) throw new TypeError("operations command readiness tenant 漂移"); setResponse(next); setCommandReadiness(nextCommands); setSelected(next.slices.find((item) => item.status === "blocked")?.sliceId ?? next.slices[0]?.sliceId ?? "orders"); setPhase(next.page.count === 0 ? "empty" : "ready"); }, (error: unknown) => { if (id === request.current) setPhase(phaseFor(error)); });
+    void Promise.all([client.getOperationsView(), client.getOperationCommandReadiness()]).then(([next, nextCommands]) => { if (id !== request.current) return; if (next.tenant.orgId !== nextCommands.tenant.orgId || next.tenant.projectId !== nextCommands.tenant.projectId) throw new TypeError("operations command readiness tenant 漂移"); setResponse(next); setCommandReadiness(nextCommands); setSelected(pickPreferredWorkshopView(next.slices, (item) => item.countLedger.attached > 0)?.sliceId ?? "orders"); setPhase(deriveWorkshopViewState(next.slices, next.page.count)); }, (error: unknown) => { if (id === request.current) setPhase(phaseFor(error)); });
   };
   useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
   const readObservation = (event: React.FormEvent<HTMLFormElement>) => {

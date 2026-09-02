@@ -3,15 +3,16 @@ import { useEffect, useRef, useState } from "react";
 import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type CustomerContactContributionViewResponse, type CustomerLifecycleContributionViewResponse, type CustomerViewId, type CustomerViewResponse, type ThreeModuleClosureContributionViewResponse } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { ThreeModuleClosureCard, unavailableThreeModuleClosure } from "./ThreeModuleClosureCard";
+import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopViewState";
 
 type Client = Pick<typeof ecommerceWorkshopClient, "getCustomerView" | "getCustomerLifecycleContributionView" | "getCustomerContactContributionView"> & Partial<Pick<typeof ecommerceWorkshopClient, "getThreeModuleClosureContributionView">>;
-type Phase = "loading" | "ready" | "empty" | "forbidden" | "failed";
+type Phase = AsyncState;
 const LABELS: Record<CustomerViewId, string> = { customer: "客户最小投影", segment: "客户分群", journey: "生命周期旅程", dialogue: "对话与批次" };
 const CUSTOMER_VIEW_IDS: CustomerViewId[] = ["customer", "segment", "journey", "dialogue"];
 const AXIS_LABELS = { customer_lite: "客户最小集", consent: "同意依据", segment: "分群投影", journey: "旅程投影", dialogue: "对话摘要", outreach_batch: "触达批次" } as const;
 const STATUS_LABELS: Record<string, string> = { ready: "可读取", blocked: "等待条件", unknown: "待核对", partial: "部分可用", failed: "读取失败", forbidden: "无权访问", eligible: "符合条件", excluded: "已排除", needsReview: "待复核", deduplicated: "已去重", reserved: "已预留", skippedWithdrawn: "已撤回跳过", cancelled: "已取消", accepted: "已受理", applied: "已应用", disputed: "有争议" };
 const labelStatus = (value: string) => STATUS_LABELS[value] ?? value;
-const stateFor = (phase: Phase): AsyncState => phase === "ready" || phase === "empty" ? "ready" : phase;
+const stateFor = (phase: Phase): AsyncState => phase;
 const unavailableLifecycle = (next: CustomerViewResponse): CustomerLifecycleContributionViewResponse => ({
   schemaVersion: "aos.ecommerce-workshop.customer-lifecycle/v1", tenant: next.tenant, evaluatedAt: next.evaluatedAt,
   atomicSkillIds: ["build-evidence-pack", "segment-entities", "consent-and-purpose-check", "needs-discovery", "customer-journey-plan", "response-or-outreach-draft", "verify-claims", "review-outcomes"],
@@ -53,8 +54,8 @@ export function CustomerPage({ client = ecommerceWorkshopClient }: { client?: Cl
     void Promise.all([client.getCustomerView(), client.getCustomerLifecycleContributionView().catch(() => null), client.getCustomerContactContributionView().catch(() => null), client.getThreeModuleClosureContributionView?.("customer").catch(() => null) ?? Promise.resolve(null)]).then(([next, nextContribution, nextContact, nextClosure]) => {
       if (id !== request.current) return;
       setResponse(next); setContribution(nextContribution ?? unavailableLifecycle(next)); setContact(nextContact ?? unavailableContact(next)); setClosure(nextClosure ?? unavailableThreeModuleClosure("customer", next.tenant, next.evaluatedAt));
-      setSelected(next.views.find((item) => item.status === "blocked")?.viewId ?? "customer");
-      setPhase(next.page.count === 0 && next.views.every((item) => item.status === "ready") ? "empty" : "ready");
+      setSelected(pickPreferredWorkshopView(next.views, (item) => item.countLedger.eligible > 0)?.viewId ?? "customer");
+      setPhase(deriveWorkshopViewState(next.views, next.page.count));
     }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); });
   };
   useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);

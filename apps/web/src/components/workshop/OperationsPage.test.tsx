@@ -21,6 +21,11 @@ describe("OperationsPage", () => {
     await act(async () => root.render(<OperationsPage client={client} />));
     expect(host.querySelectorAll(".operations-slice-card")).toHaveLength(7);
     expect(host.textContent).toContain("统一待办 · 业务切片");
+    expect(host.textContent).toContain("部分数据可用");
+    expect(host.querySelector(".operations-detail")?.textContent).toContain("订单");
+    expect(host.querySelector(".operations-detail")?.textContent).not.toContain("AFTERSALE_EVENTS_READ_FAILED_CLOSED");
+    const sliceButtons = host.querySelectorAll<HTMLButtonElement>(".operations-slice-card");
+    await act(async () => sliceButtons[5]!.click());
     expect(host.textContent).toContain("AFTERSALE_EVENTS_READ_FAILED_CLOSED");
     expect(host.textContent).toContain("只读分诊");
     expect(host.textContent).toContain("动作安全预检");
@@ -32,7 +37,7 @@ describe("OperationsPage", () => {
     const operationCommands = [...host.querySelectorAll<HTMLButtonElement>(".operations-command")];
     expect(operationCommands.every((item) => !item.disabled)).toBe(true);
     act(() => operationCommands[0]?.click());
-    expect(host.querySelector('[role="status"]')?.textContent).toContain("未触发业务操作");
+    expect(host.textContent).toContain("未触发业务操作");
     expect(host.textContent).not.toContain("王女士");
     expect(host.textContent).not.toContain("一键采纳");
     expect(host.textContent).toContain("请求级命令证据");

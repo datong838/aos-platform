@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from "react";
 
 import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type FullVideoScenarioContribution, type MediaStudioSliceId, type MediaStudioViewResponse } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
+import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopViewState";
 
 type Client = Pick<typeof ecommerceWorkshopClient, "getMediaStudioView"> & Partial<Pick<typeof ecommerceWorkshopClient, "getMediaStudioFullProductionScenario">>;
-type Phase = "loading" | "ready" | "empty" | "forbidden" | "failed";
+type Phase = AsyncState;
 const LABELS: Record<MediaStudioSliceId, string> = { context: "生产上下文", execution: "职责与执行", delivery: "交付与复盘" };
 const TAB_LABELS: Record<MediaStudioSliceId, string> = { context: "种草文案", execution: "短视频", delivery: "数字人直播" };
-const stateFor = (phase: Phase): AsyncState => phase === "ready" || phase === "empty" ? "ready" : phase;
+const stateFor = (phase: Phase): AsyncState => phase;
 const STATUS_LABELS: Record<string, string> = { ready: "可读取", target: "等待条件", blocked: "等待条件", unknown: "待核对", partial: "部分可用", failed: "读取失败", running: "执行中", succeeded: "已完成", cancelled: "已取消" };
 const AXIS_LABELS: Record<string, string> = { module: "业务模块", capability: "生产能力", assignee: "负责人", provider: "生产服务", budget: "预算", publication: "发布条件" };
 const labelStatus = (value: string) => STATUS_LABELS[value] ?? value;
@@ -15,7 +16,7 @@ const short = (value: string) => value.length > 32 ? `${value.slice(0, 14)}…${
 
 export function MediaStudioPage({ client = ecommerceWorkshopClient }: { client?: Client }) {
   const [phase, setPhase] = useState<Phase>("loading"); const [response, setResponse] = useState<MediaStudioViewResponse | null>(null); const [fullScenario, setFullScenario] = useState<FullVideoScenarioContribution | null>(null); const [selected, setSelected] = useState<MediaStudioSliceId>("context"); const request = useRef(0);
-  const load = () => { const id = ++request.current; setPhase("loading"); setResponse(null); setFullScenario(null); const scenario = client.getMediaStudioFullProductionScenario ? client.getMediaStudioFullProductionScenario() : Promise.resolve(null); void Promise.all([client.getMediaStudioView(), scenario]).then(([next, nextScenario]) => { if (id !== request.current) return; setResponse(next); setFullScenario(nextScenario); setSelected(next.slices.find((item) => item.status === "blocked")?.sliceId ?? "context"); setPhase(next.page.count === 0 && next.slices.every((item) => item.status === "ready") ? "empty" : "ready"); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); }); };
+  const load = () => { const id = ++request.current; setPhase("loading"); setResponse(null); setFullScenario(null); const scenario = client.getMediaStudioFullProductionScenario ? client.getMediaStudioFullProductionScenario() : Promise.resolve(null); void Promise.all([client.getMediaStudioView(), scenario]).then(([next, nextScenario]) => { if (id !== request.current) return; setResponse(next); setFullScenario(nextScenario); setSelected(pickPreferredWorkshopView(next.slices, (item) => item.authorityRefs.length > 0)?.sliceId ?? "context"); setPhase(deriveWorkshopViewState(next.slices, next.page.count)); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); }); };
   useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
   const slice = response?.slices.find((item) => item.sliceId === selected); const blocked = response?.slices.reduce((sum, item) => sum + item.blockers.length, 0) ?? 0; const readyAxes = response?.slices.reduce((sum, item) => sum + item.countLedger.ready, 0) ?? 0;
   const content = response && slice ? <div className="media-studio-read-model">

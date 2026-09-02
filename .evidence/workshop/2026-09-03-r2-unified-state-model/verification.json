@@ -1,0 +1,59 @@
+{
+  "taskId": "WORKSHOP-R2-04-UNIFIED-STATE-MODEL",
+  "branch": "m1",
+  "tenant": "org-org/dev-project",
+  "result": "GREEN",
+  "stateModel": [
+    "ready",
+    "empty",
+    "partial",
+    "stale",
+    "unknown",
+    "blocked",
+    "conflict",
+    "forbidden",
+    "failed"
+  ],
+  "focusedTests": {
+    "files": 9,
+    "passed": 66,
+    "failed": 0
+  },
+  "cumulativeRegression": {
+    "files": 271,
+    "passed": 2416,
+    "failed": 0
+  },
+  "typecheck": "GREEN",
+  "productionBuild": "GREEN",
+  "browserAcceptance": {
+    "browser": "Codex built-in browser",
+    "pages": 8,
+    "fullWorkshopNavigationVisible": "8/8",
+    "reloadControlVisible": "8/8",
+    "tenantTraceVisible": "8/8",
+    "interactionChecks": [
+      "任务总控大屏：数字同事介绍浮层可打开",
+      "统一运营驾驶舱：七个业务切片可切换",
+      "内容与活动工作台：三个业务切片可切换",
+      "达人邀约驾驶舱：工具栏控件可交互且阻断态保留正文",
+      "多媒体内容生产：三个工作区页签可切换",
+      "经营参谋：八个分析页签可切换且部分态保留正文",
+      "价格治理驾驶舱：三个业务页签可切换",
+      "客户关系工作台：四个业务页签可切换且阻断态保留正文"
+    ],
+    "screenshots": [
+      "cockpit.png",
+      "operations.png",
+      "content-campaign.png",
+      "creator-growth.png",
+      "media-studio.png",
+      "analyst.png",
+      "price-governance.png",
+      "customer.png"
+    ]
+  },
+  "realBusinessWrites": 0,
+  "externalEffects": 0,
+  "releaseDecision": "NO_RELEASE"
+}

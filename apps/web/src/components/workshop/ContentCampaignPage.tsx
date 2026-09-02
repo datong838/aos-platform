@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 
 import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type ContentCampaignItem, type ContentCampaignSlice, type ContentCampaignSliceId, type ContentCampaignViewResponse } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
+import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopViewState";
 import { ContributionLineage } from "./production";
 
 type Client = Pick<typeof ecommerceWorkshopClient, "getContentCampaignView">;
-type Phase = "loading" | "ready" | "empty" | "forbidden" | "failed";
+type Phase = AsyncState;
 const LABELS: Record<ContentCampaignSliceId, string> = { plan: "活动计划", calendar: "内容日历", content: "主内容与变体" };
 const TAB_LABELS: Record<ContentCampaignSliceId, string> = { plan: "活动策划", calendar: "内容日历", content: "日常模板" };
 const DESCRIPTIONS: Record<ContentCampaignSliceId, string> = { plan: "活动目标与节奏", calendar: "日期、渠道与负责人", content: "主内容与渠道版本" };
@@ -14,7 +15,7 @@ const CONTRIBUTIONS: Record<ContentCampaignSliceId, string> = {
   calendar: "呈现活动排期意图，不代表已经发布",
   content: "按主内容与渠道版本展示内容关系",
 };
-const stateFor = (phase: Phase): AsyncState => phase === "ready" || phase === "empty" ? "ready" : phase;
+const stateFor = (phase: Phase): AsyncState => phase;
 const formatTime = (value: string) => new Date(value).toLocaleString("zh-CN", { hour12: false });
 const short = (value: string) => value.length > 34 ? `${value.slice(0, 15)}…${value.slice(-12)}` : value;
 
@@ -33,7 +34,7 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
   const [selected, setSelected] = useState<ContentCampaignSliceId>("plan");
   const [safeAction, setSafeAction] = useState("");
   const request = useRef(0);
-  const load = () => { const id = ++request.current; setPhase("loading"); setResponse(null); void client.getContentCampaignView().then((next) => { if (id !== request.current) return; setResponse(next); setSelected(next.slices.find((item) => item.status === "blocked")?.sliceId ?? next.slices.find((item) => item.items.length > 0)?.sliceId ?? "plan"); setPhase(next.page.count === 0 && next.slices.every((item) => item.status === "ready") ? "empty" : "ready"); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); }); };
+  const load = () => { const id = ++request.current; setPhase("loading"); setResponse(null); void client.getContentCampaignView().then((next) => { if (id !== request.current) return; setResponse(next); setSelected(pickPreferredWorkshopView(next.slices, (item) => item.items.length > 0)?.sliceId ?? "plan"); setPhase(deriveWorkshopViewState(next.slices, next.page.count)); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); }); };
   useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
   const slice: ContentCampaignSlice | undefined = response?.slices.find((item) => item.sliceId === selected);
   const ready = response?.slices.filter((item) => item.status === "ready").length ?? 0;

@@ -25,7 +25,7 @@ describe("Workshop state boundaries", () => {
 
   const states: AsyncState[] = [
     "loading", "empty", "forbidden", "stale", "partial", "failed",
-    "unknown", "blocked", "not-installed",
+    "unknown", "blocked", "conflict", "not-installed",
   ];
 
   for (const state of states) {
@@ -38,7 +38,7 @@ describe("Workshop state boundaries", () => {
       expect(host.querySelector("[role='status'], [role='alert']")).not.toBeNull();
       expect(host.textContent).toContain("数据截止");
       expect(Boolean(host.querySelector("[data-testid='preserved']"))).toBe(
-        state === "stale" || state === "partial",
+        ["empty", "stale", "partial", "unknown", "blocked", "conflict"].includes(state),
       );
     });
   }

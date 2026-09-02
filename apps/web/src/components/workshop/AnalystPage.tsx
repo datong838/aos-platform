@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type AnalystViewId, type AnalystViewResponse, type AnalystViewSlice, type LearningScenarioContribution } from "../../api/ecommerceWorkshop";
 import type { InvestigationReadClient } from "../../api/ecommerceInvestigation";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
+import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopViewState";
 import { AsyncJobDrawer, type AsyncJobLoader } from "./AsyncJobDrawer";
 import { BusinessInvestigationTab } from "./BusinessInvestigationTab";
 import {
@@ -14,7 +15,7 @@ import {
 import { ContributionLineage } from "./production";
 
 type Client = Pick<typeof ecommerceWorkshopClient, "getAnalystView"> & Partial<Pick<typeof ecommerceWorkshopClient, "getAnalystLearningScenario">>;
-type Phase = "loading" | "ready" | "empty" | "forbidden" | "failed";
+type Phase = AsyncState;
 type LearningScenarioState = { phase: "idle" | "loading" | "ready" | "failed"; response: LearningScenarioContribution | null };
 type AnalystTabId = "investigation" | AnalystViewId;
 const LABELS: Record<AnalystViewId, string> = { overview: "经营总览", drivers: "驱动因素", diagnosis: "问题诊断", plan: "增长计划", effects: "效果复盘", evidence: "证据链", quality: "数据质量" };
@@ -29,7 +30,7 @@ const CONTRIBUTIONS: Record<AnalystViewId, string> = {
 };
 const SCENARIO_LABELS = { insight: "洞察", growth_plan: "GrowthPlan", content: "内容", creator: "达人", media: "媒体", publication: "发布", effect_review: "效果复盘", memory_candidate: "记忆候选" } as const;
 const LEARNING_STAGE_LABELS = { effect_review: "效果复盘", maturity: "成熟度", memory_candidate: "记忆候选", governance: "治理审查", promotion: "知识晋升", knowledge_query: "查询复验", revocation_impact: "撤销影响" } as const;
-const stateFor = (phase: Phase): AsyncState => phase === "ready" || phase === "empty" ? "ready" : phase;
+const stateFor = (phase: Phase): AsyncState => phase;
 const STATUS_LABELS: Record<string, string> = { ready: "可读取", blocked: "等待条件", unknown: "待核对", not_applicable: "不适用", partial: "部分可用", failed: "读取失败", forbidden: "无权访问", running: "执行中", succeeded: "已完成", cancelled: "已取消", "read-only": "只读" };
 const labelStatus = (value: string) => STATUS_LABELS[value] ?? value;
 const analystNextAction = (viewId: AnalystViewId) => ({
@@ -133,7 +134,7 @@ function AnalystExactView({ view, selected }: { view: AnalystViewSlice; selected
 export function AnalystPage({ client = ecommerceWorkshopClient, investigationClient, loadAsyncJobs, featureFlags = resolveBusinessInvestigationFeatureFlags() }: { client?: Client; investigationClient?: InvestigationReadClient; loadAsyncJobs?: AsyncJobLoader; featureFlags?: BusinessInvestigationFeatureFlags }) {
   const investigationEnabled = isBusinessInvestigationReadEnabled(featureFlags);
   const [phase, setPhase] = useState<Phase>("loading"); const [response, setResponse] = useState<AnalystViewResponse | null>(null); const [selected, setSelected] = useState<AnalystTabId>(investigationEnabled ? "investigation" : "overview"); const [learningScenario, setLearningScenario] = useState<LearningScenarioState>({ phase: "idle", response: null }); const request = useRef(0); const learningRequest = useRef(0);
-  const load = () => { const id = ++request.current; setPhase("loading"); setResponse(null); const learningId = ++learningRequest.current; if (client.getAnalystLearningScenario) { setLearningScenario({ phase: "loading", response: null }); void client.getAnalystLearningScenario().then((next) => { if (learningId === learningRequest.current) setLearningScenario({ phase: "ready", response: next }); }, () => { if (learningId === learningRequest.current) setLearningScenario({ phase: "failed", response: null }); }); } else { setLearningScenario({ phase: "idle", response: null }); } void client.getAnalystView().then((next) => { if (id !== request.current) return; setResponse(next); setSelected(investigationEnabled ? "investigation" : next.views.find((item) => item.status === "blocked")?.viewId ?? "overview"); setPhase(next.page.count === 0 && next.views.every((item) => item.status === "ready") ? "empty" : "ready"); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); }); };
+  const load = () => { const id = ++request.current; setPhase("loading"); setResponse(null); const learningId = ++learningRequest.current; if (client.getAnalystLearningScenario) { setLearningScenario({ phase: "loading", response: null }); void client.getAnalystLearningScenario().then((next) => { if (learningId === learningRequest.current) setLearningScenario({ phase: "ready", response: next }); }, () => { if (learningId === learningRequest.current) setLearningScenario({ phase: "failed", response: null }); }); } else { setLearningScenario({ phase: "idle", response: null }); } void client.getAnalystView().then((next) => { if (id !== request.current) return; setResponse(next); setSelected(investigationEnabled ? "investigation" : pickPreferredWorkshopView(next.views, (item) => item.countLedger.ready > 0)?.viewId ?? "overview"); setPhase(deriveWorkshopViewState(next.views, next.page.count)); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); }); };
   useEffect(() => { load(); return () => { request.current += 1; learningRequest.current += 1; }; }, [client, investigationEnabled]);
   const view = selected === "investigation" ? undefined : response?.views.find((item) => item.viewId === selected); const readyMetrics = response?.views.reduce((sum, item) => sum + item.countLedger.ready, 0) ?? 0; const totalMetrics = response?.views.reduce((sum, item) => sum + item.countLedger.denominator, 0) ?? 0;
   const content = response ? <div className="analyst-read-model">
