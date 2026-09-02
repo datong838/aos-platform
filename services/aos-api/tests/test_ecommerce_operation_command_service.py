@@ -27,6 +27,7 @@ from aos_api.ecommerce_operation_command_execution_contracts import (
     KillOperationAutomationCommandRequest,
     ManageOperationSlaCommandRequest,
     OperationCommandGovernanceRef,
+    OperationCommandPreviewRequest,
 )
 from aos_api.ecommerce_operation_command_service import (
     CanonicalOperationActionControl,
@@ -238,11 +239,25 @@ def service_for(command_id: str, request) -> tuple[EcommerceOperationCommandServ
     return EcommerceOperationCommandService(action_control=control, now=lambda: NOW), control
 
 
+def exact_preview_hash(
+    service: EcommerceOperationCommandService,
+    request,
+    command_id: str,
+) -> str:
+    return service.preview(
+        principal(),
+        OperationCommandPreviewRequest(
+            command_id=command_id,
+            request=request.model_dump(mode="json", by_alias=True),
+        ),
+    ).preview_hash
+
+
 def test_classify_requires_exact_governance_then_executes_canonical_lease() -> None:
     request = classification_request()
     service, control = service_for("classify", request)
 
-    result = service.classify(principal(), "command-key-1", request)
+    result = service.classify(principal(), "command-key-1", request, exact_preview_hash(service, request, "classify"))
 
     assert result.command_id == "classify"
     assert result.status == "applied"
@@ -250,11 +265,46 @@ def test_classify_requires_exact_governance_then_executes_canonical_lease() -> N
     assert control.execute_calls == [("lease-1", PROPOSAL_HASH)]
 
 
+def test_preview_is_deterministic_and_has_zero_write_side_effects() -> None:
+    request = classification_request()
+    service, control = service_for("classify", request)
+    body = OperationCommandPreviewRequest(
+        command_id="classify",
+        request=request.model_dump(mode="json", by_alias=True),
+    )
+
+    first = service.preview(principal(), body)
+    second = service.preview(principal(), body)
+
+    assert first.preview_hash == second.preview_hash
+    assert first.side_effect == "internalAuthority"
+    assert first.external_effect_allowed is False
+    assert first.confirm_path.endswith("/classify")
+    assert control.execute_calls == []
+
+
+def test_confirm_rejects_preview_hash_drift_before_action_control() -> None:
+    request = classification_request()
+    service, control = service_for("classify", request)
+
+    with pytest.raises(OperationCommandConflict, match="preview hash drifted"):
+        service.classify(principal(), "command-key-preview-drift", request, "0" * 64)
+
+    assert control.execute_calls == []
+
+
+def test_preview_rejects_external_refund_command() -> None:
+    with pytest.raises(ValueError):
+        OperationCommandPreviewRequest.model_validate(
+            {"commandId": "refund", "request": {}}
+        )
+
+
 def test_create_case_uses_distinct_action_type_and_expected_zero_version() -> None:
     request = create_case_request()
     service, control = service_for("create-case", request)
 
-    result = service.create_case(principal(), "command-key-2", request)
+    result = service.create_case(principal(), "command-key-2", request, exact_preview_hash(service, request, "createCase"))
 
     assert result.command_id == "createCase"
     assert control.execute_calls == [("lease-1", PROPOSAL_HASH)]
@@ -273,7 +323,7 @@ def test_membership_and_sla_reuse_exact_governance_chain(
     request = request_factory()
     service, control = service_for(command_id, request)
 
-    result = getattr(service, service_method)(principal(), "command-key-b2b", request)
+    result = getattr(service, service_method)(principal(), "command-key-b2b", request, exact_preview_hash(service, request, expected_command))
 
     assert result.command_id == expected_command
     assert control.execute_calls == [("lease-1", PROPOSAL_HASH)]
@@ -286,7 +336,7 @@ def test_membership_rejects_cross_tenant_original_before_action_control() -> Non
     service, control = service_for("change-membership", request)
 
     with pytest.raises(OperationCommandConflict, match="tenant"):
-        service.change_membership(principal(), "command-key-b2b-tenant", request)
+        service.change_membership(principal(), "command-key-b2b-tenant", request, "0" * 64)
 
     assert control.execute_calls == []
 
@@ -295,7 +345,7 @@ def test_automation_kill_reuses_exact_governance_chain() -> None:
     request = kill_request()
     service, control = service_for("automation-kill", request)
 
-    result = service.automation_kill(principal(), "command-key-kill", request)
+    result = service.automation_kill(principal(), "command-key-kill", request, exact_preview_hash(service, request, "automationKill"))
 
     assert result.command_id == "automationKill"
     assert control.execute_calls == [("lease-1", PROPOSAL_HASH)]
@@ -331,7 +381,7 @@ def test_cross_tenant_original_is_rejected_before_action_control() -> None:
     service, control = service_for("classify", request)
 
     with pytest.raises(OperationCommandConflict, match="tenant"):
-        service.classify(principal(), "command-key-3", request)
+        service.classify(principal(), "command-key-3", request, "0" * 64)
 
     assert control.execute_calls == []
 
@@ -342,7 +392,7 @@ def test_proposal_payload_drift_is_rejected_without_consuming_lease() -> None:
     control.command_payload = {"commandId": "classify", "revision": {}}
 
     with pytest.raises(OperationCommandConflict, match="payload"):
-        service.classify(principal(), "command-key-4", request)
+        service.classify(principal(), "command-key-4", request, exact_preview_hash(service, request, "classify"))
 
     assert control.execute_calls == []
 
@@ -535,7 +585,9 @@ def test_canonical_control_consumes_existing_action_chain_and_embeds_operation_r
     )
     service = EcommerceOperationCommandService(action_control=control, now=lambda: NOW)
 
-    result = service.classify(principal(), "command-key-5", request)
+    result = service.classify(
+        principal(), "command-key-5", request, exact_preview_hash(service, request, "classify")
+    )
 
     assert result.operation_receipt.receipt_id == "op-receipt-1"
     assert authority_store.appended == [
@@ -582,7 +634,18 @@ def test_membership_and_sla_canonical_adapters_embed_exact_operation_receipt(
     service = EcommerceOperationCommandService(action_control=control, now=lambda: NOW)
 
     result = getattr(service, service_method)(
-        principal(), "command-key-b2b-canonical", request
+        principal(),
+        "command-key-b2b-canonical",
+        request,
+        exact_preview_hash(
+            service,
+            request,
+            {
+                "change_membership": "changeMembership",
+                "manage_sla": "manageSla",
+                "automation_kill": "automationKill",
+            }[service_method],
+        ),
     )
 
     assert result.operation_receipt.receipt_id == "op-receipt-1"
@@ -611,9 +674,10 @@ def test_canonical_control_replays_same_command_key_and_rejects_key_drift() -> N
     )
     service = EcommerceOperationCommandService(action_control=control, now=lambda: NOW)
 
-    replay = service.classify(principal(), "command-key-6", request)
+    preview_hash = exact_preview_hash(service, request, "classify")
+    replay = service.classify(principal(), "command-key-6", request, preview_hash)
     assert replay.operation_receipt.receipt_id == "op-receipt-1"
     assert execution.execute_count == 0
 
     with pytest.raises(OperationCommandConflict, match="idempotency"):
-        service.classify(principal(), "different-key", request)
+        service.classify(principal(), "different-key", request, preview_hash)

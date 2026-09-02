@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import Field, model_validator
@@ -126,6 +127,32 @@ class KillOperationAutomationCommandRequest(_InternalOperationCommandRequest):
         }
 
 
+class OperationCommandPreviewRequest(AipContractModel):
+    command_id: Literal[
+        "classify", "createCase", "changeMembership", "manageSla", "automationKill"
+    ]
+    request: dict[str, Any]
+
+
+class OperationCommandPreviewEnvelope(AipContractModel):
+    schema_version: Literal[
+        "aos.ecommerce-workshop.operation-command-preview/v1"
+    ] = "aos.ecommerce-workshop.operation-command-preview/v1"
+    tenant: TenantContext
+    command_id: Literal[
+        "classify", "createCase", "changeMembership", "manageSla", "automationKill"
+    ]
+    action_type_id: str = Field(min_length=1, max_length=200)
+    preview_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    proposal_id: str = Field(min_length=1, max_length=300)
+    proposal_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    lease_id: str = Field(min_length=1, max_length=300)
+    side_effect: Literal["internalAuthority"] = "internalAuthority"
+    external_effect_allowed: Literal[False] = False
+    confirm_path: str = Field(pattern=r"^/v1/ecommerce-workshop/commands/operations/[a-z-]+$")
+    evaluated_at: datetime
+
+
 class OperationCommandExecutionEnvelope(AipContractModel):
     schema_version: Literal[
         "aos.ecommerce-workshop.operation-command-execution/v1"
@@ -146,6 +173,8 @@ __all__ = [
     "CreateOperationCaseCommandRequest",
     "KillOperationAutomationCommandRequest",
     "ManageOperationSlaCommandRequest",
+    "OperationCommandPreviewEnvelope",
+    "OperationCommandPreviewRequest",
     "OperationCommandExecutionEnvelope",
     "OperationCommandGovernanceRef",
 ]

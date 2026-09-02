@@ -1,0 +1,52 @@
+{
+  "taskId": "WORKSHOP-R2-05-INTERNAL-WRITE-RECEIPT",
+  "baseCommit": "9625a41614db6c08b9cd1d4d3be6fdbc7a085bda",
+  "verifiedAt": "2026-09-02T22:11:06Z",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "scope": "五类工作台内部命令的 preview -> confirm -> Receipt -> readback 合同；退款与其他真实外部动作不在授权范围",
+  "tests": [
+    {
+      "kind": "backend-focused-and-related",
+      "result": "60 passed",
+      "command": "services/aos-api/.venv/bin/pytest -q services/aos-api/tests/test_ecommerce_operation_command_service.py services/aos-api/tests/test_ecommerce_workshop_api.py services/aos-api/tests/test_ecommerce_operation_command_observation_service.py services/aos-api/tests/test_ecommerce_operation_commands.py services/aos-api/tests/test_ecommerce_workshop_operations_api.py services/aos-api/tests/test_ecommerce_workshop_operations_contracts.py"
+    },
+    {
+      "kind": "frontend-focused",
+      "result": "47 passed",
+      "coverage": "ecommerceWorkshop parser and client preview/confirm/readback contracts"
+    },
+    {
+      "kind": "frontend-cumulative",
+      "result": "271 files, 2419 tests passed"
+    },
+    {
+      "kind": "frontend-production-build",
+      "result": "GREEN",
+      "detail": "TypeScript and Vite production build completed"
+    }
+  ],
+  "browserAcceptance": {
+    "route": "/workshop/operations",
+    "result": "GREEN",
+    "screenshot": "operations-readonly-browser.png",
+    "observedFacts": {
+      "businessViews": 7,
+      "sourceTotal": 219,
+      "attached": 210,
+      "unmatched": 9,
+      "conflicts": 0
+    },
+    "interactionBoundary": "只读打开、重载、DOM 与截图检查；未点击任何内部命令，未产生真实业务写入"
+  },
+  "safety": {
+    "externalEffectInvoked": false,
+    "realBusinessMutationInvoked": false,
+    "refundPreviewOrConfirmAvailable": false,
+    "previewHashRequiredForConfirm": true,
+    "idempotencyKeyRequired": true,
+    "receiptReadbackRequired": true
+  }
+}

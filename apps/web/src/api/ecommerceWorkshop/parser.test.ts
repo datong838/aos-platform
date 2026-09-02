@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseContentCampaignView, parseDispatchControlObservation, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseMediaStudioView, parseModuleHandoffCompile, parseOperationCommandObservation, parseOperationCommandReadiness, parseOperationsView, parseResponsibilityAssignmentObservation, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSkillContributions, parseTaskCockpitSteps, parseWorkshopSharedContext } from "./parser";
+import { parseContentCampaignView, parseDispatchControlObservation, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseMediaStudioView, parseModuleHandoffCompile, parseOperationCommandExecution, parseOperationCommandObservation, parseOperationCommandPreview, parseOperationCommandReadiness, parseOperationsView, parseResponsibilityAssignmentObservation, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSkillContributions, parseTaskCockpitSteps, parseWorkshopSharedContext } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -75,6 +75,23 @@ describe("operation command readiness strict parser", () => {
     expect(() => parseOperationCommandReadiness({ ...commandReadiness, commands: [...commandReadiness.commands].reverse() })).toThrow("canonical order");
     expect(() => parseOperationCommandReadiness({ ...commandReadiness, commands: [{ ...commandReadiness.commands[0], status: "ready" }, ...commandReadiness.commands.slice(1)] })).toThrow("伪 ready");
     expect(() => parseOperationCommandReadiness({ ...commandReadiness, tenant: { orgId: "dev-org", projectId: "dev-project" } }, { orgId: "org-org", projectId: "dev-project" })).toThrow("tenant 漂移");
+  });
+});
+
+const commandPreview = { schemaVersion: "aos.ecommerce-workshop.operation-command-preview/v1", tenant: commandReadiness.tenant, commandId: "classify", actionTypeId: "ecommerce.operation.classify", previewHash: "a".repeat(64), proposalId: "proposal-1", proposalHash: "b".repeat(64), leaseId: "lease-1", sideEffect: "internalAuthority", externalEffectAllowed: false, confirmPath: "/v1/ecommerce-workshop/commands/operations/classify", evaluatedAt: "2026-08-24T08:00:00Z" };
+const operationReceipt = { tenant: commandReadiness.tenant, receiptId: "operation-receipt-1", operation: "operation_classification.append", idempotencyKey: "command-key-1", requestHash: "c".repeat(64), resultRef: { resourceId: "classification-1", revision: 1, contentHash: "d".repeat(64) }, createdBy: "user:executor", createdAt: "2026-08-24T08:00:01Z" };
+const commandExecution = { schemaVersion: "aos.ecommerce-workshop.operation-command-execution/v1", tenant: commandReadiness.tenant, commandId: "classify", status: "applied", proposalId: "proposal-1", leaseId: "lease-1", operationReceipt };
+
+describe("operation command preview/confirm strict parser", () => {
+  it("保留 exact preview hash、内部副作用边界与 Receipt", () => {
+    expect(parseOperationCommandPreview(commandPreview, commandReadiness.tenant, "classify")).toMatchObject({ previewHash: "a".repeat(64), externalEffectAllowed: false });
+    expect(parseOperationCommandExecution(commandExecution, commandReadiness.tenant, "classify")).toMatchObject({ status: "applied", operationReceipt: { receiptId: "operation-receipt-1" } });
+  });
+  it("拒绝外部动作、确认路径、tenant 与 Receipt hash 漂移", () => {
+    expect(() => parseOperationCommandPreview({ ...commandPreview, commandId: "refund" })).toThrow("未知枚举");
+    expect(() => parseOperationCommandPreview({ ...commandPreview, confirmPath: "/v1/ecommerce-workshop/commands/operations/refund" })).toThrow("权限边界漂移");
+    expect(() => parseOperationCommandPreview(commandPreview, { orgId: "dev-org", projectId: "dev-project" })).toThrow("tenant 漂移");
+    expect(() => parseOperationCommandExecution({ ...commandExecution, operationReceipt: { ...operationReceipt, requestHash: "bad" } })).toThrow("SHA-256");
   });
 });
 

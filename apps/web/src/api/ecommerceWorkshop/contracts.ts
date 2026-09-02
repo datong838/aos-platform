@@ -441,8 +441,27 @@ export type OperationCommandBlocker = { code: string; dependency: string; requir
 export type OperationCommandDescriptor = { commandId: OperationCommandId; label: string; status: "ready" | "blocked"; risk: "controlled" | "high"; sideEffect: "internalAuthority" | "external"; blockers: OperationCommandBlocker[] };
 export type OperationCommandReadinessResponse = { schemaVersion: typeof OPERATION_COMMAND_READINESS_SCHEMA_VERSION; tenant: WorkshopTenant; evaluatedAt: string; commands: OperationCommandDescriptor[] };
 
-export const OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION = "aos.ecommerce-workshop.operation-command-observation/v1" as const;
+export const OPERATION_COMMAND_PREVIEW_SCHEMA_VERSION = "aos.ecommerce-workshop.operation-command-preview/v1" as const;
 export type ObservableOperationCommandId = Exclude<OperationCommandId, "refund">;
+export type OperationCommandPreviewInput = { commandId: ObservableOperationCommandId; request: Record<string, unknown> };
+export type OperationCommandPreviewResponse = {
+  schemaVersion: typeof OPERATION_COMMAND_PREVIEW_SCHEMA_VERSION;
+  tenant: WorkshopTenant;
+  commandId: ObservableOperationCommandId;
+  actionTypeId: string;
+  previewHash: string;
+  proposalId: string;
+  proposalHash: string;
+  leaseId: string;
+  sideEffect: "internalAuthority";
+  externalEffectAllowed: false;
+  confirmPath: string;
+  evaluatedAt: string;
+};
+export type OperationAuthorityReceipt = { tenant: WorkshopTenant; receiptId: string; operation: string; idempotencyKey: string; requestHash: string; resultRef: { resourceId: string; revision: number; contentHash: string }; createdBy: string; createdAt: string };
+export type OperationCommandExecutionResponse = { schemaVersion: "aos.ecommerce-workshop.operation-command-execution/v1"; tenant: WorkshopTenant; commandId: ObservableOperationCommandId; status: "applied"; proposalId: string; leaseId: string; operationReceipt: OperationAuthorityReceipt };
+
+export const OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION = "aos.ecommerce-workshop.operation-command-observation/v1" as const;
 export type OperationCommandObservationStatus = "notStarted" | "accepted" | "applied" | "failed" | "unknown" | "reconciled";
 export type OperationCommandObservationResponse = {
   schemaVersion: typeof OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION;

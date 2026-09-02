@@ -8,6 +8,7 @@ import {
   FULL_VIDEO_SCENARIO_SCHEMA_VERSION,
   OPERATIONS_SCHEMA_VERSION,
   OPERATION_COMMAND_READINESS_SCHEMA_VERSION,
+  OPERATION_COMMAND_PREVIEW_SCHEMA_VERSION,
   OPERATION_COMMAND_OBSERVATION_SCHEMA_VERSION,
   CONTENT_CAMPAIGN_SCHEMA_VERSION,
   CREATOR_GROWTH_SCHEMA_VERSION,
@@ -156,6 +157,8 @@ import {
   type OperationCommandDescriptor,
   type OperationCommandId,
   type OperationCommandReadinessResponse,
+  type OperationCommandPreviewResponse,
+  type OperationCommandExecutionResponse,
   type ObservableOperationCommandId,
   type OperationCommandObservationResponse,
   type OperationCommandObservationStatus,
@@ -1565,6 +1568,36 @@ export function parseOperationCommandReadiness(value: unknown, expectedTenant?: 
 }
 
 const OBSERVABLE_OPERATION_COMMAND_IDS = ["classify", "createCase", "changeMembership", "manageSla", "automationKill"] as const satisfies readonly ObservableOperationCommandId[];
+
+export function parseOperationCommandPreview(value: unknown, expectedTenant?: WorkshopTenant, expectedCommandId?: ObservableOperationCommandId): OperationCommandPreviewResponse {
+  const raw = record(value, "operationCommandPreview");
+  exact(raw, ["schemaVersion", "tenant", "commandId", "actionTypeId", "previewHash", "proposalId", "proposalHash", "leaseId", "sideEffect", "externalEffectAllowed", "confirmPath", "evaluatedAt"], "operationCommandPreview");
+  if (raw.schemaVersion !== OPERATION_COMMAND_PREVIEW_SCHEMA_VERSION) throw new TypeError("operationCommandPreview.schemaVersion 漂移");
+  const tenant = parseTenant(raw.tenant);
+  if (expectedTenant && (tenant.orgId !== expectedTenant.orgId || tenant.projectId !== expectedTenant.projectId)) throw new TypeError("operationCommandPreview.tenant 漂移");
+  const commandId = enumValue<ObservableOperationCommandId>(raw.commandId, OBSERVABLE_OPERATION_COMMAND_IDS, "operationCommandPreview.commandId");
+  if (expectedCommandId && commandId !== expectedCommandId) throw new TypeError("operationCommandPreview.commandId 漂移");
+  const previewHash = boundedText(raw.previewHash, "operationCommandPreview.previewHash", 64);
+  const proposalHash = boundedText(raw.proposalHash, "operationCommandPreview.proposalHash", 64);
+  if (!RAW_SHA256.test(previewHash) || !RAW_SHA256.test(proposalHash)) throw new TypeError("operationCommandPreview hash 不是 SHA-256");
+  const confirmPath = boundedText(raw.confirmPath, "operationCommandPreview.confirmPath", 180);
+  const expectedPath = `/v1/ecommerce-workshop/commands/operations/${({ classify: "classify", createCase: "create-case", changeMembership: "change-membership", manageSla: "manage-sla", automationKill: "automation-kill" } as const)[commandId]}`;
+  if (confirmPath !== expectedPath || raw.sideEffect !== "internalAuthority" || raw.externalEffectAllowed !== false) throw new TypeError("operationCommandPreview 权限边界漂移");
+  return { schemaVersion: OPERATION_COMMAND_PREVIEW_SCHEMA_VERSION, tenant, commandId, actionTypeId: boundedText(raw.actionTypeId, "operationCommandPreview.actionTypeId", 200), previewHash, proposalId: boundedText(raw.proposalId, "operationCommandPreview.proposalId", 300), proposalHash, leaseId: boundedText(raw.leaseId, "operationCommandPreview.leaseId", 300), sideEffect: "internalAuthority", externalEffectAllowed: false, confirmPath, evaluatedAt: timestamp(raw.evaluatedAt, "operationCommandPreview.evaluatedAt") };
+}
+
+export function parseOperationCommandExecution(value: unknown, expectedTenant?: WorkshopTenant, expectedCommandId?: ObservableOperationCommandId): OperationCommandExecutionResponse {
+  const raw = record(value, "operationCommandExecution");
+  exact(raw, ["schemaVersion", "tenant", "commandId", "status", "proposalId", "leaseId", "operationReceipt"], "operationCommandExecution");
+  if (raw.schemaVersion !== "aos.ecommerce-workshop.operation-command-execution/v1" || raw.status !== "applied") throw new TypeError("operationCommandExecution 状态漂移");
+  const tenant = parseTenant(raw.tenant); if (expectedTenant && (tenant.orgId !== expectedTenant.orgId || tenant.projectId !== expectedTenant.projectId)) throw new TypeError("operationCommandExecution.tenant 漂移");
+  const commandId = enumValue<ObservableOperationCommandId>(raw.commandId, OBSERVABLE_OPERATION_COMMAND_IDS, "operationCommandExecution.commandId"); if (expectedCommandId && commandId !== expectedCommandId) throw new TypeError("operationCommandExecution.commandId 漂移");
+  const receipt = record(raw.operationReceipt, "operationCommandExecution.operationReceipt"); exact(receipt, ["tenant", "receiptId", "operation", "idempotencyKey", "requestHash", "resultRef", "createdBy", "createdAt"], "operationCommandExecution.operationReceipt");
+  const receiptTenant = parseTenant(receipt.tenant); if (receiptTenant.orgId !== tenant.orgId || receiptTenant.projectId !== tenant.projectId) throw new TypeError("operationCommandExecution receipt tenant 漂移");
+  const requestHash = boundedText(receipt.requestHash, "operationCommandExecution.requestHash", 64); if (!RAW_SHA256.test(requestHash)) throw new TypeError("operationCommandExecution.requestHash 不是 SHA-256");
+  const resultRef = record(receipt.resultRef, "operationCommandExecution.resultRef"); exact(resultRef, ["resourceId", "revision", "contentHash"], "operationCommandExecution.resultRef"); const contentHash = boundedText(resultRef.contentHash, "operationCommandExecution.resultRef.contentHash", 64); if (!RAW_SHA256.test(contentHash)) throw new TypeError("operationCommandExecution result hash 不是 SHA-256");
+  return { schemaVersion: "aos.ecommerce-workshop.operation-command-execution/v1", tenant, commandId, status: "applied", proposalId: boundedText(raw.proposalId, "operationCommandExecution.proposalId", 300), leaseId: boundedText(raw.leaseId, "operationCommandExecution.leaseId", 300), operationReceipt: { tenant: receiptTenant, receiptId: boundedText(receipt.receiptId, "operationCommandExecution.receiptId", 300), operation: boundedText(receipt.operation, "operationCommandExecution.operation", 200), idempotencyKey: boundedText(receipt.idempotencyKey, "operationCommandExecution.idempotencyKey", 300), requestHash, resultRef: { resourceId: boundedText(resultRef.resourceId, "operationCommandExecution.resultRef.resourceId", 300), revision: integer(resultRef.revision, "operationCommandExecution.resultRef.revision", 1), contentHash }, createdBy: boundedText(receipt.createdBy, "operationCommandExecution.createdBy", 300), createdAt: timestamp(receipt.createdAt, "operationCommandExecution.createdAt") } };
+}
 
 export function parseOperationCommandObservation(
   value: unknown,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any, Protocol
@@ -38,6 +39,8 @@ from aos_api.ecommerce_operation_command_execution_contracts import (
     KillOperationAutomationCommandRequest,
     ManageOperationSlaCommandRequest,
     OperationCommandExecutionEnvelope,
+    OperationCommandPreviewEnvelope,
+    OperationCommandPreviewRequest,
 )
 from aos_api.tenant_scope import TenantScope
 
@@ -172,6 +175,15 @@ def _key_hash(value: str) -> str:
     return hashlib.sha256(value.encode()).hexdigest()
 
 
+_COMMAND_SPECS: dict[str, tuple[type[Any], str, str]] = {
+    "classify": (ClassifyOperationCommandRequest, "ecommerce.operation.classify", "classify"),
+    "createCase": (CreateOperationCaseCommandRequest, "ecommerce.operation.create-case", "create-case"),
+    "changeMembership": (ChangeOperationMembershipCommandRequest, "ecommerce.operation.change-membership", "change-membership"),
+    "manageSla": (ManageOperationSlaCommandRequest, "ecommerce.operation.manage-sla", "manage-sla"),
+    "automationKill": (KillOperationAutomationCommandRequest, "ecommerce.operation.automation-kill", "automation-kill"),
+}
+
+
 class CanonicalOperationActionControl:
     """Bind internal authority mutation to the existing canonical AIP Action chain."""
 
@@ -296,11 +308,33 @@ class EcommerceOperationCommandService:
         self._action_control = action_control
         self._now = now or (lambda: datetime.now(UTC))
 
+    def preview(
+        self,
+        principal: Principal,
+        body: OperationCommandPreviewRequest,
+    ) -> OperationCommandPreviewEnvelope:
+        request_type, action_type_id, path_segment = _COMMAND_SPECS[body.command_id]
+        request = request_type.model_validate(body.request)
+        self._validate_request_scope(principal, body.command_id, request)
+        evaluated_at = self._now()
+        return OperationCommandPreviewEnvelope(
+            tenant=TenantContext(org_id=principal.org_id, project_id=principal.project_id),
+            command_id=body.command_id,
+            action_type_id=action_type_id,
+            preview_hash=self._preview_hash(principal, body.command_id, action_type_id, request),
+            proposal_id=request.governance.proposal_id,
+            proposal_hash=request.governance.proposal_hash,
+            lease_id=request.governance.lease_id,
+            confirm_path=f"/v1/ecommerce-workshop/commands/operations/{path_segment}",
+            evaluated_at=evaluated_at,
+        )
+
     def classify(
         self,
         principal: Principal,
         idempotency_key: str,
         request: ClassifyOperationCommandRequest,
+        preview_hash: str,
     ) -> OperationCommandExecutionEnvelope:
         self._require_idempotency_key(idempotency_key)
         self._require_revision_scope(principal, request.revision)
@@ -312,6 +346,7 @@ class EcommerceOperationCommandService:
             request=request,
             command_id="classify",
             action_type_id="ecommerce.operation.classify",
+            preview_hash=preview_hash,
         )
 
     def create_case(
@@ -319,6 +354,7 @@ class EcommerceOperationCommandService:
         principal: Principal,
         idempotency_key: str,
         request: CreateOperationCaseCommandRequest,
+        preview_hash: str,
     ) -> OperationCommandExecutionEnvelope:
         self._require_idempotency_key(idempotency_key)
         self._require_revision_scope(principal, request.revision)
@@ -332,6 +368,7 @@ class EcommerceOperationCommandService:
             request=request,
             command_id="createCase",
             action_type_id="ecommerce.operation.create-case",
+            preview_hash=preview_hash,
         )
 
     def change_membership(
@@ -339,6 +376,7 @@ class EcommerceOperationCommandService:
         principal: Principal,
         idempotency_key: str,
         request: ChangeOperationMembershipCommandRequest,
+        preview_hash: str,
     ) -> OperationCommandExecutionEnvelope:
         self._require_idempotency_key(idempotency_key)
         self._require_revision_scope(principal, request.revision)
@@ -352,6 +390,7 @@ class EcommerceOperationCommandService:
             request=request,
             command_id="changeMembership",
             action_type_id="ecommerce.operation.change-membership",
+            preview_hash=preview_hash,
         )
 
     def manage_sla(
@@ -359,6 +398,7 @@ class EcommerceOperationCommandService:
         principal: Principal,
         idempotency_key: str,
         request: ManageOperationSlaCommandRequest,
+        preview_hash: str,
     ) -> OperationCommandExecutionEnvelope:
         self._require_idempotency_key(idempotency_key)
         self._require_revision_scope(principal, request.revision)
@@ -368,6 +408,7 @@ class EcommerceOperationCommandService:
             request=request,
             command_id="manageSla",
             action_type_id="ecommerce.operation.manage-sla",
+            preview_hash=preview_hash,
         )
 
     def automation_kill(
@@ -375,6 +416,7 @@ class EcommerceOperationCommandService:
         principal: Principal,
         idempotency_key: str,
         request: KillOperationAutomationCommandRequest,
+        preview_hash: str,
     ) -> OperationCommandExecutionEnvelope:
         self._require_idempotency_key(idempotency_key)
         self._require_revision_scope(principal, request.revision)
@@ -384,6 +426,7 @@ class EcommerceOperationCommandService:
             request=request,
             command_id="automationKill",
             action_type_id="ecommerce.operation.automation-kill",
+            preview_hash=preview_hash,
         )
 
     def _execute(
@@ -394,9 +437,15 @@ class EcommerceOperationCommandService:
         request: Any,
         command_id: str,
         action_type_id: str,
+        preview_hash: str,
     ) -> OperationCommandExecutionEnvelope:
         governance = request.governance
         canonical_payload = request.canonical_action_payload()
+        expected_preview_hash = self._preview_hash(
+            principal, command_id, action_type_id, request
+        )
+        if preview_hash != expected_preview_hash:
+            raise OperationCommandConflict("operation command preview hash drifted")
         result = self._action_control.execute_exact_chain(
             principal=principal,
             proposal_id=governance.proposal_id,
@@ -425,6 +474,39 @@ class EcommerceOperationCommandService:
             lease_id=governance.lease_id,
             operation_receipt=OperationAuthorityReceipt.model_validate(receipt),
         )
+
+    @classmethod
+    def _validate_request_scope(cls, principal: Principal, command_id: str, request: Any) -> None:
+        cls._require_revision_scope(principal, request.revision)
+        if command_id == "classify":
+            original = request.revision.original_ref.tenant
+            cls._require_scope(principal, original.org_id, original.project_id)
+        elif command_id == "createCase":
+            for member in request.revision.member_refs:
+                cls._require_scope(principal, member.tenant.org_id, member.tenant.project_id)
+        elif command_id == "changeMembership":
+            for original in request.revision.moved_originals:
+                cls._require_scope(principal, original.tenant.org_id, original.tenant.project_id)
+
+    @staticmethod
+    def _preview_hash(principal: Principal, command_id: str, action_type_id: str, request: Any) -> str:
+        governance = request.governance
+        canonical = {
+            "tenant": {"orgId": principal.org_id, "projectId": principal.project_id},
+            "actor": principal.subject,
+            "commandId": command_id,
+            "actionTypeId": action_type_id,
+            "canonicalPayload": request.canonical_action_payload(),
+            "governance": {
+                "proposalId": governance.proposal_id,
+                "proposalVersion": governance.proposal_version,
+                "proposalHash": governance.proposal_hash,
+                "approvalEventIds": sorted(governance.approval_event_ids),
+                "leaseId": governance.lease_id,
+            },
+        }
+        raw = json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     @staticmethod
     def _require_idempotency_key(value: str) -> None:

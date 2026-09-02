@@ -237,6 +237,8 @@ from aos_api.ecommerce_operation_command_execution_contracts import (
     KillOperationAutomationCommandRequest,
     ManageOperationSlaCommandRequest,
     OperationCommandExecutionEnvelope,
+    OperationCommandPreviewEnvelope,
+    OperationCommandPreviewRequest,
 )
 from aos_api.ecommerce_operation_command_service import (
     CanonicalOperationActionControl,
@@ -2263,6 +2265,25 @@ def get_ecommerce_operation_command_observation(
 
 
 @router.post(
+    "/commands/operations/previews",
+    response_model=OperationCommandPreviewEnvelope,
+    operation_id="ecommerceWorkshopOperationCommandPreviewPost",
+    responses=_ERRORS,
+)
+def preview_ecommerce_operation_command(
+    body: OperationCommandPreviewRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    service: OperationCommandServiceDependency,
+) -> OperationCommandPreviewEnvelope:
+    _require_operations_installation(principal=principal, catalog=catalog)
+    try:
+        return service.preview(principal, body)
+    except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:
+        raise _map_operation_command_error(exc) from exc
+
+
+@router.post(
     "/commands/operations/classify",
     response_model=OperationCommandExecutionEnvelope,
     operation_id="ecommerceWorkshopOperationClassifyPost",
@@ -2274,11 +2295,12 @@ def classify_ecommerce_operation_event(
     catalog: CatalogDependency,
     service: OperationCommandServiceDependency,
     idempotency_key: str = Header(alias="Idempotency-Key"),
+    preview_hash: str = Header(alias="X-Workshop-Preview-Hash", pattern=r"^[0-9a-f]{64}$"),
 ) -> OperationCommandExecutionEnvelope:
     _require_operations_installation(principal=principal, catalog=catalog)
     try:
         return service.classify(
-            principal, _operation_command_idempotency(idempotency_key), body
+            principal, _operation_command_idempotency(idempotency_key), body, preview_hash
         )
     except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:
         raise _map_operation_command_error(exc) from exc
@@ -2296,11 +2318,12 @@ def create_ecommerce_operation_case(
     catalog: CatalogDependency,
     service: OperationCommandServiceDependency,
     idempotency_key: str = Header(alias="Idempotency-Key"),
+    preview_hash: str = Header(alias="X-Workshop-Preview-Hash", pattern=r"^[0-9a-f]{64}$"),
 ) -> OperationCommandExecutionEnvelope:
     _require_operations_installation(principal=principal, catalog=catalog)
     try:
         return service.create_case(
-            principal, _operation_command_idempotency(idempotency_key), body
+            principal, _operation_command_idempotency(idempotency_key), body, preview_hash
         )
     except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:
         raise _map_operation_command_error(exc) from exc
@@ -2318,11 +2341,12 @@ def change_ecommerce_operation_membership(
     catalog: CatalogDependency,
     service: OperationCommandServiceDependency,
     idempotency_key: str = Header(alias="Idempotency-Key"),
+    preview_hash: str = Header(alias="X-Workshop-Preview-Hash", pattern=r"^[0-9a-f]{64}$"),
 ) -> OperationCommandExecutionEnvelope:
     _require_operations_installation(principal=principal, catalog=catalog)
     try:
         return service.change_membership(
-            principal, _operation_command_idempotency(idempotency_key), body
+            principal, _operation_command_idempotency(idempotency_key), body, preview_hash
         )
     except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:
         raise _map_operation_command_error(exc) from exc
@@ -2340,11 +2364,12 @@ def manage_ecommerce_operation_sla(
     catalog: CatalogDependency,
     service: OperationCommandServiceDependency,
     idempotency_key: str = Header(alias="Idempotency-Key"),
+    preview_hash: str = Header(alias="X-Workshop-Preview-Hash", pattern=r"^[0-9a-f]{64}$"),
 ) -> OperationCommandExecutionEnvelope:
     _require_operations_installation(principal=principal, catalog=catalog)
     try:
         return service.manage_sla(
-            principal, _operation_command_idempotency(idempotency_key), body
+            principal, _operation_command_idempotency(idempotency_key), body, preview_hash
         )
     except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:
         raise _map_operation_command_error(exc) from exc
@@ -2362,11 +2387,12 @@ def kill_ecommerce_operation_automation(
     catalog: CatalogDependency,
     service: OperationCommandServiceDependency,
     idempotency_key: str = Header(alias="Idempotency-Key"),
+    preview_hash: str = Header(alias="X-Workshop-Preview-Hash", pattern=r"^[0-9a-f]{64}$"),
 ) -> OperationCommandExecutionEnvelope:
     _require_operations_installation(principal=principal, catalog=catalog)
     try:
         return service.automation_kill(
-            principal, _operation_command_idempotency(idempotency_key), body
+            principal, _operation_command_idempotency(idempotency_key), body, preview_hash
         )
     except (OperationCommandConflict, OperationCommandDependencyUnavailable) as exc:
         raise _map_operation_command_error(exc) from exc
