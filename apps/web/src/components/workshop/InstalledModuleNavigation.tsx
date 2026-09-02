@@ -1,56 +1,43 @@
 import { NavLink } from "react-router-dom";
 
 import { useEcommerceWorkshopCatalog } from "./EcommerceWorkshopCatalogContext";
+import { WORKSHOP_ACCEPTANCE_MODULES } from "./workshopAcceptance";
 
 export function InstalledModuleNavigation() {
   const catalog = useEcommerceWorkshopCatalog();
-
-  if (catalog.phase === "loading") {
-    return (
-      <div className="ecommerce-workshop-nav-message" role="status">
-        正在读取已安装工作台…
-      </div>
-    );
-  }
-  if (catalog.phase === "forbidden") {
-    return (
-      <div className="ecommerce-workshop-nav-message is-error" role="status">
-        无权读取工作台目录
-      </div>
-    );
-  }
-  if (catalog.phase === "failed" && catalog.modules.length === 0) {
-    return (
-      <button
-        type="button"
-        className="ecommerce-workshop-nav-retry"
-        onClick={catalog.reload}
-      >
-        目录读取失败，重试
-      </button>
-    );
-  }
-  if (catalog.modules.length === 0) {
-    return (
-      <div className="ecommerce-workshop-nav-message" role="status">
-        当前工作区未安装电商工作台
-      </div>
-    );
-  }
+  const primaryIds = new Set<string>(WORKSHOP_ACCEPTANCE_MODULES.map((module) => module.moduleId));
+  const primaryRoutes = new Set<string>(WORKSHOP_ACCEPTANCE_MODULES.map((module) => module.route));
+  const installedById = new Map(catalog.modules.map((module) => [module.moduleId, module]));
+  const navigationItems = [
+    ...WORKSHOP_ACCEPTANCE_MODULES.map((module) => {
+      const installed = installedById.get(module.moduleId);
+      return {
+        moduleId: module.moduleId,
+        route: module.route,
+        menuLabel: module.label,
+        key: installed
+          ? `${installed.moduleId}:${installed.moduleRef.moduleArtifactHash}`
+          : `${module.moduleId}:product-route`,
+      };
+    }),
+    ...catalog.modules
+      .filter((module) => !primaryIds.has(module.moduleId) && !primaryRoutes.has(module.route))
+      .map((module) => ({
+        moduleId: module.moduleId,
+        route: module.route,
+        menuLabel: module.menuLabel,
+        key: `${module.moduleId}:${module.moduleRef.moduleArtifactHash}`,
+      })),
+  ];
 
   return (
     <div
       className="ecommerce-workshop-installed-navigation"
-      aria-label="已安装电商工作台"
+      aria-label="电商工作台"
     >
-      {catalog.phase === "stale" ? (
-        <div className="ecommerce-workshop-nav-message is-stale" role="status">
-          目录刷新未完成，当前显示旧快照
-        </div>
-      ) : null}
-      {catalog.modules.map((module) => (
+      {navigationItems.map((module) => (
         <NavLink
-          key={`${module.moduleId}:${module.moduleRef.moduleArtifactHash}`}
+          key={module.key}
           to={module.route}
           data-workshop-module-id={module.moduleId}
           className={({ isActive }) =>
