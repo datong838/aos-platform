@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   useCallback,
   useEffect,
@@ -153,25 +153,6 @@ function GlobalNav({
     navigate("/ontology/wiki-index");
   };
 
-  if (pathname === "/workshop/analyst") {
-    const links: Array<{ to: string; icon: IconName; label: string }> = [
-      { to: "/workshop/cockpit", icon: "monitor", label: "日常总控" },
-      { to: "/workshop/operations", icon: "inbox", label: "运营驾驶舱" },
-      { to: "/workshop/price-governance", icon: "activity", label: "价格治理" },
-      { to: "/workshop/customer", icon: "user", label: "客户关系" },
-      { to: "/workshop/buddy", icon: "chat", label: "Buddy" },
-      { to: "/workshop/analyst", icon: "layers", label: "经营参谋" },
-    ];
-    return <nav className="p-nav-global analyst-exact-global" aria-label="全局导航">
-      <div className="analyst-exact-global-brand"><NavIcon name="plus-circle" /><span>AOS</span></div>
-      <div className="analyst-exact-global-links">{links.map((item) => <NavLink key={item.to} to={item.to} end title={item.label} aria-label={item.label} className={({ isActive }) => `analyst-exact-global-item${isActive ? " is-active" : ""}`}><NavIcon name={item.icon} /></NavLink>)}</div>
-      <div className="analyst-exact-global-bottom">
-        <button type="button" className="analyst-exact-global-item" title="帮助" aria-label="帮助" onClick={() => navigate("/settings/ops-start-guide")}><NavIcon name="wrench" /></button>
-        <UserMenu pref={pref} onAppearanceChange={onAppearanceChange} />
-      </div>
-    </nav>;
-  }
-
   // 全局图标只复用既有路由；不在导航层创建业务记录或触发外部效果。
   const topItems: {
     icon: IconName;
@@ -302,36 +283,6 @@ function UserMenu({
   );
 }
 
-const ANALYST_VISUAL_WORKSHOP_LINKS: Array<{ to: string; label: string; icon: IconName }> = [
-  { to: "/workshop/cockpit", label: "日常任务总控大屏", icon: "monitor" },
-  { to: "/workshop/content-campaign", label: "内容与活动工作台", icon: "table" },
-  { to: "/workshop/operations", label: "统一运营驾驶舱", icon: "inbox" },
-  { to: "/workshop/creator-growth", label: "达人邀约驾驶舱", icon: "user" },
-  { to: "/workshop/media-studio", label: "多媒体内容生产", icon: "film" },
-  { to: "/workshop/analyst", label: "经营参谋 · 增长指挥中心", icon: "layers" },
-  { to: "/workshop/price-governance", label: "价格治理驾驶舱", icon: "activity" },
-  { to: "/workshop/customer", label: "客户关系工作台", icon: "user" },
-];
-
-function AnalystVisualNavigation() {
-  const item = ({ to, label, icon }: { to: string; label: string; icon: IconName }) => <NavLink key={to} to={to} end className={({ isActive }) => `analyst-exact-side-item${isActive ? " is-active" : ""}`}><NavIcon name={icon} /><span>{label}</span></NavLink>;
-  return <nav className="analyst-exact-side-nav" aria-label="经营参谋视觉稿主导航">
-    <div className="analyst-exact-side-title">工作台</div>
-    <div className="analyst-exact-side-section">{ANALYST_VISUAL_WORKSHOP_LINKS.map(item)}</div>
-    <div className="analyst-exact-side-section">{item({ to: "/workshop/buddy", label: "Buddy · 智能助手", icon: "chat" })}</div>
-    <div className="analyst-exact-side-title">应用程序构建工具</div>
-    <div className="analyst-exact-side-section">
-      {item({ to: "/workshop/canvas", label: "画布编辑", icon: "layers" })}
-      {item({ to: "/workshop/graph", label: "对象探索", icon: "graph" })}
-    </div>
-    <div className="analyst-exact-side-title">AIP 决策引擎</div>
-    <div className="analyst-exact-side-section">
-      {item({ to: "/aip/logic", label: "AIP 逻辑画布", icon: "workflow" })}
-      {item({ to: "/aip/drafts", label: "Draft 审批台", icon: "inbox" })}
-    </div>
-  </nav>;
-}
-
 type WorkshopVisualHeaderSpec = {
   brand?: string;
   title: string;
@@ -354,14 +305,11 @@ function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
   const spec = WORKSHOP_VISUAL_HEADERS[pathname];
   const navigate = useNavigate();
   const searchRef = useRef<HTMLInputElement>(null);
-  const [actionNotice, setActionNotice] = useState("");
   if (!spec) return null;
+  const isExecutableAction = (label: string) => label === "筛选" || label === "查看内容计划";
   const runHeaderAction = (label: string) => {
-    setActionNotice("");
     if (label === "筛选") { searchRef.current?.focus(); return; }
     if (label === "查看内容计划") { navigate("/workshop/content-campaign"); return; }
-    const noun = label.replace(/^＋\s*/, "");
-    setActionNotice(`${noun}预检已打开：当前没有可提交的正式业务数据，页面不会创建记录或触发外部操作。`);
   };
   return <>
     <div className="workshop-visual-header-left">
@@ -375,8 +323,10 @@ function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
     {spec.search ? <label className="workshop-visual-header-search"><NavIcon name="search" /><input ref={searchRef} type="search" placeholder={spec.search} /></label> : <div />}
     <div className="workshop-visual-header-actions">
       {spec.context ? <span>{spec.context}</span> : null}
-      {spec.actions.map((label, index) => <button key={label} type="button" className={index === spec.actions.length - 1 ? "is-primary" : ""} title={label === "筛选" ? "聚焦当前页只读检索" : label === "查看内容计划" ? "打开内容与活动工作台" : "打开安全预检，不写入业务数据"} onClick={() => runHeaderAction(label)}>{label}</button>)}
-      {actionNotice ? <span className="workshop-header-action-notice" role="status">{actionNotice}<button type="button" aria-label="关闭操作提示" onClick={() => setActionNotice("")}>×</button></span> : null}
+      {spec.actions.map((label, index) => {
+        const executable = isExecutableAction(label);
+        return <button key={label} type="button" className={index === spec.actions.length - 1 ? "is-primary" : ""} disabled={!executable} title={label === "筛选" ? "聚焦当前页只读检索" : label === "查看内容计划" ? "打开内容与活动工作台" : "需要当前页正式业务数据与内部工作流就绪"} onClick={() => runHeaderAction(label)}>{label}</button>;
+      })}
     </div>
   </>;
 }
@@ -410,7 +360,6 @@ export function AppShell() {
   const onAnalystVisualRoute = location.pathname === "/workshop/analyst";
   const onTaskCockpitVisualRoute = location.pathname === "/workshop/cockpit";
   const onWorkshopPrimaryVisualRoute = ["/workshop/cockpit", "/workshop/operations", "/workshop/content-campaign", "/workshop/creator-growth", "/workshop/media-studio", "/workshop/analyst", "/workshop/price-governance", "/workshop/customer"].includes(location.pathname);
-  const onWorkshopFullSidebarVisualRoute = onWorkshopPrimaryVisualRoute;
   const onWorkshopMappedHeaderRoute = Boolean(WORKSHOP_VISUAL_HEADERS[location.pathname]);
   const cockpitDateLabel = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short" }).format(new Date());
 
@@ -700,7 +649,7 @@ export function AppShell() {
             >
               <NavIcon name="chevron" />
             </button>
-            {onWorkshopFullSidebarVisualRoute ? null : <div className="brand-block">
+            {onWorkshopPrimaryVisualRoute ? null : <div className="brand-block">
               <div className="brand-mark" aria-hidden>
                 <NavIcon name="layers" className="brand-mark-icon" />
               </div>
@@ -709,10 +658,10 @@ export function AppShell() {
                 <div className="brand-sub">AOS 企业AI转型方案</div>
               </div>
             </div>}
-            {onWorkshopFullSidebarVisualRoute ? <AnalystVisualNavigation /> : <nav ref={navigationRef} className="nav" aria-label="主导航">
+            <nav ref={navigationRef} className="nav" aria-label="主导航">
               {navNodes}
-            </nav>}
-            {onWorkshopFullSidebarVisualRoute ? null : <div className="aside-foot">AOS · {DEMO_VERSION}</div>}
+            </nav>
+            {onWorkshopPrimaryVisualRoute ? null : <div className="aside-foot">AOS · {DEMO_VERSION}</div>}
           </aside>
           <main className="main">
             <OfflineBanner />
