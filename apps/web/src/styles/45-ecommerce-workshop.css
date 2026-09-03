@@ -971,6 +971,25 @@
 .task-cockpit-visual-review li span { color: #38a169; font-size: 10px; }
 .task-cockpit-visual-review li.is-blocking span { color: #e53e3e; }
 .task-cockpit-visual-review li p { margin: 5px 0 0; color: #718096; font-size: 10px; }
+.task-cockpit-review-section { display: flex; flex-direction: column; min-height: 0; max-height: 34%; border-bottom: 1px solid #e2e8f0; }
+.task-cockpit-review-section:last-of-type { border-bottom: 0; }
+.task-cockpit-review-section > h3 { position: sticky; top: 0; z-index: 1; margin: 0; padding: 8px 12px 6px; background: #f7fafc; color: #4a5568; font-size: 11px; }
+.task-cockpit-review-section > ul { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-top: 0; }
+.task-cockpit-review-section li em { display: block; margin-top: 4px; color: #b7791f; font-size: 10px; font-style: normal; }
+.task-cockpit-review-section li b { display: block; margin-top: 4px; color: #4a5568; font-size: 10px; font-weight: 600; }
+.task-cockpit-review-section li details { margin-top: 5px; }
+.task-cockpit-review-section li summary { color: #718096; font-size: 10px; cursor: pointer; }
+.task-cockpit-review-section li small { display: block; color: #a0aec0; font: 10px/1.45 "SFMono-Regular", Consolas, monospace; word-break: break-all; }
+.task-cockpit-review-tally { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; padding: 0 12px 6px; }
+.task-cockpit-review-tally strong { color: #1a202c; font-size: 11px; }
+.task-cockpit-review-tally span { color: #718096; font-size: 10px; }
+.task-cockpit-review-blank { margin: 0 12px 10px; padding: 12px; border: 1px dashed #cbd5e0; border-radius: 4px; background: #fff; text-align: center; }
+.task-cockpit-review-blank strong { display: block; color: #4a5568; font-size: 11px; }
+.task-cockpit-review-blank span { display: block; margin-top: 4px; color: #a0aec0; font-size: 10px; }
+.task-cockpit-review-gap { margin: 0 12px 10px; }
+.task-cockpit-review-gap summary { color: #b7791f; font-size: 10px; cursor: pointer; }
+.task-cockpit-review-gap ul { padding: 8px 0 0; }
+.task-cockpit-review-gap code { display: block; color: #4a5568; font-size: 10px; }
 .task-cockpit-visual-empty { margin: 12px; padding: 18px 12px; border: 1px dashed #cbd5e0; background: #fff; color: #718096; text-align: center; }
 .task-cockpit-visual-empty strong { color: #4a5568; }
 .task-cockpit-visual-empty p { margin: 5px 0 0; font-size: 10px; }

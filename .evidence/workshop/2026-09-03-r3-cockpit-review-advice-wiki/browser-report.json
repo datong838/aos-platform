@@ -1,0 +1,74 @@
+{
+  "url": "http://127.0.0.1:5173/workshop/cockpit",
+  "reviewPresent": true,
+  "sectionCount": 3,
+  "headings": [
+    "今日复盘",
+    "AI 改进建议",
+    "经验沉淀 Wiki · 今日入库"
+  ],
+  "ariaLabels": [
+    "今日复盘",
+    "AI 改进建议",
+    "经验沉淀 Wiki · 今日入库"
+  ],
+  "sections": [
+    {
+      "label": "今日复盘",
+      "scrollable": false,
+      "text": "今日复盘今日没有可回读的终结任务不使用静态复盘结果或伪成功状态。复盘所需数据缺口 2 项TASK_COCKPIT_STAGE_MAPPING_RUN_SCOPEDaip.production.stage-compilation展开具备 canonical productionContract 的 Run 读取 exact Stage mapping；缺失或漂移时保持失败关闭TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOTbusiness-context:ecommerce.source-readiness由 Shell 单次读取 canonical SourceReadinessEnvelope 并按其独立 cutoff 展示；禁止与 Task cutoff 混算"
+    },
+    {
+      "label": "AI 改进建议",
+      "scrollable": false,
+      "text": "AI 改进建议今日没有可回读的改进观察不复制视觉稿示例建议。"
+    },
+    {
+      "label": "经验沉淀 Wiki · 今日入库",
+      "scrollable": false,
+      "text": "经验沉淀 Wiki · 今日入库今日没有入库记录不复制视觉稿示例 SOP 条目。"
+    }
+  ],
+  "forbiddenSampleText": [],
+  "writeControls": [],
+  "kpiPresent": true,
+  "capabilityCount": 10,
+  "observedReads": [
+    {
+      "endpoint": "improvement-observations",
+      "method": "GET",
+      "status": 200,
+      "count": 0
+    },
+    {
+      "endpoint": "candidates",
+      "method": "GET",
+      "status": 200,
+      "count": 0
+    },
+    {
+      "endpoint": "memories",
+      "method": "GET",
+      "status": 200,
+      "count": 0
+    },
+    {
+      "endpoint": "improvement-observations",
+      "method": "GET",
+      "status": 200,
+      "count": 0
+    },
+    {
+      "endpoint": "candidates",
+      "method": "GET",
+      "status": 200,
+      "count": 0
+    },
+    {
+      "endpoint": "memories",
+      "method": "GET",
+      "status": 200,
+      "count": 0
+    }
+  ]
+}

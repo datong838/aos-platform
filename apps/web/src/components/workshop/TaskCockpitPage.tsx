@@ -30,11 +30,14 @@ import { NavIcon } from "../../shell/icons";
 import type { IconName } from "../../nav";
 import { aipTasksSdk } from "../../api/aipTasks/client";
 import type { TaskSnapshot } from "../../api/aipTasks/contracts";
+import { aipMemorySdk } from "../../api/aipMemory/client";
+import type { MemoryAuthorityItem, MemoryCandidate, MemoryImprovementObservation } from "../../api/aipMemory/contracts";
 
 type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getAnalystView" | "getResponsibilityAssignmentObservation" | "getDispatchControlObservation" | "getTaskCockpitDispatchScenario" | "getTaskCockpitBatchScenario">>;
 type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
 type TaskCommandClient = Pick<typeof aipTasksSdk, "createTask">;
 type CapabilityCatalogClient = Pick<typeof aipAgentControl, "listCapabilities" | "listCatalog">;
+type MemoryReviewClient = Pick<typeof aipMemorySdk, "improvementObservations" | "candidates" | "memories">;
 type InternalTaskCommand = { title: string; colleague: CockpitColleague; recommendation: CockpitRecommendation | null; idempotencyKey: string };
 type InternalTaskReceipt = { task: TaskSnapshot; colleague: CockpitColleague; visibleInCockpit: boolean };
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
@@ -45,6 +48,27 @@ type DispatchScenarioState = { phase: "idle" | "loading" | "ready" | "failed"; r
 type BatchScenarioState = { phase: "idle" | "loading" | "ready" | "failed"; response: BatchScenarioContribution | null };
 type AnalystSuggestionState = { phase: "idle" | "loading" | "ready" | "failed"; response: AnalystViewResponse | null };
 type CapabilityCatalogState = { phase: "idle" | "loading" | "ready" | "failed"; capabilities: CapabilityCatalogResponse | null; agents: AgentCatalogResponse | null };
+type MemorySourcePhase = "idle" | "loading" | "ready" | "failed";
+type MemorySourceState<T> = { phase: MemorySourcePhase; items: T[] };
+type MemoryReviewState = {
+  observations: MemorySourceState<MemoryImprovementObservation>;
+  candidates: MemorySourceState<MemoryCandidate>;
+  memories: MemorySourceState<MemoryAuthorityItem>;
+};
+const IDLE_MEMORY_REVIEW: MemoryReviewState = { observations: { phase: "idle", items: [] }, candidates: { phase: "idle", items: [] }, memories: { phase: "idle", items: [] } };
+const TERMINAL_TASK_STATUSES: readonly TaskCockpitTaskStatus[] = ["completed", "failed", "cancelled", "rolled_back"];
+const RUN_STATUS_LABELS: Record<string, string> = { queued: "已排队", running: "执行中", pausing: "暂停中", paused: "已暂停", succeeded: "执行成功", failed: "执行失败", cancelled: "已取消", unknown: "状态未知" };
+const IMPROVEMENT_CONCLUSION_LABELS: Record<MemoryImprovementObservation["conclusion"], string> = { improved: "已改进", unchanged: "无变化", regressed: "已回退", insufficient_evidence: "证据不足" };
+const IMPROVEMENT_QUALITY_LABELS: Record<MemoryImprovementObservation["quality"], string> = { measured: "实测", estimated: "估算", unknown: "质量未知" };
+const IMPROVEMENT_METRIC_LABELS: Record<string, string> = { task_success_rate: "任务成功率", human_edit_rate: "人工修改率", citation_acceptance_rate: "引用采纳率" };
+const MEMORY_CANDIDATE_LABELS: Record<string, string> = { pending: "待审批", quarantined: "已隔离", rejected: "已驳回", approved: "已批准", promoted: "已入库" };
+const MEMORY_LAYER_LABELS: Record<string, string> = { semantic: "语义记忆", episodic: "情景记忆", working: "工作记忆" };
+function sameLocalDay(left: string | null, right: string | null): boolean {
+  if (!left || !right) return false;
+  const a = new Date(left); const b = new Date(right);
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return false;
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
 type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null; skillContributions: SkillContributionState; assignmentObservation: AssignmentObservationState; dispatchObservation: DispatchObservationState } | null;
 const TASK_STATUSES: readonly { value: "" | TaskCockpitTaskStatus; label: string }[] = [
   { value: "", label: "全部状态" }, { value: "pending", label: "待规划" }, { value: "planning", label: "规划中" }, { value: "awaiting_approval", label: "待审批" }, { value: "approved", label: "已批准" }, { value: "executing", label: "执行中" }, { value: "paused", label: "已暂停" }, { value: "completed", label: "已完成" }, { value: "failed", label: "失败" }, { value: "cancelled", label: "已取消" }, { value: "rolled_back", label: "已回滚" },
@@ -163,10 +187,11 @@ function blockerMatches(dependency: string, tokens: readonly string[]): boolean 
   return tokens.some((token) => normalized.includes(token));
 }
 
-function TaskCockpitVisualSurface({ response, analystSuggestions, capabilityCatalog, phase, status, onStatusChange, onReload, onCreateTask }: {
+function TaskCockpitVisualSurface({ response, analystSuggestions, capabilityCatalog, memoryReview, phase, status, onStatusChange, onReload, onCreateTask }: {
   response: TaskCockpitCoreResponse | null;
   analystSuggestions: AnalystSuggestionState;
   capabilityCatalog: CapabilityCatalogState;
+  memoryReview: MemoryReviewState;
   phase: CorePhase;
   status: "" | TaskCockpitTaskStatus;
   onStatusChange: (status: "" | TaskCockpitTaskStatus) => void;
@@ -258,6 +283,12 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, capabilityCata
   const blocking = blockers.filter((item) => item.severity === "blocking").length;
   const warnings = blockers.filter((item) => item.severity === "warning").length;
   const pending = items.filter((task) => task.status === "pending").length;
+  const reviewCutoff = response?.taskCutoff ?? null;
+  const terminalToday = items.filter((task) => TERMINAL_TASK_STATUSES.includes(task.status) && sameLocalDay(task.run?.finishedAt ?? task.updatedAt, reviewCutoff));
+  const terminalTally = terminalToday.reduce<Partial<Record<TaskCockpitTaskStatus, number>>>((acc, task) => ({ ...acc, [task.status]: (acc[task.status] ?? 0) + 1 }), {});
+  const observationsToday = memoryReview.observations.items.filter((observation) => sameLocalDay(observation.observedAt, reviewCutoff));
+  const candidatesToday = memoryReview.candidates.items.filter((candidate) => sameLocalDay(candidate.createdAt, reviewCutoff));
+  const memoriesToday = memoryReview.memories.items.filter((entry) => sameLocalDay(entry.revision.createdAt, reviewCutoff));
   const sharedCapabilities = SHARED_CAPABILITIES.map(([capabilityId, name]) => {
     const capability = capabilityCatalog.capabilities?.items.find((item) => item.capabilityId === capabilityId) ?? null;
     const links = (capabilityCatalog.agents?.items ?? []).flatMap((item) => item.skills
@@ -407,8 +438,53 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, capabilityCata
       </aside>
 
       <aside className="task-cockpit-visual-review" aria-label="复盘与经验沉淀">
-        <header><h2>复盘 · 经验沉淀</h2><span>{response ? `${blockers.length} 项待核对` : "待验证"}</span></header>
-        {blockers.length ? <ul>{blockers.slice(0, 5).map((blocker) => <li className={`is-${blocker.severity}`} key={blocker.code}><strong>经营复盘所需数据尚未完整</strong><span>需要补充正式业务数据</span><p>当前任务保持待核对，不自动执行。</p><details><summary>查看审计状态码</summary><code>{blocker.code}</code><small>{blocker.dependency}</small><p>{blocker.requiredAction}</p></details></li>)}</ul> : <div className="task-cockpit-visual-empty"><strong>没有可回读复盘</strong><p>不使用静态复盘结果或伪成功状态。</p></div>}
+        <header><h2>复盘 · 经验沉淀</h2><span>{response ? new Date(response.taskCutoff).toLocaleDateString("zh-CN") : "待验证"}</span></header>
+
+        <section className="task-cockpit-review-section" aria-label="今日复盘">
+          <h3>今日复盘</h3>
+          {terminalToday.length ? <>
+            <p className="task-cockpit-review-tally"><strong>{`今日 ${terminalToday.length} 项已终结`}</strong><span>{TERMINAL_TASK_STATUSES.filter((value) => terminalTally[value]).map((value) => `${TASK_STATUS_LABELS[value]} ${terminalTally[value]}`).join(" · ")}</span></p>
+            <ul>{terminalToday.slice(0, 5).map((task) => <li key={task.taskId}>
+              <strong>{task.title}</strong>
+              <span>{TASK_STATUS_LABELS[task.status] ?? "待核对"}{task.run ? ` · 执行记录 ${RUN_STATUS_LABELS[task.run.status] ?? "状态未知"}` : " · 尚无执行记录"}</span>
+              <em>尚无可验证效果结论</em>
+              <details><summary>查看复盘证据边界</summary><small>{`任务 ${task.taskId} · 第 ${task.version} 版 · 终结于 ${formatTime(task.run?.finishedAt ?? task.updatedAt)}`}</small><p>效果结论需要 canonical EffectReview 或 Eval 报告；当前响应不提供逐任务效果评估，页面不据 Run 状态推断业务成效。</p></details>
+            </li>)}</ul>
+          </> : <p className="task-cockpit-review-blank" role="status"><strong>今日没有可回读的终结任务</strong><span>不使用静态复盘结果或伪成功状态。</span></p>}
+          {blockers.length ? <details className="task-cockpit-review-gap"><summary>{`复盘所需数据缺口 ${blockers.length} 项`}</summary><ul>{blockers.slice(0, 5).map((blocker) => <li className={`is-${blocker.severity}`} key={blocker.code}><code>{blocker.code}</code><small>{blocker.dependency}</small><p>{blocker.requiredAction}</p></li>)}</ul></details> : null}
+        </section>
+
+        <section className="task-cockpit-review-section" aria-label="AI 改进建议">
+          <h3>AI 改进建议</h3>
+          {memoryReview.observations.phase === "failed" ? <p className="task-cockpit-review-blank" role="alert"><strong>改进观察权威读取失败</strong><span>不回退为示例建议，也不补造改进结论。</span></p>
+            : observationsToday.length ? <ul>{observationsToday.slice(0, 4).map((observation) => <li key={observation.observationId}>
+              <strong>{`${observation.agentInstanceRef.assetId} · ${IMPROVEMENT_CONCLUSION_LABELS[observation.conclusion]}`}</strong>
+              <span>{observation.metrics.map((metric) => `${IMPROVEMENT_METRIC_LABELS[metric.metricName] ?? metric.metricName} ${(metric.baselineValue * 100).toFixed(0)}% → ${(metric.treatmentValue * 100).toFixed(0)}%`).join("；") || "本次观察没有可回读指标"}</span>
+              <b>{`证据质量：${IMPROVEMENT_QUALITY_LABELS[observation.quality]}`}</b>
+              {observation.conclusion === "insufficient_evidence" || observation.quality !== "measured" ? <em>{`证据不足，仅作为观察，不得当作结论：${observation.limitations.join("；") || "缺少实测证据"}`}</em> : null}
+              <details><summary>查看观察引用</summary><small>{`观察 ${observation.observationId} · EvalContract ${observation.evalContractRef.assetId}@${observation.evalContractRef.revision}${observation.evalReportRef ? ` · EvalReport ${observation.evalReportRef.assetId}@${observation.evalReportRef.revision}` : " · 尚无 EvalReport"}`}</small><small>{`数据截止 ${formatTime(observation.cutoffAt)} · hash ${observation.observationHash.slice(0, 12)}`}</small></details>
+            </li>)}</ul>
+            : <p className="task-cockpit-review-blank" role="status"><strong>今日没有可回读的改进观察</strong><span>不复制视觉稿示例建议。</span></p>}
+        </section>
+
+        <section className="task-cockpit-review-section" aria-label="经验沉淀 Wiki · 今日入库">
+          <h3>经验沉淀 Wiki · 今日入库</h3>
+          {memoryReview.candidates.phase === "failed" || memoryReview.memories.phase === "failed" ? <p className="task-cockpit-review-blank" role="alert"><strong>记忆与知识权威读取失败</strong><span>不回退为示例条目，也不补造入库记录。</span></p>
+            : candidatesToday.length || memoriesToday.length ? <>
+              <p className="task-cockpit-review-tally"><strong>{`今日候选 ${candidatesToday.length}`}</strong><span>{`已入库 ${memoriesToday.length}`}</span></p>
+              <ul>{candidatesToday.slice(0, 4).map((candidate) => <li key={candidate.candidateId}>
+                <strong>{candidate.request.subject.resourceId}</strong>
+                <span>{`${MEMORY_CANDIDATE_LABELS[candidate.status] ?? candidate.status} · ${MEMORY_LAYER_LABELS[candidate.request.candidateLayer] ?? candidate.request.candidateLayer} · 第 ${candidate.version} 版`}</span>
+                {candidate.quarantineReasons.length ? <em>{`隔离原因：${candidate.quarantineReasons.join("；")}`}</em> : null}
+              </li>)}</ul>
+              {memoriesToday.length ? <ul>{memoriesToday.slice(0, 4).map((entry) => <li key={entry.item.memoryItemId}>
+                <strong>{entry.item.subject.resourceId}</strong>
+                <span>{`已入库 · ${MEMORY_LAYER_LABELS[entry.item.memoryLayer] ?? entry.item.memoryLayer} · 第 ${entry.revision.revision} 版`}</span>
+                <details><summary>查看入库引用</summary><small>{`候选 ${entry.revision.candidateId} · hash ${entry.revision.contentHash.slice(0, 12)} · 生效 ${formatTime(entry.revision.effectiveAt)}`}</small></details>
+              </li>)}</ul> : null}
+            </>
+            : <p className="task-cockpit-review-blank" role="status"><strong>今日没有入库记录</strong><span>不复制视觉稿示例 SOP 条目。</span></p>}
+        </section>
       </aside>
     </div>
 
@@ -516,7 +592,7 @@ function ModuleHandoffCommandPanel({ task, run, responsibility, workshopClient, 
   </div>;
 }
 
-export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClient = aipAgentControl, taskClient = aipTasksSdk, capabilityClient }: { client?: CockpitClient; handoffClient?: HandoffCommandClient; taskClient?: TaskCommandClient; capabilityClient?: CapabilityCatalogClient }) {
+export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClient = aipAgentControl, taskClient = aipTasksSdk, capabilityClient, memoryClient }: { client?: CockpitClient; handoffClient?: HandoffCommandClient; taskClient?: TaskCommandClient; capabilityClient?: CapabilityCatalogClient; memoryClient?: MemoryReviewClient }) {
   const [phase, setPhase] = useState<CorePhase>("loading");
   const [response, setResponse] = useState<TaskCockpitCoreResponse | null>(null);
   const [status, setStatus] = useState<"" | TaskCockpitTaskStatus>("");
@@ -525,7 +601,9 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
   const [batchScenario, setBatchScenario] = useState<BatchScenarioState>({ phase: "idle", response: null });
   const [analystSuggestions, setAnalystSuggestions] = useState<AnalystSuggestionState>({ phase: "idle", response: null });
   const [capabilityCatalog, setCapabilityCatalog] = useState<CapabilityCatalogState>({ phase: "idle", capabilities: null, agents: null });
+  const [memoryReview, setMemoryReview] = useState<MemoryReviewState>(IDLE_MEMORY_REVIEW);
   const catalogClient = capabilityClient ?? (client === ecommerceWorkshopClient ? aipAgentControl : null);
+  const reviewClient = memoryClient ?? (client === ecommerceWorkshopClient ? aipMemorySdk : null);
   const coreRequest = useRef(0);
   const detailRequest = useRef(0);
   const scenarioRequest = useRef(0);
@@ -567,6 +645,22 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
         () => { if (scenarioRequestId === scenarioRequest.current) setCapabilityCatalog({ phase: "failed", capabilities: null, agents: null }); },
       );
     } else setCapabilityCatalog({ phase: "idle", capabilities: null, agents: null });
+    if (reviewClient) {
+      const guard = (apply: (next: MemoryReviewState) => MemoryReviewState) => { if (scenarioRequestId === scenarioRequest.current) setMemoryReview(apply); };
+      setMemoryReview({ observations: { phase: "loading", items: [] }, candidates: { phase: "loading", items: [] }, memories: { phase: "loading", items: [] } });
+      void reviewClient.improvementObservations().then(
+        (items) => guard((current) => ({ ...current, observations: { phase: "ready", items } })),
+        () => guard((current) => ({ ...current, observations: { phase: "failed", items: [] } })),
+      );
+      void reviewClient.candidates().then(
+        (items) => guard((current) => ({ ...current, candidates: { phase: "ready", items } })),
+        () => guard((current) => ({ ...current, candidates: { phase: "failed", items: [] } })),
+      );
+      void reviewClient.memories().then(
+        (items) => guard((current) => ({ ...current, memories: { phase: "ready", items } })),
+        () => guard((current) => ({ ...current, memories: { phase: "failed", items: [] } })),
+      );
+    } else setMemoryReview(IDLE_MEMORY_REVIEW);
     if (client.getAnalystView) {
       setAnalystSuggestions({ phase: "loading", response: null });
       void client.getAnalystView().then(
@@ -829,7 +923,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
   })() : null;
 
   return <section className="task-cockpit-page" aria-label="日常任务总控只读视图">
-    <TaskCockpitVisualSurface response={response} analystSuggestions={analystSuggestions} capabilityCatalog={capabilityCatalog} phase={phase} status={status} onStatusChange={(next) => { setStatus(next); load(next); }} onReload={() => load(status, undefined, Boolean(response))} onCreateTask={createInternalTask} />
+    <TaskCockpitVisualSurface response={response} analystSuggestions={analystSuggestions} capabilityCatalog={capabilityCatalog} memoryReview={memoryReview} phase={phase} status={status} onStatusChange={(next) => { setStatus(next); load(next); }} onReload={() => load(status, undefined, Boolean(response))} onCreateTask={createInternalTask} />
     <details className="task-cockpit-audit-context">
       <summary><span>运行、发布与审计上下文</span><small>保持原完整功能；默认收起以恢复视觉稿首屏结构</small></summary>
       <div>

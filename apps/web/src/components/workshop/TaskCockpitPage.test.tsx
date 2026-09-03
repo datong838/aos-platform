@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EcommerceWorkshopClientError, type AnalystViewResponse, type DispatchControlObservation, type DispatchScenarioContribution, type ResponsibilityAssignmentObservation, type TaskCockpitActionReceiptResponse, type TaskCockpitApprovalReviewResponse, type TaskCockpitCoreResponse, type TaskCockpitProductionContextResponse, type TaskCockpitResponsibilityHandoffResponse, type TaskCockpitSkillContributionResponse } from "../../api/ecommerceWorkshop";
 import type { BatchScenarioContribution } from "../../api/ecommerceWorkshop";
 import type { AgentCatalogResponse, CapabilityCatalogResponse } from "../../api/aipAgentControl";
+import type { ArtifactRef, MemoryAuthorityItem, MemoryCandidate, MemoryImprovementObservation, VersionedAssetRef } from "../../api/aipMemory/contracts";
+import type { TaskCockpitRunStatus, TaskCockpitTask, TaskCockpitTaskStatus } from "../../api/ecommerceWorkshop";
 import { TaskCockpitPage } from "./TaskCockpitPage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -67,6 +69,35 @@ const agentCatalog: AgentCatalogResponse = {
     requiredCapabilityIds: ["material.collect"], runtimeReadiness: "blocked", blockers: ["INSTANCE_NOT_INSTALLED"],
   }],
   stats: { definitionCount: 1, installedCount: 0, runnableCount: 0, skillDefinitionCount: 1, capabilityDefinitionCount: 10 },
+};
+const memoryTenant = { orgId: "org-org", projectId: "dev-project" };
+const assetRef = (assetType: string, assetId: string, revision = 1): VersionedAssetRef => ({ assetType, assetId, revision, contentHash: "a".repeat(64) });
+const memoryArtifact = (artifactId: string): ArtifactRef => ({ artifactType: "MemoryPayload", artifactId, revision: "1", contentHash: "b".repeat(64) });
+const memorySource = (licenseId: string) => ({ sourceKind: "task_outcome", observedAt: "2026-08-15T08:30:00Z", freshnessExpiresAt: "2026-09-15T08:30:00Z", licenseId, usagePolicy: "internal_only", contentHash: "c".repeat(64), provider: "aos", providerVersion: "1", applicability: ["ecommerce.customer-service"] });
+const improvementObservations = (): MemoryImprovementObservation[] => [
+  { tenant: memoryTenant, observationId: "observation-success", agentInstanceRef: assetRef("AgentInstance", "agent-customer-service", 3), metricDefinitionRef: assetRef("MetricDefinition", "aip.task_success_rate"), evalContractRef: assetRef("EvalContract", "aip.customer-service"), evalReportRef: assetRef("EvalReport", "report-1"), exposureRefs: [], metrics: [{ metricName: "task_success_rate", baselineValue: 0.62, treatmentValue: 0.78, baselineSampleSize: 120, treatmentSampleSize: 118 }], quality: "measured", sourceRefs: [], cutoffAt: "2026-08-15T09:00:00Z", observedAt: "2026-08-15T09:30:00Z", conclusion: "improved", limitations: [], observationHash: "d".repeat(64) },
+  { tenant: memoryTenant, observationId: "observation-thin", agentInstanceRef: assetRef("AgentInstance", "agent-content-officer", 2), metricDefinitionRef: assetRef("MetricDefinition", "aip.human_edit_rate"), evalContractRef: assetRef("EvalContract", "aip.content-officer"), exposureRefs: [], metrics: [{ metricName: "human_edit_rate", baselineValue: 0.4, treatmentValue: 0.38, baselineSampleSize: 12, treatmentSampleSize: 11 }], quality: "estimated", sourceRefs: [], cutoffAt: "2026-08-15T09:00:00Z", observedAt: "2026-08-15T09:40:00Z", conclusion: "insufficient_evidence", limitations: ["样本量不足"], observationHash: "e".repeat(64) },
+];
+const memoryCandidates = (): MemoryCandidate[] => [
+  { tenant: memoryTenant, candidateId: "candidate-pending", status: "pending", scope: "workspace", version: 1, createdAt: "2026-08-15T09:10:00Z", updatedAt: "2026-08-15T09:10:00Z", quarantineReasons: [], request: { candidateLayer: "semantic", taskId: "task-每日巡检", runId: "run-1", subject: { resourceType: "Playbook", resourceId: "customer-service.allergy", authority: "aip-memory" }, payload: memoryArtifact("payload-pending"), source: memorySource("internal-license"), confidence: 0.8, marking: ["internal"] } },
+  { tenant: memoryTenant, candidateId: "candidate-quarantined", status: "quarantined", scope: "workspace", version: 1, createdAt: "2026-08-15T09:20:00Z", updatedAt: "2026-08-15T09:20:00Z", quarantineReasons: ["来源许可未确认"], request: { candidateLayer: "episodic", taskId: "task-每日巡检", runId: "run-1", subject: { resourceType: "Playbook", resourceId: "content.publish-window", authority: "aip-memory" }, payload: memoryArtifact("payload-quarantined"), source: memorySource("unknown-license"), confidence: 0.5, marking: ["internal"] } },
+  { tenant: memoryTenant, candidateId: "candidate-yesterday", status: "pending", scope: "workspace", version: 1, createdAt: "2026-08-14T09:20:00Z", updatedAt: "2026-08-14T09:20:00Z", quarantineReasons: [], request: { candidateLayer: "episodic", taskId: "task-旧", runId: "run-0", subject: { resourceType: "Playbook", resourceId: "legacy", authority: "aip-memory" }, payload: memoryArtifact("payload-legacy"), source: memorySource("internal-license"), confidence: 0.6, marking: ["internal"] } },
+];
+const memoryItems = (): MemoryAuthorityItem[] => [
+  { item: { tenant: memoryTenant, memoryItemId: "memory-promoted", memoryLayer: "semantic", status: "active", scope: "workspace", currentRevision: 3, version: 3, subject: { resourceType: "Playbook", resourceId: "customer-service.allergy", authority: "aip-memory" }, createdAt: "2026-08-15T09:30:00Z", updatedAt: "2026-08-15T09:30:00Z" }, revision: { tenant: memoryTenant, memoryItemId: "memory-promoted", revision: 3, candidateId: "candidate-approved", contentHash: "f".repeat(64), sourceId: "source-1", sourceRevision: 1, payload: memoryArtifact("payload-promoted"), confidence: 0.9, applicability: ["ecommerce.customer-service"], markings: ["internal"], effectiveAt: "2026-08-15T09:30:00Z", createdBy: "reviewer-1", createdAt: "2026-08-15T09:30:00Z" } },
+  { item: { tenant: memoryTenant, memoryItemId: "memory-legacy", memoryLayer: "episodic", status: "active", scope: "workspace", currentRevision: 1, version: 1, subject: { resourceType: "Playbook", resourceId: "legacy", authority: "aip-memory" }, createdAt: "2026-08-10T09:30:00Z", updatedAt: "2026-08-10T09:30:00Z" }, revision: { tenant: memoryTenant, memoryItemId: "memory-legacy", revision: 1, candidateId: "candidate-legacy", contentHash: "1".repeat(64), sourceId: "source-0", sourceRevision: 1, payload: memoryArtifact("payload-legacy"), confidence: 0.7, applicability: ["ecommerce.content"], markings: ["internal"], effectiveAt: "2026-08-10T09:30:00Z", createdBy: "reviewer-1", createdAt: "2026-08-10T09:30:00Z" } },
+];
+const memoryClient = () => ({ improvementObservations: vi.fn().mockResolvedValue(improvementObservations()), candidates: vi.fn().mockResolvedValue(memoryCandidates()), memories: vi.fn().mockResolvedValue(memoryItems()) });
+const reviewCore = (): TaskCockpitCoreResponse => {
+  const base = core();
+  const task = (taskId: string, title: string, status: TaskCockpitTaskStatus, runStatus: TaskCockpitRunStatus, updatedAt: string): TaskCockpitTask => ({ taskId, taskType: "daily", title, status, priority: 50, version: 1, currentPlanRevisionId: "plan-1", createdAt: "2026-08-15T08:00:00Z", updatedAt, run: { runId: `run-${taskId}`, planRevisionId: "plan-1", status: runStatus, version: 1, startedAt: "2026-08-15T08:10:00Z", finishedAt: updatedAt, createdAt: "2026-08-15T08:00:00Z", updatedAt } });
+  return { ...base, items: [
+    task("task-done", "复盘朋友圈内容表现", "completed", "succeeded", "2026-08-15T09:20:00Z"),
+    task("task-failed", "处理拼多多价格异常", "failed", "failed", "2026-08-15T09:25:00Z"),
+    task("task-cancelled", "中差评挽回跟进", "cancelled", "cancelled", "2026-08-15T09:28:00Z"),
+    task("task-yesterday", "昨日结转任务", "completed", "succeeded", "2026-08-14T09:28:00Z"),
+    ...base.items,
+  ], page: { limit: 20, count: 5, hasMore: false, nextCursor: null } };
 };
 
 describe("TaskCockpitPage", () => {
@@ -320,6 +351,83 @@ describe("TaskCockpitPage", () => {
     const detail = host.querySelector('[role="dialog"][aria-label="数据复盘贡献链"]')!;
     expect(detail.textContent).toContain("能力目录读取失败");
     expect(detail.textContent).toContain("不补造运行记录");
+  });
+
+  it("右侧固定呈现复盘三段并保持视觉稿顺序", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} memoryClient={memoryClient()} />));
+    const sections = [...host.querySelectorAll<HTMLElement>(".task-cockpit-visual-review .task-cockpit-review-section")];
+    expect(sections).toHaveLength(3);
+    expect(sections.map((item) => item.querySelector("h3")?.textContent)).toEqual(["今日复盘", "AI 改进建议", "经验沉淀 Wiki · 今日入库"]);
+  });
+
+  it("今日复盘按 taskCutoff 当日终态任务统计且不冒充效果结论", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(reviewCore()), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} memoryClient={memoryClient()} />));
+    const section = host.querySelector<HTMLElement>('[aria-label="今日复盘"]')!;
+    expect(section.textContent).toContain("今日 3 项已终结");
+    expect(section.textContent).toContain("已完成 1");
+    expect(section.textContent).toContain("失败 1");
+    expect(section.textContent).toContain("已取消 1");
+    expect(section.textContent).toContain("尚无可验证效果结论");
+    expect(section.textContent).toContain("执行记录 执行成功");
+    expect(section.textContent).toContain("执行记录 执行失败");
+    expect(section.textContent).toContain("执行记录 已取消");
+    expect([...section.querySelectorAll("li > span")].map((node) => node.textContent)).not.toContainEqual(expect.stringMatching(/succeeded|cancelled|queued|running/));
+    expect(section.textContent).not.toContain("有效");
+    expect(section.textContent).not.toContain("有害");
+    expect(section.textContent).not.toContain("昨日结转");
+  });
+
+  it("AI 改进建议展示 canonical 结论并对证据不足显式标注", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    const memory = memoryClient();
+    await act(async () => root.render(<TaskCockpitPage client={client} memoryClient={memory} />));
+    const section = host.querySelector<HTMLElement>('[aria-label="AI 改进建议"]')!;
+    expect(section.textContent).toContain("任务成功率");
+    expect(section.textContent).toContain("已改进");
+    expect(section.textContent).toContain("实测");
+    expect(section.textContent).toContain("证据不足");
+    expect(section.textContent).toContain("估算");
+    expect(section.textContent).toContain("样本量不足");
+    expect(memory.improvementObservations).toHaveBeenCalledTimes(1);
+  });
+
+  it("Wiki 今日入库按当日统计候选与条目并显示隔离原因", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    const memory = memoryClient();
+    await act(async () => root.render(<TaskCockpitPage client={client} memoryClient={memory} />));
+    const section = host.querySelector<HTMLElement>('[aria-label="经验沉淀 Wiki · 今日入库"]')!;
+    expect(section.textContent).toContain("今日候选 2");
+    expect(section.textContent).toContain("已入库 1");
+    expect(section.textContent).toContain("待审批");
+    expect(section.textContent).toContain("已隔离");
+    expect(section.textContent).toContain("来源许可未确认");
+    expect(section.textContent).toContain("语义记忆");
+    expect(memory.candidates).toHaveBeenCalledTimes(1);
+    expect(memory.memories).toHaveBeenCalledTimes(1);
+  });
+
+  it("三段各自读取失败时保留段落结构并失败关闭，不回退成缺口列表", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    const memory = { improvementObservations: vi.fn().mockRejectedValue(new Error("offline")), candidates: vi.fn().mockRejectedValue(new Error("offline")), memories: vi.fn().mockRejectedValue(new Error("offline")) };
+    await act(async () => root.render(<TaskCockpitPage client={client} memoryClient={memory} />));
+    const sections = [...host.querySelectorAll<HTMLElement>(".task-cockpit-visual-review .task-cockpit-review-section")];
+    expect(sections).toHaveLength(3);
+    expect(host.querySelector<HTMLElement>('[aria-label="AI 改进建议"]')!.textContent).toContain("权威读取失败");
+    expect(host.querySelector<HTMLElement>('[aria-label="经验沉淀 Wiki · 今日入库"]')!.textContent).toContain("权威读取失败");
+    expect(host.querySelector('.task-cockpit-visual-review .task-cockpit-visual-empty')).toBeNull();
+  });
+
+  it("复盘三段无当日数据时给出可信空态且不产生任何写调用", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    const memory = { improvementObservations: vi.fn().mockResolvedValue([]), candidates: vi.fn().mockResolvedValue([]), memories: vi.fn().mockResolvedValue([]) };
+    await act(async () => root.render(<TaskCockpitPage client={client} memoryClient={memory} />));
+    expect(host.querySelector<HTMLElement>('[aria-label="今日复盘"]')!.textContent).toContain("今日没有可回读的终结任务");
+    expect(host.querySelector<HTMLElement>('[aria-label="AI 改进建议"]')!.textContent).toContain("今日没有可回读的改进观察");
+    expect(host.querySelector<HTMLElement>('[aria-label="经验沉淀 Wiki · 今日入库"]')!.textContent).toContain("今日没有入库记录");
+    expect(host.querySelector('.task-cockpit-visual-review button[data-command]')).toBeNull();
+    expect(Object.keys(memory)).toEqual(["improvementObservations", "candidates", "memories"]);
   });
 
   it("从数字同事目录进入时定位角色并保留返回治理页和贡献回读语义", async () => {
