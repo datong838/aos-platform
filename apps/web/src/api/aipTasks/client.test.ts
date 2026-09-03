@@ -22,6 +22,22 @@ describe("AipTasksSdk", () => {
     }));
   });
 
+  it("重试工作台内部任务时复用调用方固定的幂等键且不写入请求体", async () => {
+    const request = vi.fn().mockResolvedValue(task);
+    const sdk = new AipTasksSdk({ request } as unknown as AipClient);
+    const input = { title: "复盘栖月汇微商城的订单与商品规模", idempotencyKey: "workshop-task-fixed-1" };
+    await sdk.createTask(input);
+    await sdk.createTask(input);
+    expect(request).toHaveBeenNthCalledWith(1, "createTask", {
+      body: { title: input.title },
+      headers: { "Idempotency-Key": input.idempotencyKey },
+    });
+    expect(request).toHaveBeenNthCalledWith(2, "createTask", {
+      body: { title: input.title },
+      headers: { "Idempotency-Key": input.idempotencyKey },
+    });
+  });
+
   it("按 Logic Graph 从服务端发现运行，不读取 localStorage", async () => {
     const request = vi.fn().mockResolvedValue({ items: [], count: 0 });
     const sdk = new AipTasksSdk({ request } as unknown as AipClient);

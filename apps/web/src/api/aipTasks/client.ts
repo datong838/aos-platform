@@ -22,8 +22,18 @@ function idempotencyKey(prefix: string): string {
 export class AipTasksSdk {
   constructor(private readonly client: AipClient = aipClient) {}
 
-  async createTask(input: { title: string; description?: string; type?: string }): Promise<TaskSnapshot> {
-    return parseTaskSnapshot(await this.client.request("createTask", { body: input, headers: { "Idempotency-Key": idempotencyKey("task") } }));
+  async createTask(input: {
+    title: string;
+    description?: string;
+    type?: string;
+    priority?: number;
+    goal?: Record<string, unknown>;
+    idempotencyKey?: string;
+  }): Promise<TaskSnapshot> {
+    const { idempotencyKey: suppliedKey, ...body } = input;
+    const requestKey = suppliedKey?.trim() || idempotencyKey("task");
+    if (requestKey.length < 8 || requestKey.length > 200) throw new TypeError("Idempotency-Key 长度必须为 8～200 个字符");
+    return parseTaskSnapshot(await this.client.request("createTask", { body, headers: { "Idempotency-Key": requestKey } }));
   }
 
   async getTask(taskId: string): Promise<TaskSnapshot> {

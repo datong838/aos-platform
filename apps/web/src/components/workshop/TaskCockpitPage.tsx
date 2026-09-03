@@ -28,9 +28,14 @@ import { WorkshopCumulativeReleaseGateCard } from "./WorkshopCumulativeReleaseGa
 import { WorkshopOperationalReleaseDecisionCard } from "./WorkshopOperationalReleaseDecisionCard";
 import { NavIcon } from "../../shell/icons";
 import type { IconName } from "../../nav";
+import { aipTasksSdk } from "../../api/aipTasks/client";
+import type { TaskSnapshot } from "../../api/aipTasks/contracts";
 
 type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getAnalystView" | "getResponsibilityAssignmentObservation" | "getDispatchControlObservation" | "getTaskCockpitDispatchScenario" | "getTaskCockpitBatchScenario">>;
 type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
+type TaskCommandClient = Pick<typeof aipTasksSdk, "createTask">;
+type InternalTaskCommand = { title: string; colleague: CockpitColleague; recommendation: CockpitRecommendation | null; idempotencyKey: string };
+type InternalTaskReceipt = { task: TaskSnapshot; colleague: CockpitColleague; visibleInCockpit: boolean };
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
 type SkillContributionState = { phase: "loading" | "ready" | "failed"; response: TaskCockpitSkillContributionResponse | null };
 type AssignmentObservationState = { phase: "loading" | "ready" | "failed"; response: ResponsibilityAssignmentObservation | null };
@@ -113,6 +118,27 @@ function cockpitRecommendations(response: AnalystViewResponse | null): CockpitRe
   return candidates.filter((item): item is CockpitRecommendation => item !== null).slice(0, 3);
 }
 
+function recommendColleague(title: string): CockpitColleague {
+  const rules: readonly [RegExp, string][] = [
+    [/(?:售后|投诉|退款|物流|客服)/, "customer_service"],
+    [/(?:客户|会员|私域|召回|触达)/, "private_domain_manager"],
+    [/(?:商品|选品|导购|推荐|价格|比价|库存)/, "shopping_advisor"],
+    [/(?:内容|文案|视频|直播|素材)/, "content_officer"],
+    [/(?:活动|促销|优惠|增长方案)/, "campaign_planner"],
+  ];
+  const roleKey = rules.find(([pattern]) => pattern.test(title))?.[1] ?? "data_advisor";
+  return COCKPIT_COLLEAGUES.find((profile) => profile.roleKey === roleKey) ?? COCKPIT_COLLEAGUES[3];
+}
+
+function validateInternalTaskTitle(value: string): string {
+  const title = value.trim().replace(/\s+/g, " ");
+  if (!title) throw new Error("请先输入需要处理的业务任务");
+  if (title.length < 4 || title.length > 120) throw new Error("任务内容需为 4～120 个字符");
+  if (!/[\u3400-\u9fff]/.test(title)) throw new Error("请使用中文描述真实业务任务");
+  if (DEVELOPMENT_TASK_PATTERN.test(title)) throw new Error("这里只下达业务任务，不能提交开发编号或技术实施事项");
+  return title;
+}
+
 function errorPhase(error: unknown): CorePhase {
   if (!(error instanceof EcommerceWorkshopClientError)) return "failed";
   if (error.status === 401 || error.status === 403) return "forbidden";
@@ -129,13 +155,14 @@ function blockerMatches(dependency: string, tokens: readonly string[]): boolean 
   return tokens.some((token) => normalized.includes(token));
 }
 
-function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status, onStatusChange, onReload }: {
+function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status, onStatusChange, onReload, onCreateTask }: {
   response: TaskCockpitCoreResponse | null;
   analystSuggestions: AnalystSuggestionState;
   phase: CorePhase;
   status: "" | TaskCockpitTaskStatus;
   onStatusChange: (status: "" | TaskCockpitTaskStatus) => void;
   onReload: () => void;
+  onCreateTask: (command: InternalTaskCommand) => Promise<InternalTaskReceipt>;
 }) {
   const entryContext = useRef(() => {
     const search = new URLSearchParams(window.location.search);
@@ -143,6 +170,10 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
   }).current();
   const [commandText, setCommandText] = useState("");
   const [commandNotice, setCommandNotice] = useState("");
+  const [commandPreview, setCommandPreview] = useState<InternalTaskCommand | null>(null);
+  const [commandReceipt, setCommandReceipt] = useState<InternalTaskReceipt | null>(null);
+  const [commandSubmitting, setCommandSubmitting] = useState(false);
+  const [selectedRecommendation, setSelectedRecommendation] = useState<CockpitRecommendation | null>(null);
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [activeColleague, setActiveColleague] = useState<CockpitColleague | null>(() => COCKPIT_COLLEAGUES.find((profile) => profile.roleKey === entryContext.roleKey) ?? null);
   const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({});
@@ -201,8 +232,42 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
   const recommendations = cockpitRecommendations(analystSuggestions.response);
   const fillRecommendation = (recommendation: CockpitRecommendation) => {
     setCommandText(recommendation.text);
+    setSelectedRecommendation(recommendation);
+    setCommandPreview(null);
+    setCommandReceipt(null);
     setCommandNotice("已填入经营参谋指标建议，可继续编辑后下达。");
     commandInputRef.current?.focus();
+  };
+  const updateCommandText = (value: string) => {
+    setCommandText(value);
+    setCommandPreview(null);
+    setCommandReceipt(null);
+    if (selectedRecommendation && !value.includes(selectedRecommendation.text.slice(0, 8))) setSelectedRecommendation(null);
+  };
+  const submitCommand = async () => {
+    if (commandSubmitting) return;
+    let title: string;
+    try { title = validateInternalTaskTitle(commandText); }
+    catch (error) { setCommandNotice(error instanceof Error ? error.message : "任务内容不符合要求"); return; }
+    if (!commandPreview || commandPreview.title !== title) {
+      const colleague = recommendColleague(title);
+      setCommandPreview({ title, colleague, recommendation: selectedRecommendation, idempotencyKey: `workshop-task-${crypto.randomUUID()}` });
+      setCommandReceipt(null);
+      setCommandNotice(`安全预检通过，建议由${colleague.name}承接；再次点击“确认下达”创建内部业务任务。`);
+      return;
+    }
+    setCommandSubmitting(true);
+    setCommandNotice("正在创建内部业务任务并核对任务列表…");
+    try {
+      const receipt = await onCreateTask(commandPreview);
+      setCommandReceipt(receipt);
+      setCommandPreview(null);
+      setCommandText("");
+      setSelectedRecommendation(null);
+      setCommandNotice(receipt.visibleInCockpit ? `任务受理成功：${receipt.task.id} · 第 ${receipt.task.version} 版 · ${TASK_STATUS_LABELS[receipt.task.status] ?? receipt.task.status} · ${receipt.colleague.name}建议承接 · ${formatTime(receipt.task.createdAt)} · 已在任务流回读。` : `任务已受理：${receipt.task.id}；正在等待任务流回读。`);
+    } catch (error) {
+      setCommandNotice(error instanceof Error ? `任务创建失败：${error.message}` : "任务创建失败，请核对后重试");
+    } finally { setCommandSubmitting(false); }
   };
   const showColleague = (profile: CockpitColleague, trigger: HTMLButtonElement, pinned: boolean, resetViewport = false) => {
     if (resetViewport) {
@@ -254,10 +319,10 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
 
     <div className="task-cockpit-visual-command" aria-label="任务指令与筛选">
       <span aria-hidden="true">ϟ</span>
-      <input ref={commandInputRef} aria-label="任务指令" value={commandText} onChange={(event) => setCommandText(event.target.value)} placeholder="描述业务任务需求，系统将先做安全预检…" />
-      <button type="button" onClick={() => setCommandNotice(commandText.trim() ? `已完成“${commandText.trim()}”的任务预检；当前没有可提交的正式业务数据，未创建任务。` : "请先输入需要处理的业务任务。")}>下达</button>
+      <input ref={commandInputRef} aria-label="任务指令" value={commandText} onChange={(event) => updateCommandText(event.target.value)} placeholder="描述业务任务需求，系统将先做安全预检…" />
+      <button type="button" disabled={commandSubmitting} onClick={() => void submitCommand()}>{commandSubmitting ? "受理中" : commandPreview ? "确认下达" : "下达"}</button>
       <div className="task-cockpit-recommendations" aria-label="经营参谋推荐任务">
-        {recommendations.map((recommendation) => <button
+        {commandNotice ? <p className="task-cockpit-command-notice" role="status" title={commandNotice}>{commandNotice}</p> : recommendations.map((recommendation) => <button
           type="button"
           className="task-cockpit-recommendation"
           key={recommendation.id}
@@ -271,7 +336,9 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
       </div>
       <label>任务状态<select value={status} onChange={(event) => onStatusChange(event.target.value as "" | TaskCockpitTaskStatus)}>{TASK_STATUSES.map((item) => <option key={item.value || "all"} value={item.value}>{item.label}</option>)}</select></label>
       <button type="button" className="is-secondary" onClick={onReload}>重新读取</button>
-      {commandNotice ? <p role="status">{commandNotice}</p> : null}
+      {commandReceipt ? <output className="task-cockpit-command-receipt" aria-label="任务受理回执" hidden>
+        {commandReceipt.task.id} · 第 {commandReceipt.task.version} 版 · {TASK_STATUS_LABELS[commandReceipt.task.status] ?? commandReceipt.task.status} · {commandReceipt.colleague.name}建议承接 · {formatTime(commandReceipt.task.createdAt)}
+      </output> : null}
     </div>
 
     {calendarVisible ? <section className="task-cockpit-calendar-preview" role="status" aria-label="任务日历视图"><header><strong>任务日历</strong><button type="button" onClick={() => setCalendarVisible(false)}>返回任务流</button></header>{items.length ? <div>{items.map((task) => <article key={task.taskId}><strong>{task.title}</strong><span>{TASK_STATUS_LABELS[task.status] ?? "待核对"}</span><small>{response ? new Date(response.taskCutoff).toLocaleDateString("zh-CN") : "日期待核对"}</small></article>)}</div> : <p>当前没有可排入日历的正式业务任务。</p>}</section> : null}
@@ -398,7 +465,7 @@ function ModuleHandoffCommandPanel({ task, run, responsibility, workshopClient, 
   </div>;
 }
 
-export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClient = aipAgentControl }: { client?: CockpitClient; handoffClient?: HandoffCommandClient }) {
+export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClient = aipAgentControl, taskClient = aipTasksSdk }: { client?: CockpitClient; handoffClient?: HandoffCommandClient; taskClient?: TaskCommandClient }) {
   const [phase, setPhase] = useState<CorePhase>("loading");
   const [response, setResponse] = useState<TaskCockpitCoreResponse | null>(null);
   const [status, setStatus] = useState<"" | TaskCockpitTaskStatus>("");
@@ -409,6 +476,30 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
   const coreRequest = useRef(0);
   const detailRequest = useRef(0);
   const scenarioRequest = useRef(0);
+
+  const createInternalTask = async (command: InternalTaskCommand): Promise<InternalTaskReceipt> => {
+    const task = await taskClient.createTask({
+      type: "ecommerce.workshop.business_task",
+      title: command.title,
+      description: `由日常任务总控大屏受理，建议${command.colleague.name}承接。`,
+      priority: 50,
+      idempotencyKey: command.idempotencyKey,
+      goal: {
+        workshopAssignment: { roleKey: command.colleague.roleKey, colleagueName: command.colleague.name, status: "requested" },
+        sourceEvidence: command.recommendation ? { definitionRef: command.recommendation.definitionRef, observationRef: command.recommendation.observationRef, dataCutoff: command.recommendation.dataCutoff } : null,
+        origin: "workshop.task-cockpit",
+      },
+    });
+    const requestId = ++coreRequest.current;
+    setStatus("");
+    const next = await client.getTaskCockpitCore({ status: undefined, limit: 20, cursor: undefined });
+    if (requestId === coreRequest.current) {
+      setResponse(next);
+      setPhase(next.items.length === 0 ? "empty" : "ready");
+      setDetail(null);
+    }
+    return { task, colleague: command.colleague, visibleInCockpit: next.items.some((item) => item.taskId === task.id) };
+  };
 
   const load = (nextStatus: "" | TaskCockpitTaskStatus, cursor?: string, preserve = false) => {
     const requestId = ++coreRequest.current;
@@ -678,7 +769,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
   })() : null;
 
   return <section className="task-cockpit-page" aria-label="日常任务总控只读视图">
-    <TaskCockpitVisualSurface response={response} analystSuggestions={analystSuggestions} phase={phase} status={status} onStatusChange={(next) => { setStatus(next); load(next); }} onReload={() => load(status, undefined, Boolean(response))} />
+    <TaskCockpitVisualSurface response={response} analystSuggestions={analystSuggestions} phase={phase} status={status} onStatusChange={(next) => { setStatus(next); load(next); }} onReload={() => load(status, undefined, Boolean(response))} onCreateTask={createInternalTask} />
     <details className="task-cockpit-audit-context">
       <summary><span>运行、发布与审计上下文</span><small>保持原完整功能；默认收起以恢复视觉稿首屏结构</small></summary>
       <div>

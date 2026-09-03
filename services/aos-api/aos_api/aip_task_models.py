@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+import re
 from typing import Any, Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from aos_api.aip_contracts import (
     ActorRef,
@@ -33,6 +34,37 @@ class CreateTaskRequest(AipContractModel):
         if not cleaned:
             raise ValueError("field must not be empty")
         return cleaned
+
+    @model_validator(mode="after")
+    def _validate_workshop_business_task(self) -> "CreateTaskRequest":
+        if self.type != "ecommerce.workshop.business_task":
+            return self
+        if len(self.title) < 4 or len(self.title) > 120:
+            raise ValueError("workshop business task title must contain 4 to 120 characters")
+        if not re.search(r"[\u3400-\u9fff]", self.title):
+            raise ValueError("workshop business task title must use Chinese business language")
+        if re.search(
+            r"(?:^|\s)(?:R\d+(?:-[0-9A-Z]+)?|W\d+(?:-[0-9A-Z]+)?|BI-W\d+|AOS-\d+)"
+            r"|\b(?:Skill|Provider|AgentRun|Receipt)\b|(?:开发|代码|技术方案)",
+            self.title,
+            re.IGNORECASE,
+        ):
+            raise ValueError("workshop business task title must not contain development work")
+        assignment = self.goal.get("workshopAssignment")
+        if not isinstance(assignment, dict):
+            raise ValueError("goal.workshopAssignment is required for workshop business tasks")
+        allowed_roles = {
+            "customer_service": "客服专员",
+            "private_domain_manager": "私域管家",
+            "shopping_advisor": "导购顾问",
+            "data_advisor": "数据参谋",
+            "content_officer": "内容官",
+            "campaign_planner": "活动策划师",
+        }
+        role_key = assignment.get("roleKey")
+        if allowed_roles.get(role_key) != assignment.get("colleagueName") or assignment.get("status") != "requested":
+            raise ValueError("goal.workshopAssignment must identify a requested workshop colleague")
+        return self
 
 
 class TaskSnapshot(TaskContract):

@@ -132,6 +132,56 @@ describe("TaskCockpitPage", () => {
     expect(client.getAnalystView).toHaveBeenCalledTimes(1);
   });
 
+  it("经两阶段预检创建内部业务 Task，写入建议承接与证据并在任务流回读", async () => {
+    const created = {
+      id: "task-new", type: "ecommerce.workshop.business_task", title: "复盘栖月汇微商城的订单与商品规模", description: "由日常任务总控大屏受理，建议数据参谋承接。", status: "pending" as const,
+      priority: 50, goal: {}, selectionRef: null, policyRevision: null, createdBy: { actorType: "user", actorId: "operator" },
+      createdAt: "2026-09-03T08:00:00Z", currentPlanRevisionId: null, version: 1, updatedAt: "2026-09-03T08:00:00Z",
+    };
+    const readback = core(created.title);
+    readback.items[0] = { ...readback.items[0], taskId: created.id, taskType: created.type, status: "pending", run: null };
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValueOnce(core()).mockResolvedValueOnce(readback), getAnalystView: vi.fn().mockResolvedValue(analystView()), ...unreadDetails };
+    const taskClient = { createTask: vi.fn().mockResolvedValue(created) };
+    await act(async () => root.render(<TaskCockpitPage client={client} taskClient={taskClient} />));
+    const recommendation = [...host.querySelectorAll<HTMLButtonElement>(".task-cockpit-recommendation")].find((item) => item.textContent === "复盘订单与商品规模")!;
+    await act(async () => recommendation.click());
+    const dispatch = [...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === "下达")!;
+    await act(async () => dispatch.click());
+    expect(taskClient.createTask).not.toHaveBeenCalled();
+    expect(host.textContent).toContain("安全预检通过");
+    expect(host.textContent).toContain("导购顾问承接");
+    const confirm = [...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === "确认下达")!;
+    await act(async () => confirm.click());
+    expect(taskClient.createTask).toHaveBeenCalledWith(expect.objectContaining({
+      type: "ecommerce.workshop.business_task",
+      title: expect.stringContaining("栖月汇微商城"),
+      idempotencyKey: expect.stringMatching(/^workshop-task-/),
+      goal: expect.objectContaining({
+        workshopAssignment: { roleKey: "shopping_advisor", colleagueName: "导购顾问", status: "requested" },
+        sourceEvidence: expect.objectContaining({ definitionRef: expect.stringContaining("order_count@1"), observationRef: expect.stringContaining("order_count-observation@1") }),
+      }),
+    }));
+    expect(host.textContent).toContain("任务受理成功：task-new");
+    expect(host.textContent).toContain("已在任务流回读");
+    expect(host.textContent).toContain(created.title);
+    expect(client.getTaskCockpitCore).toHaveBeenLastCalledWith({ status: undefined, limit: 20, cursor: undefined });
+  });
+
+  it("拒绝把开发编号或技术实施事项提交为经营任务", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getAnalystView: vi.fn().mockResolvedValue(analystView()), ...unreadDetails };
+    const taskClient = { createTask: vi.fn() };
+    await act(async () => root.render(<TaskCockpitPage client={client} taskClient={taskClient} />));
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".task-cockpit-recommendation")][0]!.click());
+    const input = host.querySelector<HTMLInputElement>('.task-cockpit-visual-command input[aria-label="任务指令"]')!;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "R3-03 完成前端代码开发");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === "下达")!.click());
+    expect(host.textContent).toContain("不能提交开发编号或技术实施事项");
+    expect(taskClient.createTask).not.toHaveBeenCalled();
+  });
+
   it("经营参谋推荐读取失败时明确降级且不影响任务总控", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getAnalystView: vi.fn().mockRejectedValue(new Error("offline")), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
