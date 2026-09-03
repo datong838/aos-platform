@@ -1,0 +1,37 @@
+{
+  "task_id": "WORKSHOP-R3-01-COCKPIT-VISUAL-STRUCTURE",
+  "result": "WORKSHOP_R3_01_COCKPIT_VISUAL_STRUCTURE_GREEN",
+  "tenant": "org-org/dev-project",
+  "route": "/workshop/cockpit",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "geometry": {
+    "metrics_height": 73,
+    "command_height": 53,
+    "board_height": 425,
+    "columns": [
+      { "label": "执行组", "width": 120 },
+      { "label": "当日经营任务流", "width": 407 },
+      { "label": "策划组", "width": 120 },
+      { "label": "复盘与经验沉淀", "width": 325 }
+    ],
+    "skills_height": 50,
+    "tomorrow_height": 34,
+    "surface_client_height": 635,
+    "surface_scroll_height": 635
+  },
+  "tests": {
+    "focused": "19/19",
+    "web_cumulative": "2423/2423",
+    "production_build": "GREEN"
+  },
+  "browser_evidence": [
+    "current-before.png",
+    "current-top.png",
+    "current-full.png",
+    "current-bottom.png"
+  ],
+  "scope_note": "本任务只封板视觉稿首屏八段结构与四栏比例；交互、数字同事、十项能力和三段复盘由 R3-02 至 R3-07 继续闭合。"
+}

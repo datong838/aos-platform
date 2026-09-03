@@ -109,10 +109,31 @@ describe("TaskCockpitPage", () => {
     expect(host.textContent).toContain("通用任务指令仍失败关闭");
     expect(host.textContent).toContain("执行组"); expect(host.textContent).toContain("策划组");
     expect(host.textContent).toContain("当日任务流 · 执行进度");
-    expect(host.textContent).toContain("复盘 · 权威缺口");
+    expect(host.textContent).toContain("复盘 · 经验沉淀");
     expect(host.textContent).toContain("共享能力 · 待接入");
     expect(host.textContent).toContain("当前页任务1"); expect(host.textContent).toContain("latest Run1");
     expect(host.textContent).not.toMatch(/今日 GMV|六数字同事在线|经验已入库|朋友圈3条内容/);
+  });
+
+  it("锁定视觉稿首屏的八段结构与先后顺序", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    const surface = host.querySelector(".task-cockpit-visual-surface");
+    expect(surface).not.toBeNull();
+    expect([...surface!.children].map((node) => node.className)).toEqual([
+      "task-cockpit-visual-metrics",
+      "task-cockpit-visual-command",
+      "task-cockpit-visual-board",
+      "task-cockpit-visual-skills",
+      "task-cockpit-visual-tomorrow",
+    ]);
+    const board = surface!.querySelector(".task-cockpit-visual-board");
+    expect([...board!.children].map((node) => node.getAttribute("aria-label") ?? node.getAttribute("aria-labelledby"))).toEqual([
+      "执行组",
+      "task-cockpit-visual-title",
+      "策划组",
+      "复盘与经验沉淀",
+    ]);
   });
 
   it("呈现六位数字同事并让介绍浮层支持悬停、点击与 Escape，且不伪造个人运行事实", async () => {

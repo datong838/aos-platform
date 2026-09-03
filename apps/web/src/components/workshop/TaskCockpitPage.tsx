@@ -227,8 +227,8 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
         {COCKPIT_COLLEAGUES.filter((profile) => profile.group === "planning").map(renderColleague)}
       </aside>
 
-      <aside className="task-cockpit-visual-review" aria-label="复盘与权威缺口">
-        <header><h2>复盘 · 权威缺口</h2><span>{response ? `${blockers.length} 项` : "待验证"}</span></header>
+      <aside className="task-cockpit-visual-review" aria-label="复盘与经验沉淀">
+        <header><h2>复盘 · 经验沉淀</h2><span>{response ? `${blockers.length} 项待核对` : "待验证"}</span></header>
         {blockers.length ? <ul>{blockers.slice(0, 5).map((blocker) => <li className={`is-${blocker.severity}`} key={blocker.code}><strong>经营复盘所需数据尚未完整</strong><span>需要补充正式业务数据</span><p>当前任务保持待核对，不自动执行。</p><details><summary>查看审计状态码</summary><code>{blocker.code}</code><small>{blocker.dependency}</small><p>{blocker.requiredAction}</p></details></li>)}</ul> : <div className="task-cockpit-visual-empty"><strong>没有可回读复盘</strong><p>不使用静态复盘结果或伪成功状态。</p></div>}
       </aside>
     </div>
