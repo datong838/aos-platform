@@ -20,7 +20,7 @@ import {
 } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { useSourceReadinessSnapshot } from "./SourceReadinessContext";
-import { aipAgentControl, type IssuedHandoff } from "../../api/aipAgentControl";
+import { aipAgentControl, type AgentCatalogResponse, type CapabilityCatalogResponse, type IssuedHandoff } from "../../api/aipAgentControl";
 import type { ModuleHandoffCompileResponse, TaskCockpitTask, TaskCockpitRun } from "../../api/ecommerceWorkshop";
 import { WorkshopOperatingReadinessCard } from "./WorkshopOperatingReadinessCard";
 import { WorkshopDisasterRecoveryCard } from "./WorkshopDisasterRecoveryCard";
@@ -34,6 +34,7 @@ import type { TaskSnapshot } from "../../api/aipTasks/contracts";
 type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getAnalystView" | "getResponsibilityAssignmentObservation" | "getDispatchControlObservation" | "getTaskCockpitDispatchScenario" | "getTaskCockpitBatchScenario">>;
 type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
 type TaskCommandClient = Pick<typeof aipTasksSdk, "createTask">;
+type CapabilityCatalogClient = Pick<typeof aipAgentControl, "listCapabilities" | "listCatalog">;
 type InternalTaskCommand = { title: string; colleague: CockpitColleague; recommendation: CockpitRecommendation | null; idempotencyKey: string };
 type InternalTaskReceipt = { task: TaskSnapshot; colleague: CockpitColleague; visibleInCockpit: boolean };
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
@@ -43,6 +44,7 @@ type DispatchObservationState = { phase: "loading" | "ready" | "failed"; respons
 type DispatchScenarioState = { phase: "idle" | "loading" | "ready" | "failed"; response: DispatchScenarioContribution | null };
 type BatchScenarioState = { phase: "idle" | "loading" | "ready" | "failed"; response: BatchScenarioContribution | null };
 type AnalystSuggestionState = { phase: "idle" | "loading" | "ready" | "failed"; response: AnalystViewResponse | null };
+type CapabilityCatalogState = { phase: "idle" | "loading" | "ready" | "failed"; capabilities: CapabilityCatalogResponse | null; agents: AgentCatalogResponse | null };
 type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null; skillContributions: SkillContributionState; assignmentObservation: AssignmentObservationState; dispatchObservation: DispatchObservationState } | null;
 const TASK_STATUSES: readonly { value: "" | TaskCockpitTaskStatus; label: string }[] = [
   { value: "", label: "全部状态" }, { value: "pending", label: "待规划" }, { value: "planning", label: "规划中" }, { value: "awaiting_approval", label: "待审批" }, { value: "approved", label: "已批准" }, { value: "executing", label: "执行中" }, { value: "paused", label: "已暂停" }, { value: "completed", label: "已完成" }, { value: "failed", label: "失败" }, { value: "cancelled", label: "已取消" }, { value: "rolled_back", label: "已回滚" },
@@ -71,6 +73,12 @@ const COCKPIT_COLLEAGUES: readonly CockpitColleague[] = [
   { id: "content-officer", roleKey: "content_officer", name: "内容官", group: "planning", icon: "film", subtitle: "全平台内容策略与生产编排专家", capability: "选题研究、人群与内容策略、图文文案、短视频策划、多平台适配、事实品牌合规审核、线索识别与归因", boundary: "所有内容先形成草稿；事实、品牌、版权与平台规则通过审核后才能发布", agents: "素材采集、策略规划、文案生成、脚本撰写、内容审核、平台适配" },
   { id: "campaign-planner", roleKey: "campaign_planner", name: "活动策划师", group: "planning", icon: "spark", subtitle: "增长活动设计、协同与止损专家", capability: "机会目标、人群商品机制、预算毛利模拟、跨同事任务编排、执行监控止损、增量复盘", boundary: "方案受库存、毛利、预算、投诉与履约护栏约束；外部合作和高风险动作需审批", agents: "素材采集、策略规划、平台适配、数据复盘" },
 ];
+
+const SHARED_CAPABILITIES = [
+  ["material.collect", "素材采集"], ["strategy.plan", "策略规划"], ["copy.generate", "文案生成"], ["script.compose", "脚本撰写"], ["speech.synthesize", "语音合成"],
+  ["video.compose", "视频合成"], ["content.review", "内容审核"], ["live.orchestrate", "直播编排"], ["platform.adapt", "平台适配"], ["performance.review", "数据复盘"],
+] as const;
+const CAPABILITY_STATUS_LABELS: Record<string, string> = { available: "可用", degraded: "能力受限", disabled: "暂停使用", blocked: "暂不可用", unknown: "待核对" };
 
 type CockpitRecommendation = {
   id: string;
@@ -155,9 +163,10 @@ function blockerMatches(dependency: string, tokens: readonly string[]): boolean 
   return tokens.some((token) => normalized.includes(token));
 }
 
-function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status, onStatusChange, onReload, onCreateTask }: {
+function TaskCockpitVisualSurface({ response, analystSuggestions, capabilityCatalog, phase, status, onStatusChange, onReload, onCreateTask }: {
   response: TaskCockpitCoreResponse | null;
   analystSuggestions: AnalystSuggestionState;
+  capabilityCatalog: CapabilityCatalogState;
   phase: CorePhase;
   status: "" | TaskCockpitTaskStatus;
   onStatusChange: (status: "" | TaskCockpitTaskStatus) => void;
@@ -176,6 +185,7 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
   const [selectedRecommendation, setSelectedRecommendation] = useState<CockpitRecommendation | null>(null);
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [activeColleague, setActiveColleague] = useState<CockpitColleague | null>(() => COCKPIT_COLLEAGUES.find((profile) => profile.roleKey === entryContext.roleKey) ?? null);
+  const [activeCapabilityId, setActiveCapabilityId] = useState<string | null>(null);
   const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({ visibility: "hidden" });
   const surfaceRef = useRef<HTMLElement | null>(null);
   const colleagueTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -188,6 +198,12 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
     window.addEventListener("aos-workshop-cockpit-calendar", toggleCalendar);
     return () => window.removeEventListener("aos-workshop-cockpit-calendar", toggleCalendar);
   }, []);
+  useEffect(() => {
+    if (!activeCapabilityId) return;
+    const close = (event: KeyboardEvent) => { if (event.key === "Escape") setActiveCapabilityId(null); };
+    document.addEventListener("keydown", close);
+    return () => document.removeEventListener("keydown", close);
+  }, [activeCapabilityId]);
   useLayoutEffect(() => {
     if (!activeColleague) return;
     const place = () => {
@@ -242,8 +258,14 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
   const blocking = blockers.filter((item) => item.severity === "blocking").length;
   const warnings = blockers.filter((item) => item.severity === "warning").length;
   const pending = items.filter((task) => task.status === "pending").length;
-  const dependencies = [...new Set(blockers.map((item) => item.dependency))];
-  const businessDependencyLabel = (dependency: string) => dependency.includes("source-readiness") ? "业务数据准备" : dependency.includes("production") ? "内容生产编排" : dependency.includes("binding") ? "数字同事配置" : "业务协作能力";
+  const sharedCapabilities = SHARED_CAPABILITIES.map(([capabilityId, name]) => {
+    const capability = capabilityCatalog.capabilities?.items.find((item) => item.capabilityId === capabilityId) ?? null;
+    const links = (capabilityCatalog.agents?.items ?? []).flatMap((item) => item.skills
+      .filter((skill) => skill.requiredCapabilities.includes(capabilityId))
+      .map((skill) => ({ skillId: skill.skillId, revision: skill.revision, logicId: skill.canonicalLogicId, colleague: item.template.displayName, roleKey: item.template.roleKey })));
+    return { capabilityId, name, capability, links };
+  });
+  const activeCapability = sharedCapabilities.find((item) => item.capabilityId === activeCapabilityId) ?? null;
   const value = (current: number | undefined) => current === undefined ? "未知" : String(current);
   const recommendations = cockpitRecommendations(analystSuggestions.response);
   const fillRecommendation = (recommendation: CockpitRecommendation) => {
@@ -390,8 +412,16 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
       </aside>
     </div>
 
-    <div className="task-cockpit-visual-skills"><strong>共享业务能力</strong><div>{dependencies.length ? dependencies.map((item) => <span key={item}>{businessDependencyLabel(item)}</span>) : <span>等待正式能力配置</span>}</div></div>
+    <div className="task-cockpit-visual-skills"><strong>共享技能 AGENT</strong><div>{sharedCapabilities.map((item) => {
+      const readiness = item.capability?.readiness ?? "unknown";
+      return <button type="button" className={`is-${readiness}`} aria-expanded={activeCapabilityId === item.capabilityId} aria-controls="task-cockpit-capability-detail" key={item.capabilityId} onClick={() => setActiveCapabilityId((current) => current === item.capabilityId ? null : item.capabilityId)}><i aria-hidden="true" />{item.name}<small>{CAPABILITY_STATUS_LABELS[readiness]}</small></button>;
+    })}</div></div>
     <footer className="task-cockpit-visual-tomorrow"><span>明日预告 · 仅显示已排期业务任务</span><strong>{response ? `${items.filter((task) => task.status === "pending").length} 项待规划` : "计划表未验证"}</strong></footer>
+    {activeCapability ? <section id="task-cockpit-capability-detail" className="task-cockpit-capability-detail" role="dialog" aria-label={`${activeCapability.name}贡献链`}>
+      <header><div><strong>{activeCapability.name}</strong><span>{activeCapability.capabilityId}</span></div><b>{CAPABILITY_STATUS_LABELS[activeCapability.capability?.readiness ?? "unknown"]}</b><button type="button" aria-label="关闭共享能力详情" onClick={() => setActiveCapabilityId(null)}>×</button></header>
+      {activeCapability.capability ? <p>CapabilityRevision · 第 {activeCapability.capability.revision} 版 · {activeCapability.capability.lifecycle === "published" ? "已发布定义" : activeCapability.capability.lifecycle}</p> : <p>{capabilityCatalog.phase === "failed" ? "能力目录读取失败，当前状态保持待核对。" : "当前租户没有可验证的 CapabilityRevision。"}</p>}
+      {activeCapability.links.length ? <ol>{activeCapability.links.map((link) => <li key={`${link.skillId}:${link.revision}:${link.roleKey}`}><strong>{link.skillId} · 第 {link.revision} 版</strong><span>Logic：{link.logicId}</span><span>数字同事：{link.colleague}</span><small>任务总控贡献：可作为业务任务职责编排候选，实际运行仍需绑定与运行时证据。</small></li>)}</ol> : <p>当前没有可验证的 Skill、Logic 与数字同事贡献关系，不补造运行记录。</p>}
+    </section> : null}
     {activeColleague ? <div
       ref={colleaguePopoverRef}
       id="task-cockpit-colleague-popover"
@@ -486,7 +516,7 @@ function ModuleHandoffCommandPanel({ task, run, responsibility, workshopClient, 
   </div>;
 }
 
-export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClient = aipAgentControl, taskClient = aipTasksSdk }: { client?: CockpitClient; handoffClient?: HandoffCommandClient; taskClient?: TaskCommandClient }) {
+export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClient = aipAgentControl, taskClient = aipTasksSdk, capabilityClient }: { client?: CockpitClient; handoffClient?: HandoffCommandClient; taskClient?: TaskCommandClient; capabilityClient?: CapabilityCatalogClient }) {
   const [phase, setPhase] = useState<CorePhase>("loading");
   const [response, setResponse] = useState<TaskCockpitCoreResponse | null>(null);
   const [status, setStatus] = useState<"" | TaskCockpitTaskStatus>("");
@@ -494,6 +524,8 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
   const [dispatchScenario, setDispatchScenario] = useState<DispatchScenarioState>({ phase: "idle", response: null });
   const [batchScenario, setBatchScenario] = useState<BatchScenarioState>({ phase: "idle", response: null });
   const [analystSuggestions, setAnalystSuggestions] = useState<AnalystSuggestionState>({ phase: "idle", response: null });
+  const [capabilityCatalog, setCapabilityCatalog] = useState<CapabilityCatalogState>({ phase: "idle", capabilities: null, agents: null });
+  const catalogClient = capabilityClient ?? (client === ecommerceWorkshopClient ? aipAgentControl : null);
   const coreRequest = useRef(0);
   const detailRequest = useRef(0);
   const scenarioRequest = useRef(0);
@@ -528,6 +560,13 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
     setPhase(preserve && response ? "stale" : "loading");
     setDetail(null);
     const scenarioRequestId = ++scenarioRequest.current;
+    if (catalogClient) {
+      setCapabilityCatalog({ phase: "loading", capabilities: null, agents: null });
+      void Promise.all([catalogClient.listCapabilities(), catalogClient.listCatalog()]).then(
+        ([capabilities, agents]) => { if (scenarioRequestId === scenarioRequest.current) setCapabilityCatalog({ phase: "ready", capabilities, agents }); },
+        () => { if (scenarioRequestId === scenarioRequest.current) setCapabilityCatalog({ phase: "failed", capabilities: null, agents: null }); },
+      );
+    } else setCapabilityCatalog({ phase: "idle", capabilities: null, agents: null });
     if (client.getAnalystView) {
       setAnalystSuggestions({ phase: "loading", response: null });
       void client.getAnalystView().then(
@@ -790,7 +829,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
   })() : null;
 
   return <section className="task-cockpit-page" aria-label="日常任务总控只读视图">
-    <TaskCockpitVisualSurface response={response} analystSuggestions={analystSuggestions} phase={phase} status={status} onStatusChange={(next) => { setStatus(next); load(next); }} onReload={() => load(status, undefined, Boolean(response))} onCreateTask={createInternalTask} />
+    <TaskCockpitVisualSurface response={response} analystSuggestions={analystSuggestions} capabilityCatalog={capabilityCatalog} phase={phase} status={status} onStatusChange={(next) => { setStatus(next); load(next); }} onReload={() => load(status, undefined, Boolean(response))} onCreateTask={createInternalTask} />
     <details className="task-cockpit-audit-context">
       <summary><span>运行、发布与审计上下文</span><small>保持原完整功能；默认收起以恢复视觉稿首屏结构</small></summary>
       <div>

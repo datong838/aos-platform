@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { EcommerceWorkshopClientError, type AnalystViewResponse, type DispatchControlObservation, type DispatchScenarioContribution, type ResponsibilityAssignmentObservation, type TaskCockpitActionReceiptResponse, type TaskCockpitApprovalReviewResponse, type TaskCockpitCoreResponse, type TaskCockpitProductionContextResponse, type TaskCockpitResponsibilityHandoffResponse, type TaskCockpitSkillContributionResponse } from "../../api/ecommerceWorkshop";
 import type { BatchScenarioContribution } from "../../api/ecommerceWorkshop";
+import type { AgentCatalogResponse, CapabilityCatalogResponse } from "../../api/aipAgentControl";
 import { TaskCockpitPage } from "./TaskCockpitPage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -52,6 +53,21 @@ const analystView = (): AnalystViewResponse => ({
     { viewId: "quality", status: "ready", resourceRevision: 1, dataCutoff: "2026-09-03T02:00:00Z", readinessAxes: [], metrics: [analystMetric("failed_source_count", 2), analystMetric("stale_source_count", 1)], authorityRefs: [], blockers: [], countLedger: { denominator: 2, ready: 2, unknown: 0, blocked: 0, conflict: 0 } },
   ], page: { limit: 100, count: 2, hasMore: false, nextCursor: null },
 });
+const capabilityIds = ["material.collect", "strategy.plan", "copy.generate", "script.compose", "speech.synthesize", "video.compose", "content.review", "live.orchestrate", "platform.adapt", "performance.review"];
+const capabilityCatalog: CapabilityCatalogResponse = {
+  tenant: { orgId: "org-org", projectId: "dev-project" }, count: 10, availableCount: 8,
+  items: capabilityIds.map((capabilityId, index) => ({ capabilityId, revision: index + 1, displayName: capabilityId, lifecycle: "published", aliases: [], riskLevel: "medium", requiredDataRefs: [], requiredToolRefs: [], requiredCapabilityRefs: [], readiness: index === 1 ? "degraded" : index === 2 ? "blocked" : "available", readinessReasons: index === 1 ? ["DATA_FRESHNESS_LIMITED"] : index === 2 ? ["BINDING_REQUIRED"] : [], contentHash: String(index + 1).repeat(64).slice(0, 64) })),
+};
+const agentCatalog: AgentCatalogResponse = {
+  tenant: { orgId: "org-org", projectId: "dev-project" },
+  items: [{
+    template: { templateId: "ecommerce.content_officer", revision: 3, displayName: "内容官", roleKey: "content_officer", lifecycle: "published", sourceRef: { resourceType: "AgentTemplate", resourceId: "content-officer", revision: "3", authority: "aip-agent-registry" }, sourceLicense: "internal", manifest: { logicIds: ["ecommerce.content.production"], responsibility: "内容生产", runtimeReadiness: "runnable", blockers: [] }, contentHash: "a".repeat(64) },
+    instance: null,
+    skills: [{ skillId: "ecommerce.skill.material-collect", revision: 2, canonicalLogicId: "ecommerce.content.production", lifecycle: "published", requiredCapabilities: ["material.collect"], riskLevel: "medium", contentHash: "b".repeat(64), logicRevisionRef: null }],
+    requiredCapabilityIds: ["material.collect"], runtimeReadiness: "blocked", blockers: ["INSTANCE_NOT_INSTALLED"],
+  }],
+  stats: { definitionCount: 1, installedCount: 0, runnableCount: 0, skillDefinitionCount: 1, capabilityDefinitionCount: 10 },
+};
 
 describe("TaskCockpitPage", () => {
   let host: HTMLDivElement; let root: Root;
@@ -268,6 +284,42 @@ describe("TaskCockpitPage", () => {
     await act(async () => cards[0]!.click());
     await act(async () => document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
     expect(host.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it("按 canonical 目录呈现十项共享能力并可查看 Skill 到工作台贡献链", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    const capabilityClient = { listCapabilities: vi.fn().mockResolvedValue(capabilityCatalog), listCatalog: vi.fn().mockResolvedValue(agentCatalog) };
+    await act(async () => root.render(<TaskCockpitPage client={client} capabilityClient={capabilityClient} />));
+    const capabilityButtons = [...host.querySelectorAll<HTMLButtonElement>(".task-cockpit-visual-skills button")];
+    expect(capabilityButtons).toHaveLength(10);
+    expect(capabilityButtons.map((item) => item.childNodes[1]?.textContent)).toEqual(["素材采集", "策略规划", "文案生成", "脚本撰写", "语音合成", "视频合成", "内容审核", "直播编排", "平台适配", "数据复盘"]);
+    expect(capabilityButtons[0]?.textContent).toContain("可用");
+    expect(capabilityButtons[1]?.textContent).toContain("能力受限");
+    expect(capabilityButtons[2]?.textContent).toContain("暂不可用");
+    await act(async () => capabilityButtons[0]!.click());
+    const detail = host.querySelector('[role="dialog"][aria-label="素材采集贡献链"]')!;
+    expect(detail.textContent).toContain("CapabilityRevision · 第 1 版");
+    expect(detail.textContent).toContain("ecommerce.skill.material-collect · 第 2 版");
+    expect(detail.textContent).toContain("Logic：ecommerce.content.production");
+    expect(detail.textContent).toContain("数字同事：内容官");
+    expect(detail.textContent).toContain("任务总控贡献");
+    await act(async () => detail.querySelector<HTMLButtonElement>('button[aria-label="关闭共享能力详情"]')!.click());
+    expect(host.querySelector('[aria-label="素材采集贡献链"]')).toBeNull();
+    expect(capabilityClient.listCapabilities).toHaveBeenCalledTimes(1);
+    expect(capabilityClient.listCatalog).toHaveBeenCalledTimes(1);
+  });
+
+  it("能力目录读取失败时仍保留十项产品目录且不伪造贡献关系", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
+    const capabilityClient = { listCapabilities: vi.fn().mockRejectedValue(new Error("offline")), listCatalog: vi.fn().mockRejectedValue(new Error("offline")) };
+    await act(async () => root.render(<TaskCockpitPage client={client} capabilityClient={capabilityClient} />));
+    const capabilityButtons = [...host.querySelectorAll<HTMLButtonElement>(".task-cockpit-visual-skills button")];
+    expect(capabilityButtons).toHaveLength(10);
+    expect(capabilityButtons.every((item) => item.textContent?.includes("待核对"))).toBe(true);
+    await act(async () => capabilityButtons[9]!.click());
+    const detail = host.querySelector('[role="dialog"][aria-label="数据复盘贡献链"]')!;
+    expect(detail.textContent).toContain("能力目录读取失败");
+    expect(detail.textContent).toContain("不补造运行记录");
   });
 
   it("从数字同事目录进入时定位角色并保留返回治理页和贡献回读语义", async () => {
