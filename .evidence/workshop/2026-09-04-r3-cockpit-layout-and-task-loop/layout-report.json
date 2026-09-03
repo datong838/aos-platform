@@ -1,0 +1,103 @@
+{
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "surface": {
+    "selector": ".task-cockpit-visual-surface",
+    "top": 48,
+    "bottom": 683,
+    "left": 308,
+    "right": 1280,
+    "width": 972,
+    "height": 635,
+    "scrollHeight": 635,
+    "clientHeight": 635,
+    "overflowY": "visible",
+    "verticallyScrollable": false,
+    "visible": true
+  },
+  "skills": {
+    "selector": ".task-cockpit-visual-skills",
+    "top": 599,
+    "bottom": 649,
+    "left": 308,
+    "right": 1280,
+    "width": 972,
+    "height": 50,
+    "scrollHeight": 49,
+    "clientHeight": 49,
+    "overflowY": "visible",
+    "verticallyScrollable": false,
+    "visible": true
+  },
+  "tomorrow": {
+    "selector": ".task-cockpit-visual-tomorrow",
+    "top": 649,
+    "bottom": 683,
+    "left": 308,
+    "right": 1280,
+    "width": 972,
+    "height": 34,
+    "scrollHeight": 34,
+    "clientHeight": 34,
+    "overflowY": "visible",
+    "verticallyScrollable": false,
+    "visible": true
+  },
+  "roleColumn": {
+    "selector": ".task-cockpit-visual-role-column",
+    "top": 174,
+    "bottom": 598,
+    "left": 308,
+    "right": 428,
+    "width": 120,
+    "height": 424,
+    "scrollHeight": 424,
+    "clientHeight": 424,
+    "overflowY": "auto",
+    "verticallyScrollable": false,
+    "visible": true
+  },
+  "taskColumn": {
+    "selector": ".task-cockpit-visual-task-column",
+    "top": 174,
+    "bottom": 598,
+    "left": 428,
+    "right": 835,
+    "width": 407,
+    "height": 424,
+    "scrollHeight": 424,
+    "clientHeight": 424,
+    "overflowY": "auto",
+    "verticallyScrollable": false,
+    "visible": true
+  },
+  "review": {
+    "selector": ".task-cockpit-visual-review",
+    "top": 174,
+    "bottom": 598,
+    "left": 955,
+    "right": 1280,
+    "width": 325,
+    "height": 424,
+    "scrollHeight": 424,
+    "clientHeight": 424,
+    "overflowY": "auto",
+    "verticallyScrollable": false,
+    "visible": true
+  },
+  "colleagueCardCount": 6,
+  "lastColleagueCardBottom": 526,
+  "lastColleagueCardFullyVisible": true,
+  "overlaps": {
+    "skills_x_taskColumn": false,
+    "skills_x_roleColumn": false,
+    "skills_x_review": false,
+    "tomorrow_x_skills": false,
+    "tomorrow_x_taskColumn": false
+  },
+  "taskCardCount": 4,
+  "documentScrollable": false,
+  "documentScrollHeight": 720
+}
