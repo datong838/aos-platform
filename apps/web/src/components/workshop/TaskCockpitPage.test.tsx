@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { EcommerceWorkshopClientError, type DispatchControlObservation, type DispatchScenarioContribution, type ResponsibilityAssignmentObservation, type TaskCockpitActionReceiptResponse, type TaskCockpitApprovalReviewResponse, type TaskCockpitCoreResponse, type TaskCockpitProductionContextResponse, type TaskCockpitResponsibilityHandoffResponse, type TaskCockpitSkillContributionResponse } from "../../api/ecommerceWorkshop";
+import { EcommerceWorkshopClientError, type AnalystViewResponse, type DispatchControlObservation, type DispatchScenarioContribution, type ResponsibilityAssignmentObservation, type TaskCockpitActionReceiptResponse, type TaskCockpitApprovalReviewResponse, type TaskCockpitCoreResponse, type TaskCockpitProductionContextResponse, type TaskCockpitResponsibilityHandoffResponse, type TaskCockpitSkillContributionResponse } from "../../api/ecommerceWorkshop";
 import type { BatchScenarioContribution } from "../../api/ecommerceWorkshop";
 import { TaskCockpitPage } from "./TaskCockpitPage";
 
@@ -42,6 +42,16 @@ const batchScenario: BatchScenarioContribution = {
   sideEffectLedger: { prepareExternalCalls: 0, providerCalls: 0, actionAttempts: 0, externalEffects: 0 }, blockers: [batchBlocker], commands: { prepare: false, start: false, cancel: false, reconcile: false }, automaticRetryAllowed: false, externalEffectsAllowed: false, releaseAllowed: false,
 };
 const unreadDetails = { listTaskCockpitRunSteps: vi.fn(), listTaskCockpitRunCheckpoints: vi.fn(), getTaskCockpitRunProductionContext: vi.fn(), getTaskCockpitRunResponsibilityHandoffs: vi.fn(), compileTaskCockpitRunHandoff: vi.fn(), getTaskCockpitRunApprovalReview: vi.fn(), getTaskCockpitRunActionReceipts: vi.fn(), getTaskCockpitRunSkillContributions: vi.fn() };
+const analystMetric = (metricId: string, value: number) => ({ metricId, status: "ready" as const, definitionRef: { resourceType: "MetricDefinitionRevision", resourceId: `workshop.analyst.${metricId}`, revision: 1, contentHash: "a".repeat(64), receiptId: "metric-definition:v1" }, observationRef: { resourceType: "MetricObservation", resourceId: `${metricId}-observation`, revision: 1, contentHash: "b".repeat(64), receiptId: `${metricId}:receipt` }, value, unit: "条", grain: "当前租户", window: "2026-09-03T02:00:00Z", timezone: "Asia/Shanghai", cohortFilter: "栖月汇 canonical 数据", numerator: value, denominator: null, sourceRunRef: null, qualityRef: null, reconciliationRef: null, lineageId: `${metricId}:lineage`, blockers: [] });
+const analystView = (): AnalystViewResponse => ({
+  schemaVersion: "aos.ecommerce-workshop.analyst-view/v1",
+  tenant: { orgId: "org-org", projectId: "dev-project" }, resourceRevision: 1,
+  evaluatedAt: "2026-09-03T02:01:00Z", dataCutoff: "2026-09-03T02:00:00Z", readiness: "degraded",
+  views: [
+    { viewId: "overview", status: "ready", resourceRevision: 1, dataCutoff: "2026-09-03T02:00:00Z", readinessAxes: [], metrics: [analystMetric("order_count", 124), analystMetric("product_count", 57), analystMetric("customer_count", 54)], authorityRefs: [], blockers: [], countLedger: { denominator: 3, ready: 3, unknown: 0, blocked: 0, conflict: 0 } },
+    { viewId: "quality", status: "ready", resourceRevision: 1, dataCutoff: "2026-09-03T02:00:00Z", readinessAxes: [], metrics: [analystMetric("failed_source_count", 2), analystMetric("stale_source_count", 1)], authorityRefs: [], blockers: [], countLedger: { denominator: 2, ready: 2, unknown: 0, blocked: 0, conflict: 0 } },
+  ], page: { limit: 100, count: 2, hasMore: false, nextCursor: null },
+});
 
 describe("TaskCockpitPage", () => {
   let host: HTMLDivElement; let root: Root;
@@ -98,6 +108,36 @@ describe("TaskCockpitPage", () => {
     act(() => dispatch?.click());
     expect(host.querySelector('[role="status"]')?.textContent).toContain("请先输入需要处理的业务任务");
     expect(client.getTaskCockpitCore).toHaveBeenCalledWith({ status: undefined, limit: 20, cursor: undefined });
+  });
+
+  it("从经营参谋精确指标生成中文推荐，点击后回填任务指令并允许继续编辑", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getAnalystView: vi.fn().mockResolvedValue(analystView()), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    const recommendations = [...host.querySelectorAll<HTMLButtonElement>(".task-cockpit-recommendation")];
+    expect(recommendations).toHaveLength(3);
+    expect(recommendations.map((item) => item.textContent)).toEqual(["核对经营数据异常", "复盘订单与商品规模", "梳理客户运营机会"]);
+    expect(recommendations[0]?.dataset.definitionRef).toContain("failed_source_count@1");
+    expect(recommendations[0]?.dataset.observationRef).toContain("failed_source_count-observation@1");
+    expect(host.textContent).not.toMatch(/跟一下张姐|滞销品|本周比价报告/);
+    await act(async () => recommendations[1]?.click());
+    const input = host.querySelector<HTMLInputElement>('.task-cockpit-visual-command input[aria-label="任务指令"]');
+    expect(input?.value).toContain("栖月汇微商城");
+    expect(input?.value).toContain("124 笔订单");
+    expect(document.activeElement).toBe(input);
+    await act(async () => {
+      input!.value = `${input!.value}，并按渠道拆分`;
+      input!.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    expect(input?.value).toContain("并按渠道拆分");
+    expect(client.getAnalystView).toHaveBeenCalledTimes(1);
+  });
+
+  it("经营参谋推荐读取失败时明确降级且不影响任务总控", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getAnalystView: vi.fn().mockRejectedValue(new Error("offline")), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    expect(host.textContent).toContain("暂无可验证推荐任务");
+    expect(host.textContent).toContain("每日巡检");
+    expect(host.querySelectorAll(".task-cockpit-recommendation")).toHaveLength(0);
   });
 
   it("按正式视觉层次呈现真实计数和明确阻断，不复制经营示例", async () => {

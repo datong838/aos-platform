@@ -1,0 +1,389 @@
+- navigation "全局导航":
+  - button "菜单":
+  - button "首页":
+  - button "搜索":
+  - button "通知":
+  - button "历史":
+  - button "项目":
+  - button "应用":
+  - button "数据":
+  - button "帮助":
+  - button "用户":
+- banner:
+  - strong: 栖月汇微商城
+  - generic: /
+  - generic: 日常任务总控大屏
+  - searchbox "搜索任务、同事、关键词…"
+  - generic: 2026/09/03周四
+  - button "日历视图":
+    - text: 日历视图
+- complementary:
+  - button "折叠侧栏" [expanded]:
+  - navigation "主导航":
+    - link "概览":
+      - /url: /
+      - generic: 概览
+    - button "工作台" [expanded]:
+      - generic: 工作台
+    - link "应用列表":
+      - /url: /workshop
+      - generic: 应用列表
+    - link "风险告警管理":
+      - /url: /workshop/inbox
+      - generic: 风险告警管理
+    - link "态势大屏":
+      - /url: /workshop/cop
+      - generic: 态势大屏
+    - link "Buddy · 智能助手":
+      - /url: /workshop/buddy
+      - generic: Buddy · 智能助手
+    - link "分析建模":
+      - /url: /analytics
+      - generic: 分析建模
+    - generic "电商工作台":
+      - link "日常任务总控大屏":
+        - /url: /workshop/cockpit
+        - generic: 日常任务总控大屏
+      - link "内容与活动工作台":
+        - /url: /workshop/content-campaign
+        - generic: 内容与活动工作台
+      - link "统一运营驾驶舱":
+        - /url: /workshop/operations
+        - generic: 统一运营驾驶舱
+      - link "达人邀约驾驶舱":
+        - /url: /workshop/creator-growth
+        - generic: 达人邀约驾驶舱
+      - link "多媒体内容生产":
+        - /url: /workshop/media-studio
+        - generic: 多媒体内容生产
+      - link "经营参谋 · 增长指挥中心":
+        - /url: /workshop/analyst
+        - generic: 经营参谋 · 增长指挥中心
+      - link "价格治理驾驶舱":
+        - /url: /workshop/price-governance
+        - generic: 价格治理驾驶舱
+      - link "客户关系工作台":
+        - /url: /workshop/customer
+        - generic: 客户关系工作台
+    - button "应用程序构建工具" [expanded]:
+      - generic: 应用程序构建工具
+    - link "画布编辑":
+      - /url: /workshop/canvas
+      - generic: 画布编辑
+    - link "组件注册表":
+      - /url: /workshop/widget-registry
+      - generic: 组件注册表
+    - link "变量管理器":
+      - /url: /workshop/variables
+      - generic: 变量管理器
+    - link "主题与样式":
+      - /url: /workshop/styles
+      - generic: 主题与样式
+    - link "模块接口":
+      - /url: /workshop/module-interface
+      - generic: 模块接口
+    - link "事件配置":
+      - /url: /workshop/events
+      - generic: 事件配置
+    - link "发布入口":
+      - /url: /workshop/publish
+      - generic: 发布入口
+    - button "AIP 决策引擎" [expanded]:
+      - generic: AIP 决策引擎
+    - generic: 应用层
+    - link "任务协作助手":
+      - /url: /aip/assist
+      - generic: 任务协作助手
+    - link "智能体配置":
+      - /url: /aip/studio
+      - generic: 智能体配置
+    - link "AIP 分析师":
+      - /url: /aip/analyst
+      - generic: AIP 分析师
+    - generic: 逻辑编排层
+    - link "业务逻辑编排":
+      - /url: /aip/logic
+      - generic: 业务逻辑编排
+    - link "智能体工具配置":
+      - /url: /aip/tools
+      - generic: 智能体工具配置
+    - link "成熟度楼梯":
+      - /url: /aip/maturity
+      - generic: 成熟度楼梯
+    - generic: 智能体
+    - link "上线执行审批":
+      - /url: /aip/production-contracts
+      - generic: 上线执行审批
+    - link "智能体插件":
+      - /url: /aip/capabilities
+      - generic: 智能体插件
+    - link "智能体目录":
+      - /url: /aip/agent-registry
+      - generic: 智能体目录
+    - link "智能体市场":
+      - /url: /aip/agent-marketplace
+      - generic: 智能体市场
+    - link "智能体列表":
+      - /url: /aip/agents
+      - generic: 智能体列表
+    - link "技能发布":
+      - /url: /aip/skill-publish
+      - generic: 技能发布
+    - link "智能体导入":
+      - /url: /aip/agent-import
+      - generic: 智能体导入
+    - link "能力导入":
+      - /url: /aip/capability-import
+      - generic: 能力导入
+    - generic: 评测与治理
+    - link "评测门控":
+      - /url: /aip/evals
+      - generic: 评测门控
+    - link "草稿审批台":
+      - /url: /aip/drafts
+      - generic: 草稿审批台
+    - link "决策谱系":
+      - /url: /aip/lineage
+      - generic: 决策谱系
+    - link "可观测性":
+      - /url: /aip/observability
+      - generic: 可观测性
+    - link "记忆与知识治理":
+      - /url: /aip/memory-governance
+      - generic: 记忆与知识治理
+    - button "模型管理" [expanded]:
+      - generic: 模型管理
+    - link "模型目录":
+      - /url: /aip/model-catalog
+      - generic: 模型目录
+    - link "模型供应商":
+      - /url: /aip/model-providers
+      - generic: 模型供应商
+    - link "模型路由":
+      - /url: /aip/model-router
+      - generic: 模型路由
+    - link "容量管理":
+      - /url: /aip/capacity
+      - generic: 容量管理
+    - link "运行就绪":
+      - /url: /aip/model-runtime
+      - generic: 运行就绪
+    - button "本体 · 数字孪生" [expanded]:
+      - generic: 本体 · 数字孪生
+    - link "本体管理":
+      - /url: /ontology
+      - generic: 本体管理
+    - link "对象探索":
+      - /url: /workshop/graph
+      - generic: 对象探索
+    - link "Funnel 管道":
+      - /url: /ontology/funnel
+      - generic: Funnel 管道
+    - link "OKF funnel":
+      - /url: /ontology/okf-funnel
+      - generic: OKF funnel
+    - link "OKF 概览":
+      - /url: /ontology/okf-overview
+      - generic: OKF 概览
+    - link "图谱健康度":
+      - /url: /ontology/graph-health
+      - generic: 图谱健康度
+    - link "活知识 Wiki":
+      - /url: /ontology/wiki
+      - generic: 活知识 Wiki
+    - link "Wiki 索引":
+      - /url: /ontology/wiki-index
+      - generic: Wiki 索引
+    - link "分支与 Overlay":
+      - /url: /ontology/branches
+      - generic: 分支与 Overlay
+    - button "管道与数据治理" [expanded]:
+      - generic: 管道与数据治理
+    - link "管道构建":
+      - /url: /data/pipelines
+      - generic: 管道构建
+    - link "管道提案":
+      - /url: /data/pipeline-proposals
+      - generic: 管道提案
+    - link "计划编辑器":
+      - /url: /data/schedules
+      - generic: 计划编辑器
+    - link "搭建":
+      - /url: /data/builds
+      - generic: 搭建
+    - link "数据集预览":
+      - /url: /data/datasets
+      - generic: 数据集预览
+    - link "代码库":
+      - /url: /data/code-repos
+      - generic: 代码库
+    - link "数据沿袭":
+      - /url: /data/lineage
+      - generic: 数据沿袭
+    - link "数据健康":
+      - /url: /data/health
+      - generic: 数据健康
+    - button "数据源与同步" [expanded]:
+      - generic: 数据源与同步
+    - link "数据源管理":
+      - /url: /data
+      - generic: 数据源管理
+    - link "连接器目录":
+      - /url: /data/connections
+      - generic: 连接器目录
+    - link "边缘代理":
+      - /url: /data/agents
+      - generic: 边缘代理
+    - link "同步配置":
+      - /url: /data/sync-config
+      - generic: 同步配置
+    - link "同步路由":
+      - /url: /data/sync-routes
+      - generic: 同步路由
+    - link "媒体集":
+      - /url: /data/media-sets
+      - generic: 媒体集
+    - link "文档智能":
+      - /url: /aip/doc-intelligence
+      - generic: 文档智能
+    - button "运维交付":
+      - generic: 运维交付
+- main:
+  - link "跳到模块主内容":
+    - /url: "#ecommerce-workshop-main"
+  - paragraph: 已安装电商工作台
+  - heading "电商日常任务总控大屏" [level=1]
+  - paragraph: 菜单名：日常任务总控大屏
+  - generic: 等待条件
+  - button "专注模式"
+  - generic "模块安装上下文 ecommerce.task-cockpit · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z":
+    - generic: 模块安装上下文
+    - generic: ecommerce.task-cockpit · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z
+  - region "模块主内容":
+    - alert:
+      - strong: 模块能力等待条件
+      - generic: 安装目录尚未给出可用结论；下方业务视图按自身当前 canonical GET 独立判定。
+    - region "日常任务总控只读视图":
+      - region "日常任务总控大屏":
+        - generic "实时经营与任务概览":
+          - strong: "3"
+          - generic: 今日经营任务
+          - generic: 已排除系统验收记录
+          - strong: "3"
+          - generic: 执行中
+          - generic: 活跃状态
+          - strong: "3"
+          - generic: 已绑定执行记录
+          - generic: 不补造缺失记录
+          - strong: "0"
+          - generic: 待补条件
+          - generic: 影响任务执行
+          - strong: "0"
+          - generic: 待规划
+          - generic: 尚未进入执行
+          - strong: "2"
+          - generic: 待接入
+          - generic: 需要补充数据
+          - generic "评估 2026/9/3 13:07:05 · 数据截止 2026/9/3 13:07:05":
+            - strong: 13:07
+            - generic: 评估截止
+            - generic: 2026/9/3
+        - generic "任务指令与筛选":
+          - generic: ϟ
+          - textbox "任务指令":
+            - /placeholder: 描述业务任务需求，系统将先做安全预检…
+          - button "下达"
+          - generic "经营参谋推荐任务":
+            - button "核对经营数据异常"
+            - button "复盘订单与商品规模"
+            - button "梳理客户运营机会"
+          - text: 任务状态
+          - combobox "任务状态":
+            - option "全部状态" [selected]
+            - option "待规划"
+            - option "规划中"
+            - option "待审批"
+            - option "已批准"
+            - option "执行中"
+            - option "已暂停"
+            - option "已完成"
+            - option "失败"
+            - option "已取消"
+            - option "已回滚"
+          - button "重新读取"
+        - complementary "执行组":
+          - heading "执行组" [level=2]
+          - button "客服专员 客户服务与售后风险处置专家 个人运行状态待核对":
+            - strong: 客服专员
+            - generic: 客户服务与售后风险处置专家
+            - emphasis: 个人运行状态待核对
+          - button "私域管家 客户关系沉淀与生命周期运营专家 个人运行状态待核对":
+            - strong: 私域管家
+            - generic: 客户关系沉淀与生命周期运营专家
+            - emphasis: 个人运行状态待核对
+          - button "导购顾问 购物决策支持与转化优化专家 个人运行状态待核对":
+            - strong: 导购顾问
+            - generic: 购物决策支持与转化优化专家
+            - emphasis: 个人运行状态待核对
+        - region "当日经营任务流 · 执行进度":
+          - heading "当日经营任务流 · 执行进度" [level=2]
+          - generic: 3 项
+          - article:
+            - generic: 业务任务
+            - strong: 经营任务自动化 · 受控运行
+            - emphasis: 已批准
+            - generic "执行进度未提供"
+            - generic: 业务任务
+            - generic: 执行记录：待核对 · 第 1 版
+          - article:
+            - generic: 业务任务
+            - strong: 经营任务自动化 · 受控运行
+            - emphasis: 已批准
+            - generic "执行进度未提供"
+            - generic: 业务任务
+            - generic: 执行记录：待核对 · 第 1 版
+          - article:
+            - generic: 业务任务
+            - strong: 经营任务自动化 · 受控运行
+            - emphasis: 已批准
+            - generic "执行进度未提供"
+            - generic: 业务任务
+            - generic: 执行记录：待核对 · 第 1 版
+        - complementary "策划组":
+          - heading "策划组" [level=2]
+          - button "数据参谋 经营洞察、任务编排与效果复盘专家 个人运行状态待核对":
+            - strong: 数据参谋
+            - generic: 经营洞察、任务编排与效果复盘专家
+            - emphasis: 个人运行状态待核对
+          - button "内容官 全平台内容策略与生产编排专家 个人运行状态待核对":
+            - strong: 内容官
+            - generic: 全平台内容策略与生产编排专家
+            - emphasis: 个人运行状态待核对
+          - button "活动策划师 增长活动设计、协同与止损专家 个人运行状态待核对":
+            - strong: 活动策划师
+            - generic: 增长活动设计、协同与止损专家
+            - emphasis: 个人运行状态待核对
+        - complementary "复盘与经验沉淀":
+          - heading "复盘 · 经验沉淀" [level=2]
+          - generic: 2 项待核对
+          - list:
+            - strong: 经营复盘所需数据尚未完整
+            - generic: 需要补充正式业务数据
+            - paragraph: 当前任务保持待核对，不自动执行。
+            - generic "查看审计状态码"
+            - strong: 经营复盘所需数据尚未完整
+            - generic: 需要补充正式业务数据
+            - paragraph: 当前任务保持待核对，不自动执行。
+            - generic "查看审计状态码"
+        - strong: 共享业务能力
+        - generic: 内容生产编排
+        - generic: 业务数据准备
+        - generic: 明日预告 · 仅显示已排期业务任务
+        - strong: 0 项待规划
+      - generic "运行、发布与审计上下文 保持原完整功能；默认收起以恢复视觉稿首屏结构":
+        - generic: 运行、发布与审计上下文
+        - generic: 保持原完整功能；默认收起以恢复视觉稿首屏结构
+    - region "所需业务条件":
+      - heading "所需业务条件" [level=2]
+      - paragraph: 以下条件尚未取得可验证的正式业务数据，页面保持只读并允许重新读取。
+      - generic "查看 13 项数据审计信息"

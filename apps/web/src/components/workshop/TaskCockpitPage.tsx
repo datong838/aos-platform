@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   EcommerceWorkshopClientError,
   ecommerceWorkshopClient,
+  type AnalystViewResponse,
   type DispatchControlObservation,
   type DispatchScenarioContribution,
   type BatchScenarioContribution,
@@ -28,7 +29,7 @@ import { WorkshopOperationalReleaseDecisionCard } from "./WorkshopOperationalRel
 import { NavIcon } from "../../shell/icons";
 import type { IconName } from "../../nav";
 
-type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getResponsibilityAssignmentObservation" | "getDispatchControlObservation" | "getTaskCockpitDispatchScenario" | "getTaskCockpitBatchScenario">>;
+type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getAnalystView" | "getResponsibilityAssignmentObservation" | "getDispatchControlObservation" | "getTaskCockpitDispatchScenario" | "getTaskCockpitBatchScenario">>;
 type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
 type CorePhase = "loading" | "ready" | "empty" | "stale" | "forbidden" | "failed";
 type SkillContributionState = { phase: "loading" | "ready" | "failed"; response: TaskCockpitSkillContributionResponse | null };
@@ -36,6 +37,7 @@ type AssignmentObservationState = { phase: "loading" | "ready" | "failed"; respo
 type DispatchObservationState = { phase: "loading" | "ready" | "failed"; response: DispatchControlObservation | null };
 type DispatchScenarioState = { phase: "idle" | "loading" | "ready" | "failed"; response: DispatchScenarioContribution | null };
 type BatchScenarioState = { phase: "idle" | "loading" | "ready" | "failed"; response: BatchScenarioContribution | null };
+type AnalystSuggestionState = { phase: "idle" | "loading" | "ready" | "failed"; response: AnalystViewResponse | null };
 type DetailState = { runId: string; phase: "loading" | "ready" | "failed"; steps: TaskCockpitStepPageResponse | null; checkpoints: TaskCockpitCheckpointPageResponse | null; productionContext: TaskCockpitProductionContextResponse | null; responsibilityHandoffs: TaskCockpitResponsibilityHandoffResponse | null; approvalReview: TaskCockpitApprovalReviewResponse | null; actionReceipts: TaskCockpitActionReceiptResponse | null; skillContributions: SkillContributionState; assignmentObservation: AssignmentObservationState; dispatchObservation: DispatchObservationState } | null;
 const TASK_STATUSES: readonly { value: "" | TaskCockpitTaskStatus; label: string }[] = [
   { value: "", label: "全部状态" }, { value: "pending", label: "待规划" }, { value: "planning", label: "规划中" }, { value: "awaiting_approval", label: "待审批" }, { value: "approved", label: "已批准" }, { value: "executing", label: "执行中" }, { value: "paused", label: "已暂停" }, { value: "completed", label: "已完成" }, { value: "failed", label: "失败" }, { value: "cancelled", label: "已取消" }, { value: "rolled_back", label: "已回滚" },
@@ -65,6 +67,52 @@ const COCKPIT_COLLEAGUES: readonly CockpitColleague[] = [
   { id: "campaign-planner", roleKey: "campaign_planner", name: "活动策划师", group: "planning", icon: "spark", subtitle: "增长活动设计、协同与止损专家", capability: "机会目标、人群商品机制、预算毛利模拟、跨同事任务编排、执行监控止损、增量复盘", boundary: "方案受库存、毛利、预算、投诉与履约护栏约束；外部合作和高风险动作需审批", agents: "素材采集、策略规划、平台适配、数据复盘" },
 ];
 
+type CockpitRecommendation = {
+  id: string;
+  label: string;
+  text: string;
+  definitionRef: string;
+  observationRef: string;
+  dataCutoff: string;
+};
+
+function cockpitRecommendations(response: AnalystViewResponse | null): CockpitRecommendation[] {
+  if (!response) return [];
+  const exactMetrics = new Map<string, AnalystViewResponse["views"][number]["metrics"][number]>();
+  for (const view of response.views) {
+    for (const metric of view.metrics) {
+      if (metric.status === "ready" && metric.value !== null && metric.definitionRef && metric.observationRef && !exactMetrics.has(metric.metricId)) {
+        exactMetrics.set(metric.metricId, metric);
+      }
+    }
+  }
+  const recommendation = (id: string, label: string, text: string, metricIds: string[]): CockpitRecommendation | null => {
+    const metrics = metricIds.map((metricId) => exactMetrics.get(metricId)).filter((metric) => metric?.definitionRef && metric.observationRef);
+    if (metrics.length !== metricIds.length) return null;
+    return {
+      id,
+      label,
+      text,
+      definitionRef: metrics.map((metric) => `${metric!.definitionRef!.resourceType}:${metric!.definitionRef!.resourceId}@${metric!.definitionRef!.revision}`).join("|"),
+      observationRef: metrics.map((metric) => `${metric!.observationRef!.resourceType}:${metric!.observationRef!.resourceId}@${metric!.observationRef!.revision}`).join("|"),
+      dataCutoff: response.dataCutoff,
+    };
+  };
+  const count = (metricId: string) => Math.max(0, Math.trunc(exactMetrics.get(metricId)?.value ?? 0)).toLocaleString("zh-CN");
+  const positive = (metricId: string) => (exactMetrics.get(metricId)?.value ?? 0) > 0;
+  const storeName = response.tenant.orgId === "org-org" && response.tenant.projectId === "dev-project" ? "栖月汇微商城" : "当前微商城";
+  const qualityMetricIds = [positive("failed_source_count") ? "failed_source_count" : null, positive("stale_source_count") ? "stale_source_count" : null].filter((item): item is string => item !== null);
+  const qualitySummary = [positive("failed_source_count") ? `${count("failed_source_count")} 个异常数据源` : null, positive("stale_source_count") ? `${count("stale_source_count")} 个过期数据源` : null].filter(Boolean).join("和");
+  const operationMetricIds = [exactMetrics.has("order_count") ? "order_count" : null, exactMetrics.has("product_count") ? "product_count" : null, positive("product_review_count") ? "product_review_count" : null].filter((item): item is string => item !== null);
+  const operationSummary = [exactMetrics.has("order_count") ? `${count("order_count")} 笔订单` : null, exactMetrics.has("product_count") ? `${count("product_count")} 个商品` : null, positive("product_review_count") ? `${count("product_review_count")} 条商品评价` : null].filter(Boolean).join("、");
+  const candidates = [
+    qualityMetricIds.length ? recommendation("quality", "核对经营数据异常", `核对${storeName}的${qualitySummary}并生成修复清单`, qualityMetricIds) : null,
+    operationMetricIds.length ? recommendation("operation", "复盘订单与商品规模", `复盘${storeName}的${operationSummary}的经营表现并整理问题清单`, operationMetricIds) : null,
+    exactMetrics.has("customer_count") ? recommendation("customer", "梳理客户运营机会", `分析${storeName}的${count("customer_count")} 位客户分层并形成跟进建议`, ["customer_count"]) : null,
+  ];
+  return candidates.filter((item): item is CockpitRecommendation => item !== null).slice(0, 3);
+}
+
 function errorPhase(error: unknown): CorePhase {
   if (!(error instanceof EcommerceWorkshopClientError)) return "failed";
   if (error.status === 401 || error.status === 403) return "forbidden";
@@ -81,8 +129,9 @@ function blockerMatches(dependency: string, tokens: readonly string[]): boolean 
   return tokens.some((token) => normalized.includes(token));
 }
 
-function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onReload }: {
+function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status, onStatusChange, onReload }: {
   response: TaskCockpitCoreResponse | null;
+  analystSuggestions: AnalystSuggestionState;
   phase: CorePhase;
   status: "" | TaskCockpitTaskStatus;
   onStatusChange: (status: "" | TaskCockpitTaskStatus) => void;
@@ -101,6 +150,7 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
   const colleagueTriggerRef = useRef<HTMLButtonElement | null>(null);
   const colleaguePopoverRef = useRef<HTMLDivElement | null>(null);
   const colleaguePinnedRef = useRef(false);
+  const commandInputRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
     const toggleCalendar = () => setCalendarVisible((value) => !value);
     window.addEventListener("aos-workshop-cockpit-calendar", toggleCalendar);
@@ -148,6 +198,12 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
   const dependencies = [...new Set(blockers.map((item) => item.dependency))];
   const businessDependencyLabel = (dependency: string) => dependency.includes("source-readiness") ? "业务数据准备" : dependency.includes("production") ? "内容生产编排" : dependency.includes("binding") ? "数字同事配置" : "业务协作能力";
   const value = (current: number | undefined) => current === undefined ? "未知" : String(current);
+  const recommendations = cockpitRecommendations(analystSuggestions.response);
+  const fillRecommendation = (recommendation: CockpitRecommendation) => {
+    setCommandText(recommendation.text);
+    setCommandNotice("已填入经营参谋指标建议，可继续编辑后下达。");
+    commandInputRef.current?.focus();
+  };
   const showColleague = (profile: CockpitColleague, trigger: HTMLButtonElement, pinned: boolean, resetViewport = false) => {
     if (resetViewport) {
       const scroller = surfaceRef.current?.closest<HTMLElement>(".content");
@@ -198,8 +254,21 @@ function TaskCockpitVisualSurface({ response, phase, status, onStatusChange, onR
 
     <div className="task-cockpit-visual-command" aria-label="任务指令与筛选">
       <span aria-hidden="true">ϟ</span>
-      <input aria-label="任务指令" value={commandText} onChange={(event) => setCommandText(event.target.value)} placeholder="描述业务任务需求，系统将先做安全预检…" />
+      <input ref={commandInputRef} aria-label="任务指令" value={commandText} onChange={(event) => setCommandText(event.target.value)} placeholder="描述业务任务需求，系统将先做安全预检…" />
       <button type="button" onClick={() => setCommandNotice(commandText.trim() ? `已完成“${commandText.trim()}”的任务预检；当前没有可提交的正式业务数据，未创建任务。` : "请先输入需要处理的业务任务。")}>下达</button>
+      <div className="task-cockpit-recommendations" aria-label="经营参谋推荐任务">
+        {recommendations.map((recommendation) => <button
+          type="button"
+          className="task-cockpit-recommendation"
+          key={recommendation.id}
+          title={`经营参谋指标建议 · 数据截止 ${formatTime(recommendation.dataCutoff)} · 定义与观测已精确核对`}
+          data-definition-ref={recommendation.definitionRef}
+          data-observation-ref={recommendation.observationRef}
+          onClick={() => fillRecommendation(recommendation)}
+        >{recommendation.label}</button>)}
+        {analystSuggestions.phase === "loading" ? <small>正在读取经营建议</small> : null}
+        {analystSuggestions.phase !== "loading" && recommendations.length === 0 ? <small>暂无可验证推荐任务</small> : null}
+      </div>
       <label>任务状态<select value={status} onChange={(event) => onStatusChange(event.target.value as "" | TaskCockpitTaskStatus)}>{TASK_STATUSES.map((item) => <option key={item.value || "all"} value={item.value}>{item.label}</option>)}</select></label>
       <button type="button" className="is-secondary" onClick={onReload}>重新读取</button>
       {commandNotice ? <p role="status">{commandNotice}</p> : null}
@@ -336,6 +405,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
   const [detail, setDetail] = useState<DetailState>(null);
   const [dispatchScenario, setDispatchScenario] = useState<DispatchScenarioState>({ phase: "idle", response: null });
   const [batchScenario, setBatchScenario] = useState<BatchScenarioState>({ phase: "idle", response: null });
+  const [analystSuggestions, setAnalystSuggestions] = useState<AnalystSuggestionState>({ phase: "idle", response: null });
   const coreRequest = useRef(0);
   const detailRequest = useRef(0);
   const scenarioRequest = useRef(0);
@@ -346,6 +416,15 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
     setPhase(preserve && response ? "stale" : "loading");
     setDetail(null);
     const scenarioRequestId = ++scenarioRequest.current;
+    if (client.getAnalystView) {
+      setAnalystSuggestions({ phase: "loading", response: null });
+      void client.getAnalystView().then(
+        (next) => { if (scenarioRequestId === scenarioRequest.current) setAnalystSuggestions({ phase: "ready", response: next }); },
+        () => { if (scenarioRequestId === scenarioRequest.current) setAnalystSuggestions({ phase: "failed", response: null }); },
+      );
+    } else {
+      setAnalystSuggestions({ phase: "idle", response: null });
+    }
     if (client.getTaskCockpitDispatchScenario) {
       setDispatchScenario({ phase: "loading", response: null });
       void client.getTaskCockpitDispatchScenario().then(
@@ -599,7 +678,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
   })() : null;
 
   return <section className="task-cockpit-page" aria-label="日常任务总控只读视图">
-    <TaskCockpitVisualSurface response={response} phase={phase} status={status} onStatusChange={(next) => { setStatus(next); load(next); }} onReload={() => load(status, undefined, Boolean(response))} />
+    <TaskCockpitVisualSurface response={response} analystSuggestions={analystSuggestions} phase={phase} status={status} onStatusChange={(next) => { setStatus(next); load(next); }} onReload={() => load(status, undefined, Boolean(response))} />
     <details className="task-cockpit-audit-context">
       <summary><span>运行、发布与审计上下文</span><small>保持原完整功能；默认收起以恢复视觉稿首屏结构</small></summary>
       <div>

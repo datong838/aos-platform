@@ -892,10 +892,16 @@
 .task-cockpit-visual-metrics .is-warning small { color: #d69e2e; }
 .task-cockpit-visual-command { display: flex; align-items: center; gap: 10px; min-height: 53px; height: 53px; box-sizing: border-box; padding: 8px 24px; border-bottom: 1px solid #bee3f8; background: #ebf8ff; }
 .task-cockpit-visual-command > span { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; border-radius: 6px; background: #2b6cb0; color: #fff; font-size: 20px; }
-.task-cockpit-visual-command input { min-width: 180px; flex: 1; height: 34px; padding: 0 12px; border: 1px solid #bee3f8; border-radius: 4px; background: #fff; color: #718096; }
+.task-cockpit-visual-command input { min-width: 180px; flex: 1 1 240px; height: 34px; padding: 0 12px; border: 1px solid #bee3f8; border-radius: 4px; background: #fff; color: #718096; }
 .task-cockpit-visual-command button { height: 34px; padding: 0 16px; border: 1px solid #2b6cb0; border-radius: 4px; background: #2b6cb0; color: #fff; font-weight: 600; }
 .task-cockpit-visual-command button:disabled { opacity: .58; }
 .task-cockpit-visual-command button.is-secondary { border-color: #bee3f8; background: #fff; color: #2b6cb0; }
+.task-cockpit-recommendations { display: flex; min-width: 120px; max-width: 320px; flex: 0 1 320px; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.task-cockpit-recommendations::-webkit-scrollbar { display: none; }
+.task-cockpit-visual-command .task-cockpit-recommendation { height: 28px; flex: 0 0 auto; padding: 0 10px; border-color: #90cdf4; border-radius: 14px; background: transparent; color: #2b6cb0; font-size: 10px; font-weight: 500; white-space: nowrap; }
+.task-cockpit-visual-command .task-cockpit-recommendation:hover,
+.task-cockpit-visual-command .task-cockpit-recommendation:focus-visible { border-color: #2b6cb0; background: #fff; outline: none; }
+.task-cockpit-recommendations small { color: #718096; font-size: 10px; white-space: nowrap; }
 .task-cockpit-visual-command label { display: flex; align-items: center; gap: 6px; white-space: nowrap; color: #718096; font-size: 10px; }
 .task-cockpit-visual-command select { height: 30px; border: 1px solid #bee3f8; border-radius: 4px; background: #fff; color: #4a5568; }
 .task-cockpit-visual-command > p[role="status"] { position: fixed; z-index: 80; top: 58px; right: 18px; max-width: 520px; margin: 0; padding: 9px 12px; border: 1px solid #b9ddff; border-radius: 6px; background: #eef7ff; box-shadow: 0 8px 24px rgba(37, 80, 124, .16); color: #2468a8; font-size: 12px; }

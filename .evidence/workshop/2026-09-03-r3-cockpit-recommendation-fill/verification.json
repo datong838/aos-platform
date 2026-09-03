@@ -1,0 +1,31 @@
+{
+  "task_id": "WORKSHOP-R3-02-COCKPIT-RECOMMENDATION-FILL",
+  "tenant": "org-org/dev-project",
+  "result": "WORKSHOP_R3_02_COCKPIT_RECOMMENDATION_FILL_GREEN",
+  "source": "/v1/ecommerce-workshop/views/analyst",
+  "rules": [
+    "only status=ready metrics with definitionRef, observationRef and value are consumed",
+    "visual examples are never copied as business recommendations",
+    "recommendation click only fills and focuses the editable command input",
+    "no Task, assignment, external effect or release is created in R3-02"
+  ],
+  "tests": {
+    "focused": "21/21",
+    "web_regression": "2425/2425",
+    "typescript": "GREEN",
+    "production_build": "GREEN"
+  },
+  "browser": {
+    "url": "http://127.0.0.1:5173/workshop/cockpit",
+    "viewport": "1280x720",
+    "visible_recommendations": [
+      "核对经营数据异常",
+      "复盘订单与商品规模",
+      "梳理客户运营机会"
+    ],
+    "click_fill": "复盘栖月汇微商城的57 个商品、5 条商品评价的经营表现并整理问题清单",
+    "continued_edit": "，按渠道拆分",
+    "command_band_height_preserved": "53px",
+    "external_effects": 0
+  }
+}
