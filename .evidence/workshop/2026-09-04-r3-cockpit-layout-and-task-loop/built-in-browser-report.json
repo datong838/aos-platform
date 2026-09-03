@@ -1,0 +1,75 @@
+{
+  "taskId": "WORKSHOP-R3-07-COCKPIT-LAYOUT-TASK-LOOP",
+  "browser": "Codex in-app browser",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "displayName": "栖月汇微商城"
+  },
+  "route": "/workshop/cockpit",
+  "canonicalTaskCount": 4,
+  "interactions": {
+    "analystRecommendationFilledCommand": true,
+    "filledBusinessCommand": "复盘栖月汇微商城的57 个商品、5 条商品评价的经营表现并整理问题清单",
+    "completedFilterResultCount": 0,
+    "filterResetResultCount": 4,
+    "shoppingAdvisorPopoverOpened": true,
+    "strategyCapabilityContributionOpened": true,
+    "reviewSections": [
+      "今日复盘",
+      "AI 改进建议",
+      "经验沉淀 Wiki · 今日入库"
+    ]
+  },
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 720,
+      "boardBottom": 598,
+      "skillsTop": 599,
+      "skillsBottom": 649,
+      "tomorrowTop": 649,
+      "tomorrowBottom": 683,
+      "colleagueCount": 6,
+      "documentScrollable": false,
+      "overlap": false
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "boardBottom": 778,
+      "skillsTop": 779,
+      "skillsBottom": 829,
+      "tomorrowTop": 829,
+      "tomorrowBottom": 863,
+      "colleagueCount": 6,
+      "documentScrollable": false,
+      "overlap": false
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "boardBottom": 958,
+      "skillsTop": 959,
+      "skillsBottom": 1009,
+      "tomorrowTop": 1009,
+      "tomorrowBottom": 1043,
+      "colleagueCount": 6,
+      "documentScrollable": false,
+      "overlap": false
+    }
+  ],
+  "overflowProbe": {
+    "temporaryTaskCount": 12,
+    "taskColumnClientHeight": 424,
+    "taskColumnScrollHeight": 1022,
+    "taskColumnScrollTopAfterScroll": 598.5,
+    "roleColumnScrollTopAfterTaskScroll": 0,
+    "skillsTopBeforeAndAfter": 599,
+    "tomorrowTopBeforeAndAfter": 649,
+    "documentScrollable": false,
+    "restoredCanonicalTaskCount": 4
+  },
+  "businessWrites": 0,
+  "externalEffects": 0
+}
