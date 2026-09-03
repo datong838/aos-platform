@@ -246,6 +246,28 @@ describe("TaskCockpitPage", () => {
     expect(host.querySelector('[role="dialog"]')?.getAttribute("aria-label")).toBe("导购顾问介绍");
     await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')).toBeNull();
+
+    const expectedProfiles = [
+      ["客服专员", "客户服务与售后风险处置专家"],
+      ["私域管家", "客户关系沉淀与生命周期运营专家"],
+      ["导购顾问", "购物决策支持与转化优化专家"],
+      ["数据参谋", "经营洞察、任务编排与效果复盘专家"],
+      ["内容官", "全平台内容策略与生产编排专家"],
+      ["活动策划师", "增长活动设计、协同与止损专家"],
+    ] as const;
+    for (const [index, [name, subtitle]] of expectedProfiles.entries()) {
+      await act(async () => cards[index]!.click());
+      const dialog = host.querySelector(`[role="dialog"][aria-label="${name}介绍"]`)!;
+      expect(dialog.textContent).toContain(subtitle);
+      for (const label of ["专业能力", "工作边界", "常用 Agent", "当前状态", "尚无个人级归因"]) expect(dialog.textContent).toContain(label);
+      await act(async () => dialog.querySelector<HTMLButtonElement>('button[aria-label="关闭数字同事介绍"]')!.click());
+      expect(host.querySelector('[role="dialog"]')).toBeNull();
+      expect(document.activeElement).toBe(cards[index]);
+    }
+
+    await act(async () => cards[0]!.click());
+    await act(async () => document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
   });
 
   it("从数字同事目录进入时定位角色并保留返回治理页和贡献回读语义", async () => {
@@ -253,6 +275,8 @@ describe("TaskCockpitPage", () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };
     await act(async () => root.render(<TaskCockpitPage client={client} />));
     expect(host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]')).not.toBeNull();
+    expect(host.querySelector('[data-colleague-role="shopping_advisor"]')?.getAttribute("aria-expanded")).toBe("true");
+    expect((host.querySelector('[role="dialog"][aria-label="导购顾问介绍"]') as HTMLElement).style.visibility).toBe("visible");
     expect(host.textContent).toContain("正在回读导购顾问的工作台贡献");
     expect(host.querySelector<HTMLAnchorElement>('[data-testid="colleague-return-registry"]')?.getAttribute("href")).toBe("/aip/agent-registry");
   });

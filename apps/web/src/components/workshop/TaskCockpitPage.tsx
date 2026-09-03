@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
 import {
   EcommerceWorkshopClientError,
@@ -176,48 +176,64 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
   const [selectedRecommendation, setSelectedRecommendation] = useState<CockpitRecommendation | null>(null);
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [activeColleague, setActiveColleague] = useState<CockpitColleague | null>(() => COCKPIT_COLLEAGUES.find((profile) => profile.roleKey === entryContext.roleKey) ?? null);
-  const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({});
+  const [popoverStyle, setPopoverStyle] = useState<CSSProperties>({ visibility: "hidden" });
   const surfaceRef = useRef<HTMLElement | null>(null);
   const colleagueTriggerRef = useRef<HTMLButtonElement | null>(null);
   const colleaguePopoverRef = useRef<HTMLDivElement | null>(null);
-  const colleaguePinnedRef = useRef(false);
+  const colleaguePinnedRef = useRef(Boolean(entryContext.roleKey));
+  const suppressNextColleagueFocusRef = useRef(false);
   const commandInputRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
     const toggleCalendar = () => setCalendarVisible((value) => !value);
     window.addEventListener("aos-workshop-cockpit-calendar", toggleCalendar);
     return () => window.removeEventListener("aos-workshop-cockpit-calendar", toggleCalendar);
   }, []);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!activeColleague) return;
     const place = () => {
       const surface = surfaceRef.current;
-      const trigger = colleagueTriggerRef.current;
       const popover = colleaguePopoverRef.current;
+      const trigger = colleagueTriggerRef.current ?? [...(surface?.querySelectorAll<HTMLButtonElement>("[data-colleague-role]") ?? [])].find((item) => item.dataset.colleagueRole === activeColleague.roleKey) ?? null;
       if (!surface || !trigger || !popover) return;
+      colleagueTriggerRef.current = trigger;
       const rect = trigger.getBoundingClientRect();
       const surfaceRect = surface.getBoundingClientRect();
       const commandBottom = surface.querySelector<HTMLElement>(".task-cockpit-visual-command")?.getBoundingClientRect().bottom ?? surfaceRect.top;
       const skillsTop = surface.querySelector<HTMLElement>(".task-cockpit-visual-skills")?.getBoundingClientRect().top ?? surfaceRect.bottom;
-      const safeTop = commandBottom + 8;
-      const safeBottom = skillsTop - 8;
-      const maxHeight = Math.max(180, safeBottom - safeTop);
+      const safeTop = Math.max(12, commandBottom + 8);
+      const safeBottom = Math.min(window.innerHeight - 12, skillsTop - 8);
+      const maxHeight = Math.max(48, safeBottom - safeTop);
       const popoverRect = popover.getBoundingClientRect();
       const onLeft = rect.left < surfaceRect.left + surfaceRect.width / 2;
       const preferredLeft = onLeft ? rect.right + 10 : rect.left - popoverRect.width - 10;
       const left = Math.max(surfaceRect.left + 10, Math.min(preferredLeft, surfaceRect.right - popoverRect.width - 10));
       const preferredTop = rect.top + rect.height / 2 - Math.min(popoverRect.height, maxHeight) / 2;
       const top = Math.max(safeTop, Math.min(preferredTop, safeBottom - Math.min(popoverRect.height, maxHeight)));
-      setPopoverStyle({ left, top, maxHeight });
+      setPopoverStyle({ left, top, maxHeight, visibility: "visible" });
     };
+    const close = (restoreFocus: boolean) => {
+      const trigger = colleagueTriggerRef.current;
+      colleaguePinnedRef.current = false;
+      setActiveColleague(null);
+      if (restoreFocus && trigger) { suppressNextColleagueFocusRef.current = true; trigger.focus(); }
+    };
+    place();
     const frame = window.requestAnimationFrame(place);
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { colleaguePinnedRef.current = false; setActiveColleague(null); }
+      if (event.key === "Escape") close(true);
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (!colleaguePinnedRef.current) return;
+      const target = event.target;
+      if (!(target instanceof Node) || colleaguePopoverRef.current?.contains(target) || colleagueTriggerRef.current?.contains(target)) return;
+      close(false);
     };
     window.addEventListener("resize", place);
     window.addEventListener("scroll", place, true);
     document.addEventListener("keydown", onKeyDown);
-    return () => { window.cancelAnimationFrame(frame); window.removeEventListener("resize", place); window.removeEventListener("scroll", place, true); document.removeEventListener("keydown", onKeyDown); };
-  }, [activeColleague]);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => { window.cancelAnimationFrame(frame); window.removeEventListener("resize", place); window.removeEventListener("scroll", place, true); document.removeEventListener("keydown", onKeyDown); document.removeEventListener("pointerdown", onPointerDown); };
+  }, [activeColleague, response]);
   const sourceItems = response?.items ?? [];
   const items = sourceItems.filter((task) => !DEVELOPMENT_TASK_PATTERN.test(task.title));
   const excludedDevelopmentTasks = sourceItems.length - items.length;
@@ -279,6 +295,7 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
     }
     colleagueTriggerRef.current = trigger;
     colleaguePinnedRef.current = pinned;
+    if (activeColleague?.id !== profile.id) setPopoverStyle({ visibility: "hidden" });
     setActiveColleague(profile);
   };
   const renderColleague = (profile: CockpitColleague) => <button
@@ -288,9 +305,14 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
     aria-haspopup="dialog"
     aria-expanded={activeColleague?.id === profile.id}
     aria-controls="task-cockpit-colleague-popover"
+    aria-label={`${profile.name}：${profile.subtitle}；当前状态尚无个人级归因`}
+    data-colleague-role={profile.roleKey}
     onMouseEnter={(event) => { if (!colleaguePinnedRef.current) showColleague(profile, event.currentTarget, false); }}
     onMouseLeave={() => { if (!colleaguePinnedRef.current) setActiveColleague(null); }}
-    onFocus={(event) => { if (!colleaguePinnedRef.current) showColleague(profile, event.currentTarget, false); }}
+    onFocus={(event) => {
+      if (suppressNextColleagueFocusRef.current) { suppressNextColleagueFocusRef.current = false; return; }
+      if (!colleaguePinnedRef.current) showColleague(profile, event.currentTarget, false);
+    }}
     onBlur={() => { if (!colleaguePinnedRef.current) setActiveColleague(null); }}
     onClick={(event) => {
       if (activeColleague?.id === profile.id && colleaguePinnedRef.current) { colleaguePinnedRef.current = false; setActiveColleague(null); return; }
@@ -299,8 +321,7 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
   >
     <span aria-hidden="true"><NavIcon name={profile.icon} /></span>
     <strong>{profile.name}</strong>
-    <small>{profile.subtitle}</small>
-    <em>个人运行状态待核对</em>
+    <small><i aria-hidden="true" />状态待核对</small>
   </button>;
   return <section ref={surfaceRef} className={`task-cockpit-visual-surface is-${phase}`} aria-label="日常任务总控大屏">
     {entryContext.roleKey && activeColleague ? <div className="notice" role="status" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, margin: "0 12px 10px" }}>
@@ -380,7 +401,7 @@ function TaskCockpitVisualSurface({ response, analystSuggestions, phase, status,
       aria-modal="false"
       style={popoverStyle}
     >
-      <header><div><strong>{activeColleague.name}</strong><span>{activeColleague.subtitle}</span></div><b>数字同事</b><button type="button" aria-label="关闭数字同事介绍" onClick={() => { colleaguePinnedRef.current = false; setActiveColleague(null); }}>×</button></header>
+      <header><div><strong>{activeColleague.name}</strong><span>{activeColleague.subtitle}</span></div><b>{activeColleague.roleKey === "data_advisor" ? "数字同事 · 总调度" : "数字同事"}</b><button type="button" aria-label="关闭数字同事介绍" onClick={() => { const trigger = colleagueTriggerRef.current; colleaguePinnedRef.current = false; setActiveColleague(null); if (trigger) { suppressNextColleagueFocusRef.current = true; trigger.focus(); } }}>×</button></header>
       <dl>
         <div><dt>专业能力</dt><dd>{activeColleague.capability}</dd></div>
         <div><dt>工作边界</dt><dd>{activeColleague.boundary}</dd></div>
