@@ -1,0 +1,296 @@
+{
+  "auditedAt": "2026-09-04T02:42:47.657Z",
+  "page": "日常任务总控大屏",
+  "route": "/workshop/cockpit",
+  "targetGeometry1280": {
+    "kpi": 73,
+    "dispatch": 53,
+    "sideColumn": 120,
+    "skills": 50,
+    "tomorrow": 34
+  },
+  "viewports": {
+    "1280x720": {
+      "viewportInner": {
+        "width": 1280,
+        "height": 720
+      },
+      "regions": {
+        "kpi": {
+          "selector": "p-app is-workshop-primary-visual is-task-cockpit-v",
+          "top": 0,
+          "bottom": 720,
+          "left": 0,
+          "right": 1280,
+          "width": 1280,
+          "height": 720
+        },
+        "dispatch": {
+          "selector": "task-cockpit-dispatch-scenario is-blocked",
+          "top": 4049,
+          "bottom": 5997,
+          "left": 320,
+          "right": 1262,
+          "width": 942,
+          "height": 1948
+        },
+        "execGroup": {
+          "selector": "task-cockpit-visual-role-column",
+          "top": 174,
+          "bottom": 598,
+          "left": 308,
+          "right": 428,
+          "width": 120,
+          "height": 424
+        },
+        "taskStream": null,
+        "planGroup": {
+          "selector": "task-cockpit-visual-role-column",
+          "top": 174,
+          "bottom": 598,
+          "left": 835,
+          "right": 955,
+          "width": 120,
+          "height": 424
+        },
+        "review": {
+          "selector": "task-cockpit-visual-review",
+          "top": 174,
+          "bottom": 598,
+          "left": 955,
+          "right": 1280,
+          "width": 325,
+          "height": 424
+        },
+        "skills": {
+          "selector": "task-cockpit-visual-skills",
+          "top": 599,
+          "bottom": 649,
+          "left": 308,
+          "right": 1280,
+          "width": 972,
+          "height": 50
+        },
+        "tomorrow": {
+          "selector": "task-cockpit-visual-tomorrow",
+          "top": 649,
+          "bottom": 683,
+          "left": 308,
+          "right": 1280,
+          "width": 972,
+          "height": 34
+        }
+      },
+      "overlaps": {
+        "共享能力带×明日预告": false,
+        "中央任务流×共享能力带": null,
+        "右侧复盘×共享能力带": false
+      },
+      "anchors": {
+        "R3-02 推荐任务": false,
+        "R3-03 任务指令输入": false,
+        "R3-04 数字同事卡片": 6,
+        "R3-05 共享能力标签": 0,
+        "R3-06 今日复盘": true,
+        "R3-06 AI 改进建议": true,
+        "R3-06 经验沉淀 Wiki": true,
+        "R3-07 明日预告": true
+      },
+      "taskScroller": {
+        "cls": "",
+        "scrollHeight": 8317,
+        "clientHeight": 503
+      },
+      "horizontalOverflow": false,
+      "bodyBottomCut": 0
+    },
+    "1440x900": {
+      "viewportInner": {
+        "width": 1440,
+        "height": 900
+      },
+      "regions": {
+        "kpi": {
+          "selector": "p-app is-workshop-primary-visual is-task-cockpit-v",
+          "top": 0,
+          "bottom": 900,
+          "left": 0,
+          "right": 1440,
+          "width": 1440,
+          "height": 900
+        },
+        "dispatch": {
+          "selector": "task-cockpit-dispatch-scenario is-blocked",
+          "top": 4078,
+          "bottom": 5020,
+          "left": 320,
+          "right": 1422,
+          "width": 1102,
+          "height": 942
+        },
+        "execGroup": {
+          "selector": "task-cockpit-visual-role-column",
+          "top": 174,
+          "bottom": 778,
+          "left": 308,
+          "right": 428,
+          "width": 120,
+          "height": 604
+        },
+        "taskStream": null,
+        "planGroup": {
+          "selector": "task-cockpit-visual-role-column",
+          "top": 174,
+          "bottom": 778,
+          "left": 924,
+          "right": 1044,
+          "width": 120,
+          "height": 604
+        },
+        "review": {
+          "selector": "task-cockpit-visual-review",
+          "top": 174,
+          "bottom": 778,
+          "left": 1044,
+          "right": 1440,
+          "width": 396,
+          "height": 604
+        },
+        "skills": {
+          "selector": "task-cockpit-visual-skills",
+          "top": 779,
+          "bottom": 829,
+          "left": 308,
+          "right": 1440,
+          "width": 1132,
+          "height": 50
+        },
+        "tomorrow": {
+          "selector": "task-cockpit-visual-tomorrow",
+          "top": 829,
+          "bottom": 863,
+          "left": 308,
+          "right": 1440,
+          "width": 1132,
+          "height": 34
+        }
+      },
+      "overlaps": {
+        "共享能力带×明日预告": false,
+        "中央任务流×共享能力带": null,
+        "右侧复盘×共享能力带": false
+      },
+      "anchors": {
+        "R3-02 推荐任务": false,
+        "R3-03 任务指令输入": false,
+        "R3-04 数字同事卡片": 6,
+        "R3-05 共享能力标签": 0,
+        "R3-06 今日复盘": true,
+        "R3-06 AI 改进建议": true,
+        "R3-06 经验沉淀 Wiki": true,
+        "R3-07 明日预告": true
+      },
+      "taskScroller": {
+        "cls": "",
+        "scrollHeight": 6286,
+        "clientHeight": 629
+      },
+      "horizontalOverflow": false,
+      "bodyBottomCut": 0
+    },
+    "1920x1080": {
+      "viewportInner": {
+        "width": 1920,
+        "height": 1080
+      },
+      "regions": {
+        "kpi": {
+          "selector": "p-app is-workshop-primary-visual is-task-cockpit-v",
+          "top": 0,
+          "bottom": 1080,
+          "left": 0,
+          "right": 1920,
+          "width": 1920,
+          "height": 1080
+        },
+        "dispatch": {
+          "selector": "task-cockpit-dispatch-scenario is-blocked",
+          "top": 3957,
+          "bottom": 4729,
+          "left": 320,
+          "right": 1902,
+          "width": 1582,
+          "height": 772
+        },
+        "execGroup": {
+          "selector": "task-cockpit-visual-role-column",
+          "top": 174,
+          "bottom": 958,
+          "left": 308,
+          "right": 428,
+          "width": 120,
+          "height": 784
+        },
+        "taskStream": null,
+        "planGroup": {
+          "selector": "task-cockpit-visual-role-column",
+          "top": 174,
+          "bottom": 958,
+          "left": 1190,
+          "right": 1310,
+          "width": 120,
+          "height": 784
+        },
+        "review": {
+          "selector": "task-cockpit-visual-review",
+          "top": 174,
+          "bottom": 958,
+          "left": 1310,
+          "right": 1920,
+          "width": 610,
+          "height": 784
+        },
+        "skills": {
+          "selector": "task-cockpit-visual-skills",
+          "top": 959,
+          "bottom": 1009,
+          "left": 308,
+          "right": 1920,
+          "width": 1612,
+          "height": 50
+        },
+        "tomorrow": {
+          "selector": "task-cockpit-visual-tomorrow",
+          "top": 1009,
+          "bottom": 1043,
+          "left": 308,
+          "right": 1920,
+          "width": 1612,
+          "height": 34
+        }
+      },
+      "overlaps": {
+        "共享能力带×明日预告": false,
+        "中央任务流×共享能力带": null,
+        "右侧复盘×共享能力带": false
+      },
+      "anchors": {
+        "R3-02 推荐任务": false,
+        "R3-03 任务指令输入": false,
+        "R3-04 数字同事卡片": 6,
+        "R3-05 共享能力标签": 0,
+        "R3-06 今日复盘": true,
+        "R3-06 AI 改进建议": true,
+        "R3-06 经验沉淀 Wiki": true,
+        "R3-07 明日预告": true
+      },
+      "taskScroller": {
+        "cls": "",
+        "scrollHeight": 5539,
+        "clientHeight": 755
+      },
+      "horizontalOverflow": false,
+      "bodyBottomCut": 0
+    }
+  }
+}
