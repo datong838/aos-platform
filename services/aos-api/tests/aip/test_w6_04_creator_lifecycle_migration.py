@@ -26,5 +26,7 @@ def test_w6_004_is_ancestor_of_current_single_head_without_applying_it():
     config = Config(str(root / "alembic.ini"))
     config.set_main_option("script_location", str(root / "alembic"))
     script = ScriptDirectory.from_config(config)
-    assert script.get_heads() == ["w6_009"]
+    heads = script.get_heads()
+    assert len(heads) == 1
+    assert "w6_004" in {revision.revision for revision in script.walk_revisions("base", heads[0])}
     assert script.get_revision("w6_005").down_revision == "w6_004"
