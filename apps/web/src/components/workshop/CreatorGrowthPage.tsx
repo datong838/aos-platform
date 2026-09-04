@@ -1,57 +1,134 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { CREATOR_PREPARE_SCHEMA_VERSION, EcommerceWorkshopClientError, ecommerceWorkshopClient, type CreatorBusinessStage, type CreatorContributionViewResponse, type CreatorGrowthSlice, type CreatorGrowthViewResponse, type ThreeModuleClosureContributionViewResponse } from "../../api/ecommerceWorkshop";
-import { CREATOR_LIFECYCLE_SCHEMA_VERSION, type CreatorLifecycleViewResponse } from "../../api/ecommerceWorkshop";
+import {
+  CREATOR_LIFECYCLE_SCHEMA_VERSION,
+  CREATOR_PREPARE_SCHEMA_VERSION,
+  EcommerceWorkshopClientError,
+  ecommerceWorkshopClient,
+  type CreatorBusinessStage,
+  type CreatorContributionViewResponse,
+  type CreatorGrowthSlice,
+  type CreatorGrowthViewResponse,
+  type CreatorLifecycleViewResponse,
+  type ThreeModuleClosureContributionViewResponse,
+} from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
-import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopViewState";
 import { ThreeModuleClosureCard, unavailableThreeModuleClosure } from "./ThreeModuleClosureCard";
 
 type Client = Pick<typeof ecommerceWorkshopClient, "getCreatorGrowthView" | "getCreatorContributionView"> & Partial<Pick<typeof ecommerceWorkshopClient, "getCreatorLifecycleView" | "getThreeModuleClosureContributionView">>;
-type Phase = AsyncState;
-const LABELS: Record<CreatorBusinessStage, string> = { candidate: "候选", outreach: "邀约准备", contract: "合同", delivery: "履约", relationship: "关系" };
-const TAB_LABELS: Record<CreatorBusinessStage, string> = { candidate: "达人库", outreach: "招募漏斗", contract: "商务签约", delivery: "履约效果", relationship: "长期关系" };
-const TYPES: Record<CreatorBusinessStage, string> = { candidate: "候选画像与匹配", outreach: "邀约批次与启动记录", contract: "合同与条款差异", delivery: "履约证据", relationship: "长期关系评估" };
-const WORKFLOW_PHASE_LABELS: Record<string, string> = { discovery: "发现", evidence: "证据核对", matching: "匹配", batch_prepare: "批次准备", start: "启动" };
-const FINDER_FILTERS = ["全部达人", "合作状态", "内容领域"] as const;
-type FinderFilter = typeof FINDER_FILTERS[number];
-const stateFor = (phase: Phase): AsyncState => phase;
-const short = (value: string) => value.length > 32 ? `${value.slice(0, 14)}…${value.slice(-11)}` : value;
+type PreparationMode = "import" | "batch" | null;
+const STAGES: CreatorBusinessStage[] = ["candidate", "outreach", "contract", "delivery", "relationship"];
+const TABS: Record<CreatorBusinessStage, string> = { candidate: "达人库", outreach: "招募漏斗", contract: "商务签约", delivery: "履约效果", relationship: "长期关系" };
+const STAGE_LABELS: Record<CreatorBusinessStage, string> = { candidate: "候选", outreach: "邀约", contract: "合作", delivery: "交付", relationship: "关系" };
+const STAGE_DESCRIPTIONS: Record<CreatorBusinessStage, string> = { candidate: "达人与品牌、商品和受众的匹配", outreach: "候选去重、准备、批准与回复", contract: "意向、条款、签约与生效", delivery: "内容交付、效果窗口与异常", relationship: "分层、复邀窗口与关系事件" };
+const FILTERS = ["全部", "个人达人", "机构", "有合作记录"] as const;
+const short = (value: string) => value.length > 30 ? `${value.slice(0, 12)}…${value.slice(-10)}` : value;
+
 const unavailableContribution = (next: CreatorGrowthViewResponse): CreatorContributionViewResponse => ({
-  schemaVersion: CREATOR_PREPARE_SCHEMA_VERSION,
-  tenant: next.tenant,
-  evaluatedAt: next.evaluatedAt,
-  atomicSkillRefs: [],
-  logicRef: null,
-  primaryColleague: "导购顾问",
-  collaboratorColleagues: ["数据参谋", "内容官", "活动策划师"],
-  latestBatch: null,
-  blockers: ["CREATOR_PREPARE_AUTHORITY_UNAVAILABLE", "CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"],
-  allowedCommands: [],
-  externalEffectsAllowed: false,
+  schemaVersion: CREATOR_PREPARE_SCHEMA_VERSION, tenant: next.tenant, evaluatedAt: next.evaluatedAt,
+  atomicSkillRefs: [], logicRef: null, primaryColleague: "导购顾问", collaboratorColleagues: ["数据参谋", "内容官", "活动策划师"],
+  latestBatch: null, blockers: ["CREATOR_PREPARE_AUTHORITY_UNAVAILABLE"], allowedCommands: [], externalEffectsAllowed: false,
 });
 const unavailableLifecycle = (next: CreatorGrowthViewResponse): CreatorLifecycleViewResponse => ({
   schemaVersion: CREATOR_LIFECYCLE_SCHEMA_VERSION, tenant: next.tenant, evaluatedAt: next.evaluatedAt,
   latestStart: null, ledger: { eligibleItems: 0, lanes: 0, prepared: 0, accepted: 0, applied: 0, failed: 0, unknown: 0, disputed: 0, completed: 0 },
-  contracts: [], deliveries: [], relationships: [], blockers: ["CREATOR_LIFECYCLE_AUTHORITY_UNAVAILABLE", "CREATOR_BATCH_START_NOT_AVAILABLE"],
-  allowedCommands: [], externalEffectsAllowed: false,
+  contracts: [], deliveries: [], relationships: [], blockers: ["CREATOR_LIFECYCLE_AUTHORITY_UNAVAILABLE"], allowedCommands: [], externalEffectsAllowed: false,
 });
 
+function MetricBar({ items }: { items: Array<[string, number | string, string?]> }) {
+  return <section className="creator-growth-metrics">{items.map(([label, value, note]) => <div key={label}><strong>{value}</strong><span>{label}</span>{note ? <small>{note}</small> : null}</div>)}</section>;
+}
+
+function EmptyBusinessState({ title, description, action, onAction }: { title: string; description: string; action: string; onAction: () => void }) {
+  return <section className="creator-growth-empty"><strong>{title}</strong><p>{description}</p><button type="button" onClick={onAction}>{action}</button></section>;
+}
+
+function CandidateWorkspace({ slice, onPrepare }: { slice: CreatorGrowthSlice; onPrepare: () => void }) {
+  return <>
+    <MetricBar items={[["候选总量", slice.countLedger.input], ["符合条件", slice.countLedger.eligible], ["需要复核", slice.countLedger.needsReview], ["已去重", slice.countLedger.deduplicated], ["当前选中", slice.authorityRefs.length ? 1 : 0]]} />
+    <section className="creator-growth-workspace-section"><header><div><span>达人库</span><h2>候选匹配概览</h2></div><strong>{slice.authorityRefs.length} 条正式记录</strong></header>
+      {slice.authorityRefs.length ? <div className="creator-growth-records">{slice.authorityRefs.map((item) => <article key={`${item.resourceType}:${item.resourceId}:${item.revision}`}><strong>{item.resourceId}</strong><span>{item.resourceType} · 第 {item.revision} 版</span><small>当前租户正式记录</small></article>)}</div> : <EmptyBusinessState title="当前达人库为空" description="栖月汇当前数据截止面没有可回链的达人或机构记录。可以先整理候选来源和筛选条件，再进入正式导入流程。" action="准备候选条件" onAction={onPrepare} />}
+    </section>
+  </>;
+}
+
+function OutreachWorkspace({ slice, lifecycle, onPrepare }: { slice: CreatorGrowthSlice; lifecycle: CreatorLifecycleViewResponse; onPrepare: () => void }) {
+  const funnel: Array<[string, number]> = [["候选总量", slice.countLedger.input], ["唯一候选", Math.max(0, slice.countLedger.input - slice.countLedger.deduplicated)], ["符合条件", slice.countLedger.eligible], ["已准备", lifecycle.ledger.prepared], ["已批准", lifecycle.ledger.accepted], ["已应用", lifecycle.ledger.applied], ["有回复", lifecycle.ledger.completed], ["需要复核", slice.countLedger.needsReview]];
+  const max = Math.max(1, ...funnel.map(([, value]) => value));
+  return <>
+    <MetricBar items={[["候选", slice.countLedger.input], ["批次", lifecycle.latestStart ? 1 : 0], ["已准备", lifecycle.ledger.prepared], ["有回复", lifecycle.ledger.completed], ["需要复核", slice.countLedger.needsReview]]} />
+    <section className="creator-growth-workspace-section"><header><div><span>招募工作区</span><h2>邀约漏斗</h2></div><button type="button" onClick={onPrepare}>新建批次准备</button></header>
+      <div className="creator-growth-funnel">{funnel.map(([label, value]) => <div key={label}><span>{label}</span><i><b style={{ width: `${Math.max(value ? 8 : 0, value / max * 100)}%` }} /></i><strong>{value}</strong></div>)}</div>
+      <section className="creator-growth-batch-empty"><h3>批次准备</h3><p>当前没有正式邀约批次。先选择候选范围、合作目标与渠道，本页只整理本次准备内容，不会自动发送消息。</p><button type="button" onClick={onPrepare}>填写批次条件</button></section>
+    </section>
+  </>;
+}
+
+function ContractWorkspace({ lifecycle, onPrepare }: { lifecycle: CreatorLifecycleViewResponse; onPrepare: () => void }) {
+  const columns: Array<[string, number]> = [["有意向", 0], ["谈判中", 0], ["条款确认", 0], ["签署中", 0], ["已生效", lifecycle.contracts.length]];
+  return <>
+    <MetricBar items={[["有意向", 0], ["谈判中", 0], ["条款确认", 0], ["签署中", 0], ["已生效", lifecycle.contracts.length]]} />
+    <section className="creator-growth-workspace-section"><header><div><span>商务签约</span><h2>合作条款看板</h2></div><button type="button" onClick={onPrepare}>整理合作条件</button></header><div className="creator-growth-kanban">{columns.map(([label, count]) => <section key={label}><header><strong>{label}</strong><span>{count}</span></header><p>{count ? `${count} 条正式合同记录` : "当前为空"}</p></section>)}</div><p className="creator-growth-business-note">只有正式合同记录进入“已生效”；平台接受合作、聊天确认或页面准备内容都不会替代签署结果。</p></section>
+  </>;
+}
+
+function DeliveryWorkspace({ lifecycle, onPrepare }: { lifecycle: CreatorLifecycleViewResponse; onPrepare: () => void }) {
+  return <>
+    <MetricBar items={[["进行中合作", 0], ["已交付", lifecycle.deliveries.length], ["效果窗口已闭", 0], ["效果观察中", 0], ["异常需核对", 0]]} />
+    <section className="creator-growth-workspace-section"><header><div><span>履约效果</span><h2>履约任务列表</h2></div><button type="button" onClick={onPrepare}>准备交付检查</button></header><div className="creator-growth-table"><div className="is-head"><span>达人 / 机构</span><span>交付内容</span><span>档期</span><span>效果窗口</span><span>状态</span></div><div className="is-empty"><span>当前没有正式履约记录</span></div></div><p className="creator-growth-business-note">GMV、ROI、退货率和异常判断只在正式效果窗口与来源数据齐备后展示。</p></section>
+  </>;
+}
+
+function RelationshipWorkspace({ lifecycle, onPrepare }: { lifecycle: CreatorLifecycleViewResponse; onPrepare: () => void }) {
+  return <>
+    <MetricBar items={[["核心关系", 0], ["活跃关系", lifecycle.relationships.length], ["沉默关系", 0], ["复邀窗口开放", 0], ["停止联系", 0]]} />
+    <section className="creator-growth-workspace-section"><header><div><span>长期关系</span><h2>复邀计划</h2></div><button type="button" onClick={onPrepare}>准备复邀条件</button></header><div className="creator-growth-table"><div className="is-head"><span>达人 / 机构</span><span>关系层级</span><span>上次合作</span><span>复邀窗口</span><span>负责人</span></div><div className="is-empty"><span>当前没有正式关系记录</span></div></div><section className="creator-growth-timeline"><h3>关系事件流</h3><p>暂无可回链的感谢、复邀、冷却或停止联系事件。</p></section></section>
+  </>;
+}
+
+function StageWorkspace({ stage, slice, lifecycle, onImport, onBatch }: { stage: CreatorBusinessStage; slice: CreatorGrowthSlice; lifecycle: CreatorLifecycleViewResponse; onImport: () => void; onBatch: () => void }) {
+  if (stage === "candidate") return <CandidateWorkspace slice={slice} onPrepare={onImport} />;
+  if (stage === "outreach") return <OutreachWorkspace slice={slice} lifecycle={lifecycle} onPrepare={onBatch} />;
+  if (stage === "contract") return <ContractWorkspace lifecycle={lifecycle} onPrepare={onBatch} />;
+  if (stage === "delivery") return <DeliveryWorkspace lifecycle={lifecycle} onPrepare={onBatch} />;
+  return <RelationshipWorkspace lifecycle={lifecycle} onPrepare={onBatch} />;
+}
+
+function PreparationPanel({ mode, onClose, onApply }: { mode: Exclude<PreparationMode, null>; onClose: () => void; onApply: (message: string) => void }) {
+  const [source, setSource] = useState(""); const [channel, setChannel] = useState("站内邀约"); const [objective, setObjective] = useState("");
+  const importing = mode === "import";
+  return <aside className="creator-growth-preparation" aria-label={importing ? "导入达人准备" : "新建邀约批次准备"}><header><div><span>本次页面准备</span><h2>{importing ? "导入达人准备" : "新建邀约批次准备"}</h2></div><button type="button" onClick={onClose}>关闭</button></header>
+    {importing ? <><label>达人来源<input aria-label="达人来源" value={source} onChange={(event) => setSource(event.target.value)} placeholder="例如：品牌合作名单" /></label><label>对象范围<select aria-label="对象范围"><option>个人达人和机构</option><option>仅个人达人</option><option>仅机构</option></select></label><label>候选条件<textarea aria-label="候选条件" placeholder="内容领域、渠道、受众和合作要求" /></label></> : <><label>批次目标<input aria-label="批次目标" value={objective} onChange={(event) => setObjective(event.target.value)} placeholder="例如：新品内容合作" /></label><label>邀约渠道<select aria-label="邀约渠道" value={channel} onChange={(event) => setChannel(event.target.value)}><option>站内邀约</option><option>商务邮件</option><option>人工登记</option></select></label><label>候选范围<textarea aria-label="批次候选范围" placeholder="选择当前正式候选或描述筛选范围" /></label></>}
+    <p>此处只整理本次操作所需条件，不会自动导入、发送邀约、签署合同或产生外部触达。</p><button type="button" className="is-primary" onClick={() => onApply(importing ? `已应用到本次候选筛选${source ? `：${source}` : ""}` : `已应用到本次批次准备${objective ? `：${objective}` : ""} · ${channel}`)}>{importing ? "应用到候选筛选" : "应用到本次批次准备"}</button>
+  </aside>;
+}
+
+const ADVISORS: Record<CreatorBusinessStage, readonly [string, string, string]> = {
+  candidate: ["AI 匹配分析 · 导购顾问", "核对候选与商品、内容领域和受众是否匹配。", "准备候选条件"],
+  outreach: ["批次分析 · 数据参谋", "核对候选数量、去重、频控和批次承接能力。", "准备邀约批次"],
+  contract: ["商务建议 · 活动策划师", "整理合作目标、交付要求与条款差异。", "整理合作条件"],
+  delivery: ["效果核对 · 数据参谋", "核对交付证据、效果窗口和异常信号。", "准备交付检查"],
+  relationship: ["关系维护 · 私域管家", "核对关系层级、冷却期和复邀窗口。", "准备复邀计划"],
+};
+const advisorFor = (stage: CreatorBusinessStage) => ADVISORS[stage];
+
 export function CreatorGrowthPage({ client = ecommerceWorkshopClient }: { client?: Client }) {
-  const [phase, setPhase] = useState<Phase>("loading"); const [response, setResponse] = useState<CreatorGrowthViewResponse | null>(null); const [contribution, setContribution] = useState<CreatorContributionViewResponse | null>(null); const [lifecycle, setLifecycle] = useState<CreatorLifecycleViewResponse | null>(null); const [closure, setClosure] = useState<ThreeModuleClosureContributionViewResponse | null>(null); const [selected, setSelected] = useState<CreatorBusinessStage>("candidate"); const [finderQuery, setFinderQuery] = useState(""); const [finderFilter, setFinderFilter] = useState<FinderFilter>("全部达人"); const [safeAction, setSafeAction] = useState(""); const request = useRef(0);
-  const load = () => { const id = ++request.current; setPhase("loading"); setResponse(null); setContribution(null); setLifecycle(null); setClosure(null); void Promise.all([client.getCreatorGrowthView(), client.getCreatorContributionView().catch(() => null), client.getCreatorLifecycleView?.().catch(() => null) ?? Promise.resolve(null), client.getThreeModuleClosureContributionView?.("creator").catch(() => null) ?? Promise.resolve(null)]).then(([next, nextContribution, nextLifecycle, nextClosure]) => { if (id !== request.current) return; setResponse(next); setContribution(nextContribution ?? unavailableContribution(next)); setLifecycle(nextLifecycle ?? unavailableLifecycle(next)); setClosure(nextClosure ?? unavailableThreeModuleClosure("creator", next.tenant, next.evaluatedAt)); setSelected(pickPreferredWorkshopView(next.slices, (item) => item.authorityRefs.length > 0)?.businessStage ?? "candidate"); setPhase(deriveWorkshopViewState(next.slices, next.page.count)); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); }); };
+  const [phase, setPhase] = useState<AsyncState>("loading"); const [response, setResponse] = useState<CreatorGrowthViewResponse | null>(null);
+  const [contribution, setContribution] = useState<CreatorContributionViewResponse | null>(null); const [lifecycle, setLifecycle] = useState<CreatorLifecycleViewResponse | null>(null); const [closure, setClosure] = useState<ThreeModuleClosureContributionViewResponse | null>(null);
+  const [selected, setSelected] = useState<CreatorBusinessStage>("candidate"); const [query, setQuery] = useState(""); const [filter, setFilter] = useState<(typeof FILTERS)[number]>("全部"); const [preparation, setPreparation] = useState<PreparationMode>(null); const [notice, setNotice] = useState(""); const request = useRef(0);
+  const load = () => { const id = ++request.current; setPhase("loading"); void Promise.all([client.getCreatorGrowthView(), client.getCreatorContributionView().catch(() => null), client.getCreatorLifecycleView?.().catch(() => null) ?? Promise.resolve(null), client.getThreeModuleClosureContributionView?.("creator").catch(() => null) ?? Promise.resolve(null)]).then(([next, nextContribution, nextLifecycle, nextClosure]) => { if (id !== request.current) return; setResponse(next); setContribution(nextContribution ?? unavailableContribution(next)); setLifecycle(nextLifecycle ?? unavailableLifecycle(next)); setClosure(nextClosure ?? unavailableThreeModuleClosure("creator", next.tenant, next.evaluatedAt)); setPhase("ready"); }, (error: unknown) => { if (id === request.current) setPhase(error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"); }); };
   useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
-  const slice: CreatorGrowthSlice | undefined = response?.slices.find((item) => item.businessStage === selected); const ready = response?.slices.filter((item) => item.status === "ready").length ?? 0; const blockers = response?.slices.reduce((sum, item) => sum + item.blockers.length, 0) ?? 0;
-  const audit = contribution && lifecycle && closure ? <details className="creator-growth-audit-context"><summary>治理轴、专业贡献与生命周期审计</summary><p>等待 exact candidate（技术审计术语）</p>
-    <section className="creator-growth-axis"><div><span>工作流阶段轴</span><strong>发现 → 证据 → 匹配 → 批次准备 → 启动</strong></div><div><span>业务阶段轴</span><strong>候选 → 邀约 → 合同 → 履约 → 关系</strong></div><div><span>权威读取</span><strong>{ready}/5</strong></div><div><span>独立阻断</span><strong>{blockers}</strong></div></section>
-    <section className="content-campaign-readonly"><span aria-hidden="true">◇</span><div><h2>达人增长 · 权威只读</h2><p>两条阶段轴正交；Observation ≠ Decision，accepted ≠ SIGNED，PRELIMINARY ≠ 成熟关系。</p></div><strong>无写入口</strong></section>
-    <section className="creator-contribution" aria-label="达人方法与数字同事贡献"><header><div><span>原子 Skill → Logic → 数字同事 → 工作台贡献</span><h2>{contribution.primaryColleague}主责的达人匹配编排</h2></div><strong>{contribution.latestBatch?.lifecycle === "frozen" ? "批次已冻结" : contribution.latestBatch ? "仅准备，未触达" : "等待批次准备"}</strong></header><div className="creator-contribution-flow"><div><span>原子 Skill</span><strong>{contribution.atomicSkillRefs.length || 6} 项</strong><small>{contribution.atomicSkillRefs.length ? contribution.atomicSkillRefs.map((item) => item.resourceId).join(" · ") : "exact refs 尚未挂接"}</small></div><div><span>领域 Logic</span><strong>{contribution.logicRef?.resourceId ?? "ecommerce-creator-match"}</strong><small>{contribution.logicRef ? `r${contribution.logicRef.revision}` : "等待 exact publication"}</small></div><div><span>数字同事</span><strong>{contribution.primaryColleague}</strong><small>协作：{contribution.collaboratorColleagues.join("、")}</small></div><div><span>工作台贡献</span><strong>{contribution.latestBatch ? `${contribution.latestBatch.ledger.input} 个输入` : "可信空"}</strong><small>prepare 0 触达 · 0 Action · 0 Lease</small></div></div>{contribution.blockers.length ? <p className="creator-contribution-warning">当前阻断：{contribution.blockers.join("、")}</p> : <p className="creator-contribution-clear">exact refs 与数量账本已闭合；外部动作仍未授权。</p>}</section>
-    <section className="creator-lifecycle-authority" aria-label="达人显式启动与合作生命周期"><header><div><span>显式 Start → 独立 Action lane → 合同 → 履约 → 关系</span><h2>治理编译已与外部执行分离</h2></div><strong>{lifecycle.latestStart ? "治理批次已建立" : "等待显式启动"}</strong></header><div className="creator-lifecycle-ledger"><div><span>独立 lane</span><strong>{lifecycle.ledger.lanes}</strong><small>私信 / 寄样 / 签约 / 佣金</small></div><div><span>已完成</span><strong>{lifecycle.ledger.completed}</strong><small>仅 applied + failed</small></div><div><span>partial / unknown</span><strong>{lifecycle.ledger.accepted + lifecycle.ledger.unknown + lifecycle.ledger.disputed}</strong><small>不并入完成</small></div><div><span>合作 lineage</span><strong>{lifecycle.contracts.length} / {lifecycle.deliveries.length} / {lifecycle.relationships.length}</strong><small>合同 / 履约 / 关系</small></div></div>{lifecycle.latestStart?.lanes.length ? <ul className="creator-lifecycle-lanes">{lifecycle.latestStart.lanes.map((lane) => <li key={lane.laneId}><strong>{lane.actionKind}</strong><span>{lane.resolvedOutcome ?? lane.outcome}</span><small>{short(lane.bindingHash)}</small></li>)}</ul> : <p className="creator-contribution-warning">当前阻断：{lifecycle.blockers.join("、")}</p>}<footer>外部副作用：禁止 · 页面无批量发送、寄样、签约或改佣金按钮</footer></section>
-    <ThreeModuleClosureCard value={closure} />
-  </details> : null;
-  const content = response && contribution && lifecycle && closure && slice ? <div className="creator-growth-read-model">
-    <div className="content-campaign-board creator-growth-board"><aside className="content-campaign-nav"><header><h2>业务阶段</h2><span>{5 - ready} 项待补条件</span></header><section className="creator-growth-finder" aria-label="达人检索与分群"><div><strong>达人检索与分群</strong><span>本地只读 · 不触发外部检索</span></div><input aria-label="检索达人" placeholder="检索达人业务记录" value={finderQuery} onChange={(event) => setFinderQuery(event.target.value)} /><div>{FINDER_FILTERS.map((filter) => <button type="button" className={finderFilter === filter ? "is-selected" : ""} aria-pressed={finderFilter === filter} key={filter} onClick={() => setFinderFilter(filter)}>{filter}</button>)}</div><small className="creator-growth-finder-status" aria-live="polite">范围：{finderFilter} · 检索：{finderQuery || "全部"} · 当前 {finderFilter === "全部达人" ? slice.authorityRefs.filter((item) => !finderQuery.trim() || `${item.resourceType} ${item.resourceId}`.toLocaleLowerCase().includes(finderQuery.trim().toLocaleLowerCase())).length : 0} 项</small></section>{response.slices.map((item) => <button type="button" key={item.businessStage} className={`content-campaign-slice is-${item.status}${item.businessStage === selected ? " is-selected" : ""}`} onClick={() => setSelected(item.businessStage)}><strong>{LABELS[item.businessStage]}</strong><small>{TYPES[item.businessStage]}</small><span>{item.authorityRefs.length} 条正式数据</span></button>)}</aside>
-      <section className="content-campaign-detail" aria-label="达人增长详情"><header><div><span>当前业务阶段</span><h2>{LABELS[slice.businessStage]}</h2></div><strong className={`content-campaign-status is-${slice.status}`}>{slice.status === "ready" ? "正式数据可读" : "等待数据"}</strong></header><section className="creator-growth-profile" aria-label="达人档案"><header><div><span>达人业务画像</span><h2>达人档案</h2></div><strong>{slice.authorityRefs.length ? "候选数据已挂接" : "等待候选数据"}</strong></header><p>{slice.authorityRefs.length ? "仅展示当前可回链的正式达人字段。" : "当前没有可见候选达人；不从视觉稿、缓存或模型补齐姓名与经营指标。"}</p><div className="creator-growth-profile-grid"><div className="creator-growth-profile-axis"><span>基础画像</span><strong>未挂接</strong><small>昵称 / 地域 / 标签</small></div><div className="creator-growth-profile-axis"><span>粉丝结构</span><strong>待核对</strong><small>暂无正式受众数据</small></div><div className="creator-growth-profile-axis"><span>内容表现</span><strong>待核对</strong><small>暂无正式表现数据</small></div><div className="creator-growth-profile-axis"><span>合作记录</span><strong>{lifecycle.contracts.length + lifecycle.deliveries.length}</strong><small>合同与履约记录</small></div></div></section><section className="creator-growth-phases">{slice.workflowPhases.map((item) => <span key={item}>{WORKFLOW_PHASE_LABELS[item] ?? "待核对"}</span>)}</section><section className="content-campaign-ledger"><div><span>输入</span><strong>{slice.countLedger.input}</strong></div><div><span>合格</span><strong>{slice.countLedger.eligible}</strong></div><div><span>待复核</span><strong>{slice.countLedger.needsReview}</strong></div><div><span>未知</span><strong>{slice.countLedger.unknown}</strong></div></section><section className="content-campaign-items">{slice.authorityRefs.length ? slice.authorityRefs.map((item) => <article className="content-campaign-item" key={`${item.resourceType}:${item.resourceId}:${item.revision}`}><header><strong>正式达人数据</strong><span>第 {item.revision} 版</span></header><p>该记录已通过当前租户的数据边界校验。</p><details><summary>查看数据审计信息</summary><dl><div><dt>数据类型</dt><dd>{item.resourceType}</dd></div><div><dt>数据编号</dt><dd>{item.resourceId}</dd></div><div><dt>内容校验</dt><dd>{short(item.contentHash)}</dd></div><div><dt>读取凭证</dt><dd>{short(item.receiptId)}</dd></div><div><dt>工作流阶段</dt><dd>{item.workflowPhase}</dd></div><div><dt>敏感信息</dt><dd>{item.piiRefs.length ? `${item.piiRefs.length} 个受控引用` : "未返回"}</dd></div></dl></details></article>) : <p>当前没有可挂接的正式达人数据；空数据与待补条件由右侧证据区分。</p>}</section></section>
-      <aside className="content-campaign-evidence creator-growth-analysis"><header><h2>AI 达人分析</h2><span>{slice.blockers.length} 项待补条件</span></header><section className="creator-growth-analysis-summary"><span>匹配与合作建议</span><strong>{slice.authorityRefs.length ? "等待正式分析依据" : "当前没有可回链建议"}</strong><p>无可验证候选、内容表现与合作证据时，不生成匹配分、经营判断或联系方式。</p></section><section className="creator-growth-next-actions" aria-label="只读下一步"><h3>下一步</h3><div><button type="button" onClick={() => setSafeAction("达人档案读取已执行：当前没有可回链候选，因此保持可信空。")}>读取达人档案</button><button type="button" onClick={() => setSafeAction("达人分析读取已执行：当前缺少正式分析依据，因此未生成建议。")}>读取分析建议</button></div><small>操作只重新核对当前只读数据，不触发外部检索或邀约。</small>{safeAction ? <p role="status">{safeAction}</p> : null}</section>{slice.blockers.length ? <details className="creator-growth-blocker-audit"><summary>证据链与审计详情</summary><ul>{slice.blockers.map((item) => <li key={item.code}><strong>{item.requiredAction}</strong><span>{item.dependency}</span><details><summary>查看审计状态码</summary><code>{item.code}</code></details></li>)}</ul></details> : <div className="content-campaign-evidence-clear"><strong>{slice.authorityRefs.length ? "当前读取链闭合" : "可信空集合"}</strong><p>只证明当前数据截止面的正式读取结果，不授权邀约、签署、寄样、佣金或关系变更。</p></div>}<section><h3>决策摘要</h3><p>{slice.status === "blocked" ? "缺少正式数据依据，当前阶段保持可信空。" : "正式数据来源与数量账本可读取。"}</p></section><section><h3>关键假设和不确定性</h3><p>客户敏感信息只显示受控引用；页面不复制联系方式、合同正文、地址或账号密钥。</p></section>{audit}<footer className="content-campaign-footnote"><span>租户 {response.tenant.orgId}/{response.tenant.projectId}</span><span>统一数据截止 {new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</span><span>当前为单页视图</span><button type="button" onClick={load}>重新读取</button></footer></aside></div>
-  </div> : null;
-  return <section className="creator-growth-page" aria-label="达人增长工作台只读视图"><nav className="creator-growth-toolbar" aria-label="达人增长主视图"><div>{(["candidate", "outreach", "contract", "delivery", "relationship"] as const).map((stage) => <button type="button" className={selected === stage ? "is-active" : ""} key={stage} onClick={() => setSelected(stage)}>{TAB_LABELS[stage]}</button>)}</div></nav><AsyncStateBoundary state={stateFor(phase)} dataCutoff={response?.dataCutoff} action={phase === "failed" ? <button type="button" onClick={load}>重新读取</button> : undefined}>{content}</AsyncStateBoundary></section>;
+  useEffect(() => { const search = (event: Event) => setQuery(String((event as CustomEvent<{ value?: string }>).detail?.value ?? "")); const openImport = () => setPreparation("import"); const openBatch = () => { setSelected("outreach"); setPreparation("batch"); }; window.addEventListener("aos-workshop-creator-search", search); window.addEventListener("aos-workshop-creator-import", openImport); window.addEventListener("aos-workshop-creator-new-batch", openBatch); return () => { window.removeEventListener("aos-workshop-creator-search", search); window.removeEventListener("aos-workshop-creator-import", openImport); window.removeEventListener("aos-workshop-creator-new-batch", openBatch); }; }, []);
+  const slice = response?.slices.find((item) => item.businessStage === selected); const visibleRefs = useMemo(() => slice?.authorityRefs.filter((item) => !query.trim() || `${item.resourceType} ${item.resourceId}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) ?? [], [slice, query]);
+  if (!response || !contribution || !lifecycle || !closure || !slice) return <section className="creator-growth-page"><AsyncStateBoundary state={phase} action={phase === "failed" ? <button type="button" onClick={load}>重新读取</button> : undefined} /></section>;
+  const advisor = advisorFor(selected); const openRelevantPreparation = () => setPreparation(selected === "candidate" ? "import" : "batch");
+  const auditCodes = [...slice.blockers.map((item) => item.code), ...contribution.blockers, ...lifecycle.blockers];
+  return <section className="creator-growth-page" aria-label="达人邀约驾驶舱">
+    <nav className="creator-growth-toolbar" aria-label="达人增长主视图"><div>{STAGES.map((stage) => <button type="button" className={selected === stage ? "is-active" : ""} key={stage} onClick={() => { setSelected(stage); setNotice(""); }}>{TABS[stage]}</button>)}</div></nav>
+    <div className="creator-growth-read-model"><div className="creator-growth-board">
+      <aside className="creator-growth-directory"><header><div><h2>达人与机构</h2><span>{response.page.count} 条正式记录</span></div><button type="button" onClick={() => setPreparation("import")}>导入准备</button></header><label className="creator-growth-search"><input aria-label="检索达人或机构" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索达人、机构、邀约记录" /></label><div className="creator-growth-filters">{FILTERS.map((item) => <button type="button" key={item} className={filter === item ? "is-selected" : ""} aria-pressed={filter === item} onClick={() => setFilter(item)}>{item}</button>)}</div><p className="creator-growth-range">{filter} · {query || "全部关键词"} · {visibleRefs.length} 条</p><div className="creator-growth-stage-list">{response.slices.map((item) => <button type="button" className={`content-campaign-slice${selected === item.businessStage ? " is-selected" : ""}`} key={item.businessStage} onClick={() => setSelected(item.businessStage)}><strong>{STAGE_LABELS[item.businessStage]}</strong><span>{item.authorityRefs.length}</span><small>{STAGE_DESCRIPTIONS[item.businessStage]}</small></button>)}</div><section className="creator-growth-directory-empty"><strong>{visibleRefs.length ? `${visibleRefs.length} 条匹配记录` : "没有匹配记录"}</strong><p>{visibleRefs.length ? "选择业务阶段查看正式数据。" : "调整关键词或先准备候选来源与筛选条件。"}</p></section></aside>
+      <main className="creator-growth-main"><StageWorkspace stage={selected} slice={{ ...slice, authorityRefs: visibleRefs }} lifecycle={lifecycle} onImport={() => setPreparation("import")} onBatch={() => setPreparation("batch")} />{notice ? <p className="creator-growth-notice" role="status">{notice}</p> : null}</main>
+      <aside className="creator-growth-analysis"><header><h2>{advisor[0]}</h2><span>{slice.authorityRefs.length} 条依据</span></header><section className="creator-growth-analysis-summary"><span>当前判断</span><strong>{slice.authorityRefs.length ? "可基于正式记录继续核对" : "当前没有可验证业务对象"}</strong><p>{advisor[1]}没有正式记录时不生成姓名、联系方式、匹配分或经营结果。</p></section><section className="creator-growth-next-actions"><h3>下一步动作</h3><button type="button" onClick={openRelevantPreparation}>{advisor[2]}</button><button type="button" onClick={() => { load(); setNotice("已重新读取栖月汇当前正式数据。" ); }}>重新读取业务数据</button><small>页面准备不会自动触达达人，也不会代替合同、履约或关系记录。</small></section><section className="creator-growth-colleagues"><h3>共享数字同事</h3><div><span>导购顾问</span><span>数据参谋</span><span>活动策划师</span><span>内容官</span><span>私域管家</span></div></section><details className="creator-growth-audit-context"><summary>技术与数据诊断</summary><dl><div><dt>租户</dt><dd>{response.tenant.orgId}/{response.tenant.projectId}</dd></div><div><dt>数据截止</dt><dd>{new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</dd></div><div><dt>内容校验</dt><dd>{slice.authorityRefs.length ? short(slice.authorityRefs[0]!.contentHash) : "无正式记录"}</dd></div></dl>{auditCodes.length ? <ul>{auditCodes.map((code) => <li key={code}>{code}</li>)}</ul> : <p>当前读取链无诊断项。</p>}<ThreeModuleClosureCard value={closure} /></details><footer><span>数据截止 {new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</span><button type="button" onClick={load}>重新读取</button></footer></aside>
+    </div></div>{preparation ? <PreparationPanel mode={preparation} onClose={() => setPreparation(null)} onApply={(message) => { setNotice(message); setPreparation(null); }} /> : null}
+  </section>;
 }
