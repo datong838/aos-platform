@@ -2,11 +2,11 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from aos_api.aip_task_models import CreateTaskRequest
-from aos_api.aip_task_store import AipTaskStore
 from aos_api.aip_contracts import ResourceRef
 from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.aip_production_contracts import CreateBriefRequest
+from aos_api.aip_task_models import CreateTaskRequest
+from aos_api.aip_task_store import AipTaskStore
 from aos_api.db import connect
 from aos_api.tenant_scope import TenantScope
 
