@@ -5,6 +5,8 @@ import pytest
 
 from aos_api.ecommerce_workshop_creator_growth_authorities import CreatorCandidateRevision, OutreachStartLedger
 from aos_api.ecommerce_workshop_creator_growth_store import CreatorAuthorityReadError, EcommerceWorkshopCreatorGrowthStore
+from aos_api.ecommerce_workshop_creator_lifecycle import CreatorContractRevision
+from aos_api.ecommerce_workshop_creator_prepare import CreatorBatchPreparationRevision, CreatorNormalizerReceipt
 from aos_api.tenant_scope import TenantScope
 
 NOW = datetime(2026, 8, 24, tzinfo=UTC)
@@ -48,8 +50,16 @@ def test_append_is_tenant_bound_and_never_updates() -> None:
 
 
 def test_bounded_read_is_repeatable_and_fails_closed_on_tenant_drift() -> None:
-    payload = candidate().model_dump(mode="json", by_alias=True)
-    connection = Connection(rows=[[{"org_id": "org-org", "project_id": "dev-project", "receipt_id": "receipt-1", "authority_data": payload}]])
+    payload = CreatorNormalizerReceipt.model_validate({
+        "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+        "receiptId": "receipt-1", "candidateId": "c1", "revision": 1,
+        "profileRef": {"resourceType": "CreatorDiscoveryProfileRevision", "resourceId": "profile-1", "revision": 1, "contentHash": HASH},
+        "researchArtifactRef": {"resourceType": "ResearchArtifactRevision", "resourceId": "research-1", "revision": 1, "contentHash": HASH},
+        "originalRecordRefs": [{"resourceType": "SourceRecordRevision", "resourceId": "source-1", "revision": 1, "contentHash": HASH}],
+        "identityStatus": "resolved", "identityKeyHash": HASH, "conflictCodes": [], "factKeys": ["channel"], "piiRefs": [],
+        "contentHash": HASH, "createdBy": "tester", "createdAt": NOW,
+    }).model_dump(mode="json", by_alias=True)
+    connection = Connection(rows=[[{"org_id": "org-org", "project_id": "dev-project", "authority_receipt_id": "receipt-1", "content_hash": HASH, "authority_data": payload}]])
     write_connection = Connection()
     rows = EcommerceWorkshopCreatorGrowthStore(
         factory(write_connection), factory(connection)
@@ -57,7 +67,7 @@ def test_bounded_read_is_repeatable_and_fails_closed_on_tenant_drift() -> None:
     assert rows[0].receipt_id == "receipt-1"
     assert connection.calls[0][0].startswith("SELECT")
     assert write_connection.calls == []
-    drift = Connection(rows=[[{"org_id": "dev-org", "project_id": "dev-project", "receipt_id": "receipt-1", "authority_data": payload}]])
+    drift = Connection(rows=[[{"org_id": "dev-org", "project_id": "dev-project", "authority_receipt_id": "receipt-1", "content_hash": HASH, "authority_data": payload}]])
     with pytest.raises(CreatorAuthorityReadError):
         EcommerceWorkshopCreatorGrowthStore(
             factory(Connection()), factory(drift)
@@ -71,3 +81,53 @@ def test_start_ledger_append_has_no_provider_or_update_side_effect() -> None:
     sql = connection.calls[0][0]
     assert "INSERT INTO ecommerce_creator_outreach_start_ledger" in sql
     assert "UPDATE" not in sql and "provider" not in sql.lower()
+
+
+def test_runtime_reader_uses_w6_canonical_candidate_and_outreach_tables() -> None:
+    candidate_payload = CreatorNormalizerReceipt.model_validate({
+        "tenant": {"orgId": "org-org", "projectId": "dev-project"},
+        "receiptId": "creator-normalize-r1", "candidateId": "candidate-1", "revision": 1,
+        "profileRef": {"resourceType": "CreatorDiscoveryProfileRevision", "resourceId": "profile-1", "revision": 1, "contentHash": HASH},
+        "researchArtifactRef": {"resourceType": "ResearchArtifactRevision", "resourceId": "research-1", "revision": 1, "contentHash": HASH},
+        "originalRecordRefs": [{"resourceType": "SourceRecordRevision", "resourceId": "source-1", "revision": 1, "contentHash": HASH}],
+        "identityStatus": "resolved", "identityKeyHash": HASH, "conflictCodes": [], "factKeys": ["channel"], "piiRefs": ["vault://creator/contact"],
+        "contentHash": "b" * 64, "createdBy": "tester", "createdAt": NOW,
+    }).model_dump(mode="json", by_alias=True)
+    batch_payload = CreatorBatchPreparationRevision.model_validate({
+        "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "batchId": "batch-1", "revision": 2, "version": 2,
+        "lifecycle": "prepared", "exactRefs": {}, "skillRefs": [], "items": [], "itemHashes": [],
+        "ledger": {"input": 0, "eligible": 0, "excluded": 0, "needsReview": 0, "unknown": 0, "deduplicated": 0},
+        "contentHash": "c" * 64, "createdBy": "tester", "createdAt": NOW,
+    }).model_dump(mode="json", by_alias=True)
+    connection = Connection(rows=[[
+        {"org_id": "org-org", "project_id": "dev-project", "authority_receipt_id": "creator-normalize-r1", "content_hash": "b" * 64, "authority_data": candidate_payload},
+    ], [
+        {"org_id": "org-org", "project_id": "dev-project", "authority_receipt_id": "creator-authority-batch", "content_hash": "c" * 64, "authority_data": batch_payload},
+    ]])
+    store = EcommerceWorkshopCreatorGrowthStore(factory(Connection()), factory(connection))
+    candidates = store.list_candidates(SCOPE, cutoff=NOW)
+    batches = store.list_outreach_batches(SCOPE, cutoff=NOW)
+    assert candidates[0].resource_type == "CreatorCandidateRevision"
+    assert candidates[0].resource_id == "candidate-1"
+    assert candidates[0].receipt_id == "creator-normalize-r1"
+    assert candidates[0].pii_refs == ["vault://creator/contact"]
+    assert batches[0].resource_type == "CreatorBatchPreparationRevision"
+    assert batches[0].resource_id == "batch-1" and batches[0].revision == 2
+    assert "ecommerce_creator_normalizer_receipt" in connection.calls[0][0]
+    assert "ecommerce_creator_batch_preparation_revision" in connection.calls[1][0]
+
+
+def test_runtime_reader_rejects_missing_receipt_and_content_hash_drift() -> None:
+    contract_payload = CreatorContractRevision.model_validate({
+        "tenant": {"orgId": "org-org", "projectId": "dev-project"}, "collaborationId": "collab-1", "revision": 1,
+        "candidateRef": {"resourceType": "CreatorCandidateRevision", "resourceId": "candidate-1", "revision": 1, "contentHash": HASH},
+        "startDecisionRef": {"resourceType": "CreatorBatchStartDecisionRevision", "resourceId": "start-1", "revision": 1, "contentHash": HASH},
+        "termsHash": HASH, "monetaryTermsRef": {"resourceType": "ProtectedMonetaryTermsRevision", "resourceId": "terms-1", "revision": 1, "contentHash": HASH},
+        "lifecycle": "draft", "diffFields": [], "contentHash": "d" * 64, "createdBy": "tester", "createdAt": NOW,
+    }).model_dump(mode="json", by_alias=True)
+    for row in (
+        {"org_id": "org-org", "project_id": "dev-project", "authority_receipt_id": None, "content_hash": "d" * 64, "authority_data": contract_payload},
+        {"org_id": "org-org", "project_id": "dev-project", "authority_receipt_id": "creator-authority-contract", "content_hash": "e" * 64, "authority_data": contract_payload},
+    ):
+        with pytest.raises(CreatorAuthorityReadError):
+            EcommerceWorkshopCreatorGrowthStore(factory(Connection()), factory(Connection(rows=[[row]]))).list_contracts(SCOPE, cutoff=NOW)

@@ -10,6 +10,7 @@ import psycopg
 from aos_api.db import connect
 from aos_api.db import connect_read_only
 from aos_api.ecommerce_workshop_creator_growth_authorities import CreatorExactRef
+from aos_api.ecommerce_workshop_creator_growth_store import authority_receipt_id
 from aos_api.ecommerce_workshop_creator_lifecycle import (
     CreatorActionLaneRequest,
     CreatorBatchStartDecisionRevision,
@@ -42,16 +43,21 @@ class EcommerceWorkshopCreatorLifecycleStore:
         if (item.tenant.org_id, item.tenant.project_id) != scope.key:
             raise CreatorLifecycleBlocked("CREATOR_LIFECYCLE_TENANT_DRIFT")
 
-    def _append(self, scope: TenantScope, table: str, identity_column: str, identity: str, revision: int, content_hash: str, item: Any, created_at: Any, *, extra_columns: str = "", extra_values: tuple[Any, ...] = ()) -> Any:
+    def _append(self, scope: TenantScope, table: str, identity_column: str, identity: str, revision: int, content_hash: str, item: Any, created_at: Any, *, extra_columns: str = "", extra_values: tuple[Any, ...] = (), receipt_id: str | None = None) -> Any:
         self._assert_tenant(scope, item)
         payload = item.model_dump(mode="json", by_alias=True)
-        column_suffix = f",{extra_columns}" if extra_columns else ""
-        value_suffix = "," + ",".join(["%s"] * len(extra_values)) if extra_values else ""
+        columns = [column for column in extra_columns.split(",") if column]
+        values = list(extra_values)
+        if receipt_id is not None:
+            columns.append("authority_receipt_id")
+            values.append(receipt_id)
+        column_suffix = f",{','.join(columns)}" if columns else ""
+        value_suffix = "," + ",".join(["%s"] * len(values)) if values else ""
         with self._connect(scope) as conn:
             conn.execute(
                 f"INSERT INTO {table}(org_id,project_id,{identity_column},revision,content_hash,authority_data,created_at{column_suffix}) "
                 f"VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s{value_suffix}) ON CONFLICT DO NOTHING",
-                (*scope.key, identity, revision, content_hash, self._json(payload), created_at, *extra_values),
+                (*scope.key, identity, revision, content_hash, self._json(payload), created_at, *values),
             )
             row = conn.execute(
                 f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s",
@@ -125,7 +131,8 @@ class EcommerceWorkshopCreatorLifecycleStore:
         return [CreatorLaneObservation.model_validate(row["authority_data"]) for row in rows]
 
     def append_contract(self, scope: TenantScope, item: CreatorContractRevision) -> CreatorContractRevision:
-        return self._append(scope, "ecommerce_creator_contract_revision", "collaboration_id", item.collaboration_id, item.revision, item.content_hash, item, item.created_at)
+        receipt_id = authority_receipt_id(*scope.key, "CreatorContractRevision", item.collaboration_id, item.revision, item.content_hash)
+        return self._append(scope, "ecommerce_creator_contract_revision", "collaboration_id", item.collaboration_id, item.revision, item.content_hash, item, item.created_at, receipt_id=receipt_id)
 
     def require_contract(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorContractRevision:
         with self._read_connect(scope) as conn:
@@ -138,7 +145,8 @@ class EcommerceWorkshopCreatorLifecycleStore:
         return CreatorContractRevision.model_validate(row["authority_data"])
 
     def append_delivery(self, scope: TenantScope, item: CreatorDeliveryObservation) -> CreatorDeliveryObservation:
-        return self._append(scope, "ecommerce_creator_delivery_observation", "observation_id", item.observation_id, 1, item.content_hash, item, item.observed_at)
+        receipt_id = authority_receipt_id(*scope.key, "CreatorDeliveryObservation", item.observation_id, 1, item.content_hash)
+        return self._append(scope, "ecommerce_creator_delivery_observation", "observation_id", item.observation_id, 1, item.content_hash, item, item.observed_at, receipt_id=receipt_id)
 
     def require_delivery(self, scope: TenantScope, ref: CreatorExactRef) -> CreatorDeliveryObservation:
         with self._read_connect(scope) as conn:
@@ -151,7 +159,8 @@ class EcommerceWorkshopCreatorLifecycleStore:
         return CreatorDeliveryObservation.model_validate(row["authority_data"])
 
     def append_relationship(self, scope: TenantScope, item: CreatorRelationshipRevision) -> CreatorRelationshipRevision:
-        return self._append(scope, "ecommerce_creator_relationship_revision", "relationship_id", item.relationship_id, item.revision, item.content_hash, item, item.created_at)
+        receipt_id = authority_receipt_id(*scope.key, "CreatorRelationshipRevision", item.relationship_id, item.revision, item.content_hash)
+        return self._append(scope, "ecommerce_creator_relationship_revision", "relationship_id", item.relationship_id, item.revision, item.content_hash, item, item.created_at, receipt_id=receipt_id)
 
     def latest_relationship_or_none(self, scope: TenantScope, relationship_id: str) -> CreatorRelationshipRevision | None:
         with self._read_connect(scope) as conn:

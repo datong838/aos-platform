@@ -66,28 +66,22 @@ class EcommerceWorkshopCreatorGrowth:
             if observations is not None:
                 refs = []
                 for observation in observations:
-                    authority = observation.authority
-                    identity = next(
-                        value
-                        for value in (
-                            getattr(authority, "candidate_id", None),
-                            getattr(authority, "batch_id", None),
-                            getattr(authority, "contract_id", None),
-                            getattr(authority, "delivery_id", None),
-                            getattr(authority, "relationship_id", None),
-                        )
-                        if value is not None
-                    )
                     refs.append(
                         {
-                            "resourceType": type(authority).__name__,
-                            "resourceId": identity,
-                            "revision": authority.revision,
-                            "contentHash": f"sha256:{authority.content_hash}",
+                            "resourceType": observation.resource_type,
+                            "resourceId": observation.resource_id,
+                            "revision": observation.revision,
+                            "contentHash": f"sha256:{observation.content_hash}",
                             "receiptId": observation.receipt_id,
-                            "workflowPhase": "matching" if stage is CreatorBusinessStage.CANDIDATE else "evidence",
+                            "workflowPhase": {
+                                CreatorBusinessStage.CANDIDATE: "matching",
+                                CreatorBusinessStage.OUTREACH: "batch_prepare",
+                                CreatorBusinessStage.CONTRACT: "start",
+                                CreatorBusinessStage.DELIVERY: "evidence",
+                                CreatorBusinessStage.RELATIONSHIP: "evidence",
+                            }[stage],
                             "businessStage": stage,
-                            "piiRefs": getattr(authority, "pii_refs", []),
+                            "piiRefs": observation.pii_refs,
                         }
                     )
                 slices.append(

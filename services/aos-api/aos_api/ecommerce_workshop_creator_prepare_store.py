@@ -10,6 +10,7 @@ import psycopg
 from aos_api.db import connect
 from aos_api.db import connect_read_only
 from aos_api.ecommerce_workshop_creator_growth_authorities import CreatorExactRef
+from aos_api.ecommerce_workshop_creator_growth_store import authority_receipt_id
 from aos_api.ecommerce_workshop_creator_prepare import (
     CreatorBatchPreparationRevision,
     CreatorDiscoveryProfileRevision,
@@ -41,14 +42,19 @@ class EcommerceWorkshopCreatorPrepareStore:
         if (item.tenant.org_id, item.tenant.project_id) != scope.key:
             raise CreatorPrepareBlocked("CREATOR_PREPARE_TENANT_DRIFT")
 
-    def _append(self, scope: TenantScope, table: str, identity_column: str, identity: str, revision: int, content_hash: str, item: Any, created_at: Any) -> Any:
+    def _append(self, scope: TenantScope, table: str, identity_column: str, identity: str, revision: int, content_hash: str, item: Any, created_at: Any, *, receipt_id: str | None = None) -> Any:
         self._assert_tenant(scope, item)
         payload = item.model_dump(mode="json", by_alias=True)
+        receipt_column = ",authority_receipt_id" if receipt_id is not None else ""
+        receipt_value = ",%s" if receipt_id is not None else ""
+        params = (*scope.key, identity, revision, content_hash, self._json(payload), created_at)
+        if receipt_id is not None:
+            params = (*params, receipt_id)
         with self._connect(scope) as conn:
             conn.execute(
-                f"INSERT INTO {table}(org_id,project_id,{identity_column},revision,content_hash,authority_data,created_at) "
-                "VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s) ON CONFLICT DO NOTHING",
-                (*scope.key, identity, revision, content_hash, self._json(payload), created_at),
+                f"INSERT INTO {table}(org_id,project_id,{identity_column},revision,content_hash,authority_data,created_at{receipt_column}) "
+                f"VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s{receipt_value}) ON CONFLICT DO NOTHING",
+                params,
             )
             row = conn.execute(
                 f"SELECT authority_data,content_hash FROM {table} WHERE org_id=%s AND project_id=%s AND {identity_column}=%s AND revision=%s",
@@ -72,7 +78,8 @@ class EcommerceWorkshopCreatorPrepareStore:
         return self._append(scope, "ecommerce_creator_prepared_match_decision", "decision_id", item.decision_id, item.revision, item.content_hash, item, item.decided_at)
 
     def append_batch(self, scope: TenantScope, item: CreatorBatchPreparationRevision) -> CreatorBatchPreparationRevision:
-        return self._append(scope, "ecommerce_creator_batch_preparation_revision", "batch_id", item.batch_id, item.revision, item.content_hash, item, item.created_at)
+        receipt_id = authority_receipt_id(*scope.key, "CreatorBatchPreparationRevision", item.batch_id, item.revision, item.content_hash)
+        return self._append(scope, "ecommerce_creator_batch_preparation_revision", "batch_id", item.batch_id, item.revision, item.content_hash, item, item.created_at, receipt_id=receipt_id)
 
     def _require(self, scope: TenantScope, table: str, identity_column: str, ref: CreatorExactRef, model: type[Any]) -> Any:
         with self._read_connect(scope) as conn:
