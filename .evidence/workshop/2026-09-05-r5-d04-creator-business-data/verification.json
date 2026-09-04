@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "aos.workshop.evidence-pack/v1",
+  "taskId": "WORKSHOP-R5-D04-CREATOR-BUSINESS-DATA-MAPPING",
+  "authorityRevision": "AOS-000480",
+  "tenant": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project"
+  },
+  "commits": {
+    "implementation": "986c87d982b1af2a0f9cadc4730397bcc0e16077",
+    "planClosure": "80a314e6b136c0a969aa4971f0185a0f7761aca0"
+  },
+  "realInputs": {
+    "products": 57,
+    "firstProduct": "面膜套餐",
+    "firstProductPrice": "99.00",
+    "firstProductStock": 3,
+    "source": "GET /v1/ecommerce-workshop/views/content-campaign/real-inputs"
+  },
+  "browserVerification": {
+    "browser": "Codex in-app browser",
+    "route": "/workshop/creator-growth",
+    "viewport": "1280x720",
+    "workflowPurpose": "candidate_import",
+    "workflowRef": "brief-18e73eefb10a434a87ee",
+    "savedRevision": 1,
+    "submittedRevision": 2,
+    "approvedRevision": 3,
+    "reloadReadback": "已批准，关联商品面膜套餐，候选来源、内容领域、粉丝范围、渠道和负责人均保持",
+    "fullNavigation": "八个电商工作台菜单与完整 AIP 导航可见",
+    "referenceComparison": "当前实现与 workshop-creator-outreach.html 在同一工具输出中按同视口组合复审；三栏、五标签、页头动作和右栏建议层级一致；演示达人与虚构经营指标未复制",
+    "designQa": "P0/P1/P2 = 0; passed for R5-D04 scope"
+  },
+  "verification": {
+    "focused": "29/29 GREEN",
+    "web": "273 files / 2462 tests GREEN",
+    "typescript": "GREEN",
+    "productionBuild": "GREEN with existing bundle-size warning",
+    "diffCheck": "GREEN"
+  },
+  "businessEntityMutationCount": 0,
+  "providerInvocationCount": 0,
+  "externalOutreachCount": 0,
+  "contractSignatureCount": 0,
+  "releaseCount": 0,
+  "nextTask": "R5-D05"
+}
