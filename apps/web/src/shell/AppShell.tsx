@@ -306,9 +306,10 @@ function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
   const navigate = useNavigate();
   const searchRef = useRef<HTMLInputElement>(null);
   if (!spec) return null;
-  const isExecutableAction = (label: string) => label === "筛选" || label === "查看内容计划";
+  const isExecutableAction = (label: string) => label === "筛选" || label === "查看内容计划" || (pathname === "/workshop/operations" && label === "＋ 新建处理");
   const runHeaderAction = (label: string) => {
-    if (label === "筛选") { searchRef.current?.focus(); return; }
+    if (label === "筛选") { searchRef.current?.focus(); if (pathname === "/workshop/operations") window.dispatchEvent(new CustomEvent("aos-workshop-operation-search", { detail: { value: searchRef.current?.value ?? "" } })); return; }
+    if (label === "＋ 新建处理" && pathname === "/workshop/operations") { window.dispatchEvent(new CustomEvent("aos-workshop-operation-new")); return; }
     if (label === "查看内容计划") { navigate("/workshop/content-campaign"); return; }
   };
   return <>
@@ -320,12 +321,12 @@ function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
       {spec.crumb && spec.title !== "价格治理驾驶舱" && spec.title !== "客户关系工作台" ? <span>/</span> : null}
       {spec.title !== "价格治理驾驶舱" && spec.title !== "客户关系工作台" ? <b>{spec.title}</b> : null}
     </div>
-    {spec.search ? <label className="workshop-visual-header-search"><NavIcon name="search" /><input ref={searchRef} type="search" placeholder={spec.search} /></label> : <div />}
+    {spec.search ? <label className="workshop-visual-header-search"><NavIcon name="search" /><input ref={searchRef} type="search" placeholder={spec.search} onChange={(event) => { if (pathname === "/workshop/operations") window.dispatchEvent(new CustomEvent("aos-workshop-operation-search", { detail: { value: event.target.value } })); }} /></label> : <div />}
     <div className="workshop-visual-header-actions">
       {spec.context ? <span>{spec.context}</span> : null}
       {spec.actions.map((label, index) => {
         const executable = isExecutableAction(label);
-        return <button key={label} type="button" className={index === spec.actions.length - 1 ? "is-primary" : ""} disabled={!executable} title={label === "筛选" ? "聚焦当前页只读检索" : label === "查看内容计划" ? "打开内容与活动工作台" : "需要当前页正式业务数据与内部工作流就绪"} onClick={() => runHeaderAction(label)}>{label}</button>;
+        return <button key={label} type="button" className={index === spec.actions.length - 1 ? "is-primary" : ""} disabled={!executable} title={label === "筛选" ? "聚焦当前页业务检索" : label === "查看内容计划" ? "打开内容与活动工作台" : label === "＋ 新建处理" ? "从当前正式业务对象创建内部处理提案" : "需要当前页正式业务数据与内部工作流就绪"} onClick={() => runHeaderAction(label)}>{label}</button>;
       })}
     </div>
   </>;

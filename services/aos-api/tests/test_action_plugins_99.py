@@ -6,9 +6,13 @@ def test_list_action_plugins(client, auth_headers):
     assert "close-work-order" in ids
     assert "update-wiki-card" in ids
     assert "assign-work-order" in ids
+    assert "create-operation-case" in ids
     required = [i for i in items if i["id"] in ("close-work-order", "update-wiki-card")]
     assert all(i["installed"] for i in required)
     assert all(i.get("actionTypeId") for i in required)
+    operation = next(i for i in items if i["id"] == "create-operation-case")
+    assert operation["installed"] is True
+    assert operation["actionTypeId"] == "ecommerce.operation.create-case"
 
 
 def test_seed_from_plugins_into_action_types(client, auth_headers):
@@ -18,6 +22,7 @@ def test_seed_from_plugins_into_action_types(client, auth_headers):
     type_ids = {i["id"] for i in listed.json()["items"]}
     assert "CloseWorkOrder" in type_ids
     assert "UpdateWikiCard" in type_ids
+    assert "ecommerce.operation.create-case" in type_ids
 
 
 def test_install_assign_work_order_plugin(client, auth_headers):

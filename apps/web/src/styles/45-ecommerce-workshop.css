@@ -1454,6 +1454,41 @@
 .operations-slice-card em { grid-column: 1 / -1; justify-self: start; margin-top: 5px; color: var(--aos-text-tertiary); font-size: 11px; font-style: normal; }
 .operations-filter-empty { padding: 28px 16px; border: 1px dashed var(--aos-border); text-align: center; color: var(--aos-text-tertiary); background: var(--aos-surface); }
 .operations-detail { background: color-mix(in srgb, var(--aos-surface-hover) 45%, var(--aos-surface)); }
+.operations-slice-switcher { margin-top: 8px; border-top: 1px solid var(--aos-border); padding-top: 8px; }
+.operations-slice-switcher summary { cursor: pointer; padding: 7px 2px; color: var(--aos-text-secondary); font-weight: 700; }
+.operations-slice-switcher .operations-slice-card { margin-top: 7px; }
+.operations-internal-workflow { margin-top: 16px; border: 1px solid var(--aos-border); background: var(--aos-surface); padding: 14px; }
+.operations-internal-workflow > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.operations-internal-workflow h3,
+.operations-internal-workflow p { margin: 0; }
+.operations-internal-workflow > header small { color: var(--aos-text-tertiary); }
+.operations-internal-workflow > header span { border: 1px solid var(--aos-border); border-radius: 999px; padding: 4px 8px; color: var(--aos-text-secondary); font-size: 11px; }
+.operations-internal-workflow > p { margin-top: 8px; color: var(--aos-text-secondary); }
+.operations-object-ref { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 12px 0; border: 1px solid var(--aos-border); }
+.operations-object-ref > div { min-width: 0; padding: 9px 10px; }
+.operations-object-ref > div + div { border-left: 1px solid var(--aos-border); }
+.operations-object-ref dt { color: var(--aos-text-tertiary); font-size: 11px; }
+.operations-object-ref dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.operations-internal-workflow form { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 10px; }
+.operations-internal-workflow form label { display: grid; gap: 5px; color: var(--aos-text-secondary); font-size: 12px; }
+.operations-internal-workflow form label:nth-child(3),
+.operations-internal-workflow form > div { grid-column: 1 / -1; }
+.operations-internal-workflow input,
+.operations-internal-workflow select,
+.operations-internal-workflow textarea { box-sizing: border-box; width: 100%; border: 1px solid var(--aos-border); padding: 8px 9px; background: var(--aos-surface); color: var(--aos-text); font: inherit; }
+.operations-internal-workflow textarea { min-height: 72px; resize: vertical; }
+.operations-internal-workflow form > div,
+.operations-workflow-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+.operations-internal-workflow button { cursor: pointer; border: 1px solid var(--aos-border); padding: 7px 10px; background: var(--aos-surface); color: var(--aos-text); }
+.operations-internal-workflow button.is-primary { border-color: var(--aos-accent); background: var(--aos-accent); color: white; }
+.operations-internal-workflow button:disabled { cursor: not-allowed; opacity: .5; }
+.operations-proposal-receipt { display: grid; gap: 4px; margin-top: 12px; border-left: 3px solid var(--aos-green); padding: 10px 12px; background: color-mix(in srgb, var(--aos-green) 7%, var(--aos-surface)); }
+.operations-proposal-receipt small { overflow-wrap: anywhere; color: var(--aos-text-tertiary); }
+.operations-timeline,
+.operations-workflow-sop { margin: 10px 0 0; padding-left: 20px; color: var(--aos-text-secondary); }
+.operations-timeline li { display: flex; justify-content: space-between; gap: 10px; }
+.operations-sop-toggle { margin-top: 10px; }
+.operations-workflow-notice { margin-top: 10px !important; border: 1px solid var(--aos-accent); padding: 9px 10px; background: color-mix(in srgb, var(--aos-accent) 6%, var(--aos-surface)); color: var(--aos-text) !important; }
 .operations-detail-heading > div > span { color: var(--aos-text-tertiary); font-size: 11px; }
 .operations-status { white-space: nowrap; border: 1px solid var(--aos-border); border-radius: 999px; padding: 4px 8px; font-size: 12px; }
 .operations-status.is-ready { color: var(--aos-green); border-color: var(--aos-green); }
@@ -2821,12 +2856,12 @@
 
 @media (max-width: 1359px) {
   .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.operations"] { height: 100%; min-height: 0; overflow-y: auto; }
-  .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.operations"] .operations-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); height: auto; min-height: 0; }
+  .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.operations"] .operations-metrics { grid-template-columns: repeat(6, minmax(64px, 1fr)) minmax(160px, 1.4fr); height: 73px; min-height: 73px; }
   .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.operations"] .operations-metrics > div { border-bottom: 1px solid var(--aos-border); }
-  .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.operations"] .operations-board { grid-template-columns: 1fr; height: auto; min-height: 0; overflow: visible; }
+  .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.operations"] .operations-board { grid-template-columns: 300px minmax(0, 1fr) 290px; height: calc(100vh - 165px); min-height: 520px; overflow: hidden; }
   .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.operations"] .operations-inbox,
   .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.operations"] .operations-detail,
-  .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.operations"] .operations-evidence { overflow-y: visible; }
+  .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.operations"] .operations-evidence { overflow-y: auto; }
   .creator-growth-axis { grid-template-columns: 1fr; }
   .creator-contribution-flow { grid-template-columns: 1fr; }
   .creator-lifecycle-ledger, .creator-lifecycle-lanes { grid-template-columns: 1fr; }

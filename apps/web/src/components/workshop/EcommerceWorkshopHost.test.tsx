@@ -37,7 +37,7 @@ describe("EcommerceWorkshopHost task cockpit", () => {
     expect(sourceSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("Module authority 未验证时仍暴露只读视图，并同时保留 unknown 阻断", async () => {
+  it("Module authority 未验证时直接暴露正式视图，诊断信息保留在折叠详情内", async () => {
     const taskModule = moduleWithReadiness("unknown"); Object.assign(taskModule, { moduleId: "ecommerce.task-cockpit", displayName: "日常任务总控大屏", menuLabel: "日常任务总控大屏", route: "/workshop/cockpit" });
     const catalog = { listModules: vi.fn().mockResolvedValue(workshopCatalogFixture({ items: [taskModule] })) };
     vi.spyOn(ecommerceWorkshopClient, "getSourceReadiness").mockRejectedValue(new Error("source readiness outside host assertion"));
@@ -45,34 +45,35 @@ describe("EcommerceWorkshopHost task cockpit", () => {
       { code: "TASK_COCKPIT_BUSINESS_CONTEXT_INDEPENDENT_SNAPSHOT", severity: "warning", dependency: "business-context:ecommerce.source-readiness", requiredAction: "按独立 cutoff 展示" },
     ], items: [], page: { limit: 20, count: 0, hasMore: false, nextCursor: null } });
     await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/cockpit"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
-    expect(host.textContent).toContain("模块能力待核对"); expect(host.textContent).toContain("数据源就绪度读取失败"); expect(host.textContent).toContain("当前只读范围"); expect(host.textContent).toContain("当前权威 Task 集合为空"); expect(host.querySelectorAll("h1")).toHaveLength(1);
+    expect(host.querySelector("#ecommerce-workshop-main .async-state-boundary")).toBeNull(); expect(host.querySelector<HTMLDetailsElement>(".ecommerce-workshop-technical-context")?.open).toBe(false); expect(host.textContent).toContain("模块能力待核对"); expect(host.textContent).toContain("数据源就绪度读取失败"); expect(host.textContent).toContain("当前只读范围"); expect(host.textContent).toContain("当前权威 Task 集合为空"); expect(host.querySelectorAll("h1")).toHaveLength(1);
   });
 
-  it("Operations authority 未验证时仍挂载只读分诊，并保留 Shell 阻断", async () => {
+  it("Operations authority 未验证时直接挂载正式内部处理工作区", async () => {
     const operationsModule = moduleWithReadiness("unknown"); Object.assign(operationsModule, { moduleId: "ecommerce.operations", displayName: "统一运营驾驶舱", menuLabel: "统一运营驾驶舱", route: "/workshop/operations" });
     const catalog = { listModules: vi.fn().mockResolvedValue(workshopCatalogFixture({ items: [operationsModule] })) };
     vi.spyOn(ecommerceWorkshopClient, "getSourceReadiness").mockRejectedValue(new Error("source readiness outside host assertion"));
     const ids = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"] as const;
     vi.spyOn(ecommerceWorkshopClient, "getOperationsView").mockResolvedValue({ schemaVersion: "aos.ecommerce-workshop.operations-view/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: ids.map((sliceId) => ({ sliceId, status: "ready", dataCutoff: "2026-08-24T08:00:00Z", authorityRefs: [{ resourceType: "ReadAuthority", resourceId: sliceId, revision: 1, contentHash: `sha256:${"a".repeat(64)}`, receiptId: "receipt-1" }], blockers: [], countLedger: { sourceTotal: 0, attached: 0, unmatched: 0, conflicted: 0 } })), page: { limit: 50, count: 0, hasMore: false, nextCursor: null } });
+    vi.spyOn(ecommerceWorkshopClient, "getOperationCaseWorkspace").mockResolvedValue({ schemaVersion: "aos.ecommerce-workshop.operation-case-workspace/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, status: "ready", evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", sources: [], cases: [], candidates: [], availableRefs: [], ledger: { sourceTotal: 0, assigned: 0, unassigned: 0, candidates: 0, openCases: 0, pausedCases: 0, closedCases: 0 }, externalEffectAllowed: false });
     const commandIds = ["classify", "createCase", "changeMembership", "manageSla", "automationKill", "refund"] as const;
     vi.spyOn(ecommerceWorkshopClient, "getOperationCommandReadiness").mockResolvedValue({ schemaVersion: "aos.ecommerce-workshop.operation-command-readiness/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", commands: commandIds.map((commandId, index) => ({ commandId, label: `命令${index}`, status: "blocked", risk: index > 3 ? "high" : "controlled", sideEffect: index === 5 ? "external" : "internalAuthority", blockers: [{ code: "OPERATION_COMMAND_HANDLER_NOT_BOUND", dependency: "W3-12B2", requiredAction: "完成 exact command gate" }] })) });
     await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/operations"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
     expect(host.querySelectorAll("h1")).toHaveLength(1);
     expect(host.textContent).toContain("统一运营驾驶舱");
+    expect(host.querySelector("#ecommerce-workshop-main .async-state-boundary")).toBeNull();
     expect(host.textContent).toContain("模块能力待核对");
-    expect(host.textContent).toContain("下方业务视图按自身当前 canonical GET 独立判定");
     expect(host.textContent).toContain("数据源就绪度读取失败");
-    expect(host.textContent).toContain("统一待办 · 业务切片");
-    expect(host.textContent).toContain("跨域只读分诊");
-    expect(host.textContent).toContain("动作安全预检");
+    expect(host.textContent).toContain("统一待办 · 内部处理");
+    expect(host.textContent).toContain("跨域运营分诊");
+    expect(host.querySelector('[aria-label="内部处理工作流"]')).not.toBeNull();
   });
 
-  it("Content Campaign authority 未验证时仍挂载正式只读三栏且保留阻断", async () => {
+  it("Content Campaign authority 未验证时直接挂载正式三栏，诊断默认收起", async () => {
     const contentModule = moduleWithReadiness("unknown"); Object.assign(contentModule, { moduleId: "ecommerce.content-campaign", displayName: "内容与活动工作台", menuLabel: "内容与活动工作台", route: "/workshop/content-campaign" });
     const catalog = { listModules: vi.fn().mockResolvedValue(workshopCatalogFixture({ items: [contentModule] })) };
     const cutoff = "2026-08-24T13:00:00Z";
     vi.spyOn(ecommerceWorkshopClient, "getContentCampaignView").mockResolvedValue({ schemaVersion: "aos.ecommerce-workshop.content-campaign-view/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: cutoff, dataCutoff: cutoff, readiness: "degraded", slices: (["plan", "calendar", "content"] as const).map((sliceId) => ({ sliceId, status: "blocked", dataCutoff: cutoff, authorityRefs: [], items: [], blockers: [{ code: `CANONICAL_${sliceId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`, dependency: `ecommerce.${sliceId}`, requiredAction: "接入 exact authority" }], countLedger: { eligible: 0, attached: 0, unmatched: 0, conflicted: 0 } })), page: { limit: 100, count: 0, hasMore: false, nextCursor: null } });
     await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/content-campaign"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
-    expect(host.querySelectorAll("h1")).toHaveLength(1); expect(host.textContent).toContain("内容与活动工作台"); expect(host.textContent).toContain("模块能力待核对"); expect(host.textContent).toContain("数据源就绪度读取失败"); expect(host.querySelectorAll(".content-campaign-slice")).toHaveLength(3); expect(host.textContent).toContain("内部草稿可写"); expect(host.textContent).toContain("对外发布仍需独立审批");
+    expect(host.querySelectorAll("h1")).toHaveLength(1); expect(host.textContent).toContain("内容与活动工作台"); expect(host.querySelector("#ecommerce-workshop-main .async-state-boundary")).toBeNull(); expect(host.querySelector<HTMLDetailsElement>(".ecommerce-workshop-technical-context")?.open).toBe(false); expect(host.textContent).toContain("模块能力待核对"); expect(host.textContent).toContain("数据源就绪度读取失败"); expect(host.querySelectorAll(".content-campaign-slice")).toHaveLength(3); expect(host.textContent).toContain("内部草稿可写"); expect(host.textContent).toContain("对外发布仍需独立审批");
   });
 });

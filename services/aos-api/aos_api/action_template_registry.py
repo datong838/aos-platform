@@ -12,7 +12,7 @@ log = get_logger("aos-api.action_template_registry")
 
 KEY = "action_plugin_installs"
 SUBDIR = "actions"
-DEFAULTS = ("close-work-order", "update-wiki-card")
+DEFAULTS = ("close-work-order", "update-wiki-card", "create-operation-case")
 REQUIRED = DEFAULTS
 
 

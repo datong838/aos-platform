@@ -1,0 +1,53 @@
+{
+  "id": "create-operation-case",
+  "actionTypeId": "ecommerce.operation.create-case",
+  "name": "Create Operation Case",
+  "nameZh": "创建内部运营处理",
+  "description": "基于正式业务对象形成内部运营处理提案；执行适配器默认关闭",
+  "version": "0.1.0",
+  "author": "aos",
+  "runtime": "stub",
+  "capabilities": [
+    "action"
+  ],
+  "objectType": "OperationCase",
+  "parameters": [
+    {
+      "name": "summary",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "priority",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "memberRefs",
+      "type": "array",
+      "required": true
+    },
+    {
+      "name": "externalEffectAllowed",
+      "type": "boolean",
+      "required": true
+    }
+  ],
+  "requiredMarkings": [
+    "public"
+  ],
+  "submissionCriteria": [
+    {
+      "field": "summary",
+      "op": "required"
+    },
+    {
+      "field": "memberRefs",
+      "op": "required"
+    }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}

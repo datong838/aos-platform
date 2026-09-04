@@ -1,97 +1,37 @@
-# O1-UX4 统一知识图谱画布设计 QA
+# R4-O04 统一运营驾驶舱视觉对照
 
-## 对照证据
+- source visual truth path: `/Users/ddt/work/projects/ai_agent/docs/palantier/foundry/html/workshop-app-order.html`
+- source capture: `.evidence/workshop/2026-09-04-r4-o04-operation-case-internal-workflow/reference-operations.png`
+- implementation screenshot: `.evidence/workshop/2026-09-04-r4-o04-operation-case-internal-workflow/actual-operations.png`
+- combined comparison: `.evidence/workshop/2026-09-04-r4-o04-operation-case-internal-workflow/reference-vs-actual.jpg`
+- viewport: 1280 × 720 CSS px
+- source pixels: 1280 × 720; implementation pixels: 1280 × 720; device scale factor: 1; no density normalization required
+- state: 左侧完整导航展开，待办分类为“全部”，真实栖月汇库存资料核对候选被选中。
 
-- source visual truth：
-  - `/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/codex-clipboard-50ff0523-06ea-49f2-9e17-0c175e72e3f9.png`（Foundry Object Explorer，2048×1154）
-  - `/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/codex-clipboard-d55d183f-774f-4409-a597-c663ca3cdb67.png`（Foundry Graph Health，2288×1220）
-  - `/var/folders/xw/rbrhth3s0jj8pygcx6knfs8c0000gn/T/codex-clipboard-b9d28ed6-05a8-423f-a23c-38594377ff05.png`（关系图谱表现参考）
-- implementation screenshot：`.evidence/o1-ux4-object-graph.png`（498×584，CSS viewport 498×584，deviceScaleFactor 1）
-- normalized comparison：`.evidence/o1-ux4-design-comparison.png`（1734×760；保持完整画面比例并按等高缩放）
-- route/state：`/workshop/graph?type=Payment&id=niushop:1:12`，`org-org/dev-project`，Graph 模式，2 hops，`Order.hasPayment` 过滤。
+## Findings
 
-参考稿为桌面宽屏，Codex 内置浏览器当前为 498px 响应式窄屏，不能把二者当作逐像素同视口复刻；本次比较的是已冻结的产品结构、信息层级、画布能力和窄屏降级。窄屏默认邻居列表、显式进入全屏图谱是 UX4 方案要求，不是视觉漂移。
+- 无 P0/P1/P2 可执行差异。当前实现保留视觉稿的单行指标、左侧待办、中部处理详情、右侧业务证据三栏主结构和紧凑密度。
+- 视觉稿中的王女士、退款金额、VIP 和 AI 已执行结论是演示事实；实现改为 `org-org/dev-project` 当前正式库存差异、数量守恒和内部提案，属于有意的产品约束，不是视觉漂移。
+- 字体与字号层级、间距与网格节奏、蓝/绿/黄义状态色、无额外图像资产的清晰度、中文业务文案均已逐项检查。
 
-## Full-view comparison evidence
+## Focused region comparison
 
-- 主图从旧 420px 绝对定位块升级为占满可用区域的独立画布；详情仍为按需抽屉，进入全屏后主图覆盖工作区。
-- 参考稿的图工具、图例、节点卡、方向边、类型色板和大面积画布均有对应实现。
-- 窄屏下查询条件会换行，工具栏保持可点，图例横向滚动，默认列表避免不可读的微缩图；用户显式选择“图谱画布”后可平移和缩放。
+- 重点比较了顶部指标、三栏宽度、待办卡片密度、中部数量守恒区和右侧证据/建议/SOP 区。
+- 页面不使用视觉稿的图片型资产；标准 UI 图标沿用现有 AOS 图标库，没有 CSS 伪造业务素材。
 
-## Focused region comparison evidence
+## Primary interactions tested
 
-- 工具栏：放大、缩小、重置、适配、放射/分层、邻居列表/图谱、可见路径均已浏览器点击验证，不是静态按钮。
-- 图主体：Payment `niushop:1:12` 的真实快照在 2 hops 下显示 9 节点/8 边；`Order.hasPayment` 过滤后为 3 节点/2 边，水位保持服务端值。
-- 节点：类型稳定配色、标签、规范 ID、depth、选择/邻居降噪、Enter/双击重新取 seed 均有实现。
-- 全屏：按钮进入固定全视口画布，退出按钮和 Escape 可恢复页面。
-
-## Required fidelity surfaces
-
-- Fonts and typography：沿用 AOS 既有字体和文本 token；标题、元数据、边标签三层字级清楚。窄屏 watermark 自动换行，无重叠。
-- Spacing and layout rhythm：主图区不再被详情挤成窄纵栏；工具栏和图例分层，画布保留最小可操作高度；390/498px 使用列表优先。
-- Colors and visual tokens：全部复用 `--aos-*` token；Object Type 使用稳定离散色板，选择态使用现有 accent。
-- Image quality and asset fidelity：页面无需要生成的位图资产；知识图谱 SVG 是数据可视化渲染，不以装饰性自绘资产代替参考素材。
-- Copy and content：全部说明真实 authority、watermark、节点/边数量和截断状态，不使用模拟业务文案。
-- Accessibility：工具栏为语义 toolbar；节点可聚焦并支持 Enter/Space；所有查询控件有 label；移动端列表保留相同 selection。
+- 搜索真实业务对象、分类筛选、查看原始业务对象、查看处理日志、展开完整 SOP、侧栏折叠与恢复均通过。
+- 真实内部提案的修改、建议采纳、替代提案、审批预览、时间线回读和撤回均通过；外部动作计数为 0。
+- console errors checked: 未见当前核心交互的未处理错误。
 
 ## Comparison history
 
-### Iteration 1
-
-- [P1] 旧图谱被压在 420px、仅六个绝对定位节点，不能表达真实 GraphSnapshot。
-- [P1] 展开、缩放、布局和过滤缺失或无实际动作。
-- [P2] 390px 直接画图会导致节点不可读。
-
-修复：抽离 `OntologyGraphCanvas`；实现确定性放射/分层布局、pan/zoom/fit/reset、全屏、节点与边、查询过滤；390px 默认邻居列表。
-
-### Iteration 2
-
-- 浏览器后证据：真实 Payment 快照、1/2 hops、关系/对象类型过滤、可见路径、布局切换、缩放、适配、节点选择和全屏均通过；Graph Health 复用统一画布，Domain 成功读取，当前无运行血缘数据时明确失败关闭；控制台错误 0。
-- 未发现仍需修复的 P0/P1/P2。
-
-## Findings
-
-- 无未解决的 P0/P1/P2。
+- 首次对照后将实现分类从“库存与告警”恢复到与视觉稿相同的“全部”状态；方案/代码复审又移除了业务首屏前重复出现的模块状态卡，并把技术与数据诊断收进默认折叠详情，随后重新截图完成等视口对照。
+- 没有发现需要修改生产样式的 P0/P1/P2 问题。
 
 ## Follow-up polish
 
-- [P3] 在可获得 1440×900 的内置浏览器视口时补一张同宽桌面截图，作为更精确的像素级密度对照；不阻断本波功能与响应式验收。
+- 无遗留视觉修复项；正式业务视图首屏不再被安装目录技术状态挤压，诊断信息仍可按需展开查看。
 
-## final result
-
-passed
-
----
-
-# R4-C01 内容与活动工作台设计 QA
-
-## 对照与状态
-
-- Source visual truth：`/Users/ddt/work/projects/ai_agent/docs/palantier/foundry/html/evidence/2026-08-13-workshop-seven-pages-v1/01-content-campaign-1280.png`
-- Implementation：`http://127.0.0.1:5173/workshop/content-campaign`
-- Viewport/state：1280 × 720；`org-org/dev-project`；活动策划默认态、内容日历联动态、操作预检态与审计展开态。
-- Detailed evidence：`.evidence/workshop/2026-09-04-r4-c01-content-campaign-visual-structure/verification.md`
-
-## Findings
-
-- P0：无。
-- P1：无。
-- P2：无剩余项。顶部不再被状态区挤压，主板恢复为左列表、中央策划、右协作风险三栏，底部审批栏不遮挡内容。
-
-## Required Fidelity Surfaces
-
-- Typography：沿用 AOS 既有字体、字号、颜色和边框 token；没有引入新视觉体系。
-- Layout：页签 40px；业务板 972×632；三栏宽度 190/502/280；中央审批栏固定在本栏底部；页面级水平溢出为 0。
-- Copy/data：只显示 canonical GET 的状态和数量；没有把静态稿的活动、预算、GMV、商品、库存或风险数字伪装成栖月汇事实。
-- Interaction：三页签与左侧列表双向一致；建议写入输入框；生成、保存、重新生成、批准发布、新建活动、风险检查均返回明确预检结果；审计可展开/折叠；重新读取恢复服务端状态。
-- Accessibility：页签使用 tab/aria-selected；列表按钮保留 aria-pressed；主要区域、风险区和审批区均有可读标签。
-
-## Comparison History
-
-1. 基线为通用三卡骨架，缺少视觉稿的活动列表、中央 AI 策划、右侧风险协作及底部审批层级。
-2. 第一轮恢复四区结构、可交互输入和建议，但展开审计后浏览器自动滚动造成主板暂时移出首屏。
-3. 最终态将审计默认折叠，重新读取恢复 y=88 首屏基线；参考图和实页同为 1280×720，列边界与主体高度一致。
-
-## Final result
-
-passed
+final result: passed

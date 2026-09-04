@@ -17,6 +17,17 @@ export type ReplacementProposalInput = {
   expiresAt: string;
 };
 
+export type CreateProposalInput = {
+  actionTypeId: string;
+  objectRef: { resourceType: string; resourceId: string; revision: string | null; authority: string };
+  purpose: string;
+  riskHint?: "R0" | "R1" | "R2" | "R3" | "R4";
+  payload: Record<string, unknown>;
+  diff: Record<string, unknown>;
+  evidenceRefs: Array<{ resourceType: string; resourceId: string; revision: string | null; authority: string }>;
+  expiresAt: string;
+};
+
 function idempotencyKey(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
 }
@@ -31,6 +42,34 @@ export class AipActionsSdk {
 
   async get(proposalId: string): Promise<ActionDraftBundle> {
     return parseActionDraftBundle(await this.client.request("getActionProposal", { params: { proposal_id: proposalId } }));
+  }
+
+  async createProposal(input: CreateProposalInput): Promise<ActionDraftBundle> {
+    const actionTypeId = input.actionTypeId.trim();
+    const purpose = input.purpose.trim();
+    const expiry = new Date(input.expiresAt);
+    if (!actionTypeId || !purpose) throw new TypeError("内部处理类型和目的不能为空");
+    if (!Number.isFinite(expiry.getTime()) || expiry.getTime() <= Date.now()) throw new TypeError("内部处理提案有效期必须晚于当前时间");
+    if (!input.objectRef.resourceType.trim() || !input.objectRef.resourceId.trim() || !input.objectRef.authority.trim()) throw new TypeError("内部处理对象引用不完整");
+    const snapshot = parseActionDraftRevisionSnapshot(await this.client.request("createActionDraft", {
+      headers: { "Idempotency-Key": idempotencyKey("operation-case-draft-create") },
+      body: {
+        actionTypeId,
+        objectRef: input.objectRef,
+        purpose,
+        riskHint: input.riskHint ?? "R1",
+        payload: input.payload,
+        diff: input.diff,
+        evidenceRefs: input.evidenceRefs,
+        expiresAt: expiry.toISOString(),
+      },
+    }));
+    if (snapshot.lifecycle !== "editable") throw new TypeError("服务端未返回可提交内部处理草稿");
+    return parseActionDraftBundle(await this.client.request("submitActionDraft", {
+      params: { draft_id: snapshot.draftId },
+      headers: { "Idempotency-Key": idempotencyKey("operation-case-draft-submit") },
+      body: { expectedRevision: snapshot.revision, expectedContentHash: snapshot.contentHash },
+    }));
   }
 
   async createReplacementProposal(bundle: ActionDraftBundle, input: ReplacementProposalInput): Promise<ActionDraftBundle> {
@@ -54,7 +93,7 @@ export class AipActionsSdk {
         expiresAt: expiry.toISOString(),
       },
     }));
-    if (snapshot.lifecycle !== "draft") throw new TypeError("服务端未返回可提交草稿");
+    if (snapshot.lifecycle !== "editable") throw new TypeError("服务端未返回可提交草稿");
     return parseActionDraftBundle(await this.client.request("submitActionDraft", {
       params: { draft_id: snapshot.draftId },
       headers: { "Idempotency-Key": idempotencyKey("action-draft-submit") },

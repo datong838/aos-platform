@@ -8,13 +8,22 @@ const hash = "a".repeat(64);
 const proposal: ActionProposal = { id: "proposal-1", actionType: { actionTypeId: "send_notice", revisionHash: hash, objectType: "Order" }, taskId: null, runId: null, objectRef: null, impactPreviewRef: { resourceType: "ImpactPreviewRevision", resourceId: "preview-1", revision: 2, contentHash: hash }, purpose: "发送通知", riskLevel: "R2", payload: {}, proposalHash: hash, status: "drafted", expiresAt: "2026-08-12T00:00:00Z", version: 1, createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-08-11T00:00:00Z", updatedAt: "2026-08-11T00:00:00Z" };
 const bundle = { proposal, draft: { id: "draft-1", proposalId: "proposal-1", proposalVersion: 1, proposalHash: hash, diff: {}, evidenceRefs: [], status: "awaiting_approval", createdAt: "2026-08-11T00:00:00Z" }, approvals: [] };
 const draftRevision = {
-  draftId: "working-draft-1", revision: 1, version: 1, lifecycle: "draft",
+  draftId: "working-draft-1", revision: 1, version: 1, lifecycle: "editable",
   request: {}, actionTypeRevisionHash: hash, riskLevel: "R2", approvalPolicyHash: hash,
   contentHash: hash, submittedProposalId: null,
   createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-08-11T00:00:00Z",
 };
 
 describe("AipActionsSdk", () => {
+  it("创建并提交内部处理草稿，保留正式对象和证据引用", async () => {
+    const snapshot = { draftId: "draft-new", revision: 1, version: 1, lifecycle: "editable", request: {}, actionTypeRevisionHash: "a".repeat(64), riskLevel: "R1", approvalPolicyHash: "b".repeat(64), contentHash: "c".repeat(64), submittedProposalId: null, createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-09-04T10:00:00Z" };
+    const request = vi.fn().mockResolvedValueOnce(snapshot).mockResolvedValueOnce(bundle);
+    const sdk = new AipActionsSdk({ request } as never);
+    await sdk.createProposal({ actionTypeId: "ecommerce.operation.create-case", objectRef: { resourceType: "ProductSku", resourceId: "niushop:1:70", revision: "b".repeat(64), authority: "ecommerce-workshop.operation-case-workspace" }, purpose: "核对库存资料", payload: { candidateId: "d".repeat(64) }, diff: { priority: { from: null, to: "high" } }, evidenceRefs: [{ resourceType: "ProductSku", resourceId: "niushop:1:70", revision: "b".repeat(64), authority: "ecommerce-workshop.operation-case-workspace" }], expiresAt: "2099-01-01T00:00:00Z" });
+    expect(request).toHaveBeenNthCalledWith(1, "createActionDraft", expect.objectContaining({ body: expect.objectContaining({ actionTypeId: "ecommerce.operation.create-case", purpose: "核对库存资料" }) }));
+    expect(request).toHaveBeenNthCalledWith(2, "submitActionDraft", expect.objectContaining({ params: { draft_id: "draft-new" }, body: { expectedRevision: 1, expectedContentHash: "c".repeat(64) } }));
+  });
+
   it("通过唯一 AIP client 列出 Proposal，并绑定精确 version/hash 审批", async () => {
     const request = vi.fn()
       .mockResolvedValueOnce({ items: [bundle], count: 1 })

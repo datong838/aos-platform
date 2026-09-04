@@ -232,10 +232,10 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     const visualHeaderActions = [...host.querySelectorAll<HTMLButtonElement>(".workshop-visual-header-actions button")];
     expect(visualHeaderActions.map((button) => button.textContent)).toEqual(["筛选", "＋ 新建处理"]);
     expect(visualHeaderActions[0]?.disabled).toBe(false);
-    expect(visualHeaderActions[1]?.disabled).toBe(true);
+    expect(visualHeaderActions[1]?.disabled).toBe(false);
     await act(async () => visualHeaderActions[0]?.click());
     expect(document.activeElement).toBe(host.querySelector(".workshop-visual-header-search input"));
-    expect(visualHeaderActions[1]?.title).toContain("正式业务数据与内部工作流");
+    expect(visualHeaderActions[1]?.title).toContain("创建内部处理提案");
     expect(host.querySelector(".workshop-header-action-notice")).toBeNull();
   });
 
@@ -320,7 +320,7 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
       expect(host.querySelector<HTMLInputElement>(".workshop-visual-header-search input")?.placeholder ?? null).toBe(placeholder);
       const actions = [...host.querySelectorAll<HTMLButtonElement>(".workshop-visual-header-actions button")];
       expect(actions).toHaveLength(2);
-      const executable = actions.filter((button) => button.textContent === "筛选" || button.textContent === "查看内容计划");
+      const executable = actions.filter((button) => button.textContent === "筛选" || button.textContent === "查看内容计划" || (path === "/workshop/operations" && button.textContent === "＋ 新建处理"));
       expect(executable.every((button) => !button.disabled)).toBe(true);
       expect(actions.filter((button) => !executable.includes(button)).every((button) => button.disabled)).toBe(true);
       expect(host.querySelector('.workshop-header-action-notice')).toBeNull();

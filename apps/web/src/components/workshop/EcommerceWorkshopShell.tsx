@@ -112,7 +112,7 @@ export function EcommerceWorkshopShell({
 
       <details className="ecommerce-workshop-technical-context">
         <summary>
-          <span>模块安装上下文</span>
+          <span>技术与数据诊断</span>
           <small>{module.moduleId} · 模块能力{READINESS_LABEL[module.readiness]} · 安装目录截止 {dataCutoff ?? "待验证"}</small>
         </summary>
         <div className="ecommerce-workshop-technical-context-body">
@@ -124,6 +124,7 @@ export function EcommerceWorkshopShell({
           </dl>
 
           <SourceReadinessPanel />
+          <CapabilityBlocker readiness={module.readiness} blockers={module.blockers} />
         </div>
       </details>
 
@@ -132,7 +133,9 @@ export function EcommerceWorkshopShell({
         tabIndex={-1}
         aria-label="模块主内容"
       >
-        {catalogStale ? (
+        {exposeReadOnlyWhenUnverified && children ? (
+          children
+        ) : catalogStale ? (
           <AsyncStateBoundary
             state="stale"
             title="安装目录快照可能已过期"
@@ -164,7 +167,6 @@ export function EcommerceWorkshopShell({
             ) : null}
           </>
         )}
-        <CapabilityBlocker readiness={module.readiness} blockers={module.blockers} />
       </section>
     </div>
     </SourceReadinessProvider>

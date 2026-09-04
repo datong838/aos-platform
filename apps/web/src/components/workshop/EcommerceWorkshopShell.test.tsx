@@ -41,7 +41,7 @@ describe("EcommerceWorkshopShell", () => {
     const context = host.querySelector<HTMLDetailsElement>(".ecommerce-workshop-technical-context");
     const summary = context?.querySelector("summary");
     expect(context?.open).toBe(false);
-    expect(summary?.textContent).toContain("模块安装上下文");
+    expect(summary?.textContent).toContain("技术与数据诊断");
     expect(summary?.textContent).toContain(module.moduleId);
     expect(summary?.textContent).toContain("安装目录截止");
     expect(summary?.textContent).toContain("2026-08-14T09:59:00Z");
@@ -92,6 +92,24 @@ describe("EcommerceWorkshopShell", () => {
     expect(host.textContent).toContain("下方业务视图按自身当前 canonical GET 独立判定");
     expect(host.textContent).toContain("DEPENDENCY_NOT_GREEN");
     expect(host.textContent).not.toContain("业务视图等待正式读模型接入");
+  });
+
+  it("已有正式业务视图时不在首屏插入模块状态卡，诊断仍保留在折叠详情内", async () => {
+    await act(async () => root.render(
+      <EcommerceWorkshopShell
+        module={moduleWithReadiness("unknown")}
+        dataCutoff={null}
+        exposeReadOnlyWhenUnverified
+      >
+        <section aria-label="正式业务视图">真实业务工作区</section>
+      </EcommerceWorkshopShell>,
+    ));
+    expect(host.querySelector("[aria-label='正式业务视图']")?.textContent).toBe("真实业务工作区");
+    expect(host.querySelector("#ecommerce-workshop-main .async-state-boundary")).toBeNull();
+    const context = host.querySelector<HTMLDetailsElement>(".ecommerce-workshop-technical-context");
+    expect(context?.open).toBe(false);
+    expect(context?.textContent).toContain("模块能力待核对");
+    expect(context?.textContent).toContain("DEPENDENCY_NOT_GREEN");
   });
 
   it("卸载时发送退出专注事件，平台壳不会残留隐藏状态", async () => {

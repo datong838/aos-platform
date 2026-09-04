@@ -11,6 +11,9 @@ const response = { schemaVersion: "aos.ecommerce-workshop.operations-view/v1" as
 const commandIds = ["classify", "createCase", "changeMembership", "manageSla", "automationKill", "refund"] as const;
 const commands = { schemaVersion: "aos.ecommerce-workshop.operation-command-readiness/v1" as const, tenant: response.tenant, evaluatedAt: "2026-08-24T08:00:00Z", commands: commandIds.map((commandId, index) => ({ commandId, label: ["分类事件", "创建运营工单", "调整工单成员", "管理服务时限", "停止自动化", "退款"][index], status: "blocked" as const, risk: (index > 3 ? "high" : "controlled") as "high" | "controlled", sideEffect: (index === 5 ? "external" : "internalAuthority") as "external" | "internalAuthority", blockers: [{ code: index === 5 ? "EXTERNAL_ACTION_GATE_NOT_BOUND" : "OPERATION_COMMAND_HANDLER_NOT_BOUND", dependency: "W3-12B2", requiredAction: "完成 exact command gate" }] })) };
 const observation = { schemaVersion: "aos.ecommerce-workshop.operation-command-observation/v1" as const, tenant: response.tenant, proposalId: "proposal-1", leaseId: "lease-1", commandId: "classify" as const, status: "applied" as const, proposalHash: "a".repeat(64), receiptId: "receipt-1", requestFingerprint: "b".repeat(64), operationReceiptId: "operation-receipt-1", replayAllowed: false as const };
+const workspaceRef = { tenant: response.tenant, resourceType: "ProductSku", resourceId: "niushop:1:70", contentHash: "c".repeat(64), sourceUpdatedAt: "2026-08-24T07:00:00Z" };
+const workspace = { schemaVersion: "aos.ecommerce-workshop.operation-case-workspace/v1" as const, tenant: response.tenant, status: "ready" as const, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", sources: ["orders", "inventory", "shipments", "aftersaleEvents", "payments", "operationCases"].map((sourceId, index) => ({ sourceId, status: "ready" as const, count: index === 1 ? 1 : 0, blocker: null })), cases: [], candidates: [{ candidateId: "d".repeat(64), kind: "inventory_data_gap" as const, title: "库存资料待核对", summary: "商品库存缺少正式数量。", priority: "high" as const, memberRefs: [workspaceRef], externalEffectAllowed: false as const }], availableRefs: [workspaceRef], ledger: { sourceTotal: 1, assigned: 0, unassigned: 1, candidates: 1, openCases: 0, pausedCases: 0, closedCases: 0 }, externalEffectAllowed: false as const };
+const proposalBundle = { proposal: { id: "proposal-r4o04", actionType: { actionTypeId: "ecommerce.operation.create-case", revisionHash: "a".repeat(64), objectType: "OperationCase" }, taskId: null, runId: null, objectRef: { resourceType: "ProductSku", resourceId: "niushop:1:70", revision: "c".repeat(64), authority: "ecommerce-workshop.operation-case-workspace" }, impactPreviewRef: null, purpose: "库存资料待核对", riskLevel: "R1" as const, payload: { priority: "high", summary: "商品库存缺少正式数量。" }, proposalHash: "e".repeat(64), status: "drafted" as const, expiresAt: "2099-01-01T00:00:00Z", version: 1, createdBy: { actorType: "user", actorId: "maker" }, createdAt: "2026-08-24T08:00:00Z", updatedAt: "2026-08-24T08:00:00Z" }, draft: { id: "draft-r4o04", proposalId: "proposal-r4o04", proposalVersion: 1, proposalHash: "e".repeat(64), diff: {}, evidenceRefs: [], status: "awaiting_approval", createdAt: "2026-08-24T08:00:00Z" }, approvals: [] };
 
 describe("OperationsPage", () => {
   let host: HTMLDivElement; let root: Root;
@@ -27,17 +30,8 @@ describe("OperationsPage", () => {
     const sliceButtons = host.querySelectorAll<HTMLButtonElement>(".operations-slice-card");
     await act(async () => sliceButtons[5]!.click());
     expect(host.textContent).toContain("AFTERSALE_EVENTS_READ_FAILED_CLOSED");
-    expect(host.textContent).toContain("只读分诊");
-    expect(host.textContent).toContain("动作安全预检");
-    expect(host.querySelectorAll(".operations-command")).toHaveLength(6);
-    expect(host.textContent).toContain("管理服务时限");
-    expect(host.textContent).toContain("停止自动化");
-    expect(host.textContent).not.toContain("管理 SLA");
-    expect(host.textContent).not.toContain("自动化 Kill");
-    const operationCommands = [...host.querySelectorAll<HTMLButtonElement>(".operations-command")];
-    expect(operationCommands.every((item) => !item.disabled)).toBe(true);
-    act(() => operationCommands[0]?.click());
-    expect(host.textContent).toContain("未触发业务操作");
+    expect(host.textContent).toContain("跨域运营分诊");
+    expect(host.textContent).not.toContain("0 / 6 可提交");
     expect(host.textContent).not.toContain("王女士");
     expect(host.textContent).not.toContain("一键采纳");
     expect(host.textContent).toContain("请求级命令证据");
@@ -46,7 +40,7 @@ describe("OperationsPage", () => {
     expect(host.textContent).toContain("逻辑编排");
     expect(host.textContent).toContain("数字同事");
     expect(host.textContent).toContain("工作台贡献");
-    expect(host.textContent).toContain("保持待核对");
+    expect(host.textContent).toContain("外部动作需独立审批");
     expect(host.textContent).toContain("以正式售后事件数据支撑售后事件分类");
     const inputs = host.querySelectorAll<HTMLInputElement>(".operations-observation-form input");
     const setInput = (input: HTMLInputElement, value: string) => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); };
@@ -111,7 +105,7 @@ describe("OperationsPage", () => {
       expect(button).toBeDefined();
       await act(async () => button!.click());
     };
-    await clickByText("查看原始数据");
+    await clickByText("查看原订单");
     expect(host.querySelector('[role="dialog"]')?.textContent).toContain("ReadAuthority");
     await clickByText("处理日志");
     expect(host.querySelector('[role="dialog"]')?.textContent).toContain("同一数据截止");
@@ -136,5 +130,31 @@ describe("OperationsPage", () => {
     expect(host.textContent).toContain("OBSERVATION_FAILED_CLOSED");
     expect(host.textContent).toContain("未执行重放或补偿");
     expect(host.textContent).not.toContain("重新执行");
+  });
+  it("以真实候选完成新建、建议采纳、修改、日志、审批预览和撤回内部处理", async () => {
+    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCaseWorkspace: vi.fn().mockResolvedValue(workspace), getOperationCommandObservation: vi.fn().mockResolvedValue(observation) };
+    const revised = { ...proposalBundle, proposal: { ...proposalBundle.proposal, id: "proposal-r4o04-v2", proposalHash: "f".repeat(64) } };
+    const withdrawn = { ...revised, proposal: { ...revised.proposal, status: "withdrawn" as const } };
+    const actions = { createProposal: vi.fn().mockResolvedValue(proposalBundle), createReplacementProposal: vi.fn().mockResolvedValue(revised), timeline: vi.fn().mockResolvedValue({ bundle: proposalBundle, events: [{ id: "event-1", type: "submitted", actorId: "maker", proposalVersion: 1, proposalHash: "e".repeat(64), payload: {}, createdAt: "2026-08-24T08:00:00Z" }] }), withdraw: vi.fn().mockResolvedValue(withdrawn) };
+    await act(async () => root.render(<OperationsPage client={client} actions={actions} />));
+    expect(host.textContent).toContain("库存资料待核对");
+    const click = async (label: string) => { const button = [...host.querySelectorAll<HTMLButtonElement>(".operations-internal-workflow button")].find((item) => item.textContent === label); expect(button).toBeDefined(); await act(async () => button!.click()); };
+    await click("新建处理");
+    await click("采纳建议");
+    expect(host.textContent).toContain("已采纳建议并回填处置说明");
+    await act(async () => host.querySelector<HTMLFormElement>('.operations-internal-workflow form')!.requestSubmit());
+    expect(actions.createProposal).toHaveBeenCalledWith(expect.objectContaining({ actionTypeId: "ecommerce.operation.create-case", riskHint: "R2", objectRef: expect.objectContaining({ resourceId: "niushop:1:70" }), payload: expect.objectContaining({ externalEffectAllowed: false }) }));
+    expect(host.textContent).toContain("内部提案凭证");
+    await click("批准预览");
+    expect(host.textContent).toContain("需由独立审批人批准后取得执行租约");
+    await click("处理日志");
+    expect(actions.timeline).toHaveBeenCalledWith("proposal-r4o04");
+    expect(host.textContent).toContain("submitted");
+    await click("修改");
+    await act(async () => host.querySelector<HTMLFormElement>('.operations-internal-workflow form')!.requestSubmit());
+    expect(actions.createReplacementProposal).toHaveBeenCalled();
+    await click("驳回/撤回");
+    expect(actions.withdraw).toHaveBeenCalled();
+    expect(host.textContent).toContain("未触发业务执行");
   });
 });
