@@ -1,0 +1,32 @@
+{
+  "route": "/workshop/content-campaign",
+  "tenant": "org-org/dev-project",
+  "viewport": { "width": 1280, "height": 720 },
+  "reference": {
+    "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/foundry/html/evidence/2026-08-13-workshop-seven-pages-v1/01-content-campaign-1280.png",
+    "sha256": "eedcd6d29553bc52cfb68e8e45d9348a63abc2831cc8c8f343afcbba9961ad6d"
+  },
+  "geometry": {
+    "tabs": { "x": 308, "y": 48, "width": 972, "height": 40 },
+    "board": { "x": 308, "y": 88, "width": 972, "height": 632 },
+    "activityList": { "x": 308, "y": 89, "width": 190, "height": 630 },
+    "planning": { "x": 498, "y": 89, "width": 502, "height": 630 },
+    "collaboration": { "x": 1000, "y": 89, "width": 280, "height": 630 },
+    "approvalBar": { "x": 498, "y": 664.5, "width": 502, "height": 53.5 }
+  },
+  "horizontalOverflow": 0,
+  "interactions": {
+    "tabAndListSelection": "passed",
+    "recommendationToIntent": "passed",
+    "generatePreflight": "passed",
+    "savePreflight": "passed",
+    "regeneratePreflight": "passed",
+    "approvePublishPreflight": "passed",
+    "riskPreflight": "passed",
+    "newActivityPreflight": "passed",
+    "auditDisclosure": "passed",
+    "reloadReset": "passed"
+  },
+  "console": { "errors": 0, "warnings": ["React Router v7 future flag compatibility"] },
+  "result": "passed"
+}
