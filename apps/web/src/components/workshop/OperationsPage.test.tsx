@@ -20,7 +20,7 @@ describe("OperationsPage", () => {
     const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn().mockResolvedValue(observation) };
     await act(async () => root.render(<OperationsPage client={client} />));
     expect(host.querySelectorAll(".operations-slice-card")).toHaveLength(7);
-    expect(host.textContent).toContain("统一待办 · 业务切片");
+    expect(host.textContent).toContain("统一待办");
     expect(host.textContent).toContain("部分数据可用");
     expect(host.querySelector(".operations-detail")?.textContent).toContain("订单");
     expect(host.querySelector(".operations-detail")?.textContent).not.toContain("AFTERSALE_EVENTS_READ_FAILED_CLOSED");
@@ -56,6 +56,58 @@ describe("OperationsPage", () => {
     expect(host.textContent).toContain("applied");
     expect(host.textContent).toContain("禁止自动重放");
     expect(host.textContent).not.toContain("重新执行");
+  });
+  it("按蓝图提供可用的待办分类、搜索和处理详情层级", async () => {
+    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn().mockResolvedValue(observation) };
+    await act(async () => root.render(<OperationsPage client={client} />));
+    expect(host.querySelector('[aria-label="统一待办分类"]')).not.toBeNull();
+    expect(host.querySelectorAll(".operations-queue-filter")).toHaveLength(4);
+    expect(host.textContent).toContain("订单与履约");
+    expect(host.textContent).toContain("库存与告警");
+    expect(host.textContent).toContain("售后与工单");
+
+    const filters = host.querySelectorAll<HTMLButtonElement>(".operations-queue-filter");
+    await act(async () => filters[1]!.click());
+    expect(host.querySelectorAll(".operations-slice-card")).toHaveLength(4);
+    expect(host.textContent).not.toContain("售后事件数据 · 第");
+
+    const search = host.querySelector<HTMLInputElement>('[aria-label="搜索运营待办"]')!;
+    const setInput = (input: HTMLInputElement, value: string) => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); };
+    await act(async () => setInput(search, "payments"));
+    expect(host.querySelectorAll(".operations-slice-card")).toHaveLength(1);
+    expect(host.textContent).toContain("支付");
+    await act(async () => setInput(search, "不存在的业务对象"));
+    expect(host.textContent).toContain("当前筛选下没有匹配的正式业务视图");
+
+    await act(async () => { setInput(search, ""); filters[0]!.click(); });
+    expect(host.querySelector('[aria-label="业务处理流程"]')).not.toBeNull();
+    expect(host.textContent).toContain("读取正式业务数据");
+    expect(host.textContent).toContain("数量守恒核对");
+    expect(host.textContent).toContain("运营处理关联");
+    expect(host.textContent).toContain("人工业务处置");
+    expect(host.textContent).toContain("业务证据");
+    expect(host.textContent).toContain("处理建议");
+    expect(host.textContent).toContain("处理 SOP");
+    expect(host.textContent).toContain("相似经验");
+  });
+  it("原始数据、处理日志、建议依据和 SOP 按钮都产生可观察的页内结果", async () => {
+    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn().mockResolvedValue(observation) };
+    await act(async () => root.render(<OperationsPage client={client} />));
+    const clickByText = async (label: string) => {
+      const button = [...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent?.includes(label));
+      expect(button).toBeDefined();
+      await act(async () => button!.click());
+    };
+    await clickByText("查看原始数据");
+    expect(host.querySelector('[role="dialog"]')?.textContent).toContain("ReadAuthority");
+    await clickByText("处理日志");
+    expect(host.querySelector('[role="dialog"]')?.textContent).toContain("同一数据截止");
+    await clickByText("查看建议依据");
+    expect(host.textContent).toContain("建议仅根据当前数量守恒和正式来源生成");
+    await clickByText("查看完整 SOP");
+    expect(host.textContent).toContain("核对订单、支付、履约和售后的同一截止面");
+    expect(host.textContent).not.toContain("王女士");
+    expect(host.textContent).not.toContain("¥199");
   });
   it("unknown 与 observation 读取错误均失败关闭且不生成重放入口", async () => {
     const unknown = { ...observation, status: "unknown" as const, receiptId: "receipt-unknown", operationReceiptId: null };
