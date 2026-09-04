@@ -8,7 +8,7 @@ import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
 import psycopg
@@ -69,6 +69,19 @@ class ContentVariantAuthorityObservation:
                 char not in "0123456789abcdef" for char in content_hash
             ):
                 raise ValueError("ContentVariant requires sha256 artifact hashes")
+
+
+@dataclass(frozen=True)
+class ContentCampaignAuthoritySnapshot:
+    """One tenant-bound cutoff observed through one database snapshot."""
+
+    campaigns: list[ContentCampaignAuthorityObservation[CampaignRevision]]
+    calendar_entries: list[ContentCampaignAuthorityObservation[CalendarEntryRevision]]
+    intents: list[ContentCampaignAuthorityObservation[MasterContentIntentRevision]]
+    variants: list[ContentVariantAuthorityObservation]
+    errors: dict[str, "ContentCampaignAuthorityReadError"] = field(
+        default_factory=dict
+    )
 
 
 class ContentCampaignAuthorityStoreError(RuntimeError):
@@ -294,13 +307,134 @@ class EcommerceContentCampaignAuthorityStore:
     def list_content_variants(
         self, scope: TenantScope, *, cutoff: datetime, limit: int = 100
     ) -> list[ContentVariantAuthorityObservation]:
+        try:
+            with self._read_connect_factory(scope) as conn:
+                return self._list_content_variants_on_connection(
+                    conn, scope, cutoff=cutoff, limit=limit
+                )
+        except ContentCampaignAuthorityReadError:
+            raise
+        except (psycopg.Error, AttributeError, KeyError, TypeError, ValueError) as exc:
+            raise ContentCampaignAuthorityReadError(
+                "ContentVariant authority read failed closed"
+            ) from exc
+
+    def read_snapshot(
+        self, scope: TenantScope, *, cutoff: datetime, limit: int = 100
+    ) -> ContentCampaignAuthoritySnapshot:
+        """Read all page authorities from one repeatable-read transaction.
+
+        A nested transaction isolates a failed slice with a savepoint while the
+        outer read-only connection preserves one database snapshot and cutoff.
+        """
+        if cutoff.utcoffset() is None:
+            raise ValueError("authority cutoff requires a timezone")
+        if not 1 <= limit <= 100:
+            raise ValueError("authority read limit must be between 1 and 100")
+        campaigns = []
+        calendar_entries = []
+        intents = []
+        variants = []
+        errors: dict[str, ContentCampaignAuthorityReadError] = {}
+        try:
+            with self._read_connect_factory(scope) as conn:
+                try:
+                    with conn.transaction():
+                        campaigns = self._list_current_on_connection(
+                            conn,
+                            scope,
+                            cutoff=cutoff,
+                            limit=limit,
+                            model=CampaignRevision,
+                            head_table="ecommerce_campaign_head",
+                            revision_table="ecommerce_campaign_revision",
+                            identity_column="campaign_id",
+                        )
+                except ContentCampaignAuthorityReadError as exc:
+                    errors["plan"] = exc
+                try:
+                    with conn.transaction():
+                        calendar_entries = self._list_current_on_connection(
+                            conn,
+                            scope,
+                            cutoff=cutoff,
+                            limit=limit,
+                            model=CalendarEntryRevision,
+                            head_table="ecommerce_content_calendar_head",
+                            revision_table="ecommerce_content_calendar_entry_revision",
+                            identity_column="entry_id",
+                        )
+                except ContentCampaignAuthorityReadError as exc:
+                    errors["calendar"] = exc
+                try:
+                    with conn.transaction():
+                        intents = self._list_current_on_connection(
+                            conn,
+                            scope,
+                            cutoff=cutoff,
+                            limit=limit,
+                            model=MasterContentIntentRevision,
+                            head_table="ecommerce_master_content_intent_head",
+                            revision_table="ecommerce_master_content_intent_revision",
+                            identity_column="intent_id",
+                        )
+                        master_refs = tuple(
+                            observation.revision.master_artifact_ref
+                            for observation in intents
+                            if observation.revision.master_artifact_ref is not None
+                        )
+                        variants = self._list_content_variants_on_connection(
+                            conn,
+                            scope,
+                            cutoff=cutoff,
+                            limit=limit,
+                            master_artifact_refs=master_refs,
+                        )
+                except ContentCampaignAuthorityReadError as exc:
+                    intents = []
+                    variants = []
+                    errors["content"] = exc
+        except (psycopg.Error, AttributeError, TypeError, ValueError) as exc:
+            raise ContentCampaignAuthorityReadError(
+                "content-campaign snapshot read failed closed"
+            ) from exc
+        return ContentCampaignAuthoritySnapshot(
+            campaigns=campaigns,
+            calendar_entries=calendar_entries,
+            intents=intents,
+            variants=variants,
+            errors=errors,
+        )
+
+    def _list_content_variants_on_connection(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        *,
+        cutoff: datetime,
+        limit: int,
+        master_artifact_refs: tuple[ContentCampaignExactRef, ...] | None = None,
+    ) -> list[ContentVariantAuthorityObservation]:
         if cutoff.utcoffset() is None:
             raise ValueError("ContentVariant cutoff requires a timezone")
         if not 1 <= limit <= 100:
             raise ValueError("ContentVariant read limit must be between 1 and 100")
+        if master_artifact_refs == ():
+            return []
         try:
-            with self._read_connect_factory(scope) as conn:
-                rows = conn.execute(
+            exact_filter = ""
+            exact_params: tuple[Any, ...] = ()
+            if master_artifact_refs is not None:
+                exact_filter = " AND (" + " OR ".join(
+                    "(relation.to_artifact_id=%s AND relation.to_content_hash=%s)"
+                    for _ in master_artifact_refs
+                ) + ") "
+                exact_params = tuple(
+                    value
+                    for ref in master_artifact_refs
+                    for value in (ref.resource_id, ref.content_hash)
+                )
+            rows = conn.execute(
                     "SELECT relation.org_id,relation.project_id,relation.relation_id,"
                     "relation.relation_type,relation.from_artifact_id,"
                     "relation.from_content_hash,relation.to_artifact_id,"
@@ -322,8 +456,9 @@ class EcommerceContentCampaignAuthorityStore:
                     "WHERE relation.org_id=%s AND relation.project_id=%s "
                     "AND relation.relation_type='variant_of' "
                     "AND relation.created_at<=%s "
+                    + exact_filter +
                     "ORDER BY relation.created_at DESC,relation.relation_id LIMIT %s",
-                    (*scope.key, cutoff, limit),
+                    (*scope.key, cutoff, *exact_params, limit),
                 ).fetchall()
             seen: set[str] = set()
             observations = []
@@ -350,6 +485,8 @@ class EcommerceContentCampaignAuthorityStore:
                     )
                 )
             return observations
+        except ContentCampaignAuthorityReadError:
+            raise
         except (psycopg.Error, AttributeError, KeyError, TypeError, ValueError) as exc:
             raise ContentCampaignAuthorityReadError(
                 "ContentVariant authority read failed closed"
@@ -501,7 +638,41 @@ class EcommerceContentCampaignAuthorityStore:
             raise ValueError("authority read limit must be between 1 and 100")
         try:
             with self._read_connect_factory(scope) as conn:
-                rows = conn.execute(
+                return self._list_current_on_connection(
+                    conn,
+                    scope,
+                    cutoff=cutoff,
+                    limit=limit,
+                    model=model,
+                    head_table=head_table,
+                    revision_table=revision_table,
+                    identity_column=identity_column,
+                )
+        except ContentCampaignAuthorityReadError:
+            raise
+        except (psycopg.Error, KeyError, TypeError, ValueError) as exc:
+            raise ContentCampaignAuthorityReadError(
+                "content-campaign authority read failed closed"
+            ) from exc
+
+    def _list_current_on_connection(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        *,
+        cutoff: datetime,
+        limit: int,
+        model: type[RevisionT],
+        head_table: str,
+        revision_table: str,
+        identity_column: str,
+    ) -> list[ContentCampaignAuthorityObservation[RevisionT]]:
+        if cutoff.utcoffset() is None:
+            raise ValueError("authority cutoff requires a timezone")
+        if not 1 <= limit <= 100:
+            raise ValueError("authority read limit must be between 1 and 100")
+        try:
+            rows = conn.execute(
                     f"SELECT revision.org_id,revision.project_id,"
                     f"revision.receipt_id,revision.authority_data FROM {head_table} head "
                     f"JOIN {revision_table} revision "
@@ -643,6 +814,7 @@ __all__ = [
     "ContentCampaignAuthorityIdempotencyConflict",
     "ContentCampaignAuthorityReadError",
     "ContentCampaignAuthorityObservation",
+    "ContentCampaignAuthoritySnapshot",
     "ContentVariantAuthorityObservation",
     "ContentCampaignAuthorityStoreError",
     "EcommerceContentCampaignAuthorityStore",

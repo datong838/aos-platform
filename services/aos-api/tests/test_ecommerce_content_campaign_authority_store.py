@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -52,6 +52,9 @@ class Connection:
 
     def commit(self):
         self.commits += 1
+
+    def transaction(self):
+        return nullcontext()
 
 
 def factory(connection):
@@ -360,3 +363,72 @@ def test_variant_reader_rejects_duplicate_relation_receipts() -> None:
         EcommerceContentCampaignAuthorityStore(factory(connection)).list_content_variants(
             SCOPE, cutoff=NOW
         )
+
+
+def test_snapshot_reads_all_authorities_from_one_repeatable_read_transaction() -> None:
+    connection = Connection(
+        rows=[
+            [],
+            [],
+            [],
+        ]
+    )
+    opens = 0
+
+    @contextmanager
+    def read_connect(scope):
+        nonlocal opens
+        opens += 1
+        assert scope == SCOPE
+        yield connection
+
+    snapshot = EcommerceContentCampaignAuthorityStore(
+        factory(Connection()), read_connect
+    ).read_snapshot(SCOPE, cutoff=NOW, limit=100)
+
+    assert opens == 1
+    assert snapshot.campaigns == []
+    assert snapshot.calendar_entries == []
+    assert snapshot.intents == []
+    assert snapshot.variants == []
+    assert snapshot.errors == {}
+    assert [params for _, params in connection.calls] == [
+        ("org-org", "dev-project", NOW, 100),
+        ("org-org", "dev-project", NOW, 100),
+        ("org-org", "dev-project", NOW, 100),
+    ]
+
+
+def test_snapshot_limits_variants_to_current_intent_master_artifacts() -> None:
+    connection = Connection(
+        rows=[
+            [],
+            [],
+            [
+                {
+                    "org_id": "org-org",
+                    "project_id": "dev-project",
+                    "receipt_id": "ccar-intent-1",
+                    "authority_data": intent().model_dump(mode="json", by_alias=True),
+                }
+            ],
+            [variant_row(to_artifact_id="artifact-1", to_content_hash=HASH, master_current_hash=HASH)],
+        ]
+    )
+    snapshot = EcommerceContentCampaignAuthorityStore(
+        factory(Connection()), factory(connection)
+    ).read_snapshot(SCOPE, cutoff=NOW, limit=100)
+
+    assert len(snapshot.intents) == 1
+    assert len(snapshot.variants) == 1
+    variant_sql, variant_params = connection.calls[-1]
+    assert "relation.to_artifact_id=%s" in variant_sql
+    assert "relation.to_content_hash=%s" in variant_sql
+    assert variant_params == (
+        "org-org",
+        "dev-project",
+        NOW,
+        "artifact-1",
+        HASH,
+        100,
+    )

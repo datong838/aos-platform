@@ -21,6 +21,7 @@ from aos_api.ecommerce_workshop_content_campaign_contracts import (
 from aos_api.ecommerce_content_campaign_authority_store import (
     ContentCampaignAuthorityObservation,
     ContentCampaignAuthorityReadError,
+    ContentCampaignAuthoritySnapshot,
     EcommerceContentCampaignAuthorityStore,
 )
 from aos_api.tenant_scope import TenantScope
@@ -63,35 +64,47 @@ class EcommerceWorkshopContentCampaign:
         if evaluated_at.utcoffset() is None:
             raise ValueError("content-campaign clock must be timezone-aware")
         scope = TenantScope(org_id=org_id, project_id=project_id)
-        readers = {
+        try:
+            snapshot = self._store.read_snapshot(
+                scope, cutoff=evaluated_at, limit=100
+            )
+        except ContentCampaignAuthorityReadError as exc:
+            snapshot = ContentCampaignAuthoritySnapshot(
+                campaigns=[],
+                calendar_entries=[],
+                intents=[],
+                variants=[],
+                errors={slice_id.value: exc for slice_id in ContentCampaignSliceId},
+            )
+        observations_by_slice = {
             ContentCampaignSliceId.PLAN: (
-                self._store.list_campaigns,
+                snapshot.campaigns,
                 "CampaignRevision",
             ),
             ContentCampaignSliceId.CALENDAR: (
-                self._store.list_calendar_entries,
+                snapshot.calendar_entries,
                 "CalendarEntryRevision",
             ),
             ContentCampaignSliceId.CONTENT: (
-                self._store.list_intents,
+                snapshot.intents,
                 "MasterContentIntentRevision",
             ),
         }
         slices = []
         for slice_id in ContentCampaignSliceId:
-            reader, resource_type = readers[slice_id]
+            observations, resource_type = observations_by_slice[slice_id]
             try:
-                observations = reader(scope, cutoff=evaluated_at, limit=100)
+                if slice_id.value in snapshot.errors:
+                    raise snapshot.errors[slice_id.value]
                 refs = [
                     self._item_ref(resource_type, observation)
                     for observation in observations
                 ]
                 items = list(refs)
                 if slice_id is ContentCampaignSliceId.CONTENT:
-                    variants = self._store.list_content_variants(
-                        scope, cutoff=evaluated_at, limit=100
+                    items.extend(
+                        self._variant_items(observations, snapshot.variants)
                     )
-                    items.extend(self._variant_items(observations, variants))
                 slices.append(
                     ContentCampaignSlice(
                         slice_id=slice_id,

@@ -18,6 +18,7 @@ from aos_api.ecommerce_workshop_content_campaign_contracts import (
 from aos_api.ecommerce_content_campaign_authority_store import (
     ContentCampaignAuthorityObservation,
     ContentCampaignAuthorityReadError,
+    ContentCampaignAuthoritySnapshot,
     ContentVariantAuthorityObservation,
 )
 
@@ -37,6 +38,16 @@ class _EmptyStore:
 
     def list_content_variants(self, scope, *, cutoff, limit):
         return []
+
+    def read_snapshot(self, scope, *, cutoff, limit):
+        return ContentCampaignAuthoritySnapshot(
+            campaigns=self.list_campaigns(scope, cutoff=cutoff, limit=limit),
+            calendar_entries=self.list_calendar_entries(
+                scope, cutoff=cutoff, limit=limit
+            ),
+            intents=self.list_intents(scope, cutoff=cutoff, limit=limit),
+            variants=self.list_content_variants(scope, cutoff=cutoff, limit=limit),
+        )
 
 
 class _ObservedStore(_EmptyStore):
@@ -68,6 +79,19 @@ class _CalendarFailureStore(_ObservedStore):
     def list_calendar_entries(self, scope, *, cutoff, limit):
         raise ContentCampaignAuthorityReadError("calendar unavailable")
 
+    def read_snapshot(self, scope, *, cutoff, limit):
+        return ContentCampaignAuthoritySnapshot(
+            campaigns=self.list_campaigns(scope, cutoff=cutoff, limit=limit),
+            calendar_entries=[],
+            intents=self.list_intents(scope, cutoff=cutoff, limit=limit),
+            variants=self.list_content_variants(scope, cutoff=cutoff, limit=limit),
+            errors={
+                "calendar": ContentCampaignAuthorityReadError(
+                    "calendar unavailable"
+                )
+            },
+        )
+
 
 class _VariantStore(_ObservedStore):
     def list_intents(self, scope, *, cutoff, limit):
@@ -95,6 +119,17 @@ class _OrphanVariantStore(_VariantStore):
         return _ObservedStore.list_intents(self, scope, cutoff=cutoff, limit=limit)
 
 
+class _SnapshotOnlyStore:
+    def __init__(self):
+        self.read_count = 0
+
+    def read_snapshot(self, scope, *, cutoff, limit):
+        self.read_count += 1
+        return ContentCampaignAuthoritySnapshot(
+            campaigns=[], calendar_entries=[], intents=[], variants=[]
+        )
+
+
 def _body() -> dict[str, object]:
     return EcommerceWorkshopContentCampaign(clock=lambda: NOW).read(
         org_id="org-org", project_id="dev-project"
@@ -113,6 +148,13 @@ def test_trusted_empty_authorities_are_ready_without_synthetic_refs() -> None:
     assert [item["authorityRefs"] for item in body["slices"]] == [[], [], []]
     assert [item["countLedger"]["eligible"] for item in body["slices"]] == [0, 0, 0]
     assert body["page"]["count"] == 0
+
+
+def test_page_composition_reads_exactly_one_authority_snapshot() -> None:
+    store = _SnapshotOnlyStore()
+    body = _body_with_store(store)
+    assert store.read_count == 1
+    assert [item["status"] for item in body["slices"]] == ["ready"] * 3
 
 
 def test_observed_authorities_expose_exact_revision_hash_and_receipt() -> None:
