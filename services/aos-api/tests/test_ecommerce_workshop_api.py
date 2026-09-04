@@ -159,9 +159,38 @@ class FakeSourceReadiness:
         return _source_envelope()
 
 
+class FakeContentCampaignWorkflow:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def execute(self, scope, *, actor, idempotency_key, body):
+        self.calls.append(("execute", scope, actor, idempotency_key, body.command))
+        return {
+            "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+            "command": body.command,
+            "task": {"taskId": "task-1", "title": "制定秋季会员回访活动方案"},
+            "draft": {
+                "resourceType": "TaskBriefRevision", "resourceId": "brief-1",
+                "revision": 1, "version": 1, "contentHash": "a" * 64,
+                "objective": "策划秋季会员回访活动", "channels": ["微信小店"],
+            },
+            "receipt": {
+                "receiptId": "w2r-1", "operation": "task_brief.create",
+                "idempotencyKey": f"{idempotency_key}:brief", "replay": False,
+            },
+            "sideEffects": {
+                "providerInvocationCount": 0, "approvalCreatedCount": 0,
+                "taskRunCreatedCount": 0, "externalPublicationCount": 0,
+                "externalBusinessMutationCount": 0,
+            },
+            "message": "活动方案草稿已生成。",
+        }
+
+
 def _client(
     catalog: FakeCatalog,
     source_readiness: FakeSourceReadiness | None = None,
+    content_campaign_workflow: FakeContentCampaignWorkflow | None = None,
 ) -> TestClient:
     app = FastAPI()
     register_exception_handlers(app)
@@ -177,6 +206,10 @@ def _client(
     app.dependency_overrides[
         ecommerce_workshop.get_ecommerce_workshop_source_readiness
     ] = lambda: source_readiness or FakeSourceReadiness()
+    if content_campaign_workflow is not None:
+        app.dependency_overrides[
+            ecommerce_workshop.get_ecommerce_content_campaign_workflow
+        ] = lambda: content_campaign_workflow
     return TestClient(app, raise_server_exceptions=False)
 
 
@@ -207,6 +240,32 @@ def test_routes_use_principal_tenant_and_have_no_scope_injection_surface() -> No
     assert all(call[1]["project_id"] == "dev-project" for call in catalog.calls)
     assert all("org_id" not in call[1].get("body", {}) for call in catalog.calls)
     assert [call[0] for call in catalog.calls] == ["list", "readiness"]
+
+
+def test_content_campaign_workflow_command_is_installed_tenant_scoped_and_receipted() -> None:
+    catalog = FakeCatalog()
+    workflow = FakeContentCampaignWorkflow()
+    with _client(catalog, content_campaign_workflow=workflow) as client:
+        response = client.post(
+            "/v1/ecommerce-workshop/views/content-campaign/workflow/commands",
+            headers={"Idempotency-Key": "campaign-ui-1"},
+            json={
+                "command": "generate",
+                "objective": "策划秋季会员回访活动",
+                "channels": ["微信小店"],
+            },
+        )
+        assert response.status_code == 200
+        assert response.json()["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
+        assert response.json()["receipt"]["receiptId"] == "w2r-1"
+        assert response.json()["sideEffects"]["externalPublicationCount"] == 0
+        rejected = client.post(
+            "/v1/ecommerce-workshop/views/content-campaign/workflow/commands?orgId=dev-org",
+            headers={"Idempotency-Key": "campaign-ui-2"},
+            json={"command": "generate", "objective": "策划秋季会员回访活动"},
+        )
+        assert rejected.status_code == 400
+    assert workflow.calls[0][1].key == ("org-org", "dev-project")
 
 
 def test_not_installed_and_invalid_module_id_fail_explicitly() -> None:
@@ -337,6 +396,14 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
         "ecommerceWorkshopContentCampaignViewGet": (
             "/v1/ecommerce-workshop/views/content-campaign",
             "get",
+        ),
+        "ecommerceWorkshopContentCampaignWorkflowCommand": (
+            "/v1/ecommerce-workshop/views/content-campaign/workflow/commands",
+            "post",
+        ),
+        "ecommerceWorkshopContentCampaignApprovalPreview": (
+            "/v1/ecommerce-workshop/views/content-campaign/workflow/approval-preview",
+            "post",
         ),
             "ecommerceWorkshopCreatorGrowthViewGet": (
                 "/v1/ecommerce-workshop/views/creator-growth",

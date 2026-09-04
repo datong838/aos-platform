@@ -84,6 +84,17 @@ from aos_api.ecommerce_workshop_content_campaign import (
 from aos_api.ecommerce_workshop_content_campaign_contracts import (
     WorkshopContentCampaignViewEnvelope,
 )
+from aos_api.ecommerce_content_campaign_workflow import (
+    ContentCampaignWorkflowConflict,
+    ContentCampaignWorkflowError,
+    EcommerceContentCampaignWorkflow,
+)
+from aos_api.ecommerce_content_campaign_workflow_contracts import (
+    ContentCampaignApprovalPreviewRequest,
+    ContentCampaignApprovalPreviewResponse,
+    ContentCampaignWorkflowCommandRequest,
+    ContentCampaignWorkflowCommandResponse,
+)
 from aos_api.ecommerce_workshop_creator_growth import EcommerceWorkshopCreatorGrowth
 from aos_api.ecommerce_workshop_creator_growth_contracts import (
     WorkshopCreatorGrowthViewEnvelope,
@@ -391,6 +402,13 @@ def get_ecommerce_workshop_content_campaign() -> EcommerceWorkshopContentCampaig
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_content_campaign_workflow() -> EcommerceContentCampaignWorkflow:
+    return EcommerceContentCampaignWorkflow(
+        campaign_reader=get_ecommerce_workshop_content_campaign()
+    )
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_creator_growth() -> EcommerceWorkshopCreatorGrowth:
     return EcommerceWorkshopCreatorGrowth(store=EcommerceWorkshopCreatorGrowthStore())
 
@@ -555,6 +573,10 @@ ContentCampaignDependency = Annotated[
     EcommerceWorkshopContentCampaign,
     Depends(get_ecommerce_workshop_content_campaign),
 ]
+ContentCampaignWorkflowDependency = Annotated[
+    EcommerceContentCampaignWorkflow,
+    Depends(get_ecommerce_content_campaign_workflow),
+]
 CreatorGrowthDependency = Annotated[
     EcommerceWorkshopCreatorGrowth,
     Depends(get_ecommerce_workshop_creator_growth),
@@ -657,6 +679,18 @@ def _map_prepare_error(exc: PrepareError) -> ApiError:
     if isinstance(exc, PrepareDependencyBlocked):
         return ApiError(code=exc.code, message=str(exc), status_code=422)
     return ApiError(code=exc.code, message="Workshop prepare failed closed", status_code=503)
+
+
+def _map_content_campaign_workflow_error(
+    exc: ContentCampaignWorkflowError,
+) -> ApiError:
+    if isinstance(exc, ContentCampaignWorkflowConflict):
+        return ApiError(code=exc.code, message=str(exc), status_code=409)
+    return ApiError(
+        code=exc.code,
+        message="Content campaign workflow failed closed",
+        status_code=503,
+    )
 
 
 def _map_evidence_build_error(exc: WorkshopEvidenceBuildError) -> ApiError:
@@ -1203,6 +1237,56 @@ def get_ecommerce_workshop_content_campaign_view(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
+
+
+@router.post(
+    "/views/content-campaign/workflow/commands",
+    response_model=ContentCampaignWorkflowCommandResponse,
+    operation_id="ecommerceWorkshopContentCampaignWorkflowCommand",
+    responses=_ERRORS,
+)
+def execute_ecommerce_content_campaign_workflow(
+    request: Request,
+    body: ContentCampaignWorkflowCommandRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    workflow: ContentCampaignWorkflowDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> ContentCampaignWorkflowCommandResponse:
+    _reject_query_parameters(request)
+    _require_content_campaign_installation(principal=principal, catalog=catalog)
+    try:
+        return workflow.execute(
+            TenantScope(principal.org_id, principal.project_id),
+            actor=principal.subject,
+            idempotency_key=_prepare_idempotency(idempotency_key),
+            body=body,
+        )
+    except ContentCampaignWorkflowError as exc:
+        raise _map_content_campaign_workflow_error(exc) from exc
+
+
+@router.post(
+    "/views/content-campaign/workflow/approval-preview",
+    response_model=ContentCampaignApprovalPreviewResponse,
+    operation_id="ecommerceWorkshopContentCampaignApprovalPreview",
+    responses=_ERRORS,
+)
+def preview_ecommerce_content_campaign_approval(
+    request: Request,
+    body: ContentCampaignApprovalPreviewRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    workflow: ContentCampaignWorkflowDependency,
+) -> ContentCampaignApprovalPreviewResponse:
+    _reject_query_parameters(request)
+    _require_content_campaign_installation(principal=principal, catalog=catalog)
+    try:
+        return workflow.preview_approval(
+            TenantScope(principal.org_id, principal.project_id), body
+        )
+    except ContentCampaignWorkflowError as exc:
+        raise _map_content_campaign_workflow_error(exc) from exc
 
 
 @router.get(

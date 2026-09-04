@@ -7,12 +7,14 @@ import {
   type ContentCampaignSlice,
   type ContentCampaignSliceId,
   type ContentCampaignViewResponse,
+  type ContentCampaignWorkflowCommand,
+  type ContentCampaignWorkflowCommandResponse,
 } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { ContributionLineage } from "./production";
 import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopViewState";
 
-type Client = Pick<typeof ecommerceWorkshopClient, "getContentCampaignView">;
+type Client = Pick<typeof ecommerceWorkshopClient, "getContentCampaignView" | "executeContentCampaignWorkflow" | "previewContentCampaignApproval">;
 type Phase = AsyncState;
 
 const LABELS: Record<ContentCampaignSliceId, string> = {
@@ -69,6 +71,8 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
   const [selected, setSelected] = useState<ContentCampaignSliceId>("plan");
   const [safeAction, setSafeAction] = useState("");
   const [intent, setIntent] = useState("");
+  const [workflow, setWorkflow] = useState<ContentCampaignWorkflowCommandResponse | null>(null);
+  const [busy, setBusy] = useState(false);
   const request = useRef(0);
 
   const load = () => {
@@ -96,9 +100,29 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
   const ready = response?.slices.filter((item) => item.status === "ready").length ?? 0;
   const eligible = response?.slices.reduce((sum, item) => sum + item.countLedger.eligible, 0) ?? 0;
   const unmatched = response?.slices.reduce((sum, item) => sum + item.countLedger.unmatched + item.countLedger.conflicted, 0) ?? 0;
-  const runPreflight = (action: string) => {
-    const detail = intent.trim() ? `已保留当前输入“${intent.trim()}”并完成本地预检` : "当前没有可提交的活动意图";
-    setSafeAction(`${action}预检：${detail}，未创建业务记录、生成任务或外部发布。`);
+  const runWorkflow = async (command: ContentCampaignWorkflowCommand) => {
+    if (intent.trim().length < 4) { setSafeAction("请先填写至少四个字的活动目标，再继续生成或保存。"); return; }
+    if (command !== "generate" && !workflow) { setSafeAction("请先生成活动方案草稿，再保存或重新生成。"); return; }
+    setBusy(true);
+    try {
+      const next = await client.executeContentCampaignWorkflow({
+        command, objective: intent.trim(), channels: ["微信小店"],
+        ...(workflow ? { draftRef: { resourceType: "TaskBriefRevision", resourceId: workflow.draft.resourceId, revision: workflow.draft.revision, contentHash: workflow.draft.contentHash }, expectedVersion: workflow.draft.version } : {}),
+      }, `content-campaign-${command}-${Date.now()}`);
+      setWorkflow(next);
+      setSafeAction(`${next.message} 当前第 ${next.draft.version} 版，业务回执 ${next.receipt.receiptId}。`);
+    } catch (error) {
+      setSafeAction(error instanceof Error ? `操作未完成：${error.message}` : "操作未完成，请重新读取后再试。");
+    } finally { setBusy(false); }
+  };
+  const previewApproval = async () => {
+    if (!workflow) { setSafeAction("请先生成并保存活动方案草稿，再执行审批前检查。"); return; }
+    setBusy(true);
+    try {
+      const preview = await client.previewContentCampaignApproval({ resourceType: "TaskBriefRevision", resourceId: workflow.draft.resourceId, revision: workflow.draft.revision, contentHash: workflow.draft.contentHash });
+      setSafeAction(preview.approvalAllowed ? `审批前检查通过：${preview.nextActions.join("；")}` : `审批前检查已完成：${preview.nextActions.join("；")}`);
+    } catch (error) { setSafeAction(error instanceof Error ? `审批前检查未完成：${error.message}` : "审批前检查未完成。"); }
+    finally { setBusy(false); }
   };
 
   const content = response && slice ? (
@@ -107,6 +131,7 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
         <aside className="content-campaign-nav content-campaign-list-lane" aria-label="活动列表">
           <header><h2>活动列表</h2><button type="button" onClick={() => setSafeAction("筛选已切换为当前数据范围；未改变业务记录。")}>筛选</button></header>
           <div className="content-campaign-list-group"><strong>当前数据范围</strong><span>{ready} 个视图可读取</span></div>
+          {workflow ? <button type="button" className="content-campaign-draft is-selected" onClick={() => setIntent(workflow.draft.objective)}><strong>{workflow.task.title}</strong><small>内部活动草稿 · 第 {workflow.draft.version} 版</small><span>回执可追溯</span></button> : null}
           {response.slices.map((item) => (
             <button
               type="button"
@@ -122,7 +147,7 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
           ))}
           <div className="content-campaign-list-help">
             <strong>没有活动记录？</strong>
-            <p>可先填写中央活动意图并执行预检；正式保存能力在后续内部业务闭环接入。</p>
+            <p>填写中央活动目标即可生成内部草稿；对外发布仍需独立审批。</p>
           </div>
         </aside>
 
@@ -131,7 +156,7 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
             <div><strong>AI 策划助手</strong><span>仅消费当前正式业务数据</span></div>
             <div>
               <textarea aria-label="活动意图" value={intent} onChange={(event) => setIntent(event.target.value)} placeholder="描述活动目标、周期与约束，系统会先执行安全预检…" />
-              <button type="button" onClick={() => runPreflight("生成方案")}>生成方案</button>
+              <button type="button" disabled={busy} onClick={() => void runWorkflow(workflow ? "regenerate" : "generate")}>{busy ? "处理中…" : "生成方案"}</button>
             </div>
             <div className="content-campaign-hints" aria-label="策划建议">
               <span>基于当前数据：</span>
@@ -169,11 +194,11 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
           </div>
 
           <footer className="content-campaign-actionbar" aria-label="活动审批操作">
-            <div><strong>{slice.status === "ready" ? "只读审阅" : "等待正式数据"}</strong><span>所有操作先执行安全预检，不会静默写入或发布。</span></div>
+            <div><strong>{workflow ? `内部草稿第 ${workflow.draft.version} 版` : "可创建内部草稿"}</strong><span>草稿操作形成版本与业务回执；对外发布仍需独立审批。</span></div>
             <div>
-              <button type="button" onClick={() => runPreflight("保存草稿")}>保存为草稿</button>
-              <button type="button" onClick={() => runPreflight("重新生成")}>重新生成</button>
-              <button type="button" onClick={() => runPreflight("批准并发布")}>批准并发布</button>
+              <button type="button" disabled={busy} onClick={() => void runWorkflow(workflow ? "save" : "generate")}>保存为草稿</button>
+              <button type="button" disabled={busy} onClick={() => void runWorkflow(workflow ? "regenerate" : "generate")}>重新生成</button>
+              <button type="button" disabled={busy} onClick={() => void previewApproval()}>批准并发布</button>
             </div>
           </footer>
         </section>
@@ -216,7 +241,7 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
               <div><span>待核对</span><strong>{unmatched}</strong><small>未匹配 + 冲突</small></div>
               <div><span>数据截止</span><strong>{formatTime(response.dataCutoff)}</strong><small>统一 cutoff</small></div>
             </section>
-            <section className="content-campaign-readonly"><div><h2>内容与活动 · 权威只读</h2><p>仅呈现 Campaign、Calendar、Master Intent 与 ContentVariant exact lineage；不批准、不排期、不发布。</p></div><strong>无写入口</strong></section>
+            <section className="content-campaign-readonly"><div><h2>内容与活动 · 权威数据与内部草稿</h2><p>正式数据保持只读；内部活动草稿可创建和修订，对外发布仍需独立审批。</p></div><strong>内部草稿可写</strong></section>
           </details>
 
           <footer className="content-campaign-footnote"><span>租户 {response.tenant.orgId}/{response.tenant.projectId}</span><span>评估 {formatTime(response.evaluatedAt)}</span><span>无后续页：是</span><button type="button" onClick={load}>重新读取</button></footer>
@@ -226,7 +251,7 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
   ) : null;
 
   return (
-    <section className="content-campaign-page" aria-label="内容与活动工作台只读视图">
+    <section className="content-campaign-page" aria-label="内容与活动工作台">
       <nav className="content-campaign-toolbar" aria-label="内容与活动主视图">
         <div role="tablist">
           {(["plan", "calendar", "content"] as const).map((sliceId) => (
@@ -234,7 +259,7 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
           ))}
         </div>
         <span>栖月汇微商城</span>
-        <button type="button" title="先执行安全预检" onClick={() => { setIntent(""); setSafeAction("新建活动预检：请在中央填写正式活动意图；当前未创建业务记录。"); }}>＋ 新建活动</button>
+        <button type="button" title="新建内部活动草稿" onClick={() => { setIntent(""); setWorkflow(null); setSafeAction("已打开新的活动方案输入区，请填写正式经营目标。"); }}>＋ 新建活动</button>
       </nav>
       {safeAction ? <div className="content-campaign-safe-action" role="status"><span>{safeAction}</span><button type="button" aria-label="关闭操作提示" onClick={() => setSafeAction("")}>×</button></div> : null}
       <AsyncStateBoundary state={stateFor(phase)} dataCutoff={response?.dataCutoff} action={phase === "failed" ? <button type="button" onClick={load}>重新读取</button> : undefined}>{content}</AsyncStateBoundary>

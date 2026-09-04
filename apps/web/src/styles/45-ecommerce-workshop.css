@@ -1596,6 +1596,11 @@
 .content-campaign-list-group { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 34px; padding: 0 14px; border-bottom: 1px solid #edf2f7; background: #f8fafc; }
 .content-campaign-list-group strong { color: #718096; font-size: 10px; }
 .content-campaign-list-group span { color: #a0aec0; font-size: 9px; }
+.content-campaign-draft { display: grid; gap: 5px; width: 100%; min-height: 76px; box-sizing: border-box; padding: 11px 13px; border: 0; border-bottom: 1px solid #edf2f7; border-left: 3px solid #805ad5; background: #faf5ff; color: #2d3748; text-align: left; cursor: pointer; }
+.content-campaign-draft strong { font-size: 11px; line-height: 1.45; }
+.content-campaign-draft small,
+.content-campaign-draft span { color: #805ad5; font-size: 9px; }
+.content-campaign-draft.is-selected { background: #f3e8ff; box-shadow: inset 0 0 0 1px #d6bcfa; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.content-campaign"] .content-campaign-slice { gap: 5px; min-height: 86px; padding: 12px 13px; border-width: 0 0 1px 3px; border-color: #edf2f7 #edf2f7 #edf2f7 #f56565; box-shadow: none; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.content-campaign"] .content-campaign-slice.is-ready { border-left-color: #38a169; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.content-campaign"] .content-campaign-slice.is-selected { border-left-color: #2b6cb0; background: #ebf8ff; box-shadow: none; }
