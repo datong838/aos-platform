@@ -96,6 +96,40 @@ describe("ContentCampaignPage", () => {
     expect(host.querySelector<HTMLButtonElement>('.content-campaign-slice[aria-pressed="true"]')?.textContent).toContain("内容日历");
   });
 
+  it("内容日历子视图和日常模板筛选均可操作且不伪造记录", async () => {
+    await act(async () => root.render(<ContentCampaignPage client={makeClient(ready)} />));
+    const calendarTab = [...host.querySelectorAll<HTMLButtonElement>(".content-campaign-toolbar button")].find((item) => item.textContent === "内容日历")!;
+    await act(async () => calendarTab.click());
+    expect(host.querySelector('[aria-label="内容日历业务视图"]')?.textContent).toContain("2026 年 8 月");
+    const schedule = [...host.querySelectorAll<HTMLButtonElement>('[aria-label="内容日历视图"] button')].find((item) => item.textContent === "任务计划表")!;
+    await act(async () => schedule.click());
+    expect(schedule.getAttribute("aria-selected")).toBe("true");
+    expect(host.querySelector(".content-campaign-schedule-list")?.textContent).toContain("活动计划");
+    const templateTab = [...host.querySelectorAll<HTMLButtonElement>(".content-campaign-toolbar button")].find((item) => item.textContent === "日常模板")!;
+    await act(async () => templateTab.click());
+    const active = [...host.querySelectorAll<HTMLButtonElement>('[aria-label="日常模板筛选"] button')].find((item) => item.textContent === "运行中")!;
+    await act(async () => active.click());
+    expect(active.getAttribute("aria-pressed")).toBe("true");
+    expect(host.querySelector('[aria-label="日常模板业务视图"]')?.textContent).toContain("当前截止面没有正式日常模板记录");
+    expect(host.textContent).not.toContain("每日朋友圈内容推送");
+  });
+
+  it("活动列表筛选会真实切换内部草稿与正式记录", async () => {
+    await act(async () => root.render(<ContentCampaignPage client={makeClient()} />));
+    const filter = [...host.querySelectorAll<HTMLButtonElement>(".content-campaign-list-lane header button")].find((item) => item.textContent === "筛选")!;
+    await act(async () => filter.click());
+    expect(filter.getAttribute("aria-expanded")).toBe("true");
+    const drafts = [...host.querySelectorAll<HTMLButtonElement>(".content-campaign-filters button")].find((item) => item.textContent === "内部草稿")!;
+    await act(async () => drafts.click());
+    expect(host.querySelectorAll(".content-campaign-slice")).toHaveLength(0);
+    expect(host.textContent).toContain("当前没有内部活动草稿");
+    const official = [...host.querySelectorAll<HTMLButtonElement>(".content-campaign-filters button")].find((item) => item.textContent === "正式记录")!;
+    await act(async () => official.click());
+    expect(host.querySelectorAll(".content-campaign-slice")).toHaveLength(3);
+    expect(host.textContent).not.toContain("当前没有内部活动草稿");
+    expect(host.textContent).toContain("活动列表已切换为正式记录");
+  });
+
   it("两类风险决策可写入版本化草稿并支持撤销", async () => {
     const decided = { ...commandResponse, command: "apply_risk_decision" as const, draft: { ...commandResponse.draft, revision: 2, version: 2, contentHash: "b".repeat(64), constraints: ["毛利边界必须以已审批经营口径为准"], riskDecisions: [{ category: "discount_margin" as const, disposition: "adopt_recommendation" as const, constraint: "毛利边界必须以已审批经营口径为准", appliedFromRevision: 1 }], lastAction: "risk_decision_applied" }, receipt: { ...commandResponse.receipt, operation: "task_brief.revise" as const, receiptId: "w2r-risk" }, message: "风险决策与经营约束已写入新版本。" };
     const client = makeClient();

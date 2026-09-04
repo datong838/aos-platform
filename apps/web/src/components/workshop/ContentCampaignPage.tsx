@@ -19,6 +19,9 @@ import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopVi
 
 type Client = Pick<typeof ecommerceWorkshopClient, "getContentCampaignView" | "executeContentCampaignWorkflow" | "previewContentCampaignApproval"> & Partial<Pick<typeof ecommerceWorkshopClient, "getContentCampaignRealInputs">>;
 type Phase = AsyncState;
+type ActivityFilter = "all" | "drafts" | "official";
+type CalendarView = "calendar" | "schedule";
+type TemplateFilter = "all" | "active" | "paused";
 
 const LABELS: Record<ContentCampaignSliceId, string> = {
   plan: "活动计划",
@@ -73,6 +76,10 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
   const [response, setResponse] = useState<ContentCampaignViewResponse | null>(null);
   const [inputs, setInputs] = useState<ContentCampaignInputsResponse | null>(null);
   const [selectedProduct, setSelectedProduct] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [activityFilter, setActivityFilter] = useState<ActivityFilter>("all");
+  const [calendarView, setCalendarView] = useState<CalendarView>("calendar");
+  const [templateFilter, setTemplateFilter] = useState<TemplateFilter>("all");
   const [selected, setSelected] = useState<ContentCampaignSliceId>("plan");
   const [safeAction, setSafeAction] = useState("");
   const [intent, setIntent] = useState("");
@@ -173,10 +180,13 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
     <div className="content-campaign-read-model">
       <div className="content-campaign-board">
         <aside className="content-campaign-nav content-campaign-list-lane" aria-label="活动列表">
-          <header><h2>活动列表</h2><button type="button" onClick={() => setSafeAction("筛选已切换为当前数据范围；未改变业务记录。")}>筛选</button></header>
+          <header><h2>活动列表</h2><button type="button" aria-expanded={filterOpen} aria-controls="content-campaign-filters" onClick={() => setFilterOpen((value) => !value)}>筛选</button></header>
+          {filterOpen ? <div className="content-campaign-filters" id="content-campaign-filters" aria-label="活动列表筛选">
+            {([['all', '全部'], ['drafts', '内部草稿'], ['official', '正式记录']] as const).map(([value, label]) => <button type="button" key={value} aria-pressed={activityFilter === value} onClick={() => { setActivityFilter(value); setSafeAction(`活动列表已切换为${label}。`); }}>{label}</button>)}
+          </div> : null}
           <div className="content-campaign-list-group"><strong>当前数据范围</strong><span>{ready} 个视图可读取</span></div>
-          {workflow ? <button type="button" className="content-campaign-draft is-selected" onClick={() => setIntent(workflow.draft.objective)}><strong>{workflow.task.title}</strong><small>内部活动草稿 · 第 {workflow.draft.version} 版</small><span>回执可追溯</span></button> : null}
-          {response.slices.map((item) => (
+          {workflow && activityFilter !== "official" ? <button type="button" className="content-campaign-draft is-selected" onClick={() => setIntent(workflow.draft.objective)}><strong>{workflow.task.title}</strong><small>内部活动草稿 · 第 {workflow.draft.version} 版</small><span>回执可追溯</span></button> : null}
+          {activityFilter !== "drafts" ? response.slices.map((item) => (
             <button
               type="button"
               key={item.sliceId}
@@ -188,7 +198,8 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
               <small>{DESCRIPTIONS[item.sliceId]}</small>
               <span>{item.status === "ready" ? "可读取" : "需要补充正式数据"} · {item.countLedger.attached}/{item.countLedger.eligible}</span>
             </button>
-          ))}
+          )) : null}
+          {activityFilter === "drafts" && !workflow ? <p className="content-campaign-filter-empty">当前没有内部活动草稿。</p> : null}
           <div className="content-campaign-list-help">
             <strong>没有活动记录？</strong>
             <p>填写中央活动目标即可生成内部草稿；对外发布仍需独立审批。</p>
@@ -229,6 +240,26 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
                 <div><span>未匹配</span><strong>{slice.countLedger.unmatched}</strong></div>
                 <div><span>冲突</span><strong>{slice.countLedger.conflicted}</strong></div>
               </section>
+              {selected === "calendar" ? <section className="content-campaign-calendar" aria-label="内容日历业务视图">
+                <nav aria-label="内容日历视图">
+                  <button type="button" aria-selected={calendarView === "calendar"} onClick={() => setCalendarView("calendar")}>内容排期</button>
+                  <button type="button" aria-selected={calendarView === "schedule"} onClick={() => setCalendarView("schedule")}>任务计划表</button>
+                </nav>
+                {calendarView === "calendar" ? <div className="content-campaign-calendar-grid">
+                  <header>{["一", "二", "三", "四", "五", "六", "日"].map((day) => <span key={day}>{day}</span>)}</header>
+                  <div><strong>{inputs ? `${new Date(inputs.dataCutoff).getFullYear()} 年 ${new Date(inputs.dataCutoff).getMonth() + 1} 月` : "正在读取月份"}</strong><p>{inputs?.plans.length ? `当前有 ${inputs.plans.length} 条正式排期记录，可在任务计划表逐条审阅。` : "当前月份没有正式内容排期；日历保持可信空，不使用示例活动填充。"}</p></div>
+                </div> : <div className="content-campaign-schedule-list">
+                  <header><strong>任务计划表</strong><span>只列出当前租户正式排期</span></header>
+                  {inputs?.plans.map((plan) => <article key={`schedule:${plan.planRef.resourceId}`}><strong>{plan.planRef.resourceType === "CampaignRevision" ? "活动计划" : "内容排期"}</strong><span>{plan.localStart && plan.localEnd ? `${plan.localStart} — ${plan.localEnd}` : "尚未提供正式起止时间"}</span><small>{plan.channelIds.join("、") || "尚未关联正式渠道"}</small></article>)}
+                  {inputs && inputs.plans.length === 0 ? <p>当前没有可进入任务计划表的正式排期。</p> : null}
+                </div>}
+              </section> : null}
+              {selected === "content" ? <section className="content-campaign-templates" aria-label="日常模板业务视图">
+                <nav aria-label="日常模板筛选">
+                  {([['all', '全部'], ['active', '运行中'], ['paused', '已暂停']] as const).map(([value, label]) => <button type="button" key={value} aria-pressed={templateFilter === value} onClick={() => setTemplateFilter(value)}>{label}</button>)}
+                </nav>
+                <div><strong>{templateFilter === "all" ? "日常模板" : `${templateFilter === "active" ? "运行中" : "已暂停"}模板`}</strong><p>当前截止面没有正式日常模板记录；页面不把内容版本或演示模板伪装成自动化任务。</p></div>
+              </section> : null}
               {selected !== "plan" ? <section className="content-campaign-real-inputs" aria-label="栖月汇正式业务输入">
                 <header><div><strong>栖月汇正式业务输入</strong><span>{inputs ? `同一截止面 · ${formatTime(inputs.dataCutoff)}` : "正在读取正式来源"}</span></div><em>{inputs ? `${inputs.ledger.products} 商品 · ${inputs.ledger.inventory} 库存 · ${inputs.ledger.plans} 活动排期` : "读取中"}</em></header>
                 {inputs ? <>
