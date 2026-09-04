@@ -1,0 +1,350 @@
+{
+  "capturedAt": "2026-09-04T02:37:13.910Z",
+  "foundry": "/Users/ddt/work/projects/ai_agent/docs/palantier/foundry/html",
+  "pairs": [
+    {
+      "key": "01-cockpit",
+      "visual": "workshop-task-cockpit.html",
+      "label": "日常任务总控大屏",
+      "viewports": {
+        "1280x720": {
+          "h1": [
+            "日常任务总控大屏"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 3,
+          "tabCount": 0,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1440x900": {
+          "h1": [
+            "日常任务总控大屏"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 3,
+          "tabCount": 0,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1920x1080": {
+          "h1": [
+            "日常任务总控大屏"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 3,
+          "tabCount": 0,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        }
+      }
+    },
+    {
+      "key": "02-content-campaign",
+      "visual": "workshop-content-campaign.html",
+      "label": "内容与活动工作台",
+      "viewports": {
+        "1280x720": {
+          "h1": [
+            "内容与活动工作台"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 23,
+          "tabCount": 5,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1440x900": {
+          "h1": [
+            "内容与活动工作台"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 23,
+          "tabCount": 5,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1920x1080": {
+          "h1": [
+            "内容与活动工作台"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 23,
+          "tabCount": 5,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        }
+      }
+    },
+    {
+      "key": "03-operations",
+      "visual": "workshop-app-order.html",
+      "label": "统一运营驾驶舱（正确基线，非 workshop-cop.html）",
+      "viewports": {
+        "1280x720": {
+          "h1": [
+            "统一运营驾驶舱"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 13,
+          "tabCount": 0,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1440x900": {
+          "h1": [
+            "统一运营驾驶舱"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 13,
+          "tabCount": 0,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1920x1080": {
+          "h1": [
+            "统一运营驾驶舱"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 13,
+          "tabCount": 0,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        }
+      }
+    },
+    {
+      "key": "04-creator-growth",
+      "visual": "workshop-creator-outreach.html",
+      "label": "达人邀约驾驶舱",
+      "viewports": {
+        "1280x720": {
+          "h1": [
+            "达人邀约驾驶舱"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 9,
+          "tabCount": 6,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1440x900": {
+          "h1": [
+            "达人邀约驾驶舱"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 9,
+          "tabCount": 6,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1920x1080": {
+          "h1": [
+            "达人邀约驾驶舱"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 9,
+          "tabCount": 6,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        }
+      }
+    },
+    {
+      "key": "05-media-studio",
+      "visual": "workshop-media-studio.html",
+      "label": "多媒体内容生产",
+      "viewports": {
+        "1280x720": {
+          "h1": [
+            "多媒体内容生产"
+          ],
+          "h2Count": 3,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 27,
+          "tabCount": 6,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1440x900": {
+          "h1": [
+            "多媒体内容生产"
+          ],
+          "h2Count": 3,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 27,
+          "tabCount": 6,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1920x1080": {
+          "h1": [
+            "多媒体内容生产"
+          ],
+          "h2Count": 3,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "buttonCount": 27,
+          "tabCount": 6,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        }
+      }
+    },
+    {
+      "key": "06-analyst",
+      "visual": "workshop-analyst.html",
+      "label": "经营参谋 · 增长指挥中心",
+      "viewports": {
+        "1280x720": {
+          "h1": [
+            "经营参谋 · 增长指挥中心"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 5,
+          "buttonCount": 37,
+          "tabCount": 15,
+          "listItemCount": 9,
+          "horizontalOverflow": false
+        },
+        "1440x900": {
+          "h1": [
+            "经营参谋 · 增长指挥中心"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 5,
+          "buttonCount": 37,
+          "tabCount": 15,
+          "listItemCount": 9,
+          "horizontalOverflow": false
+        },
+        "1920x1080": {
+          "h1": [
+            "经营参谋 · 增长指挥中心"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 5,
+          "buttonCount": 37,
+          "tabCount": 15,
+          "listItemCount": 9,
+          "horizontalOverflow": false
+        }
+      }
+    },
+    {
+      "key": "07-price-governance",
+      "visual": "workshop-price-governance.html",
+      "label": "价格治理驾驶舱",
+      "viewports": {
+        "1280x720": {
+          "h1": [
+            "价格治理驾驶舱"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 5,
+          "buttonCount": 7,
+          "tabCount": 3,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1440x900": {
+          "h1": [
+            "价格治理驾驶舱"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 5,
+          "buttonCount": 7,
+          "tabCount": 3,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1920x1080": {
+          "h1": [
+            "价格治理驾驶舱"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 5,
+          "buttonCount": 7,
+          "tabCount": 3,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        }
+      }
+    },
+    {
+      "key": "08-customer",
+      "visual": "workshop-customer.html",
+      "label": "客户关系工作台",
+      "viewports": {
+        "1280x720": {
+          "h1": [
+            "客户关系工作台"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 5,
+          "buttonCount": 6,
+          "tabCount": 0,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1440x900": {
+          "h1": [
+            "客户关系工作台"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 5,
+          "buttonCount": 6,
+          "tabCount": 0,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        },
+        "1920x1080": {
+          "h1": [
+            "客户关系工作台"
+          ],
+          "h2Count": 0,
+          "h3Count": 0,
+          "navLinkCount": 5,
+          "buttonCount": 6,
+          "tabCount": 0,
+          "listItemCount": 0,
+          "horizontalOverflow": false
+        }
+      }
+    }
+  ]
+}

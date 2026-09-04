@@ -1,0 +1,490 @@
+{
+  "auditedAt": "2026-09-04T02:35:31.304Z",
+  "viewport": "1280x720",
+  "baseline2026_08_30": {
+    "perPageReducedLinks": 13,
+    "buddyCanonicalLinks": 80
+  },
+  "pages": [
+    {
+      "route": "/workshop/cockpit",
+      "sidebarNavLinkCount": 80,
+      "globalNavLinkCount": 0,
+      "mainContentLinkCount": 1,
+      "asideCollapsed": false,
+      "groupHeadings": [
+        "工作台应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "工作台",
+        "应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "应用程序构建工具画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "应用程序构建工具",
+        "画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "AIP 决策引擎应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "AIP 决策引擎",
+        "应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "应用层",
+        "逻辑编排层",
+        "智能体",
+        "评测与治理",
+        "模型管理模型目录模型供应商模型路由容量管理运行就绪",
+        "模型管理",
+        "模型目录模型供应商模型路由容量管理运行就绪",
+        "本体 · 数字孪生本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "本体 · 数字孪生",
+        "本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "管道与数据治理管道构建管道提案计划编辑器搭建数据集预览代码库数据沿袭数据健康"
+      ],
+      "rect": {
+        "top": 48,
+        "bottom": 720,
+        "left": 48,
+        "width": 259,
+        "height": 672
+      },
+      "navOverflowY": "auto",
+      "scroller": {
+        "cls": "nav",
+        "scrollHeight": 2645,
+        "clientHeight": 672,
+        "scrollable": true
+      },
+      "activeLink": "日常任务总控大屏 → /workshop/cockpit",
+      "firstLinks": [
+        "概览 → /",
+        "应用列表 → /workshop",
+        "风险告警管理 → /workshop/inbox",
+        "态势大屏 → /workshop/cop"
+      ],
+      "lastLinks": [
+        "变更审批 → /apollo/change",
+        "配置与密钥 → /apollo/config",
+        "接入案例 → /apollo/cases",
+        "租户开通 → /apollo/provisioning"
+      ],
+      "toBottom": {
+        "reachedBottom": true,
+        "lastLinkVisibleAtBottom": false
+      }
+    },
+    {
+      "route": "/workshop/content-campaign",
+      "sidebarNavLinkCount": 80,
+      "globalNavLinkCount": 0,
+      "mainContentLinkCount": 1,
+      "asideCollapsed": false,
+      "groupHeadings": [
+        "工作台应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "工作台",
+        "应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "应用程序构建工具画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "应用程序构建工具",
+        "画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "AIP 决策引擎应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "AIP 决策引擎",
+        "应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "应用层",
+        "逻辑编排层",
+        "智能体",
+        "评测与治理",
+        "模型管理模型目录模型供应商模型路由容量管理运行就绪",
+        "模型管理",
+        "模型目录模型供应商模型路由容量管理运行就绪",
+        "本体 · 数字孪生本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "本体 · 数字孪生",
+        "本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "管道与数据治理管道构建管道提案计划编辑器搭建数据集预览代码库数据沿袭数据健康"
+      ],
+      "rect": {
+        "top": 48,
+        "bottom": 720,
+        "left": 48,
+        "width": 259,
+        "height": 672
+      },
+      "navOverflowY": "auto",
+      "scroller": {
+        "cls": "nav",
+        "scrollHeight": 2645,
+        "clientHeight": 672,
+        "scrollable": true
+      },
+      "activeLink": "内容与活动工作台 → /workshop/content-campaign",
+      "firstLinks": [
+        "概览 → /",
+        "应用列表 → /workshop",
+        "风险告警管理 → /workshop/inbox",
+        "态势大屏 → /workshop/cop"
+      ],
+      "lastLinks": [
+        "变更审批 → /apollo/change",
+        "配置与密钥 → /apollo/config",
+        "接入案例 → /apollo/cases",
+        "租户开通 → /apollo/provisioning"
+      ],
+      "toBottom": {
+        "reachedBottom": true,
+        "lastLinkVisibleAtBottom": false
+      }
+    },
+    {
+      "route": "/workshop/operations",
+      "sidebarNavLinkCount": 80,
+      "globalNavLinkCount": 0,
+      "mainContentLinkCount": 1,
+      "asideCollapsed": false,
+      "groupHeadings": [
+        "工作台应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "工作台",
+        "应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "应用程序构建工具画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "应用程序构建工具",
+        "画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "AIP 决策引擎应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "AIP 决策引擎",
+        "应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "应用层",
+        "逻辑编排层",
+        "智能体",
+        "评测与治理",
+        "模型管理模型目录模型供应商模型路由容量管理运行就绪",
+        "模型管理",
+        "模型目录模型供应商模型路由容量管理运行就绪",
+        "本体 · 数字孪生本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "本体 · 数字孪生",
+        "本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "管道与数据治理管道构建管道提案计划编辑器搭建数据集预览代码库数据沿袭数据健康"
+      ],
+      "rect": {
+        "top": 48,
+        "bottom": 720,
+        "left": 48,
+        "width": 259,
+        "height": 672
+      },
+      "navOverflowY": "auto",
+      "scroller": {
+        "cls": "nav",
+        "scrollHeight": 2645,
+        "clientHeight": 672,
+        "scrollable": true
+      },
+      "activeLink": "统一运营驾驶舱 → /workshop/operations",
+      "firstLinks": [
+        "概览 → /",
+        "应用列表 → /workshop",
+        "风险告警管理 → /workshop/inbox",
+        "态势大屏 → /workshop/cop"
+      ],
+      "lastLinks": [
+        "变更审批 → /apollo/change",
+        "配置与密钥 → /apollo/config",
+        "接入案例 → /apollo/cases",
+        "租户开通 → /apollo/provisioning"
+      ],
+      "toBottom": {
+        "reachedBottom": true,
+        "lastLinkVisibleAtBottom": false
+      }
+    },
+    {
+      "route": "/workshop/creator-growth",
+      "sidebarNavLinkCount": 80,
+      "globalNavLinkCount": 0,
+      "mainContentLinkCount": 1,
+      "asideCollapsed": false,
+      "groupHeadings": [
+        "工作台应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "工作台",
+        "应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "应用程序构建工具画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "应用程序构建工具",
+        "画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "AIP 决策引擎应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "AIP 决策引擎",
+        "应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "应用层",
+        "逻辑编排层",
+        "智能体",
+        "评测与治理",
+        "模型管理模型目录模型供应商模型路由容量管理运行就绪",
+        "模型管理",
+        "模型目录模型供应商模型路由容量管理运行就绪",
+        "本体 · 数字孪生本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "本体 · 数字孪生",
+        "本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "管道与数据治理管道构建管道提案计划编辑器搭建数据集预览代码库数据沿袭数据健康"
+      ],
+      "rect": {
+        "top": 48,
+        "bottom": 720,
+        "left": 48,
+        "width": 259,
+        "height": 672
+      },
+      "navOverflowY": "auto",
+      "scroller": {
+        "cls": "nav",
+        "scrollHeight": 2645,
+        "clientHeight": 672,
+        "scrollable": true
+      },
+      "activeLink": "达人邀约驾驶舱 → /workshop/creator-growth",
+      "firstLinks": [
+        "概览 → /",
+        "应用列表 → /workshop",
+        "风险告警管理 → /workshop/inbox",
+        "态势大屏 → /workshop/cop"
+      ],
+      "lastLinks": [
+        "变更审批 → /apollo/change",
+        "配置与密钥 → /apollo/config",
+        "接入案例 → /apollo/cases",
+        "租户开通 → /apollo/provisioning"
+      ],
+      "toBottom": {
+        "reachedBottom": true,
+        "lastLinkVisibleAtBottom": false
+      }
+    },
+    {
+      "route": "/workshop/media-studio",
+      "sidebarNavLinkCount": 80,
+      "globalNavLinkCount": 0,
+      "mainContentLinkCount": 1,
+      "asideCollapsed": false,
+      "groupHeadings": [
+        "工作台应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "工作台",
+        "应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "应用程序构建工具画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "应用程序构建工具",
+        "画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "AIP 决策引擎应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "AIP 决策引擎",
+        "应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "应用层",
+        "逻辑编排层",
+        "智能体",
+        "评测与治理",
+        "模型管理模型目录模型供应商模型路由容量管理运行就绪",
+        "模型管理",
+        "模型目录模型供应商模型路由容量管理运行就绪",
+        "本体 · 数字孪生本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "本体 · 数字孪生",
+        "本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "管道与数据治理管道构建管道提案计划编辑器搭建数据集预览代码库数据沿袭数据健康"
+      ],
+      "rect": {
+        "top": 48,
+        "bottom": 720,
+        "left": 48,
+        "width": 259,
+        "height": 672
+      },
+      "navOverflowY": "auto",
+      "scroller": {
+        "cls": "nav",
+        "scrollHeight": 2645,
+        "clientHeight": 672,
+        "scrollable": true
+      },
+      "activeLink": "多媒体内容生产 → /workshop/media-studio",
+      "firstLinks": [
+        "概览 → /",
+        "应用列表 → /workshop",
+        "风险告警管理 → /workshop/inbox",
+        "态势大屏 → /workshop/cop"
+      ],
+      "lastLinks": [
+        "变更审批 → /apollo/change",
+        "配置与密钥 → /apollo/config",
+        "接入案例 → /apollo/cases",
+        "租户开通 → /apollo/provisioning"
+      ],
+      "toBottom": {
+        "reachedBottom": true,
+        "lastLinkVisibleAtBottom": false
+      }
+    },
+    {
+      "route": "/workshop/analyst",
+      "sidebarNavLinkCount": 80,
+      "globalNavLinkCount": 0,
+      "mainContentLinkCount": 1,
+      "asideCollapsed": false,
+      "groupHeadings": [
+        "工作台应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "工作台",
+        "应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "应用程序构建工具画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "应用程序构建工具",
+        "画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "AIP 决策引擎应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "AIP 决策引擎",
+        "应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "应用层",
+        "逻辑编排层",
+        "智能体",
+        "评测与治理",
+        "模型管理模型目录模型供应商模型路由容量管理运行就绪",
+        "模型管理",
+        "模型目录模型供应商模型路由容量管理运行就绪",
+        "本体 · 数字孪生本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "本体 · 数字孪生",
+        "本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "管道与数据治理管道构建管道提案计划编辑器搭建数据集预览代码库数据沿袭数据健康"
+      ],
+      "rect": {
+        "top": 48,
+        "bottom": 720,
+        "left": 48,
+        "width": 259,
+        "height": 672
+      },
+      "navOverflowY": "auto",
+      "scroller": {
+        "cls": "nav",
+        "scrollHeight": 2645,
+        "clientHeight": 672,
+        "scrollable": true
+      },
+      "activeLink": "经营参谋 · 增长指挥中心 → /workshop/analyst",
+      "firstLinks": [
+        "概览 → /",
+        "应用列表 → /workshop",
+        "风险告警管理 → /workshop/inbox",
+        "态势大屏 → /workshop/cop"
+      ],
+      "lastLinks": [
+        "变更审批 → /apollo/change",
+        "配置与密钥 → /apollo/config",
+        "接入案例 → /apollo/cases",
+        "租户开通 → /apollo/provisioning"
+      ],
+      "toBottom": {
+        "reachedBottom": true,
+        "lastLinkVisibleAtBottom": false
+      }
+    },
+    {
+      "route": "/workshop/price-governance",
+      "sidebarNavLinkCount": 80,
+      "globalNavLinkCount": 0,
+      "mainContentLinkCount": 1,
+      "asideCollapsed": false,
+      "groupHeadings": [
+        "工作台应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "工作台",
+        "应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "应用程序构建工具画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "应用程序构建工具",
+        "画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "AIP 决策引擎应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "AIP 决策引擎",
+        "应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "应用层",
+        "逻辑编排层",
+        "智能体",
+        "评测与治理",
+        "模型管理模型目录模型供应商模型路由容量管理运行就绪",
+        "模型管理",
+        "模型目录模型供应商模型路由容量管理运行就绪",
+        "本体 · 数字孪生本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "本体 · 数字孪生",
+        "本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "管道与数据治理管道构建管道提案计划编辑器搭建数据集预览代码库数据沿袭数据健康"
+      ],
+      "rect": {
+        "top": 48,
+        "bottom": 720,
+        "left": 48,
+        "width": 259,
+        "height": 672
+      },
+      "navOverflowY": "auto",
+      "scroller": {
+        "cls": "nav",
+        "scrollHeight": 2645,
+        "clientHeight": 672,
+        "scrollable": true
+      },
+      "activeLink": "价格治理驾驶舱 → /workshop/price-governance",
+      "firstLinks": [
+        "概览 → /",
+        "应用列表 → /workshop",
+        "风险告警管理 → /workshop/inbox",
+        "态势大屏 → /workshop/cop"
+      ],
+      "lastLinks": [
+        "变更审批 → /apollo/change",
+        "配置与密钥 → /apollo/config",
+        "接入案例 → /apollo/cases",
+        "租户开通 → /apollo/provisioning"
+      ],
+      "toBottom": {
+        "reachedBottom": true,
+        "lastLinkVisibleAtBottom": false
+      }
+    },
+    {
+      "route": "/workshop/customer",
+      "sidebarNavLinkCount": 80,
+      "globalNavLinkCount": 0,
+      "mainContentLinkCount": 1,
+      "asideCollapsed": false,
+      "groupHeadings": [
+        "工作台应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "工作台",
+        "应用列表风险告警管理态势大屏Buddy · 智能助手分析建模日常任务总控大屏内容与活动工作台统一运营驾驶舱达人邀约驾驶舱多媒体内容生产经营参谋 · 增长指挥中心价格治理驾驶舱客户关系工作台",
+        "应用程序构建工具画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "应用程序构建工具",
+        "画布编辑组件注册表变量管理器主题与样式模块接口事件配置发布入口",
+        "AIP 决策引擎应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "AIP 决策引擎",
+        "应用层任务协作助手智能体配置AIP 分析师逻辑编排层业务逻辑编排智能体工具配置成熟度楼梯智能体上线执行审批智能体插件智能体目录智能体市场智能体列表技能发布智能体导入能力导入评测与治理评测门控草稿审批台决策谱系可观测性记忆与知识治理",
+        "应用层",
+        "逻辑编排层",
+        "智能体",
+        "评测与治理",
+        "模型管理模型目录模型供应商模型路由容量管理运行就绪",
+        "模型管理",
+        "模型目录模型供应商模型路由容量管理运行就绪",
+        "本体 · 数字孪生本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "本体 · 数字孪生",
+        "本体管理对象探索Funnel 管道OKF funnelOKF 概览图谱健康度活知识 WikiWiki 索引分支与 Overlay",
+        "管道与数据治理管道构建管道提案计划编辑器搭建数据集预览代码库数据沿袭数据健康"
+      ],
+      "rect": {
+        "top": 48,
+        "bottom": 720,
+        "left": 48,
+        "width": 259,
+        "height": 672
+      },
+      "navOverflowY": "auto",
+      "scroller": {
+        "cls": "nav",
+        "scrollHeight": 2645,
+        "clientHeight": 672,
+        "scrollable": true
+      },
+      "activeLink": "客户关系工作台 → /workshop/customer",
+      "firstLinks": [
+        "概览 → /",
+        "应用列表 → /workshop",
+        "风险告警管理 → /workshop/inbox",
+        "态势大屏 → /workshop/cop"
+      ],
+      "lastLinks": [
+        "变更审批 → /apollo/change",
+        "配置与密钥 → /apollo/config",
+        "接入案例 → /apollo/cases",
+        "租户开通 → /apollo/provisioning"
+      ],
+      "toBottom": {
+        "reachedBottom": true,
+        "lastLinkVisibleAtBottom": false
+      }
+    }
+  ]
+}

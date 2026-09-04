@@ -1,0 +1,1067 @@
+{
+  "auditedAt": "2026-09-04T02:33:08.870Z",
+  "viewports": [
+    "1280x720",
+    "1440x900",
+    "1920x1080"
+  ],
+  "pages": [
+    {
+      "key": "01-cockpit",
+      "route": "/workshop/cockpit",
+      "label": "日常任务总控大屏",
+      "visual": "workshop-task-cockpit.html",
+      "viewports": {
+        "1280x720": {
+          "title": "AOS",
+          "h1": [
+            "电商日常任务总控大屏"
+          ],
+          "h2Count": 19,
+          "h3Count": 7,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 45,
+          "disabledButtonCount": 0,
+          "tabCount": 0,
+          "tableCount": 1,
+          "listItemCount": 63,
+          "alertCount": 1,
+          "statusCount": 3,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 2,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 672
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "scrollHeight": 8317,
+              "clientHeight": 503
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "待核对",
+            "尚无",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1440x900": {
+          "title": "AOS",
+          "h1": [
+            "电商日常任务总控大屏"
+          ],
+          "h2Count": 19,
+          "h3Count": 7,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 45,
+          "disabledButtonCount": 0,
+          "tabCount": 0,
+          "tableCount": 1,
+          "listItemCount": 63,
+          "alertCount": 1,
+          "statusCount": 3,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 2,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 852
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "scrollHeight": 6286,
+              "clientHeight": 629
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "待核对",
+            "尚无",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1920x1080": {
+          "title": "AOS",
+          "h1": [
+            "电商日常任务总控大屏"
+          ],
+          "h2Count": 19,
+          "h3Count": 7,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 45,
+          "disabledButtonCount": 0,
+          "tabCount": 0,
+          "tableCount": 1,
+          "listItemCount": 63,
+          "alertCount": 1,
+          "statusCount": 3,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 2,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 1032
+            },
+            {
+              "tag": "div",
+              "cls": "",
+              "scrollHeight": 5539,
+              "clientHeight": 755
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "待核对",
+            "尚无",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        }
+      }
+    },
+    {
+      "key": "02-content-campaign",
+      "route": "/workshop/content-campaign",
+      "label": "内容与活动工作台",
+      "visual": "workshop-content-campaign.html",
+      "viewports": {
+        "1280x720": {
+          "title": "AOS",
+          "h1": [
+            "内容与活动工作台"
+          ],
+          "h2Count": 6,
+          "h3Count": 3,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 39,
+          "disabledButtonCount": 2,
+          "tabCount": 3,
+          "tableCount": 1,
+          "listItemCount": 20,
+          "alertCount": 1,
+          "statusCount": 1,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 2,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 672
+            },
+            {
+              "tag": "textarea",
+              "cls": "",
+              "scrollHeight": 74,
+              "clientHeight": 42
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": [
+            "安全预检"
+          ]
+        },
+        "1440x900": {
+          "title": "AOS",
+          "h1": [
+            "内容与活动工作台"
+          ],
+          "h2Count": 6,
+          "h3Count": 3,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 39,
+          "disabledButtonCount": 2,
+          "tabCount": 3,
+          "tableCount": 1,
+          "listItemCount": 20,
+          "alertCount": 1,
+          "statusCount": 1,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 2,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 852
+            },
+            {
+              "tag": "textarea",
+              "cls": "",
+              "scrollHeight": 74,
+              "clientHeight": 42
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": [
+            "安全预检"
+          ]
+        },
+        "1920x1080": {
+          "title": "AOS",
+          "h1": [
+            "内容与活动工作台"
+          ],
+          "h2Count": 6,
+          "h3Count": 3,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 39,
+          "disabledButtonCount": 2,
+          "tabCount": 3,
+          "tableCount": 1,
+          "listItemCount": 20,
+          "alertCount": 1,
+          "statusCount": 1,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 2,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 1032
+            },
+            {
+              "tag": "textarea",
+              "cls": "",
+              "scrollHeight": 74,
+              "clientHeight": 42
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": [
+            "安全预检"
+          ]
+        }
+      }
+    },
+    {
+      "key": "03-operations",
+      "route": "/workshop/operations",
+      "label": "统一运营驾驶舱",
+      "visual": "workshop-app-order.html",
+      "viewports": {
+        "1280x720": {
+          "title": "AOS",
+          "h1": [
+            "统一运营驾驶舱"
+          ],
+          "h2Count": 6,
+          "h3Count": 6,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 37,
+          "disabledButtonCount": 2,
+          "tabCount": 0,
+          "tableCount": 1,
+          "listItemCount": 14,
+          "alertCount": 1,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 3,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 672
+            },
+            {
+              "tag": "aside",
+              "cls": "operations-inbox",
+              "scrollHeight": 707,
+              "clientHeight": 552
+            },
+            {
+              "tag": "aside",
+              "cls": "operations-evidence",
+              "scrollHeight": 1542,
+              "clientHeight": 553
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": [
+            "安全预检"
+          ]
+        },
+        "1440x900": {
+          "title": "AOS",
+          "h1": [
+            "统一运营驾驶舱"
+          ],
+          "h2Count": 6,
+          "h3Count": 6,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 37,
+          "disabledButtonCount": 2,
+          "tabCount": 0,
+          "tableCount": 1,
+          "listItemCount": 14,
+          "alertCount": 1,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 2,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 852
+            },
+            {
+              "tag": "aside",
+              "cls": "operations-evidence",
+              "scrollHeight": 1286,
+              "clientHeight": 733
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": [
+            "安全预检"
+          ]
+        },
+        "1920x1080": {
+          "title": "AOS",
+          "h1": [
+            "统一运营驾驶舱"
+          ],
+          "h2Count": 6,
+          "h3Count": 6,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 37,
+          "disabledButtonCount": 2,
+          "tabCount": 0,
+          "tableCount": 1,
+          "listItemCount": 14,
+          "alertCount": 1,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 2,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 1032
+            },
+            {
+              "tag": "aside",
+              "cls": "operations-evidence",
+              "scrollHeight": 1286,
+              "clientHeight": 913
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": [
+            "安全预检"
+          ]
+        }
+      }
+    },
+    {
+      "key": "04-creator-growth",
+      "route": "/workshop/creator-growth",
+      "label": "达人邀约驾驶舱",
+      "visual": "workshop-creator-outreach.html",
+      "viewports": {
+        "1280x720": {
+          "title": "AOS",
+          "h1": [
+            "达人邀约与签约驾驶舱"
+          ],
+          "h2Count": 10,
+          "h3Count": 3,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 38,
+          "disabledButtonCount": 2,
+          "tabCount": 0,
+          "tableCount": 1,
+          "listItemCount": 18,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 3,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 672
+            },
+            {
+              "tag": "aside",
+              "cls": "content-campaign-nav",
+              "scrollHeight": 680,
+              "clientHeight": 629
+            },
+            {
+              "tag": "aside",
+              "cls": "content-campaign-evidence creator-growth-analysis",
+              "scrollHeight": 682,
+              "clientHeight": 630
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1440x900": {
+          "title": "AOS",
+          "h1": [
+            "达人邀约与签约驾驶舱"
+          ],
+          "h2Count": 10,
+          "h3Count": 3,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 38,
+          "disabledButtonCount": 2,
+          "tabCount": 0,
+          "tableCount": 1,
+          "listItemCount": 18,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 852
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1920x1080": {
+          "title": "AOS",
+          "h1": [
+            "达人邀约与签约驾驶舱"
+          ],
+          "h2Count": 10,
+          "h3Count": 3,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 38,
+          "disabledButtonCount": 2,
+          "tabCount": 0,
+          "tableCount": 1,
+          "listItemCount": 18,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 1032
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        }
+      }
+    },
+    {
+      "key": "05-media-studio",
+      "route": "/workshop/media-studio",
+      "label": "多媒体内容生产",
+      "visual": "workshop-media-studio.html",
+      "viewports": {
+        "1280x720": {
+          "title": "AOS",
+          "h1": [
+            "多媒体任务全过程闭环工作台"
+          ],
+          "h2Count": 5,
+          "h3Count": 6,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 26,
+          "disabledButtonCount": 1,
+          "tabCount": 3,
+          "tableCount": 1,
+          "listItemCount": 27,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 2,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 672
+            },
+            {
+              "tag": "div",
+              "cls": "media-studio-center",
+              "scrollHeight": 1053,
+              "clientHeight": 482
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "空",
+            "待核对",
+            "尚无",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1440x900": {
+          "title": "AOS",
+          "h1": [
+            "多媒体任务全过程闭环工作台"
+          ],
+          "h2Count": 5,
+          "h3Count": 6,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 26,
+          "disabledButtonCount": 1,
+          "tabCount": 3,
+          "tableCount": 1,
+          "listItemCount": 27,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 852
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "空",
+            "待核对",
+            "尚无",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1920x1080": {
+          "title": "AOS",
+          "h1": [
+            "多媒体任务全过程闭环工作台"
+          ],
+          "h2Count": 5,
+          "h3Count": 6,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 26,
+          "disabledButtonCount": 1,
+          "tabCount": 3,
+          "tableCount": 1,
+          "listItemCount": 27,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 1032
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "空",
+            "待核对",
+            "尚无",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        }
+      }
+    },
+    {
+      "key": "06-analyst",
+      "route": "/workshop/analyst",
+      "label": "经营参谋 · 增长指挥中心",
+      "visual": "workshop-analyst.html",
+      "viewports": {
+        "1280x720": {
+          "title": "AOS",
+          "h1": [
+            "经营参谋 · 增长指挥中心"
+          ],
+          "h2Count": 6,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 32,
+          "disabledButtonCount": 0,
+          "tabCount": 8,
+          "tableCount": 1,
+          "listItemCount": 20,
+          "alertCount": 1,
+          "statusCount": 1,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 672
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1440x900": {
+          "title": "AOS",
+          "h1": [
+            "经营参谋 · 增长指挥中心"
+          ],
+          "h2Count": 6,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 32,
+          "disabledButtonCount": 0,
+          "tabCount": 8,
+          "tableCount": 1,
+          "listItemCount": 20,
+          "alertCount": 1,
+          "statusCount": 1,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 852
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1920x1080": {
+          "title": "AOS",
+          "h1": [
+            "经营参谋 · 增长指挥中心"
+          ],
+          "h2Count": 6,
+          "h3Count": 0,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 32,
+          "disabledButtonCount": 0,
+          "tabCount": 8,
+          "tableCount": 1,
+          "listItemCount": 20,
+          "alertCount": 1,
+          "statusCount": 1,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 1032
+            }
+          ],
+          "emptyStateHits": [
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        }
+      }
+    },
+    {
+      "key": "07-price-governance",
+      "route": "/workshop/price-governance",
+      "label": "价格治理驾驶舱",
+      "visual": "workshop-price-governance.html",
+      "viewports": {
+        "1280x720": {
+          "title": "AOS",
+          "h1": [
+            "价格治理驾驶舱"
+          ],
+          "h2Count": 6,
+          "h3Count": 5,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 26,
+          "disabledButtonCount": 2,
+          "tabCount": 3,
+          "tableCount": 1,
+          "listItemCount": 15,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 672
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1440x900": {
+          "title": "AOS",
+          "h1": [
+            "价格治理驾驶舱"
+          ],
+          "h2Count": 6,
+          "h3Count": 5,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 26,
+          "disabledButtonCount": 2,
+          "tabCount": 3,
+          "tableCount": 1,
+          "listItemCount": 15,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 852
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1920x1080": {
+          "title": "AOS",
+          "h1": [
+            "价格治理驾驶舱"
+          ],
+          "h2Count": 6,
+          "h3Count": 5,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 26,
+          "disabledButtonCount": 2,
+          "tabCount": 3,
+          "tableCount": 1,
+          "listItemCount": 15,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 1032
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "空",
+            "待核对",
+            "未就绪"
+          ],
+          "safetyPrecheckHits": []
+        }
+      }
+    },
+    {
+      "key": "08-customer",
+      "route": "/workshop/customer",
+      "label": "客户关系工作台",
+      "visual": "workshop-customer.html",
+      "viewports": {
+        "1280x720": {
+          "title": "AOS",
+          "h1": [
+            "客户关系工作台"
+          ],
+          "h2Count": 7,
+          "h3Count": 1,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 27,
+          "disabledButtonCount": 2,
+          "tabCount": 4,
+          "tableCount": 1,
+          "listItemCount": 16,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 672
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "待核对",
+            "尚无",
+            "未就绪",
+            "读取失败"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1440x900": {
+          "title": "AOS",
+          "h1": [
+            "客户关系工作台"
+          ],
+          "h2Count": 7,
+          "h3Count": 1,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 27,
+          "disabledButtonCount": 2,
+          "tabCount": 4,
+          "tableCount": 1,
+          "listItemCount": 16,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 852
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "待核对",
+            "尚无",
+            "未就绪",
+            "读取失败"
+          ],
+          "safetyPrecheckHits": []
+        },
+        "1920x1080": {
+          "title": "AOS",
+          "h1": [
+            "客户关系工作台"
+          ],
+          "h2Count": 7,
+          "h3Count": 1,
+          "navLinkCount": 0,
+          "navLinkSample": [],
+          "documentLinkCount": 81,
+          "navScroller": null,
+          "buttonCount": 27,
+          "disabledButtonCount": 2,
+          "tabCount": 4,
+          "tableCount": 1,
+          "listItemCount": 16,
+          "alertCount": 2,
+          "statusCount": 0,
+          "horizontalOverflow": false,
+          "verticalPageScroll": false,
+          "scrollContainerCount": 1,
+          "scrollContainers": [
+            {
+              "tag": "nav",
+              "cls": "nav",
+              "scrollHeight": 2645,
+              "clientHeight": 1032
+            }
+          ],
+          "emptyStateHits": [
+            "暂无",
+            "没有",
+            "待核对",
+            "尚无",
+            "未就绪",
+            "读取失败"
+          ],
+          "safetyPrecheckHits": []
+        }
+      }
+    }
+  ]
+}
