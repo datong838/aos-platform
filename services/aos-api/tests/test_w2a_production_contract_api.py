@@ -4,6 +4,9 @@ from datetime import datetime, timedelta, timezone
 
 from aos_api.aip_task_models import CreateTaskRequest
 from aos_api.aip_task_store import AipTaskStore
+from aos_api.aip_contracts import ResourceRef
+from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contracts import CreateBriefRequest
 from aos_api.db import connect
 from aos_api.tenant_scope import TenantScope
 
@@ -74,6 +77,77 @@ def test_brief_api_principal_tenant_idempotency_and_canary(client):
         stale=client.post(f"/v1/aip/production-contracts/task-briefs/{body['briefId']}/freeze",headers=headers(key=f"freeze-{uuid.uuid4().hex}"),json={"expectedVersion":1})
         assert stale.status_code==409 and stale.json()["code"]=="AIP_VERSION_CONFLICT"
     finally:cleanup()
+
+
+def test_creator_internal_brief_rejects_generic_create_revise_and_freeze(client):
+    cleanup()
+    try:
+        task = AipTaskStore().create_task(
+            ORG,
+            ACTOR,
+            f"api-task-{uuid.uuid4().hex}",
+            CreateTaskRequest(title="W2A API creator guard"),
+        )
+        schema_ref = ResourceRef(
+            resource_type="CreatorInternalWorkflowSchema",
+            resource_id="schema://aos/ecommerce/creator-internal-workflow/v1",
+            revision="1",
+            authority="aos://ecommerce-workshop/creator-growth",
+        )
+        spec = {
+            "purpose": "outreach_batch",
+            "title": "达人邀约批次",
+            "summary": "整理候选范围和邀约目标",
+            "details": {"owner": "经营负责人"},
+            "status": "draft",
+            "externalEffectsAllowed": False,
+        }
+        generic_create = client.post(
+            "/v1/aip/production-contracts/task-briefs",
+            headers=headers(key=f"creator-generic-{uuid.uuid4().hex}"),
+            json={
+                "taskId": task.id,
+                "briefType": "creator_internal_workflow",
+                "schemaRef": schema_ref.model_dump(mode="json", by_alias=True),
+                "spec": spec,
+            },
+        )
+        assert generic_create.status_code == 409
+        assert generic_create.json()["code"] == "AIP_VERSION_CONFLICT"
+
+        draft = AipProductionContractStore().create_brief(
+            ORG,
+            ACTOR,
+            f"creator-dedicated-{uuid.uuid4().hex}",
+            CreateBriefRequest(
+                task_id=task.id,
+                brief_type="creator_internal_workflow",
+                schema_ref=schema_ref,
+                spec=spec,
+            ),
+        )
+        revise = client.post(
+            f"/v1/aip/production-contracts/task-briefs/{draft.brief_id}/revisions",
+            headers=headers(key=f"creator-revise-{uuid.uuid4().hex}"),
+            json={
+                "expectedVersion": draft.version,
+                "briefType": "creator_internal_workflow",
+                "schemaRef": schema_ref.model_dump(mode="json", by_alias=True),
+                "spec": {**spec, "title": "被通用入口修改"},
+            },
+        )
+        assert revise.status_code == 409
+        frozen = client.post(
+            f"/v1/aip/production-contracts/task-briefs/{draft.brief_id}/freeze",
+            headers=headers(key=f"creator-freeze-{uuid.uuid4().hex}"),
+            json={"expectedVersion": draft.version},
+        )
+        assert frozen.status_code == 409
+        current = AipProductionContractStore().get_brief(ORG, draft.brief_id)
+        assert current.revision == 1
+        assert current.version == 1
+    finally:
+        cleanup()
 
 
 def test_evidence_bundle_api_binds_exact_frozen_brief_and_evidence(client):

@@ -85,6 +85,7 @@ _REVIEW_CREATE_ROLES = frozenset(
 _REVIEW_CONTROL_ROLES = frozenset(
     {"admin", "reviewer", "approver", "production_operator", "operator"}
 )
+_RESERVED_TASK_BRIEF_TYPES = frozenset({"creator_internal_workflow"})
 
 
 class FreezeBriefRequest(AipContractModel):
@@ -142,6 +143,22 @@ def _map(exc: ProductionContractError) -> ApiError:
     if isinstance(exc,(ProductionContractConflict,ProductionContractIdempotencyConflict)): return ApiError(code=exc.code,message=str(exc),status_code=409)
     if isinstance(exc,ProductionContractDependencyBlocked): return ApiError(code=exc.code,message=str(exc),status_code=422)
     return ApiError(code=exc.code,message="production contract persistence failed",status_code=503)
+
+
+def _require_generic_brief_type_allowed(brief_type: str) -> None:
+    if brief_type in _RESERVED_TASK_BRIEF_TYPES:
+        raise ProductionContractConflict(
+            "reserved task brief type must use its dedicated workflow"
+        )
+
+
+def _require_generic_brief_write_allowed(
+    scope: TenantScope,
+    brief_id: str,
+    store: AipProductionContractStore,
+) -> None:
+    current = store.get_brief(scope, brief_id)
+    _require_generic_brief_type_allowed(current.brief_type)
 
 
 @router.post("/impact-previews", response_model=ImpactPreviewRevision, status_code=201)
@@ -213,7 +230,9 @@ def get_production_start_decision(decision_id: str, principal: Principal = Depen
 
 @router.post("/task-briefs", response_model=TaskBriefRevision, status_code=status.HTTP_201_CREATED)
 def create_brief(body: CreateBriefRequest, idempotency_key: str=Header(alias="Idempotency-Key"), principal:Principal=Depends(require_principal), store:AipProductionContractStore=Depends(get_store)):
-    try:return store.create_brief(_scope(principal),principal.subject,_key(idempotency_key),body)
+    try:
+        _require_generic_brief_type_allowed(body.brief_type)
+        return store.create_brief(_scope(principal),principal.subject,_key(idempotency_key),body)
     except ProductionContractError as exc:raise _map(exc) from exc
 
 
@@ -231,13 +250,20 @@ def get_brief(brief_id:str, revision:int|None=Query(default=None,ge=1), principa
 
 @router.post("/task-briefs/{brief_id}/revisions", response_model=TaskBriefRevision, status_code=status.HTTP_201_CREATED)
 def revise_brief(brief_id:str,body:ReviseBriefRequest,idempotency_key:str=Header(alias="Idempotency-Key"),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
-    try:return store.revise_brief(_scope(principal),principal.subject,brief_id,_key(idempotency_key),body)
+    try:
+        scope = _scope(principal)
+        _require_generic_brief_type_allowed(body.brief_type)
+        _require_generic_brief_write_allowed(scope, brief_id, store)
+        return store.revise_brief(scope,principal.subject,brief_id,_key(idempotency_key),body)
     except ProductionContractError as exc:raise _map(exc) from exc
 
 
 @router.post("/task-briefs/{brief_id}/freeze",response_model=TaskBriefRevision)
 def freeze_brief(brief_id:str,body:FreezeBriefRequest,idempotency_key:str=Header(alias="Idempotency-Key"),principal:Principal=Depends(require_principal),store:AipProductionContractStore=Depends(get_store)):
-    try:return store.freeze_brief(_scope(principal),principal.subject,brief_id,body.expected_version,_key(idempotency_key))
+    try:
+        scope = _scope(principal)
+        _require_generic_brief_write_allowed(scope, brief_id, store)
+        return store.freeze_brief(scope,principal.subject,brief_id,body.expected_version,_key(idempotency_key))
     except ProductionContractError as exc:raise _map(exc) from exc
 
 
