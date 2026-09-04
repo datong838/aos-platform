@@ -101,6 +101,17 @@ from aos_api.ecommerce_content_campaign_workflow_contracts import (
     ContentCampaignWorkflowCommandRequest,
     ContentCampaignWorkflowCommandResponse,
 )
+from aos_api.ecommerce_creator_internal_workflow import (
+    CreatorInternalWorkflowConflict,
+    CreatorInternalWorkflowError,
+    EcommerceCreatorInternalWorkflow,
+)
+from aos_api.ecommerce_creator_internal_workflow_contracts import (
+    CreatorInternalWorkflowCommandRequest,
+    CreatorInternalWorkflowCommandResponse,
+    CreatorInternalWorkflowHistoryResponse,
+    CreatorInternalWorkflowListResponse,
+)
 from aos_api.ecommerce_workshop_creator_growth import EcommerceWorkshopCreatorGrowth
 from aos_api.ecommerce_workshop_creator_growth_contracts import (
     WorkshopCreatorGrowthViewEnvelope,
@@ -429,6 +440,11 @@ def get_ecommerce_content_campaign_workflow() -> EcommerceContentCampaignWorkflo
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_creator_internal_workflow() -> EcommerceCreatorInternalWorkflow:
+    return EcommerceCreatorInternalWorkflow()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_creator_growth() -> EcommerceWorkshopCreatorGrowth:
     return EcommerceWorkshopCreatorGrowth(store=EcommerceWorkshopCreatorGrowthStore())
 
@@ -605,6 +621,10 @@ ContentCampaignWorkflowDependency = Annotated[
     EcommerceContentCampaignWorkflow,
     Depends(get_ecommerce_content_campaign_workflow),
 ]
+CreatorInternalWorkflowDependency = Annotated[
+    EcommerceCreatorInternalWorkflow,
+    Depends(get_ecommerce_creator_internal_workflow),
+]
 CreatorGrowthDependency = Annotated[
     EcommerceWorkshopCreatorGrowth,
     Depends(get_ecommerce_workshop_creator_growth),
@@ -719,6 +739,12 @@ def _map_content_campaign_workflow_error(
         message="Content campaign workflow failed closed",
         status_code=503,
     )
+
+
+def _map_creator_internal_workflow_error(exc: CreatorInternalWorkflowError) -> ApiError:
+    if isinstance(exc, CreatorInternalWorkflowConflict):
+        return ApiError(code=exc.code, message=str(exc), status_code=409)
+    return ApiError(code=exc.code, message="Creator internal workflow failed closed", status_code=503)
 
 
 def _map_evidence_build_error(exc: WorkshopEvidenceBuildError) -> ApiError:
@@ -1372,6 +1398,74 @@ def get_ecommerce_workshop_creator_growth_view(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
+
+
+@router.post(
+    "/views/creator-growth/workflow/commands",
+    response_model=CreatorInternalWorkflowCommandResponse,
+    operation_id="ecommerceWorkshopCreatorInternalWorkflowCommand",
+    responses=_ERRORS,
+)
+def execute_creator_internal_workflow(
+    request: Request,
+    body: CreatorInternalWorkflowCommandRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    workflow: CreatorInternalWorkflowDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> CreatorInternalWorkflowCommandResponse:
+    _reject_query_parameters(request)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    try:
+        return workflow.execute(
+            TenantScope(principal.org_id, principal.project_id),
+            principal.subject,
+            _prepare_idempotency(idempotency_key),
+            body,
+        )
+    except CreatorInternalWorkflowError as exc:
+        raise _map_creator_internal_workflow_error(exc) from exc
+
+
+@router.get(
+    "/views/creator-growth/workflow/drafts",
+    response_model=CreatorInternalWorkflowListResponse,
+    operation_id="ecommerceWorkshopCreatorInternalWorkflowList",
+    responses=_ERRORS,
+)
+def list_creator_internal_workflows(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    workflow: CreatorInternalWorkflowDependency,
+) -> CreatorInternalWorkflowListResponse:
+    _reject_query_parameters(request)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    try:
+        return workflow.list(TenantScope(principal.org_id, principal.project_id))
+    except CreatorInternalWorkflowError as exc:
+        raise _map_creator_internal_workflow_error(exc) from exc
+
+
+@router.get(
+    "/views/creator-growth/workflow/drafts/{brief_id}/history",
+    response_model=CreatorInternalWorkflowHistoryResponse,
+    operation_id="ecommerceWorkshopCreatorInternalWorkflowHistoryGet",
+    responses=_ERRORS,
+)
+def get_creator_internal_workflow_history(
+    request: Request,
+    brief_id: Annotated[str, Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    workflow: CreatorInternalWorkflowDependency,
+) -> CreatorInternalWorkflowHistoryResponse:
+    _reject_query_parameters(request)
+    _require_creator_growth_installation(principal=principal, catalog=catalog)
+    try:
+        return workflow.history(TenantScope(principal.org_id, principal.project_id), brief_id)
+    except CreatorInternalWorkflowError as exc:
+        raise _map_creator_internal_workflow_error(exc) from exc
 
 
 @router.post(

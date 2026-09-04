@@ -16,7 +16,8 @@ const emptyView: CreatorGrowthViewResponse = {
 };
 const contribution = { schemaVersion: "aos.ecommerce-workshop.creator-prepare/v1" as const, tenant: emptyView.tenant, evaluatedAt: cutoff, atomicSkillRefs: [], logicRef: null, primaryColleague: "导购顾问" as const, collaboratorColleagues: ["数据参谋", "内容官", "活动策划师"], latestBatch: null, blockers: ["CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"], allowedCommands: ["PREPARE_CREATOR_BATCH" as const], externalEffectsAllowed: false as const };
 const lifecycle = { schemaVersion: "aos.ecommerce-workshop.creator-lifecycle/v1" as const, tenant: emptyView.tenant, evaluatedAt: cutoff, latestStart: null, ledger: { eligibleItems: 0, lanes: 0, prepared: 0, accepted: 0, applied: 0, failed: 0, unknown: 0, disputed: 0, completed: 0 }, contracts: [], deliveries: [], relationships: [], blockers: ["CREATOR_BATCH_START_NOT_AVAILABLE"], allowedCommands: ["START_CREATOR_BATCH_GOVERNANCE" as const], externalEffectsAllowed: false as const };
-const clientFor = () => ({ getCreatorGrowthView: vi.fn().mockResolvedValue(emptyView), getCreatorContributionView: vi.fn().mockResolvedValue(contribution), getCreatorLifecycleView: vi.fn().mockResolvedValue(lifecycle) });
+const draft = { resourceType: "TaskBriefRevision" as const, resourceId: "creator-brief-1", revision: 1, contentHash: "a".repeat(64), version: 1, purpose: "candidate_import" as const, title: "达人候选导入", summary: "品牌合作名单与美妆达人筛选", details: { owner: "经营负责人" }, status: "draft" as const };
+const clientFor = () => ({ getCreatorGrowthView: vi.fn().mockResolvedValue(emptyView), getCreatorContributionView: vi.fn().mockResolvedValue(contribution), getCreatorLifecycleView: vi.fn().mockResolvedValue(lifecycle), listCreatorInternalWorkflows: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, items: [], count: 0 }), executeCreatorInternalWorkflow: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, command: "create", taskId: "creator-task-1", draft, receipt: { receiptId: "receipt-1", operation: "task_brief.create", idempotencyKey: "creator-key:creator-brief", replay: false }, sideEffects: { providerInvocationCount: 0, externalOutreachCount: 0, contractSignatureCount: 0, businessMutationCount: 0 }, message: "内部业务草稿已创建。" }), getCreatorInternalWorkflowHistory: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, items: [draft], count: 1 }) });
 
 describe("CreatorGrowthPage R5-D01 视觉与交互", () => {
   let host: HTMLDivElement; let root: Root;
@@ -46,10 +47,10 @@ describe("CreatorGrowthPage R5-D01 视觉与交互", () => {
     expect(host.querySelector<HTMLInputElement>('input[aria-label="检索达人或机构"]')?.value).toBe("美妆");
     await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-creator-import")));
     expect(host.textContent).toContain("导入达人准备");
-    const source = host.querySelector<HTMLInputElement>('input[aria-label="达人来源"]')!;
-    await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(source, "品牌合作名单"); source.dispatchEvent(new Event("input", { bubbles: true })); });
-    await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".creator-growth-preparation button")].find((button) => button.textContent === "应用到候选筛选")!.click());
-    expect(host.textContent).toContain("已应用到本次候选筛选"); expect(host.textContent).not.toContain("导入成功");
+    const summary = host.querySelector<HTMLTextAreaElement>('textarea[aria-label="来源与筛选条件"]')!;
+    await act(async () => { Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(summary, "品牌合作名单与美妆达人筛选"); summary.dispatchEvent(new Event("input", { bubbles: true })); });
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".creator-growth-preparation button")].find((button) => button.textContent === "保存草稿")!.click());
+    expect(host.textContent).toContain("内部业务草稿已创建"); expect(host.textContent).toContain("草稿 · 第 1 版"); expect(host.textContent).toContain("回执 receipt-1");
     await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-creator-new-batch")));
     expect(host.textContent).toContain("新建邀约批次准备"); expect(host.querySelector(".creator-growth-toolbar button.is-active")?.textContent).toBe("招募漏斗");
   });
@@ -75,5 +76,34 @@ describe("CreatorGrowthPage R5-D01 视觉与交互", () => {
     expect([...host.querySelectorAll<HTMLButtonElement>("button")].map((button) => button.textContent).join(" ")).not.toMatch(/发送邀约|签署合同|确认寄样|修改佣金/);
     await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-creator-new-batch")));
     expect(host.textContent).toContain("不会自动导入、发送邀约、签署合同或产生外部触达");
+  });
+
+  it("刷新后从服务端水合最新内部草稿", async () => {
+    const client = clientFor(); client.listCreatorInternalWorkflows.mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 });
+    await act(async () => root.render(<CreatorGrowthPage client={client} />));
+    await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-creator-import")));
+    expect(host.textContent).toContain("草稿 · 第 1 版"); expect(host.querySelector<HTMLInputElement>('input[aria-label="任务名称"]')?.value).toBe("达人候选导入");
+    expect(client.getCreatorInternalWorkflowHistory).toHaveBeenCalledWith("creator-brief-1");
+    expect(host.textContent).toContain("查看版本历史（1）");
+  });
+
+  it("修订命令只提交精确草稿引用而不夹带展示字段", async () => {
+    const client = clientFor(); client.listCreatorInternalWorkflows.mockResolvedValueOnce({ tenant: emptyView.tenant, items: [draft], count: 1 });
+    await act(async () => root.render(<CreatorGrowthPage client={client} />));
+    await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-creator-import")));
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".creator-growth-preparation button")].find((button) => button.textContent === "保存修改")!.click());
+    const input = client.executeCreatorInternalWorkflow.mock.calls[0]![0];
+    expect(input.draftRef).toEqual({ resourceType: "TaskBriefRevision", resourceId: "creator-brief-1", revision: 1, contentHash: "a".repeat(64) });
+    expect(input.draftRef).not.toHaveProperty("status");
+  });
+
+  it("命令成功但历史读取失败时保留草稿和回执", async () => {
+    const client = clientFor(); client.getCreatorInternalWorkflowHistory.mockRejectedValueOnce(new Error("history unavailable"));
+    await act(async () => root.render(<CreatorGrowthPage client={client} />));
+    await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-creator-import")));
+    const summary = host.querySelector<HTMLTextAreaElement>('textarea[aria-label="来源与筛选条件"]')!;
+    await act(async () => { Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(summary, "品牌合作名单与美妆达人筛选"); summary.dispatchEvent(new Event("input", { bubbles: true })); });
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".creator-growth-preparation button")].find((button) => button.textContent === "保存草稿")!.click());
+    expect(host.textContent).toContain("回执 receipt-1"); expect(host.textContent).toContain("操作已保存并取得回执"); expect(host.textContent).not.toContain("操作未保存");
   });
 });

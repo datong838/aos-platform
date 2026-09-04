@@ -187,10 +187,67 @@ class FakeContentCampaignWorkflow:
         }
 
 
+class FakeCreatorInternalWorkflow:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def execute(self, scope, actor, idempotency_key, body):
+        self.calls.append(("execute", scope, actor, idempotency_key, body.command))
+        return {
+            "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+            "command": body.command,
+            "taskId": "creator-task-1",
+            "draft": {
+                "resourceType": "TaskBriefRevision", "resourceId": "creator-brief-1",
+                "revision": 1, "version": 1, "contentHash": "a" * 64,
+                "purpose": body.purpose, "title": body.title,
+                "summary": body.summary, "details": body.details, "status": "draft",
+            },
+            "receipt": {
+                "receiptId": "creator-receipt-1", "operation": "task_brief.create",
+                "idempotencyKey": f"{idempotency_key}:creator-brief", "replay": False,
+            },
+            "sideEffects": {
+                "providerInvocationCount": 0, "externalOutreachCount": 0,
+                "contractSignatureCount": 0, "businessMutationCount": 0,
+            },
+            "message": "内部业务草稿已创建。",
+        }
+
+    def history(self, scope, brief_id):
+        self.calls.append(("history", scope, brief_id))
+        return {
+            "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+            "items": [{
+                "resourceType": "TaskBriefRevision", "resourceId": brief_id,
+                "revision": 1, "version": 1, "contentHash": "a" * 64,
+                "purpose": "candidate_import", "title": "达人候选导入",
+                "summary": "整理品牌合作名单与美妆达人筛选条件",
+                "details": {"owner": "经营负责人"}, "status": "draft",
+            }],
+            "count": 1,
+        }
+
+    def list(self, scope):
+        self.calls.append(("list", scope))
+        return {
+            "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+            "items": [{
+                "resourceType": "TaskBriefRevision", "resourceId": "creator-brief-1",
+                "revision": 1, "version": 1, "contentHash": "a" * 64,
+                "purpose": "candidate_import", "title": "达人候选导入",
+                "summary": "整理品牌合作名单与美妆达人筛选条件",
+                "details": {"owner": "经营负责人"}, "status": "draft",
+            }],
+            "count": 1,
+        }
+
+
 def _client(
     catalog: FakeCatalog,
     source_readiness: FakeSourceReadiness | None = None,
     content_campaign_workflow: FakeContentCampaignWorkflow | None = None,
+    creator_internal_workflow: FakeCreatorInternalWorkflow | None = None,
 ) -> TestClient:
     app = FastAPI()
     register_exception_handlers(app)
@@ -210,6 +267,10 @@ def _client(
         app.dependency_overrides[
             ecommerce_workshop.get_ecommerce_content_campaign_workflow
         ] = lambda: content_campaign_workflow
+    if creator_internal_workflow is not None:
+        app.dependency_overrides[
+            ecommerce_workshop.get_ecommerce_creator_internal_workflow
+        ] = lambda: creator_internal_workflow
     return TestClient(app, raise_server_exceptions=False)
 
 
@@ -266,6 +327,47 @@ def test_content_campaign_workflow_command_is_installed_tenant_scoped_and_receip
         )
         assert rejected.status_code == 400
     assert workflow.calls[0][1].key == ("org-org", "dev-project")
+
+
+def test_creator_internal_workflow_is_tenant_scoped_receipted_and_query_closed() -> None:
+    catalog = FakeCatalog()
+    workflow = FakeCreatorInternalWorkflow()
+    with _client(catalog, creator_internal_workflow=workflow) as client:
+        created = client.post(
+            "/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+            headers={"Idempotency-Key": "creator-ui-1"},
+            json={
+                "command": "create", "purpose": "candidate_import",
+                "title": "达人候选导入", "summary": "整理品牌合作名单与美妆达人筛选条件",
+                "details": {"owner": "经营负责人"},
+            },
+        )
+        assert created.status_code == 200
+        assert created.json()["tenant"] == {"orgId": "org-org", "projectId": "dev-project"}
+        assert created.json()["receipt"]["receiptId"] == "creator-receipt-1"
+        assert created.json()["sideEffects"] == {
+            "providerInvocationCount": 0, "externalOutreachCount": 0,
+            "contractSignatureCount": 0, "businessMutationCount": 0,
+        }
+        history = client.get(
+            "/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-1/history"
+        )
+        assert history.status_code == 200
+        assert history.json()["count"] == 1
+        listed = client.get(
+            "/v1/ecommerce-workshop/views/creator-growth/workflow/drafts"
+        )
+        assert listed.status_code == 200
+        assert listed.json()["items"][0]["resourceId"] == "creator-brief-1"
+        injected = client.get(
+            "/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-1/history?orgId=dev-org"
+        )
+        assert injected.status_code == 400
+        injected_list = client.get(
+            "/v1/ecommerce-workshop/views/creator-growth/workflow/drafts?orgId=dev-org"
+        )
+        assert injected_list.status_code == 400
+    assert all(call[1].key == ("org-org", "dev-project") for call in workflow.calls)
 
 
 def test_not_installed_and_invalid_module_id_fail_explicitly() -> None:
@@ -412,6 +514,18 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
         "ecommerceWorkshopContentCampaignApprovalPreview": (
             "/v1/ecommerce-workshop/views/content-campaign/workflow/approval-preview",
             "post",
+        ),
+        "ecommerceWorkshopCreatorInternalWorkflowCommand": (
+            "/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+            "post",
+        ),
+        "ecommerceWorkshopCreatorInternalWorkflowList": (
+            "/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+            "get",
+        ),
+        "ecommerceWorkshopCreatorInternalWorkflowHistoryGet": (
+            "/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/{brief_id}/history",
+            "get",
         ),
             "ecommerceWorkshopCreatorGrowthViewGet": (
                 "/v1/ecommerce-workshop/views/creator-growth",
