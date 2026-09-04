@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CreatorGrowthViewResponse } from "../../api/ecommerceWorkshop";
+import type { ContentCampaignInputsResponse, CreatorGrowthViewResponse } from "../../api/ecommerceWorkshop";
 import { CreatorGrowthPage } from "./CreatorGrowthPage";
 
 const cutoff = "2026-09-05T00:00:00+08:00";
@@ -17,7 +17,8 @@ const emptyView: CreatorGrowthViewResponse = {
 const contribution = { schemaVersion: "aos.ecommerce-workshop.creator-prepare/v1" as const, tenant: emptyView.tenant, evaluatedAt: cutoff, atomicSkillRefs: [], logicRef: null, primaryColleague: "导购顾问" as const, collaboratorColleagues: ["数据参谋", "内容官", "活动策划师"], latestBatch: null, blockers: ["CREATOR_BATCH_PREPARATION_NOT_AVAILABLE"], allowedCommands: ["PREPARE_CREATOR_BATCH" as const], externalEffectsAllowed: false as const };
 const lifecycle = { schemaVersion: "aos.ecommerce-workshop.creator-lifecycle/v1" as const, tenant: emptyView.tenant, evaluatedAt: cutoff, latestStart: null, ledger: { eligibleItems: 0, lanes: 0, prepared: 0, accepted: 0, applied: 0, failed: 0, unknown: 0, disputed: 0, completed: 0 }, contracts: [], deliveries: [], relationships: [], blockers: ["CREATOR_BATCH_START_NOT_AVAILABLE"], allowedCommands: ["START_CREATOR_BATCH_GOVERNANCE" as const], externalEffectsAllowed: false as const };
 const draft = { resourceType: "TaskBriefRevision" as const, resourceId: "creator-brief-1", revision: 1, contentHash: "a".repeat(64), version: 1, purpose: "candidate_import" as const, title: "达人候选导入", summary: "品牌合作名单与美妆达人筛选", details: { owner: "经营负责人" }, status: "draft" as const };
-const clientFor = () => ({ getCreatorGrowthView: vi.fn().mockResolvedValue(emptyView), getCreatorContributionView: vi.fn().mockResolvedValue(contribution), getCreatorLifecycleView: vi.fn().mockResolvedValue(lifecycle), listCreatorInternalWorkflows: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, items: [], count: 0 }), executeCreatorInternalWorkflow: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, command: "create", taskId: "creator-task-1", draft, receipt: { receiptId: "receipt-1", operation: "task_brief.create", idempotencyKey: "creator-key:creator-brief", replay: false }, sideEffects: { providerInvocationCount: 0, externalOutreachCount: 0, contractSignatureCount: 0, businessMutationCount: 0 }, message: "内部业务草稿已创建。" }), getCreatorInternalWorkflowHistory: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, items: [draft], count: 1 }) });
+const realInputs: ContentCampaignInputsResponse = { schemaVersion: "aos.ecommerce-workshop.content-campaign-inputs/v1", tenant: emptyView.tenant, evaluatedAt: cutoff, dataCutoff: cutoff, status: "ready", products: [{ productRef: { resourceType: "Product", resourceId: "niushop:1:65", revision: null, contentHash: "sha256:" + "b".repeat(64), authority: "ecom_object" }, title: "栖月汇焕亮面膜", price: "99.00", availableStock: 28, businessStatus: "1", sourceUpdatedAt: cutoff }], inventory: [], plans: [], ledger: { products: 1, inventory: 0, plans: 0, unmatchedInventory: 0 }, unavailableGroups: [] };
+const clientFor = () => ({ getCreatorGrowthView: vi.fn().mockResolvedValue(emptyView), getCreatorContributionView: vi.fn().mockResolvedValue(contribution), getCreatorLifecycleView: vi.fn().mockResolvedValue(lifecycle), getContentCampaignRealInputs: vi.fn().mockResolvedValue(realInputs), listCreatorInternalWorkflows: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, items: [], count: 0 }), executeCreatorInternalWorkflow: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, command: "create", taskId: "creator-task-1", draft, receipt: { receiptId: "receipt-1", operation: "task_brief.create", idempotencyKey: "creator-key:creator-brief", replay: false }, sideEffects: { providerInvocationCount: 0, externalOutreachCount: 0, contractSignatureCount: 0, businessMutationCount: 0 }, message: "内部业务草稿已创建。" }), getCreatorInternalWorkflowHistory: vi.fn().mockResolvedValue({ tenant: emptyView.tenant, items: [draft], count: 1 }) });
 
 describe("CreatorGrowthPage R5-D01 视觉与交互", () => {
   let host: HTMLDivElement; let root: Root;
@@ -105,5 +106,41 @@ describe("CreatorGrowthPage R5-D01 视觉与交互", () => {
     await act(async () => { Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(summary, "品牌合作名单与美妆达人筛选"); summary.dispatchEvent(new Event("input", { bubbles: true })); });
     await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".creator-growth-preparation button")].find((button) => button.textContent === "保存草稿")!.click());
     expect(host.textContent).toContain("回执 receipt-1"); expect(host.textContent).toContain("操作已保存并取得回执"); expect(host.textContent).not.toContain("操作未保存");
+  });
+
+  it("读取栖月汇正式商品并在达人业务区显示名称价格库存和来源时间", async () => {
+    await act(async () => root.render(<CreatorGrowthPage client={clientFor()} />));
+    expect(host.textContent).toContain("栖月汇商品"); expect(host.textContent).toContain("栖月汇焕亮面膜");
+    expect(host.textContent).toContain("¥99.00"); expect(host.textContent).toContain("库存 28"); expect(host.textContent).toContain("正式商品 1");
+  });
+
+  it("商品读取失败不影响达人内部工作流并提供重新读取入口", async () => {
+    const client = clientFor(); client.getContentCampaignRealInputs.mockRejectedValueOnce(new Error("products unavailable"));
+    await act(async () => root.render(<CreatorGrowthPage client={client} />));
+    expect(host.textContent).toContain("商品数据暂未读取"); expect(host.textContent).toContain("重新读取业务数据");
+    await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-creator-import")));
+    expect(host.textContent).toContain("导入达人准备"); expect(host.querySelector('button')?.disabled).toBe(false);
+  });
+
+  it("候选条件按中文业务字段保存并带入正式商品引用", async () => {
+    const client = clientFor();
+    await act(async () => root.render(<CreatorGrowthPage client={client} />));
+    await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-creator-import")));
+    const fill = async (label: string, value: string) => { const input = host.querySelector<HTMLInputElement>(`input[aria-label="${label}"]`)!; await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); }); };
+    await fill("候选来源", "小红书美妆作者库"); await fill("内容领域", "成分护肤"); await fill("粉丝范围", "1万至10万");
+    const summary = host.querySelector<HTMLTextAreaElement>('textarea[aria-label="来源与筛选条件"]')!;
+    await act(async () => { Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(summary, "筛选适合栖月汇面膜的成分护肤达人"); summary.dispatchEvent(new Event("input", { bubbles: true })); });
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".creator-growth-preparation button")].find((button) => button.textContent === "保存草稿")!.click());
+    expect(client.executeCreatorInternalWorkflow.mock.calls[0]![0].details).toMatchObject({ productRef: "niushop:1:65", productName: "栖月汇焕亮面膜", candidateSource: "小红书美妆作者库", contentCategory: "成分护肤", audienceScale: "1万至10万", owner: "经营负责人" });
+  });
+
+  it("合作与履约页提供预算权益和交付物证据的直接补录入口", async () => {
+    await act(async () => root.render(<CreatorGrowthPage client={clientFor()} />));
+    expect(host.textContent).toContain("补充候选条件"); expect(host.textContent).toContain("补充预算权益"); expect(host.textContent).toContain("补充交付物证据");
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".creator-growth-next-actions button")].find((button) => button.textContent === "补充预算权益")!.click());
+    expect(host.textContent).toContain("新建合作准备"); expect(host.querySelector('input[aria-label="合作预算"]')).not.toBeNull(); expect(host.querySelector('input[aria-label="合作权益"]')).not.toBeNull();
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".creator-growth-preparation button")].find((button) => button.textContent === "关闭")!.click());
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>(".creator-growth-next-actions button")].find((button) => button.textContent === "补充交付物证据")!.click());
+    expect(host.textContent).toContain("履约检查准备"); expect(host.querySelector('input[aria-label="约定交付物"]')).not.toBeNull(); expect(host.querySelector('input[aria-label="验收证据"]')).not.toBeNull();
   });
 });
