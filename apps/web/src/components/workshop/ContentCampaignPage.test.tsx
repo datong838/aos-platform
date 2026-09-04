@@ -25,7 +25,7 @@ const ready = {
 const commandResponse = {
   tenant: blocked.tenant, command: "generate" as const,
   task: { taskId: "task-1", title: "制定秋季会员回访活动方案" },
-  draft: { resourceType: "TaskBriefRevision" as const, resourceId: "brief-1", revision: 1, version: 1, contentHash: "a".repeat(64), objective: "策划秋季会员回访活动", channels: ["微信小店"] },
+  draft: { resourceType: "TaskBriefRevision" as const, resourceId: "brief-1", revision: 1, version: 1, contentHash: "a".repeat(64), objective: "策划秋季会员回访活动", channels: ["微信小店"], constraints: [], riskDecisions: [], lastAction: null },
   receipt: { receiptId: "w2r-1", operation: "task_brief.create" as const, idempotencyKey: "ui-1:brief", replay: false },
   sideEffects: { providerInvocationCount: 0 as const, approvalCreatedCount: 0 as const, taskRunCreatedCount: 0 as const, externalPublicationCount: 0 as const, externalBusinessMutationCount: 0 as const },
   message: "活动方案草稿已生成。",
@@ -82,6 +82,20 @@ describe("ContentCampaignPage", () => {
     await act(async () => tab.click());
     expect(tab.getAttribute("aria-selected")).toBe("true");
     expect(host.querySelector<HTMLButtonElement>('.content-campaign-slice[aria-pressed="true"]')?.textContent).toContain("内容日历");
+  });
+
+  it("两类风险决策可写入版本化草稿并支持撤销", async () => {
+    const decided = { ...commandResponse, command: "apply_risk_decision" as const, draft: { ...commandResponse.draft, revision: 2, version: 2, contentHash: "b".repeat(64), constraints: ["毛利边界必须以已审批经营口径为准"], riskDecisions: [{ category: "discount_margin" as const, disposition: "adopt_recommendation" as const, constraint: "毛利边界必须以已审批经营口径为准", appliedFromRevision: 1 }], lastAction: "risk_decision_applied" }, receipt: { ...commandResponse.receipt, operation: "task_brief.revise" as const, receiptId: "w2r-risk" }, message: "风险决策与经营约束已写入新版本。" };
+    const client = makeClient();
+    client.executeContentCampaignWorkflow.mockResolvedValueOnce(commandResponse).mockResolvedValueOnce(decided);
+    await act(async () => root.render(<ContentCampaignPage client={client} />));
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === "读取正式活动计划")!.click());
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === "生成方案")!.click());
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === "采纳建议并重算")!.click());
+    expect(client.executeContentCampaignWorkflow).toHaveBeenLastCalledWith(expect.objectContaining({ command: "apply_risk_decision", riskDecision: expect.objectContaining({ category: "discount_margin" }) }), expect.any(String));
+    expect(host.textContent).toContain("当前第 2 版");
+    expect(host.textContent).toContain("来源第 1 版");
+    expect([...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === "撤销最近一次风险决策")?.disabled).toBe(false);
   });
 
   it("非空 exact facts 与 ContentVariant lineage 可切换读取", async () => {

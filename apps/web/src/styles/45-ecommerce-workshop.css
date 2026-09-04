@@ -1647,10 +1647,19 @@
 .content-campaign-evidence-summary h3 { margin: 0; color: #1a202c; font-size: 11px; }
 .content-campaign-risk-list > header span,
 .content-campaign-evidence-summary > header span { color: #a0aec0; font-size: 9px; }
-.content-campaign-risk-list article { padding: 11px; border: 1px solid #fbd38d; border-left: 3px solid #d69e2e; border-radius: 3px; background: #fffaf0; }
+.content-campaign-risk-list article { margin-top: 8px; padding: 11px; border: 1px solid #fbd38d; border-left: 3px solid #d69e2e; border-radius: 3px; background: #fffaf0; }
+.content-campaign-risk-list article.is-decided { border-color: #9ae6b4; border-left-color: #38a169; background: #f0fff4; }
 .content-campaign-risk-list article strong { color: #4a5568; font-size: 10px; }
 .content-campaign-risk-list article p { margin: 6px 0; color: #718096; font-size: 9px; line-height: 1.5; }
-.content-campaign-risk-list article button { border: 1px solid #d69e2e; padding: 5px 8px; background: #fff; color: #b7791f; font-size: 9px; cursor: pointer; }
+.content-campaign-risk-list article label { display: grid; gap: 4px; color: #718096; font-size: 9px; }
+.content-campaign-risk-list article input { width: 100%; min-height: 28px; box-sizing: border-box; padding: 4px 7px; border: 1px solid #dce3eb; border-radius: 3px; background: #fff; color: #4a5568; font-size: 9px; }
+.content-campaign-risk-list article > div { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.content-campaign-risk-list article button { border: 1px solid #d69e2e; padding: 5px 7px; background: #fff; color: #b7791f; font-size: 8px; cursor: pointer; }
+.content-campaign-risk-list article button:first-child { background: #d69e2e; color: #fff; }
+.content-campaign-risk-list article button:disabled,
+.content-campaign-risk-undo:disabled { cursor: not-allowed; opacity: .45; }
+.content-campaign-risk-list article small { display: block; margin-top: 7px; color: #718096; font-size: 8px; line-height: 1.45; }
+.content-campaign-risk-undo { width: 100%; margin-top: 8px; min-height: 28px; border: 1px solid #dce3eb; border-radius: 3px; background: #fff; color: #4a5568; font-size: 9px; cursor: pointer; }
 .p-app.is-workshop-primary-visual .ecommerce-workshop-shell[data-module-id="ecommerce.content-campaign"] .content-campaign-evidence-summary { margin: 0 12px; padding: 12px 0; border-top: 1px solid #edf2f7; }
 .content-campaign-evidence-summary ul { margin-top: 0; }
 .content-campaign-evidence-summary li { padding: 9px; }

@@ -11,8 +11,26 @@ from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.aip_production_contracts import ExactRevisionRef
 
 
+class ContentCampaignRiskDecisionInput(AipContractModel):
+    category: Literal["discount_margin", "inventory_supply"]
+    disposition: Literal["adopt_recommendation", "keep_current", "custom", "defer"]
+    constraint: str = Field(min_length=2, max_length=500)
+
+    @field_validator("constraint")
+    @classmethod
+    def _clean_constraint(cls, value: str) -> str:
+        cleaned = " ".join(value.split())
+        if len(cleaned) < 2:
+            raise ValueError("constraint must contain at least two characters")
+        return cleaned
+
+
+class ContentCampaignRiskDecision(ContentCampaignRiskDecisionInput):
+    applied_from_revision: int = Field(ge=1)
+
+
 class ContentCampaignWorkflowCommandRequest(AipContractModel):
-    command: Literal["generate", "save", "regenerate"]
+    command: Literal["generate", "save", "regenerate", "apply_risk_decision", "undo_risk_decision"]
     objective: str = Field(min_length=4, max_length=2000)
     channels: list[str] = Field(default_factory=lambda: ["微信小店"], min_length=1, max_length=12)
     audience: str | None = Field(default=None, max_length=500)
@@ -20,6 +38,7 @@ class ContentCampaignWorkflowCommandRequest(AipContractModel):
     constraints: list[str] = Field(default_factory=list, max_length=30)
     draft_ref: ExactRevisionRef | None = None
     expected_version: int | None = Field(default=None, ge=1)
+    risk_decision: ContentCampaignRiskDecisionInput | None = None
 
     @field_validator("objective")
     @classmethod
@@ -39,11 +58,13 @@ class ContentCampaignWorkflowCommandRequest(AipContractModel):
 
     @model_validator(mode="after")
     def _revision_inputs(self) -> "ContentCampaignWorkflowCommandRequest":
-        revising = self.command in {"save", "regenerate"}
+        revising = self.command != "generate"
         if revising != (self.draft_ref is not None and self.expected_version is not None):
-            raise ValueError("save/regenerate require draftRef and expectedVersion")
+            raise ValueError("revision commands require draftRef and expectedVersion")
         if self.draft_ref is not None and self.draft_ref.resource_type != "TaskBriefRevision":
             raise ValueError("draftRef must reference TaskBriefRevision")
+        if (self.command == "apply_risk_decision") != (self.risk_decision is not None):
+            raise ValueError("applyRiskDecision requires riskDecision and other commands forbid it")
         return self
 
 
@@ -57,6 +78,9 @@ class ContentCampaignWorkflowDraft(ExactRevisionRef):
     version: int = Field(ge=1)
     objective: str
     channels: list[str]
+    constraints: list[str] = Field(default_factory=list)
+    risk_decisions: list[ContentCampaignRiskDecision] = Field(default_factory=list)
+    last_action: str | None = None
 
 
 class ContentCampaignWorkflowReceipt(AipContractModel):
@@ -76,7 +100,7 @@ class ContentCampaignWorkflowSideEffects(AipContractModel):
 
 class ContentCampaignWorkflowCommandResponse(AipContractModel):
     tenant: TenantContext
-    command: Literal["generate", "save", "regenerate"]
+    command: Literal["generate", "save", "regenerate", "apply_risk_decision", "undo_risk_decision"]
     task: ContentCampaignWorkflowTask
     draft: ContentCampaignWorkflowDraft
     receipt: ContentCampaignWorkflowReceipt

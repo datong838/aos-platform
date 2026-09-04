@@ -506,10 +506,14 @@ export type WorkshopTimelineEvent = { eventKey: string; eventType: "task" | "han
 export type WorkshopNavigationTarget = { targetId: string; status: "available" | "forbidden" | "expired" | "uninstalled" | "disabled" | "stale" | "unresolved"; moduleId: string | null; viewId: string | null; route: string | null; subjectRef: WorkshopSharedRef | null; filterSummary: string | null; focusAnchor: string | null; scrollAnchor: string | null; blockers: WorkshopSharedBlocker[] };
 export type WorkshopSharedContextResponse = { schemaVersion: typeof SHARED_CONTEXT_SCHEMA_VERSION; tenant: WorkshopTenant; context: WorkshopSharedContext; timeline: WorkshopTimelineEvent[]; navigationTargets: WorkshopNavigationTarget[]; page: { limit: 100; count: number; hasMore: false; nextCursor: null } };
 
-export type ContentCampaignWorkflowCommand = "generate" | "save" | "regenerate";
+export type ContentCampaignWorkflowCommand = "generate" | "save" | "regenerate" | "apply_risk_decision" | "undo_risk_decision";
 export type ContentCampaignWorkflowDraftRef = { resourceType: "TaskBriefRevision"; resourceId: string; revision: number; contentHash: string };
-export type ContentCampaignWorkflowCommandInput = { command: ContentCampaignWorkflowCommand; objective: string; channels: string[]; audience?: string | null; timeWindow?: string | null; constraints?: string[]; draftRef?: ContentCampaignWorkflowDraftRef; expectedVersion?: number };
-export type ContentCampaignWorkflowDraft = ContentCampaignWorkflowDraftRef & { version: number; objective: string; channels: string[] };
+export type ContentCampaignRiskCategory = "discount_margin" | "inventory_supply";
+export type ContentCampaignRiskDisposition = "adopt_recommendation" | "keep_current" | "custom" | "defer";
+export type ContentCampaignRiskDecisionInput = { category: ContentCampaignRiskCategory; disposition: ContentCampaignRiskDisposition; constraint: string };
+export type ContentCampaignRiskDecision = ContentCampaignRiskDecisionInput & { appliedFromRevision: number };
+export type ContentCampaignWorkflowCommandInput = { command: ContentCampaignWorkflowCommand; objective: string; channels: string[]; audience?: string | null; timeWindow?: string | null; constraints?: string[]; draftRef?: ContentCampaignWorkflowDraftRef; expectedVersion?: number; riskDecision?: ContentCampaignRiskDecisionInput };
+export type ContentCampaignWorkflowDraft = ContentCampaignWorkflowDraftRef & { version: number; objective: string; channels: string[]; constraints: string[]; riskDecisions: ContentCampaignRiskDecision[]; lastAction: string | null };
 export type ContentCampaignWorkflowCommandResponse = { tenant: WorkshopTenant; command: ContentCampaignWorkflowCommand; task: { taskId: string; title: string }; draft: ContentCampaignWorkflowDraft; receipt: { receiptId: string; operation: "task_brief.create" | "task_brief.revise"; idempotencyKey: string; replay: boolean }; sideEffects: { providerInvocationCount: 0; approvalCreatedCount: 0; taskRunCreatedCount: 0; externalPublicationCount: 0; externalBusinessMutationCount: 0 }; message: string };
 export type ContentCampaignApprovalPreviewResponse = { tenant: WorkshopTenant; status: "reviewable" | "needs_input"; approvalAllowed: boolean; draft: ContentCampaignWorkflowDraft; checks: { name: string; passed: boolean; detail: string }[]; nextActions: string[]; evaluatedAt: string; dataCutoff: string; sideEffects: ContentCampaignWorkflowCommandResponse["sideEffects"] };
 import type { IssueHandoffInput, ResourceRef } from "../aipAgentControl/contracts";

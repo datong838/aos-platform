@@ -22,7 +22,7 @@ SCOPE = TenantScope("org-org", "dev-project")
 NOW = datetime(2026, 9, 4, 8, 30, tzinfo=UTC)
 
 
-def brief(*, revision: int = 1, version: int = 1, content_hash: str = "a" * 64):
+def brief(*, revision: int = 1, version: int = 1, content_hash: str = "a" * 64, spec=None):
     return TaskBriefRevision(
         tenant=TenantContext(org_id="org-org", project_id="dev-project"),
         brief_id="brief-1",
@@ -36,7 +36,7 @@ def brief(*, revision: int = 1, version: int = 1, content_hash: str = "a" * 64):
             revision="1",
             authority="aos://ecommerce-workshop/content-campaign",
         ),
-        spec={"objective": "策划秋季会员回访活动", "channels": ["微信小店"]},
+        spec=spec or {"objective": "策划秋季会员回访活动", "channels": ["微信小店"], "constraints": []},
         content_hash=content_hash,
         lifecycle=BriefLifecycle.DRAFT,
         created_by="user:operator",
@@ -58,6 +58,7 @@ class Briefs:
         self.current = brief()
         self.created = []
         self.revised = []
+        self.history = {1: self.current}
 
     def create_brief(self, scope, actor, key, body):
         self.created.append((scope, actor, key, body))
@@ -65,11 +66,12 @@ class Briefs:
 
     def revise_brief(self, scope, actor, brief_id, key, body):
         self.revised.append((scope, actor, brief_id, key, body))
-        self.current = brief(revision=2, version=2, content_hash="b" * 64)
+        self.current = brief(revision=self.current.revision + 1, version=self.current.version + 1, content_hash=chr(97 + self.current.revision) * 64, spec=body.spec)
+        self.history[self.current.revision] = self.current
         return self.current
 
     def get_brief(self, scope, brief_id, revision=None):
-        return self.current
+        return self.history.get(revision, self.current)
 
 
 class CampaignReader:
@@ -204,3 +206,53 @@ def test_approval_preview_can_be_reviewed_but_never_publishes():
     assert result.status == "reviewable"
     assert result.approval_allowed is True
     assert result.side_effects.external_publication_count == 0
+
+
+def test_apply_risk_decision_creates_receipted_successor_without_external_effect():
+    service = workflow()
+    result = service.execute(
+        SCOPE,
+        actor="user:operator",
+        idempotency_key="campaign-risk-1",
+        body=command(
+            command="apply_risk_decision",
+            draftRef={"resourceType": "TaskBriefRevision", "resourceId": "brief-1", "revision": 1, "contentHash": "a" * 64},
+            expectedVersion=1,
+            riskDecision={"category": "discount_margin", "disposition": "keep_current", "constraint": "毛利率不得低于已审批边界"},
+        ),
+    )
+    assert result.draft.version == 2
+    assert result.draft.risk_decisions[0].category == "discount_margin"
+    assert result.draft.risk_decisions[0].applied_from_revision == 1
+    assert "毛利率不得低于已审批边界" in result.draft.constraints
+    assert result.receipt.operation == "task_brief.revise"
+    assert result.side_effects.external_business_mutation_count == 0
+
+
+def test_undo_risk_decision_uses_previous_revision_and_keeps_audit_history():
+    service = workflow()
+    applied = service.execute(
+        SCOPE,
+        actor="user:operator",
+        idempotency_key="campaign-risk-2",
+        body=command(
+            command="apply_risk_decision",
+            draftRef={"resourceType": "TaskBriefRevision", "resourceId": "brief-1", "revision": 1, "contentHash": "a" * 64},
+            expectedVersion=1,
+            riskDecision={"category": "inventory_supply", "disposition": "defer", "constraint": "库存承诺必须以正式可售量为准"},
+        ),
+    )
+    undone = service.execute(
+        SCOPE,
+        actor="user:operator",
+        idempotency_key="campaign-risk-3",
+        body=command(
+            command="undo_risk_decision",
+            draftRef={"resourceType": "TaskBriefRevision", "resourceId": "brief-1", "revision": applied.draft.revision, "contentHash": applied.draft.content_hash},
+            expectedVersion=applied.draft.version,
+        ),
+    )
+    assert undone.draft.version == 3
+    assert undone.draft.risk_decisions == []
+    assert undone.draft.last_action == "risk_decision_undone"
+    assert undone.side_effects.external_publication_count == 0

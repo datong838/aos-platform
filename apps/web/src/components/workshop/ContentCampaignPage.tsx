@@ -9,6 +9,8 @@ import {
   type ContentCampaignViewResponse,
   type ContentCampaignWorkflowCommand,
   type ContentCampaignWorkflowCommandResponse,
+  type ContentCampaignRiskCategory,
+  type ContentCampaignRiskDisposition,
 } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { ContributionLineage } from "./production";
@@ -73,6 +75,7 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
   const [intent, setIntent] = useState("");
   const [workflow, setWorkflow] = useState<ContentCampaignWorkflowCommandResponse | null>(null);
   const [busy, setBusy] = useState(false);
+  const [riskConstraint, setRiskConstraint] = useState<Record<ContentCampaignRiskCategory, string>>({ discount_margin: "毛利边界必须以已审批经营口径为准", inventory_supply: "库存承诺必须以当前正式可售量为准" });
   const request = useRef(0);
 
   const load = () => {
@@ -122,6 +125,38 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
       const preview = await client.previewContentCampaignApproval({ resourceType: "TaskBriefRevision", resourceId: workflow.draft.resourceId, revision: workflow.draft.revision, contentHash: workflow.draft.contentHash });
       setSafeAction(preview.approvalAllowed ? `审批前检查通过：${preview.nextActions.join("；")}` : `审批前检查已完成：${preview.nextActions.join("；")}`);
     } catch (error) { setSafeAction(error instanceof Error ? `审批前检查未完成：${error.message}` : "审批前检查未完成。"); }
+    finally { setBusy(false); }
+  };
+  const runRiskDecision = async (category: ContentCampaignRiskCategory, disposition: ContentCampaignRiskDisposition) => {
+    if (!workflow) { setSafeAction("请先生成活动方案草稿，再记录风险决策。"); return; }
+    const constraint = riskConstraint[category].trim();
+    if (constraint.length < 2) { setSafeAction("请先填写可核验的经营约束。"); return; }
+    setBusy(true);
+    try {
+      const next = await client.executeContentCampaignWorkflow({
+        command: "apply_risk_decision", objective: intent.trim() || workflow.draft.objective, channels: workflow.draft.channels,
+        constraints: workflow.draft.constraints,
+        draftRef: { resourceType: "TaskBriefRevision", resourceId: workflow.draft.resourceId, revision: workflow.draft.revision, contentHash: workflow.draft.contentHash },
+        expectedVersion: workflow.draft.version, riskDecision: { category, disposition, constraint },
+      }, `content-campaign-risk-${category}-${Date.now()}`);
+      setWorkflow(next);
+      setSafeAction(`${next.message} 当前第 ${next.draft.version} 版，业务回执 ${next.receipt.receiptId}。`);
+    } catch (error) { setSafeAction(error instanceof Error ? `风险决策未保存：${error.message}` : "风险决策未保存。"); }
+    finally { setBusy(false); }
+  };
+  const undoRiskDecision = async () => {
+    if (!workflow || workflow.draft.version <= 1) { setSafeAction("当前没有可撤销的风险决策版本。"); return; }
+    setBusy(true);
+    try {
+      const next = await client.executeContentCampaignWorkflow({
+        command: "undo_risk_decision", objective: intent.trim() || workflow.draft.objective, channels: workflow.draft.channels,
+        constraints: workflow.draft.constraints,
+        draftRef: { resourceType: "TaskBriefRevision", resourceId: workflow.draft.resourceId, revision: workflow.draft.revision, contentHash: workflow.draft.contentHash },
+        expectedVersion: workflow.draft.version,
+      }, `content-campaign-risk-undo-${Date.now()}`);
+      setWorkflow(next);
+      setSafeAction(`${next.message} 当前第 ${next.draft.version} 版，业务回执 ${next.receipt.receiptId}。`);
+    } catch (error) { setSafeAction(error instanceof Error ? `撤销未完成：${error.message}` : "撤销未完成。"); }
     finally { setBusy(false); }
   };
 
@@ -211,12 +246,25 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
           </section>
 
           <section className="content-campaign-risk-list" aria-label="风险决策">
-            <header><h3>风险决策</h3><span>需要人工确认</span></header>
-            <article>
-              <strong>当前无可验证风险决策</strong>
-              <p>折扣、库存与发布风险需要 canonical 风险版本；本页目前仅保留可工作的预检入口。</p>
-              <button type="button" onClick={() => setSafeAction("风险决策预检：尚无可验证风险版本，未采纳建议或修改方案。")}>检查风险条件</button>
-            </article>
+            <header><h3>风险决策</h3><span>{workflow ? `草稿第 ${workflow.draft.version} 版` : "先生成草稿"}</span></header>
+            {([
+              ["discount_margin", "折扣与毛利边界", "确认活动折扣不突破正式审批的毛利边界。"],
+              ["inventory_supply", "库存与供给边界", "确认选品与承诺量不超过当前正式可售库存。"],
+            ] as const).map(([category, title, description]) => {
+              const current = workflow?.draft.riskDecisions.find((item) => item.category === category);
+              return <article key={category} className={current ? "is-decided" : ""}>
+                <strong>{title}</strong>
+                <p>{description}</p>
+                <label>经营约束<input aria-label={`${title}经营约束`} value={riskConstraint[category]} onChange={(event) => setRiskConstraint((value) => ({ ...value, [category]: event.target.value }))} /></label>
+                <div>
+                  <button type="button" disabled={busy || !workflow} onClick={() => void runRiskDecision(category, "adopt_recommendation")}>采纳建议并重算</button>
+                  <button type="button" disabled={busy || !workflow} onClick={() => void runRiskDecision(category, "keep_current")}>保持当前方案</button>
+                  <button type="button" disabled={busy || !workflow} onClick={() => void runRiskDecision(category, "defer")}>暂缓决策</button>
+                </div>
+                {current ? <small>已记录：{current.constraint} · 来源第 {current.appliedFromRevision} 版</small> : <small>尚未写入草稿；不会自动采用数值或修改业务数据。</small>}
+              </article>;
+            })}
+            <button type="button" className="content-campaign-risk-undo" disabled={busy || !workflow || workflow.draft.version <= 1} onClick={() => void undoRiskDecision()}>撤销最近一次风险决策</button>
           </section>
 
           <section className="content-campaign-evidence-summary">

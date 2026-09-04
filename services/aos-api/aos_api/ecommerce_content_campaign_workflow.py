@@ -130,6 +130,7 @@ class EcommerceContentCampaignWorkflow:
                 assert exact is not None and body.expected_version is not None
                 current = self._briefs.get_brief(scope, exact.resource_id)
                 self._require_exact(current, exact, body.expected_version)
+                spec = self._revision_spec(scope, current, body)
                 draft = self._briefs.revise_brief(
                     scope,
                     actor,
@@ -139,7 +140,7 @@ class EcommerceContentCampaignWorkflow:
                         expected_version=body.expected_version,
                         brief_type="content_campaign",
                         schema_ref=self._schema_ref(),
-                        spec=self._spec(body),
+                        spec=spec,
                     ),
                 )
                 task_id = draft.task_id
@@ -172,8 +173,55 @@ class EcommerceContentCampaignWorkflow:
                 "generate": "活动方案草稿已生成，可继续编辑或执行审批前检查。",
                 "save": "活动方案草稿已保存为新版本。",
                 "regenerate": "已根据当前输入生成新版本，原版本保留可回读。",
+                "apply_risk_decision": "风险决策与经营约束已写入新版本，可继续审阅或撤销。",
+                "undo_risk_decision": "已撤销最近一次风险决策并生成新版本，历史版本保持可回读。",
             }[body.command],
         )
+
+    def _revision_spec(
+        self,
+        scope: TenantScope,
+        current: TaskBriefRevision,
+        body: ContentCampaignWorkflowCommandRequest,
+    ) -> dict:
+        if body.command in {"save", "regenerate"}:
+            next_spec = self._spec(body)
+            next_spec["riskDecisions"] = list(current.spec.get("riskDecisions", []))
+            return next_spec
+        if body.command == "apply_risk_decision":
+            assert body.risk_decision is not None
+            next_spec = dict(current.spec)
+            decisions = list(current.spec.get("riskDecisions", []))
+            decisions = [item for item in decisions if item.get("category") != body.risk_decision.category]
+            decisions.append(
+                {
+                    **body.risk_decision.model_dump(mode="json", by_alias=True),
+                    "appliedFromRevision": current.revision,
+                }
+            )
+            next_spec.update(
+                {
+                    "constraints": list(dict.fromkeys([*body.constraints, body.risk_decision.constraint])),
+                    "riskDecisions": decisions,
+                    "generationMode": body.command,
+                    "lastAction": "risk_decision_applied",
+                    "externalPublicationRequested": False,
+                }
+            )
+            return next_spec
+        if current.revision <= 1:
+            raise ContentCampaignWorkflowConflict("no previous draft revision is available for undo")
+        previous = self._briefs.get_brief(scope, current.brief_id, revision=current.revision - 1)
+        next_spec = dict(previous.spec)
+        next_spec.update(
+            {
+                "generationMode": body.command,
+                "lastAction": "risk_decision_undone",
+                "undoOfRevision": current.revision,
+                "externalPublicationRequested": False,
+            }
+        )
+        return next_spec
 
     def preview_approval(
         self,
@@ -254,6 +302,9 @@ class EcommerceContentCampaignWorkflow:
             content_hash=value.content_hash,
             objective=str(value.spec.get("objective", "")),
             channels=list(value.spec.get("channels", [])),
+            constraints=list(value.spec.get("constraints", [])),
+            risk_decisions=list(value.spec.get("riskDecisions", [])),
+            last_action=value.spec.get("lastAction"),
         )
 
     @staticmethod
