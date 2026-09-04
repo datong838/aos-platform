@@ -1,0 +1,3802 @@
+[
+  {
+    "url": "http://127.0.0.1:5173/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+    "status": 200,
+    "topLevelKeys": [
+      "schemaVersion",
+      "status",
+      "rootEffectReviewRef",
+      "maturityPolicyRef",
+      "learningBindingHash",
+      "composition",
+      "evaluatedAt",
+      "stages",
+      "ledger",
+      "outcomeAxes",
+      "blockers",
+      "commands",
+      "externalEffectsAllowed"
+    ],
+    "body": {
+      "schemaVersion": "aos.ecommerce-workshop.learning-scenario/v1",
+      "status": "blocked",
+      "rootEffectReviewRef": null,
+      "maturityPolicyRef": null,
+      "learningBindingHash": null,
+      "composition": null,
+      "evaluatedAt": "2026-09-04T02:52:39.777909Z",
+      "stages": [
+        {
+          "stageId": "effect_review",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "maturity",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "memory_candidate",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "governance",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "promotion",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "knowledge_query",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "revocation_impact",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        }
+      ],
+      "ledger": {
+        "reviewsExpected": 0,
+        "reviewsObserved": 0,
+        "candidatesExpected": 0,
+        "candidatesObserved": 0,
+        "promotionsExpected": 0,
+        "promotionsObserved": 0,
+        "citationsExpected": 0,
+        "citationsObserved": 0,
+        "historicalExposures": 0,
+        "retainedExposures": 0,
+        "impactRefsExpected": 0,
+        "impactRefsObserved": 0
+      },
+      "outcomeAxes": [
+        {
+          "axisId": "effect_mature",
+          "status": "blocked",
+          "exactRef": null,
+          "blocker": {
+            "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+            "dependency": "aip.effect-review-authority",
+            "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+          }
+        },
+        {
+          "axisId": "candidate_governed",
+          "status": "blocked",
+          "exactRef": null,
+          "blocker": {
+            "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+            "dependency": "aip.effect-review-authority",
+            "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+          }
+        },
+        {
+          "axisId": "knowledge_promoted",
+          "status": "blocked",
+          "exactRef": null,
+          "blocker": {
+            "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+            "dependency": "aip.effect-review-authority",
+            "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+          }
+        },
+        {
+          "axisId": "future_query_authorized",
+          "status": "blocked",
+          "exactRef": null,
+          "blocker": {
+            "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+            "dependency": "aip.effect-review-authority",
+            "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+          }
+        },
+        {
+          "axisId": "revocation_impact_recorded",
+          "status": "blocked",
+          "exactRef": null,
+          "blocker": {
+            "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+            "dependency": "aip.effect-review-authority",
+            "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+          }
+        }
+      ],
+      "blockers": [
+        {
+          "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+          "dependency": "aip.effect-review-authority",
+          "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+        }
+      ],
+      "commands": {
+        "submitCandidate": false,
+        "approveCandidate": false,
+        "promoteCandidate": false,
+        "publishWiki": false,
+        "revokeKnowledge": false
+      },
+      "externalEffectsAllowed": false
+    }
+  },
+  {
+    "url": "http://127.0.0.1:5173/api/v1/ecommerce-workshop/views/analyst",
+    "status": 200,
+    "topLevelKeys": [
+      "schemaVersion",
+      "tenant",
+      "resourceRevision",
+      "evaluatedAt",
+      "dataCutoff",
+      "readiness",
+      "views",
+      "growthScenario",
+      "page"
+    ],
+    "body": {
+      "schemaVersion": "aos.ecommerce-workshop.analyst-view/v2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "resourceRevision": 146037772397858,
+      "evaluatedAt": "2026-09-04T02:52:39.781476Z",
+      "dataCutoff": "2026-09-04T02:52:39.781476Z",
+      "readiness": "degraded",
+      "views": [
+        {
+          "viewId": "overview",
+          "status": "ready",
+          "resourceRevision": 146037772397858,
+          "dataCutoff": "2026-09-04T02:52:39.781476Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "ready",
+              "exactRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 146037772397858,
+                "contentHash": "sha256:84d2118c2d226463010d7bf479062f6acd0bc013010e57dbf120f1c93c55bbf5",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "blockers": []
+            },
+            {
+              "axis": "model",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "eval",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            }
+          ],
+          "metrics": [
+            {
+              "metricId": "order_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.order_count",
+                "revision": 12671821419701,
+                "contentHash": "sha256:0b86636a14b52e7109a7a7d3ffda26687eb23c86d9cbf6201e57fa6e5ec243a6",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P05-order-qyh:scr-152827a782c1472d",
+                "revision": 150507556340763,
+                "contentHash": "sha256:88e2c56e841b2fa291e782fd295a46d4317c31e59bfa6d90cf6de29b9b6ea9d7",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "value": 124,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T22:00:17.594087+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 订单数",
+              "numerator": 124,
+              "denominator": 124,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-152827a782c1472d",
+                "revision": 10603845708399,
+                "contentHash": "sha256:09a4e674ea6fafecb572c423272f3616bfb9f436d89c920d5cfb13ac58bb04d7",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "lineageId": "source-run:scr-152827a782c1472d",
+              "blockers": []
+            },
+            {
+              "metricId": "product_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.product_count",
+                "revision": 99637058383955,
+                "contentHash": "sha256:5a9e8f78b05303e188ad779dfbbe0222cfb5925458019c103cd9fe5532b29917",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P02-product-qyh:scr-a38b0bc17f664b34",
+                "revision": 216481621854153,
+                "contentHash": "sha256:c4e38e2bc7c9c88167a8c34650c808edc069e2fada146331bebb0c877e7b8ab3",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "value": 57,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T19:00:11.793237+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 商品数",
+              "numerator": 57,
+              "denominator": 57,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-a38b0bc17f664b34",
+                "revision": 142494705797324,
+                "contentHash": "sha256:8199225248cc7702934dec2522063303f398787001c1cb06fc640d4ab72e0683",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "lineageId": "source-run:scr-a38b0bc17f664b34",
+              "blockers": []
+            },
+            {
+              "metricId": "customer_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.customer_count",
+                "revision": 167039593221560,
+                "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+                "revision": 191712914671006,
+                "contentHash": "sha256:ae5ca42d859ef69ce2f8288ff9d4809b3dc06e572d3cf81a3e4a73fed95934a8",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "value": 54,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-04T01:00:10.301873+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 会员数",
+              "numerator": 54,
+              "denominator": 54,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-dc6811a2819d4101",
+                "revision": 149752021956316,
+                "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "lineageId": "source-run:scr-dc6811a2819d4101",
+              "blockers": []
+            }
+          ],
+          "authorityRefs": [
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.order_count",
+              "revision": 12671821419701,
+              "contentHash": "sha256:0b86636a14b52e7109a7a7d3ffda26687eb23c86d9cbf6201e57fa6e5ec243a6",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P05-order-qyh:scr-152827a782c1472d",
+              "revision": 150507556340763,
+              "contentHash": "sha256:88e2c56e841b2fa291e782fd295a46d4317c31e59bfa6d90cf6de29b9b6ea9d7",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-152827a782c1472d",
+              "revision": 10603845708399,
+              "contentHash": "sha256:09a4e674ea6fafecb572c423272f3616bfb9f436d89c920d5cfb13ac58bb04d7",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.product_count",
+              "revision": 99637058383955,
+              "contentHash": "sha256:5a9e8f78b05303e188ad779dfbbe0222cfb5925458019c103cd9fe5532b29917",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P02-product-qyh:scr-a38b0bc17f664b34",
+              "revision": 216481621854153,
+              "contentHash": "sha256:c4e38e2bc7c9c88167a8c34650c808edc069e2fada146331bebb0c877e7b8ab3",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-a38b0bc17f664b34",
+              "revision": 142494705797324,
+              "contentHash": "sha256:8199225248cc7702934dec2522063303f398787001c1cb06fc640d4ab72e0683",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.customer_count",
+              "revision": 167039593221560,
+              "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+              "revision": 191712914671006,
+              "contentHash": "sha256:ae5ca42d859ef69ce2f8288ff9d4809b3dc06e572d3cf81a3e4a73fed95934a8",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-dc6811a2819d4101",
+              "revision": 149752021956316,
+              "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceReadinessSnapshot",
+              "resourceId": "org-org/dev-project",
+              "revision": 146037772397858,
+              "contentHash": "sha256:84d2118c2d226463010d7bf479062f6acd0bc013010e57dbf120f1c93c55bbf5",
+              "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+            }
+          ],
+          "blockers": [],
+          "countLedger": {
+            "denominator": 3,
+            "ready": 3,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "drivers",
+          "status": "blocked",
+          "resourceRevision": 146037772397858,
+          "dataCutoff": "2026-09-04T02:52:39.781476Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "ready",
+              "exactRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 146037772397858,
+                "contentHash": "sha256:84d2118c2d226463010d7bf479062f6acd0bc013010e57dbf120f1c93c55bbf5",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "blockers": []
+            },
+            {
+              "axis": "model",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_DRIVERS_NON_CAUSAL_BOUNDARY",
+                  "dependency": "workshop.analyst.drivers.model-eval",
+                  "requiredAction": "仅展示当前经营观察；需 exact 模型与评价证据后才能形成归因或因果结论"
+                }
+              ]
+            },
+            {
+              "axis": "eval",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_DRIVERS_NON_CAUSAL_BOUNDARY",
+                  "dependency": "workshop.analyst.drivers.model-eval",
+                  "requiredAction": "仅展示当前经营观察；需 exact 模型与评价证据后才能形成归因或因果结论"
+                }
+              ]
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            }
+          ],
+          "metrics": [
+            {
+              "metricId": "product_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.product_count",
+                "revision": 99637058383955,
+                "contentHash": "sha256:5a9e8f78b05303e188ad779dfbbe0222cfb5925458019c103cd9fe5532b29917",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P02-product-qyh:scr-a38b0bc17f664b34",
+                "revision": 216481621854153,
+                "contentHash": "sha256:c4e38e2bc7c9c88167a8c34650c808edc069e2fada146331bebb0c877e7b8ab3",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "value": 57,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T19:00:11.793237+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 商品数",
+              "numerator": 57,
+              "denominator": 57,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-a38b0bc17f664b34",
+                "revision": 142494705797324,
+                "contentHash": "sha256:8199225248cc7702934dec2522063303f398787001c1cb06fc640d4ab72e0683",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "lineageId": "source-run:scr-a38b0bc17f664b34",
+              "blockers": []
+            },
+            {
+              "metricId": "product_review_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.product_review_count",
+                "revision": 78084069451856,
+                "contentHash": "sha256:47045d38e8507b6f97d4616bbf786e5a82de920b88cc69a0950f55f45974794c",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P11-product-review-qyh:scr-077a1d405155499f",
+                "revision": 206024190760183,
+                "contentHash": "sha256:bb60beb494f7a2b33393b2abccd26a0db461206939c3823275fdda40bf9865c8",
+                "receiptId": "source-run:scr-077a1d405155499f"
+              },
+              "value": 5,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T04:00:05.782943+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 商品评价数",
+              "numerator": 5,
+              "denominator": 5,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-077a1d405155499f",
+                "revision": 69489825972148,
+                "contentHash": "sha256:3f335c647fb4f8b4c8363865c5cb1c195ec30803d29afe8d73b4a69b21f85bdf",
+                "receiptId": "source-run:scr-077a1d405155499f"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-077a1d405155499f"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-077a1d405155499f"
+              },
+              "lineageId": "source-run:scr-077a1d405155499f",
+              "blockers": []
+            },
+            {
+              "metricId": "customer_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.customer_count",
+                "revision": 167039593221560,
+                "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+                "revision": 191712914671006,
+                "contentHash": "sha256:ae5ca42d859ef69ce2f8288ff9d4809b3dc06e572d3cf81a3e4a73fed95934a8",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "value": 54,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-04T01:00:10.301873+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 会员数",
+              "numerator": 54,
+              "denominator": 54,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-dc6811a2819d4101",
+                "revision": 149752021956316,
+                "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "lineageId": "source-run:scr-dc6811a2819d4101",
+              "blockers": []
+            }
+          ],
+          "authorityRefs": [
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.product_count",
+              "revision": 99637058383955,
+              "contentHash": "sha256:5a9e8f78b05303e188ad779dfbbe0222cfb5925458019c103cd9fe5532b29917",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P02-product-qyh:scr-a38b0bc17f664b34",
+              "revision": 216481621854153,
+              "contentHash": "sha256:c4e38e2bc7c9c88167a8c34650c808edc069e2fada146331bebb0c877e7b8ab3",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-a38b0bc17f664b34",
+              "revision": 142494705797324,
+              "contentHash": "sha256:8199225248cc7702934dec2522063303f398787001c1cb06fc640d4ab72e0683",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.product_review_count",
+              "revision": 78084069451856,
+              "contentHash": "sha256:47045d38e8507b6f97d4616bbf786e5a82de920b88cc69a0950f55f45974794c",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P11-product-review-qyh:scr-077a1d405155499f",
+              "revision": 206024190760183,
+              "contentHash": "sha256:bb60beb494f7a2b33393b2abccd26a0db461206939c3823275fdda40bf9865c8",
+              "receiptId": "source-run:scr-077a1d405155499f"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-077a1d405155499f",
+              "revision": 69489825972148,
+              "contentHash": "sha256:3f335c647fb4f8b4c8363865c5cb1c195ec30803d29afe8d73b4a69b21f85bdf",
+              "receiptId": "source-run:scr-077a1d405155499f"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-077a1d405155499f"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-077a1d405155499f"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.customer_count",
+              "revision": 167039593221560,
+              "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+              "revision": 191712914671006,
+              "contentHash": "sha256:ae5ca42d859ef69ce2f8288ff9d4809b3dc06e572d3cf81a3e4a73fed95934a8",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-dc6811a2819d4101",
+              "revision": 149752021956316,
+              "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceReadinessSnapshot",
+              "resourceId": "org-org/dev-project",
+              "revision": 146037772397858,
+              "contentHash": "sha256:84d2118c2d226463010d7bf479062f6acd0bc013010e57dbf120f1c93c55bbf5",
+              "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+            }
+          ],
+          "blockers": [
+            {
+              "code": "ANALYST_DRIVERS_AUTHORITY_NOT_AVAILABLE",
+              "dependency": "workshop.analyst.drivers-authority",
+              "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+            }
+          ],
+          "countLedger": {
+            "denominator": 3,
+            "ready": 3,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "diagnosis",
+          "status": "blocked",
+          "resourceRevision": 146037772397858,
+          "dataCutoff": "2026-09-04T02:52:39.781476Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "ready",
+              "exactRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 146037772397858,
+                "contentHash": "sha256:84d2118c2d226463010d7bf479062f6acd0bc013010e57dbf120f1c93c55bbf5",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "blockers": []
+            },
+            {
+              "axis": "model",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_DIAGNOSIS_NON_CAUSAL_BOUNDARY",
+                  "dependency": "workshop.analyst.diagnosis.model-eval",
+                  "requiredAction": "仅展示当前经营观察；需 exact 模型与评价证据后才能形成归因或因果结论"
+                }
+              ]
+            },
+            {
+              "axis": "eval",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_DIAGNOSIS_NON_CAUSAL_BOUNDARY",
+                  "dependency": "workshop.analyst.diagnosis.model-eval",
+                  "requiredAction": "仅展示当前经营观察；需 exact 模型与评价证据后才能形成归因或因果结论"
+                }
+              ]
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            }
+          ],
+          "metrics": [
+            {
+              "metricId": "order_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.order_count",
+                "revision": 12671821419701,
+                "contentHash": "sha256:0b86636a14b52e7109a7a7d3ffda26687eb23c86d9cbf6201e57fa6e5ec243a6",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P05-order-qyh:scr-152827a782c1472d",
+                "revision": 150507556340763,
+                "contentHash": "sha256:88e2c56e841b2fa291e782fd295a46d4317c31e59bfa6d90cf6de29b9b6ea9d7",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "value": 124,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T22:00:17.594087+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 订单数",
+              "numerator": 124,
+              "denominator": 124,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-152827a782c1472d",
+                "revision": 10603845708399,
+                "contentHash": "sha256:09a4e674ea6fafecb572c423272f3616bfb9f436d89c920d5cfb13ac58bb04d7",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "lineageId": "source-run:scr-152827a782c1472d",
+              "blockers": []
+            },
+            {
+              "metricId": "order_line_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.order_line_count",
+                "revision": 126692400543710,
+                "contentHash": "sha256:7339df87b7de5751c372236cc96579baaa1a635b11f9226d5c77dbfb29af8bca",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P06-order-line-qyh:scr-ced1b175f73844c9",
+                "revision": 59962783376150,
+                "contentHash": "sha256:36892c672316ff9fb5439c83651471599fa66ba91e4d92453addee98fecb8d1f",
+                "receiptId": "source-run:scr-ced1b175f73844c9"
+              },
+              "value": 234,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T23:00:11.445896+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 订单明细数",
+              "numerator": 234,
+              "denominator": 234,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-ced1b175f73844c9",
+                "revision": 264846940665125,
+                "contentHash": "sha256:f0e07bd175258de81c526dd210fa2603cab6c1838257e66fdb9215abf794e3e8",
+                "receiptId": "source-run:scr-ced1b175f73844c9"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-ced1b175f73844c9"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-ced1b175f73844c9"
+              },
+              "lineageId": "source-run:scr-ced1b175f73844c9",
+              "blockers": []
+            },
+            {
+              "metricId": "customer_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.customer_count",
+                "revision": 167039593221560,
+                "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+                "revision": 191712914671006,
+                "contentHash": "sha256:ae5ca42d859ef69ce2f8288ff9d4809b3dc06e572d3cf81a3e4a73fed95934a8",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "value": 54,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-04T01:00:10.301873+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 会员数",
+              "numerator": 54,
+              "denominator": 54,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-dc6811a2819d4101",
+                "revision": 149752021956316,
+                "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "lineageId": "source-run:scr-dc6811a2819d4101",
+              "blockers": []
+            }
+          ],
+          "authorityRefs": [
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.order_count",
+              "revision": 12671821419701,
+              "contentHash": "sha256:0b86636a14b52e7109a7a7d3ffda26687eb23c86d9cbf6201e57fa6e5ec243a6",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P05-order-qyh:scr-152827a782c1472d",
+              "revision": 150507556340763,
+              "contentHash": "sha256:88e2c56e841b2fa291e782fd295a46d4317c31e59bfa6d90cf6de29b9b6ea9d7",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-152827a782c1472d",
+              "revision": 10603845708399,
+              "contentHash": "sha256:09a4e674ea6fafecb572c423272f3616bfb9f436d89c920d5cfb13ac58bb04d7",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.order_line_count",
+              "revision": 126692400543710,
+              "contentHash": "sha256:7339df87b7de5751c372236cc96579baaa1a635b11f9226d5c77dbfb29af8bca",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P06-order-line-qyh:scr-ced1b175f73844c9",
+              "revision": 59962783376150,
+              "contentHash": "sha256:36892c672316ff9fb5439c83651471599fa66ba91e4d92453addee98fecb8d1f",
+              "receiptId": "source-run:scr-ced1b175f73844c9"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-ced1b175f73844c9",
+              "revision": 264846940665125,
+              "contentHash": "sha256:f0e07bd175258de81c526dd210fa2603cab6c1838257e66fdb9215abf794e3e8",
+              "receiptId": "source-run:scr-ced1b175f73844c9"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-ced1b175f73844c9"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-ced1b175f73844c9"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.customer_count",
+              "revision": 167039593221560,
+              "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+              "revision": 191712914671006,
+              "contentHash": "sha256:ae5ca42d859ef69ce2f8288ff9d4809b3dc06e572d3cf81a3e4a73fed95934a8",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-dc6811a2819d4101",
+              "revision": 149752021956316,
+              "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceReadinessSnapshot",
+              "resourceId": "org-org/dev-project",
+              "revision": 146037772397858,
+              "contentHash": "sha256:84d2118c2d226463010d7bf479062f6acd0bc013010e57dbf120f1c93c55bbf5",
+              "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+            }
+          ],
+          "blockers": [
+            {
+              "code": "ANALYST_DIAGNOSIS_AUTHORITY_NOT_AVAILABLE",
+              "dependency": "workshop.analyst.diagnosis-authority",
+              "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+            }
+          ],
+          "countLedger": {
+            "denominator": 3,
+            "ready": 3,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "plan",
+          "status": "blocked",
+          "resourceRevision": 146037772397858,
+          "dataCutoff": "2026-09-04T02:52:39.781476Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.plan-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "model",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.plan-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "eval",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.plan-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.plan-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.plan-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            }
+          ],
+          "metrics": [],
+          "authorityRefs": [],
+          "blockers": [
+            {
+              "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+              "dependency": "workshop.analyst.plan-authority",
+              "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+            }
+          ],
+          "countLedger": {
+            "denominator": 0,
+            "ready": 0,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "effects",
+          "status": "blocked",
+          "resourceRevision": 146037772397858,
+          "dataCutoff": "2026-09-04T02:52:39.781476Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.effects-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "model",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.effects-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "eval",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.effects-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.effects-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.effects-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            }
+          ],
+          "metrics": [],
+          "authorityRefs": [],
+          "blockers": [
+            {
+              "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+              "dependency": "workshop.analyst.effects-authority",
+              "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+            }
+          ],
+          "countLedger": {
+            "denominator": 0,
+            "ready": 0,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "evidence",
+          "status": "blocked",
+          "resourceRevision": 146037772397858,
+          "dataCutoff": "2026-09-04T02:52:39.781476Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.evidence-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "model",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.evidence-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "eval",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.evidence-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.evidence-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.evidence-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            }
+          ],
+          "metrics": [],
+          "authorityRefs": [],
+          "blockers": [
+            {
+              "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+              "dependency": "workshop.analyst.evidence-authority",
+              "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+            }
+          ],
+          "countLedger": {
+            "denominator": 0,
+            "ready": 0,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "quality",
+          "status": "ready",
+          "resourceRevision": 146037772397858,
+          "dataCutoff": "2026-09-04T02:52:39.781476Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "ready",
+              "exactRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 146037772397858,
+                "contentHash": "sha256:84d2118c2d226463010d7bf479062f6acd0bc013010e57dbf120f1c93c55bbf5",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "blockers": []
+            },
+            {
+              "axis": "model",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "eval",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            }
+          ],
+          "metrics": [
+            {
+              "metricId": "ready_source_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.ready_source_count",
+                "revision": 126844145958368,
+                "contentHash": "sha256:735d3442fde090818130836de70ce80130bffffa8987aadd894ebac318ef6e3b",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 146037772397858,
+                "contentHash": "sha256:84d2118c2d226463010d7bf479062f6acd0bc013010e57dbf120f1c93c55bbf5",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "value": 10,
+              "unit": "个",
+              "grain": "当前租户数据源",
+              "window": "2026-09-04T02:52:39.781904+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "栖月汇 canonical P01-P12 数据源集合",
+              "numerator": 10,
+              "denominator": 12,
+              "sourceRunRef": {
+                "resourceType": "SourceRunSetObservation",
+                "resourceId": "org-org/dev-project",
+                "revision": 64181526867075,
+                "contentHash": "sha256:3a5f6d1c2c83a37d5d1957b73130beab839c62316f1259da2bacce89ad96ca23",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "qualityRef": {
+                "resourceType": "QualityObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 170193545417803,
+                "contentHash": "sha256:9aca45d1544bbf28cb7254c15f3503d62d6f6d0728ba7e2adc305755dc176922",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 115955031301682,
+                "contentHash": "sha256:6975e2735e32f5de24ca2b175f2b1d635987381053e3cbf82a211ec6b507c69a",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "lineageId": "source-readiness:84d2118c2d226463",
+              "blockers": []
+            },
+            {
+              "metricId": "failed_source_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.failed_source_count",
+                "revision": 196847360222302,
+                "contentHash": "sha256:b30818fb245eb1236d11f48334f710b154a2c48e26d79fa1cc096b2993b9b6a4",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 146037772397858,
+                "contentHash": "sha256:84d2118c2d226463010d7bf479062f6acd0bc013010e57dbf120f1c93c55bbf5",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "value": 2,
+              "unit": "个",
+              "grain": "当前租户数据源",
+              "window": "2026-09-04T02:52:39.781904+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "栖月汇 canonical P01-P12 数据源集合",
+              "numerator": 2,
+              "denominator": 12,
+              "sourceRunRef": {
+                "resourceType": "SourceRunSetObservation",
+                "resourceId": "org-org/dev-project",
+                "revision": 64181526867075,
+                "contentHash": "sha256:3a5f6d1c2c83a37d5d1957b73130beab839c62316f1259da2bacce89ad96ca23",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "qualityRef": {
+                "resourceType": "QualityObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 170193545417803,
+                "contentHash": "sha256:9aca45d1544bbf28cb7254c15f3503d62d6f6d0728ba7e2adc305755dc176922",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 115955031301682,
+                "contentHash": "sha256:6975e2735e32f5de24ca2b175f2b1d635987381053e3cbf82a211ec6b507c69a",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "lineageId": "source-readiness:84d2118c2d226463",
+              "blockers": []
+            },
+            {
+              "metricId": "stale_source_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.stale_source_count",
+                "revision": 33883883342231,
+                "contentHash": "sha256:1ed134d48997d9a7939c71aff42a9f8d22643f7f3aaa314161d34358338984c5",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 146037772397858,
+                "contentHash": "sha256:84d2118c2d226463010d7bf479062f6acd0bc013010e57dbf120f1c93c55bbf5",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "value": 0,
+              "unit": "个",
+              "grain": "当前租户数据源",
+              "window": "2026-09-04T02:52:39.781904+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "栖月汇 canonical P01-P12 数据源集合",
+              "numerator": 0,
+              "denominator": 12,
+              "sourceRunRef": {
+                "resourceType": "SourceRunSetObservation",
+                "resourceId": "org-org/dev-project",
+                "revision": 64181526867075,
+                "contentHash": "sha256:3a5f6d1c2c83a37d5d1957b73130beab839c62316f1259da2bacce89ad96ca23",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "qualityRef": {
+                "resourceType": "QualityObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 170193545417803,
+                "contentHash": "sha256:9aca45d1544bbf28cb7254c15f3503d62d6f6d0728ba7e2adc305755dc176922",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 115955031301682,
+                "contentHash": "sha256:6975e2735e32f5de24ca2b175f2b1d635987381053e3cbf82a211ec6b507c69a",
+                "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+              },
+              "lineageId": "source-readiness:84d2118c2d226463",
+              "blockers": []
+            }
+          ],
+          "authorityRefs": [
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.ready_source_count",
+              "revision": 126844145958368,
+              "contentHash": "sha256:735d3442fde090818130836de70ce80130bffffa8987aadd894ebac318ef6e3b",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "SourceReadinessSnapshot",
+              "resourceId": "org-org/dev-project",
+              "revision": 146037772397858,
+              "contentHash": "sha256:84d2118c2d226463010d7bf479062f6acd0bc013010e57dbf120f1c93c55bbf5",
+              "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+            },
+            {
+              "resourceType": "SourceRunSetObservation",
+              "resourceId": "org-org/dev-project",
+              "revision": 64181526867075,
+              "contentHash": "sha256:3a5f6d1c2c83a37d5d1957b73130beab839c62316f1259da2bacce89ad96ca23",
+              "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+            },
+            {
+              "resourceType": "QualityObservationSet",
+              "resourceId": "org-org/dev-project",
+              "revision": 170193545417803,
+              "contentHash": "sha256:9aca45d1544bbf28cb7254c15f3503d62d6f6d0728ba7e2adc305755dc176922",
+              "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+            },
+            {
+              "resourceType": "ReconciliationObservationSet",
+              "resourceId": "org-org/dev-project",
+              "revision": 115955031301682,
+              "contentHash": "sha256:6975e2735e32f5de24ca2b175f2b1d635987381053e3cbf82a211ec6b507c69a",
+              "receiptId": "source-readiness:2026-09-04T02:52:39.781904+00:00"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.failed_source_count",
+              "revision": 196847360222302,
+              "contentHash": "sha256:b30818fb245eb1236d11f48334f710b154a2c48e26d79fa1cc096b2993b9b6a4",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.stale_source_count",
+              "revision": 33883883342231,
+              "contentHash": "sha256:1ed134d48997d9a7939c71aff42a9f8d22643f7f3aaa314161d34358338984c5",
+              "receiptId": "analyst-metric-definition:v1"
+            }
+          ],
+          "blockers": [],
+          "countLedger": {
+            "denominator": 3,
+            "ready": 3,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        }
+      ],
+      "growthScenario": {
+        "schemaVersion": "aos.ecommerce-workshop.growth-scenario/v1",
+        "status": "blocked",
+        "rootPlanRef": null,
+        "scenarioBindingHash": null,
+        "evaluatedAt": "2026-09-04T02:52:39.781476Z",
+        "stages": [
+          {
+            "stageId": "insight",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "growth_plan",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "content",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "creator",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "media",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "publication",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "effect_review",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "memory_candidate",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          }
+        ],
+        "ledger": {
+          "tasksExpected": 0,
+          "tasksObserved": 0,
+          "handoffsExpected": 0,
+          "handoffsObserved": 0,
+          "outcomesExpected": 4,
+          "outcomesReady": 0,
+          "outcomesBlocked": 4,
+          "outcomesUnknown": 0
+        },
+        "outcomeAxes": [
+          {
+            "axisId": "provider_applied",
+            "status": "blocked",
+            "exactRef": null,
+            "blocker": {
+              "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+              "dependency": "workshop.growth-plan-authority",
+              "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+            }
+          },
+          {
+            "axisId": "usage_settled",
+            "status": "blocked",
+            "exactRef": null,
+            "blocker": {
+              "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+              "dependency": "workshop.growth-plan-authority",
+              "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+            }
+          },
+          {
+            "axisId": "effect_mature",
+            "status": "blocked",
+            "exactRef": null,
+            "blocker": {
+              "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+              "dependency": "workshop.growth-plan-authority",
+              "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+            }
+          },
+          {
+            "axisId": "memory_governed",
+            "status": "blocked",
+            "exactRef": null,
+            "blocker": {
+              "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+              "dependency": "workshop.growth-plan-authority",
+              "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+            }
+          }
+        ],
+        "blockers": [
+          {
+            "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+            "dependency": "workshop.growth-plan-authority",
+            "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+          }
+        ],
+        "commands": {
+          "materialize": false,
+          "dispatch": false,
+          "publish": false,
+          "promoteMemory": false
+        },
+        "externalEffectsAllowed": false
+      },
+      "page": {
+        "limit": 100,
+        "count": 12,
+        "hasMore": false,
+        "nextCursor": null
+      }
+    }
+  },
+  {
+    "url": "http://127.0.0.1:5173/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+    "status": 200,
+    "topLevelKeys": [
+      "schemaVersion",
+      "status",
+      "rootEffectReviewRef",
+      "maturityPolicyRef",
+      "learningBindingHash",
+      "composition",
+      "evaluatedAt",
+      "stages",
+      "ledger",
+      "outcomeAxes",
+      "blockers",
+      "commands",
+      "externalEffectsAllowed"
+    ],
+    "body": {
+      "schemaVersion": "aos.ecommerce-workshop.learning-scenario/v1",
+      "status": "blocked",
+      "rootEffectReviewRef": null,
+      "maturityPolicyRef": null,
+      "learningBindingHash": null,
+      "composition": null,
+      "evaluatedAt": "2026-09-04T02:52:40.004549Z",
+      "stages": [
+        {
+          "stageId": "effect_review",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "maturity",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "memory_candidate",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "governance",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "promotion",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "knowledge_query",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        },
+        {
+          "stageId": "revocation_impact",
+          "status": "blocked",
+          "exactRefs": [],
+          "contribution": "等待 exact authority；不制造 Candidate、知识、Citation、Exposure 或撤销事实",
+          "blockers": [
+            {
+              "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+              "dependency": "aip.effect-review-authority",
+              "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+            }
+          ]
+        }
+      ],
+      "ledger": {
+        "reviewsExpected": 0,
+        "reviewsObserved": 0,
+        "candidatesExpected": 0,
+        "candidatesObserved": 0,
+        "promotionsExpected": 0,
+        "promotionsObserved": 0,
+        "citationsExpected": 0,
+        "citationsObserved": 0,
+        "historicalExposures": 0,
+        "retainedExposures": 0,
+        "impactRefsExpected": 0,
+        "impactRefsObserved": 0
+      },
+      "outcomeAxes": [
+        {
+          "axisId": "effect_mature",
+          "status": "blocked",
+          "exactRef": null,
+          "blocker": {
+            "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+            "dependency": "aip.effect-review-authority",
+            "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+          }
+        },
+        {
+          "axisId": "candidate_governed",
+          "status": "blocked",
+          "exactRef": null,
+          "blocker": {
+            "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+            "dependency": "aip.effect-review-authority",
+            "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+          }
+        },
+        {
+          "axisId": "knowledge_promoted",
+          "status": "blocked",
+          "exactRef": null,
+          "blocker": {
+            "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+            "dependency": "aip.effect-review-authority",
+            "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+          }
+        },
+        {
+          "axisId": "future_query_authorized",
+          "status": "blocked",
+          "exactRef": null,
+          "blocker": {
+            "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+            "dependency": "aip.effect-review-authority",
+            "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+          }
+        },
+        {
+          "axisId": "revocation_impact_recorded",
+          "status": "blocked",
+          "exactRef": null,
+          "blocker": {
+            "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+            "dependency": "aip.effect-review-authority",
+            "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+          }
+        }
+      ],
+      "blockers": [
+        {
+          "code": "EFFECT_REVIEW_EXACT_ROOT_REQUIRED",
+          "dependency": "aip.effect-review-authority",
+          "requiredAction": "provide tenant-bound exact EffectReview, maturity, governance, knowledge, citation and revocation impact refs at one cutoff"
+        }
+      ],
+      "commands": {
+        "submitCandidate": false,
+        "approveCandidate": false,
+        "promoteCandidate": false,
+        "publishWiki": false,
+        "revokeKnowledge": false
+      },
+      "externalEffectsAllowed": false
+    }
+  },
+  {
+    "url": "http://127.0.0.1:5173/api/v1/ecommerce-workshop/views/analyst",
+    "status": 200,
+    "topLevelKeys": [
+      "schemaVersion",
+      "tenant",
+      "resourceRevision",
+      "evaluatedAt",
+      "dataCutoff",
+      "readiness",
+      "views",
+      "growthScenario",
+      "page"
+    ],
+    "body": {
+      "schemaVersion": "aos.ecommerce-workshop.analyst-view/v2",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "resourceRevision": 190187794678144,
+      "evaluatedAt": "2026-09-04T02:52:40.064656Z",
+      "dataCutoff": "2026-09-04T02:52:40.064656Z",
+      "readiness": "degraded",
+      "views": [
+        {
+          "viewId": "overview",
+          "status": "ready",
+          "resourceRevision": 190187794678144,
+          "dataCutoff": "2026-09-04T02:52:40.064656Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "ready",
+              "exactRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 190187794678144,
+                "contentHash": "sha256:acf98bf14180d9e7e044d5f46ded4f32db93d0a2bc837c6a95804b58eb7f398b",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "blockers": []
+            },
+            {
+              "axis": "model",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "eval",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            }
+          ],
+          "metrics": [
+            {
+              "metricId": "order_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.order_count",
+                "revision": 12671821419701,
+                "contentHash": "sha256:0b86636a14b52e7109a7a7d3ffda26687eb23c86d9cbf6201e57fa6e5ec243a6",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P05-order-qyh:scr-152827a782c1472d",
+                "revision": 195045730883068,
+                "contentHash": "sha256:b1649f8115fcda3e8c826dff8131625ae382febe0ce4225c55ecfe2fdd9e40a9",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "value": 124,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T22:00:17.594087+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 订单数",
+              "numerator": 124,
+              "denominator": 124,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-152827a782c1472d",
+                "revision": 10603845708399,
+                "contentHash": "sha256:09a4e674ea6fafecb572c423272f3616bfb9f436d89c920d5cfb13ac58bb04d7",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "lineageId": "source-run:scr-152827a782c1472d",
+              "blockers": []
+            },
+            {
+              "metricId": "product_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.product_count",
+                "revision": 99637058383955,
+                "contentHash": "sha256:5a9e8f78b05303e188ad779dfbbe0222cfb5925458019c103cd9fe5532b29917",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P02-product-qyh:scr-a38b0bc17f664b34",
+                "revision": 219329585149731,
+                "contentHash": "sha256:c77aa602f723f664e39e591a1df1de351f71d980e6445920ea5d8ec6645a77c3",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "value": 57,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T19:00:11.793237+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 商品数",
+              "numerator": 57,
+              "denominator": 57,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-a38b0bc17f664b34",
+                "revision": 142494705797324,
+                "contentHash": "sha256:8199225248cc7702934dec2522063303f398787001c1cb06fc640d4ab72e0683",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "lineageId": "source-run:scr-a38b0bc17f664b34",
+              "blockers": []
+            },
+            {
+              "metricId": "customer_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.customer_count",
+                "revision": 167039593221560,
+                "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+                "revision": 36587933414352,
+                "contentHash": "sha256:2146cac633d0a6670a75a25a0e19a04f8fc5a8400fe555f943d921da8e5b4923",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "value": 54,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-04T01:00:10.301873+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 会员数",
+              "numerator": 54,
+              "denominator": 54,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-dc6811a2819d4101",
+                "revision": 149752021956316,
+                "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "lineageId": "source-run:scr-dc6811a2819d4101",
+              "blockers": []
+            }
+          ],
+          "authorityRefs": [
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.order_count",
+              "revision": 12671821419701,
+              "contentHash": "sha256:0b86636a14b52e7109a7a7d3ffda26687eb23c86d9cbf6201e57fa6e5ec243a6",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P05-order-qyh:scr-152827a782c1472d",
+              "revision": 195045730883068,
+              "contentHash": "sha256:b1649f8115fcda3e8c826dff8131625ae382febe0ce4225c55ecfe2fdd9e40a9",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-152827a782c1472d",
+              "revision": 10603845708399,
+              "contentHash": "sha256:09a4e674ea6fafecb572c423272f3616bfb9f436d89c920d5cfb13ac58bb04d7",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.product_count",
+              "revision": 99637058383955,
+              "contentHash": "sha256:5a9e8f78b05303e188ad779dfbbe0222cfb5925458019c103cd9fe5532b29917",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P02-product-qyh:scr-a38b0bc17f664b34",
+              "revision": 219329585149731,
+              "contentHash": "sha256:c77aa602f723f664e39e591a1df1de351f71d980e6445920ea5d8ec6645a77c3",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-a38b0bc17f664b34",
+              "revision": 142494705797324,
+              "contentHash": "sha256:8199225248cc7702934dec2522063303f398787001c1cb06fc640d4ab72e0683",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.customer_count",
+              "revision": 167039593221560,
+              "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+              "revision": 36587933414352,
+              "contentHash": "sha256:2146cac633d0a6670a75a25a0e19a04f8fc5a8400fe555f943d921da8e5b4923",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-dc6811a2819d4101",
+              "revision": 149752021956316,
+              "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceReadinessSnapshot",
+              "resourceId": "org-org/dev-project",
+              "revision": 190187794678144,
+              "contentHash": "sha256:acf98bf14180d9e7e044d5f46ded4f32db93d0a2bc837c6a95804b58eb7f398b",
+              "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+            }
+          ],
+          "blockers": [],
+          "countLedger": {
+            "denominator": 3,
+            "ready": 3,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "drivers",
+          "status": "blocked",
+          "resourceRevision": 190187794678144,
+          "dataCutoff": "2026-09-04T02:52:40.064656Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "ready",
+              "exactRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 190187794678144,
+                "contentHash": "sha256:acf98bf14180d9e7e044d5f46ded4f32db93d0a2bc837c6a95804b58eb7f398b",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "blockers": []
+            },
+            {
+              "axis": "model",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_DRIVERS_NON_CAUSAL_BOUNDARY",
+                  "dependency": "workshop.analyst.drivers.model-eval",
+                  "requiredAction": "仅展示当前经营观察；需 exact 模型与评价证据后才能形成归因或因果结论"
+                }
+              ]
+            },
+            {
+              "axis": "eval",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_DRIVERS_NON_CAUSAL_BOUNDARY",
+                  "dependency": "workshop.analyst.drivers.model-eval",
+                  "requiredAction": "仅展示当前经营观察；需 exact 模型与评价证据后才能形成归因或因果结论"
+                }
+              ]
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            }
+          ],
+          "metrics": [
+            {
+              "metricId": "product_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.product_count",
+                "revision": 99637058383955,
+                "contentHash": "sha256:5a9e8f78b05303e188ad779dfbbe0222cfb5925458019c103cd9fe5532b29917",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P02-product-qyh:scr-a38b0bc17f664b34",
+                "revision": 219329585149731,
+                "contentHash": "sha256:c77aa602f723f664e39e591a1df1de351f71d980e6445920ea5d8ec6645a77c3",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "value": 57,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T19:00:11.793237+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 商品数",
+              "numerator": 57,
+              "denominator": 57,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-a38b0bc17f664b34",
+                "revision": 142494705797324,
+                "contentHash": "sha256:8199225248cc7702934dec2522063303f398787001c1cb06fc640d4ab72e0683",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-a38b0bc17f664b34"
+              },
+              "lineageId": "source-run:scr-a38b0bc17f664b34",
+              "blockers": []
+            },
+            {
+              "metricId": "product_review_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.product_review_count",
+                "revision": 78084069451856,
+                "contentHash": "sha256:47045d38e8507b6f97d4616bbf786e5a82de920b88cc69a0950f55f45974794c",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P11-product-review-qyh:scr-077a1d405155499f",
+                "revision": 201487712817655,
+                "contentHash": "sha256:b740838c91f71ffd133ef34755f35c725e50a193a6eca7a23d229b8cc34efbae",
+                "receiptId": "source-run:scr-077a1d405155499f"
+              },
+              "value": 5,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T04:00:05.782943+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 商品评价数",
+              "numerator": 5,
+              "denominator": 5,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-077a1d405155499f",
+                "revision": 69489825972148,
+                "contentHash": "sha256:3f335c647fb4f8b4c8363865c5cb1c195ec30803d29afe8d73b4a69b21f85bdf",
+                "receiptId": "source-run:scr-077a1d405155499f"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-077a1d405155499f"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-077a1d405155499f"
+              },
+              "lineageId": "source-run:scr-077a1d405155499f",
+              "blockers": []
+            },
+            {
+              "metricId": "customer_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.customer_count",
+                "revision": 167039593221560,
+                "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+                "revision": 36587933414352,
+                "contentHash": "sha256:2146cac633d0a6670a75a25a0e19a04f8fc5a8400fe555f943d921da8e5b4923",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "value": 54,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-04T01:00:10.301873+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 会员数",
+              "numerator": 54,
+              "denominator": 54,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-dc6811a2819d4101",
+                "revision": 149752021956316,
+                "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "lineageId": "source-run:scr-dc6811a2819d4101",
+              "blockers": []
+            }
+          ],
+          "authorityRefs": [
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.product_count",
+              "revision": 99637058383955,
+              "contentHash": "sha256:5a9e8f78b05303e188ad779dfbbe0222cfb5925458019c103cd9fe5532b29917",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P02-product-qyh:scr-a38b0bc17f664b34",
+              "revision": 219329585149731,
+              "contentHash": "sha256:c77aa602f723f664e39e591a1df1de351f71d980e6445920ea5d8ec6645a77c3",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-a38b0bc17f664b34",
+              "revision": 142494705797324,
+              "contentHash": "sha256:8199225248cc7702934dec2522063303f398787001c1cb06fc640d4ab72e0683",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-a38b0bc17f664b34"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.product_review_count",
+              "revision": 78084069451856,
+              "contentHash": "sha256:47045d38e8507b6f97d4616bbf786e5a82de920b88cc69a0950f55f45974794c",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P11-product-review-qyh:scr-077a1d405155499f",
+              "revision": 201487712817655,
+              "contentHash": "sha256:b740838c91f71ffd133ef34755f35c725e50a193a6eca7a23d229b8cc34efbae",
+              "receiptId": "source-run:scr-077a1d405155499f"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-077a1d405155499f",
+              "revision": 69489825972148,
+              "contentHash": "sha256:3f335c647fb4f8b4c8363865c5cb1c195ec30803d29afe8d73b4a69b21f85bdf",
+              "receiptId": "source-run:scr-077a1d405155499f"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-077a1d405155499f"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-077a1d405155499f"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.customer_count",
+              "revision": 167039593221560,
+              "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+              "revision": 36587933414352,
+              "contentHash": "sha256:2146cac633d0a6670a75a25a0e19a04f8fc5a8400fe555f943d921da8e5b4923",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-dc6811a2819d4101",
+              "revision": 149752021956316,
+              "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceReadinessSnapshot",
+              "resourceId": "org-org/dev-project",
+              "revision": 190187794678144,
+              "contentHash": "sha256:acf98bf14180d9e7e044d5f46ded4f32db93d0a2bc837c6a95804b58eb7f398b",
+              "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+            }
+          ],
+          "blockers": [
+            {
+              "code": "ANALYST_DRIVERS_AUTHORITY_NOT_AVAILABLE",
+              "dependency": "workshop.analyst.drivers-authority",
+              "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+            }
+          ],
+          "countLedger": {
+            "denominator": 3,
+            "ready": 3,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "diagnosis",
+          "status": "blocked",
+          "resourceRevision": 190187794678144,
+          "dataCutoff": "2026-09-04T02:52:40.064656Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "ready",
+              "exactRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 190187794678144,
+                "contentHash": "sha256:acf98bf14180d9e7e044d5f46ded4f32db93d0a2bc837c6a95804b58eb7f398b",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "blockers": []
+            },
+            {
+              "axis": "model",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_DIAGNOSIS_NON_CAUSAL_BOUNDARY",
+                  "dependency": "workshop.analyst.diagnosis.model-eval",
+                  "requiredAction": "仅展示当前经营观察；需 exact 模型与评价证据后才能形成归因或因果结论"
+                }
+              ]
+            },
+            {
+              "axis": "eval",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_DIAGNOSIS_NON_CAUSAL_BOUNDARY",
+                  "dependency": "workshop.analyst.diagnosis.model-eval",
+                  "requiredAction": "仅展示当前经营观察；需 exact 模型与评价证据后才能形成归因或因果结论"
+                }
+              ]
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            }
+          ],
+          "metrics": [
+            {
+              "metricId": "order_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.order_count",
+                "revision": 12671821419701,
+                "contentHash": "sha256:0b86636a14b52e7109a7a7d3ffda26687eb23c86d9cbf6201e57fa6e5ec243a6",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P05-order-qyh:scr-152827a782c1472d",
+                "revision": 195045730883068,
+                "contentHash": "sha256:b1649f8115fcda3e8c826dff8131625ae382febe0ce4225c55ecfe2fdd9e40a9",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "value": 124,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T22:00:17.594087+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 订单数",
+              "numerator": 124,
+              "denominator": 124,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-152827a782c1472d",
+                "revision": 10603845708399,
+                "contentHash": "sha256:09a4e674ea6fafecb572c423272f3616bfb9f436d89c920d5cfb13ac58bb04d7",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-152827a782c1472d"
+              },
+              "lineageId": "source-run:scr-152827a782c1472d",
+              "blockers": []
+            },
+            {
+              "metricId": "order_line_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.order_line_count",
+                "revision": 126692400543710,
+                "contentHash": "sha256:7339df87b7de5751c372236cc96579baaa1a635b11f9226d5c77dbfb29af8bca",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P06-order-line-qyh:scr-ced1b175f73844c9",
+                "revision": 198451918935563,
+                "contentHash": "sha256:b47db022160bbdae28d30520b67db2dbae3fb36509ab973e97df88ccd0e47272",
+                "receiptId": "source-run:scr-ced1b175f73844c9"
+              },
+              "value": 234,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-03T23:00:11.445896+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 订单明细数",
+              "numerator": 234,
+              "denominator": 234,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-ced1b175f73844c9",
+                "revision": 264846940665125,
+                "contentHash": "sha256:f0e07bd175258de81c526dd210fa2603cab6c1838257e66fdb9215abf794e3e8",
+                "receiptId": "source-run:scr-ced1b175f73844c9"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-ced1b175f73844c9"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-ced1b175f73844c9"
+              },
+              "lineageId": "source-run:scr-ced1b175f73844c9",
+              "blockers": []
+            },
+            {
+              "metricId": "customer_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.customer_count",
+                "revision": 167039593221560,
+                "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "MetricObservation",
+                "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+                "revision": 36587933414352,
+                "contentHash": "sha256:2146cac633d0a6670a75a25a0e19a04f8fc5a8400fe555f943d921da8e5b4923",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "value": 54,
+              "unit": "条",
+              "grain": "当前租户",
+              "window": "2026-09-04T01:00:10.301873+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "正式数据来源 niushop-qyh · 会员数",
+              "numerator": 54,
+              "denominator": 54,
+              "sourceRunRef": {
+                "resourceType": "SourceRunObservation",
+                "resourceId": "scr-dc6811a2819d4101",
+                "revision": 149752021956316,
+                "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "qualityRef": {
+                "resourceType": "QualityPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "revision": 33125480811958,
+                "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationPolicy",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "revision": 141950915816595,
+                "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "receiptId": "source-run:scr-dc6811a2819d4101"
+              },
+              "lineageId": "source-run:scr-dc6811a2819d4101",
+              "blockers": []
+            }
+          ],
+          "authorityRefs": [
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.order_count",
+              "revision": 12671821419701,
+              "contentHash": "sha256:0b86636a14b52e7109a7a7d3ffda26687eb23c86d9cbf6201e57fa6e5ec243a6",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P05-order-qyh:scr-152827a782c1472d",
+              "revision": 195045730883068,
+              "contentHash": "sha256:b1649f8115fcda3e8c826dff8131625ae382febe0ce4225c55ecfe2fdd9e40a9",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-152827a782c1472d",
+              "revision": 10603845708399,
+              "contentHash": "sha256:09a4e674ea6fafecb572c423272f3616bfb9f436d89c920d5cfb13ac58bb04d7",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-152827a782c1472d"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.order_line_count",
+              "revision": 126692400543710,
+              "contentHash": "sha256:7339df87b7de5751c372236cc96579baaa1a635b11f9226d5c77dbfb29af8bca",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P06-order-line-qyh:scr-ced1b175f73844c9",
+              "revision": 198451918935563,
+              "contentHash": "sha256:b47db022160bbdae28d30520b67db2dbae3fb36509ab973e97df88ccd0e47272",
+              "receiptId": "source-run:scr-ced1b175f73844c9"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-ced1b175f73844c9",
+              "revision": 264846940665125,
+              "contentHash": "sha256:f0e07bd175258de81c526dd210fa2603cab6c1838257e66fdb9215abf794e3e8",
+              "receiptId": "source-run:scr-ced1b175f73844c9"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-ced1b175f73844c9"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-ced1b175f73844c9"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.customer_count",
+              "revision": 167039593221560,
+              "contentHash": "sha256:97ebef9e0db8867b8615367c3289e73b9549abff1e6c656aa4531ea0ae0e6e77",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricObservation",
+              "resourceId": "P08-customer-lite-qyh:scr-dc6811a2819d4101",
+              "revision": 36587933414352,
+              "contentHash": "sha256:2146cac633d0a6670a75a25a0e19a04f8fc5a8400fe555f943d921da8e5b4923",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceRunObservation",
+              "resourceId": "scr-dc6811a2819d4101",
+              "revision": 149752021956316,
+              "contentHash": "sha256:8832dc12b6dc4b4aa9ec7ac30306d3ead74656ed78fc46e3c0da2f599c4801ce",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "QualityPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+              "revision": 33125480811958,
+              "contentHash": "sha256:74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "ReconciliationPolicy",
+              "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+              "revision": 141950915816595,
+              "contentHash": "sha256:6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+              "receiptId": "source-run:scr-dc6811a2819d4101"
+            },
+            {
+              "resourceType": "SourceReadinessSnapshot",
+              "resourceId": "org-org/dev-project",
+              "revision": 190187794678144,
+              "contentHash": "sha256:acf98bf14180d9e7e044d5f46ded4f32db93d0a2bc837c6a95804b58eb7f398b",
+              "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+            }
+          ],
+          "blockers": [
+            {
+              "code": "ANALYST_DIAGNOSIS_AUTHORITY_NOT_AVAILABLE",
+              "dependency": "workshop.analyst.diagnosis-authority",
+              "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+            }
+          ],
+          "countLedger": {
+            "denominator": 3,
+            "ready": 3,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "plan",
+          "status": "blocked",
+          "resourceRevision": 190187794678144,
+          "dataCutoff": "2026-09-04T02:52:40.064656Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.plan-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "model",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.plan-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "eval",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.plan-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.plan-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.plan-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            }
+          ],
+          "metrics": [],
+          "authorityRefs": [],
+          "blockers": [
+            {
+              "code": "ANALYST_PLAN_AUTHORITY_NOT_AVAILABLE",
+              "dependency": "workshop.analyst.plan-authority",
+              "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+            }
+          ],
+          "countLedger": {
+            "denominator": 0,
+            "ready": 0,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "effects",
+          "status": "blocked",
+          "resourceRevision": 190187794678144,
+          "dataCutoff": "2026-09-04T02:52:40.064656Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.effects-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "model",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.effects-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "eval",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.effects-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.effects-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.effects-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            }
+          ],
+          "metrics": [],
+          "authorityRefs": [],
+          "blockers": [
+            {
+              "code": "ANALYST_EFFECTS_AUTHORITY_NOT_AVAILABLE",
+              "dependency": "workshop.analyst.effects-authority",
+              "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+            }
+          ],
+          "countLedger": {
+            "denominator": 0,
+            "ready": 0,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "evidence",
+          "status": "blocked",
+          "resourceRevision": 190187794678144,
+          "dataCutoff": "2026-09-04T02:52:40.064656Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.evidence-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "model",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.evidence-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "eval",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.evidence-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.evidence-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "blocked",
+              "exactRef": null,
+              "blockers": [
+                {
+                  "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+                  "dependency": "workshop.analyst.evidence-authority",
+                  "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+                }
+              ]
+            }
+          ],
+          "metrics": [],
+          "authorityRefs": [],
+          "blockers": [
+            {
+              "code": "ANALYST_EVIDENCE_AUTHORITY_NOT_AVAILABLE",
+              "dependency": "workshop.analyst.evidence-authority",
+              "requiredAction": "provide tenant-bound exact metric, quality, evidence and plan refs at one cutoff"
+            }
+          ],
+          "countLedger": {
+            "denominator": 0,
+            "ready": 0,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        },
+        {
+          "viewId": "quality",
+          "status": "ready",
+          "resourceRevision": 190187794678144,
+          "dataCutoff": "2026-09-04T02:52:40.064656Z",
+          "readinessAxes": [
+            {
+              "axis": "metric_query",
+              "status": "ready",
+              "exactRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 190187794678144,
+                "contentHash": "sha256:acf98bf14180d9e7e044d5f46ded4f32db93d0a2bc837c6a95804b58eb7f398b",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "blockers": []
+            },
+            {
+              "axis": "model",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "eval",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "plan_materialization",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            },
+            {
+              "axis": "professional_handoff",
+              "status": "not_applicable",
+              "exactRef": null,
+              "blockers": []
+            }
+          ],
+          "metrics": [
+            {
+              "metricId": "ready_source_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.ready_source_count",
+                "revision": 126844145958368,
+                "contentHash": "sha256:735d3442fde090818130836de70ce80130bffffa8987aadd894ebac318ef6e3b",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 190187794678144,
+                "contentHash": "sha256:acf98bf14180d9e7e044d5f46ded4f32db93d0a2bc837c6a95804b58eb7f398b",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "value": 10,
+              "unit": "个",
+              "grain": "当前租户数据源",
+              "window": "2026-09-04T02:52:40.066989+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "栖月汇 canonical P01-P12 数据源集合",
+              "numerator": 10,
+              "denominator": 12,
+              "sourceRunRef": {
+                "resourceType": "SourceRunSetObservation",
+                "resourceId": "org-org/dev-project",
+                "revision": 64181526867075,
+                "contentHash": "sha256:3a5f6d1c2c83a37d5d1957b73130beab839c62316f1259da2bacce89ad96ca23",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "qualityRef": {
+                "resourceType": "QualityObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 170193545417803,
+                "contentHash": "sha256:9aca45d1544bbf28cb7254c15f3503d62d6f6d0728ba7e2adc305755dc176922",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 115955031301682,
+                "contentHash": "sha256:6975e2735e32f5de24ca2b175f2b1d635987381053e3cbf82a211ec6b507c69a",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "lineageId": "source-readiness:acf98bf14180d9e7",
+              "blockers": []
+            },
+            {
+              "metricId": "failed_source_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.failed_source_count",
+                "revision": 196847360222302,
+                "contentHash": "sha256:b30818fb245eb1236d11f48334f710b154a2c48e26d79fa1cc096b2993b9b6a4",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 190187794678144,
+                "contentHash": "sha256:acf98bf14180d9e7e044d5f46ded4f32db93d0a2bc837c6a95804b58eb7f398b",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "value": 2,
+              "unit": "个",
+              "grain": "当前租户数据源",
+              "window": "2026-09-04T02:52:40.066989+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "栖月汇 canonical P01-P12 数据源集合",
+              "numerator": 2,
+              "denominator": 12,
+              "sourceRunRef": {
+                "resourceType": "SourceRunSetObservation",
+                "resourceId": "org-org/dev-project",
+                "revision": 64181526867075,
+                "contentHash": "sha256:3a5f6d1c2c83a37d5d1957b73130beab839c62316f1259da2bacce89ad96ca23",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "qualityRef": {
+                "resourceType": "QualityObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 170193545417803,
+                "contentHash": "sha256:9aca45d1544bbf28cb7254c15f3503d62d6f6d0728ba7e2adc305755dc176922",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 115955031301682,
+                "contentHash": "sha256:6975e2735e32f5de24ca2b175f2b1d635987381053e3cbf82a211ec6b507c69a",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "lineageId": "source-readiness:acf98bf14180d9e7",
+              "blockers": []
+            },
+            {
+              "metricId": "stale_source_count",
+              "status": "ready",
+              "definitionRef": {
+                "resourceType": "MetricDefinitionRevision",
+                "resourceId": "workshop.analyst.stale_source_count",
+                "revision": 33883883342231,
+                "contentHash": "sha256:1ed134d48997d9a7939c71aff42a9f8d22643f7f3aaa314161d34358338984c5",
+                "receiptId": "analyst-metric-definition:v1"
+              },
+              "observationRef": {
+                "resourceType": "SourceReadinessSnapshot",
+                "resourceId": "org-org/dev-project",
+                "revision": 190187794678144,
+                "contentHash": "sha256:acf98bf14180d9e7e044d5f46ded4f32db93d0a2bc837c6a95804b58eb7f398b",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "value": 0,
+              "unit": "个",
+              "grain": "当前租户数据源",
+              "window": "2026-09-04T02:52:40.066989+00:00",
+              "timezone": "Asia/Shanghai",
+              "cohortFilter": "栖月汇 canonical P01-P12 数据源集合",
+              "numerator": 0,
+              "denominator": 12,
+              "sourceRunRef": {
+                "resourceType": "SourceRunSetObservation",
+                "resourceId": "org-org/dev-project",
+                "revision": 64181526867075,
+                "contentHash": "sha256:3a5f6d1c2c83a37d5d1957b73130beab839c62316f1259da2bacce89ad96ca23",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "qualityRef": {
+                "resourceType": "QualityObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 170193545417803,
+                "contentHash": "sha256:9aca45d1544bbf28cb7254c15f3503d62d6f6d0728ba7e2adc305755dc176922",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "reconciliationRef": {
+                "resourceType": "ReconciliationObservationSet",
+                "resourceId": "org-org/dev-project",
+                "revision": 115955031301682,
+                "contentHash": "sha256:6975e2735e32f5de24ca2b175f2b1d635987381053e3cbf82a211ec6b507c69a",
+                "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+              },
+              "lineageId": "source-readiness:acf98bf14180d9e7",
+              "blockers": []
+            }
+          ],
+          "authorityRefs": [
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.ready_source_count",
+              "revision": 126844145958368,
+              "contentHash": "sha256:735d3442fde090818130836de70ce80130bffffa8987aadd894ebac318ef6e3b",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "SourceReadinessSnapshot",
+              "resourceId": "org-org/dev-project",
+              "revision": 190187794678144,
+              "contentHash": "sha256:acf98bf14180d9e7e044d5f46ded4f32db93d0a2bc837c6a95804b58eb7f398b",
+              "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+            },
+            {
+              "resourceType": "SourceRunSetObservation",
+              "resourceId": "org-org/dev-project",
+              "revision": 64181526867075,
+              "contentHash": "sha256:3a5f6d1c2c83a37d5d1957b73130beab839c62316f1259da2bacce89ad96ca23",
+              "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+            },
+            {
+              "resourceType": "QualityObservationSet",
+              "resourceId": "org-org/dev-project",
+              "revision": 170193545417803,
+              "contentHash": "sha256:9aca45d1544bbf28cb7254c15f3503d62d6f6d0728ba7e2adc305755dc176922",
+              "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+            },
+            {
+              "resourceType": "ReconciliationObservationSet",
+              "resourceId": "org-org/dev-project",
+              "revision": 115955031301682,
+              "contentHash": "sha256:6975e2735e32f5de24ca2b175f2b1d635987381053e3cbf82a211ec6b507c69a",
+              "receiptId": "source-readiness:2026-09-04T02:52:40.066989+00:00"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.failed_source_count",
+              "revision": 196847360222302,
+              "contentHash": "sha256:b30818fb245eb1236d11f48334f710b154a2c48e26d79fa1cc096b2993b9b6a4",
+              "receiptId": "analyst-metric-definition:v1"
+            },
+            {
+              "resourceType": "MetricDefinitionRevision",
+              "resourceId": "workshop.analyst.stale_source_count",
+              "revision": 33883883342231,
+              "contentHash": "sha256:1ed134d48997d9a7939c71aff42a9f8d22643f7f3aaa314161d34358338984c5",
+              "receiptId": "analyst-metric-definition:v1"
+            }
+          ],
+          "blockers": [],
+          "countLedger": {
+            "denominator": 3,
+            "ready": 3,
+            "unknown": 0,
+            "blocked": 0,
+            "conflict": 0
+          }
+        }
+      ],
+      "growthScenario": {
+        "schemaVersion": "aos.ecommerce-workshop.growth-scenario/v1",
+        "status": "blocked",
+        "rootPlanRef": null,
+        "scenarioBindingHash": null,
+        "evaluatedAt": "2026-09-04T02:52:40.064656Z",
+        "stages": [
+          {
+            "stageId": "insight",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "growth_plan",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "content",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "creator",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "media",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "publication",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "effect_review",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          },
+          {
+            "stageId": "memory_candidate",
+            "status": "blocked",
+            "exactRefs": [],
+            "contribution": "等待 exact authority；不制造业务事实",
+            "blockers": [
+              {
+                "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+                "dependency": "workshop.growth-plan-authority",
+                "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+              }
+            ]
+          }
+        ],
+        "ledger": {
+          "tasksExpected": 0,
+          "tasksObserved": 0,
+          "handoffsExpected": 0,
+          "handoffsObserved": 0,
+          "outcomesExpected": 4,
+          "outcomesReady": 0,
+          "outcomesBlocked": 4,
+          "outcomesUnknown": 0
+        },
+        "outcomeAxes": [
+          {
+            "axisId": "provider_applied",
+            "status": "blocked",
+            "exactRef": null,
+            "blocker": {
+              "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+              "dependency": "workshop.growth-plan-authority",
+              "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+            }
+          },
+          {
+            "axisId": "usage_settled",
+            "status": "blocked",
+            "exactRef": null,
+            "blocker": {
+              "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+              "dependency": "workshop.growth-plan-authority",
+              "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+            }
+          },
+          {
+            "axisId": "effect_mature",
+            "status": "blocked",
+            "exactRef": null,
+            "blocker": {
+              "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+              "dependency": "workshop.growth-plan-authority",
+              "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+            }
+          },
+          {
+            "axisId": "memory_governed",
+            "status": "blocked",
+            "exactRef": null,
+            "blocker": {
+              "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+              "dependency": "workshop.growth-plan-authority",
+              "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+            }
+          }
+        ],
+        "blockers": [
+          {
+            "code": "GROWTH_PLAN_EXACT_ROOT_REQUIRED",
+            "dependency": "workshop.growth-plan-authority",
+            "requiredAction": "provide tenant-bound exact refs at one cutoff and binding hash"
+          }
+        ],
+        "commands": {
+          "materialize": false,
+          "dispatch": false,
+          "publish": false,
+          "promoteMemory": false
+        },
+        "externalEffectsAllowed": false
+      },
+      "page": {
+        "limit": 100,
+        "count": 12,
+        "hasMore": false,
+        "nextCursor": null
+      }
+    }
+  }
+]

@@ -1,0 +1,105 @@
+{
+  "capturedAt": "2026-09-04T02:52:43.803Z",
+  "sameLoad": true,
+  "route": "/workshop/analyst",
+  "responses": [
+    {
+      "url": "http://127.0.0.1:5173/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/api/v1/ecommerce-workshop/views/analyst",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:5173/api/v1/ecommerce-workshop/views/analyst",
+      "status": 200
+    }
+  ],
+  "metricsByView": {
+    "overview": {
+      "total": 2,
+      "ready": 2,
+      "ids": [
+        "undefined=undefined(ready)",
+        "undefined=undefined(ready)"
+      ]
+    },
+    "drivers": {
+      "total": 2,
+      "ready": 0,
+      "ids": [
+        "undefined=undefined(blocked)",
+        "undefined=undefined(blocked)"
+      ]
+    },
+    "diagnosis": {
+      "total": 2,
+      "ready": 0,
+      "ids": [
+        "undefined=undefined(blocked)",
+        "undefined=undefined(blocked)"
+      ]
+    },
+    "plan": {
+      "total": 2,
+      "ready": 0,
+      "ids": [
+        "undefined=undefined(blocked)",
+        "undefined=undefined(blocked)"
+      ]
+    },
+    "effects": {
+      "total": 2,
+      "ready": 0,
+      "ids": [
+        "undefined=undefined(blocked)",
+        "undefined=undefined(blocked)"
+      ]
+    },
+    "evidence": {
+      "total": 2,
+      "ready": 0,
+      "ids": [
+        "undefined=undefined(blocked)",
+        "undefined=undefined(blocked)"
+      ]
+    },
+    "quality": {
+      "total": 2,
+      "ready": 2,
+      "ids": [
+        "undefined=undefined(ready)",
+        "undefined=undefined(ready)"
+      ]
+    }
+  },
+  "domTabs": {
+    "tabs": [
+      "生意探究只读",
+      "经营总览可读取",
+      "驱动因素等待条件",
+      "问题诊断等待条件",
+      "增长计划等待条件",
+      "效果复盘等待条件",
+      "证据链等待条件",
+      "数据质量可读取"
+    ],
+    "channelTexts": [
+      "渠道视角",
+      "渠道未知",
+      "渠道未选择 · 数据截止未验证",
+      "按渠道、经营实体与分析记录三级选择"
+    ],
+    "entityTexts": [
+      "按渠道、经营实体与分析记录三级选择",
+      "经营实体",
+      "未选择经营实体"
+    ]
+  },
+  "conflicts": []
+}
