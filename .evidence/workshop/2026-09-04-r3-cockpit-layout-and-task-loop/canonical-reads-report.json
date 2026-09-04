@@ -1,0 +1,133 @@
+{
+  "visitedRoutes": [
+    "/workshop/cockpit",
+    "/workshop/graph",
+    "/ontology/graph-health"
+  ],
+  "observed": [
+    {
+      "endpoint": "/api/v1/ecommerce-workshop/views/analyst",
+      "method": "GET",
+      "status": 200,
+      "metrics": [
+        {
+          "viewId": "overview",
+          "metricId": "order_count",
+          "status": "ready",
+          "value": 124
+        },
+        {
+          "viewId": "overview",
+          "metricId": "product_count",
+          "status": "ready",
+          "value": 57
+        },
+        {
+          "viewId": "overview",
+          "metricId": "customer_count",
+          "status": "ready",
+          "value": 54
+        },
+        {
+          "viewId": "drivers",
+          "metricId": "product_count",
+          "status": "ready",
+          "value": 57
+        },
+        {
+          "viewId": "drivers",
+          "metricId": "product_review_count",
+          "status": "ready",
+          "value": 5
+        },
+        {
+          "viewId": "drivers",
+          "metricId": "customer_count",
+          "status": "ready",
+          "value": 54
+        },
+        {
+          "viewId": "diagnosis",
+          "metricId": "order_count",
+          "status": "ready",
+          "value": 124
+        },
+        {
+          "viewId": "diagnosis",
+          "metricId": "order_line_count",
+          "status": "ready",
+          "value": 234
+        },
+        {
+          "viewId": "diagnosis",
+          "metricId": "customer_count",
+          "status": "ready",
+          "value": 54
+        },
+        {
+          "viewId": "quality",
+          "metricId": "ready_source_count",
+          "status": "ready",
+          "value": 10
+        },
+        {
+          "viewId": "quality",
+          "metricId": "failed_source_count",
+          "status": "ready",
+          "value": 2
+        },
+        {
+          "viewId": "quality",
+          "metricId": "stale_source_count",
+          "status": "ready",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/v1/ecommerce-workshop/source-readiness",
+      "method": "GET",
+      "status": 200,
+      "sources": {
+        "count": 12,
+        "status": "failed",
+        "ready": 10
+      }
+    },
+    {
+      "endpoint": "/api/v1/ontology/object-types",
+      "method": "GET",
+      "status": 200,
+      "itemCount": 15,
+      "total": null,
+      "sampleKeys": [
+        "id",
+        "name",
+        "description",
+        "published",
+        "properties"
+      ]
+    },
+    {
+      "endpoint": "/api/v1/objects/Order",
+      "method": "GET",
+      "status": 200,
+      "itemCount": 124,
+      "total": 124,
+      "sampleKeys": [
+        "type",
+        "id",
+        "shopId",
+        "status",
+        "orderNo",
+        "currency",
+        "isDelete",
+        "memberId",
+        "createdAt",
+        "payStatus",
+        "updatedAt",
+        "risk_score"
+      ]
+    }
+  ]
+}

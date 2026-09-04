@@ -1,0 +1,74 @@
+{
+  "orderCount": 124,
+  "propertyKeys": [
+    "_displayLabel",
+    "_schemaVersion",
+    "_sourceIdentity",
+    "_sourceIdentityLabel",
+    "_sourceRecordLabel",
+    "_sourceUpdatedAt",
+    "createdAt",
+    "createdAtSourceTimezone",
+    "currency",
+    "currencyScale",
+    "deliveryStatus",
+    "id",
+    "isDelete",
+    "memberId",
+    "orderNo",
+    "orderStatus",
+    "payStatus",
+    "risk_score",
+    "shopId",
+    "status",
+    "totalAmount",
+    "type",
+    "updatedAt",
+    "updatedAtSourceTimezone"
+  ],
+  "status": {
+    "active": 124
+  },
+  "payStatus": {
+    "0": 26,
+    "1": 98
+  },
+  "isDelete": {
+    "0": 124
+  },
+  "shopId": {
+    "1": 124
+  },
+  "currency": {
+    "CNY": 124
+  },
+  "riskScore": {
+    "count": 124,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "max": 0.4
+  },
+  "createdAtRange": {
+    "min": "2026-01-24T13:12:34.000000Z",
+    "max": "2026-08-28T04:55:49.000000Z"
+  },
+  "sample": [
+    {
+      "id": "niushop:1:184",
+      "orderNo": "20260828125571002",
+      "status": "active",
+      "payStatus": "1",
+      "risk_score": 0,
+      "createdAt": "2026-08-28T04:55:49.000000Z"
+    },
+    {
+      "id": "niushop:1:183",
+      "orderNo": "20260828125571001",
+      "status": "active",
+      "payStatus": "0",
+      "risk_score": 0,
+      "createdAt": "2026-08-28T04:55:33.000000Z"
+    }
+  ]
+}

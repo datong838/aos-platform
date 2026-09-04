@@ -1,6 +1,6 @@
 // R3-07 第 1/8 步只读几何测量：确认底部能力带/明日预告遮挡、任务列表滚动、数字同事列可见性。
 // 只读脚本：不创建任务、不提交表单、不触发任何写命令。
-import { chromium } from "playwright-core";
+import { acquirePage } from "./cdp-page.mjs";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,10 +8,7 @@ import { fileURLToPath } from "node:url";
 const outDir = dirname(fileURLToPath(import.meta.url));
 mkdirSync(outDir, { recursive: true });
 
-const browser = await chromium.connectOverCDP("http://127.0.0.1:9333");
-const context = browser.contexts()[0];
-const owned = context.pages().find((page) => page.url().startsWith("http://127.0.0.1:5173/"));
-const page = owned ?? (await context.newPage());
+const { browser, page } = await acquirePage();
 await page.setViewportSize({ width: 1280, height: 720 });
 await page.goto("http://127.0.0.1:5173/workshop/cockpit", { waitUntil: "networkidle", timeout: 45000 });
 await page.waitForSelector(".task-cockpit-visual-surface", { timeout: 30000 });
@@ -68,5 +65,5 @@ await page.screenshot({ path: `${outDir}/01-viewport-1280x720.png` });
 await page.screenshot({ path: `${outDir}/02-fullpage-1280x720.png`, fullPage: true });
 
 console.log(JSON.stringify(report, null, 2));
-if (!owned) await page.close();
+// 保留任务专属标签供后续波次复用；仅断开连接，不关闭标签或浏览器。
 await browser.close();
