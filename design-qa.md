@@ -35,3 +35,33 @@
 - 无遗留视觉修复项；正式业务视图首屏不再被安装目录技术状态挤压，诊断信息仍可按需展开查看。
 
 final result: passed
+
+# R5-D05 达人邀约驾驶舱累计验收
+
+- source visual truth path: `/Users/ddt/work/projects/ai_agent/docs/palantier/foundry/html/workshop-creator-outreach.html`
+- implementation route: `http://127.0.0.1:5173/workshop/creator-growth`
+- tenant: `org-org/dev-project`
+- browser: Codex 内置浏览器
+- viewports: 1280 × 720、1440 × 900、1920 × 1080 CSS px
+- data basis: 栖月汇 57 条正式商品；不复制视觉稿中的演示达人、GMV 或合作结论
+
+## Findings
+
+- 无 P0/P1/P2 可执行差异。当前实现保留视觉稿的页头动作、五业务页签、左侧对象与商品、中部阶段工作区、右侧数字同事建议三栏结构。
+- 1280、1440、1920 三档视口均未出现标题挤压、栏位重叠、浮层遮挡、横向截断或底部覆盖。
+- 五个业务页签均展示独立的中文业务状态和动作；正式达人数据为空时保留完整可工作结构，不伪造姓名、联系方式、匹配分或经营结果。
+- 完整侧栏包含八个电商工作台菜单和 AIP 菜单，折叠与恢复均可用；折叠后主区自适应扩展。
+
+## Primary interactions tested
+
+- 导入达人、新建邀约批次、补充候选条件、补充预算权益、补充交付物证据均打开对应内部业务表单。
+- 六类准备表单均绑定真实商品，保存、提交审核、批准、驳回、历史版本和刷新回读由专项测试覆盖；浏览器复核已批准第 3 版候选导入任务仍可回读。
+- `dev-org/dev-project` 负向 canary 在浏览器只显示“模块未安装”，未显示栖月汇商品；验收后已恢复 `org-org/dev-project`。
+- 页面搜索、页签切换、重新读取、侧栏折叠/恢复均可操作；未调用 Provider，未外发邀约，未签署合同，未发布。
+
+## Comparison history
+
+- 视觉稿与实际页在同一内置浏览器输出中按 1280 × 720 逐区比较；1440 × 900 和 1920 × 1080 通过同源 iframe 等视口验收。
+- 视觉稿的 147 位达人、合作 GMV 和推荐结论属于演示数据；实际页以 57 条栖月汇正式商品和真实内部任务版本替代，不将演示事实写入业务数据。
+
+final result: passed

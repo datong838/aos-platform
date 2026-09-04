@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "aos.workshop.evidence-pack/v1",
+  "taskId": "WORKSHOP-R5-D05-CREATOR-BROWSER-CUMULATIVE-ACCEPTANCE",
+  "authorityRevision": "AOS-000481",
+  "tenant": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "negativeCanaryResult": "module-not-installed",
+    "positiveTenantRestored": true
+  },
+  "realInputs": {
+    "products": 57,
+    "firstProduct": "面膜套餐",
+    "firstProductPrice": "99.00",
+    "firstProductStock": 3,
+    "approvedWorkflowRef": "brief-18e73eefb10a434a87ee",
+    "approvedWorkflowRevision": 3
+  },
+  "browserVerification": {
+    "browser": "Codex in-app browser",
+    "route": "/workshop/creator-growth",
+    "viewports": ["1280x720", "1440x900", "1920x1080"],
+    "tabs": ["达人库", "招募漏斗", "商务签约", "履约效果", "长期关系"],
+    "preparationActions": ["导入达人", "新建邀约批次", "补充候选条件", "补充预算权益", "补充交付物证据"],
+    "fullNavigation": "八个电商工作台菜单与完整 AIP 导航可见，侧栏折叠和恢复通过",
+    "referenceComparison": "与 workshop-creator-outreach.html 在同一内置浏览器输出中按 1280x720 对照；三栏、五页签、页头动作、右栏建议层级一致；1440x900 与 1920x1080 未见溢出",
+    "designQa": "P0/P1/P2 = 0; passed"
+  },
+  "verification": {
+    "web": "273 files / 2462 tests GREEN",
+    "typescript": "GREEN",
+    "productionBuild": "GREEN with existing bundle-size warning",
+    "backendCreatorAndTenant": "40/40 GREEN"
+  },
+  "businessEntityMutationCount": 0,
+  "providerInvocationCount": 0,
+  "externalOutreachCount": 0,
+  "contractSignatureCount": 0,
+  "releaseCount": 0,
+  "nextTask": "R5-M01"
+}
