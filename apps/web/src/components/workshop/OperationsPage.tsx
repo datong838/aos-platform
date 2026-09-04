@@ -17,6 +17,7 @@ const QUEUE_FILTERS: ReadonlyArray<{ id: QueueFilter; label: string; slices: rea
   { id: "inventory", label: "库存与告警", slices: ["inventory"] },
   { id: "alerts", label: "售后与工单", slices: ["aftersaleEvents", "operationCases"] },
 ];
+const OPERATIONS_SLICE_PRIORITY: readonly OperationsSliceId[] = ["orders", "orderLines", "inventory", "shipments", "payments", "aftersaleEvents", "operationCases"];
 const CONTRIBUTIONS: Record<OperationsSliceId, string> = {
   orders: "以正式订单数据支撑跨域运营分诊",
   orderLines: "以正式订单明细支撑逐项核对",
@@ -32,6 +33,13 @@ function formatTime(value: string): string { return new Date(value).toLocaleStri
 function short(value: string): string { return value.length > 30 ? `${value.slice(0, 14)}…${value.slice(-10)}` : value; }
 function phaseFor(error: unknown): Phase { return error instanceof EcommerceWorkshopClientError && (error.status === 401 || error.status === 403) ? "forbidden" : "failed"; }
 function queueLabel(sliceId: OperationsSliceId): string { return QUEUE_FILTERS.find((item) => item.slices.includes(sliceId))?.label ?? "统一待办"; }
+function pickDefaultOperationsSlice(slices: readonly OperationsSlice[]): OperationsSlice | undefined {
+  for (const sliceId of OPERATIONS_SLICE_PRIORITY) {
+    const candidate = slices.find((slice) => slice.sliceId === sliceId && slice.status === "ready" && slice.countLedger.attached > 0);
+    if (candidate) return candidate;
+  }
+  return pickPreferredWorkshopView(slices, (slice) => slice.countLedger.attached > 0);
+}
 
 function ProcessSteps({ slice, caseCount }: { slice: OperationsSlice; caseCount: number }) {
   const reconciled = slice.countLedger.unmatched === 0 && slice.countLedger.conflicted === 0;
@@ -74,7 +82,7 @@ export function OperationsPage({ client = ecommerceWorkshopClient }: { client?: 
   const request = useRef(0);
   const load = () => {
     const id = ++request.current; setPhase("loading"); setResponse(null); setCommandReadiness(null); setObservation(null); setObservationState("idle"); setObservationError(""); setDetailPanel(null);
-    void Promise.all([client.getOperationsView(), client.getOperationCommandReadiness()]).then(([next, nextCommands]) => { if (id !== request.current) return; if (next.tenant.orgId !== nextCommands.tenant.orgId || next.tenant.projectId !== nextCommands.tenant.projectId) throw new TypeError("operations command readiness tenant 漂移"); setResponse(next); setCommandReadiness(nextCommands); setSelected(pickPreferredWorkshopView(next.slices, (item) => item.countLedger.attached > 0)?.sliceId ?? "orders"); setPhase(deriveWorkshopViewState(next.slices, next.page.count)); }, (error: unknown) => { if (id === request.current) setPhase(phaseFor(error)); });
+    void Promise.all([client.getOperationsView(), client.getOperationCommandReadiness()]).then(([next, nextCommands]) => { if (id !== request.current) return; if (next.tenant.orgId !== nextCommands.tenant.orgId || next.tenant.projectId !== nextCommands.tenant.projectId) throw new TypeError("operations command readiness tenant 漂移"); setResponse(next); setCommandReadiness(nextCommands); setSelected(pickDefaultOperationsSlice(next.slices)?.sliceId ?? "orders"); setPhase(deriveWorkshopViewState(next.slices, next.page.count)); }, (error: unknown) => { if (id === request.current) setPhase(phaseFor(error)); });
   };
   useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
   const readObservation = (event: React.FormEvent<HTMLFormElement>) => {

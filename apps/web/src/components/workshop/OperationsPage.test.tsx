@@ -57,6 +57,19 @@ describe("OperationsPage", () => {
     expect(host.textContent).toContain("禁止自动重放");
     expect(host.textContent).not.toContain("重新执行");
   });
+  it("接口乱序时仍默认展示最高优先级的有数据订单，而不是运营工单", async () => {
+    const ordered = response.slices.map((slice) => slice.sliceId === "orders"
+      ? { ...slice, countLedger: { ...slice.countLedger, sourceTotal: 50, attached: 50 } }
+      : slice.sliceId === "operationCases"
+        ? { ...slice, countLedger: { ...slice.countLedger, sourceTotal: 7, attached: 7 } }
+        : slice);
+    const shuffled = { ...response, slices: [ordered[6]!, ordered[4]!, ordered[2]!, ordered[0]!, ordered[1]!, ordered[3]!, ordered[5]!] };
+    const client = { getOperationsView: vi.fn().mockResolvedValue(shuffled), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn().mockResolvedValue(observation) };
+    await act(async () => root.render(<OperationsPage client={client} />));
+    expect(host.querySelector(".operations-detail-heading h2")?.textContent).toContain("订单 · 业务处理");
+    expect(host.querySelector(".operations-detail")?.textContent).toContain("来源总量50");
+    expect(host.querySelector<HTMLButtonElement>('.operations-slice-card[aria-pressed="true"]')?.textContent).toContain("订单");
+  });
   it("按蓝图提供可用的待办分类、搜索和处理详情层级", async () => {
     const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCommandObservation: vi.fn().mockResolvedValue(observation) };
     await act(async () => root.render(<OperationsPage client={client} />));
