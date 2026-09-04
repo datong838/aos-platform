@@ -273,6 +273,10 @@ from aos_api.ecommerce_operation_command_observation import (
 from aos_api.ecommerce_workshop_operations_contracts import (
     WorkshopOperationsViewEnvelope,
 )
+from aos_api.ecommerce_operation_case_workspace import EcommerceOperationCaseWorkspace
+from aos_api.ecommerce_operation_case_workspace_contracts import (
+    OperationCaseWorkspaceEnvelope,
+)
 from aos_api.ecommerce_workshop_source_readiness import (
     EcommerceWorkshopSourceReadiness,
     SourceReadinessTenantMismatchError,
@@ -385,6 +389,11 @@ def get_ecommerce_workshop_source_readiness() -> EcommerceWorkshopSourceReadines
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_operations() -> EcommerceWorkshopOperations:
     return EcommerceWorkshopOperations()
+
+
+@lru_cache(maxsize=1)
+def get_ecommerce_operation_case_workspace() -> EcommerceOperationCaseWorkspace:
+    return EcommerceOperationCaseWorkspace()
 
 
 @lru_cache(maxsize=1)
@@ -567,6 +576,10 @@ SourceReadinessDependency = Annotated[
 OperationsDependency = Annotated[
     EcommerceWorkshopOperations,
     Depends(get_ecommerce_workshop_operations),
+]
+OperationCaseWorkspaceDependency = Annotated[
+    EcommerceOperationCaseWorkspace,
+    Depends(get_ecommerce_operation_case_workspace),
 ]
 PrepareServiceDependency = Annotated[
     EcommerceWorkshopPrepareService,
@@ -1229,6 +1242,26 @@ def get_ecommerce_workshop_operations_view(
     _reject_query_parameters(request)
     _require_operations_installation(principal=principal, catalog=catalog)
     return operations.read(
+        org_id=principal.org_id,
+        project_id=principal.project_id,
+    )
+
+
+@router.get(
+    "/views/operations/cases",
+    response_model=OperationCaseWorkspaceEnvelope,
+    operation_id="ecommerceWorkshopOperationCaseWorkspaceGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_operation_case_workspace_view(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    workspace: OperationCaseWorkspaceDependency,
+) -> OperationCaseWorkspaceEnvelope:
+    _reject_query_parameters(request)
+    _require_operations_installation(principal=principal, catalog=catalog)
+    return workspace.read(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
