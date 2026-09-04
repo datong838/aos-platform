@@ -4,6 +4,7 @@ import {
   EcommerceWorkshopClientError,
   ecommerceWorkshopClient,
   type ContentCampaignItem,
+  type ContentCampaignInputsResponse,
   type ContentCampaignSlice,
   type ContentCampaignSliceId,
   type ContentCampaignViewResponse,
@@ -16,7 +17,7 @@ import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { ContributionLineage } from "./production";
 import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopViewState";
 
-type Client = Pick<typeof ecommerceWorkshopClient, "getContentCampaignView" | "executeContentCampaignWorkflow" | "previewContentCampaignApproval">;
+type Client = Pick<typeof ecommerceWorkshopClient, "getContentCampaignView" | "executeContentCampaignWorkflow" | "previewContentCampaignApproval"> & Partial<Pick<typeof ecommerceWorkshopClient, "getContentCampaignRealInputs">>;
 type Phase = AsyncState;
 
 const LABELS: Record<ContentCampaignSliceId, string> = {
@@ -70,6 +71,8 @@ function ItemCard({ item }: { item: ContentCampaignItem }) {
 export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { client?: Client }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [response, setResponse] = useState<ContentCampaignViewResponse | null>(null);
+  const [inputs, setInputs] = useState<ContentCampaignInputsResponse | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState("");
   const [selected, setSelected] = useState<ContentCampaignSliceId>("plan");
   const [safeAction, setSafeAction] = useState("");
   const [intent, setIntent] = useState("");
@@ -82,6 +85,12 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
     const id = ++request.current;
     setPhase("loading");
     setResponse(null);
+    setInputs(null);
+    if (client.getContentCampaignRealInputs) void client.getContentCampaignRealInputs().then((next) => {
+      if (id !== request.current) return;
+      setInputs(next);
+      setSelectedProduct(next.products[0]?.productRef.resourceId ?? "");
+    }, () => { if (id === request.current) setSafeAction("商品、库存与活动来源读取未完整，已保留其他可用业务视图。"); });
     void client.getContentCampaignView().then((next) => {
       if (id !== request.current) return;
       setResponse(next);
@@ -220,6 +229,26 @@ export function ContentCampaignPage({ client = ecommerceWorkshopClient }: { clie
                 <div><span>未匹配</span><strong>{slice.countLedger.unmatched}</strong></div>
                 <div><span>冲突</span><strong>{slice.countLedger.conflicted}</strong></div>
               </section>
+              {selected !== "plan" ? <section className="content-campaign-real-inputs" aria-label="栖月汇正式业务输入">
+                <header><div><strong>栖月汇正式业务输入</strong><span>{inputs ? `同一截止面 · ${formatTime(inputs.dataCutoff)}` : "正在读取正式来源"}</span></div><em>{inputs ? `${inputs.ledger.products} 商品 · ${inputs.ledger.inventory} 库存 · ${inputs.ledger.plans} 活动排期` : "读取中"}</em></header>
+                {inputs ? <>
+                  <div className="content-campaign-product-choices" aria-label="正式商品选择">
+                    {inputs.products.slice(0, 12).map((product) => <button type="button" key={product.productRef.resourceId} aria-pressed={selectedProduct === product.productRef.resourceId} onClick={() => setSelectedProduct(product.productRef.resourceId)}><strong>{product.title}</strong><span>{product.price === null ? "价格来源未提供" : `价格 ${product.price}`} · {product.availableStock === null ? "库存来源未提供" : `商品库存 ${product.availableStock}`}</span></button>)}
+                  </div>
+                  {inputs.products.length === 0 ? <p className="content-campaign-real-inputs-empty">当前截止面没有正式商品记录，不使用演示商品填充。</p> : null}
+                  {selectedProduct ? <div className="content-campaign-input-detail">
+                    <strong>{inputs.products.find((item) => item.productRef.resourceId === selectedProduct)?.title}</strong>
+                    <span>关联 SKU {inputs.inventory.filter((item) => item.productRef?.resourceId === selectedProduct).length} 个</span>
+                    <span>未匹配库存 {inputs.ledger.unmatchedInventory} 个</span>
+                    <details><summary>查看商品与库存来源</summary><p>商品和库存来自栖月汇微商城正式同步数据；无法通过明确商品关联的 SKU 不会被猜测归并。</p><code>{selectedProduct}</code></details>
+                  </div> : null}
+                  <div className="content-campaign-plan-inputs">
+                    <strong>正式活动计划与排期</strong>
+                    {inputs.plans.slice(0, 8).map((plan) => <article key={`${plan.planRef.resourceType}:${plan.planRef.resourceId}`}><span>{plan.planRef.resourceType === "CampaignRevision" ? "活动计划" : "内容排期"}</span><b>{plan.lifecycle}</b><small>{plan.localStart && plan.localEnd ? `${plan.localStart} — ${plan.localEnd}` : plan.channelIds.join("、") || "尚未关联渠道或档期"}</small><details><summary>查看来源</summary><code>{plan.planRef.resourceId}</code></details></article>)}
+                    {inputs.plans.length === 0 ? <p>当前没有正式活动计划；商品与库存仍可独立审阅。</p> : null}
+                  </div>
+                </> : <p className="content-campaign-real-inputs-empty">正在核对商品、库存与活动计划来源。</p>}
+              </section> : null}
               <section className="content-campaign-items" aria-label={`${LABELS[slice.sliceId]}正式数据`}>
                 {slice.items.length ? slice.items.map((item) => <ItemCard item={item} key={`${item.resourceType}:${item.resourceId}:${item.revision}`} />) : (
                   <p><strong>当前没有可展示的{LABELS[slice.sliceId]}</strong><span>页面不会用演示活动填充；请补充正式业务数据后重新读取。</span></p>

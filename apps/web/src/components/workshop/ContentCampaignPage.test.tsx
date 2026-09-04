@@ -30,8 +30,20 @@ const commandResponse = {
   sideEffects: { providerInvocationCount: 0 as const, approvalCreatedCount: 0 as const, taskRunCreatedCount: 0 as const, externalPublicationCount: 0 as const, externalBusinessMutationCount: 0 as const },
   message: "活动方案草稿已生成。",
 };
+const realInputs = {
+  schemaVersion: "aos.ecommerce-workshop.content-campaign-inputs/v1" as const, tenant: blocked.tenant,
+  evaluatedAt: cutoff, dataCutoff: cutoff, status: "ready" as const,
+  products: [
+    { productRef: { resourceType: "Product" as const, resourceId: "niushop:1:65", revision: null, contentHash: `sha256:${"a".repeat(64)}`, authority: "ecom_object" as const }, title: "面膜套餐", price: "99.00", availableStock: 3, businessStatus: "1", sourceUpdatedAt: cutoff },
+    { productRef: { resourceType: "Product" as const, resourceId: "niushop:1:66", revision: null, contentHash: `sha256:${"d".repeat(64)}`, authority: "ecom_object" as const }, title: "臻颜会员 VIP6・一星合伙人", price: "19980.00", availableStock: 68, businessStatus: "1", sourceUpdatedAt: cutoff },
+  ],
+  inventory: [{ skuRef: { resourceType: "ProductSku" as const, resourceId: "niushop:1:74", revision: null, contentHash: `sha256:${"b".repeat(64)}`, authority: "ecom_object" as const }, productRef: { resourceType: "Product" as const, resourceId: "niushop:1:65", revision: null, contentHash: `sha256:${"a".repeat(64)}`, authority: "ecom_object" as const }, stock: 3, stockAlarm: 5, stockHealth: "low" as const, sourceUpdatedAt: cutoff }],
+  plans: [{ planRef: { resourceType: "CampaignRevision" as const, resourceId: "campaign-business-1", revision: 1, contentHash: `sha256:${"c".repeat(64)}`, authority: "content_campaign_authority" as const }, lifecycle: "draft", channelIds: ["微信小店"], localStart: null, localEnd: null, sourceUpdatedAt: cutoff }],
+  ledger: { products: 2, inventory: 1, plans: 1, unmatchedInventory: 0 }, unavailableGroups: [],
+};
 const makeClient = (view: typeof blocked | typeof ready = blocked) => ({
   getContentCampaignView: vi.fn().mockResolvedValue(view),
+  getContentCampaignRealInputs: vi.fn().mockResolvedValue(realInputs),
   executeContentCampaignWorkflow: vi.fn().mockResolvedValue(commandResponse),
   previewContentCampaignApproval: vi.fn().mockResolvedValue({ tenant: blocked.tenant, status: "needs_input", approvalAllowed: false, draft: commandResponse.draft, checks: [], nextActions: ["补充正式经营目标与预算版本"], evaluatedAt: cutoff, dataCutoff: cutoff, sideEffects: commandResponse.sideEffects }),
 });
@@ -105,6 +117,22 @@ describe("ContentCampaignPage", () => {
     await act(async () => button.click());
     expect(host.textContent).toContain("ContentVariant");
     expect(host.textContent).toContain("variant_of");
+  });
+
+  it("内容日历和主内容页展示栖月汇真实商品库存并可切换来源", async () => {
+    const client = makeClient(ready);
+    await act(async () => root.render(<ContentCampaignPage client={client} />));
+    const tab = [...host.querySelectorAll<HTMLButtonElement>(".content-campaign-toolbar button")].find((item) => item.textContent === "内容日历")!;
+    await act(async () => tab.click());
+    expect(client.getContentCampaignRealInputs).toHaveBeenCalled();
+    expect(host.querySelector(".content-campaign-real-inputs")?.textContent).toContain("面膜套餐");
+    expect(host.querySelector(".content-campaign-real-inputs")?.textContent).toContain("价格 99.00");
+    expect(host.querySelector(".content-campaign-real-inputs")?.textContent).toContain("关联 SKU 1 个");
+    expect(host.querySelector(".content-campaign-real-inputs")?.textContent).toContain("正式活动计划与排期");
+    const products = host.querySelectorAll<HTMLButtonElement>(".content-campaign-product-choices button");
+    await act(async () => products[1].click());
+    expect(products[1].getAttribute("aria-pressed")).toBe("true");
+    expect(host.querySelector(".content-campaign-input-detail")?.textContent).toContain("臻颜会员 VIP6・一星合伙人");
   });
 
   it("可信空不伪造成示例业务数据", async () => {

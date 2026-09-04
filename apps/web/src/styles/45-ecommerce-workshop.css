@@ -2888,3 +2888,20 @@
   border: 1px solid #90cdf4; border-radius: 4px; background: #ebf8ff; color: #2c5282; font-size: 12px; line-height: 1.5;
 }
 .content-campaign-safe-action button { width: 26px; height: 26px; padding: 0; border: 0; background: transparent; color: inherit; font-size: 18px; }
+.content-campaign-real-inputs { display: grid; gap: 10px; margin: 14px 0; padding: 14px; border: 1px solid #cbd5e1; border-left: 3px solid #2b6cb0; background: #f8fbff; }
+.content-campaign-real-inputs > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.content-campaign-real-inputs > header div { display: grid; gap: 3px; }
+.content-campaign-real-inputs > header span, .content-campaign-real-inputs > header em { color: var(--aos-text-tertiary); font-size: 11px; font-style: normal; }
+.content-campaign-product-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.content-campaign-product-choices button { display: grid; gap: 4px; min-width: 0; padding: 10px; border: 1px solid var(--aos-border); border-radius: 3px; background: var(--aos-surface); color: var(--aos-text-primary); text-align: left; cursor: pointer; }
+.content-campaign-product-choices button[aria-pressed="true"] { border-color: #2b6cb0; box-shadow: inset 3px 0 #2b6cb0; background: #ebf8ff; }
+.content-campaign-product-choices button strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.content-campaign-product-choices button span { color: var(--aos-text-secondary); font-size: 11px; }
+.content-campaign-input-detail { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px; background: var(--aos-surface); border: 1px solid var(--aos-border); font-size: 11px; }
+.content-campaign-input-detail details { flex-basis: 100%; color: var(--aos-text-secondary); }
+.content-campaign-plan-inputs { display: grid; gap: 7px; }
+.content-campaign-plan-inputs article { display: grid; grid-template-columns: 72px 74px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--aos-border); background: var(--aos-surface); font-size: 11px; }
+.content-campaign-plan-inputs article b { color: #2f855a; }
+.content-campaign-plan-inputs article small { overflow: hidden; color: var(--aos-text-secondary); text-overflow: ellipsis; white-space: nowrap; }
+.content-campaign-real-inputs-empty { margin: 0; padding: 12px; border: 1px dashed var(--aos-border-strong); color: var(--aos-text-secondary); text-align: center; }
+@media (max-width: 920px) { .content-campaign-product-choices { grid-template-columns: 1fr; } .content-campaign-plan-inputs article { grid-template-columns: 1fr; } }

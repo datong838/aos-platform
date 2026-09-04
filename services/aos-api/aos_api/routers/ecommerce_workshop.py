@@ -84,6 +84,12 @@ from aos_api.ecommerce_workshop_content_campaign import (
 from aos_api.ecommerce_workshop_content_campaign_contracts import (
     WorkshopContentCampaignViewEnvelope,
 )
+from aos_api.ecommerce_workshop_content_campaign_inputs import (
+    EcommerceWorkshopContentCampaignInputs,
+)
+from aos_api.ecommerce_workshop_content_campaign_inputs_contracts import (
+    WorkshopContentCampaignInputsEnvelope,
+)
 from aos_api.ecommerce_content_campaign_workflow import (
     ContentCampaignWorkflowConflict,
     ContentCampaignWorkflowError,
@@ -402,6 +408,11 @@ def get_ecommerce_workshop_content_campaign() -> EcommerceWorkshopContentCampaig
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_workshop_content_campaign_inputs() -> EcommerceWorkshopContentCampaignInputs:
+    return EcommerceWorkshopContentCampaignInputs()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_content_campaign_workflow() -> EcommerceContentCampaignWorkflow:
     return EcommerceContentCampaignWorkflow(
         campaign_reader=get_ecommerce_workshop_content_campaign()
@@ -572,6 +583,10 @@ FreezeServiceDependency = Annotated[
 ContentCampaignDependency = Annotated[
     EcommerceWorkshopContentCampaign,
     Depends(get_ecommerce_workshop_content_campaign),
+]
+ContentCampaignInputsDependency = Annotated[
+    EcommerceWorkshopContentCampaignInputs,
+    Depends(get_ecommerce_workshop_content_campaign_inputs),
 ]
 ContentCampaignWorkflowDependency = Annotated[
     EcommerceContentCampaignWorkflow,
@@ -1237,6 +1252,23 @@ def get_ecommerce_workshop_content_campaign_view(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
+
+
+@router.get(
+    "/views/content-campaign/real-inputs",
+    response_model=WorkshopContentCampaignInputsEnvelope,
+    operation_id="ecommerceWorkshopContentCampaignRealInputsGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_content_campaign_real_inputs(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    inputs: ContentCampaignInputsDependency,
+) -> WorkshopContentCampaignInputsEnvelope:
+    _reject_query_parameters(request)
+    _require_content_campaign_installation(principal=principal, catalog=catalog)
+    return inputs.read(org_id=principal.org_id, project_id=principal.project_id)
 
 
 @router.post(
