@@ -148,6 +148,7 @@ from aos_api.ecommerce_workshop_creator_lifecycle import (
 from aos_api.ecommerce_workshop_creator_lifecycle_store import EcommerceWorkshopCreatorLifecycleStore
 from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
 from aos_api.ecommerce_workshop_media_studio_lifecycle import EcommerceWorkshopMediaStudioLifecycle
+from aos_api.ecommerce_workshop_media_studio_source_reader import EcommerceWorkshopMediaStudioSourceReader
 from aos_api.ecommerce_workshop_media_publish import EcommerceWorkshopMediaPublish
 from aos_api.ecommerce_workshop_media_cumulative import EcommerceWorkshopMediaCumulative
 from aos_api.aip_action_adapters import ACTION_ADAPTERS
@@ -486,12 +487,20 @@ def get_ecommerce_workshop_media_studio() -> EcommerceWorkshopMediaStudio:
         media_finance_store=media_finance_store,
     )
     action_store = AipActionStore()
+    reader = EcommerceWorkshopMediaStudioSourceReader(
+        production_store=production_store,
+        production_start_service=AipProductionStartService(contract_store=production_store),
+        provider_job_store=provider_job_store,
+        media_finance_store=media_finance_store,
+        action_store=action_store,
+    )
     publisher = EcommerceWorkshopMediaPublish(
         production_store=production_store,
         action_store=action_store,
         action_execution=AipActionExecutionService(action_store, ACTION_ADAPTERS),
     )
     return EcommerceWorkshopMediaStudio(
+        reader=reader,
         provider_job_store=provider_job_store,
         media_finance_store=media_finance_store,
         lifecycle=lifecycle,

@@ -16,6 +16,7 @@ from aos_api.ecommerce_workshop_media_studio_contracts import (
     MediaStudioSliceId,
 )
 from aos_api.ecommerce_workshop_media_studio_reader import MediaStudioSliceObservation
+from aos_api.ecommerce_workshop_media_studio_source_reader import EcommerceWorkshopMediaStudioSourceReader
 from aos_api.tenant_scope import TenantScope
 from aos_api.aip_media_provider_job_contracts import MediaJobStatus
 from aos_api.aip_production_contracts import ExactRevisionRef
@@ -98,6 +99,32 @@ def test_bounded_reader_returns_exact_refs_and_trusted_ready_slices() -> None:
     assert [item.count_ledger.ready for item in view.slices] == [6, 6, 6]
     assert view.page.count == 3
     assert [call[3] for call in reader.calls] == [100, 100, 100]
+
+
+def test_canonical_reader_preserves_real_empty_as_three_ready_slices() -> None:
+    empty = SimpleNamespace(items=[])
+    reader = EcommerceWorkshopMediaStudioSourceReader(
+        production_store=SimpleNamespace(
+            list_production_contexts=lambda scope: empty,
+            list_artifact_families=lambda scope: empty,
+            list_media_gate_sets=lambda scope: empty,
+            list_review_issues=lambda scope: empty,
+            list_return_decisions=lambda scope: empty,
+        ),
+        production_start_service=SimpleNamespace(list=lambda scope: empty),
+        provider_job_store=SimpleNamespace(list_jobs=lambda scope, limit: empty),
+        media_finance_store=SimpleNamespace(list=lambda scope, limit: empty),
+        action_store=SimpleNamespace(list_proposals=lambda scope, limit: []),
+    )
+
+    view = EcommerceWorkshopMediaStudio(
+        reader=reader,
+        clock=lambda: datetime(2026, 9, 5, tzinfo=UTC),
+    ).read(org_id="org-org", project_id="dev-project")
+
+    assert [item.status for item in view.slices] == ["ready", "ready", "ready"]
+    assert [item.count_ledger.not_applicable for item in view.slices] == [6, 6, 6]
+    assert view.page.count == 0
 
 
 def test_one_reader_tenant_drift_blocks_only_its_slice() -> None:

@@ -1,0 +1,47 @@
+{
+  "schema": "aos.workshop.browser-verification/v1",
+  "wave": "R5-M02",
+  "route": "/workshop/media-studio",
+  "reference": "/Users/ddt/work/projects/ai_agent/docs/palantier/foundry/html/workshop-media-studio.html",
+  "browser": "Codex in-app browser",
+  "positiveTenant": "org-org/dev-project",
+  "negativeCanary": "dev-org/dev-project",
+  "api": {
+    "positiveStatus": 200,
+    "sliceStatuses": ["ready", "ready", "ready"],
+    "notApplicablePerSlice": [6, 6, 6],
+    "providerJobCount": 0,
+    "mediaFinanceCount": 0,
+    "lifecycleTaskCount": 0,
+    "negativeStatus": 404,
+    "negativeMessage": "Workshop module is not installed"
+  },
+  "browserChecks": [
+    "three media tabs remain readable and switchable",
+    "all six empty authority axes use Chinese business copy",
+    "raw not_applicable is absent from the business surface",
+    "complete eight-menu workshop navigation is present",
+    "sidebar collapses and restores",
+    "task list and internal production preparation controls remain usable"
+  ],
+  "tests": {
+    "backendTargeted": "23 passed",
+    "web": "273 files / 2464 tests passed",
+    "typescript": "passed",
+    "productionBuild": "passed with pre-existing chunk-size warning",
+    "diffCheck": "passed"
+  },
+  "fileHashes": {
+    "services/aos-api/aos_api/ecommerce_workshop_media_studio_source_reader.py": "b5b7e3f196cc392e83b80f28bcbe23e95fe335706947518b4a161fb5e4f4e61d",
+    "services/aos-api/aos_api/ecommerce_workshop_media_studio_lifecycle.py": "3c8abff266f63cb1e9b8376ac9a99faaa2d9e4777a8ff3e68b913c784b478a3b",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py": "08c21d535a04dbac37be773b66d1d5ef12d39c5af57a3e52efe3eb57856db4df",
+    "services/aos-api/tests/test_ecommerce_workshop_media_studio_source_reader.py": "fdafdbf3f110fba1474722bb66747194683d0739a635c955a6ed512e43984c06",
+    "services/aos-api/tests/test_ecommerce_workshop_media_studio_lifecycle.py": "838c07f0282a2fcde753e39b961a0538124589a8089d45932db2c5699a2eb541",
+    "services/aos-api/tests/test_ecommerce_workshop_media_studio.py": "1c1c2be331e40c7bb3c1ddf2dfef7f55085ab01a19f65a66f1f6461a11dc8150",
+    "apps/web/src/components/workshop/MediaStudioPage.tsx": "5fd14b8f2150670d7c8bd471c5c108276f5719ead5b752cf202720c23d06606b",
+    "apps/web/src/components/workshop/MediaStudioPage.test.tsx": "897542c88ef0c624f3429f1a55d95750d9e3e728aa0e99fae51b9703f513fc49"
+  },
+  "externalEffects": 0,
+  "providerCalls": 0,
+  "publishes": 0
+}

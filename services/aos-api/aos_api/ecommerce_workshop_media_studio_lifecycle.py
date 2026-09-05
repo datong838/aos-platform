@@ -98,10 +98,27 @@ class EcommerceWorkshopMediaStudioLifecycle:
             observedAt=observed_at,
         )
 
-    def read(self, scope: TenantScope, *, cutoff: datetime) -> MediaStudioLifecycleContribution | None:
+    def read(
+        self,
+        scope: TenantScope,
+        *,
+        cutoff: datetime,
+        context_id: str | None = None,
+        context_revision: int | None = None,
+    ) -> MediaStudioLifecycleContribution | None:
         if cutoff.utcoffset() is None:
             raise MediaStudioLifecycleError("media lifecycle cutoff requires timezone")
         contexts = [item for item in self._production.list_production_contexts(scope).items if item.created_at <= cutoff]
+        if (context_id is None) != (context_revision is None):
+            raise MediaStudioLifecycleConflict("MEDIA_PRODUCTION_CONTEXT_EXACT_SELECTOR_REQUIRED")
+        if context_id is not None and context_revision is not None:
+            contexts = [
+                item
+                for item in contexts
+                if item.context_id == context_id and item.revision == context_revision
+            ]
+            if not contexts:
+                raise MediaStudioLifecycleConflict("MEDIA_PRODUCTION_CONTEXT_NOT_FOUND")
         if not contexts:
             return None
         if len(contexts) != 1:

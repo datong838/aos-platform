@@ -62,6 +62,30 @@ describe("MediaStudioPage", () => {
     expect(host.querySelector('[role="tabpanel"]')?.textContent).toContain("当前没有可挂接的媒体业务数据");
   });
 
+  it("可信空集合使用中文业务文案且不暴露内部枚举", async () => {
+    const payload = response();
+    payload.slices = payload.slices.map((slice) => ({
+      ...slice,
+      status: "ready",
+      readinessAxes: slice.readinessAxes.map((axis) => ({
+        ...axis,
+        status: "not_applicable",
+        targetContractRef: null,
+        gaps: [],
+        blockers: [],
+      })),
+      blockers: [],
+      countLedger: { denominator: 6, ready: 0, target: 0, blocked: 0, unknown: 0, conflict: 0, notApplicable: 6 },
+    }));
+
+    await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(payload) }} />); });
+
+    expect(host.querySelector(".media-readiness-grid")?.textContent).toContain("本期无记录");
+    expect(host.querySelector(".media-readiness-grid")?.textContent).toContain("已完成数据校验，本期没有对应业务记录");
+    expect(host.querySelector(".media-readiness-grid")?.textContent).not.toContain("not_applicable");
+    expect(host.querySelector(".media-readiness-grid")?.textContent).not.toContain("暂无可验证来源");
+  });
+
   it("按视觉稿恢复三栏生产工作区、发布准备侧栏和底部批量操作且空数据也可开始内部准备", async () => {
     await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()) }} />); });
     expect(host.querySelector(".media-studio-task-lane")?.textContent).toContain("文案任务");

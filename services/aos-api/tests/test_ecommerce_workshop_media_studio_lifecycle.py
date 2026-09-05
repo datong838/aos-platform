@@ -88,6 +88,41 @@ def test_lifecycle_requires_an_exact_selector_when_contexts_conflict() -> None:
         instance.read(TenantScope("org-org", "dev-project"), cutoff=CUTOFF)
 
 
+def test_lifecycle_uses_exact_context_selector_without_guessing() -> None:
+    selected = context("context-2")
+    instance, production = composer(contexts=[context("context-1"), selected])
+    production.plan = SimpleNamespace(slots=production.plan.slots)
+
+    view = instance.read(
+        TenantScope("org-org", "dev-project"),
+        cutoff=CUTOFF,
+        context_id="context-2",
+        context_revision=4,
+    )
+
+    assert view is not None
+    assert view.context_id == "context-2"
+    assert view.context_revision == 4
+
+
+def test_lifecycle_rejects_partial_or_missing_context_selector() -> None:
+    instance, _ = composer(contexts=[context("context-1"), context("context-2")])
+
+    with pytest.raises(MediaStudioLifecycleConflict, match="EXACT_SELECTOR_REQUIRED"):
+        instance.read(
+            TenantScope("org-org", "dev-project"),
+            cutoff=CUTOFF,
+            context_id="context-1",
+        )
+    with pytest.raises(MediaStudioLifecycleConflict, match="NOT_FOUND"):
+        instance.read(
+            TenantScope("org-org", "dev-project"),
+            cutoff=CUTOFF,
+            context_id="missing",
+            context_revision=1,
+        )
+
+
 def test_missing_role_receipt_blocks_only_that_role_and_never_partial_assigns() -> None:
     instance, production = composer()
     production.plan.slots[2].assignee_resolution_receipt_id = None
