@@ -1,0 +1,149 @@
+"""Real isolated Registry/OCI/Installation join; no business ports or activation."""
+import asyncio
+from datetime import datetime, timezone, timedelta
+import json
+import uuid
+
+import pytest
+
+from aos_api.asset_registry.composition_contracts import (
+    CompositionRequest, CreateInstallationRequest, EmptyInstallationActionRequest,
+    ApproveInstallationRequest,
+)
+from aos_api.asset_registry.composition_store import PostgresCompositionStore
+from aos_api.asset_registry.contracts import LoadedBundle
+from aos_api.asset_registry.errors import RegistrySnapshotStaleError, AssetRegistryError
+from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.asset_registry.installation_service import InstallationService
+from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
+from aos_api.asset_registry.registry_service import RegistryService
+from aos_api.asset_registry.registry_store import PostgresRegistryStore
+from aos_api.asset_registry.registry_snapshot import RegistrySnapshotReader
+from aos_api.asset_registry.release_policy import ReleasePolicy
+from aos_api.asset_registry.resolver import resolve
+from aos_api.asset_registry.signature import FrozenTrustRootProvider
+from aos_api.extension_runtime.release_revalidation import RuntimeReleaseRevalidator
+from aos_api.extension_runtime.lifecycle_service import RuntimeLifecycleService
+from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
+from aos_api.extension_runtime.reconciler import ResourceJournal
+from aos_api.extension_runtime.preparation_commit import commit_prepared
+from aos_api.extension_runtime.signed_session import open_signed_session
+from aos_api.extension_runtime.oci_driver import OciDriver
+
+
+def run_signed_installation(connect,helper,tmp_path,*,revoke=False):
+    from test_admission import fixture
+    from test_persistent_supervisor import build_session_image,CONTEXT
+    from offline_registry import cached_registry_image
+    from test_journaled_session_pg import assert_container_absent
+
+    build=tmp_path/'image';build.mkdir()
+    image,claims=build_session_image(build)
+    with cached_registry_image(tmp_path/'registry',image,CONTEXT) as (manifest_digest,config_digest):
+        def patch_index(files):
+            path='artifacts/backend-image.json'
+            index=json.loads(files[path])
+            index['images'][0].update(imageDigest=manifest_digest,configDigest=config_digest)
+            files[path]=json.dumps(index).encode()
+        now=datetime.now(timezone.utc)
+        def manifest(value):
+            value['spec']['contributions']=claims['contributions']
+            value['metadata']['displayName']='隔离运行联合测试'
+        args,_=fixture(patch_index,now=now,
+            transform_manifest=manifest)
+        record=args['record']
+        test_roots=args['policy']._trust_roots
+        class LocalRoots:
+            def get_trust_root(self,**kwargs):return test_roots.get_trust_root(**kwargs)
+            def snapshot(self):return FrozenTrustRootProvider({(record.publisher,test_roots.root.key_id):test_roots.root})
+        roots=LocalRoots()
+        policy=ReleasePolicy(trust_roots=roots)
+        loaded=LoadedBundle(sourceRef='bundle://fixture/signed-runtime',manifest=record.manifest,
+            artifacts=[{**item,'artifactRef':'bundle://fixture/signed-runtime/'+item['relativePath']} for item in record.artifacts],
+            evidence=record.evidence,contentHash=record.content_hash,
+            signature=record.signature,loadedAt=now)
+        registry=RegistryService(store=PostgresRegistryStore(connect),loader=helper.FixedLoader(loaded,roots),
+            trust_roots=roots)
+        package=dict(publisher=record.publisher,bundle_id=record.manifest.metadata.id)
+        access=dict(publisher_scopes={record.publisher})
+        registry.create_bundle(**package,kind=record.manifest.kind,display_name='隔离运行联合测试',
+            actor='test-author',roles={'developer'},**access)
+        registry.create_version(**package,source_ref=loaded.source_ref,actor='test-author',roles={'developer'},**access)
+        registry.validate(**package,version=record.manifest.metadata.version,actor='test-validator',roles={'developer'},**access)
+        registry.publish(**package,version=record.manifest.metadata.version,actor='test-publisher',roles={'asset-publisher'},**access)
+        snapshot=RegistrySnapshotReader(connect_factory=connect,release_policy=policy).read()
+        assert len(snapshot.candidates)==1
+        request=CompositionRequest.model_validate({'requested':[{'publisher':record.publisher,
+            'id':record.manifest.metadata.id,'version':record.manifest.metadata.version}],
+            'platformApiVersion':'1.7.0','platformRelease':'aos-platform/1.7.0','environment':'dev',
+            'registrySnapshotHash':snapshot.snapshot_hash,'currentInstallationRef':None})
+        payload=resolve(request,snapshot,None)
+        scope=dict(org_id='org-org',project_id='dev-project')
+        composition_store=PostgresCompositionStore(connect)
+        lock=composition_store.create_or_get(**scope,request=request,snapshot=snapshot,payload=payload,created_by='test-author')
+        store=PostgresInstallationStore(connect)
+        fresh=RuntimeReleaseRevalidator(release_policy=policy)
+        legacy=InstallationService(store=store,composition_store=composition_store,
+            revalidator=InstallationRevalidator(release_policy=policy),planning_revalidator=fresh)
+        draft=store.create_draft(**scope,request=CreateInstallationRequest(compositionId=lock.composition_id,
+            lockRevision=lock.revision,overlayRevision='isolated-test',displayName='签名运行准备联合测试'),requested_by='test-author')
+        action=dict(**scope,installation_id=draft.installation_id,markings=[],roles=['asset-installer'],actor='test-author')
+        legacy.submit(**action,request=EmptyInstallationActionRequest(),idempotency_key='signed-submit',if_match=f'"{draft.etag_version}"')
+        submitted=store.get_installation(**scope,installation_id=draft.installation_id)
+        legacy.approve(**{**action,'actor':'test-reviewer','roles':['asset-install-approver']},
+            request=ApproveInstallationRequest(lockHash=lock.lock_hash,permissionDiffHash=lock.permission_diff_hash,
+                migrationPlanHash=lock.migration_plan_hash,contributionDiffHash=lock.contribution_diff_hash),
+            idempotency_key='signed-approve',if_match=f'"{submitted.etag_version}"')
+        approved=store.get_installation(**scope,installation_id=draft.installation_id)
+        service=RuntimeLifecycleService(installation_store=store,installation_reader=legacy,revalidator=fresh)
+        accepted=service.request_preparation(**action,kind='runtime-apply',idempotency_key='signed-prepare',
+            if_match=f'"{approved.etag_version}"')
+        operation=accepted.response_json['operationId']
+        generation=uuid.uuid4()
+        selected=lock.payload.resolved[0]
+        operations=RuntimeOperationStore()
+        with connect() as conn:
+            intent=ResourceJournal().prepare(conn,**scope,operation_id=operation,generation=generation,
+                package_id=selected.id,package_hash=selected.content_hash,engine_context=CONTEXT,
+                expires_at=datetime.now(timezone.utc)+timedelta(minutes=2))
+            revision=accepted.response_json['revision']
+            for phase in ('validating','preparing'):
+                revision=operations.advance(conn,**scope,operation_id=operation,expected_revision=revision,phase=phase).revision
+        args.update(driver=OciDriver(context=CONTEXT),selected=selected,policy=policy)
+        reached={'revoked':False,'commit':False}
+        async def run():
+            async with open_signed_session(**args,connect=connect,**scope,resource_id=intent.resource_id) as session:
+                assert await session.invoke('example_read',{'value':'隔离安装联合实测'})=={'value':'隔离安装联合实测'}
+                if revoke:
+                    registry.revoke(**package,version=record.manifest.metadata.version,actor='test-publisher',
+                        roles={'asset-publisher'},reason='隔离测试撤销发布资格',**access)
+                    reached['revoked']=True
+                with connect() as conn:
+                    revision=conn.execute('SELECT revision FROM extension_runtime_operation WHERE operation_id=%s',(operation,)).fetchone()['revision']
+                    registered=operations.advance(conn,**scope,operation_id=operation,expected_revision=revision,phase='registered')
+                    # Trusted test host permission seam only; not a production
+                    # principal/role service and not a business readiness grant.
+                    reached['commit']=True
+                    applied=commit_prepared(conn,installation_store=store,revalidator=fresh,
+                        check_current_permission=lambda **kwargs:True,**scope,operation_id=operation,
+                        expected_revision=registered.revision,generation=generation)
+                    assert applied.state=='applied' and applied.active_revision is None
+                # The actual legacy service and actual fresh Registry reader must
+                # reject this exact signed runtime, even after preparation.
+                with pytest.raises(RegistrySnapshotStaleError) as rejected:
+                    legacy.verify(**action,request=EmptyInstallationActionRequest(),
+                        idempotency_key='legacy-must-reject',if_match=f'"{applied.etag_version}"')
+                assert 'runtime bundles require the isolated installation lifecycle' in str(rejected.value.__cause__)
+        if revoke:
+            with pytest.raises(AssetRegistryError):asyncio.run(run())
+            assert reached=={'revoked':True,'commit':True}
+        else:
+            asyncio.run(run())
+        observed=store.get_installation(**scope,installation_id=draft.installation_id)
+        assert observed.state==('approved' if revoke else 'applied') and observed.active_revision is None
+        if not revoke:assert observed.events[-1].evidence.type=='runtime_preparation'
+        with connect() as conn:
+            assert conn.execute('SELECT phase,status FROM extension_runtime_operation WHERE operation_id=%s',(operation,)).fetchone()==({'phase':'preparing','status':'running'} if revoke else {'phase':'succeeded','status':'succeeded'})
+            assert conn.execute('SELECT cleanup_state,observed_release FROM extension_runtime_resource_lease WHERE resource_id=%s',(intent.resource_id,)).fetchone()=={'cleanup_state':'released','observed_release':True}
+            assert conn.execute('SELECT count(*) AS n FROM extension_runtime_binding').fetchone()['n']==0
+        assert_container_absent(CONTEXT,intent)

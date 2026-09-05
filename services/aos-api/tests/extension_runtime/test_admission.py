@@ -13,10 +13,11 @@ from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 
 
-def fixture(transform_files=None, namespace="example", transform_manifest=None):
+def fixture(transform_files=None, namespace="example", transform_manifest=None, now=None):
     path=Path(__file__).resolve().parents[1]/"asset_registry/test_release_policy.py"
     spec=importlib.util.spec_from_file_location("runtime_release_fixture",path)
     module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module;spec.loader.exec_module(module)
+    if now is not None:module.NOW=now
     record,roots=module._record()
     raw_manifest=record.manifest.model_dump(mode="json",by_alias=True)
     raw_manifest["spec"]["runtime"]={"apiVersion":"aos.dev/bundle-runtime/v1alpha1","backend":{
@@ -53,7 +54,7 @@ def fixture(transform_files=None, namespace="example", transform_manifest=None):
       version=record.manifest.metadata.version,kind=record.manifest.kind,contentHash=record.content_hash,
       signatureFingerprint=result.signature_fingerprint,releaseEvidenceRevision=result.release_evidence_revision,
       dependencies=[],optionalDependencies=[],conflicts=[],capabilities=spec.capabilities.model_dump(mode="json",by_alias=True),permissions=spec.permissions.model_dump(mode="json",by_alias=True),
-      migration={"planRef":None,"downgradePolicy":"retain-canonical"},contributions=[],selectionReason="requested"))
+      migration={"planRef":None,"downgradePolicy":"retain-canonical"},contributions=spec.contributions,selectionReason="requested"))
     class Driver:
         calls=0
         def _run(self,*args):

@@ -19,8 +19,10 @@ import pytest
 pytestmark=pytest.mark.skipif(os.getenv("AOS_EXTENSION_PG_TEST")!="1",reason="dedicated DB opt-in")
 
 
-@pytest.mark.parametrize('commit_case', ['valid', 'rollback', 'wrong_type', 'invalid', 'missing', 'released', 'unregistered', 'expired', 'denied', 'revoked', 'wrong_hash', 'other_generation', 'claims_changed', 'etag_changed', 'late_policy', 'unsupported_runtime', 'extra_resource', 'operation_cas', 'non_boolean_permission', 'late_resource'])
-def test_existing_installation_schema_accepts_subordinate_operation(commit_case):
+@pytest.mark.parametrize('commit_case', ['valid', 'rollback', 'wrong_type', 'invalid', 'missing', 'released', 'unregistered', 'expired', 'denied', 'revoked', 'wrong_hash', 'other_generation', 'claims_changed', 'etag_changed', 'late_policy', 'unsupported_runtime', 'extra_resource', 'operation_cas', 'non_boolean_permission', 'late_resource', 'signed', 'signed_revoked'])
+def test_existing_installation_schema_accepts_subordinate_operation(commit_case,tmp_path):
+    if commit_case.startswith('signed') and os.getenv('AOS_EXTENSION_OCI_TEST')!='1':
+        pytest.skip('dedicated OCI opt-in required')
     from aos_api.asset_registry.installation_store import PostgresInstallationStore
     from aos_api.asset_registry.composition_contracts import CreateInstallationRequest
     from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
@@ -60,6 +62,15 @@ def test_existing_installation_schema_accepts_subordinate_operation(commit_case)
                 admin.execute(sql.SQL("CREATE POLICY {} ON {} TO aos_runtime USING (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true)) WITH CHECK (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))").format(sql.Identifier("tenant_scope_"+table+"_ti6"),qualified))
                 admin.execute(sql.SQL("ALTER TABLE {} ENABLE ROW LEVEL SECURITY").format(qualified))
                 admin.execute(sql.SQL("ALTER TABLE {} FORCE ROW LEVEL SECURITY").format(qualified))
+            if commit_case.startswith('signed'):
+                # Global immutable template facts are read by the scoped
+                # installation control role; grant only these four reads in
+                # this temporary schema, not business tables or registry writes.
+                for table in ('asset_bundle','asset_bundle_version','asset_bundle_artifact','asset_bundle_evidence'):
+                    admin.execute(sql.SQL('GRANT SELECT ON {} TO aos_runtime').format(sql.Identifier(schema,table)))
+                from signed_installation_case import run_signed_installation
+                run_signed_installation(scoped_connect,helper,tmp_path,revoke=commit_case=='signed_revoked')
+                return
             composition_store,_,_,_,lock=helper._persist_lock(scoped_connect)
             draft=PostgresInstallationStore(scoped_connect).create_draft(org_id="org-a",project_id="project-a",
                 request=CreateInstallationRequest.model_validate({"compositionId":lock.composition_id,"lockRevision":1,
