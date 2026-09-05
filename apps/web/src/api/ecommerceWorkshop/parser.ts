@@ -721,9 +721,9 @@ export function parseFullVideoScenario(value: unknown): FullVideoScenarioContrib
   return { schemaVersion: FULL_VIDEO_SCENARIO_SCHEMA_VERSION, status: "blocked", rootBriefRef, taskRunRef, fullProductionBindingHash, composition, evaluatedAt: timestamp(raw.evaluatedAt, "fullVideo.evaluatedAt"), responsibilities, stages, faultRecovery, ledger, blockers: raw.blockers.map(parseFullVideoBlocker), commands: { prepare: false, start: false, resume: false, takeover: false, cancel: false, reconcile: false, publish: false, settle: false }, externalEffectsAllowed: false, releaseAllowed: false };
 }
 
-export function parseTaskCockpitCore(value: unknown): TaskCockpitCoreResponse {
+export function parseTaskCockpitCore(value: unknown, expectedTenant?: WorkshopTenant): TaskCockpitCoreResponse {
   const raw = record(value, "taskCockpit.core"); exact(raw, ["schemaVersion", "tenant", "evaluatedAt", "taskCutoff", "stateConsistency", "readiness", "blockers", "items", "page"], "taskCockpit.core");
-  const base = parseTaskCockpitBase(raw, "taskCockpit.core"); if (raw.readiness !== "degraded") throw new TypeError("taskCockpit.core.readiness 漂移");
+  const base = parseTaskCockpitBase(raw, "taskCockpit.core"); if (expectedTenant && (base.tenant.orgId !== expectedTenant.orgId || base.tenant.projectId !== expectedTenant.projectId)) throw new TypeError("taskCockpit.core tenant 漂移"); if (raw.readiness !== "degraded") throw new TypeError("taskCockpit.core.readiness 漂移");
   if (!Array.isArray(raw.blockers) || raw.blockers.length < 1 || raw.blockers.length > 20) throw new TypeError("taskCockpit.core.blockers 数量非法"); const blockers = raw.blockers.map(parseTaskCockpitBlocker); assertUnique(blockers.map((item) => item.code), "taskCockpit.core.blockers");
   if (!Array.isArray(raw.items)) throw new TypeError("taskCockpit.core.items 必须是数组"); const items = raw.items.map(parseTaskCockpitTask); assertUnique(items.map((item) => item.taskId), "taskCockpit.core.items");
   const page = parseTaskCockpitPage(raw.page); if (page.count !== items.length) throw new TypeError("taskCockpit.core.page count 不一致");

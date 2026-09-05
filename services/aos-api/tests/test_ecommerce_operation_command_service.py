@@ -386,6 +386,66 @@ def test_cross_tenant_original_is_rejected_before_action_control() -> None:
     assert control.execute_calls == []
 
 
+@pytest.mark.parametrize(
+    ("command_id", "request_factory", "request_type", "service_method", "preview_command_id"),
+    [
+        ("classify", classification_request, ClassifyOperationCommandRequest, "classify", "classify"),
+        ("create-case", create_case_request, CreateOperationCaseCommandRequest, "create_case", "createCase"),
+        ("change-membership", membership_request, ChangeOperationMembershipCommandRequest, "change_membership", "changeMembership"),
+        ("manage-sla", sla_request, ManageOperationSlaCommandRequest, "manage_sla", "manageSla"),
+        ("automation-kill", kill_request, KillOperationAutomationCommandRequest, "automation_kill", "automationKill"),
+    ],
+)
+def test_all_internal_commands_reject_revision_tenant_drift_before_action_control(
+    command_id, request_factory, request_type, service_method, preview_command_id
+) -> None:
+    payload = request_factory().model_dump(mode="json", by_alias=True)
+    payload["revision"]["tenant"]["orgId"] = "dev-org"
+    request = request_type.model_validate(payload)
+    service, control = service_for(command_id, request)
+
+    with pytest.raises(OperationCommandConflict, match="tenant"):
+        service.preview(
+            principal(),
+            OperationCommandPreviewRequest(
+                command_id=preview_command_id,
+                request=request.model_dump(mode="json", by_alias=True),
+            ),
+        )
+    with pytest.raises(OperationCommandConflict, match="tenant"):
+        getattr(service, service_method)(principal(), "tenant-drift-key", request, "0" * 64)
+
+    assert control.execute_calls == []
+
+
+def test_create_case_rejects_nested_member_tenant_drift_before_action_control() -> None:
+    payload = create_case_request().model_dump(mode="json", by_alias=True)
+    payload["revision"]["memberRefs"] = [
+        {
+            "tenant": {"orgId": "dev-org", "projectId": "dev-project"},
+            "resourceType": "Order",
+            "resourceId": "order-cross-tenant",
+            "contentHash": HASH,
+            "sourceUpdatedAt": NOW,
+        }
+    ]
+    request = CreateOperationCaseCommandRequest.model_validate(payload)
+    service, control = service_for("create-case", request)
+
+    with pytest.raises(OperationCommandConflict, match="tenant"):
+        service.preview(
+            principal(),
+            OperationCommandPreviewRequest(
+                command_id="createCase",
+                request=request.model_dump(mode="json", by_alias=True),
+            ),
+        )
+    with pytest.raises(OperationCommandConflict, match="tenant"):
+        service.create_case(principal(), "nested-tenant-drift-key", request, "0" * 64)
+
+    assert control.execute_calls == []
+
+
 def test_proposal_payload_drift_is_rejected_without_consuming_lease() -> None:
     request = classification_request()
     service, control = service_for("classify", request)

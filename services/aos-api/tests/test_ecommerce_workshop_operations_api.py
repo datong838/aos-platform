@@ -25,6 +25,7 @@ from aos_api.ecommerce_workshop_analyst import EcommerceWorkshopAnalyst
 from aos_api.ecommerce_operation_commands import EcommerceOperationCommands
 from aos_api.ecommerce_operation_command_execution_contracts import (
     OperationCommandExecutionEnvelope,
+    OperationCommandPreviewEnvelope,
 )
 from aos_api.ecommerce_operation_command_observation import OperationCommandObservationEnvelope
 
@@ -374,21 +375,46 @@ def test_openapi_exposes_only_operation_command_readiness_get() -> None:
 class FakeOperationCommandService:
     def __init__(self) -> None:
         self.calls = []
+        self.preview_calls = []
 
-    def classify(self, principal, idempotency_key, body):
-        self.calls.append((principal, idempotency_key, body))
+    def preview(self, principal, body):
+        self.preview_calls.append((principal, body))
+        request = body.request
+        path_segment = {
+            "classify": "classify",
+            "createCase": "create-case",
+            "changeMembership": "change-membership",
+            "manageSla": "manage-sla",
+            "automationKill": "automation-kill",
+        }[body.command_id]
+        return OperationCommandPreviewEnvelope.model_validate(
+            {
+                "tenant": {"orgId": principal.org_id, "projectId": principal.project_id},
+                "commandId": body.command_id,
+                "actionTypeId": f"ecommerce.operation.{body.command_id}",
+                "previewHash": "c" * 64,
+                "proposalId": request["governance"]["proposalId"],
+                "proposalHash": request["governance"]["proposalHash"],
+                "leaseId": request["governance"]["leaseId"],
+                "confirmPath": f"/v1/ecommerce-workshop/commands/operations/{path_segment}",
+                "evaluatedAt": datetime(2026, 8, 24, tzinfo=UTC),
+            }
+        )
+
+    def classify(self, principal, idempotency_key, body, preview_hash):
+        self.calls.append((principal, idempotency_key, body, preview_hash))
         return self._response(principal, idempotency_key, body, "classify")
 
-    def change_membership(self, principal, idempotency_key, body):
-        self.calls.append((principal, idempotency_key, body))
+    def change_membership(self, principal, idempotency_key, body, preview_hash):
+        self.calls.append((principal, idempotency_key, body, preview_hash))
         return self._response(principal, idempotency_key, body, "changeMembership")
 
-    def manage_sla(self, principal, idempotency_key, body):
-        self.calls.append((principal, idempotency_key, body))
+    def manage_sla(self, principal, idempotency_key, body, preview_hash):
+        self.calls.append((principal, idempotency_key, body, preview_hash))
         return self._response(principal, idempotency_key, body, "manageSla")
 
-    def automation_kill(self, principal, idempotency_key, body):
-        self.calls.append((principal, idempotency_key, body))
+    def automation_kill(self, principal, idempotency_key, body, preview_hash):
+        self.calls.append((principal, idempotency_key, body, preview_hash))
         return self._response(principal, idempotency_key, body, "automationKill")
 
     @staticmethod
@@ -518,21 +544,32 @@ def _kill_payload() -> dict:
     }
 
 
+def _preview(client: TestClient, command_id: str, payload: dict) -> str:
+    response = client.post(
+        "/v1/ecommerce-workshop/commands/operations/previews",
+        json={"commandId": command_id, "request": payload},
+    )
+    assert response.status_code == 200
+    assert response.json()["externalEffectAllowed"] is False
+    return response.json()["previewHash"]
+
+
 def test_classify_command_requires_idempotency_and_rejects_body_scope_injection() -> None:
     service = FakeOperationCommandService()
     payload = _classification_payload()
     with _client(command_service=service) as client:
+        preview_hash = _preview(client, "classify", payload)
         missing_key = client.post(
             "/v1/ecommerce-workshop/commands/operations/classify", json=payload
         )
         injected = client.post(
             "/v1/ecommerce-workshop/commands/operations/classify",
-            headers={"Idempotency-Key": "command-key-1"},
+            headers={"Idempotency-Key": "command-key-1", "X-Workshop-Preview-Hash": preview_hash},
             json={**payload, "orgId": "dev-org"},
         )
         response = client.post(
             "/v1/ecommerce-workshop/commands/operations/classify",
-            headers={"Idempotency-Key": "command-key-1"},
+            headers={"Idempotency-Key": "command-key-1", "X-Workshop-Preview-Hash": preview_hash},
             json=payload,
         )
 
@@ -557,17 +594,18 @@ def test_membership_and_sla_commands_are_explicit_strict_posts(
     service = FakeOperationCommandService()
     payload = payload_factory()
     with _client(command_service=service) as client:
+        preview_hash = _preview(client, command_id, payload)
         missing_key = client.post(
             f"/v1/ecommerce-workshop/commands/operations/{path}", json=payload
         )
         injected = client.post(
             f"/v1/ecommerce-workshop/commands/operations/{path}",
-            headers={"Idempotency-Key": "command-key-b2b"},
+            headers={"Idempotency-Key": "command-key-b2b", "X-Workshop-Preview-Hash": preview_hash},
             json={**payload, "actorId": "user:other"},
         )
         response = client.post(
             f"/v1/ecommerce-workshop/commands/operations/{path}",
-            headers={"Idempotency-Key": "command-key-b2b"},
+            headers={"Idempotency-Key": "command-key-b2b", "X-Workshop-Preview-Hash": preview_hash},
             json=payload,
         )
 
@@ -582,12 +620,13 @@ def test_automation_kill_is_explicit_strict_post_and_requires_idempotency() -> N
     service = FakeOperationCommandService()
     payload = _kill_payload()
     with _client(command_service=service) as client:
+        preview_hash = _preview(client, "automationKill", payload)
         missing_key = client.post(
             "/v1/ecommerce-workshop/commands/operations/automation-kill", json=payload
         )
         response = client.post(
             "/v1/ecommerce-workshop/commands/operations/automation-kill",
-            headers={"Idempotency-Key": "command-key-kill"},
+            headers={"Idempotency-Key": "command-key-kill", "X-Workshop-Preview-Hash": preview_hash},
             json=payload,
         )
 

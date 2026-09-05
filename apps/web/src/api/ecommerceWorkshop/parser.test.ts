@@ -283,6 +283,9 @@ const skillContribution = { contributionId: "agent-run-1", taskRunRef: resourceR
 const skillContributions = { schemaVersion: cockpitBase.schemaVersion, tenant: cockpitBase.tenant, runId: "run-1", taskId: "task-1", evaluatedAt: cockpitBase.evaluatedAt, projectionStatus: "ready", blockerCodes: [], items: [skillContribution] };
 
 describe("task cockpit strict parser", () => {
+  it("拒绝 Task Cockpit 顶层租户回显漂移", () => {
+    expect(() => parseTaskCockpitCore(cockpitCore, { orgId: "dev-org", projectId: "dev-project" })).toThrow("tenant 漂移");
+  });
   it("保留 Task/Run/Step/Checkpoint、decimal 与 current-state 语义", () => {
     expect(parseTaskCockpitCore(cockpitCore)).toMatchObject({ readiness: "degraded", items: [{ run: { runId: "run-1" } }] });
     expect(parseTaskCockpitSteps(steps).items[0]).toMatchObject({ costAmount: "0.0100", hasInputRefs: true, fence: 2, safePoint: false });
