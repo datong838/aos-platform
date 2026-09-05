@@ -2,7 +2,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 
-from .lifecycle_store import RuntimeConflict
+from .lifecycle_store import RuntimeConflict, _values
 from .oci_driver import CleanupUncertainError
 from .reconciler import ResourceJournal
 from .session_supervisor import open_session
@@ -54,7 +54,7 @@ class _JournalDriver:
 
 
 @asynccontextmanager
-async def open_journaled_session(driver,*,connect,org_id,project_id,resource_id,image_id,declared):
+async def open_journaled_session(driver,*,connect,org_id,project_id,resource_id,image_id,declared,expected_package=None):
     """connect is a trusted scoped factory, not a request-supplied connection."""
     journal=ResourceJournal()
     def claim():
@@ -63,6 +63,12 @@ async def open_journaled_session(driver,*,connect,org_id,project_id,resource_id,
                 intent=journal.claim_create(conn,org_id=org_id,project_id=project_id,resource_id=resource_id)
                 if intent.engine_context!=driver.context:
                     raise RuntimeConflict("resource engine context mismatch")
+                if expected_package is not None:
+                    row=conn.execute("""SELECT package_id,package_hash FROM extension_runtime_resource_lease
+                        WHERE org_id=%s AND project_id=%s AND resource_id=%s""",
+                        (org_id,project_id,intent.resource_id)).fetchone()
+                    if row is None or _values(row,("package_id","package_hash"))!=expected_package:
+                        raise RuntimeConflict("resource package does not match signed artifact")
                 return intent
     intent,cancelled=await _settle(asyncio.create_task(asyncio.to_thread(claim)))
     def persist(confirmed):

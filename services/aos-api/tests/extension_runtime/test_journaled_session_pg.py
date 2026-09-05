@@ -69,6 +69,43 @@ def test_claim_commits_before_engine_and_cleanup_is_immediate(database,monkeypat
     assert calls==before
 
 
+def test_signed_session_claims_matching_package(database,monkeypatch):
+    from test_admission import fixture
+    from aos_api.extension_runtime.signed_session import open_signed_session
+    from aos_api.extension_runtime import journaled_session
+    args,_=fixture()
+    conn,_,intent,connect=setup_intent(database)
+    conn.execute("UPDATE extension_runtime_resource_lease SET package_id=%s,package_hash=%s",
+        (args["selected"].id,args["selected"].content_hash))
+    args["driver"].context="colima-aos-extension"
+    @asynccontextmanager
+    async def simulated(driver,**kwargs):
+        assert conn.execute("SELECT create_claimed_at IS NOT NULL FROM extension_runtime_resource_lease").fetchone()[0]
+        assert kwargs["image_id"]=="sha256:"+"b"*64
+        driver.observe(True)
+        yield "signed"
+    monkeypatch.setattr(journaled_session,"open_session",simulated)
+    async def run():
+        async with open_signed_session(**args,connect=connect,org_id="org-org",project_id="dev-project",resource_id=intent.resource_id) as session:
+            assert session=="signed"
+    asyncio.run(run())
+    assert conn.execute("SELECT cleanup_state FROM extension_runtime_resource_lease").fetchone()[0]=="released"
+
+
+def test_package_mismatch_rolls_back_claim_without_engine(database):
+    from aos_api.extension_runtime.journaled_session import open_journaled_session
+    conn,_,intent,connect=setup_intent(database)
+    class Driver:context="colima-aos-extension"
+    async def run():
+        async with open_journaled_session(Driver(),connect=connect,org_id="org-org",project_id="dev-project",
+            resource_id=intent.resource_id,image_id="image",declared={},
+            expected_package=("other","sha256:"+"b"*64)):
+            raise AssertionError("must reject")
+    with pytest.raises(RuntimeConflict,match="package"):
+        asyncio.run(run())
+    assert conn.execute("SELECT create_claimed_at FROM extension_runtime_resource_lease").fetchone()[0] is None
+
+
 def test_context_mismatch_rolls_back_claim_without_engine(database):
     from aos_api.extension_runtime.journaled_session import open_journaled_session
     conn,_,intent,connect=setup_intent(database)
