@@ -69,3 +69,9 @@ def test_create_timeout_reconciles_or_retains_reference(monkeypatch, appears):
             driver.create_registration(digest, "aos-ext-test", "owner")
         assert len(attempts) == 10
         assert error.value.cleanup_reference == {"context": driver.context, "name": "aos-ext-test", "owner": "owner"}
+def test_persistent_command_is_fixed_and_keeps_isolation():
+    from aos_api.extension_runtime.oci_driver import OciDriver
+    driver=OciDriver(context="colima-aos-extension")
+    image="sha256:"+"a"*64
+    ordinary=driver.registration_command(image,"aos-ext-test","test")
+    assert driver.session_command(image,"aos-ext-test","test")==ordinary+["--serve"]

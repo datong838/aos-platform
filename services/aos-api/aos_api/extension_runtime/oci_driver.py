@@ -49,7 +49,16 @@ class OciDriver:
                 "-I", "/aos/runner.py"]
 
     def create_registration(self, image_id: str, name: str, owner: str) -> str:
-        command = self.registration_command(image_id, name, owner)
+        return self._create(image_id, name, owner, persistent=False)
+
+    def session_command(self, image_id: str, name: str, owner: str) -> list[str]:
+        return self.registration_command(image_id, name, owner) + ["--serve"]
+
+    def create_session(self, image_id: str, name: str, owner: str) -> str:
+        return self._create(image_id, name, owner, persistent=True)
+
+    def _create(self, image_id: str, name: str, owner: str, *, persistent: bool) -> str:
+        command = (self.session_command if persistent else self.registration_command)(image_id, name, owner)
         metadata = json.loads(self._run("image", "inspect", image_id))
         if len(metadata) != 1 or metadata[0].get("Id") != image_id:
             raise ValueError("image identity mismatch")

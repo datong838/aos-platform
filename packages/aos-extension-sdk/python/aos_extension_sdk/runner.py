@@ -6,9 +6,13 @@ import sys
 from pathlib import Path
 
 from .client import serve_registration
+from .session import serve_session
 
 
 def main():
+    if sys.argv[1:] not in ([], ["--serve"]):
+        raise ValueError("unsupported runtime mode")
+    persistent = sys.argv[1:] == ["--serve"]
     root = Path("/aos/bundle").resolve(strict=True)
     config = json.loads(Path("/aos/runtime.json").read_bytes())
     entry = config["entrypoint"]
@@ -35,7 +39,10 @@ def main():
     module = importlib.import_module(module_name)
     if Path(module.__file__).resolve(strict=True) != path:
         raise ValueError("loaded module does not match entrypoint")
-    serve_registration(module.register)
+    if persistent:
+        serve_session(module.register, module.handle)
+    else:
+        serve_registration(module.register)
 
 
 if __name__ == "__main__":
