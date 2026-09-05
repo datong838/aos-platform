@@ -77,7 +77,8 @@ def test_claim_commits_before_engine_and_cleanup_is_immediate(database,monkeypat
 
 
 @pytest.mark.skipif(os.getenv("AOS_EXTENSION_OCI_TEST")!="1",reason="dedicated OCI opt-in required")
-def test_signed_real_oci_and_journal(database,tmp_path):
+@pytest.mark.parametrize('fail_registration',[False,True])
+def test_signed_real_oci_and_journal(database,tmp_path,monkeypatch,fail_registration):
     import json
     from test_admission import fixture
     from test_persistent_supervisor import build_session_image,CONTEXT
@@ -87,6 +88,9 @@ def test_signed_real_oci_and_journal(database,tmp_path):
     build=tmp_path/'build';build.mkdir()
     image,claims=build_session_image(build)
     conn,_,intent,connect=setup_intent(database)
+    if fail_registration:
+        def unavailable(*values,**kwargs):raise RuntimeError('registration journal unavailable')
+        monkeypatch.setattr(ResourceJournal,'record_registered',unavailable)
     with cached_registry_image(tmp_path/'registry',image,CONTEXT) as (manifest_digest,config_digest):
         def files(values):
             path='artifacts/backend-image.json'
@@ -99,12 +103,16 @@ def test_signed_real_oci_and_journal(database,tmp_path):
             (args['selected'].id,args['selected'].content_hash))
         async def run():
             async with open_signed_session(**args,connect=connect,org_id="org-org",project_id="dev-project",resource_id=intent.resource_id) as session:
+                assert not fail_registration
                 assert await session.invoke('example_read',{'value':'签名容器联合实测'})=={'value':'签名容器联合实测'}
-        asyncio.run(run())
+        if fail_registration:
+            with pytest.raises(RuntimeError,match='registration journal unavailable'):asyncio.run(run())
+        else:asyncio.run(run())
     assert conn.execute("SELECT cleanup_state,observed_release FROM extension_runtime_resource_lease").fetchone()==('released',True)
     recorded=conn.execute("SELECT container_id FROM extension_runtime_resource_lease").fetchone()[0]
     assert isinstance(recorded,str) and len(recorded)==64
     assert_container_absent(CONTEXT,intent)
+    assert conn.execute("SELECT count(*) FROM extension_runtime_event WHERE type='resource_registered'").fetchone()[0]==(0 if fail_registration else 1)
 
 
 def test_signed_session_claims_matching_package(database,monkeypatch):
@@ -120,14 +128,35 @@ def test_signed_session_claims_matching_package(database,monkeypatch):
     async def simulated(driver,**kwargs):
         assert conn.execute("SELECT create_claimed_at IS NOT NULL FROM extension_runtime_resource_lease").fetchone()[0]
         assert kwargs["image_id"]=="sha256:"+"b"*64
-        driver.observe(True)
-        yield "signed"
+        driver.persist_created('a'*64)
+        try:yield "signed"
+        finally:driver.observe(True)
     monkeypatch.setattr(journaled_session,"open_session",simulated)
     async def run():
         async with open_signed_session(**args,connect=connect,org_id="org-org",project_id="dev-project",resource_id=intent.resource_id) as session:
             assert session=="signed"
     asyncio.run(run())
     assert conn.execute("SELECT cleanup_state FROM extension_runtime_resource_lease").fetchone()[0]=="released"
+
+
+def test_registration_observation_requires_live_created_resource(database):
+    conn,_,intent,_=setup_intent(database)
+    journal=ResourceJournal()
+    args=dict(org_id='org-org',project_id='dev-project',resource_id=intent.resource_id,declared={'contributions':[]})
+    with pytest.raises(RuntimeConflict):
+        with conn.transaction():journal.record_registered(conn,**args)
+    with conn.transaction():
+        journal.claim_create(conn,org_id='org-org',project_id='dev-project',resource_id=intent.resource_id)
+        journal.record_created(conn,org_id='org-org',project_id='dev-project',intent=intent,container_id='a'*64)
+    for _ in range(2):
+        with conn.transaction():journal.record_registered(conn,**args)
+    assert conn.execute("SELECT count(*) FROM extension_runtime_event WHERE type='resource_registered'").fetchone()[0]==1
+    changed={'contributions':[{'kind':'api','method':'POST','path':'/example/read','operationId':'example_read','mode':'exclusive'}]}
+    with pytest.raises(RuntimeConflict):
+        with conn.transaction():journal.record_registered(conn,**{**args,'declared':changed})
+    with conn.transaction():journal.record_cleanup(conn,org_id='org-org',project_id='dev-project',intent=intent,removed=True)
+    with pytest.raises(RuntimeConflict):
+        with conn.transaction():journal.record_registered(conn,**args)
 
 
 def test_created_identity_is_atomic_and_not_replaceable(database):

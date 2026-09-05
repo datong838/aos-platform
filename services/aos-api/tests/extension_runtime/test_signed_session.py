@@ -15,6 +15,8 @@ def test_signature_and_declared_package_are_joined(monkeypatch):
         calls.append(kwargs)
         yield "verified-session"
     monkeypatch.setattr(module,"open_journaled_session",journal)
+    observations=[]
+    monkeypatch.setattr(module,"_record_registration",lambda *values:observations.append(values[-1]))
     original=args["driver"]._run
     def inspect(*values):
         # Caller mutation while async validation runs cannot change declarations.
@@ -26,6 +28,7 @@ def test_signature_and_declared_package_are_joined(monkeypatch):
             assert session=="verified-session"
     asyncio.run(run())
     assert calls[0]["declared"].contributions==expected
+    assert observations[0].contributions==expected
     assert calls[0]["image_id"]=="sha256:"+"b"*64
     assert calls[0]["expected_package"]==(args["selected"].id,args["selected"].content_hash)
 
@@ -73,3 +76,31 @@ def test_cancel_during_image_check_never_claims(monkeypatch):
             finish.set()
     asyncio.run(run())
     assert calls==[]
+
+
+def test_cancel_waits_for_registration_commit_then_closes(monkeypatch):
+    import threading
+    args,_=fixture()
+    started,finish=threading.Event(),threading.Event()
+    events=[]
+    @asynccontextmanager
+    async def journal(*values,**kwargs):
+        try:yield 'session'
+        finally:events.append('closed')
+    def record(*values):
+        started.set()
+        assert finish.wait(5)
+        events.append('committed')
+    monkeypatch.setattr(module,'open_journaled_session',journal)
+    monkeypatch.setattr(module,'_record_registration',record)
+    async def enter():
+        async with module.open_signed_session(**args,connect=None,org_id='org-org',project_id='dev-project',resource_id='test'):
+            events.append('entered')
+    async def run():
+        task=asyncio.create_task(enter())
+        assert await asyncio.to_thread(started.wait,3)
+        task.cancel()
+        finish.set()
+        with pytest.raises(asyncio.CancelledError):await task
+    asyncio.run(run())
+    assert events==['committed','closed']

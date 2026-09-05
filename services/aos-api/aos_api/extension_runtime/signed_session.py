@@ -5,7 +5,15 @@ from contextlib import asynccontextmanager
 
 from .admission import admit_runtime_artifact
 from .contracts import RegistrationDescription
-from .journaled_session import open_journaled_session
+from .journaled_session import open_journaled_session, _settle
+from .reconciler import ResourceJournal
+
+
+def _record_registration(connect,org_id,project_id,resource_id,declared):
+    with connect() as conn:
+        with conn.transaction():
+            ResourceJournal().record_registered(conn,org_id=org_id,project_id=project_id,
+                resource_id=resource_id,declared=declared)
 
 
 @asynccontextmanager
@@ -20,4 +28,8 @@ async def open_signed_session(*, driver, connect, org_id, project_id, resource_i
     async with open_journaled_session(driver,connect=connect,org_id=org_id,project_id=project_id,
         resource_id=resource_id,image_id=artifact.image_id,declared=declared,
         expected_package=(record.manifest.metadata.id,artifact.package_hash)) as session:
+        _,cancelled=await _settle(asyncio.create_task(asyncio.to_thread(_record_registration,
+            connect,org_id,project_id,resource_id,declared)))
+        if cancelled:
+            raise asyncio.CancelledError
         yield session

@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import UUID, uuid4
 import re
 
-from aos_api.extension_runtime.lifecycle_store import _require_transaction, _values, _deadline_valid, RuntimeConflict, RuntimeOperationStore
+from aos_api.extension_runtime.lifecycle_store import _require_transaction, _values, _deadline_valid, _digest, RuntimeConflict, RuntimeOperationStore
 from aos_api.extension_runtime.supervisor import ResourceIdentity
 
 
@@ -17,6 +17,38 @@ class ResourceIntent:
 
 
 class ResourceJournal:
+    def record_registered(self,conn,*,org_id,project_id,resource_id,declared):
+        """Trusted signed supervisor only; persists comparison, not readiness."""
+        from .contracts import RegistrationDescription
+        _require_transaction(conn)
+        description=RegistrationDescription.model_validate(declared)
+        claims_hash=_digest(description.model_dump(mode='json',by_alias=True))
+        target=(org_id,project_id,UUID(str(resource_id)))
+        row=conn.execute("""SELECT owner_token_ref,engine_context,container_id
+            FROM extension_runtime_resource_lease WHERE org_id=%s AND project_id=%s AND resource_id=%s""",target).fetchone()
+        if row is None:raise LookupError('resource not found')
+        owner,context,container_id=_values(row,('owner_token_ref','engine_context','container_id'))
+        if container_id is None:raise RuntimeConflict('resource not created')
+        # Reuse exact lock order and the live/claimed identity guard. Since the
+        # ID already exists this never creates an additional creation event.
+        self.record_created(conn,org_id=org_id,project_id=project_id,
+            intent=ResourceIntent(target[2],ResourceIdentity(owner),context),container_id=container_id)
+        row=conn.execute("""SELECT operation_id,package_hash FROM extension_runtime_resource_lease
+            WHERE org_id=%s AND project_id=%s AND resource_id=%s""",target).fetchone()
+        operation_id,package_hash=_values(row,('operation_id','package_hash'))
+        payload={'resourceId':str(target[2]),'containerId':container_id,'packageHash':package_hash,'claimsHash':claims_hash}
+        prior=conn.execute("""SELECT payload FROM extension_runtime_event WHERE org_id=%s AND project_id=%s
+            AND operation_id=%s AND type='resource_registered' AND payload->>'resourceId'=%s""",
+            (org_id,project_id,operation_id,str(target[2]))).fetchone()
+        if prior is not None:
+            if _values(prior,('payload',))[0]!=payload:raise RuntimeConflict('registration observation changed')
+            return
+        row=conn.execute("""UPDATE extension_runtime_operation SET revision=revision+1
+            WHERE org_id=%s AND project_id=%s AND operation_id=%s RETURNING revision""",
+            (org_id,project_id,operation_id)).fetchone()
+        RuntimeOperationStore._event(conn,org_id,project_id,operation_id,_values(row,('revision',))[0],
+            'resource_registered',payload)
+
     def record_created(self,conn,*,org_id,project_id,intent,container_id):
         """Record a trusted OCI observation; never assert registration/readiness."""
         _require_transaction(conn)
