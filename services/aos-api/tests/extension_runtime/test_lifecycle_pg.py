@@ -12,6 +12,26 @@ import pytest
 pytestmark = pytest.mark.skipif(os.getenv("AOS_EXTENSION_PG_TEST") != "1", reason="dedicated database opt-in required")
 
 
+def test_registry_relation_rejects_expanded_or_custom_types(database):
+    from aos_api.extension_runtime.storage_ports import require_registry_relation, StorageRoleDenied
+    conn, _, schema = database
+    conn.execute("CREATE TABLE products(id bigint, name text)")
+    with conn.transaction():
+        require_registry_relation(conn, table=schema+".products", column_types={"id":"int8","name":"text"})
+    with pytest.raises(StorageRoleDenied):
+        with conn.transaction():
+            require_registry_relation(conn, table=schema+".products", column_types={"id":"text"})
+    conn.execute("CREATE TABLE extra_products(extra text) INHERITS(products)")
+    with pytest.raises(StorageRoleDenied):
+        with conn.transaction():
+            require_registry_relation(conn, table=schema+".products", column_types={"id":"int8"})
+    conn.execute("CREATE DOMAIN custom_value AS bigint")
+    conn.execute("CREATE TABLE custom_products(id custom_value)")
+    with pytest.raises(StorageRoleDenied):
+        with conn.transaction():
+            require_registry_relation(conn, table=schema+".custom_products", column_types={"id":"int8"})
+
+
 @pytest.fixture
 def database():
     schema = "ar1c_" + uuid.uuid4().hex
