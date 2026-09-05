@@ -859,6 +859,16 @@ class PostgresInstallationStore:
             conn, locked=locked, actor=actor, to_state="active", evidence=evidence
         )
 
+    def append_runtime_preparation_in_transaction(
+        self, conn: Any, *, locked: LockedInstallation, actor: str,
+        evidence: InstallationEventEvidence,
+    ) -> InstallationRecord:
+        """Trusted lifecycle committer only. This never activates an installation."""
+        if evidence.type != "runtime_preparation" or evidence.status != "valid":
+            raise InstallationStateConflictError("runtime preparation evidence required")
+        return self._append_transition(conn, locked=locked, actor=actor,
+            to_state="applied", evidence=evidence, runtime_preparation=True)
+
     def append_rollback_in_transaction(
         self,
         conn: Any,
@@ -905,6 +915,7 @@ class PostgresInstallationStore:
         decision: str | None = None,
         reason: str | None = None,
         evidence: InstallationEventEvidence | None = None,
+        runtime_preparation: bool = False,
     ) -> InstallationRecord:
         actor = _normalized_text(actor, "actor")
         current = locked.record.current
@@ -918,6 +929,10 @@ class PostgresInstallationStore:
             "uninstalled": ("active", "uninstall"),
         }
         expected_from, evidence_type = allowed[to_state]
+        if runtime_preparation:
+            if to_state != "applied":
+                raise InstallationStateConflictError("runtime preparation cannot activate")
+            evidence_type = "runtime_preparation"
         if current.state != expected_from:
             raise InstallationStateConflictError(
                 "installation state transition is not allowed"

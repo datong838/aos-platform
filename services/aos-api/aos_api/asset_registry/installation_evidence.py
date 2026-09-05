@@ -10,6 +10,7 @@ from aos_api.asset_registry.composition_contracts import InstallationEventEviden
 EVIDENCE_SCHEMA_VERSION = "m2-installation-evidence/v1"
 _TRANSITIONS = {
     "dry_apply": ("approved", "applied"),
+    "runtime_preparation": ("approved", "applied"),
     "verification": ("applied", "active"),
     "rollback": ("active", "rolled_back"),
     "uninstall": ("active", "uninstalled"),

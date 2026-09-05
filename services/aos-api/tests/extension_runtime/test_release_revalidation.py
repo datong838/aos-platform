@@ -21,6 +21,7 @@ def test_fresh_policy_under_registry_lock(case):
     if case=="revoked":
         fresh.evaluate.side_effect=RegistrySnapshotStaleError("revoked")
     record=MagicMock(content_hash="hash")
+    record.manifest.spec.contributions=[]
     with patch("aos_api.extension_runtime.release_revalidation.StoredCompositionLock.model_validate",return_value=lock),patch(
         "aos_api.extension_runtime.release_revalidation._record_from_row",return_value=record):
         if case=="valid":

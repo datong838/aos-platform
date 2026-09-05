@@ -6,13 +6,16 @@ from aos_api.asset_registry.composition_contracts import StoredCompositionLock
 from aos_api.asset_registry.installation_revalidation import _record_from_row
 from aos_api.asset_registry.registry_snapshot import _SNAPSHOT_QUERY
 from aos_api.asset_registry.errors import RegistryIntegrityCorruptError, RegistrySnapshotStaleError
-from aos_api.extension_runtime.lifecycle_store import _require_transaction, _values
+from aos_api.extension_runtime.lifecycle_store import _require_transaction, _values, _digest
 
 
 @dataclass(frozen=True)
 class RuntimeReleaseCheck:
     checked_at: datetime
     runtime_members: tuple[str, ...]
+    # Only backend members have an OCI registration proof. Other runtime forms
+    # need their own preparation worker; callers must not silently skip them.
+    backend_claims: tuple[tuple[str, str, str], ...] = ()
 
 
 class RuntimeReleaseRevalidator:
@@ -37,6 +40,7 @@ class RuntimeReleaseRevalidator:
                 raise RegistryIntegrityCorruptError()
             indexed[key]=row
         runtime_members=[]
+        backend_claims=[]
         for selected in lock.payload.resolved:
             row=indexed.get((selected.publisher,selected.id,selected.version))
             if row is None:
@@ -51,4 +55,9 @@ class RuntimeReleaseRevalidator:
                 expected_evidence_revision=selected.release_evidence_revision)
             if record.manifest.spec.runtime is not None:
                 runtime_members.append(selected.id)
-        return RuntimeReleaseCheck(checked_at=checked_at,runtime_members=tuple(runtime_members))
+                if record.manifest.spec.runtime.backend is not None:
+                    from .contracts import RegistrationDescription
+                    claims=RegistrationDescription(contributions=record.manifest.spec.contributions)
+                    backend_claims.append((selected.id,selected.content_hash,
+                        _digest(claims.model_dump(mode='json',by_alias=True))))
+        return RuntimeReleaseCheck(checked_at=checked_at,runtime_members=tuple(runtime_members),backend_claims=tuple(backend_claims))

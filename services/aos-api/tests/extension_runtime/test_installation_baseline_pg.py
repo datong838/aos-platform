@@ -19,7 +19,8 @@ import pytest
 pytestmark=pytest.mark.skipif(os.getenv("AOS_EXTENSION_PG_TEST")!="1",reason="dedicated DB opt-in")
 
 
-def test_existing_installation_schema_accepts_subordinate_operation():
+@pytest.mark.parametrize('commit_case', ['valid', 'rollback', 'wrong_type', 'invalid', 'missing', 'released', 'unregistered', 'expired', 'denied', 'revoked', 'wrong_hash', 'other_generation', 'claims_changed', 'etag_changed', 'late_policy', 'unsupported_runtime', 'extra_resource', 'operation_cas', 'non_boolean_permission', 'late_resource'])
+def test_existing_installation_schema_accepts_subordinate_operation(commit_case):
     from aos_api.asset_registry.installation_store import PostgresInstallationStore
     from aos_api.asset_registry.composition_contracts import CreateInstallationRequest
     from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
@@ -107,6 +108,113 @@ def test_existing_installation_schema_accepts_subordinate_operation():
             with pytest.raises(RuntimeConflict):
                 service.request_preparation(**{**args,"idempotency_key":"another-key"})
             assert store.get_installation(org_id="org-a",project_id="project-a",installation_id=second.installation_id).state=="approved"
+            # Internal transaction compatibility fixture, not signed OCI or
+            # production policy evidence: those are independently tested.
+            from aos_api.extension_runtime.preparation_commit import commit_prepared
+            from aos_api.extension_runtime.reconciler import ResourceJournal
+            from aos_api.extension_runtime.contracts import RegistrationDescription
+            from aos_api.asset_registry.composition_contracts import InstallationEventEvidence
+            from aos_api.asset_registry.installation_store import InstallationStateConflictError
+            operation_id=accepted.response_json['operationId']
+            generation=uuid.uuid4()
+            selected=lock.payload.resolved[0]
+            validator.revalidate_in_transaction.return_value=SimpleNamespace(
+                checked_at=datetime.now(timezone.utc),runtime_members=(selected.id,))
+            scope=dict(org_id='org-a',project_id='project-a')
+            journal=ResourceJournal()
+            with scoped_connect() as c:
+                intent=journal.prepare(c,**scope,operation_id=operation_id,generation=generation,
+                    package_id=selected.id,package_hash=selected.content_hash,engine_context='colima-aos-extension',
+                    expires_at=datetime.now(timezone.utc)+timedelta(minutes=1))
+                journal.claim_create(c,**scope,resource_id=intent.resource_id)
+                journal.record_created(c,**scope,intent=intent,container_id='a'*64)
+                if commit_case=='extra_resource':
+                    journal.prepare(c,**scope,operation_id=operation_id,generation=uuid.uuid4(),
+                        package_id=selected.id,package_hash=selected.content_hash,engine_context='colima-aos-extension',
+                        expires_at=datetime.now(timezone.utc)+timedelta(minutes=1))
+                if commit_case!='unregistered':
+                    journal.record_registered(c,**scope,resource_id=intent.resource_id,
+                        declared=RegistrationDescription(contributions=[]))
+                current=c.execute('SELECT revision FROM extension_runtime_operation WHERE operation_id=%s',(operation_id,)).fetchone()['revision']
+                for phase in ('validating','preparing','registered'):
+                    current=RuntimeOperationStore().advance(c,**scope,operation_id=operation_id,
+                        expected_revision=current,phase=phase).revision
+                from aos_api.extension_runtime.lifecycle_store import _digest
+                validator.revalidate_in_transaction.return_value.backend_claims=((selected.id,selected.content_hash,_digest({'contributions':[]})),)
+                if commit_case=='released':
+                    journal.record_cleanup(c,**scope,intent=intent,removed=True)
+                    current+=1
+                if commit_case=='expired':
+                    c.execute("UPDATE extension_runtime_resource_lease SET expires_at=clock_timestamp()-interval '1 second'")
+                if commit_case=='wrong_hash':
+                    c.execute("UPDATE extension_runtime_resource_lease SET package_hash=%s",('sha256:'+'0'*64,))
+                if commit_case=='etag_changed':
+                    from aos_api.asset_registry.installation_evidence import build_event_evidence
+                    locked=store.lock_for_transition_in_transaction(c,**scope,installation_id=second.installation_id,
+                        expected_etag_version=approved.etag_version)
+                    evidence=build_event_evidence(evidence_type='dry_apply',installation_id=second.installation_id,
+                        from_revision=approved.current_revision,to_revision=approved.current_revision+1,
+                        lock_hash=lock.lock_hash,permission_diff_hash=lock.permission_diff_hash,
+                        migration_plan_hash=lock.migration_plan_hash,contribution_diff_hash=lock.contribution_diff_hash,
+                        decision_id=approved.decision.decision_id,observed_at=store.read_control_clock_in_transaction(c))
+                    store.append_apply_in_transaction(c,locked=locked,actor='test-actor',evidence=evidence)
+            if commit_case in ('wrong_type','invalid'):
+                with pytest.raises(InstallationStateConflictError):
+                    with scoped_connect() as c:
+                        locked=store.lock_for_transition_in_transaction(c,**scope,installation_id=second.installation_id,
+                            expected_etag_version=approved.etag_version)
+                        evidence=InstallationEventEvidence(type='runtime_preparation',evidenceRef='runtime/test',
+                            evidenceHash='sha256:'+'a'*64,status='invalid' if commit_case=='invalid' else 'valid',
+                            observedAt=datetime.now(timezone.utc))
+                        method=store.append_apply_in_transaction if commit_case=='wrong_type' else store.append_runtime_preparation_in_transaction
+                        method(c,locked=locked,actor='test-actor',evidence=evidence)
+            else:
+                if commit_case=='missing':
+                    validator.revalidate_in_transaction.return_value.runtime_members=(selected.id,'missing')
+                if commit_case=='revoked':
+                    validator.revalidate_in_transaction.side_effect=RuntimeConflict('release revoked')
+                if commit_case=='claims_changed':
+                    validator.revalidate_in_transaction.return_value.backend_claims=((selected.id,selected.content_hash,'sha256:'+'f'*64),)
+                if commit_case=='unsupported_runtime':
+                    validator.revalidate_in_transaction.return_value.backend_claims=()
+                if commit_case=='late_policy':
+                    def late_policy(conn,**kwargs):
+                        conn.execute("UPDATE extension_runtime_operation SET deadline=clock_timestamp()-interval '1 second' WHERE operation_id=%s",(operation_id,))
+                        return validator.revalidate_in_transaction.return_value
+                    validator.revalidate_in_transaction.side_effect=late_policy
+                def execute_commit():
+                    with scoped_connect() as c:
+                        c.execute('SELECT 1')
+                        transaction=c
+                        if commit_case=='late_resource':
+                            c.execute("UPDATE extension_runtime_resource_lease SET expires_at=clock_timestamp()+interval '150 milliseconds'")
+                            class DelayedObservation:
+                                def __getattr__(self,name):return getattr(c,name)
+                                def execute(self,query,params=None):
+                                    if isinstance(query,str) and 'SELECT payload,payload_hash' in query:
+                                        c.execute('SELECT pg_sleep(0.2)')
+                                    return c.execute(query,params)
+                            transaction=DelayedObservation()
+                        result=commit_prepared(transaction,installation_store=store,revalidator=validator,
+                            check_current_permission=lambda **kwargs: 1 if commit_case=='non_boolean_permission' else commit_case!='denied',
+                            **scope,operation_id=operation_id,expected_revision=current-1 if commit_case=='operation_cas' else current,
+                            generation=uuid.uuid4() if commit_case=='other_generation' else generation)
+                        if commit_case=='rollback':raise RuntimeConflict('injected post-append failure')
+                        return result
+                if commit_case=='valid':
+                    result=execute_commit()
+                    assert result.state=='applied' and result.active_revision is None
+                    assert result.events[-1].evidence.type=='runtime_preparation'
+                    assert execute_commit()==result  # Replay must not append a second event.
+                else:
+                    with pytest.raises(RuntimeConflict):execute_commit()
+            observed=store.get_installation(**scope,installation_id=second.installation_id)
+            assert observed.state==('applied' if commit_case in ('valid','etag_changed') else 'approved')
+            assert observed.active_revision is None
+            with scoped_connect() as c:
+                row=c.execute('SELECT phase,revision FROM extension_runtime_operation WHERE operation_id=%s',(operation_id,)).fetchone()
+                assert row==dict(phase='succeeded' if commit_case=='valid' else 'registered',revision=current+3 if commit_case=='valid' else current)
+                assert c.execute('SELECT count(*) AS count FROM extension_runtime_binding').fetchone()['count']==0
         finally:
             admin.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
             if created_runtime:

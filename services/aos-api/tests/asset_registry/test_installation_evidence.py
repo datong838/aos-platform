@@ -73,3 +73,14 @@ def test_evidence_tampering_is_rejected() -> None:
             evidence,
             **{k: v for k, v in _arguments().items() if k != "evidence_type"},
         )
+
+
+def test_runtime_preparation_is_reproducible_without_changing_old_shape():
+    original=build_event_evidence(**_arguments())
+    arguments={**_arguments(),'evidence_type':'runtime_preparation'}
+    prepared=build_event_evidence(**arguments)
+    assert prepared.type=='runtime_preparation'
+    assert prepared.evidence_ref.endswith('/revisions/4/runtime_preparation')
+    assert prepared.evidence_hash!=original.evidence_hash
+    assert set(prepared.model_dump(by_alias=True))==set(original.model_dump(by_alias=True))
+    verify_event_evidence(prepared,**{k:v for k,v in arguments.items() if k!='evidence_type'})
