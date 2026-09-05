@@ -3,7 +3,7 @@
   "taskId": "WORKSHOP-R5-M04-MEDIA-DELIVERY-PROPOSAL",
   "recordedAt": "2026-09-05T04:14:31Z",
   "baseAuthorityRevision": "AOS-000497",
-  "status": "CODE_TEST_GREEN_BROWSER_EXTERNAL_PENDING",
+  "status": "FINAL_GREEN",
   "tenantBoundary": {
     "positive": "org-org/dev-project",
     "negativeCanary": "dev-org/dev-project",
@@ -23,12 +23,12 @@
     {
       "command": "uv run pytest -q tests/test_ecommerce_*.py",
       "cwd": "services/aos-api",
-      "result": "534 passed, 7 warnings"
+      "result": "535 passed, 7 warnings"
     },
     {
       "command": "pnpm test",
       "cwd": "apps/web",
-      "result": "276 files passed, 2474 tests passed"
+      "result": "276 files passed, 2475 tests passed"
     },
     {
       "command": "pnpm exec tsc -p tsconfig.json",
@@ -64,13 +64,15 @@
     "no Provider invocation, Lease acquisition, approval decision, external publication or release is implemented"
   ],
   "browser": {
-    "result": "EXTERNAL_ACCEPTANCE_PENDING",
-    "reason": "R5-M04 changes the media-studio page; external browser acceptance is the next gate and iab availability does not block code closure",
-    "requiredChecks": [
-      "org-org/dev-project reads version, review, return and candidate facts from the selected current task",
-      "real export downloads deterministic JSON and the UI states that no external action occurred",
-      "publish Proposal remains disabled while the real task has no exact ready candidate",
-      "no external publish, provider, billing or release control is exposed"
+    "result": "CODEX_IAB_PASSED",
+    "evidence": "browser-acceptance-iab.json",
+    "checks": [
+      "org-org/dev-project reads exact current version 2 and consecutive history versions 1 and 2",
+      "real export succeeds and the UI states that no external action occurred",
+      "review checklist reads the real zero-item state",
+      "publish approval remains disabled while the real task has no exact ready candidate",
+      "sidebar collapse/restore, all eight Workshop links and media tab switching work",
+      "dev-org/dev-project returns 404 NOT_FOUND"
     ]
   },
   "effects": {
@@ -80,5 +82,5 @@
     "externalPublish": 0,
     "release": 0
   },
-  "exitDecision": "R5-M04 code, API contract, automated tests, production build and real-tenant read-only evidence are green. Stop at external browser acceptance; do not enter R5-M05. The 230 L0 authorization remains separately pending."
+  "exitDecision": "R5-M04 code, API contract, automated tests, production build, real-tenant data probe and Codex in-app browser acceptance are green. R5-M04 is closed. Per the user's current instruction, record the state and pause without entering R5-M05. The 230 L0 authorization remains separately pending."
 }

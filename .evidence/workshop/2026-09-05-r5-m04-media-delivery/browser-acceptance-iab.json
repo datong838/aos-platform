@@ -1,0 +1,72 @@
+{
+  "schema": "aos-workshop-browser-acceptance/v1",
+  "taskId": "WORKSHOP-R5-M04-MEDIA-DELIVERY-PROPOSAL",
+  "recordedAt": "2026-09-05T05:46:57Z",
+  "browser": "Codex in-app browser",
+  "tabId": "14",
+  "route": "/workshop/media-studio",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "displayName": "栖月汇微商城"
+  },
+  "reference": {
+    "tabId": "2",
+    "route": "/workshop-media-studio.html",
+    "viewport": "1280x720",
+    "comparison": "same-viewport reference and implementation were inspected together for header density, complete navigation, three-column workspace, action placement, borders, spacing and overflow"
+  },
+  "assertions": [
+    {
+      "name": "真实任务回读",
+      "result": "passed",
+      "evidence": "任务列表显示 2 项栖月汇微商城真实内部任务；当前任务为第 2 版"
+    },
+    {
+      "name": "连续历史版本",
+      "result": "passed",
+      "evidence": "点击历史版本后显示第 1 版和第 2 版；不再出现 media workflow history drift"
+    },
+    {
+      "name": "确定性导出",
+      "result": "passed",
+      "evidence": "点击导出清单后显示导出摘要与内容哈希，并明确未触发外部动作"
+    },
+    {
+      "name": "交付评审",
+      "result": "passed",
+      "evidence": "点击评审清单后显示评审事实已读取 0 项，与候选 0 的真实状态一致"
+    },
+    {
+      "name": "发布审批门",
+      "result": "passed",
+      "evidence": "候选 0 时提交发布审批保持禁用，并提示先选择已通过质量与评审检查的交付候选"
+    },
+    {
+      "name": "侧栏和页签",
+      "result": "passed",
+      "evidence": "侧栏可折叠并恢复；八个电商工作台菜单完整保留；种草文案与短视频页签可切换"
+    },
+    {
+      "name": "负租户隔离",
+      "result": "passed",
+      "evidence": "dev-org/dev-project 读取同一资源返回 404 NOT_FOUND，Workshop module is not installed"
+    }
+  ],
+  "realReadback": {
+    "briefId": "brief-bdb87a5e57ee4e5da721",
+    "currentVersion": 2,
+    "historyVersions": [1, 2],
+    "candidateCount": 0,
+    "blockerCodes": ["MEDIA_ARTIFACT_FAMILY_NOT_AVAILABLE"],
+    "externalEffectsAllowed": false
+  },
+  "effects": {
+    "providerInvocation": 0,
+    "billingMutation": 0,
+    "externalMediaGeneration": 0,
+    "externalPublish": 0,
+    "release": 0
+  },
+  "result": "PASSED"
+}
