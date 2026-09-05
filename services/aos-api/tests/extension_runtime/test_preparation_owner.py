@@ -4,6 +4,56 @@ from contextlib import asynccontextmanager
 import pytest
 
 from aos_api.extension_runtime.preparation_owner import PreparationOwner
+from aos_api.extension_runtime.oci_driver import CleanupUncertainError
+
+
+@pytest.mark.parametrize('mode', ['sibling', 'cancel_during_stop'])
+def test_health_preserves_cleanup_uncertain_during_drain_and_stop(mode):
+    async def run():
+        error = CleanupUncertainError('isolated', 'exact-name', 'exact-owner')
+        entered = asyncio.Event()
+        cleaning = asyncio.Event()
+        release = asyncio.Event()
+        def factory(index):
+            @asynccontextmanager
+            async def resource():
+                class Session:
+                    process = Process()
+                    async def check_health(self):
+                        if index == 0:
+                            await entered.wait()
+                            if mode == 'sibling':
+                                raise ValueError('first ordinary failure')
+                            raise error
+                        entered.set()
+                        try:
+                            await asyncio.Event().wait()
+                        except asyncio.CancelledError:
+                            if mode == 'sibling':
+                                raise error
+                            raise
+                try:
+                    yield Session()
+                finally:
+                    if mode == 'cancel_during_stop':
+                        cleaning.set()
+                        await release.wait()
+            return resource
+        async def commit():return 'ref'
+        owner = PreparationOwner([factory(0), factory(1)], commit, lease_seconds=5)
+        await owner.prepared()
+        task = asyncio.create_task(owner.check_health())
+        if mode == 'cancel_during_stop':
+            await cleaning.wait()
+            task.cancel()
+            await asyncio.sleep(0)
+            release.set()
+        with pytest.raises(CleanupUncertainError) as caught:
+            await task
+        assert caught.value is error
+        await owner.wait_closed()
+        assert not [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    asyncio.run(run())
 
 
 class Process:
@@ -13,6 +63,46 @@ class Process:
     async def wait(self):
         await self.exited.wait()
         return 1
+
+
+@pytest.mark.parametrize('mode', ['healthy','failure','cancel'])
+def test_health_covers_whole_owned_group_without_leaking_tasks(mode):
+    async def run():
+        checked=[]
+        closed=[]
+        entered=asyncio.Event()
+        def factory(index):
+            @asynccontextmanager
+            async def resource():
+                class Session:
+                    process=Process()
+                    async def check_health(self):
+                        checked.append(index)
+                        if index==0:
+                            entered.set()
+                            if mode=='cancel':await asyncio.Event().wait()
+                            if mode=='failure':raise ValueError('unhealthy')
+                try:yield Session()
+                finally:closed.append(index)
+            return resource
+        async def commit():return 'ref'
+        owner=PreparationOwner([factory(0),factory(1)],commit,lease_seconds=5)
+        await owner.prepared()
+        if mode=='healthy':
+            assert await owner.check_health() is None
+            assert sorted(checked)==[0,1] and closed==[]
+            await owner.stop()
+        else:
+            task=asyncio.create_task(owner.check_health())
+            if mode=='cancel':
+                await entered.wait()
+                task.cancel()
+            with pytest.raises((ValueError,asyncio.CancelledError)):
+                await task
+        assert closed==[1,0]
+        with pytest.raises(RuntimeError):await owner.check_health()
+        assert not [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    asyncio.run(run())
 
 
 def test_owner_holds_resources_after_cancelled_wait_and_cleans_reverse_order():

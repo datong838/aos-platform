@@ -53,6 +53,18 @@ class PreparedJob:
     async def wait_closed(self):
         return await asyncio.shield(self._closed)
 
+    async def check_health(self):
+        try:
+            await self._owner.check_health()
+        except BaseException as original:
+            try:
+                await self.stop()
+            except BaseException as stopping_error:
+                if isinstance(original,CleanupUncertainError) and original is not stopping_error:
+                    raise original from stopping_error
+                raise
+            raise
+
     async def stop(self):
         self._stopping=True
         try:

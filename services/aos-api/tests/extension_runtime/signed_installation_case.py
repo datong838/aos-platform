@@ -124,6 +124,7 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                 else:
                     applied=await job.prepared()
                     assert applied.state=='applied' and applied.active_revision is None
+                    assert await job.check_health() is None
                     running=await asyncio.to_thread(subprocess.check_output,
                         ['docker','--context',CONTEXT,'inspect','--format','{{.State.Running}}',job.plan.members[0].intent.identity.name],
                         text=True,timeout=10)

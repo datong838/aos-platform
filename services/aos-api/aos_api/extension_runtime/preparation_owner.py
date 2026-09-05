@@ -4,6 +4,7 @@ from contextlib import AsyncExitStack
 import math
 
 from .journaled_session import _settle
+from .oci_driver import CleanupUncertainError
 
 
 def _observe(future):
@@ -28,6 +29,7 @@ class PreparationOwner:
         self._ready.add_done_callback(_observe)
         self._started = False
         self._cleaning = False
+        self._sessions = []
         self._task = asyncio.create_task(self._run(factories, commit, lease_seconds))
         self._task.add_done_callback(_observe)
         self._stopping = False
@@ -43,6 +45,7 @@ class PreparationOwner:
                     async with asyncio.timeout(lease_seconds):
                         for factory in factories:
                             session = await stack.enter_async_context(factory())
+                            self._sessions.append(session)
                             children.append(asyncio.create_task(session.process.wait()))
                         committing = asyncio.create_task(commit())
                         children.append(committing)
@@ -69,6 +72,32 @@ class PreparationOwner:
         except BaseException as exc:
             if not self._ready.done():
                 self._ready.set_exception(exc)
+            raise
+        finally:
+            self._sessions.clear()
+
+    async def check_health(self):
+        await self.prepared()
+        if self._stopping or self._cleaning or self._task.done():
+            raise RuntimeError('preparation is no longer owned')
+        checks=[asyncio.create_task(session.check_health()) for session in self._sessions]
+        try:
+            await asyncio.gather(*checks)
+            if self._stopping or self._cleaning or self._task.done():
+                raise RuntimeError('preparation closed during health check')
+        except BaseException as original:
+            for check in checks:check.cancel()
+            results, _ = await _settle(asyncio.gather(*checks,return_exceptions=True))
+            uncertain = next((error for error in [original, *results]
+                              if isinstance(error, CleanupUncertainError)), None)
+            try:
+                await self.stop()
+            except BaseException as stopping_error:
+                if uncertain is not None and uncertain is not stopping_error:
+                    raise uncertain from stopping_error
+                raise
+            if uncertain is not None and uncertain is not original:
+                raise uncertain from original
             raise
 
     async def prepared(self):

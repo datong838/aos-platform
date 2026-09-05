@@ -9,6 +9,24 @@ from aos_api.extension_runtime.oci_driver import CleanupUncertainError
 from aos_api.extension_runtime.preparation_worker import PreparedJob, PreparationWorker
 
 
+def test_job_health_preserves_uncertain_when_finalization_refuses():
+    async def run():
+        error = CleanupUncertainError('isolated', 'exact-name', 'exact-owner')
+        stopped = asyncio.Event()
+        class Owner:
+            async def check_health(self):raise error
+            async def stop(self):stopped.set()
+            async def wait_closed(self):await stopped.wait()
+        def finalize(code):raise RuntimeConflict('unresolved resource')
+        job = PreparedJob(None, Owner(), finalize)
+        with pytest.raises(CleanupUncertainError) as caught:
+            await job.check_health()
+        assert caught.value is error
+        assert isinstance(error.__cause__, RuntimeConflict)
+        assert job._closed.done()
+    asyncio.run(run())
+
+
 def test_job_retains_exact_cleanup_uncertain_when_finalization_refuses():
     async def run():
         error=CleanupUncertainError('isolated-engine','exact-name','exact-owner')
