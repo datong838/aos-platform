@@ -1,6 +1,6 @@
 """Transactional subordinate operations; caller owns trusted tenant transaction."""
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import json
 from uuid import UUID, uuid4
@@ -36,6 +36,17 @@ def _digest(value):
 
 def _values(row, names):
     return tuple(row[name] for name in names) if isinstance(row,Mapping) else row
+
+
+def _request_hash(*, kind, actor, etag, deadline, configuration_target=None):
+    # PostgreSQL stores timestamptz as an instant. Only the new configuration
+    # contract normalizes offsets; existing command hash semantics stay intact.
+    if configuration_target is not None:
+        deadline = deadline.astimezone(timezone.utc)
+    request = {'kind':kind, 'actor':actor, 'expectedEtag':etag, 'deadline':deadline.isoformat()}
+    if configuration_target is not None:
+        request['configurationTarget'] = configuration_target
+    return _digest(request)
 
 
 def _require_transaction(conn):
@@ -141,11 +152,8 @@ class RuntimeOperationStore:
         if head is None:
             raise LookupError("installation not found")
         head=_values(head,("etag_version",))
-        request={"kind":kind,"actor":requested_by,"expectedEtag":expected_installation_etag,
-                 "deadline":deadline.isoformat()}
-        if snapshot is not None:
-            request['configurationTarget']=snapshot
-        request_hash=_digest(request)
+        request_hash=_request_hash(kind=kind,actor=requested_by,etag=expected_installation_etag,
+                                  deadline=deadline,configuration_target=snapshot)
         existing=conn.execute("""SELECT operation_id,phase,status,revision,request_hash
             FROM extension_runtime_operation WHERE org_id=%s AND project_id=%s AND installation_id=%s
             AND kind=%s AND idempotency_key=%s""",(*target,kind,idempotency_key)).fetchone()

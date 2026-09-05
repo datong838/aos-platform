@@ -17,11 +17,17 @@ class RuntimeBindingStore:
         if conn.execute("""SELECT installation_id FROM bundle_installation
             WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE""",target).fetchone() is None:
             raise LookupError("installation not found")
-        operation=conn.execute("""SELECT operation_id FROM extension_runtime_operation
+        operation=conn.execute("""SELECT kind FROM extension_runtime_operation
             WHERE org_id=%s AND project_id=%s AND installation_id=%s AND operation_id=%s FOR UPDATE""",
             (*target,operation_id)).fetchone()
         if operation is None:
             raise LookupError("operation not found for installation")
+        if _values(operation,('kind',))[0] == 'configure':
+            from .configuration_request import load_configure_target
+            target_request = load_configure_target(conn,org_id=org_id,project_id=project_id,operation_id=operation_id)
+            if (str(generation) != target_request.generation or type(expected_binding_revision) is not int
+                    or expected_binding_revision != target_request.bindingRevision):
+                raise RuntimeRevisionConflict('configuration fence target differs from accepted request')
         binding=conn.execute("""SELECT revision FROM extension_runtime_binding
             WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s FOR UPDATE""",
             (*target,generation)).fetchone()
