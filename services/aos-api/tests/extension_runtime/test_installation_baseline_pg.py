@@ -75,8 +75,17 @@ def test_existing_installation_schema_accepts_subordinate_operation(commit_case,
                 # this temporary schema, not business tables or registry writes.
                 for table in ('asset_bundle','asset_bundle_version','asset_bundle_artifact','asset_bundle_evidence'):
                     admin.execute(sql.SQL('GRANT SELECT ON {} TO aos_runtime').format(sql.Identifier(schema,table)))
-                from signed_installation_case import run_signed_installation
+                from signed_installation_case import run_signed_installation,SCHEMA_PROBE_SQL
+                def schema_setup(package_id):
+                    import hashlib
+                    from aos_api.extension_runtime.schema_registry import SchemaRequirement,apply_once
+                    with admin.transaction():
+                        admin.execute(sql.SQL('SET LOCAL search_path TO {}').format(sql.Identifier(schema)))
+                        requirement=SchemaRequirement(package_id,'1','sha256:'+hashlib.sha256(SCHEMA_PROBE_SQL.encode()).hexdigest())
+                        def migrate(c):c.execute(SCHEMA_PROBE_SQL)
+                        assert apply_once(admin,requirement,migrate) is True
                 run_signed_installation(scoped_connect,helper,tmp_path,revoke=commit_case=='signed_revoked',
+                    schema_setup=schema_setup,
                     owned=commit_case in {'signed_owned','signed_planned'},planned=commit_case=='signed_planned',
                     worker_mode=({'signed_worker_artifact_error':'artifact_error','signed_worker_permission_error':'permission_error','signed_worker_verify':'verify'}.get(commit_case,'normal')) if commit_case.startswith('signed_worker') else None)
                 return

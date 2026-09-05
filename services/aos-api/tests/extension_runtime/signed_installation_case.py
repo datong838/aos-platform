@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 import json
 import subprocess
 import uuid
+import hashlib
 
 import pytest
 
@@ -32,7 +33,10 @@ from aos_api.extension_runtime.signed_session import open_signed_session
 from aos_api.extension_runtime.oci_driver import OciDriver
 
 
-def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,planned=False,worker_mode=None):
+SCHEMA_PROBE_SQL='CREATE TABLE runtime_schema_probe (id bigint)'
+
+
+def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,planned=False,worker_mode=None,schema_setup=None):
     from test_admission import fixture
     from test_persistent_supervisor import build_session_image,CONTEXT
     from offline_registry import cached_registry_image
@@ -46,6 +50,8 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
             index=json.loads(files[path])
             index['images'][0].update(imageDigest=manifest_digest,configDigest=config_digest)
             files[path]=json.dumps(index).encode()
+            files['artifacts/schema-requirements.json']=json.dumps({'schemaVersion':1,'requirements':[
+                {'version':'1','migrationHash':'sha256:'+hashlib.sha256(SCHEMA_PROBE_SQL.encode()).hexdigest()}]}).encode()
         now=datetime.now(timezone.utc)
         def manifest(value):
             value['spec']['contributions']=claims['contributions']
@@ -118,10 +124,17 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                 assert member==selected
                 if worker_mode=='artifact_error':raise ValueError('artifact unavailable')
                 return record
+            if worker_mode=='verify':
+                from aos_api.extension_runtime.schema_conditions import CurrentSchemaConditions,schema_package_id
+                assert schema_setup is not None
+                schema_setup(schema_package_id(selected.publisher,selected.id))
+                conditions=CurrentSchemaConditions(load_record=load_record,
+                    read_artifact=lambda member,path,limit:args['read_artifact'](path,limit),policy=policy)
+            else:conditions=None
             worker=PreparationWorker(connect=connect,driver=OciDriver(context=CONTEXT),
                 installation_store=store,revalidator=fresh,check_current_permission=permission,
                 load_record=load_record,read_artifact=args['read_artifact'],policy=policy,platform=args['platform'],
-                check_current_conditions=lambda **kwargs:True,
+                check_current_conditions=conditions,
                 check_verification_permission=lambda **kwargs:permission(verification=True,**kwargs))
             async def run_worker():
                 job=await worker.start(**scope,operation_id=operation,expected_revision=accepted.response_json['revision'])
