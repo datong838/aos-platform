@@ -10,6 +10,11 @@
     "authorized": true,
     "finding": "MediaStudioPage.tsx and MediaStudioPage.test.tsx changes were written by the prior Codex execution during its 12:26-12:33 window; the contested-file stop was a false positive and this run was authorized to take over both files."
   },
+  "lateWatchdogReconciliation": {
+    "observedAt": "2026-09-05T12:56:18+08:00",
+    "finding": "Two local watchdog --once processes resumed the prior task after the first code commit and added history display normalization. They were stopped before further work; the change was retained because the live delivery response carries head version 2 on both historical rows while revision remains 1 and 2.",
+    "verification": "The regression fixture now mirrors that live response and still renders first and second version labels from revision."
+  },
   "rootCause": {
     "code": "STALE_API_PROCESS",
     "finding": "The external acceptance run reached an old :8080 API process whose OpenAPI did not include the R5-M04 delivery, exports, or publish-proposals routes. Restarting :8080 with current m1 restored all three routes.",
@@ -58,11 +63,11 @@
   "changedFileHashes": {
     "apps/web/src/components/workshop/MediaStudioPage.tsx": {
       "before": "24c98b4ce051062dfbf9fe9abe2134eb01b04b7c3b9b374385bd62774ac3c361",
-      "after": "193acf8a7fbc9329d3a5ac9abff2bb2c9aae6a4958e57468484fdc2d14a417e9"
+      "after": "ed1b92079ef49f675ad0f3c0437c9e027b66ebe4a5745f643bd91c10b060c766"
     },
     "apps/web/src/components/workshop/MediaStudioPage.test.tsx": {
       "before": "798e25b34ddb3bc54d38b81e88abb6c650b3d1fe8dfd67e486a3df6c786a9af8",
-      "after": "fea677a61db5cd84630edaf7db682d4c87daf278dfacbc1a0d53d64dbd3f2d9d"
+      "after": "1af3496776b104420e82cc0134cab1d0e9eac9c0d0d9390ccc0179b7bd454b70"
     }
   },
   "evidenceQualityWarning": {
