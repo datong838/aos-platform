@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import UUID, uuid4
 import re
 
-from aos_api.extension_runtime.lifecycle_store import _require_transaction, _values, RuntimeConflict, RuntimeOperationStore
+from aos_api.extension_runtime.lifecycle_store import _require_transaction, _values, _deadline_valid, RuntimeConflict, RuntimeOperationStore
 from aos_api.extension_runtime.supervisor import ResourceIdentity
 
 
@@ -82,13 +82,13 @@ class ResourceJournal:
         if identity is None:
             raise LookupError("resource intent not found")
         operation_id=_values(identity,("operation_id",))[0]
-        operation=conn.execute("""SELECT status,deadline > clock_timestamp() AS valid
+        operation=conn.execute("""SELECT status,deadline
           FROM extension_runtime_operation WHERE org_id=%s AND project_id=%s
           AND operation_id=%s FOR UPDATE""",(org_id,project_id,operation_id)).fetchone()
         if operation is None:
             raise LookupError("operation not found")
-        status,valid=_values(operation,("status","valid"))
-        if status not in {"accepted","running"} or not valid:
+        status,deadline=_values(operation,("status","deadline"))
+        if status not in {"accepted","running"} or not _deadline_valid(conn,deadline):
             raise RuntimeConflict("operation cannot create resources")
         row=conn.execute("""UPDATE extension_runtime_resource_lease
           SET create_claimed_at=clock_timestamp()
@@ -119,12 +119,14 @@ class ResourceJournal:
         conn.execute("""SELECT installation_id FROM bundle_installation
           WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE""",
           (org_id,project_id,installation_id))
-        operation=conn.execute("""SELECT status FROM extension_runtime_operation
+        operation=conn.execute("""SELECT status,deadline FROM extension_runtime_operation
           WHERE org_id=%s AND project_id=%s AND operation_id=%s FOR UPDATE""",target).fetchone()
         if operation is None:
             raise LookupError("operation not found")
         if _values(operation,("status",))[0] not in {"accepted","running"}:
             raise RuntimeConflict("operation no longer accepts resources")
+        if not _deadline_valid(conn,_values(operation,("status","deadline"))[1]):
+            raise RuntimeConflict("operation deadline expired")
         generation=UUID(str(generation))
         existing=conn.execute("""SELECT resource_id,owner_token_ref,engine_context FROM extension_runtime_resource_lease
           WHERE org_id=%s AND project_id=%s AND operation_id=%s AND generation=%s AND package_id=%s AND package_hash=%s""",

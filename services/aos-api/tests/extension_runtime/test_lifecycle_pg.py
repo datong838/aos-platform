@@ -75,6 +75,61 @@ def seed(conn):
     return installation,operation
 
 
+@pytest.mark.parametrize("kind", ["runtime-apply", "runtime-verify", "configure", "enable"])
+def test_expired_positive_operation_cannot_advance(database, kind):
+    from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore, RuntimeConflict
+    conn, _, _ = database
+    _, operation = seed(conn)
+    conn.execute("UPDATE extension_runtime_operation SET kind=%s,deadline=clock_timestamp()-interval '1 second'",(kind,))
+    with pytest.raises(RuntimeConflict,match="expired"):
+        with conn.transaction():
+            RuntimeOperationStore().advance(conn,org_id="org-org",project_id="dev-project",
+                operation_id=operation,expected_revision=1,phase="validating")
+    assert conn.execute("SELECT revision,phase FROM extension_runtime_operation").fetchone()==(1,"accepted")
+    assert conn.execute("SELECT count(*) FROM extension_runtime_outbox").fetchone()[0]==0
+
+
+@pytest.mark.parametrize("mode", ["advance", "prepare", "claim"])
+def test_deadline_is_checked_after_operation_lock_wait(database, mode):
+    from concurrent.futures import ThreadPoolExecutor
+    from datetime import datetime, timezone, timedelta
+    import time
+    from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore, RuntimeConflict
+    from aos_api.extension_runtime.reconciler import ResourceJournal
+    conn, _, schema = database
+    _, operation = seed(conn)
+    args=dict(org_id="org-org",project_id="dev-project",operation_id=operation,generation=uuid.uuid4(),
+        package_id="test-package",package_hash="sha256:"+"a"*64,engine_context="colima-aos-extension",
+        expires_at=datetime.now(timezone.utc)+timedelta(minutes=1))
+    if mode=="claim":
+        with conn.transaction():
+            intent=ResourceJournal().prepare(conn,**args)
+    with psycopg.connect(host="127.0.0.1",port=18432,user="postgres",dbname="postgres",autocommit=True) as worker:
+        worker.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+        worker.execute("SET statement_timeout='5s'")
+        pid=worker.info.backend_pid
+        conn.execute("UPDATE extension_runtime_operation SET deadline=clock_timestamp()+interval '1 second'")
+        def advance():
+            with worker.transaction():
+                if mode=="prepare":
+                    return ResourceJournal().prepare(worker,**args)
+                if mode=="claim":
+                    return ResourceJournal().claim_create(worker,org_id="org-org",project_id="dev-project",resource_id=intent.resource_id)
+                return RuntimeOperationStore().advance(worker,org_id="org-org",project_id="dev-project",
+                    operation_id=operation,expected_revision=1,phase="validating")
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            with conn.transaction():
+                conn.execute("SELECT operation_id FROM extension_runtime_operation FOR UPDATE")
+                future=pool.submit(advance)
+                end=time.monotonic()+3
+                while not conn.execute("SELECT cardinality(pg_blocking_pids(%s)) > 0",(pid,)).fetchone()[0]:
+                    assert time.monotonic()<end
+                    time.sleep(.01)
+                conn.execute("SELECT pg_sleep(1.1)")
+            with pytest.raises(RuntimeConflict):
+                future.result(timeout=5)
+
+
 def test_real_rls_no_scope_and_negative_tenant(database):
     conn,role,_=database
     seed(conn)
@@ -208,6 +263,11 @@ def test_resource_intent_survives_new_reader_and_replay(database):
     with conn.transaction():
         replay=ResourceJournal().prepare(conn,**args)
     assert replay.replayed and replay.resource_id==first.resource_id and replay.identity==first.identity
+    conn.execute("UPDATE extension_runtime_operation SET deadline=clock_timestamp()-interval '1 second'")
+    from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+    with pytest.raises(RuntimeConflict,match="expired"):
+        with conn.transaction():
+            ResourceJournal().prepare(conn,**{**args,"package_id":"another-package"})
     recovered=ResourceJournal().unresolved(conn,org_id="org-org",project_id="dev-project")
     assert len(recovered)==1 and recovered[0].identity==first.identity
     assert ResourceJournal().unresolved(conn,org_id="dev-org",project_id="dev-project")==[]

@@ -43,6 +43,13 @@ def _require_transaction(conn):
         raise RuntimeError("runtime operation requires an explicit transaction")
 
 
+def _deadline_valid(conn, deadline):
+    # Call only after acquiring the operation lock; SELECT target expressions
+    # in the locking statement may have been evaluated before a lock wait.
+    row=conn.execute("SELECT %s > clock_timestamp() AS valid",(deadline,)).fetchone()
+    return _values(row,("valid",))[0] is True
+
+
 class RuntimeOperationStore:
     def settle_failed_preparation(self,conn,*,org_id,project_id,operation_id,expected_revision):
         """Close confirmed failed preparation, never resume or activate it."""
@@ -123,13 +130,15 @@ class RuntimeOperationStore:
         conn.execute("""SELECT installation_id FROM bundle_installation
             WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE""",
             (org_id,project_id,identity[0]))
-        row=conn.execute("""SELECT kind,phase,status,revision FROM extension_runtime_operation
+        row=conn.execute("""SELECT kind,phase,status,revision,deadline FROM extension_runtime_operation
             WHERE org_id=%s AND project_id=%s AND operation_id=%s FOR UPDATE""",target).fetchone()
-        row=_values(row,("kind","phase","status","revision"))
+        row=_values(row,("kind","phase","status","revision","deadline"))
         if type(expected_revision) is not int or row[3]!=expected_revision:
             raise RuntimeRevisionConflict("operation version changed")
         if row[2] not in {"accepted","running"}:
             raise RuntimeConflict("operation does not accept progress")
+        if row[0] in {"runtime-apply","runtime-verify","configure","enable"} and not _deadline_valid(conn,row[4]):
+            raise RuntimeConflict("operation deadline expired")
         next_phase(row[0],row[1],phase)
         status=phase if phase in {"succeeded","cancelled"} else "running"
         revision=row[3]+1
