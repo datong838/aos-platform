@@ -106,8 +106,13 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
         if worker_mode:
             from aos_api.extension_runtime.preparation_worker import PreparationWorker
             permission_calls=[]
-            def permission(**kwargs):
+            def permission(*,verification=False,**kwargs):
                 permission_calls.append(kwargs['actor'])
+                if worker_mode=='verify':
+                    assert kwargs['conn'].execute('SELECT current_user AS role').fetchone()['role']=='aos_runtime'
+                    from aos_api.extension_runtime.current_permission import CurrentControlPermission
+                    from aos_api.asset_registry.control_policy import APPLY_INSTALLATION_OPERATION,VERIFY_INSTALLATION_OPERATION
+                    return CurrentControlPermission(operation=VERIFY_INSTALLATION_OPERATION if verification else APPLY_INSTALLATION_OPERATION)(**kwargs)
                 return worker_mode!='permission_error' or len(permission_calls)==1
             def load_record(member):
                 assert member==selected
@@ -116,7 +121,8 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
             worker=PreparationWorker(connect=connect,driver=OciDriver(context=CONTEXT),
                 installation_store=store,revalidator=fresh,check_current_permission=permission,
                 load_record=load_record,read_artifact=args['read_artifact'],policy=policy,platform=args['platform'],
-                check_current_conditions=lambda **kwargs:True)
+                check_current_conditions=lambda **kwargs:True,
+                check_verification_permission=lambda **kwargs:permission(verification=True,**kwargs))
             async def run_worker():
                 job=await worker.start(**scope,operation_id=operation,expected_revision=accepted.response_json['revision'])
                 if worker_mode not in {'normal','verify'}:

@@ -1,6 +1,6 @@
 """Trusted in-process worker composition; durable dispatch/restart remains separate."""
 import asyncio
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timezone
 
 from .journaled_session import _settle
@@ -12,6 +12,7 @@ from .preparation_plan import claim_preparation
 from .reconciler import ResourceJournal
 from .signed_session import open_signed_session
 from .verification_commit import commit_verified
+from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 
 
 class PreparedJob:
@@ -89,7 +90,7 @@ class PreparedJob:
 class PreparationWorker:
     def __init__(self, *, connect, driver, installation_store, revalidator,
                  check_current_permission, load_record, read_artifact, policy, platform,
-                 check_current_conditions=None):
+                 check_current_conditions=None, check_verification_permission=None):
         self.connect=connect
         self.driver=driver
         self.store=installation_store
@@ -100,25 +101,36 @@ class PreparationWorker:
         self.policy=policy
         self.platform=platform
         self.conditions=check_current_conditions
+        self.verification_permission=check_verification_permission
 
-    def _verify(self,scope,plan,operation_id,expected_revision,observed):
+    @contextmanager
+    def _connection(self, scope):
         with self.connect() as conn:
             with conn.transaction():
+                apply_asset_transaction_scope(conn, **scope)
+                row=conn.execute('SELECT current_user AS role').fetchone()
+                if _values(row,('role',))[0]!='aos_runtime':
+                    raise RuntimeConflict('worker requires adopted runtime control role')
+                yield conn
+
+    def _verify(self,scope,plan,operation_id,expected_revision,observed):
+        with self._connection(scope) as conn:
+            with conn.transaction():
                 return commit_verified(conn,installation_store=self.store,revalidator=self.revalidator,
-                    check_current_permission=self.permission,check_current_conditions=self.conditions,
+                    check_current_permission=self.verification_permission,check_current_conditions=self.conditions,
                     **scope,operation_id=operation_id,expected_revision=expected_revision,
                     preparation_operation_id=plan.operation_id,generation=plan.generation,
                     health_checked_at=observed)
 
     def _claim(self,scope,operation_id,expected_revision):
-        with self.connect() as conn:
+        with self._connection(scope) as conn:
             with conn.transaction():
                 return claim_preparation(conn,installation_store=self.store,revalidator=self.revalidator,
                     check_current_permission=self.permission,**scope,operation_id=operation_id,
                     expected_revision=expected_revision,engine_context=self.driver.context)
 
     def _commit(self,scope,plan):
-        with self.connect() as conn:
+        with self._connection(scope) as conn:
             with conn.transaction():
                 row=conn.execute('''SELECT revision FROM extension_runtime_operation
                     WHERE org_id=%s AND project_id=%s AND operation_id=%s''',
@@ -133,7 +145,7 @@ class PreparationWorker:
     def _finalize(self,scope,plan,code):
         # Release unissued permits even when another member remains uncertain.
         # Claimed permits are never inferred absent from a missing container ID.
-        with self.connect() as conn:
+        with self._connection(scope) as conn:
             with conn.transaction():
                 for member in plan.members:
                     row=conn.execute('''SELECT create_claimed_at,observed_release FROM extension_runtime_resource_lease
@@ -143,7 +155,7 @@ class PreparationWorker:
                     claimed,released=_values(row,('create_claimed_at','observed_release'))
                     if claimed is None and not released:
                         ResourceJournal().cancel_unclaimed(conn,**scope,intent=member.intent)
-        with self.connect() as conn:
+        with self._connection(scope) as conn:
             with conn.transaction():
                 row=conn.execute('''SELECT revision,phase,status FROM extension_runtime_operation
                     WHERE org_id=%s AND project_id=%s AND operation_id=%s''',
@@ -166,7 +178,7 @@ class PreparationWorker:
                 @asynccontextmanager
                 async def open_member():
                     record=await asyncio.to_thread(self.load_record,member.selected)
-                    async with open_signed_session(driver=self.driver,connect=self.connect,**scope,
+                    async with open_signed_session(driver=self.driver,connect=lambda:self._connection(scope),**scope,
                         resource_id=member.intent.resource_id,record=record,selected=member.selected,
                         policy=self.policy,checked_at=datetime.now(timezone.utc),read_artifact=self.read_artifact,
                         platform=self.platform) as session:
@@ -177,7 +189,7 @@ class PreparationWorker:
                 if was_cancelled:raise asyncio.CancelledError
                 return result
             owner=PreparationOwner([factory(member) for member in plan.members],commit,lease_seconds=remaining)
-            verify=(lambda operation_id,revision,observed:self._verify(scope,plan,operation_id,revision,observed)) if callable(self.conditions) else None
+            verify=(lambda operation_id,revision,observed:self._verify(scope,plan,operation_id,revision,observed)) if callable(self.conditions) and callable(self.verification_permission) else None
             return PreparedJob(plan,owner,lambda code:self._finalize(scope,plan,code),verify)
         except BaseException:
             await _settle(asyncio.create_task(asyncio.to_thread(self._finalize,scope,plan,'PREPARATION_STOPPED')))

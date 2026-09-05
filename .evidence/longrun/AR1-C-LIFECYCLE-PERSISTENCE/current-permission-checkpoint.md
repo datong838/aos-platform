@@ -1,0 +1,13 @@
+# AR1-c 当前控制权限与作用域接线检查点
+
+2026-09-06；m1基线abaff203 / AOS-000527，沿用主生命周期Lease。
+
+新增本地PG当前控制权限reader：同事务按精确租户/actor读取meta_membership角色及目标marking的authz_tuple bearer，共享锁维持到提交。复用原控制角色策略，无owner映射、JWT旧claims或内存示例许可，remote部署拒绝而不降级。准备与验证分别注入操作权限；条件reader仍独立。
+
+真实联合反证暴露worker原连接没有绑定作用域，current permission tenant differs；已统一worker claim/commit/verify/finalize及签名session journal事务复用apply_asset_transaction_scope，并严格要求当前角色aos_runtime，未采用旧schema管理连接fallback。联合用例断言运行角色。该修复同时修正此前测试管理连接可能掩盖RLS接线的证据局限。
+
+测试：权限模块缺失Red7failed→7passed/7.31s；增补remote拒绝和双连接撤权等待后9passed/7.98s。真实签名worker目标初次失败，scope修复后4passed/18.35s；累计512passed/6既有warnings/91.54s/exit0。其后分别注入verify权限和严格角色断言，最终受影响四条worker回归4passed/36deselected/18.93s/exit0。独立Prime只读复审未发现授权绕过，指出临时表与现网不能等同。
+
+额外现有应用数据库只读元数据探针（READ ONLY、3秒statement_timeout）：public.meta_membership与authz_tuple存在，aos_runtime均有SELECT/UPDATE，但两表RLS/FORCE RLS为false；extension_runtime_binding及extension_schema_installation未检出。未读取成员或客户内容、未执行DDL或GRANT。因此不宣称共享部署可用或数据库迁移已完成；权限表治理和运行迁移保留在受控部署检查，当前reader有显式双租户谓词。
+
+无页面变更，未重载在线后端；前述浏览器冒烟不能冒称此代码验收。未写真实业务数据/权限，无Provider/费用/发布。业务场景新增0，整波IN_PROGRESS。下一段继续签名schema条件契约与当前schema读取，随后配置启用、持久派发/恢复；部署维护门未跳过。

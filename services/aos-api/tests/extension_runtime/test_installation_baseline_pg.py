@@ -63,6 +63,13 @@ def test_existing_installation_schema_accepts_subordinate_operation(commit_case,
                 admin.execute(sql.SQL("ALTER TABLE {} ENABLE ROW LEVEL SECURITY").format(qualified))
                 admin.execute(sql.SQL("ALTER TABLE {} FORCE ROW LEVEL SECURITY").format(qualified))
             if commit_case.startswith('signed'):
+                if commit_case=='signed_worker_verify':
+                    for table,fields in (('meta_membership','subject text,role text'),
+                                         ('authz_tuple','user_key text,relation text,object_key text')):
+                        admin.execute(sql.SQL('CREATE TABLE {} (org_id text,project_id text,{})').format(
+                            sql.Identifier(schema,table),sql.SQL(fields)))
+                        admin.execute(sql.SQL('GRANT SELECT,UPDATE ON {} TO aos_runtime').format(sql.Identifier(schema,table)))
+                    admin.execute(sql.SQL("INSERT INTO {} VALUES('org-org','dev-project','test-author','admin')").format(sql.Identifier(schema,'meta_membership')))
                 # Global immutable template facts are read by the scoped
                 # installation control role; grant only these four reads in
                 # this temporary schema, not business tables or registry writes.
