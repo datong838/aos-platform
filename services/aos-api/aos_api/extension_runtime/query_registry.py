@@ -13,6 +13,8 @@ class ValidatedSelect:
     table: str
     columns: tuple[str, ...]
     parameter_count: int
+    predicate_column: str
+    operator: str
 
 
 def validate_parameter(kind: str, value):
@@ -100,9 +102,10 @@ def validate_select_template(
     if (len(operators) != 1 or operators[0].get("@") != "String"
             or operators[0].get("sval") not in {"=", "<>", "<", "<=", ">", ">="}):
         raise ValueError("unsupported comparison")
-    column(predicate.get("lexpr", {}))
+    predicate_column = column(predicate.get("lexpr", {}))
     parameter = predicate.get("rexpr", {})
     if (parameter.get("@") != "ParamRef" or parameter.get("number") != 1
             or set(parameter) - {"@", "number", "location"} or parameter_count != 1):
         raise ValueError("exactly one bound parameter required")
-    return ValidatedSelect(sql, table, tuple(columns), parameter_count)
+    return ValidatedSelect(sql, table, tuple(columns), parameter_count,
+                           predicate_column, operators[0]["sval"])

@@ -14,6 +14,8 @@ def test_explicit_columns_and_parameter_predicate():
     accepted=check("SELECT id, name FROM domain.products WHERE price >= $1")
     assert accepted.table=="domain.products"
     assert accepted.columns==("id","name")
+    assert accepted.predicate_column=="price"
+    assert accepted.operator==">="
 
 
 @pytest.mark.parametrize("query",[

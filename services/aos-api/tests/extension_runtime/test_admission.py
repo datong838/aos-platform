@@ -13,22 +13,28 @@ from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 
 
-def fixture():
+def fixture(transform_files=None, namespace="example"):
     path=Path(__file__).resolve().parents[1]/"asset_registry/test_release_policy.py"
     spec=importlib.util.spec_from_file_location("runtime_release_fixture",path)
     module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module;spec.loader.exec_module(module)
     record,roots=module._record()
     raw_manifest=record.manifest.model_dump(mode="json",by_alias=True)
     raw_manifest["spec"]["runtime"]={"apiVersion":"aos.dev/bundle-runtime/v1alpha1","backend":{
-      "entrypoint":"backend/example/__init__.py:register","pythonPackage":"example","schemaNamespace":"example",
+      "entrypoint":"backend/example/__init__.py:register","pythonPackage":"example","schemaNamespace":namespace,
       "profileId":"internal-python-v1","imageIndex":"artifacts/backend-image.json"}}
     record.manifest=type(record.manifest).model_validate(raw_manifest)
     import hashlib
     digest=lambda raw:"sha256:"+hashlib.sha256(raw).hexdigest()
     files={"artifacts/python-dependencies.lock":b"sdk==0.1.0\n","evidence/sbom.json":b'{"packages":[]}'}
+    files["artifacts/product-query.sql"]=f"SELECT name FROM {namespace}.products WHERE id=$1".encode()
+    files["artifacts/storage-registry.json"]=json.dumps({"schemaVersion":1,"queries":[{
+      "operationId":"products.read","sqlPath":"artifacts/product-query.sql","table":namespace+".products",
+      "columnTypes":{"id":"int8","name":"text"},"limit":100}]}).encode()
     files["artifacts/backend-image.json"]=json.dumps({"schemaVersion":1,"images":[{
       "platform":"linux/arm64","imageDigest":"sha256:"+"a"*64,"configDigest":"sha256:"+"b"*64,
       "dependencyLockHash":digest(files["artifacts/python-dependencies.lock"]),"sbomPath":"evidence/sbom.json"}]}).encode()
+    if transform_files:
+        transform_files(files)
     record.artifacts=[{"relativePath":path,"digest":digest(raw),"size":len(raw),"mediaType":"application/octet-stream"}
                       for path,raw in sorted(files.items())]
     descriptor={"manifest":record.manifest.model_dump(mode="json",by_alias=True,exclude_none=False),"artifacts":record.artifacts}
@@ -60,6 +66,43 @@ def test_signed_index_lock_sbom_and_cache_are_joined():
     args,_=fixture()
     assert admit_runtime_artifact(**args).image_id=="sha256:"+"b"*64
     assert args["driver"].calls==1
+
+
+def test_query_registry_uses_exact_signed_release():
+    from aos_api.extension_runtime.admission import admit_query_registry
+    args,_=fixture()
+    result=admit_query_registry(**{key:value for key,value in args.items() if key not in {"platform","driver"}})
+    assert result[0].operation_id=="products.read"
+    assert result[0].limit==100
+    assert result[0].package_hash==args["record"].content_hash
+    assert args["driver"].calls==0
+
+
+@pytest.mark.parametrize("path",["artifacts/storage-registry.json","artifacts/product-query.sql"])
+def test_query_registry_rejects_changed_bytes(path):
+    from aos_api.extension_runtime.admission import admit_query_registry
+    args,files=fixture()
+    files[path]+=b" "
+    with pytest.raises(ValueError):
+        admit_query_registry(**{key:value for key,value in args.items() if key not in {"platform","driver"}})
+
+
+@pytest.mark.parametrize("defect",["namespace","duplicate","unknown","limit","function","signature"])
+def test_even_signed_query_definitions_must_pass_registry_contract(defect):
+    from aos_api.extension_runtime.admission import admit_query_registry
+    def transform(files):
+        path="artifacts/storage-registry.json"
+        doc=json.loads(files[path]);entry=doc["queries"][0]
+        if defect=="namespace":entry["table"]="platform.products"
+        if defect=="duplicate":doc["queries"].append(entry.copy())
+        if defect=="unknown":entry["executeAsSuperuser"]=True
+        if defect=="limit":entry["limit"]=501
+        if defect=="function":files["artifacts/product-query.sql"]=b"SELECT evil($1) FROM example.products"
+        files[path]=json.dumps(doc).encode()
+    args,_=fixture(transform)
+    if defect=="signature":args["record"].signature=None
+    with pytest.raises(Exception):
+        admit_query_registry(**{key:value for key,value in args.items() if key not in {"platform","driver"}})
 
 
 @pytest.mark.parametrize("tamper",["signature","index","lock","sbom"])

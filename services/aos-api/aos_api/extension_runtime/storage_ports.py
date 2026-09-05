@@ -1,11 +1,84 @@
 """Trusted broker transaction guard; not an arbitrary SQL execution port."""
 from aos_api.extension_runtime.lifecycle_store import _require_transaction, _values
 import re
+import json
+import uuid
+from time import monotonic
 from psycopg import sql
+from psycopg.pq import TransactionStatus
+from aos_api.extension_runtime.query_registry import validate_select_template, validate_parameter
 
 
 class StorageRoleDenied(PermissionError):
     pass
+
+
+def read_registered_rows(conn, *, raw, expected_hash, table, column_types,
+                         parameter, org_id, project_id, limit=100):
+    """Internal broker primitive, after signed admission and epoch authorization.
+
+    No router/IPC exposes this function. Scope and registry metadata are trusted
+    broker inputs, never values supplied by an extension process.
+    """
+    if not conn.autocommit or conn.info.transaction_status != TransactionStatus.IDLE:
+        raise StorageRoleDenied("dedicated idle connection required")
+    if type(limit) is not int or not 1 <= limit <= 500:
+        raise ValueError("invalid row limit")
+    deadline = monotonic() + 10.0
+    column_types = dict(column_types)
+    template = validate_select_template(raw, expected_hash=expected_hash,
+        tables={table: frozenset(column_types)}, parameter_count=1)
+    parameter = validate_parameter(column_types[template.predicate_column], parameter)
+    with conn.transaction():
+        conn.execute("SET TRANSACTION READ ONLY")
+        conn.execute("SELECT pg_catalog.set_config('search_path','pg_catalog',true), "
+                     "pg_catalog.set_config('statement_timeout','10000',true), "
+                     "pg_catalog.set_config('lock_timeout','1000',true), "
+                     "pg_catalog.set_config('aos.org_id',%s,true), "
+                     "pg_catalog.set_config('aos.project_id',%s,true)", (org_id, project_id))
+        def remaining_budget():
+            remaining = int((deadline - monotonic()) * 1000)
+            if remaining <= 0:
+                raise TimeoutError("registry read deadline exceeded")
+            conn.execute("SELECT pg_catalog.set_config('statement_timeout',%s,true)", (str(remaining),))
+
+        class BudgetedConnection:
+            info = conn.info
+
+            def execute(self, *args, **kwargs):
+                remaining_budget()
+                return conn.execute(*args, **kwargs)
+
+        guarded = BudgetedConnection()
+        require_registry_relation(guarded, table=table, column_types=column_types)
+        require_runtime_role(guarded, org_id=org_id, project_id=project_id, protected_tables=(table,))
+
+        projections = [sql.SQL("pg_catalog.left({},4097)").format(sql.Identifier(name))
+                       if column_types[name] == "text" else sql.Identifier(name)
+                       for name in template.columns]
+        query = sql.SQL("SELECT {} FROM ONLY {} WHERE {} {} %s LIMIT %s").format(
+            sql.SQL(",").join(projections), sql.Identifier(*table.split(".")),
+            sql.Identifier(template.predicate_column), sql.SQL(template.operator))
+        rows, size = [], 0
+        with conn.cursor(name="registry_"+uuid.uuid4().hex) as cursor:
+            remaining_budget()
+            cursor.execute(query, (parameter, limit+1))
+            while True:
+                remaining_budget()
+                row = cursor.fetchone()
+                if row is None:
+                    break
+                if isinstance(row, dict):
+                    raise StorageRoleDenied("tuple row factory required")
+                if any(isinstance(value, str) and len(value.encode("utf-8")) > 4096 for value in row):
+                    raise ValueError("result value exceeds byte limit")
+                size += len(json.dumps(row, ensure_ascii=False).encode("utf-8"))
+                if len(rows) >= limit or size > 1024*1024:
+                    raise ValueError("result exceeds registry limit")
+                rows.append(tuple(row))
+        if monotonic() >= deadline:
+            raise TimeoutError("registry read deadline exceeded")
+        return tuple(rows)
 
 
 def require_registry_relation(conn, *, table, column_types):
