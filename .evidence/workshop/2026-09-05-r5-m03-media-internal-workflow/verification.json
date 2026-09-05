@@ -3,11 +3,15 @@
   "taskId": "WORKSHOP-R5-M03-MEDIA-INTERNAL-STATE-MACHINE",
   "recordedAt": "2026-09-05",
   "codeCommit": "d67a120b13605092c835b277246f810cfc678c3d",
-  "status": "CODE_AND_AUTOMATED_TEST_GREEN_BROWSER_BLOCKED",
+  "status": "GREEN",
   "tenantBoundary": {
     "positive": "org-org/dev-project",
     "negativeCanary": "dev-org/dev-project",
-    "browserMutationPerformed": false
+    "browserMutationPerformed": true,
+    "positiveTaskRefs": [
+      "brief-342998cb15104ade85f6@25",
+      "栖月汇微商城会员种草任务@1"
+    ]
   },
   "verification": [
     {
@@ -39,13 +43,29 @@
       "command": "git diff --check",
       "cwd": ".",
       "result": "passed for the committed implementation scope"
+    },
+    {
+      "command": "pytest -q test_ecommerce_media_internal_workflow.py plus five adjacent media suites",
+      "cwd": "services/aos-api",
+      "result": "40 passed, 27 warnings"
     }
   ],
   "browser": {
     "tool": "Codex built-in browser",
     "requestedUrl": "http://127.0.0.1:5173/workshop/media-studio",
-    "result": "BLOCKED",
-    "reason": "Browser is not available: iab"
+    "result": "PASSED",
+    "viewport": "1280x720",
+    "reference": "http://127.0.0.1:8765/workshop-media-studio.html",
+    "checks": [
+      "same-viewport reference and implementation comparison",
+      "three media tabs switch independently",
+      "full Workshop and AIP sidebar collapses and restores",
+      "created 栖月汇微商城会员种草任务 from the page",
+      "saved input and evidence, reassigned, prepared sample/template/live/batch, scheduled, paused, resumed and returned",
+      "refreshed and read back the canonical task list and continuous history",
+      "negative dev-org/dev-project canary returned 404 module not installed"
+    ],
+    "defectClosedDuringAcceptance": "The UI initially sent the entire draft as draftRef and received request validation failed. It now sends only resourceType, resourceId, revision and contentHash; the same browser flow then saved successfully."
   },
   "effects": {
     "providerInvocation": 0,
@@ -54,5 +74,24 @@
     "externalPublish": 0,
     "release": 0
   },
-  "exitDecision": "Do not mark R5-M03 complete and do not start R5-M04 until the built-in browser acceptance, real-tenant refresh readback, negative canary, EvidencePack completion, Delivery Receipt and authority CAS are closed."
+  "changedFiles": [
+    "services/aos-api/aos_api/ecommerce_media_internal_workflow_contracts.py",
+    "services/aos-api/aos_api/ecommerce_media_internal_workflow.py",
+    "services/aos-api/aos_api/routers/ecommerce_workshop.py",
+    "services/aos-api/tests/test_ecommerce_media_internal_workflow.py",
+    "services/aos-api/tests/test_ecommerce_workshop_api.py",
+    "apps/web/src/api/ecommerceWorkshop/mediaWorkflowParser.ts",
+    "apps/web/src/api/ecommerceWorkshop/mediaWorkflowParser.test.ts",
+    "apps/web/src/api/ecommerceWorkshop/contracts.ts",
+    "apps/web/src/api/ecommerceWorkshop/client.ts",
+    "apps/web/src/api/ecommerceWorkshop/index.ts",
+    "apps/web/src/api/ecommerceWorkshop/mediaWorkflowClient.test.ts",
+    "apps/web/src/components/workshop/MediaStudioPage.tsx",
+    "apps/web/src/components/workshop/MediaStudioPage.test.tsx",
+    "apps/web/src/styles/45-ecommerce-workshop.css",
+    ".evidence/workshop/2026-09-05-r5-m03-media-internal-workflow/verification.json",
+    ".evidence/workshop/2026-09-05-r5-m03-media-internal-workflow/design-qa.md",
+    "design-qa.md"
+  ],
+  "exitDecision": "R5-M03 browser, real-tenant, negative-canary, automated, build and zero-external-effect evidence is complete. Proceed to Delivery Receipt, authority CAS, memory gate and independent Prime readback before R5-M04."
 }
