@@ -36,6 +36,36 @@
 
 final result: passed
 
+# R5-M01 多媒体内容生产视觉工作区
+
+- source visual truth path: `/Users/ddt/work/projects/ai_agent/docs/palantier/foundry/html/workshop-media-studio.html`
+- implementation route: `http://127.0.0.1:5173/workshop/media-studio`
+- tenant: `org-org/dev-project`
+- browser: Codex 内置浏览器
+- viewports: 1280 × 720、1440 × 900、1920 × 1080 CSS px
+- data boundary: 只回读当前租户 canonical 媒体视图；视觉稿中的篇数、GMV、任务名称、CTR、生成结果和发布结论均未复制
+
+## Findings
+
+- 无 P0/P1/P2 可执行差异。实现已恢复视觉稿的页头搜索与动作、四项摘要、三类媒体标签、左侧任务列表、中部生产中心、右侧内容官建议/证据与版本/交付准备，以及底部批量操作。
+- 1280、1440、1920 三档视口均无页头挤压、三栏重叠、浮层遮挡、横向截断或底部操作覆盖；完整侧栏在三档视口均可见并可折叠恢复。
+- canonical 媒体任务为空时，页面仍可搜索、筛选、切换标签、建立内部生产准备并查看证据/版本/评审入口；没有用演示内容冒充正式业务数据。
+- 视觉稿的任务密度与经营指标属于演示事实；实际页使用可信空和正式数据准备入口替代，这是数据边界差异，不是视觉结构缺失。
+
+## Primary interactions tested
+
+- 页头“＋ 新建内容任务”、页内“新建生产准备”和“创建交付草稿”均可打开内部生产准备表单；保存、取消和收起有明确反馈。
+- 页头搜索与页内搜索联动；全部、草稿、复核中筛选可切换并更新可信空说明；种草文案、短视频、数字人直播标签可切换。
+- 历史版本、导出清单、样片准备、选择模板、安排生产、直播控制、补充生产证据、查看版本、评审清单、全选和批量生产准备均有可见状态反馈。
+- `dev-org/dev-project` 负向 canary 仅显示“模块未安装”，未显示栖月汇数据；验收后已恢复 `org-org/dev-project`。
+
+## Comparison history
+
+- 首次浏览器对照发现页内筛选是静态按钮、保存反馈暴露技术波次编号、页头新建动作提示仍是通用等待文案；已补齐筛选状态与空态联动，删除技术编号，并改为明确的内部生产任务提示后重新验收。
+- 同一内置浏览器分别打开视觉稿与运行页，并用同源 iframe 视口架验证三档精确 CSS 视口；未发现需要继续修复的 P0/P1/P2 视觉问题。
+
+final result: passed
+
 # R5-D05 达人邀约驾驶舱累计验收
 
 - source visual truth path: `/Users/ddt/work/projects/ai_agent/docs/palantier/foundry/html/workshop-creator-outreach.html`

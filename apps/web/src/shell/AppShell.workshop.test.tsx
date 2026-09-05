@@ -320,7 +320,7 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
       expect(host.querySelector<HTMLInputElement>(".workshop-visual-header-search input")?.placeholder ?? null).toBe(placeholder);
       const actions = [...host.querySelectorAll<HTMLButtonElement>(".workshop-visual-header-actions button")];
       expect(actions).toHaveLength(2);
-      const executable = actions.filter((button) => button.textContent === "筛选" || button.textContent === "查看内容计划" || path === "/workshop/creator-growth" || (path === "/workshop/operations" && button.textContent === "＋ 新建处理"));
+      const executable = actions.filter((button) => button.textContent === "筛选" || button.textContent === "查看内容计划" || path === "/workshop/creator-growth" || path === "/workshop/media-studio" || (path === "/workshop/operations" && button.textContent === "＋ 新建处理"));
       expect(executable.every((button) => !button.disabled)).toBe(true);
       expect(actions.filter((button) => !executable.includes(button)).every((button) => button.disabled)).toBe(true);
       expect(host.querySelector('.workshop-header-action-notice')).toBeNull();

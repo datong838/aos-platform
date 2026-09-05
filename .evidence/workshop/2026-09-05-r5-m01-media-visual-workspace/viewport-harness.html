@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>多媒体工作台等视口验收</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; background: #dfe6ef; font-family: sans-serif; }
+      header { height: 44px; padding: 10px 16px; color: #243247; background: #fff; border-bottom: 1px solid #cbd5e1; }
+      #stage { position: relative; margin: 12px; transform-origin: top left; }
+      iframe { display: block; border: 1px solid #94a3b8; background: #fff; }
+    </style>
+  </head>
+  <body>
+    <header id="label"></header>
+    <main id="stage">
+      <iframe id="target" title="多媒体内容生产工作台"></iframe>
+    </main>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const allowed = new Set(["1280x720", "1440x900", "1920x1080"]);
+      const size = allowed.has(params.get("size")) ? params.get("size") : "1280x720";
+      const [width, height] = size.split("x").map(Number);
+      const frame = document.getElementById("target");
+      const stage = document.getElementById("stage");
+      document.getElementById("label").textContent = `验收视口 ${width} × ${height} CSS px`;
+      frame.width = String(width);
+      frame.height = String(height);
+      frame.src = "http://127.0.0.1:5173/workshop/media-studio";
+      const fit = () => {
+        const scale = Math.min((innerWidth - 24) / width, (innerHeight - 68) / height, 1);
+        stage.style.transform = `scale(${scale})`;
+        stage.style.width = `${width}px`;
+        stage.style.height = `${height}px`;
+      };
+      addEventListener("resize", fit);
+      fit();
+    </script>
+  </body>
+</html>

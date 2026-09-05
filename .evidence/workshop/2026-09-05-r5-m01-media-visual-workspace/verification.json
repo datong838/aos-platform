@@ -1,0 +1,36 @@
+{
+  "schema": "aos.workshop.browser-verification/v1",
+  "wave": "R5-M01",
+  "route": "/workshop/media-studio",
+  "reference": "/Users/ddt/work/projects/ai_agent/docs/palantier/foundry/html/workshop-media-studio.html",
+  "browser": "Codex in-app browser",
+  "positiveTenant": "org-org/dev-project",
+  "negativeCanary": "dev-org/dev-project",
+  "viewports": ["1280x720", "1440x900", "1920x1080"],
+  "visualResult": "passed",
+  "interactions": [
+    "header search mirrors task search",
+    "all/draft/review filters update selected and empty states",
+    "three media tabs switch the production workspace",
+    "header and page create actions open the internal preparation form",
+    "history/export/sample/template/schedule/live-control actions show feedback",
+    "evidence/version/delivery/review actions show feedback",
+    "batch actions show feedback",
+    "full navigation collapses and restores"
+  ],
+  "tenantIsolation": {
+    "positive": "canonical view returned org-org/dev-project and an honest empty media task set",
+    "negative": "dev-org/dev-project rendered module not installed and no qiyuehui data",
+    "restored": true
+  },
+  "tests": {
+    "targeted": "21 passed",
+    "web": "273 files / 2463 tests passed",
+    "typescript": "passed",
+    "productionBuild": "passed with pre-existing chunk-size warning",
+    "diffCheck": "passed"
+  },
+  "externalEffects": 0,
+  "providerCalls": 0,
+  "publishes": 0
+}

@@ -6,6 +6,12 @@ import { MediaStudioPage } from "./MediaStudioPage";
 
 const response = (): MediaStudioViewResponse => ({ schemaVersion: "aos.ecommerce-workshop.media-studio-view/v3", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: ["context", "execution", "delivery"].map((sliceId) => ({ sliceId: sliceId as "context" | "execution" | "delivery", status: "blocked", dataCutoff: "2026-08-24T08:00:00Z", readinessAxes: ["module", "capability", "assignee", "provider", "budget", "publication"].map((axis) => ({ axis: axis as "module", status: "target", exactRef: null, targetContractRef: `ADR-86#${axis}`, gaps: ["missing authority"], blockers: [{ code: "MEDIA_AUTHORITY_NOT_AVAILABLE", dependency: axis, requiredAction: "attach exact ref" }] })), authorityRefs: [], blockers: [{ code: `MEDIA_${sliceId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`, dependency: sliceId, requiredAction: "attach exact refs" }], countLedger: { denominator: 6, ready: 0, target: 6, blocked: 0, unknown: 0, conflict: 0, notApplicable: 0 } })), providerJobsStatus: "blocked", providerJobs: [], providerJobBlockers: [{ code: "MEDIA_PROVIDER_JOB_AUTHORITY_NOT_AVAILABLE", dependency: "aip.media-provider-jobs", requiredAction: "install authority" }], mediaFinanceStatus: "ready", mediaFinance: [], mediaFinanceBlockers: [], lifecycleStatus: "blocked", lifecycle: null, lifecycleBlockers: [{ code: "MEDIA_LIFECYCLE_LEGACY_VIEW", dependency: "media-studio-v4", requiredAction: "refresh canonical v4 projection" }], publishStatus: "blocked", publishContributions: [], publishBlockers: [{ code: "MEDIA_PUBLISH_LEGACY_VIEW", dependency: "media-studio-v5", requiredAction: "refresh canonical v5 projection" }], page: { limit: 100, count: 0, hasMore: false, nextCursor: null } });
 
+const expectInternalWorkspaceControls = (host: HTMLElement) => {
+  const labels = Array.from(host.querySelectorAll("button")).map((item) => item.textContent);
+  expect(labels).toEqual(expect.arrayContaining(["重新读取", "历史版本", "导出清单", "批量生产准备"]));
+  expect(labels).not.toEqual(expect.arrayContaining(["立即生成", "立即发布", "执行发布"]));
+};
+
 const fullVideoScenario = (): FullVideoScenarioContribution => {
   const contentHash = `sha256:${"a".repeat(64)}`; const ref = (resourceType: string, resourceId: string) => ({ resourceType, resourceId, revision: 1, contentHash });
   const blocker = { code: "FULL_VIDEO_EXTERNAL_GATE_REQUIRED", dependency: "workshop.full-video", requiredAction: "append exact current evidence" };
@@ -40,8 +46,8 @@ describe("MediaStudioPage", () => {
     expect(host.querySelector(".media-studio-context-strip")?.textContent).toContain("内容官（负责人未绑定）");
     expect(host.querySelector(".media-studio-context-strip")?.textContent).toContain("今日计划：待核对");
     expect(host.querySelector(".media-studio-task-empty")?.textContent).toContain("当前没有可审阅文案任务");
-    expect(host.querySelector(".media-studio-production-empty")?.textContent).toContain("等待生产上下文");
-    expect(host.querySelector(".media-studio-advice-empty")?.textContent).toContain("尚无可回链内容建议");
+    expect(host.querySelector(".media-studio-production-empty")?.textContent).toContain("先完成内部生产准备");
+    expect(host.querySelector(".media-studio-advice-empty")?.textContent).toContain("先补齐可信生产上下文");
     expect(host.textContent).not.toMatch(/七夕专题|banner 文案|历史回款 CTR|整体 GMV 贡献 ¥/);
     expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).some((button) => button.textContent === "重新读取")).toBe(true);
     expect(host.textContent).toContain("target ≠ achieved；Provider submitted ≠ delivered；published、settled 与 effect-reviewed 分轴。");
@@ -54,6 +60,26 @@ describe("MediaStudioPage", () => {
     expect(tab).toBeTruthy();
     act(() => tab?.click());
     expect(host.querySelector('[role="tabpanel"]')?.textContent).toContain("当前没有可挂接的媒体业务数据");
+  });
+
+  it("按视觉稿恢复三栏生产工作区、发布准备侧栏和底部批量操作且空数据也可开始内部准备", async () => {
+    await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()) }} />); });
+    expect(host.querySelector(".media-studio-task-lane")?.textContent).toContain("文案任务");
+    expect(host.querySelector(".media-studio-center")?.textContent).toContain("生产中心");
+    expect(host.querySelector(".media-studio-advice-lane")?.textContent).toContain("证据与版本");
+    expect(host.querySelector(".media-studio-advice-lane")?.textContent).toContain("交付准备");
+    expect(host.querySelector(".media-studio-batch-bar")?.textContent).toContain("批量生产准备");
+    const prepare = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "新建生产准备");
+    expect(prepare).toBeTruthy();
+    act(() => prepare?.click());
+    expect(host.querySelector(".media-studio-preparation-form")).toBeTruthy();
+    expect(host.textContent).toContain("建立内部生产草稿");
+    expect(host.textContent).not.toMatch(/七夕专题|banner 文案|整体 GMV 贡献 ¥/);
+    const reviewFilter = Array.from(host.querySelectorAll<HTMLButtonElement>(".media-studio-filter-row button")).find((item) => item.textContent === "复核中");
+    act(() => reviewFilter?.click());
+    expect(reviewFilter?.getAttribute("aria-pressed")).toBe("true");
+    expect(host.querySelector(".media-studio-task-empty")?.textContent).toContain("当前没有复核中任务");
+    expect(host.textContent).not.toContain("R5-M03");
   });
 
   it("用 roving tabindex 和稳定 controls 支持方向键、Home 与 End", async () => {
@@ -81,7 +107,7 @@ describe("MediaStudioPage", () => {
     expect(host.textContent).toContain("内容官 · unknown");
     expect(host.textContent).toContain("media-generate");
     expect(host.textContent).toContain("外部副作用关闭");
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案等待条件", "短视频等待条件", "数字人直播等待条件"]);
+    expectInternalWorkspaceControls(host);
   });
 
   it("按币种分轴展示双预留、取消、Usage 与 Settlement 且保持只读", async () => {
@@ -93,7 +119,7 @@ describe("MediaStudioPage", () => {
     expect(host.textContent).toContain("CNY：已计量 1000");
     expect(host.textContent).toContain("USD：已计量 0 / 预估 25");
     expect(host.textContent).toContain("too_late");
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案等待条件", "短视频等待条件", "数字人直播等待条件"]);
+    expectInternalWorkspaceControls(host);
   });
 
   it("按 frozen context 在三 Tab 展示七节点、八职责、Stage、Artifact、Issue 与禁用命令", async () => {
@@ -119,7 +145,7 @@ describe("MediaStudioPage", () => {
     expect(host.textContent).toContain("复核事项 1");
     expect(host.textContent).toContain("family-1");
     expect(host.textContent).toContain("issue-1 · major");
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案等待条件", "短视频等待条件", "数字人直播等待条件"]);
+    expectInternalWorkspaceControls(host);
   });
 
   it("展示 Candidate 到 Handoff 的 canonical 发布贡献但不生成发布按钮", async () => {
@@ -135,7 +161,7 @@ describe("MediaStudioPage", () => {
     expect(host.textContent).toContain("logic-media-publish");
     expect(host.textContent).toContain("尚无 Receipt");
     expect(host.textContent).toContain("required · 仅最小披露");
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案等待条件", "短视频等待条件", "数字人直播等待条件"]);
+    expectInternalWorkspaceControls(host);
   });
 
   it("展示 W7 十一栏累计门且保留 Provider、Canary 和运营阻断", async () => {
@@ -148,7 +174,7 @@ describe("MediaStudioPage", () => {
     expect(host.querySelectorAll('[aria-label="媒体生产累计验收"] .media-command-grid article')).toHaveLength(11);
     expect(host.textContent).toContain("provider_adapter_greenblocked");
     expect(host.textContent).toContain("外部副作用：关闭 · Release：关闭");
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案等待条件", "短视频等待条件", "数字人直播等待条件"]);
+    expectInternalWorkspaceControls(host);
   });
 
   it("展示 FULL 视频四层贡献、八职责、七阶段和九类故障且无写按钮", async () => {
@@ -160,6 +186,6 @@ describe("MediaStudioPage", () => {
     expect(host.querySelectorAll(".full-video-fault-grid article")).toHaveLength(9);
     expect(host.textContent).toContain("故障证据 8/9");
     expect(host.querySelectorAll(".full-video-scenario .media-command-grid article")).toHaveLength(8);
-    expect(Array.from(host.querySelectorAll("button")).map((item) => item.textContent)).toEqual(["重新读取", "种草文案等待条件", "短视频等待条件", "数字人直播等待条件"]);
+    expectInternalWorkspaceControls(host);
   });
 });
