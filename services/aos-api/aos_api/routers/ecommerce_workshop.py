@@ -158,6 +158,18 @@ from aos_api.ecommerce_media_internal_workflow_contracts import (
     MediaInternalWorkflowHistoryResponse,
     MediaInternalWorkflowListResponse,
 )
+from aos_api.ecommerce_media_delivery import (
+    EcommerceMediaDelivery,
+    MediaDeliveryConflict,
+    MediaDeliveryError,
+)
+from aos_api.ecommerce_media_delivery_contracts import (
+    MediaDeliveryExportRequest,
+    MediaDeliveryExportResponse,
+    MediaDeliveryPublishProposalRequest,
+    MediaDeliveryPublishProposalResponse,
+    MediaDeliveryWorkspaceResponse,
+)
 from aos_api.ecommerce_workshop_media_studio_lifecycle import EcommerceWorkshopMediaStudioLifecycle
 from aos_api.ecommerce_workshop_media_studio_source_reader import EcommerceWorkshopMediaStudioSourceReader
 from aos_api.ecommerce_workshop_media_publish import EcommerceWorkshopMediaPublish
@@ -165,6 +177,7 @@ from aos_api.ecommerce_workshop_media_cumulative import EcommerceWorkshopMediaCu
 from aos_api.aip_action_adapters import ACTION_ADAPTERS
 from aos_api.aip_action_execution import AipActionExecutionService
 from aos_api.aip_action_store import AipActionStore
+from aos_api.aip_action_service import AipActionService
 from aos_api.aip_media_finance_store import AipMediaFinanceStore
 from aos_api.aip_media_provider_job_store import AipMediaProviderJobStore
 from aos_api.aip_production_contract_store import AipProductionContractStore
@@ -526,6 +539,17 @@ def get_ecommerce_media_internal_workflow() -> EcommerceMediaInternalWorkflow:
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_media_delivery() -> EcommerceMediaDelivery:
+    action_store = AipActionStore()
+    return EcommerceMediaDelivery(
+        brief_store=AipProductionContractStore(),
+        production_store=AipProductionContractStore(),
+        action_service=AipActionService(action_store),
+        action_store=action_store,
+    )
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_analyst() -> EcommerceWorkshopAnalyst:
     return EcommerceWorkshopAnalyst(reader=EcommerceWorkshopAnalystSourceReader(), growth_scenario=EcommerceWorkshopGrowthScenario())
 
@@ -670,6 +694,10 @@ MediaInternalWorkflowDependency = Annotated[
     EcommerceMediaInternalWorkflow,
     Depends(get_ecommerce_media_internal_workflow),
 ]
+MediaDeliveryDependency = Annotated[
+    EcommerceMediaDelivery,
+    Depends(get_ecommerce_media_delivery),
+]
 AnalystDependency = Annotated[
     EcommerceWorkshopAnalyst,
     Depends(get_ecommerce_workshop_analyst),
@@ -780,6 +808,12 @@ def _map_media_internal_workflow_error(exc: MediaInternalWorkflowError) -> ApiEr
     if isinstance(exc, MediaInternalWorkflowConflict):
         return ApiError(code=exc.code, message=str(exc), status_code=409)
     return ApiError(code=exc.code, message="Media internal workflow failed closed", status_code=503)
+
+
+def _map_media_delivery_error(exc: MediaDeliveryError) -> ApiError:
+    if isinstance(exc, MediaDeliveryConflict):
+        return ApiError(code=exc.code, message=str(exc), status_code=409)
+    return ApiError(code=exc.code, message="Media delivery workflow failed closed", status_code=503)
 
 
 def _map_evidence_build_error(exc: WorkshopEvidenceBuildError) -> ApiError:
@@ -1783,6 +1817,76 @@ def get_media_internal_workflow_history(
         return workflow.history(TenantScope(principal.org_id, principal.project_id), brief_id)
     except MediaInternalWorkflowError as exc:
         raise _map_media_internal_workflow_error(exc) from exc
+
+
+@router.get(
+    "/views/media-studio/workflow/drafts/{brief_id}/delivery",
+    response_model=MediaDeliveryWorkspaceResponse,
+    operation_id="ecommerceWorkshopMediaDeliveryWorkspaceGet",
+    responses=_ERRORS,
+)
+def get_media_delivery_workspace(
+    request: Request,
+    brief_id: Annotated[str, Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    delivery: MediaDeliveryDependency,
+) -> MediaDeliveryWorkspaceResponse:
+    _reject_query_parameters(request)
+    _require_media_studio_installation(principal=principal, catalog=catalog)
+    try:
+        return delivery.workspace(TenantScope(principal.org_id, principal.project_id), brief_id)
+    except MediaDeliveryError as exc:
+        raise _map_media_delivery_error(exc) from exc
+
+
+@router.post(
+    "/views/media-studio/workflow/drafts/{brief_id}/exports",
+    response_model=MediaDeliveryExportResponse,
+    operation_id="ecommerceWorkshopMediaDeliveryExport",
+    responses=_ERRORS,
+)
+def export_media_delivery(
+    request: Request,
+    brief_id: Annotated[str, Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$")],
+    body: MediaDeliveryExportRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    delivery: MediaDeliveryDependency,
+) -> MediaDeliveryExportResponse:
+    _reject_query_parameters(request)
+    _require_media_studio_installation(principal=principal, catalog=catalog)
+    if body.draft_ref.resource_id != brief_id:
+        raise ApiError(code="MEDIA_DELIVERY_CONFLICT", message="brief path and draftRef mismatch", status_code=409)
+    try:
+        return delivery.export(TenantScope(principal.org_id, principal.project_id), body)
+    except MediaDeliveryError as exc:
+        raise _map_media_delivery_error(exc) from exc
+
+
+@router.post(
+    "/views/media-studio/workflow/drafts/{brief_id}/publish-proposals",
+    response_model=MediaDeliveryPublishProposalResponse,
+    operation_id="ecommerceWorkshopMediaDeliveryPublishProposalCreate",
+    responses=_ERRORS,
+)
+def create_media_delivery_publish_proposal(
+    request: Request,
+    brief_id: Annotated[str, Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$")],
+    body: MediaDeliveryPublishProposalRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    delivery: MediaDeliveryDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> MediaDeliveryPublishProposalResponse:
+    _reject_query_parameters(request)
+    _require_media_studio_installation(principal=principal, catalog=catalog)
+    if body.draft_ref.resource_id != brief_id:
+        raise ApiError(code="MEDIA_DELIVERY_CONFLICT", message="brief path and draftRef mismatch", status_code=409)
+    try:
+        return delivery.create_publish_proposal(principal, _prepare_idempotency(idempotency_key), body)
+    except MediaDeliveryError as exc:
+        raise _map_media_delivery_error(exc) from exc
 
 
 @router.get(

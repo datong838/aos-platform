@@ -583,6 +583,18 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
                 "/v1/ecommerce-workshop/views/media-studio/workflow/drafts/{brief_id}/history",
                 "get",
             ),
+            "ecommerceWorkshopMediaDeliveryWorkspaceGet": (
+                "/v1/ecommerce-workshop/views/media-studio/workflow/drafts/{brief_id}/delivery",
+                "get",
+            ),
+            "ecommerceWorkshopMediaDeliveryExport": (
+                "/v1/ecommerce-workshop/views/media-studio/workflow/drafts/{brief_id}/exports",
+                "post",
+            ),
+            "ecommerceWorkshopMediaDeliveryPublishProposalCreate": (
+                "/v1/ecommerce-workshop/views/media-studio/workflow/drafts/{brief_id}/publish-proposals",
+                "post",
+            ),
             "ecommerceWorkshopMediaStudioFullProductionScenarioGet": (
             "/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
             "get",

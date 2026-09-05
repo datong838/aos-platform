@@ -39,7 +39,7 @@ describe("MediaStudioPage", () => {
     host.remove();
   });
 
-  it("展示三切片 target 边界且没有媒体写入口", async () => {
+  it("展示三切片 target 边界且只有失败关闭的内部 Proposal 入口", async () => {
     await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()) }} />); });
     expect(host.querySelectorAll('[role="tab"]')).toHaveLength(3);
     expect(host.querySelectorAll(".media-studio-summary-metrics article")).toHaveLength(4);
@@ -53,7 +53,8 @@ describe("MediaStudioPage", () => {
     expect(host.textContent).not.toMatch(/七夕专题|banner 文案|历史回款 CTR|整体 GMV 贡献 ¥/);
     expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).some((button) => button.textContent === "重新读取")).toBe(true);
     expect(host.textContent).toContain("target ≠ achieved；Provider submitted ≠ delivered；published、settled 与 effect-reviewed 分轴。");
-    expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).filter((item) => /开始|发布|取消|批准|结算|对账/.test(item.textContent ?? ""))).toEqual([]);
+    expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).filter((item) => /立即生成|立即发布|执行发布|批准发布|结算|对账/.test(item.textContent ?? ""))).toEqual([]);
+    expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "创建发布 Proposal")?.disabled).toBe(true);
   });
 
   it("切换 Tab 不制造业务事实", async () => {
@@ -125,6 +126,26 @@ describe("MediaStudioPage", () => {
     expect(execute.mock.calls.at(-1)?.[0].draftRef).toEqual({ resourceType: "TaskBriefRevision", resourceId: "media-brief-1", revision: 2, contentHash: "a".repeat(64) });
     expect(execute.mock.calls.at(-1)?.[0].draftRef).not.toHaveProperty("version");
     expect(host.textContent).toContain("内部操作已保存");
+  });
+
+  it("从 canonical delivery 工作区展示评审、真实导出并只创建内部发布 Proposal", async () => {
+    const hash = "a".repeat(64); const gateHash = "b".repeat(64); const previewHash = "c".repeat(64);
+    const workflow = { resourceType: "TaskBriefRevision" as const, resourceId: "media-brief-1", revision: 2, contentHash: hash, version: 2, mediaType: "planting_copy" as const, title: "栖月汇种草任务", summary: "准备种草内容", details: { mediaType: "planting_copy", lastCommand: "save_input" }, status: "draft" as const };
+    const candidate = { familyId: "family-1", familyVersion: 3, variantRef: { resourceType: "ArtifactRevision", resourceId: "variant-1", revision: 4, contentHash: hash }, gateSetRef: { resourceType: "MediaGateSetDecision", resourceId: "gate-1", revision: 1, contentHash: gateHash }, gateReadiness: "ready" as const, impactPreviewRefs: [{ resourceType: "ImpactPreviewRevision", resourceId: "preview-1", revision: 2, contentHash: previewHash }], reviewIssues: [{ issueId: "issue-1", version: 2, status: "resolved" as const, severity: "warning" as const, returnStage: "media.review" }], returnDecisionCount: 1, publishReady: true, blockerCodes: [] };
+    const exportDelivery = vi.fn().mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, fileName: "media-media-brief-1-r2.json", contentType: "application/json", content: "{}", contentHash: hash, sideEffects: { providerInvocationCount: 0, externalGenerationCount: 0, feeChargeCount: 0, publicationCount: 0, businessMutationCount: 0 } });
+    const createProposal = vi.fn().mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, proposal: { proposalId: "proposal-1", version: 1, proposalHash: hash, status: "pending" }, sideEffects: { providerInvocationCount: 0, externalGenerationCount: 0, feeChargeCount: 0, publicationCount: 0, businessMutationCount: 0 }, message: "发布 Proposal 已创建；当前仍未执行外部发布。" });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()), listMediaInternalWorkflows: vi.fn().mockResolvedValue({ items: [workflow], count: 1 }), getMediaDeliveryWorkspace: vi.fn().mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, currentDraft: workflow, history: [{ ...workflow, revision: 1, version: 1 }, workflow], historyCount: 2, candidates: [candidate], blockerCodes: [], externalEffectsAllowed: false }), exportMediaDelivery: exportDelivery, createMediaDeliveryPublishProposal: createProposal }} />); await Promise.resolve(); });
+    expect(host.querySelector('[aria-label="交付评审事实"]')?.textContent).toContain("2 个版本 · 1 个交付候选");
+    expect(host.querySelector('[aria-label="交付评审事实"]')?.textContent).toContain("复核 1 项 · 退回 1 次");
+    const exportButton = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "导出清单" && !item.disabled);
+    await act(async () => { exportButton?.click(); await Promise.resolve(); });
+    expect(exportDelivery).toHaveBeenCalled(); expect(click).toHaveBeenCalled();
+    const proposalButton = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "创建发布 Proposal");
+    await act(async () => { proposalButton?.click(); await Promise.resolve(); });
+    expect(createProposal.mock.calls[0]?.[1].selection.familyId).toBe("family-1");
+    expect(host.textContent).toContain("当前仍未执行外部发布");
+    click.mockRestore();
   });
 
   it("用 roving tabindex 和稳定 controls 支持方向键、Home 与 End", async () => {

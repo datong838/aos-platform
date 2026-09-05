@@ -1,0 +1,84 @@
+{
+  "schema": "aos-workshop-verification/v1",
+  "taskId": "WORKSHOP-R5-M04-MEDIA-DELIVERY-PROPOSAL",
+  "recordedAt": "2026-09-05T04:14:31Z",
+  "baseAuthorityRevision": "AOS-000497",
+  "status": "CODE_TEST_GREEN_BROWSER_EXTERNAL_PENDING",
+  "tenantBoundary": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "browserMutationPerformed": false,
+    "realTenantReadback": {
+      "briefId": "brief-bdb87a5e57ee4e5da721",
+      "revision": 2,
+      "historyCount": 2,
+      "candidateCount": 0,
+      "blockerCodes": [
+        "MEDIA_ARTIFACT_FAMILY_NOT_AVAILABLE"
+      ],
+      "externalEffectsAllowed": false
+    }
+  },
+  "verification": [
+    {
+      "command": "uv run pytest -q tests/test_ecommerce_*.py",
+      "cwd": "services/aos-api",
+      "result": "534 passed, 7 warnings"
+    },
+    {
+      "command": "pnpm test",
+      "cwd": "apps/web",
+      "result": "276 files passed, 2474 tests passed"
+    },
+    {
+      "command": "pnpm exec tsc -p tsconfig.json",
+      "cwd": "apps/web",
+      "result": "passed as the first phase of pnpm build"
+    },
+    {
+      "command": "pnpm exec vite build --emptyOutDir false",
+      "cwd": "apps/web",
+      "result": "passed; normal output cleanup was denied by the environment bulk-delete guard, so existing ignored artifacts were preserved"
+    },
+    {
+      "command": "uv run python -m compileall -q aos_api/ecommerce_media_delivery.py aos_api/ecommerce_media_delivery_contracts.py aos_api/routers/ecommerce_workshop.py",
+      "cwd": "services/aos-api",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "cwd": ".",
+      "result": "passed"
+    },
+    {
+      "command": "uv run ruff check ...",
+      "cwd": "services/aos-api",
+      "result": "not available: ruff executable is not installed; compileall, focused and full tests passed"
+    }
+  ],
+  "contractBoundaries": [
+    "GET delivery workspace reads exact current TaskBrief history and canonical ArtifactFamily, Variant, MediaGateSet, ReviewIssue, ReturnDecision and ImpactPreview facts",
+    "deterministic JSON export records a SHA-256 digest and has zero provider, generation, fee, publication or business effects",
+    "publish preparation can create only a content.publish ActionProposal after exact current and unexpired bindings pass",
+    "canonical Proposal readback must preserve proposal id, version, hash and payload",
+    "no Provider invocation, Lease acquisition, approval decision, external publication or release is implemented"
+  ],
+  "browser": {
+    "result": "EXTERNAL_ACCEPTANCE_PENDING",
+    "reason": "R5-M04 changes the media-studio page; external browser acceptance is the next gate and iab availability does not block code closure",
+    "requiredChecks": [
+      "org-org/dev-project reads version, review, return and candidate facts from the selected current task",
+      "real export downloads deterministic JSON and the UI states that no external action occurred",
+      "publish Proposal remains disabled while the real task has no exact ready candidate",
+      "no external publish, provider, billing or release control is exposed"
+    ]
+  },
+  "effects": {
+    "providerInvocation": 0,
+    "billingMutation": 0,
+    "externalMediaGeneration": 0,
+    "externalPublish": 0,
+    "release": 0
+  },
+  "exitDecision": "R5-M04 code, API contract, automated tests, production build and real-tenant read-only evidence are green. Stop at external browser acceptance; do not enter R5-M05. The 230 L0 authorization remains separately pending."
+}
