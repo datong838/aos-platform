@@ -5,6 +5,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { aipModelRuntime, type ModelRuntimeChainOverview, type ModelRuntimeCostOverview, type ModelRuntimeOverview } from "../../api/aipModelRuntime";
 import { controlledTrialLabel, ModelRuntimePage, modelRuntimeControlStatus } from "./ModelRuntimePage";
 
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+vi.mock("../../components/aip/AipOperationalProjectionStrip", () => ({ AipOperationalProjectionStrip: () => null }));
+
 const hash = "a".repeat(64);
 const base = {
   tenant: { orgId: "org-org", projectId: "dev-project" },
@@ -23,7 +26,7 @@ const base = {
 const emptyCost = {
   tenant: base.tenant,
   modelPrices: [], budgets: [], quotas: [],
-  usage: { state: "unobserved", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, periods: [], attributionDimensions: [] },
+  usage: { state: "unobserved", receiptCount: 0, measuredCount: 0, estimatedCount: 0, unknownCount: 0, adjustmentCount: 0, costTotals: {}, latestObservedAt: null, truncated: false, periods: [] },
   generatedAt: base.generatedAt,
 } satisfies ModelRuntimeCostOverview;
 

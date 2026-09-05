@@ -38,6 +38,12 @@
 - `p6d-browser.png`
 - `p6d-plan.md`
 
+## 恢复后组件证据补强
+
+- 新增 `ModelRuntimePage` 真实 DOM 渲染用例，核验六节点完整展示、受控试聊按钮在条件不满足时禁用、Usage Receipt 双向追溯可见。
+- runtime parser + page 专项测试由 `24 passed` 增至 `25 passed`；TypeScript 与 365 modules 生产构建继续 GREEN。
+- 恢复后再次连接内置浏览器时连接器不可用；未改用其他浏览器冒充内置浏览器证据，保留本波次中断前的真实租户截图与交互证据。
+
 ## 方案一致性与风险复审
 
 - 全链复用现有 Provider、ModelRoute、Policy、Eval、Health、Capacity 与 Usage Receipt authority，没有建立第二真源。
