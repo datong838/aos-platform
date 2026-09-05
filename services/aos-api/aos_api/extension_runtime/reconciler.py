@@ -84,6 +84,15 @@ class ResourceJournal:
 
     def record_cleanup(self, conn, *, org_id, project_id, intent, removed):
         """Trusted supervisor observation; absence/unknown never means released."""
+        return self._release(conn,org_id=org_id,project_id=project_id,intent=intent,
+            removed=removed,cancel_unclaimed=False)
+
+    def cancel_unclaimed(self, conn, *, org_id, project_id, intent):
+        """Revoke an unissued creation permit, not a container deletion observation."""
+        return self._release(conn,org_id=org_id,project_id=project_id,intent=intent,
+            removed=True,cancel_unclaimed=True)
+
+    def _release(self, conn, *, org_id, project_id, intent, removed, cancel_unclaimed):
         _require_transaction(conn)
         if type(removed) is not bool or not isinstance(intent,ResourceIntent):
             raise ValueError("invalid cleanup observation")
@@ -111,11 +120,13 @@ class ResourceJournal:
         conn.execute("""SELECT generation FROM extension_runtime_binding
             WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s FOR UPDATE""",
             binding_target).fetchone()
-        resource=conn.execute("""SELECT owner_token_ref,engine_context,cleanup_state
+        resource=conn.execute("""SELECT owner_token_ref,engine_context,cleanup_state,create_claimed_at,container_id
             FROM extension_runtime_resource_lease WHERE org_id=%s AND project_id=%s AND resource_id=%s FOR UPDATE""",target).fetchone()
-        owner,context,state=_values(resource,("owner_token_ref","engine_context","cleanup_state"))
+        owner,context,state,claimed,container_id=_values(resource,("owner_token_ref","engine_context","cleanup_state","create_claimed_at","container_id"))
         if (owner,context)!=(intent.identity.owner,intent.engine_context):
             raise RuntimeConflict("cleanup resource identity mismatch")
+        if cancel_unclaimed and (claimed is not None or container_id is not None):
+            raise RuntimeConflict("creation already claimed; reconcile actual resource")
         requested="released" if removed else "uncertain"
         if state==requested or state=="released":
             return state
@@ -134,7 +145,8 @@ class ResourceJournal:
             failure_code=CASE WHEN %s THEN failure_code ELSE 'RESOURCE_CLEANUP_UNCERTAIN' END
             WHERE org_id=%s AND project_id=%s AND operation_id=%s""",
             (revision,removed,removed,org_id,project_id,operation_id))
-        RuntimeOperationStore._event(conn,org_id,project_id,operation_id,revision,"resource_"+requested,
+        event_type="resource_intent_cancelled" if cancel_unclaimed else "resource_"+requested
+        RuntimeOperationStore._event(conn,org_id,project_id,operation_id,revision,event_type,
             {"resourceId":str(intent.resource_id)})
         return requested
 

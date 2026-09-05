@@ -51,6 +51,40 @@ def _deadline_valid(conn, deadline):
 
 
 class RuntimeOperationStore:
+    def fail_uncommitted_preparation(self,conn,*,org_id,project_id,operation_id,expected_revision,failure_code):
+        """Trusted worker terminal failure, only before preparation was committed."""
+        _require_transaction(conn)
+        if failure_code not in {'PREPARATION_VALIDATION_FAILED','PREPARATION_EXECUTION_FAILED',
+                                'PREPARATION_STOPPED','PREPARATION_EXPIRED'}:
+            raise ValueError('invalid preparation failure code')
+        target=(org_id,project_id,UUID(str(operation_id)))
+        head=conn.execute('''SELECT installation_id FROM extension_runtime_operation
+            WHERE org_id=%s AND project_id=%s AND operation_id=%s''',target).fetchone()
+        if head is None:raise LookupError('operation not found')
+        conn.execute('''SELECT installation_id FROM bundle_installation
+            WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',
+            (org_id,project_id,_values(head,('installation_id',))[0])).fetchone()
+        row=conn.execute('''SELECT kind,phase,status,revision,failure_code FROM extension_runtime_operation
+            WHERE org_id=%s AND project_id=%s AND operation_id=%s FOR UPDATE''',target).fetchone()
+        kind,phase,status,revision,existing_code=_values(row,('kind','phase','status','revision','failure_code'))
+        if type(expected_revision) is not int or expected_revision!=revision:
+            raise RuntimeRevisionConflict('operation version changed')
+        if kind!='runtime-apply' or phase not in {'accepted','validating','preparing','registered'}:
+            raise RuntimeConflict('operation is not an uncommitted preparation')
+        if status=='failed' and existing_code==failure_code:
+            return OperationResult(target[2],phase,status,revision,replayed=True)
+        if status not in {'accepted','running','needs_attention'}:
+            raise RuntimeConflict('operation cannot settle failure')
+        resources=conn.execute('''SELECT observed_release,cleanup_state FROM extension_runtime_resource_lease
+            WHERE org_id=%s AND project_id=%s AND operation_id=%s ORDER BY resource_id FOR UPDATE''',target).fetchall()
+        if any(_values(row,('observed_release','cleanup_state'))!=(True,'released') for row in resources):
+            raise RuntimeConflict('preparation resources remain unresolved')
+        revision+=1
+        conn.execute('''UPDATE extension_runtime_operation SET status='failed',revision=%s,failure_code=%s
+            WHERE org_id=%s AND project_id=%s AND operation_id=%s''',(revision,failure_code,*target))
+        self._event(conn,*target,revision,'preparation_failed',{'phase':phase,'failureCode':failure_code})
+        return OperationResult(target[2],phase,'failed',revision)
+
     def settle_failed_preparation(self,conn,*,org_id,project_id,operation_id,expected_revision):
         """Close confirmed failed preparation, never resume or activate it."""
         _require_transaction(conn)

@@ -75,6 +75,91 @@ def seed(conn):
     return installation,operation
 
 
+@pytest.mark.parametrize('case', ['empty', 'released', 'pending', 'uncertain', 'cas', 'tenant', 'kind', 'committing', 'succeeded', 'rollback', 'bad_code'])
+def test_failed_preparation_requires_all_resources_settled(database, case):
+    from datetime import datetime, timezone, timedelta
+    from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore, RuntimeConflict
+    from aos_api.extension_runtime.reconciler import ResourceJournal
+    conn, _, _ = database
+    _, operation = seed(conn)
+    scope = dict(org_id='org-org', project_id='dev-project')
+    operations = RuntimeOperationStore()
+    if case in {'released', 'pending', 'uncertain'}:
+        with conn.transaction():
+            intent = ResourceJournal().prepare(conn, **scope, operation_id=operation, generation=uuid.uuid4(),
+                package_id='failure-test', package_hash='sha256:'+'a'*64,engine_context='colima-aos-extension',
+                expires_at=datetime.now(timezone.utc)+timedelta(minutes=1))
+            if case == 'released':
+                ResourceJournal().cancel_unclaimed(conn, **scope, intent=intent)
+            if case == 'uncertain':
+                ResourceJournal().record_cleanup(conn, **scope, intent=intent, removed=False)
+    if case == 'kind':conn.execute("UPDATE extension_runtime_operation SET kind='enable'")
+    if case in {'committing','succeeded'}:
+        conn.execute('UPDATE extension_runtime_operation SET phase=%s,status=%s', (case,'succeeded' if case=='succeeded' else 'running'))
+    before = conn.execute('SELECT revision,status,phase FROM extension_runtime_operation').fetchone()
+    events = conn.execute('SELECT count(*) FROM extension_runtime_event').fetchone()[0]
+    args = dict(**scope,operation_id=operation,expected_revision=before[0],failure_code='PREPARATION_EXECUTION_FAILED')
+    if case == 'cas':args['expected_revision']=0
+    if case == 'tenant':args['org_id']='dev-org'
+    if case == 'bad_code':args['failure_code']='arbitrary engine error details'
+    if case in {'empty','released'}:
+        with conn.transaction():result = operations.fail_uncommitted_preparation(conn, **args)
+        assert result.status=='failed' and result.phase==before[2]
+        with conn.transaction():replay = operations.fail_uncommitted_preparation(conn, **{**args,'expected_revision':result.revision})
+        assert replay.replayed
+        assert conn.execute('SELECT count(*) FROM extension_runtime_event').fetchone()[0]==events+1
+        assert conn.execute('SELECT type FROM extension_runtime_event ORDER BY sequence DESC LIMIT 1').fetchone()==('preparation_failed',)
+    else:
+        with pytest.raises((RuntimeConflict, LookupError, ValueError, RuntimeError)):
+            with conn.transaction():
+                operations.fail_uncommitted_preparation(conn, **args)
+                if case=='rollback':raise RuntimeError('rollback')
+        assert conn.execute('SELECT revision,status,phase FROM extension_runtime_operation').fetchone()==before
+        assert conn.execute('SELECT count(*) FROM extension_runtime_event').fetchone()[0]==events
+
+
+@pytest.mark.parametrize('case', ['normal', 'expired', 'claimed', 'wrong_owner', 'rollback', 'tenant'])
+def test_cancel_unclaimed_intent_is_not_unknown_creation_cleanup(database, case):
+    from datetime import datetime, timezone, timedelta
+    from aos_api.extension_runtime.reconciler import ResourceJournal, ResourceIntent
+    from aos_api.extension_runtime.supervisor import ResourceIdentity
+    from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+    conn, _, _ = database
+    _, operation = seed(conn)
+    journal = ResourceJournal()
+    scope = dict(org_id='org-org', project_id='dev-project')
+    with conn.transaction():
+        intent = journal.prepare(conn, **scope, operation_id=operation, generation=uuid.uuid4(),
+            package_id='test-package', package_hash='sha256:'+'a'*64, engine_context='colima-aos-extension',
+            expires_at=datetime.now(timezone.utc)+timedelta(minutes=1))
+    if case == 'claimed':
+        with conn.transaction():
+            journal.claim_create(conn, **scope, resource_id=intent.resource_id)
+    if case == 'expired':
+        conn.execute("UPDATE extension_runtime_resource_lease SET expires_at=clock_timestamp()-interval '1 second'")
+    target = intent if case != 'wrong_owner' else ResourceIntent(intent.resource_id, ResourceIdentity(uuid.uuid4().hex), intent.engine_context)
+    target_scope = scope if case != 'tenant' else {**scope, 'org_id':'dev-org'}
+    if case in {'claimed', 'wrong_owner', 'tenant', 'rollback'}:
+        with pytest.raises((RuntimeConflict, LookupError, RuntimeError)):
+            with conn.transaction():
+                journal.cancel_unclaimed(conn, **target_scope, intent=target)
+                if case == 'rollback':
+                    raise RuntimeError('rollback')
+        assert conn.execute('SELECT observed_release FROM extension_runtime_resource_lease').fetchone()==(False,)
+        assert conn.execute('SELECT count(*) FROM extension_runtime_event').fetchone()==(0,)
+    else:
+        with conn.transaction():
+            assert journal.cancel_unclaimed(conn, **scope, intent=intent)=='released'
+        with conn.transaction():
+            assert journal.cancel_unclaimed(conn, **scope, intent=intent)=='released'
+        assert conn.execute('SELECT observed_release,create_claimed_at,container_id FROM extension_runtime_resource_lease').fetchone()==(True,None,None)
+        assert conn.execute('SELECT type FROM extension_runtime_event').fetchall()==[('resource_intent_cancelled',)]
+        assert conn.execute('SELECT count(*) FROM extension_runtime_outbox').fetchone()==(1,)
+        with pytest.raises(RuntimeConflict):
+            with conn.transaction():
+                journal.claim_create(conn, **scope, resource_id=intent.resource_id)
+
+
 @pytest.mark.parametrize("kind", ["runtime-apply", "runtime-verify", "configure", "enable"])
 def test_expired_positive_operation_cannot_advance(database, kind):
     from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore, RuntimeConflict
@@ -324,6 +409,44 @@ def test_resource_creation_claim_is_one_shot(database,condition):
             ResourceJournal().claim_create(conn,**args)
     # Claimed is not released, nor proof of creation; restart must reconcile it.
     assert len(journal.unresolved(conn,org_id="org-org",project_id="dev-project"))==1
+
+
+@pytest.mark.parametrize('first', ['claim', 'cancel'])
+def test_cancel_and_claim_have_only_one_winner(database, first):
+    from concurrent.futures import ThreadPoolExecutor
+    from datetime import datetime, timezone, timedelta
+    import time
+    from aos_api.extension_runtime.reconciler import ResourceJournal
+    from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+    conn, _, schema = database
+    _, operation = seed(conn)
+    journal = ResourceJournal()
+    scope = dict(org_id='org-org', project_id='dev-project')
+    with conn.transaction():
+        intent = journal.prepare(conn, **scope, operation_id=operation, generation=uuid.uuid4(),
+            package_id='race', package_hash='sha256:'+'c'*64, engine_context='colima-aos-extension',
+            expires_at=datetime.now(timezone.utc)+timedelta(minutes=1))
+    def execute(connection, action):
+        if action == 'claim':
+            return journal.claim_create(connection, **scope, resource_id=intent.resource_id)
+        return journal.cancel_unclaimed(connection, **scope, intent=intent)
+    with psycopg.connect(host='127.0.0.1', port=18432, user='postgres', dbname='postgres', autocommit=True) as worker:
+        worker.execute(sql.SQL('SET search_path TO {}').format(sql.Identifier(schema)))
+        worker.execute("SET statement_timeout='5s'")
+        def follower():
+            with worker.transaction():
+                execute(worker, 'cancel' if first == 'claim' else 'claim')
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            with conn.transaction():
+                execute(conn, first)
+                future = pool.submit(follower)
+                deadline = time.monotonic()+3
+                while not conn.execute('SELECT cardinality(pg_blocking_pids(%s))>0', (worker.info.backend_pid,)).fetchone()[0]:
+                    assert time.monotonic() < deadline
+                    time.sleep(.01)
+            with pytest.raises(RuntimeConflict):
+                future.result(timeout=5)
+    assert conn.execute('SELECT create_claimed_at IS NOT NULL,observed_release FROM extension_runtime_resource_lease').fetchone()==(first=='claim', first=='cancel')
 
 
 def test_concurrent_claim_and_rollback(database):
