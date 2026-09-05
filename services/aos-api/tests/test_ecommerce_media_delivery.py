@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from copy import deepcopy
 from types import SimpleNamespace
 
 import pytest
@@ -169,6 +170,26 @@ def test_workspace_composes_existing_versions_review_and_publish_authority() -> 
     assert result.candidates[0].return_decision_count == 1
     assert result.candidates[0].publish_ready is True
     assert result.external_effects_allowed is False
+
+
+def test_workspace_projects_each_history_row_with_its_exact_revision_number() -> None:
+    briefs = Briefs()
+    briefs.items[1].version = 2
+    briefs.items[2] = deepcopy(briefs.items[1])
+    briefs.items[2].revision = 2
+    briefs.items[2].content_hash = "f" * 64
+    delivery = EcommerceMediaDelivery(
+        brief_store=briefs,
+        production_store=Production(),
+        action_service=Actions(),
+        action_store=Actions(),
+        clock=lambda: NOW,
+    )
+
+    result = delivery.workspace(SCOPE, "brief-1")
+
+    assert [item.revision for item in result.history] == [1, 2]
+    assert [item.version for item in result.history] == [1, 2]
 
 
 def test_export_is_deterministic_and_does_not_create_an_artifact_or_side_effect() -> None:

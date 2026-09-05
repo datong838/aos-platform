@@ -69,7 +69,7 @@ class EcommerceMediaDelivery:
             for revision in range(1, current.revision + 1):
                 item = self._briefs.get_brief(scope, brief_id, revision)
                 self._require_media_brief(item)
-                history.append(self._draft(item))
+                history.append(self._draft(item, version=revision))
             candidates = self._candidates(scope, current)
         except MediaDeliveryError:
             raise
@@ -239,9 +239,9 @@ class EcommerceMediaDelivery:
             raise MediaDeliveryConflict("media workflow safety authority is invalid")
 
     @staticmethod
-    def _draft(value) -> MediaInternalWorkflowDraft:
+    def _draft(value, *, version: int | None = None) -> MediaInternalWorkflowDraft:
         return MediaInternalWorkflowDraft(
-            resourceId=value.brief_id, revision=value.revision, version=value.version,
+            resourceId=value.brief_id, revision=value.revision, version=version or value.version,
             contentHash=value.content_hash, mediaType=value.spec["mediaType"], title=value.spec["title"],
             summary=value.spec["summary"], details=value.spec["details"], status=value.spec["status"],
         )
