@@ -11,9 +11,7 @@ from aos_api.extension_runtime.oci_driver import OciDriver
 from aos_api.extension_runtime.supervisor import ResourceIdentity
 
 
-@pytest.mark.parametrize("finish",["normal","error","cancel","double-cancel","idle-stderr"])
-def test_real_sdk_persistent_calls_and_exact_cleanup(tmp_path, finish):
-    from aos_api.extension_runtime.session_supervisor import open_session
+def build_session_image(tmp_path):
     sdk=Path(__file__).resolve().parents[4]/"packages/aos-extension-sdk/python/aos_extension_sdk"
     shutil.copytree(sdk,tmp_path/"aos_extension_sdk")
     package=tmp_path/"bundle/backend/example"
@@ -36,6 +34,13 @@ def test_real_sdk_persistent_calls_and_exact_cleanup(tmp_path, finish):
     (tmp_path/"runner.py").write_text("from aos_extension_sdk.runner import main\nmain()\n")
     (tmp_path/"Dockerfile").write_text("FROM python:3.11-alpine\nCOPY aos_extension_sdk /usr/local/lib/python3.11/site-packages/aos_extension_sdk\nCOPY bundle /aos/bundle\nCOPY runtime.json runner.py /aos/\n")
     digest=subprocess.check_output(["docker","--context",CONTEXT,"build","--network=none","--pull=false","-q",str(tmp_path)],text=True,timeout=60).strip()
+    return digest,claims
+
+
+@pytest.mark.parametrize("finish",["normal","error","cancel","double-cancel","idle-stderr"])
+def test_real_sdk_persistent_calls_and_exact_cleanup(tmp_path, finish):
+    from aos_api.extension_runtime.session_supervisor import open_session
+    digest,claims=build_session_image(tmp_path)
     identity=ResourceIdentity(uuid.uuid4().hex)
     async def exercise():
         async with open_session(OciDriver(context=CONTEXT),image_id=digest,
