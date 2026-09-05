@@ -11,14 +11,16 @@ from .preparation_owner import PreparationOwner, _observe
 from .preparation_plan import claim_preparation
 from .reconciler import ResourceJournal
 from .signed_session import open_signed_session
+from .verification_commit import commit_verified
 
 
 class PreparedJob:
-    def __init__(self, plan, owner, finalize):
+    def __init__(self, plan, owner, finalize, verify=None):
         self.plan=plan
         self._owner=owner
         self._stopping=False
         self._finalize=finalize
+        self._verify=verify
         self._closed=asyncio.create_task(self._watch())
         self._closed.add_done_callback(_observe)
 
@@ -65,6 +67,16 @@ class PreparedJob:
                 raise
             raise
 
+    async def verify(self, *, operation_id, expected_revision):
+        if self._verify is None:
+            raise RuntimeError('current verification conditions reader required')
+        async def commit(observed):
+            result,cancelled=await _settle(asyncio.create_task(asyncio.to_thread(
+                self._verify,operation_id,expected_revision,observed)))
+            if cancelled:raise asyncio.CancelledError
+            return result
+        return await self._owner.verify(commit)
+
     async def stop(self):
         self._stopping=True
         try:
@@ -76,7 +88,8 @@ class PreparedJob:
 
 class PreparationWorker:
     def __init__(self, *, connect, driver, installation_store, revalidator,
-                 check_current_permission, load_record, read_artifact, policy, platform):
+                 check_current_permission, load_record, read_artifact, policy, platform,
+                 check_current_conditions=None):
         self.connect=connect
         self.driver=driver
         self.store=installation_store
@@ -86,6 +99,16 @@ class PreparationWorker:
         self.read_artifact=read_artifact
         self.policy=policy
         self.platform=platform
+        self.conditions=check_current_conditions
+
+    def _verify(self,scope,plan,operation_id,expected_revision,observed):
+        with self.connect() as conn:
+            with conn.transaction():
+                return commit_verified(conn,installation_store=self.store,revalidator=self.revalidator,
+                    check_current_permission=self.permission,check_current_conditions=self.conditions,
+                    **scope,operation_id=operation_id,expected_revision=expected_revision,
+                    preparation_operation_id=plan.operation_id,generation=plan.generation,
+                    health_checked_at=observed)
 
     def _claim(self,scope,operation_id,expected_revision):
         with self.connect() as conn:
@@ -154,7 +177,8 @@ class PreparationWorker:
                 if was_cancelled:raise asyncio.CancelledError
                 return result
             owner=PreparationOwner([factory(member) for member in plan.members],commit,lease_seconds=remaining)
-            return PreparedJob(plan,owner,lambda code:self._finalize(scope,plan,code))
+            verify=(lambda operation_id,revision,observed:self._verify(scope,plan,operation_id,revision,observed)) if callable(self.conditions) else None
+            return PreparedJob(plan,owner,lambda code:self._finalize(scope,plan,code),verify)
         except BaseException:
             await _settle(asyncio.create_task(asyncio.to_thread(self._finalize,scope,plan,'PREPARATION_STOPPED')))
             raise

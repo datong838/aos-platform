@@ -115,7 +115,8 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                 return record
             worker=PreparationWorker(connect=connect,driver=OciDriver(context=CONTEXT),
                 installation_store=store,revalidator=fresh,check_current_permission=permission,
-                load_record=load_record,read_artifact=args['read_artifact'],policy=policy,platform=args['platform'])
+                load_record=load_record,read_artifact=args['read_artifact'],policy=policy,platform=args['platform'],
+                check_current_conditions=lambda **kwargs:True)
             async def run_worker():
                 job=await worker.start(**scope,operation_id=operation,expected_revision=accepted.response_json['revision'])
                 if worker_mode not in {'normal','verify'}:
@@ -130,23 +131,11 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                         text=True,timeout=10)
                     assert running.strip()=='true'
                     if worker_mode=='verify':
-                        from aos_api.extension_runtime.verification_commit import commit_verified
                         from aos_api.ecommerce_workshop_catalog import PostgresWorkshopCatalogSource
                         requested=await asyncio.to_thread(service.request_preparation,**action,kind='runtime-verify',
                             idempotency_key='signed-verify',if_match=f'"{applied.etag_version}"')
-                        # Trusted test-host observation from this still-owned group,
-                        # never a request-provided timestamp or grant.
-                        await job.check_health()
-                        health_time=datetime.now(timezone.utc)
-                        def verify():
-                            with connect() as conn:
-                                return commit_verified(conn,installation_store=store,revalidator=fresh,
-                                    check_current_permission=permission,check_current_conditions=lambda **kwargs:True,
-                                    **scope,operation_id=requested.response_json['operationId'],
-                                    expected_revision=requested.response_json['revision'],
-                                    preparation_operation_id=operation,generation=job.plan.generation,
-                                    health_checked_at=health_time)
-                        verified=await asyncio.to_thread(verify)
+                        verified=await job.verify(operation_id=requested.response_json['operationId'],
+                            expected_revision=requested.response_json['revision'])
                         assert verified.state=='active'
                         with connect() as conn:
                             assert conn.execute('SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()=={

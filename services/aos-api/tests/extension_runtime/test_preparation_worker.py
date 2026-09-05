@@ -9,6 +9,53 @@ from aos_api.extension_runtime.oci_driver import CleanupUncertainError
 from aos_api.extension_runtime.preparation_worker import PreparedJob, PreparationWorker
 
 
+def test_job_verification_settles_thread_on_owner_cancellation():
+    async def run():
+        started,release=threading.Event(),threading.Event()
+        stopped=asyncio.Event()
+        results=[]
+        class Owner:
+            async def verify(self,commit):
+                self.task=asyncio.create_task(commit('trusted-observation'))
+                return await asyncio.shield(self.task)
+            async def wait_closed(self):await stopped.wait()
+        owner=Owner()
+        def verify(op,rev,observed):
+            assert (op,rev,observed)==('op',7,'trusted-observation')
+            started.set()
+            assert release.wait(5)
+            results.append('committed')
+            return 'result'
+        job=PreparedJob(None,owner,lambda code:None,verify)
+        waiter=asyncio.create_task(job.verify(operation_id='op',expected_revision=7))
+        try:
+            assert await asyncio.to_thread(started.wait,5)
+            owner.task.cancel()
+            await asyncio.sleep(0)
+            owner.task.cancel()
+            await asyncio.sleep(0)
+            assert not owner.task.done() and results==[]
+        finally:release.set()
+        with pytest.raises(asyncio.CancelledError):await waiter
+        assert results==['committed']
+        stopped.set()
+        await job.wait_closed()
+    asyncio.run(run())
+
+
+def test_job_requires_host_conditions_before_verification():
+    async def run():
+        stopped=asyncio.Event()
+        class Owner:
+            async def wait_closed(self):await stopped.wait()
+        job=PreparedJob(None,Owner(),lambda code:None)
+        with pytest.raises(RuntimeError,match='conditions reader'):
+            await job.verify(operation_id='op',expected_revision=1)
+        stopped.set()
+        await job.wait_closed()
+    asyncio.run(run())
+
+
 def test_job_health_preserves_uncertain_when_finalization_refuses():
     async def run():
         error = CleanupUncertainError('isolated', 'exact-name', 'exact-owner')

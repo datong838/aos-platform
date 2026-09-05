@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import AsyncExitStack
 import math
+from datetime import datetime, timezone
 
 from .journaled_session import _settle
 from .oci_driver import CleanupUncertainError
@@ -30,6 +31,7 @@ class PreparationOwner:
         self._started = False
         self._cleaning = False
         self._sessions = []
+        self._verification = None
         self._task = asyncio.create_task(self._run(factories, commit, lease_seconds))
         self._task.add_done_callback(_observe)
         self._stopping = False
@@ -60,9 +62,14 @@ class PreparationOwner:
                     # Leave the lease timer before draining a committing DB
                     # thread. A second cancellation must not orphan its result.
                     self._cleaning = True
+                    if self._verification is not None:
+                        children.append(self._verification)
                     for child in children:
                         child.cancel()
                     results, _ = await _settle(asyncio.gather(*children, return_exceptions=True))
+                    uncertain = next((r for r in results if isinstance(r, CleanupUncertainError)), None)
+                    if uncertain is not None:
+                        raise uncertain
                     for result in results:
                         if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
                             raise result
@@ -77,6 +84,18 @@ class PreparationOwner:
             self._sessions.clear()
 
     async def check_health(self):
+        try:
+            await self._check_health()
+        except BaseException as original:
+            try:
+                await self.stop()
+            except BaseException as stopping_error:
+                if isinstance(original, CleanupUncertainError) and original is not stopping_error:
+                    raise original from stopping_error
+                raise
+            raise
+
+    async def _check_health(self):
         await self.prepared()
         if self._stopping or self._cleaning or self._task.done():
             raise RuntimeError('preparation is no longer owned')
@@ -90,15 +109,31 @@ class PreparationOwner:
             results, _ = await _settle(asyncio.gather(*checks,return_exceptions=True))
             uncertain = next((error for error in [original, *results]
                               if isinstance(error, CleanupUncertainError)), None)
-            try:
-                await self.stop()
-            except BaseException as stopping_error:
-                if uncertain is not None and uncertain is not stopping_error:
-                    raise uncertain from stopping_error
-                raise
             if uncertain is not None and uncertain is not original:
                 raise uncertain from original
             raise
+
+    async def verify(self, commit):
+        """Trusted callback must settle DB work before propagating cancellation."""
+        await self.prepared()
+        if (self._stopping or self._cleaning or self._task.done()
+                or self._verification is not None):
+            raise RuntimeError('verification requires exclusive live ownership')
+        if not callable(commit):
+            raise TypeError('trusted verification callback required')
+        async def execute():
+            await self._check_health()
+            return await commit(datetime.now(timezone.utc))
+        # No await between admission check and registration. Closing sees this
+        # task and settles it before the resource contexts leave.
+        self._verification = asyncio.create_task(execute())
+        def supervised(task):
+            failed = task.cancelled() or task.exception() is not None
+            if failed and not self._cleaning and not self._task.done():
+                self._stopping = True
+                self._task.cancel()
+        self._verification.add_done_callback(supervised)
+        return await asyncio.shield(self._verification)
 
     async def prepared(self):
         return await asyncio.shield(self._ready)
