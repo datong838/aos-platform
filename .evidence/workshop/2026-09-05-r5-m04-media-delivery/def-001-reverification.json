@@ -1,0 +1,80 @@
+{
+  "schema": "aos-workshop-r5-m04-defect-reverification/v1",
+  "defectId": "R5M04-DEF-001",
+  "verifiedAt": "2026-09-05T12:50:00+08:00",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "takeover": {
+    "authorized": true,
+    "finding": "MediaStudioPage.tsx and MediaStudioPage.test.tsx changes were written by the prior Codex execution during its 12:26-12:33 window; the contested-file stop was a false positive and this run was authorized to take over both files."
+  },
+  "rootCause": {
+    "code": "STALE_API_PROCESS",
+    "finding": "The external acceptance run reached an old :8080 API process whose OpenAPI did not include the R5-M04 delivery, exports, or publish-proposals routes. Restarting :8080 with current m1 restored all three routes.",
+    "frontendHardening": "Delivery read failures now render a recoverable error with an explicit reload action instead of silently becoming an empty delivery state."
+  },
+  "openapiRoutes": [
+    "/v1/ecommerce-workshop/views/media-studio/workflow/drafts/{brief_id}/delivery",
+    "/v1/ecommerce-workshop/views/media-studio/workflow/drafts/{brief_id}/exports",
+    "/v1/ecommerce-workshop/views/media-studio/workflow/drafts/{brief_id}/publish-proposals"
+  ],
+  "workspace": {
+    "httpStatus": 200,
+    "briefId": "brief-bdb87a5e57ee4e5da721",
+    "revision": 2,
+    "version": 2,
+    "contentHash": "d0a5847921d6d89af562e31551c40215de603a8e18d425fdb25c24b42694dc19",
+    "historyCount": 2,
+    "candidateCount": 0,
+    "blockerCodes": [
+      "MEDIA_ARTIFACT_FAMILY_NOT_AVAILABLE"
+    ],
+    "externalEffectsAllowed": false
+  },
+  "zeroCandidateExport": {
+    "httpStatuses": [
+      200,
+      200
+    ],
+    "selection": null,
+    "contentHash": "b7f2163dcee4ba491b571a41e7468238d58f7b0776863418f8ea6ae2d5b8e966",
+    "contentAndHashDeterministicAcrossTwoRequests": true,
+    "sideEffects": {
+      "providerInvocationCount": 0,
+      "externalGenerationCount": 0,
+      "feeChargeCount": 0,
+      "publicationCount": 0,
+      "businessMutationCount": 0
+    }
+  },
+  "verification": {
+    "targetedWeb": "2 files, 17 passed",
+    "fullWeb": "276 files, 2475 passed",
+    "typescript": "GREEN",
+    "productionBuild": "GREEN, 373 modules transformed"
+  },
+  "changedFileHashes": {
+    "apps/web/src/components/workshop/MediaStudioPage.tsx": {
+      "before": "24c98b4ce051062dfbf9fe9abe2134eb01b04b7c3b9b374385bd62774ac3c361",
+      "after": "193acf8a7fbc9329d3a5ac9abff2bb2c9aae6a4958e57468484fdc2d14a417e9"
+    },
+    "apps/web/src/components/workshop/MediaStudioPage.test.tsx": {
+      "before": "798e25b34ddb3bc54d38b81e88abb6c650b3d1fe8dfd67e486a3df6c786a9af8",
+      "after": "fea677a61db5cd84630edaf7db682d4c87daf278dfacbc1a0d53d64dbd3f2d9d"
+    }
+  },
+  "evidenceQualityWarning": {
+    "retained": true,
+    "finding": "r5m04_review_checklist.png and r5m04_create_delivery_draft.png are duplicate images and must not be treated as two independent visual assertions.",
+    "duplicateSha256": "b4e566f14deb4ea4e5021a34537e0e03791503a3c796a10b77339af6b6be643f"
+  },
+  "boundaries": {
+    "r5M05": "R5_M05_PLAN_REVIEWED_IMPLEMENTATION_NOT_STARTED",
+    "architecture230L0": "SEPARATE_AUTHORIZATION_PENDING",
+    "push": false,
+    "release": false
+  },
+  "result": "R5M04_DEF_001_CLOSED_R5_M04_FINAL_GREEN"
+}

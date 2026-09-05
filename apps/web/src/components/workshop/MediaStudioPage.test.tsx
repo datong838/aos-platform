@@ -54,7 +54,7 @@ describe("MediaStudioPage", () => {
     expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).some((button) => button.textContent === "重新读取")).toBe(true);
     expect(host.textContent).toContain("target ≠ achieved；Provider submitted ≠ delivered；published、settled 与 effect-reviewed 分轴。");
     expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).filter((item) => /立即生成|立即发布|执行发布|批准发布|结算|对账/.test(item.textContent ?? ""))).toEqual([]);
-    expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "创建发布 Proposal")?.disabled).toBe(true);
+    expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "提交发布审批")?.disabled).toBe(true);
   });
 
   it("切换 Tab 不制造业务事实", async () => {
@@ -128,24 +128,42 @@ describe("MediaStudioPage", () => {
     expect(host.textContent).toContain("内部操作已保存");
   });
 
-  it("从 canonical delivery 工作区展示评审、真实导出并只创建内部发布 Proposal", async () => {
+  it("展示逐版历史并要求用户显式选择交付候选后才可提交发布审批", async () => {
     const hash = "a".repeat(64); const gateHash = "b".repeat(64); const previewHash = "c".repeat(64);
     const workflow = { resourceType: "TaskBriefRevision" as const, resourceId: "media-brief-1", revision: 2, contentHash: hash, version: 2, mediaType: "planting_copy" as const, title: "栖月汇种草任务", summary: "准备种草内容", details: { mediaType: "planting_copy", lastCommand: "save_input" }, status: "draft" as const };
     const candidate = { familyId: "family-1", familyVersion: 3, variantRef: { resourceType: "ArtifactRevision", resourceId: "variant-1", revision: 4, contentHash: hash }, gateSetRef: { resourceType: "MediaGateSetDecision", resourceId: "gate-1", revision: 1, contentHash: gateHash }, gateReadiness: "ready" as const, impactPreviewRefs: [{ resourceType: "ImpactPreviewRevision", resourceId: "preview-1", revision: 2, contentHash: previewHash }], reviewIssues: [{ issueId: "issue-1", version: 2, status: "resolved" as const, severity: "warning" as const, returnStage: "media.review" }], returnDecisionCount: 1, publishReady: true, blockerCodes: [] };
     const exportDelivery = vi.fn().mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, fileName: "media-media-brief-1-r2.json", contentType: "application/json", content: "{}", contentHash: hash, sideEffects: { providerInvocationCount: 0, externalGenerationCount: 0, feeChargeCount: 0, publicationCount: 0, businessMutationCount: 0 } });
     const createProposal = vi.fn().mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, proposal: { proposalId: "proposal-1", version: 1, proposalHash: hash, status: "pending" }, sideEffects: { providerInvocationCount: 0, externalGenerationCount: 0, feeChargeCount: 0, publicationCount: 0, businessMutationCount: 0 }, message: "发布 Proposal 已创建；当前仍未执行外部发布。" });
     const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
-    await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()), listMediaInternalWorkflows: vi.fn().mockResolvedValue({ items: [workflow], count: 1 }), getMediaDeliveryWorkspace: vi.fn().mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, currentDraft: workflow, history: [{ ...workflow, revision: 1, version: 1 }, workflow], historyCount: 2, candidates: [candidate], blockerCodes: [], externalEffectsAllowed: false }), exportMediaDelivery: exportDelivery, createMediaDeliveryPublishProposal: createProposal }} />); await Promise.resolve(); });
+    await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()), listMediaInternalWorkflows: vi.fn().mockResolvedValue({ items: [workflow], count: 1 }), getMediaDeliveryWorkspace: vi.fn().mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, currentDraft: workflow, history: [{ ...workflow, revision: 1, version: 1, summary: "第一版任务准备" }, workflow], historyCount: 2, candidates: [candidate], blockerCodes: [], externalEffectsAllowed: false }), exportMediaDelivery: exportDelivery, createMediaDeliveryPublishProposal: createProposal }} />); await Promise.resolve(); });
     expect(host.querySelector('[aria-label="交付评审事实"]')?.textContent).toContain("2 个版本 · 1 个交付候选");
     expect(host.querySelector('[aria-label="交付评审事实"]')?.textContent).toContain("复核 1 项 · 退回 1 次");
+    expect(host.querySelector('[aria-label="交付评审事实"]')?.textContent).toContain("复核事项 issue-1 · 已解决");
+    const proposalButton = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "提交发布审批");
+    expect(proposalButton?.disabled).toBe(true);
+    const selectCandidate = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent?.includes("选择交付候选 1"));
+    act(() => selectCandidate?.click());
+    expect(selectCandidate?.getAttribute("aria-pressed")).toBe("true");
+    expect(proposalButton?.disabled).toBe(false);
+    const historyButton = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "历史版本");
+    act(() => historyButton?.click());
+    expect(host.querySelector('[aria-label="任务版本历史"]')?.textContent).toContain("第 1 版 · 草稿");
+    expect(host.querySelector('[aria-label="任务版本历史"]')?.textContent).toContain("第一版任务准备");
+    expect(host.querySelector('[aria-label="任务版本历史"]')?.textContent).toContain("第 2 版 · 草稿");
     const exportButton = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "导出清单" && !item.disabled);
     await act(async () => { exportButton?.click(); await Promise.resolve(); });
     expect(exportDelivery).toHaveBeenCalled(); expect(click).toHaveBeenCalled();
-    const proposalButton = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "创建发布 Proposal");
     await act(async () => { proposalButton?.click(); await Promise.resolve(); });
     expect(createProposal.mock.calls[0]?.[1].selection.familyId).toBe("family-1");
     expect(host.textContent).toContain("当前仍未执行外部发布");
     click.mockRestore();
+  });
+
+  it("交付事实读取失败时展示可恢复错误而不是静默空态", async () => {
+    const workflow = { resourceType: "TaskBriefRevision" as const, resourceId: "media-brief-1", revision: 2, contentHash: "a".repeat(64), version: 2, mediaType: "planting_copy" as const, title: "栖月汇种草任务", summary: "准备种草内容", details: { mediaType: "planting_copy" }, status: "draft" as const };
+    await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()), listMediaInternalWorkflows: vi.fn().mockResolvedValue({ items: [workflow], count: 1 }), getMediaDeliveryWorkspace: vi.fn().mockRejectedValue(new Error("交付数据暂时不可读取")) }} />); await Promise.resolve(); });
+    expect(host.querySelector('.media-studio-advice-lane [role="alert"]')?.textContent).toContain("交付数据暂时不可读取");
+    expect(Array.from(host.querySelectorAll("button")).some((item) => item.textContent === "重新读取交付事实")).toBe(true);
   });
 
   it("用 roving tabindex 和稳定 controls 支持方向键、Home 与 End", async () => {

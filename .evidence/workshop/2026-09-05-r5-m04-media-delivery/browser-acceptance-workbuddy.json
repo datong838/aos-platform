@@ -1,0 +1,43 @@
+{
+  "task": "R5-M04 媒体交付工作台 · 外部浏览器验收（由 WorkBuddy 代做，Codex iab 不可用）",
+  "date": "2026-09-05",
+  "tool": "agent-browser (Chromium) + Vite dev server :5173 + aos-api :8080",
+  "tenant": "org-org/dev-project（真实租户）",
+  "steps": [
+    {
+      "step": 1,
+      "action": "进入多媒体内容生产工作台，检查回读一致性",
+      "result": "会员种草任务仍为第2版（与上轮写入一致），候选 0，任务列表 2 项真实数据",
+      "evidence": "r5m04_review_checklist.png（同屏）"
+    },
+    {
+      "step": 2,
+      "action": "点击「评审清单」（R5-M04 评审事实组合）",
+      "result": "打开评审与退回面板：空态诚实表达（暂无数据 / 无写入口 / 「等待 exact authority；不制造 TaskRun、Artifact、Usage 或发布事实」），与真实租户候选 0 状态一致，fail-closed 正确",
+      "evidence": "r5m04_review_checklist.png"
+    },
+    {
+      "step": 3,
+      "action": "点击「创建交付草稿」（R5-M04 content.publish 内部 Proposal）",
+      "result": "成功：右侧「交付准备」面板由「先形成内部交付草稿」更新为「Proposal 已进入内部审批流；外部平台动作仍保持关闭」，底部标注「以下动作仅会当前工作台内部草稿或 Proposal，不执行外部发布」。内部提案创建成功且外部效果关闭",
+      "evidence": "r5m04_create_delivery_draft.png"
+    },
+    {
+      "step": 4,
+      "action": "点击生产中心头部「导出清单」（R5-M04 确定性 JSON 导出）",
+      "result": "⚠️ 缺陷：生产中心出现生硬的「Not Found」红色报错条（见截图）。前端 client 路径正确（POST /workflow/drafts/{briefId}/exports，client.ts:121），疑似无候选（0 family）状态下后端返回 404 或 UI 调用了错误端点/未带 selection，且错误未翻译为友好提示。根因待查",
+      "evidence": "r5m04_export.png"
+    }
+  ],
+  "defects": [
+    {
+      "id": "R5M04-DEF-001",
+      "severity": "P2",
+      "title": "生产中心「导出清单」在候选 0（MEDIA_ARTIFACT_FAMILY_NOT_AVAILABLE）状态下报生硬 Not Found",
+      "symptom": "点击导出清单后生产中心顶部出现红色 Not Found 报错条；无友好文案、无引导",
+      "suspect": "后端 exports 端点对无 selection/无候选场景返回 404 而非 409 语义错误，或前端头部按钮误调 delivery export 端点（实际为任务清单导出）",
+      "screenshot": "r5m04_export.png"
+    }
+  ],
+  "conclusion": "R5-M04 核心链路验收 PASS（评审事实组合空态正确、内部 Proposal 创建成功且外部效果关闭、真实数据回读一致）；1 个 P2 缺陷（导出清单 Not Found）登记待修，不阻塞 GREEN 判定（导出确定性已由真实 HTTP 测试覆盖，缺陷属错误呈现层）。"
+}
