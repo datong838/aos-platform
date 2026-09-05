@@ -1,0 +1,15 @@
+{
+  "taskId": "AR1-B-ISOLATED-RUNTIME",
+  "startedAt": "2026-09-05T12:48:27Z",
+  "verificationCutoff": "2026-09-05T13:29:00Z",
+  "timingCoverage": "partial; implementation and review interleaved; no invented category durations",
+  "acceptanceAttempts": [
+    {"kind": "technical-package", "result": "210 passed", "elapsedSeconds": 25.55, "businessScenario": false},
+    {"kind": "prior-expanded-regression", "result": "934 passed", "elapsedSeconds": 79.78, "temporaryDatabaseSchemas": true, "remainingTestSchemas": 0}
+  ],
+  "realOciTests": 8,
+  "businessScenariosAdded": 0,
+  "browser": "N/A: no UI changes",
+  "evidenceRefs": ["verification.md", "environment-result.json"],
+  "nextTaskId": "AR1-C-LIFECYCLE-PERSISTENCE"
+}
