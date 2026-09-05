@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FullVideoScenarioContribution, MediaStudioViewResponse } from "../../api/ecommerceWorkshop";
 import { MediaStudioPage } from "./MediaStudioPage";
 
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
 const response = (): MediaStudioViewResponse => ({ schemaVersion: "aos.ecommerce-workshop.media-studio-view/v3", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-24T08:00:00Z", dataCutoff: "2026-08-24T08:00:00Z", readiness: "degraded", slices: ["context", "execution", "delivery"].map((sliceId) => ({ sliceId: sliceId as "context" | "execution" | "delivery", status: "blocked", dataCutoff: "2026-08-24T08:00:00Z", readinessAxes: ["module", "capability", "assignee", "provider", "budget", "publication"].map((axis) => ({ axis: axis as "module", status: "target", exactRef: null, targetContractRef: `ADR-86#${axis}`, gaps: ["missing authority"], blockers: [{ code: "MEDIA_AUTHORITY_NOT_AVAILABLE", dependency: axis, requiredAction: "attach exact ref" }] })), authorityRefs: [], blockers: [{ code: `MEDIA_${sliceId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`, dependency: sliceId, requiredAction: "attach exact refs" }], countLedger: { denominator: 6, ready: 0, target: 6, blocked: 0, unknown: 0, conflict: 0, notApplicable: 0 } })), providerJobsStatus: "blocked", providerJobs: [], providerJobBlockers: [{ code: "MEDIA_PROVIDER_JOB_AUTHORITY_NOT_AVAILABLE", dependency: "aip.media-provider-jobs", requiredAction: "install authority" }], mediaFinanceStatus: "ready", mediaFinance: [], mediaFinanceBlockers: [], lifecycleStatus: "blocked", lifecycle: null, lifecycleBlockers: [{ code: "MEDIA_LIFECYCLE_LEGACY_VIEW", dependency: "media-studio-v4", requiredAction: "refresh canonical v4 projection" }], publishStatus: "blocked", publishContributions: [], publishBlockers: [{ code: "MEDIA_PUBLISH_LEGACY_VIEW", dependency: "media-studio-v5", requiredAction: "refresh canonical v5 projection" }], page: { limit: 100, count: 0, hasMore: false, nextCursor: null } });
 
 const expectInternalWorkspaceControls = (host: HTMLElement) => {
@@ -104,6 +106,25 @@ describe("MediaStudioPage", () => {
     expect(reviewFilter?.getAttribute("aria-pressed")).toBe("true");
     expect(host.querySelector(".media-studio-task-empty")?.textContent).toContain("当前没有复核中任务");
     expect(host.textContent).not.toContain("R5-M03");
+  });
+
+  it("创建内部任务后可执行输入、证据、改派、暂停继续和五类生产准备", async () => {
+    const workflow = { resourceType: "TaskBriefRevision" as const, resourceId: "media-brief-1", revision: 1, contentHash: "a".repeat(64), version: 1, mediaType: "planting_copy" as const, title: "种草文案生产准备", summary: "基于栖月汇正式商品资料准备内容", details: { mediaType: "planting_copy", lastCommand: "create" }, status: "draft" as const };
+    const execute = vi.fn().mockImplementation(async (input) => ({ tenant: { orgId: "org-org", projectId: "dev-project" }, command: input.command, taskId: "task-1", draft: { ...workflow, revision: 2, version: 2, status: input.command === "pause" ? "paused" : input.command === "schedule" ? "scheduled" : input.command.startsWith("prepare") || input.command === "select_template" ? "prepared" : "draft", details: { ...workflow.details, ...input.details, lastCommand: input.command } }, receipt: { receiptId: "receipt-1", operation: input.command === "create" ? "task_brief.create" : "task_brief.revise", idempotencyKey: "key", replay: false }, sideEffects: { providerInvocationCount: 0, externalGenerationCount: 0, feeChargeCount: 0, publicationCount: 0, businessMutationCount: 0 }, message: "内部操作已保存" }));
+    const list = vi.fn().mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [], count: 0 });
+    await act(async () => { root.render(<MediaStudioPage client={{ getMediaStudioView: vi.fn().mockResolvedValue(response()), listMediaInternalWorkflows: list, executeMediaInternalWorkflow: execute, getMediaInternalWorkflowHistory: vi.fn().mockResolvedValue({ tenant: { orgId: "org-org", projectId: "dev-project" }, items: [workflow], count: 1 }) }} />); });
+    const prepare = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "新建生产准备");
+    act(() => prepare?.click());
+    const save = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "保存当前准备");
+    await act(async () => { save?.click(); await Promise.resolve(); });
+    expect(execute.mock.calls[0]?.[0].command).toBe("create");
+    for (const label of ["保存输入", "补充证据", "改派内容官", "暂停任务", "样片准备", "选择模板", "安排生产", "直播控制", "批量生产准备"]) expect(Array.from(host.querySelectorAll("button")).some((item) => item.textContent === label)).toBe(true);
+    const sample = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((item) => item.textContent === "样片准备");
+    await act(async () => { sample?.click(); await Promise.resolve(); });
+    expect(execute.mock.calls.at(-1)?.[0].command).toBe("prepare_sample");
+    expect(execute.mock.calls.at(-1)?.[0].draftRef).toEqual({ resourceType: "TaskBriefRevision", resourceId: "media-brief-1", revision: 2, contentHash: "a".repeat(64) });
+    expect(execute.mock.calls.at(-1)?.[0].draftRef).not.toHaveProperty("version");
+    expect(host.textContent).toContain("内部操作已保存");
   });
 
   it("用 roving tabindex 和稳定 controls 支持方向键、Home 与 End", async () => {

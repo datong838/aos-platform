@@ -147,6 +147,17 @@ from aos_api.ecommerce_workshop_creator_lifecycle import (
 )
 from aos_api.ecommerce_workshop_creator_lifecycle_store import EcommerceWorkshopCreatorLifecycleStore
 from aos_api.ecommerce_workshop_media_studio import EcommerceWorkshopMediaStudio
+from aos_api.ecommerce_media_internal_workflow import (
+    EcommerceMediaInternalWorkflow,
+    MediaInternalWorkflowConflict,
+    MediaInternalWorkflowError,
+)
+from aos_api.ecommerce_media_internal_workflow_contracts import (
+    MediaInternalWorkflowCommandRequest,
+    MediaInternalWorkflowCommandResponse,
+    MediaInternalWorkflowHistoryResponse,
+    MediaInternalWorkflowListResponse,
+)
 from aos_api.ecommerce_workshop_media_studio_lifecycle import EcommerceWorkshopMediaStudioLifecycle
 from aos_api.ecommerce_workshop_media_studio_source_reader import EcommerceWorkshopMediaStudioSourceReader
 from aos_api.ecommerce_workshop_media_publish import EcommerceWorkshopMediaPublish
@@ -510,6 +521,11 @@ def get_ecommerce_workshop_media_studio() -> EcommerceWorkshopMediaStudio:
 
 
 @lru_cache(maxsize=1)
+def get_ecommerce_media_internal_workflow() -> EcommerceMediaInternalWorkflow:
+    return EcommerceMediaInternalWorkflow()
+
+
+@lru_cache(maxsize=1)
 def get_ecommerce_workshop_analyst() -> EcommerceWorkshopAnalyst:
     return EcommerceWorkshopAnalyst(reader=EcommerceWorkshopAnalystSourceReader(), growth_scenario=EcommerceWorkshopGrowthScenario())
 
@@ -650,6 +666,10 @@ MediaStudioDependency = Annotated[
     EcommerceWorkshopMediaStudio,
     Depends(get_ecommerce_workshop_media_studio),
 ]
+MediaInternalWorkflowDependency = Annotated[
+    EcommerceMediaInternalWorkflow,
+    Depends(get_ecommerce_media_internal_workflow),
+]
 AnalystDependency = Annotated[
     EcommerceWorkshopAnalyst,
     Depends(get_ecommerce_workshop_analyst),
@@ -754,6 +774,12 @@ def _map_creator_internal_workflow_error(exc: CreatorInternalWorkflowError) -> A
     if isinstance(exc, CreatorInternalWorkflowConflict):
         return ApiError(code=exc.code, message=str(exc), status_code=409)
     return ApiError(code=exc.code, message="Creator internal workflow failed closed", status_code=503)
+
+
+def _map_media_internal_workflow_error(exc: MediaInternalWorkflowError) -> ApiError:
+    if isinstance(exc, MediaInternalWorkflowConflict):
+        return ApiError(code=exc.code, message=str(exc), status_code=409)
+    return ApiError(code=exc.code, message="Media internal workflow failed closed", status_code=503)
 
 
 def _map_evidence_build_error(exc: WorkshopEvidenceBuildError) -> ApiError:
@@ -1689,6 +1715,74 @@ def get_ecommerce_workshop_media_studio_view(
         org_id=principal.org_id,
         project_id=principal.project_id,
     )
+
+
+@router.post(
+    "/views/media-studio/workflow/commands",
+    response_model=MediaInternalWorkflowCommandResponse,
+    operation_id="ecommerceWorkshopMediaInternalWorkflowCommand",
+    responses=_ERRORS,
+)
+def execute_media_internal_workflow(
+    request: Request,
+    body: MediaInternalWorkflowCommandRequest,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    workflow: MediaInternalWorkflowDependency,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+) -> MediaInternalWorkflowCommandResponse:
+    _reject_query_parameters(request)
+    _require_media_studio_installation(principal=principal, catalog=catalog)
+    try:
+        return workflow.execute(
+            TenantScope(principal.org_id, principal.project_id),
+            principal.subject,
+            _prepare_idempotency(idempotency_key),
+            body,
+        )
+    except MediaInternalWorkflowError as exc:
+        raise _map_media_internal_workflow_error(exc) from exc
+
+
+@router.get(
+    "/views/media-studio/workflow/drafts",
+    response_model=MediaInternalWorkflowListResponse,
+    operation_id="ecommerceWorkshopMediaInternalWorkflowList",
+    responses=_ERRORS,
+)
+def list_media_internal_workflows(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    workflow: MediaInternalWorkflowDependency,
+) -> MediaInternalWorkflowListResponse:
+    _reject_query_parameters(request)
+    _require_media_studio_installation(principal=principal, catalog=catalog)
+    try:
+        return workflow.list(TenantScope(principal.org_id, principal.project_id))
+    except MediaInternalWorkflowError as exc:
+        raise _map_media_internal_workflow_error(exc) from exc
+
+
+@router.get(
+    "/views/media-studio/workflow/drafts/{brief_id}/history",
+    response_model=MediaInternalWorkflowHistoryResponse,
+    operation_id="ecommerceWorkshopMediaInternalWorkflowHistoryGet",
+    responses=_ERRORS,
+)
+def get_media_internal_workflow_history(
+    request: Request,
+    brief_id: Annotated[str, Path(min_length=1, max_length=200, pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$")],
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    workflow: MediaInternalWorkflowDependency,
+) -> MediaInternalWorkflowHistoryResponse:
+    _reject_query_parameters(request)
+    _require_media_studio_installation(principal=principal, catalog=catalog)
+    try:
+        return workflow.history(TenantScope(principal.org_id, principal.project_id), brief_id)
+    except MediaInternalWorkflowError as exc:
+        raise _map_media_internal_workflow_error(exc) from exc
 
 
 @router.get(
