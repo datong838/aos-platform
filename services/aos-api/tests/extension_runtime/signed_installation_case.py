@@ -32,7 +32,7 @@ from aos_api.extension_runtime.signed_session import open_signed_session
 from aos_api.extension_runtime.oci_driver import OciDriver
 
 
-def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False):
+def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,planned=False,worker_mode=None):
     from test_admission import fixture
     from test_persistent_supervisor import build_session_image,CONTEXT
     from offline_registry import cached_registry_image
@@ -103,13 +103,85 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False):
         generation=uuid.uuid4()
         selected=lock.payload.resolved[0]
         operations=RuntimeOperationStore()
-        with connect() as conn:
-            intent=ResourceJournal().prepare(conn,**scope,operation_id=operation,generation=generation,
-                package_id=selected.id,package_hash=selected.content_hash,engine_context=CONTEXT,
-                expires_at=datetime.now(timezone.utc)+timedelta(minutes=2))
-            revision=accepted.response_json['revision']
-            for phase in ('validating','preparing'):
-                revision=operations.advance(conn,**scope,operation_id=operation,expected_revision=revision,phase=phase).revision
+        if worker_mode:
+            from aos_api.extension_runtime.preparation_worker import PreparationWorker
+            permission_calls=[]
+            def permission(**kwargs):
+                permission_calls.append(kwargs['actor'])
+                return worker_mode!='permission_error' or len(permission_calls)==1
+            def load_record(member):
+                assert member==selected
+                if worker_mode=='artifact_error':raise ValueError('artifact unavailable')
+                return record
+            worker=PreparationWorker(connect=connect,driver=OciDriver(context=CONTEXT),
+                installation_store=store,revalidator=fresh,check_current_permission=permission,
+                load_record=load_record,read_artifact=args['read_artifact'],policy=policy,platform=args['platform'])
+            async def run_worker():
+                job=await worker.start(**scope,operation_id=operation,expected_revision=accepted.response_json['revision'])
+                if worker_mode!='normal':
+                    with pytest.raises(ValueError,match='artifact unavailable' if worker_mode=='artifact_error' else 'current preparation permission'):
+                        await job.prepared()
+                else:
+                    applied=await job.prepared()
+                    assert applied.state=='applied' and applied.active_revision is None
+                    running=await asyncio.to_thread(subprocess.check_output,
+                        ['docker','--context',CONTEXT,'inspect','--format','{{.State.Running}}',job.plan.members[0].intent.identity.name],
+                        text=True,timeout=10)
+                    assert running.strip()=='true'
+                    await job.stop()
+                return job.plan
+            plan=asyncio.run(run_worker())
+            observed=store.get_installation(**scope,installation_id=draft.installation_id)
+            assert observed.state==('applied' if worker_mode=='normal' else 'approved')
+            assert observed.active_revision is None
+            with connect() as conn:
+                assert conn.execute('SELECT status FROM extension_runtime_operation WHERE operation_id=%s',(operation,)).fetchone()=={'status':'succeeded' if worker_mode=='normal' else 'failed'}
+                assert conn.execute('SELECT observed_release,cleanup_state FROM extension_runtime_resource_lease').fetchall()==[{'observed_release':True,'cleanup_state':'released'}]
+                assert conn.execute('SELECT count(*) AS n FROM extension_runtime_binding').fetchone()['n']==0
+            assert_container_absent(CONTEXT,plan.members[0].intent)
+            assert len(permission_calls)==(1 if worker_mode=='artifact_error' else 2)
+            return
+        if planned:
+            from aos_api.extension_runtime.preparation_plan import claim_preparation
+            from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+            claim_args=dict(installation_store=store,revalidator=fresh,check_current_permission=lambda **kwargs:True,
+                **scope,operation_id=operation,expected_revision=accepted.response_json['revision'],engine_context=CONTEXT)
+            for permission in (False,None,'allowed'):
+                with pytest.raises(RuntimeConflict):
+                    with connect() as conn:
+                        claim_preparation(conn,**{**claim_args,'check_current_permission':lambda **kwargs:permission})
+            for failure in ('cas','expired','existing','context','rollback'):
+                with pytest.raises((RuntimeConflict,ValueError,RuntimeError)):
+                    with connect() as conn:
+                        if failure=='expired':
+                            conn.execute("UPDATE extension_runtime_operation SET deadline=clock_timestamp()-interval '1 second' WHERE operation_id=%s",(operation,))
+                        if failure=='existing':
+                            ResourceJournal().prepare(conn,**scope,operation_id=operation,generation=generation,
+                                package_id=selected.id,package_hash=selected.content_hash,engine_context=CONTEXT,
+                                expires_at=datetime.now(timezone.utc)+timedelta(minutes=1))
+                        altered={**claim_args}
+                        if failure=='cas':altered['expected_revision']=0
+                        if failure=='context':altered['engine_context']='invalid context'
+                        claim_preparation(conn,**altered)
+                        if failure=='rollback':raise RuntimeError('rollback accepted plan')
+            with connect() as conn:
+                assert conn.execute('SELECT count(*) AS n FROM extension_runtime_resource_lease').fetchone()['n']==0
+                assert conn.execute('SELECT phase,revision FROM extension_runtime_operation WHERE operation_id=%s',(operation,)).fetchone()=={'phase':'accepted','revision':accepted.response_json['revision']}
+                plan=claim_preparation(conn,**claim_args)
+                assert len(plan.members)==1 and plan.members[0].selected==selected
+            generation=plan.generation
+            intent=plan.members[0].intent
+            with pytest.raises(RuntimeConflict):
+                with connect() as conn:
+                    claim_preparation(conn,**claim_args)
+        else:
+            with connect() as conn:
+                intent=ResourceJournal().prepare(conn,**scope,operation_id=operation,generation=generation,
+                    package_id=selected.id,package_hash=selected.content_hash,engine_context=CONTEXT,
+                    expires_at=datetime.now(timezone.utc)+timedelta(minutes=2))
+                revision=accepted.response_json['revision']
+                for phase in ('validating','preparing'):
+                    revision=operations.advance(conn,**scope,operation_id=operation,expected_revision=revision,phase=phase).revision
         args.update(driver=OciDriver(context=CONTEXT),selected=selected,policy=policy)
         reached={'revoked':False,'commit':False}
         def commit_registered():

@@ -14,6 +14,17 @@ from .lifecycle_store import (
 from .runtime_gate import _reject_deferred
 
 
+def _expected_backend_claims(lock, checked):
+    members=checked.runtime_members
+    claims=checked.backend_claims
+    selected={(item.id,item.content_hash) for item in lock.payload.resolved}
+    if (not 1<=len(members)<=64 or len(set(members))!=len(members)
+            or len(claims)!=len(members) or {item[0] for item in claims}!=set(members)
+            or any((item[0],item[1]) not in selected for item in claims)):
+        raise RuntimeConflict('runtime preparation members unavailable or unsupported')
+    return {(item[0],item[1]):item[2] for item in claims}
+
+
 def commit_prepared(conn, *, installation_store, revalidator, check_current_permission,
                     org_id, project_id, operation_id, expected_revision, generation):
     _require_transaction(conn)
@@ -57,14 +68,7 @@ def commit_prepared(conn, *, installation_store, revalidator, check_current_perm
         raise RuntimeConflict('operation is not a registered preparation')
     lock=_load_current_lock(conn,locked=locked,org_id=org_id,project_id=project_id)
     checked=revalidator.revalidate_in_transaction(conn,lock=lock)
-    members=checked.runtime_members
-    claims=checked.backend_claims
-    selected={(item.id,item.content_hash) for item in lock.payload.resolved}
-    if (not 1<=len(members)<=64 or len(set(members))!=len(members)
-            or len(claims)!=len(members) or {item[0] for item in claims}!=set(members)
-            or any((item[0],item[1]) not in selected for item in claims)):
-        raise RuntimeConflict('runtime preparation members unavailable or unsupported')
-    expected={(item[0],item[1]):item[2] for item in claims}
+    expected=_expected_backend_claims(lock,checked)
     rows=conn.execute("""SELECT resource_id,generation,package_id,package_hash,container_id,
         create_claimed_at,cleanup_state,observed_release,expires_at
         FROM extension_runtime_resource_lease WHERE org_id=%s AND project_id=%s AND operation_id=%s
