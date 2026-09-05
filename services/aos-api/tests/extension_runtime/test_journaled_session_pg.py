@@ -4,12 +4,19 @@ from datetime import datetime, timezone, timedelta
 import uuid
 import os
 import threading
+import subprocess
 import psycopg
 from psycopg import sql
 import pytest
 from test_lifecycle_pg import database, seed, pytestmark
 from aos_api.extension_runtime.reconciler import ResourceJournal
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+
+
+def assert_container_absent(context,intent):
+    result=subprocess.run(['docker','--context',context,'container','inspect',intent.identity.name],
+        capture_output=True,text=True,timeout=15)
+    assert result.returncode!=0 and 'No such' in result.stderr
 
 
 def setup_intent(database):
@@ -95,6 +102,9 @@ def test_signed_real_oci_and_journal(database,tmp_path):
                 assert await session.invoke('example_read',{'value':'签名容器联合实测'})=={'value':'签名容器联合实测'}
         asyncio.run(run())
     assert conn.execute("SELECT cleanup_state,observed_release FROM extension_runtime_resource_lease").fetchone()==('released',True)
+    recorded=conn.execute("SELECT container_id FROM extension_runtime_resource_lease").fetchone()[0]
+    assert isinstance(recorded,str) and len(recorded)==64
+    assert_container_absent(CONTEXT,intent)
 
 
 def test_signed_session_claims_matching_package(database,monkeypatch):
@@ -118,6 +128,27 @@ def test_signed_session_claims_matching_package(database,monkeypatch):
             assert session=="signed"
     asyncio.run(run())
     assert conn.execute("SELECT cleanup_state FROM extension_runtime_resource_lease").fetchone()[0]=="released"
+
+
+def test_created_identity_is_atomic_and_not_replaceable(database):
+    conn,_,intent,connect=setup_intent(database)
+    journal=ResourceJournal()
+    args=dict(org_id="org-org",project_id="dev-project",intent=intent,container_id="a"*64)
+    with pytest.raises(RuntimeConflict):
+        with conn.transaction():journal.record_created(conn,**args)
+    with conn.transaction():
+        journal.claim_create(conn,org_id="org-org",project_id="dev-project",resource_id=intent.resource_id)
+    with pytest.raises(RuntimeError,match="rollback"):
+        with conn.transaction():
+            journal.record_created(conn,**args)
+            raise RuntimeError("rollback")
+    assert conn.execute("SELECT container_id FROM extension_runtime_resource_lease").fetchone()[0] is None
+    for _ in range(2):
+        with conn.transaction():journal.record_created(conn,**args)
+    assert conn.execute("SELECT container_id FROM extension_runtime_resource_lease").fetchone()[0]=="a"*64
+    assert conn.execute("SELECT count(*) FROM extension_runtime_event").fetchone()[0]==1
+    with pytest.raises(RuntimeConflict):
+        with conn.transaction():journal.record_created(conn,**{**args,"container_id":"b"*64})
 
 
 def test_package_mismatch_rolls_back_claim_without_engine(database):
@@ -201,3 +232,22 @@ def test_real_container_and_pg_cleanup_before_context_exit(database,tmp_path,mon
         # Context exit retains the same unresolved cleanup, not silent success.
         with pytest.raises(CleanupUncertainError):asyncio.run(run())
     else:asyncio.run(run())
+
+
+@pytest.mark.skipif(os.getenv("AOS_EXTENSION_OCI_TEST")!="1",reason="dedicated OCI opt-in required")
+def test_creation_record_failure_still_removes_real_container(database,tmp_path,monkeypatch):
+    from test_persistent_supervisor import build_session_image,CONTEXT
+    from aos_api.extension_runtime.journaled_session import open_journaled_session
+    from aos_api.extension_runtime.oci_driver import OciDriver
+    conn,_,intent,connect=setup_intent(database)
+    image,claims=build_session_image(tmp_path)
+    def unavailable(*args,**kwargs):raise RuntimeError('creation journal unavailable')
+    monkeypatch.setattr(ResourceJournal,'record_created',unavailable)
+    async def run():
+        async with open_journaled_session(OciDriver(context=CONTEXT),connect=connect,
+            org_id='org-org',project_id='dev-project',resource_id=intent.resource_id,image_id=image,declared=claims):
+            raise AssertionError('must not start a session after journal failure')
+    with pytest.raises(RuntimeError,match='creation journal unavailable'):
+        asyncio.run(run())
+    assert conn.execute('SELECT container_id,cleanup_state,observed_release FROM extension_runtime_resource_lease').fetchone()==(None,'released',True)
+    assert_container_absent(CONTEXT,intent)

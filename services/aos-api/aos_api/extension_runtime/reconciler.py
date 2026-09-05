@@ -17,6 +17,39 @@ class ResourceIntent:
 
 
 class ResourceJournal:
+    def record_created(self,conn,*,org_id,project_id,intent,container_id):
+        """Record a trusted OCI observation; never assert registration/readiness."""
+        _require_transaction(conn)
+        if not isinstance(intent,ResourceIntent) or not isinstance(container_id,str) or not re.fullmatch(r"[0-9a-f]{64}",container_id):
+            raise ValueError("invalid container observation")
+        target=(org_id,project_id,intent.resource_id)
+        head=conn.execute("""SELECT o.installation_id,o.operation_id FROM extension_runtime_resource_lease r
+            JOIN extension_runtime_operation o USING(org_id,project_id,operation_id)
+            WHERE r.org_id=%s AND r.project_id=%s AND r.resource_id=%s""",target).fetchone()
+        if head is None:raise LookupError("resource not found")
+        installation_id,operation_id=_values(head,("installation_id","operation_id"))
+        conn.execute("""SELECT installation_id FROM bundle_installation
+            WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE""",
+            (org_id,project_id,installation_id)).fetchone()
+        operation=conn.execute("""SELECT revision FROM extension_runtime_operation
+            WHERE org_id=%s AND project_id=%s AND operation_id=%s FOR UPDATE""",
+            (org_id,project_id,operation_id)).fetchone()
+        row=conn.execute("""SELECT owner_token_ref,engine_context,container_id,create_claimed_at,observed_release
+            FROM extension_runtime_resource_lease WHERE org_id=%s AND project_id=%s AND resource_id=%s FOR UPDATE""",target).fetchone()
+        owner,context,existing,claimed,released=_values(row,("owner_token_ref","engine_context","container_id","create_claimed_at","observed_release"))
+        if (owner,context)!=(intent.identity.owner,intent.engine_context) or claimed is None or released:
+            raise RuntimeConflict("resource cannot accept creation observation")
+        if existing is not None:
+            if existing!=container_id:raise RuntimeConflict("container identity changed")
+            return
+        conn.execute("""UPDATE extension_runtime_resource_lease SET container_id=%s
+            WHERE org_id=%s AND project_id=%s AND resource_id=%s""",(container_id,*target))
+        revision=_values(operation,("revision",))[0]+1
+        conn.execute("""UPDATE extension_runtime_operation SET revision=%s
+            WHERE org_id=%s AND project_id=%s AND operation_id=%s""",(revision,org_id,project_id,operation_id))
+        RuntimeOperationStore._event(conn,org_id,project_id,operation_id,revision,"resource_created",
+            {"resourceId":str(intent.resource_id),"containerId":container_id})
+
     def record_cleanup(self, conn, *, org_id, project_id, intent, removed):
         """Trusted supervisor observation; absence/unknown never means released."""
         _require_transaction(conn)

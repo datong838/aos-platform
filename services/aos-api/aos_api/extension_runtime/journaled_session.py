@@ -19,9 +19,10 @@ async def _settle(task):
 
 
 class _JournalDriver:
-    def __init__(self,driver,persist):
+    def __init__(self,driver,persist,persist_created):
         self.driver=driver
         self.persist=persist
+        self.persist_created=persist_created
         self.created=False
         self.unknown=False
         self.observation_attempted=False
@@ -40,6 +41,7 @@ class _JournalDriver:
             self.unknown=True
             raise
         self.created=True
+        self.persist_created(result)
         return result
 
     def remove_owned(self,*args):
@@ -75,7 +77,11 @@ async def open_journaled_session(driver,*,connect,org_id,project_id,resource_id,
         with connect() as conn:
             with conn.transaction():
                 journal.record_cleanup(conn,org_id=org_id,project_id=project_id,intent=intent,removed=confirmed)
-    wrapped=_JournalDriver(driver,persist)
+    def persist_created(container_id):
+        with connect() as conn:
+            with conn.transaction():
+                journal.record_created(conn,org_id=org_id,project_id=project_id,intent=intent,container_id=container_id)
+    wrapped=_JournalDriver(driver,persist,persist_created)
     try:
         if cancelled:
             raise asyncio.CancelledError
