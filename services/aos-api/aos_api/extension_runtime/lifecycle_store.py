@@ -114,7 +114,8 @@ class RuntimeOperationStore:
         return OperationResult(target[2],phase,"failed",revision)
 
     def accept(self, conn, *, org_id, project_id, installation_id, kind,
-               idempotency_key, requested_by, expected_installation_etag, deadline):
+               idempotency_key, requested_by, expected_installation_etag, deadline,
+               configuration_target=None):
         _require_transaction(conn)
         from aos_api.extension_runtime.lifecycle import _PATHS
         if kind not in _PATHS or not isinstance(deadline,datetime) or deadline.utcoffset() is None:
@@ -123,6 +124,15 @@ class RuntimeOperationStore:
             raise ValueError("invalid expected installation revision")
         if not isinstance(idempotency_key,str) or not 1 <= len(idempotency_key) <= 240:
             raise ValueError("invalid idempotency key")
+        snapshot = None
+        if kind == 'configure':
+            from .configuration_contracts import ConfigureTarget
+            snapshot = ConfigureTarget.model_validate(configuration_target).model_dump(mode='json')
+            scope = conn.execute("SELECT current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id").fetchone()
+            if not org_id or not project_id or _values(scope,('org_id','project_id')) != (org_id,project_id):
+                raise PermissionError('configuration tenant scope mismatch')
+        elif configuration_target is not None:
+            raise ValueError('configuration target only belongs to configure')
         installation_id=UUID(str(installation_id))
         target=(org_id,project_id,installation_id)
         # Serialize by the existing installation head. Replay precedes CAS validation.
@@ -131,8 +141,11 @@ class RuntimeOperationStore:
         if head is None:
             raise LookupError("installation not found")
         head=_values(head,("etag_version",))
-        request_hash=_digest({"kind":kind,"actor":requested_by,"expectedEtag":expected_installation_etag,
-                              "deadline":deadline.isoformat()})
+        request={"kind":kind,"actor":requested_by,"expectedEtag":expected_installation_etag,
+                 "deadline":deadline.isoformat()}
+        if snapshot is not None:
+            request['configurationTarget']=snapshot
+        request_hash=_digest(request)
         existing=conn.execute("""SELECT operation_id,phase,status,revision,request_hash
             FROM extension_runtime_operation WHERE org_id=%s AND project_id=%s AND installation_id=%s
             AND kind=%s AND idempotency_key=%s""",(*target,kind,idempotency_key)).fetchone()
@@ -143,14 +156,29 @@ class RuntimeOperationStore:
             return OperationResult(*existing[:4],replayed=True)
         if head[0]!=expected_installation_etag:
             raise RuntimeRevisionConflict("installation version changed")
+        binding_revision = None
+        if snapshot is not None:
+            binding = conn.execute('''SELECT revision FROM extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s FOR UPDATE''',
+                (*target, UUID(snapshot['generation']))).fetchone()
+            if binding is None:
+                raise LookupError('configuration binding not found')
+            binding_revision = snapshot['bindingRevision']
+            if _values(binding,('revision',))[0] != binding_revision:
+                raise RuntimeRevisionConflict('configuration binding version changed')
+            if not _deadline_valid(conn,deadline):
+                raise RuntimeConflict('configuration request deadline expired')
         operation_id=uuid4()
         conn.execute("""INSERT INTO extension_runtime_operation
             (org_id,project_id,operation_id,installation_id,kind,idempotency_key,request_hash,
-             requested_by,expected_installation_etag,status,phase,deadline)
-            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,'accepted','accepted',%s)""",
+             requested_by,expected_installation_etag,expected_binding_revision,status,phase,deadline)
+            VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'accepted','accepted',%s)""",
             (org_id,project_id,operation_id,installation_id,kind,idempotency_key,request_hash,
-             requested_by,expected_installation_etag,deadline))
-        self._event(conn,org_id,project_id,operation_id,1,"accepted",{"kind":kind})
+             requested_by,expected_installation_etag,binding_revision,deadline))
+        payload={"kind":kind}
+        if snapshot is not None:
+            payload['configurationTarget']=snapshot
+        self._event(conn,org_id,project_id,operation_id,1,"accepted",payload)
         return OperationResult(operation_id,"accepted","accepted",1)
 
     def advance(self, conn, *, org_id, project_id, operation_id, expected_revision, phase):
