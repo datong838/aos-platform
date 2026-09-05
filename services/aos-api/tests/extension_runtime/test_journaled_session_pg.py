@@ -69,6 +69,34 @@ def test_claim_commits_before_engine_and_cleanup_is_immediate(database,monkeypat
     assert calls==before
 
 
+@pytest.mark.skipif(os.getenv("AOS_EXTENSION_OCI_TEST")!="1",reason="dedicated OCI opt-in required")
+def test_signed_real_oci_and_journal(database,tmp_path):
+    import json
+    from test_admission import fixture
+    from test_persistent_supervisor import build_session_image,CONTEXT
+    from offline_registry import cached_registry_image
+    from aos_api.extension_runtime.signed_session import open_signed_session
+    from aos_api.extension_runtime.oci_driver import OciDriver
+    build=tmp_path/'build';build.mkdir()
+    image,claims=build_session_image(build)
+    conn,_,intent,connect=setup_intent(database)
+    with cached_registry_image(tmp_path/'registry',image,CONTEXT) as (manifest_digest,config_digest):
+        def files(values):
+            path='artifacts/backend-image.json'
+            index=json.loads(values[path])
+            index['images'][0].update(imageDigest=manifest_digest,configDigest=config_digest)
+            values[path]=json.dumps(index).encode()
+        args,_=fixture(files,transform_manifest=lambda value:value['spec'].update(contributions=claims['contributions']))
+        args['driver']=OciDriver(context=CONTEXT)
+        conn.execute("UPDATE extension_runtime_resource_lease SET package_id=%s,package_hash=%s",
+            (args['selected'].id,args['selected'].content_hash))
+        async def run():
+            async with open_signed_session(**args,connect=connect,org_id="org-org",project_id="dev-project",resource_id=intent.resource_id) as session:
+                assert await session.invoke('example_read',{'value':'签名容器联合实测'})=={'value':'签名容器联合实测'}
+        asyncio.run(run())
+    assert conn.execute("SELECT cleanup_state,observed_release FROM extension_runtime_resource_lease").fetchone()==('released',True)
+
+
 def test_signed_session_claims_matching_package(database,monkeypatch):
     from test_admission import fixture
     from aos_api.extension_runtime.signed_session import open_signed_session

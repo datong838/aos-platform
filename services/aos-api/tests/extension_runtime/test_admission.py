@@ -13,7 +13,7 @@ from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 
 
-def fixture(transform_files=None, namespace="example"):
+def fixture(transform_files=None, namespace="example", transform_manifest=None):
     path=Path(__file__).resolve().parents[1]/"asset_registry/test_release_policy.py"
     spec=importlib.util.spec_from_file_location("runtime_release_fixture",path)
     module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module;spec.loader.exec_module(module)
@@ -22,6 +22,8 @@ def fixture(transform_files=None, namespace="example"):
     raw_manifest["spec"]["runtime"]={"apiVersion":"aos.dev/bundle-runtime/v1alpha1","backend":{
       "entrypoint":"backend/example/__init__.py:register","pythonPackage":"example","schemaNamespace":namespace,
       "profileId":"internal-python-v1","imageIndex":"artifacts/backend-image.json"}}
+    if transform_manifest:
+        transform_manifest(raw_manifest)
     record.manifest=type(record.manifest).model_validate(raw_manifest)
     import hashlib
     digest=lambda raw:"sha256:"+hashlib.sha256(raw).hexdigest()
