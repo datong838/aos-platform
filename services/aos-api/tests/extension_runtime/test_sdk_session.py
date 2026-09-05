@@ -38,6 +38,33 @@ def test_session_register_then_invoke_without_ports():
     assert results[1]["payload"]=={"标题":"隔离会话测试"}
 
 
+def test_heartbeat_is_bounded_and_never_calls_business_handler():
+    nonce='a'*32
+    target=io.BytesIO()
+    source=io.BytesIO(encode_frame(frame('register','register',0))+
+        encode_frame(frame('heartbeat','heartbeat',1,{'nonce':nonce})))
+    def handle(*args):raise AssertionError('heartbeat must not call business handler')
+    sdk()(registration,handle,source=source,target=target)
+    result=FrameSession(allowed_methods={'register','heartbeat'}).feed(target.getvalue())
+    assert result[1]['payload']=={'nonce':nonce,'protocol':'aos-extension/1','status':'alive'}
+
+
+@pytest.mark.parametrize('method,payload', [('other',{'nonce':'a'*32}),('heartbeat',{}),
+    ('heartbeat',{'nonce':'a'*31}),('heartbeat',{'nonce':'A'*32}),
+    ('heartbeat',{'nonce':'a'*32,'extra':True}),('heartbeat',{'nonce':1})])
+def test_invalid_heartbeat_is_rejected(method,payload):
+    def handle(*args):raise AssertionError('must not call business handler')
+    with pytest.raises(ValueError):
+        sdk()(registration,handle,source=io.BytesIO(encode_frame(frame('register','register',0))+
+            encode_frame(frame('heartbeat',method,1,payload))),target=io.BytesIO())
+
+
+def test_heartbeat_cannot_replace_initial_registration():
+    with pytest.raises(ValueError,match='registration required'):
+        sdk()(registration,lambda *args:{},source=io.BytesIO(
+            encode_frame(frame('heartbeat','heartbeat',0,{'nonce':'a'*32}))),target=io.BytesIO())
+
+
 @pytest.mark.parametrize("message",[frame("invoke","unknown.read",1),frame("invoke","example.read",3),
     frame("port_request","example.read",1),{**frame("invoke","example.read",1),"parentRequestId":"forged"}])
 def test_bad_followup_closes_before_handler(message):

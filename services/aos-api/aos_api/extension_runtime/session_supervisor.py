@@ -16,7 +16,7 @@ class RuntimeSession:
         self.process = process
         self.stderr_task = stderr_task
         self.methods = {claim.operation_id for claim in declared.contributions if claim.kind == "api"}
-        self.frames = FrameSession(allowed_methods=self.methods | {"register"})
+        self.frames = FrameSession(allowed_methods=self.methods | {"register", "heartbeat"})
         self.sequence = 0
         self.failed = False
         self.lock = asyncio.Lock()
@@ -77,6 +77,20 @@ class RuntimeSession:
             if method not in self.methods:
                 raise ProtocolError("undeclared operation")
             return await self._exchange("invoke",method,payload,30)
+
+    async def check_health(self):
+        """Check protocol responsiveness only; never return business readiness."""
+        try:
+            async with asyncio.timeout(3):
+                async with self.lock:
+                    nonce=uuid.uuid4().hex
+                    result=await self._exchange('heartbeat','heartbeat',{'nonce':nonce},3)
+                    if result!={'nonce':nonce,'protocol':'aos-extension/1','status':'alive'}:
+                        raise ProtocolError('invalid heartbeat response')
+        except BaseException:
+            self.failed=True
+            await self.close()
+            raise
 
 
 @asynccontextmanager

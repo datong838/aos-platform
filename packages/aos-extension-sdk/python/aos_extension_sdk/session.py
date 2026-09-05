@@ -82,6 +82,12 @@ def serve_session(register, handle, *, source=None, target=None):
                     if type(method) is not str or not _ID.fullmatch(method) or method in methods:
                         raise ValueError("invalid API operation")
                     methods.add(method)
+        elif message['type'] == 'heartbeat':
+            nonce = message['payload'].get('nonce')
+            if (message['method'] != 'heartbeat' or set(message['payload']) != {'nonce'}
+                    or type(nonce) is not str or not re.fullmatch(r'[0-9a-f]{32}', nonce)):
+                raise ValueError('invalid heartbeat')
+            result = {'nonce': nonce, 'protocol': 'aos-extension/1', 'status': 'alive'}
         else:
             if message["type"] != "invoke" or message["method"] not in methods:
                 raise ValueError("unregistered invocation")

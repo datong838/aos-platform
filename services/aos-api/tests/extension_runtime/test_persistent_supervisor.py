@@ -45,7 +45,9 @@ def test_real_sdk_persistent_calls_and_exact_cleanup(tmp_path, finish):
     async def exercise():
         async with open_session(OciDriver(context=CONTEXT),image_id=digest,
                                 declared=RegistrationDescription.model_validate(claims),resource_identity=identity) as session:
+            assert await session.check_health() is None
             assert await session.invoke("example_read",{"value":"第一次"})=={"value":"第一次"}
+            assert await session.check_health() is None
             assert await session.invoke("example_read",{"value":"第二次"})=={"value":"第二次"}
             if finish=="error":
                 with pytest.raises(Exception):
