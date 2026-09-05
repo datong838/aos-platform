@@ -1,0 +1,16 @@
+{
+  "taskId": "AR1-B-ISOLATED-ENVIRONMENT",
+  "result": "ENVIRONMENT_PROBE_PASSED_NOT_AR1_B_COMPLETE",
+  "tools": {"colima": "0.10.3", "lima": "2.2.0", "dockerGuest": "29.5.2"},
+  "vm": {"profile": "aos-extension", "cpu": 2, "memoryGiB": 3, "containerDiskGiB": 20, "vmType": "vz"},
+  "context": "colima-aos-extension",
+  "unchangedDefaultContext": "desktop-linux",
+  "uidMap": "0 100000 65536",
+  "gidMap": "0 100000 65536",
+  "probe": "python3 deploy/dev/extension-runtime/verify_environment.py",
+  "probeResult": "passed",
+  "sharedContainers": "same 8 IDs remained running; no restart command issued",
+  "fixes": ["official image native downloader timeout resolved via supported curl downloader", "dedicated daemon containerd-snapshotter disabled to support userns-remap"],
+  "limits": ["not an implemented runtime supervisor or business installation", "no paid provider or business data operation", "remaining full runtime safety tests belong to AR1-b"],
+  "nextTask": "AR1-B-ISOLATED-RUNTIME"
+}

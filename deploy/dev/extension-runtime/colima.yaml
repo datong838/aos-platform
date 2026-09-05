@@ -1,0 +1,21 @@
+# Dedicated development VM only. Never apply to Docker Desktop.
+cpu: 2
+memory: 3
+disk: 20
+arch: aarch64
+runtime: docker
+vmType: vz
+mountType: virtiofs
+autoActivate: false
+forwardAgent: false
+sshConfig: false
+rosetta: false
+binfmt: false
+kubernetes:
+  enabled: false
+docker:
+  userns-remap: default
+  features:
+    containerd-snapshotter: false
+# Disable Colima's default home mount (CLI equivalent: --mount none).
+mounts: null
