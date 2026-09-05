@@ -9,6 +9,7 @@ from typing import Any
 
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
+from aos_api.asset_registry.legacy_runtime_boundary import legacy_content_predicate
 
 _ETAG_RE = re.compile(r'^"ontology-overlay-v1:(\d+):([0-9a-f]{64})"$')
 
@@ -51,8 +52,9 @@ def _base_schema(conn: Any, target_kind: str, target_id: str) -> tuple[dict[str,
 
 def _lock_installation(conn: Any, scope: TenantScope, installation_pk: str) -> dict[str, Any]:
     row = conn.execute(
-        """
-        SELECT bi.installation_pk,bi.active_revision,bir.overlay_revision,
+        f"""
+        SELECT {legacy_content_predicate('bil')} AS legacy_eligible,
+               bi.installation_pk,bi.active_revision,bir.overlay_revision,
                bir.composition_pk,bir.lock_revision,bir.lock_hash,
                bil.lock_hash AS stored_lock_hash,bil.lock_payload
           FROM bundle_installation bi
@@ -70,6 +72,8 @@ def _lock_installation(conn: Any, scope: TenantScope, installation_pk: str) -> d
     ).fetchone()
     if row is None:
         raise ApiError(code="ONTOLOGY_INSTALLATION_NOT_ACTIVE", message="active installation not found", status_code=409)
+    if row['legacy_eligible'] is not True:
+        raise ApiError(code="RUNTIME_OPERATION_REQUIRED", message="运行扩展不能通过旧内容入口修改本体", status_code=409)
     if row["lock_hash"] != row["stored_lock_hash"]:
         raise ApiError(code="ONTOLOGY_INSTALLATION_LOCK_HASH_MISMATCH", message="installation lock verification failed", status_code=409)
     resolved = (row["lock_payload"] or {}).get("resolved") or []

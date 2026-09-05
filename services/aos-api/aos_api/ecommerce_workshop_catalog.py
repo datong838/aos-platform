@@ -15,6 +15,7 @@ from pydantic import ValidationError
 
 from aos_api.asset_registry.composition_contracts import StoredCompositionLock
 from aos_api.asset_registry.canonical_json import canonical_sha256
+from aos_api.asset_registry.legacy_runtime_boundary import legacy_content_predicate
 from aos_api.asset_registry.contracts import (
     BundleManifest,
     LoadedBundle,
@@ -277,8 +278,9 @@ class PostgresWorkshopCatalogSource:
                 ) != (checked_org, checked_project):
                     raise RegistryIntegrityCorruptError()
                 rows = conn.execute(
-                    """
-                    SELECT i.installation_id, i.active_revision,
+                    f"""
+                    SELECT {legacy_content_predicate('l')} AS legacy_eligible,
+                           i.installation_id, i.active_revision,
                            r.overlay_revision, r.lock_hash AS revision_lock_hash,
                            c.composition_id,
                            l.revision AS lock_revision, l.lock_payload,
@@ -311,6 +313,9 @@ class PostgresWorkshopCatalogSource:
                 result: list[ActiveWorkshopBundle] = []
                 versions: dict[tuple[str, str, str], PersistedBundleVersion] = {}
                 for row, lock in effective_rows:
+                    # Preserve replacement graph selection before exclusion.
+                    if row['legacy_eligible'] is not True:
+                        continue
                     for resolved in lock.payload.resolved:
                         coordinate = (resolved.publisher, resolved.id, resolved.version)
                         version = versions.get(coordinate)

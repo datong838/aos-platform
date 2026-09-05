@@ -18,6 +18,7 @@ from psycopg.types.json import Jsonb
 from pydantic import ValidationError
 
 from aos_api.asset_registry.canonical_json import canonical_sha256
+from aos_api.asset_registry.legacy_runtime_boundary import legacy_content_predicate
 from aos_api.asset_registry.errors import (
     AssetNotFoundError,
     EvidenceIntegrityCorruptError,
@@ -178,8 +179,9 @@ class PostgresIntegrationStore:
         markings = _markings(required_markings)
         request = CreateIntegrationCaseRequest.model_validate(request)
         binding = conn.execute(
-            """
-            SELECT i.installation_pk, i.installation_id, i.active_revision,
+            f"""
+            SELECT {legacy_content_predicate('l')} AS legacy_eligible,
+                   i.installation_pk, i.installation_id, i.active_revision,
                    r.composition_pk, c.composition_id, r.lock_revision,
                    r.lock_hash, r.overlay_revision
               FROM bundle_installation AS i
@@ -190,6 +192,9 @@ class PostgresIntegrationStore:
               JOIN bundle_composition AS c
                 ON c.org_id = r.org_id AND c.project_id = r.project_id
                AND c.composition_pk = r.composition_pk
+              JOIN bundle_composition_lock AS l
+                ON l.org_id=r.org_id AND l.project_id=r.project_id
+               AND l.composition_pk=r.composition_pk AND l.revision=r.lock_revision
              WHERE i.org_id = %s AND i.project_id = %s
                AND i.installation_id = %s AND r.state = 'active'
             """,
@@ -197,6 +202,8 @@ class PostgresIntegrationStore:
         ).fetchone()
         if binding is None or binding["overlay_revision"] != request.overlay_revision:
             raise AssetNotFoundError("active installation binding not found")
+        if binding['legacy_eligible'] is not True:
+            raise AssetNotFoundError("runtime installation requires its controlled integration path")
         now = _utc(self._clock())
         case_pk, case_id, instance_pk = (
             self._uuid_factory(),

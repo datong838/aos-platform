@@ -69,6 +69,13 @@ def commit_prepared(conn, *, installation_store, revalidator, check_current_perm
     lock=_load_current_lock(conn,locked=locked,org_id=org_id,project_id=project_id)
     checked=revalidator.revalidate_in_transaction(conn,lock=lock)
     expected=_expected_backend_claims(lock,checked)
+    proofs, expiries = _registered_resources(conn, target, generation, expected, deadline)
+    return _finish_preparation(conn, installation_store, locked, target, generation,
+        expected_revision, revision, actor, proofs, expiries)
+
+
+def _registered_resources(conn, target, generation, expected, deadline):
+    """Read the exact still-owned signed set under the caller's lock order."""
     rows=conn.execute("""SELECT resource_id,generation,package_id,package_hash,container_id,
         create_claimed_at,cleanup_state,observed_release,expires_at
         FROM extension_runtime_resource_lease WHERE org_id=%s AND project_id=%s AND operation_id=%s
@@ -103,6 +110,13 @@ def commit_prepared(conn, *, installation_store, revalidator, check_current_perm
     # Separate wall clock check after every lock wait and policy revalidation.
     if not _deadline_valid(conn,min(expiries)):
         raise RuntimeConflict('operation or preparation resource deadline expired')
+    return proofs, expiries
+
+
+def _finish_preparation(conn, installation_store, locked, target, generation,
+                        expected_revision, revision, actor, proofs, expiries):
+    org_id, project_id, operation_id = target
+    installation_id = locked.record.installation_id
     observed_at=installation_store.read_control_clock_in_transaction(conn)
     current=locked.record.current
     evidence=build_event_evidence(evidence_type='runtime_preparation',

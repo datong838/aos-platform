@@ -118,7 +118,7 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                 load_record=load_record,read_artifact=args['read_artifact'],policy=policy,platform=args['platform'])
             async def run_worker():
                 job=await worker.start(**scope,operation_id=operation,expected_revision=accepted.response_json['revision'])
-                if worker_mode!='normal':
+                if worker_mode not in {'normal','verify'}:
                     with pytest.raises(ValueError,match='artifact unavailable' if worker_mode=='artifact_error' else 'current preparation permission'):
                         await job.prepared()
                 else:
@@ -129,18 +129,46 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                         ['docker','--context',CONTEXT,'inspect','--format','{{.State.Running}}',job.plan.members[0].intent.identity.name],
                         text=True,timeout=10)
                     assert running.strip()=='true'
+                    if worker_mode=='verify':
+                        from aos_api.extension_runtime.verification_commit import commit_verified
+                        from aos_api.ecommerce_workshop_catalog import PostgresWorkshopCatalogSource
+                        requested=await asyncio.to_thread(service.request_preparation,**action,kind='runtime-verify',
+                            idempotency_key='signed-verify',if_match=f'"{applied.etag_version}"')
+                        # Trusted test-host observation from this still-owned group,
+                        # never a request-provided timestamp or grant.
+                        await job.check_health()
+                        health_time=datetime.now(timezone.utc)
+                        def verify():
+                            with connect() as conn:
+                                return commit_verified(conn,installation_store=store,revalidator=fresh,
+                                    check_current_permission=permission,check_current_conditions=lambda **kwargs:True,
+                                    **scope,operation_id=requested.response_json['operationId'],
+                                    expected_revision=requested.response_json['revision'],
+                                    preparation_operation_id=operation,generation=job.plan.generation,
+                                    health_checked_at=health_time)
+                        verified=await asyncio.to_thread(verify)
+                        assert verified.state=='active'
+                        with connect() as conn:
+                            assert conn.execute('SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()=={
+                                'enabled':False,'operation_fence':True,'observed_state':'ready'}
+                        # Actual current catalog must not turn active into legacy capability.
+                        assert await asyncio.to_thread(PostgresWorkshopCatalogSource(connect).read_active_bundles,
+                            **scope,markings=[])==()
                     await job.stop()
                 return job.plan
             plan=asyncio.run(run_worker())
             observed=store.get_installation(**scope,installation_id=draft.installation_id)
-            assert observed.state==('applied' if worker_mode=='normal' else 'approved')
-            assert observed.active_revision is None
+            assert observed.state==('active' if worker_mode=='verify' else 'applied' if worker_mode=='normal' else 'approved')
+            assert (observed.active_revision is not None)==(worker_mode=='verify')
             with connect() as conn:
-                assert conn.execute('SELECT status FROM extension_runtime_operation WHERE operation_id=%s',(operation,)).fetchone()=={'status':'succeeded' if worker_mode=='normal' else 'failed'}
+                assert conn.execute('SELECT status FROM extension_runtime_operation WHERE operation_id=%s',(operation,)).fetchone()=={'status':'succeeded' if worker_mode in {'normal','verify'} else 'failed'}
                 assert conn.execute('SELECT observed_release,cleanup_state FROM extension_runtime_resource_lease').fetchall()==[{'observed_release':True,'cleanup_state':'released'}]
-                assert conn.execute('SELECT count(*) AS n FROM extension_runtime_binding').fetchone()['n']==0
+                assert conn.execute('SELECT count(*) AS n FROM extension_runtime_binding').fetchone()['n']==(1 if worker_mode=='verify' else 0)
+                if worker_mode=='verify':
+                    assert conn.execute('SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()=={
+                        'enabled':False,'operation_fence':True,'observed_state':'unknown'}
             assert_container_absent(CONTEXT,plan.members[0].intent)
-            assert len(permission_calls)==(1 if worker_mode=='artifact_error' else 2)
+            assert len(permission_calls)==(1 if worker_mode=='artifact_error' else 3 if worker_mode=='verify' else 2)
             return
         if planned:
             from aos_api.extension_runtime.preparation_plan import claim_preparation

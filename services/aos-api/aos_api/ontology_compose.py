@@ -8,13 +8,15 @@ from typing import Any
 
 from aos_api.ecom_core_models import CORE_LINK_TYPES, CORE_OBJECT_TYPES
 from aos_api.tenant_scope import TenantScope
+from aos_api.asset_registry.legacy_runtime_boundary import legacy_content_predicate
 
 
 def active_ecommerce_installation(conn: Any, scope: TenantScope) -> dict[str, Any] | None:
     """Resolve the latest active integration binding and verify its frozen lock."""
     row = conn.execute(
-        """
-        SELECT i.instance_pk, ir.installation_pk, ir.installation_revision,
+        f"""
+        SELECT {legacy_content_predicate('bil')} AS legacy_eligible,
+               i.instance_pk, ir.installation_pk, ir.installation_revision,
                ir.composition_pk, ir.lock_revision, ir.lock_hash,
                ir.overlay_revision AS installation_overlay_revision,
                bil.lock_payload, bil.lock_hash AS stored_lock_hash
@@ -40,6 +42,8 @@ def active_ecommerce_installation(conn: Any, scope: TenantScope) -> dict[str, An
         scope.key,
     ).fetchone()
     if row is None:
+        return None
+    if row['legacy_eligible'] is not True:
         return None
     if row["lock_hash"] != row["stored_lock_hash"]:
         raise RuntimeError("ONTOLOGY_INSTALLATION_LOCK_HASH_MISMATCH")

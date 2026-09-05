@@ -35,6 +35,7 @@ def _ref(*, revision: int = 7, content_hash: str = ARTIFACT_HASH) -> ExactRevisi
 
 def _row(**changes: Any) -> dict[str, Any]:
     row: dict[str, Any] = {
+        "legacy_eligible": True,
         "installation_id": "00000000-0000-0000-0000-000000000007",
         "active_revision": 7,
         "installation_state": "active",
@@ -64,6 +65,11 @@ def _row(**changes: Any) -> dict[str, Any]:
     }
     row.update(changes)
     return row
+
+
+@pytest.mark.parametrize('eligible', [False, None, 1, 'true'])
+def test_runtime_lock_cannot_authorize_legacy_profile(eligible):
+    assert not InstalledProductionProfileResolver._row_matches(_row(legacy_eligible=eligible), _ref())
 
 
 class _Result:

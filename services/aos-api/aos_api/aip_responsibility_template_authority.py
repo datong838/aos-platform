@@ -21,6 +21,7 @@ from aos_api.aip_production_contracts import ExactRevisionRef
 from aos_api.aip_production_profile_contracts import ProductionProfile
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
+from aos_api.asset_registry.legacy_runtime_boundary import legacy_content_predicate
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
 _PROFILE_RESOURCE_TYPES = {
@@ -119,8 +120,9 @@ class InstalledProductionProfileResolver:
         try:
             with self._connect_factory(scope) as conn:
                 rows = conn.execute(
-                    """
-                    SELECT installation.installation_id,
+                    f"""
+                    SELECT {legacy_content_predicate('composition_lock')} AS legacy_eligible,
+                           installation.installation_id,
                            installation.active_revision,
                            active.state AS installation_state,
                            composition_lock.lock_payload,
@@ -235,6 +237,8 @@ class InstalledProductionProfileResolver:
     @staticmethod
     def _row_matches(row: Any, ref: ExactRevisionRef) -> bool:
         try:
+            if row['legacy_eligible'] is not True:
+                return False
             if int(row["active_revision"]) != ref.revision:
                 return False
             if row["installation_state"] != "active":

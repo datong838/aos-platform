@@ -19,7 +19,7 @@ import pytest
 pytestmark=pytest.mark.skipif(os.getenv("AOS_EXTENSION_PG_TEST")!="1",reason="dedicated DB opt-in")
 
 
-@pytest.mark.parametrize('commit_case', ['valid', 'rollback', 'wrong_type', 'invalid', 'missing', 'released', 'unregistered', 'expired', 'denied', 'revoked', 'wrong_hash', 'other_generation', 'claims_changed', 'etag_changed', 'late_policy', 'unsupported_runtime', 'extra_resource', 'operation_cas', 'non_boolean_permission', 'late_resource', 'signed', 'signed_revoked', 'signed_owned', 'signed_planned', 'signed_worker', 'signed_worker_artifact_error', 'signed_worker_permission_error'])
+@pytest.mark.parametrize('commit_case', ['valid', 'rollback', 'wrong_type', 'invalid', 'missing', 'released', 'unregistered', 'expired', 'denied', 'revoked', 'wrong_hash', 'other_generation', 'claims_changed', 'etag_changed', 'late_policy', 'unsupported_runtime', 'extra_resource', 'operation_cas', 'non_boolean_permission', 'late_resource', 'signed', 'signed_revoked', 'signed_owned', 'signed_planned', 'signed_worker', 'signed_worker_artifact_error', 'signed_worker_permission_error', 'signed_worker_verify', *['verify_'+case for case in ('valid','rollback','stale_health','future_health','permission','conditions','cas','generation','released','wrong_preparation','late_conditions','locked_unrelated')]])
 def test_existing_installation_schema_accepts_subordinate_operation(commit_case,tmp_path):
     if commit_case.startswith('signed') and os.getenv('AOS_EXTENSION_OCI_TEST')!='1':
         pytest.skip('dedicated OCI opt-in required')
@@ -71,7 +71,7 @@ def test_existing_installation_schema_accepts_subordinate_operation(commit_case,
                 from signed_installation_case import run_signed_installation
                 run_signed_installation(scoped_connect,helper,tmp_path,revoke=commit_case=='signed_revoked',
                     owned=commit_case in {'signed_owned','signed_planned'},planned=commit_case=='signed_planned',
-                    worker_mode=({'signed_worker_artifact_error':'artifact_error','signed_worker_permission_error':'permission_error'}.get(commit_case,'normal')) if commit_case.startswith('signed_worker') else None)
+                    worker_mode=({'signed_worker_artifact_error':'artifact_error','signed_worker_permission_error':'permission_error','signed_worker_verify':'verify'}.get(commit_case,'normal')) if commit_case.startswith('signed_worker') else None)
                 return
             composition_store,_,_,_,lock=helper._persist_lock(scoped_connect)
             draft=PostgresInstallationStore(scoped_connect).create_draft(org_id="org-a",project_id="project-a",
@@ -214,11 +214,16 @@ def test_existing_installation_schema_accepts_subordinate_operation(commit_case,
                             generation=uuid.uuid4() if commit_case=='other_generation' else generation)
                         if commit_case=='rollback':raise RuntimeConflict('injected post-append failure')
                         return result
-                if commit_case=='valid':
+                if commit_case=='valid' or commit_case.startswith('verify_'):
                     result=execute_commit()
                     assert result.state=='applied' and result.active_revision is None
                     assert result.events[-1].evidence.type=='runtime_preparation'
                     assert execute_commit()==result  # Replay must not append a second event.
+                    if commit_case.startswith('verify_'):
+                        from verification_case import run_verification_case
+                        run_verification_case(scoped_connect,store,validator,service,args,scope,
+                            result,operation_id,generation,commit_case.removeprefix('verify_'))
+                        return
                 else:
                     with pytest.raises(RuntimeConflict):execute_commit()
             observed=store.get_installation(**scope,installation_id=second.installation_id)
