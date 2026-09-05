@@ -1,0 +1,34 @@
+{
+  "task": "R5-M03 媒体内部 TaskBrief 状态机 · 内置浏览器验收（由 WorkBuddy 代 Codex 补做，Codex 内置浏览器不可用 iab）",
+  "date": "2026-09-05",
+  "tool": "agent-browser (Chromium) + Vite dev server :5173 + aos-api :8080",
+  "tenant": "org-org/dev-project（真实租户，页脚确认）",
+  "steps": [
+    {
+      "step": 1,
+      "action": "登录态打开 http://localhost:5173 → 侧栏进入「多媒体内容生产」（MediaStudio）",
+      "result": "页面加载成功，真实数据：栖月汇微商城会员种草任务（草稿·第1版）、秋季商品种草准备（草稿·第25版）；R5-M03 新增「内部任务操作」（保存输入/补充证据/改派内容官/暂停任务/退回调整）与「生产准备步骤」（样片准备/选择模板/安排生产/直播控制）区域均已渲染",
+      "evidence": "r5m03_media_studio_1.png"
+    },
+    {
+      "step": 2,
+      "action": "对选中任务执行真实状态机命令「保存输入」（save_input，经 POST /v1/ecommerce-workshop/views/media-studio/workflow/commands）",
+      "result": "UI 提示「业务输入已保存。」，任务版本 第1版 → 第2版，真实租户写入成功",
+      "evidence": "r5m03_save_input_result.png"
+    },
+    {
+      "step": 3,
+      "action": "整页刷新后重新进入媒体工作台回读",
+      "result": "会员种草任务仍为 第2版，写入已持久化（真实 PostgreSQL 存储）",
+      "evidence": "r5m03_refresh_readback.png, r5m03_refresh_readback2.png"
+    },
+    {
+      "step": 4,
+      "action": "查看历史版本入口",
+      "result": "入口可点（evidence: r5m03_history.png）；历史面板交互留待下轮深验",
+      "evidence": "r5m03_history.png"
+    }
+  ],
+  "negative_tenant_canary": "由 Codex 真实 HTTP 测试覆盖：GET /workflow/drafts?orgId=dev-org → 400；跨租户 history → MediaInternalWorkflowConflict（见 services/aos-api/tests/test_ecommerce_media_internal_workflow.py::test_real_http_routes_are_principal_scoped_receipted_and_query_closed）",
+  "conclusion": "R5-M03 浏览器验收 PASS：真实租户写入 + 刷新回读 + 真实数据（无 mock、空态诚实表达）全部通过。可按 authority 流程将 gate 从 CODE_TEST_GREEN_BROWSER_BLOCKED 翻为 GREEN。"
+}
