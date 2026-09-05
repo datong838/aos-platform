@@ -2,6 +2,7 @@
 import asyncio
 from datetime import datetime, timezone, timedelta
 import json
+import subprocess
 import uuid
 
 import pytest
@@ -31,7 +32,7 @@ from aos_api.extension_runtime.signed_session import open_signed_session
 from aos_api.extension_runtime.oci_driver import OciDriver
 
 
-def run_signed_installation(connect,helper,tmp_path,*,revoke=False):
+def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False):
     from test_admission import fixture
     from test_persistent_supervisor import build_session_image,CONTEXT
     from offline_registry import cached_registry_image
@@ -111,29 +112,59 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False):
                 revision=operations.advance(conn,**scope,operation_id=operation,expected_revision=revision,phase=phase).revision
         args.update(driver=OciDriver(context=CONTEXT),selected=selected,policy=policy)
         reached={'revoked':False,'commit':False}
+        def commit_registered():
+            with connect() as conn:
+                revision=conn.execute('SELECT revision FROM extension_runtime_operation WHERE operation_id=%s',(operation,)).fetchone()['revision']
+                registered=operations.advance(conn,**scope,operation_id=operation,expected_revision=revision,phase='registered')
+                # Explicit test-host permission seam, never a production grant.
+                reached['commit']=True
+                applied=commit_prepared(conn,installation_store=store,revalidator=fresh,
+                    check_current_permission=lambda **kwargs:True,**scope,operation_id=operation,
+                    expected_revision=registered.revision,generation=generation)
+                assert applied.state=='applied' and applied.active_revision is None
+                return applied
+
+        def assert_legacy_rejects(applied):
+            with pytest.raises(RegistrySnapshotStaleError) as rejected:
+                legacy.verify(**action,request=EmptyInstallationActionRequest(),
+                    idempotency_key='legacy-must-reject',if_match=f'"{applied.etag_version}"')
+            assert 'runtime bundles require the isolated installation lifecycle' in str(rejected.value.__cause__)
+
         async def run():
+            if owned:
+                from aos_api.extension_runtime.preparation_owner import PreparationOwner
+                from aos_api.extension_runtime.journaled_session import _settle
+                async def commit():
+                    result,cancelled=await _settle(asyncio.create_task(asyncio.to_thread(commit_registered)))
+                    if cancelled:raise asyncio.CancelledError
+                    return result
+                owner=PreparationOwner([lambda:open_signed_session(**args,connect=connect,**scope,
+                    resource_id=intent.resource_id)],commit,lease_seconds=60)
+                try:
+                    applied=await owner.prepared()
+                    # Prepared result returned, owner still keeps the actual OCI
+                    # process alive without handing a session to the requester.
+                    running=await asyncio.to_thread(subprocess.check_output,
+                        ['docker','--context',CONTEXT,'inspect','--format','{{.State.Running}}',intent.identity.name],
+                        text=True,timeout=10)
+                    assert running.strip()=='true'
+                    with connect() as conn:
+                        assert conn.execute('SELECT observed_release FROM extension_runtime_resource_lease WHERE resource_id=%s',
+                            (intent.resource_id,)).fetchone()=={'observed_release':False}
+                    assert_legacy_rejects(applied)
+                finally:
+                    await owner.stop()
+                return
             async with open_signed_session(**args,connect=connect,**scope,resource_id=intent.resource_id) as session:
                 assert await session.invoke('example_read',{'value':'隔离安装联合实测'})=={'value':'隔离安装联合实测'}
                 if revoke:
                     registry.revoke(**package,version=record.manifest.metadata.version,actor='test-publisher',
                         roles={'asset-publisher'},reason='隔离测试撤销发布资格',**access)
                     reached['revoked']=True
-                with connect() as conn:
-                    revision=conn.execute('SELECT revision FROM extension_runtime_operation WHERE operation_id=%s',(operation,)).fetchone()['revision']
-                    registered=operations.advance(conn,**scope,operation_id=operation,expected_revision=revision,phase='registered')
-                    # Trusted test host permission seam only; not a production
-                    # principal/role service and not a business readiness grant.
-                    reached['commit']=True
-                    applied=commit_prepared(conn,installation_store=store,revalidator=fresh,
-                        check_current_permission=lambda **kwargs:True,**scope,operation_id=operation,
-                        expected_revision=registered.revision,generation=generation)
-                    assert applied.state=='applied' and applied.active_revision is None
+                applied=commit_registered()
                 # The actual legacy service and actual fresh Registry reader must
                 # reject this exact signed runtime, even after preparation.
-                with pytest.raises(RegistrySnapshotStaleError) as rejected:
-                    legacy.verify(**action,request=EmptyInstallationActionRequest(),
-                        idempotency_key='legacy-must-reject',if_match=f'"{applied.etag_version}"')
-                assert 'runtime bundles require the isolated installation lifecycle' in str(rejected.value.__cause__)
+                assert_legacy_rejects(applied)
         if revoke:
             with pytest.raises(AssetRegistryError):asyncio.run(run())
             assert reached=={'revoked':True,'commit':True}

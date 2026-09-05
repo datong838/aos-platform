@@ -19,7 +19,7 @@ import pytest
 pytestmark=pytest.mark.skipif(os.getenv("AOS_EXTENSION_PG_TEST")!="1",reason="dedicated DB opt-in")
 
 
-@pytest.mark.parametrize('commit_case', ['valid', 'rollback', 'wrong_type', 'invalid', 'missing', 'released', 'unregistered', 'expired', 'denied', 'revoked', 'wrong_hash', 'other_generation', 'claims_changed', 'etag_changed', 'late_policy', 'unsupported_runtime', 'extra_resource', 'operation_cas', 'non_boolean_permission', 'late_resource', 'signed', 'signed_revoked'])
+@pytest.mark.parametrize('commit_case', ['valid', 'rollback', 'wrong_type', 'invalid', 'missing', 'released', 'unregistered', 'expired', 'denied', 'revoked', 'wrong_hash', 'other_generation', 'claims_changed', 'etag_changed', 'late_policy', 'unsupported_runtime', 'extra_resource', 'operation_cas', 'non_boolean_permission', 'late_resource', 'signed', 'signed_revoked', 'signed_owned'])
 def test_existing_installation_schema_accepts_subordinate_operation(commit_case,tmp_path):
     if commit_case.startswith('signed') and os.getenv('AOS_EXTENSION_OCI_TEST')!='1':
         pytest.skip('dedicated OCI opt-in required')
@@ -69,7 +69,7 @@ def test_existing_installation_schema_accepts_subordinate_operation(commit_case,
                 for table in ('asset_bundle','asset_bundle_version','asset_bundle_artifact','asset_bundle_evidence'):
                     admin.execute(sql.SQL('GRANT SELECT ON {} TO aos_runtime').format(sql.Identifier(schema,table)))
                 from signed_installation_case import run_signed_installation
-                run_signed_installation(scoped_connect,helper,tmp_path,revoke=commit_case=='signed_revoked')
+                run_signed_installation(scoped_connect,helper,tmp_path,revoke=commit_case=='signed_revoked',owned=commit_case=='signed_owned')
                 return
             composition_store,_,_,_,lock=helper._persist_lock(scoped_connect)
             draft=PostgresInstallationStore(scoped_connect).create_draft(org_id="org-a",project_id="project-a",
