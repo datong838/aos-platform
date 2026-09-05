@@ -1,0 +1,14 @@
+{
+  "taskId": "AR1-A-RUNTIME-CONTRACTS",
+  "businessOutcomeRef": "231-first-analysis-content-review-feedback",
+  "startedAt": "2026-09-05T11:51:56Z",
+  "endedAt": null,
+  "segments": [
+    {"start": "2026-09-05T11:51:56Z", "end": "2026-09-05T11:54:16Z", "category": "方案", "estimated": true, "evidence": "231-8现场补充及旧release摘要"},
+    {"start": "2026-09-05T11:54:16Z", "end": "2026-09-05T12:01:19Z", "category": "实现", "estimated": true, "evidence": "源码与测试交替实现，包含测试编写返工，未精确拆分"}
+  ],
+  "timingCoverage": "partial; no fabricated exact implementation/test/rework split",
+  "acceptanceAttempts": [{"kind": "technical-package", "result": "169 passed", "businessScenario": false}],
+  "evidenceRefs": ["verification.md", "231-8"],
+  "nextTaskId": "AR1-B-ISOLATED-RUNTIME"
+}

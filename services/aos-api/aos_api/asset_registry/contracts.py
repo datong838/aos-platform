@@ -17,6 +17,8 @@ from pydantic import (
     model_validator,
 )
 
+from aos_api.asset_registry.runtime_contracts import RuntimeSpec
+
 BUNDLE_API_VERSION = "aos.dev/v1alpha1"
 BUNDLE_ID_PATTERN = r"^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
 CAPABILITY_PATTERN = r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
@@ -593,6 +595,7 @@ class BundleMigrations(StrictContract):
 
 
 class BundleSpec(StrictContract):
+    runtime: RuntimeSpec | None = Field(default=None, exclude_if=lambda v: v is None)
     platform_api: str = Field(alias="platformApi", min_length=1, max_length=240)
     dependencies: list[BundleDependency] = Field(max_length=500)
     optional_dependencies: list[BundleDependency] = Field(

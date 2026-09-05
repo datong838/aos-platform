@@ -127,6 +127,21 @@ class StaticTrustRoots:
         return None
 
 
+def test_signed_runtime_change_invalidates_signature(tmp_path: Path) -> None:
+    manifest = _manifest()
+    manifest["spec"]["runtime"] = {
+        "apiVersion": "aos.dev/bundle-runtime/v1alpha1",
+        "frontend": {"manifest": "frontend/manifest.json", "artifactHash": "sha256:" + "a" * 64},
+    }
+    bundle = _make_bundle(tmp_path, manifest=manifest)
+    unsigned = _loader(tmp_path).load("bundle://fixtures/example")
+    roots = _sign_bundle(bundle, unsigned)
+    assert _signature_evidence(_loader(tmp_path, roots).load("bundle://fixtures/example")).status == BundleEvidenceStatus.VALID
+    manifest["spec"]["runtime"]["frontend"]["artifactHash"] = "sha256:" + "b" * 64
+    (bundle / "bundle.yaml").write_text(yaml.safe_dump(manifest), encoding="utf-8")
+    assert _signature_evidence(_loader(tmp_path, roots).load("bundle://fixtures/example")).status == BundleEvidenceStatus.INVALID
+
+
 def _sign_bundle(bundle: Path, unsigned, *, wrong_payload: bool = False):
     private_key = Ed25519PrivateKey.generate()
     public_key = private_key.public_key().public_bytes(

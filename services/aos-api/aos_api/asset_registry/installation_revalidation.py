@@ -77,6 +77,10 @@ class InstallationRevalidator:
                 )
             try:
                 record = _record_from_row(row)
+                if record.manifest.spec.runtime is not None:
+                    raise RegistrySnapshotStaleError(
+                        "runtime bundles require the isolated installation lifecycle"
+                    )
                 if record.content_hash != selected.content_hash:
                     raise RegistryIntegrityCorruptError()
                 policy.evaluate(
