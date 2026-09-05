@@ -99,6 +99,25 @@ def build_installation_service() -> InstallationControl:
     )
 
 
+def build_runtime_lifecycle_service():
+    """Wire preparation commands, without exposing routes or starting workers."""
+    from aos_api.extension_runtime.lifecycle_service import RuntimeLifecycleService
+    from aos_api.extension_runtime.release_revalidation import RuntimeReleaseRevalidator
+    from aos_api.asset_registry.installation_service import InstallationService
+    from aos_api.asset_registry.installation_store import PostgresInstallationStore
+    from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
+    from aos_api.asset_registry.composition_store import PostgresCompositionStore
+    from aos_api.asset_registry.release_policy import ReleasePolicy
+
+    store=PostgresInstallationStore()
+    policy=ReleasePolicy(trust_roots=_configured_trust_roots())
+    planning=RuntimeReleaseRevalidator(release_policy=policy)
+    installation=InstallationService(store=store,composition_store=PostgresCompositionStore(),
+        revalidator=InstallationRevalidator(release_policy=policy),planning_revalidator=planning)
+    return RuntimeLifecycleService(installation_store=store,
+        installation_reader=installation,revalidator=planning)
+
+
 def build_integration_case_service():
     """Assemble the M4 Integration Case service from PostgreSQL truth sources."""
 

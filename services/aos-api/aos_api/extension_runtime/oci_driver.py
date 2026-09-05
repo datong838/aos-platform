@@ -76,12 +76,12 @@ class OciDriver:
 
     def remove_owned(self, name: str, owner: str) -> bool:
         try:
-            actual = self._run("inspect", "--format", '{{index .Config.Labels "aos.extension.owner"}}', name).strip()
+            observation = self._run("inspect", "--format", '{{.Id}} {{index .Config.Labels "aos.extension.owner"}}', name).strip().split()
         except subprocess.CalledProcessError as exc:
             if "No such" in exc.stderr:
                 return False
             raise
-        if actual != owner:
+        if len(observation)!=2 or not re.fullmatch(r"[0-9a-f]{64}",observation[0]) or observation[1] != owner:
             raise RuntimeError("refusing to remove a resource with another owner")
-        self._run("rm", "--force", "--volumes", name)
+        self._run("rm", "--force", "--volumes", observation[0])
         return True

@@ -60,10 +60,12 @@ class InstallationService:
         store: PostgresInstallationStore,
         composition_store: Any,
         revalidator: InstallationRevalidator,
+        planning_revalidator: Any | None = None,
     ) -> None:
         self._store = store
         self._composition_store = composition_store
         self._revalidator = revalidator
+        self._planning_revalidator = planning_revalidator or revalidator
 
     def create(
         self,
@@ -413,7 +415,10 @@ class InstallationService:
             )
             _require_lock_markings(lock, markings=markings, conceal=False)
             if revalidate:
-                self._revalidator.revalidate_in_transaction(conn, lock=lock)
+                validator = (self._planning_revalidator if operation in {
+                    SUBMIT_INSTALLATION_OPERATION, APPROVE_INSTALLATION_OPERATION
+                } else self._revalidator)
+                validator.revalidate_in_transaction(conn, lock=lock)
             record = mutate(conn, locked, request, actor, lock)
             return _command_result(record, status_code=200)
 

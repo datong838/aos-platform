@@ -3,11 +3,25 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from dataclasses import dataclass
 
 from aos_api.extension_runtime.contracts import RegistrationDescription
 from aos_api.extension_runtime.ipc import FrameSession, MAX_FRAME_BYTES, ProtocolError, encode_frame
 from aos_api.extension_runtime.oci_driver import CleanupUncertainError, OciDriver
 from aos_api.extension_runtime.registration import validate_registration
+
+
+@dataclass(frozen=True)
+class ResourceIdentity:
+    owner: str
+
+    def __post_init__(self):
+        if uuid.UUID(self.owner).hex != self.owner:
+            raise ValueError("resource owner must be a canonical generated UUID")
+
+    @property
+    def name(self):
+        return "aos-ext-" + self.owner
 
 
 async def _bounded_read(reader, limit):
@@ -22,11 +36,12 @@ async def _bounded_read(reader, limit):
 
 
 async def register_once(driver: OciDriver, *, image_id: str,
-                        declared: RegistrationDescription) -> RegistrationDescription:
+                        declared: RegistrationDescription,
+                        resource_identity: ResourceIdentity | None = None) -> RegistrationDescription:
     """Internal entry only: caller must verify signed artifact before invocation."""
     await asyncio.to_thread(driver.require_isolation)
-    owner = uuid.uuid4().hex
-    name = "aos-ext-" + owner
+    identity = resource_identity or ResourceIdentity(uuid.uuid4().hex)
+    owner, name = identity.owner, identity.name
     request_id = uuid.uuid4().hex
     process = None
     readers = []

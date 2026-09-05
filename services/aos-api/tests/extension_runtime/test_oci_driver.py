@@ -22,6 +22,17 @@ def test_untrusted_context_rejected():
         OciDriver(context="unix:///arbitrary.sock")
 
 
+def test_cleanup_uses_observed_container_id_not_reusable_name(monkeypatch):
+    driver=OciDriver(context="colima-aos-extension")
+    calls=[]
+    def run(*args):
+        calls.append(args)
+        return "a"*64+" owner" if args[0]=="inspect" else ""
+    monkeypatch.setattr(driver,"_run",run)
+    assert driver.remove_owned("aos-ext-test","owner")
+    assert calls[-1]==("rm","--force","--volumes","a"*64)
+
+
 def test_image_declared_volume_rejected(monkeypatch):
     import json
     driver = OciDriver(context="colima-aos-extension")
