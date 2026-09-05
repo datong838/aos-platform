@@ -156,6 +156,45 @@ def test_event_outbox_and_phase_are_atomic(database):
     assert conn.execute("SELECT count(*) FROM extension_runtime_outbox").fetchone()[0]==1
 
 
+@pytest.mark.parametrize("removed", [True, False])
+@pytest.mark.parametrize("already_fenced", [True, False])
+def test_cleanup_fences_only_its_generation_atomically(database, removed, already_fenced):
+    from datetime import datetime, timezone, timedelta
+    from aos_api.extension_runtime.reconciler import ResourceJournal
+    conn, _, _ = database
+    installation, operation = seed(conn)
+    generation, other = uuid.uuid4(), uuid.uuid4()
+    for value in (generation, other):
+        conn.execute("""INSERT INTO extension_runtime_binding
+          (org_id,project_id,installation_id,generation,installation_revision,package_lock_ref,
+           profile_ref,config_ref,desired_state,observed_state,enabled,operation_fence)
+          VALUES('org-org','dev-project',%s,%s,1,'{}','test','{}','enabled','ready',true,false)""",
+          (installation,value))
+    if already_fenced:
+        conn.execute("UPDATE extension_runtime_binding SET enabled=false,operation_fence=true WHERE generation=%s",(generation,))
+    journal = ResourceJournal()
+    with conn.transaction():
+        intent = journal.prepare(conn,org_id="org-org",project_id="dev-project",operation_id=operation,
+          generation=generation,package_id="test-package",package_hash="sha256:"+"a"*64,
+          engine_context="colima-aos-extension",expires_at=datetime.now(timezone.utc)+timedelta(minutes=1))
+    args = dict(org_id="org-org",project_id="dev-project",intent=intent,removed=removed)
+    def binding(value):
+        return conn.execute("SELECT enabled,operation_fence,execution_epoch,revision FROM extension_runtime_binding WHERE generation=%s",(value,)).fetchone()
+    with pytest.raises(RuntimeError,match="rollback"):
+        with conn.transaction():
+            journal.record_cleanup(conn,**args)
+            raise RuntimeError("rollback")
+    assert binding(generation)==(not already_fenced,already_fenced,1,1)
+    assert conn.execute("SELECT count(*) FROM extension_runtime_outbox").fetchone()[0]==0
+    for _ in range(2):
+        with conn.transaction():
+            journal.record_cleanup(conn,**args)
+        assert binding(generation)==(False,True,1 if already_fenced else 2,2)
+        assert conn.execute("SELECT observed_state FROM extension_runtime_binding WHERE generation=%s",(generation,)).fetchone()[0]=="unknown"
+        assert binding(other)==(True,False,1,1)
+    assert conn.execute("SELECT count(*) FROM extension_runtime_outbox").fetchone()[0]==1
+
+
 def test_resource_intent_survives_new_reader_and_replay(database):
     from datetime import datetime,timezone,timedelta
     from aos_api.extension_runtime.reconciler import ResourceJournal

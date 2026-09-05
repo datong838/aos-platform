@@ -23,16 +23,29 @@ class ResourceJournal:
         if type(removed) is not bool or not isinstance(intent,ResourceIntent):
             raise ValueError("invalid cleanup observation")
         target=(org_id,project_id,intent.resource_id)
-        row=conn.execute("""SELECT operation_id FROM extension_runtime_resource_lease
+        row=conn.execute("""SELECT operation_id,generation FROM extension_runtime_resource_lease
             WHERE org_id=%s AND project_id=%s AND resource_id=%s""",target).fetchone()
         if row is None:
             raise LookupError("resource not found")
-        operation_id=_values(row,("operation_id",))[0]
+        operation_id,generation=_values(row,("operation_id","generation"))
+        head=conn.execute("""SELECT installation_id FROM extension_runtime_operation
+            WHERE org_id=%s AND project_id=%s AND operation_id=%s""",
+            (org_id,project_id,operation_id)).fetchone()
+        if head is None:
+            raise LookupError("operation not found")
+        installation_id=_values(head,("installation_id",))[0]
+        binding_target=(org_id,project_id,installation_id,generation)
+        conn.execute("""SELECT installation_id FROM bundle_installation
+            WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE""",
+            binding_target[:3]).fetchone()
         operation=conn.execute("""SELECT revision FROM extension_runtime_operation
             WHERE org_id=%s AND project_id=%s AND operation_id=%s FOR UPDATE""",
             (org_id,project_id,operation_id)).fetchone()
         if operation is None:
             raise LookupError("operation not found")
+        conn.execute("""SELECT generation FROM extension_runtime_binding
+            WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s FOR UPDATE""",
+            binding_target).fetchone()
         resource=conn.execute("""SELECT owner_token_ref,engine_context,cleanup_state
             FROM extension_runtime_resource_lease WHERE org_id=%s AND project_id=%s AND resource_id=%s FOR UPDATE""",target).fetchone()
         owner,context,state=_values(resource,("owner_token_ref","engine_context","cleanup_state"))
@@ -41,6 +54,13 @@ class ResourceJournal:
         requested="released" if removed else "uncertain"
         if state==requested or state=="released":
             return state
+        # A single missing child invalidates admission, but cannot prove the
+        # whole generation stopped. Lifecycle aggregation owns that decision.
+        conn.execute("""UPDATE extension_runtime_binding SET enabled=false,operation_fence=true,
+            execution_epoch=execution_epoch+CASE WHEN enabled OR NOT operation_fence THEN 1 ELSE 0 END,
+            revision=revision+1,observed_state='unknown'
+            WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+            AND (enabled OR NOT operation_fence OR observed_state<>'unknown')""",binding_target)
         conn.execute("""UPDATE extension_runtime_resource_lease SET cleanup_state=%s,observed_release=%s
             WHERE org_id=%s AND project_id=%s AND resource_id=%s""",(requested,removed,*target))
         revision=_values(operation,("revision",))[0]+1
