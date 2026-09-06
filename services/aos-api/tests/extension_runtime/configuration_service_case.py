@@ -16,7 +16,7 @@ def exercise_configuration_service(connect,store,reader,validator,scope,action,v
     from aos_api.extension_runtime.configuration_store import append_configuration
     from aos_api.extension_runtime.configuration_consumer import ConfigurationConsumer
     from aos_api.aip_runtime_configuration_sources import build_current_configuration_authorization
-    from test_current_configuration_sources_pg import install_current_configuration_sources
+    from current_configuration_sources_case import install_current_configuration_sources
     path=Path(__file__).resolve().parents[2]/'alembic/versions/ar1_002_runtime_configuration.py'
     spec=importlib.util.spec_from_file_location('signed_configuration_migration',path)
     migration=importlib.util.module_from_spec(spec);spec.loader.exec_module(migration)

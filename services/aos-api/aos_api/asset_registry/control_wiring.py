@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,18 @@ from aos_api.asset_registry.signature import (
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 RegistryStoreFactory = Callable[[], Any]
 ManifestLoaderFactory = Callable[..., Any]
+
+
+@dataclass(frozen=True, slots=True)
+class RuntimeControlPlane:
+    """Process-owned control services; construction starts no runtime work."""
+
+    installation_store: Any
+    installation_reader: Any
+    revalidator: Any
+    lifecycle_service: Any
+    configuration_service: Any
+    configuration_authorize: Any
 
 
 class _UnavailableTrustRootProvider:
@@ -101,21 +114,92 @@ def build_installation_service() -> InstallationControl:
 
 def build_runtime_lifecycle_service():
     """Wire preparation commands, without exposing routes or starting workers."""
-    from aos_api.extension_runtime.lifecycle_service import RuntimeLifecycleService
-    from aos_api.extension_runtime.release_revalidation import RuntimeReleaseRevalidator
+    return build_runtime_control_plane().lifecycle_service
+
+
+def build_runtime_control_plane() -> RuntimeControlPlane:
+    """Assemble current runtime controls without connecting or starting workers."""
+    from aos_api.aip_runtime_configuration_sources import (
+        build_current_configuration_authorization,
+    )
+    from aos_api.asset_registry.composition_store import PostgresCompositionStore
+    from aos_api.asset_registry.control_policy import CONFIGURE_RUNTIME_OPERATION
+    from aos_api.asset_registry.installation_revalidation import (
+        InstallationRevalidator,
+    )
     from aos_api.asset_registry.installation_service import InstallationService
     from aos_api.asset_registry.installation_store import PostgresInstallationStore
-    from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
-    from aos_api.asset_registry.composition_store import PostgresCompositionStore
     from aos_api.asset_registry.release_policy import ReleasePolicy
+    from aos_api.extension_runtime.configuration_service import (
+        RuntimeConfigurationService,
+    )
+    from aos_api.extension_runtime.current_permission import CurrentControlPermission
+    from aos_api.extension_runtime.lifecycle_service import RuntimeLifecycleService
+    from aos_api.extension_runtime.release_revalidation import (
+        RuntimeReleaseRevalidator,
+    )
 
-    store=PostgresInstallationStore()
-    policy=ReleasePolicy(trust_roots=_configured_trust_roots())
-    planning=RuntimeReleaseRevalidator(release_policy=policy)
-    installation=InstallationService(store=store,composition_store=PostgresCompositionStore(),
-        revalidator=InstallationRevalidator(release_policy=policy),planning_revalidator=planning)
-    return RuntimeLifecycleService(installation_store=store,
-        installation_reader=installation,revalidator=planning)
+    store = PostgresInstallationStore()
+    policy = ReleasePolicy(trust_roots=_configured_trust_roots())
+    planning = RuntimeReleaseRevalidator(release_policy=policy)
+    installation = InstallationService(
+        store=store,
+        composition_store=PostgresCompositionStore(),
+        revalidator=InstallationRevalidator(release_policy=policy),
+        planning_revalidator=planning,
+    )
+
+    def current_configuration_permission(
+        conn,
+        *,
+        org_id,
+        project_id,
+        installation_id,
+        actor,
+        **_,
+    ):
+        row = conn.execute(
+            """SELECT etag_version FROM bundle_installation
+               WHERE org_id=%s AND project_id=%s AND installation_id=%s
+               FOR UPDATE""",
+            (org_id, project_id, installation_id),
+        ).fetchone()
+        if row is None:
+            raise LookupError("configuration installation not found")
+        etag = row["etag_version"] if isinstance(row, dict) else row[0]
+        locked = store.lock_for_transition_in_transaction(
+            conn,
+            org_id=org_id,
+            project_id=project_id,
+            installation_id=installation_id,
+            expected_etag_version=etag,
+        )
+        return CurrentControlPermission(operation=CONFIGURE_RUNTIME_OPERATION)(
+            conn=conn, locked=locked, actor=actor
+        )
+
+    authorize = build_current_configuration_authorization(
+        permission=current_configuration_permission
+    )
+    lifecycle = RuntimeLifecycleService(
+        installation_store=store,
+        installation_reader=installation,
+        revalidator=planning,
+    )
+    configuration = RuntimeConfigurationService(
+        installation_store=store,
+        installation_reader=installation,
+        revalidator=planning,
+        authorize=authorize,
+    )
+    return RuntimeControlPlane(
+        installation_store=store,
+        installation_reader=installation,
+        revalidator=planning,
+        lifecycle_service=lifecycle,
+        configuration_service=configuration,
+        configuration_authorize=authorize,
+    )
 
 
 def build_integration_case_service():

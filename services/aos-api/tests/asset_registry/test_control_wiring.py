@@ -300,3 +300,107 @@ def test_control_builders_load_future_modules_only_when_called(
     }
     assert created["installation"]["revalidator"].__class__ is FakeRevalidator
     assert set(created["revalidator"]) == {"release_policy"}
+
+
+def test_runtime_control_plane_uses_one_store_and_formal_configuration_sources() -> None:
+    from aos_api.aip_runtime_configuration_sources import (
+        DATA_AUTHORITY,
+        POLICY_AUTHORITY,
+        ROLE_AUTHORITY,
+    )
+
+    plane = control_wiring.build_runtime_control_plane()
+
+    assert plane.lifecycle_service._store is plane.installation_store
+    assert plane.configuration_service._store is plane.installation_store
+    assert plane.lifecycle_service._reader is plane.installation_reader
+    assert plane.configuration_service._reader is plane.installation_reader
+    assert plane.lifecycle_service._revalidator is plane.revalidator
+    assert plane.configuration_service._revalidator is plane.revalidator
+    assert plane.configuration_service._authorize is plane.configuration_authorize
+    assert set(plane.configuration_authorize._readers) == {
+        ("role", ROLE_AUTHORITY),
+        ("data", DATA_AUTHORITY),
+        ("budget", "aip.budget_revision"),
+        ("policy", POLICY_AUTHORITY),
+    }
+
+
+def test_runtime_control_plane_permission_locks_the_current_installation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from aos_api.asset_registry.control_policy import CONFIGURE_RUNTIME_OPERATION
+    from aos_api.extension_runtime import current_permission as permission_module
+
+    calls: dict[str, Any] = {}
+    locked = object()
+
+    class PermissionSpy:
+        def __init__(self, *, operation: str) -> None:
+            calls["operation"] = operation
+
+        def __call__(self, *, conn: Any, locked: Any, actor: str) -> bool:
+            calls["permission"] = (conn, locked, actor)
+            return True
+
+    class Result:
+        @staticmethod
+        def fetchone() -> dict[str, int]:
+            return {"etag_version": 7}
+
+    class Connection:
+        @staticmethod
+        def execute(statement: str, parameters: tuple[str, str, str]) -> Result:
+            calls["query"] = (statement, parameters)
+            return Result()
+
+    monkeypatch.setattr(permission_module, "CurrentControlPermission", PermissionSpy)
+    plane = control_wiring.build_runtime_control_plane()
+
+    def lock_for_transition(
+        _self: Any,
+        conn: Any,
+        *,
+        org_id: str,
+        project_id: str,
+        installation_id: str,
+        expected_etag_version: int,
+    ) -> object:
+        calls["lock"] = (
+            conn,
+            org_id,
+            project_id,
+            installation_id,
+            expected_etag_version,
+        )
+        return locked
+
+    monkeypatch.setattr(
+        type(plane.installation_store),
+        "lock_for_transition_in_transaction",
+        lock_for_transition,
+    )
+    conn = Connection()
+
+    assert plane.configuration_authorize._permission(
+        conn,
+        org_id="org-org",
+        project_id="dev-project",
+        installation_id="00000000-0000-0000-0000-000000000001",
+        generation="00000000-0000-0000-0000-000000000002",
+        actor="operator@example.test",
+    ) is True
+    assert calls["operation"] == CONFIGURE_RUNTIME_OPERATION
+    assert calls["query"][1] == (
+        "org-org",
+        "dev-project",
+        "00000000-0000-0000-0000-000000000001",
+    )
+    assert calls["lock"] == (
+        conn,
+        "org-org",
+        "dev-project",
+        "00000000-0000-0000-0000-000000000001",
+        7,
+    )
+    assert calls["permission"] == (conn, locked, "operator@example.test")

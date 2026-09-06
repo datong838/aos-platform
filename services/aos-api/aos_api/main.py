@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import os
-from contextlib import suppress
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any
@@ -132,17 +131,26 @@ def _prebuild_jdbc_ssh_tunnels() -> None:
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
+async def _lifespan_body(_app: FastAPI):
     cron_stop = asyncio.Event()
     cron_task: asyncio.Task[None] | None = None
     logic_automation_stop = asyncio.Event()
     logic_automation_task: asyncio.Task[None] | None = None
     provider_health_stop = asyncio.Event()
     provider_health_task: asyncio.Task[None] | None = None
+    _app.state.runtime_stop_events = (
+        cron_stop,
+        logic_automation_stop,
+        provider_health_stop,
+    )
     # Migration mode owns its failure policy. Keep it outside the best-effort
     # bootstrap boundary so managed-mode failures can stop application startup.
     migration_mode = run_migrations()
     mode_value = getattr(migration_mode, "value", migration_mode)
+    from aos_api.asset_registry.control_wiring import build_runtime_control_plane
+
+    _app.state.extension_runtime_control_plane = None
+    _app.state.extension_runtime_control_plane = build_runtime_control_plane()
     # ``None`` preserves compatibility with the pre-W1 implementation. Once W1
     # is merged, only its explicit LEGACY_BOOTSTRAP mode may execute runtime DDL.
     legacy_bootstrap = mode_value is None or mode_value in {
@@ -361,6 +369,7 @@ async def lifespan(_app: FastAPI):
 
     if _qyh_cron_worker_enabled():
         cron_task = asyncio.create_task(_qyh_cron_loop(), name="qyh-real-cron")
+        _app.state.runtime_background_tasks.append(cron_task)
         log.info("startup_qyh_real_cron_worker_started interval_seconds=15")
     else:
         log.info("startup_qyh_real_cron_worker_disabled explicit=true")
@@ -385,6 +394,7 @@ async def lifespan(_app: FastAPI):
         logic_automation_task = asyncio.create_task(
             _logic_automation_loop(), name="aip-logic-automation"
         )
+        _app.state.runtime_background_tasks.append(logic_automation_task)
         log.info("startup_aip_logic_automation_worker_started interval_seconds=15")
     else:
         log.info("startup_aip_logic_automation_worker_disabled explicit=true")
@@ -420,6 +430,7 @@ async def lifespan(_app: FastAPI):
         provider_health_task = asyncio.create_task(
             _provider_health_loop(), name="aip-text-provider-health-maintenance"
         )
+        _app.state.runtime_background_tasks.append(provider_health_task)
         log.info(
             "startup_aip_text_provider_health_maintenance interval_seconds=%d",
             maintenance_interval_seconds(),
@@ -435,28 +446,44 @@ async def lifespan(_app: FastAPI):
             provider_health_selection.status,
         )
     yield
-    cron_stop.set()
-    logic_automation_stop.set()
-    provider_health_stop.set()
-    if cron_task is not None:
-        cron_task.cancel()
-        with suppress(asyncio.CancelledError):
-            await cron_task
-    if logic_automation_task is not None:
-        logic_automation_task.cancel()
-        with suppress(asyncio.CancelledError):
-            await logic_automation_task
-    if provider_health_task is not None:
-        provider_health_task.cancel()
-        with suppress(asyncio.CancelledError):
-            await provider_health_task
+
+
+async def _shutdown_application_runtime(_app: FastAPI) -> None:
+    for stop_event in tuple(getattr(_app.state, "runtime_stop_events", ())):
+        stop_event.set()
+    tasks = tuple(getattr(_app.state, "runtime_background_tasks", ()))
+    for task in tasks:
+        task.cancel()
+    for task in tasks:
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            log.exception("shutdown_background_task_failed_continue task=%s", task.get_name())
+    _app.state.runtime_background_tasks = []
+    _app.state.runtime_stop_events = ()
+    _app.state.extension_runtime_control_plane = None
     # ── shutdown：清理 JDBC 缓存（SSH 隧道 + DB 连接）──
     try:
         from aos_api.jdbc_connector_runtime import jdbc_runtime_shutdown
+
         jdbc_runtime_shutdown()
         log.info("shutdown_jdbc_runtime_ok")
     except Exception:
         log.exception("shutdown_jdbc_runtime_failed_continue")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    _app.state.extension_runtime_control_plane = None
+    _app.state.runtime_background_tasks = []
+    _app.state.runtime_stop_events = ()
+    try:
+        async with _lifespan_body(_app):
+            yield
+    finally:
+        await _shutdown_application_runtime(_app)
 
 
 def create_app() -> FastAPI:
