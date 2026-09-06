@@ -38,3 +38,12 @@ def runtime_directory_connection():
         if conn.info.transaction_status != TransactionStatus.IDLE:
             raise RuntimeError("runtime directory connection must start idle")
         yield conn
+
+
+@contextmanager
+def runtime_web_identity_connection():
+    """Open the Web principal without request scope solely for identity preflight."""
+    with psycopg.connect(get_dsn(), row_factory=dict_row) as conn:
+        if conn.info.transaction_status != TransactionStatus.IDLE:
+            raise RuntimeError("web identity connection must start idle")
+        yield conn

@@ -40,6 +40,55 @@ class RuntimeControlPlane:
     configuration_authorize: Any
 
 
+def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlane):
+    """Build but do not start the explicitly enabled persistent runtime host."""
+    from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
+    from aos_api.extension_runtime.current_permission import CurrentControlPermission
+    from aos_api.extension_runtime.generation_attempts import GenerationDrainReader
+    from aos_api.extension_runtime.oci_driver import CleanupOnlyOciDriver, OciDriver
+    from aos_api.extension_runtime.production_runtime import (
+        RuntimeWorkerDependencies,
+        select_production_runtime_host,
+    )
+    from aos_api.extension_runtime.runtime_connections import (
+        runtime_directory_connection,
+        runtime_web_identity_connection,
+        runtime_worker_connection,
+    )
+
+    enabled = os.getenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "").strip() == "1"
+    runtime_dsn = os.getenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "").strip()
+    directory_dsn = os.getenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "").strip()
+    oci_context = os.getenv("AOS_EXTENSION_OCI_CONTEXT", "").strip()
+    dependencies = None
+    if (
+        enabled
+        and type(control_plane) is RuntimeControlPlane
+        and runtime_dsn
+        and directory_dsn
+        and oci_context
+    ):
+        try:
+            dependencies = RuntimeWorkerDependencies(
+                installation_store=control_plane.installation_store,
+                configuration_authorize=control_plane.configuration_authorize,
+                disable_permission=CurrentControlPermission(
+                    operation=DISABLE_RUNTIME_OPERATION
+                ),
+                drain_reader=GenerationDrainReader(),
+                cleanup_driver=CleanupOnlyOciDriver(OciDriver(context=oci_context)),
+            )
+        except (TypeError, ValueError):
+            dependencies = None
+    return select_production_runtime_host(
+        enabled=enabled,
+        directory_connect=runtime_directory_connection,
+        runtime_connect=runtime_worker_connection,
+        web_connect=runtime_web_identity_connection,
+        dependencies=dependencies,
+    )
+
+
 class _UnavailableTrustRootProvider:
     """Deferred fail-closed provider that keeps read-only Registry APIs alive."""
 
@@ -123,7 +172,6 @@ def build_runtime_control_plane() -> RuntimeControlPlane:
         build_current_configuration_authorization,
     )
     from aos_api.asset_registry.composition_store import PostgresCompositionStore
-    from aos_api.asset_registry.control_policy import CONFIGURE_RUNTIME_OPERATION
     from aos_api.asset_registry.installation_revalidation import (
         InstallationRevalidator,
     )
@@ -133,7 +181,9 @@ def build_runtime_control_plane() -> RuntimeControlPlane:
     from aos_api.extension_runtime.configuration_service import (
         RuntimeConfigurationService,
     )
-    from aos_api.extension_runtime.current_permission import CurrentControlPermission
+    from aos_api.extension_runtime.configuration_authorization import (
+        CurrentConfigurationPermission,
+    )
     from aos_api.extension_runtime.lifecycle_service import RuntimeLifecycleService
     from aos_api.extension_runtime.release_revalidation import (
         RuntimeReleaseRevalidator,
@@ -149,37 +199,8 @@ def build_runtime_control_plane() -> RuntimeControlPlane:
         planning_revalidator=planning,
     )
 
-    def current_configuration_permission(
-        conn,
-        *,
-        org_id,
-        project_id,
-        installation_id,
-        actor,
-        **_,
-    ):
-        row = conn.execute(
-            """SELECT etag_version FROM bundle_installation
-               WHERE org_id=%s AND project_id=%s AND installation_id=%s
-               FOR UPDATE""",
-            (org_id, project_id, installation_id),
-        ).fetchone()
-        if row is None:
-            raise LookupError("configuration installation not found")
-        etag = row["etag_version"] if isinstance(row, dict) else row[0]
-        locked = store.lock_for_transition_in_transaction(
-            conn,
-            org_id=org_id,
-            project_id=project_id,
-            installation_id=installation_id,
-            expected_etag_version=etag,
-        )
-        return CurrentControlPermission(operation=CONFIGURE_RUNTIME_OPERATION)(
-            conn=conn, locked=locked, actor=actor
-        )
-
     authorize = build_current_configuration_authorization(
-        permission=current_configuration_permission
+        permission=CurrentConfigurationPermission(installation_store=store)
     )
     lifecycle = RuntimeLifecycleService(
         installation_store=store,

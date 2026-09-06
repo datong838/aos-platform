@@ -1,6 +1,7 @@
 """Real role/CAS checks in a disposable database on the isolated AR1 cluster."""
 import importlib.util
 import os
+from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from types import SimpleNamespace
@@ -14,6 +15,21 @@ from aos_api.extension_runtime.runtime_identity import (
     RuntimeDatabaseIdentity,
     probe_runtime_database_identity,
     require_isolated_runtime_identities,
+)
+from aos_api.extension_runtime.generation_attempts import GenerationDrainReader
+from aos_api.extension_runtime.oci_driver import CleanupOnlyOciDriver, OciDriver
+from aos_api.extension_runtime.production_runtime import (
+    RuntimeWorkerDependencies,
+    select_production_runtime_host,
+)
+from aos_api.extension_runtime.current_permission import CurrentControlPermission
+from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
+from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.aip_runtime_configuration_sources import (
+    build_current_configuration_authorization,
+)
+from aos_api.extension_runtime.configuration_authorization import (
+    CurrentConfigurationPermission,
 )
 
 pytestmark = pytest.mark.skipif(
@@ -30,6 +46,8 @@ def directory_database():
     password = "isolated-" + suffix
     admin_dsn = "postgresql://postgres@127.0.0.1:18432/postgres"
     with psycopg.connect(admin_dsn, autocommit=True) as admin:
+        if admin.execute("SELECT 1 FROM pg_roles WHERE rolname='aos_runtime'").fetchone() is None:
+            admin.execute("CREATE ROLE aos_runtime NOLOGIN NOSUPERUSER NOBYPASSRLS")
         admin.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database)))
         admin.execute(sql.SQL("CREATE ROLE {} LOGIN PASSWORD {} NOSUPERUSER NOBYPASSRLS").format(
             sql.Identifier(first_role), sql.Literal(password)
@@ -41,17 +59,22 @@ def directory_database():
     try:
         with psycopg.connect(database_dsn, autocommit=True) as conn:
             conn.execute("CREATE TABLE twa_workspace(org_id text,project_id text,name text,PRIMARY KEY(org_id,project_id))")
+            conn.execute("CREATE TABLE bundle_installation(org_id text,project_id text,installation_id uuid,etag_version bigint NOT NULL DEFAULT 1,PRIMARY KEY(org_id,project_id,installation_id))")
             conn.execute("INSERT INTO twa_workspace VALUES"
                          "('org-org','dev-project','isolated'),"
                          "('other-org','other-project','other'),"
                          "('a','b/c','slash-one'),('a/b','c','slash-two')")
-            conn.execute("CREATE FUNCTION extension_reject_history_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'immutable'; END $$")
-            path = Path(__file__).resolve().parents[2] / "alembic/versions/ar1_003_runtime_host_directory.py"
-            spec = importlib.util.spec_from_file_location("ar1_directory_migration", path)
-            migration = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(migration)
-            migration.op = SimpleNamespace(execute=conn.execute)
-            migration.upgrade()
+            for revision in (
+                "ar1_001_extension_runtime_authority.py",
+                "ar1_003_runtime_host_directory.py",
+                "ar1_004_runtime_execution_attempt.py",
+            ):
+                path = Path(__file__).resolve().parents[2] / "alembic/versions" / revision
+                spec = importlib.util.spec_from_file_location("test_" + revision, path)
+                migration = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(migration)
+                migration.op = SimpleNamespace(execute=conn.execute)
+                migration.upgrade()
             conn.execute(sql.SQL("GRANT aos_extension_directory TO {},{}").format(
                 sql.Identifier(first_role), sql.Identifier(second_role)
             ))
@@ -278,3 +301,104 @@ def test_revoked_directory_role_cannot_receive_assignment_but_identity_can_be_di
             "FROM extension_runtime_host_identity WHERE database_role=%s",
             (first_role,),
         ).fetchone() == (False, old_oid, "host-one", 2)
+
+
+def test_production_selector_uses_real_directory_roles_and_runtime_drain(directory_database):
+    dsn, directory_role, _, password = directory_database
+    suffix = uuid.uuid4().hex[:12]
+    runtime_role = "aos_ext_runtime_" + suffix
+    web_role = "aos_ext_web_" + suffix
+    installation = uuid.uuid4()
+    generation = uuid.uuid4()
+    admin_dsn = "postgresql://postgres@127.0.0.1:18432/postgres"
+    with psycopg.connect(admin_dsn, autocommit=True) as cluster:
+        for role in (runtime_role, web_role):
+            cluster.execute(
+                sql.SQL("CREATE ROLE {} LOGIN PASSWORD {} NOSUPERUSER NOBYPASSRLS").format(
+                    sql.Identifier(role), sql.Literal(password)
+                )
+            )
+        cluster.execute(sql.SQL("GRANT aos_runtime TO {}").format(sql.Identifier(runtime_role)))
+    try:
+        with psycopg.connect(dsn, autocommit=True) as admin:
+            _bind(admin, directory_role, "host-one", 0, "bind-production", _hash("7"))
+            _assign(
+                admin, "org-org", "dev-project", "host-one", "assigned", 0,
+                "assign-production", _hash("8"),
+            )
+            admin.execute(
+                "INSERT INTO bundle_installation VALUES('org-org','dev-project',%s,1)",
+                (installation,),
+            )
+            admin.execute(
+                """INSERT INTO extension_runtime_binding
+                   (org_id,project_id,installation_id,generation,installation_revision,
+                    package_lock_ref,profile_ref,config_ref,desired_state,observed_state,
+                    enabled,operation_fence,execution_epoch)
+                   VALUES('org-org','dev-project',%s,%s,1,'{}','test','{}',
+                          'disabled','draining',false,true,2)""",
+                (installation, generation),
+            )
+
+        from psycopg.rows import dict_row
+
+        @contextmanager
+        def directory_connect():
+            role_dsn = dsn.replace("postgres@", f"{directory_role}:{password}@")
+            with psycopg.connect(role_dsn, row_factory=dict_row) as conn:
+                conn.read_only = True
+                yield conn
+
+        @contextmanager
+        def runtime_connect():
+            role_dsn = dsn.replace("postgres@", f"{runtime_role}:{password}@")
+            with psycopg.connect(role_dsn, row_factory=dict_row) as conn:
+                yield conn
+
+        @contextmanager
+        def web_connect():
+            role_dsn = dsn.replace("postgres@", f"{web_role}:{password}@")
+            with psycopg.connect(role_dsn, row_factory=dict_row) as conn:
+                yield conn
+
+        selected = select_production_runtime_host(
+            enabled=True,
+            directory_connect=directory_connect,
+            runtime_connect=runtime_connect,
+            web_connect=web_connect,
+            dependencies=RuntimeWorkerDependencies(
+                installation_store=PostgresInstallationStore(),
+                configuration_authorize=build_current_configuration_authorization(
+                    permission=CurrentConfigurationPermission(
+                        installation_store=PostgresInstallationStore()
+                    )
+                ),
+                disable_permission=CurrentControlPermission(
+                    operation=DISABLE_RUNTIME_OPERATION
+                ),
+                drain_reader=GenerationDrainReader(),
+                cleanup_driver=CleanupOnlyOciDriver(
+                    OciDriver(context="colima-aos-extension")
+                ),
+            ),
+        )
+        assert selected.status == "ACTIVE"
+        with runtime_connect() as conn:
+            with conn.transaction():
+                conn.execute("SET LOCAL ROLE aos_runtime")
+                conn.execute(
+                    "SELECT set_config('aos.org_id','org-org',true),"
+                    "set_config('aos.project_id','dev-project',true)"
+                )
+                assert GenerationDrainReader()(
+                    conn,
+                    org_id="org-org",
+                    project_id="dev-project",
+                    installation_id=installation,
+                    generation=generation,
+                    fence_epoch=2,
+                ) is True
+    finally:
+        with psycopg.connect(admin_dsn, autocommit=True) as cluster:
+            cluster.execute(sql.SQL("DROP ROLE IF EXISTS {}").format(sql.Identifier(runtime_role)))
+            cluster.execute(sql.SQL("DROP ROLE IF EXISTS {}").format(sql.Identifier(web_role)))

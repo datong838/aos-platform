@@ -25,7 +25,11 @@ from aos_api.aip_production_contracts import BriefLifecycle, CreateResponsibilit
 from aos_api.aip_production_contract_store import canonical_hash as production_contract_hash
 
 from aos_api.extension_runtime.configuration_contracts import ConfigurationDocument, ConfigurationSourceRef
-from aos_api.extension_runtime.configuration_authorization import ConfigurationAuthorization
+from aos_api.extension_runtime.configuration_authorization import (
+    ConfigurationAuthorization,
+    CurrentConfigurationPermission,
+    _mint_current_four_source_authorization,
+)
 from aos_api.extension_runtime.lifecycle_store import _require_transaction, _values
 
 
@@ -192,23 +196,26 @@ def read_current_responsibility_plan_ref(
     return True
 
 
+def read_current_configuration_budget_ref(
+    conn, *, purpose, ref, org_id, project_id, **_context
+):
+    if purpose != "budget":
+        raise ValueError("configuration-source purpose differs")
+    read_current_budget_ref(conn, org_id=org_id, project_id=project_id, ref=ref)
+    return True
+
+
 def build_current_configuration_authorization(*, permission):
     """Build the AIP-owned exact reader set for runtime configuration admission."""
-    def budget(conn, *, purpose, ref, org_id, project_id, **_context):
-        if purpose != "budget":
-            raise ValueError("configuration-source purpose differs")
-        read_current_budget_ref(conn, org_id=org_id, project_id=project_id, ref=ref)
-        return True
-
-    return ConfigurationAuthorization(
-        permission=permission,
-        readers={
-            ("role", ROLE_AUTHORITY): read_current_responsibility_plan_ref,
-            ("data", DATA_AUTHORITY): read_current_data_classification_ref,
-            ("budget", "aip.budget_revision"): budget,
-            ("policy", POLICY_AUTHORITY): read_current_runtime_policy_ref,
-        },
-    )
+    readers = {
+        ("role", ROLE_AUTHORITY): read_current_responsibility_plan_ref,
+        ("data", DATA_AUTHORITY): read_current_data_classification_ref,
+        ("budget", "aip.budget_revision"): read_current_configuration_budget_ref,
+        ("policy", POLICY_AUTHORITY): read_current_runtime_policy_ref,
+    }
+    if type(permission) is CurrentConfigurationPermission:
+        return _mint_current_four_source_authorization(permission=permission)
+    return ConfigurationAuthorization(permission=permission, readers=readers)
 
 
 def _load_network_policy(conn, scope, value):

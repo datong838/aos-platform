@@ -1,6 +1,9 @@
 """Trusted composition of current readers, not a business authority or permit."""
 from types import MappingProxyType
 
+from aos_api.asset_registry.control_policy import CONFIGURE_RUNTIME_OPERATION
+from aos_api.asset_registry.installation_store import PostgresInstallationStore
+
 from .configuration_contracts import ConfigurationDocument
 from .configuration_store import _target
 from .runtime_gate import _reject_deferred
@@ -46,3 +49,89 @@ class ConfigurationAuthorization:
             extra={'configuration':document} if purpose=='policy' else {}
             self._check(reader,conn,**context,purpose=purpose,ref=ref,**extra)
         return True
+
+
+CURRENT_FOUR_SOURCE_AUTHORITIES = frozenset(
+    {
+        ("role", "aip.responsibility_plan_revision"),
+        ("data", "aip.data_classification_policy_revision"),
+        ("budget", "aip.budget_revision"),
+        ("policy", "aip.runtime_policy_revision"),
+    }
+)
+_CURRENT_FOUR_SOURCE_MINT = object()
+
+
+class CurrentConfigurationPermission:
+    """Concrete current-installation permission used by production admission."""
+
+    def __init__(self, *, installation_store: PostgresInstallationStore):
+        if type(installation_store) is not PostgresInstallationStore:
+            raise TypeError("current configuration permission requires PostgreSQL store")
+        from . import current_permission as permission_module
+
+        self._store = installation_store
+        self._permission = permission_module.CurrentControlPermission(
+            operation=CONFIGURE_RUNTIME_OPERATION
+        )
+
+    def __call__(
+        self,
+        conn,
+        *,
+        org_id,
+        project_id,
+        installation_id,
+        generation,
+        actor,
+        **_context,
+    ):
+        row = conn.execute(
+            """SELECT etag_version FROM bundle_installation
+               WHERE org_id=%s AND project_id=%s AND installation_id=%s
+               FOR UPDATE""",
+            (org_id, project_id, installation_id),
+        ).fetchone()
+        if row is None:
+            raise LookupError("configuration installation not found")
+        etag = row["etag_version"] if isinstance(row, dict) else row[0]
+        locked = self._store.lock_for_transition_in_transaction(
+            conn,
+            org_id=org_id,
+            project_id=project_id,
+            installation_id=installation_id,
+            expected_etag_version=etag,
+        )
+        return self._permission(conn=conn, locked=locked, actor=actor)
+
+
+class CurrentFourSourceConfigurationAuthorization(ConfigurationAuthorization):
+    """Closed production admission type for the current AIP four-source set."""
+
+    def __init__(self, *, permission, readers, _mint=None):
+        if _mint is not _CURRENT_FOUR_SOURCE_MINT:
+            raise TypeError("current four-source authority requires AIP factory")
+        if type(permission) is not CurrentConfigurationPermission:
+            raise TypeError("current configuration permission required")
+        super().__init__(permission=permission, readers=readers)
+        if frozenset(self._readers) != CURRENT_FOUR_SOURCE_AUTHORITIES:
+            raise ValueError("current four-source configuration readers required")
+
+
+def _mint_current_four_source_authorization(*, permission):
+    """Mint only the fixed AIP readers; arbitrary reader injection is impossible."""
+    from aos_api import aip_runtime_configuration_sources as sources
+
+    readers = {
+        ("role", "aip.responsibility_plan_revision"):
+            sources.read_current_responsibility_plan_ref,
+        ("data", "aip.data_classification_policy_revision"):
+            sources.read_current_data_classification_ref,
+        ("budget", "aip.budget_revision"):
+            sources.read_current_configuration_budget_ref,
+        ("policy", "aip.runtime_policy_revision"):
+            sources.read_current_runtime_policy_ref,
+    }
+    return CurrentFourSourceConfigurationAuthorization(
+        permission=permission, readers=readers, _mint=_CURRENT_FOUR_SOURCE_MINT
+    )
