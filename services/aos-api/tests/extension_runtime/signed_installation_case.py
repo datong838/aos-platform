@@ -153,7 +153,18 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                         c.execute('SET SESSION AUTHORIZATION aos_runtime')
                         c.commit()
                         yield c
-                job=await worker.start(**scope,operation_id=operation,expected_revision=accepted.response_json['revision'])
+                host=None
+                if lifecycle_probe is not None:
+                    from aos_api.extension_runtime.preparation_consumer import PreparationConsumer
+                    host=PreparationConsumer(connect=consumer_connect,worker=worker,
+                        installation_id=draft.installation_id,**scope)
+                    from preparation_case import prepare_with_ack_recovery
+                    delivery=await prepare_with_ack_recovery(host,connect,operation)
+                    assert str(delivery.operation_id)==str(operation) and delivery.operation_status=='succeeded'
+                    job=host.job
+                    assert job is not None
+                else:
+                    job=await worker.start(**scope,operation_id=operation,expected_revision=accepted.response_json['revision'])
                 if worker_mode not in {'normal','verify'}:
                     with pytest.raises(ValueError,match='artifact unavailable' if worker_mode=='artifact_error' else 'current preparation permission'):
                         await job.prepared()
@@ -202,7 +213,7 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                                 from disable_case import exercise_disable
                                 await asyncio.to_thread(exercise_disable,worker,legacy,scope,action,verified,job.plan.generation)
                             finally:
-                                await job.stop()
+                                await host.stop()
                     await job.stop()
                 return job.plan
             plan=asyncio.run(run_worker())

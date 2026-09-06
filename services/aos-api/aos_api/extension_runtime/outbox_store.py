@@ -31,7 +31,7 @@ def _seconds(value):
 class RuntimeOutboxStore:
     def claim(self,conn,*,org_id,project_id,lease_seconds=30,operation_kind=None,installation_id=None):
         _scope(conn,org_id,project_id);_seconds(lease_seconds)
-        if operation_kind not in (None,'disable','runtime-verify','enable'):raise ValueError('unsupported internal consumer kind')
+        if operation_kind not in (None,'disable','runtime-apply','runtime-verify','enable'):raise ValueError('unsupported internal consumer kind')
         installation_id=UUID(str(installation_id)) if installation_id is not None else None
         row=conn.execute('''SELECT b.event_id,e.operation_id,e.sequence,e.type,e.payload,e.payload_hash
             FROM extension_runtime_outbox b JOIN extension_runtime_event e
