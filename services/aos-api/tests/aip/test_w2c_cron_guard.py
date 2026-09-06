@@ -40,6 +40,8 @@ def test_lifespan_does_not_create_cron_task_when_disabled(
         lambda: types.SimpleNamespace(value="managed"),
     )
     monkeypatch.setenv("AOS_QYH_CRON_ENABLED", "false")
+    monkeypatch.setenv("AOS_AIP_LOGIC_AUTOMATION_ENABLED", "false")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "0")
     monkeypatch.setenv("AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED", "false")
 
     def fail_create_task(*_args: object, **_kwargs: object) -> None:

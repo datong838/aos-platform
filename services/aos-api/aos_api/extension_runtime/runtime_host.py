@@ -14,6 +14,7 @@ from aos_api.tenant_scope import TenantScope
 
 from .configuration_consumer import ConfigurationConsumer
 from .disable_consumer import RuntimeDisableConsumer
+from .generation_attempts import ExpiredSignedReadAttemptRecovery
 from .owned_control_consumer import _settled
 from .preparation_owner import _observe
 from .resource_recovery import ExpiredResourceRecovery, RecoveryPage
@@ -26,6 +27,7 @@ _SYNC_CONSUMERS = (ConfigurationConsumer, RuntimeDisableConsumer)
 class RuntimeTenantAssignment:
     scope: TenantScope
     recovery: ExpiredResourceRecovery | None = None
+    attempt_recovery: ExpiredSignedReadAttemptRecovery | None = None
     consumers: tuple[object, ...] = ()
 
     def __post_init__(self) -> None:
@@ -33,6 +35,11 @@ class RuntimeTenantAssignment:
             raise TypeError("runtime assignment requires TenantScope")
         if self.recovery is not None and type(self.recovery) is not ExpiredResourceRecovery:
             raise TypeError("runtime assignment requires concrete recovery worker")
+        if (
+            self.attempt_recovery is not None
+            and type(self.attempt_recovery) is not ExpiredSignedReadAttemptRecovery
+        ):
+            raise TypeError("runtime assignment requires concrete attempt recovery worker")
         if type(self.consumers) is not tuple or any(
             type(consumer) not in _SYNC_CONSUMERS for consumer in self.consumers
         ):
@@ -55,7 +62,7 @@ class RuntimeTenantAssignment:
                 )
             ),
         )
-        if self.recovery is None and not self.consumers:
+        if self.recovery is None and self.attempt_recovery is None and not self.consumers:
             raise ValueError("runtime assignment has no worker")
 
 
@@ -63,6 +70,7 @@ class RuntimeTenantAssignment:
 class RuntimeTenantTick:
     scope: TenantScope
     recovery: RecoveryPage | None
+    recovered_attempts: tuple[UUID, ...]
     deliveries: tuple[object | None, ...]
 
 
@@ -95,7 +103,7 @@ class RuntimeHost:
             raise TypeError("runtime assignment source must be synchronous")
         if type(current) is not tuple or len(current) > 1000:
             raise TypeError("runtime assignments must be a bounded tuple")
-        if any(not isinstance(item, RuntimeTenantAssignment) for item in current):
+        if any(type(item) is not RuntimeTenantAssignment for item in current):
             raise TypeError("invalid runtime assignment")
         ordered = tuple(sorted(current, key=lambda item: item.scope.key))
         keys = tuple(item.scope.key for item in ordered)
@@ -136,10 +144,29 @@ class RuntimeHost:
             )
         )
 
+    async def _recover_attempts(
+        self, assignment: RuntimeTenantAssignment
+    ) -> tuple[UUID, ...]:
+        if assignment.attempt_recovery is None:
+            return ()
+        result = await _settled(
+            asyncio.to_thread(
+                assignment.attempt_recovery.run_once,
+                org_id=assignment.scope.org_id,
+                project_id=assignment.scope.project_id,
+            )
+        )
+        if type(result) is not tuple or any(type(item) is not UUID for item in result):
+            raise TypeError("attempt recovery returned an invalid result")
+        return result
+
     async def _run_tick(self) -> RuntimeHostTick:
         tenants: list[RuntimeTenantTick] = []
         for assignment in self._current_assignments():
             recovery = await self._recover(assignment)
+            recovered_attempts: tuple[UUID, ...] = ()
+            if self._contains_assignment(assignment):
+                recovered_attempts = await self._recover_attempts(assignment)
             deliveries = []
             for consumer in assignment.consumers:
                 # A directory revocation after recovery closes the remainder of
@@ -151,6 +178,7 @@ class RuntimeHost:
                 RuntimeTenantTick(
                     scope=assignment.scope,
                     recovery=recovery,
+                    recovered_attempts=recovered_attempts,
                     deliveries=tuple(deliveries),
                 )
             )

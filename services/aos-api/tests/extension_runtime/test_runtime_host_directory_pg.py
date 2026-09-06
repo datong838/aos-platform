@@ -1,8 +1,10 @@
 """Real role/CAS checks in a disposable database on the isolated AR1 cluster."""
+import asyncio
 import importlib.util
 import os
 from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 import uuid
@@ -16,7 +18,10 @@ from aos_api.extension_runtime.runtime_identity import (
     probe_runtime_database_identity,
     require_isolated_runtime_identities,
 )
-from aos_api.extension_runtime.generation_attempts import GenerationDrainReader
+from aos_api.extension_runtime.generation_attempts import (
+    GenerationDrainReader,
+    PostgresRuntimeAttemptStore,
+)
 from aos_api.extension_runtime.oci_driver import CleanupOnlyOciDriver, OciDriver
 from aos_api.extension_runtime.production_runtime import (
     RuntimeWorkerDependencies,
@@ -60,6 +65,16 @@ def directory_database():
         with psycopg.connect(database_dsn, autocommit=True) as conn:
             conn.execute("CREATE TABLE twa_workspace(org_id text,project_id text,name text,PRIMARY KEY(org_id,project_id))")
             conn.execute("CREATE TABLE bundle_installation(org_id text,project_id text,installation_id uuid,etag_version bigint NOT NULL DEFAULT 1,PRIMARY KEY(org_id,project_id,installation_id))")
+            # Reproduce the exact TI6 adoption marker used by production tenant
+            # transactions without importing unrelated application tables.
+            conn.execute("CREATE TABLE bundle_composition(org_id text,project_id text)")
+            conn.execute("ALTER TABLE bundle_composition ENABLE ROW LEVEL SECURITY")
+            conn.execute(
+                """CREATE POLICY tenant_scope_bundle_composition_ti6
+                       ON bundle_composition
+                    USING (org_id=current_setting('aos.org_id',true)
+                       AND project_id=current_setting('aos.project_id',true))"""
+            )
             conn.execute("INSERT INTO twa_workspace VALUES"
                          "('org-org','dev-project','isolated'),"
                          "('other-org','other-project','other'),"
@@ -336,7 +351,7 @@ def test_production_selector_uses_real_directory_roles_and_runtime_drain(directo
                     package_lock_ref,profile_ref,config_ref,desired_state,observed_state,
                     enabled,operation_fence,execution_epoch)
                    VALUES('org-org','dev-project',%s,%s,1,'{}','test','{}',
-                          'disabled','draining',false,true,2)""",
+                          'enabled','ready',true,false,1)""",
                 (installation, generation),
             )
 
@@ -383,6 +398,42 @@ def test_production_selector_uses_real_directory_roles_and_runtime_drain(directo
             ),
         )
         assert selected.status == "ACTIVE"
+        with runtime_connect() as conn:
+            with conn.transaction():
+                conn.execute("SET LOCAL ROLE aos_runtime")
+                conn.execute(
+                    "SELECT set_config('aos.org_id','org-org',true),"
+                    "set_config('aos.project_id','dev-project',true)"
+                )
+                attempt = PostgresRuntimeAttemptStore().begin(
+                    conn,
+                    org_id="org-org",
+                    project_id="dev-project",
+                    installation_id=installation,
+                    generation=generation,
+                    execution_epoch=1,
+                    operation_kind="signed_read",
+                    operation_key="products.read",
+                    idempotency_key="selector-host-recovery",
+                    request_hash=_hash("9"),
+                    owner_token="selector-owner-" + "x" * 32,
+                    lease_until=datetime.now(timezone.utc)
+                    + timedelta(milliseconds=120),
+                )
+        with psycopg.connect(dsn, autocommit=True) as admin:
+            admin.execute(
+                """UPDATE extension_runtime_binding
+                      SET desired_state='disabled',observed_state='draining',
+                          enabled=false,operation_fence=true,execution_epoch=2,
+                          revision=revision+1
+                    WHERE org_id='org-org' AND project_id='dev-project'
+                      AND installation_id=%s AND generation=%s""",
+                (installation, generation),
+            )
+            admin.execute("SELECT pg_sleep(.15)")
+
+        tick = asyncio.run(selected.host.run_once())
+        assert tick.tenants[0].recovered_attempts == (attempt.attempt_id,)
         with runtime_connect() as conn:
             with conn.transaction():
                 conn.execute("SET LOCAL ROLE aos_runtime")

@@ -36,6 +36,8 @@ from aos_api.tenant_scope import TenantScope
 configure_logging()
 log = get_logger("aos-api")
 
+_EXTENSION_RUNTIME_SHUTDOWN_TIMEOUT_SECONDS = 30
+
 
 def _qyh_cron_worker_enabled() -> bool:
     """Keep production Cron on by default, with an explicit local-test off switch."""
@@ -138,6 +140,8 @@ async def _lifespan_body(_app: FastAPI):
     logic_automation_task: asyncio.Task[None] | None = None
     provider_health_stop = asyncio.Event()
     provider_health_task: asyncio.Task[None] | None = None
+    extension_runtime_stop = asyncio.Event()
+    extension_runtime_task: asyncio.Task[None] | None = None
     _app.state.runtime_stop_events = (
         cron_stop,
         logic_automation_stop,
@@ -147,7 +151,10 @@ async def _lifespan_body(_app: FastAPI):
     # bootstrap boundary so managed-mode failures can stop application startup.
     migration_mode = run_migrations()
     mode_value = getattr(migration_mode, "value", migration_mode)
-    from aos_api.asset_registry.control_wiring import build_runtime_control_plane
+    from aos_api.asset_registry.control_wiring import (
+        build_production_runtime_host_selection,
+        build_runtime_control_plane,
+    )
 
     _app.state.extension_runtime_control_plane = None
     _app.state.extension_runtime_control_plane = build_runtime_control_plane()
@@ -353,6 +360,54 @@ async def _lifespan_body(_app: FastAPI):
     except Exception:
         log.exception("startup_memory_cold_start_failed_continue")
 
+    # Select only after migration/bootstrap and all compatibility cold starts.
+    # An enabled host must never inspect a partially prepared schema.
+    runtime_host_selection = build_production_runtime_host_selection(
+        control_plane=_app.state.extension_runtime_control_plane
+    )
+    _app.state.extension_runtime_host_selection = runtime_host_selection
+    _app.state.extension_runtime_host_status = runtime_host_selection.status
+    _app.state.extension_runtime_host_error_code = runtime_host_selection.error_code
+    if runtime_host_selection.status == "ACTIVE":
+        host = runtime_host_selection.host
+        if host is None:
+            raise RuntimeError("active extension runtime host selection is incomplete")
+
+        def _observe_extension_runtime_host(task: asyncio.Task[None]) -> None:
+            if task.cancelled():
+                return
+            error = task.exception()
+            if error is not None:
+                _app.state.extension_runtime_host_status = "FAILED_CLOSED"
+                _app.state.extension_runtime_host_error_code = "HOST_TASK_FAILED"
+                log.error("extension_runtime_host_failed_closed code=HOST_TASK_FAILED")
+
+        _app.state.runtime_stop_events = (
+            *_app.state.runtime_stop_events,
+            extension_runtime_stop,
+        )
+        extension_runtime_task = asyncio.create_task(
+            host.serve(extension_runtime_stop), name="extension-runtime-host"
+        )
+        extension_runtime_task.add_done_callback(_observe_extension_runtime_host)
+        _app.state.extension_runtime_host_task = extension_runtime_task
+        _app.state.runtime_background_tasks.append(extension_runtime_task)
+        # Give an immediately failing host one scheduling turn so startup does
+        # not advertise a live runtime task that has already terminated.
+        await asyncio.sleep(0)
+        if extension_runtime_task.done() and not extension_runtime_task.cancelled():
+            error = extension_runtime_task.exception()
+            if error is not None:
+                _app.state.extension_runtime_host_status = "FAILED_CLOSED"
+                _app.state.extension_runtime_host_error_code = "HOST_TASK_FAILED"
+                raise RuntimeError("extension runtime host failed during startup") from error
+        log.info("startup_extension_runtime_host_started")
+    else:
+        log.info(
+            "startup_extension_runtime_host_inactive code=%s",
+            runtime_host_selection.error_code,
+        )
+
     async def _qyh_cron_loop() -> None:
         """每 15 秒检查一次；Cron 命中按分钟数据库幂等领取。"""
         while not cron_stop.is_set():
@@ -448,11 +503,24 @@ async def _lifespan_body(_app: FastAPI):
     yield
 
 
-async def _shutdown_application_runtime(_app: FastAPI) -> None:
+async def _shutdown_application_runtime_body(_app: FastAPI) -> None:
     for stop_event in tuple(getattr(_app.state, "runtime_stop_events", ())):
         stop_event.set()
     tasks = tuple(getattr(_app.state, "runtime_background_tasks", ()))
+    extension_task = getattr(_app.state, "extension_runtime_host_task", None)
+    if extension_task in tasks and not extension_task.done():
+        try:
+            await asyncio.wait_for(
+                asyncio.shield(extension_task),
+                timeout=_EXTENSION_RUNTIME_SHUTDOWN_TIMEOUT_SECONDS,
+            )
+        except TimeoutError:
+            extension_task.cancel()
+        except Exception:
+            log.exception("shutdown_extension_runtime_host_failed_closed")
     for task in tasks:
+        if task is extension_task and task.done():
+            continue
         task.cancel()
     for task in tasks:
         try:
@@ -464,6 +532,10 @@ async def _shutdown_application_runtime(_app: FastAPI) -> None:
     _app.state.runtime_background_tasks = []
     _app.state.runtime_stop_events = ()
     _app.state.extension_runtime_control_plane = None
+    _app.state.extension_runtime_host_selection = None
+    _app.state.extension_runtime_host_task = None
+    if getattr(_app.state, "extension_runtime_host_status", None) != "FAILED_CLOSED":
+        _app.state.extension_runtime_host_status = "STOPPED"
     # ── shutdown：清理 JDBC 缓存（SSH 隧道 + DB 连接）──
     try:
         from aos_api.jdbc_connector_runtime import jdbc_runtime_shutdown
@@ -474,9 +546,37 @@ async def _shutdown_application_runtime(_app: FastAPI) -> None:
         log.exception("shutdown_jdbc_runtime_failed_continue")
 
 
+async def _shutdown_application_runtime(_app: FastAPI) -> None:
+    """Finish the app-owned cleanup before propagating caller cancellation."""
+    task = getattr(_app.state, "runtime_shutdown_task", None)
+    if task is None:
+        task = asyncio.get_running_loop().create_task(
+            _shutdown_application_runtime_body(_app),
+            name="aos-application-runtime-shutdown",
+        )
+        _app.state.runtime_shutdown_task = task
+    cancelled = False
+    while not task.done():
+        try:
+            await asyncio.shield(task)
+        except asyncio.CancelledError:
+            cancelled = True
+    try:
+        task.result()
+    finally:
+        _app.state.runtime_shutdown_task = None
+    if cancelled:
+        raise asyncio.CancelledError
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     _app.state.extension_runtime_control_plane = None
+    _app.state.extension_runtime_host_selection = None
+    _app.state.extension_runtime_host_task = None
+    _app.state.extension_runtime_host_status = "NOT_SELECTED"
+    _app.state.extension_runtime_host_error_code = None
+    _app.state.runtime_shutdown_task = None
     _app.state.runtime_background_tasks = []
     _app.state.runtime_stop_events = ()
     try:

@@ -23,7 +23,10 @@ from aos_api.extension_runtime.configuration_authorization import (
 )
 from aos_api.extension_runtime.current_permission import CurrentControlPermission
 from aos_api.extension_runtime.disable_consumer import RuntimeDisableConsumer
-from aos_api.extension_runtime.generation_attempts import GenerationDrainReader
+from aos_api.extension_runtime.generation_attempts import (
+    ExpiredSignedReadAttemptRecovery,
+    GenerationDrainReader,
+)
 from aos_api.extension_runtime.oci_driver import CleanupOnlyOciDriver, OciDriver
 from aos_api.extension_runtime.production_runtime import (
     RuntimeHostSelection,
@@ -187,6 +190,7 @@ def test_complete_selector_builds_only_concrete_workers_and_reuses_assignment(mo
     second = selected.host._current_assignments()[0]
     assert first is second
     assert type(first.recovery) is ExpiredResourceRecovery
+    assert type(first.attempt_recovery) is ExpiredSignedReadAttemptRecovery
     assert tuple(type(value) for value in first.consumers) == (
         ConfigurationConsumer,
         RuntimeDisableConsumer,

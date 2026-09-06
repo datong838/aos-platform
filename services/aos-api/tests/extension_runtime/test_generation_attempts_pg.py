@@ -1,5 +1,6 @@
 """Generation attempt and drain authority on the dedicated PostgreSQL only."""
 import importlib.util
+from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -8,11 +9,13 @@ import uuid
 
 import psycopg
 from psycopg import sql
+from psycopg.rows import dict_row
 import pytest
 
 from test_lifecycle_pg import database, seed, pytestmark
 
 from aos_api.extension_runtime.generation_attempts import (
+    ExpiredSignedReadAttemptRecovery,
     GenerationDrainReader,
     PostgresRuntimeAttemptStore,
 )
@@ -237,6 +240,11 @@ def test_attempt_head_is_tenant_isolated_for_nonprivileged_role(attempt_case):
 def test_committed_attempt_survives_owner_exit_and_other_process_recovers_it(attempt_case):
     conn, installation, generation, role, schema = attempt_case
 
+    # The production runtime role is intentionally fixed.  The isolated test
+    # schema is created per case, so grant only schema visibility here; the
+    # migration already owns the exact table privileges.
+    conn.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(sql.Identifier(schema)))
+
     with psycopg.connect(
         host="127.0.0.1", port=18432, user="postgres", dbname="postgres", autocommit=True
     ) as owner:
@@ -252,25 +260,36 @@ def test_committed_attempt_survives_owner_exit_and_other_process_recovers_it(att
         )
 
     _fence(conn)
-    with psycopg.connect(
-        host="127.0.0.1", port=18432, user="postgres", dbname="postgres", autocommit=True
-    ) as recovery:
-        recovery.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
-        recovery.execute(sql.SQL("SET ROLE {}").format(sql.Identifier(role)))
-        recovery.execute(
-            "SELECT set_config('aos.org_id','org-org',false),"
-            "set_config('aos.project_id','dev-project',false)"
-        )
+    @contextmanager
+    def recovery_connect():
+        with psycopg.connect(
+            host="127.0.0.1",
+            port=18432,
+            user="postgres",
+            dbname="postgres",
+            autocommit=True,
+            row_factory=dict_row,
+        ) as recovery:
+            recovery.execute("SET SESSION AUTHORIZATION aos_runtime")
+            recovery.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+            recovery.execute(
+                "SELECT set_config('aos.org_id','org-org',false),"
+                "set_config('aos.project_id','dev-project',false)"
+            )
+            yield recovery
+
+    attempt_recovery = ExpiredSignedReadAttemptRecovery(connect=recovery_connect)
+    with recovery_connect() as recovery:
         with recovery.transaction():
             assert GenerationDrainReader()(
                 recovery, **SCOPE, installation_id=installation,
                 generation=generation, fence_epoch=2,
             ) is False
-        recovery.execute("SELECT pg_sleep(.18)")
-        with recovery.transaction():
-            assert PostgresRuntimeAttemptStore().abandon_expired_reads(recovery, **SCOPE) == (
-                lease.attempt_id,
-            )
+    # Process B cannot recover a still-live owner lease and never replays the read.
+    assert attempt_recovery.run_once(**SCOPE) == ()
+    conn.execute("SELECT pg_sleep(.18)")
+    assert attempt_recovery.run_once(**SCOPE) == (lease.attempt_id,)
+    with recovery_connect() as recovery:
         with recovery.transaction():
             assert GenerationDrainReader()(
                 recovery, **SCOPE, installation_id=installation,

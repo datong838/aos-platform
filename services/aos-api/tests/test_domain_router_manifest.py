@@ -315,14 +315,14 @@ class RouterManifestStaticTests(unittest.TestCase):
 
     def test_migration_runs_outside_best_effort_startup_boundary(self) -> None:
         tree = ast.parse(MAIN_PATH.read_text(encoding="utf-8"))
-        lifespan = next(
+        lifespan_body = next(
             node
             for node in tree.body
-            if isinstance(node, ast.AsyncFunctionDef) and node.name == "lifespan"
+            if isinstance(node, ast.AsyncFunctionDef) and node.name == "_lifespan_body"
         )
         executable = [
             node
-            for node in lifespan.body
+            for node in lifespan_body.body
             if not (
                 isinstance(node, ast.Expr)
                 and isinstance(node.value, ast.Constant)
@@ -384,15 +384,17 @@ class RouterManifestRuntimeTests(unittest.TestCase):
         # DataRequirement and Business Investigation canonical routes delivered
         # through BI-W2/4/6/8; the exported business-route inventory
         # intentionally filters framework routes out.
-        # BI-W10 exact case selection added one canonical GET route after the
-        # previous manifest seal; keep the runtime checksum pinned to the
-        # current reviewed inventory rather than silently ignoring drift.
-        self.assertEqual(4518, result["count"])
+        # The current seal includes 23 reviewed routes added after the prior
+        # baseline for action withdrawal, memory rejection, model-runtime
+        # revisions/readiness, Workshop operations and document extraction.
+        # Keep both the exact inventory and duplicate set pinned so later drift
+        # cannot be hidden by updating only a count.
+        self.assertEqual(4541, result["count"])
         self.assertEqual(
-            "bf873b042198a869e85f42040e1a1a2163105a95b7f41ceb034b78bf8f957913",
+            "156f63de27f0b777ad225f76b3927ec7c72785d2a1b81b30d6ca44c0f64c37da",
             result["sha256"],
         )
-        self.assertEqual(2718, result["openapi_paths"])
+        self.assertEqual(2740, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],

@@ -7,7 +7,11 @@ import hashlib
 import re
 from uuid import UUID, uuid4
 
+from aos_api.tenant_scope import TenantScope
+
+from .consumer_connection import consumer_connection
 from .lifecycle_store import RuntimeConflict, RuntimeRevisionConflict, _require_transaction, _values
+from .storage_ports import require_runtime_role
 
 _HASH = re.compile(r"^sha256:[0-9a-f]{64}$")
 _TERMINAL = ("succeeded", "failed", "abandoned")
@@ -239,6 +243,34 @@ class PostgresRuntimeAttemptStore:
                    sequence=revision, event_type="attempt_abandoned", state="abandoned", revision=revision)
             result.append(attempt_id)
         return tuple(result)
+
+
+class ExpiredSignedReadAttemptRecovery:
+    """Tenant-scoped, bounded recovery; never replays the external read."""
+
+    def __init__(self, *, connect) -> None:
+        if not callable(connect):
+            raise ValueError("trusted runtime connection factory required")
+        self._connect = connect
+        self._store = PostgresRuntimeAttemptStore()
+
+    def run_once(
+        self, *, org_id: str, project_id: str, limit: int = 100
+    ) -> tuple[UUID, ...]:
+        TenantScope(org_id, project_id)
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("attempt recovery limit must be 1..100")
+        scope = {"org_id": org_id, "project_id": project_id}
+        with consumer_connection(self._connect, scope) as conn:
+            require_runtime_role(
+                conn,
+                **scope,
+                protected_tables=(
+                    "extension_runtime_execution_attempt",
+                    "extension_runtime_execution_attempt_event",
+                ),
+            )
+            return self._store.abandon_expired_reads(conn, **scope, limit=limit)
 
 
 class GenerationDrainReader:

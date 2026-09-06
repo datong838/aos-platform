@@ -105,6 +105,8 @@ def test_lifespan_failed_preflight_does_not_create_provider_health_task(
         lambda: types.SimpleNamespace(value="managed"),
     )
     monkeypatch.setenv("AOS_QYH_CRON_ENABLED", "false")
+    monkeypatch.setenv("AOS_AIP_LOGIC_AUTOMATION_ENABLED", "false")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "0")
     monkeypatch.setenv("AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED", "true")
     monkeypatch.delenv(
         "AOS_AIP_TEXT_HEALTH_CANONICAL_AUTHORITY_MODE", raising=False

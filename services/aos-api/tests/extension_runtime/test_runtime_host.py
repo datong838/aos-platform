@@ -9,6 +9,7 @@ import pytest
 
 from aos_api.extension_runtime.configuration_consumer import ConfigurationConsumer
 from aos_api.extension_runtime.disable_consumer import RuntimeDisableConsumer
+from aos_api.extension_runtime.generation_attempts import ExpiredSignedReadAttemptRecovery
 from aos_api.extension_runtime.resource_recovery import ExpiredResourceRecovery, RecoveryPage
 from aos_api.extension_runtime.runtime_host import RuntimeHost, RuntimeTenantAssignment
 from aos_api.tenant_scope import TenantScope
@@ -48,6 +49,19 @@ def disable(calls):
     return consumer
 
 
+def attempt_recovery(calls, *, result=(), action=None):
+    worker = object.__new__(ExpiredSignedReadAttemptRecovery)
+
+    def run_once(**scope):
+        calls.append(("attempt-recovery", scope))
+        if action is not None:
+            action()
+        return result
+
+    worker.run_once = run_once
+    return worker
+
+
 def scope(org, project):
     return TenantScope(org, project)
 
@@ -62,6 +76,8 @@ async def wait_for_thread_event(event, timeout=2):
 def test_assignment_rejects_untrusted_and_empty_workers():
     with pytest.raises(TypeError):
         RuntimeTenantAssignment(scope("a", "b"), recovery=object())
+    with pytest.raises(TypeError):
+        RuntimeTenantAssignment(scope("a", "b"), attempt_recovery=object())
     with pytest.raises(TypeError):
         RuntimeTenantAssignment(scope("a", "b"), consumers=(object(),))
     with pytest.raises(ValueError):
@@ -81,8 +97,9 @@ def test_consumer_order_is_fixed_independent_of_input_order():
     assert [call[0] for call in calls] == ["configuration", "disable"]
 
 
-def test_tick_sorts_tenants_and_runs_recovery_before_concrete_consumers():
+def test_tick_sorts_tenants_and_runs_recoveries_before_concrete_consumers():
     calls = []
+    recovered = UUID("00000000-0000-0000-0000-000000000008")
     one = RuntimeTenantAssignment(
         scope("org-b", "project"),
         consumers=(configuration(calls, result="b"),),
@@ -90,11 +107,18 @@ def test_tick_sorts_tenants_and_runs_recovery_before_concrete_consumers():
     two = RuntimeTenantAssignment(
         scope("org-a", "project"),
         recovery=recovery((RecoveryPage((), None),), calls),
+        attempt_recovery=attempt_recovery(calls, result=(recovered,)),
         consumers=(configuration(calls, result="a"),),
     )
     result = asyncio.run(RuntimeHost(assignments=lambda: (one, two)).run_once())
     assert [item.scope.org_id for item in result.tenants] == ["org-a", "org-b"]
-    assert [item[0] for item in calls] == ["recovery", "configuration", "configuration"]
+    assert [item[0] for item in calls] == [
+        "recovery",
+        "attempt-recovery",
+        "configuration",
+        "configuration",
+    ]
+    assert result.tenants[0].recovered_attempts == (recovered,)
     assert result.tenants[0].deliveries == ("a",)
 
 
@@ -126,6 +150,17 @@ def test_recovery_cursor_returns_to_origin_after_empty_page():
 def test_assignment_source_must_return_typed_bounded_tuple(value):
     with pytest.raises(TypeError):
         asyncio.run(RuntimeHost(assignments=lambda: value).run_once())
+
+
+def test_assignment_source_rejects_runtime_assignment_subclass():
+    class ForgedAssignment(RuntimeTenantAssignment):
+        pass
+
+    forged = ForgedAssignment(
+        scope("org", "project"), consumers=(configuration([]),)
+    )
+    with pytest.raises(TypeError, match="invalid runtime assignment"):
+        asyncio.run(RuntimeHost(assignments=lambda: (forged,)).run_once())
 
 
 def test_async_assignment_source_is_rejected_without_starting_it():
@@ -225,6 +260,25 @@ def test_revoked_assignment_after_recovery_does_not_enter_consumer():
     host = RuntimeHost(assignments=lambda: (assignment,) if current else ())
     result = asyncio.run(host.run_once())
     assert [call[0] for call in calls] == ["recovery"]
+    assert result.tenants[0].deliveries == ()
+
+
+def test_revoked_assignment_after_attempt_recovery_does_not_enter_consumer():
+    calls = []
+    current = True
+
+    def revoke():
+        nonlocal current
+        current = False
+
+    assignment = RuntimeTenantAssignment(
+        scope("org", "project"),
+        attempt_recovery=attempt_recovery(calls, action=revoke),
+        consumers=(configuration(calls),),
+    )
+    host = RuntimeHost(assignments=lambda: (assignment,) if current else ())
+    result = asyncio.run(host.run_once())
+    assert [call[0] for call in calls] == ["attempt-recovery"]
     assert result.tenants[0].deliveries == ()
 
 

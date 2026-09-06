@@ -12,7 +12,10 @@ from .configuration_authorization import CurrentFourSourceConfigurationAuthoriza
 from .configuration_consumer import ConfigurationConsumer
 from .current_permission import CurrentControlPermission
 from .disable_consumer import RuntimeDisableConsumer
-from .generation_attempts import GenerationDrainReader
+from .generation_attempts import (
+    ExpiredSignedReadAttemptRecovery,
+    GenerationDrainReader,
+)
 from .oci_driver import CleanupOnlyOciDriver
 from .resource_recovery import ExpiredResourceRecovery
 from .runtime_directory import PostgresRuntimeTenantDirectory
@@ -140,7 +143,10 @@ def select_production_runtime_host(
             check_drained=dependencies.drain_reader,
         )
         return RuntimeTenantAssignment(
-            scope=scope, recovery=recovery, consumers=(configure, disable)
+            scope=scope,
+            recovery=recovery,
+            attempt_recovery=ExpiredSignedReadAttemptRecovery(connect=runtime_connect),
+            consumers=(configure, disable),
         )
 
     directory = PostgresRuntimeTenantDirectory(
