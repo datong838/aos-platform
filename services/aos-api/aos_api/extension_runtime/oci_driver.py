@@ -98,3 +98,24 @@ class OciDriver:
             raise RuntimeError('refusing to remove a different persisted container identity')
         self._run("rm", "--force", "--volumes", observation[0])
         return True
+
+
+class CleanupOnlyOciDriver:
+    """Composition facade for recovery; intentionally has no create/start surface."""
+
+    def __init__(self, driver: OciDriver):
+        if type(driver) is not OciDriver:
+            raise TypeError("cleanup facade requires the concrete OCI driver")
+        self.__driver = driver
+
+    @property
+    def context(self) -> str:
+        return self.__driver.context
+
+    def require_isolation(self):
+        return self.__driver.require_isolation()
+
+    def remove_owned(self, name: str, owner: str, *, expected_container_id: str | None = None) -> bool:
+        return self.__driver.remove_owned(
+            name, owner, expected_container_id=expected_container_id
+        )
