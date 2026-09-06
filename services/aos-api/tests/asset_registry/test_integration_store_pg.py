@@ -118,6 +118,8 @@ def _schema() -> Iterator[Callable[[], object]]:
 
 
 def _seed_active_installation(connect_factory: Callable[[], object]) -> None:
+    bundle_pk = uuid.UUID("51000000-0000-4000-8000-000000000001")
+    version_pk = uuid.UUID("51000000-0000-4000-8000-000000000002")
     composition_pk = uuid.UUID("52000000-0000-4000-8000-000000000001")
     composition_id = uuid.UUID("52000000-0000-4000-8000-000000000002")
     installation_pk = uuid.UUID("53000000-0000-4000-8000-000000000001")
@@ -134,7 +136,14 @@ def _seed_active_installation(connect_factory: Callable[[], object]) -> None:
         "resolverVersion": "aos-resolver/1.0.0",
         "request": {},
         "registrySnapshotHash": ZERO_HASH,
-        "resolved": [],
+        "resolved": [
+            {
+                "publisher": "aos.test",
+                "id": "integration-content",
+                "version": "1.0.0",
+                "contentHash": ZERO_HASH,
+            }
+        ],
         "edges": [],
         "capabilityProviders": [],
         "permissionDiff": diff,
@@ -143,6 +152,25 @@ def _seed_active_installation(connect_factory: Callable[[], object]) -> None:
         "currentInstallationRef": None,
     }
     with connect_factory() as conn:
+        conn.execute(
+            """INSERT INTO asset_bundle (
+                 bundle_pk,publisher,bundle_id,kind,display_name
+               ) VALUES (%s,'aos.test','integration-content','DomainPack',
+                         'Integration content fixture')""",
+            (bundle_pk,),
+        )
+        conn.execute(
+            """INSERT INTO asset_bundle_version (
+                 version_pk,bundle_pk,version,manifest_json,content_hash,
+                 status,created_by
+               ) VALUES (%s,%s,'1.0.0',%s,%s,'draft','test')""",
+            (
+                version_pk,
+                bundle_pk,
+                Jsonb({"spec": {"runtime": None}}),
+                ZERO_HASH,
+            ),
+        )
         registry_hash = conn.execute(
             "SELECT canonical_bundle_control_sha256(%s::JSONB) AS hash",
             (Jsonb(registry),),

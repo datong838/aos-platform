@@ -341,7 +341,7 @@ def test_signed_bundle_publishes_and_survives_store_restart(registry_runtime) ->
         item for item in draft["evidence"] if item["type"] == "signature_verification"
     )
     assert signature_evidence["metadata"]["trustRootRevision"] == (trust_root.revision)
-    assert signature_evidence["expiresAt"] == trust_root.not_after.isoformat()
+    assert datetime.fromisoformat(signature_evidence["expiresAt"]) == trust_root.not_after
     assert draft["lifecycleEvents"] == []
 
     validated = service.validate(
