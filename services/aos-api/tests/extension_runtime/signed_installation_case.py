@@ -5,6 +5,7 @@ import json
 import subprocess
 import uuid
 import hashlib
+from contextlib import contextmanager
 
 import pytest
 
@@ -144,6 +145,14 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                 configuration_authorize=authorize_configuration if lifecycle_probe else None,
                 check_enable_permission=CurrentControlPermission(operation=ENABLE_RUNTIME_OPERATION) if lifecycle_probe else None)
             async def run_worker():
+                from aos_api.extension_runtime.owned_control_consumer import OwnedControlConsumer
+                @contextmanager
+                def consumer_connect():
+                    with connect() as c:
+                        c.commit()
+                        c.execute('SET SESSION AUTHORIZATION aos_runtime')
+                        c.commit()
+                        yield c
                 job=await worker.start(**scope,operation_id=operation,expected_revision=accepted.response_json['revision'])
                 if worker_mode not in {'normal','verify'}:
                     with pytest.raises(ValueError,match='artifact unavailable' if worker_mode=='artifact_error' else 'current preparation permission'):
@@ -160,8 +169,16 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                         from aos_api.ecommerce_workshop_catalog import PostgresWorkshopCatalogSource
                         requested=await asyncio.to_thread(service.request_preparation,**action,kind='runtime-verify',
                             idempotency_key='signed-verify',if_match=f'"{applied.etag_version}"')
-                        verified=await job.verify(operation_id=requested.response_json['operationId'],
-                            expected_revision=requested.response_json['revision'])
+                        if lifecycle_probe is None:
+                            verified=await job.verify(operation_id=requested.response_json['operationId'],
+                                expected_revision=requested.response_json['revision'])
+                        else:
+                            from owned_control_case import deliver_with_ack_recovery
+                            verifier=OwnedControlConsumer(connect=consumer_connect,job=job,kind='runtime-verify',**scope)
+                            delivered=await deliver_with_ack_recovery(verifier,connect,requested.response_json['operationId'])
+                            assert str(delivered.operation_id)==requested.response_json['operationId']
+                            assert delivered.operation_status=='succeeded'
+                            verified=await asyncio.to_thread(store.get_installation,**scope,installation_id=draft.installation_id)
                         assert verified.state=='active'
                         with connect() as conn:
                             assert conn.execute('SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()=={
@@ -175,8 +192,10 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                                 configuration_authority['authorize']=enable['authorize']
                                 from enable_commit_case import exercise_enable_rejections
                                 await asyncio.to_thread(exercise_enable_rejections,worker,scope,job.plan,enable)
-                                result=await job.enable(operation_id=enable['operation_id'],expected_revision=enable['expected_revision'])
-                                assert result.phase=='succeeded'
+                                enabler=OwnedControlConsumer(connect=consumer_connect,job=job,kind='enable',**scope)
+                                result=await deliver_with_ack_recovery(enabler,connect,enable['operation_id'])
+                                assert str(result.operation_id)==str(enable['operation_id'])
+                                assert result.operation_status=='succeeded'
                                 with connect() as conn:
                                     assert conn.execute('SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()=={
                                         'enabled':True,'operation_fence':False,'observed_state':'ready'}

@@ -1,15 +1,12 @@
 """Concrete single-message disable consumer. No generic execution callback."""
-from contextlib import contextmanager
 from dataclasses import dataclass
 from uuid import UUID
-from psycopg.pq import TransactionStatus
 
 from aos_api.tenant_scope import TenantScope
-from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 from .disable_executor import RuntimeDisableExecutor
 from .outbox_store import RuntimeOutboxStore
 from .lifecycle_store import _values,RuntimeConflict
-from .storage_ports import require_runtime_role
+from .consumer_connection import consumer_connection
 
 
 @dataclass(frozen=True)
@@ -26,19 +23,8 @@ class RuntimeDisableConsumer:
             check_current_permission=check_current_permission,check_drained=check_drained)
         self.outbox=RuntimeOutboxStore()
 
-    @contextmanager
     def _connection(self,scope):
-        with self.connect() as conn:
-            if conn.info.transaction_status!=TransactionStatus.IDLE:
-                raise RuntimeConflict('consumer requires an independent idle connection')
-            with conn.transaction():
-                apply_asset_transaction_scope(conn,**scope)
-                if _values(conn.execute('SELECT current_user AS role').fetchone(),('role',))[0]!='aos_runtime':
-                    raise RuntimeConflict('consumer requires adopted runtime role')
-                require_runtime_role(conn,**scope,protected_tables=('extension_runtime_operation','extension_runtime_outbox','extension_runtime_event'))
-                conn.execute("SET LOCAL lock_timeout='1s'")
-                conn.execute("SET LOCAL statement_timeout='10s'")
-                yield conn
+        return consumer_connection(self.connect,scope)
 
     def _current(self,conn,scope,operation):
         row=conn.execute('''SELECT kind,status,phase,revision FROM extension_runtime_operation

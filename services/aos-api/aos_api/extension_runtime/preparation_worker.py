@@ -14,11 +14,13 @@ from .signed_session import open_signed_session
 from .verification_commit import commit_verified
 from .enable_commit import commit_enabled
 from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
+from aos_api.tenant_scope import TenantScope
 
 
 class PreparedJob:
-    def __init__(self, plan, owner, finalize, verify=None, enable=None):
+    def __init__(self, plan, owner, finalize, verify=None, enable=None, *, tenant_scope=None):
         self.plan=plan
+        self._tenant_scope=tenant_scope
         self._owner=owner
         self._stopping=False
         self._finalize=finalize
@@ -26,6 +28,10 @@ class PreparedJob:
         self._enable=enable
         self._closed=asyncio.create_task(self._watch())
         self._closed.add_done_callback(_observe)
+
+    @property
+    def tenant_scope(self):
+        return self._tenant_scope
 
     async def _watch(self):
         code='PREPARATION_EXECUTION_FAILED'
@@ -214,7 +220,8 @@ class PreparationWorker:
             owner=PreparationOwner([factory(member) for member in plan.members],commit,lease_seconds=remaining)
             verify=(lambda operation_id,revision,observed:self._verify(scope,plan,operation_id,revision,observed)) if callable(self.conditions) and callable(self.verification_permission) else None
             enable=(lambda operation_id,revision,observed:self._enable(scope,plan,operation_id,revision,observed)) if callable(self.conditions) and callable(self.configuration_authorize) and callable(self.enable_permission) else None
-            return PreparedJob(plan,owner,lambda code:self._finalize(scope,plan,code),verify,enable)
+            return PreparedJob(plan,owner,lambda code:self._finalize(scope,plan,code),verify,enable,
+                tenant_scope=TenantScope(**scope))
         except BaseException:
             await _settle(asyncio.create_task(asyncio.to_thread(self._finalize,scope,plan,'PREPARATION_STOPPED')))
             raise
