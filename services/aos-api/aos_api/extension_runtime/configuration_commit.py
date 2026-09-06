@@ -14,6 +14,43 @@ from .configuration_store import read_configuration, _target
 from .lifecycle_store import (_require_transaction, _values, _deadline_valid, _digest,
     RuntimeConflict, RuntimeRevisionConflict, RuntimeOperationStore)
 from .runtime_gate import _reject_deferred
+from .binding_store import RuntimeBindingStore
+
+
+def begin_configuration(conn, *, org_id,project_id,operation_id,expected_revision,authorize):
+    """Caller commits this fence before any generation drain observation."""
+    _require_transaction(conn)
+    identity=(org_id,project_id,UUID(str(operation_id)))
+    row=conn.execute('''SELECT installation_id FROM extension_runtime_operation
+        WHERE org_id=%s AND project_id=%s AND operation_id=%s''',identity).fetchone()
+    if row is None:raise LookupError('configuration operation not found')
+    installation=_values(row,('installation_id',))[0]
+    head=conn.execute('''SELECT etag_version FROM bundle_installation
+        WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',
+        (org_id,project_id,installation)).fetchone()
+    if head is None:raise LookupError('configuration installation not found')
+    row=conn.execute('''SELECT kind,status,phase,revision,expected_installation_etag,requested_by
+        FROM extension_runtime_operation WHERE org_id=%s AND project_id=%s AND operation_id=%s FOR UPDATE''',identity).fetchone()
+    kind,status,phase,revision,etag,actor=_values(row,('kind','status','phase','revision','expected_installation_etag','requested_by'))
+    if type(expected_revision) is not int or expected_revision!=revision or _values(head,('etag_version',))[0]!=etag:
+        raise RuntimeRevisionConflict('configuration operation or installation changed')
+    if (kind,status,phase)!=('configure','accepted','accepted'):
+        raise RuntimeConflict('configuration requires current accepted operation')
+    request=load_configure_target(conn,org_id=org_id,project_id=project_id,operation_id=operation_id)
+    row=conn.execute('''SELECT revision,desired_state,observed_state FROM extension_runtime_binding
+        WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s FOR UPDATE''',
+        (org_id,project_id,installation,UUID(request.generation))).fetchone()
+    if row is None:raise LookupError('configuration binding not found')
+    brev,desired,observed=_values(row,('revision','desired_state','observed_state'))
+    if brev!=request.bindingRevision or desired=='uninstalled' or observed=='stopped':
+        raise RuntimeConflict('configuration accepted binding is unavailable')
+    read_configuration(conn,org_id=org_id,project_id=project_id,installation_id=installation,
+        generation=request.generation,actor=actor,ref=request.configRef,authorize=authorize)
+    validated=RuntimeOperationStore().advance(conn,org_id=org_id,project_id=project_id,
+        operation_id=operation_id,expected_revision=revision,phase='validating')
+    return RuntimeBindingStore().fence(conn,org_id=org_id,project_id=project_id,installation_id=installation,
+        generation=request.generation,operation_id=operation_id,expected_operation_revision=validated.revision,
+        expected_binding_revision=request.bindingRevision)
 
 
 def commit_configuration(conn, *, org_id, project_id, operation_id, expected_revision,

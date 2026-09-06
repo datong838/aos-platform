@@ -1,6 +1,7 @@
 """Signed live-owner service integration, only the caller's isolated schema."""
 from pathlib import Path
 from types import SimpleNamespace
+from contextlib import contextmanager
 import importlib.util
 
 import pytest
@@ -14,9 +15,7 @@ def exercise_configuration_service(connect,store,reader,validator,scope,action,v
     from aos_api.extension_runtime.configuration_authorization import ConfigurationAuthorization
     from aos_api.extension_runtime.configuration_service import RuntimeConfigurationService
     from aos_api.extension_runtime.configuration_store import append_configuration
-    from aos_api.extension_runtime.configuration_commit import commit_configuration
-    from aos_api.extension_runtime.binding_store import RuntimeBindingStore
-    from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
+    from aos_api.extension_runtime.configuration_consumer import ConfigurationConsumer
     path=Path(__file__).resolve().parents[2]/'alembic/versions/ar1_002_runtime_configuration.py'
     spec=importlib.util.spec_from_file_location('signed_configuration_migration',path)
     migration=importlib.util.module_from_spec(spec);spec.loader.exec_module(migration)
@@ -56,17 +55,53 @@ def exercise_configuration_service(connect,store,reader,validator,scope,action,v
     with connect() as c:c.execute("UPDATE meta_membership SET role='viewer'")
     with pytest.raises(AssetRegistryError):service.request(**request)
     with connect() as c:c.execute("UPDATE meta_membership SET role='admin'")
+    @contextmanager
+    def consumer_connect():
+        with connect() as c:
+            # This fixture owns the search_path setup transaction and connection.
+            c.commit()
+            c.execute('SET SESSION AUTHORIZATION aos_runtime')
+            c.commit()
+            yield c
+    operation_id=accepted.response_json['operationId']
+    def state():
+        with connect() as c:
+            return (c.execute('SELECT status,revision FROM extension_runtime_operation WHERE operation_id=%s',
+                (operation_id,)).fetchone(),c.execute('SELECT enabled,operation_fence,execution_epoch,revision,config_ref FROM extension_runtime_binding').fetchone())
+    drain_ready=False
+    def drained(c,**kwargs):
+        # A different connection must see the fence before drain is attempted.
+        observed=state()[1]
+        assert observed['operation_fence'] and not observed['enabled'] and observed['execution_epoch']==2
+        # Named fixture seam, not proof of the production broker's drain state.
+        return drain_ready
+    consumer=ConfigurationConsumer(connect=consumer_connect,authorize=authorize,check_drained=drained)
+    with pytest.raises(ValueError):consumer.run_once(**scope)
+    assert state()[1]['execution_epoch']==2
     with connect() as c:
-        apply_asset_transaction_scope(c,**scope)
-        operations=RuntimeOperationStore()
-        operation_id=accepted.response_json['operationId']
-        validated=operations.advance(c,**scope,operation_id=operation_id,expected_revision=1,phase='validating')
-        fenced=RuntimeBindingStore().fence(c,**scope,installation_id=verified.installation_id,generation=generation,
-            operation_id=operation_id,expected_operation_revision=validated.revision,expected_binding_revision=1)
-        # No application job was admitted in this isolated lifecycle fixture.
-        # This seam does NOT attest the production async broker's drain state.
-        commit_configuration(c,**scope,operation_id=operation_id,expected_revision=fenced.revision,
-            authorize=authorize,check_drained=lambda *a,**k:True)
+        c.execute("UPDATE extension_runtime_outbox SET claim_until=clock_timestamp()-interval '1 second' WHERE event_id IN (SELECT event_id FROM extension_runtime_event WHERE operation_id=%s) AND claim_until IS NOT NULL",(operation_id,))
+    drain_ready=True
+    original_ack=consumer.outbox.ack
+    lost=[]
+    def fail_ack(c,**kwargs):
+        original_ack(c,**kwargs)
+        lost.append(kwargs['lease'])
+        raise RuntimeError('named configuration ACK rollback')
+    consumer.outbox.ack=fail_ack
+    with pytest.raises(RuntimeError,match='named configuration ACK rollback'):consumer.run_once(**scope)
+    before=state()
+    assert before[0]['status']=='succeeded' and before[1]['execution_epoch']==2 and len(lost)==1
+    with connect() as c:
+        assert c.execute('SELECT delivered_at FROM extension_runtime_outbox WHERE event_id=%s',(lost[0].event_id,)).fetchone()=={'delivered_at':None}
+        c.execute("UPDATE extension_runtime_outbox SET claim_until=clock_timestamp()-interval '1 second',next_attempt=clock_timestamp()-interval '1 day' WHERE event_id=%s",(lost[0].event_id,))
+    def forbidden(*args,**kwargs):raise AssertionError('committed configuration replayed')
+    fresh=ConfigurationConsumer(connect=consumer_connect,authorize=forbidden,check_drained=forbidden)
+    result=fresh.run_once(**scope)
+    assert str(result.operation_id)==str(operation_id) and result.delivery_status=='acknowledged'
+    for _ in range(30):
+        if fresh.run_once(**scope) is None:break
+    else:raise AssertionError('bounded configuration event drain did not finish')
+    assert state()==before
     with connect() as c:
         apply_asset_transaction_scope(c,**scope)
         second=append_configuration(c,**{**write,'expected_binding_revision':3,'idempotency_key':'second-signed-config'},previous_ref=first)
