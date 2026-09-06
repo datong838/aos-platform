@@ -101,7 +101,56 @@ def exercise_disable(worker, reader, scope, action, verified, generation):
     normal=service.request(**{**request,'idempotency_key':'normal-disable',
         'target':dict(generation=str(generation),bindingRevision=6)})
     assert normal.response_json['phase']=='accepted'
-    done=executor.execute(**scope,operation_id=normal.response_json['operationId'],expected_revision=1)
-    assert done.phase=='succeeded'
+    from aos_api.extension_runtime.disable_consumer import RuntimeDisableConsumer
+    @contextmanager
+    def consumer_connect():
+        with worker.connect() as c:
+            c.commit()
+            c.execute('SET SESSION AUTHORIZATION aos_runtime')
+            c.commit()
+            yield c
+    consumer=RuntimeDisableConsumer(connect=consumer_connect,installation_store=worker.store,
+        check_current_permission=permission,check_drained=pending)
+    normal_id=normal.response_json['operationId']
+    original_ack=consumer.outbox.ack
+    failed_lease=[]
+    def fail_ack(c,**kwargs):
+        original_ack(c,**kwargs)
+        if str(kwargs['lease'].operation_id)==normal_id:
+            failed_lease.append(kwargs['lease'])
+            raise RuntimeError('isolated ACK transaction rollback')
+    consumer.outbox.ack=fail_ack
+    # Old terminal messages may precede this operation. They must not re-execute.
+    for _ in range(30):
+        try:consumer.run_once(**scope)
+        except RuntimeError as exc:
+            assert str(exc)=='isolated ACK transaction rollback'
+            break
+    assert len(failed_lease)==1
+    with worker._connection(scope) as c:
+        before=c.execute('SELECT status,revision FROM extension_runtime_operation WHERE operation_id=%s',
+            (normal_id,)).fetchone()
+        assert before['status']=='succeeded'
+        assert c.execute('SELECT delivered_at FROM extension_runtime_outbox WHERE event_id=%s',
+            (failed_lease[0].event_id,)).fetchone()=={'delivered_at':None}
+        # Expire only the exact isolated claim; force its retry ahead of later events.
+        c.execute("UPDATE extension_runtime_outbox SET claim_until=clock_timestamp()-interval '1 second',next_attempt=clock_timestamp()-interval '1 day' WHERE event_id=%s",
+            (failed_lease[0].event_id,))
+    fresh=RuntimeDisableConsumer(connect=consumer_connect,installation_store=worker.store,
+        check_current_permission=permission,check_drained=pending)
+    def must_not_execute(**kwargs):raise AssertionError('terminal redelivery executed again')
+    fresh.executor.execute=must_not_execute
+    delivery=fresh.run_once(**scope)
+    assert str(delivery.operation_id)==normal_id and delivery.operation_status=='succeeded'
+    assert delivery.delivery_status=='acknowledged'
+    for _ in range(30):
+        if fresh.run_once(**scope) is None:break
+    else:raise AssertionError('bounded disable event drain did not finish')
+    with worker._connection(scope) as c:
+        assert c.execute('SELECT status,revision FROM extension_runtime_operation WHERE operation_id=%s',
+            (normal_id,)).fetchone()==before
+        assert c.execute('SELECT delivered_at IS NOT NULL AS delivered FROM extension_runtime_outbox WHERE event_id=%s',
+            (failed_lease[0].event_id,)).fetchone()=={'delivered':True}
+        assert c.execute("SELECT count(*) AS n FROM extension_runtime_outbox b JOIN extension_runtime_event e USING(org_id,project_id,event_id) JOIN extension_runtime_operation o USING(org_id,project_id,operation_id) WHERE o.kind='disable' AND b.delivered_at IS NULL").fetchone()=={'n':0}
     with worker._connection(scope) as c:
         assert c.execute('SELECT execution_epoch FROM extension_runtime_binding').fetchone()=={'execution_epoch':5}

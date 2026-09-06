@@ -29,15 +29,18 @@ def _seconds(value):
 
 
 class RuntimeOutboxStore:
-    def claim(self,conn,*,org_id,project_id,lease_seconds=30):
+    def claim(self,conn,*,org_id,project_id,lease_seconds=30,operation_kind=None):
         _scope(conn,org_id,project_id);_seconds(lease_seconds)
+        if operation_kind not in (None,'disable'):raise ValueError('unsupported internal consumer kind')
         row=conn.execute('''SELECT b.event_id,e.operation_id,e.sequence,e.type,e.payload,e.payload_hash
             FROM extension_runtime_outbox b JOIN extension_runtime_event e
               ON (e.org_id,e.project_id,e.event_id)=(b.org_id,b.project_id,b.event_id)
+            JOIN extension_runtime_operation o ON (o.org_id,o.project_id,o.operation_id)=(e.org_id,e.project_id,e.operation_id)
             WHERE b.org_id=%s AND b.project_id=%s AND b.consumer_id='runtime-reconciler'
               AND b.delivered_at IS NULL AND b.next_attempt<=clock_timestamp()
               AND (b.claim_until IS NULL OR b.claim_until<=clock_timestamp()) AND b.attempt<2147483647
-            ORDER BY b.next_attempt,b.event_id LIMIT 1 FOR UPDATE OF b SKIP LOCKED''',(org_id,project_id)).fetchone()
+              AND (CAST(%s AS text) IS NULL OR o.kind=%s)
+            ORDER BY b.next_attempt,b.event_id LIMIT 1 FOR UPDATE OF b SKIP LOCKED''',(org_id,project_id,operation_kind,operation_kind)).fetchone()
         if row is None:return None
         event,operation,sequence,event_type,payload,payload_hash=_values(row,('event_id','operation_id','sequence','type','payload','payload_hash'))
         if _digest(payload)!=payload_hash:raise RuntimeConflict('immutable outbox event hash mismatch')
