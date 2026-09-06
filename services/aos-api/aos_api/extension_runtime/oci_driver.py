@@ -83,14 +83,18 @@ class OciDriver:
             raise ValueError("invalid container identity")
         return ["docker", "--context", self.context, "start", "--attach", "--interactive", container_id]
 
-    def remove_owned(self, name: str, owner: str) -> bool:
+    def remove_owned(self, name: str, owner: str, *, expected_container_id: str | None = None) -> bool:
+        if expected_container_id is not None and not re.fullmatch(r'[0-9a-f]{64}',expected_container_id):
+            raise ValueError('invalid persisted container identity')
         try:
             observation = self._run("inspect", "--format", '{{.Id}} {{index .Config.Labels "aos.extension.owner"}}', name).strip().split()
         except subprocess.CalledProcessError as exc:
-            if "No such" in exc.stderr:
+            if "no such" in (exc.stderr or '').lower():
                 return False
             raise
         if len(observation)!=2 or not re.fullmatch(r"[0-9a-f]{64}",observation[0]) or observation[1] != owner:
             raise RuntimeError("refusing to remove a resource with another owner")
+        if expected_container_id is not None and observation[0]!=expected_container_id:
+            raise RuntimeError('refusing to remove a different persisted container identity')
         self._run("rm", "--force", "--volumes", observation[0])
         return True

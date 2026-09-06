@@ -17,6 +17,51 @@ class ResourceIntent:
 
 
 class ResourceJournal:
+    def expired(self,conn,*,org_id,project_id,engine_context,limit=100,after=None):
+        """Bounded routing only. Recheck each candidate under locks before action."""
+        _require_transaction(conn)
+        if type(limit) is not int or not 1<=limit<=100:
+            raise ValueError('resource scan limit must be 1..100')
+        after=UUID(str(after)) if after is not None else UUID(int=0)
+        rows=conn.execute('''SELECT resource_id FROM extension_runtime_resource_lease
+            WHERE org_id=%s AND project_id=%s AND engine_context=%s AND NOT observed_release
+            AND expires_at<=clock_timestamp() AND resource_id>%s ORDER BY resource_id LIMIT %s''',
+            (org_id,project_id,engine_context,after,limit)).fetchall()
+        return [_values(row,('resource_id',))[0] for row in rows]
+
+    def begin_recovery(self,conn,*,org_id,project_id,resource_id,engine_context):
+        """Trusted recovery worker; caller must commit before touching OCI."""
+        _require_transaction(conn)
+        target=(org_id,project_id,UUID(str(resource_id)))
+        head=conn.execute('''SELECT o.installation_id,r.operation_id,r.generation
+            FROM extension_runtime_resource_lease r JOIN extension_runtime_operation o
+            USING(org_id,project_id,operation_id)
+            WHERE r.org_id=%s AND r.project_id=%s AND r.resource_id=%s''',target).fetchone()
+        if head is None:raise LookupError('recovery resource not found')
+        installation,operation,generation=_values(head,('installation_id','operation_id','generation'))
+        conn.execute('''SELECT installation_id FROM bundle_installation WHERE org_id=%s AND project_id=%s
+            AND installation_id=%s FOR UPDATE''',(org_id,project_id,installation)).fetchone()
+        conn.execute('''SELECT operation_id FROM extension_runtime_operation WHERE org_id=%s AND project_id=%s
+            AND operation_id=%s FOR UPDATE''',(org_id,project_id,operation)).fetchone()
+        conn.execute('''SELECT generation FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s
+            AND installation_id=%s AND generation=%s FOR UPDATE''',(org_id,project_id,installation,generation)).fetchone()
+        row=conn.execute('''SELECT owner_token_ref,resource_name,engine_context,container_id,create_claimed_at,
+            observed_release,expires_at FROM extension_runtime_resource_lease
+            WHERE org_id=%s AND project_id=%s AND resource_id=%s FOR UPDATE''',target).fetchone()
+        owner,name,context,container,claimed,released,expiry=_values(row,('owner_token_ref','resource_name',
+            'engine_context','container_id','create_claimed_at','observed_release','expires_at'))
+        intent=ResourceIntent(target[2],ResourceIdentity(owner),context,True)
+        if context!=engine_context or name!=intent.identity.name:
+            raise RuntimeConflict('recovery resource identity mismatch')
+        if released:return intent,None,'released'
+        if _deadline_valid(conn,expiry):raise RuntimeConflict('resource lease is still live')
+        if claimed is None:
+            self.cancel_unclaimed(conn,org_id=org_id,project_id=project_id,intent=intent)
+            return intent,None,'released'
+        # This also fences precisely this generation and records needs_attention.
+        self.record_cleanup(conn,org_id=org_id,project_id=project_id,intent=intent,removed=False)
+        return intent,container,'uncertain'
+
     def record_registered(self,conn,*,org_id,project_id,resource_id,declared):
         """Trusted signed supervisor only; persists comparison, not readiness."""
         from .contracts import RegistrationDescription

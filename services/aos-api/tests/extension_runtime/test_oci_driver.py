@@ -22,6 +22,17 @@ def test_untrusted_context_rejected():
         OciDriver(context="unix:///arbitrary.sock")
 
 
+@pytest.mark.parametrize('message',['Error: No such object: aos-ext-test','error: no such object: aos-ext-test','connection refused'])
+def test_missing_resource_is_not_positive_deletion(monkeypatch,message):
+    import subprocess
+    driver=OciDriver(context='colima-aos-extension')
+    def run(*args):raise subprocess.CalledProcessError(1,['docker'],stderr=message)
+    monkeypatch.setattr(driver,'_run',run)
+    if 'no such' in message.lower():assert driver.remove_owned('aos-ext-test','owner') is False
+    else:
+        with pytest.raises(subprocess.CalledProcessError):driver.remove_owned('aos-ext-test','owner')
+
+
 def test_cleanup_uses_observed_container_id_not_reusable_name(monkeypatch):
     driver=OciDriver(context="colima-aos-extension")
     calls=[]
@@ -31,6 +42,23 @@ def test_cleanup_uses_observed_container_id_not_reusable_name(monkeypatch):
     monkeypatch.setattr(driver,"_run",run)
     assert driver.remove_owned("aos-ext-test","owner")
     assert calls[-1]==("rm","--force","--volumes","a"*64)
+
+
+@pytest.mark.parametrize('expected',['a'*64,'b'*64,'bad'])
+def test_recovery_cleanup_compares_persisted_container_id(monkeypatch,expected):
+    driver=OciDriver(context='colima-aos-extension')
+    calls=[]
+    def run(*args):
+        calls.append(args)
+        return 'a'*64+' owner' if args[0]=='inspect' else ''
+    monkeypatch.setattr(driver,'_run',run)
+    if expected=='a'*64:
+        assert driver.remove_owned('aos-ext-test','owner',expected_container_id=expected)
+        assert calls[-1]==('rm','--force','--volumes',expected)
+    else:
+        with pytest.raises((ValueError,RuntimeError)):
+            driver.remove_owned('aos-ext-test','owner',expected_container_id=expected)
+        assert not any(call[0]=='rm' for call in calls)
 
 
 def test_image_declared_volume_rejected(monkeypatch):
