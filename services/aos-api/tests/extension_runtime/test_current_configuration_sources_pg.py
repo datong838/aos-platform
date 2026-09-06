@@ -23,8 +23,7 @@ def _migration(conn, filename, name):
     module.upgrade()
 
 
-@pytest.fixture
-def source_case(database):
+def install_current_configuration_sources(conn, schema):
     from aos_api.aip_agent_registry_contracts import VersionedAssetRef
     from aos_api.aip_budget_contracts import BudgetRevisionCreate
     from aos_api.aip_budget_store import materialize_revision as materialize_budget_revision
@@ -44,7 +43,6 @@ def source_case(database):
     from aos_api.extension_runtime.configuration_contracts import ConfigurationDocument, ConfigurationSourceRef
     from aos_api.tenant_scope import TenantScope
 
-    conn, _, schema = database
     conn.execute("""CREATE FUNCTION guard_aip4_append_only() RETURNS trigger AS $$
         BEGIN RAISE EXCEPTION 'AIP4_APPEND_ONLY' USING ERRCODE='55000'; END; $$ LANGUAGE plpgsql""")
     conn.execute("CREATE TABLE twa_workspace(org_id text,project_id text,PRIMARY KEY(org_id,project_id))")
@@ -66,18 +64,34 @@ def source_case(database):
     from aos_api.aip_production_contracts import CreateResponsibilityPlanRequest
     from aos_api.aip_production_contract_store import canonical_hash as production_hash
     responsibility = CreateResponsibilityPlanRequest.model_validate({
-        "profile": "qyh-extension-runtime",
+        "profile": "STANDARD",
         "templateRef": {"resourceType": "ResponsibilityTemplateRevision", "resourceId": "qyh-six-colleagues",
             "revision": 1, "contentHash": "1" * 64},
-        "slots": [{"slotId": "investigation-owner", "responsibilityType": "business_investigation",
+        "slots": [{"slotId": "investigation-research", "responsibilityType": "business_investigation",
             "requiredCapabilityIds": ["business.query"],
             "inputSchemaRef": {"resourceType": "BusinessQuestion", "resourceId": "qyh-question-v1",
                 "revision": "1", "authority": "solution.ecommerce.growth"},
             "outputSchemaRef": {"resourceType": "BusinessFinding", "resourceId": "qyh-finding-v1",
                 "revision": "1", "authority": "solution.ecommerce.growth"},
             "gateRefs": [], "returnStage": "business-review",
-            "assignee": {"kind": "human_principal", "resourceId": "qyh-business-owner", "version": 1}}],
-        "mergeDecisions": [], "mergeDecisionReceiptIds": [],
+            "assignee": {"kind": "human_principal", "resourceId": "qyh-business-owner", "version": 1}},
+            {"slotId": "investigation-owner", "responsibilityType": "business_review",
+             "requiredCapabilityIds": ["business.review"],
+             "inputSchemaRef": {"resourceType": "BusinessFinding", "resourceId": "qyh-finding-v1",
+                 "revision": "1", "authority": "solution.ecommerce.growth"},
+             "outputSchemaRef": {"resourceType": "BusinessDecision", "resourceId": "qyh-decision-v1",
+                 "revision": "1", "authority": "solution.ecommerce.growth"},
+             "gateRefs": [], "returnStage": "business-review",
+             "assignee": {"kind": "human_principal", "resourceId": "qyh-business-owner", "version": 1}}],
+        "profileRecommendationRef": {"resourceType": "ProfileRecommendationRevision",
+            "resourceId": "qyh-profile-recommendation", "revision": 1, "contentHash": "2" * 64},
+        "profileConfirmationId": "qyh-profile-confirmation",
+        "mergePolicyRef": {"resourceType": "MergePolicyRevision", "resourceId": "qyh-merge-policy",
+            "revision": 1, "contentHash": "3" * 64},
+        "mergeDecisions": [{"sourceSlotIds": ["investigation-research"],
+            "targetSlotId": "investigation-owner", "reason": "经营研究结论由经营负责人统一复核",
+            "mergedResponsibilityTypes": ["business_investigation", "business_review"]}],
+        "mergeDecisionReceiptIds": ["qyh-merge-decision-receipt"],
     })
     responsibility_hash = production_hash(responsibility.model_dump(mode="json", by_alias=True))
     conn.execute("INSERT INTO aip_responsibility_plan_head VALUES(%s,%s,'qyh-runtime-roles',1,1,NOW())", scope.key)
@@ -85,10 +99,14 @@ def source_case(database):
         (org_id,project_id,plan_id,revision,profile,template_ref,slots,merge_decisions,
          profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,merge_decision_receipt_ids,
          content_hash,lifecycle,created_by,created_at)
-        VALUES(%s,%s,'qyh-runtime-roles',1,%s,%s,%s,%s,NULL,NULL,NULL,%s,%s,'frozen','隔离测试',%s)""",
+        VALUES(%s,%s,'qyh-runtime-roles',1,%s,%s,%s,%s,%s,%s,%s,%s,%s,'frozen','隔离测试',%s)""",
         (*scope.key, responsibility.profile, Jsonb(responsibility.template_ref.model_dump(mode="json", by_alias=True)),
          Jsonb([item.model_dump(mode="json", by_alias=True) for item in responsibility.slots]),
-         Jsonb([]), Jsonb([]), responsibility_hash, now))
+         Jsonb([item.model_dump(mode="json", by_alias=True) for item in responsibility.merge_decisions]),
+         Jsonb(responsibility.profile_recommendation_ref.model_dump(mode="json", by_alias=True)),
+         responsibility.profile_confirmation_id,
+         Jsonb(responsibility.merge_policy_ref.model_dump(mode="json", by_alias=True)),
+         Jsonb(responsibility.merge_decision_receipt_ids), responsibility_hash, now))
     egress = materialize_guard(scope, "隔离测试", EgressPolicyRevisionCreate(
         policyId="qyh-egress", revision=1, environment="development",
         allowedSchemes=["https"], allowedHosts=["apihub.agnes-ai.com"], allowedPorts=[443],
@@ -210,6 +228,12 @@ def source_case(database):
                      aip_responsibility_plan_head,aip_responsibility_plan_revision TO aos_runtime""")
     conn.execute("SET ROLE aos_runtime")
     return conn,refs
+
+
+@pytest.fixture
+def source_case(database):
+    conn, _, schema = database
+    return install_current_configuration_sources(conn, schema)
 
 
 def test_current_responsibility_plan_ref_uses_original_frozen_authority(source_case):

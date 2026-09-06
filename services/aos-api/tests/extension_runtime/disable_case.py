@@ -23,7 +23,8 @@ def exercise_disable(worker, reader, scope, action, verified, generation):
         idempotency_key='stalled-configure',if_match=f'"{verified.etag_version}"',
         target={**request['target'],'configRef':config})
     # Broken/expired dependencies cannot veto an authorized conservative fence.
-    with worker.connect() as c:c.execute('DELETE FROM test_signed_config_refs')
+    with worker.connect() as c:
+        c.execute('UPDATE aip_budget_head SET current_revision=2')
     accepted=service.request(**request)
     assert accepted.status_code==202 and service.request(**request).replayed
     assert accepted.response_json['phase']=='fencing'
