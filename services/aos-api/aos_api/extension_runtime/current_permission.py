@@ -1,6 +1,7 @@
 """Current local-PG control authorization; never grants or bootstraps members."""
 from aos_api.asset_registry.control_policy import (
     APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION,
+    CONFIGURE_RUNTIME_OPERATION, ENABLE_RUNTIME_OPERATION,
     require_control_role, require_target_markings,
 )
 from aos_api.asset_registry.installation_service import _load_current_lock
@@ -10,7 +11,8 @@ from .lifecycle_store import _require_transaction, _values, RuntimeConflict
 
 class CurrentControlPermission:
     def __init__(self, *, operation):
-        if operation not in {APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION}:
+        if operation not in {APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION,
+                             CONFIGURE_RUNTIME_OPERATION, ENABLE_RUNTIME_OPERATION}:
             raise ValueError('unsupported current control permission')
         self.operation=operation
 
@@ -29,7 +31,9 @@ class CurrentControlPermission:
             WHERE org_id=%s AND project_id=%s AND subject=%s FOR SHARE''',(*scope,actor)).fetchall()
         if len(rows)!=1:
             raise RuntimeConflict('current persisted membership unavailable')
-        require_control_role(roles=[_values(rows[0],('role',))[0]],operation=self.operation)
+        permission_operation=(APPLY_INSTALLATION_OPERATION if self.operation in {
+            CONFIGURE_RUNTIME_OPERATION,ENABLE_RUNTIME_OPERATION} else self.operation)
+        require_control_role(roles=[_values(rows[0],('role',))[0]],operation=permission_operation)
         lock=_load_current_lock(conn,locked=locked,org_id=scope[0],project_id=scope[1])
         target=lock.payload.permission_diff.target.markings
         granted=[]

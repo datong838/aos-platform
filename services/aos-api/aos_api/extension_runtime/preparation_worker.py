@@ -12,16 +12,18 @@ from .preparation_plan import claim_preparation
 from .reconciler import ResourceJournal
 from .signed_session import open_signed_session
 from .verification_commit import commit_verified
+from .enable_commit import commit_enabled
 from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 
 
 class PreparedJob:
-    def __init__(self, plan, owner, finalize, verify=None):
+    def __init__(self, plan, owner, finalize, verify=None, enable=None):
         self.plan=plan
         self._owner=owner
         self._stopping=False
         self._finalize=finalize
         self._verify=verify
+        self._enable=enable
         self._closed=asyncio.create_task(self._watch())
         self._closed.add_done_callback(_observe)
 
@@ -78,6 +80,16 @@ class PreparedJob:
             return result
         return await self._owner.verify(commit)
 
+    async def enable(self, *, operation_id, expected_revision):
+        if self._enable is None:
+            raise RuntimeError('current enable configuration and permission readers required')
+        async def commit(observed):
+            result,cancelled=await _settle(asyncio.create_task(asyncio.to_thread(
+                self._enable,operation_id,expected_revision,observed)))
+            if cancelled:raise asyncio.CancelledError
+            return result
+        return await self._owner.control(commit)
+
     async def stop(self):
         self._stopping=True
         try:
@@ -90,7 +102,8 @@ class PreparedJob:
 class PreparationWorker:
     def __init__(self, *, connect, driver, installation_store, revalidator,
                  check_current_permission, load_record, read_artifact, policy, platform,
-                 check_current_conditions=None, check_verification_permission=None):
+                 check_current_conditions=None, check_verification_permission=None,
+                 configuration_authorize=None, check_enable_permission=None):
         self.connect=connect
         self.driver=driver
         self.store=installation_store
@@ -102,6 +115,8 @@ class PreparationWorker:
         self.platform=platform
         self.conditions=check_current_conditions
         self.verification_permission=check_verification_permission
+        self.configuration_authorize=configuration_authorize
+        self.enable_permission=check_enable_permission
 
     @contextmanager
     def _connection(self, scope):
@@ -128,6 +143,14 @@ class PreparationWorker:
                 return claim_preparation(conn,installation_store=self.store,revalidator=self.revalidator,
                     check_current_permission=self.permission,**scope,operation_id=operation_id,
                     expected_revision=expected_revision,engine_context=self.driver.context)
+
+    def _enable(self,scope,plan,operation_id,expected_revision,observed):
+        with self._connection(scope) as conn:
+            return commit_enabled(conn,installation_store=self.store,revalidator=self.revalidator,
+                check_current_permission=self.enable_permission,check_current_conditions=self.conditions,
+                authorize=self.configuration_authorize,**scope,operation_id=operation_id,
+                expected_revision=expected_revision,preparation_operation_id=plan.operation_id,
+                generation=plan.generation,health_checked_at=observed)
 
     def _commit(self,scope,plan):
         with self._connection(scope) as conn:
@@ -190,7 +213,8 @@ class PreparationWorker:
                 return result
             owner=PreparationOwner([factory(member) for member in plan.members],commit,lease_seconds=remaining)
             verify=(lambda operation_id,revision,observed:self._verify(scope,plan,operation_id,revision,observed)) if callable(self.conditions) and callable(self.verification_permission) else None
-            return PreparedJob(plan,owner,lambda code:self._finalize(scope,plan,code),verify)
+            enable=(lambda operation_id,revision,observed:self._enable(scope,plan,operation_id,revision,observed)) if callable(self.conditions) and callable(self.configuration_authorize) and callable(self.enable_permission) else None
+            return PreparedJob(plan,owner,lambda code:self._finalize(scope,plan,code),verify,enable)
         except BaseException:
             await _settle(asyncio.create_task(asyncio.to_thread(self._finalize,scope,plan,'PREPARATION_STOPPED')))
             raise

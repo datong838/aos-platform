@@ -136,14 +136,14 @@ class RuntimeOperationStore:
         if not isinstance(idempotency_key,str) or not 1 <= len(idempotency_key) <= 240:
             raise ValueError("invalid idempotency key")
         snapshot = None
-        if kind == 'configure':
+        if kind == 'configure' or (kind == 'enable' and configuration_target is not None):
             from .configuration_contracts import ConfigureTarget
             snapshot = ConfigureTarget.model_validate(configuration_target).model_dump(mode='json')
             scope = conn.execute("SELECT current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id").fetchone()
             if not org_id or not project_id or _values(scope,('org_id','project_id')) != (org_id,project_id):
                 raise PermissionError('configuration tenant scope mismatch')
         elif configuration_target is not None:
-            raise ValueError('configuration target only belongs to configure')
+            raise ValueError('configuration target only belongs to configure or enable')
         installation_id=UUID(str(installation_id))
         target=(org_id,project_id,installation_id)
         # Serialize by the existing installation head. Replay precedes CAS validation.

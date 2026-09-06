@@ -36,7 +36,7 @@ from aos_api.extension_runtime.oci_driver import OciDriver
 SCHEMA_PROBE_SQL='CREATE TABLE runtime_schema_probe (id bigint)'
 
 
-def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,planned=False,worker_mode=None,schema_setup=None):
+def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,planned=False,worker_mode=None,schema_setup=None,lifecycle_probe=None):
     from test_admission import fixture
     from test_persistent_supervisor import build_session_image,CONTEXT
     from offline_registry import cached_registry_image
@@ -131,11 +131,18 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                 conditions=CurrentSchemaConditions(load_record=load_record,
                     read_artifact=lambda member,path,limit:args['read_artifact'](path,limit),policy=policy)
             else:conditions=None
+            configuration_authority={}
+            def authorize_configuration(*a,**k):
+                return configuration_authority['authorize'](*a,**k)
+            from aos_api.extension_runtime.current_permission import CurrentControlPermission
+            from aos_api.asset_registry.control_policy import ENABLE_RUNTIME_OPERATION
             worker=PreparationWorker(connect=connect,driver=OciDriver(context=CONTEXT),
                 installation_store=store,revalidator=fresh,check_current_permission=permission,
                 load_record=load_record,read_artifact=args['read_artifact'],policy=policy,platform=args['platform'],
                 check_current_conditions=conditions,
-                check_verification_permission=lambda **kwargs:permission(verification=True,**kwargs))
+                check_verification_permission=lambda **kwargs:permission(verification=True,**kwargs),
+                configuration_authorize=authorize_configuration if lifecycle_probe else None,
+                check_enable_permission=CurrentControlPermission(operation=ENABLE_RUNTIME_OPERATION) if lifecycle_probe else None)
             async def run_worker():
                 job=await worker.start(**scope,operation_id=operation,expected_revision=accepted.response_json['revision'])
                 if worker_mode not in {'normal','verify'}:
@@ -162,6 +169,19 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                         # Actual current catalog must not turn active into legacy capability.
                         assert await asyncio.to_thread(PostgresWorkshopCatalogSource(connect).read_active_bundles,
                             **scope,markings=[])==()
+                        if lifecycle_probe is not None:
+                            try:
+                                enable=await asyncio.to_thread(lifecycle_probe,connect,store,legacy,fresh,scope,action,verified,job.plan.generation)
+                                configuration_authority['authorize']=enable['authorize']
+                                from enable_commit_case import exercise_enable_rejections
+                                await asyncio.to_thread(exercise_enable_rejections,worker,scope,job.plan,enable)
+                                result=await job.enable(operation_id=enable['operation_id'],expected_revision=enable['expected_revision'])
+                                assert result.phase=='succeeded'
+                                with connect() as conn:
+                                    assert conn.execute('SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()=={
+                                        'enabled':True,'operation_fence':False,'observed_state':'ready'}
+                            finally:
+                                await job.stop()
                     await job.stop()
                 return job.plan
             plan=asyncio.run(run_worker())

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection
+from collections.abc import Collection, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -42,6 +42,16 @@ class IdempotentCommandStore(Protocol):
         subject: str,
         request_hash: str,
         handler: IdempotentCommandHandler,
+    ) -> CommandReceipt: ...
+
+
+class CurrentCheckedCommandStore(IdempotentCommandStore, Protocol):
+    """Optional richer store contract; legacy implementations stay unchanged."""
+    def execute_idempotent(
+        self, *, org_id: str, project_id: str, operation: str,
+        idempotency_key: str, subject: str, request_hash: str,
+        handler: IdempotentCommandHandler,
+        current_check: Callable[[Any], bool] | None = None,
     ) -> CommandReceipt: ...
 
 

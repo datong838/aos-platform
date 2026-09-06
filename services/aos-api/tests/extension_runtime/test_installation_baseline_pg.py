@@ -19,7 +19,7 @@ import pytest
 pytestmark=pytest.mark.skipif(os.getenv("AOS_EXTENSION_PG_TEST")!="1",reason="dedicated DB opt-in")
 
 
-@pytest.mark.parametrize('commit_case', ['valid', 'rollback', 'wrong_type', 'invalid', 'missing', 'released', 'unregistered', 'expired', 'denied', 'revoked', 'wrong_hash', 'other_generation', 'claims_changed', 'etag_changed', 'late_policy', 'unsupported_runtime', 'extra_resource', 'operation_cas', 'non_boolean_permission', 'late_resource', 'signed', 'signed_revoked', 'signed_owned', 'signed_planned', 'signed_worker', 'signed_worker_artifact_error', 'signed_worker_permission_error', 'signed_worker_verify', *['verify_'+case for case in ('valid','rollback','stale_health','future_health','permission','conditions','cas','generation','released','wrong_preparation','late_conditions','locked_unrelated')]])
+@pytest.mark.parametrize('commit_case', ['receipt_current', 'valid', 'rollback', 'wrong_type', 'invalid', 'missing', 'released', 'unregistered', 'expired', 'denied', 'revoked', 'wrong_hash', 'other_generation', 'claims_changed', 'etag_changed', 'late_policy', 'unsupported_runtime', 'extra_resource', 'operation_cas', 'non_boolean_permission', 'late_resource', 'signed', 'signed_revoked', 'signed_owned', 'signed_planned', 'signed_worker', 'signed_worker_artifact_error', 'signed_worker_permission_error', 'signed_worker_verify', 'signed_worker_configuration', *['verify_'+case for case in ('valid','rollback','stale_health','future_health','permission','conditions','cas','generation','released','wrong_preparation','late_conditions','locked_unrelated')]])
 def test_existing_installation_schema_accepts_subordinate_operation(commit_case,tmp_path):
     if commit_case.startswith('signed') and os.getenv('AOS_EXTENSION_OCI_TEST')!='1':
         pytest.skip('dedicated OCI opt-in required')
@@ -62,8 +62,34 @@ def test_existing_installation_schema_accepts_subordinate_operation(commit_case,
                 admin.execute(sql.SQL("CREATE POLICY {} ON {} TO aos_runtime USING (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true)) WITH CHECK (org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))").format(sql.Identifier("tenant_scope_"+table+"_ti6"),qualified))
                 admin.execute(sql.SQL("ALTER TABLE {} ENABLE ROW LEVEL SECURITY").format(qualified))
                 admin.execute(sql.SQL("ALTER TABLE {} FORCE ROW LEVEL SECURITY").format(qualified))
+            if commit_case=='receipt_current':
+                from aos_api.asset_registry.installation_store import CommandResult
+                admin.execute(sql.SQL('CREATE TABLE {} (org_id text,project_id text,actor text)').format(sql.Identifier(schema,'test_command_members')))
+                admin.execute(sql.SQL("INSERT INTO {} VALUES('org-org','dev-project','test-actor')").format(sql.Identifier(schema,'test_command_members')))
+                admin.execute(sql.SQL('GRANT SELECT ON {} TO aos_runtime').format(sql.Identifier(schema,'test_command_members')))
+                called=[]
+                def check(c):
+                    return c.execute("SELECT actor FROM test_command_members WHERE org_id=current_setting('aos.org_id') AND project_id=current_setting('aos.project_id') AND actor='test-actor' FOR SHARE").fetchone() is not None
+                # PostgreSQL requires UPDATE privilege for row-locking SELECT;
+                # this is a named isolated permission fixture, not a real grant.
+                admin.execute(sql.SQL('GRANT UPDATE ON {} TO aos_runtime').format(sql.Identifier(schema,'test_command_members')))
+                def handler(c):
+                    called.append(True)
+                    return CommandResult(202,{'accepted':True},'"1"')
+                store=PostgresInstallationStore(scoped_connect)
+                kwargs=dict(org_id='org-org',project_id='dev-project',operation='runtime_installations.configure',
+                    idempotency_key='current-receipt',subject='test-actor',request_hash='sha256:'+'a'*64,
+                    handler=handler,current_check=check)
+                assert not store.execute_idempotent(**kwargs).replayed
+                assert store.execute_idempotent(**kwargs).replayed
+                admin.execute(sql.SQL('DELETE FROM {}').format(sql.Identifier(schema,'test_command_members')))
+                with pytest.raises(PermissionError):store.execute_idempotent(**kwargs)
+                with pytest.raises(PermissionError):store.execute_idempotent(**{**kwargs,'org_id':'dev-org'})
+                assert called==[True]
+                assert admin.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(schema,'bundle_installation_command'))).fetchone()==(1,)
+                return
             if commit_case.startswith('signed'):
-                if commit_case=='signed_worker_verify':
+                if commit_case in {'signed_worker_verify','signed_worker_configuration'}:
                     for table,fields in (('meta_membership','subject text,role text'),
                                          ('authz_tuple','user_key text,relation text,object_key text')):
                         admin.execute(sql.SQL('CREATE TABLE {} (org_id text,project_id text,{})').format(
@@ -84,10 +110,15 @@ def test_existing_installation_schema_accepts_subordinate_operation(commit_case,
                         requirement=SchemaRequirement(package_id,'1','sha256:'+hashlib.sha256(SCHEMA_PROBE_SQL.encode()).hexdigest())
                         def migrate(c):c.execute(SCHEMA_PROBE_SQL)
                         assert apply_once(admin,requirement,migrate) is True
+                probe=None
+                if commit_case=='signed_worker_configuration':
+                    from configuration_service_case import exercise_configuration_service
+                    probe=exercise_configuration_service
                 run_signed_installation(scoped_connect,helper,tmp_path,revoke=commit_case=='signed_revoked',
                     schema_setup=schema_setup,
+                    lifecycle_probe=probe,
                     owned=commit_case in {'signed_owned','signed_planned'},planned=commit_case=='signed_planned',
-                    worker_mode=({'signed_worker_artifact_error':'artifact_error','signed_worker_permission_error':'permission_error','signed_worker_verify':'verify'}.get(commit_case,'normal')) if commit_case.startswith('signed_worker') else None)
+                    worker_mode=({'signed_worker_artifact_error':'artifact_error','signed_worker_permission_error':'permission_error','signed_worker_verify':'verify','signed_worker_configuration':'verify'}.get(commit_case,'normal')) if commit_case.startswith('signed_worker') else None)
                 return
             composition_store,_,_,_,lock=helper._persist_lock(scoped_connect)
             draft=PostgresInstallationStore(scoped_connect).create_draft(org_id="org-a",project_id="project-a",

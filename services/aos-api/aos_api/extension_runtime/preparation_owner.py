@@ -32,6 +32,7 @@ class PreparationOwner:
         self._cleaning = False
         self._sessions = []
         self._verification = None
+        self._control = None
         self._task = asyncio.create_task(self._run(factories, commit, lease_seconds))
         self._task.add_done_callback(_observe)
         self._stopping = False
@@ -64,6 +65,8 @@ class PreparationOwner:
                     self._cleaning = True
                     if self._verification is not None:
                         children.append(self._verification)
+                    if self._control is not None:
+                        children.append(self._control)
                     for child in children:
                         child.cancel()
                     results, _ = await _settle(asyncio.gather(*children, return_exceptions=True))
@@ -134,6 +137,42 @@ class PreparationOwner:
                 self._task.cancel()
         self._verification.add_done_callback(supervised)
         return await asyncio.shield(self._verification)
+
+    async def control(self, commit):
+        """Serialize trusted post-verification commits while retaining resources.
+
+        The callback must settle DB work before propagating cancellation, just
+        like verify. This is ownership, not authorization to enable a binding.
+        """
+        await self.prepared()
+        verification = self._verification
+        previous = self._control
+        if (self._stopping or self._cleaning or self._task.done()
+                or verification is None or not verification.done()
+                or verification.cancelled() or verification.exception() is not None
+                or (previous is not None and (not previous.done()
+                    or previous.cancelled() or previous.exception() is not None))):
+            raise RuntimeError('control requires exclusive verified live ownership')
+        if not callable(commit):
+            raise TypeError('trusted control callback required')
+
+        async def execute():
+            await self._check_health()
+            return await commit(datetime.now(timezone.utc))
+
+        # Admission and registration are indivisible on this event loop. Keep
+        # only the latest task; failed tasks can never be replaced.
+        task = asyncio.create_task(execute())
+        self._control = task
+
+        def supervised(done):
+            failed = done.cancelled() or done.exception() is not None
+            if failed and not self._cleaning and not self._task.done():
+                self._stopping = True
+                self._task.cancel()
+
+        task.add_done_callback(supervised)
+        return await asyncio.shield(task)
 
     async def prepared(self):
         return await asyncio.shield(self._ready)

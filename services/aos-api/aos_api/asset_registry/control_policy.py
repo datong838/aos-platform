@@ -21,6 +21,8 @@ APPROVE_INSTALLATION_OPERATION = "bundle_installations.approve"
 REJECT_INSTALLATION_OPERATION = "bundle_installations.reject"
 APPLY_INSTALLATION_OPERATION = "bundle_installations.apply"
 VERIFY_INSTALLATION_OPERATION = "bundle_installations.verify"
+CONFIGURE_RUNTIME_OPERATION = "runtime_installations.configure"
+ENABLE_RUNTIME_OPERATION = "runtime_installations.enable"
 ROLLBACK_INSTALLATION_OPERATION = "bundle_installations.rollback"
 UNINSTALL_INSTALLATION_OPERATION = "bundle_installations.uninstall"
 

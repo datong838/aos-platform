@@ -68,6 +68,25 @@ def test_configuration_history_replay_and_readback(configuration_case):
     assert conn.execute('SELECT config_ref,enabled,execution_epoch FROM extension_runtime_binding').fetchone() == (None,False,1)
 
 
+@pytest.mark.parametrize('mode',['closed','no_pointer','bad_pointer','unfenced','uninstalled','stopped','desired_enabled'])
+def test_configuration_repair_only_stages_while_closed(configuration_case,mode):
+    from psycopg.types.json import Jsonb
+    from aos_api.extension_runtime.configuration_store import append_configuration
+    conn,args=configuration_case
+    with conn.transaction():first=append_configuration(conn,**args)
+    pointer=None if mode=='no_pointer' else {} if mode=='bad_pointer' else first.model_dump(mode='json')
+    conn.execute('''UPDATE extension_runtime_binding SET observed_state=%s,config_ref=%s,
+        operation_fence=%s,desired_state=%s''',('stopped' if mode=='stopped' else 'unknown',Jsonb(pointer),
+        mode!='unfenced','uninstalled' if mode=='uninstalled' else 'enabled' if mode=='desired_enabled' else 'disabled'))
+    args={**args,'idempotency_key':'repair-configuration'}
+    if mode=='closed':
+        with conn.transaction():assert append_configuration(conn,**args,previous_ref=first).revision==2
+    else:
+        with pytest.raises(ValueError):
+            with conn.transaction():append_configuration(conn,**args,previous_ref=first)
+    assert conn.execute('SELECT enabled,observed_state FROM extension_runtime_binding').fetchone()==(False,'stopped' if mode=='stopped' else 'unknown')
+
+
 @pytest.mark.parametrize('failure',['actor','role','data','budget','policy','async','scope','tenant','etag','binding','rollback','invalid','duplicate'])
 def test_configuration_rejects_invalid_or_revoked_inputs(configuration_case,failure):
     from aos_api.extension_runtime.configuration_store import append_configuration

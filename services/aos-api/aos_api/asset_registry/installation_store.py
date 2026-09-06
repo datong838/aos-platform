@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+import inspect
+import asyncio
 import uuid
 from collections.abc import Callable, Collection
 from contextlib import AbstractContextManager
@@ -429,6 +431,7 @@ class PostgresInstallationStore:
         subject: str,
         request_hash: str,
         handler: CommandHandler,
+        current_check: Callable[[Any], bool] | None = None,
     ) -> CommandReceipt:
         org_id = _normalized_text(org_id, "org_id")
         project_id = _normalized_text(project_id, "project_id")
@@ -447,6 +450,16 @@ class PostgresInstallationStore:
                     "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
                     (lock_identity,),
                 )
+                if current_check is not None:
+                    if not callable(current_check):
+                        raise ValueError('trusted current command check required')
+                    verdict = current_check(conn)
+                    if inspect.isawaitable(verdict) or inspect.isgenerator(verdict) or inspect.isasyncgen(verdict):
+                        if isinstance(verdict, asyncio.Future):verdict.cancel()
+                        if inspect.iscoroutine(verdict) or inspect.isgenerator(verdict):verdict.close()
+                        raise ValueError('current command check must finish synchronously')
+                    if verdict is not True:
+                        raise PermissionError('current command access denied')
                 row = conn.execute(
                     """
                     SELECT subject, request_hash, status_code,

@@ -11,7 +11,8 @@ pytestmark=pytest.mark.skipif(os.getenv('AOS_EXTENSION_PG_TEST')!='1',reason='is
 
 
 @pytest.mark.parametrize('case', ['allowed','revoked','viewer','owner','no_marking','wrong_tenant','no_scope','remote','revoke_locked'])
-def test_current_permission_reads_persisted_exact_tenant(database,monkeypatch,case):
+@pytest.mark.parametrize('operation',['bundle_installations.verify','runtime_installations.configure','runtime_installations.enable'])
+def test_current_permission_reads_persisted_exact_tenant(database,monkeypatch,case,operation):
     from aos_api.extension_runtime.current_permission import CurrentControlPermission
     from aos_api.asset_registry.control_policy import VERIFY_INSTALLATION_OPERATION
     from aos_api.asset_registry.errors import AssetRegistryError
@@ -33,7 +34,7 @@ def test_current_permission_reads_persisted_exact_tenant(database,monkeypatch,ca
         if case!='no_scope':
             conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id','dev-project',true)",
                          ('dev-org' if case=='wrong_tenant' else 'org-org',))
-        reader=CurrentControlPermission(operation=VERIFY_INSTALLATION_OPERATION)
+        reader=CurrentControlPermission(operation=operation)
         if case in {'allowed','revoke_locked'}:
             assert reader(conn=conn,locked=locked,actor='tester') is True
             if case=='revoke_locked':

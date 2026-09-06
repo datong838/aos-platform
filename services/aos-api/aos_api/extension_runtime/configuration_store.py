@@ -57,7 +57,7 @@ def append_configuration(conn, *, org_id, project_id, installation_id, generatio
     head=conn.execute('''SELECT etag_version FROM bundle_installation
         WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',target[:3]).fetchone()
     if head is None: raise LookupError('configuration installation not found')
-    binding=conn.execute('''SELECT revision,desired_state,observed_state FROM extension_runtime_binding
+    binding=conn.execute('''SELECT revision,desired_state,observed_state,enabled,operation_fence,config_ref FROM extension_runtime_binding
         WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s FOR UPDATE''',target).fetchone()
     if binding is None: raise LookupError('configuration binding not found')
     _authorize(conn,target,actor,configuration,authorize)
@@ -71,11 +71,16 @@ def append_configuration(conn, *, org_id, project_id, installation_id, generatio
         values=_values(existing,(*_COLUMNS.split(','),'request_hash'))
         if values[-1] != request_hash: raise RuntimeConflict('configuration idempotency key has another request')
         return _decode(target,values[:-1])[0]
-    revision, desired, observed = _values(binding,('revision','desired_state','observed_state'))
+    revision, desired, observed, enabled, fence, current_ref = _values(binding,
+        ('revision','desired_state','observed_state','enabled','operation_fence','config_ref'))
     if _values(head,('etag_version',))[0] != expected_installation_etag or revision != expected_binding_revision:
         raise RuntimeRevisionConflict('configuration target version changed')
-    if desired == 'uninstalled' or observed in {'unknown','stopped'}:
+    if desired == 'uninstalled' or observed == 'stopped':
         raise RuntimeConflict('configuration target is not installed')
+    if observed == 'unknown':
+        if desired!='disabled' or enabled is not False or fence is not True or current_ref is None:
+            raise RuntimeConflict('unknown configuration target is not safely fenced')
+        ConfigurationRef.model_validate(current_ref)
     if previous:
         latest=conn.execute(f'''SELECT {_COLUMNS} FROM extension_runtime_configuration
             WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s AND configuration_id=%s

@@ -6,6 +6,14 @@ from .lifecycle_store import _require_transaction, _values, _digest, _request_ha
 
 
 def load_configure_target(conn, *, org_id, project_id, operation_id):
+    return _load_target(conn,org_id=org_id,project_id=project_id,operation_id=operation_id,expected_kind='configure')
+
+
+def load_enable_target(conn, *, org_id, project_id, operation_id):
+    return _load_target(conn,org_id=org_id,project_id=project_id,operation_id=operation_id,expected_kind='enable')
+
+
+def _load_target(conn, *, org_id, project_id, operation_id, expected_kind):
     """Mutation callers must already own Installation then operation locks."""
     _require_transaction(conn)
     scope = conn.execute("SELECT current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id").fetchone()
@@ -18,7 +26,7 @@ def load_configure_target(conn, *, org_id, project_id, operation_id):
     if row is None: raise LookupError('configuration operation not found')
     kind, actor, etag, revision, deadline, request_hash = _values(row,
         ('kind','requested_by','expected_installation_etag','expected_binding_revision','deadline','request_hash'))
-    if kind != 'configure': raise RuntimeConflict('operation is not configure')
+    if kind != expected_kind: raise RuntimeConflict('operation does not match target reader')
     row = conn.execute('''SELECT payload,payload_hash FROM extension_runtime_event
         WHERE org_id=%s AND project_id=%s AND operation_id=%s AND sequence=1 AND type='accepted' ''',identity).fetchone()
     if row is None: raise RuntimeConflict('configuration accepted target unavailable')
