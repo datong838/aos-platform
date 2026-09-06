@@ -34,17 +34,16 @@ def configuration_case(database):
     document = dict(schemaVersion=1,roleRefs=(ref('role'),),dataRefs=(ref('data'),),budgetRef=ref('budget'),policyRef=ref('policy'))
     conn.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO aos_runtime').format(sql.Identifier(schema)))
     conn.execute('GRANT SELECT,UPDATE ON bundle_installation,test_configuration_actors,test_configuration_refs TO aos_runtime')
-    def authorize(db, *, org_id, project_id, installation_id, generation, actor, configuration):
-        if db.execute('SELECT actor FROM test_configuration_actors WHERE org_id=%s AND project_id=%s AND actor=%s FOR SHARE',
-                      (org_id,project_id,actor)).fetchone() is None: return False
-        for purpose, refs in [('role',configuration.roleRefs),('data',configuration.dataRefs),
-                              ('budget',(configuration.budgetRef,)),('policy',(configuration.policyRef,))]:
-            for item in refs:
-                if item.authority != 'test.configuration': return False
-                if db.execute('''SELECT ref_id FROM test_configuration_refs WHERE org_id=%s AND project_id=%s
-                    AND purpose=%s AND ref_id=%s AND revision=%s AND hash=%s FOR SHARE''',
-                    (org_id,project_id,purpose,item.id,item.revision,item.hash)).fetchone() is None: return False
-        return True
+    from aos_api.extension_runtime.configuration_authorization import ConfigurationAuthorization
+    def permission(db, *, org_id, project_id, actor, **_):
+        return db.execute('SELECT actor FROM test_configuration_actors WHERE org_id=%s AND project_id=%s AND actor=%s FOR SHARE',
+                          (org_id,project_id,actor)).fetchone() is not None
+    def reader(db, *, org_id, project_id, purpose, ref, **_):
+        return db.execute('''SELECT ref_id FROM test_configuration_refs WHERE org_id=%s AND project_id=%s
+            AND purpose=%s AND ref_id=%s AND revision=%s AND hash=%s FOR SHARE''',
+            (org_id,project_id,purpose,ref.id,ref.revision,ref.hash)).fetchone() is not None
+    authorize=ConfigurationAuthorization(permission=permission,readers={
+        (purpose,'test.configuration'):reader for purpose in ('role','data','budget','policy')})
     conn.execute('SET ROLE aos_runtime')
     write_args = dict(org_id=args['org_id'],project_id=args['project_id'],installation_id=args['installation_id'],
         generation=args['configuration_target']['generation'],expected_installation_etag=1,expected_binding_revision=1,
