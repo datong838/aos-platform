@@ -43,5 +43,6 @@ class ConfigurationAuthorization:
                     raise PermissionError('configuration source reader unavailable')
                 checks.append((purpose,ref,reader))
         for purpose,ref,reader in checks:
-            self._check(reader,conn,**context,purpose=purpose,ref=ref)
+            extra={'configuration':document} if purpose=='policy' else {}
+            self._check(reader,conn,**context,purpose=purpose,ref=ref,**extra)
         return True

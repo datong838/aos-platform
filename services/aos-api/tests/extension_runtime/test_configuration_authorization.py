@@ -96,6 +96,17 @@ def test_reference_order_and_exact_context():
     assert seen==['a','z']
 
 
+def test_only_policy_reader_receives_revalidated_configuration_document():
+    cls,readers,permission,calls,args=setup_case()
+    seen=[]
+    def policy(conn,**kwargs):
+        seen.append(kwargs['configuration'])
+        return True
+    readers[('policy','test.authority')]=policy
+    assert cls(permission=permission,readers=readers)(Connection(),**args) is True
+    assert seen == [args['configuration']]
+
+
 @pytest.mark.parametrize('key',[('unknown','test.authority'),('role','*'),('role',''), 'role'])
 def test_invalid_registration(key):
     cls,readers,permission,calls,args=setup_case()

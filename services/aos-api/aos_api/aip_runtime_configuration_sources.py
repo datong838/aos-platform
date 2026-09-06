@@ -6,18 +6,32 @@ copy policy contents into the extension-runtime domain.
 """
 from aos_api.aip_model_runtime_contracts import ModelRuntimeLifecycle, RuntimePolicyRevision
 from aos_api.aip_model_runtime_store import canonical_hash as runtime_policy_hash
+from aos_api.aip_network_policy_contracts import NetworkPolicyRevision
+from aos_api.aip_network_policy_store import canonical_hash as network_policy_hash
 from aos_api.aip_runtime_guard_policy_contracts import (
     DataClassificationPolicyRevision,
+    EgressPolicyRevision,
     GuardPolicyLifecycle,
 )
 from aos_api.aip_runtime_guard_policy_store import canonical_hash as guard_policy_hash
+from aos_api.aip_model_governance_policy_contracts import (
+    BudgetPolicyRevision,
+    ModelGovernancePolicyLifecycle,
+    QuotaPolicyRevision,
+)
+from aos_api.aip_model_governance_policy_store import canonical_hash as governance_policy_hash
+from aos_api.aip_runtime_configuration_authority import read_current_budget_ref
 
-from aos_api.extension_runtime.configuration_contracts import ConfigurationSourceRef
+from aos_api.extension_runtime.configuration_contracts import ConfigurationDocument, ConfigurationSourceRef
 from aos_api.extension_runtime.lifecycle_store import _require_transaction, _values
 
 
 DATA_AUTHORITY = "aip.data_classification_policy_revision"
 POLICY_AUTHORITY = "aip.runtime_policy_revision"
+NETWORK_AUTHORITY = "aip.network_policy_revision"
+EGRESS_AUTHORITY = "aip.egress_policy_revision"
+QUOTA_AUTHORITY = "aip.quota_policy_revision"
+BUDGET_POLICY_AUTHORITY = "aip.budget_policy_revision"
 
 
 def _current_scope(conn, org_id, project_id):
@@ -43,10 +57,24 @@ def _exact_ref(ref, *, purpose, expected_purpose, authority):
     return value
 
 
-def read_current_data_classification_ref(conn, *, org_id, project_id, purpose, ref, **_context):
-    """Validate an exact current, active and effective AIP data-policy ref."""
-    scope = _current_scope(conn, org_id, project_id)
-    value = _exact_ref(ref, purpose=purpose, expected_purpose="data", authority=DATA_AUTHORITY)
+def _asset_ref(value, authority):
+    return ConfigurationSourceRef(
+        authority=authority,
+        id=value.asset_id,
+        revision=value.revision,
+        hash=f"sha256:{value.content_hash}",
+    )
+
+
+def _canonical_payload(document, excluded):
+    return {
+        key: item
+        for key, item in document.model_dump(mode="json", by_alias=True).items()
+        if key not in excluded
+    }
+
+
+def _load_guard_policy(conn, scope, value, *, kind, model):
     row = conn.execute(
         """SELECT h.current_revision,r.content_hash,r.lifecycle,r.effective_from,
                   r.effective_until,r.payload
@@ -56,31 +84,25 @@ def read_current_data_classification_ref(conn, *, org_id, project_id, purpose, r
               AND r.policy_kind=h.policy_kind AND r.policy_id=h.policy_id
               AND r.revision=h.current_revision
             WHERE h.org_id=%s AND h.project_id=%s
-              AND h.policy_kind='data_classification' AND h.policy_id=%s
+              AND h.policy_kind=%s AND h.policy_id=%s
             FOR SHARE OF h""",
-        (*scope, value.id),
+        (*scope, kind, value.id),
     ).fetchone()
     if row is None:
-        raise LookupError("current data-classification policy unavailable")
+        raise LookupError(f"current {kind} policy unavailable")
     current_revision, content_hash, lifecycle, effective_from, effective_until, payload = _values(
         row,
         ("current_revision", "content_hash", "lifecycle", "effective_from", "effective_until", "payload"),
     )
     if current_revision != value.revision or value.hash != f"sha256:{content_hash}":
-        raise ValueError("data-classification policy reference is not current and exact")
+        raise ValueError(f"{kind} policy reference is not current and exact")
     if lifecycle != GuardPolicyLifecycle.ACTIVE.value:
-        raise PermissionError("data-classification policy is not active")
-    # Read DB time only after FOR SHARE has returned: target expressions in the
-    # locking SELECT may otherwise be evaluated before a lock wait.
+        raise PermissionError(f"{kind} policy is not active")
     checked_at = _values(conn.execute("SELECT clock_timestamp() AS checked_at").fetchone(), ("checked_at",))[0]
     if checked_at < effective_from or checked_at >= effective_until:
-        raise PermissionError("data-classification policy is not effective")
-    document = DataClassificationPolicyRevision.model_validate(payload)
-    canonical_payload = document.model_dump(mode="json", by_alias=True)
-    canonical_content = {
-        key: item for key, item in canonical_payload.items()
-        if key not in {"tenant", "contentHash", "createdBy", "createdAt"}
-    }
+        raise PermissionError(f"{kind} policy is not effective")
+    document = model.model_validate(payload)
+    canonical_content = _canonical_payload(document, {"tenant", "contentHash", "createdBy", "createdAt"})
     if (
         (document.tenant.org_id, document.tenant.project_id) != scope
         or document.policy_id != value.id
@@ -91,14 +113,109 @@ def read_current_data_classification_ref(conn, *, org_id, project_id, purpose, r
         or document.effective_until != effective_until
         or guard_policy_hash(canonical_content) != content_hash
     ):
-        raise ValueError("data-classification policy payload differs from authority columns")
+        raise ValueError(f"{kind} policy payload differs from authority columns")
+    return document
+
+
+def _load_data_classification(conn, scope, value):
+    return _load_guard_policy(
+        conn, scope, value, kind="data_classification", model=DataClassificationPolicyRevision
+    )
+
+
+def read_current_data_classification_ref(conn, *, org_id, project_id, purpose, ref, **_context):
+    """Validate an exact current, active and effective AIP data-policy ref."""
+    scope = _current_scope(conn, org_id, project_id)
+    value = _exact_ref(ref, purpose=purpose, expected_purpose="data", authority=DATA_AUTHORITY)
+    _load_data_classification(conn, scope, value)
     return True
 
 
-def read_current_runtime_policy_ref(conn, *, org_id, project_id, purpose, ref, **_context):
-    """Validate an exact current, active AIP runtime-policy ref with kill switch off."""
-    scope = _current_scope(conn, org_id, project_id)
-    value = _exact_ref(ref, purpose=purpose, expected_purpose="policy", authority=POLICY_AUTHORITY)
+def _load_network_policy(conn, scope, value):
+    row = conn.execute(
+        """SELECT h.current_revision,r.content_hash,r.lifecycle,r.effective_from,
+                  r.effective_until,r.payload
+             FROM aip_network_policy_head h
+             JOIN aip_network_policy_revision r
+               ON r.org_id=h.org_id AND r.project_id=h.project_id
+              AND r.policy_id=h.policy_id AND r.revision=h.current_revision
+            WHERE h.org_id=%s AND h.project_id=%s AND h.policy_id=%s
+            FOR SHARE OF h""",
+        (*scope, value.id),
+    ).fetchone()
+    if row is None:
+        raise LookupError("current network policy unavailable")
+    current_revision, content_hash, lifecycle, effective_from, effective_until, payload = _values(
+        row, ("current_revision", "content_hash", "lifecycle", "effective_from", "effective_until", "payload")
+    )
+    if current_revision != value.revision or value.hash != f"sha256:{content_hash}":
+        raise ValueError("network policy reference is not current and exact")
+    if lifecycle != GuardPolicyLifecycle.ACTIVE.value:
+        raise PermissionError("network policy is not active")
+    checked_at = _values(conn.execute("SELECT clock_timestamp() AS checked_at").fetchone(), ("checked_at",))[0]
+    if checked_at < effective_from or checked_at >= effective_until:
+        raise PermissionError("network policy is not effective")
+    document = NetworkPolicyRevision.model_validate(payload)
+    if (
+        (document.tenant.org_id, document.tenant.project_id) != scope
+        or document.policy_id != value.id
+        or document.revision != value.revision
+        or document.content_hash != content_hash
+        or document.lifecycle.value != lifecycle
+        or document.effective_from != effective_from
+        or document.effective_until != effective_until
+        or network_policy_hash(
+            _canonical_payload(document, {"tenant", "contentHash", "createdBy", "createdAt"})
+        ) != content_hash
+    ):
+        raise ValueError("network policy payload differs from authority columns")
+    return document
+
+
+def _load_governance_policy(conn, scope, value, *, kind, model):
+    row = conn.execute(
+        """SELECT h.current_revision,r.content_hash,r.lifecycle,r.effective_from,
+                  r.effective_until,r.payload
+             FROM aip_model_governance_policy_head h
+             JOIN aip_model_governance_policy_revision r
+               ON r.org_id=h.org_id AND r.project_id=h.project_id
+              AND r.policy_kind=h.policy_kind AND r.policy_id=h.policy_id
+              AND r.revision=h.current_revision
+            WHERE h.org_id=%s AND h.project_id=%s
+              AND h.policy_kind=%s AND h.policy_id=%s
+            FOR SHARE OF h""",
+        (*scope, kind, value.id),
+    ).fetchone()
+    if row is None:
+        raise LookupError(f"current {kind} policy unavailable")
+    current_revision, content_hash, lifecycle, effective_from, effective_until, payload = _values(
+        row, ("current_revision", "content_hash", "lifecycle", "effective_from", "effective_until", "payload")
+    )
+    if current_revision != value.revision or value.hash != f"sha256:{content_hash}":
+        raise ValueError(f"{kind} policy reference is not current and exact")
+    if lifecycle != ModelGovernancePolicyLifecycle.ACTIVE.value:
+        raise PermissionError(f"{kind} policy is not active")
+    checked_at = _values(conn.execute("SELECT clock_timestamp() AS checked_at").fetchone(), ("checked_at",))[0]
+    if checked_at < effective_from or checked_at >= effective_until:
+        raise PermissionError(f"{kind} policy is not effective")
+    document = model.model_validate(payload)
+    if (
+        (document.tenant.org_id, document.tenant.project_id) != scope
+        or document.policy_id != value.id
+        or document.revision != value.revision
+        or document.content_hash != content_hash
+        or document.lifecycle.value != lifecycle
+        or document.effective_from != effective_from
+        or document.effective_until != effective_until
+        or governance_policy_hash(
+            _canonical_payload(document, {"tenant", "contentHash", "createdBy", "createdAt"})
+        ) != content_hash
+    ):
+        raise ValueError(f"{kind} policy payload differs from authority columns")
+    return document
+
+
+def _load_runtime_policy(conn, scope, value):
     row = conn.execute(
         """SELECT h.current_revision,r.content_hash,r.lifecycle,r.payload
              FROM aip_runtime_policy_head h
@@ -120,11 +237,9 @@ def read_current_runtime_policy_ref(conn, *, org_id, project_id, purpose, ref, *
     if lifecycle != ModelRuntimeLifecycle.ACTIVE.value:
         raise PermissionError("runtime policy is not active")
     document = RuntimePolicyRevision.model_validate(payload)
-    canonical_payload = document.model_dump(mode="json", by_alias=True)
-    canonical_content = {
-        key: item for key, item in canonical_payload.items()
-        if key not in {"tenant", "revision", "contentHash", "createdBy", "createdAt"}
-    }
+    canonical_content = _canonical_payload(
+        document, {"tenant", "revision", "contentHash", "createdBy", "createdAt"}
+    )
     if (
         (document.tenant.org_id, document.tenant.project_id) != scope
         or document.policy_id != value.id
@@ -136,4 +251,53 @@ def read_current_runtime_policy_ref(conn, *, org_id, project_id, purpose, ref, *
         raise ValueError("runtime policy payload differs from authority columns")
     if document.kill_switch_enabled:
         raise PermissionError("runtime policy kill switch is enabled")
+    return document
+
+
+def read_current_runtime_policy_ref(
+    conn, *, org_id, project_id, purpose, ref, configuration=None, **_context
+):
+    """Validate a runtime policy, all current dependencies and configuration bindings."""
+    scope = _current_scope(conn, org_id, project_id)
+    value = _exact_ref(ref, purpose=purpose, expected_purpose="policy", authority=POLICY_AUTHORITY)
+    configuration = ConfigurationDocument.model_validate(configuration)
+    policy = _load_runtime_policy(conn, scope, value)
+    network_ref = _asset_ref(policy.network_policy_ref, NETWORK_AUTHORITY)
+    egress_ref = _asset_ref(policy.egress_policy_ref, EGRESS_AUTHORITY)
+    data_ref = _asset_ref(policy.data_classification_policy_ref, DATA_AUTHORITY)
+    quota_ref = _asset_ref(policy.quota_policy_ref, QUOTA_AUTHORITY)
+    budget_policy_ref = _asset_ref(policy.budget_policy_ref, BUDGET_POLICY_AUTHORITY)
+    network = _load_network_policy(conn, scope, network_ref)
+    egress = _load_guard_policy(conn, scope, egress_ref, kind="egress", model=EgressPolicyRevision)
+    data = _load_data_classification(conn, scope, data_ref)
+    quota = _load_governance_policy(conn, scope, quota_ref, kind="quota", model=QuotaPolicyRevision)
+    budget_policy = _load_governance_policy(
+        conn, scope, budget_policy_ref, kind="budget", model=BudgetPolicyRevision
+    )
+    if _asset_ref(network.egress_policy_ref, EGRESS_AUTHORITY) != egress_ref:
+        raise PermissionError("network policy egress binding differs from runtime policy")
+    bound_data = tuple(item for item in configuration.dataRefs if item.authority == DATA_AUTHORITY)
+    if bound_data != (data_ref,):
+        raise PermissionError("configuration data policy binding differs from runtime policy")
+    budget_ref = _asset_ref(budget_policy.budget_revision_ref, "aip.budget_revision")
+    if configuration.budgetRef != budget_ref:
+        raise PermissionError("configuration budget binding differs from runtime policy")
+    budget = read_current_budget_ref(
+        conn, org_id=org_id, project_id=project_id, ref=configuration.budgetRef
+    )
+    # A later head lock can outlive an earlier dependency's validity window.
+    # Re-sample database time only after every mutable head has been locked.
+    checked_at = _values(
+        conn.execute("SELECT clock_timestamp() AS checked_at").fetchone(), ("checked_at",)
+    )[0]
+    for name, item in (
+        ("network", network),
+        ("egress", egress),
+        ("data classification", data),
+        ("quota", quota),
+        ("budget policy", budget_policy),
+        ("budget", budget),
+    ):
+        if checked_at < item.effective_from or checked_at >= item.effective_until:
+            raise PermissionError(f"{name} policy expired during configuration authorization")
     return True
