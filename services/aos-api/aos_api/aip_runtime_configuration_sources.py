@@ -21,8 +21,11 @@ from aos_api.aip_model_governance_policy_contracts import (
 )
 from aos_api.aip_model_governance_policy_store import canonical_hash as governance_policy_hash
 from aos_api.aip_runtime_configuration_authority import read_current_budget_ref
+from aos_api.aip_production_contracts import BriefLifecycle, CreateResponsibilityPlanRequest
+from aos_api.aip_production_contract_store import canonical_hash as production_contract_hash
 
 from aos_api.extension_runtime.configuration_contracts import ConfigurationDocument, ConfigurationSourceRef
+from aos_api.extension_runtime.configuration_authorization import ConfigurationAuthorization
 from aos_api.extension_runtime.lifecycle_store import _require_transaction, _values
 
 
@@ -32,6 +35,7 @@ NETWORK_AUTHORITY = "aip.network_policy_revision"
 EGRESS_AUTHORITY = "aip.egress_policy_revision"
 QUOTA_AUTHORITY = "aip.quota_policy_revision"
 BUDGET_POLICY_AUTHORITY = "aip.budget_policy_revision"
+ROLE_AUTHORITY = "aip.responsibility_plan_revision"
 
 
 def _current_scope(conn, org_id, project_id):
@@ -129,6 +133,82 @@ def read_current_data_classification_ref(conn, *, org_id, project_id, purpose, r
     value = _exact_ref(ref, purpose=purpose, expected_purpose="data", authority=DATA_AUTHORITY)
     _load_data_classification(conn, scope, value)
     return True
+
+
+def read_current_responsibility_plan_ref(
+    conn, *, org_id, project_id, purpose, ref, **_context
+):
+    """Validate one exact current and frozen AIP responsibility plan."""
+    scope = _current_scope(conn, org_id, project_id)
+    value = _exact_ref(ref, purpose=purpose, expected_purpose="role", authority=ROLE_AUTHORITY)
+    row = conn.execute(
+        """SELECT h.current_revision,r.plan_id,r.revision,r.profile,r.template_ref,
+                  r.slots,r.merge_decisions,r.profile_recommendation_ref,
+                  r.profile_confirmation_id,r.merge_policy_ref,
+                  r.merge_decision_receipt_ids,r.content_hash,r.lifecycle
+             FROM aip_responsibility_plan_head h
+             JOIN aip_responsibility_plan_revision r
+               ON r.org_id=h.org_id AND r.project_id=h.project_id
+              AND r.plan_id=h.plan_id AND r.revision=h.current_revision
+            WHERE h.org_id=%s AND h.project_id=%s AND h.plan_id=%s
+            FOR SHARE OF h""",
+        (*scope, value.id),
+    ).fetchone()
+    if row is None:
+        raise LookupError("current responsibility plan unavailable")
+    fields = (
+        "current_revision", "plan_id", "revision", "profile", "template_ref", "slots",
+        "merge_decisions", "profile_recommendation_ref", "profile_confirmation_id",
+        "merge_policy_ref", "merge_decision_receipt_ids", "content_hash", "lifecycle",
+    )
+    (
+        current_revision, plan_id, revision, profile, template_ref, slots,
+        merge_decisions, recommendation_ref, confirmation_id, merge_policy_ref,
+        merge_receipt_ids, content_hash, lifecycle,
+    ) = _values(row, fields)
+    if (
+        current_revision != value.revision
+        or revision != value.revision
+        or plan_id != value.id
+        or value.hash != f"sha256:{content_hash}"
+    ):
+        raise ValueError("responsibility plan reference is not current and exact")
+    if lifecycle != BriefLifecycle.FROZEN.value:
+        raise PermissionError("responsibility plan is not frozen")
+    content = CreateResponsibilityPlanRequest.model_validate(
+        {
+            "profile": profile,
+            "templateRef": template_ref,
+            "slots": slots,
+            "mergeDecisions": merge_decisions,
+            "profileRecommendationRef": recommendation_ref,
+            "profileConfirmationId": confirmation_id,
+            "mergePolicyRef": merge_policy_ref,
+            "mergeDecisionReceiptIds": merge_receipt_ids,
+        }
+    )
+    if production_contract_hash(content.model_dump(mode="json", by_alias=True)) != content_hash:
+        raise ValueError("responsibility plan payload differs from authority columns")
+    return True
+
+
+def build_current_configuration_authorization(*, permission):
+    """Build the AIP-owned exact reader set for runtime configuration admission."""
+    def budget(conn, *, purpose, ref, org_id, project_id, **_context):
+        if purpose != "budget":
+            raise ValueError("configuration-source purpose differs")
+        read_current_budget_ref(conn, org_id=org_id, project_id=project_id, ref=ref)
+        return True
+
+    return ConfigurationAuthorization(
+        permission=permission,
+        readers={
+            ("role", ROLE_AUTHORITY): read_current_responsibility_plan_ref,
+            ("data", DATA_AUTHORITY): read_current_data_classification_ref,
+            ("budget", "aip.budget_revision"): budget,
+            ("policy", POLICY_AUTHORITY): read_current_runtime_policy_ref,
+        },
+    )
 
 
 def _load_network_policy(conn, scope, value):

@@ -107,6 +107,36 @@ def test_only_policy_reader_receives_revalidated_configuration_document():
     assert seen == [args['configuration']]
 
 
+def test_aip_factory_registers_only_the_four_formal_authorities(monkeypatch):
+    import aos_api.aip_runtime_configuration_sources as sources
+    seen=[]
+    def role(conn,**kwargs):seen.append((kwargs['purpose'],kwargs['ref'].authority));return True
+    def data(conn,**kwargs):seen.append((kwargs['purpose'],kwargs['ref'].authority));return True
+    def budget(conn,**kwargs):seen.append(('budget',kwargs['ref'].authority));return object()
+    def policy(conn,**kwargs):
+        assert kwargs['configuration'] == document
+        assert kwargs['configuration'] is not document
+        seen.append((kwargs['purpose'],kwargs['ref'].authority));return True
+    monkeypatch.setattr(sources,'read_current_responsibility_plan_ref',role)
+    monkeypatch.setattr(sources,'read_current_data_classification_ref',data)
+    monkeypatch.setattr(sources,'read_current_budget_ref',budget)
+    monkeypatch.setattr(sources,'read_current_runtime_policy_ref',policy)
+    authorities=(sources.ROLE_AUTHORITY,sources.DATA_AUTHORITY,'aip.budget_revision',sources.POLICY_AUTHORITY)
+    refs=[dict(authority=value,id=f'item-{index}',revision=1,hash='sha256:'+'a'*64)
+        for index,value in enumerate(authorities)]
+    document=ConfigurationDocument(roleRefs=(refs[0],),dataRefs=(refs[1],),budgetRef=refs[2],policyRef=refs[3])
+    checker=sources.build_current_configuration_authorization(permission=lambda *a,**k:True)
+    assert checker(Connection(),org_id='org-org',project_id='dev-project',installation_id=str(uuid4()),
+        generation=str(uuid4()),actor='tester',configuration=document) is True
+    assert seen == [('role',authorities[0]),('data',authorities[1]),('budget',authorities[2]),('policy',authorities[3])]
+
+    unknown=document.model_copy(update={'roleRefs':(
+        document.roleRefs[0].model_copy(update={'authority':'aip.unknown_role'}),)})
+    with pytest.raises(PermissionError):
+        checker(Connection(),org_id='org-org',project_id='dev-project',installation_id=str(uuid4()),
+            generation=str(uuid4()),actor='tester',configuration=unknown)
+
+
 @pytest.mark.parametrize('key',[('unknown','test.authority'),('role','*'),('role',''), 'role'])
 def test_invalid_registration(key):
     cls,readers,permission,calls,args=setup_case()

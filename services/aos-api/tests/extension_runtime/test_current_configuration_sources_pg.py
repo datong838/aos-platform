@@ -47,6 +47,14 @@ def source_case(database):
     conn, _, schema = database
     conn.execute("""CREATE FUNCTION guard_aip4_append_only() RETURNS trigger AS $$
         BEGIN RAISE EXCEPTION 'AIP4_APPEND_ONLY' USING ERRCODE='55000'; END; $$ LANGUAGE plpgsql""")
+    conn.execute("CREATE TABLE twa_workspace(org_id text,project_id text,PRIMARY KEY(org_id,project_id))")
+    conn.execute("INSERT INTO twa_workspace VALUES('org-org','dev-project')")
+    _migration(conn, "w2_002_eval_responsibility.py", "ar1c_w2_responsibility")
+    conn.execute("""ALTER TABLE aip_responsibility_plan_revision
+        ADD COLUMN profile_recommendation_ref jsonb,
+        ADD COLUMN profile_confirmation_id text,
+        ADD COLUMN merge_policy_ref jsonb,
+        ADD COLUMN merge_decision_receipt_ids jsonb NOT NULL DEFAULT '[]'::jsonb""")
     _migration(conn, "aip7_001_model_runtime_authority.py", "ar1c_aip7")
     _migration(conn, "aip10_001_budget_authority.py", "ar1c_aip10_budget")
     _migration(conn, "aip10_002_runtime_guard_policy_authority.py", "ar1c_aip10_guard")
@@ -55,6 +63,32 @@ def source_case(database):
     _migration(conn, "aip10_004_network_policy_eval_gate_expiry.py", "ar1c_aip10_network")
     now = datetime.now(timezone.utc)
     scope = TenantScope("org-org", "dev-project")
+    from aos_api.aip_production_contracts import CreateResponsibilityPlanRequest
+    from aos_api.aip_production_contract_store import canonical_hash as production_hash
+    responsibility = CreateResponsibilityPlanRequest.model_validate({
+        "profile": "qyh-extension-runtime",
+        "templateRef": {"resourceType": "ResponsibilityTemplateRevision", "resourceId": "qyh-six-colleagues",
+            "revision": 1, "contentHash": "1" * 64},
+        "slots": [{"slotId": "investigation-owner", "responsibilityType": "business_investigation",
+            "requiredCapabilityIds": ["business.query"],
+            "inputSchemaRef": {"resourceType": "BusinessQuestion", "resourceId": "qyh-question-v1",
+                "revision": "1", "authority": "solution.ecommerce.growth"},
+            "outputSchemaRef": {"resourceType": "BusinessFinding", "resourceId": "qyh-finding-v1",
+                "revision": "1", "authority": "solution.ecommerce.growth"},
+            "gateRefs": [], "returnStage": "business-review",
+            "assignee": {"kind": "human_principal", "resourceId": "qyh-business-owner", "version": 1}}],
+        "mergeDecisions": [], "mergeDecisionReceiptIds": [],
+    })
+    responsibility_hash = production_hash(responsibility.model_dump(mode="json", by_alias=True))
+    conn.execute("INSERT INTO aip_responsibility_plan_head VALUES(%s,%s,'qyh-runtime-roles',1,1,NOW())", scope.key)
+    conn.execute("""INSERT INTO aip_responsibility_plan_revision
+        (org_id,project_id,plan_id,revision,profile,template_ref,slots,merge_decisions,
+         profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,merge_decision_receipt_ids,
+         content_hash,lifecycle,created_by,created_at)
+        VALUES(%s,%s,'qyh-runtime-roles',1,%s,%s,%s,%s,NULL,NULL,NULL,%s,%s,'frozen','隔离测试',%s)""",
+        (*scope.key, responsibility.profile, Jsonb(responsibility.template_ref.model_dump(mode="json", by_alias=True)),
+         Jsonb([item.model_dump(mode="json", by_alias=True) for item in responsibility.slots]),
+         Jsonb([]), Jsonb([]), responsibility_hash, now))
     egress = materialize_guard(scope, "隔离测试", EgressPolicyRevisionCreate(
         policyId="qyh-egress", revision=1, environment="development",
         allowedSchemes=["https"], allowedHosts=["apihub.agnes-ai.com"], allowedPorts=[443],
@@ -154,6 +188,8 @@ def source_case(database):
         Jsonb(policy.model_dump(mode="json",by_alias=True)),policy.created_by,policy.created_at))
     conn.execute("SELECT set_config('aos.org_id',%s,false),set_config('aos.project_id',%s,false)",scope.key)
     refs={
+        "role":ConfigurationSourceRef(authority="aip.responsibility_plan_revision",id="qyh-runtime-roles",
+            revision=1,hash="sha256:"+responsibility_hash),
         "data":ConfigurationSourceRef(authority="aip.data_classification_policy_revision",id=data.policy_id,
             revision=1,hash="sha256:"+data.content_hash),
         "policy":ConfigurationSourceRef(authority="aip.runtime_policy_revision",id=policy.policy_id,
@@ -161,7 +197,7 @@ def source_case(database):
         "budget":ConfigurationSourceRef(authority="aip.budget_revision",id=budget.budget_id,
             revision=1,hash="sha256:"+budget.content_hash),
     }
-    refs["configuration"]=ConfigurationDocument(roleRefs=(),dataRefs=(refs["data"],),
+    refs["configuration"]=ConfigurationDocument(roleRefs=(refs["role"],),dataRefs=(refs["data"],),
         budgetRef=refs["budget"],policyRef=refs["policy"])
     refs["runtime"]=policy
     refs["items"]={"network":network,"egress":egress,"data":data,"quota":quota,
@@ -170,9 +206,85 @@ def source_case(database):
     conn.execute("""GRANT SELECT ON aip_runtime_guard_policy_head,aip_runtime_guard_policy_revision,
                      aip_runtime_policy_head,aip_runtime_policy_revision,aip_network_policy_head,
                      aip_network_policy_revision,aip_model_governance_policy_head,
-                     aip_model_governance_policy_revision,aip_budget_head,aip_budget_revision TO aos_runtime""")
+                     aip_model_governance_policy_revision,aip_budget_head,aip_budget_revision,
+                     aip_responsibility_plan_head,aip_responsibility_plan_revision TO aos_runtime""")
     conn.execute("SET ROLE aos_runtime")
     return conn,refs
+
+
+def test_current_responsibility_plan_ref_uses_original_frozen_authority(source_case):
+    from aos_api.aip_runtime_configuration_sources import read_current_responsibility_plan_ref
+    conn,refs=source_case
+    with conn.transaction():
+        assert read_current_responsibility_plan_ref(conn,org_id="org-org",project_id="dev-project",
+            purpose="role",ref=refs["role"]) is True
+
+
+@pytest.mark.parametrize("case",("scope","purpose","authority","hash","head","lifecycle","payload"))
+def test_current_responsibility_plan_ref_fails_closed(source_case,case):
+    from aos_api.aip_runtime_configuration_sources import read_current_responsibility_plan_ref
+    conn,refs=source_case
+    ref=refs["role"]
+    org_id="org-org"
+    purpose="role"
+    mutation=case in {"head","lifecycle","payload"}
+    conn.execute("BEGIN")
+    if mutation:conn.execute("RESET ROLE")
+    if case=="scope":org_id="dev-org"
+    elif case=="purpose":purpose="data"
+    elif case=="authority":ref=ref.model_copy(update={"authority":"test.role"})
+    elif case=="hash":ref=ref.model_copy(update={"hash":"sha256:"+"f"*64})
+    elif case=="head":conn.execute("UPDATE aip_responsibility_plan_head SET current_revision=2")
+    elif case in {"lifecycle","payload"}:
+        conn.execute("""INSERT INTO aip_responsibility_plan_revision
+            (org_id,project_id,plan_id,revision,profile,template_ref,slots,merge_decisions,
+             profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,
+             merge_decision_receipt_ids,content_hash,lifecycle,created_by,created_at)
+            SELECT org_id,project_id,plan_id,2,%s,template_ref,slots,merge_decisions,
+                   profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,
+                   merge_decision_receipt_ids,content_hash,%s,created_by,created_at
+              FROM aip_responsibility_plan_revision WHERE revision=1""",
+            ("drifted-profile" if case=="payload" else "qyh-extension-runtime",
+             "draft" if case=="lifecycle" else "frozen"))
+        conn.execute("UPDATE aip_responsibility_plan_head SET current_revision=2")
+        ref=ref.model_copy(update={"revision":2})
+    if mutation:conn.execute("SET ROLE aos_runtime")
+    with pytest.raises((ValueError,LookupError,PermissionError)):
+        with conn.transaction():
+            read_current_responsibility_plan_ref(conn,org_id=org_id,project_id="dev-project",
+                purpose=purpose,ref=ref)
+    conn.execute("RESET ROLE")
+    conn.execute("ROLLBACK")
+    conn.execute("SET ROLE aos_runtime")
+
+
+def test_current_responsibility_plan_ref_rejects_privileged_connection(source_case):
+    from aos_api.aip_runtime_configuration_sources import read_current_responsibility_plan_ref
+    conn,refs=source_case
+    conn.execute("RESET ROLE")
+    try:
+        with pytest.raises(PermissionError):
+            with conn.transaction():
+                read_current_responsibility_plan_ref(conn,org_id="org-org",project_id="dev-project",
+                    purpose="role",ref=refs["role"])
+    finally:
+        conn.execute("SET ROLE aos_runtime")
+
+
+def test_current_responsibility_plan_head_is_locked_until_authorization_finishes(source_case):
+    from aos_api.aip_runtime_configuration_sources import read_current_responsibility_plan_ref
+    conn,refs=source_case
+    conn.execute("RESET ROLE")
+    schema=conn.execute("SELECT current_schema()").fetchone()[0]
+    conn.execute("SET ROLE aos_runtime")
+    with psycopg.connect(host="127.0.0.1",port=18432,user="postgres",dbname="postgres",autocommit=True) as writer:
+        writer.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+        writer.execute("SET statement_timeout='250ms'")
+        with conn.transaction():
+            assert read_current_responsibility_plan_ref(conn,org_id="org-org",project_id="dev-project",
+                purpose="role",ref=refs["role"]) is True
+            with pytest.raises(psycopg.errors.QueryCanceled):
+                writer.execute("UPDATE aip_responsibility_plan_head SET version=version+1")
 
 
 def test_current_data_and_runtime_policy_refs_use_original_authorities(source_case):
