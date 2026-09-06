@@ -16,6 +16,10 @@ class ResourceIntent:
     replayed: bool = False
 
 
+class ResourceStillLive(RuntimeConflict):
+    """A scanned candidate was renewed or is not yet expired."""
+
+
 class ResourceJournal:
     def expired(self,conn,*,org_id,project_id,engine_context,limit=100,after=None):
         """Bounded routing only. Recheck each candidate under locks before action."""
@@ -54,7 +58,7 @@ class ResourceJournal:
         if context!=engine_context or name!=intent.identity.name:
             raise RuntimeConflict('recovery resource identity mismatch')
         if released:return intent,None,'released'
-        if _deadline_valid(conn,expiry):raise RuntimeConflict('resource lease is still live')
+        if _deadline_valid(conn,expiry):raise ResourceStillLive('resource lease is still live')
         if claimed is None:
             self.cancel_unclaimed(conn,org_id=org_id,project_id=project_id,intent=intent)
             return intent,None,'released'

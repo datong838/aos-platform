@@ -114,11 +114,12 @@ class RuntimeOperationStore:
         kind,status,phase,revision,reason=_values(row,("kind","status","phase","revision","failure_code"))
         if type(expected_revision) is not int or revision!=expected_revision:
             raise RuntimeRevisionConflict("operation version changed")
-        if kind!="runtime-apply" or status!="needs_attention" or reason!="RESOURCE_CLEANUP_UNCERTAIN":
+        if (kind!="runtime-apply" or status!="needs_attention" or reason!="RESOURCE_CLEANUP_UNCERTAIN"
+                or phase not in {'accepted','validating','preparing','registered'}):
             raise RuntimeConflict("operation is not a failed preparation cleanup")
-        resources=conn.execute("""SELECT observed_release FROM extension_runtime_resource_lease
-            WHERE org_id=%s AND project_id=%s AND operation_id=%s FOR UPDATE""",target).fetchall()
-        if not resources or not all(_values(item,("observed_release",))[0] for item in resources):
+        resources=conn.execute("""SELECT observed_release,cleanup_state FROM extension_runtime_resource_lease
+            WHERE org_id=%s AND project_id=%s AND operation_id=%s ORDER BY resource_id FOR UPDATE""",target).fetchall()
+        if not resources or not all(_values(item,("observed_release","cleanup_state"))==(True,'released') for item in resources):
             raise RuntimeConflict("preparation resources are not confirmed released")
         revision+=1
         conn.execute("""UPDATE extension_runtime_operation SET status='failed',revision=%s
