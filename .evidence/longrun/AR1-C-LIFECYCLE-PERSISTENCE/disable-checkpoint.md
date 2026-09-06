@@ -1,0 +1,15 @@
+# AR1-c 受控停用联合检查点
+
+2026-09-06；基线m1@6e204e81/AOS-000536。主AR1-C-LIFECYCLE-PERSISTENCE Lease负责代码，本子Receipt仅归档，不结束主波。
+
+精确DisableTarget由不可变accepted事件及原请求哈希恢复；旧无目标记录不猜测恢复。原CommandReceipt接纳并在缓存重放前检查当前持久权限，停用不被坏配置或过期预算拦住。仅同generation/bindingRevision、accepted/validating且无效应的configure/enable可被停用抢占：全部预检后，在同一事务写取消事件、停用接纳和fence。其他未决阶段拒绝猜测取消。
+
+RuntimeDisableExecutor只接受独立IDLE连接，先提交持久fence，再独立事务核对该generation全部epoch的排空事实并收敛disabled；失败保留fence，资源和配置保留，observed状态unknown。非IDLE连接在任何SQL/transaction前拒绝，避免嵌套SAVEPOINT冒充持久提交。排空reader和连接工厂属于可信宿主接线，不是客户端可提交的布尔值。
+
+验证：目标合同8Red后84项相关测试通过；真实签名OCI/Registry/Installation/当前角色联合，覆盖受控抢占、权限撤回重放拒绝、跨epoch未决工作拒绝且另一连接观察到已提交fence、8类失败事务、正常accepted执行、fencing恢复和资源保留。独立Prime发现的效果前抢占与非IDLE事务边界问题均修复；4个非IDLE状态先Red后Green，最终专项5passed/41deselected/16.21s。最终累计774passed、6既有warnings、112.16s、exit0。既有JDBC退出日志关闭流警告不影响exit0；未改无关日志实现。
+
+累计范围同configure-enable-checkpoint安全集合：extension_runtime全目录及列明原Registry/AIP合同测试，未运行默认共享DSN的预算store测试。独立Prime只读复审无新增实质问题，不冒充重跑测试。无页面改动，本段不声称新页面浏览器验收。
+
+只使用专用OCI context及18432临时PG schema，无共享迁移、真实业务数据写入、Provider调用、费用或发布。测试排空表是明确命名隔离夹具，不能当成正式broker排空。AR1-c IN_PROGRESS；新增业务场景0；正式broker/预算hold、持久派发及完整卸载仍未完成。
+
+下一段立即进入重启后的持久资源/任务接续：先核对现有账本、资源租期与OCI ownership恢复契约，禁止回放create permit或清理活跃owner；再专项失败恢复测试、累计验证与证据更新。

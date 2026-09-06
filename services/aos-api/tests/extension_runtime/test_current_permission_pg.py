@@ -11,7 +11,7 @@ pytestmark=pytest.mark.skipif(os.getenv('AOS_EXTENSION_PG_TEST')!='1',reason='is
 
 
 @pytest.mark.parametrize('case', ['allowed','revoked','viewer','owner','no_marking','wrong_tenant','no_scope','remote','revoke_locked'])
-@pytest.mark.parametrize('operation',['bundle_installations.verify','runtime_installations.configure','runtime_installations.enable'])
+@pytest.mark.parametrize('operation',['bundle_installations.verify','runtime_installations.configure','runtime_installations.enable','runtime_installations.disable'])
 def test_current_permission_reads_persisted_exact_tenant(database,monkeypatch,case,operation):
     from aos_api.extension_runtime.current_permission import CurrentControlPermission
     from aos_api.asset_registry.control_policy import VERIFY_INSTALLATION_OPERATION

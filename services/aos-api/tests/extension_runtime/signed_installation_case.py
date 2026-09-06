@@ -180,6 +180,8 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                                 with connect() as conn:
                                     assert conn.execute('SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()=={
                                         'enabled':True,'operation_fence':False,'observed_state':'ready'}
+                                from disable_case import exercise_disable
+                                await asyncio.to_thread(exercise_disable,worker,legacy,scope,action,verified,job.plan.generation)
                             finally:
                                 await job.stop()
                     await job.stop()

@@ -38,14 +38,16 @@ def _values(row, names):
     return tuple(row[name] for name in names) if isinstance(row,Mapping) else row
 
 
-def _request_hash(*, kind, actor, etag, deadline, configuration_target=None):
+def _request_hash(*, kind, actor, etag, deadline, configuration_target=None, binding_target=None):
     # PostgreSQL stores timestamptz as an instant. Only the new configuration
     # contract normalizes offsets; existing command hash semantics stay intact.
-    if configuration_target is not None:
+    if configuration_target is not None or binding_target is not None:
         deadline = deadline.astimezone(timezone.utc)
     request = {'kind':kind, 'actor':actor, 'expectedEtag':etag, 'deadline':deadline.isoformat()}
     if configuration_target is not None:
         request['configurationTarget'] = configuration_target
+    if binding_target is not None:
+        request['bindingTarget'] = binding_target
     return _digest(request)
 
 
@@ -126,7 +128,7 @@ class RuntimeOperationStore:
 
     def accept(self, conn, *, org_id, project_id, installation_id, kind,
                idempotency_key, requested_by, expected_installation_etag, deadline,
-               configuration_target=None):
+               configuration_target=None, binding_target=None):
         _require_transaction(conn)
         from aos_api.extension_runtime.lifecycle import _PATHS
         if kind not in _PATHS or not isinstance(deadline,datetime) or deadline.utcoffset() is None:
@@ -136,6 +138,9 @@ class RuntimeOperationStore:
         if not isinstance(idempotency_key,str) or not 1 <= len(idempotency_key) <= 240:
             raise ValueError("invalid idempotency key")
         snapshot = None
+        snapshot_key = 'configurationTarget'
+        if binding_target is not None and (kind!='disable' or configuration_target is not None):
+            raise ValueError('binding target only belongs to disable')
         if kind == 'configure' or (kind == 'enable' and configuration_target is not None):
             from .configuration_contracts import ConfigureTarget
             snapshot = ConfigureTarget.model_validate(configuration_target).model_dump(mode='json')
@@ -144,6 +149,13 @@ class RuntimeOperationStore:
                 raise PermissionError('configuration tenant scope mismatch')
         elif configuration_target is not None:
             raise ValueError('configuration target only belongs to configure or enable')
+        if binding_target is not None:
+            from .disable_contracts import DisableTarget
+            snapshot=DisableTarget.model_validate(binding_target).model_dump(mode='json')
+            snapshot_key='bindingTarget'
+            scope=conn.execute("SELECT current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id").fetchone()
+            if not org_id or not project_id or _values(scope,('org_id','project_id'))!=(org_id,project_id):
+                raise PermissionError('disable tenant scope mismatch')
         installation_id=UUID(str(installation_id))
         target=(org_id,project_id,installation_id)
         # Serialize by the existing installation head. Replay precedes CAS validation.
@@ -153,7 +165,9 @@ class RuntimeOperationStore:
             raise LookupError("installation not found")
         head=_values(head,("etag_version",))
         request_hash=_request_hash(kind=kind,actor=requested_by,etag=expected_installation_etag,
-                                  deadline=deadline,configuration_target=snapshot)
+                                  deadline=deadline,
+                                  configuration_target=snapshot if snapshot_key=='configurationTarget' else None,
+                                  binding_target=snapshot if snapshot_key=='bindingTarget' else None)
         existing=conn.execute("""SELECT operation_id,phase,status,revision,request_hash
             FROM extension_runtime_operation WHERE org_id=%s AND project_id=%s AND installation_id=%s
             AND kind=%s AND idempotency_key=%s""",(*target,kind,idempotency_key)).fetchone()
@@ -174,7 +188,7 @@ class RuntimeOperationStore:
             binding_revision = snapshot['bindingRevision']
             if _values(binding,('revision',))[0] != binding_revision:
                 raise RuntimeRevisionConflict('configuration binding version changed')
-            if not _deadline_valid(conn,deadline):
+            if snapshot_key=='configurationTarget' and not _deadline_valid(conn,deadline):
                 raise RuntimeConflict('configuration request deadline expired')
         operation_id=uuid4()
         conn.execute("""INSERT INTO extension_runtime_operation
@@ -185,7 +199,7 @@ class RuntimeOperationStore:
              requested_by,expected_installation_etag,binding_revision,deadline))
         payload={"kind":kind}
         if snapshot is not None:
-            payload['configurationTarget']=snapshot
+            payload[snapshot_key]=snapshot
         self._event(conn,org_id,project_id,operation_id,1,"accepted",payload)
         return OperationResult(operation_id,"accepted","accepted",1)
 
