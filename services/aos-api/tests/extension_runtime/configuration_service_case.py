@@ -16,6 +16,8 @@ def exercise_configuration_service(connect,store,reader,validator,scope,action,v
     from aos_api.extension_runtime.configuration_service import RuntimeConfigurationService
     from aos_api.extension_runtime.configuration_store import append_configuration
     from aos_api.extension_runtime.configuration_consumer import ConfigurationConsumer
+    from aos_api.aip_runtime_configuration_authority import read_current_budget_ref
+    from signed_budget_case import install_signed_test_budget
     path=Path(__file__).resolve().parents[2]/'alembic/versions/ar1_002_runtime_configuration.py'
     spec=importlib.util.spec_from_file_location('signed_configuration_migration',path)
     migration=importlib.util.module_from_spec(spec);spec.loader.exec_module(migration)
@@ -27,18 +29,27 @@ def exercise_configuration_service(connect,store,reader,validator,scope,action,v
             value=dict(authority='test.signed.configuration',id=purpose,revision=1,hash='sha256:'+'a'*64)
             c.execute('INSERT INTO test_signed_config_refs VALUES(%s,%s,1,%s)',(purpose,purpose,value['hash']))
             return value
-        document=dict(roleRefs=(ref('role'),),dataRefs=(ref('data'),),budgetRef=ref('budget'),policyRef=ref('policy'))
+        document=dict(roleRefs=(ref('role'),),dataRefs=(ref('data'),),
+            budgetRef=install_signed_test_budget(c,scope),policyRef=ref('policy'))
 
     def permission(c,*,installation_id,actor,**_):
         etag=c.execute('SELECT etag_version FROM bundle_installation WHERE org_id=%s AND project_id=%s AND installation_id=%s',
             (scope['org_id'],scope['project_id'],installation_id)).fetchone()['etag_version']
         locked=store.lock_for_transition_in_transaction(c,**scope,installation_id=installation_id,expected_etag_version=etag)
         return CurrentControlPermission(operation=CONFIGURE_RUNTIME_OPERATION)(conn=c,locked=locked,actor=actor)
+    with connect() as c:
+        assert c.execute('SELECT count(*) AS count FROM aip_budget_revision').fetchone()=={'count':1}
+        assert document['budgetRef']['authority']=='aip.budget_revision'
     def reference(c,*,purpose,ref,**_):
         return c.execute('SELECT ref_id FROM test_signed_config_refs WHERE purpose=%s AND ref_id=%s AND revision=%s AND hash=%s FOR SHARE',
             (purpose,ref.id,ref.revision,ref.hash)).fetchone() is not None
-    authorize=ConfigurationAuthorization(permission=permission,readers={
-        (purpose,'test.signed.configuration'):reference for purpose in ('role','data','budget','policy')})
+    def budget_reference(c,*,purpose,ref,org_id,project_id,**_):
+        assert purpose=='budget'
+        read_current_budget_ref(c,org_id=org_id,project_id=project_id,ref=ref)
+        return True
+    readers={(purpose,'test.signed.configuration'):reference for purpose in ('role','data','policy')}
+    readers[('budget','aip.budget_revision')]=budget_reference
+    authorize=ConfigurationAuthorization(permission=permission,readers=readers)
     write=dict(**scope,installation_id=verified.installation_id,generation=str(generation),actor=action['actor'],
         expected_installation_etag=verified.etag_version,expected_binding_revision=1,
         idempotency_key='signed-config-version',configuration=document,authorize=authorize)
@@ -80,6 +91,15 @@ def exercise_configuration_service(connect,store,reader,validator,scope,action,v
     assert state()[1]['execution_epoch']==2
     with connect() as c:
         c.execute("UPDATE extension_runtime_outbox SET claim_until=clock_timestamp()-interval '1 second' WHERE event_id IN (SELECT event_id FROM extension_runtime_event WHERE operation_id=%s) AND claim_until IS NOT NULL",(operation_id,))
+        c.execute('UPDATE aip_budget_head SET current_revision=2 WHERE budget_id=%s',(document['budgetRef']['id'],))
+    fenced_state=state()
+    drain_ready=True
+    with pytest.raises(ValueError,match='budget reference is no longer current'):consumer.run_once(**scope)
+    assert state()==fenced_state
+    with connect() as c:
+        # Fault injection restoration only; never a production budget rollback.
+        c.execute('UPDATE aip_budget_head SET current_revision=1 WHERE budget_id=%s',(document['budgetRef']['id'],))
+        c.execute("UPDATE extension_runtime_outbox SET claim_until=clock_timestamp()-interval '1 second' WHERE event_id IN (SELECT event_id FROM extension_runtime_event WHERE operation_id=%s) AND claim_until IS NOT NULL",(operation_id,))
     drain_ready=True
     original_ack=consumer.outbox.ack
     lost=[]
@@ -113,4 +133,6 @@ def exercise_configuration_service(connect,store,reader,validator,scope,action,v
     enabled=service.request(**enable)
     assert enabled.status_code==202
     assert service.request(**enable).replayed
+    with connect() as c:
+        assert c.execute('SELECT count(*) AS count FROM aip_budget_receipt').fetchone()=={'count':0}
     return dict(authorize=authorize,operation_id=enabled.response_json['operationId'],expected_revision=enabled.response_json['revision'])
