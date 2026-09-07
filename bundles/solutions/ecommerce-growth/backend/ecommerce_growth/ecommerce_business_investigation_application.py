@@ -8,11 +8,18 @@ from typing import Any, Mapping
 from aos_extension_sdk import DispatchRef
 
 from .sdk_ports import GrowthWritePort
+from .analysis_runtime import AnalysisRuntimeRequest, AnalysisRuntimeReceipt, advance_analysis_runtime
+from .sdk_ports import GrowthRuntimePort
 
 
 class EcommerceGrowthApplication:
-    def __init__(self, write_port: GrowthWritePort) -> None:
+    def __init__(
+        self,
+        write_port: GrowthWritePort,
+        runtime_port: GrowthRuntimePort | None = None,
+    ) -> None:
         self._write_port = write_port
+        self._runtime_port = runtime_port
 
     def commit_case_or_schedule(
         self,
@@ -34,6 +41,20 @@ class EcommerceGrowthApplication:
             dispatch_ref=dispatch_ref,
             command=dict(command),
             occurred_at=occurred_at,
+        )
+
+    def advance_analysis(
+        self,
+        *,
+        dispatch_ref: DispatchRef,
+        request: AnalysisRuntimeRequest,
+    ) -> AnalysisRuntimeReceipt:
+        if self._runtime_port is None:
+            raise RuntimeError("analysis runtime port is not configured")
+        return advance_analysis_runtime(
+            self._runtime_port,
+            dispatch_ref=dispatch_ref,
+            request=request,
         )
 
 

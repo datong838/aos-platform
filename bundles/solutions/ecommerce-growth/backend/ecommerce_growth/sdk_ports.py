@@ -34,7 +34,7 @@ class ExactRef:
     def __post_init__(self) -> None:
         if not 1 <= len(self.resource_type.strip()) <= 120 or not 1 <= len(self.resource_id.strip()) <= 240:
             raise ValueError("exact reference identity is required")
-        if self.revision <= 0 or not _SHA256.fullmatch(self.content_hash):
+        if type(self.revision) is not int or self.revision <= 0 or not _SHA256.fullmatch(self.content_hash):
             raise ValueError("exact reference revision and hash are required")
         if self.receipt_id is not None and not 1 <= len(self.receipt_id.strip()) <= 240:
             raise ValueError("receipt identity cannot be blank")
@@ -67,4 +67,22 @@ class GrowthDataPort(Protocol):
     ) -> Mapping[str, Any]: ...
 
 
-__all__ = ["ExactRef", "GrowthDataPort", "GrowthReadPort", "GrowthWritePort", "TenantRef"]
+class GrowthRuntimePort(Protocol):
+    """Canonical AIP runtime port; host revalidates DispatchRef on every commit."""
+
+    def commit(
+        self,
+        *,
+        dispatch_ref: DispatchRef,
+        command: Mapping[str, Any],
+    ) -> Mapping[str, Any]: ...
+
+
+__all__ = [
+    "ExactRef",
+    "GrowthDataPort",
+    "GrowthReadPort",
+    "GrowthRuntimePort",
+    "GrowthWritePort",
+    "TenantRef",
+]

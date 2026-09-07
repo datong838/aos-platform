@@ -21,9 +21,10 @@ PACKAGES = (
             "ecommerce_growth_investigation_describe",
             "ecommerce_growth_case_put",
             "ecommerce_growth_schedule_put",
-            "ecommerce_growth_schedule_trigger",
-            "ecommerce_growth_data_fulfill",
-        ),
+        "ecommerce_growth_schedule_trigger",
+        "ecommerce_growth_data_fulfill",
+        "ecommerce_growth_analysis_advance",
+    ),
     ),
     (
         "bundles/platforms/ecommerce-niushop",
