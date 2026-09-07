@@ -13,9 +13,18 @@ from aos_api.extension_runtime.contracts import RegistrationDescription
 ROOT = Path(__file__).resolve().parents[4]
 SDK_ROOT = ROOT / "packages/aos-extension-sdk/python"
 PACKAGES = (
-    ("bundles/domains/ecommerce-core", "ecommerce_core", "ecommerce_core_object_describe"),
-    ("bundles/solutions/ecommerce-growth", "ecommerce_growth", "ecommerce_growth_investigation_describe"),
-    ("bundles/platforms/ecommerce-niushop", "ecommerce_niushop", "ecommerce_niushop_source_describe"),
+    ("bundles/domains/ecommerce-core", "ecommerce_core", ("ecommerce_core_object_describe",)),
+    (
+        "bundles/solutions/ecommerce-growth",
+        "ecommerce_growth",
+        (
+            "ecommerce_growth_investigation_describe",
+            "ecommerce_growth_case_put",
+            "ecommerce_growth_schedule_put",
+            "ecommerce_growth_schedule_trigger",
+        ),
+    ),
+    ("bundles/platforms/ecommerce-niushop", "ecommerce_niushop", ("ecommerce_niushop_source_describe",)),
 )
 
 
@@ -27,8 +36,8 @@ def _module(base, package):
     return module
 
 
-@pytest.mark.parametrize("base,package,operation", PACKAGES)
-def test_bundle_runtime_registration_is_exact_and_inactive(base, package, operation):
+@pytest.mark.parametrize("base,package,operations", PACKAGES)
+def test_bundle_runtime_registration_is_exact_and_inactive(base, package, operations):
     manifest = BundleManifest.model_validate(yaml.safe_load((ROOT / base / "bundle.yaml").read_text()))
     runtime = manifest.spec.runtime.backend
     assert runtime.entrypoint == f"backend/{package}/__init__.py:register"
@@ -36,9 +45,10 @@ def test_bundle_runtime_registration_is_exact_and_inactive(base, package, operat
     module = _module(base, package)
     registration = module.register(object())
     RegistrationDescription.model_validate(registration)
-    assert [item["operationId"] for item in registration["contributions"]] == [operation]
-    with pytest.raises(PermissionError, match="registration-only"):
-        module.handle(operation, {}, object())
+    assert tuple(item["operationId"] for item in registration["contributions"]) == operations
+    for operation in operations:
+        with pytest.raises(PermissionError, match="registration-only"):
+            module.handle(operation, {}, object())
     with pytest.raises(ValueError):
         module.handle("unknown.operation", {}, object())
 
@@ -90,9 +100,9 @@ def test_dispatch_ref_is_immutable_and_forwarded_without_authority_override():
 
 
 def test_bundle_backend_has_no_platform_imports():
-    for base, package, _operation in PACKAGES:
-        text = (ROOT / base / "backend" / package / "__init__.py").read_text()
-        assert "aos_api" not in text
+    for base, package, _operations in PACKAGES:
+        for path in (ROOT / base / "backend" / package).glob("*.py"):
+            assert "aos_api" not in path.read_text()
 
 
 def test_dispatch_authority_migration_is_empty_tenant_scoped_and_retained():
