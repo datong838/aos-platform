@@ -32,6 +32,13 @@ class ExactRef:
     receipt_id: str | None = None
 
     def __post_init__(self) -> None:
+        if (
+            type(self.resource_type) is not str
+            or type(self.resource_id) is not str
+            or type(self.content_hash) is not str
+            or (self.receipt_id is not None and type(self.receipt_id) is not str)
+        ):
+            raise ValueError("exact reference fields must use strict types")
         if not 1 <= len(self.resource_type.strip()) <= 120 or not 1 <= len(self.resource_id.strip()) <= 240:
             raise ValueError("exact reference identity is required")
         if type(self.revision) is not int or self.revision <= 0 or not _SHA256.fullmatch(self.content_hash):

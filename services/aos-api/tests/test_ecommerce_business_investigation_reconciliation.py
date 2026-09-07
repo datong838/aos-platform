@@ -126,15 +126,19 @@ def test_migration_freezes_receipt_rls_and_no_reconcile_success() -> None:
 
 
 def test_disposable_database_empty_upgrade_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw4_reconcile_empty") as (config, _dsn):
+    with isolated_aip_migration_database(
+        "biw4_reconcile_empty", migration_target="biw4_007"
+    ) as (config, _dsn):
         command.downgrade(config, "biw4_006")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw4_007")
         command.downgrade(config, "biw4_006")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw4_007")
 
 
 def test_waiting_unknown_reconciling_replay_isolation_and_illegal_transitions() -> None:
-    with isolated_aip_migration_database("biw4_reconcile_authority") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw4_reconcile_authority", migration_target="biw4_007"
+    ) as (config, dsn):
         with psycopg.connect(dsn) as conn:
             conn.execute(
                 "INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','BI-W4') ON CONFLICT DO NOTHING"

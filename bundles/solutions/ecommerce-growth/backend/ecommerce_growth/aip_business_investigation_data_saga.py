@@ -17,6 +17,11 @@ def build_resume_data_command(
     requirement_ref: Mapping[str, object],
     fulfillment_ref: Mapping[str, object],
     checkpoint_ref: Mapping[str, object],
+    prior_plan_ref: Mapping[str, object],
+    source_readiness_ref: Mapping[str, object],
+    mapping_ref: Mapping[str, object],
+    evidence_refs: tuple[Mapping[str, object], ...],
+    observed_at: datetime,
 ) -> dict[str, object]:
     return {
         "operation": "runtime.analysis.resume_data",
@@ -29,6 +34,11 @@ def build_resume_data_command(
         "requirementRef": dict(requirement_ref),
         "fulfillmentRef": dict(fulfillment_ref),
         "checkpointRef": dict(checkpoint_ref),
+        "priorPlanRef": dict(prior_plan_ref),
+        "sourceReadinessRef": dict(source_readiness_ref),
+        "mappingRef": dict(mapping_ref),
+        "evidenceRefs": [dict(ref) for ref in evidence_refs],
+        "observedAt": observed_at.isoformat(),
     }
 
 

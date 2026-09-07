@@ -86,13 +86,17 @@ def test_migration_freezes_unique_slot_trigger_receipt_and_revokes_old_entrypoin
 
 
 def test_disposable_database_empty_upgrade_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw4_run_guard_empty") as (config, _dsn):
+    with isolated_aip_migration_database(
+        "biw4_run_guard_empty", migration_target="biw4_003"
+    ) as (config, _dsn):
         command.downgrade(config, "biw4_002")
         command.upgrade(config, "head")
 
 
 def test_trigger_replay_overlap_receipt_single_active_and_runtime_guard() -> None:
-    with isolated_aip_migration_database("biw4_run_guard") as (_config, dsn):
+    with isolated_aip_migration_database(
+        "biw4_run_guard", migration_target="biw4_003"
+    ) as (_config, dsn):
         with psycopg.connect(dsn) as conn:
             conn.execute(
                 "INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','BI-W4') ON CONFLICT DO NOTHING"

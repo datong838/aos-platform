@@ -128,13 +128,17 @@ def test_store_uses_controlled_function_and_checks_content_hash() -> None:
 
 
 def test_disposable_database_empty_upgrade_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw4_run_empty") as (config, _dsn):
+    with isolated_aip_migration_database(
+        "biw4_run_empty", migration_target="biw4_006"
+    ) as (config, _dsn):
         command.downgrade(config, "biw4_001")
         command.upgrade(config, "head")
 
 
 def test_disposable_database_atomic_active_case_idempotency_isolation_and_guard() -> None:
-    with isolated_aip_migration_database("biw4_run_authority") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw4_run_authority", migration_target="biw4_006"
+    ) as (config, dsn):
         with psycopg.connect(dsn) as conn:
             conn.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','BI-W4') ON CONFLICT DO NOTHING")
             conn.execute("INSERT INTO ecommerce_investigation_case_head(org_id,project_id,case_id,current_revision,version,lifecycle,analysis_type,channel_id,business_entity_id) VALUES('org-org','dev-project','case-active',2,2,'ACTIVE','initial_store_analysis','private-mall','store-1')")

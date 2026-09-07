@@ -210,9 +210,11 @@ def test_migration_is_single_head_cas_receipt_authority_without_runtime_table_wr
 
 
 def test_disposable_database_empty_upgrade_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw6_artifact_publication_empty") as (config, _dsn):
+    with isolated_aip_migration_database(
+        "biw6_artifact_publication_empty", migration_target="biw6_002"
+    ) as (config, _dsn):
         command.downgrade(config, "biw6_001")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw6_002")
         command.downgrade(config, "biw6_001")
 
 
@@ -234,7 +236,9 @@ def _seed_publication_dependencies(conn, item: BusinessInvestigationArtifactRevi
 
 
 def test_disposable_database_publish_replay_rls_and_nonempty_downgrade() -> None:
-    with isolated_aip_migration_database("biw6_artifact_publication") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw6_artifact_publication", migration_target="biw6_002"
+    ) as (config, dsn):
         item = artifact()
         selected = binding(item)
         with psycopg.connect(dsn) as conn:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import sys
 
@@ -93,8 +93,13 @@ def receipt_payload(command, *, phase="PREPARING", action="CONTINUE", **override
         "phase": phase,
         "recoverableAction": action,
         "checkpointRef": None,
+        "priorCheckpointRef": None,
         "requirementRef": None,
         "fulfillmentRef": None,
+        "sourceReadinessRef": None,
+        "mappingRef": None,
+        "evidenceRefs": [],
+        "observedAt": None,
         "targetReceiptRef": None,
         "completed": False,
     }
@@ -195,6 +200,11 @@ def test_resume_data_binds_same_requirement_fulfillment_and_checkpoint() -> None
         requirement_ref=ref("DataRequirementRevision", "requirement-1"),
         fulfillment_ref=ref("DataFulfillmentReceipt", "fulfillment-1", receipt="fulfillment-receipt-1"),
         checkpoint_ref=ref("CheckpointRevision", "checkpoint-1"),
+        prior_plan_ref=ref("PlanRevision", "plan-1"),
+        source_readiness_ref=ref("SourceReadinessEnvelope", "readiness-1", receipt="readiness-1"),
+        mapping_ref=ref("SourceMappingRevision", "mapping-1"),
+        evidence_refs=(ref("EvidenceBundleRevision", "evidence-1"),),
+        observed_at=CUTOFF,
     )
 
     def resumed(command):
@@ -205,6 +215,11 @@ def test_resume_data_binds_same_requirement_fulfillment_and_checkpoint() -> None
             requirementRef=command["requirementRef"],
             fulfillmentRef=command["fulfillmentRef"],
             checkpointRef=exact_payload(ref("CheckpointRevision", "checkpoint-2", revision=2)),
+            priorCheckpointRef=command["checkpointRef"],
+            sourceReadinessRef=command["sourceReadinessRef"],
+            mappingRef=command["mappingRef"],
+            evidenceRefs=command["evidenceRefs"],
+            observedAt=command["observedAt"],
         )
 
     result = advance_analysis_runtime(RuntimePort(resumed), dispatch_ref=dispatch(), request=request)
@@ -303,6 +318,11 @@ def test_resume_and_reconcile_cannot_regress_to_preparing() -> None:
         requirement_ref=ref("DataRequirementRevision", "requirement-1"),
         fulfillment_ref=ref("DataFulfillmentReceipt", "fulfillment-1"),
         checkpoint_ref=ref("CheckpointRevision", "checkpoint-1"),
+        prior_plan_ref=ref("PlanRevision", "plan-1"),
+        source_readiness_ref=ref("SourceReadinessEnvelope", "readiness-1"),
+        mapping_ref=ref("SourceMappingRevision", "mapping-1"),
+        evidence_refs=(ref("EvidenceBundleRevision", "evidence-1"),),
+        observed_at=CUTOFF,
     )
     with pytest.raises(ValueError, match="does not match recovery mode"):
         advance_analysis_runtime(RuntimePort(), dispatch_ref=dispatch(), request=resume)
@@ -313,3 +333,229 @@ def test_package_runtime_has_no_platform_or_side_effect_imports() -> None:
     source = package.read_text(encoding="utf-8")
     for forbidden in ("aos_api", "psycopg", "requests", "httpx", "subprocess", "socket"):
         assert forbidden not in source
+
+
+def test_exact_response_rejects_extra_authority_fields() -> None:
+    def extra(command):
+        plan = exact_payload(ref("PlanRevision", "plan-1"))
+        plan["unexpectedAuthority"] = "override"
+        return receipt_payload(command, planRef=plan)
+
+    with pytest.raises(ValueError, match="fields drifted"):
+        advance_analysis_runtime(RuntimePort(extra), dispatch_ref=dispatch(), request=start_request())
+
+
+def test_exact_response_rejects_extra_receipt_fields_and_coerced_timestamps() -> None:
+    def extra(command):
+        return receipt_payload(command, tenant="org-org")
+
+    with pytest.raises(ValueError, match="Receipt fields drifted"):
+        advance_analysis_runtime(RuntimePort(extra), dispatch_ref=dispatch(), request=start_request())
+
+    def coerced(command):
+        return receipt_payload(command, cutoffAt=123)
+
+    with pytest.raises(ValueError, match="cutoffAt must be an ISO datetime"):
+        advance_analysis_runtime(RuntimePort(coerced), dispatch_ref=dispatch(), request=start_request())
+
+
+def test_resume_requires_complete_evidence_and_checkpoint_successor() -> None:
+    base = dict(
+        occurrence_ref=ref("AutomationOccurrence", "occurrence-1"),
+        case_ref=ref("BusinessInvestigationCaseRevision", "case-1"),
+        profile_ref=ref("InvestigationProfileRevision", "profile-1"),
+        cutoff_at=CUTOFF,
+        idempotency_key="resume-evidence-1",
+        mode="RESUME_DATA",
+        prior_receipt_ref=ref("AnalysisRuntimeReceipt", "waiting-receipt-1"),
+        requirement_ref=ref("DataRequirementRevision", "requirement-1"),
+        fulfillment_ref=ref("DataFulfillmentReceipt", "fulfillment-1"),
+        checkpoint_ref=ref("CheckpointRevision", "checkpoint-1"),
+        prior_plan_ref=ref("PlanRevision", "plan-1"),
+        source_readiness_ref=ref("SourceReadinessEnvelope", "readiness-1"),
+        mapping_ref=ref("SourceMappingRevision", "mapping-1"),
+        observed_at=CUTOFF,
+    )
+    with pytest.raises(ValueError, match="observed evidence"):
+        AnalysisRuntimeRequest(**base)
+    request = AnalysisRuntimeRequest(
+        **base,
+        evidence_refs=(ref("EvidenceBundleRevision", "evidence-1"),),
+    )
+
+    def stale_checkpoint(command):
+        return receipt_payload(
+            command,
+            phase="RUNNING",
+            action="CONTINUE",
+            requirementRef=command["requirementRef"],
+            fulfillmentRef=command["fulfillmentRef"],
+            checkpointRef=command["checkpointRef"],
+            priorCheckpointRef=command["checkpointRef"],
+            sourceReadinessRef=command["sourceReadinessRef"],
+            mappingRef=command["mappingRef"],
+            evidenceRefs=command["evidenceRefs"],
+            observedAt=command["observedAt"],
+        )
+
+    with pytest.raises(ValueError, match="data lineage drifted"):
+        advance_analysis_runtime(RuntimePort(stale_checkpoint), dispatch_ref=dispatch(), request=request)
+
+
+def test_resume_rejects_mutable_excess_or_late_evidence_and_accepts_dataset() -> None:
+    base = dict(
+        occurrence_ref=ref("AutomationOccurrence", "occurrence-1"),
+        case_ref=ref("BusinessInvestigationCaseRevision", "case-1"),
+        profile_ref=ref("InvestigationProfileRevision", "profile-1"),
+        cutoff_at=CUTOFF,
+        idempotency_key="resume-evidence-bounds-1",
+        mode="RESUME_DATA",
+        prior_receipt_ref=ref("AnalysisRuntimeReceipt", "waiting-receipt-1"),
+        requirement_ref=ref("DataRequirementRevision", "requirement-1"),
+        fulfillment_ref=ref("DataFulfillmentReceipt", "fulfillment-1"),
+        checkpoint_ref=ref("CheckpointRevision", "checkpoint-1"),
+        prior_plan_ref=ref("PlanRevision", "plan-1"),
+        source_readiness_ref=ref("SourceReadinessEnvelope", "readiness-1"),
+        mapping_ref=ref("SourceMappingRevision", "mapping-1"),
+    )
+    with pytest.raises(ValueError, match="observed evidence"):
+        AnalysisRuntimeRequest(
+            **base,
+            evidence_refs=[ref("EvidenceBundleRevision", "evidence-1")],
+            observed_at=CUTOFF,
+        )
+    with pytest.raises(ValueError, match="observed evidence"):
+        AnalysisRuntimeRequest(
+            **base,
+            evidence_refs=tuple(
+                ref("EvidenceBundleRevision", f"evidence-{index}")
+                for index in range(201)
+            ),
+            observed_at=CUTOFF,
+        )
+    with pytest.raises(ValueError, match="observed evidence"):
+        AnalysisRuntimeRequest(
+            **base,
+            evidence_refs=(ref("EvidenceBundleRevision", "evidence-1"),),
+            observed_at=CUTOFF + timedelta(hours=25),
+        )
+    request = AnalysisRuntimeRequest(
+        **base,
+        evidence_refs=(ref("DatasetRevision", "dataset-1"),),
+        observed_at=CUTOFF + timedelta(hours=24),
+    )
+    assert request.evidence_refs[0].resource_type == "DatasetRevision"
+
+
+def test_resumed_running_cannot_also_claim_unknown_target_receipt() -> None:
+    request = AnalysisRuntimeRequest(
+        occurrence_ref=ref("AutomationOccurrence", "occurrence-1"),
+        case_ref=ref("BusinessInvestigationCaseRevision", "case-1"),
+        profile_ref=ref("InvestigationProfileRevision", "profile-1"),
+        cutoff_at=CUTOFF,
+        idempotency_key="resume-target-conflict-1",
+        mode="RESUME_DATA",
+        prior_receipt_ref=ref("AnalysisRuntimeReceipt", "waiting-receipt-1"),
+        requirement_ref=ref("DataRequirementRevision", "requirement-1"),
+        fulfillment_ref=ref("DataFulfillmentReceipt", "fulfillment-1"),
+        checkpoint_ref=ref("CheckpointRevision", "checkpoint-1"),
+        prior_plan_ref=ref("PlanRevision", "plan-1"),
+        source_readiness_ref=ref("SourceReadinessEnvelope", "readiness-1"),
+        mapping_ref=ref("SourceMappingRevision", "mapping-1"),
+        evidence_refs=(ref("EvidenceBundleRevision", "evidence-1"),),
+        observed_at=CUTOFF,
+    )
+
+    def conflicting(command):
+        return receipt_payload(
+            command,
+            phase="RUNNING",
+            action="CONTINUE",
+            requirementRef=command["requirementRef"],
+            fulfillmentRef=command["fulfillmentRef"],
+            checkpointRef=exact_payload(ref("CheckpointRevision", "checkpoint-2", revision=2)),
+            priorCheckpointRef=command["checkpointRef"],
+            sourceReadinessRef=command["sourceReadinessRef"],
+            mappingRef=command["mappingRef"],
+            evidenceRefs=command["evidenceRefs"],
+            observedAt=command["observedAt"],
+            targetReceiptRef=exact_payload(ref("RuntimeCommandReceipt", "target-1")),
+        )
+
+    with pytest.raises(ValueError, match="data lineage drifted"):
+        advance_analysis_runtime(RuntimePort(conflicting), dispatch_ref=dispatch(), request=request)
+
+
+def test_reconciled_running_requires_empty_or_complete_data_lineage() -> None:
+    request = AnalysisRuntimeRequest(
+        occurrence_ref=ref("AutomationOccurrence", "occurrence-1"),
+        case_ref=ref("BusinessInvestigationCaseRevision", "case-1"),
+        profile_ref=ref("InvestigationProfileRevision", "profile-1"),
+        cutoff_at=CUTOFF,
+        idempotency_key="reconcile-running-1",
+        mode="RECONCILE_UNKNOWN",
+        prior_receipt_ref=ref("AnalysisRuntimeReceipt", "unknown-receipt-1"),
+    )
+
+    def partial(command):
+        return receipt_payload(
+            command,
+            phase="RUNNING",
+            action="CONTINUE",
+            requirementRef=exact_payload(ref("DataRequirementRevision", "requirement-1")),
+        )
+
+    with pytest.raises(ValueError, match="empty or complete data lineage"):
+        advance_analysis_runtime(RuntimePort(partial), dispatch_ref=dispatch(), request=request)
+
+    def target_conflict(command):
+        return receipt_payload(
+            command,
+            phase="RUNNING",
+            action="CONTINUE",
+            targetReceiptRef=exact_payload(ref("RuntimeCommandReceipt", "target-1")),
+        )
+
+    with pytest.raises(ValueError, match="empty or complete data lineage"):
+        advance_analysis_runtime(
+            RuntimePort(target_conflict), dispatch_ref=dispatch(), request=request
+        )
+
+    empty = advance_analysis_runtime(
+        RuntimePort(
+            lambda command: receipt_payload(
+                command,
+                phase="RUNNING",
+                action="CONTINUE",
+            )
+        ),
+        dispatch_ref=dispatch(),
+        request=request,
+    )
+    assert empty.phase.value == "RUNNING" and empty.checkpoint_ref is None
+
+    def complete(command):
+        return receipt_payload(
+            command,
+            phase="RUNNING",
+            action="CONTINUE",
+            requirementRef=exact_payload(ref("DataRequirementRevision", "requirement-1")),
+            fulfillmentRef=exact_payload(ref("DataFulfillmentReceipt", "fulfillment-1")),
+            priorCheckpointRef=exact_payload(
+                ref("CheckpointRevision", "checkpoint-1", revision=1)
+            ),
+            checkpointRef=exact_payload(
+                ref("CheckpointRevision", "checkpoint-2", revision=2)
+            ),
+            sourceReadinessRef=exact_payload(
+                ref("SourceReadinessEnvelope", "readiness-1")
+            ),
+            mappingRef=exact_payload(ref("SourceMappingRevision", "mapping-1")),
+            evidenceRefs=[exact_payload(ref("DatasetRevision", "dataset-1"))],
+            observedAt=CUTOFF.isoformat(),
+        )
+
+    completed_reconcile = advance_analysis_runtime(
+        RuntimePort(complete), dispatch_ref=dispatch(), request=request
+    )
+    assert completed_reconcile.checkpoint_ref.revision == 2

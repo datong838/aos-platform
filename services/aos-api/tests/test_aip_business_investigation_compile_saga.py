@@ -265,7 +265,9 @@ def test_migration_is_additive_tenant_scoped_immutable_and_fail_closed() -> None
 
 
 def test_disposable_database_receipt_replay_isolation_immutability_and_restart() -> None:
-    with isolated_aip_migration_database("biw6_compile_receipt") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw6_compile_receipt", migration_target="biw6_001"
+    ) as (config, dsn):
         run = run_view()
         request = request_for(run)
         result = compilation(request)
