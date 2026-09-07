@@ -22,9 +22,14 @@ PACKAGES = (
             "ecommerce_growth_case_put",
             "ecommerce_growth_schedule_put",
             "ecommerce_growth_schedule_trigger",
+            "ecommerce_growth_data_fulfill",
         ),
     ),
-    ("bundles/platforms/ecommerce-niushop", "ecommerce_niushop", ("ecommerce_niushop_source_describe",)),
+    (
+        "bundles/platforms/ecommerce-niushop",
+        "ecommerce_niushop",
+        ("ecommerce_niushop_source_describe", "ecommerce_niushop_facts_read"),
+    ),
 )
 
 

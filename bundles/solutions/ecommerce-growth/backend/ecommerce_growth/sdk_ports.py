@@ -56,4 +56,15 @@ class GrowthReadPort(Protocol):
     def read_exact(self, *, tenant: TenantRef, ref: ExactRef) -> Mapping[str, Any]: ...
 
 
-__all__ = ["ExactRef", "GrowthReadPort", "GrowthWritePort", "TenantRef"]
+class GrowthDataPort(Protocol):
+    """Public Data authority port; the host derives tenant from DispatchRef."""
+
+    def commit(
+        self,
+        *,
+        dispatch_ref: DispatchRef,
+        command: Mapping[str, Any],
+    ) -> Mapping[str, Any]: ...
+
+
+__all__ = ["ExactRef", "GrowthDataPort", "GrowthReadPort", "GrowthWritePort", "TenantRef"]

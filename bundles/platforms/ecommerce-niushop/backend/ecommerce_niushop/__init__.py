@@ -2,6 +2,7 @@
 
 _OPERATIONS = (
     ("ecommerce_niushop_source_describe", "POST", "/ecommerce/niushop/source/describe"),
+    ("ecommerce_niushop_facts_read", "POST", "/ecommerce/niushop/facts/read"),
 )
 
 

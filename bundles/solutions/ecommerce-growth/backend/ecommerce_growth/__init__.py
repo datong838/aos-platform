@@ -5,6 +5,7 @@ _OPERATIONS = (
     ("ecommerce_growth_case_put", "POST", "/ecommerce/growth/investigations/cases"),
     ("ecommerce_growth_schedule_put", "POST", "/ecommerce/growth/investigations/schedules"),
     ("ecommerce_growth_schedule_trigger", "POST", "/ecommerce/growth/investigations/schedules/trigger"),
+    ("ecommerce_growth_data_fulfill", "POST", "/ecommerce/growth/investigations/data/fulfill"),
 )
 
 
