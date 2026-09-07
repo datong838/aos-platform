@@ -23,17 +23,17 @@ def frame(kind,method,number,payload=None):
 
 def registration(ctx):
     return {"contributions":[{"kind":"api","method":"POST","path":"/example/read",
-                              "operationId":"example.read","mode":"exclusive"}]}
+                              "operationId":"example_read","mode":"exclusive"}]}
 
 
 def test_session_register_then_invoke_without_ports():
     target=io.BytesIO()
-    source=io.BytesIO(encode_frame(frame("register","register",0))+encode_frame(frame("invoke","example.read",1)))
+    source=io.BytesIO(encode_frame(frame("register","register",0))+encode_frame(frame("invoke","example_read",1)))
     def handle(operation,payload,ctx):
         with pytest.raises(PermissionError):ctx.request("storage.query",{})
         return {"标题":"隔离会话测试"}
     sdk()(registration,handle,source=source,target=target)
-    results=FrameSession(allowed_methods={"register","example.read"}).feed(target.getvalue())
+    results=FrameSession(allowed_methods={"register","example_read"}).feed(target.getvalue())
     assert len(results)==2
     assert results[1]["payload"]=={"标题":"隔离会话测试"}
 
@@ -65,8 +65,17 @@ def test_heartbeat_cannot_replace_initial_registration():
             encode_frame(frame('heartbeat','heartbeat',0,{'nonce':'a'*32}))),target=io.BytesIO())
 
 
-@pytest.mark.parametrize("message",[frame("invoke","unknown.read",1),frame("invoke","example.read",3),
-    frame("port_request","example.read",1),{**frame("invoke","example.read",1),"parentRequestId":"forged"}])
+def test_registration_rejects_operation_id_outside_platform_contract():
+    def dotted(_context):
+        return {"contributions": [{"kind": "api", "method": "POST", "path": "/example",
+                                    "operationId": "example.read", "mode": "exclusive"}]}
+    with pytest.raises(ValueError, match="invalid API operation"):
+        sdk()(dotted, lambda *args: {}, source=io.BytesIO(
+            encode_frame(frame("register", "register", 0))), target=io.BytesIO())
+
+
+@pytest.mark.parametrize("message",[frame("invoke","unknown.read",1),frame("invoke","example_read",3),
+    frame("port_request","example_read",1),{**frame("invoke","example_read",1),"parentRequestId":"forged"}])
 def test_bad_followup_closes_before_handler(message):
     def handle(*args):raise AssertionError("must not invoke")
     with pytest.raises(ValueError):

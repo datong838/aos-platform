@@ -9,6 +9,7 @@ from .client import RegistrationContext, _pairs
 
 _FIELDS = {"schemaVersion", "type", "method", "requestId", "parentRequestId", "payload", "sequence"}
 _ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}")
+_OPERATION_ID = re.compile(r"[A-Za-z][A-Za-z0-9_]{0,159}")
 
 
 def _value(value, depth=0):
@@ -79,7 +80,7 @@ def serve_session(register, handle, *, source=None, target=None):
                     raise ValueError("invalid contribution")
                 if claim.get("kind") == "api":
                     method = claim.get("operationId")
-                    if type(method) is not str or not _ID.fullmatch(method) or method in methods:
+                    if type(method) is not str or not _OPERATION_ID.fullmatch(method) or method in methods:
                         raise ValueError("invalid API operation")
                     methods.add(method)
         elif message['type'] == 'heartbeat':

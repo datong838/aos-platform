@@ -1,4 +1,11 @@
-"""Isolated extension registration SDK. No implicit data or capability grants."""
+"""Isolated extension SDK. No implicit data, tenant, or capability grants."""
 from .client import RegistrationContext, serve_registration
+from .dispatch import DispatchRef, DispatchWritePort, commit_with_dispatch
 
-__all__ = ["RegistrationContext", "serve_registration"]
+__all__ = [
+    "DispatchRef",
+    "DispatchWritePort",
+    "RegistrationContext",
+    "commit_with_dispatch",
+    "serve_registration",
+]

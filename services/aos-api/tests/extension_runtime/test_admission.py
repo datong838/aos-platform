@@ -13,7 +13,7 @@ from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 
 
-def fixture(transform_files=None, namespace="example", transform_manifest=None, now=None):
+def fixture(transform_files=None, namespace="example", transform_manifest=None, now=None, omit_paths=()):
     path=Path(__file__).resolve().parents[1]/"asset_registry/test_release_policy.py"
     spec=importlib.util.spec_from_file_location("runtime_release_fixture",path)
     module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module;spec.loader.exec_module(module)
@@ -36,6 +36,8 @@ def fixture(transform_files=None, namespace="example", transform_manifest=None, 
     files["artifacts/backend-image.json"]=json.dumps({"schemaVersion":1,"images":[{
       "platform":"linux/arm64","imageDigest":"sha256:"+"a"*64,"configDigest":"sha256:"+"b"*64,
       "dependencyLockHash":digest(files["artifacts/python-dependencies.lock"]),"sbomPath":"evidence/sbom.json"}]}).encode()
+    for path in omit_paths:
+        files.pop(path)
     if transform_files:
         transform_files(files)
     record.artifacts=[{"relativePath":path,"digest":digest(raw),"size":len(raw),"mediaType":"application/octet-stream"}
@@ -69,6 +71,13 @@ def test_signed_index_lock_sbom_and_cache_are_joined():
     args,_=fixture()
     assert admit_runtime_artifact(**args).image_id=="sha256:"+"b"*64
     assert args["driver"].calls==1
+
+
+def test_signed_runtime_without_image_index_is_not_admissible():
+    args,_=fixture(omit_paths={"artifacts/backend-image.json"})
+    with pytest.raises(ValueError,match="artifact missing"):
+        admit_runtime_artifact(**args)
+    assert args["driver"].calls==0
 
 
 def test_query_registry_uses_exact_signed_release():
