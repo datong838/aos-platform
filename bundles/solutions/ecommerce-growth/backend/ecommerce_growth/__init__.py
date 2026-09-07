@@ -8,6 +8,8 @@ _OPERATIONS = (
     ("ecommerce_growth_data_fulfill", "POST", "/ecommerce/growth/investigations/data/fulfill"),
     ("ecommerce_growth_analysis_advance", "POST", "/ecommerce/growth/investigations/analysis/advance"),
     ("ecommerce_growth_review_advance", "POST", "/ecommerce/growth/investigations/review/advance"),
+    ("ecommerce_growth_content_generate", "POST", "/ecommerce/growth/content/generate"),
+    ("ecommerce_growth_content_review", "POST", "/ecommerce/growth/content/review"),
 )
 
 

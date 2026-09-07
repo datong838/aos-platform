@@ -25,6 +25,8 @@ PACKAGES = (
             "ecommerce_growth_data_fulfill",
             "ecommerce_growth_analysis_advance",
             "ecommerce_growth_review_advance",
+            "ecommerce_growth_content_generate",
+            "ecommerce_growth_content_review",
         ),
     ),
     (

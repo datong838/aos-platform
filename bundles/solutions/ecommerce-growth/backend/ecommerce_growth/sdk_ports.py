@@ -101,8 +101,32 @@ class GrowthReviewPort(Protocol):
     ) -> Mapping[str, Any]: ...
 
 
+class GrowthCapabilityPort(Protocol):
+    """Host capability broker: receipt-first budget hold, then Provider call."""
+
+    def commit(
+        self,
+        *,
+        dispatch_ref: DispatchRef,
+        command: Mapping[str, Any],
+    ) -> Mapping[str, Any]: ...
+
+
+class GrowthContentReviewPort(Protocol):
+    """Host-owned exact Artifact review authority; never publishes externally."""
+
+    def commit(
+        self,
+        *,
+        dispatch_ref: DispatchRef,
+        command: Mapping[str, Any],
+    ) -> Mapping[str, Any]: ...
+
+
 __all__ = [
     "ExactRef",
+    "GrowthCapabilityPort",
+    "GrowthContentReviewPort",
     "GrowthDataPort",
     "GrowthReadPort",
     "GrowthReviewPort",
