@@ -290,10 +290,14 @@ def test_host_broker_revalidates_allowlist_readiness_mapping_and_exact_refs() ->
             read_port(authority=authority).request(
                 dispatch_ref=dispatch("ecommerce_niushop_facts_read"), request=request
             )
-    unsafe_schema = connector_operation_schema()
-    unsafe_schema["parameters"][0]["name"] = "tableName"
-    with pytest.raises(ValueError, match="parameter rule"):
-        ConnectorOperationSchema.from_payload(unsafe_schema)
+    for target_name in (
+        "tablename", "TableName", "TABLE", "querytarget", "QueryTarget",
+        "DatabaseName", "SchemaName",
+    ):
+        unsafe_schema = connector_operation_schema()
+        unsafe_schema["parameters"][0]["name"] = target_name
+        with pytest.raises(ValueError, match="parameter rule"):
+            ConnectorOperationSchema.from_payload(unsafe_schema)
 
 
 @pytest.mark.parametrize("drift", ["field", "object", "ref", "nan", "max_rows"])

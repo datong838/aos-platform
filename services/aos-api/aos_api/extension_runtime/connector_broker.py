@@ -15,8 +15,8 @@ _SHA256 = re.compile(r"sha256:[0-9a-f]{64}")
 _REF_FIELDS = {"resourceType", "resourceId", "revision", "contentHash", "receiptId"}
 _OPERATION_ID = re.compile(r"[A-Za-z][A-Za-z0-9_]{0,159}")
 _DYNAMIC_TARGET_NAMES = {
-    "database", "databaseName", "query", "queryTarget", "schema", "schemaName", "table",
-    "tableName",
+    "database", "databasename", "query", "querytarget", "schema", "schemaname", "table",
+    "tablename",
 }
 
 
@@ -34,7 +34,7 @@ class ParameterRule:
         if (
             type(self.name) is not str
             or not re.fullmatch(r"[A-Za-z][A-Za-z0-9]{0,79}", self.name)
-            or self.name in _DYNAMIC_TARGET_NAMES
+            or re.sub(r"[^A-Za-z0-9]", "", self.name).casefold() in _DYNAMIC_TARGET_NAMES
             or self.kind not in {"integer", "string_list", "exact_ref"}
             or type(self.required) is not bool
             or type(self.minimum) is not int
