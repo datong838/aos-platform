@@ -85,10 +85,27 @@ class GrowthRuntimePort(Protocol):
     ) -> Mapping[str, Any]: ...
 
 
+class GrowthReviewPort(Protocol):
+    """Review/Handoff host port with DB-clock expiry and receipt-first replay.
+
+    The host first reads the idempotency Receipt.  On first write it obtains
+    ``decidedAt`` from its authoritative transaction clock and rejects an
+    expired Handoff; replay returns the original Receipt and decision time.
+    """
+
+    def commit(
+        self,
+        *,
+        dispatch_ref: DispatchRef,
+        command: Mapping[str, Any],
+    ) -> Mapping[str, Any]: ...
+
+
 __all__ = [
     "ExactRef",
     "GrowthDataPort",
     "GrowthReadPort",
+    "GrowthReviewPort",
     "GrowthRuntimePort",
     "GrowthWritePort",
     "TenantRef",

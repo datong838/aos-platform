@@ -10,6 +10,9 @@ from aos_extension_sdk import DispatchRef
 from .sdk_ports import GrowthWritePort
 from .analysis_runtime import AnalysisRuntimeRequest, AnalysisRuntimeReceipt, advance_analysis_runtime
 from .sdk_ports import GrowthRuntimePort
+from .ecommerce_business_investigation_review_command import ReviewHandoffRequest
+from .ecommerce_content_campaign_workflow import ReviewHandoffReceipt, advance_review_handoff
+from .sdk_ports import GrowthReviewPort
 
 
 class EcommerceGrowthApplication:
@@ -17,9 +20,11 @@ class EcommerceGrowthApplication:
         self,
         write_port: GrowthWritePort,
         runtime_port: GrowthRuntimePort | None = None,
+        review_port: GrowthReviewPort | None = None,
     ) -> None:
         self._write_port = write_port
         self._runtime_port = runtime_port
+        self._review_port = review_port
 
     def commit_case_or_schedule(
         self,
@@ -53,6 +58,20 @@ class EcommerceGrowthApplication:
             raise RuntimeError("analysis runtime port is not configured")
         return advance_analysis_runtime(
             self._runtime_port,
+            dispatch_ref=dispatch_ref,
+            request=request,
+        )
+
+    def advance_review(
+        self,
+        *,
+        dispatch_ref: DispatchRef,
+        request: ReviewHandoffRequest,
+    ) -> ReviewHandoffReceipt:
+        if self._review_port is None:
+            raise RuntimeError("review Handoff port is not configured")
+        return advance_review_handoff(
+            self._review_port,
             dispatch_ref=dispatch_ref,
             request=request,
         )
