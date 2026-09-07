@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "aos.ar2-dynamic-reference-phases/v1",
+  "phases": {
+    "ar2-0": {
+      "exactHashes": {
+        "services/aos-api/aos_api/main.py": "206d335cac09dea1a7a47e8a17c927797e8aaeb212e3e44948309c45872722e2",
+        "services/aos-api/aos_api/routers/domain_manifest.json": "cf68e6fda93f5cecc44f1116d4fe6158ea32269bfae26f9a0ac55a4d5ea1cd12",
+        "services/aos-api/aos_api/routers/domain_aggregates.py": "9113e28b9bb5b2a0e3462ec75d545350fcc9ab217470a69e10746b8e368b37dc",
+        "services/aos-api/aos_api/routers/ecommerce_business_investigations.py": "ef63dde1f0207982357e59af342e760dfc5ef4c8614d995514db802d2af35953",
+        "services/aos-api/aos_api/routers/ecommerce_workshop.py": "acadd20bc140699fe5008794ff69a7d625a925acaa098ef217d12f54c997e469",
+        "apps/web/src/App.tsx": "b923a9a3b1540cdec71e16399964a9257be4d712e2481ec8f66f11c8122a2aa7",
+        "apps/web/src/pages/s2/ecommerce/routes.tsx": "043860b4796298c02c89b41724ca2c96b126fef5b09c26069cd7a2187e0882e1",
+        "apps/web/src/components/workshop/InstalledModuleNavigation.tsx": "700cb9f6d616a826577fe0070bc6434182be0c76aadfe35f5d10521ce000f2af",
+        "bundles/domains/ecommerce-core/bundle.yaml": "9f907446d8626c7ea915d53c2fc3b71aecedc7c23ca34320785ff6b8d1d4e7d8",
+        "bundles/solutions/ecommerce-growth/bundle.yaml": "ee5265c560ada664b62ed1dcd107106a3be3895faacd094c4f30fdd867eb9a55",
+        "bundles/platforms/ecommerce-niushop/bundle.yaml": "a1e3d5d71017232c78beeb6a4c035a06fdb0706d748940d32973afb988d95b28"
+      }
+    },
+    "ar2-1": {
+      "exactHashes": {
+        "services/aos-api/aos_api/main.py": "206d335cac09dea1a7a47e8a17c927797e8aaeb212e3e44948309c45872722e2",
+        "services/aos-api/aos_api/routers/domain_manifest.json": "cf68e6fda93f5cecc44f1116d4fe6158ea32269bfae26f9a0ac55a4d5ea1cd12",
+        "services/aos-api/aos_api/routers/domain_aggregates.py": "9113e28b9bb5b2a0e3462ec75d545350fcc9ab217470a69e10746b8e368b37dc",
+        "services/aos-api/aos_api/routers/ecommerce_business_investigations.py": "ef63dde1f0207982357e59af342e760dfc5ef4c8614d995514db802d2af35953",
+        "services/aos-api/aos_api/routers/ecommerce_workshop.py": "acadd20bc140699fe5008794ff69a7d625a925acaa098ef217d12f54c997e469",
+        "apps/web/src/App.tsx": "b923a9a3b1540cdec71e16399964a9257be4d712e2481ec8f66f11c8122a2aa7",
+        "apps/web/src/pages/s2/ecommerce/routes.tsx": "043860b4796298c02c89b41724ca2c96b126fef5b09c26069cd7a2187e0882e1",
+        "apps/web/src/components/workshop/InstalledModuleNavigation.tsx": "700cb9f6d616a826577fe0070bc6434182be0c76aadfe35f5d10521ce000f2af"
+      },
+      "requiredPaths": [
+        "bundles/domains/ecommerce-core/backend/ecommerce_core/__init__.py",
+        "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py",
+        "bundles/platforms/ecommerce-niushop/backend/ecommerce_niushop/__init__.py"
+      ],
+      "contains": {
+        "bundles/domains/ecommerce-core/bundle.yaml": ["runtime:", "backend/ecommerce_core/__init__.py:register"],
+        "bundles/solutions/ecommerce-growth/bundle.yaml": ["runtime:", "backend/ecommerce_growth/__init__.py:register"],
+        "bundles/platforms/ecommerce-niushop/bundle.yaml": ["runtime:", "backend/ecommerce_niushop/__init__.py:register"],
+        "services/aos-api/aos_api/routers/domain_manifest.json": ["aos_api.routers.ecommerce_workshop", "aos_api.routers.ecommerce_business_investigations"]
+      }
+    },
+    "ar2-7": {
+      "requiredPaths": [
+        "bundles/domains/ecommerce-core/backend/ecommerce_core/__init__.py",
+        "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py",
+        "bundles/platforms/ecommerce-niushop/backend/ecommerce_niushop/__init__.py"
+      ],
+      "contains": {
+        "bundles/domains/ecommerce-core/bundle.yaml": ["runtime:", "backend/ecommerce_core/__init__.py:register"],
+        "bundles/solutions/ecommerce-growth/bundle.yaml": ["runtime:", "backend/ecommerce_growth/__init__.py:register"],
+        "bundles/platforms/ecommerce-niushop/bundle.yaml": ["runtime:", "backend/ecommerce_niushop/__init__.py:register"],
+        "services/aos-api/aos_api/routers/domain_manifest.json": ["aos_api.routers.extension_dispatch"],
+        "services/aos-api/aos_api/routers/domain_aggregates.py": ["aos_api.routers.extension_dispatch"],
+        "apps/web/src/App.tsx": ["EcommerceWorkshopEntryRoute"],
+        "apps/web/src/pages/s2/ecommerce/routes.tsx": ["EcommerceWorkshopHost"],
+        "apps/web/src/components/workshop/InstalledModuleNavigation.tsx": ["catalog.modules"]
+      },
+      "notContains": {
+        "services/aos-api/aos_api/routers/domain_manifest.json": ["aos_api.routers.ecommerce_workshop", "aos_api.routers.ecommerce_business_investigations"],
+        "services/aos-api/aos_api/routers/domain_aggregates.py": ["aos_api.routers.ecommerce_workshop", "aos_api.routers.ecommerce_business_investigations"],
+        "apps/web/src/pages/s2/ecommerce/routes.tsx": ["LegacyFallback", "OrderManagementPage", "ProductInventoryPage"],
+        "apps/web/src/components/workshop/InstalledModuleNavigation.tsx": ["WORKSHOP_ACCEPTANCE_MODULES.map"]
+      }
+    }
+  }
+}
