@@ -152,6 +152,17 @@ const STATUS_POLICIES: Record<AssetControlErrorStatus, FailurePolicy> = {
   },
 };
 
+const CODE_POLICIES: Readonly<Record<string, FailurePolicy>> = {
+  RUNTIME_VIEW_UNAVAILABLE: {
+    ...STATUS_POLICIES[503],
+    message: "运行状态读取服务暂时不可用，未执行任何运行操作；请稍后重新读取。",
+  },
+  RUNTIME_CONTROL_UNAVAILABLE: {
+    ...STATUS_POLICIES[503],
+    message: "运行控制服务暂时不可用，本次命令未受理；请稍后重新发起新命令。",
+  },
+};
+
 const NETWORK_POLICY: FailurePolicy = {
   kind: "network",
   message: "无法确认资产控制操作结果；恢复连接后请先刷新状态，重试时复用原幂等键。",
@@ -321,13 +332,14 @@ export function normalizeAssetControlError(error: unknown): AssetControlError {
 
   if (isSupportedStatus(status)) {
     const hideResourceDetails = status === 404;
+    const code = hideResourceDetails
+      ? "NOT_VISIBLE_OR_MISSING"
+      : safeCode(body, `HTTP_${status}`);
     return new AssetControlError(
       failureFromPolicy(
         status,
-        STATUS_POLICIES[status],
-        hideResourceDetails
-          ? "NOT_VISIBLE_OR_MISSING"
-          : safeCode(body, `HTTP_${status}`),
+        CODE_POLICIES[code] ?? STATUS_POLICIES[status],
+        code,
         safeTraceId(body),
         hideResourceDetails ? null : safeDetails(body),
       ),

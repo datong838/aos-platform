@@ -38,6 +38,31 @@ class RuntimeControlPlane:
     lifecycle_service: Any
     configuration_service: Any
     configuration_authorize: Any
+    disable_service: Any = None
+    view_reader: Any = None
+
+
+class _LazyRuntimeViewReader:
+    """Resolve the read projection on first request, not during app import."""
+
+    def __init__(self) -> None:
+        self._reader: Any = None
+
+    def _resolve(self) -> Any:
+        if self._reader is None:
+            from aos_api.extension_runtime.runtime_view import RuntimeViewReader
+
+            self._reader = RuntimeViewReader(
+                installation_reader=_build_read_only_installation_service(),
+                ui_session_resolver=_build_runtime_ui_session_resolver(),
+            )
+        return self._reader
+
+    def get_installation(self, **kwargs: Any) -> Any:
+        return self._resolve().get_installation(**kwargs)
+
+    def get_operation(self, **kwargs: Any) -> Any:
+        return self._resolve().get_operation(**kwargs)
 
 
 def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlane):
@@ -161,9 +186,52 @@ def build_installation_service() -> InstallationControl:
     )
 
 
+def _build_read_only_installation_service() -> InstallationControl:
+    """Build the Installation projection with an actually read-only connection."""
+
+    from aos_api.asset_registry.composition_store import PostgresCompositionStore
+    from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
+    from aos_api.asset_registry.installation_service import InstallationService
+    from aos_api.asset_registry.installation_store import PostgresInstallationStore
+    from aos_api.asset_registry.release_policy import ReleasePolicy
+    from aos_api.db import connect_read_only
+
+    return InstallationService(
+        store=PostgresInstallationStore(connect_factory=connect_read_only),
+        composition_store=PostgresCompositionStore(),
+        revalidator=InstallationRevalidator(
+            release_policy=ReleasePolicy(trust_roots=_configured_trust_roots())
+        ),
+    )
+
+
+def _build_runtime_ui_session_resolver():
+    """Build the fail-closed signed frontend projection from server-owned inputs."""
+
+    from aos_api.db import connect_read_only
+    from aos_api.extension_runtime.ui_resources import ProductionUiSessionResolver
+    from aos_api.asset_registry.release_policy import ReleasePolicy
+
+    loader = ManifestLoader(
+        _allowlist_roots(repository_root=_REPOSITORY_ROOT),
+        trust_roots=_configured_trust_roots(),
+    )
+    return ProductionUiSessionResolver(
+        connect_factory=connect_read_only,
+        release_policy=ReleasePolicy(trust_roots=_configured_trust_roots()),
+        loader=loader,
+        resource_origin=os.getenv("AOS_EXTENSION_UI_RESOURCE_ORIGIN"),
+    )
+
+
 def build_runtime_lifecycle_service():
     """Wire preparation commands, without exposing routes or starting workers."""
     return build_runtime_control_plane().lifecycle_service
+
+
+def build_runtime_view_reader():
+    """Build the read-only runtime projection without enabling command services."""
+    return _LazyRuntimeViewReader()
 
 
 def build_runtime_control_plane() -> RuntimeControlPlane:
@@ -185,6 +253,10 @@ def build_runtime_control_plane() -> RuntimeControlPlane:
         CurrentConfigurationPermission,
     )
     from aos_api.extension_runtime.lifecycle_service import RuntimeLifecycleService
+    from aos_api.extension_runtime.disable_service import RuntimeDisableService
+    from aos_api.extension_runtime.current_permission import CurrentControlPermission
+    from aos_api.extension_runtime.runtime_view import RuntimeViewReader
+    from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
     from aos_api.extension_runtime.release_revalidation import (
         RuntimeReleaseRevalidator,
     )
@@ -199,6 +271,13 @@ def build_runtime_control_plane() -> RuntimeControlPlane:
         planning_revalidator=planning,
     )
 
+    disable = RuntimeDisableService(
+        installation_store=store,
+        installation_reader=installation,
+        check_current_permission=CurrentControlPermission(
+            operation=DISABLE_RUNTIME_OPERATION
+        ),
+    )
     authorize = build_current_configuration_authorization(
         permission=CurrentConfigurationPermission(installation_store=store)
     )
@@ -219,6 +298,11 @@ def build_runtime_control_plane() -> RuntimeControlPlane:
         revalidator=planning,
         lifecycle_service=lifecycle,
         configuration_service=configuration,
+        disable_service=disable,
+        view_reader=RuntimeViewReader(
+            installation_reader=_build_read_only_installation_service(),
+            ui_session_resolver=_build_runtime_ui_session_resolver(),
+        ),
         configuration_authorize=authorize,
     )
 

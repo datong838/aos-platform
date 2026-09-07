@@ -17,6 +17,7 @@ const INSTALLATION_STATES = new Set<InstallationState>([
   "applied",
   "active",
   "rolled_back",
+  "uninstalled",
 ]);
 const TERMINAL_DECISION_STATES = new Set<InstallationState>([
   "approved",
@@ -24,6 +25,7 @@ const TERMINAL_DECISION_STATES = new Set<InstallationState>([
   "applied",
   "active",
   "rolled_back",
+  "uninstalled",
 ]);
 const PRE_ACTIVE_STATES = new Set<InstallationState>([
   "draft",

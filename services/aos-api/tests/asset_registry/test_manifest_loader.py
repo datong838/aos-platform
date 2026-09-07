@@ -178,6 +178,37 @@ def _signature_evidence(loaded):
     )
 
 
+def test_read_verified_artifact_requires_the_exact_allowlisted_digest(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "allowed"
+    _make_bundle(root)
+    loader = _loader(root)
+    loaded = loader.load("bundle://fixtures/example")
+    artifact = next(item for item in loaded.artifacts if item.relative_path == "content/schema.json")
+
+    assert loader.read_verified_artifact(
+        "bundle://fixtures/example",
+        artifact.relative_path,
+        expected_digest=artifact.digest,
+        limit=1024,
+    ) == b'{"type": "object"}'
+    with pytest.raises(ManifestInvalidError, match="digest does not match"):
+        loader.read_verified_artifact(
+            "bundle://fixtures/example",
+            artifact.relative_path,
+            expected_digest="sha256:" + "f" * 64,
+            limit=1024,
+        )
+    with pytest.raises(ManifestInvalidError, match="path is invalid"):
+        loader.read_verified_artifact(
+            "bundle://fixtures/example",
+            "../secret",
+            expected_digest=artifact.digest,
+            limit=1024,
+        )
+
+
 def test_load_builds_sorted_server_derived_artifact_index_and_evidence(
     tmp_path: Path,
 ) -> None:

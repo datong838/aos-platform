@@ -33,7 +33,7 @@ DOMAIN_ORDER = (
     "apollo",
 )
 DOMAIN_COUNTS = {
-    "infra": 24,
+    "infra": 25,
     "admin": 8,
     "system": 4,
     "agent": 3,
@@ -216,8 +216,8 @@ class RouterManifestStaticTests(unittest.TestCase):
         cls.routers = cls.generator.load_manifest(MANIFEST_PATH)
 
     def test_manifest_count_order_domains_and_unique_keys(self) -> None:
-        self.assertEqual(547, len(self.routers))
-        self.assertEqual(list(range(547)), [entry["order"] for entry in self.routers])
+        self.assertEqual(548, len(self.routers))
+        self.assertEqual(list(range(548)), [entry["order"] for entry in self.routers])
         self.assertEqual(
             DOMAIN_COUNTS,
             {
@@ -226,7 +226,7 @@ class RouterManifestStaticTests(unittest.TestCase):
             },
         )
         keys = {(entry["module"], entry["attribute"]) for entry in self.routers}
-        self.assertEqual(547, len(keys))
+        self.assertEqual(548, len(keys))
 
     def test_main_exposes_control_plane_etag_to_browser_clients(self) -> None:
         tree = ast.parse(MAIN_PATH.read_text(encoding="utf-8"))
@@ -384,17 +384,17 @@ class RouterManifestRuntimeTests(unittest.TestCase):
         # DataRequirement and Business Investigation canonical routes delivered
         # through BI-W2/4/6/8; the exported business-route inventory
         # intentionally filters framework routes out.
-        # The current seal includes 23 reviewed routes added after the prior
+        # The current seal includes the reviewed routes added after the prior
         # baseline for action withdrawal, memory rejection, model-runtime
         # revisions/readiness, Workshop operations and document extraction.
         # Keep both the exact inventory and duplicate set pinned so later drift
         # cannot be hidden by updating only a count.
-        self.assertEqual(4541, result["count"])
+        self.assertEqual(4544, result["count"])
         self.assertEqual(
-            "156f63de27f0b777ad225f76b3927ec7c72785d2a1b81b30d6ca44c0f64c37da",
+            "535adf284c9106b0be8cf8f7165f3064ef0ad2403b0a4d14628923c1f404f0d3",
             result["sha256"],
         )
-        self.assertEqual(2740, result["openapi_paths"])
+        self.assertEqual(2743, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],

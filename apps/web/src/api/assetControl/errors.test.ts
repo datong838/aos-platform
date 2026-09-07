@@ -151,6 +151,16 @@ describe("M3-1 asset-control error normalization", () => {
     });
   });
 
+  it.each([
+    ["RUNTIME_VIEW_UNAVAILABLE", "运行状态读取服务暂时不可用"],
+    ["RUNTIME_CONTROL_UNAVAILABLE", "运行控制服务暂时不可用"],
+  ])("does not mislabel runtime 503 code %s as a trust-root failure", (code, expected) => {
+    const normalized = normalizeAssetControlError(apiError(503, code, null));
+    expect(normalized.message).toContain(expected);
+    expect(normalized.message).not.toContain("信任根");
+    expect(normalized.outcomeUnknown).toBe(false);
+  });
+
   it("keeps 428 failure closed because a refresh cannot supply a missing header", () => {
     const normalized = normalizeAssetControlError(
       apiError(428, "PRECONDITION_REQUIRED"),

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "aos.browser-acceptance/ar1-d-v1",
+  "target": "http://127.0.0.1:15173/apollo/assets",
+  "tenant": "org-org/dev-project",
+  "result": "PASS",
+  "results": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "failures": [],
+      "runtimeReasonVisible": true,
+      "runtimeActionButtonCount": 0
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "failures": [],
+      "runtimeReasonVisible": true,
+      "runtimeActionButtonCount": 0
+    },
+    {
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "failures": [],
+      "runtimeReasonVisible": true,
+      "runtimeActionButtonCount": 0
+    }
+  ],
+  "boundaries": [
+    "内置浏览器已完成真实栖月汇安装详情、侧栏折叠展开和滚动实点；本脚本补充三视口布局证据。",
+    "审计 API 为只读进程，未执行安装、运行、Provider、计费或发布写操作。"
+  ]
+}

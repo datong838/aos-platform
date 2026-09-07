@@ -315,6 +315,86 @@ export interface InstallationListResponse {
   offset: number;
 }
 
+export type RuntimeAction =
+  | "runtime-apply"
+  | "runtime-verify"
+  | "configure"
+  | "enable"
+  | "disable";
+
+export interface RuntimeBinding {
+  generation: string;
+  installationRevision: number;
+  profileRef: string;
+  configRef: Record<string, JsonValue> | null;
+  executionEpoch: number;
+  desiredState: string;
+  observedState: string;
+  enabled: boolean;
+  operationFence: boolean;
+  revision: number;
+}
+
+export interface RuntimeOperationEvent {
+  sequence: number;
+  type: string;
+  payloadHash: string;
+  occurredAt: IsoDateTime;
+}
+
+export interface RuntimeOperation {
+  operationId: string;
+  installationId: string;
+  kind: RuntimeAction;
+  phase: string;
+  status: string;
+  revision: number;
+  requestedBy: string;
+  approvedBy: string | null;
+  expectedInstallationEtag: number;
+  expectedBindingRevision: number | null;
+  deadline: IsoDateTime;
+  failureCode: string | null;
+  createdAt: IsoDateTime;
+  events: RuntimeOperationEvent[];
+}
+
+export interface RuntimeUiSession {
+  title: string;
+  signedResourceUrl: string;
+  resourceHash: Sha256;
+  initialRoute: string;
+  routeClaims: string[];
+  readOperationClaims: string[];
+  commandOperationClaims: string[];
+}
+
+export interface RuntimeInstallation {
+  installationId: string;
+  installationRevision: number;
+  installationEtag: number;
+  installationState: InstallationState;
+  effectiveState: string;
+  binding: RuntimeBinding | null;
+  currentOperation: RuntimeOperation | null;
+  ui: RuntimeUiSession | null;
+  allowedActions: RuntimeAction[];
+  reasons: string[];
+}
+
+export interface RuntimeOperationRequest {
+  kind: RuntimeAction;
+  target?: Record<string, JsonValue>;
+}
+
+export interface RuntimeOperationAccepted {
+  installationId: string;
+  operationId: string;
+  phase: string;
+  status: string;
+  revision: number;
+}
+
 export interface ApiErrorBody {
   code: string;
   message: string;

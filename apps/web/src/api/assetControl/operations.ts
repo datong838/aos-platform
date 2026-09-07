@@ -24,7 +24,10 @@ export type AssetControlOperationId =
   | "apply_bundle_installation"
   | "verify_bundle_installation"
   | "rollback_bundle_installation"
-  | "uninstall_bundle_installation";
+  | "uninstall_bundle_installation"
+  | "get_bundle_runtime_installation"
+  | "get_bundle_runtime_operation"
+  | "create_bundle_runtime_operation";
 
 export type AssetControlOperationSpec = Readonly<{
   method: AssetControlHttpMethod;
@@ -154,6 +157,33 @@ export const ASSET_CONTROL_OPERATIONS = {
     requiresIfMatch: true,
     returnsEtag: true,
     errorStatuses: ACTION_ERRORS,
+  },
+  getRuntimeInstallation: {
+    method: "GET",
+    pathTemplate: "/v1/bundle-runtime-installations/{installation_id}",
+    operationId: "get_bundle_runtime_installation",
+    requiresIdempotencyKey: false,
+    requiresIfMatch: false,
+    returnsEtag: false,
+    errorStatuses: [...BASE_ERRORS, 503],
+  },
+  getRuntimeOperation: {
+    method: "GET",
+    pathTemplate: "/v1/bundle-runtime-installations/operations/{operation_id}",
+    operationId: "get_bundle_runtime_operation",
+    requiresIdempotencyKey: false,
+    requiresIfMatch: false,
+    returnsEtag: true,
+    errorStatuses: [...BASE_ERRORS, 503],
+  },
+  createRuntimeOperation: {
+    method: "POST",
+    pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/operations",
+    operationId: "create_bundle_runtime_operation",
+    requiresIdempotencyKey: true,
+    requiresIfMatch: true,
+    returnsEtag: true,
+    errorStatuses: [...ACTION_ERRORS, 503],
   },
 } as const satisfies Record<string, AssetControlOperationSpec>;
 

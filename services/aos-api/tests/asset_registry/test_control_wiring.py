@@ -242,6 +242,20 @@ def test_invalid_trust_root_configuration_is_deferred_and_fail_closed(
         provider.get_trust_root(publisher="publisher", key_id="key")
 
 
+def test_runtime_view_production_wiring_uses_read_only_installation_and_ui_resolver(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from aos_api.db import connect_read_only
+    from aos_api.extension_runtime.ui_resources import ProductionUiSessionResolver
+
+    monkeypatch.delenv("AOS_EXTENSION_UI_RESOURCE_ORIGIN", raising=False)
+    installation = control_wiring._build_read_only_installation_service()
+    resolver = control_wiring._build_runtime_ui_session_resolver()
+
+    assert installation._store._connect_factory is connect_read_only
+    assert isinstance(resolver, ProductionUiSessionResolver)
+
+
 def test_control_builders_load_future_modules_only_when_called(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

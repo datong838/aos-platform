@@ -10,6 +10,12 @@ import {
 } from "./compositions";
 import { parseInstallationDetail, parseInstallationList } from "./installations";
 import {
+  parseRuntimeInstallation,
+  parseRuntimeOperation,
+  parseRuntimeOperationAccepted,
+  serializeRuntimeOperationRequest,
+} from "./runtimeInstallations";
+import {
   serializeApproveInstallationRequest,
   serializeEmptyInstallationAction,
   serializeRejectInstallationRequest,
@@ -39,6 +45,10 @@ import type {
   InstallationState,
   RejectInstallationRequest,
   RollbackInstallationRequest,
+  RuntimeInstallation,
+  RuntimeOperation,
+  RuntimeOperationAccepted,
+  RuntimeOperationRequest,
   StoredCompositionLock,
   UninstallInstallationRequest,
 } from "./types";
@@ -242,7 +252,7 @@ export class AssetControlClient {
     operationId: string,
     path: string,
     init: RequestInit,
-    expectEtag = false,
+    expectEtag: false | "etagVersion" | "revision" = false,
   ): Promise<T> {
     let response: Response;
     try {
@@ -277,11 +287,11 @@ export class AssetControlClient {
     if (payload === undefined) {
       malformedResponse(operationId, "canonical API returned non-JSON success");
     }
-    if (expectEtag) this.assertResponseEtag(operationId, response, payload);
+    if (expectEtag) this.assertResponseEtag(operationId, response, payload, expectEtag);
     return payload as T;
   }
 
-  private async get<T>(operationId: string, path: string, expectEtag = false) {
+  private async get<T>(operationId: string, path: string, expectEtag: false | "etagVersion" | "revision" = false) {
     return this.request<T>(
       operationId,
       path,
@@ -311,7 +321,7 @@ export class AssetControlClient {
         headers: this.headers({ idempotencyKey: key, ifMatch }),
         body: JSON.stringify(body),
       },
-      operation.returnsEtag,
+      operation.returnsEtag ? "etagVersion" : false,
     );
   }
 
@@ -319,17 +329,20 @@ export class AssetControlClient {
     operationId: string,
     response: Response,
     payload: unknown,
+    field: "etagVersion" | "revision",
   ): void {
     if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
       malformedResponse(operationId, "installation response must be an object");
     }
-    const version = (payload as { etagVersion?: unknown }).etagVersion;
+    const version = (payload as Record<string, unknown>)[field];
     if (typeof version !== "number") {
-      malformedResponse(operationId, "installation response has no etagVersion");
+      malformedResponse(operationId, `response has no ${field}`);
     }
     const expected = strongIfMatch(version);
     if (response.headers.get(ASSET_CONTROL_HEADER_CONTRACT.etag.name) !== expected) {
-      malformedResponse(operationId, "installation ETag does not match etagVersion");
+      malformedResponse(operationId, field === "etagVersion"
+        ? "installation ETag does not match etagVersion"
+        : "runtime operation ETag does not match revision");
     }
   }
 
@@ -447,7 +460,7 @@ export class AssetControlClient {
     const payload = await this.get<unknown>(
       operation.operationId,
       path,
-      operation.returnsEtag,
+      operation.returnsEtag ? "etagVersion" : false,
     );
     return parseInstallationDetail(payload);
   }
@@ -551,6 +564,36 @@ export class AssetControlClient {
       serializeUninstallInstallationRequest(body),
       options,
     );
+  }
+
+  getRuntimeInstallation(installationId: string): Promise<RuntimeInstallation> {
+    const operation = ASSET_CONTROL_OPERATIONS.getRuntimeInstallation;
+    const path = fillPath(operation, { installation_id: canonicalUuid(installationId, "installation_id") });
+    return this.get<unknown>(operation.operationId, path).then(parseRuntimeInstallation);
+  }
+
+  getRuntimeOperation(operationId: string): Promise<RuntimeOperation> {
+    const operation = ASSET_CONTROL_OPERATIONS.getRuntimeOperation;
+    const path = fillPath(operation, { operation_id: canonicalUuid(operationId, "operation_id") });
+    return this.get<unknown>(operation.operationId, path, "revision").then(parseRuntimeOperation);
+  }
+
+  createRuntimeOperation(
+    installationId: string,
+    body: RuntimeOperationRequest,
+    options: InstallationActionOptions,
+  ): Promise<RuntimeOperationAccepted> {
+    const operation = ASSET_CONTROL_OPERATIONS.createRuntimeOperation;
+    const path = fillPath(operation, { installation_id: canonicalUuid(installationId, "installation_id") });
+    if (isOffline()) offlineMutationDisabled(operation.operationId);
+    return this.request<unknown>(operation.operationId, path, {
+      method: "POST",
+      headers: this.headers({
+        idempotencyKey: idempotencyKey(options.idempotencyKey),
+        ifMatch: strongIfMatch(options.etagVersion),
+      }),
+      body: JSON.stringify(serializeRuntimeOperationRequest(body)),
+    }, "revision").then(parseRuntimeOperationAccepted);
   }
 }
 

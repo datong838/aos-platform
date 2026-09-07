@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "aos.extension-host-browser/ar1-d-v1",
+  "result": "PASS",
+  "resourceHash": "sha256:80294e04bc23f54f4c5e9a372aefdc288bb225e9272245a16bfcb48246ba4352",
+  "observed": [
+    "canonical-runtime-http-api",
+    "server-ui-strict-parser",
+    "sandbox-iframe",
+    "nonce-message-channel",
+    "claimed-read",
+    "claimed-command",
+    "unclaimed-read-fenced"
+  ],
+  "failures": []
+}

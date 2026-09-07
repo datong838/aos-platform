@@ -241,6 +241,7 @@ class PostgresInstallationStore:
                     org_id=org_id,
                     project_id=project_id,
                     installation_pk=row["installation_pk"],
+                    lock=False,
                 )
         except (AssetNotFoundError, LockIntegrityCorruptError):
             raise
@@ -1131,7 +1132,9 @@ def _load_record_by_pk(
     org_id: str,
     project_id: str,
     installation_pk: uuid.UUID,
+    lock: bool = True,
 ) -> InstallationRecord:
+    lock_clause = " FOR SHARE OF i" if lock else ""
     row = conn.execute(
         """
         SELECT i.installation_id, i.display_name,
@@ -1167,8 +1170,8 @@ def _load_record_by_pk(
            AND d.decision_id = r.decision_id
          WHERE i.org_id = %s AND i.project_id = %s
            AND i.installation_pk = %s
-         FOR SHARE OF i
-        """,
+        """
+        + lock_clause,
         (org_id, project_id, installation_pk),
     ).fetchone()
     if row is None:

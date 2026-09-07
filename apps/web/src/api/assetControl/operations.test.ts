@@ -7,18 +7,18 @@ import {
 } from "./operations";
 
 describe("asset-control M2-B operation contract", () => {
-  it("freezes the 12 unique operation ids and paths", () => {
+  it("freezes the 15 unique operation ids and paths", () => {
     const operations = Object.values(ASSET_CONTROL_OPERATIONS);
 
-    expect(operations).toHaveLength(12);
-    expect(new Set(operations.map((operation) => operation.operationId)).size).toBe(12);
+    expect(operations).toHaveLength(15);
+    expect(new Set(operations.map((operation) => operation.operationId)).size).toBe(15);
     expect(
       new Set(
         operations.map(
           (operation) => `${operation.method} ${operation.pathTemplate}`,
         ),
       ).size,
-    ).toBe(12);
+    ).toBe(15);
   });
 
   it("requires idempotency for commands and If-Match for state actions", () => {
@@ -40,6 +40,7 @@ describe("asset-control M2-B operation contract", () => {
       "verify_bundle_installation",
       "rollback_bundle_installation",
       "uninstall_bundle_installation",
+      "create_bundle_runtime_operation",
     ]);
     expect(conditionalActions).toEqual([
       "submit_bundle_installation",
@@ -49,6 +50,7 @@ describe("asset-control M2-B operation contract", () => {
       "verify_bundle_installation",
       "rollback_bundle_installation",
       "uninstall_bundle_installation",
+      "create_bundle_runtime_operation",
     ]);
   });
 
@@ -81,9 +83,10 @@ describe("asset-control M2-B operation contract", () => {
     expect(ASSET_CONTROL_OPERATIONS.resolveComposition.returnsEtag).toBe(false);
     expect(ASSET_CONTROL_OPERATIONS.getCompositionLock.returnsEtag).toBe(false);
     expect(ASSET_CONTROL_OPERATIONS.listInstallations.returnsEtag).toBe(false);
+    expect(ASSET_CONTROL_OPERATIONS.getRuntimeInstallation.returnsEtag).toBe(false);
 
     for (const operation of Object.values(ASSET_CONTROL_OPERATIONS).filter(
-      (item) => item.operationId.includes("installation") && item.operationId !== "list_bundle_installations",
+      (item) => item.returnsEtag,
     )) {
       expect(operation.returnsEtag).toBe(true);
     }

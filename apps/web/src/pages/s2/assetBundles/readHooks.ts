@@ -9,6 +9,7 @@ import type {
 import type {
   InstallationListResponse,
   InstallationResponse,
+  RuntimeInstallation,
 } from "../../../api/assetControl/types";
 import type {
   AssetReadState,
@@ -204,6 +205,20 @@ export function useInstallation(
     () => {
       if (!installationId) throw new Error("installation id is required");
       return assetControlClient.getInstallation(installationId);
+    },
+    resourceIsNeverEmpty,
+  );
+}
+
+export function useRuntimeInstallation(
+  installationId: string | null,
+): AssetReadState<RuntimeInstallation> {
+  const requestKey = installationId ? `runtime-installation:${installationId}` : null;
+  return useAssetRead(
+    requestKey,
+    () => {
+      if (!installationId) throw new Error("installation id is required");
+      return assetControlClient.getRuntimeInstallation(installationId);
     },
     resourceIsNeverEmpty,
   );

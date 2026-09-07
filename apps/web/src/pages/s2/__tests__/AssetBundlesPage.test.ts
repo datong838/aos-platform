@@ -17,6 +17,7 @@ import {
 import { INSTALLATION_DETAIL_FIXTURE, INSTALLATION_DRAFT_FIXTURE, INSTALLATION_LIST_FIXTURE } from "../../../api/assetControl/installationFixtures";
 import { REGISTRY_BUNDLE_DETAIL_FIXTURE, REGISTRY_BUNDLE_LIST_FIXTURE, REGISTRY_VERSION_DETAIL_FIXTURE } from "../../../api/assetControl/registryFixtures";
 import { setConnectivity } from "../../../lib/offlineStore";
+import type { RuntimeInstallation } from "../../../api/assetControl/types";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -65,6 +66,14 @@ vi.mock("../assetBundles/readHooks", () => ({
       ? (hooks.installationData ?? INSTALLATION_DETAIL_FIXTURE)
       : null,
     status: installationId ? "ready" : "idle",
+    error: null,
+    refreshing: false,
+    stale: false,
+    reload,
+  }),
+  useRuntimeInstallation: () => ({
+    data: null,
+    status: "idle",
     error: null,
     refreshing: false,
     stale: false,
@@ -547,5 +556,50 @@ describe("M3-4/M3-5 AssetBundlesPage integration", () => {
     );
     expect(host.textContent).not.toContain("批准安装");
     expect(host.textContent).not.toContain("Apply Installation");
+  });
+
+  it("父级运行处理器在离线、刷新、过期、pending 或服务端撤回动作时拒绝发送", async () => {
+    const { canExecuteRuntimeAction, runtimeBindingIdentity } = await import("../AssetBundlesPage");
+    const runtime = {
+      installationId: "22222222-2222-4222-8222-222222222222",
+      installationRevision: 5,
+      installationEtag: 5,
+      installationState: "active",
+      effectiveState: "disabled",
+      binding: null,
+      currentOperation: null,
+      ui: null,
+      allowedActions: ["disable"],
+      reasons: [],
+    } satisfies RuntimeInstallation;
+    const base = {
+      installationId: runtime.installationId,
+      runtime,
+      kind: "disable" as const,
+      offline: false,
+      stale: false,
+      refreshing: false,
+      pending: null,
+    };
+    expect(canExecuteRuntimeAction(base)).toBe(true);
+    expect(canExecuteRuntimeAction({ ...base, offline: true })).toBe(false);
+    expect(canExecuteRuntimeAction({ ...base, stale: true })).toBe(false);
+    expect(canExecuteRuntimeAction({ ...base, refreshing: true })).toBe(false);
+    expect(canExecuteRuntimeAction({ ...base, pending: "configure" })).toBe(false);
+    expect(canExecuteRuntimeAction({ ...base, runtime: { ...runtime, allowedActions: [] } })).toBe(false);
+    expect(canExecuteRuntimeAction({ ...base, installationId: "33333333-3333-4333-8333-333333333333" })).toBe(false);
+    expect(runtimeBindingIdentity(runtime)).toBe("no-binding");
+    expect(runtimeBindingIdentity({ ...runtime, binding: {
+      generation: "44444444-4444-4444-8444-444444444444",
+      installationRevision: 5,
+      profileRef: "runtime-profile/python-v1",
+      configRef: null,
+      executionEpoch: 2,
+      desiredState: "disabled",
+      observedState: "disabled",
+      enabled: false,
+      operationFence: false,
+      revision: 2,
+    } })).not.toBe(runtimeBindingIdentity(runtime));
   });
 });

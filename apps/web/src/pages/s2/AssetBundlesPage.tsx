@@ -1,8 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { getTenant } from "../../api/tenant";
+import { assetControlClient } from "../../api/assetControl/client";
+import { normalizeAssetControlError, type AssetControlError } from "../../api/assetControl/errors";
+import { createIdempotentCommand, idempotencyKeyFor, type IdempotencyKey } from "../../api/assetControl/idempotency";
 import type {
   CompositionRequest,
+  JsonValue,
+  RuntimeAction,
+  RuntimeInstallation,
+  RuntimeOperationAccepted,
+  RuntimeOperationRequest,
   InstallationState,
   StoredCompositionLock,
 } from "../../api/assetControl/types";
@@ -12,6 +20,7 @@ import { BpBanner, BpTabs, BpToolbar } from "./blueprintUi";
 import { InstallationDetail } from "./assetBundles/InstallationDetail";
 import { InstallationActionPanel } from "./assetBundles/InstallationActionPanel";
 import { InstallationPanel } from "./assetBundles/InstallationPanel";
+import { RuntimeInstallationPanel } from "./assetBundles/RuntimeInstallationPanel";
 import { RegistryPanel } from "./assetBundles/RegistryPanel";
 import { CompositionDependencyPanel } from "./assetBundles/CompositionDependencyPanel";
 import { CompositionDiffPanel } from "./assetBundles/CompositionDiffPanel";
@@ -20,6 +29,7 @@ import { CompositionPanel } from "./assetBundles/CompositionPanel";
 import {
   useInstallation,
   useInstallations,
+  useRuntimeInstallation,
   useRegistryBundle,
   useRegistryBundles,
   useRegistryVersion,
@@ -69,6 +79,52 @@ interface ActionRuntimeContext {
   readonly subject?: string;
   readonly roles?: readonly string[];
   readonly offline: boolean;
+}
+
+interface RuntimeAttempt {
+  installationId: string;
+  body: RuntimeOperationRequest;
+  idempotencyKey: IdempotencyKey;
+  etagVersion: number;
+  bindingIdentity: string;
+}
+
+interface RuntimeActionPreflight {
+  readonly installationId: string | null;
+  readonly runtime: RuntimeInstallation | null;
+  readonly kind: RuntimeAction;
+  readonly offline: boolean;
+  readonly stale: boolean;
+  readonly refreshing: boolean;
+  readonly pending: RuntimeAction | null;
+}
+
+export function canExecuteRuntimeAction({
+  installationId,
+  runtime,
+  kind,
+  offline,
+  stale,
+  refreshing,
+  pending,
+}: RuntimeActionPreflight): boolean {
+  return Boolean(
+    installationId &&
+    runtime &&
+    runtime.installationId === installationId &&
+    runtime.allowedActions.includes(kind) &&
+    !offline &&
+    !stale &&
+    !refreshing &&
+    pending === null,
+  );
+}
+
+export function runtimeBindingIdentity(runtime: RuntimeInstallation | null): string {
+  const binding = runtime?.binding;
+  return binding
+    ? `${binding.generation}\u0000${binding.revision}\u0000${binding.executionEpoch}`
+    : "no-binding";
 }
 
 function readActionRuntimeContext(): ActionRuntimeContext {
@@ -136,6 +192,11 @@ export function AssetBundlesPage() {
     useState<CreateInstallationDraft>(DEFAULT_CREATE_DRAFT);
   const [selectedAction, setSelectedAction] =
     useState<InstallationAction | null>(null);
+  const [runtimePending, setRuntimePending] = useState<RuntimeAction | null>(null);
+  const [runtimeError, setRuntimeError] = useState<AssetControlError | null>(null);
+  const [runtimeReceipt, setRuntimeReceipt] = useState<RuntimeOperationAccepted | null>(null);
+  const [runtimeRetry, setRuntimeRetry] = useState<RuntimeAttempt | null>(null);
+  const runtimeInFlight = useRef(false);
   const actionRuntime = useActionRuntimeContext();
 
   const registryState = useRegistryBundles();
@@ -143,6 +204,7 @@ export function AssetBundlesPage() {
   const versionDetailState = useRegistryVersion(versionSelection);
   const installationsState = useInstallations(installationRequest);
   const installationDetailState = useInstallation(installationId);
+  const runtimeInstallationState = useRuntimeInstallation(installationId);
   const commands = useResolveCreateCommands({
     onCreateSuccess: (installation) => {
       setInstallationId(installation.installationId);
@@ -215,6 +277,68 @@ export function AssetBundlesPage() {
     if (succeeded) setSelectedAction(null);
   }
 
+  async function executeRuntimeAttempt(attempt: RuntimeAttempt): Promise<void> {
+    const runtime = runtimeInstallationState.data;
+    if (!canExecuteRuntimeAction({
+      installationId,
+      runtime,
+      kind: attempt.body.kind,
+      offline: isOffline(),
+      stale: runtimeInstallationState.stale,
+      refreshing: runtimeInstallationState.refreshing,
+      pending: runtimePending,
+    }) || runtimeInFlight.current) return;
+    if (
+      attempt.installationId !== installationId ||
+      attempt.etagVersion !== runtime?.installationEtag ||
+      attempt.bindingIdentity !== runtimeBindingIdentity(runtime)
+    ) return;
+    runtimeInFlight.current = true;
+    setRuntimePending(attempt.body.kind);
+    setRuntimeError(null);
+    try {
+      const receipt = await assetControlClient.createRuntimeOperation(
+        attempt.installationId,
+        attempt.body,
+        { idempotencyKey: attempt.idempotencyKey, etagVersion: attempt.etagVersion },
+      );
+      setRuntimeReceipt(receipt);
+      setRuntimeRetry(null);
+      await assetControlClient.getRuntimeOperation(receipt.operationId);
+      runtimeInstallationState.reload();
+    } catch (cause) {
+      const error = normalizeAssetControlError(cause);
+      setRuntimeError(error);
+      setRuntimeRetry(error.outcomeUnknown ? attempt : null);
+      if (error.requiresRefresh) runtimeInstallationState.reload();
+    } finally {
+      runtimeInFlight.current = false;
+      setRuntimePending(null);
+    }
+  }
+
+  function executeRuntimeAction(kind: RuntimeAction, target?: Record<string, JsonValue>) {
+    const runtime = runtimeInstallationState.data;
+    if (!installationId || !runtime) return;
+    if (!canExecuteRuntimeAction({
+      installationId,
+      runtime,
+      kind,
+      offline: isOffline(),
+      stale: runtimeInstallationState.stale,
+      refreshing: runtimeInstallationState.refreshing,
+      pending: runtimePending,
+    })) return;
+    const command = createIdempotentCommand();
+    void executeRuntimeAttempt({
+      installationId,
+      body: target === undefined ? { kind } : { kind, target },
+      idempotencyKey: idempotencyKeyFor(command),
+      etagVersion: runtime.installationEtag,
+      bindingIdentity: runtimeBindingIdentity(runtime),
+    });
+  }
+
   function selectVersion(selection: RegistryVersionSelection) {
     if (!commands.markInputChanged()) return;
     setVersionSelection(selection);
@@ -237,6 +361,21 @@ export function AssetBundlesPage() {
     versionDetailState.status === "ready" &&
     versionDetailState.data?.status === "published" &&
     versionDetailState.data.signature,
+  );
+  const runtimeRetryAllowed = Boolean(
+    runtimeRetry &&
+    canExecuteRuntimeAction({
+      installationId,
+      runtime: runtimeInstallationState.data,
+      kind: runtimeRetry.body.kind,
+      offline: actionRuntime.offline,
+      stale: runtimeInstallationState.stale,
+      refreshing: runtimeInstallationState.refreshing,
+      pending: runtimePending,
+    }) &&
+    runtimeRetry.installationId === installationId &&
+    runtimeRetry.etagVersion === runtimeInstallationState.data?.installationEtag &&
+    runtimeRetry.bindingIdentity === runtimeBindingIdentity(runtimeInstallationState.data),
   );
   const resolveDisabledReason = !versionSelection
     ? "请先从 Registry 选择一个版本"
@@ -332,6 +471,17 @@ export function AssetBundlesPage() {
             pendingAction={pendingAction}
             onSelectedActionChange={setSelectedAction}
             onConfirm={(command) => { void confirmInstallationAction(command); }}
+          />
+          <RuntimeInstallationPanel
+            state={runtimeInstallationState}
+            offline={actionRuntime.offline}
+            pending={runtimePending}
+            error={runtimeError}
+            receipt={runtimeReceipt}
+            hasRetrySameCommand={runtimeRetry !== null}
+            canRetrySameCommand={runtimeRetryAllowed}
+            onRetrySameCommand={() => { if (runtimeRetry) void executeRuntimeAttempt(runtimeRetry); }}
+            onExecute={executeRuntimeAction}
           />
           {actionCommands.state.error && (
             <p role="alert">{actionCommands.state.error.message}</p>

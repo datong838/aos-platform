@@ -286,6 +286,32 @@ def test_create_get_and_list_draft_are_tenant_scoped(installation_scope) -> None
     assert counts == {"installations": 1, "revisions": 1, "events": 1}
 
 
+def test_get_installation_is_compatible_with_read_only_audit_connection(
+    installation_scope,
+) -> None:
+    composition_store, store, scoped_connect = installation_scope
+    lock = _seed_composition(composition_store)
+    record = store.create_draft(
+        org_id=ORG,
+        project_id=PROJECT,
+        request=_create_request(lock.composition_id),
+        requested_by="requester:test",
+    )
+
+    @contextmanager
+    def read_only_connect():
+        with scoped_connect() as conn:
+            conn.execute("SET LOCAL transaction_read_only = on")
+            yield conn
+
+    read_store = PostgresInstallationStore(read_only_connect)
+    assert read_store.get_installation(
+        org_id=ORG,
+        project_id=PROJECT,
+        installation_id=record.installation_id,
+    ).installation_id == record.installation_id
+
+
 def test_cross_tenant_lock_and_failed_create_leave_no_partial_installation(
     installation_scope,
 ) -> None:

@@ -361,6 +361,53 @@ class ManifestLoader:
         except (OSError, ValueError, TypeError, ValidationError, yaml.YAMLError) as exc:
             raise ManifestInvalidError("bundle source failed safe loading") from exc
 
+    def read_verified_artifact(
+        self,
+        source_ref: str,
+        relative_path: str,
+        *,
+        expected_digest: str,
+        limit: int,
+    ) -> bytes:
+        """Read one allowlisted bundle file and bind its bytes to an exact digest."""
+
+        try:
+            alias, relative_parts = self._parse_source_ref(source_ref)
+            root = self._allowlist_roots.get(alias)
+            if root is None:
+                raise ManifestInvalidError("bundle source alias is not allowlisted")
+            if (
+                not isinstance(relative_path, str)
+                or not relative_path
+                or relative_path.startswith(("/", "~"))
+                or "\\" in relative_path
+                or "://" in relative_path
+                or any(part in {"", ".", ".."} for part in relative_path.split("/"))
+            ):
+                raise ManifestInvalidError("bundle artifact path is invalid")
+            if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1 or limit > self.MAX_FILE_BYTES:
+                raise ManifestInvalidError("bundle artifact read limit is invalid")
+            if not isinstance(expected_digest, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", expected_digest):
+                raise ManifestInvalidError("bundle artifact digest is invalid")
+            with self._open_bundle_directory(
+                root,
+                self._allowlist_root_identities[alias],
+                relative_parts,
+            ) as bundle_descriptor:
+                files, _ = self._enumerate_files(bundle_descriptor)
+                selected = next((item for item in files if item.relative_path == relative_path), None)
+                if selected is None:
+                    raise ManifestInvalidError("bundle artifact is missing")
+                content = self._read_regular_file(bundle_descriptor, selected, limit=limit)
+                if self._sha256_bytes(content) != expected_digest:
+                    raise ManifestInvalidError("bundle artifact digest does not match")
+                self._scan_sensitive_content(relative_path, content)
+                return content
+        except ManifestInvalidError:
+            raise
+        except (OSError, TypeError, ValueError) as exc:
+            raise ManifestInvalidError("bundle artifact failed safe reading") from exc
+
     @staticmethod
     def _is_exported_path(relative_path: str, exports: list[str]) -> bool:
         return any(
