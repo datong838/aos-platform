@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime
 import math
 import re
+from types import MappingProxyType
 from typing import Any, Mapping, Protocol, TypeVar
 
 from .dispatch import DispatchRef
@@ -28,13 +28,29 @@ def _safe_parameters(value: Any, depth: int = 0) -> None:
             if not isinstance(key, str) or key.replace("_", "").lower() in _FORBIDDEN_KEYS:
                 raise ValueError("connector parameters contain a forbidden key")
             _safe_parameters(child, depth + 1)
-    elif isinstance(value, list):
+    elif isinstance(value, (list, tuple)):
         for child in value:
             _safe_parameters(child, depth + 1)
     elif isinstance(value, float) and not math.isfinite(value):
         raise ValueError("connector parameters must contain finite numbers")
     elif value is not None and not isinstance(value, (str, int, float, bool)):
         raise ValueError("connector parameters must be JSON values")
+
+
+def _freeze(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return MappingProxyType({key: _freeze(child) for key, child in value.items()})
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze(child) for child in value)
+    return value
+
+
+def _thaw(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {key: _thaw(child) for key, child in value.items()}
+    if isinstance(value, tuple):
+        return [_thaw(child) for child in value]
+    return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +62,11 @@ class ConnectorRequest:
     idempotency_key: str
 
     def __post_init__(self) -> None:
+        self._validate()
+        object.__setattr__(self, "connection_ref", _freeze(self.connection_ref))
+        object.__setattr__(self, "typed_params", _freeze(self.typed_params))
+
+    def _validate(self) -> None:
         if not _OPERATION_ID.fullmatch(self.operation_id):
             raise ValueError("invalid connector operation id")
         if self.cutoff_at.utcoffset() is None:
@@ -68,10 +89,11 @@ class ConnectorRequest:
         _safe_parameters(self.typed_params)
 
     def to_payload(self) -> dict[str, Any]:
+        self._validate()
         return {
-            "connectionRef": deepcopy(dict(self.connection_ref)),
+            "connectionRef": _thaw(self.connection_ref),
             "operationId": self.operation_id,
-            "typedParams": deepcopy(dict(self.typed_params)),
+            "typedParams": _thaw(self.typed_params),
             "cutoffAt": self.cutoff_at.isoformat(),
             "idempotencyKey": self.idempotency_key,
         }
@@ -84,6 +106,7 @@ class ConnectorPort(Protocol):
 def request_connector(port: ConnectorPort, dispatch_ref: DispatchRef, request: ConnectorRequest) -> _T:
     if dispatch_ref.handler_kind != "extension" or dispatch_ref.operation_id != request.operation_id:
         raise PermissionError("connector dispatch does not authorize this operation")
+    request._validate()
     return port.request(dispatch_ref=dispatch_ref, request=request)
 
 

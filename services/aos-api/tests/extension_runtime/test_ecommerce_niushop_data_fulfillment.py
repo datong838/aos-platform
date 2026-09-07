@@ -21,6 +21,11 @@ for dependency in (SDK_ROOT, NIUSHOP_ROOT, GROWTH_ROOT):
         sys.path.insert(0, str(dependency))
 
 from aos_extension_sdk import ConnectorRequest, DispatchRef
+from aos_api.extension_runtime.connector_broker import (
+    ConnectorAuthoritySnapshot,
+    ConnectorBroker,
+    ConnectorOperationSchema,
+)
 from ecommerce_growth.data_fulfillment import (
     DataRequirementSpec,
     bind_observation_fulfillment,
@@ -31,7 +36,11 @@ from ecommerce_niushop.business_investigation_niushop_profile import (
     NiushopProfile as PackageNiushopProfile,
     evaluate_niushop_profile as evaluate_package_profile,
 )
-from ecommerce_niushop.connector import NiushopFactQuery, read_bounded_facts
+from ecommerce_niushop.connector import (
+    NiushopFactQuery,
+    connector_operation_schema,
+    read_bounded_facts,
+)
 from ecommerce_niushop.sdk_ports import ExactRef as AdapterRef
 
 
@@ -134,13 +143,48 @@ def observation(item: NiushopFactQuery | None = None) -> dict[str, object]:
     }
 
 
-class ReadPort:
-    def request(self, *, dispatch_ref, request):
+class ReadExecutor:
+    def __init__(self, result=None):
+        self.result = result
+
+    def execute(self, *, dispatch_ref, request):
         assert dispatch_ref.org_id == "org-org" and dispatch_ref.project_id == "dev-project"
         assert set(request.to_payload()["typedParams"]) == {
-            "factFamilies", "objectIds", "selectedFields", "maxRows", "timeoutSeconds"
+            "requirementRef", "sourceReadinessRef", "mappingRef", "factFamilies",
+            "objectIds", "selectedFields", "maxRows", "timeoutSeconds"
         }
-        return observation()
+        return self.result or observation()
+
+
+class Authority:
+    def __init__(self, *, available=True, mapping_hash=HASH_A):
+        self.available = available
+        self.mapping_hash = mapping_hash
+
+    def revalidate(self, *, dispatch_ref, request):
+        params = request.typed_params
+        mapping_ref = dict(params["mappingRef"])
+        mapping_ref["contentHash"] = self.mapping_hash
+        return ConnectorAuthoritySnapshot(
+            available=self.available,
+            connection_ref=dict(request.connection_ref),
+            requirement_ref=dict(params["requirementRef"]),
+            source_readiness_ref=dict(params["sourceReadinessRef"]),
+            mapping_ref=mapping_ref,
+            cutoff_at=request.cutoff_at,
+        )
+
+
+def read_schema() -> ConnectorOperationSchema:
+    return ConnectorOperationSchema.from_payload(connector_operation_schema())
+
+
+def read_port(*, authority=None, result=None) -> ConnectorBroker:
+    return ConnectorBroker(
+        {"ecommerce_niushop_facts_read": read_schema()},
+        authority or Authority(),
+        ReadExecutor(result),
+    )
 
 
 class DataPort:
@@ -188,7 +232,7 @@ def test_bounded_connector_produces_same_cutoff_qiyuehui_shaped_facts() -> None:
     result = read_bounded_facts(
         item,
         dispatch_ref=dispatch("ecommerce_niushop_facts_read"),
-        port=ReadPort(),
+        port=read_port(),
     )
     assert result.cutoff_at == CUTOFF and result.quality_score == 0.98
     assert {fact.fact_family for fact in result.facts} == {"order", "payment"}
@@ -205,6 +249,74 @@ def test_connector_rejects_arbitrary_targets_credentials_and_nonfinite_values() 
     ):
         with pytest.raises(ValueError):
             ConnectorRequest(connection, "ecommerce_niushop_facts_read", params, CUTOFF, "key")
+
+    original = {"factFamilies": ["order"]}
+    frozen = ConnectorRequest(
+        connection, "ecommerce_niushop_facts_read", original, CUTOFF, "key"
+    )
+    original["sql"] = "SELECT secret"
+    original["factFamilies"].append("customer")
+    assert frozen.to_payload()["typedParams"] == {"factFamilies": ["order"]}
+    with pytest.raises(TypeError):
+        frozen.typed_params["sql"] = "SELECT secret"
+
+
+def test_host_broker_revalidates_allowlist_readiness_mapping_and_exact_refs() -> None:
+    item = query()
+    params = {
+        "requirementRef": exact_payload(item.requirement_ref),
+        "sourceReadinessRef": exact_payload(item.source_readiness_ref),
+        "mappingRef": exact_payload(item.mapping_ref),
+        "factFamilies": ["order"],
+        "objectIds": [],
+        "selectedFields": ["orderCount"],
+        "maxRows": 10,
+        "timeoutSeconds": 5,
+    }
+    connection = exact_payload(item.connection_ref)
+    for drift in ({**params, "tableName": "orders"}, {**params, "maxRows": 1001}):
+        request = ConnectorRequest(
+            connection, "ecommerce_niushop_facts_read", drift, CUTOFF, "broker-key"
+        )
+        with pytest.raises(ValueError):
+            read_port().request(
+                dispatch_ref=dispatch("ecommerce_niushop_facts_read"), request=request
+            )
+    request = ConnectorRequest(
+        connection, "ecommerce_niushop_facts_read", params, CUTOFF, "broker-key"
+    )
+    for authority in (Authority(available=False), Authority(mapping_hash=HASH_B)):
+        with pytest.raises(PermissionError, match="authority"):
+            read_port(authority=authority).request(
+                dispatch_ref=dispatch("ecommerce_niushop_facts_read"), request=request
+            )
+    unsafe_schema = connector_operation_schema()
+    unsafe_schema["parameters"][0]["name"] = "tableName"
+    with pytest.raises(ValueError, match="parameter rule"):
+        ConnectorOperationSchema.from_payload(unsafe_schema)
+
+
+@pytest.mark.parametrize("drift", ["field", "object", "ref", "nan", "max_rows"])
+def test_adapter_rejects_unrequested_or_untraceable_facts(drift: str) -> None:
+    item = query().model_copy(update={"object_ids": ["shop-qyh"]})
+    result = observation(item)
+    if drift == "field":
+        result["facts"][0]["field"] = "unrequestedSensitiveField"
+    elif drift == "object":
+        result["facts"][0]["objectId"] = "another-shop"
+    elif drift == "ref":
+        result["factRefs"][0]["resourceId"] = "unrelated"
+    else:
+        if drift == "nan":
+            result["facts"][0]["value"] = float("nan")
+        else:
+            item = item.model_copy(update={"max_rows": 1})
+    with pytest.raises(ValueError):
+        read_bounded_facts(
+            item,
+            dispatch_ref=dispatch("ecommerce_niushop_facts_read"),
+            port=read_port(result=result),
+        )
 
 
 def test_growth_composes_requirement_and_fulfillment_without_tenant_override() -> None:
@@ -264,7 +376,7 @@ def test_authority_cutoff_quality_and_cross_tenant_drift_fail_closed() -> None:
         read_bounded_facts(
             item,
             dispatch_ref=dispatch("ecommerce_niushop_facts_read", org_id="dev-org"),
-            port=ReadPort(),
+            port=read_port(),
         )
     with pytest.raises(PermissionError):
         request_requirement(

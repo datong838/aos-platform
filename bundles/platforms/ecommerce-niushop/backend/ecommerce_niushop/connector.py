@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import math
 from typing import Any, Mapping, Self
 
 from pydantic import Field, field_validator, model_validator
@@ -19,6 +20,35 @@ from .sdk_ports import (
 
 
 READ_OPERATION = "ecommerce_niushop_facts_read"
+
+
+def connector_operation_schema() -> dict[str, Any]:
+    """Signed runtime declaration consumed by the generic host broker at activation."""
+    return {
+        "operationId": READ_OPERATION,
+        "parameters": [
+            {
+                "name": "requirementRef", "kind": "exact_ref",
+                "resourceType": "DataRequirementRevision",
+            },
+            {
+                "name": "sourceReadinessRef", "kind": "exact_ref",
+                "resourceType": "SourceReadinessEnvelope", "receiptRequired": True,
+            },
+            {
+                "name": "mappingRef", "kind": "exact_ref",
+                "resourceType": "SourceMappingRevision",
+            },
+            {"name": "factFamilies", "kind": "string_list", "minimum": 1, "maximum": 16},
+            {
+                "name": "objectIds", "kind": "string_list", "required": False,
+                "minimum": 0, "maximum": 200,
+            },
+            {"name": "selectedFields", "kind": "string_list", "minimum": 1, "maximum": 100},
+            {"name": "maxRows", "kind": "integer", "minimum": 1, "maximum": 1000},
+            {"name": "timeoutSeconds", "kind": "integer", "minimum": 1, "maximum": 30},
+        ],
+    }
 
 
 class NiushopFactQuery(AdapterContract):
@@ -83,6 +113,13 @@ class NiushopFact(AdapterContract):
             raise ValueError("fact asOf must include timezone")
         return value
 
+    @field_validator("value")
+    @classmethod
+    def _finite_value(cls, value):
+        if isinstance(value, float) and not math.isfinite(value):
+            raise ValueError("fact numeric value must be finite")
+        return value
+
 
 class NiushopObservationBatch(AdapterContract):
     requirement_ref: ExactRef
@@ -121,6 +158,14 @@ class NiushopObservationBatch(AdapterContract):
         ]
         if len(identities) != len(set(identities)):
             raise ValueError("observation references must be unique")
+        fact_ids = [item.fact_id for item in self.facts]
+        if len(fact_ids) != len(set(fact_ids)):
+            raise ValueError("fact IDs must be unique")
+        if (
+            {ref.resource_id for ref in self.fact_refs} != set(fact_ids)
+            or len(self.fact_refs) != len(fact_ids)
+        ):
+            raise ValueError("every fact must have one exact FactRevision ref")
         return self
 
 
@@ -134,6 +179,13 @@ def read_bounded_facts(
         connection_ref=query.connection_ref.model_dump(by_alias=True, exclude_none=True),
         operation_id=READ_OPERATION,
         typed_params={
+            "requirementRef": query.requirement_ref.model_dump(
+                by_alias=True, exclude_none=True
+            ),
+            "sourceReadinessRef": query.source_readiness_ref.model_dump(
+                by_alias=True, exclude_none=True
+            ),
+            "mappingRef": query.mapping_ref.model_dump(by_alias=True, exclude_none=True),
             "factFamilies": list(query.fact_families),
             "objectIds": list(query.object_ids),
             "selectedFields": list(query.selected_fields),
@@ -157,10 +209,18 @@ def read_bounded_facts(
         raise ValueError("connector observation drifted from the exact query authority")
     if not {item.fact_family for item in result.facts} <= set(query.fact_families):
         raise ValueError("connector returned an unrequested fact family")
+    if len(result.facts) > query.max_rows:
+        raise ValueError("connector returned more facts than maxRows")
+    if not {item.field for item in result.facts} <= set(query.selected_fields):
+        raise ValueError("connector returned an unrequested field")
+    if query.object_ids and not {item.object_id for item in result.facts} <= set(
+        query.object_ids
+    ):
+        raise ValueError("connector returned an unrequested object")
     return result
 
 
 __all__ = [
     "NiushopFact", "NiushopFactQuery", "NiushopObservationBatch", "READ_OPERATION",
-    "read_bounded_facts",
+    "connector_operation_schema", "read_bounded_facts",
 ]

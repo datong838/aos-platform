@@ -207,7 +207,9 @@ def test_store_fails_closed_before_db_for_scope_actor_hash_and_operation() -> No
 
 
 def test_disposable_database_runtime_cas_idempotency_audit_and_isolation() -> None:
-    with isolated_aip_migration_database("biw2_requirement_cas") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw2_requirement_cas", migration_target="biw2_002"
+    ) as (config, dsn):
         @contextmanager
         def runtime_connect(scope: TenantScope):
             with psycopg.connect(dsn, row_factory=dict_row) as conn:

@@ -18,7 +18,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 @contextmanager
-def isolated_aip_migration_database(prefix: str) -> Iterator[tuple[Config, str]]:
+def isolated_aip_migration_database(
+    prefix: str, *, migration_target: str = "head"
+) -> Iterator[tuple[Config, str]]:
     """Create a fully bootstrapped disposable database for downgrade contracts."""
     parts = conninfo_to_dict(os.environ["AOS_DATABASE_URL"])
     database_name = f"aos_test_{prefix}_{uuid4().hex[:12]}"
@@ -84,7 +86,7 @@ def isolated_aip_migration_database(prefix: str) -> Iterator[tuple[Config, str]]
         ensure_variable_schema()
         ensure_widget_schema()
         ensure_draft_schema()
-        command.upgrade(config, "head")
+        command.upgrade(config, migration_target)
         ensure_data_os_schema()
         yield config, test_dsn
     finally:
