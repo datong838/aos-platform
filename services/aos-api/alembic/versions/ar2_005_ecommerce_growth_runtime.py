@@ -79,11 +79,6 @@ def upgrade() -> None:
              OR length(btrim(coalesce(p_actor,''))) NOT BETWEEN 1 AND 240
              OR p_occurred_at IS NULL
           THEN RAISE EXCEPTION USING ERRCODE='22023',MESSAGE='invalid ecommerce runtime Receipt'; END IF;
-          -- A missing row cannot be protected by FOR UPDATE.  Serialize the
-          -- tenant/operation/idempotency identity before the first read so a
-          -- concurrent replay deterministically observes the winning Receipt.
-          PERFORM pg_advisory_xact_lock(hashtextextended(
-            v_org||E'\x1f'||v_project||E'\x1f'||p_operation_id||E'\x1f'||btrim(p_idempotency_key),0));
           SELECT * INTO v_dispatch FROM extension_operation_dispatch_binding
            WHERE org_id=v_org AND project_id=v_project AND operation_id=p_operation_id
            FOR UPDATE;
@@ -106,6 +101,11 @@ def upgrade() -> None:
              OR v_runtime.enabled IS DISTINCT FROM TRUE
              OR v_runtime.operation_fence IS DISTINCT FROM FALSE
           THEN RAISE EXCEPTION USING ERRCODE='23514',MESSAGE='ecommerce runtime binding is not executable'; END IF;
+          -- Keep the host lock order: dispatch -> runtime -> idempotency.
+          -- A missing Receipt row cannot be protected by FOR UPDATE, so the
+          -- last step uses a transaction advisory lock for the first writer.
+          PERFORM pg_advisory_xact_lock(hashtextextended(
+            v_org||E'\x1f'||v_project||E'\x1f'||p_operation_id||E'\x1f'||btrim(p_idempotency_key),0));
           SELECT * INTO v_existing FROM ecommerce_growth_runtime_command_receipt
            WHERE org_id=v_org AND project_id=v_project AND operation_id=p_operation_id
              AND idempotency_key=btrim(p_idempotency_key) FOR UPDATE;

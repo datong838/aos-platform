@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
+from threading import Event
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -142,6 +143,13 @@ def concurrent_put(database, scope, dispatch, response=None):
         return put(store, dispatch, response).replayed
 
 
+def signaled_concurrent_put(database, scope, dispatch, started):
+    with bound(database, scope) as (store, conn):
+        conn.execute("SET LOCAL statement_timeout='4s'")
+        started.set()
+        return put(store, dispatch).replayed
+
+
 def test_postgres_replay_isolation_drift_and_nonempty_downgrade(database):
     positive = TenantScope("org-org", "dev-project")
     canary = TenantScope("dev-org", "dev-project")
@@ -220,6 +228,20 @@ def test_postgres_receipt_function_revalidates_exact_dispatch_and_runtime(databa
         with pytest.raises(psycopg.Error, match="dispatch authority drifted"):
             put(store, cross_installation)
 
+    database.owner.execute(
+        """UPDATE extension_operation_dispatch_binding SET operation_fence=true
+             WHERE org_id=%s AND project_id=%s AND operation_id=%s""",
+        (*scope.key, dispatch.operation_id),
+    )
+    with bound(database, scope) as (store, _):
+        with pytest.raises(psycopg.Error, match="dispatch authority drifted"):
+            put(store, dispatch)
+    database.owner.execute(
+        """UPDATE extension_operation_dispatch_binding SET operation_fence=false
+             WHERE org_id=%s AND project_id=%s AND operation_id=%s""",
+        (*scope.key, dispatch.operation_id),
+    )
+
     for changed in (
         replace(dispatch, execution_epoch=2),
         replace(dispatch, dispatch_revision=4),
@@ -239,3 +261,35 @@ def test_postgres_receipt_function_revalidates_exact_dispatch_and_runtime(databa
     with bound(database, scope) as (store, _):
         with pytest.raises(psycopg.Error, match="not executable"):
             put(store, disabled)
+
+
+def test_postgres_host_and_direct_receipt_paths_share_one_lock_order(database):
+    scope = TenantScope("org-org", "dev-project")
+    dispatch = seed(database, scope)
+    host = psycopg.connect(**database.pg, autocommit=False, row_factory=dict_row)
+    try:
+        host.execute("SELECT set_config('aos.org_id',%s,false)", (scope.org_id,))
+        host.execute("SELECT set_config('aos.project_id',%s,false)", (scope.project_id,))
+        host.execute("SET LOCAL statement_timeout='4s'")
+        host.execute(
+            """SELECT 1 FROM extension_operation_dispatch_binding
+                WHERE org_id=%s AND project_id=%s AND operation_id=%s FOR UPDATE""",
+            (*scope.key, dispatch.operation_id),
+        )
+        host.execute(
+            """SELECT 1 FROM extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+                FOR UPDATE""",
+            (*scope.key, dispatch.installation_id, dispatch.generation),
+        )
+        started = Event()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            direct = pool.submit(signaled_concurrent_put, database, scope, dispatch, started)
+            assert started.wait(timeout=2)
+            store = BoundEcommerceGrowthRuntimeStore(HostTransaction(host), scope)
+            assert put(store, dispatch).replayed is False
+            host.commit()
+            assert direct.result(timeout=5) is True
+    finally:
+        host.rollback()
+        host.close()
