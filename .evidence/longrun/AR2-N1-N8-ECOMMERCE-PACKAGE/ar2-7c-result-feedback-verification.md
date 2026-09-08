@@ -21,6 +21,7 @@
 - PostgreSQL 事务、RLS、恢复与非空降级门：`6 passed`。
 - Python 编译、精确 `git diff --check`：通过。
 - Alembic：唯一 head `ar2_004`。
+- 独立 Prime 二审：`PASS`；结果反馈专项 `11 passed`、内容评审邻接回归 `47 passed`、PostgreSQL `6 passed`，原三个 blocker 全部关闭。
 
 ## 文件摘要
 

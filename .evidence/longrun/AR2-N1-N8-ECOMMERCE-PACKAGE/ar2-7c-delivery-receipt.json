@@ -15,7 +15,7 @@
     "pythonCompile": "GREEN",
     "diffCheck": "GREEN",
     "alembicHead": "ar2_004",
-    "primeReview": "PENDING_INDEPENDENT_READBACK"
+    "primeReview": "PASS: 11 feedback, 47 adjacent, 6 PostgreSQL"
   },
   "tenantEvidence": {
     "positive": "org-org/dev-project",
