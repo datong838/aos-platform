@@ -471,6 +471,52 @@ def test_schedule_trigger_revalidates_exact_enabled_policy(monkeypatch):
             ),
             command={**command, "localSlot": "not-the-shanghai-slot"},
         )
+    with pytest.raises(ValueError, match="future slot"):
+        service.revalidate(
+            transaction=HostTransaction(SimpleNamespace(execute=lambda *_: Cursor())),
+            scope=scope,
+            dispatch=SimpleNamespace(
+                operation_id="ecommerce_growth_schedule_trigger",
+                execution_epoch=3,
+                checked_at=datetime(2026, 9, 8, 12, tzinfo=UTC),
+            ),
+            command={
+                **command,
+                "scheduledAt": "2026-09-09T12:00:00Z",
+                "localSlot": "2026-09-09T20:00+0800",
+                "deadline": "2026-09-10T12:00:00Z",
+            },
+        )
+    with pytest.raises(ValueError, match="outside the bounded recovery window"):
+        service.revalidate(
+            transaction=HostTransaction(SimpleNamespace(execute=lambda *_: Cursor())),
+            scope=scope,
+            dispatch=SimpleNamespace(
+                operation_id="ecommerce_growth_schedule_trigger",
+                execution_epoch=3,
+                checked_at=datetime(2026, 9, 8, 12, tzinfo=UTC),
+            ),
+            command={
+                **command,
+                "scheduledAt": "2026-09-06T12:00:00Z",
+                "localSlot": "2026-09-06T20:00+0800",
+            },
+        )
+    within_window = {
+        **command,
+        "scheduledAt": "2026-09-07T13:00:00Z",
+        "localSlot": "2026-09-07T21:00+0800",
+    }
+    service.revalidate(
+        transaction=HostTransaction(SimpleNamespace(execute=lambda *_: Cursor())),
+        scope=scope,
+        dispatch=SimpleNamespace(
+            operation_id="ecommerce_growth_schedule_trigger",
+            execution_epoch=3,
+            checked_at=datetime(2026, 9, 8, 12, tzinfo=UTC),
+        ),
+        command=within_window,
+    )
     with pytest.raises(ValueError, match="invalid envelope"):
         service.revalidate(
             transaction=HostTransaction(SimpleNamespace(execute=lambda *_: Cursor())),

@@ -245,11 +245,13 @@ def test_occurrence_authority_rls_concurrency_and_reconcile_only(database):
         positive, binding, scheduled_at=scheduled_at + timedelta(days=2), local_slot="receipt-expiry",
         deadline=scheduled_at + timedelta(days=3)
     )
-    receipt_claim = positive_store.claim_next(positive, owner="worker-c", now=scheduled_at)
+    assert positive_store.claim_next(positive, owner="worker-early", now=scheduled_at) is None
+    event_time = scheduled_at + timedelta(days=2)
+    receipt_claim = positive_store.claim_next(positive, owner="worker-c", now=event_time)
     assert receipt_claim is not None and receipt_claim.occurrence_id == event.occurrence_id
     database.owner.execute(
         "UPDATE automation_occurrence SET claim_until=%s WHERE org_id=%s AND project_id=%s AND occurrence_id=%s",
-        (scheduled_at - timedelta(seconds=1), *positive.key, event.occurrence_id),
+        (event_time - timedelta(seconds=1), *positive.key, event.occurrence_id),
     )
     with pytest.raises(AutomationOccurrenceConflict, match="claim changed"):
         positive_store.record_target_receipt(
@@ -257,9 +259,9 @@ def test_occurrence_authority_rls_concurrency_and_reconcile_only(database):
             occurrence_id=event.occurrence_id,
             owner="worker-c",
             receipt_ref={"receiptId": "accepted-but-local-expired"},
-            occurred_at=scheduled_at,
+            occurred_at=event_time,
         )
-    assert positive_store.reconcile_expired_claims(positive, now=scheduled_at) == 1
+    assert positive_store.reconcile_expired_claims(positive, now=event_time) == 1
 
     water_barrier = Barrier(2)
 

@@ -517,7 +517,11 @@ class ScheduleTriggerHostService:
         if scheduled_at < policy.created_at.astimezone(UTC):
             raise ValueError("scheduledAt is before the Policy effective interval")
         checked_second = dispatch.checked_at.astimezone(UTC).replace(microsecond=0)
-        if deadline != max(checked_second, scheduled_at) + timedelta(hours=24):
+        if scheduled_at > checked_second:
+            raise ValueError("scheduledAt is a future slot")
+        if checked_second - scheduled_at > timedelta(hours=24):
+            raise ValueError("scheduledAt is outside the bounded recovery window")
+        if deadline != checked_second + timedelta(hours=24):
             raise ValueError("deadline does not match the bounded host recovery window")
         if (
             dispatch.operation_id != "ecommerce_growth_schedule_trigger"
