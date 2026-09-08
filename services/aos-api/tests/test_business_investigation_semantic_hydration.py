@@ -181,13 +181,17 @@ def test_store_requests_and_records_through_controlled_functions() -> None:
 
 
 def test_disposable_database_empty_upgrade_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw3_semantic_hydration") as (config, _dsn):
+    with isolated_aip_migration_database(
+        "biw3_semantic_hydration", migration_target="biw3_005"
+    ) as (config, _dsn):
         command.downgrade(config, "biw3_004")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw3_005")
 
 
 def test_disposable_database_receipt_first_idempotency_isolation_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw3_hydration_authority") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw3_hydration_authority", migration_target="biw3_005"
+    ) as (config, dsn):
         with psycopg.connect(dsn) as conn:
             job_data = {"receiptRefs": [ref("ObservationReceipt", "receipt-1")], "observationRefs": [ref("PlatformObservation", "observation-1")]}
             conn.execute("INSERT INTO business_investigation_schema_profiling_job_revision(org_id,project_id,job_id,revision,content_hash,status,cutoff_at,idempotency_key,request_hash,authority_data) VALUES('org-org','dev-project','job-1',1,%s,'requested',NOW(),'seed-job',%s,%s)", (HASH_A, HASH_B, psycopg.types.json.Jsonb(job_data)))

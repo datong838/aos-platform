@@ -90,7 +90,7 @@ def test_disposable_database_empty_upgrade_and_downgrade() -> None:
         "biw4_run_guard_empty", migration_target="biw4_003"
     ) as (config, _dsn):
         command.downgrade(config, "biw4_002")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw4_003")
 
 
 def test_trigger_replay_overlap_receipt_single_active_and_runtime_guard() -> None:

@@ -235,9 +235,11 @@ def test_store_uses_controlled_functions_and_validates_before_sql() -> None:
 
 
 def test_disposable_database_cas_revoke_isolation_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw3_observation_session_plan") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw3_observation_session_plan", migration_target="biw3_001"
+    ) as (config, dsn):
         command.downgrade(config, "biw2_004")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw3_001")
         with psycopg.connect(dsn) as conn:
             for org in ("org-org", "dev-org"):
                 conn.execute(

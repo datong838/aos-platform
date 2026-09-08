@@ -181,13 +181,17 @@ def test_store_uses_single_controlled_create_and_checks_content_hash() -> None:
 
 
 def test_disposable_database_empty_upgrade_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw4_case_empty") as (config, _dsn):
+    with isolated_aip_migration_database(
+        "biw4_case_empty", migration_target="biw4_001"
+    ) as (config, _dsn):
         command.downgrade(config, "biw3_006")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw4_001")
 
 
 def test_disposable_database_idempotency_isolation_restart_and_downgrade_guard() -> None:
-    with isolated_aip_migration_database("biw4_case_authority") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw4_case_authority", migration_target="biw4_001"
+    ) as (config, dsn):
         with psycopg.connect(dsn) as conn:
             conn.execute(
                 "INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','BI-W4') ON CONFLICT DO NOTHING"

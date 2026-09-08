@@ -155,7 +155,9 @@ def test_bind1_legacy_capability_binding_defaults_fail_closed() -> None:
 
 
 def test_z_bind1_empty_downgrade_upgrade_is_reversible_and_single_head() -> None:
-    with isolated_aip_migration_database("bind1_migration") as (config, database_url):
+    with isolated_aip_migration_database(
+        "bind1_migration", migration_target="bind1_001"
+    ) as (config, database_url):
         command.downgrade(config, "aip5_005")
         with psycopg.connect(database_url, row_factory=dict_row) as conn:
             names = conn.execute(
@@ -170,7 +172,7 @@ def test_z_bind1_empty_downgrade_upgrade_is_reversible_and_single_head() -> None
                 )
             assert not (CAPABILITY_COLUMNS & by_table["aip_capability_binding"])
             assert not (SKILL_COLUMNS & by_table["aip_skill_binding"])
-        command.upgrade(config, "head")
+        command.upgrade(config, "bind1_001")
         with psycopg.connect(database_url, row_factory=dict_row) as conn:
             restored = conn.execute(
                 """SELECT table_name,column_name FROM information_schema.columns

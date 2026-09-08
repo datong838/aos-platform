@@ -33,7 +33,9 @@ def test_00_guard_fix_is_linear_fixed_path_and_least_privilege() -> None:
 
 
 def test_guard_fix_upgrade_and_downgrade_restore_security_mode() -> None:
-    with isolated_aip_migration_database("aip9_guard") as (config, database_url):
+    with isolated_aip_migration_database(
+        "aip9_guard", migration_target="aip9_002"
+    ) as (config, database_url):
         with psycopg.connect(database_url, row_factory=dict_row) as conn:
             row = conn.execute(
                 """SELECT p.prosecdef,p.proconfig FROM pg_proc p
@@ -47,7 +49,7 @@ def test_guard_fix_upgrade_and_downgrade_restore_security_mode() -> None:
                 "SELECT prosecdef FROM pg_proc WHERE proname='guard_aip9_content_event_sequence'"
             ).fetchone()
             assert row["prosecdef"] is False
-        command.upgrade(config, "head")
+        command.upgrade(config, "aip9_002")
         with psycopg.connect(database_url, row_factory=dict_row) as conn:
             assert conn.execute(
                 "SELECT prosecdef FROM pg_proc WHERE proname='guard_aip9_content_event_sequence'"

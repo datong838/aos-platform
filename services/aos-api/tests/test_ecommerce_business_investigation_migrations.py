@@ -60,14 +60,18 @@ def test_schedule_downgrade_refuses_non_empty_authority() -> None:
 
 
 def test_disposable_database_empty_schedule_upgrade_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw8_schedule_empty") as (config, _dsn):
+    with isolated_aip_migration_database(
+        "biw8_schedule_empty", migration_target="biw8_001"
+    ) as (config, _dsn):
         command.downgrade(config, "biw6_002")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw8_001")
 
 
 def test_disposable_database_atomic_policy_trigger_overlap_rls_and_nonempty_guard() -> None:
     scope = TenantScope("org-org", "dev-project")
-    with isolated_aip_migration_database("biw8_schedule_authority") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw8_schedule_authority", migration_target="biw8_001"
+    ) as (config, dsn):
         with psycopg.connect(dsn) as conn:
             conn.execute(
                 "INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','BI-W8') ON CONFLICT DO NOTHING"

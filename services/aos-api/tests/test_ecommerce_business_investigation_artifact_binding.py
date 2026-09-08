@@ -133,9 +133,11 @@ def test_migration_has_atomic_guard_append_only_rls_and_no_runtime_write() -> No
 
 
 def test_disposable_database_empty_upgrade_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw4_artifact_binding_empty") as (config, _dsn):
+    with isolated_aip_migration_database(
+        "biw4_artifact_binding_empty", migration_target="biw4_005"
+    ) as (config, _dsn):
         command.downgrade(config, "biw4_004")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw4_005")
 
 
 def _seed_artifact(conn, artifact: BusinessInvestigationArtifactRevision) -> None:
@@ -186,7 +188,9 @@ def _insert_binding(conn, binding: BusinessInvestigationArtifactBinding, *, chan
 
 
 def test_disposable_database_selection_guard_rls_runtime_write_and_nonempty_downgrade() -> None:
-    with isolated_aip_migration_database("biw4_artifact_binding") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw4_artifact_binding", migration_target="biw4_005"
+    ) as (config, dsn):
         artifact = _dossier()
         binding = _binding(artifact)
         with psycopg.connect(dsn) as conn:
@@ -213,5 +217,5 @@ def test_disposable_database_selection_guard_rls_runtime_write_and_nonempty_down
                 "SELECT set_config('aos.org_id','dev-org',true),set_config('aos.project_id','dev-project',true)"
             )
             assert conn.execute("SELECT count(*) FROM ecommerce_investigation_artifact_binding").fetchone()[0] == 0
-        with pytest.raises(Exception, match="cannot downgrade biw4_006"):
+        with pytest.raises(Exception, match="cannot downgrade biw4_005"):
             command.downgrade(config, "biw4_004")

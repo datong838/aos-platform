@@ -15,7 +15,9 @@ TABLES = {
 
 
 def test_w7_08_migration_is_reversible_only_while_empty() -> None:
-    with isolated_aip_migration_database("w708finance") as (config, dsn):
+    with isolated_aip_migration_database(
+        "w708finance", migration_target="w7_006"
+    ) as (config, dsn):
         engine = create_engine(dsn.replace("postgresql://", "postgresql+psycopg://", 1))
         try:
             assert TABLES <= set(inspect(engine).get_table_names())

@@ -88,7 +88,9 @@ def test_biw4_migrations_are_one_guarded_tenant_authority_chain() -> None:
 
 
 def test_disposable_database_closes_receipt_cas_restart_rls_and_rollback_gates() -> None:
-    with isolated_aip_migration_database("biw4_cumulative_acceptance") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw4_cumulative_acceptance", migration_target="biw6_001"
+    ) as (config, dsn):
         with psycopg.connect(dsn) as conn:
             conn.execute(
                 """INSERT INTO twa_workspace(org_id,project_id,name)

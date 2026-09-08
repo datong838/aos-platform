@@ -303,7 +303,7 @@ def test_disposable_database_runtime_cas_idempotency_audit_and_isolation() -> No
                 conn.execute("UPDATE data_requirement_head SET version=99")
 
         command.downgrade(config, "biw2_001")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw2_002")
 
 
 def test_reject_and_illegal_transition_are_fail_closed() -> None:

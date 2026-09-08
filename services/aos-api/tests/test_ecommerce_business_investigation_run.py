@@ -132,7 +132,7 @@ def test_disposable_database_empty_upgrade_and_downgrade() -> None:
         "biw4_run_empty", migration_target="biw4_006"
     ) as (config, _dsn):
         command.downgrade(config, "biw4_001")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw4_006")
 
 
 def test_disposable_database_atomic_active_case_idempotency_isolation_and_guard() -> None:

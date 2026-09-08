@@ -204,13 +204,17 @@ def test_store_uses_three_controlled_functions() -> None:
 
 
 def test_disposable_database_empty_upgrade_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw3_data_handling") as (config, _dsn):
+    with isolated_aip_migration_database(
+        "biw3_data_handling", migration_target="biw3_006"
+    ) as (config, _dsn):
         command.downgrade(config, "biw3_005")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw3_006")
 
 
 def test_disposable_database_exact_policy_receipts_isolation_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw3_data_handling_authority") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw3_data_handling_authority", migration_target="biw3_006"
+    ) as (config, dsn):
         with psycopg.connect(dsn) as conn:
             conn.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','BI-W3') ON CONFLICT DO NOTHING")
             conn.execute("INSERT INTO ontology_retention_policy_head(org_id,workspace_id,record_id,active_revision) VALUES('org-org','dev-project','retention-1',1)")

@@ -81,8 +81,8 @@ def capability_request(*, key="capability-1", **overrides):
         "capability_ref": ref("CapabilityRevision", "text-generation-1"),
         "model_route_ref": ref("ModelRouteRevision", "route-1"),
         "budget_ref": ref("BudgetRevision", "budget-1"),
-        "pricing_ref": ref("ProviderPriceRevision", "price-1"),
-        "approval_ref": ref("ApprovalDecisionRevision", "approval-1"),
+        "pricing_ref": ref("ModelPriceSnapshotRevision", "price-1"),
+        "approval_ref": ref("ActionApprovalEvent", "approval-1"),
         "capacity_reservation_ref": ref("CapacityReservation", "capacity-1"),
         "currency": "CNY",
         "upper_bound_fen": 500,
@@ -110,12 +110,14 @@ def artifact_payload(command):
     }
 
 
-def capability_receipt(command, *, state="COMPLETED", replayed=False, **overrides):
+def capability_receipt(
+    command, *, state="COMPLETED", replayed=False, submitted_failure=False, **overrides
+):
     completed = state == "COMPLETED"
     failed = state == "FAILED_NO_EFFECT"
     value = {
         "receiptRef": exact_ref_payload(
-            ref("CapabilityInvocationReceipt", "invocation-receipt-1")
+            ref("CapabilityInvocationRevision", "invocation-receipt-1")
         ),
         "requestHash": command["requestHash"],
         "state": state,
@@ -126,10 +128,10 @@ def capability_receipt(command, *, state="COMPLETED", replayed=False, **override
         ),
         "budgetState": "SETTLED" if completed else "RELEASED" if failed else "UNKNOWN",
         "providerRequestReceiptRef": None
-        if failed
-        else exact_ref_payload(ref("ProviderRequestReceipt", "provider-request-1")),
-        "providerReceiptRef": exact_ref_payload(ref("ProviderReceipt", "provider-1"))
-        if completed
+        if failed and not submitted_failure
+        else exact_ref_payload(ref("CapabilityProviderRequestReceipt", "provider-request-1")),
+        "providerReceiptRef": exact_ref_payload(ref("CapabilityProviderReceipt", "provider-1"))
+        if completed or (failed and submitted_failure)
         else None,
         "usageReceiptRefs": [exact_ref_payload(ref("UsageReceipt", "usage-1"))]
         if completed
@@ -139,13 +141,13 @@ def capability_receipt(command, *, state="COMPLETED", replayed=False, **override
         "upperBoundFen": command["upperBoundFen"],
         "actualFen": 360 if completed else None,
         "retryDirective": "NONE"
-        if completed
+        if completed or submitted_failure
         else "RETRYABLE_NO_EFFECT"
         if failed
         else "RECONCILE_ONLY",
         "replayed": replayed,
         "sideEffects": {
-            "providerInvocationCount": 0 if failed else 1,
+            "providerInvocationCount": 0 if failed and not submitted_failure else 1,
             "approvalCreatedCount": 0,
             "taskRunCreatedCount": 0,
             "externalPublicationCount": 0,
@@ -229,6 +231,22 @@ def test_noncompleted_states_preserve_exact_budget_semantics(
     assert result.artifact is None and port.provider_calls == calls
 
 
+def test_submitted_failed_no_effect_retains_provider_receipts_without_retry() -> None:
+    port = CapabilityPort(
+        lambda command: capability_receipt(
+            command, state="FAILED_NO_EFFECT", submitted_failure=True
+        )
+    )
+    result = execute_content_capability(
+        port, dispatch_ref=dispatch(), request=capability_request()
+    )
+    assert result.budget_state == "RELEASED"
+    assert result.provider_request_receipt_ref is not None
+    assert result.provider_receipt_ref is not None
+    assert result.retry_directive == "NONE"
+    assert port.provider_calls == 1
+
+
 def test_unknown_replay_never_invokes_provider_again_or_releases_hold() -> None:
     port = CapabilityPort(lambda command: capability_receipt(command, state="UNKNOWN"))
     item = capability_request()
@@ -295,7 +313,7 @@ def test_receipt_over_budget_lineage_and_state_shapes_fail_closed() -> None:
 
     def lineage_drift(command):
         refs = dict(command["authorityRefs"])
-        refs["pricing"] = exact_ref_payload(ref("ProviderPriceRevision", "other-price"))
+        refs["pricing"] = exact_ref_payload(ref("ModelPriceSnapshotRevision", "other-price"))
         return capability_receipt(command, authorityRefs=refs)
 
     with pytest.raises(ValueError, match="exact request lineage drifted"):

@@ -144,9 +144,11 @@ def test_unknown_reconcile_requires_exact_non_unknown_receipt():
 
 
 def test_disposable_database_restart_fence_reconcile_isolation_and_downgrade():
-    with isolated_aip_migration_database("biw2_outbox_delivery") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw2_outbox_delivery", migration_target="biw2_004"
+    ) as (config, dsn):
         command.downgrade(config, "biw2_003")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw2_004")
         with psycopg.connect(dsn) as conn:
             for org in ("org-org", "dev-org"):
                 conn.execute(

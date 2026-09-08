@@ -219,9 +219,11 @@ def test_store_publishes_only_through_controlled_function() -> None:
 
 
 def test_disposable_database_cas_isolation_unknown_direct_write_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw3_source_mapping") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw3_source_mapping", migration_target="biw3_004"
+    ) as (config, dsn):
         command.downgrade(config, "biw3_003")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw3_004")
         with psycopg.connect(dsn) as conn:
             conn.execute(
                 "INSERT INTO data_requirement_head(org_id,project_id,requirement_id,current_revision,current_content_hash,status,version,created_by) VALUES('org-org','dev-project','requirement-1',1,%s,'accepted',1,'pytest')",

@@ -27,8 +27,8 @@ _AUTHORITY_TYPES = (
     ("capability_ref", "CapabilityRevision"),
     ("model_route_ref", "ModelRouteRevision"),
     ("budget_ref", "BudgetRevision"),
-    ("pricing_ref", "ProviderPriceRevision"),
-    ("approval_ref", "ApprovalDecisionRevision"),
+    ("pricing_ref", "ModelPriceSnapshotRevision"),
+    ("approval_ref", "ActionApprovalEvent"),
     ("capacity_reservation_ref", "CapacityReservation"),
 )
 _RECEIPT_FIELDS = frozenset(
@@ -214,7 +214,7 @@ class ContentCapabilityReceipt:
         )
         receipt = cls(
             receipt_ref=exact_ref_from_payload(
-                value["receiptRef"], {"CapabilityInvocationReceipt"}
+                value["receiptRef"], {"CapabilityInvocationRevision"}
             ),
             request_hash=request_hash,
             state=value["state"],
@@ -225,10 +225,10 @@ class ContentCapabilityReceipt:
             ),
             budget_state=value["budgetState"],
             provider_request_receipt_ref=exact_ref_from_payload(
-                value["providerRequestReceiptRef"], {"ProviderRequestReceipt"}, required=False
+                value["providerRequestReceiptRef"], {"CapabilityProviderRequestReceipt"}, required=False
             ),
             provider_receipt_ref=exact_ref_from_payload(
-                value["providerReceiptRef"], {"ProviderReceipt"}, required=False
+                value["providerReceiptRef"], {"CapabilityProviderReceipt"}, required=False
             ),
             usage_receipt_refs=_parse_ref_list(
                 value["usageReceiptRefs"],
@@ -279,15 +279,24 @@ class ContentCapabilityReceipt:
             ):
                 raise ValueError("COMPLETED capability Receipt is incomplete or over budget")
         elif self.state == "FAILED_NO_EFFECT":
+            pre_submit_failure = (
+                self.provider_request_receipt_ref is None
+                and self.provider_receipt_ref is None
+                and self.retry_directive == "RETRYABLE_NO_EFFECT"
+                and self.provider_invocation_count == 0
+            )
+            submitted_failure = (
+                self.provider_request_receipt_ref is not None
+                and self.provider_receipt_ref is not None
+                and self.retry_directive == "NONE"
+                and self.provider_invocation_count == 1
+            )
             if (
                 self.budget_state != "RELEASED"
-                or self.provider_request_receipt_ref is not None
-                or self.provider_receipt_ref is not None
+                or not (pre_submit_failure or submitted_failure)
                 or self.usage_receipt_refs
                 or self.artifact is not None
                 or self.actual_fen is not None
-                or self.retry_directive != "RETRYABLE_NO_EFFECT"
-                or self.provider_invocation_count != 0
             ):
                 raise ValueError("FAILED_NO_EFFECT capability Receipt shape drifted")
         elif self.state == "UNKNOWN":

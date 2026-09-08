@@ -156,13 +156,17 @@ def test_migration_has_four_append_only_exact_ref_tables_and_no_runtime_write() 
 
 
 def test_disposable_database_empty_upgrade_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw4_artifact_empty") as (config, _dsn):
+    with isolated_aip_migration_database(
+        "biw4_artifact_empty", migration_target="biw4_004"
+    ) as (config, _dsn):
         command.downgrade(config, "biw4_003")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw4_004")
 
 
 def test_disposable_database_exact_case_run_rls_runtime_guard_and_nonempty_downgrade() -> None:
-    with isolated_aip_migration_database("biw4_artifact_authority") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw4_artifact_authority", migration_target="biw4_004"
+    ) as (config, dsn):
         dossier = _artifact("BusinessDossierRevision")
         with psycopg.connect(dsn) as conn:
             conn.execute(
@@ -212,5 +216,5 @@ def test_disposable_database_exact_case_run_rls_runtime_guard_and_nonempty_downg
                 "SELECT set_config('aos.org_id','dev-org',true),set_config('aos.project_id','dev-project',true)"
             )
             assert conn.execute("SELECT count(*) FROM ecommerce_investigation_business_dossier_revision").fetchone()[0] == 0
-        with pytest.raises(Exception, match="cannot downgrade biw4_006"):
+        with pytest.raises(Exception, match="cannot downgrade biw4_004"):
             command.downgrade(config, "biw4_003")

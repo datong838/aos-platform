@@ -251,7 +251,9 @@ def test_disposable_database_rls_and_empty_only_downgrade() -> None:
         "data_requirement_outbox",
         "data_fulfillment_receipt",
     }
-    with isolated_aip_migration_database("biw2_requirement") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw2_requirement", migration_target="biw2_001"
+    ) as (config, dsn):
         engine = create_engine(dsn.replace("postgresql://", "postgresql+psycopg://", 1))
         try:
             assert tables <= set(inspect(engine).get_table_names())
@@ -301,7 +303,7 @@ def test_disposable_database_rls_and_empty_only_downgrade() -> None:
             assert tables.isdisjoint(inspect(engine).get_table_names())
         finally:
             engine.dispose()
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw2_001")
 
         with psycopg.connect(dsn) as conn:
             conn.execute(

@@ -170,13 +170,17 @@ def test_migration_freezes_rls_receipts_cas_and_no_runtime_direct_write() -> Non
 
 
 def test_disposable_database_empty_upgrade_and_downgrade() -> None:
-    with isolated_aip_migration_database("biw4_lifecycle_empty") as (config, _dsn):
+    with isolated_aip_migration_database(
+        "biw4_lifecycle_empty", migration_target="biw4_006"
+    ) as (config, _dsn):
         command.downgrade(config, "biw4_005")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw4_006")
 
 
 def test_upgrade_backfills_preexisting_run_before_rls_enforcement() -> None:
-    with isolated_aip_migration_database("biw4_lifecycle_backfill") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw4_lifecycle_backfill", migration_target="biw4_006"
+    ) as (config, dsn):
         command.downgrade(config, "biw4_005")
         with psycopg.connect(dsn) as conn:
             conn.execute(
@@ -194,7 +198,7 @@ def test_upgrade_backfills_preexisting_run_before_rls_enforcement() -> None:
                 (HASH_A,),
             )
             conn.commit()
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw4_006")
         with psycopg.connect(dsn) as conn:
             row = conn.execute(
                 "SELECT current_version,lifecycle,control FROM ecommerce_investigation_run_state_head WHERE run_id='run-existing'"
@@ -203,7 +207,9 @@ def test_upgrade_backfills_preexisting_run_before_rls_enforcement() -> None:
 
 
 def test_case_run_lifecycle_idempotency_rls_restart_and_slot_release() -> None:
-    with isolated_aip_migration_database("biw4_lifecycle_authority") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw4_lifecycle_authority", migration_target="biw4_006"
+    ) as (config, dsn):
         with psycopg.connect(dsn) as conn:
             conn.execute(
                 "INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','BI-W4') ON CONFLICT DO NOTHING"

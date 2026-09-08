@@ -175,7 +175,9 @@ def test_e7_observation_is_tenant_isolated_fail_closed_and_append_only() -> None
 
 
 def test_z_e7_empty_downgrade_upgrade_is_reversible_and_single_head() -> None:
-    with isolated_aip_migration_database("e7_migration") as (config, database_url):
+    with isolated_aip_migration_database(
+        "e7_migration", migration_target="aip5_005"
+    ) as (config, database_url):
         command.downgrade(config, "w2_004")
         with psycopg.connect(database_url, row_factory=dict_row) as conn:
             count = conn.execute(
@@ -183,7 +185,7 @@ def test_z_e7_empty_downgrade_upgrade_is_reversible_and_single_head() -> None:
                 (list(TABLES),),
             ).fetchone()["n"]
             assert count == 0
-        command.upgrade(config, "head")
+        command.upgrade(config, "aip5_005")
         with psycopg.connect(database_url, row_factory=dict_row) as conn:
             restored = conn.execute(
                 "SELECT COUNT(*) AS n FROM pg_class WHERE relname=ANY(%s)",

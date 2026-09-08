@@ -156,9 +156,11 @@ def test_store_records_through_controlled_function_only() -> None:
 
 
 def test_disposable_database_idempotency_current_refs_isolation_and_rollback() -> None:
-    with isolated_aip_migration_database("biw3_observation_receipt") as (config, dsn):
+    with isolated_aip_migration_database(
+        "biw3_observation_receipt", migration_target="biw3_002"
+    ) as (config, dsn):
         command.downgrade(config, "biw3_001")
-        command.upgrade(config, "head")
+        command.upgrade(config, "biw3_002")
         with psycopg.connect(dsn) as conn:
             for org in ("org-org", "dev-org"):
                 conn.execute(

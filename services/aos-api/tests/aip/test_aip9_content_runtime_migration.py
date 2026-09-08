@@ -110,7 +110,9 @@ def test_content_events_and_receipts_are_append_only() -> None:
 
 
 def test_z_content_runtime_empty_downgrade_upgrade_is_reversible() -> None:
-    with isolated_aip_migration_database("aip9_reverse") as (config, database_url):
+    with isolated_aip_migration_database(
+        "aip9_reverse", migration_target="aip9_001"
+    ) as (config, database_url):
         command.downgrade(config, "aip8_002")
         with psycopg.connect(database_url, row_factory=dict_row) as conn:
             count = conn.execute(
@@ -118,7 +120,7 @@ def test_z_content_runtime_empty_downgrade_upgrade_is_reversible() -> None:
                 (list(TABLES),),
             ).fetchone()["n"]
             assert count == 0
-        command.upgrade(config, "head")
+        command.upgrade(config, "aip9_001")
         with psycopg.connect(database_url, row_factory=dict_row) as conn:
             restored = conn.execute(
                 "SELECT COUNT(*) AS n FROM pg_class WHERE relname=ANY(%s)",
