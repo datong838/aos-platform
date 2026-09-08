@@ -36,9 +36,15 @@ from aos_api.ecommerce_business_investigation_schedule import (
 from aos_api.aip_budget_reservation_store import canonical_hash as budget_canonical_hash
 from aos_api.automation_occurrence_store import AutomationOccurrenceStore, ScheduleBinding
 from aos_api.ecommerce_business_investigation_case_selection import (
+    BusinessInvestigationCaseSelectionResolver,
     CatalogCanonicalProfileSelectionSource,
     PostgresCanonicalShopSelectionSource,
 )
+from aos_api.ecommerce_investigation_description_store import (
+    InvestigationDescriptionStore,
+    deterministic_receipt_id,
+)
+from aos_api.source_readiness import PostgresSourceReadinessFactSource, SourceReadinessService
 from aos_api.tenant_scope import TenantScope
 
 
@@ -281,6 +287,126 @@ def _occurrence_ref(payload: Mapping[str, Any]) -> dict[str, Any]:
 class _AlreadyValidatedCaseSelection:
     def verify_case_refs(self, *_args, **_kwargs) -> None:
         return None
+
+
+def _strict_describe_command(command: Mapping[str, Any]) -> tuple[str, str]:
+    if type(command) is not dict or set(command) != {"idempotencyKey", "analysisType"}:
+        raise ValueError("investigation describe command has an invalid envelope")
+    key, analysis_type = command["idempotencyKey"], command["analysisType"]
+    if type(key) is not str or not 1 <= len(key.strip()) <= 200:
+        raise ValueError("investigation describe idempotencyKey is invalid")
+    if type(analysis_type) is not str or not 1 <= len(analysis_type.strip()) <= 120:
+        raise ValueError("investigation describe analysisType is invalid")
+    return key.strip(), analysis_type.strip()
+
+
+class InvestigationDescribeHostService:
+    """Persist a business-readable snapshot of current investigation readiness."""
+
+    executor_identity = "ecommerce-growth-investigation-describe-host"
+
+    @staticmethod
+    def _selection(transaction, scope, checked_at, analysis_type):
+        factory = TransactionBoundConnectFactory(transaction, scope)
+        readiness_service = SourceReadinessService(
+            PostgresSourceReadinessFactSource(
+                factory,
+                clock=lambda: checked_at,
+                manage_transaction=False,
+            )
+        )
+
+        readiness = readiness_service.read(org_id=scope.org_id, project_id=scope.project_id)
+
+        class FixedReadiness:
+            def read(self, *, org_id, project_id):
+                if (org_id, project_id) != scope.key:
+                    raise PermissionError("description readiness requested a different tenant")
+                return readiness
+
+        resolver = BusinessInvestigationCaseSelectionResolver(
+            readiness_service=FixedReadiness(),
+            shop_source=PostgresCanonicalShopSelectionSource(factory),
+            profile_source=CatalogCanonicalProfileSelectionSource(
+                composition_source=PostgresAipProductionCompositionSource(factory)
+            ),
+        )
+        return resolver.read(scope, analysis_type), readiness
+
+    @staticmethod
+    def _authority(scope, key, analysis_type, selection, readiness, checked_at):
+        selection_payload = selection.model_dump(by_alias=True, mode="json")
+        readiness_payload = readiness.model_dump(by_alias=True, mode="json")
+        blockers = list(selection_payload["blockers"])
+        business_blockers = []
+        if "SOURCE_READINESS_NOT_READY" in blockers:
+            business_blockers.append("经营数据来源尚未达到分析要求")
+        if "CANONICAL_SHOP_SELECTION_UNAVAILABLE" in blockers:
+            business_blockers.append("当前没有唯一可用的经营门店")
+        if any(item.startswith("INVESTIGATION_") for item in blockers):
+            business_blockers.append("当前经营分析范围尚未配置完整")
+        if blockers and not business_blockers:
+            business_blockers.append("当前经营分析条件尚未核验完整")
+        return {
+            "schemaVersion": "aos.ecommerce.investigation-description/v1",
+            "receiptId": str(deterministic_receipt_id(scope, key)),
+            "analysisType": analysis_type,
+            "businessTitle": "经营实体生意探究准备说明",
+            "businessSummary": (
+                "渠道、经营实体与数据来源已核验，可创建经营分析任务"
+                if selection.case_creatable
+                else "已完成经营条件核验，请先处理列出的业务条件"
+            ),
+            "caseCreatable": selection.case_creatable,
+            "runCreatable": selection.run_creatable,
+            "businessBlockers": business_blockers,
+            "selection": selection_payload,
+            "sourceReadiness": readiness_payload,
+            "checkedAt": checked_at.astimezone(UTC).isoformat(),
+        }
+
+    def revalidate(self, *, transaction, scope, dispatch, command) -> None:
+        _key, analysis_type = _strict_describe_command(command)
+        self._selection(transaction, scope, dispatch.checked_at, analysis_type)
+        if dispatch.operation_id != "ecommerce_growth_investigation_describe":
+            raise ValueError("investigation describe dispatch operation drifted")
+
+    def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
+        key, analysis_type = _strict_describe_command(command)
+        selection, readiness = self._selection(transaction, scope, checked_at, analysis_type)
+        authority = self._authority(
+            scope, key, analysis_type, selection, readiness, checked_at
+        )
+        record = InvestigationDescriptionStore(transaction, scope).put(
+            idempotency_key=key,
+            request_hash=budget_canonical_hash(dict(command), prefixed=True),
+            authority=authority,
+            created_at=occurred_at or checked_at,
+        )
+        return {
+            "receiptRef": record.receipt_ref,
+            "authority": record.authority,
+            "replayed": record.replayed,
+        }
+
+    def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        _key, analysis_type = _strict_describe_command(command)
+        ref = receipt.get("receiptRef")
+        if type(ref) is not dict or ref.get("resourceType") != "InvestigationDescriptionReceipt":
+            return {}
+        try:
+            receipt_id = UUID(str(ref.get("resourceId")))
+        except (TypeError, ValueError):
+            return {}
+        record = InvestigationDescriptionStore(transaction, scope).read(receipt_id)
+        if record is None or record.authority.get("analysisType") != analysis_type:
+            return {}
+        expected = {
+            "receiptRef": record.receipt_ref,
+            "authority": record.authority,
+            "replayed": bool(receipt.get("replayed")),
+        }
+        return expected if dict(receipt) == expected else {}
 
 
 class CasePutHostService:
@@ -759,6 +885,7 @@ RUNTIME_ADAPTER_TYPES = (
 
 __all__ = [adapter.__name__ for adapter in RUNTIME_ADAPTER_TYPES] + [
     "RUNTIME_ADAPTER_TYPES",
+    "InvestigationDescribeHostService",
     "CasePutHostService",
     "SchedulePutHostService",
     "ScheduleTriggerHostService",

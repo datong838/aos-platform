@@ -117,9 +117,12 @@ class PostgresSourceReadinessFactSource:
         self,
         connect_factory: ConnectFactory = connect,
         clock: Clock = _utc_now,
+        *,
+        manage_transaction: bool = True,
     ) -> None:
         self._connect_factory = connect_factory
         self._clock = clock
+        self._manage_transaction = manage_transaction
 
     def read_atomic(self, *, org_id: str, project_id: str) -> AtomicSourceFacts:
         scope = TenantScope(org_id=org_id, project_id=project_id)
@@ -127,8 +130,9 @@ class PostgresSourceReadinessFactSource:
         pipeline_ids = [item.pipeline_id for item in CANONICAL_QYH_SOURCES]
         object_types = [item.object_type for item in CANONICAL_QYH_SOURCES]
         with self._connect_factory() as conn:
-            conn.rollback()
-            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+            if self._manage_transaction:
+                conn.rollback()
+                conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
             apply_transaction_scope(conn, scope)
             self._assert_scope(conn, scope)
             pipeline_rows = conn.execute(

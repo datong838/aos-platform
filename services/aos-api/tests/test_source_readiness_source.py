@@ -153,3 +153,21 @@ def test_reader_projects_sanitized_latest_run_error_code() -> None:
     assert source.latest_run is not None
     assert source.latest_run.status == "failed"
     assert source.latest_run.error_code == "SSH_CONNECT_TIMEOUT"
+
+
+def test_reader_reuses_host_transaction_without_rollback_or_isolation_change() -> None:
+    conn = Connection()
+
+    @contextmanager
+    def connect_factory():
+        yield conn
+
+    snapshot = PostgresSourceReadinessFactSource(
+        connect_factory=connect_factory,
+        clock=lambda: NOW,
+        manage_transaction=False,
+    ).read_atomic(org_id="org-org", project_id="dev-project")
+
+    assert len(snapshot.sources) == 12
+    assert conn.rolled_back is False
+    assert not any("SET TRANSACTION ISOLATION" in call[0] for call in conn.calls)

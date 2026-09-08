@@ -11,6 +11,7 @@ from aos_api.ecommerce_growth_host_composition import (
 )
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
+    InvestigationDescribeHostService,
     RUNTIME_ADAPTER_TYPES,
     TransactionBoundConnectFactory,
 )
@@ -86,6 +87,97 @@ def exact(kind, identity):
         "revision": 1,
         "contentHash": "sha256:" + "a" * 64,
     }
+
+
+def test_investigation_describe_persists_business_readable_exact_receipt(monkeypatch):
+    scope = TenantScope("org-org", "dev-project")
+    checked_at = datetime(2026, 9, 8, 12, tzinfo=UTC)
+    command = {
+        "idempotencyKey": "describe-qyh-001",
+        "analysisType": "initial_store_analysis",
+    }
+    selection_payload = {
+        "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+        "analysisType": "initial_store_analysis",
+        "sourceReadinessStatus": "ready",
+        "caseCreatable": True,
+        "runCreatable": False,
+        "blockers": [],
+        "runBlockers": ["PROVIDER_NOT_READY"],
+    }
+    selection = SimpleNamespace(
+        case_creatable=True,
+        run_creatable=False,
+        model_dump=lambda **_: selection_payload,
+    )
+    readiness_payload = {
+        "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+        "checkedAt": checked_at.isoformat(),
+        "cutoffAt": checked_at.isoformat(),
+        "status": "ready",
+        "sources": [],
+    }
+    readiness = SimpleNamespace(model_dump=lambda **_: readiness_payload)
+    monkeypatch.setattr(
+        InvestigationDescribeHostService,
+        "_selection",
+        staticmethod(lambda *_: (selection, readiness)),
+    )
+    persisted = {}
+
+    class Store:
+        def __init__(self, _transaction, _scope):
+            pass
+
+        def put(self, **kwargs):
+            persisted.update(kwargs)
+            ref = exact("InvestigationDescriptionReceipt", kwargs["authority"]["receiptId"])
+            ref["receiptId"] = kwargs["authority"]["receiptId"]
+            return SimpleNamespace(receipt_ref=ref, authority=kwargs["authority"], replayed=False)
+
+        def read(self, _receipt_id):
+            ref = exact("InvestigationDescriptionReceipt", persisted["authority"]["receiptId"])
+            ref["receiptId"] = persisted["authority"]["receiptId"]
+            return SimpleNamespace(receipt_ref=ref, authority=persisted["authority"], replayed=True)
+
+    monkeypatch.setattr(runtime_adapters, "InvestigationDescriptionStore", Store)
+    service = InvestigationDescribeHostService()
+    dispatch = SimpleNamespace(
+        operation_id="ecommerce_growth_investigation_describe",
+        checked_at=checked_at,
+    )
+    service.revalidate(
+        transaction=HostTransaction(SimpleNamespace()),
+        scope=scope,
+        dispatch=dispatch,
+        command=command,
+    )
+    receipt = service.execute(
+        transaction=HostTransaction(SimpleNamespace()),
+        scope=scope,
+        dispatch_ref=SimpleNamespace(),
+        command=command,
+        checked_at=checked_at,
+        occurred_at=checked_at,
+    )
+    assert receipt["authority"]["businessSummary"] == "渠道、经营实体与数据来源已核验，可创建经营分析任务"
+    assert receipt["authority"]["selection"] == selection_payload
+    assert receipt["authority"]["sourceReadiness"] == readiness_payload
+    assert persisted["request_hash"].startswith("sha256:")
+    assert service.verify_receipt(
+        transaction=HostTransaction(SimpleNamespace()),
+        scope=scope,
+        dispatch=dispatch,
+        command=command,
+        receipt=receipt,
+    ) == receipt
+    with pytest.raises(ValueError, match="invalid envelope"):
+        service.revalidate(
+            transaction=HostTransaction(SimpleNamespace()),
+            scope=scope,
+            dispatch=dispatch,
+            command={**command, "tenant": {"orgId": scope.org_id}},
+        )
 
 
 def case_command():
