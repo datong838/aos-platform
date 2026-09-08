@@ -109,6 +109,26 @@ def case_command():
     }
 
 
+def schedule_put_command():
+    return {
+        "idempotencyKey": "schedule-qyh-001",
+        "caseId": "case-qyh-001",
+        "expectedPolicyRevision": 0,
+        "expectedCaseVersion": 1,
+        "policy": {
+            "schedulePolicyId": "schedule-qyh-001",
+            "caseRef": exact("BusinessInvestigationCaseRevision", "case-qyh-001"),
+            "analysisType": "initial_store_analysis",
+            "policyKind": "initial_checkup",
+            "cadence": "once",
+            "enabled": True,
+            "overlapPolicy": "skip",
+            "timezone": "Asia/Shanghai",
+        },
+        "approvalRef": exact("ActionApprovalEvent", "approval-qyh-001"),
+    }
+
+
 def test_case_host_service_rejects_authority_override_and_revalidates_exact_selection(monkeypatch):
     command = case_command()
     scope = TenantScope("org-org", "dev-project")
@@ -228,6 +248,147 @@ def test_case_host_service_returns_and_rereads_exact_case_authority(monkeypatch)
         occurred_at=None,
     )
     assert response["receiptRef"]["resourceId"] == "case-qyh-001"
+    assert service.verify_receipt(
+        transaction=transaction,
+        scope=scope,
+        dispatch=None,
+        command=command,
+        receipt=response,
+    ) == response
+
+
+def test_schedule_put_revalidates_case_policy_and_exact_approval(monkeypatch):
+    command = schedule_put_command()
+    scope = TenantScope("org-org", "dev-project")
+    checked_at = datetime(2026, 9, 8, 12, tzinfo=UTC)
+    approval_row = {
+        "approval_event_id": "approval-qyh-001",
+        "proposal_id": "proposal-qyh-001",
+        "proposal_version": 1,
+        "proposal_hash": "proposal-hash",
+        "decision": "approved",
+        "actor_id": "operator-qyh",
+        "reason": "批准首次经营分析周期计划",
+        "expires_at": datetime(2026, 9, 9, 12, tzinfo=UTC),
+        "created_at": checked_at,
+        "action_binding_hash": "binding-hash",
+    }
+    command["approvalRef"]["contentHash"] = runtime_adapters.budget_canonical_hash(
+        approval_row, prefixed=True
+    )
+    proposal_row = {
+        "proposal_id": "proposal-qyh-001",
+        "action_type_id": "ecommerce_growth_schedule_put",
+        "payload": {
+            "caseId": "case-qyh-001",
+            "schedulePolicyId": "schedule-qyh-001",
+            "expectedPolicyRevision": 0,
+            "expectedCaseVersion": 1,
+        },
+        "proposal_hash": "proposal-hash",
+        "status": "approved",
+        "action_binding_hash": "binding-hash",
+    }
+
+    class Cursor:
+        def __init__(self, row):
+            self.row = row
+
+        def fetchone(self):
+            return self.row
+
+    class Connection:
+        def execute(self, sql, _params):
+            if "case_head" in sql:
+                return Cursor({"current_revision": 1})
+            if "schedule_policy_head" in sql:
+                return Cursor(None)
+            if "aip_action_approval_event" in sql:
+                return Cursor(approval_row)
+            if "aip_action_proposal" in sql:
+                return Cursor(proposal_row)
+            raise AssertionError(sql)
+
+    class Cases:
+        def __init__(self, _factory):
+            pass
+
+        def get(self, _scope, _case_id):
+            return SimpleNamespace(
+                content_hash="sha256:" + "a" * 64,
+                analysis_type=runtime_adapters.PutBusinessInvestigationSchedulePolicyRequest.model_validate(
+                    command["policy"]
+                ).analysis_type,
+            )
+
+    monkeypatch.setattr(runtime_adapters, "BusinessInvestigationCaseStore", Cases)
+    service = runtime_adapters.SchedulePutHostService()
+    dispatch = SimpleNamespace(checked_at=checked_at)
+    service.revalidate(
+        transaction=HostTransaction(Connection()), scope=scope, dispatch=dispatch, command=command
+    )
+    drifted = {**command, "expectedCaseVersion": 2}
+    with pytest.raises(ValueError, match="Case authority"):
+        service.revalidate(
+            transaction=HostTransaction(Connection()), scope=scope, dispatch=dispatch, command=drifted
+        )
+    with pytest.raises(ValueError, match="invalid envelope"):
+        service.revalidate(
+            transaction=HostTransaction(Connection()),
+            scope=scope,
+            dispatch=dispatch,
+            command={**command, "current": True},
+        )
+
+
+def test_schedule_put_returns_and_rereads_policy_and_case(monkeypatch):
+    command = schedule_put_command()
+    scope = TenantScope("org-org", "dev-project")
+    authority = SimpleNamespace(
+        schedule_policy_id="schedule-qyh-001",
+        revision=1,
+        content_hash="sha256:" + "b" * 64,
+        model_dump=lambda **_: {"schedulePolicyId": "schedule-qyh-001", "revision": 1},
+    )
+    case = SimpleNamespace(
+        model_dump=lambda **_: {"caseId": "case-qyh-001", "revision": 2}
+    )
+
+    class Schedules:
+        def __init__(self, _factory):
+            pass
+
+        def get(self, _scope, _policy_id):
+            return authority
+
+    class Cases:
+        def __init__(self, _factory):
+            pass
+
+        def get(self, _scope, _case_id):
+            return case
+
+    class App:
+        def __init__(self, *, case_store, schedule_store):
+            assert isinstance(case_store, Cases) and isinstance(schedule_store, Schedules)
+
+        def put_schedule_policy(self, *_args, **_kwargs):
+            return SimpleNamespace(authority=authority, case_authority=case, replayed=False)
+
+    monkeypatch.setattr(runtime_adapters, "BusinessInvestigationScheduleStore", Schedules)
+    monkeypatch.setattr(runtime_adapters, "BusinessInvestigationCaseStore", Cases)
+    monkeypatch.setattr(runtime_adapters, "EcommerceBusinessInvestigationApplication", App)
+    service = runtime_adapters.SchedulePutHostService()
+    transaction = HostTransaction(SimpleNamespace(execute=lambda *_: None))
+    response = service.execute(
+        transaction=transaction,
+        scope=scope,
+        dispatch_ref=None,
+        command=command,
+        checked_at=datetime(2026, 9, 8, 12, tzinfo=UTC),
+        occurred_at=None,
+    )
+    assert response["receiptRef"]["resourceId"] == "schedule-qyh-001"
     assert service.verify_receipt(
         transaction=transaction,
         scope=scope,
