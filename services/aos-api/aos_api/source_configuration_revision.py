@@ -107,7 +107,7 @@ class SourceConfigurationRevisionStore:
             raise ValueError("invalid source plugin identity")
         digest = canonical_hash(body)
         if ((row["org_id"], row["project_id"]) != self._scope.key
-            or row["authority"] != body or row["content_hash"] != digest
+            or row["authority"] != body or canonical_hash(row["authority"]) != digest or row["content_hash"] != digest
             or not isinstance(row["recorded_at"], datetime) or row["recorded_at"].utcoffset() is None):
             raise ValueError("source configuration authority drifted")
         ref = InvestigationExactRef(resource_type="DataSourceConfigurationRevision",

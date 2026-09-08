@@ -138,7 +138,9 @@ def test_exact_read_rejects_safe_metadata_or_reference_drift():
         original = store.read_current(source_id)
         row = conn.execute("SELECT * FROM public.data_source_configuration_revision WHERE revision_id=%s", (token,)).fetchone()
         for field, value in [("org_id", "dev-org"), ("status", "changed"), ("source_id", "other"),
-                             ("content_hash", "0" * 64), ("authority", {}), ("recorded_at", None)]:
+                             ("content_hash", "0" * 64), ("authority", {}),
+                             ("authority", {**row["authority"], "configurationIdentityOnly": 1}),
+                             ("recorded_at", None)]:
             changed = deepcopy(row)
             changed[field] = value
             with pytest.raises(ValueError):

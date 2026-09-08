@@ -60,7 +60,7 @@ class SourceObservationEvidenceStore:
         item.verify_rows(rows)
         ref = InvestigationExactRef(resource_type="Evidence", resource_id=_PREFIX + digest,
                                     revision=1, content_hash="sha256:" + digest)
-        self._transaction.execute("""INSERT INTO aip_evidence
+        self._transaction.execute("""INSERT INTO public.aip_evidence
             (org_id,project_id,evidence_id,run_id,evidence_type,subject_ref,source_type,source_ref,
              observed_at,freshness_at,content_hash,redaction,payload,created_by,created_at)
             VALUES(%s,%s,%s,NULL,%s,%s,%s,%s,%s,%s,%s,'{}'::jsonb,%s,%s,clock_timestamp())
@@ -80,10 +80,10 @@ class SourceObservationEvidenceStore:
             or ref.receipt_id is not None or ref.resource_id != _PREFIX + ref.content_hash[7:]):
             raise ValueError("exact source observation evidence reference required")
         row = self._transaction.execute("""SELECT e.*, EXISTS(
-            SELECT 1 FROM aip_evidence_revoke_event r WHERE r.org_id=e.org_id
+            SELECT 1 FROM public.aip_evidence_revoke_event r WHERE r.org_id=e.org_id
             AND r.project_id=e.project_id AND r.evidence_id=e.evidence_id
             AND r.revision=1 AND r.content_hash=e.content_hash) AS revoked
-            FROM aip_evidence e WHERE e.org_id=%s AND e.project_id=%s AND e.evidence_id=%s""",
+            FROM public.aip_evidence e WHERE e.org_id=%s AND e.project_id=%s AND e.evidence_id=%s""",
             (*self._scope.key, ref.resource_id)).fetchone()
         if row is None:
             return None
@@ -103,7 +103,7 @@ class SourceObservationEvidenceStore:
             evidence_id=ref.resource_id, run_id=None, evidence_type=_TYPE, subject_ref=_subject(item),
             source_type=_TYPE, source_ref=item.source_id, observed_at=item.read_finished_at,
             freshness_at=item.read_started_at, content_hash=digest, redaction={}, created_by=actor)
-        if (body != raw or ref.content_hash != "sha256:" + digest
+        if (body != raw or canonical_hash(raw) != digest or ref.content_hash != "sha256:" + digest
             or any(row.get(key) != value for key, value in expected.items())):
             raise ValueError("observation evidence authority drifted")
         return PersistedSourceObservation(item, actor, recorded_at)
