@@ -53,25 +53,25 @@
 
 | source module | target | decision | preHash |
 |---|---|---|---|
-| `business_investigation_shared_contracts.py` | `bundles/domains/ecommerce-core/backend/ecommerce_core/contracts.py`＋`packages/aos-extension-sdk/python/aos_extension_sdk/contracts.py` | 电商事实合同进 core；通用 ExactRef/信封进 SDK；旧模块仅兼容转发 SDK 类型，平台绝不 import bundle | `3efeb79094e2ad41e273fca64ced9c3464f9cd4c7f7409940dadbb19be372843` |
-| `aip_business_investigation_data_requester.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/aip_business_investigation_data_requester.py` | BI 专用数据请求桥迁入 growth | `9cdc9a27c44f7e9126b2181d2cc09b4f714e5a44041589c8fd3df9b11db55746` |
-| `ecommerce_analyst_authority_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_authority_contracts.py` | 迁入 growth | `694e86a477197ffb79cb45d8fa2fb13fc092680d12c2d83479c934a6b0b15e94` |
-| `ecommerce_analyst_authority_store.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_authority_store.py` | 迁入 growth，存储改走 SDK | `c6c6b0847646aa7435cfe39c46ce07bfb35c619b74b49bf1d46d4b63196af4d9` |
-| `ecommerce_analyst_growth_plan_approval.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_approval.py` | 迁入 growth | `9d3013da2cfb7f78bc5075183a986155a5515a3ecb24e02abed35ec42b834728` |
-| `ecommerce_business_investigation_case_selection.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_case_selection.py` | 迁入 growth | `2d3b41a04b7e66efb3ee19dc95441264de373659b03cb66dc29c6b5ff4dac52c` |
-| `ecommerce_business_investigation_data_command.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_data_command.py` | 迁入 growth | `9b5737f79f1e062ccb4fd6817faf20fd0cbb16fbe1531cf2e6086154192d53f6` |
-| `ecommerce_business_investigation_projection.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_projection.py` | 迁入 growth | `f1d4846f898c4caf49e447c82cae1a9916f5ca71448f91db1db3b7b95b50332d` |
-| `ecommerce_business_investigation_run.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_run.py` | 迁入 growth | `7c2db302485eecb926c3fad41f225845c668048b49b915669d5cbb46cd91bcf2` |
-| `ecommerce_workshop_catalog.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_catalog.py` | 迁入 growth | `c7baa6b6b484c95125cae59496200363aa120d6ac65b40d09c56a8c961b501d2` |
-| `ecommerce_workshop_content_campaign.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_content_campaign.py` | 迁入 growth | `7779517ed8617d2b0e4939e5f7db698087f8f3a808c9f80bf6aa933cd486c79d` |
-| `ecommerce_workshop_handoff_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_handoff_contracts.py` | 迁入 growth | `ad3da43c641f8805c4e2661cb071d97e8ec6822bf27be0298c5b732f5a2cee0e` |
-| `ecommerce_workshop_handoff_service.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_handoff_service.py` | 迁入 growth，任务命令改走 SDK | `07bcc6ae309c876cf9e502ea15a7bbbea390902ed37d7cdd9e9d99feb424f0f5` |
-| `ecommerce_workshop_task_cockpit_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_task_cockpit_contracts.py` | 迁入 growth | `1b703e0e0f9210cbea2e5c6732f9ef4d966c3a15e16bd132d8fc0e2457f3b3b8` |
-| `ecommerce_workshop_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_contracts.py` | 迁入 growth；旧路径仅作序列化 DTO 兼容转发 | `a03218f42b50e1807b9165c7bf0b28179144554e3d284ec0441fb7135088f044` |
-| `ecommerce_workshop_content_campaign_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_content_campaign_contracts.py` | 迁入 growth | `84b40e90191c4033709528a0ba9acbf437f310bbc77e2c5330f0f0cdfcb50598` |
-| `ecommerce_content_campaign_authority_store.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_content_campaign_authority_store.py` | 迁入 growth；存储操作改走 SDK storage port | `67362f4692cd1738f89dade9d9d8989893bb112f35a9a913df92f1acdedfe07d` |
-| `ecommerce_content_campaign_authority_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_content_campaign_authority_contracts.py` | 迁入 growth | `1ba3074c23e6dfc3ec74aeda144ea0b3b5f43dc84c0677ea7a1df01624e4fa9f` |
-| `ecommerce_business_investigation_aip_authority.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_aip_authority.py` | 迁入 growth；StageTemplate 查询通过公共 SDK port 注入 | `547f4d96bd5bd65f6a2b60872d9f8e5d168fbc42d587f9d09bd0192b6907d923` |
+| `services/aos-api/aos_api/business_investigation_shared_contracts.py` | `bundles/domains/ecommerce-core/backend/ecommerce_core/contracts.py`＋`packages/aos-extension-sdk/python/aos_extension_sdk/contracts.py` | 电商事实合同进 core；通用 ExactRef/信封进 SDK；旧模块仅兼容转发 SDK 类型，平台绝不 import bundle | `3efeb79094e2ad41e273fca64ced9c3464f9cd4c7f7409940dadbb19be372843` |
+| `services/aos-api/aos_api/aip_business_investigation_data_requester.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/aip_business_investigation_data_requester.py` | BI 专用数据请求桥迁入 growth | `9cdc9a27c44f7e9126b2181d2cc09b4f714e5a44041589c8fd3df9b11db55746` |
+| `services/aos-api/aos_api/ecommerce_analyst_authority_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_authority_contracts.py` | 迁入 growth | `694e86a477197ffb79cb45d8fa2fb13fc092680d12c2d83479c934a6b0b15e94` |
+| `services/aos-api/aos_api/ecommerce_analyst_authority_store.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_authority_store.py` | 迁入 growth，存储改走 SDK | `c6c6b0847646aa7435cfe39c46ce07bfb35c619b74b49bf1d46d4b63196af4d9` |
+| `services/aos-api/aos_api/ecommerce_analyst_growth_plan_approval.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_approval.py` | 迁入 growth | `9d3013da2cfb7f78bc5075183a986155a5515a3ecb24e02abed35ec42b834728` |
+| `services/aos-api/aos_api/ecommerce_business_investigation_case_selection.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_case_selection.py` | 迁入 growth | `2d3b41a04b7e66efb3ee19dc95441264de373659b03cb66dc29c6b5ff4dac52c` |
+| `services/aos-api/aos_api/ecommerce_business_investigation_data_command.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_data_command.py` | 迁入 growth | `9b5737f79f1e062ccb4fd6817faf20fd0cbb16fbe1531cf2e6086154192d53f6` |
+| `services/aos-api/aos_api/ecommerce_business_investigation_projection.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_projection.py` | 迁入 growth | `f1d4846f898c4caf49e447c82cae1a9916f5ca71448f91db1db3b7b95b50332d` |
+| `services/aos-api/aos_api/ecommerce_business_investigation_run.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_run.py` | 迁入 growth | `7c2db302485eecb926c3fad41f225845c668048b49b915669d5cbb46cd91bcf2` |
+| `services/aos-api/aos_api/ecommerce_workshop_catalog.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_catalog.py` | 迁入 growth | `c7baa6b6b484c95125cae59496200363aa120d6ac65b40d09c56a8c961b501d2` |
+| `services/aos-api/aos_api/ecommerce_workshop_content_campaign.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_content_campaign.py` | 迁入 growth | `7779517ed8617d2b0e4939e5f7db698087f8f3a808c9f80bf6aa933cd486c79d` |
+| `services/aos-api/aos_api/ecommerce_workshop_handoff_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_handoff_contracts.py` | 迁入 growth | `ad3da43c641f8805c4e2661cb071d97e8ec6822bf27be0298c5b732f5a2cee0e` |
+| `services/aos-api/aos_api/ecommerce_workshop_handoff_service.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_handoff_service.py` | 迁入 growth，任务命令改走 SDK | `07bcc6ae309c876cf9e502ea15a7bbbea390902ed37d7cdd9e9d99feb424f0f5` |
+| `services/aos-api/aos_api/ecommerce_workshop_task_cockpit_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_task_cockpit_contracts.py` | 迁入 growth | `1b703e0e0f9210cbea2e5c6732f9ef4d966c3a15e16bd132d8fc0e2457f3b3b8` |
+| `services/aos-api/aos_api/ecommerce_workshop_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_contracts.py` | 迁入 growth；旧路径仅作序列化 DTO 兼容转发 | `a03218f42b50e1807b9165c7bf0b28179144554e3d284ec0441fb7135088f044` |
+| `services/aos-api/aos_api/ecommerce_workshop_content_campaign_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_workshop_content_campaign_contracts.py` | 迁入 growth | `84b40e90191c4033709528a0ba9acbf437f310bbc77e2c5330f0f0cdfcb50598` |
+| `services/aos-api/aos_api/ecommerce_content_campaign_authority_store.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_content_campaign_authority_store.py` | 迁入 growth；存储操作改走 SDK storage port | `67362f4692cd1738f89dade9d9d8989893bb112f35a9a913df92f1acdedfe07d` |
+| `services/aos-api/aos_api/ecommerce_content_campaign_authority_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_content_campaign_authority_contracts.py` | 迁入 growth | `1ba3074c23e6dfc3ec74aeda144ea0b3b5f43dc84c0677ea7a1df01624e4fa9f` |
+| `services/aos-api/aos_api/ecommerce_business_investigation_aip_authority.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_aip_authority.py` | 迁入 growth；StageTemplate 查询通过公共 SDK port 注入 | `547f4d96bd5bd65f6a2b60872d9f8e5d168fbc42d587f9d09bd0192b6907d923` |
 
 其余一跳依赖归为平台 ports：AIP contracts/任务/评测/模型/用量/生产合同/EffectReview、Data mapping/hydration/observation/profiling、`db`、`tenant_scope`、`auth`、`logging_facade`、`errors` 与 `public_contracts`。AR2-1 先为实际调用到的操作定义窄 `operationId + typed payload + exact ref`，不得把这些模块复制进领域包，也不得允许领域包直接导入 `aos_api`。
 
@@ -79,25 +79,25 @@
 
 | reverse caller | decision / target | preHash |
 |---|---|---|
-| `aip_business_investigation_artifact_saga.py` | 迁入 `ecommerce_growth`，Artifact 调用改走 SDK | `b7ef4e22aaf31088dc59adb845f148435cebcae08f2c22ec6986f50ad3c0d9c4` |
-| `aip_business_investigation_contribution.py` | 迁入 `ecommerce_growth` | `1257c36406b6466e942de48feb702a4ffcec365f69eaedb6ba0076d915ba9ec2` |
-| `aip_business_investigation_eval.py` | 迁入 `ecommerce_growth`，Eval 调用改走 SDK | `063a12c86bca8353a5840b0a3ff8f16b7cd36d5969c0fb3f4806f3cebce85684` |
-| `aip_business_investigation_evidence.py` | 迁入 `ecommerce_growth`，Evidence 调用改走 SDK | `0764a1bb934568b76bf72b940b147e3a156d3428eb7e4fc619290553ae044aec` |
-| `aip_business_investigation_fulfillment_saga.py` | 迁入 `ecommerce_growth`，DataRequirement/Fulfillment 改走 SDK | `b5a1c79cc4aeba66265429296bcb8b3d3b4659e67866ff163c7ae98465fbc36d` |
-| `aip_business_investigation_reconcile_saga.py` | 迁入 `ecommerce_growth` | `0864f624768f65bd29b893662fca6d51b4981dec3b089c228587a460282c5837` |
-| `aip_business_investigation_research.py` | 迁入 `ecommerce_growth` | `deb328355839faa141624581e89b45425b771de7707684096f0a001de60528b7` |
-| `ecommerce_analyst_materializer.py` | 迁入 `ecommerce_growth` | `e992f722a94c8f0f048ad1822ea359a95aca50cdef4ccb58429cfe7f5c8924fd` |
-| `ecommerce_business_investigation_aip_composition.py` | 迁入 `ecommerce_growth`，公共组合通过 SDK 注入 | `45d6f12f839501a6179a1c1364d2031a417138b3b4f33b38945b7b8399b298a6` |
-| `ecommerce_business_investigation_artifact.py` | 迁入 `ecommerce_growth` | `6fc11dfee4acea6a2216a113b034f88d8120c80e6bea5faf1df779a01f78b102` |
-| `ecommerce_business_investigation_artifact_publication.py` | 迁入 `ecommerce_growth`，发布仅内部 Artifact authority | `f48b3260f7b88b0ec0bce7f9b5bbb0afcedfa95fbce363009f4779d30208674f` |
-| `ecommerce_business_investigation_profile_catalog.py` | 迁入 `ecommerce_growth` | `88f81c0c206f69144a0709bb3af566543cb2bdc43686273fcecb34e8ced376d2` |
-| `aip_handoff_reference_authority.py` | 留平台；移除对 cockpit 实现导入，只消费通用 Handoff/ExactRef port | `713d48b7ff8984563149f894037a6fc4b619f20181e7279e4fe037b3a84173b9` |
-| `routers/ecommerce_business_investigations.py` | AR2 切换前保留；切换时原子改为 Canonical installation dispatch，旧实现不再可写 | `ef63dde1f0207982357e59af342e760dfc5ef4c8614d995514db802d2af35953` |
-| `routers/ecommerce_workshop.py` | AR2 切换前保留；切换时原子改为 Canonical installation dispatch，旧实现不再可写 | `acadd20bc140699fe5008794ff69a7d625a925acaa098ef217d12f54c997e469` |
-| `aip_stage_template_authority.py` | 留平台；移除对 profile catalog 实现导入，改为查询公共 Bundle/StageTemplate catalog port | `fd062cb1db3c436dcada1949d1bc19fb7765ad6b1ce2173ea9e22d153b365541` |
-| `ecommerce_business_investigation_aip_readiness.py` | 迁入 `ecommerce_growth`；生产合同、绑定与技能查询经 SDK ports | `4cafb003e1bf8852baa1a4b82558cf985de8258192331dcb65ec87c59f3cac71` |
-| `ecommerce_workshop_content_campaign_inputs.py` | 留 Data/Workshop 公共读取侧；移除对 campaign store 实现导入，仅消费带 cutoff 的 SDK query port 和序列化 DTO | `8fa43a446715b1fc4f939e91343fcf53c2e52da8b87e89684f199d167d550b46` |
-| `ecommerce_workshop_feature_activation.py` | 留平台治理侧；FeatureActivation 权威仍由平台持有，旧 contracts 路径仅兼容转发 SDK DTO，不导入 bundle | `f5890735121be588462fcb71a9784806685fe45ff6b61fce9e84aed9199dc011` |
+| `services/aos-api/aos_api/aip_business_investigation_artifact_saga.py` | 迁入 `ecommerce_growth`，Artifact 调用改走 SDK | `b7ef4e22aaf31088dc59adb845f148435cebcae08f2c22ec6986f50ad3c0d9c4` |
+| `services/aos-api/aos_api/aip_business_investigation_contribution.py` | 迁入 `ecommerce_growth` | `1257c36406b6466e942de48feb702a4ffcec365f69eaedb6ba0076d915ba9ec2` |
+| `services/aos-api/aos_api/aip_business_investigation_eval.py` | 迁入 `ecommerce_growth`，Eval 调用改走 SDK | `063a12c86bca8353a5840b0a3ff8f16b7cd36d5969c0fb3f4806f3cebce85684` |
+| `services/aos-api/aos_api/aip_business_investigation_evidence.py` | 迁入 `ecommerce_growth`，Evidence 调用改走 SDK | `0764a1bb934568b76bf72b940b147e3a156d3428eb7e4fc619290553ae044aec` |
+| `services/aos-api/aos_api/aip_business_investigation_fulfillment_saga.py` | 迁入 `ecommerce_growth`，DataRequirement/Fulfillment 改走 SDK | `b5a1c79cc4aeba66265429296bcb8b3d3b4659e67866ff163c7ae98465fbc36d` |
+| `services/aos-api/aos_api/aip_business_investigation_reconcile_saga.py` | 迁入 `ecommerce_growth` | `0864f624768f65bd29b893662fca6d51b4981dec3b089c228587a460282c5837` |
+| `services/aos-api/aos_api/aip_business_investigation_research.py` | 迁入 `ecommerce_growth` | `deb328355839faa141624581e89b45425b771de7707684096f0a001de60528b7` |
+| `services/aos-api/aos_api/ecommerce_analyst_materializer.py` | 迁入 `ecommerce_growth` | `e992f722a94c8f0f048ad1822ea359a95aca50cdef4ccb58429cfe7f5c8924fd` |
+| `services/aos-api/aos_api/ecommerce_business_investigation_aip_composition.py` | 迁入 `ecommerce_growth`，公共组合通过 SDK 注入 | `45d6f12f839501a6179a1c1364d2031a417138b3b4f33b38945b7b8399b298a6` |
+| `services/aos-api/aos_api/ecommerce_business_investigation_artifact.py` | 迁入 `ecommerce_growth` | `6fc11dfee4acea6a2216a113b034f88d8120c80e6bea5faf1df779a01f78b102` |
+| `services/aos-api/aos_api/ecommerce_business_investigation_artifact_publication.py` | 迁入 `ecommerce_growth`，发布仅内部 Artifact authority | `f48b3260f7b88b0ec0bce7f9b5bbb0afcedfa95fbce363009f4779d30208674f` |
+| `services/aos-api/aos_api/ecommerce_business_investigation_profile_catalog.py` | 迁入 `ecommerce_growth` | `88f81c0c206f69144a0709bb3af566543cb2bdc43686273fcecb34e8ced376d2` |
+| `services/aos-api/aos_api/aip_handoff_reference_authority.py` | 留平台；移除对 cockpit 实现导入，只消费通用 Handoff/ExactRef port | `713d48b7ff8984563149f894037a6fc4b619f20181e7279e4fe037b3a84173b9` |
+| `services/aos-api/aos_api/routers/ecommerce_business_investigations.py` | AR2 切换前保留；切换时原子改为 Canonical installation dispatch，旧实现不再可写 | `ef63dde1f0207982357e59af342e760dfc5ef4c8614d995514db802d2af35953` |
+| `services/aos-api/aos_api/routers/ecommerce_workshop.py` | AR2 切换前保留；切换时原子改为 Canonical installation dispatch，旧实现不再可写 | `acadd20bc140699fe5008794ff69a7d625a925acaa098ef217d12f54c997e469` |
+| `services/aos-api/aos_api/aip_stage_template_authority.py` | 留平台；移除对 profile catalog 实现导入，改为查询公共 Bundle/StageTemplate catalog port | `fd062cb1db3c436dcada1949d1bc19fb7765ad6b1ce2173ea9e22d153b365541` |
+| `services/aos-api/aos_api/ecommerce_business_investigation_aip_readiness.py` | 迁入 `ecommerce_growth`；生产合同、绑定与技能查询经 SDK ports | `4cafb003e1bf8852baa1a4b82558cf985de8258192331dcb65ec87c59f3cac71` |
+| `services/aos-api/aos_api/ecommerce_workshop_content_campaign_inputs.py` | 留 Data/Workshop 公共读取侧；移除对 campaign store 实现导入，仅消费带 cutoff 的 SDK query port 和序列化 DTO | `8fa43a446715b1fc4f939e91343fcf53c2e52da8b87e89684f199d167d550b46` |
+| `services/aos-api/aos_api/ecommerce_workshop_feature_activation.py` | 留平台治理侧；FeatureActivation 权威仍由平台持有，旧 contracts 路径仅兼容转发 SDK DTO，不导入 bundle | `f5890735121be588462fcb71a9784806685fe45ff6b61fce9e84aed9199dc011` |
 
 平台聚合与前端可达性入口同样纳入阶段合同，不能只检查 Python 领域 import：
 
@@ -150,3 +150,18 @@ AR2-7 只通过数据库 CAS 切换这个 handler 指针，不再声称 Python �
 ## 6. AR2-0 独立复审
 
 2026-09-07 Prime 最终结论：PASS，可封板 AR2-0 并进入 AR2-1。独立复核覆盖包内绝对/相对导入、AR2-0 专属 preHash、AR2-1 旧入口保持、AR2-7 runtime/entrypoint 继承、四根 Python 闭包和 bundle 禁止直接依赖 `aos_api`。最终命令 `verify_closure.py --phase ar2-0` 扫描 1,654 个 Python 模块，分类 64 个、迁移 44 个；hash、正向依赖、反向调用、跨层导入和动态入口错误全部为空。
+
+## 7. 2026-09-09 接续闭包登记
+
+原 source 列改为完整平台路径以消除迁入后同名解析歧义；第 2～3 节历史 preHash 不变。以下是接续基线 fa0612c5 已有新增节点及本次新增读取者，非 AR2-0 历史基线节点。登记不代表旧实现已经移除或 7D 已完成。
+
+| sourcePath | target | decision | 接续基线摘要（非 AR2-0 preHash） |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py` | 原路径 | platform host port；既有 AR2-7D 宿主事务适配，切换前不注册未完成服务 | 48a51c177c506b56355d4b6d14810ff471ca5feb6dd2538b32a03a3a49629727 |
+| `services/aos-api/aos_api/ecommerce_canonical_population.py` | 原路径 | data query port；本次新增当前规范库全集身份读取，仅由受信宿主使用 | NEW |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analysis_runtime.py` | 原路径 | solution package；既有包内纯编排节点；公共权威仅经 SDK ports | aebddd199ba97397b053946dee54a082c2c897ed8a80406653f5e9badc6904da |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/audit_projection.py` | 原路径 | solution package；既有包内纯编排节点；公共权威仅经 SDK ports | 8b7221e60fc6a5787dafcc0ff98ea14fc842c91fe9b5c0a07d4d63bb7b3736bc |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/content_artifact_review.py` | 原路径 | solution package；既有包内纯编排节点；公共权威仅经 SDK ports | d7eb9b15ee97a51b122c083ed52a70f47139f1fdcc55e8c80728b04d7921e9d2 |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/content_capability_runtime.py` | 原路径 | solution package；既有包内纯编排节点；公共权威仅经 SDK ports | ca149ec75b9578cf2f1691db79507aa145f56b7ad73295f6e1a117ca6c687095 |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/result_feedback.py` | 原路径 | solution package；既有包内纯编排节点；公共权威仅经 SDK ports | 88be9cac4f9d89a56beed20be301540481ba76c196c15f8c41d62b32bdfa12f4 |
+| `bundles/platforms/ecommerce-niushop/backend/ecommerce_niushop/connector.py` | 原路径 | adapter package；既有 Niushop 类型化 connector，只由受控宿主承载读取 | 5c53d528df282609d0c2cda7bf1d848f266cf69d45933fb1fc7a49c4310db5bc |
