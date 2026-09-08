@@ -16,7 +16,7 @@ from psycopg.types.json import Jsonb
 from aos_api.aip_contracts import AipContractModel
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.data_requirement_contracts import DataRequirementRevisionRecord
-from aos_api.data_requirement_quality import QualityMeasurement, ResolvedPopulationPolicy, evaluate_quality
+from aos_api.data_requirement_quality import QualityMeasurementRecord, ResolvedPopulationPolicy, evaluate_quality
 from aos_api.data_requirement_store import canonical_hash
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.tenant_scope import TenantScope
@@ -27,7 +27,7 @@ TYPE = "data-requirement-quality"
 
 class QualityEvidenceInput(AipContractModel):
     requirement: DataRequirementRevisionRecord
-    measurement: QualityMeasurement
+    measurement: QualityMeasurementRecord
     population_policy: ResolvedPopulationPolicy
     evaluated_at: datetime
     actor: str = Field(min_length=1, max_length=200)

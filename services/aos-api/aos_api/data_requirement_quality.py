@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Annotated, Literal, Self
 
-from pydantic import Field, StrictInt, field_validator, model_validator
+from pydantic import Field, StrictInt, TypeAdapter, field_validator, model_validator
 
 from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
@@ -62,8 +62,7 @@ class ResolvedPopulationPolicy(AipContractModel):
     population_unit: str = Field(pattern=r"^[a-z][a-z0-9_]{0,79}$")
 
 
-class QualityMeasurement(AipContractModel):
-    schema_version: Literal["aos.data-requirement-quality-measurement/v1"] = "aos.data-requirement-quality-measurement/v1"
+class _QualityMeasurementBase(AipContractModel):
     tenant: TenantContext
     requirement_ref: InvestigationExactRef
     channel_ref: InvestigationExactRef
@@ -72,8 +71,6 @@ class QualityMeasurement(AipContractModel):
     cutoff_at: datetime
     grain: str = Field(pattern=r"^[a-z][a-z0-9_]{0,79}$")
     source_refs: list[InvestigationExactRef] = Field(min_length=1, max_length=200)
-    hydration_ref: InvestigationExactRef
-    mapping_refs: list[InvestigationExactRef] = Field(min_length=1, max_length=200)
     query_version: MeasurementPolicyVersion
     rule_version: MeasurementPolicyVersion
     population_policy_version: MeasurementPolicyVersion
@@ -96,13 +93,10 @@ class QualityMeasurement(AipContractModel):
     def _shape(self) -> Self:
         for reference, kind in ((self.requirement_ref, "DataRequirementRevision"),
                                 (self.channel_ref, "ChannelRevision"),
-                                (self.entity_ref, "BusinessEntityRevision"),
-                                (self.hydration_ref, "SemanticHydrationReceipt")):
+                                (self.entity_ref, "BusinessEntityRevision")):
             if reference.resource_type != kind:
                 raise ValueError("incorrect measurement reference type")
-        if any(ref.resource_type != "SourceMappingRevision" for ref in self.mapping_refs):
-            raise ValueError("incorrect mapping reference type")
-        for refs in (self.source_refs, self.mapping_refs):
+        for refs in (self.source_refs,):
             keys = [(r.resource_type, r.resource_id, r.revision, r.content_hash) for r in refs]
             if len(keys) != len(set(keys)):
                 raise ValueError("duplicate measurement lineage")
@@ -111,6 +105,45 @@ class QualityMeasurement(AipContractModel):
         if self.source_observed_at > self.measured_at:
             raise ValueError("source observation is after measurement")
         return self
+
+
+class QualityMeasurement(_QualityMeasurementBase):
+    """Original hydration provenance; serialization remains v1-compatible."""
+    schema_version: Literal["aos.data-requirement-quality-measurement/v1"] = "aos.data-requirement-quality-measurement/v1"
+    hydration_ref: InvestigationExactRef
+    mapping_refs: list[InvestigationExactRef] = Field(min_length=1, max_length=200)
+
+    @model_validator(mode="after")
+    def _hydration(self) -> Self:
+        if self.hydration_ref.resource_type != "SemanticHydrationReceipt":
+            raise ValueError("incorrect hydration reference type")
+        if any(ref.resource_type != "SourceMappingRevision" for ref in self.mapping_refs):
+            raise ValueError("incorrect mapping reference type")
+        keys = [(r.resource_type, r.resource_id, r.revision, r.content_hash) for r in self.mapping_refs]
+        if len(keys) != len(set(keys)):
+            raise ValueError("duplicate measurement lineage")
+        return self
+
+
+class CanonicalQueryQualityMeasurement(_QualityMeasurementBase):
+    """Explicit existing-canonical-data read, not a semantic hydration write."""
+    schema_version: Literal["aos.data-requirement-query-quality-measurement/v1"] = "aos.data-requirement-query-quality-measurement/v1"
+    query_result_ref: InvestigationExactRef
+
+    @model_validator(mode="after")
+    def _query(self) -> Self:
+        if (self.query_result_ref.resource_type != "QueryResultRevision"
+            or type(self.query_result_ref.revision) is not int or self.query_result_ref.receipt_id is not None):
+            raise ValueError("exact query result reference required")
+        if any(ref.resource_type != "EcommerceObjectRevision" for ref in self.source_refs):
+            raise ValueError("canonical query requires actual ecommerce source references")
+        return self
+
+
+QualityMeasurementRecord = Annotated[
+    QualityMeasurement | CanonicalQueryQualityMeasurement, Field(discriminator="schema_version")
+]
+_MEASUREMENT_ADAPTER = TypeAdapter(QualityMeasurementRecord)
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,14 +156,14 @@ class QualityAssessment:
 def evaluate_quality(
     scope: TenantScope,
     requirement: DataRequirementRevisionRecord,
-    measurement: QualityMeasurement,
+    measurement: QualityMeasurementRecord,
     *,
     evaluated_at: datetime,
     population_policy: ResolvedPopulationPolicy,
 ) -> QualityAssessment:
     """Check every requested fact independently; no rounding, averaging or I/O."""
     req = DataRequirementRevisionRecord.model_validate(requirement.model_dump())
-    item = QualityMeasurement.model_validate(measurement.model_dump())
+    item = _MEASUREMENT_ADAPTER.validate_python(measurement.model_dump())
     policy = ResolvedPopulationPolicy.model_validate(population_policy.model_dump())
     if req.content_hash != canonical_revision_content_hash(req):
         raise ValueError("requirement content hash mismatch")
