@@ -123,10 +123,22 @@ class GrowthContentReviewPort(Protocol):
     ) -> Mapping[str, Any]: ...
 
 
+class GrowthFeedbackPort(Protocol):
+    """Transaction-bound host sink for deterministic post-review feedback."""
+
+    def enqueue(
+        self,
+        *,
+        review_receipt: Mapping[str, Any],
+        feedback_plan: Mapping[str, Any],
+    ) -> Mapping[str, Any]: ...
+
+
 __all__ = [
     "ExactRef",
     "GrowthCapabilityPort",
     "GrowthContentReviewPort",
+    "GrowthFeedbackPort",
     "GrowthDataPort",
     "GrowthReadPort",
     "GrowthReviewPort",
