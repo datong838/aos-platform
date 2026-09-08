@@ -2,7 +2,7 @@
 
 - 验收时间：2026-09-08T12:42:04+08:00
 - 分支：`m1`
-- 源提交：`2aa7a28ba96b884a338644da71a288a885869c3b`
+- 源提交：`2aa7a28ba96b884a338644da71a288a885869c3b`＋`c8f2a6808803b47c198a0db1be7c3a2114ef1156`
 - 方案提交：`43e70e80759ab9052fe636712fd5fd0053f2444f`
 - 结果：`AR2_7C_RESULT_FEEDBACK_RECOVERY_GREEN`
 
@@ -16,22 +16,23 @@
 
 ## 验证结果
 
-- 结果反馈专项：`9 passed`。
-- AR2-7A～7C 受影响累计回归：`59 passed`。
+- 结果反馈专项：`11 passed`。
+- AR2-7A～7C 受影响累计回归：`61 passed`。
 - PostgreSQL 事务、RLS、恢复与非空降级门：`6 passed`。
 - Python 编译、精确 `git diff --check`：通过。
 - Alembic：唯一 head `ar2_004`。
 
 ## 文件摘要
 
-- `result_feedback.py`: `sha256:1fa7cf4d8cf2f2bdc8fa428be8895fef9f84df12122f395730384ce148947cff`
+- `content_artifact_review.py`: `sha256:d7eb9b15ee97a51b122c083ed52a70f47139f1fdcc55e8c80728b04d7921e9d2`
+- `result_feedback.py`: `sha256:88be9cac4f9d89a56beed20be301540481ba76c196c15f8c41d62b32bdfa12f4`
 - `audit_projection.py`: `sha256:8b7221e60fc6a5787dafcc0ff98ea14fc842c91fe9b5c0a07d4d63bb7b3736bc`
 - `sdk_ports.py`: `sha256:8a213388e3594e6735868566b2449cac12dcd8ddeeeea372bed8c69925bcc151`
-- `ecommerce_growth_feedback_port.py`: `sha256:8f9aa60ab5225c914d434399bac59be946e4eb7c45bcddbae91ef43943c56df1`
-- `ar2_004_ecommerce_growth_feedback.py`: `sha256:54f2a752683502ec867fd5da10ac22244a7e0edbef82dd37df5de836f79cb564`
-- `test_ecommerce_result_feedback.py`: `sha256:785e606321582896544bd6b3bb72f68dba72fb206bde18de846fc61b08d449df`
-- `test_ecommerce_growth_feedback_port.py`: `sha256:72cb69219aba7faa677b267bc8ca3385d00b012c1541239c60839d147efbd1e0`
-- `test_ecommerce_growth_feedback_port_pg.py`: `sha256:3d52be77333cd8d7e8f075743c0d41af7461a85a084aee728fb71043609ac070`
+- `ecommerce_growth_feedback_port.py`: `sha256:b8b1627e71a7148b9ca68ee247cf0733edbb05d8cfd27e3a2250535f84d08b3d`
+- `ar2_004_ecommerce_growth_feedback.py`: `sha256:f29e241fbc18ff4efb6558e9ba5572537d809901717477f64d77676c2f2754c9`
+- `test_ecommerce_result_feedback.py`: `sha256:93714fcf74504b7c38f3a1d650a9449a9249ff7780e91e1f492be35c04779ce4`
+- `test_ecommerce_growth_feedback_port.py`: `sha256:4c489ad1ad19edd4d11b9132fbbc459155da792831aae9f8ea6f3979ad1779ab`
+- `test_ecommerce_growth_feedback_port_pg.py`: `sha256:cbf62c7a13964d64d08c166ed7619179602387feb18364b2b3ebb6c5b279036d`
 
 ## 安全边界与下一步
 
