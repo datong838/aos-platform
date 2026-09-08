@@ -19,7 +19,7 @@ from .sdk_ports import ExactRef, GrowthContentReviewPort
 
 CONTENT_REVIEW_OPERATION = "ecommerce_growth_content_review"
 _TECHNICAL_TEXT = re.compile(
-    r"(?:(?:AR|W|R|N)\s*[-_]?\s*\d|技术方案|开发任务|波次|API|SQL|DDL|数据库迁移|代码|(?:Artifact|Dataset|DataFulfillment|EvidenceBundle|TaskBrief|GrowthPlan|Capability|Provider|Usage|Installation)[A-Za-z]*(?:Revision|Receipt)|sha256\s*:|\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b|(?:/[\w.-]+){2,}|(?:[\w.-]+/)+[\w.-]+\.(?:py|ts|tsx|js|sql|md|json|ya?ml)|[A-Za-z]:\\+[^\\\s]+(?:\\+[^\\\s]+)+)",
+    r"(?:(?:AR|W|R|N)\s*[-_]?\s*\d|技术方案|开发任务|波次|API|SQL|DDL|数据库迁移|代码|(?:Artifact|Dataset|DataFulfillment|EvidenceBundle|TaskBrief|GrowthPlan|Capability|Provider|Usage|Installation)[A-Za-z]*(?:Revision|Receipt)|sha256\s*:|\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b|(?:/[\w.-]+){2,}|(?:[\w.-]+/)+[\w.-]+\.(?:py|ts|tsx|js|sql|md|json|ya?ml)|\b[\w.-]+\.(?:py|ts|tsx|js|sql|md|json|ya?ml)\b|[A-Za-z]:\\+[^\\\s]+(?:\\+[^\\\s]+)+)",
     re.IGNORECASE,
 )
 _ARTIFACT_FIELDS = frozenset(
@@ -56,7 +56,7 @@ _REVIEW_SIDE_EFFECT_FIELDS = frozenset(
 )
 
 
-def _business_text(value: Any, *, name: str, limit: int) -> str:
+def validated_business_text(value: Any, *, name: str, limit: int) -> str:
     if type(value) is not str or not 1 <= len(value.strip()) <= limit:
         raise ValueError(f"{name} must be non-empty bounded business text")
     normalized = "".join(
@@ -72,7 +72,7 @@ def _business_text(value: Any, *, name: str, limit: int) -> str:
 def _string_tuple(value: Any, *, name: str, maximum: int) -> tuple[str, ...]:
     if type(value) is not list or not 1 <= len(value) <= maximum:
         raise ValueError(f"{name} must be a bounded non-empty list")
-    result = tuple(_business_text(item, name=name, limit=300) for item in value)
+    result = tuple(validated_business_text(item, name=name, limit=300) for item in value)
     if len(result) != len(set(result)):
         raise ValueError(f"{name} values must be unique")
     return result
@@ -131,7 +131,7 @@ class ReadableContentArtifact:
                 },
                 maximum=200,
             ),
-            body=_business_text(value["body"], name="body", limit=20_000),
+            body=validated_business_text(value["body"], name="body", limit=20_000),
             constraint_checks=_string_tuple(
                 value["constraintChecks"], name="constraintChecks", maximum=50
             ),
@@ -264,4 +264,5 @@ __all__ = [
     "ContentReviewRequest",
     "ReadableContentArtifact",
     "review_content_artifact",
+    "validated_business_text",
 ]

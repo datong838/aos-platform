@@ -120,7 +120,7 @@ def upgrade() -> None:
         LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
         DECLARE v_org TEXT:=NULLIF(current_setting('aos.org_id',true),'');
           v_project TEXT:=NULLIF(current_setting('aos.project_id',true),'');v_existing RECORD;
-          v_segment JSONB;v_ordinal BIGINT;v_expected TEXT[];v_count INTEGER;
+          v_segment JSONB;v_existing_segments JSONB;v_ordinal BIGINT;v_expected TEXT[];v_count INTEGER;
         BEGIN
           IF coalesce(v_org,'')='' OR coalesce(v_project,'')='' OR coalesce(btrim(p_command_id),'')=''
              OR p_request_hash !~ '^sha256:[0-9a-f]{64}$' OR p_decision NOT IN ('ACCEPT','RETURN')
@@ -140,7 +140,16 @@ def upgrade() -> None:
            WHERE org_id=v_org AND project_id=v_project AND ecommerce_growth_feedback_command.command_id=p_command_id
            FOR UPDATE;
           IF FOUND THEN
+            SELECT jsonb_agg(segment.payload ORDER BY segment.sequence) INTO v_existing_segments
+              FROM ecommerce_growth_feedback_segment AS segment
+             WHERE segment.org_id=v_org AND segment.project_id=v_project
+               AND segment.command_id=p_command_id;
             IF v_existing.request_hash<>p_request_hash OR v_existing.decision<>p_decision
+               OR v_existing.review_receipt_ref IS DISTINCT FROM p_review_receipt_ref
+               OR v_existing.artifact_ref IS DISTINCT FROM p_artifact_ref
+               OR v_existing.task_ref IS DISTINCT FROM p_task_ref
+               OR v_existing.brief_ref IS DISTINCT FROM p_brief_ref
+               OR v_existing_segments IS DISTINCT FROM p_segments
             THEN RAISE EXCEPTION USING ERRCODE='23505',MESSAGE='feedback command content drifted'; END IF;
             RETURN QUERY SELECT p_command_id,p_request_hash,v_count,TRUE; RETURN;
           END IF;
@@ -210,6 +219,28 @@ def upgrade() -> None:
         END $$"""
     )
     op.execute(
+        """CREATE FUNCTION ecommerce_growth_feedback_reconcile_claim_ar2_004(
+          p_command_id TEXT
+        ) RETURNS TABLE(sequence INTEGER,kind TEXT,target_id TEXT,payload JSONB,
+          attempt INTEGER,lease_token UUID,checkpoint_version BIGINT)
+        LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
+        DECLARE v_org TEXT:=NULLIF(current_setting('aos.org_id',true),'');
+          v_project TEXT:=NULLIF(current_setting('aos.project_id',true),'');v_checkpoint RECORD;v_segment RECORD;
+        BEGIN
+          IF coalesce(v_org,'')='' OR coalesce(v_project,'')='' OR coalesce(btrim(p_command_id),'')=''
+          THEN RAISE EXCEPTION USING ERRCODE='22023',MESSAGE='invalid feedback reconciliation claim'; END IF;
+          SELECT * INTO v_checkpoint FROM ecommerce_growth_feedback_checkpoint
+           WHERE org_id=v_org AND project_id=v_project AND command_id=p_command_id FOR UPDATE;
+          IF NOT FOUND THEN RAISE EXCEPTION USING ERRCODE='P0002',MESSAGE='feedback command not found'; END IF;
+          SELECT * INTO v_segment FROM ecommerce_growth_feedback_segment
+           WHERE org_id=v_org AND project_id=v_project AND command_id=p_command_id
+             AND ecommerce_growth_feedback_segment.sequence=v_checkpoint.completed_sequence+1 FOR UPDATE;
+          IF NOT FOUND OR v_segment.state<>'unknown' THEN RETURN; END IF;
+          RETURN QUERY SELECT v_segment.sequence,v_segment.kind,v_segment.target_id,v_segment.payload,
+            v_segment.attempt,v_segment.lease_token,v_checkpoint.version;
+        END $$"""
+    )
+    op.execute(
         """CREATE FUNCTION ecommerce_growth_feedback_ack_ar2_004(
           p_command_id TEXT,p_sequence INTEGER,p_lease_token UUID,p_checkpoint_version BIGINT,
           p_target_receipt_ref JSONB
@@ -263,6 +294,7 @@ def upgrade() -> None:
     _secure("ecommerce_growth_feedback_enqueue_ar2_004", "(text,text,text,jsonb,jsonb,jsonb,jsonb,jsonb,text,timestamptz)")
     _secure("ecommerce_growth_feedback_claim_ar2_004", "(text,text,integer)")
     _secure("ecommerce_growth_feedback_unknown_ar2_004", "(text,integer,uuid,text)")
+    _secure("ecommerce_growth_feedback_reconcile_claim_ar2_004", "(text)")
     _secure("ecommerce_growth_feedback_ack_ar2_004", "(text,integer,uuid,bigint,jsonb)")
 
 
@@ -273,6 +305,7 @@ def downgrade() -> None:
           'AR2_004_DOWNGRADE_REQUIRES_EMPTY_FEEDBACK_AUTHORITY' USING ERRCODE='55000'; END IF; END $$"""
     )
     op.execute("DROP FUNCTION ecommerce_growth_feedback_ack_ar2_004(text,integer,uuid,bigint,jsonb)")
+    op.execute("DROP FUNCTION ecommerce_growth_feedback_reconcile_claim_ar2_004(text)")
     op.execute("DROP FUNCTION ecommerce_growth_feedback_unknown_ar2_004(text,integer,uuid,text)")
     op.execute("DROP FUNCTION ecommerce_growth_feedback_claim_ar2_004(text,text,integer)")
     op.execute("DROP FUNCTION ecommerce_growth_feedback_enqueue_ar2_004(text,text,text,jsonb,jsonb,jsonb,jsonb,jsonb,text,timestamptz)")

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
+import json
 from uuid import uuid4
 
 import pytest
@@ -23,31 +25,47 @@ def exact(kind: str, identity: str) -> dict[str, object]:
     }
 
 
+def digest(value: object) -> str:
+    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
 def plan(decision: str = "ACCEPT") -> dict[str, object]:
     kinds = (
         ("daily_review", "improvement_observation", "memory_candidate")
         if decision == "ACCEPT"
         else ("content_return_target",)
     )
-    return {
-        "commandId": "feedback-command-1",
-        "requestHash": "sha256:" + "b" * 64,
+    review_ref = exact("ContentReviewReceipt", "review-1")
+    segments = [
+        {
+            "sequence": index,
+            "kind": kind,
+            "targetId": f"{kind}-1",
+            "businessTitle": "今日内容复盘" if index == 1 else "内容结果持续改进",
+            "businessSummary": "内容已通过评审，等待后续业务效果观察。",
+            "targetPhase": "content_generation" if kind == "content_return_target" else None,
+        }
+        for index, kind in enumerate(kinds, start=1)
+    ]
+    command_id = "feedback-" + digest({"reviewReceiptRef": review_ref, "decision": decision})[:40]
+    canonical = {
         "decision": decision,
-        "reviewReceiptRef": exact("ContentReviewReceipt", "review-1"),
+        "reviewReceiptRef": review_ref,
         "artifactRef": exact("ArtifactRevision", "artifact-1"),
         "taskRef": exact("Task", "task-1"),
         "briefRef": exact("TaskBriefRevision", "brief-1"),
-        "segments": [
-            {
-                "sequence": index,
-                "kind": kind,
-                "targetId": f"{kind}-1",
-                "businessTitle": "今日内容复盘" if index == 1 else "内容结果持续改进",
-                "businessSummary": "内容已通过评审，等待后续业务效果观察。",
-                "targetPhase": "content_generation" if kind == "content_return_target" else None,
-            }
-            for index, kind in enumerate(kinds, start=1)
-        ],
+        "segments": segments,
+    }
+    return {
+        "commandId": command_id,
+        "requestHash": "sha256:" + digest(canonical),
+        "decision": decision,
+        "reviewReceiptRef": canonical["reviewReceiptRef"],
+        "artifactRef": canonical["artifactRef"],
+        "taskRef": canonical["taskRef"],
+        "briefRef": canonical["briefRef"],
+        "segments": segments,
         "sideEffects": {
             "providerInvocationCount": 0,
             "externalPublicationCount": 0,
@@ -95,17 +113,18 @@ def port(rows):
 
 
 def test_enqueue_is_strict_receipt_first_and_has_no_authority_override() -> None:
+    expected = plan()
     item, connection = port(
-        [{"command_id": "feedback-command-1", "request_hash": "sha256:" + "b" * 64,
+        [{"command_id": expected["commandId"], "request_hash": expected["requestHash"],
           "segment_count": 3, "replayed": False}]
     )
     result = item.enqueue(
         review_receipt={"receiptRef": exact("ContentReviewReceipt", "review-1")},
-        feedback_plan=plan(),
+        feedback_plan=expected,
     )
     assert result == {
-        "commandId": "feedback-command-1",
-        "requestHash": "sha256:" + "b" * 64,
+        "commandId": expected["commandId"],
+        "requestHash": expected["requestHash"],
         "segmentCount": 3,
         "replayed": False,
     }
@@ -138,21 +157,39 @@ def test_claim_unknown_and_reconcile_preserve_one_target_and_checkpoint() -> Non
         "lease_token": token,
         "checkpoint_version": 1,
     }
-    item, connection = port([claim_row, None, {
+    reconciliation_row = {**claim_row, "checkpoint_version": 1}
+    item, connection = port([claim_row, None, reconciliation_row, {
         "completed_sequence": 1, "checkpoint_version": 2, "receipt_ref": None,
     }])
-    claim = item.claim(command_id="feedback-command-1", worker="feedback-worker")
+    command_id = plan()["commandId"]
+    claim = item.claim(command_id=command_id, worker="feedback-worker")
     assert claim["targetId"] == "daily_review-1"
-    item.mark_unknown(command_id="feedback-command-1", claim=claim, reason_code="target_outcome_unknown")
+    item.mark_unknown(command_id=command_id, claim=claim, reason_code="target_outcome_unknown")
+    claim = item.claim_reconciliation(command_id=command_id)
+    assert claim["attempt"] == 1
     target = exact("EffectReviewReceipt", "effect-1")
     checkpoint = item.reconcile(
-        command_id="feedback-command-1",
+        command_id=command_id,
         claim=claim,
         target_receipt_ref=target,
     )
     assert checkpoint == {"completedSequence": 1, "checkpointVersion": 2, "receiptRef": None}
     assert "feedback_unknown_ar2_004" in connection.calls[1][0]
-    assert "feedback_ack_ar2_004" in connection.calls[2][0]
+    assert "feedback_reconcile_claim_ar2_004" in connection.calls[2][0]
+    assert "feedback_ack_ar2_004" in connection.calls[3][0]
+
+
+def test_enqueue_rejects_forged_canonical_hash_and_command_identity() -> None:
+    item, connection = port([])
+    drift = plan()
+    drift["requestHash"] = "sha256:" + "f" * 64
+    with pytest.raises(ValueError, match="canonical request hash drifted"):
+        item.enqueue(review_receipt={"receiptRef": exact("ContentReviewReceipt", "review-1")}, feedback_plan=drift)
+    drift = plan()
+    drift["commandId"] = "feedback-" + "f" * 40
+    with pytest.raises(ValueError, match="canonical command identity drifted"):
+        item.enqueue(review_receipt={"receiptRef": exact("ContentReviewReceipt", "review-1")}, feedback_plan=drift)
+    assert connection.calls == []
 
 
 def test_checkpoint_cannot_advance_when_target_readback_differs() -> None:
@@ -171,7 +208,7 @@ def test_checkpoint_cannot_advance_when_target_readback_differs() -> None:
     }
     with pytest.raises(EcommerceGrowthFeedbackConflict, match="readback drifted"):
         item.acknowledge(
-            command_id="feedback-command-1",
+            command_id=plan()["commandId"],
             claim=claim,
             target_receipt_ref=exact("EffectReviewReceipt", "effect-1"),
         )

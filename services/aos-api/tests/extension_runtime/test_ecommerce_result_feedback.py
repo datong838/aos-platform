@@ -87,6 +87,18 @@ def test_accept_builds_exact_three_segments_without_effect_claim_or_side_effects
     assert build_result_feedback(request()) == plan
 
 
+def test_command_identity_only_uses_review_receipt_and_decision() -> None:
+    original = build_result_feedback(request())
+    other_key = build_result_feedback(replace(request(), idempotency_key="another-client-key"))
+    other_copy = build_result_feedback(
+        replace(request(), business_task_title="七夕老会员回购内容策划")
+    )
+    assert other_key.command_id == original.command_id
+    assert other_key.command_hash == original.command_hash
+    assert other_copy.command_id == original.command_id
+    assert other_copy.command_hash != original.command_hash
+
+
 def test_return_builds_only_new_content_stage_target_and_keeps_artifact_exact() -> None:
     item = request("RETURN")
     plan = build_result_feedback(item)
@@ -107,6 +119,13 @@ def test_feedback_rejects_lineage_stage_and_technical_business_copy_drift() -> N
         replace(item, business_task_title="AR2-7C 开发任务")
     with pytest.raises(ValueError, match="technical text"):
         replace(item, artifact_summary="修改 services/aos-api/demo.py 完成任务。")
+    for polluted in (
+        "请修改代码后继续业务处理",
+        r"请修改 C:\repo\demo.py 后继续业务处理",
+        "请修改 demo.py 后继续业务处理",
+    ):
+        with pytest.raises(ValueError, match="technical text"):
+            replace(item, artifact_summary=polluted)
 
 
 def test_business_projection_has_no_exact_ids_and_audit_projection_contains_them() -> None:

@@ -1,6 +1,8 @@
 """Dedicated PostgreSQL proof for AR2-7C result feedback recovery."""
 
 import importlib.util
+import hashlib
+import json
 import os
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -15,7 +17,6 @@ from psycopg.rows import dict_row
 
 from aos_api.ecommerce_growth_feedback_port import (
     BoundEcommerceGrowthFeedbackPort,
-    EcommerceGrowthFeedbackConflict,
 )
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.tenant_scope import TenantScope
@@ -39,31 +40,46 @@ def exact(kind: str, identity: str, fill: str = "a") -> dict[str, object]:
     }
 
 
+def digest(value: object) -> str:
+    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
 def feedback_plan(command_id: str = "feedback-1", decision: str = "ACCEPT"):
     kinds = (
         ("daily_review", "improvement_observation", "memory_candidate")
         if decision == "ACCEPT"
         else ("content_return_target",)
     )
-    return {
-        "commandId": command_id,
-        "requestHash": "sha256:" + ("b" if decision == "ACCEPT" else "c") * 64,
+    review_ref = exact("ContentReviewReceipt", f"review-{command_id}")
+    segments = [
+        {
+            "sequence": index,
+            "kind": kind,
+            "targetId": f"{kind}-{command_id}",
+            "businessTitle": "内容结果回流",
+            "businessSummary": "内容结果已进入受控回流流程。",
+            "targetPhase": "content_generation" if kind == "content_return_target" else None,
+        }
+        for index, kind in enumerate(kinds, start=1)
+    ]
+    canonical = {
         "decision": decision,
-        "reviewReceiptRef": exact("ContentReviewReceipt", f"review-{command_id}"),
+        "reviewReceiptRef": review_ref,
         "artifactRef": exact("ArtifactRevision", f"artifact-{command_id}"),
         "taskRef": exact("Task", f"task-{command_id}"),
         "briefRef": exact("TaskBriefRevision", f"brief-{command_id}"),
-        "segments": [
-            {
-                "sequence": index,
-                "kind": kind,
-                "targetId": f"{kind}-{command_id}",
-                "businessTitle": "内容结果回流",
-                "businessSummary": "内容结果已进入受控回流流程。",
-                "targetPhase": "content_generation" if kind == "content_return_target" else None,
-            }
-            for index, kind in enumerate(kinds, start=1)
-        ],
+        "segments": segments,
+    }
+    return {
+        "commandId": "feedback-" + digest({"reviewReceiptRef": review_ref, "decision": decision})[:40],
+        "requestHash": "sha256:" + digest(canonical),
+        "decision": decision,
+        "reviewReceiptRef": canonical["reviewReceiptRef"],
+        "artifactRef": canonical["artifactRef"],
+        "taskRef": canonical["taskRef"],
+        "briefRef": canonical["briefRef"],
+        "segments": segments,
         "sideEffects": {
             "providerInvocationCount": 0,
             "externalPublicationCount": 0,
@@ -146,16 +162,16 @@ def test_accept_replay_ordered_ack_and_aggregate_receipt(database):
         assert enqueue(port, item)["replayed"] is False
         assert enqueue(port, item)["replayed"] is True
         for sequence, kind in enumerate(("daily_review", "improvement_observation", "memory_candidate"), start=1):
-            claim = port.claim(command_id="feedback-1", worker="worker-1")
+            claim = port.claim(command_id=item["commandId"], worker="worker-1")
             assert (claim["sequence"], claim["kind"], claim["attempt"]) == (sequence, kind, 1)
             target = exact("TargetReceipt", f"target-{sequence}", fill=str(sequence))
             result = port.acknowledge(
-                command_id="feedback-1", claim=claim,
+                command_id=item["commandId"], claim=claim,
                 target_receipt_ref=target,
             )
             assert result["completedSequence"] == sequence
         assert result["receiptRef"]["resourceType"] == "FeedbackReceipt"
-        assert port.claim(command_id="feedback-1", worker="worker-1") is None
+        assert port.claim(command_id=item["commandId"], worker="worker-1") is None
 
     rows = database.owner.execute(
         "SELECT state,target_receipt_ref FROM ecommerce_growth_feedback_segment ORDER BY sequence"
@@ -170,18 +186,21 @@ def test_unknown_restart_only_reconciles_same_target(database):
     item = feedback_plan("feedback-return", "RETURN")
     with bound(database, scope) as (port, _):
         enqueue(port, item)
-        claim = port.claim(command_id="feedback-return", worker="worker-1")
-        port.mark_unknown(command_id="feedback-return", claim=claim, reason_code="target_outcome_unknown")
-        assert port.claim(command_id="feedback-return", worker="worker-2") is None
+        claim = port.claim(command_id=item["commandId"], worker="worker-1")
+        port.mark_unknown(command_id=item["commandId"], claim=claim, reason_code="target_outcome_unknown")
+        assert port.claim(command_id=item["commandId"], worker="worker-2") is None
     with bound(database, scope) as (restarted, _):
+        claim = restarted.claim_reconciliation(command_id=item["commandId"])
+        assert claim["attempt"] == 1
         target = exact("TaskStageTargetReceipt", "return-target", fill="d")
         result = restarted.reconcile(
-            command_id="feedback-return", claim=claim,
+            command_id=item["commandId"], claim=claim,
             target_receipt_ref=target,
         )
         assert result["receiptRef"]["resourceType"] == "FeedbackReceipt"
     row = database.owner.execute(
-        "SELECT state,attempt,target_receipt_ref FROM ecommerce_growth_feedback_segment WHERE command_id='feedback-return'"
+        "SELECT state,attempt,target_receipt_ref FROM ecommerce_growth_feedback_segment WHERE command_id=%s",
+        (item["commandId"],),
     ).fetchone()
     assert row["state"] == "acked" and row["attempt"] == 1
     assert row["target_receipt_ref"]["resourceId"] == "return-target"
@@ -194,11 +213,19 @@ def test_tenant_isolation_content_drift_and_nonempty_downgrade_gate(database):
     with bound(database, positive) as (port, conn):
         enqueue(port, item)
         assert conn.execute("SELECT count(*) n FROM ecommerce_growth_feedback_command").fetchone()["n"] == 1
-    with bound(database, positive) as (port, _):
+    with bound(database, positive) as (_, conn):
         drift = dict(item)
-        drift["requestHash"] = "sha256:" + "e" * 64
-        with pytest.raises(EcommerceGrowthFeedbackConflict):
-            enqueue(port, drift)
+        drift["artifactRef"] = exact("ArtifactRevision", "artifact-drift", fill="e")
+        drift["requestHash"] = item["requestHash"]
+        with pytest.raises(psycopg.Error, match="content drifted"):
+            conn.execute(
+                "SELECT * FROM ecommerce_growth_feedback_enqueue_ar2_004(%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s)",
+                (
+                    drift["commandId"], drift["requestHash"], drift["decision"], json.dumps(drift["reviewReceiptRef"]),
+                    json.dumps(drift["artifactRef"]), json.dumps(drift["taskRef"]), json.dumps(drift["briefRef"]),
+                    json.dumps(drift["segments"], ensure_ascii=False), "数字同事", datetime(2026, 9, 8, 12, tzinfo=UTC),
+                ),
+            ).fetchone()
     with bound(database, canary) as (_, conn):
         assert conn.execute("SELECT count(*) n FROM ecommerce_growth_feedback_command").fetchone()["n"] == 0
     with pytest.raises(psycopg.Error, match="AR2_004_DOWNGRADE_REQUIRES_EMPTY"):

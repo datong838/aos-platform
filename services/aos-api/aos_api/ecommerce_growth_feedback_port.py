@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime
+import hashlib
 import json
 import re
 from typing import Any, Mapping
@@ -104,6 +105,27 @@ def _strict_plan(review_receipt: Mapping[str, Any], plan: Mapping[str, Any]) -> 
             raise ValueError("feedback segment shape drifted")
         if (segment["kind"] == "content_return_target") != (segment["targetPhase"] == "content_generation"):
             raise ValueError("feedback return target phase drifted")
+    command_identity = {
+        "reviewReceiptRef": plan["reviewReceiptRef"],
+        "decision": plan["decision"],
+    }
+    encoded_identity = json.dumps(
+        command_identity, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    expected_command_id = "feedback-" + hashlib.sha256(encoded_identity.encode("utf-8")).hexdigest()[:40]
+    if plan["commandId"] != expected_command_id:
+        raise ValueError("feedback canonical command identity drifted")
+    canonical = {
+        "decision": plan["decision"],
+        "reviewReceiptRef": plan["reviewReceiptRef"],
+        "artifactRef": plan["artifactRef"],
+        "taskRef": plan["taskRef"],
+        "briefRef": plan["briefRef"],
+        "segments": plan["segments"],
+    }
+    encoded = json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    if plan["requestHash"] != "sha256:" + hashlib.sha256(encoded.encode("utf-8")).hexdigest():
+        raise ValueError("feedback canonical request hash drifted")
     return deepcopy(plan)
 
 
@@ -209,6 +231,32 @@ class BoundEcommerceGrowthFeedbackPort:
             raise
         except Exception as exc:
             raise EcommerceGrowthFeedbackConflict("feedback unknown state could not be persisted") from exc
+
+    def claim_reconciliation(self, *, command_id: str) -> Mapping[str, Any] | None:
+        """Reload the sole unknown segment after restart without executing or incrementing attempt."""
+
+        if type(command_id) is not str or not command_id.strip():
+            raise ValueError("feedback reconciliation command identity is required")
+        try:
+            row = self._transaction.execute(
+                "SELECT * FROM ecommerce_growth_feedback_reconcile_claim_ar2_004(%s)",
+                (command_id,),
+            ).fetchone()
+            if row is None:
+                return None
+            return {
+                "sequence": int(row["sequence"]),
+                "kind": row["kind"],
+                "targetId": row["target_id"],
+                "payload": deepcopy(row["payload"]),
+                "attempt": int(row["attempt"]),
+                "leaseToken": str(row["lease_token"]),
+                "checkpointVersion": int(row["checkpoint_version"]),
+            }
+        except (ValueError, EcommerceGrowthFeedbackError):
+            raise
+        except Exception as exc:
+            raise EcommerceGrowthFeedbackConflict("feedback reconciliation could not be loaded") from exc
 
     def acknowledge(
         self,
