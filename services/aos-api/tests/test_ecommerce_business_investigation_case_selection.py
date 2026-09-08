@@ -247,13 +247,14 @@ def test_postgres_shop_selection_is_tenant_bound_and_payload_drift_changes_hash(
             assert "object_type='Shop'" in sql and params == SCOPE.key
             return Cursor(self.rows)
 
-    def source(rows):
+    def source(rows, *, bound=False):
         @contextmanager
         def connect(scope):
             assert scope == SCOPE
             yield Connection(rows)
 
-        return PostgresCanonicalShopSelectionSource(connect).read(SCOPE)
+        owner = PostgresCanonicalShopSelectionSource(connect)
+        return owner.read_bound(SCOPE) if bound else owner.read(SCOPE)
 
     first = source([row])
     second = source([{**row, "payload_hash": "2" * 64}])
@@ -261,3 +262,17 @@ def test_postgres_shop_selection_is_tenant_bound_and_payload_drift_changes_hash(
     assert first.business_entity_ref.resource_id == "1"
     assert first.business_entity_ref.content_hash != second.business_entity_ref.content_hash
     assert source([]) is None and source([row, row]) is None
+    physical = source([row], bound=True)
+    assert physical.selection == first
+    assert physical.scope == SCOPE
+    assert physical.platform == "niushop"
+    assert physical.shop_or_marketplace_id == "1"
+    assert physical.shop_external_id == "1"
+    assert source([], bound=True) is None
+    assert source([row, row], bound=True) is None
+    complex_shop = source([{**row, "shop_or_marketplace_id": "region:shop:1"}], bound=True)
+    assert complex_shop.shop_or_marketplace_id == "region:shop:1"
+    for field in ("platform", "shop_or_marketplace_id", "external_id"):
+        for invalid in (None, "", " ", " shop ", 1):
+            with pytest.raises(ValueError):
+                source([{**row, field: invalid}], bound=True)

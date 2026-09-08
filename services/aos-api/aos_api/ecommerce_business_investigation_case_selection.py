@@ -81,6 +81,17 @@ class CanonicalShopSelection:
 
 
 @dataclass(frozen=True, slots=True)
+class BoundCanonicalShopSelection:
+    """Internal physical scope from the same read as the public exact selection."""
+
+    scope: TenantScope
+    platform: str
+    shop_or_marketplace_id: str
+    shop_external_id: str
+    selection: CanonicalShopSelection
+
+
+@dataclass(frozen=True, slots=True)
 class CanonicalProfileSelection:
     investigation_profile_ref: InvestigationExactRef
     scope_ref: InvestigationExactRef
@@ -113,6 +124,10 @@ class PostgresCanonicalShopSelectionSource:
         self._connect = connect_factory
 
     def read(self, scope: TenantScope) -> CanonicalShopSelection | None:
+        bound = self.read_bound(scope)
+        return bound.selection if bound is not None else None
+
+    def read_bound(self, scope: TenantScope) -> BoundCanonicalShopSelection | None:
         with self._connect(scope) as conn:
             rows = conn.execute(
                 """SELECT platform,shop_or_marketplace_id,external_id,schema_version,
@@ -126,6 +141,10 @@ class PostgresCanonicalShopSelectionSource:
         if len(rows) != 1:
             return None
         row = rows[0]
+        for field in ("platform", "shop_or_marketplace_id", "external_id"):
+            value = row[field]
+            if not isinstance(value, str) or not value or value.strip() != value:
+                raise ValueError("canonical Shop identity must be nonempty canonical text")
         revision = int(row["schema_version"])
         platform = str(row["platform"])
         marketplace = str(row["shop_or_marketplace_id"])
@@ -171,7 +190,10 @@ class PostgresCanonicalShopSelectionSource:
                 }
             ),
         )
-        return CanonicalShopSelection(channel_ref, business_entity_ref, binding_ref)
+        return BoundCanonicalShopSelection(
+            scope, platform, marketplace, external_id,
+            CanonicalShopSelection(channel_ref, business_entity_ref, binding_ref),
+        )
 
 
 class CatalogCanonicalProfileSelectionSource:
