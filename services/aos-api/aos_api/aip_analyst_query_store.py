@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 from datetime import UTC, datetime
 from typing import Any
 
@@ -19,6 +21,7 @@ from aos_api.aip_analyst_contracts import (
     RecordQueryResultRequest,
 )
 from aos_api.aip_contracts import TenantContext
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
@@ -37,6 +40,17 @@ def _id(prefix: str, scope: TenantScope, *parts: object) -> str:
 
 
 class AipAnalystQueryStore:
+    def __init__(self, *, connect_factory: Callable[[TenantScope], AbstractContextManager[Any]] | None = None,
+                 clock: Callable[[], datetime] | None = None) -> None:
+        self._connect = connect_factory or connect
+        self._clock = clock or (lambda: datetime.now(UTC))
+
+    def _now(self) -> datetime:
+        value = self._clock()
+        if value.utcoffset() is None:
+            raise ValueError("query authority clock requires timezone")
+        return value
+
     def create(
         self,
         scope: TenantScope,
@@ -50,8 +64,8 @@ class AipAnalystQueryStore:
         payload = request.model_dump(mode="json", by_alias=True)
         request_hash = _hash({"scope": scope.key, "request": payload, "actor": actor})
         query_id = _id("analyst-query", scope, idempotency_key)
-        now = datetime.now(UTC)
-        with connect(scope) as conn:
+        now = self._now()
+        with self._connect(scope) as conn:
             replay = self._replay(conn, scope, "create", idempotency_key, request_hash)
             if replay:
                 return QueryJobSnapshot.model_validate(replay)
@@ -90,14 +104,14 @@ class AipAnalystQueryStore:
             return snapshot
 
     def get(self, scope: TenantScope, query_id: str) -> QueryJobSnapshot:
-        with connect(scope) as conn:
+        with self._connect(scope) as conn:
             return self._snapshot(conn, scope, query_id)
 
     def list_jobs(
         self, scope: TenantScope, *, limit: int = 50
     ) -> QueryJobListResponse:
         limit = max(1, min(int(limit), 200))
-        with connect(scope) as conn:
+        with self._connect(scope) as conn:
             rows = conn.execute(
                 """SELECT query_id FROM aip_analyst_query_job
                    WHERE org_id=%s AND project_id=%s
@@ -139,8 +153,8 @@ class AipAnalystQueryStore:
                 "actor": actor,
             }
         )
-        now = datetime.now(UTC)
-        with connect(scope) as conn:
+        now = self._now()
+        with self._connect(scope) as conn:
             replay = self._replay(conn, scope, operation, idempotency_key, request_hash)
             if replay:
                 return QueryJobSnapshot.model_validate(replay)
@@ -204,8 +218,8 @@ class AipAnalystQueryStore:
                 "actor": actor,
             }
         )
-        now = datetime.now(UTC)
-        with connect(scope) as conn:
+        now = self._now()
+        with self._connect(scope) as conn:
             replay = self._replay(conn, scope, "result", idempotency_key, request_hash)
             if replay:
                 return QueryJobSnapshot.model_validate(replay)
@@ -234,26 +248,7 @@ class AipAnalystQueryStore:
                     message="result createdAt is outside the query execution window",
                     status_code=409,
                 )
-            result_payload = {
-                "scope": scope.key,
-                "requestHash": _hash(dict(job["request_json"])),
-                "status": result.status.value,
-                "columns": [
-                    item.model_dump(mode="json", by_alias=True)
-                    for item in result.columns
-                ],
-                "rows": [item.model_dump(mode="json", by_alias=True) for item in result.rows],
-                "sources": [
-                    item.model_dump(mode="json", by_alias=True)
-                    for item in result.source_refs
-                ],
-                "lineage": [
-                    item.model_dump(mode="json", by_alias=True)
-                    for item in result.lineage_refs
-                ],
-                "uncertainties": result.uncertainties,
-            }
-            if result.content_hash != _hash(result_payload):
+            if result.content_hash != self._result_hash(scope, dict(job["request_json"]), result):
                 raise ApiError(
                     code="AIP_ANALYST_RESULT_HASH_MISMATCH",
                     message="result content hash is invalid",
@@ -304,6 +299,46 @@ class AipAnalystQueryStore:
             self._receipt(conn, scope, "result", idempotency_key, request_hash, snapshot, actor, now)
             conn.commit()
             return snapshot
+
+    @staticmethod
+    def _result_hash(scope: TenantScope, request: dict[str, Any], result: QueryResultRevision) -> str:
+        # Preserve the existing QueryResult authority algorithm verbatim.
+        return _hash({
+            "scope": scope.key, "requestHash": _hash(request), "status": result.status.value,
+            "columns": [item.model_dump(mode="json", by_alias=True) for item in result.columns],
+            "rows": [item.model_dump(mode="json", by_alias=True) for item in result.rows],
+            "sources": [item.model_dump(mode="json", by_alias=True) for item in result.source_refs],
+            "lineage": [item.model_dump(mode="json", by_alias=True) for item in result.lineage_refs],
+            "uncertainties": result.uncertainties,
+        })
+
+    def read_result_exact(self, scope: TenantScope, ref: InvestigationExactRef) -> QueryResultRevision | None:
+        ref = InvestigationExactRef.model_validate(ref.model_dump())
+        if ref.resource_type != "QueryResultRevision" or type(ref.revision) is not int or ref.receipt_id is not None:
+            raise ValueError("exact QueryResultRevision reference required")
+        with self._connect(scope) as conn:
+            row = conn.execute("""SELECT r.*,j.kind AS job_kind,j.request_json,
+                j.cutoff_at AS job_cutoff,j.created_at AS job_created
+                FROM aip_analyst_query_result_revision r JOIN aip_analyst_query_job j
+                ON j.org_id=r.org_id AND j.project_id=r.project_id AND j.query_id=r.query_id
+                WHERE r.org_id=%s AND r.project_id=%s AND r.query_id=%s AND r.revision=%s""",
+                (*scope.key, ref.resource_id, ref.revision)).fetchone()
+        if row is None:
+            return None
+        result = QueryResultRevision.model_validate(row["result_json"])
+        if (result.tenant.org_id != scope.org_id or result.tenant.project_id != scope.project_id
+            or row["org_id"] != scope.org_id or row["project_id"] != scope.project_id
+            or result.query_id != ref.resource_id or row["query_id"] != ref.resource_id
+            or result.revision != ref.revision or row["revision"] != ref.revision
+            or result.kind.value != row["job_kind"] or result.status.value != row["status"]
+            or result.cutoff_at != row["job_cutoff"] or result.cutoff_at != row["cutoff_at"]
+            or result.created_at.utcoffset() is None or result.cutoff_at.utcoffset() is None
+            or not row["job_created"] <= result.created_at <= row["created_at"]
+            or result.content_hash != row["content_hash"]
+            or "sha256:" + result.content_hash != ref.content_hash
+            or result.content_hash != self._result_hash(scope, dict(row["request_json"]), result)):
+            raise ValueError("query result exact authority drifted")
+        return result
 
     def _snapshot(self, conn: Any, scope: TenantScope, query_id: str) -> QueryJobSnapshot:
         row = conn.execute(
