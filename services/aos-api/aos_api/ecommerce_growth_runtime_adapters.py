@@ -15,6 +15,20 @@ from aos_api.ecommerce_growth_host_ports import (
     HostTransaction,
 )
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
+from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+from aos_api.ecommerce_business_investigation_aip_composition import (
+    PostgresAipProductionCompositionSource,
+)
+from aos_api.ecommerce_business_investigation_application import (
+    CreateBusinessInvestigationCaseRequest,
+    EcommerceBusinessInvestigationApplication,
+)
+from aos_api.ecommerce_business_investigation_case import BusinessInvestigationCaseStore
+from aos_api.ecommerce_business_investigation_case_selection import (
+    CatalogCanonicalProfileSelectionSource,
+    PostgresCanonicalShopSelectionSource,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -53,6 +67,126 @@ class TransactionBoundConnectFactory:
         if requested_scope is not None and requested_scope != self._scope:
             raise PermissionError("domain Store requested a different tenant scope")
         yield self._connection
+
+
+def _strict_case_command(command: Mapping[str, Any]) -> tuple[str, CreateBusinessInvestigationCaseRequest, InvestigationExactRef]:
+    if type(command) is not dict or set(command) != {"idempotencyKey", "case", "taskBriefRef"}:
+        raise ValueError("case command must contain exactly idempotencyKey, case and taskBriefRef")
+    key = command["idempotencyKey"]
+    if type(key) is not str or not 1 <= len(key.strip()) <= 200:
+        raise ValueError("case command idempotencyKey is invalid")
+    if type(command["case"]) is not dict or type(command["taskBriefRef"]) is not dict:
+        raise ValueError("case command authorities must be strict objects")
+    request = CreateBusinessInvestigationCaseRequest.model_validate(command["case"])
+    brief_ref = InvestigationExactRef.model_validate(command["taskBriefRef"])
+    if brief_ref.resource_type != "TaskBriefRevision":
+        raise ValueError("taskBriefRef must reference TaskBriefRevision")
+    return key.strip(), request, brief_ref
+
+
+def _case_ref(authority) -> dict[str, Any]:
+    return {
+        "resourceType": "BusinessInvestigationCaseRevision",
+        "resourceId": authority.case_id,
+        "revision": authority.revision,
+        "contentHash": authority.content_hash,
+    }
+
+
+class _AlreadyValidatedCaseSelection:
+    def verify_case_refs(self, *_args, **_kwargs) -> None:
+        return None
+
+
+class CasePutHostService:
+    """Current-authority Case write in the locked HostPort transaction."""
+
+    executor_identity = "ecommerce-growth-case-host"
+
+    @staticmethod
+    def _factory(transaction: HostTransaction, scope: TenantScope) -> TransactionBoundConnectFactory:
+        return TransactionBoundConnectFactory(transaction, scope)
+
+    def revalidate(self, *, transaction, scope, dispatch, command) -> None:
+        _key, request, brief_ref = _strict_case_command(command)
+        factory = self._factory(transaction, scope)
+        # Lock the mutable canonical Shop set before deriving its exact refs.
+        transaction.execute(
+            """SELECT external_id FROM ecom_object
+                WHERE org_id=%s AND workspace_id=%s AND object_type='Shop'
+                  AND deleted_at IS NULL AND canonical_status='active'
+                ORDER BY platform,shop_or_marketplace_id,external_id FOR SHARE""",
+            scope.key,
+        ).fetchall()
+        shop = PostgresCanonicalShopSelectionSource(factory).read(scope)
+        profile = CatalogCanonicalProfileSelectionSource(
+            composition_source=PostgresAipProductionCompositionSource(factory)
+        ).read(scope, request.analysis_type.value)
+        if shop is None or profile is None:
+            raise ValueError("current Case selection authority is unavailable")
+        expected = (
+            shop.channel_ref,
+            shop.business_entity_ref,
+            shop.entity_channel_binding_ref,
+            profile.investigation_profile_ref,
+            profile.scope_ref,
+        )
+        actual = (
+            request.channel_ref,
+            request.business_entity_ref,
+            request.entity_channel_binding_ref,
+            request.investigation_profile_ref,
+            request.scope_ref,
+        )
+        if actual != expected:
+            raise ValueError("case command refs drifted from current canonical selection")
+        brief_head = transaction.execute(
+            """SELECT current_revision FROM aip_task_brief_head
+                WHERE org_id=%s AND project_id=%s AND brief_id=%s FOR SHARE""",
+            (*scope.key, brief_ref.resource_id),
+        ).fetchone()
+        if brief_head is None or int(brief_head["current_revision"]) != brief_ref.revision:
+            raise ValueError("taskBriefRef is not the current revision")
+        brief = AipProductionContractStore(factory).get_brief(
+            scope, brief_ref.resource_id, brief_ref.revision, conn=transaction
+        )
+        brief_hash = brief.content_hash
+        if not brief_hash.startswith("sha256:"):
+            brief_hash = "sha256:" + brief_hash
+        if brief_hash != brief_ref.content_hash or brief.lifecycle.value != "frozen":
+            raise ValueError("taskBriefRef is not the current frozen authority")
+
+    def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
+        key, request, _brief_ref = _strict_case_command(command)
+        factory = self._factory(transaction, scope)
+        app = EcommerceBusinessInvestigationApplication(
+            case_store=BusinessInvestigationCaseStore(factory),
+            case_selection_resolver=_AlreadyValidatedCaseSelection(),
+        )
+        result = app.create_case(
+            scope,
+            request,
+            idempotency_key=key,
+            actor=self.executor_identity,
+            occurred_at=occurred_at or checked_at,
+        )
+        return {
+            "receiptRef": _case_ref(result.authority),
+            "authority": result.authority.model_dump(by_alias=True, mode="json"),
+            "replayed": result.replayed,
+        }
+
+    def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        _key, request, _brief_ref = _strict_case_command(command)
+        current = BusinessInvestigationCaseStore(self._factory(transaction, scope)).get(
+            scope, request.case_id
+        )
+        expected = {
+            "receiptRef": _case_ref(current),
+            "authority": current.model_dump(by_alias=True, mode="json"),
+            "replayed": bool(receipt.get("replayed")),
+        }
+        return expected if dict(receipt) == expected else {}
 
 
 class TrustedEcommerceGrowthDomainService(Protocol):
@@ -211,6 +345,7 @@ RUNTIME_ADAPTER_TYPES = (
 
 __all__ = [adapter.__name__ for adapter in RUNTIME_ADAPTER_TYPES] + [
     "RUNTIME_ADAPTER_TYPES",
+    "CasePutHostService",
     "TransactionBoundConnectFactory",
     "TrustedEcommerceGrowthDomainService",
 ]
