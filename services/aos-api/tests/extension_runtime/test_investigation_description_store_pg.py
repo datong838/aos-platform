@@ -1,5 +1,6 @@
 """PostgreSQL proof for immutable, tenant-scoped investigation descriptions."""
 
+import ast
 import importlib.util
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -15,7 +16,7 @@ from psycopg import sql
 from psycopg.rows import dict_row
 
 from aos_api.ecommerce_growth_host_ports import HostTransaction
-from aos_api.ecommerce_investigation_description_store import InvestigationDescriptionStore
+from aos_api.ecommerce_investigation_description_store import InvestigationDescriptionStore, canonical_hash
 from aos_api.tenant_scope import TenantScope
 
 
@@ -41,6 +42,12 @@ def database():
     owner = psycopg.connect(**database_pg, autocommit=True, row_factory=dict_row)
     migration = None
     try:
+        owner.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public")
+        baseline = ROOT / "alembic/versions/228asset0_evidence_snapshot.py"
+        helper_sql = next(node.value for node in ast.walk(ast.parse(baseline.read_text()))
+                          if isinstance(node, ast.Constant) and isinstance(node.value, str)
+                          and "CREATE OR REPLACE FUNCTION canonical_asset_registry_jsonb" in node.value)
+        owner.execute(helper_sql)
         filename = "ar2_006_investigation_description_receipt.py"
         spec = importlib.util.spec_from_file_location(filename, ROOT / "alembic/versions" / filename)
         migration = importlib.util.module_from_spec(spec)
@@ -48,6 +55,12 @@ def database():
         spec.loader.exec_module(migration)
         migration.op = SimpleNamespace(execute=owner.execute)
         migration.upgrade()
+        hardening_path = ROOT / "alembic/versions/ar2_007_description_required_identity.py"
+        hardening_spec = importlib.util.spec_from_file_location("description_hardening", hardening_path)
+        hardening = importlib.util.module_from_spec(hardening_spec)
+        hardening_spec.loader.exec_module(hardening)
+        hardening.op = SimpleNamespace(execute=owner.execute)
+        hardening.upgrade()
         owner.execute("GRANT USAGE ON SCHEMA public TO aos_runtime")
         yield SimpleNamespace(owner=owner, pg=database_pg, migration=migration)
     finally:
@@ -97,7 +110,7 @@ def put(database, scope, key="describe-qyh-001", payload=None):
     with store_for(database, scope) as store:
         return store.put(
             idempotency_key=key,
-            request_hash=REQUEST_HASH,
+            request_hash=canonical_hash({"idempotencyKey": key, "analysisType": "initial_store_analysis"}),
             authority=payload or authority(scope, key),
             created_at=NOW,
         )
@@ -133,3 +146,55 @@ def test_description_concurrent_first_write_is_serialized(database):
         futures = [pool.submit(put, database, scope) for _ in range(2)]
         results = [future.result().replayed for future in futures]
     assert sorted(results) == [False, True]
+
+
+@pytest.mark.parametrize("field", ["schemaVersion", "receiptId"])
+@pytest.mark.parametrize("explicit_null", [False, True])
+def test_direct_function_rejects_missing_identity(database, field, explicit_null):
+    from psycopg.types.json import Jsonb
+    from aos_api.ecommerce_investigation_description_store import deterministic_receipt_id
+
+    scope = TenantScope("org-org", "dev-project")
+    key = "missing-" + field
+    payload = authority(scope, key)
+    if explicit_null:
+        payload[field] = None
+    else:
+        payload.pop(field)
+    with psycopg.connect(**database.pg) as conn:
+        conn.execute("SET ROLE aos_runtime")
+        conn.execute("SELECT set_config('aos.org_id',%s,false)", (scope.org_id,))
+        conn.execute("SELECT set_config('aos.project_id',%s,false)", (scope.project_id,))
+        with pytest.raises(psycopg.Error, match="invalid investigation"):
+            conn.execute(
+                "SELECT * FROM ecommerce_investigation_description_put_ar2_006(%s,%s,%s,%s,%s,%s)",
+                (key, REQUEST_HASH, deterministic_receipt_id(scope, key), REQUEST_HASH, Jsonb(payload), NOW),
+            )
+        conn.rollback()
+
+
+@pytest.mark.parametrize("forged", ["receiptId", "requestHash", "contentHash"])
+def test_direct_function_rejects_forgery_without_occupying_key(database, forged):
+    from psycopg.types.json import Jsonb
+    scope = TenantScope("org-org", "dev-project")
+    key = "forged-" + forged
+    payload = authority(scope, key)
+    if forged == "receiptId":
+        payload["receiptId"] = str(uuid4())
+    request_hash = canonical_hash({"idempotencyKey": key, "analysisType": payload["analysisType"]})
+    content_hash = canonical_hash(payload)
+    if forged == "requestHash":
+        request_hash = REQUEST_HASH
+    if forged == "contentHash":
+        content_hash = REQUEST_HASH
+    with psycopg.connect(**database.pg) as conn:
+        conn.execute("SET ROLE aos_runtime")
+        conn.execute("SELECT set_config('aos.org_id',%s,false)", (scope.org_id,))
+        conn.execute("SELECT set_config('aos.project_id',%s,false)", (scope.project_id,))
+        with pytest.raises(psycopg.Error, match="invalid investigation"):
+            conn.execute(
+                "SELECT * FROM ecommerce_investigation_description_put_ar2_006(%s,%s,%s,%s,%s,%s)",
+                (key, request_hash, UUID(payload["receiptId"]), content_hash, Jsonb(payload), NOW),
+            )
+        conn.rollback()
+    assert put(database, scope, key).replayed is False

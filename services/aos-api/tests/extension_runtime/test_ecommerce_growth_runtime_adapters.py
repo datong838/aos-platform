@@ -135,7 +135,10 @@ def test_investigation_describe_persists_business_readable_exact_receipt(monkeyp
             ref["receiptId"] = kwargs["authority"]["receiptId"]
             return SimpleNamespace(receipt_ref=ref, authority=kwargs["authority"], replayed=False)
 
-        def read(self, _receipt_id):
+        def read(self, _receipt_id, *, request_hash=None):
+            if not persisted:
+                return None
+            assert request_hash == persisted["request_hash"]
             ref = exact("InvestigationDescriptionReceipt", persisted["authority"]["receiptId"])
             ref["receiptId"] = persisted["authority"]["receiptId"]
             return SimpleNamespace(receipt_ref=ref, authority=persisted["authority"], replayed=True)
@@ -171,6 +174,22 @@ def test_investigation_describe_persists_business_readable_exact_receipt(monkeyp
         command=command,
         receipt=receipt,
     ) == receipt
+    monkeypatch.setattr(
+        InvestigationDescribeHostService, "_selection",
+        staticmethod(lambda *_: pytest.fail("replay must not reread current data")),
+    )
+    replay = service.execute(
+        transaction=HostTransaction(SimpleNamespace()), scope=scope,
+        dispatch_ref=SimpleNamespace(), command=command,
+        checked_at=datetime(2026, 9, 9, 12, tzinfo=UTC), occurred_at=None,
+    )
+    assert replay["authority"] == receipt["authority"]
+    assert replay["replayed"] is True
+    assert service.verify_receipt(
+        transaction=HostTransaction(SimpleNamespace()), scope=scope,
+        dispatch=dispatch, command={**command, "idempotencyKey": "another-request"},
+        receipt=receipt,
+    ) == {}
     with pytest.raises(ValueError, match="invalid envelope"):
         service.revalidate(
             transaction=HostTransaction(SimpleNamespace()),
@@ -178,6 +197,15 @@ def test_investigation_describe_persists_business_readable_exact_receipt(monkeyp
             dispatch=dispatch,
             command={**command, "tenant": {"orgId": scope.org_id}},
         )
+
+
+@pytest.mark.parametrize("field", ["idempotencyKey", "analysisType"])
+def test_description_rejects_noncanonical_command_whitespace(field):
+    from aos_api.ecommerce_growth_runtime_adapters import _strict_describe_command
+    command = {"idempotencyKey": "description-001", "analysisType": "initial_store_analysis"}
+    command[field] = " " + command[field] + " "
+    with pytest.raises(ValueError, match="invalid"):
+        _strict_describe_command(command)
 
 
 def case_command():

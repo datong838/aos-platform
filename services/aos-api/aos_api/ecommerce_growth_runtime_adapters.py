@@ -293,9 +293,9 @@ def _strict_describe_command(command: Mapping[str, Any]) -> tuple[str, str]:
     if type(command) is not dict or set(command) != {"idempotencyKey", "analysisType"}:
         raise ValueError("investigation describe command has an invalid envelope")
     key, analysis_type = command["idempotencyKey"], command["analysisType"]
-    if type(key) is not str or not 1 <= len(key.strip()) <= 200:
+    if type(key) is not str or key != key.strip() or not 1 <= len(key) <= 200:
         raise ValueError("investigation describe idempotencyKey is invalid")
-    if type(analysis_type) is not str or not 1 <= len(analysis_type.strip()) <= 120:
+    if type(analysis_type) is not str or analysis_type != analysis_type.strip() or not 1 <= len(analysis_type) <= 120:
         raise ValueError("investigation describe analysisType is invalid")
     return key.strip(), analysis_type.strip()
 
@@ -366,20 +366,30 @@ class InvestigationDescribeHostService:
         }
 
     def revalidate(self, *, transaction, scope, dispatch, command) -> None:
-        _key, analysis_type = _strict_describe_command(command)
-        self._selection(transaction, scope, dispatch.checked_at, analysis_type)
+        _strict_describe_command(command)
         if dispatch.operation_id != "ecommerce_growth_investigation_describe":
             raise ValueError("investigation describe dispatch operation drifted")
 
     def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
         key, analysis_type = _strict_describe_command(command)
+        store = InvestigationDescriptionStore(transaction, scope)
+        request_hash = budget_canonical_hash(dict(command), prefixed=True)
+        existing = store.read(
+            deterministic_receipt_id(scope, key), request_hash=request_hash
+        )
+        if existing is not None:
+            return {
+                "receiptRef": existing.receipt_ref,
+                "authority": existing.authority,
+                "replayed": existing.replayed,
+            }
         selection, readiness = self._selection(transaction, scope, checked_at, analysis_type)
         authority = self._authority(
             scope, key, analysis_type, selection, readiness, checked_at
         )
-        record = InvestigationDescriptionStore(transaction, scope).put(
+        record = store.put(
             idempotency_key=key,
-            request_hash=budget_canonical_hash(dict(command), prefixed=True),
+            request_hash=request_hash,
             authority=authority,
             created_at=occurred_at or checked_at,
         )
@@ -390,7 +400,7 @@ class InvestigationDescribeHostService:
         }
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
-        _key, analysis_type = _strict_describe_command(command)
+        key, analysis_type = _strict_describe_command(command)
         ref = receipt.get("receiptRef")
         if type(ref) is not dict or ref.get("resourceType") != "InvestigationDescriptionReceipt":
             return {}
@@ -398,7 +408,11 @@ class InvestigationDescribeHostService:
             receipt_id = UUID(str(ref.get("resourceId")))
         except (TypeError, ValueError):
             return {}
-        record = InvestigationDescriptionStore(transaction, scope).read(receipt_id)
+        if receipt_id != deterministic_receipt_id(scope, key):
+            return {}
+        record = InvestigationDescriptionStore(transaction, scope).read(
+            receipt_id, request_hash=budget_canonical_hash(dict(command), prefixed=True)
+        )
         if record is None or record.authority.get("analysisType") != analysis_type:
             return {}
         expected = {

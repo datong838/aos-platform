@@ -107,19 +107,25 @@ class InvestigationDescriptionStore:
             replayed=row["replayed"],
         )
 
-    def read(self, receipt_id: UUID) -> InvestigationDescriptionRecord | None:
+    def read(self, receipt_id: UUID, *, request_hash: str | None = None) -> InvestigationDescriptionRecord | None:
         if type(receipt_id) is not UUID:
             raise TypeError("description receipt lookup requires UUID")
         row = self._transaction.execute(
-            """SELECT authority,content_hash FROM ecommerce_investigation_description_receipt
+            """SELECT authority,content_hash,request_hash FROM ecommerce_investigation_description_receipt
                  WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
             (*self._scope.key, receipt_id),
         ).fetchone()
         if row is None:
             return None
+        if request_hash is not None and row["request_hash"] != request_hash:
+            raise InvestigationDescriptionConflict("description request hash drifted")
         authority = deepcopy(row["authority"])
         content_hash = str(row["content_hash"])
-        if type(authority) is not dict or canonical_hash(authority) != content_hash:
+        if (
+            type(authority) is not dict
+            or authority.get("receiptId") != str(receipt_id)
+            or canonical_hash(authority) != content_hash
+        ):
             raise InvestigationDescriptionConflict("stored description content hash drifted")
         return InvestigationDescriptionRecord(
             receipt_ref=receipt_ref(receipt_id, content_hash),
