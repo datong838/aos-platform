@@ -387,6 +387,33 @@ class BusinessInvestigationRunStore:
             replayed=bool(row["replayed"]),
         )
 
+    def read_data_request_receipt(
+        self, scope: TenantScope, run_id: str, requirement_ref: InvestigationExactRef,
+        *, expected_version: int, idempotency_key: str,
+    ) -> BusinessInvestigationRunStateRevision | None:
+        """Verify a historical request-data transition without current runtime state."""
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """SELECT run_id,expected_version,authority_data
+                    FROM ecommerce_investigation_run_state_transition_receipt
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation='business_investigation_run.request_data' AND idempotency_key=%s""",
+                (*scope.key, idempotency_key),
+            ).fetchone()
+        if row is None:
+            return None
+        authority = BusinessInvestigationRunStateRevision.model_validate(row["authority_data"])
+        if (row["run_id"] != run_id or int(row["expected_version"]) != expected_version
+                or (authority.tenant.org_id, authority.tenant.project_id) != scope.key
+                or authority.run_id != run_id or authority.version != expected_version + 1
+                or authority.lifecycle is not BusinessInvestigationRunLifecycle.WAITING_DATA
+                or authority.control is not BusinessInvestigationRunControl.RUNNING
+                or authority.pending_requirement_ref != requirement_ref
+                or authority.uncertain_command is not None
+                or authority.calculated_content_hash() != authority.content_hash):
+            raise BusinessInvestigationRunConflict("historical data-request Receipt drifted")
+        return authority
+
     def request_data(
         self,
         scope: TenantScope,

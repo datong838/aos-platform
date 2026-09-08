@@ -339,6 +339,10 @@ def test_growth_composes_requirement_and_fulfillment_without_tenant_override() -
         quality_threshold=0.95,
         min_population=20,
         idempotency_key="requirement-once",
+        expected_run_version=1, purpose_code="business_portrait_gap", grain="day",
+        freshness_max_age_seconds=3600, markings=("INTERNAL",),
+        acceptable_degradation=(), requested_outputs=("EvidenceBundleRevision",),
+        budget_minor=0, expires_at=CUTOFF + timedelta(days=1),
     )
     requirement_ref = request_requirement(data_port, growth_dispatch, spec)
     fulfillment_ref = bind_observation_fulfillment(
@@ -392,5 +396,7 @@ def test_authority_cutoff_quality_and_cross_tenant_drift_fail_closed() -> None:
                 growth_ref("ChannelRevision", "channel-niushop"),
                 growth_ref("BusinessEntityRevision", "shop-qyh"),
                 ("Order",), CUTOFF - timedelta(days=1), CUTOFF, CUTOFF, 0.9, 1, "key",
+                1, "business_portrait_gap", "day", 3600, ("INTERNAL",), (),
+                ("EvidenceBundleRevision",), 0, CUTOFF + timedelta(days=1),
             ),
         )

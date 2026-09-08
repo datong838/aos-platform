@@ -45,6 +45,15 @@ from aos_api.ecommerce_investigation_description_store import (
     deterministic_receipt_id,
 )
 from aos_api.source_readiness import PostgresSourceReadinessFactSource, SourceReadinessService
+from aos_api.data_requirement_store import DataRequirementStore
+from aos_api.ecommerce_business_investigation_data_command import (
+    EcommerceBusinessInvestigationDataCommandService,
+    RequestBusinessInvestigationMissingDataCommand,
+)
+from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunStore
+from aos_api.aip_business_investigation_runtime import BusinessInvestigationRuntimeBinder
+from aos_api.aip_business_investigation_compile_saga import BusinessInvestigationCompilationReceiptStore
+from aos_api.aip_task_store import AipTaskStore
 from aos_api.tenant_scope import TenantScope
 
 
@@ -420,6 +429,136 @@ class InvestigationDescribeHostService:
             "authority": record.authority,
             "replayed": bool(receipt.get("replayed")),
         }
+        return expected if dict(receipt) == expected else {}
+
+
+_DATA_SPEC_KEYS = {
+    "purposeCode", "requiredFacts", "timeWindow", "grain", "cutoffAt",
+    "freshnessMaxAgeSeconds", "qualityThreshold", "markings", "minPopulation",
+    "acceptableDegradation", "requestedOutputs", "budgetMinor", "expiresAt",
+}
+_DATA_REF_TYPES = {
+    "caseRef": "BusinessInvestigationCaseRevision", "runRef": "BusinessInvestigationRun",
+    "checkpointRef": "CheckpointRevision", "channelRef": "ChannelRevision",
+    "entityRef": "BusinessEntityRevision",
+}
+
+
+def _strict_data_request(command):
+    expected = _DATA_SPEC_KEYS | set(_DATA_REF_TYPES) | {"operation", "idempotencyKey", "expectedRunVersion"}
+    if type(command) is not dict or set(command) != expected or command["operation"] != "data.requirement.request":
+        raise ValueError("data requirement command has an invalid envelope")
+    key, version = command["idempotencyKey"], command["expectedRunVersion"]
+    if type(key) is not str or key != key.strip() or not 1 <= len(key) <= 200:
+        raise ValueError("data requirement idempotencyKey is invalid")
+    if type(version) is not int or version < 1:
+        raise ValueError("data requirement expectedRunVersion is invalid")
+    refs = {}
+    for name, kind in _DATA_REF_TYPES.items():
+        value = command[name]
+        if (type(value) is not dict or not {"resourceType", "resourceId", "revision", "contentHash"} <= set(value)
+                or set(value) - {"resourceType", "resourceId", "revision", "contentHash", "receiptId"}
+                or type(value["revision"]) is not int):
+            raise ValueError("data requirement needs exact references")
+        ref = InvestigationExactRef.model_validate(value)
+        if ref.resource_type != kind:
+            raise ValueError("data requirement reference type drifted")
+        refs[name] = ref
+    request = RequestBusinessInvestigationMissingDataCommand.model_validate_json(
+        json.dumps({name: command[name] for name in _DATA_SPEC_KEYS}, allow_nan=False), strict=True
+    )
+    return key, version, refs, request
+
+
+class DataRequirementRequestHostService:
+    """Request-only slice; registered DataFulfill awaits observation/bind wiring."""
+
+    executor_identity = "ecommerce-growth-data-host"
+
+    @staticmethod
+    def _original_response(data, runs, scope, command):
+        key, version, refs, request = _strict_data_request(command)
+        original = data.find_command_receipt(scope, "request", key)
+        if original is None:
+            return None
+        authority = original.authority
+        serialized = authority.model_dump(by_alias=True, mode="json")
+        requested = request.model_dump(by_alias=True, mode="json")
+        if (authority.case_ref != refs["caseRef"] or authority.run_ref != refs["runRef"]
+                or authority.checkpoint_ref != refs["checkpointRef"]
+                or authority.channel_ref != refs["channelRef"] or authority.entity_ref != refs["entityRef"]
+                or any(serialized[name] != requested[name] for name in _DATA_SPEC_KEYS)):
+            raise ValueError("original data requirement command drifted")
+        transition = runs.read_data_request_receipt(
+            scope, refs["runRef"].resource_id, original.result.exact_ref,
+            expected_version=version, idempotency_key=key,
+        )
+        if transition is None:
+            return None
+        return {"requirementRef": original.result.exact_ref.model_dump(by_alias=True, mode="json", exclude_none=True),
+                "authority": serialized, "replayed": True}
+
+    @staticmethod
+    def _components(transaction, scope):
+        factory = TransactionBoundConnectFactory(transaction, scope)
+        cases = BusinessInvestigationCaseStore(factory)
+        runs = BusinessInvestigationRunStore(factory)
+        receipts = BusinessInvestigationCompilationReceiptStore(factory)
+        binder = BusinessInvestigationRuntimeBinder(AipTaskStore(factory))
+        data = DataRequirementStore(factory)
+        service = EcommerceBusinessInvestigationDataCommandService(
+            case_store=cases, run_store=runs, receipt_store=receipts,
+            runtime_binder=binder, data_store=data,
+        )
+        return cases, runs, receipts, binder, data, service
+
+    def revalidate(self, *, transaction, scope, dispatch, command):
+        key, version, refs, request = _strict_data_request(command)
+        if dispatch.operation_id != "ecommerce_growth_data_fulfill":
+            raise ValueError("data requirement dispatch operation drifted")
+        cases, runs, receipts, binder, data, _service = self._components(transaction, scope)
+        if self._original_response(data, runs, scope, command) is not None:
+            return
+        run = runs.get(scope, refs["runRef"].resource_id)
+        case = cases.get(scope, refs["caseRef"].resource_id)
+        if (run.authority.case_ref != refs["caseRef"]
+                or _case_ref(case) != refs["caseRef"].model_dump(by_alias=True, mode="json", exclude_none=True)
+                or case.channel_ref != refs["channelRef"]
+                or case.business_entity_ref != refs["entityRef"]
+                or run.authority.version != refs["runRef"].revision
+                or run.authority.content_hash != refs["runRef"].content_hash):
+            raise ValueError("data requirement Case or Run lineage drifted")
+        if data.find_command_receipt(scope, "request", key) is None and run.state.version != version:
+            raise ValueError("data requirement Run version drifted")
+        compilation = receipts.get_for_run(scope, refs["runRef"])
+        runtime = binder.bind_receipt(scope, compilation, run)
+        checkpoint = runtime.checkpoint_ref
+        if (checkpoint is None or checkpoint.resource_id != refs["checkpointRef"].resource_id
+                or checkpoint.sequence != refs["checkpointRef"].revision
+                or "sha256:" + checkpoint.state_hash != refs["checkpointRef"].content_hash):
+            raise ValueError("data requirement Checkpoint lineage drifted")
+
+    def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
+        key, version, refs, request = _strict_data_request(command)
+        _cases, runs, _receipts, _binder, data, service = self._components(transaction, scope)
+        original = self._original_response(data, runs, scope, command)
+        if original is not None:
+            return original
+        result = service.request_missing_data(
+            scope, refs["runRef"].resource_id, request, expected_version=version,
+            idempotency_key=key, actor=self.executor_identity, occurred_at=occurred_at or checked_at,
+        )
+        authority = data.get_exact(scope, result.requirement_ref)
+        return {"requirementRef": result.requirement_ref.model_dump(by_alias=True, mode="json", exclude_none=True),
+                "authority": authority.model_dump(by_alias=True, mode="json"),
+                "replayed": result.data_replayed}
+
+    def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        _cases, runs, _receipts, _binder, data, _service = self._components(transaction, scope)
+        expected = self._original_response(data, runs, scope, command)
+        if expected is None:
+            return {}
+        expected["replayed"] = bool(receipt.get("replayed"))
         return expected if dict(receipt) == expected else {}
 
 

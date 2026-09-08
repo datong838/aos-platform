@@ -22,10 +22,12 @@ from aos_api.data_requirement_store import (
     DataRequirementIdempotencyConflict,
     DataRequirementInvalidTransition,
     DataRequirementStore,
+    DataRequirementStoreError,
     DataRequirementValidationError,
     canonical_revision_content_hash,
 )
 from aos_api.tenant_scope import TenantScope
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 
 
 MIGRATION = (
@@ -141,6 +143,41 @@ def factory(connection: Connection):
         yield connection
 
     return connect
+
+
+@pytest.mark.parametrize("tamper", [None, "tenant", "payload"])
+def test_command_receipt_revalidates_payload_hash_and_tenant(tamper):
+    item = requirement(org_id="dev-org" if tamper == "tenant" else "org-org")
+    payload = item.model_dump(mode="json", by_alias=True)
+    if tamper == "payload":
+        payload["budgetMinor"] += 1
+    conn = Connection({"payload": payload, "revision": item.revision, "content_hash": item.content_hash[7:]})
+    store = DataRequirementStore(factory(conn))
+    if tamper:
+        with pytest.raises(DataRequirementStoreError, match="drifted"):
+            store.find_command_receipt(SCOPE, "request", "request-1")
+    else:
+        assert store.find_command_receipt(SCOPE, "request", "request-1").authority == item
+
+
+@pytest.mark.parametrize("tamper", [None, "tenant", "payload", "revision", "identity"])
+def test_historical_requirement_readback_is_exact(tamper):
+    item = requirement(org_id="dev-org" if tamper == "tenant" else "org-org")
+    payload = item.model_dump(mode="json", by_alias=True)
+    if tamper == "payload":
+        payload["budgetMinor"] += 1
+    exact = InvestigationExactRef(resource_type="DataRequirementRevision",
+        resource_id="another" if tamper == "identity" else item.requirement_id,
+        revision=2 if tamper == "revision" else item.revision, content_hash=item.content_hash)
+    conn = Connection({"payload": payload, "content_hash": item.content_hash[7:]})
+    store = DataRequirementStore(factory(conn))
+    if tamper:
+        with pytest.raises(DataRequirementStoreError, match="drifted"):
+            store.get_exact(SCOPE, exact)
+    else:
+        assert store.get_exact(SCOPE, exact) == item
+        assert "data_requirement_head" not in conn.calls[0][0]
+    assert conn.commits == 0
 
 
 def test_migration_defines_single_tenant_cas_entrypoint() -> None:

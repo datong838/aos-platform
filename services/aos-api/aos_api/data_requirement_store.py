@@ -191,9 +191,35 @@ class DataRequirementStore:
             or item.requirement_id != requirement_id
             or item.revision != int(row["current_revision"])
             or item.content_hash != stored_hash
+            or canonical_revision_content_hash(item) != stored_hash
             or str(row["current_content_hash"]).strip() != str(row["content_hash"]).strip()
         ):
             raise DataRequirementStoreError("DataRequirement authority readback drift")
+        return item
+
+    def get_exact(
+        self, scope: TenantScope, ref: InvestigationExactRef
+    ) -> DataRequirementRevisionRecord:
+        """Read an immutable historical revision without consulting current head."""
+        if ref.resource_type != "DataRequirementRevision":
+            raise DataRequirementValidationError("exact DataRequirementRevision is required")
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """SELECT payload,content_hash FROM data_requirement_revision
+                    WHERE org_id=%s AND project_id=%s AND requirement_id=%s AND revision=%s""",
+                (*scope.key, ref.resource_id, ref.revision),
+            ).fetchone()
+        if row is None:
+            raise DataRequirementNotFound("DataRequirement revision was not found")
+        item = DataRequirementRevisionRecord.model_validate(row["payload"])
+        if (
+            (item.tenant.org_id, item.tenant.project_id) != scope.key
+            or item.requirement_id != ref.resource_id or item.revision != ref.revision
+            or item.content_hash != ref.content_hash
+            or "sha256:" + str(row["content_hash"]).strip() != ref.content_hash
+            or canonical_revision_content_hash(item) != ref.content_hash
+        ):
+            raise DataRequirementStoreError("DataRequirement exact revision drifted")
         return item
 
     def find_command_receipt(
@@ -211,7 +237,12 @@ class DataRequirementStore:
             return None
         authority = DataRequirementRevisionRecord.model_validate(row["payload"])
         stored_hash = f"sha256:{str(row['content_hash']).strip()}"
-        if authority.revision != int(row["revision"]) or authority.content_hash != stored_hash:
+        if (
+            authority.revision != int(row["revision"])
+            or authority.content_hash != stored_hash
+            or (authority.tenant.org_id, authority.tenant.project_id) != scope.key
+            or canonical_revision_content_hash(authority) != stored_hash
+        ):
             raise DataRequirementStoreError("DataRequirement command Receipt drifted")
         return DataRequirementCommandReceipt(
             authority=authority,

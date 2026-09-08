@@ -35,6 +35,15 @@ class DataRequirementSpec:
     quality_threshold: float
     min_population: int
     idempotency_key: str
+    expected_run_version: int
+    purpose_code: str
+    grain: str
+    freshness_max_age_seconds: int
+    markings: tuple[str, ...]
+    acceptable_degradation: tuple[str, ...]
+    requested_outputs: tuple[str, ...]
+    budget_minor: int
+    expires_at: datetime
 
     def __post_init__(self) -> None:
         expected = (
@@ -60,6 +69,22 @@ class DataRequirementSpec:
             raise ValueError("invalid data quality threshold")
         if not 1 <= len(self.idempotency_key.strip()) <= 200:
             raise ValueError("invalid data requirement idempotency key")
+        if (type(self.expected_run_version) is not int or self.expected_run_version < 1
+                or type(self.freshness_max_age_seconds) is not int
+                or not 1 <= self.freshness_max_age_seconds <= 31_536_000
+                or type(self.budget_minor) is not int or self.budget_minor < 0):
+            raise ValueError("invalid data requirement version or policy bounds")
+        if (not re.fullmatch(r"[a-z][a-z0-9_]{1,119}", self.purpose_code)
+                or not re.fullmatch(r"[a-z][a-z0-9_]{0,79}", self.grain)):
+            raise ValueError("invalid data requirement purpose or grain")
+        if self.expires_at.utcoffset() is None or self.expires_at <= self.cutoff_at:
+            raise ValueError("data requirement expiry must follow cutoff")
+        for values in (self.markings, self.acceptable_degradation, self.requested_outputs):
+            if (type(values) is not tuple or len(values) != len(set(values))
+                    or any(type(value) is not str or not value.strip() for value in values)):
+                raise ValueError("data requirement policies must contain unique nonblank values")
+        if not self.requested_outputs:
+            raise ValueError("data requirement requested outputs are required")
 
 
 def _ref_payload(ref: ExactRef) -> dict[str, Any]:
@@ -106,6 +131,15 @@ def request_requirement(
         "cutoffAt": spec.cutoff_at.isoformat(),
         "qualityThreshold": spec.quality_threshold,
         "minPopulation": spec.min_population,
+        "expectedRunVersion": spec.expected_run_version,
+        "purposeCode": spec.purpose_code,
+        "grain": spec.grain,
+        "freshnessMaxAgeSeconds": spec.freshness_max_age_seconds,
+        "markings": list(spec.markings),
+        "acceptableDegradation": list(spec.acceptable_degradation),
+        "requestedOutputs": list(spec.requested_outputs),
+        "budgetMinor": spec.budget_minor,
+        "expiresAt": spec.expires_at.isoformat(),
     }
     result = commit_with_dispatch(port, dispatch_ref, command)
     if not isinstance(result, Mapping) or not isinstance(result.get("requirementRef"), Mapping):
