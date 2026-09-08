@@ -132,7 +132,7 @@ class PostgresCanonicalShopSelectionSource:
             rows = conn.execute(
                 """SELECT platform,shop_or_marketplace_id,external_id,schema_version,
                           payload_hash,source_updated_at
-                   FROM ecom_object
+                   FROM public.ecom_object
                    WHERE org_id=%s AND workspace_id=%s AND object_type='Shop'
                      AND deleted_at IS NULL AND canonical_status='active'
                    ORDER BY platform,shop_or_marketplace_id,external_id LIMIT 2""",

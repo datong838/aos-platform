@@ -71,7 +71,7 @@ class CanonicalPopulationReader:
         rows = self._transaction.execute(
             """SELECT org_id,workspace_id,platform,shop_or_marketplace_id,
                       object_type,external_id,payload_hash,source_updated_at
-                 FROM ecom_object
+                 FROM public.ecom_object
                 WHERE org_id=%s AND workspace_id=%s
                   AND platform=%s AND shop_or_marketplace_id=%s
                   AND object_type=ANY(%s)
