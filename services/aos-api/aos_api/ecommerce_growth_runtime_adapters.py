@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 import hashlib
 import json
@@ -15,6 +16,43 @@ from aos_api.ecommerce_growth_host_ports import (
 )
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
 from aos_api.tenant_scope import TenantScope
+
+
+class _TransactionBoundConnection:
+    """Compatibility view for existing stores without exposing commit control."""
+
+    __slots__ = ("_transaction",)
+
+    def __init__(self, transaction: HostTransaction) -> None:
+        self._transaction = transaction
+
+    def execute(self, query: str, params: tuple[Any, ...] = ()) -> Any:
+        return self._transaction.execute(query, params)
+
+    def commit(self) -> None:
+        # The surrounding LockedEcommerceGrowthHostPort owns the only commit.
+        return None
+
+    def rollback(self) -> None:
+        raise RuntimeError("transaction-bound domain store cannot roll back the host transaction")
+
+
+class TransactionBoundConnectFactory:
+    """Yield one scope-checked host transaction to existing domain Stores."""
+
+    __slots__ = ("_connection", "_scope")
+
+    def __init__(self, transaction: HostTransaction, scope: TenantScope) -> None:
+        if type(transaction) is not HostTransaction or type(scope) is not TenantScope:
+            raise TypeError("host transaction and tenant scope are required")
+        self._connection = _TransactionBoundConnection(transaction)
+        self._scope = scope
+
+    @contextmanager
+    def __call__(self, requested_scope: TenantScope | None = None):
+        if requested_scope is not None and requested_scope != self._scope:
+            raise PermissionError("domain Store requested a different tenant scope")
+        yield self._connection
 
 
 class TrustedEcommerceGrowthDomainService(Protocol):
@@ -173,5 +211,6 @@ RUNTIME_ADAPTER_TYPES = (
 
 __all__ = [adapter.__name__ for adapter in RUNTIME_ADAPTER_TYPES] + [
     "RUNTIME_ADAPTER_TYPES",
+    "TransactionBoundConnectFactory",
     "TrustedEcommerceGrowthDomainService",
 ]

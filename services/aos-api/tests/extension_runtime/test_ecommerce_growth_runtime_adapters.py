@@ -7,7 +7,12 @@ from aos_api.ecommerce_growth_host_composition import (
     ECOMMERCE_GROWTH_OPERATIONS,
     ECOMMERCE_GROWTH_RECEIPT_KEYS,
 )
-from aos_api.ecommerce_growth_runtime_adapters import RUNTIME_ADAPTER_TYPES
+from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_runtime_adapters import (
+    RUNTIME_ADAPTER_TYPES,
+    TransactionBoundConnectFactory,
+)
+from aos_api.tenant_scope import TenantScope
 
 
 class DomainService:
@@ -48,3 +53,24 @@ def test_host_receipt_verifier_contract_includes_original_command():
     # The actual persistence path is covered by runtime-store tests and the PG suite;
     # this assertion guards the command-aware callback introduced for exact replay.
     assert binding.verify_receipt.__name__ == "_verify_and_journal"
+
+
+def test_transaction_bound_store_connection_cannot_commit_rollback_or_cross_scope():
+    executed = []
+
+    class Connection:
+        def execute(self, query, params):
+            executed.append((query, params))
+            return "cursor"
+
+    scope = TenantScope("org-org", "dev-project")
+    factory = TransactionBoundConnectFactory(HostTransaction(Connection()), scope)
+    with factory(scope) as conn:
+        assert conn.execute("SELECT 1", ("经营参谋",)) == "cursor"
+        assert conn.commit() is None
+        with pytest.raises(RuntimeError, match="cannot roll back"):
+            conn.rollback()
+    assert executed == [("SELECT 1", ("经营参谋",))]
+    with pytest.raises(PermissionError, match="different tenant"):
+        with factory(TenantScope("dev-org", "dev-project")):
+            pass
