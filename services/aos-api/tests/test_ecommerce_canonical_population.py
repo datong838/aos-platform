@@ -146,3 +146,32 @@ def test_missing_current_shop_is_rejected():
 def test_additional_noncanonical_rows_rejected(changes):
     with pytest.raises(ValueError):
         run(Connection([object_row(**changes)]))
+
+
+def test_real_postgres_bound_query_filters_and_rejects_overflow():
+    from aos_api.db import connect_serializable
+
+    with connect_serializable(SCOPE) as conn:
+        def insert(kind, external_id, *, shop="region:1", status="active", deleted=None):
+            conn.execute("""INSERT INTO ecom_object
+                (org_id,workspace_id,platform,shop_or_marketplace_id,object_type,external_id,
+                 source_updated_at,source_timezone,canonical_status,payload_hash,deleted_at)
+                VALUES(%s,%s,'niushop',%s,%s,%s,%s,'UTC',%s,%s,%s)""",
+                (*SCOPE.key, shop, kind, external_id, NOW, status, "a" * 64, deleted))
+
+        insert("Shop", "shop:1")
+        for n in range(99):
+            insert("Product", str(n))
+        insert("Product", "other-shop", shop="elsewhere")
+        insert("Product", "inactive", status="inactive")
+        insert("Product", "deleted", deleted=NOW)
+        tx = HostTransaction(conn)
+        selected = PostgresCanonicalShopSelectionSource(TransactionBoundConnectFactory(tx, SCOPE)).read(SCOPE)
+        reader = CanonicalPopulationReader(tx, SCOPE)
+        kwargs = dict(channel_ref=selected.channel_ref, entity_ref=selected.business_entity_ref,
+                      binding_ref=selected.entity_channel_binding_ref, object_types=("Product",))
+        assert len(reader.read(**kwargs).sources) == 99
+        insert("Product", "overflow")
+        with pytest.raises(ValueError, match="limit"):
+            reader.read(**kwargs)
+        conn.rollback()
