@@ -100,6 +100,7 @@ class HostReceiptVerifier(Protocol):
         transaction: "HostTransaction",
         scope: TenantScope,
         dispatch: "EcommerceGrowthDispatchSnapshot",
+        command: Mapping[str, Any],
         receipt: Mapping[str, Any],
     ) -> Mapping[str, Any]: ...
 
@@ -275,6 +276,7 @@ class LockedEcommerceGrowthHostPort:
                     transaction=transaction,
                     scope=scope,
                     dispatch=snapshot,
+                    command=deepcopy(command),
                     receipt=deepcopy(payload),
                 )
                 if inspect.isawaitable(persisted) or not isinstance(persisted, Mapping):
