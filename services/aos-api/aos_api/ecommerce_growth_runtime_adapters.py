@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 import hashlib
 import json
 from typing import Any, Mapping, Protocol
+from uuid import UUID
 
 from aos_api.ecommerce_growth_host_ports import (
     DispatchAuthorityRef,
@@ -32,6 +33,7 @@ from aos_api.ecommerce_business_investigation_schedule import (
     PutBusinessInvestigationSchedulePolicyRequest,
 )
 from aos_api.aip_budget_reservation_store import canonical_hash as budget_canonical_hash
+from aos_api.automation_occurrence_store import AutomationOccurrenceStore, ScheduleBinding
 from aos_api.ecommerce_business_investigation_case_selection import (
     CatalogCanonicalProfileSelectionSource,
     PostgresCanonicalShopSelectionSource,
@@ -200,6 +202,78 @@ def _lock_schedule_approval(
         or any(payload.get(key) != value for key, value in expected_binding.items())
     ):
         raise ValueError("schedule approval is not bound to this exact Case and Policy revision")
+
+
+def _strict_utc_seconds(value: Any, field: str) -> datetime:
+    if type(value) is not str:
+        raise ValueError(f"{field} must be an RFC3339 UTC string")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"{field} must be an RFC3339 UTC string") from exc
+    if parsed.utcoffset() is None or parsed.utcoffset().total_seconds() != 0 or parsed.microsecond:
+        raise ValueError(f"{field} must be UTC with second precision")
+    return parsed.astimezone(UTC)
+
+
+def _strict_schedule_trigger_command(
+    command: Mapping[str, Any],
+) -> tuple[str, InvestigationExactRef, datetime, str, datetime]:
+    required = {"idempotencyKey", "schedulePolicyRef", "scheduledAt", "localSlot", "deadline"}
+    if type(command) is not dict or set(command) != required:
+        raise ValueError("schedule trigger command has an invalid envelope")
+    key, local_slot = command["idempotencyKey"], command["localSlot"]
+    if type(key) is not str or not 1 <= len(key.strip()) <= 200:
+        raise ValueError("schedule trigger idempotencyKey is invalid")
+    if type(local_slot) is not str or not 1 <= len(local_slot.strip()) <= 120:
+        raise ValueError("schedule trigger localSlot is invalid")
+    if type(command["schedulePolicyRef"]) is not dict:
+        raise ValueError("schedulePolicyRef must be a strict object")
+    policy_ref = InvestigationExactRef.model_validate(command["schedulePolicyRef"])
+    if policy_ref.resource_type != "SchedulePolicyRevision":
+        raise ValueError("schedulePolicyRef must reference SchedulePolicyRevision")
+    scheduled_at = _strict_utc_seconds(command["scheduledAt"], "scheduledAt")
+    deadline = _strict_utc_seconds(command["deadline"], "deadline")
+    if deadline <= scheduled_at:
+        raise ValueError("schedule trigger deadline must be later than scheduledAt")
+    return key.strip(), policy_ref, scheduled_at, local_slot.strip(), deadline
+
+
+def _occurrence_payload(transaction: HostTransaction, scope: TenantScope, occurrence_id: UUID) -> dict[str, Any]:
+    row = transaction.execute(
+        """SELECT occurrence_id,policy_id,policy_revision,policy_hash,operation_id,
+                  installation_id,generation,execution_epoch,scheduled_at,local_slot,
+                  trigger_source,source_event_id,deadline
+             FROM automation_occurrence
+            WHERE org_id=%s AND project_id=%s AND occurrence_id=%s""",
+        (*scope.key, occurrence_id),
+    ).fetchone()
+    if row is None:
+        raise ValueError("AutomationOccurrence authority is missing")
+    return {
+        "occurrenceId": str(row["occurrence_id"]),
+        "policyId": row["policy_id"],
+        "policyRevision": int(row["policy_revision"]),
+        "policyHash": row["policy_hash"],
+        "operationId": row["operation_id"],
+        "installationId": str(row["installation_id"]),
+        "generation": str(row["generation"]),
+        "executionEpoch": int(row["execution_epoch"]),
+        "scheduledAt": row["scheduled_at"].isoformat(),
+        "localSlot": row["local_slot"],
+        "triggerSource": row["trigger_source"],
+        "sourceEventId": row["source_event_id"],
+        "deadline": row["deadline"].isoformat(),
+    }
+
+
+def _occurrence_ref(payload: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "resourceType": "AutomationOccurrence",
+        "resourceId": str(payload["occurrenceId"]),
+        "revision": 1,
+        "contentHash": budget_canonical_hash(dict(payload), prefixed=True),
+    }
 
 
 class _AlreadyValidatedCaseSelection:
@@ -395,6 +469,110 @@ class SchedulePutHostService:
         return expected if dict(receipt) == expected else {}
 
 
+class ScheduleTriggerHostService:
+    """Create one deterministic occurrence bound to the current runtime epoch."""
+
+    executor_identity = "ecommerce-growth-occurrence-host"
+
+    @staticmethod
+    def _factory(transaction: HostTransaction, scope: TenantScope) -> TransactionBoundConnectFactory:
+        return TransactionBoundConnectFactory(transaction, scope)
+
+    def revalidate(self, *, transaction, scope, dispatch, command) -> None:
+        _key, policy_ref, _scheduled_at, _local_slot, _deadline = (
+            _strict_schedule_trigger_command(command)
+        )
+        head = transaction.execute(
+            """SELECT current_revision FROM ecommerce_investigation_schedule_policy_head
+                WHERE org_id=%s AND project_id=%s AND schedule_policy_id=%s FOR SHARE""",
+            (*scope.key, policy_ref.resource_id),
+        ).fetchone()
+        if head is None or int(head["current_revision"]) != policy_ref.revision:
+            raise ValueError("schedulePolicyRef is not current")
+        policy = BusinessInvestigationScheduleStore(self._factory(transaction, scope)).get(
+            scope, policy_ref.resource_id
+        )
+        if _schedule_ref(policy) != policy_ref.model_dump(
+            by_alias=True, mode="json", exclude_none=True
+        ):
+            raise ValueError("schedulePolicyRef exact authority drifted")
+        if not policy.enabled or policy.cadence.value not in {"once", "weekly"}:
+            raise ValueError("only an enabled once or weekly SchedulePolicy may trigger")
+        if (
+            dispatch.operation_id != "ecommerce_growth_schedule_trigger"
+            or dispatch.execution_epoch <= 0
+        ):
+            raise ValueError("schedule trigger runtime epoch is invalid")
+
+    def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
+        _key, policy_ref, scheduled_at, local_slot, deadline = _strict_schedule_trigger_command(
+            command
+        )
+        factory = self._factory(transaction, scope)
+        policy = BusinessInvestigationScheduleStore(factory).get(scope, policy_ref.resource_id)
+        binding = ScheduleBinding(
+            policy_id=policy.schedule_policy_id,
+            policy_revision=policy.revision,
+            policy_hash=policy.content_hash,
+            operation_id="ecommerce_growth_schedule_trigger",
+            installation_id=UUID(str(dispatch_ref.installation_id)),
+            generation=UUID(str(dispatch_ref.generation)),
+            execution_epoch=int(dispatch_ref.execution_epoch),
+            cadence=policy.cadence.value,
+            effective_from=policy.created_at,
+            weekly_day=policy.weekly_day,
+            local_time=policy.local_time,
+            approved=True,
+            enabled=True,
+        )
+        occurrences = AutomationOccurrenceStore(factory)
+        occurrences.put_binding(scope, binding)
+        write = occurrences.record_scheduled(
+            scope,
+            binding,
+            scheduled_at=scheduled_at,
+            local_slot=local_slot,
+            deadline=deadline,
+        )
+        authority = _occurrence_payload(transaction, scope, write.occurrence_id)
+        return {
+            "occurrenceRef": _occurrence_ref(authority),
+            "authority": authority,
+            "status": write.status,
+            "replayed": write.replayed,
+        }
+
+    def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        _key, policy_ref, _scheduled_at, _local_slot, _deadline = (
+            _strict_schedule_trigger_command(command)
+        )
+        ref = receipt.get("occurrenceRef")
+        if type(ref) is not dict:
+            return {}
+        try:
+            occurrence_id = UUID(str(ref.get("resourceId")))
+        except (TypeError, ValueError):
+            return {}
+        authority = _occurrence_payload(transaction, scope, occurrence_id)
+        if (
+            authority["policyId"] != policy_ref.resource_id
+            or authority["policyRevision"] != policy_ref.revision
+            or authority["policyHash"] != policy_ref.content_hash
+            or authority["operationId"] != dispatch.operation_id
+            or authority["installationId"] != str(dispatch.installation_id)
+            or authority["generation"] != str(dispatch.generation)
+            or authority["executionEpoch"] != dispatch.execution_epoch
+        ):
+            return {}
+        expected = {
+            "occurrenceRef": _occurrence_ref(authority),
+            "authority": authority,
+            "status": receipt.get("status"),
+            "replayed": bool(receipt.get("replayed")),
+        }
+        return expected if dict(receipt) == expected else {}
+
+
 class TrustedEcommerceGrowthDomainService(Protocol):
     executor_identity: str
 
@@ -553,6 +731,7 @@ __all__ = [adapter.__name__ for adapter in RUNTIME_ADAPTER_TYPES] + [
     "RUNTIME_ADAPTER_TYPES",
     "CasePutHostService",
     "SchedulePutHostService",
+    "ScheduleTriggerHostService",
     "TransactionBoundConnectFactory",
     "TrustedEcommerceGrowthDomainService",
 ]

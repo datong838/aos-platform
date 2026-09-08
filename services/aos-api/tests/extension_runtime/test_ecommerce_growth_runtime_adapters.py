@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from types import SimpleNamespace
+from uuid import UUID
 
 import pytest
 
@@ -126,6 +127,21 @@ def schedule_put_command():
             "timezone": "Asia/Shanghai",
         },
         "approvalRef": exact("ActionApprovalEvent", "approval-qyh-001"),
+    }
+
+
+def schedule_trigger_command():
+    return {
+        "idempotencyKey": "occurrence-qyh-001",
+        "schedulePolicyRef": {
+            "resourceType": "SchedulePolicyRevision",
+            "resourceId": "schedule-qyh-001",
+            "revision": 1,
+            "contentHash": "sha256:" + "b" * 64,
+        },
+        "scheduledAt": "2026-09-08T12:00:00Z",
+        "localSlot": "2026-09-08 20:00 Asia/Shanghai",
+        "deadline": "2026-09-08T13:00:00Z",
     }
 
 
@@ -393,6 +409,131 @@ def test_schedule_put_returns_and_rereads_policy_and_case(monkeypatch):
         transaction=transaction,
         scope=scope,
         dispatch=None,
+        command=command,
+        receipt=response,
+    ) == response
+
+
+def test_schedule_trigger_revalidates_exact_enabled_policy(monkeypatch):
+    command = schedule_trigger_command()
+    scope = TenantScope("org-org", "dev-project")
+    policy = SimpleNamespace(
+        schedule_policy_id="schedule-qyh-001",
+        revision=1,
+        content_hash="sha256:" + "b" * 64,
+        enabled=True,
+        cadence=SimpleNamespace(value="once"),
+        model_dump=lambda **_: command["schedulePolicyRef"],
+    )
+
+    class Schedules:
+        def __init__(self, _factory):
+            pass
+
+        def get(self, _scope, _policy_id):
+            return policy
+
+    class Cursor:
+        def fetchone(self):
+            return {"current_revision": 1}
+
+    monkeypatch.setattr(runtime_adapters, "BusinessInvestigationScheduleStore", Schedules)
+    service = runtime_adapters.ScheduleTriggerHostService()
+    service.revalidate(
+        transaction=HostTransaction(SimpleNamespace(execute=lambda *_: Cursor())),
+        scope=scope,
+        dispatch=SimpleNamespace(
+            operation_id="ecommerce_growth_schedule_trigger", execution_epoch=3
+        ),
+        command=command,
+    )
+    with pytest.raises(ValueError, match="invalid envelope"):
+        service.revalidate(
+            transaction=HostTransaction(SimpleNamespace(execute=lambda *_: Cursor())),
+            scope=scope,
+            dispatch=SimpleNamespace(
+                operation_id="ecommerce_growth_schedule_trigger", execution_epoch=3
+            ),
+            command={**command, "enabled": True},
+        )
+
+
+def test_schedule_trigger_writes_unique_occurrence_and_exact_readback(monkeypatch):
+    command = schedule_trigger_command()
+    scope = TenantScope("org-org", "dev-project")
+    installation = UUID("11111111-1111-4111-8111-111111111111")
+    generation = UUID("22222222-2222-4222-8222-222222222222")
+    occurrence = UUID("33333333-3333-4333-8333-333333333333")
+    policy = SimpleNamespace(
+        schedule_policy_id="schedule-qyh-001",
+        revision=1,
+        content_hash="sha256:" + "b" * 64,
+        cadence=SimpleNamespace(value="once"),
+        created_at=datetime(2026, 9, 1, tzinfo=UTC),
+        weekly_day=None,
+        local_time=None,
+    )
+    row = {
+        "occurrence_id": occurrence,
+        "policy_id": "schedule-qyh-001",
+        "policy_revision": 1,
+        "policy_hash": "sha256:" + "b" * 64,
+        "operation_id": "ecommerce_growth_schedule_trigger",
+        "installation_id": installation,
+        "generation": generation,
+        "execution_epoch": 3,
+        "scheduled_at": datetime(2026, 9, 8, 12, tzinfo=UTC),
+        "local_slot": "2026-09-08 20:00 Asia/Shanghai",
+        "trigger_source": "schedule",
+        "source_event_id": None,
+        "deadline": datetime(2026, 9, 8, 13, tzinfo=UTC),
+    }
+
+    class Cursor:
+        def fetchone(self):
+            return row
+
+    class Schedules:
+        def __init__(self, _factory):
+            pass
+
+        def get(self, _scope, _policy_id):
+            return policy
+
+    class Occurrences:
+        def __init__(self, _factory):
+            pass
+
+        def put_binding(self, _scope, binding):
+            assert binding.execution_epoch == 3 and binding.enabled
+
+        def record_scheduled(self, _scope, _binding, **kwargs):
+            assert kwargs["scheduled_at"] == row["scheduled_at"]
+            return SimpleNamespace(occurrence_id=occurrence, status="pending", replayed=False)
+
+    monkeypatch.setattr(runtime_adapters, "BusinessInvestigationScheduleStore", Schedules)
+    monkeypatch.setattr(runtime_adapters, "AutomationOccurrenceStore", Occurrences)
+    transaction = HostTransaction(SimpleNamespace(execute=lambda *_: Cursor()))
+    dispatch = SimpleNamespace(
+        operation_id="ecommerce_growth_schedule_trigger",
+        installation_id=installation,
+        generation=generation,
+        execution_epoch=3,
+    )
+    service = runtime_adapters.ScheduleTriggerHostService()
+    response = service.execute(
+        transaction=transaction,
+        scope=scope,
+        dispatch_ref=dispatch,
+        command=command,
+        checked_at=datetime(2026, 9, 8, 12, tzinfo=UTC),
+        occurred_at=None,
+    )
+    assert response["occurrenceRef"]["resourceId"] == str(occurrence)
+    assert service.verify_receipt(
+        transaction=transaction,
+        scope=scope,
+        dispatch=dispatch,
         command=command,
         receipt=response,
     ) == response
