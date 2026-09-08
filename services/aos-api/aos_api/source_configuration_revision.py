@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -25,6 +25,12 @@ class SourceConfigurationRevision:
     recorded_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class SourceConnectionInput:
+    revision: SourceConfigurationRevision
+    props: dict[str, Any] = field(repr=False)
+
+
 class SourceConfigurationRevisionStore:
     def __init__(self, transaction: HostTransaction, scope: TenantScope):
         if type(transaction) is not HostTransaction or type(scope) is not TenantScope:
@@ -44,6 +50,23 @@ class SourceConfigurationRevisionStore:
         if item is not None and item.source_id != source_id:
             raise ValueError("current source configuration identity drifted")
         return item
+
+    def read_connection_input(self, source_id: str) -> SourceConnectionInput | None:
+        """Load configuration inputs and their identity from one SQL snapshot."""
+        if type(source_id) is not str or not source_id or source_id.strip() != source_id:
+            raise ValueError("canonical source identity required")
+        row = self._transaction.execute("""SELECT r.*,s.props AS connection_props
+            FROM public.meta_source s JOIN public.data_source_configuration_revision r
+            ON (r.org_id,r.project_id,r.source_id,r.revision_id)=
+               (s.org_id,s.project_id,s.id,s.configuration_revision)
+            WHERE s.org_id=%s AND s.project_id=%s AND s.id=%s""",
+            (*self._scope.key, source_id)).fetchone()
+        if row is None:
+            return None
+        item = self._decode(row)
+        if item.source_id != source_id or type(row["connection_props"]) is not dict:
+            raise ValueError("source configuration input unavailable")
+        return SourceConnectionInput(item, row["connection_props"])
 
     def read_exact(self, ref: InvestigationExactRef) -> SourceConfigurationRevision | None:
         ref = InvestigationExactRef.model_validate(ref.model_dump())

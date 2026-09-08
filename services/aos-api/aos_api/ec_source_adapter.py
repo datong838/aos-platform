@@ -23,6 +23,10 @@ from typing import Any, Mapping, Sequence
 
 import pymysql
 
+from aos_api.configured_source_observation import ConfiguredSourceObservation
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.source_configuration_revision import SourceConfigurationRevisionStore
 from aos_api.db import connect
 from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime
 from aos_api.logging_facade import get_logger
@@ -180,6 +184,44 @@ def fetch_source_rows_observed(
     This additive entry is not wired to live execution or DataFulfill. Its
     observation is not persisted and cannot supply source-config authority.
     """
+    return _fetch_source_rows_observed(nodes=nodes, node_id=node_id, scope=scope,
+        spec_id=spec_id, load_props=_query_meta_source_props)
+
+
+def fetch_source_rows_configured_observed(
+    *, nodes: list[Any], node_id: str | None, scope: TenantScope,
+    transaction: HostTransaction, expected_configuration_ref: InvestigationExactRef,
+    spec_id: str,
+) -> tuple[list[dict[str, Any]], ConfiguredSourceObservation]:
+    store = SourceConfigurationRevisionStore(transaction, scope)
+    expected = InvestigationExactRef.model_validate(expected_configuration_ref.model_dump())
+    loaded = None
+
+    def load_props(source_id, actual_scope):
+        nonlocal loaded
+        if actual_scope != scope:
+            raise ValueError("source configuration scope drifted")
+        loaded = store.read_connection_input(source_id)
+        if loaded is None or loaded.revision.ref != expected:
+            raise ValueError("source configuration does not match expected revision")
+        return loaded.props
+
+    try:
+        rows, observation = _fetch_source_rows_observed(nodes=nodes, node_id=node_id, scope=scope,
+            spec_id=spec_id, load_props=load_props)
+    except Exception:
+        # Connector errors may embed credentials; never propagate their text.
+        raise ValueError("source configuration observation failed") from None
+    if (loaded is None or loaded.revision.source_id != observation.source_id
+        or (observation.tenant.org_id, observation.tenant.project_id) != scope.key):
+        raise ValueError("source observation configuration binding drifted")
+    bound = ConfiguredSourceObservation(observation=observation.model_dump(),
+        sourceConfigurationRef=expected.model_dump())
+    bound.verify_rows(rows)
+    return rows, bound
+
+
+def _fetch_source_rows_observed(*, nodes, node_id, scope, spec_id, load_props):
     if type(scope) is not TenantScope or spec_id != "niushop.product-observation/v1":
         raise ValueError("trusted tenant scope and fixed observation spec required")
     config = _resolve_source_node_config(nodes, node_id)
@@ -198,7 +240,7 @@ def fetch_source_rows_observed(
         or filters["site_id"] <= 0
     ):
         raise ValueError("observation requires the fixed product shop scope without a cursor")
-    props = _query_meta_source_props(source_id, scope)
+    props = load_props(source_id, scope)
     with JdbcConnectorRuntime(props) as runtime:
         started = _read_observation_clock()
         if not isinstance(started, datetime) or started.utcoffset() is None:
