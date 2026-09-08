@@ -1,0 +1,32 @@
+{
+  "schema": "aos-subwave-delivery-receipt/v1",
+  "taskId": "AR2-RESULT-FEEDBACK-RECOVERY",
+  "subwave": "AR2-7C",
+  "completedAt": "2026-09-08T12:42:04+08:00",
+  "result": "AR2_7C_RESULT_FEEDBACK_RECOVERY_GREEN",
+  "branch": "m1",
+  "sourceCommit": "2aa7a28ba96b884a338644da71a288a885869c3b",
+  "planCommit": "43e70e80759ab9052fe636712fd5fd0053f2444f",
+  "verification": {
+    "feedbackUnit": "9 passed",
+    "affectedRegression": "59 passed",
+    "postgresql": "6 passed",
+    "pythonCompile": "GREEN",
+    "diffCheck": "GREEN",
+    "alembicHead": "ar2_004",
+    "primeReview": "PENDING_INDEPENDENT_READBACK"
+  },
+  "tenantEvidence": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "businessTenantActivated": false
+  },
+  "safety": {
+    "providerCalled": false,
+    "secretResolved": false,
+    "businessDataWritten": false,
+    "externalEffect": false,
+    "releasePerformed": false
+  },
+  "nextTask": "AR2-7D-RUNTIME-WIRING-CANONICAL-ROUTER"
+}
