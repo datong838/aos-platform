@@ -1,0 +1,32 @@
+{
+  "schema": "aos-subwave-delivery-receipt/v1",
+  "taskId": "AR2-HOST-WIRING-CUTOVER-PLUGGABILITY-BROWSER-ACCEPTANCE",
+  "subwave": "AR2-7B",
+  "completedAt": "2026-09-08T11:19:36+08:00",
+  "result": "AR2_7B_SEALED_HOST_PORTS_REGISTRATION_ONLY_GREEN",
+  "branch": "m1",
+  "sourceCommit": "c8c0e95d5d0cc1eb55c31bbe0c418b1d9ae4f339",
+  "planCommit": "06fb9df3ed14ba32b460f0f306d16c764d6a5f15",
+  "verification": {
+    "hostUnit": "25 passed",
+    "hostPostgresql": "3 passed",
+    "affectedRegression": "191 passed",
+    "pythonCompile": "GREEN",
+    "diffCheck": "GREEN",
+    "alembicHead": "ar2_003",
+    "primeReview": "PASS"
+  },
+  "tenantEvidence": {
+    "positive": "org-org/dev-project",
+    "negativeCanary": "dev-org/dev-project",
+    "businessTenantActivated": false
+  },
+  "safety": {
+    "providerCalled": false,
+    "secretResolved": false,
+    "businessDataWritten": false,
+    "externalEffect": false,
+    "releasePerformed": false
+  },
+  "nextTask": "AR2-7C-RESULT-FEEDBACK-RECOVERY"
+}
