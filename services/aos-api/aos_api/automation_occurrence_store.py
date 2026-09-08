@@ -115,6 +115,7 @@ class AutomationOccurrenceStore:
 
     def put_binding(self, scope: TenantScope, binding: ScheduleBinding) -> None:
         with self._connect_factory(scope) as conn:
+            self._lock_policy(conn, scope, binding.policy_id)
             dispatch = conn.execute(
                 """SELECT handler_kind,installation_id,generation,execution_epoch
                    FROM extension_operation_dispatch_binding
@@ -135,6 +136,19 @@ class AutomationOccurrenceStore:
             )
             if actual != expected:
                 raise AutomationOccurrenceNotReady("schedule binding does not match current dispatch")
+            conn.execute(
+                """SELECT policy_revision FROM automation_schedule_binding
+                   WHERE org_id=%s AND project_id=%s AND policy_id=%s
+                   ORDER BY policy_revision FOR UPDATE""",
+                (*scope.key, binding.policy_id),
+            ).fetchall()
+            conn.execute(
+                """UPDATE automation_schedule_binding
+                      SET enabled=false,revision=revision+1
+                    WHERE org_id=%s AND project_id=%s AND policy_id=%s
+                      AND policy_revision<>%s AND enabled""",
+                (*scope.key, binding.policy_id, binding.policy_revision),
+            )
             row = conn.execute(
                 """INSERT INTO automation_schedule_binding(
                      org_id,project_id,policy_id,policy_revision,policy_hash,operation_id,
@@ -187,6 +201,41 @@ class AutomationOccurrenceStore:
                 if row is None or dict(row) != expected_existing:
                     raise AutomationOccurrenceConflict("schedule binding replay drifted")
             conn.commit()
+
+    def disable_policy_bindings(
+        self,
+        scope: TenantScope,
+        policy_id: str,
+        *,
+        keep_revision: int | None = None,
+    ) -> None:
+        if not policy_id.strip() or len(policy_id) > 200:
+            raise ValueError("bounded policy_id is required")
+        if keep_revision is not None and (type(keep_revision) is not int or keep_revision <= 0):
+            raise ValueError("keep_revision must be a positive integer")
+        with self._connect_factory(scope) as conn:
+            self._lock_policy(conn, scope, policy_id)
+            conn.execute(
+                """SELECT policy_revision FROM automation_schedule_binding
+                   WHERE org_id=%s AND project_id=%s AND policy_id=%s
+                   ORDER BY policy_revision FOR UPDATE""",
+                (*scope.key, policy_id),
+            ).fetchall()
+            conn.execute(
+                """UPDATE automation_schedule_binding
+                      SET enabled=false,revision=revision+1
+                    WHERE org_id=%s AND project_id=%s AND policy_id=%s AND enabled
+                      AND (%s::bigint IS NULL OR policy_revision<>%s)""",
+                (*scope.key, policy_id, keep_revision, keep_revision),
+            )
+            conn.commit()
+
+    @staticmethod
+    def _lock_policy(conn: Any, scope: TenantScope, policy_id: str) -> None:
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+            (f"{scope.org_id}\x1f{scope.project_id}\x1fautomation-policy\x1f{policy_id}",),
+        )
 
     def record_scheduled(
         self,
@@ -491,7 +540,7 @@ class AutomationOccurrenceStore:
                       AND d.execution_epoch=o.execution_epoch
                       AND r.enabled AND NOT r.operation_fence AND r.observed_state='ready'
                       AND r.execution_epoch=o.execution_epoch
-                    ORDER BY o.created_at,o.occurrence_id FOR UPDATE OF o SKIP LOCKED LIMIT 1
+                    ORDER BY o.created_at,o.occurrence_id FOR UPDATE OF o,b SKIP LOCKED LIMIT 1
                    ) UPDATE automation_occurrence o
                      SET status='claimed',claim_owner=%s,claim_until=%s,updated_at=clock_timestamp()
                     FROM candidate c

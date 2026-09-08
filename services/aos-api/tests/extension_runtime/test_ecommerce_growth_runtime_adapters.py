@@ -140,8 +140,8 @@ def schedule_trigger_command():
             "contentHash": "sha256:" + "b" * 64,
         },
         "scheduledAt": "2026-09-08T12:00:00Z",
-        "localSlot": "2026-09-08 20:00 Asia/Shanghai",
-        "deadline": "2026-09-08T13:00:00Z",
+        "localSlot": "2026-09-08T20:00+0800",
+        "deadline": "2026-09-09T12:00:00Z",
     }
 
 
@@ -234,6 +234,7 @@ def test_case_host_service_returns_and_rereads_exact_case_authority(monkeypatch)
         case_id="case-qyh-001",
         revision=1,
         content_hash="sha256:" + "b" * 64,
+        enabled=True,
         model_dump=lambda **_: authority_payload,
     )
 
@@ -364,6 +365,7 @@ def test_schedule_put_returns_and_rereads_policy_and_case(monkeypatch):
         schedule_policy_id="schedule-qyh-001",
         revision=1,
         content_hash="sha256:" + "b" * 64,
+        enabled=True,
         model_dump=lambda **_: {"schedulePolicyId": "schedule-qyh-001", "revision": 1},
     )
     case = SimpleNamespace(
@@ -391,9 +393,17 @@ def test_schedule_put_returns_and_rereads_policy_and_case(monkeypatch):
         def put_schedule_policy(self, *_args, **_kwargs):
             return SimpleNamespace(authority=authority, case_authority=case, replayed=False)
 
+    class Occurrences:
+        def __init__(self, _factory):
+            pass
+
+        def disable_policy_bindings(self, _scope, _policy_id, *, keep_revision):
+            assert keep_revision == 1
+
     monkeypatch.setattr(runtime_adapters, "BusinessInvestigationScheduleStore", Schedules)
     monkeypatch.setattr(runtime_adapters, "BusinessInvestigationCaseStore", Cases)
     monkeypatch.setattr(runtime_adapters, "EcommerceBusinessInvestigationApplication", App)
+    monkeypatch.setattr(runtime_adapters, "AutomationOccurrenceStore", Occurrences)
     service = runtime_adapters.SchedulePutHostService()
     transaction = HostTransaction(SimpleNamespace(execute=lambda *_: None))
     response = service.execute(
@@ -423,6 +433,7 @@ def test_schedule_trigger_revalidates_exact_enabled_policy(monkeypatch):
         content_hash="sha256:" + "b" * 64,
         enabled=True,
         cadence=SimpleNamespace(value="once"),
+        created_at=datetime(2026, 9, 1, tzinfo=UTC),
         model_dump=lambda **_: command["schedulePolicyRef"],
     )
 
@@ -443,16 +454,31 @@ def test_schedule_trigger_revalidates_exact_enabled_policy(monkeypatch):
         transaction=HostTransaction(SimpleNamespace(execute=lambda *_: Cursor())),
         scope=scope,
         dispatch=SimpleNamespace(
-            operation_id="ecommerce_growth_schedule_trigger", execution_epoch=3
+            operation_id="ecommerce_growth_schedule_trigger",
+            execution_epoch=3,
+            checked_at=datetime(2026, 9, 8, 12, tzinfo=UTC),
         ),
         command=command,
     )
+    with pytest.raises(ValueError, match="natural slot"):
+        service.revalidate(
+            transaction=HostTransaction(SimpleNamespace(execute=lambda *_: Cursor())),
+            scope=scope,
+            dispatch=SimpleNamespace(
+                operation_id="ecommerce_growth_schedule_trigger",
+                execution_epoch=3,
+                checked_at=datetime(2026, 9, 8, 12, tzinfo=UTC),
+            ),
+            command={**command, "localSlot": "not-the-shanghai-slot"},
+        )
     with pytest.raises(ValueError, match="invalid envelope"):
         service.revalidate(
             transaction=HostTransaction(SimpleNamespace(execute=lambda *_: Cursor())),
             scope=scope,
             dispatch=SimpleNamespace(
-                operation_id="ecommerce_growth_schedule_trigger", execution_epoch=3
+                operation_id="ecommerce_growth_schedule_trigger",
+                execution_epoch=3,
+                checked_at=datetime(2026, 9, 8, 12, tzinfo=UTC),
             ),
             command={**command, "enabled": True},
         )
@@ -483,10 +509,11 @@ def test_schedule_trigger_writes_unique_occurrence_and_exact_readback(monkeypatc
         "generation": generation,
         "execution_epoch": 3,
         "scheduled_at": datetime(2026, 9, 8, 12, tzinfo=UTC),
-        "local_slot": "2026-09-08 20:00 Asia/Shanghai",
+        "local_slot": "2026-09-08T20:00+0800",
         "trigger_source": "schedule",
         "source_event_id": None,
-        "deadline": datetime(2026, 9, 8, 13, tzinfo=UTC),
+        "status": "pending",
+        "deadline": datetime(2026, 9, 9, 12, tzinfo=UTC),
     }
 
     class Cursor:
@@ -537,3 +564,10 @@ def test_schedule_trigger_writes_unique_occurrence_and_exact_readback(monkeypatc
         command=command,
         receipt=response,
     ) == response
+    assert service.verify_receipt(
+        transaction=transaction,
+        scope=scope,
+        dispatch=dispatch,
+        command=command,
+        receipt={**response, "status": "accepted"},
+    ) == {}

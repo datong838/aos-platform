@@ -290,3 +290,45 @@ def test_occurrence_authority_rls_concurrency_and_reconcile_only(database):
                JOIN automation_occurrence o USING(org_id,project_id,occurrence_id)
                WHERE o.local_slot LIKE 'slot-%'"""
         ).fetchone()["count"] == 1
+
+
+def test_schedule_binding_rollover_disables_old_revision_and_old_occurrence(database):
+    scope = TenantScope("org-org", "dev-project")
+    first = _seed(database, scope)
+    store = AutomationOccurrenceStore(_runtime_connection(database, scope))
+    store.put_binding(scope, first)
+    scheduled_at = datetime(2026, 9, 7, tzinfo=UTC)
+    store.record_scheduled(
+        scope,
+        first,
+        scheduled_at=scheduled_at,
+        local_slot="2026-09-07T08:00+0800",
+        deadline=scheduled_at + timedelta(days=2),
+    )
+    second = replace(
+        first,
+        policy_revision=2,
+        policy_hash="sha256:" + "c" * 64,
+        effective_from=scheduled_at + timedelta(hours=1),
+    )
+    store.put_binding(scope, second)
+    with _runtime_connection(database, scope)(scope) as conn:
+        rows = conn.execute(
+            """SELECT policy_revision,enabled FROM automation_schedule_binding
+               WHERE policy_id=%s ORDER BY policy_revision""",
+            (first.policy_id,),
+        ).fetchall()
+        assert rows == [
+            {"policy_revision": 1, "enabled": False},
+            {"policy_revision": 2, "enabled": True},
+        ]
+        conn.rollback()
+    assert store.claim_next(
+        scope, owner="rollover-test", now=scheduled_at + timedelta(hours=2)
+    ) is None
+    store.disable_policy_bindings(scope, first.policy_id)
+    with _runtime_connection(database, scope)(scope) as conn:
+        assert conn.execute(
+            "SELECT count(*) AS count FROM automation_schedule_binding WHERE enabled"
+        ).fetchone()["count"] == 0
+        conn.rollback()

@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 import hashlib
 import json
 from typing import Any, Mapping, Protocol
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from aos_api.ecommerce_growth_host_ports import (
     DispatchAuthorityRef,
@@ -243,7 +244,7 @@ def _occurrence_payload(transaction: HostTransaction, scope: TenantScope, occurr
     row = transaction.execute(
         """SELECT occurrence_id,policy_id,policy_revision,policy_hash,operation_id,
                   installation_id,generation,execution_epoch,scheduled_at,local_slot,
-                  trigger_source,source_event_id,deadline
+                  trigger_source,source_event_id,status,deadline
              FROM automation_occurrence
             WHERE org_id=%s AND project_id=%s AND occurrence_id=%s""",
         (*scope.key, occurrence_id),
@@ -263,6 +264,7 @@ def _occurrence_payload(transaction: HostTransaction, scope: TenantScope, occurr
         "localSlot": row["local_slot"],
         "triggerSource": row["trigger_source"],
         "sourceEventId": row["source_event_id"],
+        "status": row["status"],
         "deadline": row["deadline"].isoformat(),
     }
 
@@ -444,6 +446,11 @@ class SchedulePutHostService:
             actor=self.executor_identity,
             occurred_at=occurred_at or checked_at,
         )
+        AutomationOccurrenceStore(factory).disable_policy_bindings(
+            scope,
+            result.authority.schedule_policy_id,
+            keep_revision=result.authority.revision if result.authority.enabled else None,
+        )
         return {
             "receiptRef": _schedule_ref(result.authority),
             "authority": result.authority.model_dump(by_alias=True, mode="json"),
@@ -479,7 +486,7 @@ class ScheduleTriggerHostService:
         return TransactionBoundConnectFactory(transaction, scope)
 
     def revalidate(self, *, transaction, scope, dispatch, command) -> None:
-        _key, policy_ref, _scheduled_at, _local_slot, _deadline = (
+        _key, policy_ref, scheduled_at, local_slot, deadline = (
             _strict_schedule_trigger_command(command)
         )
         head = transaction.execute(
@@ -498,6 +505,20 @@ class ScheduleTriggerHostService:
             raise ValueError("schedulePolicyRef exact authority drifted")
         if not policy.enabled or policy.cadence.value not in {"once", "weekly"}:
             raise ValueError("only an enabled once or weekly SchedulePolicy may trigger")
+        local = scheduled_at.astimezone(ZoneInfo("Asia/Shanghai"))
+        expected_local_slot = local.strftime("%Y-%m-%dT%H:%M%z")
+        if local_slot != expected_local_slot:
+            raise ValueError("localSlot does not match the Asia/Shanghai natural slot")
+        if policy.cadence.value == "weekly" and (
+            local.isoweekday() != policy.weekly_day
+            or local.strftime("%H:%M") != policy.local_time
+        ):
+            raise ValueError("scheduledAt does not match the weekly Policy slot")
+        if scheduled_at < policy.created_at.astimezone(UTC):
+            raise ValueError("scheduledAt is before the Policy effective interval")
+        checked_second = dispatch.checked_at.astimezone(UTC).replace(microsecond=0)
+        if deadline != max(checked_second, scheduled_at) + timedelta(hours=24):
+            raise ValueError("deadline does not match the bounded host recovery window")
         if (
             dispatch.operation_id != "ecommerce_growth_schedule_trigger"
             or dispatch.execution_epoch <= 0
@@ -538,12 +559,12 @@ class ScheduleTriggerHostService:
         return {
             "occurrenceRef": _occurrence_ref(authority),
             "authority": authority,
-            "status": write.status,
+            "status": authority["status"],
             "replayed": write.replayed,
         }
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
-        _key, policy_ref, _scheduled_at, _local_slot, _deadline = (
+        _key, policy_ref, scheduled_at, local_slot, deadline = (
             _strict_schedule_trigger_command(command)
         )
         ref = receipt.get("occurrenceRef")
@@ -562,12 +583,17 @@ class ScheduleTriggerHostService:
             or authority["installationId"] != str(dispatch.installation_id)
             or authority["generation"] != str(dispatch.generation)
             or authority["executionEpoch"] != dispatch.execution_epoch
+            or authority["scheduledAt"] != scheduled_at.isoformat()
+            or authority["localSlot"] != local_slot
+            or authority["deadline"] != deadline.isoformat()
+            or authority["triggerSource"] != "schedule"
+            or authority["sourceEventId"] is not None
         ):
             return {}
         expected = {
             "occurrenceRef": _occurrence_ref(authority),
             "authority": authority,
-            "status": receipt.get("status"),
+            "status": authority["status"],
             "replayed": bool(receipt.get("replayed")),
         }
         return expected if dict(receipt) == expected else {}
