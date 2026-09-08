@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from types import MappingProxyType
 from typing import Any, Mapping, Sequence
 
@@ -25,6 +26,8 @@ import pymysql
 from aos_api.db import connect
 from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime
 from aos_api.logging_facade import get_logger
+from aos_api.source_read_observation import SourceReadObservation, observed_rows_hash
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.ec-source")
 
@@ -153,6 +156,72 @@ def fetch_source_rows(
         node_config=node_config,
         props=props,
     )
+
+
+_PRODUCT_OBSERVATION_FIELDS = frozenset({
+    "goods_id", "site_id", "goods_name", "price", "goods_stock", "state",
+    "is_delete", "modify_time", "create_time",
+})
+
+
+def _read_observation_clock() -> datetime:
+    return datetime.now(UTC)
+
+
+def fetch_source_rows_observed(
+    *,
+    nodes: list[Any],
+    node_id: str | None,
+    scope: TenantScope,
+    spec_id: str,
+) -> tuple[list[dict[str, Any]], SourceReadObservation]:
+    """Read one fixed public product scope with an actual read interval.
+
+    This additive entry is not wired to live execution or DataFulfill. Its
+    observation is not persisted and cannot supply source-config authority.
+    """
+    if type(scope) is not TenantScope or spec_id != "niushop.product-observation/v1":
+        raise ValueError("trusted tenant scope and fixed observation spec required")
+    config = _resolve_source_node_config(nodes, node_id)
+    if config is None:
+        raise ValueError("observation source node is unavailable")
+    source_id = config.get("source_id")
+    if type(source_id) is not str or not source_id or source_id.strip() != source_id or len(source_id) > 240:
+        raise ValueError("canonical observation source identity required")
+    table = config.get("table") or config.get("source_table")
+    filters = _parse_site_filter(config.get("site_filter"))
+    if (
+        table != "ns_goods"
+        or config.get("cursor") is not None
+        or set(filters) != {"site_id"}
+        or type(filters["site_id"]) is not int
+        or filters["site_id"] <= 0
+    ):
+        raise ValueError("observation requires the fixed product shop scope without a cursor")
+    props = _query_meta_source_props(source_id, scope)
+    with JdbcConnectorRuntime(props) as runtime:
+        started = _read_observation_clock()
+        if not isinstance(started, datetime) or started.utcoffset() is None:
+            raise ValueError("observation clock requires timezone")
+        rows = runtime.read_rows("ns_goods", limit=101, where_equals=filters)
+        finished = _read_observation_clock()
+    if type(rows) is not list or len(rows) > 100:
+        raise ValueError("observation exceeds the complete read limit")
+    if any(type(row) is not dict or type(row.get("site_id")) is not int
+           or row["site_id"] != filters["site_id"] for row in rows):
+        raise ValueError("observation returned rows outside the fixed shop scope")
+    public_rows = [{key: value for key, value in row.items() if key in _PRODUCT_OBSERVATION_FIELDS}
+                   for row in rows]
+    # Empty identifiers deliberately avoid modifying live pipeline DLQ state.
+    cleaned = _clean_rows(public_rows, pipeline_id="", node_id="", table="ns_goods")
+    observation = SourceReadObservation(
+        tenant={"orgId": scope.org_id, "projectId": scope.project_id},
+        sourceId=source_id, specId=spec_id, siteId=filters["site_id"],
+        readStartedAt=started, readFinishedAt=finished,
+        fetchedCount=len(rows), excludedCount=len(rows) - len(cleaned), retainedCount=len(cleaned),
+        rowsHash=observed_rows_hash(cleaned),
+    )
+    return cleaned, observation
 
 
 def batch_read_public(
