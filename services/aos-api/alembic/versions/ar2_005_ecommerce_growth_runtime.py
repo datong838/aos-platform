@@ -60,7 +60,8 @@ def upgrade() -> None:
         ) RETURNS TABLE(response JSONB,replayed BOOLEAN)
         LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
         DECLARE v_org TEXT:=NULLIF(current_setting('aos.org_id',true),'');
-          v_project TEXT:=NULLIF(current_setting('aos.project_id',true),'');v_existing RECORD;
+          v_project TEXT:=NULLIF(current_setting('aos.project_id',true),'');
+          v_existing RECORD;v_dispatch RECORD;v_runtime RECORD;
         BEGIN
           IF coalesce(v_org,'')='' OR coalesce(v_project,'')=''
              OR p_operation_id NOT IN (
@@ -78,6 +79,33 @@ def upgrade() -> None:
              OR length(btrim(coalesce(p_actor,''))) NOT BETWEEN 1 AND 240
              OR p_occurred_at IS NULL
           THEN RAISE EXCEPTION USING ERRCODE='22023',MESSAGE='invalid ecommerce runtime Receipt'; END IF;
+          -- A missing row cannot be protected by FOR UPDATE.  Serialize the
+          -- tenant/operation/idempotency identity before the first read so a
+          -- concurrent replay deterministically observes the winning Receipt.
+          PERFORM pg_advisory_xact_lock(hashtextextended(
+            v_org||E'\x1f'||v_project||E'\x1f'||p_operation_id||E'\x1f'||btrim(p_idempotency_key),0));
+          SELECT * INTO v_dispatch FROM extension_operation_dispatch_binding
+           WHERE org_id=v_org AND project_id=v_project AND operation_id=p_operation_id
+           FOR UPDATE;
+          IF NOT FOUND OR v_dispatch.handler_kind<>'extension'
+             OR v_dispatch.installation_id IS DISTINCT FROM p_installation_id
+             OR v_dispatch.generation IS DISTINCT FROM p_generation
+             OR v_dispatch.execution_epoch IS DISTINCT FROM p_execution_epoch
+             OR v_dispatch.operation_fence IS DISTINCT FROM FALSE
+             OR v_dispatch.revision<>p_dispatch_revision
+             OR v_dispatch.cutover_group_id<>p_cutover_group_id
+             OR v_dispatch.cutover_group_revision<>p_cutover_group_revision
+          THEN RAISE EXCEPTION USING ERRCODE='23514',MESSAGE='ecommerce runtime dispatch authority drifted'; END IF;
+          SELECT * INTO v_runtime FROM extension_runtime_binding
+           WHERE org_id=v_org AND project_id=v_project
+             AND installation_id=p_installation_id AND generation=p_generation
+           FOR UPDATE;
+          IF NOT FOUND OR v_runtime.execution_epoch<>p_execution_epoch
+             OR v_runtime.revision<>p_runtime_revision
+             OR v_runtime.desired_state<>'enabled' OR v_runtime.observed_state<>'ready'
+             OR v_runtime.enabled IS DISTINCT FROM TRUE
+             OR v_runtime.operation_fence IS DISTINCT FROM FALSE
+          THEN RAISE EXCEPTION USING ERRCODE='23514',MESSAGE='ecommerce runtime binding is not executable'; END IF;
           SELECT * INTO v_existing FROM ecommerce_growth_runtime_command_receipt
            WHERE org_id=v_org AND project_id=v_project AND operation_id=p_operation_id
              AND idempotency_key=btrim(p_idempotency_key) FOR UPDATE;

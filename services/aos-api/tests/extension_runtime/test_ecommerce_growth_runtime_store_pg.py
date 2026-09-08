@@ -2,7 +2,9 @@
 
 import importlib.util
 import os
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -135,6 +137,11 @@ def put(store, dispatch, response=None):
     )
 
 
+def concurrent_put(database, scope, dispatch, response=None):
+    with bound(database, scope) as (store, _):
+        return put(store, dispatch, response).replayed
+
+
 def test_postgres_replay_isolation_drift_and_nonempty_downgrade(database):
     positive = TenantScope("org-org", "dev-project")
     canary = TenantScope("dev-org", "dev-project")
@@ -151,3 +158,84 @@ def test_postgres_replay_isolation_drift_and_nonempty_downgrade(database):
             put(store, positive_dispatch, {"receiptRef": TARGET, "businessTitle": "另一份经营分析"})
     with pytest.raises(psycopg.Error, match="not empty"):
         database.migration.downgrade()
+
+
+def test_postgres_concurrent_replay_and_drift_are_serialized(database):
+    scope = TenantScope("org-org", "dev-project")
+    dispatch = seed(database, scope)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = sorted(
+            future.result()
+            for future in (
+                pool.submit(concurrent_put, database, scope, dispatch),
+                pool.submit(concurrent_put, database, scope, dispatch),
+            )
+        )
+    assert results == [False, True]
+
+    drifted = {"receiptRef": TARGET, "businessTitle": "另一份经营分析"}
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = (
+            pool.submit(concurrent_put, database, scope, dispatch),
+            pool.submit(concurrent_put, database, scope, dispatch, drifted),
+        )
+        outcomes = []
+        for future in futures:
+            try:
+                outcomes.append(future.result())
+            except psycopg.Error as exc:
+                outcomes.append(str(exc))
+    assert outcomes.count(True) == 1
+    assert sum("drifted" in str(item) for item in outcomes) == 1
+
+
+def test_postgres_receipt_function_revalidates_exact_dispatch_and_runtime(database):
+    scope = TenantScope("org-org", "dev-project")
+    dispatch = seed(database, scope)
+
+    other_installation, other_generation = uuid4(), uuid4()
+    database.owner.execute(
+        "INSERT INTO bundle_installation(org_id,project_id,installation_id) VALUES(%s,%s,%s)",
+        (*scope.key, other_installation),
+    )
+    database.owner.execute(
+        """INSERT INTO extension_runtime_binding(
+          org_id,project_id,installation_id,generation,installation_revision,package_lock_ref,
+          profile_ref,execution_epoch,desired_state,observed_state,enabled,operation_fence,config_ref)
+          VALUES(%s,%s,%s,%s,1,'{}','internal-python-v1',3,'enabled','ready',true,false,'{}')""",
+        (*scope.key, other_installation, other_generation),
+    )
+    cross_installation = EcommerceGrowthDispatchSnapshot(
+        operation_id=dispatch.operation_id,
+        dispatch_revision=dispatch.dispatch_revision,
+        installation_id=other_installation,
+        generation=other_generation,
+        execution_epoch=dispatch.execution_epoch,
+        cutover_group_id=dispatch.cutover_group_id,
+        cutover_group_revision=dispatch.cutover_group_revision,
+        runtime_revision=dispatch.runtime_revision,
+        checked_at=dispatch.checked_at,
+    )
+    with bound(database, scope) as (store, _):
+        with pytest.raises(psycopg.Error, match="dispatch authority drifted"):
+            put(store, cross_installation)
+
+    for changed in (
+        replace(dispatch, execution_epoch=2),
+        replace(dispatch, dispatch_revision=4),
+        replace(dispatch, runtime_revision=2),
+    ):
+        with bound(database, scope) as (store, _):
+            with pytest.raises(psycopg.Error, match="drifted|not executable"):
+                put(store, changed)
+
+    database.owner.execute(
+        """UPDATE extension_runtime_binding SET enabled=false,operation_fence=true,
+                  desired_state='disabled',observed_state='stopped',revision=revision+1
+             WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s""",
+        (*scope.key, dispatch.installation_id, dispatch.generation),
+    )
+    disabled = replace(dispatch, runtime_revision=2)
+    with bound(database, scope) as (store, _):
+        with pytest.raises(psycopg.Error, match="not executable"):
+            put(store, disabled)
