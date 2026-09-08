@@ -16,6 +16,7 @@ from aos_api.business_investigation_observation_contracts import (
     ObservationSessionLeaseRecord,
 )
 from aos_api.db import connect as db_connect
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.tenant_scope import TenantScope
 
 
@@ -44,6 +45,38 @@ class ObservationAuthorityWrite(Generic[AuthorityT]):
 class BusinessInvestigationObservationStore:
     def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
         self._connect_factory = connect_factory or db_connect
+
+    def read_receipt_exact(self, scope: TenantScope, ref: InvestigationExactRef) -> ObservationReceiptRecord | None:
+        """Read historical owner authority; never rerun observation or infer fulfillment."""
+        if (ref.resource_type != "ObservationReceipt" or type(ref.revision) is not int
+                or ref.revision != 1 or ref.receipt_id not in (None, ref.resource_id)):
+            raise BusinessInvestigationObservationValidationError("exact observation receipt reference required")
+        with self._connect_factory(scope) as conn:
+            row = conn.execute("""SELECT * FROM business_investigation_observation_receipt
+                WHERE org_id=%s AND project_id=%s AND receipt_id=%s""", (*scope.key, ref.resource_id)).fetchone()
+        if row is None:
+            return None
+        try:
+            item = ObservationReceiptRecord.model_validate(row["authority_data"])
+        except (TypeError, ValueError) as exc:
+            raise BusinessInvestigationObservationValidationError("invalid observation authority payload") from exc
+        self._scope_matches(scope, item.tenant.org_id, item.tenant.project_id)
+        expected = {
+            "org_id": scope.org_id, "project_id": scope.project_id, "receipt_id": item.receipt_id,
+            "plan_id": item.plan_ref.resource_id, "plan_revision": item.plan_ref.revision,
+            "plan_content_hash": item.plan_ref.content_hash,
+            "step_id": item.step_ref.resource_id.removeprefix(item.plan_ref.resource_id + ":"),
+            "capability_id": item.capability_ref.resource_id, "lease_id": item.session_ref.resource_id,
+            "lease_revision": item.session_ref.revision, "lease_content_hash": item.session_ref.content_hash,
+            "requirement_id": item.requirement_ref.resource_id, "requirement_revision": item.requirement_ref.revision,
+            "requirement_content_hash": item.requirement_ref.content_hash, "status": item.status.value,
+            "semantic_route": item.semantic_route, "cutoff_at": item.cutoff_at, "content_hash": item.content_hash,
+            "idempotency_key": item.idempotency_key, "request_hash": item.request_hash,
+        }
+        if (item.receipt_id != ref.resource_id or item.content_hash != ref.content_hash
+                or any(row[key] != value for key, value in expected.items())):
+            raise BusinessInvestigationObservationValidationError("observation authority identity or lineage drifted")
+        return item
 
     def issue_lease(
         self,

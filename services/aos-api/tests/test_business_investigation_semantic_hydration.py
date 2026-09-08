@@ -17,11 +17,13 @@ from pydantic import ValidationError
 from aos_api.business_investigation_hydration import (
     BusinessInvestigationHydrationStore,
     BusinessInvestigationHydrationConflict,
+    BusinessInvestigationHydrationValidationError,
     HydrationCounts,
     SemanticHydrationJobRevision,
     SemanticHydrationReceipt,
 )
 from aos_api.tenant_scope import TenantScope
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from tests.aip._migration_test_support import isolated_aip_migration_database
 
 
@@ -180,6 +182,42 @@ def test_store_requests_and_records_through_controlled_functions() -> None:
     assert "semantic_hydration_record_biw3_005" in connection.calls[1][0]
 
 
+@pytest.mark.parametrize("defect", ["missing", "tenant", "hash", "job", "count", "payload", "revision", "type", "receipt"])
+def test_exact_hydration_read_rejects_invalid_identity_without_writes(defect):
+    from tests.test_data_fulfillment_store import Connection
+    item = SemanticHydrationReceipt.model_validate(receipt_payload())
+    exact = InvestigationExactRef(resource_type="SemanticHydrationReceipt", resource_id=item.hydration_id,
+                                  revision=1, content_hash=item.content_hash)
+    row = {"authority_data": item.model_dump(by_alias=True), "org_id": SCOPE.org_id,
+           "project_id": SCOPE.project_id, "hydration_id": item.hydration_id,
+           "hydration_job_id": item.job_ref.resource_id, "hydration_job_revision": item.job_ref.revision,
+           "content_hash": item.content_hash, "status": item.status.value, "attempted": item.counts.attempted,
+           "created_count": item.counts.created, "updated_count": item.counts.updated,
+           "quarantined_count": item.counts.quarantined, "unknown_count": item.counts.unknown,
+           "zero_observed": item.zero_observed, "idempotency_key": item.idempotency_key,
+           "request_hash": item.request_hash}
+    if defect == "tenant": row["org_id"] = "dev-org"
+    if defect == "hash": row["content_hash"] = HASH_C
+    if defect == "job": row["hydration_job_revision"] = 99
+    if defect == "count": row["unknown_count"] = 99
+    if defect == "payload": row["authority_data"]["tenant"]["orgId"] = "dev-org"
+    if defect == "revision": exact = exact.model_copy(update={"revision": "1"})
+    if defect == "type": exact = exact.model_copy(update={"resource_type": "PlatformObservation"})
+    if defect == "receipt": exact = exact.model_copy(update={"receipt_id": "other"})
+    conn = Connection(None if defect == "missing" else row)
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield conn
+    store = BusinessInvestigationHydrationStore(connect)
+    if defect == "missing": assert store.read_receipt_exact(SCOPE, exact) is None
+    else:
+        with pytest.raises(BusinessInvestigationHydrationValidationError):
+            store.read_receipt_exact(SCOPE, exact)
+    assert conn.commits == 0
+    assert all(sql.startswith("SELECT") and "head" not in sql for sql, _ in conn.calls)
+
+
 def test_disposable_database_empty_upgrade_and_downgrade() -> None:
     with isolated_aip_migration_database(
         "biw3_semantic_hydration", migration_target="biw3_005"
@@ -232,6 +270,10 @@ def test_disposable_database_receipt_first_idempotency_isolation_and_downgrade()
         receipt = SemanticHydrationReceipt.model_validate(receipt_payload())
         assert not store.record(SCOPE, receipt).replayed
         assert store.record(SCOPE, receipt).replayed
+        exact_receipt = InvestigationExactRef(resource_type="SemanticHydrationReceipt", resource_id=receipt.hydration_id,
+                                             revision=1, content_hash=receipt.content_hash)
+        assert store.read_receipt_exact(SCOPE, exact_receipt) == receipt
+        assert store.read_receipt_exact(TenantScope("dev-org", "dev-project"), exact_receipt) is None
         with psycopg.connect(dsn) as conn:
             conn.execute("SET LOCAL ROLE aos_runtime")
             conn.execute("SELECT set_config('aos.org_id','dev-org',true)")

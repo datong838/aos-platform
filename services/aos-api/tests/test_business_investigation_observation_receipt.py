@@ -18,8 +18,10 @@ from aos_api.business_investigation_observation_contracts import ObservationRece
 from aos_api.business_investigation_observation_store import (
     BusinessInvestigationObservationConflict,
     BusinessInvestigationObservationStore,
+    BusinessInvestigationObservationValidationError,
 )
 from aos_api.tenant_scope import TenantScope
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from tests.aip._migration_test_support import isolated_aip_migration_database
 
 
@@ -155,6 +157,44 @@ def test_store_records_through_controlled_function_only() -> None:
     assert "observation_receipt_record_biw3_002" in connection.calls[0][0]
 
 
+@pytest.mark.parametrize("defect", ["missing", "tenant", "hash", "plan", "payload", "revision", "type", "receipt"])
+def test_exact_observation_read_rejects_invalid_identity_without_writes(defect):
+    from tests.test_data_fulfillment_store import Connection
+    item = ObservationReceiptRecord.model_validate(receipt_payload())
+    exact = InvestigationExactRef(resource_type="ObservationReceipt", resource_id=item.receipt_id,
+                                  revision=1, content_hash=item.content_hash)
+    row = {"authority_data": item.model_dump(by_alias=True), "org_id": SCOPE.org_id,
+           "project_id": SCOPE.project_id, "receipt_id": item.receipt_id,
+           "plan_id": item.plan_ref.resource_id, "plan_revision": item.plan_ref.revision,
+           "plan_content_hash": item.plan_ref.content_hash,
+           "step_id": item.step_ref.resource_id.removeprefix(item.plan_ref.resource_id + ":"),
+           "capability_id": item.capability_ref.resource_id, "lease_id": item.session_ref.resource_id,
+           "lease_revision": item.session_ref.revision, "lease_content_hash": item.session_ref.content_hash,
+           "requirement_id": item.requirement_ref.resource_id, "requirement_revision": item.requirement_ref.revision,
+           "requirement_content_hash": item.requirement_ref.content_hash, "status": item.status.value,
+           "semantic_route": item.semantic_route, "cutoff_at": item.cutoff_at, "content_hash": item.content_hash,
+           "idempotency_key": item.idempotency_key, "request_hash": item.request_hash}
+    if defect == "tenant": row["org_id"] = "dev-org"
+    if defect == "hash": row["content_hash"] = HASH_C
+    if defect == "plan": row["plan_revision"] = 99
+    if defect == "payload": row["authority_data"]["tenant"]["orgId"] = "dev-org"
+    if defect == "revision": exact = exact.model_copy(update={"revision": "1"})
+    if defect == "type": exact = exact.model_copy(update={"resource_type": "PlatformObservation"})
+    if defect == "receipt": exact = exact.model_copy(update={"receipt_id": "other"})
+    conn = Connection(None if defect == "missing" else row)
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield conn
+    store = BusinessInvestigationObservationStore(connect)
+    if defect == "missing": assert store.read_receipt_exact(SCOPE, exact) is None
+    else:
+        with pytest.raises(BusinessInvestigationObservationValidationError):
+            store.read_receipt_exact(SCOPE, exact)
+    assert conn.commits == 0
+    assert all(sql.startswith("SELECT") and "head" not in sql for sql, _ in conn.calls)
+
+
 def test_disposable_database_idempotency_current_refs_isolation_and_rollback() -> None:
     with isolated_aip_migration_database(
         "biw3_observation_receipt", migration_target="biw3_002"
@@ -208,6 +248,10 @@ def test_disposable_database_idempotency_current_refs_isolation_and_rollback() -
         receipt = ObservationReceiptRecord.model_validate(receipt_payload())
         assert not store.record_receipt(SCOPE, receipt).replayed
         assert store.record_receipt(SCOPE, receipt).replayed
+        exact_receipt = InvestigationExactRef(resource_type="ObservationReceipt", resource_id=receipt.receipt_id,
+                                             revision=1, content_hash=receipt.content_hash)
+        assert store.read_receipt_exact(SCOPE, exact_receipt) == receipt
+        assert store.read_receipt_exact(OTHER_SCOPE, exact_receipt) is None
         with pytest.raises(BusinessInvestigationObservationConflict):
             store.record_receipt(
                 SCOPE,
@@ -226,6 +270,7 @@ def test_disposable_database_idempotency_current_refs_isolation_and_rollback() -
                     receipt_payload(receiptId="receipt-old-plan", idempotencyKey="old-plan")
                 ),
             )
+        assert store.read_receipt_exact(SCOPE, exact_receipt) == receipt
         with psycopg.connect(dsn) as conn:
             conn.execute(
                 "UPDATE business_investigation_observation_plan_head SET current_revision=1,current_content_hash=%s,version=1 WHERE org_id='org-org' AND project_id='dev-project' AND plan_id='plan-1'",

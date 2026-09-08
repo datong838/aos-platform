@@ -247,6 +247,35 @@ class BusinessInvestigationHydrationStore:
     def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
         self._connect_factory = connect_factory or db_connect
 
+    def read_receipt_exact(self, scope: TenantScope, ref: InvestigationExactRef) -> SemanticHydrationReceipt | None:
+        """Read immutable owner authority without hydrating or relying on current mapping heads."""
+        if (ref.resource_type != "SemanticHydrationReceipt" or type(ref.revision) is not int
+                or ref.revision != 1 or ref.receipt_id not in (None, ref.resource_id)):
+            raise BusinessInvestigationHydrationValidationError("exact hydration receipt reference required")
+        with self._connect_factory(scope) as conn:
+            row = conn.execute("""SELECT * FROM business_investigation_semantic_hydration_receipt
+                WHERE org_id=%s AND project_id=%s AND hydration_id=%s""", (*scope.key, ref.resource_id)).fetchone()
+        if row is None:
+            return None
+        try:
+            item = SemanticHydrationReceipt.model_validate(row["authority_data"])
+        except (TypeError, ValueError) as exc:
+            raise BusinessInvestigationHydrationValidationError("invalid hydration authority payload") from exc
+        self._scope(scope, item.tenant)
+        expected = {
+            "org_id": scope.org_id, "project_id": scope.project_id, "hydration_id": item.hydration_id,
+            "hydration_job_id": item.job_ref.resource_id, "hydration_job_revision": item.job_ref.revision,
+            "content_hash": item.content_hash, "status": item.status.value,
+            "attempted": item.counts.attempted, "created_count": item.counts.created,
+            "updated_count": item.counts.updated, "quarantined_count": item.counts.quarantined,
+            "unknown_count": item.counts.unknown, "zero_observed": item.zero_observed,
+            "idempotency_key": item.idempotency_key, "request_hash": item.request_hash,
+        }
+        if (item.hydration_id != ref.resource_id or item.content_hash != ref.content_hash
+                or any(row[key] != value for key, value in expected.items())):
+            raise BusinessInvestigationHydrationValidationError("hydration authority identity or lineage drifted")
+        return item
+
     def request(self, scope: TenantScope, job: SemanticHydrationJobRevision):
         self._scope(scope, job.tenant)
         row = self._execute(scope, "SELECT authority_data,replayed FROM semantic_hydration_request_biw3_005(%s,%s,%s,%s)", (
