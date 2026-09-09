@@ -25,7 +25,12 @@ pytestmark = pytest.mark.skipif(
     os.getenv("AOS_EXTENSION_PG_TEST") != "1",
     reason="dedicated PostgreSQL opt-in required",
 )
-PG = {"host": "127.0.0.1", "port": 18432, "user": "postgres", "dbname": "postgres"}
+PG = {
+    "host": os.getenv("AOS_EXTENSION_PG_HOST", "127.0.0.1"),
+    "port": int(os.getenv("AOS_EXTENSION_PG_PORT", "18432")),
+    "user": os.getenv("AOS_EXTENSION_PG_USER", "postgres"),
+    "dbname": os.getenv("AOS_EXTENSION_PG_DATABASE", "postgres"),
+}
 ROOT = Path(__file__).resolve().parents[2]
 HASH = "sha256:" + "a" * 64
 TARGET = {

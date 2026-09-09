@@ -83,6 +83,9 @@ class Cursor:
     def fetchone(self):
         return self.row
 
+    def fetchall(self):
+        return self.row or []
+
 
 class Connection:
     def __init__(self, rows):
@@ -144,6 +147,41 @@ def test_enqueue_rejects_review_lineage_segment_and_effect_drift() -> None:
     drift["sideEffects"]["taskCreatedCount"] = 1
     with pytest.raises(ValueError, match="side-effect boundary"):
         item.enqueue(review_receipt={"receiptRef": exact("ContentReviewReceipt", "review-1")}, feedback_plan=drift)
+
+
+def test_read_returns_complete_command_segments_and_checkpoint() -> None:
+    expected = plan("RETURN")
+    segment = expected["segments"][0]
+    item, connection = port(
+        [
+            {
+                "request_hash": expected["requestHash"],
+                "decision": "RETURN",
+                "review_receipt_ref": expected["reviewReceiptRef"],
+                "artifact_ref": expected["artifactRef"],
+                "task_ref": expected["taskRef"],
+                "brief_ref": expected["briefRef"],
+            },
+            [
+                {
+                    "sequence": 1,
+                    "payload": segment,
+                    "state": "pending",
+                    "attempt": 0,
+                    "lease_token": None,
+                    "lease_expires_at": None,
+                    "target_receipt_ref": None,
+                    "reason_code": None,
+                }
+            ],
+            {"completed_sequence": 0, "version": 1},
+        ]
+    )
+    result = item.read(command_id=expected["commandId"])
+    assert result["segments"][0]["payload"] == segment
+    assert result["segments"][0]["state"] == "pending"
+    assert result["checkpoint"] == {"completedSequence": 0, "version": 1}
+    assert all("public.ecommerce_growth_feedback_" in query for query, _ in connection.calls)
 
 
 def test_claim_unknown_and_reconcile_preserve_one_target_and_checkpoint() -> None:

@@ -194,6 +194,70 @@ class BoundEcommerceGrowthFeedbackPort:
         except Exception as exc:
             raise EcommerceGrowthFeedbackConflict("feedback command could not be persisted") from exc
 
+    def read(self, *, command_id: str) -> Mapping[str, Any] | None:
+        """Read the complete immutable enqueue authority inside the host transaction."""
+
+        if type(command_id) is not str or not command_id.strip():
+            raise ValueError("feedback command identity is required")
+        try:
+            command = self._transaction.execute(
+                """SELECT request_hash,decision,review_receipt_ref,artifact_ref,
+                          task_ref,brief_ref
+                     FROM public.ecommerce_growth_feedback_command
+                    WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                (*self._scope.key, command_id.strip()),
+            ).fetchone()
+            if command is None:
+                return None
+            segments = self._transaction.execute(
+                """SELECT sequence,payload,state,attempt,lease_token,lease_expires_at,
+                          target_receipt_ref,reason_code
+                     FROM public.ecommerce_growth_feedback_segment
+                    WHERE org_id=%s AND project_id=%s AND command_id=%s
+                    ORDER BY sequence""",
+                (*self._scope.key, command_id.strip()),
+            ).fetchall()
+            checkpoint = self._transaction.execute(
+                """SELECT completed_sequence,version
+                     FROM public.ecommerce_growth_feedback_checkpoint
+                    WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                (*self._scope.key, command_id.strip()),
+            ).fetchone()
+            if checkpoint is None:
+                raise EcommerceGrowthFeedbackConflict("feedback checkpoint authority is missing")
+            return {
+                "commandId": command_id.strip(),
+                "requestHash": command["request_hash"],
+                "decision": command["decision"],
+                "reviewReceiptRef": deepcopy(command["review_receipt_ref"]),
+                "artifactRef": deepcopy(command["artifact_ref"]),
+                "taskRef": deepcopy(command["task_ref"]),
+                "briefRef": deepcopy(command["brief_ref"]),
+                "segments": [
+                    {
+                        "sequence": int(row["sequence"]),
+                        "payload": deepcopy(row["payload"]),
+                        "state": row["state"],
+                        "attempt": int(row["attempt"]),
+                        "leaseToken": None if row["lease_token"] is None else str(row["lease_token"]),
+                        "leaseExpiresAt": None
+                        if row["lease_expires_at"] is None
+                        else row["lease_expires_at"].isoformat(),
+                        "targetReceiptRef": deepcopy(row["target_receipt_ref"]),
+                        "reasonCode": row["reason_code"],
+                    }
+                    for row in segments
+                ],
+                "checkpoint": {
+                    "completedSequence": int(checkpoint["completed_sequence"]),
+                    "version": int(checkpoint["version"]),
+                },
+            }
+        except (ValueError, EcommerceGrowthFeedbackError):
+            raise
+        except Exception as exc:
+            raise EcommerceGrowthFeedbackConflict("feedback command could not be read") from exc
+
     def claim(self, *, command_id: str, worker: str, lease_seconds: int = 60) -> Mapping[str, Any] | None:
         if not command_id.strip() or not worker.strip() or not 1 <= lease_seconds <= 300:
             raise ValueError("bounded feedback claim identity is required")

@@ -66,7 +66,17 @@ def _strict_response(value: Any, target_receipt_ref: Mapping[str, Any]) -> dict[
         decoded = json.loads(encoded)
     except (TypeError, ValueError) as exc:
         raise ValueError("runtime response must be a strict JSON tree") from exc
-    if target_receipt_ref not in decoded.values():
+    target_json = json.dumps(
+        target_receipt_ref, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
+    )
+    if not any(
+        type(candidate) is dict
+        and json.dumps(
+            candidate, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
+        )
+        == target_json
+        for candidate in decoded.values()
+    ):
         raise ValueError("runtime response must contain its exact target Receipt")
     return decoded
 
@@ -146,7 +156,7 @@ class BoundEcommerceGrowthRuntimeStore:
         if operation_id not in _OPERATIONS or not idempotency_key.strip():
             raise ValueError("runtime Receipt lookup identity is invalid")
         row = self._transaction.execute(
-            """SELECT response FROM ecommerce_growth_runtime_command_receipt
+            """SELECT response FROM public.ecommerce_growth_runtime_command_receipt
                  WHERE org_id=%s AND project_id=%s AND operation_id=%s AND idempotency_key=%s""",
             (*self._scope.key, operation_id, idempotency_key.strip()),
         ).fetchone()

@@ -122,6 +122,8 @@ def test_store_rejects_response_without_target_or_persistence_drift():
     )
     with pytest.raises(ValueError, match="contain"):
         store.put(response={"receiptRef": {**TARGET, "revision": 2}}, **base)
+    with pytest.raises(ValueError, match="contain"):
+        store.put(response={"receiptRef": {**TARGET, "revision": True}}, **base)
     drift = BoundEcommerceGrowthRuntimeStore(
         HostTransaction(Connection({"response": {"receiptRef": {**TARGET, "revision": 2}}, "replayed": True})),
         TenantScope("org-org", "dev-project"),
@@ -144,3 +146,4 @@ def test_read_is_tenant_scoped_and_returns_copy():
         "ecommerce_growth_case_put",
         "case-qyh-001",
     )
+    assert "public.ecommerce_growth_runtime_command_receipt" in connection.calls[0][0]

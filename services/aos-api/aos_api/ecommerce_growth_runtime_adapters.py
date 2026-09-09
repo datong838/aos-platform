@@ -22,6 +22,7 @@ from aos_api.ecommerce_growth_host_ports import (
     HostTransaction,
 )
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
+from aos_api.ecommerce_growth_feedback_port import BoundEcommerceGrowthFeedbackPort
 from aos_api.aip_production_contract_store import (
     AipProductionContractStore,
     canonical_hash as production_contract_canonical_hash,
@@ -2563,7 +2564,8 @@ def _content_exact_ref(value: Any, expected_type: str) -> InvestigationExactRef:
     if (
         ref.resource_type != expected_type
         or type(ref.revision) is not int
-        or ref.model_dump(mode="json", by_alias=True, exclude_none=True) != value
+        or _request_hash(ref.model_dump(mode="json", by_alias=True, exclude_none=True))
+        != _request_hash(value)
     ):
         raise ValueError("content generate exact ref drifted")
     return ref
@@ -3972,6 +3974,662 @@ class ContentGenerateHostService:
             return {}
 
 
+CONTENT_REVIEW_RECEIPT_NAMESPACE = UUID("5c4b4772-1e80-4c22-9b8d-98aa34994d36")
+_CONTENT_REVIEW_FIELDS = frozenset(
+    {
+        "operation",
+        "artifactRef",
+        "taskRef",
+        "briefRef",
+        "growthPlanRef",
+        "sourceArtifactRefs",
+        "reviewIssueRef",
+        "reviewerAuthorityRef",
+        "artifactContentHash",
+        "decision",
+        "returnStage",
+        "idempotencyKey",
+        "requestHash",
+    }
+)
+_READABLE_CONTENT_FIELDS = frozenset(
+    {
+        "artifactRef",
+        "taskRef",
+        "briefRef",
+        "growthPlanRef",
+        "sourceArtifactRefs",
+        "productNames",
+        "channels",
+        "factSourceRefs",
+        "body",
+        "constraintChecks",
+    }
+)
+_CONTENT_REVIEW_RESPONSE_FIELDS = frozenset(
+    {
+        "receiptRef",
+        "requestHash",
+        "decision",
+        "artifactRef",
+        "taskRef",
+        "briefRef",
+        "reviewIssueRef",
+        "reviewerAuthorityRef",
+        "returnStage",
+        "replayed",
+        "sideEffects",
+    }
+)
+_CONTENT_TECHNICAL_TEXT = re.compile(
+    r"(?:(?:AR|W|R|N)\s*[-_]?\s*\d|技术方案|开发任务|波次|API|SQL|DDL|数据库迁移|代码|"
+    r"(?:Artifact|Dataset|DataFulfillment|EvidenceBundle|TaskBrief|GrowthPlan|Capability|Provider|Usage|Installation)"
+    r"[A-Za-z]*(?:Revision|Receipt)|sha256\s*:|\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-"
+    r"[89ab][0-9a-f]{3}-[0-9a-f]{12}\b|(?:/[\w.-]+){2,}|(?:[\w.-]+/)+[\w.-]+\."
+    r"(?:py|ts|tsx|js|sql|md|json|ya?ml)|\b[\w.-]+\.(?:py|ts|tsx|js|sql|md|json|ya?ml)\b)",
+    re.IGNORECASE,
+)
+
+
+def _content_business_text(value: Any, *, name: str, limit: int) -> str:
+    if type(value) is not str or not 1 <= len(value.strip()) <= limit:
+        raise ValueError(f"{name} must be non-empty bounded business text")
+    normalized = "".join(
+        character
+        for character in unicodedata.normalize("NFKC", value)
+        if unicodedata.category(character) != "Cf"
+    )
+    if not re.search(r"[\u3400-\u9fff]", normalized) or _CONTENT_TECHNICAL_TEXT.search(normalized):
+        raise ValueError(f"{name} contains non-business technical text")
+    return value
+
+
+def _strict_content_review_command(command: Mapping[str, Any]) -> dict[str, Any]:
+    if type(command) is not dict or set(command) != _CONTENT_REVIEW_FIELDS:
+        raise ValueError("content review command envelope drifted")
+    if command["operation"] != "content.review":
+        raise ValueError("content review operation drifted")
+    key = command["idempotencyKey"]
+    if (
+        type(key) is not str
+        or key != key.strip()
+        or not 1 <= len(key) <= 200
+        or type(command["requestHash"]) is not str
+        or _analysis_command_hash(
+            {name: value for name, value in command.items() if name != "requestHash"}
+        )
+        != command["requestHash"]
+    ):
+        raise ValueError("content review command identity drifted")
+    refs = {
+        "artifactRef": _content_exact_ref(command["artifactRef"], "ArtifactRevision"),
+        "taskRef": _content_exact_ref(command["taskRef"], "Task"),
+        "briefRef": _content_exact_ref(command["briefRef"], "TaskBriefRevision"),
+        "growthPlanRef": _content_exact_ref(command["growthPlanRef"], "GrowthPlanRevision"),
+        "reviewIssueRef": _content_exact_ref(command["reviewIssueRef"], "ReviewIssueRevision"),
+        "reviewerAuthorityRef": _content_exact_ref(
+            command["reviewerAuthorityRef"], "ReviewerAuthorityRevision"
+        ),
+    }
+    source_values = command["sourceArtifactRefs"]
+    if type(source_values) is not list or len(source_values) != 4:
+        raise ValueError("content review requires four source Artifacts")
+    source_refs = [_content_exact_ref(value, "ArtifactRevision") for value in source_values]
+    if len({(ref.resource_id, ref.revision, ref.content_hash) for ref in source_refs}) != 4:
+        raise ValueError("content review source Artifacts must be unique")
+    if command["artifactContentHash"] != command["artifactRef"]["contentHash"]:
+        raise ValueError("content review Artifact input hash drifted")
+    decision, return_stage = command["decision"], command["returnStage"]
+    if (decision, return_stage) not in {("ACCEPT", None), ("RETURN", "content_generation")}:
+        raise ValueError("content review decision or return stage drifted")
+    return {"key": key, "refs": refs, "sourceRefs": source_refs}
+
+
+class ContentReviewHostService:
+    """Persist one exact content decision and its feedback outbox atomically."""
+
+    executor_identity = "ecommerce-growth-content-review-host"
+
+    @staticmethod
+    def _artifact_authority(transaction, scope, command):
+        row = transaction.execute(
+            """SELECT artifact_id,run_id,artifact_type,content_hash,metadata,family_revision
+                 FROM public.aip_artifact
+                WHERE org_id=%s AND project_id=%s AND artifact_id=%s FOR SHARE""",
+            (*scope.key, command["artifactRef"]["resourceId"]),
+        ).fetchone()
+        if row is None or type(row["metadata"]) is not dict:
+            raise ValueError("content review Artifact authority is missing")
+        artifact = row["metadata"].get("ecommerceGrowthContentArtifact")
+        revision = 1 if row["family_revision"] is None else int(row["family_revision"])
+        expected_ref = {
+            "resourceType": "ArtifactRevision",
+            "resourceId": row["artifact_id"],
+            "revision": revision,
+            "contentHash": "sha256:" + row["content_hash"],
+        }
+        if (
+            type(artifact) is not dict
+            or set(artifact) != _READABLE_CONTENT_FIELDS
+            or _request_hash(artifact.get("artifactRef")) != _request_hash(expected_ref)
+            or _request_hash(command["artifactRef"]) != _request_hash(expected_ref)
+            or _request_hash(artifact.get("taskRef")) != _request_hash(command["taskRef"])
+            or _request_hash(artifact.get("briefRef")) != _request_hash(command["briefRef"])
+            or _request_hash(artifact.get("growthPlanRef")) != _request_hash(command["growthPlanRef"])
+            or _request_hash(artifact.get("sourceArtifactRefs"))
+            != _request_hash(command["sourceArtifactRefs"])
+            or budget_canonical_hash(
+                {name: value for name, value in artifact.items() if name != "artifactRef"},
+                prefixed=True,
+            )
+            != expected_ref["contentHash"]
+        ):
+            raise ValueError("content review Artifact exact projection drifted")
+        for name, maximum in (("productNames", 50), ("channels", 12), ("constraintChecks", 50)):
+            values = artifact[name]
+            if type(values) is not list or not 1 <= len(values) <= maximum or len(values) != len(set(values)):
+                raise ValueError(f"content review Artifact {name} drifted")
+            for value in values:
+                _content_business_text(value, name=name, limit=300)
+        _content_business_text(artifact["body"], name="body", limit=20_000)
+        facts = artifact["factSourceRefs"]
+        if type(facts) is not list or not 1 <= len(facts) <= 200:
+            raise ValueError("content review Artifact fact sources drifted")
+        for value in facts:
+            if type(value) is not dict or value.get("resourceType") not in {
+                "EvidenceBundleRevision", "DatasetRevision", "DataFulfillmentReceipt"
+            }:
+                raise ValueError("content review Artifact fact source type drifted")
+            _content_exact_ref(value, value["resourceType"])
+        if len({_request_hash(value) for value in facts}) != len(facts):
+            raise ValueError("content review Artifact fact sources must be unique")
+        source_ids = [item["resourceId"] for item in command["sourceArtifactRefs"]]
+        rows = transaction.execute(
+            """SELECT artifact_id,content_hash,family_revision FROM public.aip_artifact
+                WHERE org_id=%s AND project_id=%s AND artifact_id=ANY(%s)""",
+            (*scope.key, source_ids),
+        ).fetchall()
+        observed = {
+            item["artifact_id"]: {
+                "resourceType": "ArtifactRevision",
+                "resourceId": item["artifact_id"],
+                "revision": 1 if item["family_revision"] is None else int(item["family_revision"]),
+                "contentHash": "sha256:" + item["content_hash"],
+            }
+            for item in rows
+        }
+        if len(rows) != 4 or _request_hash(
+            [observed.get(identity) for identity in source_ids]
+        ) != _request_hash(command["sourceArtifactRefs"]):
+            raise ValueError("content review source Artifact authority drifted")
+        return deepcopy(artifact)
+
+    @staticmethod
+    def _task_brief_authority(transaction, scope, command):
+        task = transaction.execute(
+            """SELECT task_id,task_type,title,description,priority,goal,selection_ref,
+                      policy_revision,request_hash,version
+                 FROM public.aip_task
+                WHERE org_id=%s AND project_id=%s AND task_id=%s FOR SHARE""",
+            (*scope.key, command["taskRef"]["resourceId"]),
+        ).fetchone()
+        if task is None:
+            raise ValueError("content review Task authority is missing")
+        task_payload = {
+            "type": task["task_type"],
+            "title": task["title"],
+            "description": task["description"],
+            "priority": int(task["priority"]),
+            "goal": task["goal"],
+            "selectionRef": task["selection_ref"],
+            "policyRevision": task["policy_revision"],
+        }
+        expected_task = {
+            "resourceType": "Task",
+            "resourceId": task["task_id"],
+            "revision": int(task["version"]),
+            "contentHash": "sha256:" + _analysis_command_hash(task_payload).removeprefix("sha256:"),
+        }
+        if (
+            _request_hash(command["taskRef"]) != _request_hash(expected_task)
+            or task["request_hash"] != expected_task["contentHash"].removeprefix("sha256:")
+        ):
+            raise ValueError("content review Task exact authority drifted")
+        head = transaction.execute(
+            """SELECT task_id,current_revision,version FROM public.aip_task_brief_head
+                WHERE org_id=%s AND project_id=%s AND brief_id=%s FOR SHARE""",
+            (*scope.key, command["briefRef"]["resourceId"]),
+        ).fetchone()
+        brief = transaction.execute(
+            """SELECT task_id,brief_type,schema_ref,spec,content_hash,lifecycle
+                 FROM public.aip_task_brief_revision
+                WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=%s""",
+            (*scope.key, command["briefRef"]["resourceId"], command["briefRef"]["revision"]),
+        ).fetchone()
+        if head is None or brief is None:
+            raise ValueError("content review TaskBrief authority is missing")
+        expected_brief_hash = _analysis_command_hash(
+            {"briefType": brief["brief_type"], "schemaRef": brief["schema_ref"], "spec": brief["spec"]}
+        ).removeprefix("sha256:")
+        expected_brief = {
+            "resourceType": "TaskBriefRevision",
+            "resourceId": command["briefRef"]["resourceId"],
+            "revision": int(command["briefRef"]["revision"]),
+            "contentHash": "sha256:" + expected_brief_hash,
+        }
+        spec = brief["spec"]
+        if (
+            _request_hash(command["briefRef"]) != _request_hash(expected_brief)
+            or head["task_id"] != task["task_id"]
+            or int(head["current_revision"]) != expected_brief["revision"]
+            or int(head["version"]) != expected_brief["revision"]
+            or brief["task_id"] != task["task_id"]
+            or brief["brief_type"] != "content_campaign"
+            or brief["lifecycle"] != "draft"
+            or brief["content_hash"] != expected_brief_hash
+            or type(spec) is not dict
+            or _request_hash(spec.get("taskRef")) != _request_hash(command["taskRef"])
+            or _request_hash(spec.get("growthPlanRef")) != _request_hash(command["growthPlanRef"])
+            or _request_hash(spec.get("artifactRefs")) != _request_hash(command["sourceArtifactRefs"])
+            or spec.get("externalPublicationRequested") is not False
+        ):
+            raise ValueError("content review TaskBrief exact lineage drifted")
+        return _content_business_text(task["title"], name="business_task_title", limit=120)
+
+    @staticmethod
+    def _issue_authority(transaction, scope, command):
+        row = transaction.execute(
+            """SELECT * FROM public.aip_review_issue
+                WHERE org_id=%s AND project_id=%s AND issue_id=%s FOR SHARE""",
+            (*scope.key, command["reviewIssueRef"]["resourceId"]),
+        ).fetchone()
+        if row is None:
+            raise ValueError("content review ReviewIssue authority is missing")
+        issue = AipProductionContractStore()._review_issue(scope, row)
+        issue_payload = issue.model_dump(mode="json", by_alias=True)
+        raw_issue_payload = {
+            **issue_payload,
+            "ruleRef": row["rule_ref"],
+            "location": row["location"],
+            "evidenceRefs": row["evidence_refs"],
+        }
+        expected = review_issue_exact_ref(issue).model_dump(mode="json", by_alias=True)
+        if (
+            budget_canonical_hash(raw_issue_payload)
+            != budget_canonical_hash(issue_payload)
+            or expected["contentHash"]
+            != budget_canonical_hash(raw_issue_payload, prefixed=True)
+            or _request_hash(expected) != _request_hash(command["reviewIssueRef"])
+            or issue.status is not ReviewIssueStatus.OPEN
+            or issue.artifact_ref.artifact_id != command["artifactRef"]["resourceId"]
+            or "sha256:" + issue.artifact_ref.content_hash != command["artifactRef"]["contentHash"]
+            or (command["decision"] == "RETURN" and issue.return_stage != "content_generation")
+        ):
+            raise ValueError("content review ReviewIssue exact lineage drifted")
+
+    @staticmethod
+    def _reviewer_authority(transaction, scope, command):
+        authority_id = command["reviewerAuthorityRef"]["resourceId"]
+        plan_id, separator, slot_id = authority_id.rpartition("/")
+        if not separator or not plan_id or slot_id != "content.review":
+            raise ValueError("content review ReviewerAuthority identity drifted")
+        rows = transaction.execute(
+            """SELECT head.plan_id,head.current_revision,head.version,
+                      revision.profile,revision.template_ref,revision.slots,
+                      revision.merge_decisions,revision.profile_recommendation_ref,
+                      revision.profile_confirmation_id,revision.merge_policy_ref,
+                      revision.merge_decision_receipt_ids,revision.content_hash,
+                      revision.lifecycle
+                 FROM public.aip_responsibility_plan_head head
+                 JOIN public.aip_responsibility_plan_revision revision
+                   ON revision.org_id=head.org_id AND revision.project_id=head.project_id
+                  AND revision.plan_id=head.plan_id AND revision.revision=head.current_revision
+                WHERE head.org_id=%s AND head.project_id=%s
+                  AND head.plan_id=%s
+                  AND revision.lifecycle='frozen'
+                FOR SHARE OF head,revision""",
+            (*scope.key, plan_id),
+        ).fetchall()
+        matches = []
+        store = AipProductionContractStore(TransactionBoundConnectFactory(transaction, scope))
+        for row in rows:
+            plan = store.get_responsibility_plan(
+                scope, row["plan_id"], int(row["current_revision"]), conn=transaction
+            )
+            raw_plan = {
+                "profile": row["profile"],
+                "templateRef": row["template_ref"],
+                "slots": row["slots"],
+                "mergeDecisions": row["merge_decisions"],
+                "profileRecommendationRef": row["profile_recommendation_ref"],
+                "profileConfirmationId": row["profile_confirmation_id"],
+                "mergePolicyRef": row["merge_policy_ref"],
+                "mergeDecisionReceiptIds": row["merge_decision_receipt_ids"],
+            }
+            typed_plan = {
+                "profile": plan.profile,
+                "templateRef": plan.template_ref.model_dump(mode="json", by_alias=True),
+                "slots": [slot.model_dump(mode="json", by_alias=True) for slot in plan.slots],
+                "mergeDecisions": [
+                    decision.model_dump(mode="json", by_alias=True)
+                    for decision in plan.merge_decisions
+                ],
+                "profileRecommendationRef": None
+                if plan.profile_recommendation_ref is None
+                else plan.profile_recommendation_ref.model_dump(mode="json", by_alias=True),
+                "profileConfirmationId": plan.profile_confirmation_id,
+                "mergePolicyRef": None
+                if plan.merge_policy_ref is None
+                else plan.merge_policy_ref.model_dump(mode="json", by_alias=True),
+                "mergeDecisionReceiptIds": plan.merge_decision_receipt_ids,
+            }
+            if (
+                type(row["current_revision"]) is not int
+                or type(row["version"]) is not int
+                or row["current_revision"] != plan.revision
+                or row["version"] != plan.version
+                or production_contract_canonical_hash(raw_plan) != row["content_hash"]
+                or production_contract_canonical_hash(raw_plan)
+                != production_contract_canonical_hash(typed_plan)
+                or plan.content_hash != row["content_hash"]
+                or plan.lifecycle is not BriefLifecycle.FROZEN
+                or plan.readiness is not ContractReadiness.READY
+                or plan.coverage is not Coverage.COMPLETE
+                or plan.blockers
+                or plan.uncovered_slots
+            ):
+                continue
+            for slot in plan.slots:
+                if slot.slot_id != "content.review":
+                    continue
+                plan_ref = {
+                    "resourceType": "ResponsibilityPlanRevision",
+                    "resourceId": plan.plan_id,
+                    "revision": plan.revision,
+                    "contentHash": "sha256:" + plan.content_hash,
+                }
+                projection = {
+                    "responsibilityPlanRef": plan_ref,
+                    "slotId": slot.slot_id,
+                    "responsibilityType": slot.responsibility_type,
+                    "requiredCapabilityIds": slot.required_capability_ids,
+                    "assignee": slot.assignee.model_dump(mode="json", by_alias=True),
+                    "assigneeResolutionReceiptId": slot.assignee_resolution_receipt_id,
+                }
+                candidate = {
+                    "resourceType": "ReviewerAuthorityRevision",
+                    "resourceId": f"{plan.plan_id}/content.review",
+                    "revision": plan.revision,
+                    "contentHash": budget_canonical_hash(projection, prefixed=True),
+                }
+                if _request_hash(candidate) == _request_hash(command["reviewerAuthorityRef"]):
+                    matches.append(candidate)
+        if len(matches) != 1:
+            raise ValueError("content review ReviewerAuthority must match one current responsibility slot")
+
+    @staticmethod
+    def _feedback_plan(receipt, artifact, task_title):
+        review_ref = receipt["receiptRef"]
+        decision = receipt["decision"]
+        command_id = "feedback-" + budget_canonical_hash(
+            {"reviewReceiptRef": review_ref, "decision": decision}
+        )[:40]
+        kinds = (
+            ("daily_review", "improvement_observation", "memory_candidate")
+            if decision == "ACCEPT"
+            else ("content_return_target",)
+        )
+        titles = {
+            "daily_review": "今日内容复盘",
+            "improvement_observation": "内容效果改进建议",
+            "memory_candidate": "内容经验候选",
+            "content_return_target": "内容方案重新调整",
+        }
+        summaries = {
+            "daily_review": f"{task_title}的内容已通过评审，等待后续效果观察。",
+            "improvement_observation": f"{task_title}暂无足够证据判断效果，需要积累可比较的业务结果。",
+            "memory_candidate": f"{task_title}形成一条待治理的经验候选，尚未进入知识库。",
+            "content_return_target": f"{task_title}需要根据评审意见重新调整内容，原内容保留不变。",
+        }
+        _content_business_text(artifact["body"][:500], name="artifact_summary", limit=500)
+        segments = []
+        for sequence, kind in enumerate(kinds, start=1):
+            target_hash = budget_canonical_hash({"commandId": command_id, "kind": kind})
+            segments.append(
+                {
+                    "sequence": sequence,
+                    "kind": kind,
+                    "targetId": f"{kind}-{target_hash[:40]}",
+                    "businessTitle": titles[kind],
+                    "businessSummary": _content_business_text(
+                        summaries[kind], name="business_summary", limit=500
+                    ),
+                    "targetPhase": "content_generation" if kind == "content_return_target" else None,
+                }
+            )
+        canonical = {
+            "decision": decision,
+            "reviewReceiptRef": review_ref,
+            "artifactRef": receipt["artifactRef"],
+            "taskRef": receipt["taskRef"],
+            "briefRef": receipt["briefRef"],
+            "segments": segments,
+        }
+        return {
+            "commandId": command_id,
+            "requestHash": budget_canonical_hash(canonical, prefixed=True),
+            **canonical,
+            "sideEffects": {
+                "providerInvocationCount": 0,
+                "externalPublicationCount": 0,
+                "externalBusinessMutationCount": 0,
+                "taskCreatedCount": 0,
+                "budgetSettlementCount": 0,
+            },
+        }
+
+    @staticmethod
+    def _feedback_port(transaction, scope, occurred_at):
+        def target_not_wired(**_kwargs):
+            raise RuntimeError("content review host cannot execute feedback targets")
+
+        readers = {
+            kind: target_not_wired
+            for kind in (
+                "daily_review", "improvement_observation", "memory_candidate", "content_return_target"
+            )
+        }
+        return BoundEcommerceGrowthFeedbackPort(
+            transaction,
+            scope,
+            actor=ContentReviewHostService.executor_identity,
+            checked_at=occurred_at,
+            target_receipt_readers=readers,
+        )
+
+    @staticmethod
+    def _runtime_snapshot(transaction, dispatch_ref, checked_at):
+        row = transaction.execute(
+            """SELECT revision FROM public.extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s""",
+            (
+                dispatch_ref.org_id,
+                dispatch_ref.project_id,
+                UUID(str(dispatch_ref.installation_id)),
+                UUID(str(dispatch_ref.generation)),
+            ),
+        ).fetchone()
+        if row is None:
+            raise ValueError("content review runtime authority is missing")
+        return EcommerceGrowthDispatchSnapshot(
+            operation_id=dispatch_ref.operation_id,
+            dispatch_revision=dispatch_ref.dispatch_revision,
+            installation_id=UUID(str(dispatch_ref.installation_id)),
+            generation=UUID(str(dispatch_ref.generation)),
+            execution_epoch=dispatch_ref.execution_epoch,
+            cutover_group_id=UUID(str(dispatch_ref.cutover_group_id)),
+            cutover_group_revision=dispatch_ref.cutover_group_revision,
+            runtime_revision=int(row["revision"]),
+            checked_at=checked_at,
+        )
+
+    @staticmethod
+    def _feedback_matches(readback, plan):
+        if readback is None:
+            return False
+        immutable = {
+            key: readback.get(key)
+            for key in (
+                "commandId", "requestHash", "decision", "reviewReceiptRef",
+                "artifactRef", "taskRef", "briefRef"
+            )
+        }
+        expected = {key: plan[key] for key in immutable}
+        rows = readback.get("segments")
+        return (
+            _request_hash(immutable) == _request_hash(expected)
+            and type(rows) is list
+            and _request_hash([row.get("payload") for row in rows])
+            == _request_hash(plan["segments"])
+            and all(type(row.get("sequence")) is int and row["sequence"] == index
+                    for index, row in enumerate(rows, start=1))
+        )
+
+    def revalidate(self, *, transaction, scope, dispatch, command):
+        _strict_content_review_command(command)
+        if dispatch.operation_id != "ecommerce_growth_content_review":
+            raise ValueError("content review dispatch operation drifted")
+        artifact = self._artifact_authority(transaction, scope, command)
+        self._task_brief_authority(transaction, scope, command)
+        self._issue_authority(transaction, scope, command)
+        self._reviewer_authority(transaction, scope, command)
+        if _request_hash(artifact["growthPlanRef"]) != _request_hash(command["growthPlanRef"]):
+            raise ValueError("content review GrowthPlan lineage drifted")
+
+    def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
+        parsed = _strict_content_review_command(command)
+        effective_at = checked_at
+        runtime_hash = _request_hash(command)
+        row = transaction.execute(
+            """SELECT request_hash,response FROM public.ecommerce_growth_runtime_command_receipt
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_review' AND idempotency_key=%s""",
+            (*scope.key, parsed["key"]),
+        ).fetchone()
+        if row is not None:
+            if row["request_hash"] != runtime_hash or type(row["response"]) is not dict:
+                raise ValueError("content review idempotency content drifted")
+            receipt = deepcopy(row["response"])
+        else:
+            body = {
+                "requestHash": command["requestHash"],
+                "decision": command["decision"],
+                "artifactRef": command["artifactRef"],
+                "taskRef": command["taskRef"],
+                "briefRef": command["briefRef"],
+                "reviewIssueRef": command["reviewIssueRef"],
+                "reviewerAuthorityRef": command["reviewerAuthorityRef"],
+                "returnStage": command["returnStage"],
+                "replayed": False,
+                "sideEffects": {
+                    "externalPublicationCount": 0,
+                    "externalBusinessMutationCount": 0,
+                },
+            }
+            receipt_id = str(
+                uuid5(CONTENT_REVIEW_RECEIPT_NAMESPACE, "\x1f".join((*scope.key, parsed["key"])))
+            )
+            receipt = {
+                "receiptRef": {
+                    "resourceType": "ContentReviewReceipt",
+                    "resourceId": receipt_id,
+                    "revision": 1,
+                    "contentHash": _analysis_command_hash(body),
+                    "receiptId": receipt_id,
+                },
+                **body,
+            }
+            snapshot = self._runtime_snapshot(transaction, dispatch_ref, checked_at)
+            receipt = BoundEcommerceGrowthRuntimeStore(transaction, scope).put(
+                operation_id="ecommerce_growth_content_review",
+                idempotency_key=parsed["key"],
+                request_hash=runtime_hash,
+                dispatch=snapshot,
+                response=receipt,
+                target_receipt_ref=receipt["receiptRef"],
+                actor=self.executor_identity,
+                occurred_at=effective_at,
+            ).response
+        artifact = self._artifact_authority(transaction, scope, command)
+        task_title = self._task_brief_authority(transaction, scope, command)
+        plan = self._feedback_plan(receipt, artifact, task_title)
+        port = self._feedback_port(transaction, scope, effective_at)
+        enqueue = port.enqueue(review_receipt=receipt, feedback_plan=plan)
+        readback = port.read(command_id=plan["commandId"])
+        if not self._feedback_matches(readback, plan):
+            raise ValueError("content review feedback authority drifted")
+        if enqueue["replayed"] is False and any(
+            row["state"] != "pending" or row["attempt"] != 0
+            for row in readback["segments"]
+        ):
+            raise ValueError("content review initial feedback state drifted")
+        return receipt
+
+    def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        if type(receipt) is not dict or set(receipt) != _CONTENT_REVIEW_RESPONSE_FIELDS:
+            return {}
+        parsed = _strict_content_review_command(command)
+        runtime_row = transaction.execute(
+            """SELECT request_hash,response FROM public.ecommerce_growth_runtime_command_receipt
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_review' AND idempotency_key=%s""",
+            (*scope.key, parsed["key"]),
+        ).fetchone()
+        if (
+            runtime_row is None
+            or runtime_row["request_hash"] != _request_hash(command)
+            or type(runtime_row["response"]) is not dict
+            or _request_hash(runtime_row["response"]) != _request_hash(receipt)
+        ):
+            return {}
+        expected_body = {
+            "requestHash": command["requestHash"],
+            "decision": command["decision"],
+            "artifactRef": command["artifactRef"],
+            "taskRef": command["taskRef"],
+            "briefRef": command["briefRef"],
+            "reviewIssueRef": command["reviewIssueRef"],
+            "reviewerAuthorityRef": command["reviewerAuthorityRef"],
+            "returnStage": command["returnStage"],
+            "replayed": False,
+            "sideEffects": {
+                "externalPublicationCount": 0,
+                "externalBusinessMutationCount": 0,
+            },
+        }
+        expected_ref = {
+            "resourceType": "ContentReviewReceipt",
+            "resourceId": str(
+                uuid5(CONTENT_REVIEW_RECEIPT_NAMESPACE, "\x1f".join((*scope.key, parsed["key"])))
+            ),
+            "revision": 1,
+            "contentHash": _analysis_command_hash(expected_body),
+            "receiptId": str(
+                uuid5(CONTENT_REVIEW_RECEIPT_NAMESPACE, "\x1f".join((*scope.key, parsed["key"])))
+            ),
+        }
+        expected_receipt = {"receiptRef": expected_ref, **expected_body}
+        if _request_hash(receipt) != _request_hash(expected_receipt):
+            return {}
+        artifact = self._artifact_authority(transaction, scope, command)
+        task_title = self._task_brief_authority(transaction, scope, command)
+        plan = self._feedback_plan(receipt, artifact, task_title)
+        readback = self._feedback_port(transaction, scope, dispatch.checked_at).read(
+            command_id=plan["commandId"]
+        )
+        return receipt if self._feedback_matches(readback, plan) else {}
+
+
 class InvestigationDescribeAdapter(_ExplicitRuntimeAdapter):
     SPEC = _AdapterSpec("ecommerce_growth_investigation_describe", ("channel", "business_entity", "source_readiness"), ("receiptRef",))
 
@@ -4031,6 +4689,8 @@ __all__ = [adapter.__name__ for adapter in RUNTIME_ADAPTER_TYPES] + [
     "DataFulfillHostService",
     "AnalysisAdvanceHostService",
     "ReviewAdvanceHostService",
+    "ContentGenerateHostService",
+    "ContentReviewHostService",
     "TransactionBoundConnectFactory",
     "TrustedEcommerceGrowthDomainService",
 ]
