@@ -10,7 +10,7 @@ import json
 import math
 import re
 from typing import Any, Mapping, Protocol
-from uuid import UUID
+from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
 
 from aos_api.ecommerce_growth_host_ports import (
@@ -27,6 +27,7 @@ from aos_api.ecommerce_business_investigation_aip_composition import (
 )
 from aos_api.ecommerce_business_investigation_application import (
     CreateBusinessInvestigationCaseRequest,
+    CreateBusinessInvestigationRunRequest,
     EcommerceBusinessInvestigationApplication,
 )
 from aos_api.ecommerce_business_investigation_case import BusinessInvestigationCaseStore
@@ -54,7 +55,10 @@ from aos_api.ecommerce_business_investigation_data_command import (
     EcommerceBusinessInvestigationDataCommandService,
     RequestBusinessInvestigationMissingDataCommand,
 )
-from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunStore
+from aos_api.ecommerce_business_investigation_run import (
+    BusinessInvestigationRunStore,
+    BusinessInvestigationTriggerKind,
+)
 from aos_api.aip_business_investigation_runtime import BusinessInvestigationRuntimeBinder
 from aos_api.aip_business_investigation_compile_saga import BusinessInvestigationCompilationReceiptStore
 from aos_api.aip_task_store import AipTaskStore
@@ -718,6 +722,307 @@ class DataFulfillHostService:
         return expected if dict(receipt) == expected else {}
 
 
+_ANALYSIS_START_FIELDS = frozenset(
+    {
+        "operation",
+        "occurrenceRef",
+        "caseRef",
+        "profileRef",
+        "cutoffAt",
+        "idempotencyKey",
+        "priorReceiptRef",
+        "requirementRef",
+        "fulfillmentRef",
+        "checkpointRef",
+        "requestHash",
+    }
+)
+_ANALYSIS_START_PRIOR = (
+    "priorReceiptRef",
+    "requirementRef",
+    "fulfillmentRef",
+    "checkpointRef",
+)
+ANALYSIS_RECEIPT_NAMESPACE = UUID("a31a1c70-7d4e-4b2a-9c18-6e5f4d3c2b1a")
+
+
+def _analysis_command_hash(payload: Mapping[str, Any]) -> str:
+    encoded = json.dumps(
+        dict(payload), ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _analysis_plan_ref(plan_ref) -> dict[str, Any]:
+    payload = plan_ref.model_dump(by_alias=True, mode="json", exclude_none=True)
+    content_hash = payload.get("contentHash")
+    if type(content_hash) is str and not content_hash.startswith("sha256:"):
+        payload["contentHash"] = "sha256:" + content_hash
+    return payload
+
+
+def _strict_analysis_start_command(command: Mapping[str, Any]) -> tuple[str, InvestigationExactRef, InvestigationExactRef, InvestigationExactRef]:
+    if type(command) is not dict:
+        raise ValueError("analysis command must be a strict mapping")
+    operation = command.get("operation")
+    if operation != "runtime.analysis.start":
+        raise ValueError("analysis runtime mode is not wired")
+    if set(command) != _ANALYSIS_START_FIELDS:
+        raise ValueError("analysis start command has an invalid envelope")
+    key = command["idempotencyKey"]
+    request_hash = command["requestHash"]
+    if type(key) is not str or key != key.strip() or not 1 <= len(key) <= 200:
+        raise ValueError("analysis idempotencyKey is invalid")
+    if type(request_hash) is not str or not re.fullmatch(r"sha256:[0-9a-f]{64}", request_hash):
+        raise ValueError("analysis requestHash is invalid")
+    body = {name: command[name] for name in command if name != "requestHash"}
+    if _analysis_command_hash(body) != request_hash:
+        raise ValueError("analysis request hash drifted")
+    if any(command[name] is not None for name in _ANALYSIS_START_PRIOR):
+        raise ValueError("START cannot claim prior runtime authority")
+    cutoff = command["cutoffAt"]
+    if type(cutoff) is not str:
+        raise ValueError("analysis cutoffAt must be an ISO datetime")
+    parsed = datetime.fromisoformat(cutoff)
+    if parsed.utcoffset() is None:
+        raise ValueError("analysis cutoffAt must include timezone")
+    occurrence_ref = InvestigationExactRef.model_validate(command["occurrenceRef"])
+    case_ref = InvestigationExactRef.model_validate(command["caseRef"])
+    profile_ref = InvestigationExactRef.model_validate(command["profileRef"])
+    if occurrence_ref.resource_type != "AutomationOccurrence":
+        raise ValueError("analysis occurrence type drifted")
+    if case_ref.resource_type != "BusinessInvestigationCaseRevision":
+        raise ValueError("analysis case type drifted")
+    if profile_ref.resource_type != "InvestigationProfileRevision":
+        raise ValueError("analysis profile type drifted")
+    return key, occurrence_ref, case_ref, profile_ref
+
+
+class _HostAnalysisReceiptStore:
+    """Persist AnalysisRuntimeReceipt so verify_receipt can reread before the adapter journal."""
+
+    def __init__(self, transaction: HostTransaction, scope: TenantScope) -> None:
+        self._transaction = transaction
+        self._scope = scope
+
+    def read(self, key: str) -> dict[str, Any] | None:
+        return BoundEcommerceGrowthRuntimeStore(self._transaction, self._scope).read(
+            operation_id="ecommerce_growth_analysis_advance",
+            idempotency_key=key,
+        )
+
+    def put(
+        self,
+        key: str,
+        payload: Mapping[str, Any],
+        *,
+        dispatch_ref=None,
+        checked_at=None,
+    ) -> dict[str, Any]:
+        existing = self.read(key)
+        body = dict(payload)
+        if existing is not None:
+            if existing != body:
+                raise ValueError("analysis runtime Receipt idempotency content drift")
+            return existing
+        if dispatch_ref is None or checked_at is None:
+            raise ValueError("analysis runtime Receipt persistence requires dispatch authority")
+        row = self._transaction.execute(
+            """SELECT revision FROM extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s""",
+            (
+                *self._scope.key,
+                UUID(str(dispatch_ref.installation_id)),
+                UUID(str(dispatch_ref.generation)),
+            ),
+        ).fetchone()
+        if row is None:
+            raise ValueError("analysis runtime binding is missing")
+        snapshot = EcommerceGrowthDispatchSnapshot(
+            operation_id=dispatch_ref.operation_id,
+            dispatch_revision=int(dispatch_ref.dispatch_revision),
+            installation_id=UUID(str(dispatch_ref.installation_id)),
+            generation=UUID(str(dispatch_ref.generation)),
+            execution_epoch=int(dispatch_ref.execution_epoch),
+            cutover_group_id=UUID(str(dispatch_ref.cutover_group_id)),
+            cutover_group_revision=int(dispatch_ref.cutover_group_revision),
+            runtime_revision=int(row["revision"]),
+            checked_at=checked_at,
+        )
+        record = BoundEcommerceGrowthRuntimeStore(self._transaction, self._scope).put(
+            operation_id="ecommerce_growth_analysis_advance",
+            idempotency_key=key,
+            request_hash=str(body["requestHash"]),
+            dispatch=snapshot,
+            response=body,
+            target_receipt_ref=body["receiptRef"],
+            actor="ecommerce-growth-analysis-host",
+            occurred_at=checked_at,
+        )
+        return record.response
+
+
+class AnalysisAdvanceHostService:
+    """START-only recoverable analysis host; resume/reconcile remain fail-closed."""
+
+    executor_identity = "ecommerce-growth-analysis-host"
+
+    @staticmethod
+    def _components(transaction, scope):
+        factory = TransactionBoundConnectFactory(transaction, scope)
+        return (
+            lambda occurrence_id: _occurrence_payload(transaction, scope, occurrence_id),
+            BusinessInvestigationCaseStore(factory),
+            _HostAnalysisReceiptStore(transaction, scope),
+        )
+
+    @staticmethod
+    def _occurrence_content_hash(payload: Mapping[str, Any]) -> str:
+        return budget_canonical_hash(dict(payload), prefixed=True)
+
+    def _start_lineage(self, *, transaction, scope, command, occurred_at):
+        factory = TransactionBoundConnectFactory(transaction, scope)
+        cases = BusinessInvestigationCaseStore(factory)
+        runs = BusinessInvestigationRunStore(factory)
+        receipts = BusinessInvestigationCompilationReceiptStore(factory)
+        binder = BusinessInvestigationRuntimeBinder(AipTaskStore(factory))
+        case = cases.get(scope, command["caseRef"]["resourceId"])
+        run_id = "analysis-" + hashlib.sha256(
+            "\x1f".join((*scope.key, command["idempotencyKey"])).encode()
+        ).hexdigest()[:32]
+        result = EcommerceBusinessInvestigationApplication(
+            case_store=cases,
+            run_store=runs,
+            case_selection_resolver=_AlreadyValidatedCaseSelection(),
+        ).create_run(
+            scope,
+            case.case_id,
+            CreateBusinessInvestigationRunRequest(
+                run_id=run_id,
+                case_ref=InvestigationExactRef.model_validate(command["caseRef"]),
+                analysis_type=case.analysis_type,
+                trigger_kind=BusinessInvestigationTriggerKind.RECOVERY,
+                trigger_key=command["idempotencyKey"],
+            ),
+            idempotency_key=command["idempotencyKey"],
+            actor=self.executor_identity,
+            occurred_at=occurred_at,
+        )
+        run = result.run
+        run_ref = InvestigationExactRef(
+            resource_type="BusinessInvestigationRun",
+            resource_id=run.authority.run_id,
+            revision=run.authority.version,
+            content_hash=run.authority.content_hash,
+        )
+        compilation = receipts.get_for_run(scope, run_ref)
+        runtime = binder.bind_receipt(scope, compilation, run)
+        binding_hash = runtime.binding_hash
+        if not binding_hash.startswith("sha256:"):
+            binding_hash = "sha256:" + binding_hash
+        return {
+            "runRef": run_ref.model_dump(by_alias=True, mode="json", exclude_none=True),
+            "compilationRef": compilation.exact_ref.model_dump(
+                by_alias=True, mode="json", exclude_none=True
+            ),
+            "planRef": _analysis_plan_ref(compilation.plan_ref),
+            "taskRunRef": {
+                "resourceType": "TaskRun",
+                "resourceId": runtime.task_run_ref.resource_id,
+                "revision": runtime.task_run_ref.version,
+                "contentHash": binding_hash,
+            },
+        }
+
+    def _preparing_receipt(self, command, lineage, scope, key):
+        body = {
+            "requestHash": command["requestHash"],
+            "occurrenceRef": command["occurrenceRef"],
+            "caseRef": command["caseRef"],
+            "profileRef": command["profileRef"],
+            "cutoffAt": command["cutoffAt"],
+            "runRef": lineage["runRef"],
+            "compilationRef": lineage["compilationRef"],
+            "planRef": lineage["planRef"],
+            "taskRunRef": lineage["taskRunRef"],
+            "phase": "PREPARING",
+            "recoverableAction": "CONTINUE",
+            "checkpointRef": None,
+            "priorCheckpointRef": None,
+            "requirementRef": None,
+            "fulfillmentRef": None,
+            "sourceReadinessRef": None,
+            "mappingRef": None,
+            "evidenceRefs": [],
+            "observedAt": None,
+            "targetReceiptRef": None,
+            "completed": False,
+        }
+        receipt_id = str(uuid5(ANALYSIS_RECEIPT_NAMESPACE, "\x1f".join((*scope.key, key))))
+        return {
+            "receiptRef": {
+                "resourceType": "AnalysisRuntimeReceipt",
+                "resourceId": receipt_id,
+                "revision": 1,
+                "contentHash": _analysis_command_hash(body),
+                "receiptId": receipt_id,
+            },
+            **body,
+        }
+
+    def revalidate(self, *, transaction, scope, dispatch, command):
+        key, occurrence_ref, case_ref, profile_ref = _strict_analysis_start_command(command)
+        if dispatch.operation_id != "ecommerce_growth_analysis_advance":
+            raise ValueError("analysis dispatch operation drifted")
+        occurrence_reader, cases, _receipts = self._components(transaction, scope)
+        try:
+            occurrence_id = UUID(str(occurrence_ref.resource_id))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("analysis occurrence identity is invalid") from exc
+        authority = occurrence_reader(occurrence_id)
+        expected_occurrence = {
+            "resourceType": "AutomationOccurrence",
+            "resourceId": str(authority["occurrenceId"]),
+            "revision": 1,
+            "contentHash": self._occurrence_content_hash(authority),
+        }
+        if command["occurrenceRef"] != expected_occurrence:
+            raise ValueError("analysis occurrence lineage drifted")
+        case = cases.get(scope, case_ref.resource_id)
+        if _case_ref(case) != command["caseRef"]:
+            raise ValueError("analysis case lineage drifted")
+        profile = case.investigation_profile_ref.model_dump(
+            by_alias=True, mode="json", exclude_none=True
+        )
+        if profile != command["profileRef"] or profile_ref.resource_id != profile["resourceId"]:
+            raise ValueError("analysis profile lineage drifted")
+        if not key:
+            raise ValueError("analysis idempotencyKey is invalid")
+
+    def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
+        key, _occurrence_ref, _case_ref_value, _profile_ref = _strict_analysis_start_command(command)
+        _reader, _cases, receipts = self._components(transaction, scope)
+        existing = receipts.read(key)
+        if existing is not None:
+            return existing
+        lineage = self._start_lineage(
+            transaction=transaction,
+            scope=scope,
+            command=command,
+            occurred_at=occurred_at or checked_at,
+        )
+        payload = self._preparing_receipt(command, lineage, scope, key)
+        return receipts.put(key, payload, dispatch_ref=dispatch_ref, checked_at=checked_at)
+
+    def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        key, _occurrence_ref, _case_ref_value, _profile_ref = _strict_analysis_start_command(command)
+        _reader, _cases, receipts = self._components(transaction, scope)
+        expected = receipts.read(key)
+        if expected is None or type(receipt) is not dict:
+            return {}
+        return expected if dict(receipt) == expected else {}
+
+
 class CasePutHostService:
     """Current-authority Case write in the locked HostPort transaction."""
 
@@ -1200,6 +1505,7 @@ __all__ = [adapter.__name__ for adapter in RUNTIME_ADAPTER_TYPES] + [
     "ScheduleTriggerHostService",
     "DataRequirementRequestHostService",
     "DataFulfillHostService",
+    "AnalysisAdvanceHostService",
     "TransactionBoundConnectFactory",
     "TrustedEcommerceGrowthDomainService",
 ]
