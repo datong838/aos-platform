@@ -25,6 +25,12 @@ from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.aip_production_contracts import CreateBriefRequest
 from aos_api.aip_task_models import CreateTaskRequest
 from aos_api.aip_contracts import ResourceRef
+from aos_api.ecommerce_analyst_authority_contracts import (
+    AnalystExactRef,
+    GrowthPlanRevision,
+    GrowthPlanLifecycle,
+)
+from aos_api.ecommerce_analyst_authority_store import canonical_hash as analyst_canonical_hash
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.ecommerce_business_investigation_aip_composition import (
     PostgresAipProductionCompositionSource,
@@ -1281,6 +1287,76 @@ class ReviewAdvanceHostService:
     def _occurrence_content_hash(payload: Mapping[str, Any]) -> str:
         return budget_canonical_hash(dict(payload), prefixed=True)
 
+    @staticmethod
+    def _revalidate_growth_plan(*, transaction, scope, command) -> None:
+        supplied = InvestigationExactRef.model_validate(command["growthPlanRef"])
+        if supplied.resource_type != "GrowthPlanRevision" or type(supplied.revision) is not int:
+            raise ValueError("review GrowthPlan exact ref is invalid")
+        owner_ref = AnalystExactRef(
+            resource_type="GrowthPlanRevision",
+            resource_id=supplied.resource_id,
+            revision=supplied.revision,
+            content_hash=supplied.content_hash.removeprefix("sha256:"),
+        )
+        locked = transaction.execute(
+            """SELECT head.current_revision,revision.content_hash,revision.receipt_id,
+                       revision.payload,revision.created_by
+                FROM public.ecommerce_analyst_growth_plan_head head
+                JOIN public.ecommerce_analyst_growth_plan_revision revision
+                  ON revision.org_id=head.org_id AND revision.project_id=head.project_id
+                 AND revision.plan_id=head.plan_id AND revision.revision=%s
+                WHERE head.org_id=%s AND head.project_id=%s AND head.plan_id=%s
+                FOR SHARE OF head""",
+            (owner_ref.revision, *scope.key, owner_ref.resource_id),
+        ).fetchone()
+        if (
+            locked is None
+            or int(locked["current_revision"]) != owner_ref.revision
+            or locked["content_hash"] != owner_ref.content_hash
+        ):
+            raise ValueError("review GrowthPlan is not the current exact revision")
+        receipt = transaction.execute(
+            """SELECT request_hash,result_ref,created_by
+                FROM public.ecommerce_analyst_authority_receipt
+                WHERE org_id=%s AND project_id=%s AND receipt_id=%s
+                  AND operation='analyst.growth_plan_publish'""",
+            (*scope.key, locked["receipt_id"]),
+        ).fetchone()
+        payload = locked["payload"]
+        plan = GrowthPlanRevision.model_validate(payload)
+        expected = {
+            "resourceType": "GrowthPlanRevision",
+            "resourceId": plan.plan_id,
+            "revision": plan.revision,
+            "contentHash": "sha256:" + plan.content_hash,
+        }
+        expected_owner_result = {
+            "resourceType": "GrowthPlanRevision",
+            "resourceId": plan.plan_id,
+            "revision": plan.revision,
+            "contentHash": plan.content_hash,
+        }
+        expected_request_hash = analyst_canonical_hash(
+            {"expectedVersion": plan.revision - 1, "revision": payload}
+        )
+        if (
+            expected != command["growthPlanRef"]
+            or plan.lifecycle is not GrowthPlanLifecycle.APPROVED
+            or plan.revision != owner_ref.revision
+            or plan.version != owner_ref.revision
+            or plan.tenant.org_id != scope.org_id
+            or plan.tenant.project_id != scope.project_id
+            or plan.content_hash != owner_ref.content_hash
+            or plan.created_by != locked["created_by"]
+            or receipt is None
+            or receipt["request_hash"] != expected_request_hash
+            or receipt["created_by"] != locked["created_by"]
+            or receipt["result_ref"] != expected_owner_result
+            or analyst_canonical_hash(receipt["result_ref"])
+            != analyst_canonical_hash(expected_owner_result)
+        ):
+            raise ValueError("review GrowthPlan must be current and APPROVED")
+
     def _review_lineage(self, *, transaction, scope, command, occurred_at):
         if not isinstance(occurred_at, datetime) or occurred_at.utcoffset() is None:
             raise ValueError("review lineage time must include timezone")
@@ -1534,6 +1610,11 @@ class ReviewAdvanceHostService:
         case = cases.get(scope, case_ref.resource_id)
         if _case_ref(case) != command["caseRef"]:
             raise ValueError("review case lineage drifted")
+        self._revalidate_growth_plan(
+            transaction=transaction,
+            scope=scope,
+            command=command,
+        )
         if not key:
             raise ValueError("review idempotencyKey is invalid")
 
