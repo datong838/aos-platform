@@ -35,13 +35,20 @@ def _locked(conn, *, org_id,project_id,operation_id,expected_revision,installati
 
 
 def begin_disable(conn, **args):
+    dependent=args.pop('dependent',None)
     identity,installation_id,request,revision=_locked(conn,**args,phase='accepted')
-    return RuntimeBindingStore().fence(conn,org_id=identity[0],project_id=identity[1],installation_id=installation_id,
+    result=RuntimeBindingStore().fence(conn,org_id=identity[0],project_id=identity[1],installation_id=installation_id,
         generation=request.generation,operation_id=identity[2],expected_operation_revision=revision,
         expected_binding_revision=request.bindingRevision)
+    if dependent is not None:
+        hook=getattr(dependent,'after_runtime_fenced',None)
+        if not callable(hook):raise RuntimeConflict('valid disable dependent required')
+        hook(conn,org_id=identity[0],project_id=identity[1],runtime_operation_id=identity[2])
+    return result
 
 
 def finish_disable(conn, *, check_drained, **args):
+    dependent=args.pop('dependent',None)
     identity,installation_id,request,revision=_locked(conn,**args,phase='fencing')
     event=conn.execute('''SELECT payload,payload_hash FROM extension_runtime_event
         WHERE org_id=%s AND project_id=%s AND operation_id=%s AND sequence=%s AND type='fencing' ''',
@@ -71,5 +78,10 @@ def finish_disable(conn, *, check_drained, **args):
     revision+=1
     operations._event(conn,*identity,revision,'disabled_committed',dict(installationId=str(installation_id),
         generation=request.generation,bindingRevision=brev+1,executionEpoch=epoch,resourcesRetained=True))
-    return operations.advance(conn,org_id=identity[0],project_id=identity[1],operation_id=identity[2],
+    result=operations.advance(conn,org_id=identity[0],project_id=identity[1],operation_id=identity[2],
         expected_revision=revision,phase='succeeded')
+    if dependent is not None:
+        hook=getattr(dependent,'after_runtime_disabled',None)
+        if not callable(hook):raise RuntimeConflict('valid disable dependent required')
+        hook(conn,org_id=identity[0],project_id=identity[1],runtime_operation_id=identity[2])
+    return result

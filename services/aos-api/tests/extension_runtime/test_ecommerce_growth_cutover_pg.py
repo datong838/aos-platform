@@ -35,6 +35,7 @@ from aos_api.ecommerce_growth_lifecycle import (
     EcommerceGrowthLifecycleConflict,
 )
 from aos_api.extension_runtime.binding_store import RuntimeBindingStore
+from aos_api.extension_runtime.disable_executor import RuntimeDisableExecutor
 from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
 from aos_api.tenant_scope import TenantScope
 
@@ -196,6 +197,25 @@ def _connection(
         except Exception:
             conn.rollback()
             raise
+        finally:
+            conn.close()
+
+    return connect
+
+
+def _idle_runtime_connection(database):
+    @contextmanager
+    def connect():
+        conn = psycopg.connect(
+            **{**PG, "user": database.role}, autocommit=False, row_factory=dict_row
+        )
+        try:
+            conn.execute("SET ROLE aos_runtime")
+            conn.execute(
+                sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema))
+            )
+            conn.commit()
+            yield conn
         finally:
             conn.close()
 
@@ -1613,6 +1633,152 @@ def test_resumed_disable_fences_then_detaches_exact_dispatch_group(database):
     assert database.owner.execute(
         "SELECT count(*) AS n FROM extension_dispatch_claim_gate"
     ).fetchone()["n"] == 0
+
+
+def test_disable_executor_wires_exact_ecommerce_dependent_across_two_transactions(
+    database,
+):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request, _ = _resumed_activation(database, scope)
+    with _connection(database, runtime=True)(scope) as conn:
+        accepted = RuntimeOperationStore().accept(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            installation_id=prepare_request.target_installation_id,
+            kind="disable",
+            idempotency_key="d6-executor-disable",
+            requested_by="runtime-owner",
+            expected_installation_etag=1,
+            deadline=datetime.now(timezone.utc) + timedelta(minutes=5),
+            binding_target={
+                "generation": str(prepare_request.target_generation),
+                "bindingRevision": 15,
+            },
+        )
+        conn.commit()
+
+    class InstallationLock:
+        @staticmethod
+        def lock_for_transition_in_transaction(conn, **_):
+            return object()
+
+    executor = RuntimeDisableExecutor(
+        connect=_idle_runtime_connection(database),
+        installation_store=InstallationLock(),
+        check_current_permission=lambda **_: True,
+        check_drained=lambda *_args, **_kwargs: True,
+        dependent=EcommerceGrowthDisableDependent(schema=database.schema),
+    )
+    result = executor.execute(
+        org_id=scope.org_id,
+        project_id=scope.project_id,
+        operation_id=accepted.operation_id,
+        expected_revision=accepted.revision,
+    )
+    assert result.status == "succeeded" and result.phase == "succeeded"
+    assert database.owner.execute(
+        """SELECT count(*) AS n FROM extension_dispatch_lifecycle_receipt
+             WHERE runtime_operation_id=%s""",
+        (accepted.operation_id,),
+    ).fetchone()["n"] == 2
+    assert database.owner.execute(
+        "SELECT status FROM extension_dispatch_lifecycle_operation"
+    ).fetchone()["status"] == "detached"
+    assert database.owner.execute(
+        """SELECT count(*) AS n FROM extension_operation_dispatch_binding
+             WHERE handler_kind='legacy' AND NOT operation_fence
+               AND revision=8 AND cutover_group_revision=14"""
+    ).fetchone()["n"] == 9
+
+
+@pytest.mark.parametrize("failure_phase", ["fence", "detach"])
+def test_disable_executor_rolls_back_the_exact_failing_dependent_transaction(
+    database, failure_phase
+):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request, _ = _resumed_activation(database, scope)
+    with _connection(database, runtime=True)(scope) as conn:
+        accepted = RuntimeOperationStore().accept(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            installation_id=prepare_request.target_installation_id,
+            kind="disable",
+            idempotency_key=f"d6-{failure_phase}-rollback",
+            requested_by="runtime-owner",
+            expected_installation_etag=1,
+            deadline=datetime.now(timezone.utc) + timedelta(minutes=5),
+            binding_target={
+                "generation": str(prepare_request.target_generation),
+                "bindingRevision": 15,
+            },
+        )
+        conn.commit()
+
+    concrete = EcommerceGrowthDisableDependent(schema=database.schema)
+
+    class FailingDependent:
+        def after_runtime_fenced(self, conn, **kwargs):
+            result = concrete.after_runtime_fenced(conn, **kwargs)
+            if failure_phase == "fence":
+                raise RuntimeError("fence hook rollback")
+            return result
+
+        def after_runtime_disabled(self, conn, **kwargs):
+            result = concrete.after_runtime_disabled(conn, **kwargs)
+            if failure_phase == "detach":
+                raise RuntimeError("detach hook rollback")
+            return result
+
+    class InstallationLock:
+        @staticmethod
+        def lock_for_transition_in_transaction(conn, **_):
+            return object()
+
+    executor = RuntimeDisableExecutor(
+        connect=_idle_runtime_connection(database),
+        installation_store=InstallationLock(),
+        check_current_permission=lambda **_: True,
+        check_drained=lambda *_args, **_kwargs: True,
+        dependent=FailingDependent(),
+    )
+    with pytest.raises(RuntimeError, match=f"{failure_phase} hook rollback"):
+        executor.execute(
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            operation_id=accepted.operation_id,
+            expected_revision=accepted.revision,
+        )
+    operation = database.owner.execute(
+        "SELECT status,phase FROM extension_runtime_operation WHERE operation_id=%s",
+        (accepted.operation_id,),
+    ).fetchone()
+    binding = database.owner.execute(
+        "SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding"
+    ).fetchone()
+    lifecycle_count = database.owner.execute(
+        "SELECT count(*) AS n FROM extension_dispatch_lifecycle_operation"
+    ).fetchone()["n"]
+    if failure_phase == "fence":
+        assert operation == {"status": "accepted", "phase": "accepted"}
+        assert binding == {
+            "enabled": True,
+            "operation_fence": False,
+            "observed_state": "ready",
+        }
+        assert lifecycle_count == 0
+    else:
+        assert operation == {"status": "running", "phase": "fencing"}
+        assert binding == {
+            "enabled": False,
+            "operation_fence": True,
+            "observed_state": "draining",
+        }
+        assert lifecycle_count == 1
+        assert database.owner.execute(
+            "SELECT status FROM extension_dispatch_lifecycle_operation"
+        ).fetchone()["status"] == "fenced"
 
 
 def test_direct_disable_detach_without_receipt_rolls_back(database):

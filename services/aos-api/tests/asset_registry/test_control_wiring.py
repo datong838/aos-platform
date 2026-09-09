@@ -322,6 +322,7 @@ def test_runtime_control_plane_uses_one_store_and_formal_configuration_sources()
         POLICY_AUTHORITY,
         ROLE_AUTHORITY,
     )
+    from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
 
     plane = control_wiring.build_runtime_control_plane()
 
@@ -332,6 +333,7 @@ def test_runtime_control_plane_uses_one_store_and_formal_configuration_sources()
     assert plane.lifecycle_service._revalidator is plane.revalidator
     assert plane.configuration_service._revalidator is plane.revalidator
     assert plane.configuration_service._authorize is plane.configuration_authorize
+    assert type(plane.disable_service._dependent) is EcommerceGrowthDisableDependent
     assert set(plane.configuration_authorize._readers) == {
         ("role", ROLE_AUTHORITY),
         ("data", DATA_AUTHORITY),

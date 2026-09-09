@@ -7,6 +7,7 @@ import inspect
 
 from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
 
 from .configuration_authorization import CurrentFourSourceConfigurationAuthorization
 from .configuration_consumer import ConfigurationConsumer
@@ -43,6 +44,7 @@ class RuntimeWorkerDependencies:
     disable_permission: CurrentControlPermission
     drain_reader: GenerationDrainReader
     cleanup_driver: CleanupOnlyOciDriver
+    disable_dependent: EcommerceGrowthDisableDependent
 
     def __post_init__(self) -> None:
         if type(self.installation_store) is not PostgresInstallationStore:
@@ -61,6 +63,8 @@ class RuntimeWorkerDependencies:
             raise TypeError("production runtime requires the persistent generation drain reader")
         if type(self.cleanup_driver) is not CleanupOnlyOciDriver:
             raise TypeError("production runtime requires the cleanup-only OCI facade")
+        if type(self.disable_dependent) is not EcommerceGrowthDisableDependent:
+            raise TypeError("production runtime requires ecommerce disable lifecycle authority")
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,6 +145,7 @@ def select_production_runtime_host(
             installation_store=dependencies.installation_store,
             check_current_permission=dependencies.disable_permission,
             check_drained=dependencies.drain_reader,
+            dependent=dependencies.disable_dependent,
         )
         return RuntimeTenantAssignment(
             scope=scope,

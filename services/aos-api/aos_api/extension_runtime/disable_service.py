@@ -14,11 +14,13 @@ from .disable_commit import begin_disable
 
 
 class RuntimeDisableService:
-    def __init__(self, *, installation_store, installation_reader, check_current_permission):
+    def __init__(self, *, installation_store, installation_reader, check_current_permission,
+                 dependent=None):
         if not callable(check_current_permission):raise ValueError('current disable permission required')
         self._store=installation_store
         self._reader=installation_reader
         self._permission=check_current_permission
+        self._dependent=dependent
 
     def request(self, *, installation_id, org_id, project_id, actor, roles, markings,
                 idempotency_key, if_match, target):
@@ -75,7 +77,8 @@ class RuntimeDisableService:
                 # Cancellation, disable receipt and fence are one commit; no
                 # window where a cancelled positive operation leaves work open.
                 result=begin_disable(conn,**scope,operation_id=result.operation_id,expected_revision=result.revision,
-                    installation_store=self._store,check_current_permission=self._permission)
+                    installation_store=self._store,check_current_permission=self._permission,
+                    dependent=self._dependent)
             return CommandResult(status_code=202,response_json=dict(installationId=installation_id,
                 operationId=str(result.operation_id),phase=result.phase,status=result.status,revision=result.revision),
                 response_etag=strong_etag(result.revision))

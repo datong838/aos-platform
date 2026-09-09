@@ -35,6 +35,7 @@ from aos_api.extension_runtime.production_runtime import (
 )
 from aos_api.extension_runtime.resource_recovery import ExpiredResourceRecovery
 from aos_api.extension_runtime.runtime_identity import RuntimeDatabaseIdentity
+from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
 
 
 class _Transaction:
@@ -98,6 +99,7 @@ def _dependencies():
         cleanup_driver=CleanupOnlyOciDriver(
             OciDriver(context="colima-aos-extension")
         ),
+        disable_dependent=EcommerceGrowthDisableDependent(),
     )
 
 
@@ -195,6 +197,7 @@ def test_complete_selector_builds_only_concrete_workers_and_reuses_assignment(mo
         ConfigurationConsumer,
         RuntimeDisableConsumer,
     )
+    assert type(first.consumers[1].executor.dependent) is EcommerceGrowthDisableDependent
     assert calls == ["directory", "runtime", "web", "directory", "directory"]
 
 
@@ -270,6 +273,7 @@ def test_selector_rejects_non_four_source_authority_before_connections(authorize
             cleanup_driver=CleanupOnlyOciDriver(
                 OciDriver(context="colima-aos-extension")
             ),
+            disable_dependent=EcommerceGrowthDisableDependent(),
         )
     assert calls == []
 
@@ -338,3 +342,4 @@ def test_environment_wiring_constructs_exact_dependencies_without_starting(monke
     assert dependencies.configuration_authorize is authorize
     assert type(dependencies.drain_reader) is GenerationDrainReader
     assert type(dependencies.cleanup_driver) is CleanupOnlyOciDriver
+    assert type(dependencies.disable_dependent) is EcommerceGrowthDisableDependent

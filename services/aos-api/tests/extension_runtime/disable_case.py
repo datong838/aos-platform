@@ -11,8 +11,15 @@ def exercise_disable(worker, reader, scope, action, verified, generation):
     from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
     from aos_api.asset_registry.errors import AssetRegistryError
     permission=CurrentControlPermission(operation=DISABLE_RUNTIME_OPERATION)
+    dependent_calls=[]
+    class Dependent:
+        def after_runtime_fenced(self,conn,**context):
+            dependent_calls.append(('fenced',context['runtime_operation_id']))
+        def after_runtime_disabled(self,conn,**context):
+            dependent_calls.append(('disabled',context['runtime_operation_id']))
+    dependent=Dependent()
     service=RuntimeDisableService(installation_store=worker.store,installation_reader=reader,
-        check_current_permission=permission)
+        check_current_permission=permission,dependent=dependent)
     request=dict(**action,idempotency_key='signed-disable',if_match=f'"{verified.etag_version}"',
         target=dict(generation=str(generation),bindingRevision=4))
     from aos_api.extension_runtime.configuration_service import RuntimeConfigurationService
@@ -28,6 +35,7 @@ def exercise_disable(worker, reader, scope, action, verified, generation):
     accepted=service.request(**request)
     assert accepted.status_code==202 and service.request(**request).replayed
     assert accepted.response_json['phase']=='fencing'
+    assert [phase for phase,_ in dependent_calls]==['fenced']
     with worker._connection(scope) as c:
         assert c.execute('SELECT status FROM extension_runtime_operation WHERE operation_id=%s',
             (stalled.response_json['operationId'],)).fetchone()=={'status':'cancelled'}
@@ -59,7 +67,7 @@ def exercise_disable(worker, reader, scope, action, verified, generation):
             c.commit()
             yield c
     executor=RuntimeDisableExecutor(connect=idle_connect,installation_store=worker.store,
-        check_current_permission=permission,check_drained=pending)
+        check_current_permission=permission,check_drained=pending,dependent=dependent)
     execute_args=dict(**scope,operation_id=accepted.response_json['operationId'],expected_revision=accepted.response_json['revision'])
     with pytest.raises(ValueError):executor.execute(**execute_args)
     args['expected_revision']=2
@@ -92,6 +100,7 @@ def exercise_disable(worker, reader, scope, action, verified, generation):
             assert c.execute('SELECT enabled,operation_fence FROM extension_runtime_binding').fetchone()=={'enabled':False,'operation_fence':True}
     result=executor.execute(**{**execute_args,'expected_revision':2})
     assert result.phase=='succeeded'
+    assert [phase for phase,_ in dependent_calls]==['fenced','disabled']
     with worker._connection(scope) as c:
         assert c.execute('SELECT enabled,operation_fence,desired_state,observed_state,execution_epoch FROM extension_runtime_binding').fetchone()=={
             'enabled':False,'operation_fence':True,'desired_state':'disabled','observed_state':'unknown','execution_epoch':4}
@@ -111,7 +120,7 @@ def exercise_disable(worker, reader, scope, action, verified, generation):
             c.commit()
             yield c
     consumer=RuntimeDisableConsumer(connect=consumer_connect,installation_store=worker.store,
-        check_current_permission=permission,check_drained=pending)
+        check_current_permission=permission,check_drained=pending,dependent=dependent)
     normal_id=normal.response_json['operationId']
     original_ack=consumer.outbox.ack
     failed_lease=[]
@@ -128,6 +137,7 @@ def exercise_disable(worker, reader, scope, action, verified, generation):
             assert str(exc)=='isolated ACK transaction rollback'
             break
     assert len(failed_lease)==1
+    assert [phase for phase,_ in dependent_calls]==['fenced','disabled','fenced','disabled']
     with worker._connection(scope) as c:
         before=c.execute('SELECT status,revision FROM extension_runtime_operation WHERE operation_id=%s',
             (normal_id,)).fetchone()
@@ -138,7 +148,7 @@ def exercise_disable(worker, reader, scope, action, verified, generation):
         c.execute("UPDATE extension_runtime_outbox SET claim_until=clock_timestamp()-interval '1 second',next_attempt=clock_timestamp()-interval '1 day' WHERE event_id=%s",
             (failed_lease[0].event_id,))
     fresh=RuntimeDisableConsumer(connect=consumer_connect,installation_store=worker.store,
-        check_current_permission=permission,check_drained=pending)
+        check_current_permission=permission,check_drained=pending,dependent=dependent)
     def must_not_execute(**kwargs):raise AssertionError('terminal redelivery executed again')
     fresh.executor.execute=must_not_execute
     delivery=fresh.run_once(**scope)
@@ -153,5 +163,6 @@ def exercise_disable(worker, reader, scope, action, verified, generation):
         assert c.execute('SELECT delivered_at IS NOT NULL AS delivered FROM extension_runtime_outbox WHERE event_id=%s',
             (failed_lease[0].event_id,)).fetchone()=={'delivered':True}
         assert c.execute("SELECT count(*) AS n FROM extension_runtime_outbox b JOIN extension_runtime_event e USING(org_id,project_id,event_id) JOIN extension_runtime_operation o USING(org_id,project_id,operation_id) WHERE o.kind='disable' AND b.delivered_at IS NULL").fetchone()=={'n':0}
+    assert [phase for phase,_ in dependent_calls]==['fenced','disabled','fenced','disabled']
     with worker._connection(scope) as c:
         assert c.execute('SELECT execution_epoch FROM extension_runtime_binding').fetchone()=={'execution_epoch':5}

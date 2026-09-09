@@ -13,13 +13,15 @@ from .lifecycle_store import _values,RuntimeConflict,RuntimeRevisionConflict
 
 
 class RuntimeDisableExecutor:
-    def __init__(self, *, connect, installation_store, check_current_permission, check_drained):
+    def __init__(self, *, connect, installation_store, check_current_permission, check_drained,
+                 dependent=None):
         if not all(callable(v) for v in (connect,check_current_permission,check_drained)):
             raise ValueError('trusted connection, current permission and drain readers required')
         self.connect=connect
         self.store=installation_store
         self.permission=check_current_permission
         self.drain=check_drained
+        self.dependent=dependent
 
     @contextmanager
     def _connection(self,scope):
@@ -47,7 +49,7 @@ class RuntimeDisableExecutor:
             if kind!='disable' or phase not in ('accepted','fencing'):
                 raise RuntimeConflict('disable requires accepted or fenced operation')
             if phase=='accepted':
-                args['expected_revision']=begin_disable(conn,**args).revision
+                args['expected_revision']=begin_disable(conn,**args,dependent=self.dependent).revision
         # The first connection context has committed before this one is opened.
         with self._connection(scope) as conn:
-            return finish_disable(conn,**args,check_drained=self.drain)
+            return finish_disable(conn,**args,check_drained=self.drain,dependent=self.dependent)

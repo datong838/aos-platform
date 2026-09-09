@@ -17,10 +17,12 @@ class DisableDeliveryResult:
 
 
 class RuntimeDisableConsumer:
-    def __init__(self,*,connect,installation_store,check_current_permission,check_drained):
+    def __init__(self,*,connect,installation_store,check_current_permission,check_drained,
+                 dependent=None):
         self.connect=connect
         self.executor=RuntimeDisableExecutor(connect=connect,installation_store=installation_store,
-            check_current_permission=check_current_permission,check_drained=check_drained)
+            check_current_permission=check_current_permission,check_drained=check_drained,
+            dependent=dependent)
         self.outbox=RuntimeOutboxStore()
 
     def _connection(self,scope):

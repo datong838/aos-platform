@@ -36,6 +36,7 @@ from aos_api.aip_runtime_configuration_sources import (
 from aos_api.extension_runtime.configuration_authorization import (
     CurrentConfigurationPermission,
 )
+from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
 
 pytestmark = pytest.mark.skipif(
     os.getenv("AOS_EXTENSION_PG_TEST") != "1", reason="dedicated database opt-in required"
@@ -395,6 +396,7 @@ def test_production_selector_uses_real_directory_roles_and_runtime_drain(directo
                 cleanup_driver=CleanupOnlyOciDriver(
                     OciDriver(context="colima-aos-extension")
                 ),
+                disable_dependent=EcommerceGrowthDisableDependent(),
             ),
         )
         assert selected.status == "ACTIVE"
