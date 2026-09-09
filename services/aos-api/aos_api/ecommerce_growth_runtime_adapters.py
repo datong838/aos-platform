@@ -9,6 +9,7 @@ import hashlib
 import json
 import math
 import re
+import unicodedata
 from typing import Any, Mapping, Protocol
 from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
@@ -21,6 +22,9 @@ from aos_api.ecommerce_growth_host_ports import (
 )
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
 from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contracts import CreateBriefRequest
+from aos_api.aip_task_models import CreateTaskRequest
+from aos_api.aip_contracts import ResourceRef
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.ecommerce_business_investigation_aip_composition import (
     PostgresAipProductionCompositionSource,
@@ -1049,7 +1053,29 @@ _REVIEW_ACCEPT_FIELDS = frozenset(
     }
 )
 _REVIEW_ARTIFACT_FAMILIES = ("portrait", "diagnosis", "growth_plan", "evidence_summary")
+_REVIEW_TASK_SPEC_FIELDS = frozenset(
+    {
+        "taskType",
+        "briefType",
+        "title",
+        "objective",
+        "channels",
+        "audience",
+        "timeWindow",
+        "constraints",
+        "growthPlanRef",
+        "artifactRefs",
+    }
+)
+_REVIEW_CJK = re.compile(r"[\u3400-\u9fff]")
+_REVIEW_TECHNICAL_POLLUTION = re.compile(
+    r"(?:(?:AR|W|R|N)\s*[-_]?\s*\d|技术方案|开发任务|波次|API|SQL|DDL|数据库迁移|代码|"
+    r"(?:/[\w.-]+){2,}|(?:[\w.-]+/)+[\w.-]+\.(?:py|ts|tsx|js|sql|md|json|ya?ml)|"
+    r"[A-Za-z]:\\+[^\\\s]+(?:\\+[^\\\s]+)+)",
+    re.IGNORECASE,
+)
 REVIEW_RECEIPT_NAMESPACE = UUID("b42b2d81-8e5f-4c3b-ad29-7f6e5d4c3b2a")
+REVIEW_HANDOFF_NAMESPACE = UUID("19ae5ab5-e974-46c0-8aa9-f70329bc7c03")
 _REVIEW_SIDE_EFFECTS = {
     "externalEffectsAllowed": False,
     "providerInvocationCount": 0,
@@ -1103,6 +1129,71 @@ def _strict_review_accept_command(command: Mapping[str, Any]) -> tuple[str, Inve
         artifacts.append(artifact)
     if len(set((item.resource_type, item.resource_id, item.revision, item.content_hash) for item in artifacts)) != 4:
         raise ValueError("review Artifact refs must be unique")
+    task = command["taskSpec"]
+    try:
+        nested_growth_plan = InvestigationExactRef.model_validate(task["growthPlanRef"])
+        outer_growth_plan = InvestigationExactRef.model_validate(command["growthPlanRef"])
+        nested_artifacts = [
+            InvestigationExactRef.model_validate(value) for value in task["artifactRefs"]
+        ]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("review content Task exact refs are invalid") from exc
+    normalized_growth_plan = nested_growth_plan.model_dump(
+        mode="json", by_alias=True, exclude_none=True
+    )
+    normalized_outer_growth_plan = outer_growth_plan.model_dump(
+        mode="json", by_alias=True, exclude_none=True
+    )
+    normalized_artifacts = [
+        value.model_dump(mode="json", by_alias=True, exclude_none=True)
+        for value in nested_artifacts
+    ]
+    if (
+        set(task) != _REVIEW_TASK_SPEC_FIELDS
+        or task["taskType"] != "ecommerce.workshop.business_task"
+        or task["briefType"] != "content_campaign"
+        or nested_growth_plan.resource_type != "GrowthPlanRevision"
+        or normalized_growth_plan != task["growthPlanRef"]
+        or normalized_outer_growth_plan != command["growthPlanRef"]
+        or normalized_growth_plan != normalized_outer_growth_plan
+        or any(value.resource_type != "ArtifactRevision" for value in nested_artifacts)
+        or normalized_artifacts != task["artifactRefs"]
+        or normalized_artifacts != [item["artifactRef"] for item in bindings]
+    ):
+        raise ValueError("review content Task exact lineage drifted")
+    text_limits = (
+        (task["title"], 120),
+        (task["objective"], 500),
+        (task["audience"], 300),
+        (task["timeWindow"], 200),
+    )
+    if any(type(value) is not str or not 1 <= len(value.strip()) <= limit for value, limit in text_limits):
+        raise ValueError("review content Task text is invalid")
+    channels = task["channels"]
+    constraints = task["constraints"]
+    values = (*channels, *constraints) if type(channels) is list and type(constraints) is list else ()
+    if (
+        type(channels) is not list
+        or not 1 <= len(channels) <= 12
+        or type(constraints) is not list
+        or len(constraints) > 30
+        or any(type(value) is not str or not 1 <= len(value.strip()) <= 200 for value in values)
+        or len(values) != len(set(values))
+    ):
+        raise ValueError("review content Task business values are invalid")
+    for value in (task["title"], task["objective"], *values, task["audience"], task["timeWindow"]):
+        normalized = "".join(
+            character
+            for character in unicodedata.normalize("NFKC", value)
+            if unicodedata.category(character) != "Cf"
+        )
+        if (
+            normalized != value
+            or value != value.strip()
+            or not _REVIEW_CJK.search(normalized)
+            or _REVIEW_TECHNICAL_POLLUTION.search(normalized)
+        ):
+            raise ValueError("review content Task must use Chinese business text")
     occurrence_ref = InvestigationExactRef.model_validate(command["occurrenceRef"])
     case_ref = InvestigationExactRef.model_validate(command["caseRef"])
     run_ref = InvestigationExactRef.model_validate(command["runRef"])
@@ -1191,7 +1282,202 @@ class ReviewAdvanceHostService:
         return budget_canonical_hash(dict(payload), prefixed=True)
 
     def _review_lineage(self, *, transaction, scope, command, occurred_at):
-        raise ValueError("review ACCEPT requires existing Handoff, Task and Brief authority")
+        if not isinstance(occurred_at, datetime) or occurred_at.utcoffset() is None:
+            raise ValueError("review lineage time must include timezone")
+        key = command["idempotencyKey"]
+        task_spec = command["taskSpec"]
+        handoff_body = {
+            "operation": "review_handoff.accept",
+            "occurrenceRef": command["occurrenceRef"],
+            "caseRef": command["caseRef"],
+            "runRef": command["runRef"],
+            "analysisReceiptRef": command["analysisReceiptRef"],
+            "currentPlanRef": command["currentPlanRef"],
+            "growthPlanRef": command["growthPlanRef"],
+            "reviewIssueRef": command["reviewIssueRef"],
+            "evalReportRef": command["evalReportRef"],
+            "artifactBindings": command["artifactBindings"],
+            "targetModuleId": command["targetModuleId"],
+            "sourceSlotId": command["sourceSlotId"],
+            "targetSlotId": command["targetSlotId"],
+            "markings": command["markings"],
+            "expiresAt": command["expiresAt"],
+        }
+        handoff_id = str(
+            uuid5(REVIEW_HANDOFF_NAMESPACE, "\x1f".join((*scope.key, key)))
+        )
+        handoff_ref = {
+            "resourceType": "HandoffReceipt",
+            "resourceId": handoff_id,
+            "revision": 1,
+            "contentHash": _analysis_command_hash(handoff_body),
+            "receiptId": handoff_id,
+        }
+        factory = TransactionBoundConnectFactory(transaction, scope)
+        task_goal = {
+            "objective": task_spec["objective"],
+            "sourceHandoffRef": handoff_ref,
+            "growthPlanRef": command["growthPlanRef"],
+            "artifactRefs": task_spec["artifactRefs"],
+            "workshopAssignment": {
+                "roleKey": "campaign_planner",
+                "colleagueName": "活动策划师",
+                "status": "requested",
+            },
+        }
+        task_request = CreateTaskRequest(
+            type=task_spec["taskType"],
+            title=task_spec["title"],
+            description=task_spec["objective"],
+            goal=task_goal,
+        )
+        task = AipTaskStore(factory).create_task(
+            scope,
+            self.executor_identity,
+            f"{key}:content-task",
+            task_request,
+        )
+        task_payload = task_request.model_dump(mode="json", by_alias=True)
+        expected_task_hash = _analysis_command_hash(task_payload).removeprefix("sha256:")
+        task_row = transaction.execute(
+            """SELECT request_hash,task_type,title,description,priority,goal,
+                       selection_ref,policy_revision,version
+                FROM public.aip_task
+                WHERE org_id=%s AND project_id=%s AND task_id=%s
+                  AND idempotency_key=%s""",
+            (*scope.key, task.id, f"{key}:content-task"),
+        ).fetchone()
+        actual_task_payload = None if task_row is None else {
+            "type": task_row["task_type"],
+            "title": task_row["title"],
+            "description": task_row["description"],
+            "priority": int(task_row["priority"]),
+            "goal": task_row["goal"],
+            "selectionRef": task_row["selection_ref"],
+            "policyRevision": task_row["policy_revision"],
+        }
+        if (
+            task_row is None
+            or actual_task_payload != task_payload
+            or _analysis_command_hash(actual_task_payload).removeprefix("sha256:")
+            != expected_task_hash
+            or task_row["request_hash"] != expected_task_hash
+            or int(task_row["version"]) != 1
+        ):
+            raise ValueError("review Task authority drifted")
+        task_ref = {
+            "resourceType": "Task",
+            "resourceId": task.id,
+            "revision": 1,
+            "contentHash": "sha256:" + expected_task_hash,
+        }
+        brief_request = CreateBriefRequest(
+            task_id=task.id,
+            brief_type=task_spec["briefType"],
+            schema_ref=ResourceRef(
+                resource_type="ContentCampaignBriefSchema",
+                resource_id="schema://aos/ecommerce/content-campaign-brief/v1",
+                revision="1",
+                authority="aos://ecommerce-workshop/content-campaign",
+            ),
+            spec={
+                "sourceHandoffRef": handoff_ref,
+                "taskRef": task_ref,
+                "growthPlanRef": command["growthPlanRef"],
+                "artifactRefs": task_spec["artifactRefs"],
+                "objective": task_spec["objective"],
+                "channels": task_spec["channels"],
+                "audience": task_spec["audience"],
+                "timeWindow": task_spec["timeWindow"],
+                "constraints": task_spec["constraints"],
+                "externalPublicationRequested": False,
+            },
+        )
+        brief = AipProductionContractStore(factory).create_brief(
+            scope,
+            self.executor_identity,
+            f"{key}:content-brief",
+            brief_request,
+        )
+        brief_payload = brief_request.model_dump(mode="json", by_alias=True)
+        expected_brief_request_hash = _analysis_command_hash(brief_payload).removeprefix(
+            "sha256:"
+        )
+        expected_brief_content_hash = _analysis_command_hash(
+            {
+                "briefType": brief_payload["briefType"],
+                "schemaRef": brief_payload["schemaRef"],
+                "spec": brief_request.spec,
+            }
+        ).removeprefix("sha256:")
+        brief_head = transaction.execute(
+            """SELECT task_id,current_revision,version FROM public.aip_task_brief_head
+                WHERE org_id=%s AND project_id=%s AND brief_id=%s""",
+            (*scope.key, brief.brief_id),
+        ).fetchone()
+        brief_row = transaction.execute(
+            """SELECT task_id,brief_type,schema_ref,spec,content_hash,lifecycle,created_by
+                FROM public.aip_task_brief_revision
+                WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=1""",
+            (*scope.key, brief.brief_id),
+        ).fetchone()
+        brief_receipt = transaction.execute(
+            """SELECT request_hash,result_ref,created_by
+                FROM public.aip_production_contract_receipt
+                WHERE org_id=%s AND project_id=%s AND operation='task_brief.create'
+                  AND idempotency_key=%s""",
+            (*scope.key, f"{key}:content-brief"),
+        ).fetchone()
+        expected_brief_ref = {
+            "resourceType": "TaskBriefRevision",
+            "resourceId": brief.brief_id,
+            "revision": 1,
+            "contentHash": expected_brief_content_hash,
+        }
+        actual_brief_content_hash = None if brief_row is None else _analysis_command_hash(
+            {
+                "briefType": brief_row["brief_type"],
+                "schemaRef": brief_row["schema_ref"],
+                "spec": brief_row["spec"],
+            }
+        ).removeprefix("sha256:")
+        actual_brief_result_hash = (
+            None
+            if brief_receipt is None
+            else _analysis_command_hash(brief_receipt["result_ref"])
+        )
+        expected_brief_result_hash = _analysis_command_hash(expected_brief_ref)
+        if (
+            brief_head is None
+            or brief_row is None
+            or brief_receipt is None
+            or brief_head["task_id"] != task.id
+            or int(brief_head["current_revision"]) != 1
+            or int(brief_head["version"]) != 1
+            or brief_row["task_id"] != task.id
+            or brief_row["brief_type"] != brief_payload["briefType"]
+            or brief_row["schema_ref"] != brief_payload["schemaRef"]
+            or brief_row["spec"] != brief_request.spec
+            or actual_brief_content_hash != expected_brief_content_hash
+            or brief_row["content_hash"] != expected_brief_content_hash
+            or brief_row["lifecycle"] != "draft"
+            or brief_row["created_by"] != self.executor_identity
+            or brief_receipt["request_hash"] != expected_brief_request_hash
+            or brief_receipt["result_ref"] != expected_brief_ref
+            or actual_brief_result_hash != expected_brief_result_hash
+            or brief_receipt["created_by"] != self.executor_identity
+        ):
+            raise ValueError("review TaskBrief authority drifted")
+        return {
+            "handoffRef": handoff_ref,
+            "taskRef": task_ref,
+            "briefRef": {
+                "resourceType": "TaskBriefRevision",
+                "resourceId": brief.brief_id,
+                "revision": 1,
+                "contentHash": "sha256:" + expected_brief_content_hash,
+            },
+        }
 
     def _accept_receipt(self, command, lineage, scope, key, decided_at):
         body = {

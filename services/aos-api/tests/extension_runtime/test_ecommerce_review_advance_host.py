@@ -156,7 +156,20 @@ def test_review_advance_host_is_the_runtime_registry_service():
     assert ReviewAdvanceHostService.executor_identity == "ecommerce-growth-review-host"
 
 
-@pytest.mark.parametrize("mutation", ["extra", "return", "hash_drift", "wrong_family", "tenant"])
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "extra",
+        "return",
+        "hash_drift",
+        "wrong_family",
+        "tenant",
+        "task_plan_drift",
+        "task_extra",
+        "technical_text",
+        "boolean_revision",
+    ],
+)
 def test_accept_command_rejects_unknown_mode_and_drift(mutation):
     from aos_api.ecommerce_growth_runtime_adapters import _strict_review_accept_command
 
@@ -181,6 +194,18 @@ def test_accept_command_rejects_unknown_mode_and_drift(mutation):
         value["requestHash"] = command_hash({k: v for k, v in value.items() if k != "requestHash"})
     if mutation == "tenant":
         value["tenant"] = {"orgId": "org-org", "projectId": "dev-project"}
+        value["requestHash"] = command_hash({k: v for k, v in value.items() if k != "requestHash"})
+    if mutation == "task_plan_drift":
+        value["taskSpec"]["growthPlanRef"] = ref("GrowthPlanRevision", "other-plan")
+        value["requestHash"] = command_hash({k: v for k, v in value.items() if k != "requestHash"})
+    if mutation == "task_extra":
+        value["taskSpec"]["tenant"] = {"orgId": "org-org"}
+        value["requestHash"] = command_hash({k: v for k, v in value.items() if k != "requestHash"})
+    if mutation == "technical_text":
+        value["taskSpec"]["objective"] = "执行 AR2-7D 技术方案"
+        value["requestHash"] = command_hash({k: v for k, v in value.items() if k != "requestHash"})
+    if mutation == "boolean_revision":
+        value["taskSpec"]["growthPlanRef"]["revision"] = True
         value["requestHash"] = command_hash({k: v for k, v in value.items() if k != "requestHash"})
     with pytest.raises(ValueError):
         _strict_review_accept_command(value)
