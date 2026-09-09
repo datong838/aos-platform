@@ -1,0 +1,56 @@
+# AR2-7D D6 停用、卸载与重装联动施工方案
+
+日期：2026-09-10
+基线：`aos-platform/m1@b6589cd7`、`docs/m1@682b0ab`
+状态：`REVIEWED_IMPLEMENTATION_PLAN_D6A_NEXT`
+
+## 1. Rules 与边界
+
+- 以 closure manifest、231-6 D6/C10/J04/J06/J07/J11 和 D5C 已封存权威为准；m1 单人串行，方案先于代码，每切片专项、邻接、全量、证据和提交后自动进入下一片。
+- D6 复用现有 `extension_runtime` disable、资源 ownership journal 和 Installation immutable transition；只新增受控从属联动，不复制第二套安装生命周期。
+- D5C2 只用于 resume 前的结构验证失败。activation 已 `resumed` 后必须走 D6 disable → dispatch detach → resource release → uninstall，禁止把 validation rollback 当卸载捷径。
+- 所有实现与测试保持 no-effect：只用隔离 PostgreSQL、仓内签名测试制品和隔离 OCI；不连接真实源、不调用 Provider、不产生费用、不执行共享/生产迁移、不做真实租户装卸、不 push。230 L0 继续挂起。
+
+## 2. 当前缺口
+
+1. 通用 disable 已能先提交 runtime fence、增加 execution epoch、排空 generation attempt 并落 `disabled`，但不会同步暂停该 installation/generation 对应的 cutover claim gate，也不会撤销九项 extension dispatch。
+2. activation 已 resume 时，D5C2 正确拒绝 rollback；仓内尚无专门的 post-resume detach authority。因此 runtime 虽能拒绝 handler，occurrence 仍可能被 open gate 领取，九项 dispatch 也仍指向已停用 generation。
+3. Installation `uninstall` 当前可从 active 直接写不可变安装 revision；它尚未要求 runtime disabled、九项 dispatch 已撤销、当前 generation 的资源/slot/subscription 已确认释放。
+4. 现有 ResourceJournal 能保存精确 OCI ownership 并以确认观察标记 release，但没有把“本代资源全部 released”绑定到 uninstall transition；重装的新 installation/generation/epoch/group revision 与旧权威隔离也缺联合证明。
+
+## 3. 串行切片
+
+### D6A：disable 与九项 dispatch detach 原子联动
+
+- 接续迁移 `ar2_017_ecommerce_growth_disable_detach.py`，新增从属于既有 runtime disable operation 的 lifecycle authority、不可变事件/Receipt 与两个受限固定函数。
+- 在通用 disable 的两个既有事务边界加入受信 dependent hook：第一事务先由现有 `RuntimeBindingStore.fence` 关闭 runtime 并 epoch+1，同事务锁定 resumed activation、把 open gate 改为 paused、把 9/9 extension dispatch 整组设 fence；第二事务在既有 generation drain 成功后，把 9/9 整组恢复 activation prepare 的 legacy identity、删除 gate，再允许 disable operation 成功。
+- dependent 只能由 production-owned concrete wiring 注入；没有匹配 resumed cutover 时严格 no-op，既有非电商 disable 行为不变。任一 hook、Receipt、9/9 CAS 或当前权威失败，所在事务整体回滚；第一事务已提交后第二事务失败时继续保持 runtime/gate/dispatch fence。
+- 覆盖 normal/replay、9/9→0/9、并发 claim/attempt、UNKNOWN 只对账、旧 epoch/generation、跨租户、非特权、直接函数缺 Receipt、宿主重启与非电商 no-op。
+
+### D6B：资源释放与 uninstall 前置门
+
+- 新增受信 uninstall orchestration，先读取已完成 disable/detach Receipt，再按 ownership journal 逐个回收本 generation 的 OCI/slot/subscription 资源；任何 absent/unknown 观察都不算 released。
+- `InstallationService.uninstall` 的生产 wiring 注入当前 runtime uninstall guard；有 runtime members 时只允许 exact disabled binding、dispatch detached、全部资源 released、无 claimed/running/UNKNOWN 未归宿义务后写 installation `uninstalled` revision。普通内容包和无 runtime member 的既有流程保持原合同。
+- 卸载提交把 binding 推进为 desired `uninstalled` / observed `stopped`，但保留 Case/Receipt/审计只读历史；资源或权限漂移保持 fail-closed，不用删除历史冒充释放。
+
+### D6C：重装代次与旧权威隔离
+
+- 重装必须创建新的 installation 与 generation，enable 产生新 execution epoch，重新 prepare/cutover 产生更高且独立的 group revision；不得复活旧 installation 的 Approval、claim、DispatchRef 或 idempotency scope。
+- 联合测试证明旧页面请求、旧 epoch/generation、旧 approval/ref 和旧 target Receipt 全部拒绝；旧 Case/Run/Receipt/审计仍按原 tenant 只读，新代次只有经完整签名、配置、健康、cutover validate/resume 后才可派发。
+
+### D6D：同 digest 隔离联合验收
+
+- 以一个仓内签名 ecommerce-growth 制品，在允许的隔离 OCI 完成 install → verify/configure/enable → 9 项可派发 → disable 禁入 → 9 项拒绝 → resource release → uninstall 不可见 → reinstall 新代次可派发。
+- 固定记录 image/package digest、installation/generation/epoch/group revision、每阶段 Receipt、OCI 资源观测和失败注入；不得用 mock 容器结果冒充物理释放。若当前引擎不满足 userns/seccomp，代码与 PostgreSQL 切片继续完成，D6D 明确保持 blocked，不降低隔离门。
+
+## 4. 文件上限
+
+- 新增：`services/aos-api/alembic/versions/ar2_017_ecommerce_growth_disable_detach.py`、`services/aos-api/aos_api/ecommerce_growth_lifecycle.py`、`services/aos-api/tests/extension_runtime/test_ecommerce_growth_signed_lifecycle_pg.py`；D6B 若现有服务不能表达卸载门，可新增一个 `extension_runtime` 下的窄 uninstall orchestration 文件。
+- 最小修改：`services/aos-api/aos_api/extension_runtime/{disable_commit.py,disable_executor.py,disable_service.py,disable_consumer.py,production_runtime.py}`、`services/aos-api/aos_api/asset_registry/{control_wiring.py,installation_service.py}` 及其直接测试。Router 只在生产 service wiring 必须切换时修改。
+- 不修改领域 bundle 业务实现，不扩写八工作台 UI，不改变预算/Provider/真实数据权威。发现额外文件依赖先更新本方案与 231-6，再编码。
+
+## 5. 验证与退出
+
+- 每切片：新 PostgreSQL 专项、既有 disable/lifecycle/production host/asset uninstall 邻接、compile、diff check、Alembic 单头、closure、memory validate。
+- D6A 后运行完整 `tests/extension_runtime`；D6B/C 增加 asset registry uninstall/replacement 全量；D6D 增加真实隔离 OCI 观察。
+- D6 退出必须同时具备：同 digest 安装启用、九项派发、停用先围栏、排空后 9/9 legacy detach、资源确认释放、卸载、重装新代次、旧权威拒绝和历史只读。唯一切片结论为 `AR2_7D_DISABLE_UNINSTALL_REINSTALL_GREEN`，随后进入 AR2-7D 剩余可插拔累计验收；不提前宣布 AR2-7 或 7E 完成。
