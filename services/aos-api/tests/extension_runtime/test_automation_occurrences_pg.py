@@ -30,7 +30,12 @@ pytestmark = pytest.mark.skipif(
     reason="dedicated database opt-in required",
 )
 
-PG = {"host": "127.0.0.1", "port": 18432, "user": "postgres", "dbname": "postgres"}
+PG = {
+    "host": os.getenv("AOS_EXTENSION_PG_HOST", "127.0.0.1"),
+    "port": int(os.getenv("AOS_EXTENSION_PG_PORT", "18432")),
+    "user": os.getenv("AOS_EXTENSION_PG_USER", "postgres"),
+    "dbname": os.getenv("AOS_EXTENSION_PG_DATABASE", "postgres"),
+}
 
 
 @pytest.fixture
@@ -59,6 +64,13 @@ def database():
             spec.loader.exec_module(migration)
             migration.op = SimpleNamespace(execute=owner.execute)
             migration.upgrade()
+        owner.execute(
+            """CREATE TABLE extension_dispatch_claim_gate(
+                 org_id text NOT NULL,project_id text NOT NULL,cutover_group_id uuid NOT NULL,
+                 claim_paused boolean NOT NULL,
+                 PRIMARY KEY(org_id,project_id,cutover_group_id))"""
+        )
+        owner.execute("GRANT SELECT ON extension_dispatch_claim_gate TO aos_runtime")
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(sql.Identifier(schema)))
         assert owner.execute(
             "SELECT has_table_privilege('aos_runtime','extension_operation_dispatch_binding','SELECT') AS allowed"
@@ -138,8 +150,12 @@ def test_occurrence_authority_rls_concurrency_and_reconcile_only(database):
     canary = TenantScope("dev-org", "dev-project")
     binding = _seed(database, positive)
     canary_binding = _seed(database, canary)
-    positive_store = AutomationOccurrenceStore(_runtime_connection(database, positive))
-    canary_store = AutomationOccurrenceStore(_runtime_connection(database, canary))
+    positive_store = AutomationOccurrenceStore(
+        _runtime_connection(database, positive), schema=database.schema
+    )
+    canary_store = AutomationOccurrenceStore(
+        _runtime_connection(database, canary), schema=database.schema
+    )
     positive_store.put_binding(positive, binding)
     canary_store.put_binding(canary, canary_binding)
     scheduled_at = datetime(2026, 9, 7, tzinfo=UTC)
@@ -297,7 +313,9 @@ def test_occurrence_authority_rls_concurrency_and_reconcile_only(database):
 def test_schedule_binding_rollover_disables_old_revision_and_old_occurrence(database):
     scope = TenantScope("org-org", "dev-project")
     first = _seed(database, scope)
-    store = AutomationOccurrenceStore(_runtime_connection(database, scope))
+    store = AutomationOccurrenceStore(
+        _runtime_connection(database, scope), schema=database.schema
+    )
     store.put_binding(scope, first)
     scheduled_at = datetime(2026, 9, 7, tzinfo=UTC)
     store.record_scheduled(

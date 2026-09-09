@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID, uuid4
 
+import psycopg
 from pydantic import Field, StrictInt, field_validator, model_validator
 from psycopg.types.json import Jsonb
 
@@ -112,6 +113,55 @@ class CutoverPrepareReceipt(AipContractModel):
     approval_ref: CutoverExactRef
     request_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    replayed: bool = False
+    created_at: datetime
+
+
+class CutoverCommitRequest(AipContractModel):
+    cutover_operation_id: UUID
+    idempotency_key: str = Field(min_length=1, max_length=240)
+    prepare_receipt_ref: CutoverExactRef
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def _canonical_key(cls, value: str) -> str:
+        if value != value.strip():
+            raise ValueError("cutover commit idempotency key must be canonical")
+        return value
+
+    @model_validator(mode="after")
+    def _prepare_ref(self) -> "CutoverCommitRequest":
+        if self.prepare_receipt_ref.resource_type != "CutoverPrepareReceipt":
+            raise ValueError("prepareReceiptRef must reference CutoverPrepareReceipt")
+        try:
+            UUID(self.prepare_receipt_ref.resource_id)
+        except ValueError as exc:
+            raise ValueError("prepareReceiptRef resourceId must be a UUID") from exc
+        return self
+
+    def request_hash(self) -> str:
+        return canonical_sha256(self.model_dump(mode="json", by_alias=True))
+
+
+class CutoverCommitPhaseReceipt(AipContractModel):
+    tenant: TenantContext
+    receipt_id: UUID
+    cutover_operation_id: UUID
+    phase: Literal["pause", "commit"]
+    status: Literal["draining", "committed"]
+    cutover_group_id: UUID
+    operation_ids: tuple[str, ...]
+    dispatch_snapshot: tuple[dict[str, Any], ...]
+    occurrence_watermark: datetime | None
+    claimed_occurrences: tuple[dict[str, Any], ...]
+    claimed_attempts: tuple[dict[str, Any], ...]
+    unknown_attempts: tuple[dict[str, Any], ...]
+    running_runtime_attempts: tuple[dict[str, Any], ...]
+    pending_target_receipt_refs: tuple[CutoverExactRef, ...]
+    prepare_receipt_ref: CutoverExactRef
+    request_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    claim_paused: Literal[True] = True
     replayed: bool = False
     created_at: datetime
 
@@ -247,8 +297,7 @@ class EcommerceGrowthCutoverStore:
                 f"SELECT {self._schema}.extension_dispatch_cutover_lock_approval_ar2_013(%s)",
                 (request.approval_ref.resource_id,),
             )
-            checked_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
-            self._approval_authority(conn, scope, request, checked_at)
+            checked_at = self._approval_authority(conn, scope, request)
             old_snapshot = [_snapshot(dict(row)) for row in rows]
             new_snapshot = [
                 {
@@ -359,13 +408,565 @@ class EcommerceGrowthCutoverStore:
             conn.commit()
             return result
 
+    def begin_activation_commit(
+        self,
+        scope: TenantScope,
+        request: CutoverCommitRequest,
+        *,
+        actor: str,
+    ) -> CutoverCommitPhaseReceipt:
+        scope, request, actor = self._validated_commit_call(scope, request, actor)
+        request_hash = request.request_hash()
+        with self._connect_factory(scope) as conn:
+            self._require_maintainer(conn)
+            operation = self._load_operation_with_prepare(conn, scope, request.cutover_operation_id)
+            prepare = self._validate_prepare_ref(scope, operation, request)
+            existing = self._load_phase_receipt(conn, scope, request.cutover_operation_id, "pause")
+            if existing is not None:
+                if existing["request_hash"] != request_hash:
+                    raise EcommerceGrowthCutoverConflict("cutover pause idempotency payload drifted")
+                return self._phase_receipt(scope, existing, replayed=True)
+            self._lock_current_prepare_authority(conn, scope, operation, prepare)
+            try:
+                paused_at = conn.execute(
+                    f"SELECT {self._schema}.extension_dispatch_cutover_pause_claims_ar2_014(%s,%s) AS paused_at",
+                    (request.cutover_operation_id, actor),
+                ).fetchone()["paused_at"]
+            except psycopg.Error as exc:
+                raise EcommerceGrowthCutoverBlocked(str(exc).splitlines()[0]) from exc
+            facts = self._execution_facts(conn, scope, prepare)
+            authority = self._phase_authority(
+                scope,
+                request,
+                prepare,
+                phase="pause",
+                status="draining",
+                dispatch_snapshot=list(prepare.old_dispatch_snapshot),
+                facts=facts,
+                actor=actor,
+                created_at=paused_at,
+            )
+            receipt_id = uuid4()
+            self._insert_phase_history(
+                conn,
+                scope,
+                request.cutover_operation_id,
+                sequence=2,
+                event_type="CUTOVER_CLAIMS_PAUSED",
+                phase="pause",
+                receipt_id=receipt_id,
+                request_hash=request_hash,
+                authority=authority,
+                occurred_at=paused_at,
+            )
+            row = self._load_phase_receipt(conn, scope, request.cutover_operation_id, "pause")
+            if row is None:
+                raise EcommerceGrowthCutoverConflict("cutover pause readback is missing")
+            result = self._phase_receipt(scope, row, replayed=False)
+            conn.commit()
+            return result
+
+    def commit_activation(
+        self,
+        scope: TenantScope,
+        request: CutoverCommitRequest,
+        *,
+        actor: str,
+    ) -> CutoverCommitPhaseReceipt:
+        scope, request, actor = self._validated_commit_call(scope, request, actor)
+        request_hash = request.request_hash()
+        with self._connect_factory(scope) as conn:
+            self._require_maintainer(conn)
+            operation = self._load_operation_with_prepare(conn, scope, request.cutover_operation_id)
+            prepare = self._validate_prepare_ref(scope, operation, request)
+            existing = self._load_phase_receipt(conn, scope, request.cutover_operation_id, "commit")
+            if existing is not None:
+                if existing["request_hash"] != request_hash:
+                    raise EcommerceGrowthCutoverConflict("cutover commit idempotency payload drifted")
+                return self._phase_receipt(scope, existing, replayed=True)
+            pause = self._load_phase_receipt(conn, scope, request.cutover_operation_id, "pause")
+            if pause is None or pause["request_hash"] != request_hash:
+                raise EcommerceGrowthCutoverBlocked("cutover claims must be paused by this exact request")
+            self._phase_receipt(scope, pause, replayed=True)
+            if operation["status"] != "draining":
+                raise EcommerceGrowthCutoverConflict("cutover operation is not draining")
+            self._lock_current_prepare_authority(
+                conn, scope, operation, prepare, runtime_draining=True
+            )
+            facts = self._execution_facts(conn, scope, prepare)
+            if prepare.pending_target_receipt_refs:
+                raise EcommerceGrowthCutoverBlocked("pending target Receipt reconciliation remains")
+            if (
+                facts["claimedOccurrences"]
+                or facts["claimedAttempts"]
+                or facts["runningRuntimeAttempts"]
+            ):
+                raise EcommerceGrowthCutoverBlocked("cutover target execution is not drained")
+            try:
+                updated = conn.execute(
+                    f"SELECT {self._schema}.extension_dispatch_cutover_commit_ar2_014(%s,%s) AS updated",
+                    (request.cutover_operation_id, actor),
+                ).fetchone()["updated"]
+            except psycopg.Error as exc:
+                raise EcommerceGrowthCutoverBlocked(str(exc).splitlines()[0]) from exc
+            if int(updated) != len(ECOMMERCE_GROWTH_OPERATIONS):
+                raise EcommerceGrowthCutoverConflict("cutover group update was not exact")
+            rows = self._dispatch_rows(conn, scope, prepare.cutover_group_id)
+            if canonical_hash([_snapshot(dict(row)) for row in rows]) != canonical_hash(
+                list(prepare.new_dispatch_snapshot)
+            ):
+                raise EcommerceGrowthCutoverConflict("committed dispatch readback drifted")
+            committed_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+            final_facts = self._execution_facts(conn, scope, prepare)
+            if (
+                final_facts["claimedOccurrences"]
+                or final_facts["claimedAttempts"]
+                or final_facts["runningRuntimeAttempts"]
+            ):
+                raise EcommerceGrowthCutoverConflict("execution appeared during cutover commit")
+            authority = self._phase_authority(
+                scope,
+                request,
+                prepare,
+                phase="commit",
+                status="committed",
+                dispatch_snapshot=[_snapshot(dict(row)) for row in rows],
+                facts=final_facts,
+                actor=actor,
+                created_at=committed_at,
+            )
+            receipt_id = uuid4()
+            self._insert_phase_history(
+                conn,
+                scope,
+                request.cutover_operation_id,
+                sequence=3,
+                event_type="CUTOVER_COMMITTED",
+                phase="commit",
+                receipt_id=receipt_id,
+                request_hash=request_hash,
+                authority=authority,
+                occurred_at=committed_at,
+            )
+            state = conn.execute(
+                f"""SELECT status FROM {self._schema}.extension_dispatch_cutover_operation
+                     WHERE org_id=%s AND project_id=%s AND cutover_operation_id=%s""",
+                (*scope.key, request.cutover_operation_id),
+            ).fetchone()
+            if state is None or state["status"] != "committed":
+                raise EcommerceGrowthCutoverConflict("cutover operation commit state drifted")
+            row = self._load_phase_receipt(conn, scope, request.cutover_operation_id, "commit")
+            if row is None:
+                raise EcommerceGrowthCutoverConflict("cutover commit readback is missing")
+            result = self._phase_receipt(scope, row, replayed=False)
+            conn.commit()
+            return result
+
+    @staticmethod
+    def _validated_commit_call(
+        scope: TenantScope,
+        request: CutoverCommitRequest,
+        actor: str,
+    ) -> tuple[TenantScope, CutoverCommitRequest, str]:
+        if type(scope) is not TenantScope or type(request) is not CutoverCommitRequest:
+            raise TypeError("trusted TenantScope and CutoverCommitRequest are required")
+        request = CutoverCommitRequest.model_validate(
+            request.model_dump(mode="python", by_alias=True)
+        )
+        if type(actor) is not str or not actor or actor != actor.strip() or len(actor) > 240:
+            raise ValueError("canonical cutover actor is required")
+        return scope, request, actor
+
+    def _load_operation_with_prepare(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        cutover_operation_id: UUID,
+    ) -> dict[str, Any]:
+        row = conn.execute(
+            f"""SELECT o.*,r.receipt_id,r.request_hash AS receipt_request_hash,
+                        r.authority_data,r.content_hash,r.created_at AS receipt_created_at
+                   FROM {self._schema}.extension_dispatch_cutover_operation o
+                   JOIN {self._schema}.extension_dispatch_cutover_receipt r
+                     USING(org_id,project_id,cutover_operation_id)
+                  WHERE o.org_id=%s AND o.project_id=%s AND o.cutover_operation_id=%s
+                    AND r.phase='prepare' FOR SHARE OF o""",
+            (*scope.key, cutover_operation_id),
+        ).fetchone()
+        if row is None:
+            raise EcommerceGrowthCutoverBlocked("cutover prepare authority is unavailable")
+        return dict(row)
+
+    def _validate_prepare_ref(
+        self,
+        scope: TenantScope,
+        operation: dict[str, Any],
+        request: CutoverCommitRequest,
+    ) -> CutoverPrepareReceipt:
+        prepare = self._receipt(scope, operation, replayed=True)
+        if (
+            request.prepare_receipt_ref.revision != 1
+            or request.prepare_receipt_ref.resource_id != str(prepare.receipt_id)
+            or request.prepare_receipt_ref.content_hash != prepare.content_hash
+        ):
+            raise EcommerceGrowthCutoverConflict("prepare Receipt reference drifted")
+        reconstructed = CutoverPrepareRequest(
+            cutoverOperationId=prepare.cutover_operation_id,
+            idempotencyKey=operation["idempotency_key"],
+            cutoverGroupId=prepare.cutover_group_id,
+            expectedGroupRevision=prepare.expected_group_revision,
+            targetInstallationId=prepare.target_installation_id,
+            targetGeneration=prepare.target_generation,
+            targetExecutionEpoch=prepare.target_execution_epoch,
+            targetRuntimeRevision=prepare.target_runtime_revision,
+            policyRef=prepare.policy_ref,
+            approvalRef=prepare.approval_ref,
+            checkpoint=prepare.checkpoint,
+            occurrenceWatermark=prepare.occurrence_watermark,
+            pendingTargetReceiptRefs=prepare.pending_target_receipt_refs,
+        )
+        if reconstructed.request_hash() != operation["request_hash"]:
+            raise EcommerceGrowthCutoverConflict("prepared request authority drifted")
+        return prepare
+
+    def _lock_current_prepare_authority(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        operation: dict[str, Any],
+        prepare: CutoverPrepareReceipt,
+        *,
+        runtime_draining: bool = False,
+    ) -> None:
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+            (f"{scope.org_id}\x1f{scope.project_id}\x1f{prepare.cutover_group_id}",),
+        )
+        rows = self._dispatch_rows(conn, scope, prepare.cutover_group_id)
+        if canonical_hash([_snapshot(dict(row)) for row in rows]) != canonical_hash(
+            list(prepare.old_dispatch_snapshot)
+        ):
+            raise EcommerceGrowthCutoverConflict("legacy dispatch group authority drifted")
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+            (f"{scope.org_id}\x1f{scope.project_id}\x1f{prepare.target_installation_id}",),
+        )
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+            (f"{scope.org_id}\x1f{scope.project_id}\x1f{prepare.target_installation_id}"
+             f"\x1f{prepare.target_generation}",),
+        )
+        runtime = conn.execute(
+            f"""SELECT execution_epoch,desired_state,observed_state,enabled,operation_fence,revision
+                   FROM {self._schema}.extension_runtime_binding
+                  WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s""",
+            (*scope.key, prepare.target_installation_id, prepare.target_generation),
+        ).fetchone()
+        if (
+            runtime is None
+            or runtime["execution_epoch"] != prepare.target_execution_epoch
+            or runtime["revision"] != prepare.target_runtime_revision + int(runtime_draining)
+            or runtime["desired_state"] != "enabled"
+            or runtime["observed_state"] != "ready"
+            or runtime["enabled"] is not (not runtime_draining)
+            or runtime["operation_fence"] is not runtime_draining
+        ):
+            raise EcommerceGrowthCutoverConflict("target runtime binding is not exact and ready")
+        conn.execute(
+            f"SELECT {self._schema}.extension_dispatch_cutover_lock_approval_ar2_013(%s)",
+            (prepare.approval_ref.resource_id,),
+        )
+        reconstructed = CutoverPrepareRequest(
+            cutoverOperationId=prepare.cutover_operation_id,
+            idempotencyKey=operation["idempotency_key"],
+            cutoverGroupId=prepare.cutover_group_id,
+            expectedGroupRevision=prepare.expected_group_revision,
+            targetInstallationId=prepare.target_installation_id,
+            targetGeneration=prepare.target_generation,
+            targetExecutionEpoch=prepare.target_execution_epoch,
+            targetRuntimeRevision=prepare.target_runtime_revision,
+            policyRef=prepare.policy_ref,
+            approvalRef=prepare.approval_ref,
+            checkpoint=prepare.checkpoint,
+            occurrenceWatermark=prepare.occurrence_watermark,
+            pendingTargetReceiptRefs=prepare.pending_target_receipt_refs,
+        )
+        self._approval_authority(conn, scope, reconstructed)
+
+    def _dispatch_rows(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        cutover_group_id: UUID,
+    ) -> list[dict[str, Any]]:
+        return conn.execute(
+            f"""SELECT operation_id,handler_kind,installation_id,generation,execution_epoch,
+                        operation_fence,revision,cutover_group_id,cutover_group_revision
+                   FROM {self._schema}.extension_operation_dispatch_binding
+                  WHERE org_id=%s AND project_id=%s AND cutover_group_id=%s
+                  ORDER BY operation_id""",
+            (*scope.key, cutover_group_id),
+        ).fetchall()
+
+    def _execution_facts(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        prepare: CutoverPrepareReceipt,
+    ) -> dict[str, Any]:
+        target = (
+            *scope.key,
+            prepare.target_installation_id,
+            prepare.target_generation,
+            prepare.target_execution_epoch,
+        )
+        watermark = conn.execute(
+            f"""SELECT max(created_at) AS watermark FROM {self._schema}.automation_occurrence
+                 WHERE org_id=%s AND project_id=%s AND installation_id=%s
+                   AND generation=%s AND execution_epoch=%s""",
+            target,
+        ).fetchone()["watermark"]
+        claimed = conn.execute(
+            f"""SELECT occurrence_id,claim_owner,claim_until
+                   FROM {self._schema}.automation_occurrence
+                  WHERE org_id=%s AND project_id=%s AND installation_id=%s
+                    AND generation=%s AND execution_epoch=%s AND status='claimed'
+                  ORDER BY occurrence_id""",
+            target,
+        ).fetchall()
+        unknown = conn.execute(
+            f"""SELECT a.attempt_id,a.occurrence_id,a.target_idempotency_key,a.resolved_at
+                   FROM {self._schema}.automation_occurrence_dispatch_attempt a
+                   JOIN {self._schema}.automation_occurrence o USING(org_id,project_id,occurrence_id)
+                  WHERE a.org_id=%s AND a.project_id=%s AND o.installation_id=%s
+                    AND o.generation=%s AND o.execution_epoch=%s AND a.status='unknown'
+                  ORDER BY a.attempt_id""",
+            target,
+        ).fetchall()
+        claimed_attempts = conn.execute(
+            f"""SELECT a.attempt_id,a.occurrence_id,a.target_idempotency_key,
+                        a.claim_owner,a.claim_until
+                   FROM {self._schema}.automation_occurrence_dispatch_attempt a
+                   JOIN {self._schema}.automation_occurrence o USING(org_id,project_id,occurrence_id)
+                  WHERE a.org_id=%s AND a.project_id=%s AND o.installation_id=%s
+                    AND o.generation=%s AND o.execution_epoch=%s AND a.status='claimed'
+                  ORDER BY a.attempt_id""",
+            target,
+        ).fetchall()
+        running = conn.execute(
+            f"""SELECT attempt_id,operation_key,idempotency_key,accepted_at,lease_until
+                   FROM {self._schema}.extension_runtime_execution_attempt
+                  WHERE org_id=%s AND project_id=%s AND installation_id=%s
+                    AND generation=%s AND execution_epoch=%s AND state='running'
+                  ORDER BY attempt_id""",
+            target,
+        ).fetchall()
+        return {
+            "occurrenceWatermark": None if watermark is None else watermark.isoformat(),
+            "claimedOccurrences": [
+                {"occurrenceId": str(row["occurrence_id"]), "claimOwner": row["claim_owner"],
+                 "claimUntil": row["claim_until"].isoformat()}
+                for row in claimed
+            ],
+            "claimedAttempts": [
+                {"attemptId": str(row["attempt_id"]), "occurrenceId": str(row["occurrence_id"]),
+                 "targetIdempotencyKey": row["target_idempotency_key"],
+                 "claimOwner": row["claim_owner"], "claimUntil": row["claim_until"].isoformat()}
+                for row in claimed_attempts
+            ],
+            "unknownAttempts": [
+                {"attemptId": str(row["attempt_id"]), "occurrenceId": str(row["occurrence_id"]),
+                 "targetIdempotencyKey": row["target_idempotency_key"],
+                 "resolvedAt": row["resolved_at"].isoformat()}
+                for row in unknown
+            ],
+            "runningRuntimeAttempts": [
+                {"attemptId": str(row["attempt_id"]), "operationKey": row["operation_key"],
+                 "idempotencyKey": row["idempotency_key"],
+                 "acceptedAt": row["accepted_at"].isoformat(),
+                 "leaseUntil": row["lease_until"].isoformat()}
+                for row in running
+            ],
+        }
+
+    @staticmethod
+    def _phase_authority(
+        scope: TenantScope,
+        request: CutoverCommitRequest,
+        prepare: CutoverPrepareReceipt,
+        *,
+        phase: Literal["pause", "commit"],
+        status: Literal["draining", "committed"],
+        dispatch_snapshot: list[dict[str, Any]],
+        facts: dict[str, Any],
+        actor: str,
+        created_at: datetime,
+    ) -> dict[str, Any]:
+        return {
+            "schemaVersion": f"aos.ecommerce.dispatch-cutover-{phase}/v1",
+            "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+            "cutoverOperationId": str(request.cutover_operation_id),
+            "phase": phase,
+            "status": status,
+            "cutoverGroupId": str(prepare.cutover_group_id),
+            "operationIds": list(prepare.operation_ids),
+            "dispatchSnapshot": dispatch_snapshot,
+            **facts,
+            "pendingTargetReceiptRefs": [
+                item.model_dump(mode="json", by_alias=True)
+                for item in prepare.pending_target_receipt_refs
+            ],
+            "prepareReceiptRef": request.prepare_receipt_ref.model_dump(mode="json", by_alias=True),
+            "commitIdempotencyKey": request.idempotency_key,
+            "requestHash": request.request_hash(),
+            "claimPaused": True,
+            "requestedBy": actor,
+            "createdAt": created_at.isoformat(),
+        }
+
+    def _insert_phase_history(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        cutover_operation_id: UUID,
+        *,
+        sequence: int,
+        event_type: str,
+        phase: str,
+        receipt_id: UUID,
+        request_hash: str,
+        authority: dict[str, Any],
+        occurred_at: datetime,
+    ) -> None:
+        content_hash = canonical_sha256(authority)
+        event_payload = {
+            "cutoverOperationId": str(cutover_operation_id),
+            "phase": phase,
+            "receiptId": str(receipt_id),
+            "contentHash": content_hash,
+        }
+        conn.execute(
+            f"""INSERT INTO {self._schema}.extension_dispatch_cutover_event(
+                 org_id,project_id,cutover_operation_id,sequence,event_id,event_type,
+                 payload,payload_hash,occurred_at)
+               VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            (*scope.key, cutover_operation_id, sequence, uuid4(), event_type,
+             Jsonb(event_payload), canonical_sha256(event_payload), occurred_at),
+        )
+        conn.execute(
+            f"""INSERT INTO {self._schema}.extension_dispatch_cutover_receipt(
+                 org_id,project_id,receipt_id,cutover_operation_id,phase,request_hash,
+                 authority_data,content_hash,created_at)
+               VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+            (*scope.key, receipt_id, cutover_operation_id, phase, request_hash,
+             Jsonb(authority), content_hash, occurred_at),
+        )
+
+    def _load_phase_receipt(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        cutover_operation_id: UUID,
+        phase: str,
+    ) -> dict[str, Any] | None:
+        event_type, sequence = {
+            "pause": ("CUTOVER_CLAIMS_PAUSED", 2),
+            "commit": ("CUTOVER_COMMITTED", 3),
+        }[phase]
+        row = conn.execute(
+            f"""SELECT r.*,o.cutover_group_id,o.operation_ids,o.old_dispatch_snapshot,
+                        o.new_dispatch_snapshot,o.pending_target_receipt_refs,
+                        e.payload AS event_payload,e.payload_hash,e.occurred_at
+                   FROM {self._schema}.extension_dispatch_cutover_receipt r
+                   JOIN {self._schema}.extension_dispatch_cutover_operation o
+                     USING(org_id,project_id,cutover_operation_id)
+                   JOIN {self._schema}.extension_dispatch_cutover_event e
+                     USING(org_id,project_id,cutover_operation_id)
+                  WHERE r.org_id=%s AND r.project_id=%s AND r.cutover_operation_id=%s
+                    AND r.phase=%s AND e.sequence=%s AND e.event_type=%s""",
+            (*scope.key, cutover_operation_id, phase, sequence, event_type),
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    @staticmethod
+    def _phase_receipt(
+        scope: TenantScope,
+        row: dict[str, Any],
+        *,
+        replayed: bool,
+    ) -> CutoverCommitPhaseReceipt:
+        authority = _object(row["authority_data"])
+        event = _object(row["event_payload"])
+        phase = row["phase"]
+        expected_status = "draining" if phase == "pause" else "committed"
+        try:
+            phase_request = CutoverCommitRequest(
+                cutoverOperationId=authority.get("cutoverOperationId"),
+                idempotencyKey=authority.get("commitIdempotencyKey"),
+                prepareReceiptRef=authority.get("prepareReceiptRef"),
+            )
+        except (TypeError, ValueError) as exc:
+            raise EcommerceGrowthCutoverConflict(
+                f"cutover {phase} Receipt authority drifted"
+            ) from exc
+        if (
+            phase not in {"pause", "commit"}
+            or canonical_sha256(authority) != row["content_hash"]
+            or canonical_sha256(event) != row["payload_hash"]
+            or event != {
+                "cutoverOperationId": str(row["cutover_operation_id"]),
+                "phase": phase,
+                "receiptId": str(row["receipt_id"]),
+                "contentHash": row["content_hash"],
+            }
+            or authority.get("tenant") != {"orgId": scope.org_id, "projectId": scope.project_id}
+            or authority.get("cutoverOperationId") != str(row["cutover_operation_id"])
+            or authority.get("phase") != phase
+            or authority.get("status") != expected_status
+            or authority.get("cutoverGroupId") != str(row["cutover_group_id"])
+            or canonical_hash(authority.get("operationIds")) != canonical_hash(_array(row["operation_ids"]))
+            or canonical_hash(authority.get("dispatchSnapshot")) != canonical_hash(
+                _array(row["old_dispatch_snapshot"] if phase == "pause" else row["new_dispatch_snapshot"])
+            )
+            or canonical_hash(authority.get("pendingTargetReceiptRefs")) != canonical_hash(
+                _array(row["pending_target_receipt_refs"])
+            )
+            or authority.get("requestHash") != row["request_hash"]
+            or phase_request.request_hash() != row["request_hash"]
+            or authority.get("claimPaused") is not True
+            or authority.get("createdAt") != row["created_at"].isoformat()
+            or row["occurred_at"] != row["created_at"]
+        ):
+            raise EcommerceGrowthCutoverConflict(f"cutover {phase} Receipt authority drifted")
+        return CutoverCommitPhaseReceipt.model_validate({
+            "tenant": authority["tenant"],
+            "receiptId": row["receipt_id"],
+            "cutoverOperationId": row["cutover_operation_id"],
+            "phase": phase,
+            "status": expected_status,
+            "cutoverGroupId": authority["cutoverGroupId"],
+            "operationIds": tuple(_array(authority["operationIds"])),
+            "dispatchSnapshot": tuple(_array(authority["dispatchSnapshot"])),
+            "occurrenceWatermark": authority.get("occurrenceWatermark"),
+            "claimedOccurrences": tuple(_array(authority.get("claimedOccurrences"))),
+            "claimedAttempts": tuple(_array(authority.get("claimedAttempts"))),
+            "unknownAttempts": tuple(_array(authority.get("unknownAttempts"))),
+            "runningRuntimeAttempts": tuple(_array(authority.get("runningRuntimeAttempts"))),
+            "pendingTargetReceiptRefs": tuple(_array(authority["pendingTargetReceiptRefs"])),
+            "prepareReceiptRef": authority["prepareReceiptRef"],
+            "requestHash": authority["requestHash"],
+            "contentHash": row["content_hash"],
+            "claimPaused": True,
+            "replayed": replayed,
+            "createdAt": row["created_at"],
+        })
+
     def _approval_authority(
         self,
         conn: Any,
         scope: TenantScope,
         request: CutoverPrepareRequest,
-        checked_at: datetime,
-    ) -> None:
+    ) -> datetime:
         approval = conn.execute(
             f"""SELECT approval_event_id,proposal_id,proposal_version,proposal_hash,decision,
                       actor_id,reason,expires_at,created_at,action_binding_hash
@@ -377,7 +978,6 @@ class EcommerceGrowthCutoverStore:
             approval is None
             or int(approval["proposal_version"]) != request.approval_ref.revision
             or approval["decision"] != "approved"
-            or (approval["expires_at"] is not None and approval["expires_at"] <= checked_at)
         ):
             raise EcommerceGrowthCutoverBlocked("active exact cutover ActionApprovalEvent is required")
         if canonical_hash(dict(approval), prefixed=True) != request.approval_ref.content_hash:
@@ -399,6 +999,7 @@ class EcommerceGrowthCutoverStore:
             (*scope.key, approval["proposal_id"]),
         ).fetchone()
         stable = _object(draft["snapshot"]) if draft is not None else {}
+        checked_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
         impact_preview_ref = (
             {
                 "resourceType": "ImpactPreviewRevision",
@@ -417,6 +1018,14 @@ class EcommerceGrowthCutoverStore:
             }
             if proposal is not None and proposal["source_draft_id"] is not None else None
         )
+        if (
+            proposal is None
+            or proposal["expires_at"] <= checked_at
+            or (approval["expires_at"] is not None and approval["expires_at"] <= checked_at)
+        ):
+            raise EcommerceGrowthCutoverBlocked(
+                "active exact cutover ActionApprovalEvent is required"
+            )
         expected = {
             "cutoverGroupId": str(request.cutover_group_id),
             "expectedGroupRevision": request.expected_group_revision,
@@ -449,6 +1058,14 @@ class EcommerceGrowthCutoverStore:
             or canonical_hash(stable.get("policy"))
                 != canonical_hash(_object(proposal["policy_snapshot"]))
             or stable.get("approvalPolicyHash") != proposal["approval_policy_hash"]
+            or (proposal["impact_preview_id"] is None)
+                != (proposal["impact_preview_revision"] is None)
+            or (proposal["impact_preview_id"] is None)
+                != (proposal["impact_preview_hash"] is None)
+            or (proposal["source_draft_id"] is None)
+                != (proposal["source_draft_revision"] is None)
+            or (proposal["source_draft_id"] is None)
+                != (proposal["source_draft_hash"] is None)
             or canonical_hash(stable.get("payload")) != canonical_hash(payload)
             or canonical_hash(stable.get("diff"))
                 != canonical_hash(_object(proposal["diff"]))
@@ -465,6 +1082,7 @@ class EcommerceGrowthCutoverStore:
             or any(canonical_hash(payload.get(key)) != canonical_hash(value) for key, value in expected.items())
         ):
             raise EcommerceGrowthCutoverBlocked("cutover approval is not bound to this exact group")
+        return checked_at
 
     @staticmethod
     def _require_maintainer(conn: Any) -> None:
@@ -561,6 +1179,8 @@ class EcommerceGrowthCutoverStore:
 
 
 __all__ = [
+    "CutoverCommitPhaseReceipt",
+    "CutoverCommitRequest",
     "CutoverPrepareReceipt",
     "CutoverPrepareRequest",
     "CutoverExactRef",

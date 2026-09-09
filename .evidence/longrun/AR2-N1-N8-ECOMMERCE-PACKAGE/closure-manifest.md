@@ -140,7 +140,7 @@ Router 不跨 IPC 或远程 handler 调用持有数据库锁。它在短事务�
 AR2-7 只通过数据库 CAS 切换这个 handler 指针，不再声称 Python 代码部署与数据库绑定能处于同一事务：
 
 1. 记录旧入口 checkpoint、当前 installationId/generation/executionEpoch、policyRef、occurrence watermark 和未决 target Receipt。
-2. 暂停新 occurrence claim；排空或明确归宿旧在途命令。
+2. 暂停新 occurrence claim，并将目标 runtime 从 enabled/unfenced 推进为 disabled/fenced；runtime 行锁与既有 attempt insert guard 形成线性化点，使 pause 前已启动的 attempt 可枚举、pause 后的新 attempt 被拒绝；随后排空或明确归宿旧在途命令。
 3. 预先部署的通用 Router 已覆盖全部入口；一个业务链涉及的全部 operationId 先写入同一 `cutover_group_id`。在一个数据库事务内按 `org_id → project_id → cutover_group_id → operation_id（字典序）→ installation_id → generation` 固定锁序，检查组 revision、每条 dispatch `revision`、旧 `handler_kind`、旧 epoch 和目标 runtime binding revision，再整组 CAS 更新 `handler_kind=extension`、目标 installation/generation、新 epoch、`operation_fence=false`、每行 `revision+1` 及 `cutover_group_revision+1`；只要一行不匹配整组回滚，禁止半条业务链新旧分流。该事务提交点是唯一切换点。
 4. 新入口每次调用携带 DispatchRef；最终公共写端口在自己的提交事务中二次核对 dispatch/runtime binding。旧 revision、旧 group revision、旧 epoch、旧批准和旧页面请求全部拒绝。
 5. 切换验证失败时先以 dispatch `revision+handler_kind+epoch` 做 rollback CAS，将 dispatch fence 设为 true；排空新 epoch 后再 CAS 恢复 `handler_kind=legacy` 和旧 checkpoint。CAS 冲突一律转人工核验，不盲重试；已经接受的命令只按 target Receipt reconcile，禁止重放。
@@ -158,7 +158,8 @@ AR2-7 只通过数据库 CAS 切换这个 handler 指针，不再声称 Python �
 | sourcePath | target | decision | 接续基线摘要（非 AR2-0 preHash） |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py` | 原路径 | platform host port；既有 AR2-7D 宿主事务适配，切换前不注册未完成服务 | 48a51c177c506b56355d4b6d14810ff471ca5feb6dd2538b32a03a3a49629727 |
-| `services/aos-api/aos_api/ecommerce_growth_cutover.py` | 原路径 | platform host control port；D5 整组 prepare/commit/rollback 权威，不导入领域 bundle | NEW |
+| `services/aos-api/aos_api/ecommerce_growth_cutover.py` | 原路径 | platform host control port；D5 整组 prepare/commit/rollback 权威，不导入领域 bundle | 213209a8a3f000b69e22ecbc5d12933fa84ed969e50de06c2356dd9d331dc5c0 |
+| `services/aos-api/aos_api/automation_occurrence_store.py` | 原路径 | platform occurrence authority；D5B 只在领取候选中读取组级 claim gate，不改变创建、结算或 UNKNOWN 对账状态机 | e708fff8502d32e93438695b8fb25834b5375577b5b4e6003f9a6aa1423c76b4 |
 | `services/aos-api/aos_api/ecommerce_canonical_population.py` | 原路径 | data query port；本次新增当前规范库全集身份读取，仅由受信宿主使用 | NEW |
 | `services/aos-api/aos_api/ecommerce_product_observation_comparison.py` | 原路径 | data query port；受信宿主有界商品观察与规范版本比较，不生成业务事实或履约 | NEW |
 | `services/aos-api/aos_api/ecommerce_product_comparison_query.py` | 原路径 | data query port；固定比较复用MetricDefinition和QueryResult真实Owner，partial不代表履约 | NEW |

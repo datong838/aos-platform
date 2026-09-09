@@ -110,8 +110,16 @@ def _utc_seconds(value: datetime, name: str) -> datetime:
 
 
 class AutomationOccurrenceStore:
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(
+        self,
+        connect_factory: ConnectFactory | None = None,
+        *,
+        schema: str = "public",
+    ) -> None:
+        if re.fullmatch(r"[a-z_][a-z0-9_]*", schema) is None:
+            raise ValueError("occurrence authority schema is invalid")
         self._connect_factory = connect_factory or db_connect
+        self._schema = schema
 
     def put_binding(self, scope: TenantScope, binding: ScheduleBinding) -> None:
         with self._connect_factory(scope) as conn:
@@ -524,7 +532,7 @@ class AutomationOccurrenceStore:
         claim_until = now + lease
         with self._connect_factory(scope) as conn:
             row = conn.execute(
-                """WITH candidate AS (
+                f"""WITH candidate AS (
                      SELECT o.occurrence_id FROM automation_occurrence o
                      JOIN automation_schedule_binding b USING(org_id,project_id,policy_id,policy_revision)
                      JOIN extension_operation_dispatch_binding d
@@ -540,6 +548,10 @@ class AutomationOccurrenceStore:
                       AND d.execution_epoch=o.execution_epoch
                       AND r.enabled AND NOT r.operation_fence AND r.observed_state='ready'
                       AND r.execution_epoch=o.execution_epoch
+                      AND NOT EXISTS (
+                        SELECT 1 FROM {self._schema}.extension_dispatch_claim_gate g
+                         WHERE g.org_id=o.org_id AND g.project_id=o.project_id
+                           AND g.cutover_group_id=d.cutover_group_id AND g.claim_paused)
                     ORDER BY o.created_at,o.occurrence_id FOR UPDATE OF o,b SKIP LOCKED LIMIT 1
                    ) UPDATE automation_occurrence o
                      SET status='claimed',claim_owner=%s,claim_until=%s,updated_at=clock_timestamp()

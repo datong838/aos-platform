@@ -18,7 +18,9 @@ from psycopg.rows import dict_row
 from pydantic import ValidationError
 
 from aos_api.aip_budget_reservation_store import canonical_hash
+from aos_api.automation_occurrence_store import AutomationOccurrenceStore
 from aos_api.ecommerce_growth_cutover import (
+    CutoverCommitRequest,
     CutoverExactRef,
     CutoverPrepareRequest,
     EcommerceGrowthCutoverBlocked,
@@ -77,7 +79,9 @@ def database():
         )
         root = Path(__file__).resolve().parents[2]
         _migration(root, "ar1_001_extension_runtime_authority.py", owner)
+        _migration(root, "ar1_004_runtime_execution_attempt.py", owner)
         _migration(root, "ar2_001_ecommerce_dispatch_authority.py", owner)
+        _migration(root, "ar2_002_automation_occurrence.py", owner)
         owner.execute(
             """CREATE TABLE aip_action_proposal(
                  org_id text NOT NULL,project_id text NOT NULL,proposal_id text NOT NULL,
@@ -117,7 +121,9 @@ def database():
                     AND project_id=current_setting('aos.project_id',true))"""
             )
         _migration(root, "ar2_013_ecommerce_growth_cutover.py", owner, schema=schema)
+        _migration(root, "ar2_014_ecommerce_growth_cutover_commit.py", owner, schema=schema)
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_extension_maintainer").format(sql.Identifier(schema)))
+        owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(sql.Identifier(schema)))
         yield SimpleNamespace(owner=owner, schema=schema, role=role, root=root)
     finally:
         owner.execute("RESET ROLE")
@@ -158,6 +164,7 @@ def _connection(
 
 def _seed(
     database, scope: TenantScope, *, complete: bool = True, ready: bool = True,
+    pending_receipt: bool = True,
     approval_lifetime: timedelta = timedelta(hours=1),
 ):
     owner = database.owner
@@ -268,12 +275,25 @@ def _seed(
         policyRef=policy_ref, approvalRef=approval_ref,
         checkpoint={"legacyEntry": "canonical-router", "version": 1},
         occurrenceWatermark=now,
-        pendingTargetReceiptRefs=[{
+        pendingTargetReceiptRefs=([{
             "resourceType": "CapabilityProviderReceipt", "resourceId": "provider-result-1",
             "revision": 1, "contentHash": "sha256:" + "2" * 64,
-        }],
+        }] if pending_receipt else []),
     )
     return request
+
+
+def _commit_request(prepare_receipt):
+    return CutoverCommitRequest(
+        cutoverOperationId=prepare_receipt.cutover_operation_id,
+        idempotencyKey="commit-cutover-1",
+        prepareReceiptRef={
+            "resourceType": "CutoverPrepareReceipt",
+            "resourceId": str(prepare_receipt.receipt_id),
+            "revision": 1,
+            "contentHash": prepare_receipt.content_hash,
+        },
+    )
 
 
 def test_prepare_freezes_exact_nine_rows_without_cutting_over(database):
@@ -467,3 +487,386 @@ def test_approval_expiry_is_checked_after_waiting_for_proposal_lock(database):
         blocker.close()
         with pytest.raises(EcommerceGrowthCutoverBlocked, match="active exact"):
             future.result(timeout=5)
+
+
+def _seed_pending_occurrence(database, scope, request):
+    owner = database.owner
+    now = datetime(2026, 9, 9, 12, 0, tzinfo=timezone.utc)
+    occurrence_id = uuid4()
+    owner.execute(
+        """INSERT INTO automation_schedule_binding(
+             org_id,project_id,policy_id,policy_revision,policy_hash,operation_id,
+             installation_id,generation,execution_epoch,timezone,cadence,weekly_day,
+             local_time,effective_from,approved,enabled)
+           VALUES(%s,%s,'cutover-policy',1,%s,'ecommerce_growth_schedule_trigger',
+             %s,%s,%s,'Asia/Shanghai','weekly',3,'20:00',%s,true,true)""",
+        (*scope.key, "sha256:" + "9" * 64, request.target_installation_id,
+         request.target_generation, request.target_execution_epoch, now - timedelta(days=1)),
+    )
+    owner.execute(
+        """INSERT INTO automation_occurrence(
+             org_id,project_id,occurrence_id,policy_id,policy_revision,policy_hash,operation_id,
+             installation_id,generation,execution_epoch,scheduled_at,local_slot,
+             trigger_source,status,deadline)
+           VALUES(%s,%s,%s,'cutover-policy',1,%s,'ecommerce_growth_schedule_trigger',
+             %s,%s,%s,%s,'2026-09-09T20:00+0800','schedule','pending',%s)""",
+        (*scope.key, occurrence_id, "sha256:" + "9" * 64,
+         request.target_installation_id, request.target_generation,
+         request.target_execution_epoch, now, now + timedelta(days=1)),
+    )
+    return occurrence_id, now
+
+
+def test_pause_then_commit_switches_exact_group_and_keeps_claim_gate_closed(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    occurrence_id, now = _seed_pending_occurrence(database, scope, prepare_request)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    request = _commit_request(prepared)
+
+    paused = store.begin_activation_commit(scope, request, actor="runtime-owner")
+    paused_replay = store.begin_activation_commit(scope, request, actor="runtime-owner")
+    assert paused.status == "draining" and paused.replayed is False
+    assert paused_replay.receipt_id == paused.receipt_id and paused_replay.replayed is True
+    assert paused.occurrence_watermark is not None
+    assert database.owner.execute(
+        "SELECT status FROM extension_dispatch_cutover_operation"
+    ).fetchone()["status"] == "draining"
+    assert database.owner.execute(
+        "SELECT claim_paused FROM extension_dispatch_claim_gate"
+    ).fetchone()["claim_paused"] is True
+    assert database.owner.execute(
+        "SELECT enabled,operation_fence,revision FROM extension_runtime_binding"
+    ).fetchone() == {"enabled": False, "operation_fence": True, "revision": 14}
+
+    committed = store.commit_activation(scope, request, actor="runtime-owner")
+    replay = store.commit_activation(scope, request, actor="runtime-owner")
+    assert committed.status == "committed" and committed.replayed is False
+    assert replay.receipt_id == committed.receipt_id and replay.replayed is True
+    rows = database.owner.execute(
+        """SELECT handler_kind,installation_id,generation,execution_epoch,
+                  operation_fence,revision,cutover_group_revision
+             FROM extension_operation_dispatch_binding ORDER BY operation_id"""
+    ).fetchall()
+    assert len(rows) == 9
+    assert all(
+        row == {
+            "handler_kind": "extension",
+            "installation_id": prepare_request.target_installation_id,
+            "generation": prepare_request.target_generation,
+            "execution_epoch": 7,
+            "operation_fence": False,
+            "revision": 6,
+            "cutover_group_revision": 12,
+        }
+        for row in rows
+    )
+    occurrence_store = AutomationOccurrenceStore(
+        _connection(database, runtime=True), schema=database.schema
+    )
+    assert occurrence_store.claim_next(scope, owner="worker-paused", now=now) is None
+    database.owner.execute("UPDATE extension_dispatch_claim_gate SET claim_paused=false,revision=2")
+    database.owner.execute(
+        "UPDATE extension_runtime_binding SET enabled=true,operation_fence=false,revision=revision+1"
+    )
+    claimed = occurrence_store.claim_next(scope, owner="worker-open", now=now)
+    assert claimed is not None and claimed.occurrence_id == occurrence_id
+
+
+def test_commit_blocks_active_claim_then_preserves_unknown_without_replay(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    occurrence_id, now = _seed_pending_occurrence(database, scope, prepare_request)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    request = _commit_request(prepared)
+    attempt_id = uuid4()
+    database.owner.execute(
+        """UPDATE automation_occurrence SET status='claimed',claim_owner='old-worker',claim_until=%s
+             WHERE occurrence_id=%s""",
+        (now + timedelta(minutes=5), occurrence_id),
+    )
+    database.owner.execute(
+        """INSERT INTO automation_occurrence_dispatch_attempt(
+             org_id,project_id,attempt_id,occurrence_id,claim_owner,target_idempotency_key,
+             status,claimed_at,claim_until)
+           VALUES(%s,%s,%s,%s,'old-worker','old-target-key','claimed',%s,%s)""",
+        (*scope.key, attempt_id, occurrence_id, now, now + timedelta(minutes=5)),
+    )
+    store.begin_activation_commit(scope, request, actor="runtime-owner")
+    with pytest.raises(EcommerceGrowthCutoverBlocked, match="not drained"):
+        store.commit_activation(scope, request, actor="runtime-owner")
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_operation_dispatch_binding WHERE handler_kind='legacy'"
+    ).fetchone()["n"] == 9
+    database.owner.execute(
+        """UPDATE automation_occurrence SET status='needs_attention',claim_owner=NULL,claim_until=NULL
+             WHERE occurrence_id=%s""",
+        (occurrence_id,),
+    )
+    database.owner.execute(
+        """UPDATE automation_occurrence_dispatch_attempt
+              SET status='unknown',resolved_at=%s WHERE attempt_id=%s""",
+        (now + timedelta(minutes=1), attempt_id),
+    )
+    committed = store.commit_activation(scope, request, actor="runtime-owner")
+    assert [item["attemptId"] for item in committed.unknown_attempts] == [str(attempt_id)]
+    assert database.owner.execute(
+        "SELECT status FROM automation_occurrence_dispatch_attempt WHERE attempt_id=%s",
+        (attempt_id,),
+    ).fetchone()["status"] == "unknown"
+
+
+def test_commit_blocks_prepared_pending_receipt_and_dispatch_drift(database):
+    scope = TenantScope("org-org", "dev-project")
+    pending_request = _seed(database, scope)
+    pending_store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    pending_prepared = pending_store.prepare_activation(scope, pending_request, actor="runtime-owner")
+    pending_commit = _commit_request(pending_prepared)
+    pending_store.begin_activation_commit(scope, pending_commit, actor="runtime-owner")
+    with pytest.raises(EcommerceGrowthCutoverBlocked, match="pending target Receipt"):
+        pending_store.commit_activation(scope, pending_commit, actor="runtime-owner")
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_operation_dispatch_binding WHERE handler_kind='extension'"
+    ).fetchone()["n"] == 0
+
+
+def test_commit_rolls_back_all_nine_when_one_dispatch_row_drifted(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    request = _commit_request(prepared)
+    store.begin_activation_commit(scope, request, actor="runtime-owner")
+    database.owner.execute(
+        """UPDATE extension_operation_dispatch_binding SET revision=revision+1
+             WHERE operation_id=(SELECT min(operation_id) FROM extension_operation_dispatch_binding)"""
+    )
+    with pytest.raises(EcommerceGrowthCutoverConflict, match="dispatch group authority drifted"):
+        store.commit_activation(scope, request, actor="runtime-owner")
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_operation_dispatch_binding WHERE handler_kind='extension'"
+    ).fetchone()["n"] == 0
+
+
+def test_pause_receipt_tamper_and_runtime_function_call_are_rejected(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    request = _commit_request(prepared)
+    store.begin_activation_commit(scope, request, actor="runtime-owner")
+    with _connection(database, runtime=True)(scope) as conn:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            conn.execute(
+                sql.SQL("SELECT {}.extension_dispatch_cutover_commit_ar2_014(%s,%s)").format(
+                    sql.Identifier(database.schema)
+                ),
+                (request.cutover_operation_id, "runtime"),
+            )
+        conn.rollback()
+    database.owner.execute("ALTER TABLE extension_dispatch_cutover_receipt DISABLE TRIGGER immutable_history")
+    database.owner.execute(
+        """UPDATE extension_dispatch_cutover_receipt
+              SET authority_data=jsonb_set(authority_data,'{claimPaused}','false')
+            WHERE phase='pause'"""
+    )
+    database.owner.execute("ALTER TABLE extension_dispatch_cutover_receipt ENABLE TRIGGER immutable_history")
+    with pytest.raises(EcommerceGrowthCutoverConflict, match="pause Receipt authority drifted"):
+        store.begin_activation_commit(scope, request, actor="runtime-owner")
+
+
+def test_commit_function_itself_rejects_current_approval_drift(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    request = _commit_request(prepared)
+    store.begin_activation_commit(scope, request, actor="runtime-owner")
+    database.owner.execute("UPDATE aip_action_proposal SET status='expired'")
+    with _connection(database)(scope) as conn:
+        with pytest.raises(psycopg.Error, match="approval is not bound"):
+            conn.execute(
+                sql.SQL("SELECT {}.extension_dispatch_cutover_commit_ar2_014(%s,%s)").format(
+                    sql.Identifier(database.schema)
+                ),
+                (request.cutover_operation_id, "runtime-owner"),
+            )
+        conn.rollback()
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_operation_dispatch_binding WHERE handler_kind='legacy'"
+    ).fetchone()["n"] == 9
+
+
+def test_commit_blocks_running_runtime_attempt_until_terminal(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    request = _commit_request(prepared)
+    attempt_id = uuid4()
+    now = datetime.now(timezone.utc)
+    database.owner.execute("SELECT set_config('aos.org_id',%s,false)", (scope.org_id,))
+    database.owner.execute("SELECT set_config('aos.project_id',%s,false)", (scope.project_id,))
+    database.owner.execute(
+        """INSERT INTO extension_runtime_execution_attempt(
+             org_id,project_id,attempt_id,installation_id,generation,execution_epoch,
+             operation_kind,operation_key,idempotency_key,request_hash,owner_token_hash,
+             state,lease_until)
+           VALUES(%s,%s,%s,%s,%s,%s,'signed_read','cutover-read','running-key',%s,%s,
+             'running',%s)""",
+        (*scope.key, attempt_id, prepare_request.target_installation_id,
+         prepare_request.target_generation, prepare_request.target_execution_epoch,
+         "sha256:" + "7" * 64, "sha256:" + "8" * 64, now + timedelta(minutes=5)),
+    )
+    store.begin_activation_commit(scope, request, actor="runtime-owner")
+    with pytest.raises(EcommerceGrowthCutoverBlocked, match="not drained"):
+        store.commit_activation(scope, request, actor="runtime-owner")
+    database.owner.execute(
+        """UPDATE extension_runtime_execution_attempt
+              SET state='abandoned',revision=2,completed_at=%s WHERE attempt_id=%s""",
+        (now + timedelta(minutes=1), attempt_id),
+    )
+    assert store.commit_activation(scope, request, actor="runtime-owner").status == "committed"
+
+
+def test_pause_waits_for_concurrent_runtime_attempt_then_commit_blocks(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    request = _commit_request(prepared)
+    attempt_id = uuid4()
+    now = datetime.now(timezone.utc)
+    blocker = psycopg.connect(**PG, autocommit=False, row_factory=dict_row)
+    blocker.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
+    blocker.execute("SELECT set_config('aos.org_id',%s,false)", (scope.org_id,))
+    blocker.execute("SELECT set_config('aos.project_id',%s,false)", (scope.project_id,))
+    blocker.execute(
+        """INSERT INTO extension_runtime_execution_attempt(
+             org_id,project_id,attempt_id,installation_id,generation,execution_epoch,
+             operation_kind,operation_key,idempotency_key,request_hash,owner_token_hash,
+             state,lease_until)
+           VALUES(%s,%s,%s,%s,%s,%s,'signed_read','concurrent-cutover-read',
+             'concurrent-running-key',%s,%s,'running',%s)""",
+        (*scope.key, attempt_id, prepare_request.target_installation_id,
+         prepare_request.target_generation, prepare_request.target_execution_epoch,
+         "sha256:" + "5" * 64, "sha256:" + "6" * 64, now + timedelta(minutes=5)),
+    )
+    try:
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(
+                store.begin_activation_commit, scope, request, actor="runtime-owner"
+            )
+            time.sleep(0.2)
+            assert future.done() is False
+            blocker.commit()
+            assert future.result(timeout=5).status == "draining"
+    finally:
+        blocker.rollback()
+        blocker.close()
+    with pytest.raises(EcommerceGrowthCutoverBlocked, match="not drained"):
+        store.commit_activation(scope, request, actor="runtime-owner")
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_operation_dispatch_binding WHERE handler_kind='legacy'"
+    ).fetchone()["n"] == 9
+
+
+def test_ar2_014_nonempty_gate_blocks_downgrade(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    store.begin_activation_commit(scope, _commit_request(prepared), actor="runtime-owner")
+    spec = importlib.util.spec_from_file_location(
+        "ar2_014_down",
+        database.root / "alembic/versions/ar2_014_ecommerce_growth_cutover_commit.py",
+    )
+    migration = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(migration)
+    migration.op = SimpleNamespace(execute=database.owner.execute)
+    with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState):
+        migration.downgrade()
+
+
+def test_ar2_014_empty_downgrade_restores_prior_constraints(database):
+    spec = importlib.util.spec_from_file_location(
+        "ar2_014_empty_down",
+        database.root / "alembic/versions/ar2_014_ecommerce_growth_cutover_commit.py",
+    )
+    migration = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(migration)
+    migration.op = SimpleNamespace(execute=database.owner.execute)
+    migration.downgrade()
+    assert database.owner.execute(
+        "SELECT to_regclass('extension_dispatch_claim_gate') AS relation"
+    ).fetchone()["relation"] is None
+    definition = database.owner.execute(
+        """SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint
+             WHERE conrelid='extension_dispatch_cutover_event'::regclass
+               AND conname='extension_dispatch_cutover_event_event_type_check'"""
+    ).fetchone()["definition"]
+    assert "CUTOVER_CLAIMS_PAUSED" not in definition
+
+
+def test_direct_pause_or_commit_without_phase_receipt_rolls_back(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    request = _commit_request(prepared)
+    with _connection(database)(scope) as conn:
+        conn.execute(
+            sql.SQL("SELECT {}.extension_dispatch_cutover_pause_claims_ar2_014(%s,%s)").format(
+                sql.Identifier(database.schema)
+            ),
+            (request.cutover_operation_id, "runtime-owner"),
+        )
+        with pytest.raises(psycopg.errors.CheckViolation, match="pause Receipt"):
+            conn.commit()
+        conn.rollback()
+    assert database.owner.execute(
+        "SELECT status FROM extension_dispatch_cutover_operation"
+    ).fetchone()["status"] == "prepared"
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_dispatch_claim_gate"
+    ).fetchone()["n"] == 0
+
+    store.begin_activation_commit(scope, request, actor="runtime-owner")
+    with _connection(database)(scope) as conn:
+        conn.execute(
+            sql.SQL("SELECT {}.extension_dispatch_cutover_commit_ar2_014(%s,%s)").format(
+                sql.Identifier(database.schema)
+            ),
+            (request.cutover_operation_id, "runtime-owner"),
+        )
+        with pytest.raises(psycopg.errors.CheckViolation, match="commit Receipt"):
+            conn.commit()
+        conn.rollback()
+    assert database.owner.execute(
+        "SELECT status FROM extension_dispatch_cutover_operation"
+    ).fetchone()["status"] == "draining"
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_operation_dispatch_binding WHERE handler_kind='legacy'"
+    ).fetchone()["n"] == 9
+
+
+def test_pause_event_hash_drift_is_rejected_on_replay(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    request = _commit_request(prepared)
+    store.begin_activation_commit(scope, request, actor="runtime-owner")
+    database.owner.execute("ALTER TABLE extension_dispatch_cutover_event DISABLE TRIGGER immutable_history")
+    database.owner.execute(
+        """UPDATE extension_dispatch_cutover_event SET payload_hash=%s
+             WHERE event_type='CUTOVER_CLAIMS_PAUSED'""",
+        ("sha256:" + "f" * 64,),
+    )
+    database.owner.execute("ALTER TABLE extension_dispatch_cutover_event ENABLE TRIGGER immutable_history")
+    with pytest.raises(EcommerceGrowthCutoverConflict, match="pause Receipt authority drifted"):
+        store.begin_activation_commit(scope, request, actor="runtime-owner")
