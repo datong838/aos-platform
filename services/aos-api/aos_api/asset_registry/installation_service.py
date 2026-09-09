@@ -61,11 +61,13 @@ class InstallationService:
         composition_store: Any,
         revalidator: InstallationRevalidator,
         planning_revalidator: Any | None = None,
+        runtime_uninstall_guard: Any | None = None,
     ) -> None:
         self._store = store
         self._composition_store = composition_store
         self._revalidator = revalidator
         self._planning_revalidator = planning_revalidator or revalidator
+        self._runtime_uninstall_guard = runtime_uninstall_guard
 
     def create(
         self,
@@ -583,6 +585,15 @@ class InstallationService:
         self._store.guard_no_active_replacement_in_transaction(
             conn, locked=locked
         )
+        if self._runtime_uninstall_guard is not None:
+            self._runtime_uninstall_guard.before_uninstall(
+                conn,
+                org_id=locked.org_id,
+                project_id=locked.project_id,
+                installation_id=locked.record.installation_id,
+                expected_installation_revision=locked.record.current.revision,
+                actor=actor,
+            )
         checked_at = self._store.read_control_clock_in_transaction(conn)
         return self._store.append_uninstall_in_transaction(
             conn,

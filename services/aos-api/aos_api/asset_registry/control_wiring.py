@@ -178,6 +178,7 @@ def build_installation_service() -> InstallationControl:
     from aos_api.asset_registry.installation_service import InstallationService
     from aos_api.asset_registry.installation_store import PostgresInstallationStore
     from aos_api.asset_registry.release_policy import ReleasePolicy
+    from aos_api.extension_runtime.runtime_uninstall import RuntimeUninstallGuard
 
     return InstallationService(
         store=PostgresInstallationStore(),
@@ -185,6 +186,7 @@ def build_installation_service() -> InstallationControl:
         revalidator=InstallationRevalidator(
             release_policy=ReleasePolicy(trust_roots=_configured_trust_roots())
         ),
+        runtime_uninstall_guard=RuntimeUninstallGuard(),
     )
 
 
@@ -263,6 +265,7 @@ def build_runtime_control_plane() -> RuntimeControlPlane:
         RuntimeReleaseRevalidator,
     )
     from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
+    from aos_api.extension_runtime.runtime_uninstall import RuntimeUninstallGuard
 
     store = PostgresInstallationStore()
     policy = ReleasePolicy(trust_roots=_configured_trust_roots())
@@ -272,6 +275,7 @@ def build_runtime_control_plane() -> RuntimeControlPlane:
         composition_store=PostgresCompositionStore(),
         revalidator=InstallationRevalidator(release_policy=policy),
         planning_revalidator=planning,
+        runtime_uninstall_guard=RuntimeUninstallGuard(),
     )
 
     disable = RuntimeDisableService(
