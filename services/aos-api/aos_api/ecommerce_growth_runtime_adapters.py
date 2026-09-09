@@ -27,6 +27,10 @@ from aos_api.aip_production_contract_store import (
 )
 from aos_api.aip_agent_registry_store import AipAgentRegistryStore
 from aos_api.aip_capability_registry import AipCapabilityRegistry
+from aos_api.aip_binding_readiness_service import AipBindingReadinessService
+from aos_api.aip_capability_binding_service import AipCapabilityBindingService
+from aos_api.aip_skill_binding_readiness_service import AipSkillBindingReadinessService
+from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.aip_budget_reservation_contracts import BudgetExactRef
 from aos_api.aip_budget_reservation_store import (
     AipBudgetReservationStore,
@@ -36,6 +40,7 @@ from aos_api.aip_agent_registry_contracts import (
     AgentInstanceStatus,
     CapabilityReadiness,
     TemplateLifecycle,
+    VersionedAssetRef,
 )
 from aos_api.aip_model_runtime_contracts import (
     ModelModality,
@@ -2824,7 +2829,7 @@ class ContentGenerateHostService:
             raise ValueError("content generate Task/Brief exact lineage drifted")
 
     @staticmethod
-    def _agent_capability_authority(transaction, scope, authorities) -> None:
+    def _agent_capability_authority(transaction, scope, authorities):
         agent_ref = authorities["agent_instance"]
         plan_ref = authorities["responsibility_plan"]
         capability_ref = authorities["capability"]
@@ -2946,6 +2951,7 @@ class ContentGenerateHostService:
             != expected_capability_ref
         ):
             raise ValueError("content generate Capability authority drifted")
+        return agent, capability
 
     @staticmethod
     def _route_budget_approval_authority(
@@ -3048,7 +3054,7 @@ class ContentGenerateHostService:
         checked_at: datetime,
         max_input_tokens: int,
         max_output_tokens: int,
-    ) -> None:
+    ):
         capacity_ref = authorities["capacity_reservation"]
         capacity = transaction.execute(
             """SELECT r.reservation_id,r.pool_id,r.pool_revision,r.agent_run_id,
@@ -3304,8 +3310,8 @@ class ContentGenerateHostService:
             raise ValueError("content generate Provider health authority drifted")
 
         run = transaction.execute(
-            """SELECT agent_run_id,task_id,instance_id,instance_version,model_route_ref,
-                      policy_ref,status,version
+            """SELECT agent_run_id,task_id,instance_id,instance_version,skill_binding_id,
+                      skill_ref,model_route_ref,policy_ref,status,version
                  FROM public.aip_agent_run
                 WHERE org_id=%s AND project_id=%s AND agent_run_id=%s FOR SHARE""",
             (*scope.key, capacity["agent_run_id"]),
@@ -3330,6 +3336,206 @@ class ContentGenerateHostService:
             != capacity_pool_canonical_hash(route.runtime_policy_ref.model_dump(mode="json", by_alias=True))
         ):
             raise ValueError("content generate AgentRun capacity lineage drifted")
+        return model, provider, policy, run
+
+    @staticmethod
+    def _binding_authority(
+        transaction,
+        scope,
+        authorities,
+        *,
+        route,
+        provider,
+        policy,
+        run,
+        capability,
+        checked_at,
+    ) -> None:
+        row = transaction.execute(
+            """SELECT b.*,s.content_hash AS skill_content_hash,
+                      s.lifecycle AS skill_lifecycle,s.publication_tenant,
+                      s.model_route_ref AS skill_model_route_ref,
+                      s.runtime_policy_ref AS skill_runtime_policy_ref,
+                      s.release_gate_ref AS skill_release_gate_ref,
+                      s.required_capabilities
+                 FROM public.aip_skill_binding b
+                 JOIN public.aip_skill_template_revision s
+                   ON s.skill_id=b.skill_id AND s.revision=b.skill_revision
+                WHERE b.org_id=%s AND b.project_id=%s AND b.binding_id=%s
+                FOR SHARE OF b""",
+            (*scope.key, run["skill_binding_id"]),
+        ).fetchone()
+        if row is None:
+            raise ValueError("content generate SkillBinding authority is missing")
+
+        def strict_versioned_ref(value):
+            raw = AipModelRuntimeStore._load(value)
+            if not isinstance(raw, dict) or type(raw.get("revision")) is not int:
+                raise ValueError("content generate Binding exact ref drifted")
+            parsed = VersionedAssetRef.model_validate(raw)
+            canonical = parsed.model_dump(mode="json", by_alias=True)
+            if capacity_pool_canonical_hash(raw) != capacity_pool_canonical_hash(canonical):
+                raise ValueError("content generate Binding exact ref drifted")
+            return parsed
+
+        for field in (
+            "model_route_ref",
+            "runtime_policy_ref",
+            "eval_gate_ref",
+            "budget_policy_ref",
+        ):
+            strict_versioned_ref(row[field])
+        binding_row = dict(row)
+        binding_row["content_hash"] = row["skill_content_hash"]
+        try:
+            binding = AipSkillRegistry._binding_from_row(scope, binding_row)
+        except ValueError as exc:
+            raise ValueError("content generate SkillBinding authority drifted") from exc
+        capability_ids = binding.capability_binding_ids
+        capability_rows = transaction.execute(
+            """SELECT binding_id,capability_ref,status,health,version,
+                      provider_ref,model_route_ref,runtime_policy_ref,eval_gate_ref,
+                      eval_contract_ref,license_evidence_refs,data_dependency_refs,
+                      tool_dependency_refs,budget_policy_ref,allow_degraded,
+                      dependency_snapshot_hash,operational_readiness,readiness_reasons,
+                      observed_at,last_evaluated_at,readiness_expires_at
+                 FROM public.aip_capability_binding
+                WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)
+                ORDER BY binding_id FOR SHARE""",
+            (*scope.key, capability_ids),
+        ).fetchall()
+        skill_ref = strict_versioned_ref(run["skill_ref"])
+        skill_route_ref = strict_versioned_ref(row["skill_model_route_ref"])
+        skill_policy_ref = strict_versioned_ref(row["skill_runtime_policy_ref"])
+        skill_gate_ref = strict_versioned_ref(row["skill_release_gate_ref"])
+        def asset_ref(asset_type, asset_id, revision, content_hash):
+            return VersionedAssetRef(
+                assetType=asset_type,
+                assetId=asset_id,
+                revision=revision,
+                contentHash=content_hash,
+            )
+
+        route_ref = asset_ref(
+            "ModelRouteRevision", route.route_id, route.revision, route.content_hash
+        )
+        provider_ref = asset_ref(
+            "ProviderInstanceRevision",
+            provider.provider_instance_id,
+            provider.revision,
+            provider.content_hash,
+        )
+        capability_ref = asset_ref(
+            "CapabilityRevision",
+            capability.capability_id,
+            capability.revision,
+            capability.content_hash,
+        )
+        policy_ref = route.runtime_policy_ref
+        gate_ref = route.eval_gate_ref
+        budget_policy_ref = policy.budget_policy_ref
+        if (
+            not run["skill_binding_id"]
+            or not capability_ids
+            or len(capability_ids) != len(set(capability_ids))
+            or any(not item.strip() for item in capability_ids)
+            or binding.instance_id != authorities["agent_instance"].resource_id
+            or binding.status != "active"
+            or type(row["version"]) is not int
+            or binding.readiness is not CapabilityReadiness.AVAILABLE
+            or binding.readiness_reasons
+            or binding.last_evaluated_at is None
+            or binding.readiness_expires_at is None
+            or not binding.last_evaluated_at <= checked_at < binding.readiness_expires_at
+            or skill_ref != binding.skill
+            or row["skill_lifecycle"] != "published"
+            or row["publication_tenant"]
+            != {"orgId": scope.org_id, "projectId": scope.project_id}
+            or skill_route_ref != route_ref
+            or skill_policy_ref != policy_ref
+            or skill_gate_ref != gate_ref
+            or binding.dependencies.model_route_ref != route_ref
+            or binding.dependencies.runtime_policy_ref != policy_ref
+            or binding.dependencies.eval_gate_ref != gate_ref
+            or binding.dependencies.budget_policy_ref != budget_policy_ref
+            or binding.budget_policy_ref != budget_policy_ref
+            or len(capability_rows) != len(capability_ids)
+            or {item["binding_id"] for item in capability_rows}
+            != set(capability_ids)
+            or binding.dependency_snapshot_hash
+            != AipSkillBindingReadinessService.snapshot_hash(binding, capability_rows)
+        ):
+            raise ValueError("content generate SkillBinding authority drifted")
+
+        required_capabilities = row["required_capabilities"]
+        if (
+            not isinstance(required_capabilities, list)
+            or any(not isinstance(item, str) or not item.strip() for item in required_capabilities)
+            or len(required_capabilities) != len(set(required_capabilities))
+        ):
+            raise ValueError("content generate Skill capability coverage drifted")
+        provided_capabilities = set()
+        for item in capability_rows:
+            capability_item = strict_versioned_ref(item["capability_ref"])
+            for field in (
+                "provider_ref",
+                "model_route_ref",
+                "runtime_policy_ref",
+                "eval_gate_ref",
+                "eval_contract_ref",
+                "budget_policy_ref",
+            ):
+                strict_versioned_ref(item[field])
+            for field in ("data_dependency_refs", "tool_dependency_refs"):
+                raw_refs = AipModelRuntimeStore._load(item[field])
+                if not isinstance(raw_refs, list):
+                    raise ValueError("content generate Binding exact ref drifted")
+                for raw_ref in raw_refs:
+                    strict_versioned_ref(raw_ref)
+            provided_capabilities.add(capability_item.asset_id)
+            if (
+                item["status"] != "active"
+                or item["health"] != "healthy"
+                or type(item["version"]) is not int
+                or item["operational_readiness"] != "available"
+                or item["readiness_reasons"]
+                or item["observed_at"] is None
+                or item["last_evaluated_at"] is None
+                or item["readiness_expires_at"] is None
+                or item["observed_at"] > checked_at
+                or not item["last_evaluated_at"] <= checked_at < item["readiness_expires_at"]
+            ):
+                raise ValueError("content generate CapabilityBinding authority drifted")
+        if (
+            capability.capability_id not in required_capabilities
+            or not set(required_capabilities).issubset(provided_capabilities)
+        ):
+            raise ValueError("content generate Skill capability coverage drifted")
+
+        matching = [
+            item
+            for item in capability_rows
+            if strict_versioned_ref(item["capability_ref"]) == capability_ref
+        ]
+        if len(matching) != 1:
+            raise ValueError("content generate CapabilityBinding authority drifted")
+        cap_row = matching[0]
+        try:
+            dependencies = AipCapabilityBindingService._dependencies_from_row(cap_row)
+        except ValueError as exc:
+            raise ValueError("content generate CapabilityBinding authority drifted") from exc
+        if (
+            dependencies.provider_ref != provider_ref
+            or dependencies.model_route_ref != route_ref
+            or dependencies.runtime_policy_ref != policy_ref
+            or dependencies.eval_gate_ref != gate_ref
+            or dependencies.budget_policy_ref != budget_policy_ref
+            or cap_row["dependency_snapshot_hash"]
+            != AipBindingReadinessService.snapshot_hash(
+                capability_ref, dependencies
+            )
+        ):
+            raise ValueError("content generate CapabilityBinding authority drifted")
 
     def revalidate(self, *, transaction, scope, dispatch, command):
         parsed = _strict_content_generate_command(command)
@@ -3352,7 +3558,7 @@ class ContentGenerateHostService:
                 )
             },
         )
-        self._agent_capability_authority(
+        _agent, capability = self._agent_capability_authority(
             transaction, scope, parsed["authorities"]
         )
         route, checked_at = self._route_budget_approval_authority(
@@ -3361,7 +3567,7 @@ class ContentGenerateHostService:
             parsed["authorities"],
             upper_bound_fen=command["upperBoundFen"],
         )
-        self._resolution_capacity_authority(
+        _model, provider, policy, run = self._resolution_capacity_authority(
             transaction,
             scope,
             parsed["authorities"],
@@ -3369,6 +3575,17 @@ class ContentGenerateHostService:
             checked_at=checked_at,
             max_input_tokens=command["maxInputTokens"],
             max_output_tokens=command["maxOutputTokens"],
+        )
+        self._binding_authority(
+            transaction,
+            scope,
+            parsed["authorities"],
+            route=route,
+            provider=provider,
+            policy=policy,
+            run=run,
+            capability=capability,
+            checked_at=checked_at,
         )
         return {
             "key": parsed["key"],
