@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
+import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -42,6 +44,7 @@ from aos_api.ecommerce_growth_lifecycle import (
 from aos_api.extension_runtime.binding_store import RuntimeBindingStore
 from aos_api.extension_runtime.disable_executor import RuntimeDisableExecutor
 from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
+from aos_api.extension_runtime.oci_driver import CleanupOnlyOciDriver, OciDriver
 from aos_api.extension_runtime.reconciler import ResourceJournal
 from aos_api.extension_runtime.runtime_uninstall import (
     RuntimeUninstallCleanupExecutor,
@@ -1645,7 +1648,14 @@ def _complete_runtime_disable(database, scope, operation_id, revision):
     return result
 
 
-def _seed_owned_runtime_resource(database, scope, prepare_request):
+def _seed_owned_runtime_resource(
+    database,
+    scope,
+    prepare_request,
+    *,
+    package_hash="sha256:" + "a" * 64,
+    created_container_id="b" * 64,
+):
     with _connection(database, runtime=True)(scope) as conn:
         operation = RuntimeOperationStore().accept(
             conn,
@@ -1666,10 +1676,31 @@ def _seed_owned_runtime_resource(database, scope, prepare_request):
             operation_id=operation.operation_id,
             generation=prepare_request.target_generation,
             package_id="ecommerce-growth",
-            package_hash="sha256:" + "a" * 64,
+            package_hash=package_hash,
             engine_context="colima-aos-extension",
             expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
         )
+        if created_container_id is not None:
+            claimed = journal.claim_create(
+                conn,
+                org_id=scope.org_id,
+                project_id=scope.project_id,
+                resource_id=intent.resource_id,
+            )
+            journal.record_created(
+                conn,
+                org_id=scope.org_id,
+                project_id=scope.project_id,
+                intent=claimed,
+                container_id=created_container_id,
+            )
+        conn.commit()
+    return intent
+
+
+def _record_owned_runtime_container(database, scope, intent, container_id):
+    with _connection(database, runtime=True)(scope) as conn:
+        journal = ResourceJournal()
         claimed = journal.claim_create(
             conn,
             org_id=scope.org_id,
@@ -1681,14 +1712,15 @@ def _seed_owned_runtime_resource(database, scope, prepare_request):
             org_id=scope.org_id,
             project_id=scope.project_id,
             intent=claimed,
-            container_id="b" * 64,
+            container_id=container_id,
         )
         conn.commit()
-    return intent
 
 
-def _detach_and_release_existing_runtime(database, scope, prepare_request):
-    intent = _seed_owned_runtime_resource(database, scope, prepare_request)
+def _detach_and_release_existing_runtime(
+    database, scope, prepare_request, *, intent=None, cleanup_driver=None
+):
+    intent = intent or _seed_owned_runtime_resource(database, scope, prepare_request)
     operation_id, revision = _begin_runtime_disable(database, scope, prepare_request)
     _complete_runtime_disable(database, scope, operation_id, revision)
     with _connection(database, runtime=True)(scope) as conn:
@@ -1700,21 +1732,24 @@ def _detach_and_release_existing_runtime(database, scope, prepare_request):
         )
         conn.commit()
 
-    class Driver:
-        context = "colima-aos-extension"
+    if cleanup_driver is None:
+        class Driver:
+            context = "colima-aos-extension"
 
-        @staticmethod
-        def require_isolation():
-            return None
+            @staticmethod
+            def require_isolation():
+                return None
 
-        @staticmethod
-        def remove_owned(name, owner, *, expected_container_id):
-            assert (name, owner) == (intent.identity.name, intent.identity.owner)
-            assert expected_container_id == "b" * 64
-            return True
+            @staticmethod
+            def remove_owned(name, owner, *, expected_container_id):
+                assert (name, owner) == (intent.identity.name, intent.identity.owner)
+                assert expected_container_id == "b" * 64
+                return True
+
+        cleanup_driver = Driver()
 
     state = RuntimeUninstallCleanupExecutor(
-        connect=_idle_runtime_connection(database), driver=Driver()
+        connect=_idle_runtime_connection(database), driver=cleanup_driver
     ).run_one(
         org_id=scope.org_id,
         project_id=scope.project_id,
@@ -2399,6 +2434,213 @@ def test_reinstall_uses_new_authority_and_preserves_old_audit_history(database):
         (*scope.key, old_request.target_installation_id,
          uninstall_receipt["receiptId"]),
     ).fetchone()["n"] == 1
+
+
+@pytest.mark.skipif(
+    os.getenv("AOS_EXTENSION_OCI_TEST") != "1",
+    reason="explicit isolated OCI environment required",
+)
+def test_same_digest_reinstall_observes_exact_physical_oci_release(
+    database, tmp_path
+):
+    scope = TenantScope("org-org", "dev-project")
+    context = "colima-aos-extension"
+    driver = OciDriver(context=context)
+    cleanup_driver = CleanupOnlyOciDriver(driver)
+    driver.require_isolation()
+    image_dir = tmp_path / "same-digest-runtime"
+    image_dir.mkdir()
+    (image_dir / "runner.py").write_text(
+        "import time\ntime.sleep(300)\n", encoding="utf-8"
+    )
+    (image_dir / "Dockerfile").write_text(
+        "FROM python:3.11-alpine\nCOPY runner.py /aos/runner.py\n",
+        encoding="utf-8",
+    )
+    image_id = subprocess.check_output(
+        [
+            "docker", "--context", context, "build", "--network=none",
+            "--pull=false", "-q", str(image_dir),
+        ],
+        text=True,
+        timeout=60,
+    ).strip()
+    assert image_id.startswith("sha256:") and len(image_id) == 71
+    created: list[tuple[str, str, str]] = []
+
+    def create_and_observe(request):
+        intent = _seed_owned_runtime_resource(
+            database,
+            scope,
+            request,
+            package_hash=image_id,
+            created_container_id=None,
+        )
+        container_id = driver.create_session(
+            image_id, intent.identity.name, intent.identity.owner
+        )
+        created.append((intent.identity.name, intent.identity.owner, container_id))
+        subprocess.run(
+            ["docker", "--context", context, "start", container_id],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        observed = subprocess.check_output(
+            [
+                "docker", "--context", context, "inspect", "--format",
+                "{{.Id}}|{{index .Config.Labels \"aos.extension.owner\"}}|"
+                "{{.State.Running}}|{{.Config.User}}|{{.HostConfig.NetworkMode}}|"
+                "{{.HostConfig.ReadonlyRootfs}}|{{json .HostConfig.SecurityOpt}}",
+                intent.identity.name,
+            ],
+            text=True,
+            timeout=15,
+        ).strip().split("|", 6)
+        assert observed[:6] == [
+            container_id,
+            intent.identity.owner,
+            "true",
+            "65534:65534",
+            "none",
+            "true",
+        ]
+        security_options = json.loads(observed[6])
+        assert "no-new-privileges" in security_options
+        assert any(item.startswith("seccomp=") for item in security_options)
+        _record_owned_runtime_container(
+            database, scope, intent, container_id
+        )
+        return intent, container_id
+
+    def assert_absent(name):
+        result = subprocess.run(
+            ["docker", "--context", context, "inspect", name],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        assert result.returncode != 0 and "no such" in result.stderr.lower()
+
+    try:
+        old_request, _ = _resumed_activation(database, scope)
+        old_intent, old_container_id = create_and_observe(old_request)
+        _detach_and_release_existing_runtime(
+            database,
+            scope,
+            old_request,
+            intent=old_intent,
+            cleanup_driver=cleanup_driver,
+        )
+        assert_absent(old_intent.identity.name)
+        assert database.owner.execute(
+            """SELECT package_hash,container_id,cleanup_state,observed_release
+                FROM extension_runtime_resource_lease WHERE resource_id=%s""",
+            (old_intent.resource_id,),
+        ).fetchone() == {
+            "package_hash": image_id,
+            "container_id": old_container_id,
+            "cleanup_state": "released",
+            "observed_release": True,
+        }
+        with _connection(database, app=True)(scope) as conn:
+            RuntimeUninstallGuard().before_uninstall(
+                conn,
+                org_id=scope.org_id,
+                project_id=scope.project_id,
+                installation_id=old_request.target_installation_id,
+                expected_installation_revision=1,
+                actor="asset-operator",
+            )
+            _append_minimal_uninstalled_revision(
+                conn, scope, old_request.target_installation_id, 1
+            )
+            conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+            conn.commit()
+
+        legacy_group_revision = database.owner.execute(
+            """SELECT min(cutover_group_revision) AS revision
+                FROM extension_operation_dispatch_binding
+                WHERE org_id=%s AND project_id=%s AND cutover_group_id=%s
+                  AND handler_kind='legacy'""",
+            (*scope.key, old_request.cutover_group_id),
+        ).fetchone()["revision"]
+        new_request = _seed(
+            database,
+            scope,
+            pending_receipt=False,
+            suffix="-oci-reinstall",
+            existing_group=old_request.cutover_group_id,
+            expected_group_revision=legacy_group_revision,
+            target_execution_epoch=1,
+            target_runtime_revision=13,
+        )
+        new_intent, new_container_id = create_and_observe(new_request)
+        assert new_container_id != old_container_id
+        prepared = EcommerceGrowthCutoverStore(
+            _connection(database), schema=database.schema
+        ).prepare_activation(scope, new_request, actor="runtime-owner")
+        store = EcommerceGrowthCutoverStore(
+            _connection(database), schema=database.schema
+        )
+        commit_request = _commit_request(prepared, suffix="-oci-reinstall")
+        store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+        committed = store.commit_activation(
+            scope, commit_request, actor="runtime-owner"
+        )
+        finalize_request = _finalize_request(
+            committed, suffix="-oci-reinstall"
+        )
+        validated = store.validate_activation(
+            scope, finalize_request, actor="runtime-owner"
+        )
+        store.resume_activation(
+            scope,
+            finalize_request,
+            validate_receipt_ref=_validate_ref(validated),
+            actor="runtime-owner",
+        )
+        assert database.owner.execute(
+            """SELECT count(*) AS n FROM extension_operation_dispatch_binding
+                WHERE org_id=%s AND project_id=%s AND handler_kind='extension'
+                  AND installation_id=%s AND generation=%s
+                  AND execution_epoch=%s AND NOT operation_fence""",
+            (*scope.key, new_request.target_installation_id,
+             new_request.target_generation, new_request.target_execution_epoch),
+        ).fetchone()["n"] == len(ECOMMERCE_GROWTH_OPERATIONS)
+        _detach_and_release_existing_runtime(
+            database,
+            scope,
+            new_request,
+            intent=new_intent,
+            cleanup_driver=cleanup_driver,
+        )
+        assert_absent(new_intent.identity.name)
+        assert database.owner.execute(
+            """SELECT package_hash,container_id,cleanup_state,observed_release
+                FROM extension_runtime_resource_lease WHERE resource_id=%s""",
+            (new_intent.resource_id,),
+        ).fetchone() == {
+            "package_hash": image_id,
+            "container_id": new_container_id,
+            "cleanup_state": "released",
+            "observed_release": True,
+        }
+    finally:
+        for name, owner, container_id in created:
+            try:
+                driver.remove_owned(
+                    name, owner, expected_container_id=container_id
+                )
+            except (RuntimeError, subprocess.SubprocessError):
+                pass
+        subprocess.run(
+            ["docker", "--context", context, "image", "rm", image_id],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
     assert database.owner.execute(
         """SELECT count(*) AS n FROM extension_dispatch_lifecycle_receipt receipt
             JOIN extension_runtime_operation operation
