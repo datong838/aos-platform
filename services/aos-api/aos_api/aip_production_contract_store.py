@@ -349,11 +349,11 @@ class AipProductionContractStore:
     def get_responsibility_plan(self, scope: TenantScope, plan_id: str, revision: int | None = None,
                                 *, conn: Any | None = None) -> ResponsibilityPlanRevision:
         def read(c: Any) -> ResponsibilityPlanRevision:
-            head = c.execute("SELECT * FROM aip_responsibility_plan_head WHERE org_id=%s AND project_id=%s AND plan_id=%s", (*scope.key, plan_id)).fetchone()
+            head = c.execute("SELECT * FROM public.aip_responsibility_plan_head WHERE org_id=%s AND project_id=%s AND plan_id=%s", (*scope.key, plan_id)).fetchone()
             if not head:
                 raise ProductionContractNotFound("responsibility plan not found")
             selected = revision or int(head["current_revision"])
-            row = c.execute("SELECT * FROM aip_responsibility_plan_revision WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s", (*scope.key, plan_id, selected)).fetchone()
+            row = c.execute("SELECT * FROM public.aip_responsibility_plan_revision WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s", (*scope.key, plan_id, selected)).fetchone()
             if not row:
                 raise ProductionContractNotFound("responsibility plan revision not found")
             return self._responsibility_plan(scope, row, int(head["version"]), c)
@@ -5517,7 +5517,7 @@ class AipProductionContractStore:
         row = conn.execute(
             """SELECT kind,resource_id,version,status,selected_assignee,
                       required_capability_refs,snapshot_hash,expires_at
-                 FROM aip_assignee_resolution_receipt
+                 FROM public.aip_assignee_resolution_receipt
                 WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
             (*scope.key, receipt_id),
         ).fetchone()
@@ -5597,7 +5597,7 @@ class AipProductionContractStore:
             instance_id = assignee["resourceId"]
             required = set(slot["requiredCapabilityIds"])
             skill_rows = conn.execute(
-                """SELECT capability_refs FROM aip_skill_binding
+                """SELECT capability_refs FROM public.aip_skill_binding
                    WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status='active'""",
                 (*scope.key, instance_id),
             ).fetchall()
@@ -5632,7 +5632,7 @@ class AipProductionContractStore:
                 uncovered.append(slot_id)
                 continue
             cap_rows = conn.execute(
-                """SELECT * FROM aip_capability_binding
+                """SELECT * FROM public.aip_capability_binding
                    WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)""",
                 (*scope.key, binding_ids),
             ).fetchall()

@@ -372,9 +372,9 @@ class _CoverageConnection:
         self._binding_ids = binding_ids
 
     def execute(self, query, _params):
-        if "FROM aip_skill_binding" in query:
+        if "aip_skill_binding" in query:
             return _CoverageRows([{"capability_refs": self._binding_ids}])
-        if "FROM aip_capability_binding" in query:
+        if "aip_capability_binding" in query:
             return _CoverageRows(self._capability_rows)
         raise AssertionError(query)
 

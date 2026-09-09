@@ -21,8 +21,22 @@ from aos_api.ecommerce_growth_host_ports import (
     HostTransaction,
 )
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
-from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contract_store import (
+    AipProductionContractStore,
+    canonical_hash as production_contract_canonical_hash,
+)
+from aos_api.aip_agent_registry_store import AipAgentRegistryStore
+from aos_api.aip_capability_registry import AipCapabilityRegistry
+from aos_api.aip_agent_registry_contracts import (
+    AgentInstanceStatus,
+    CapabilityReadiness,
+    TemplateLifecycle,
+)
 from aos_api.aip_production_contracts import (
+    AssigneeKind,
+    BriefLifecycle,
+    ContractReadiness,
+    Coverage,
     CreateBriefRequest,
     ExactArtifactRef,
     ExactRevisionRef,
@@ -2785,6 +2799,130 @@ class ContentGenerateHostService:
         ):
             raise ValueError("content generate Task/Brief exact lineage drifted")
 
+    @staticmethod
+    def _agent_capability_authority(transaction, scope, authorities) -> None:
+        agent_ref = authorities["agent_instance"]
+        plan_ref = authorities["responsibility_plan"]
+        capability_ref = authorities["capability"]
+        agent_row = transaction.execute(
+            """SELECT i.*,t.content_hash FROM public.aip_agent_instance i
+                JOIN public.aip_agent_template_revision t
+                  ON t.template_id=i.template_id AND t.revision=i.template_revision
+                WHERE i.org_id=%s AND i.project_id=%s AND i.instance_id=%s
+                FOR SHARE OF i""",
+            (*scope.key, agent_ref.resource_id),
+        ).fetchone()
+        if agent_row is None:
+            raise ValueError("content generate AgentInstance authority is missing")
+        agent = AipAgentRegistryStore._instance_from_row(scope, agent_row)
+        expected_agent_ref = {
+            "resourceType": "AgentInstanceRevision",
+            "resourceId": agent.instance_id,
+            "revision": agent.version,
+            "contentHash": "sha256:" + agent.instance_ref.content_hash,
+        }
+        if (
+            agent.status is not AgentInstanceStatus.ACTIVE
+            or agent_ref.model_dump(mode="json", by_alias=True, exclude_none=True)
+            != expected_agent_ref
+        ):
+            raise ValueError("content generate AgentInstance authority drifted")
+
+        head = transaction.execute(
+            """SELECT current_revision,version
+                 FROM public.aip_responsibility_plan_head
+                WHERE org_id=%s AND project_id=%s AND plan_id=%s FOR SHARE""",
+            (*scope.key, plan_ref.resource_id),
+        ).fetchone()
+        if head is None:
+            raise ValueError("content generate ResponsibilityPlan authority is missing")
+        plan_row = transaction.execute(
+            """SELECT profile,template_ref,slots,merge_decisions,
+                      profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,
+                      merge_decision_receipt_ids,content_hash,lifecycle
+                 FROM public.aip_responsibility_plan_revision
+                WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s""",
+            (*scope.key, plan_ref.resource_id, plan_ref.revision),
+        ).fetchone()
+        if plan_row is None:
+            raise ValueError("content generate ResponsibilityPlan revision is missing")
+        raw_plan_content = {
+            "profile": plan_row["profile"],
+            "templateRef": plan_row["template_ref"],
+            "slots": plan_row["slots"],
+            "mergeDecisions": plan_row["merge_decisions"],
+            "profileRecommendationRef": plan_row["profile_recommendation_ref"],
+            "profileConfirmationId": plan_row["profile_confirmation_id"],
+            "mergePolicyRef": plan_row["merge_policy_ref"],
+            "mergeDecisionReceiptIds": plan_row["merge_decision_receipt_ids"],
+        }
+        plan = AipProductionContractStore().get_responsibility_plan(
+            scope, plan_ref.resource_id, plan_ref.revision, conn=transaction
+        )
+        expected_plan_ref = {
+            "resourceType": "ResponsibilityPlanRevision",
+            "resourceId": plan.plan_id,
+            "revision": plan.revision,
+            "contentHash": "sha256:" + plan.content_hash,
+        }
+        matching_slots = [
+            slot
+            for slot in plan.slots
+            if slot.assignee.kind is AssigneeKind.AGENT_INSTANCE
+            and slot.assignee.resource_id == agent.instance_id
+            and slot.assignee.version == agent.version
+            and capability_ref.resource_id in slot.required_capability_ids
+        ]
+        if (
+            type(head["current_revision"]) is not int
+            or type(head["version"]) is not int
+            or head["current_revision"] != plan_ref.revision
+            or head["version"] != plan_ref.revision
+            or plan.version != head["version"]
+            or production_contract_canonical_hash(raw_plan_content)
+            != plan_row["content_hash"]
+            or plan.content_hash != plan_row["content_hash"]
+            or plan.lifecycle is not BriefLifecycle.FROZEN
+            or plan.readiness is not ContractReadiness.READY
+            or plan.coverage is not Coverage.COMPLETE
+            or plan.blockers
+            or plan.uncovered_slots
+            or not matching_slots
+            or plan_ref.model_dump(mode="json", by_alias=True, exclude_none=True)
+            != expected_plan_ref
+        ):
+            raise ValueError("content generate ResponsibilityPlan authority drifted")
+
+        capability_row = transaction.execute(
+            """SELECT capability.*,
+                      (SELECT max(candidate.revision)
+                         FROM public.aip_capability_revision candidate
+                        WHERE candidate.capability_id=capability.capability_id
+                          AND candidate.lifecycle='published') AS latest_published_revision
+                 FROM public.aip_capability_revision capability
+                WHERE capability.capability_id=%s AND capability.revision=%s""",
+            (capability_ref.resource_id, capability_ref.revision),
+        ).fetchone()
+        if capability_row is None:
+            raise ValueError("content generate Capability authority is missing")
+        capability = AipCapabilityRegistry._from_row(capability_row)
+        expected_capability_ref = {
+            "resourceType": "CapabilityRevision",
+            "resourceId": capability.capability_id,
+            "revision": capability.revision,
+            "contentHash": "sha256:" + capability.content_hash,
+        }
+        if (
+            capability.lifecycle is not TemplateLifecycle.PUBLISHED
+            or capability.readiness is not CapabilityReadiness.AVAILABLE
+            or capability.readiness_reasons
+            or type(capability_row["latest_published_revision"]) is not int
+            or capability_row["latest_published_revision"] != capability.revision
+            or capability_ref.model_dump(mode="json", by_alias=True, exclude_none=True)
+            != expected_capability_ref
+        ):
+            raise ValueError("content generate Capability authority drifted")
+
     def revalidate(self, *, transaction, scope, dispatch, command):
         parsed = _strict_content_generate_command(command)
         if dispatch.operation_id != "ecommerce_growth_content_generate":
@@ -2805,6 +2943,9 @@ class ContentGenerateHostService:
                     mode="json", by_alias=True, exclude_none=True
                 )
             },
+        )
+        self._agent_capability_authority(
+            transaction, scope, parsed["authorities"]
         )
         return {
             "key": parsed["key"],

@@ -217,6 +217,11 @@ def test_content_generate_accepts_review_handoff_and_current_task_brief(monkeypa
     monkeypatch.setattr(
         ReviewAdvanceHostService, "_revalidate_growth_plan", staticmethod(lambda **_: None)
     )
+    monkeypatch.setattr(
+        ContentGenerateHostService,
+        "_agent_capability_authority",
+        staticmethod(lambda *_: None),
+    )
     transaction = Transaction(values)
     result = ContentGenerateHostService().revalidate(
         transaction=transaction,
@@ -268,6 +273,11 @@ def test_content_generate_rejects_review_task_brief_drift(monkeypatch, drift):
     values = authorities()
     monkeypatch.setattr(
         ReviewAdvanceHostService, "_revalidate_growth_plan", staticmethod(lambda **_: None)
+    )
+    monkeypatch.setattr(
+        ContentGenerateHostService,
+        "_agent_capability_authority",
+        staticmethod(lambda *_: None),
     )
     if drift == "review_decision":
         values["review"]["response"]["decision"] = "RETURN"
