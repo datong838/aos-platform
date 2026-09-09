@@ -22,7 +22,14 @@ from aos_api.ecommerce_growth_host_ports import (
 )
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
 from aos_api.aip_production_contract_store import AipProductionContractStore
-from aos_api.aip_production_contracts import CreateBriefRequest
+from aos_api.aip_production_contracts import (
+    CreateBriefRequest,
+    ExactArtifactRef,
+    ExactRevisionRef,
+    ReviewIssue,
+    ReviewIssueStatus,
+)
+from aos_api.aip_eval_runner import AipEvalRunner, compute_eval_report_hash
 from aos_api.aip_task_models import CreateTaskRequest
 from aos_api.aip_contracts import ResourceRef
 from aos_api.ecommerce_analyst_authority_contracts import (
@@ -32,6 +39,10 @@ from aos_api.ecommerce_analyst_authority_contracts import (
 )
 from aos_api.ecommerce_analyst_authority_store import canonical_hash as analyst_canonical_hash
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+from aos_api.ecommerce_business_investigation_review_command import (
+    EcommerceBusinessInvestigationReviewCommandService,
+    review_issue_exact_ref,
+)
 from aos_api.ecommerce_business_investigation_aip_composition import (
     PostgresAipProductionCompositionSource,
 )
@@ -1357,6 +1368,114 @@ class ReviewAdvanceHostService:
         ):
             raise ValueError("review GrowthPlan must be current and APPROVED")
 
+    @staticmethod
+    def _revalidate_issue_eval(*, transaction, scope, command) -> None:
+        supplied_issue = InvestigationExactRef.model_validate(command["reviewIssueRef"])
+        supplied_eval = InvestigationExactRef.model_validate(command["evalReportRef"])
+        if (
+            supplied_issue.resource_type != "ReviewIssueRevision"
+            or supplied_eval.resource_type != "EvalReportRevision"
+            or type(supplied_issue.revision) is not int
+            or type(supplied_eval.revision) is not int
+        ):
+            raise ValueError("review Issue/Eval exact refs are invalid")
+        row = transaction.execute(
+            """SELECT * FROM public.aip_review_issue
+                WHERE org_id=%s AND project_id=%s AND issue_id=%s
+                FOR SHARE""",
+            (*scope.key, supplied_issue.resource_id),
+        ).fetchone()
+        if row is None:
+            raise ValueError("review Issue current authority is missing")
+        issue = ReviewIssue(
+            tenant={"orgId": scope.org_id, "projectId": scope.project_id},
+            issue_id=row["issue_id"],
+            rule_ref=ExactRevisionRef.model_validate(row["rule_ref"]),
+            severity=row["severity"],
+            artifact_ref=ExactArtifactRef(
+                artifact_id=row["artifact_id"], content_hash=row["artifact_hash"]
+            ),
+            eval_report_ref=ExactRevisionRef(
+                resource_type="EvalReportRevision",
+                resource_id=row["eval_report_id"],
+                revision=int(row["eval_report_revision"]),
+                content_hash=row["eval_report_hash"],
+            ),
+            location=row["location"],
+            evidence_refs=[
+                ExactRevisionRef.model_validate(item) for item in row["evidence_refs"]
+            ],
+            suggested_fix=row["suggested_fix"],
+            return_stage=row["return_stage"],
+            status=row["status"],
+            version=int(row["version"]),
+            created_by=row["created_by"],
+            created_at=row["created_at"],
+            updated_by=row["updated_by"],
+            updated_at=row["updated_at"],
+        )
+        issue_payload = issue.model_dump(mode="json", by_alias=True)
+        raw_issue_payload = {
+            **issue_payload,
+            "ruleRef": row["rule_ref"],
+            "location": row["location"],
+            "evidenceRefs": row["evidence_refs"],
+        }
+        expected_issue = review_issue_exact_ref(issue).model_dump(mode="json", by_alias=True)
+        if (
+            budget_canonical_hash(raw_issue_payload)
+            != budget_canonical_hash(issue_payload)
+            or expected_issue["contentHash"]
+            != "sha256:" + budget_canonical_hash(raw_issue_payload)
+            or command["reviewIssueRef"] != expected_issue
+            or issue.status is not ReviewIssueStatus.OPEN
+            or issue.version != supplied_issue.revision
+        ):
+            raise ValueError("review Issue must be the current OPEN exact version")
+        report_row = transaction.execute(
+            """SELECT * FROM public.aip_eval_report_revision
+                WHERE org_id=%s AND project_id=%s AND report_id=%s AND revision=%s""",
+            (*scope.key, supplied_eval.resource_id, supplied_eval.revision),
+        ).fetchone()
+        if report_row is None:
+            raise ValueError("review EvalReport authority is missing")
+        report = AipEvalRunner._report_from_row(scope, report_row)
+        report_payload = report.model_dump(
+            mode="json", by_alias=True, exclude={"content_hash"}
+        )
+        raw_report_payload = {
+            **report_payload,
+            "suiteRef": report_row["suite_ref"],
+            "evalContractRef": report_row["eval_contract_ref"],
+            "subjectArtifactRef": report_row["subject_artifact_ref"],
+            "stageAttemptRef": report_row["stage_attempt_ref"],
+            "gatePolicyRef": report_row["gate_policy_ref"],
+            "target": report_row["target_ref"],
+            "dataset": report_row["dataset_ref"],
+            "judge": report_row["judge_ref"],
+            "results": report_row["results"],
+        }
+        expected_eval = {
+            "resourceType": "EvalReportRevision",
+            "resourceId": report.report_id,
+            "revision": report.revision,
+            "contentHash": "sha256:" + report.content_hash,
+        }
+        if (
+            command["evalReportRef"] != expected_eval
+            or budget_canonical_hash(raw_report_payload)
+            != budget_canonical_hash(report_payload)
+            or budget_canonical_hash(raw_report_payload) != report.content_hash
+            or compute_eval_report_hash(report) != report.content_hash
+        ):
+            raise ValueError("review EvalReport exact authority drifted")
+        try:
+            EcommerceBusinessInvestigationReviewCommandService._validate_issue_report(
+                issue, report
+            )
+        except RuntimeError as exc:
+            raise ValueError("review Issue/Eval/Artifact lineage drifted") from exc
+
     def _review_lineage(self, *, transaction, scope, command, occurred_at):
         if not isinstance(occurred_at, datetime) or occurred_at.utcoffset() is None:
             raise ValueError("review lineage time must include timezone")
@@ -1611,6 +1730,11 @@ class ReviewAdvanceHostService:
         if _case_ref(case) != command["caseRef"]:
             raise ValueError("review case lineage drifted")
         self._revalidate_growth_plan(
+            transaction=transaction,
+            scope=scope,
+            command=command,
+        )
+        self._revalidate_issue_eval(
             transaction=transaction,
             scope=scope,
             command=command,

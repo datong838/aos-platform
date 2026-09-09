@@ -10,7 +10,10 @@ from pydantic import Field, field_validator, model_validator
 from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.aip_eval_contracts import EvalReportRevision
 from aos_api.aip_eval_runner import AipEvalRunner
-from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contract_store import (
+    AipProductionContractStore,
+    canonical_hash as production_canonical_hash,
+)
 from aos_api.aip_production_contracts import (
     ExactRevisionRef,
     ResolveReviewIssueRequest,
@@ -36,6 +39,18 @@ from aos_api.tenant_scope import TenantScope
 
 ReviewDecision = Literal["accept", "return", "request_more"]
 InvestigationStage = Literal["portrait", "diagnosis", "solution_design"]
+
+
+def review_issue_exact_ref(issue: ReviewIssue) -> InvestigationExactRef:
+    """Freeze the mutable canonical ReviewIssue state at one exact version."""
+
+    return InvestigationExactRef(
+        resource_type="ReviewIssueRevision",
+        resource_id=issue.issue_id,
+        revision=issue.version,
+        content_hash="sha256:"
+        + production_canonical_hash(issue.model_dump(mode="json", by_alias=True)),
+    )
 
 
 class BusinessInvestigationStageReviewCommand(AipContractModel):

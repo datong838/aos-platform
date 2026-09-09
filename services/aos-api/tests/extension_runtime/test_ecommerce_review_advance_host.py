@@ -139,6 +139,7 @@ def wired_host(monkeypatch, *, occurrence_hash=HASH):
     )
     monkeypatch.setattr(host, "_occurrence_content_hash", lambda _payload: occurrence_hash)
     monkeypatch.setattr(host, "_revalidate_growth_plan", lambda **_: None)
+    monkeypatch.setattr(host, "_revalidate_issue_eval", lambda **_: None)
     monkeypatch.setattr(
         host,
         "_review_lineage",
