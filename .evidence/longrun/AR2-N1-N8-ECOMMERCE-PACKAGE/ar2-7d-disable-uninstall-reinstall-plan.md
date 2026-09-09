@@ -2,7 +2,7 @@
 
 日期：2026-09-10
 基线：`aos-platform/m1@b6589cd7`、`docs/m1@682b0ab`
-状态：`REVIEWED_IMPLEMENTATION_PLAN_D6A_NEXT`
+状态：`REVIEWED_IMPLEMENTATION_PLAN_D6B2A_NEXT`
 
 ## 1. Rules 与边界
 
@@ -38,8 +38,8 @@
 
 - D6B1 新增 `extension_runtime/runtime_uninstall.py` 的固定 cleanup executor。每次只处理一个 ownership lease：第一事务锁定 installation、最新 generation binding、成功 disable operation、D6A detach Receipt 和 resource identity，写 cleanup intent checkpoint 后提交；事务外只允许 `CleanupOnlyOciDriver.remove_owned`；第二事务用既有 `ResourceJournal.record_cleanup` 写真实 removed 观察。引擎异常、absent/false 或进程重启一律保持 `uncertain/observed_release=false`，不自动重发未知删除。
 - D6B1 扫描限定 exact installation + generation + engine context，稳定按 resource_id 分页；已 released 幂等跳过。禁止复用“过期 preparation recovery”冒充主动卸载，因为 uninstall cleanup 必须以成功 disable/detach 为当前授权，与 lease expiry 无关。
-- D6B2 新增 `RuntimeUninstallGuard`，由 `InstallationService._append_uninstall` 在既有 installation 锁与同一提交事务内调用。有 runtime binding 才启用门：只接受唯一最新 generation、binding desired=disabled/observed=unknown/enabled=false/fence=true、对应 disable succeeded、D6A lifecycle detached 且 fence/detach Receipt 均可回读、该 generation 所有 lease released、claimed/running/UNKNOWN 义务为零、九项 dispatch 已恢复 legacy 且 gate 已删除；随后同事务把 binding 推进到 desired=uninstalled/observed=stopped，保留 fence 并 revision+1。
-- 普通无 runtime binding 的内容包严格 no-op；存在 runtime 表但 authority 不全时 fail-closed。production `build_runtime_control_plane` 必须注入 concrete guard；测试构造保留可选参数以兼容既有隔离夹具。D6B 不删除 resource lease、operation、Receipt、Case 或 audit 历史。
+- D6B2A 新增 `ar2_018` 窄卸载 authority 与 `RuntimeUninstallGuard`。Web 数据库身份 `aos_app` 不获得 runtime 表的通用读写权；只可执行 tenant-scoped `SECURITY DEFINER` 命令。命令在既有 installation 锁与同一事务内只接受唯一 generation binding、binding desired=disabled/observed=unknown/enabled=false/fence=true、对应 disable succeeded、D6A lifecycle detached 且 fence/detach Receipt 均可回读、该 generation 至少一项 lease 且全部 released、occurrence claimed、dispatch attempt claimed/unknown、runtime attempt running 三类义务均为零、九项 dispatch 已恢复 legacy 且 gate 已删除；随后原子写不可变 runtime uninstall Receipt，并把 binding 推进到 desired=uninstalled/observed=stopped，保留 fence并 revision+1。Receipt 的 authority_data 与数据库内 SHA-256 由 deferred constraint 绑定，缺 Receipt 或内容漂移不能提交。
+- D6B2B 由 `InstallationService._append_uninstall` 在 leaf guard 后、installation revision 前调用 concrete guard；普通无 runtime binding 的内容包严格 no-op，存在 runtime authority 但事实不全时 fail-closed。canonical HTTP `build_installation_service()` 与 `build_runtime_control_plane()` 内部的 InstallationService 都必须注入同一 concrete guard；只改 runtime control plane 会留下 HTTP 绕过。测试构造保留可选参数以兼容既有隔离夹具。runtime guard、binding 终态、installation event 任一失败都回滚同一事务。D6B 不删除 resource lease、operation、Receipt、Case 或 audit 历史。
 
 ### D6C：重装代次与旧权威隔离
 
@@ -53,7 +53,7 @@
 
 ## 4. 文件上限
 
-- 新增：`services/aos-api/alembic/versions/ar2_017_ecommerce_growth_disable_detach.py`、`services/aos-api/aos_api/ecommerce_growth_lifecycle.py`、`services/aos-api/tests/extension_runtime/test_ecommerce_growth_signed_lifecycle_pg.py`；D6B 若现有服务不能表达卸载门，可新增一个 `extension_runtime` 下的窄 uninstall orchestration 文件。
+- 新增：`services/aos-api/alembic/versions/ar2_017_ecommerce_growth_disable_detach.py`、`services/aos-api/alembic/versions/ar2_018_runtime_uninstall_authority.py`、`services/aos-api/aos_api/ecommerce_growth_lifecycle.py`、`services/aos-api/aos_api/extension_runtime/runtime_uninstall.py`、`services/aos-api/tests/extension_runtime/test_ecommerce_growth_signed_lifecycle_pg.py`。
 - 最小修改：`services/aos-api/aos_api/extension_runtime/{disable_commit.py,disable_executor.py,disable_service.py,disable_consumer.py,production_runtime.py}`、`services/aos-api/aos_api/asset_registry/{control_wiring.py,installation_service.py}` 及其直接测试。Router 只在生产 service wiring 必须切换时修改。
 - 不修改领域 bundle 业务实现，不扩写八工作台 UI，不改变预算/Provider/真实数据权威。发现额外文件依赖先更新本方案与 231-6，再编码。
 
