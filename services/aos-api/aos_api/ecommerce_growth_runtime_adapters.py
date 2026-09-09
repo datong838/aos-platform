@@ -1023,6 +1023,260 @@ class AnalysisAdvanceHostService:
         return expected if dict(receipt) == expected else {}
 
 
+_REVIEW_ACCEPT_FIELDS = frozenset(
+    {
+        "operation",
+        "occurrenceRef",
+        "caseRef",
+        "runRef",
+        "analysisReceiptRef",
+        "currentPlanRef",
+        "growthPlanRef",
+        "reviewIssueRef",
+        "evalReportRef",
+        "artifactBindings",
+        "decision",
+        "returnStage",
+        "targetModuleId",
+        "sourceSlotId",
+        "targetSlotId",
+        "markings",
+        "expiresAt",
+        "taskSpec",
+        "cutoffAt",
+        "idempotencyKey",
+        "requestHash",
+    }
+)
+_REVIEW_ARTIFACT_FAMILIES = ("portrait", "diagnosis", "growth_plan", "evidence_summary")
+REVIEW_RECEIPT_NAMESPACE = UUID("b42b2d81-8e5f-4c3b-ad29-7f6e5d4c3b2a")
+_REVIEW_SIDE_EFFECTS = {
+    "externalEffectsAllowed": False,
+    "providerInvocationCount": 0,
+    "approvalCreatedCount": 0,
+    "taskRunCreatedCount": 0,
+    "externalPublicationCount": 0,
+    "externalBusinessMutationCount": 0,
+}
+
+
+def _strict_review_accept_command(command: Mapping[str, Any]) -> tuple[str, InvestigationExactRef, InvestigationExactRef]:
+    if type(command) is not dict:
+        raise ValueError("review command must be a strict mapping")
+    if command.get("operation") != "review_handoff.advance" or command.get("decision") != "ACCEPT":
+        raise ValueError("review runtime mode is not wired")
+    if set(command) != _REVIEW_ACCEPT_FIELDS:
+        raise ValueError("review accept command has an invalid envelope")
+    key = command["idempotencyKey"]
+    request_hash = command["requestHash"]
+    if type(key) is not str or key != key.strip() or not 1 <= len(key) <= 200:
+        raise ValueError("review idempotencyKey is invalid")
+    if type(request_hash) is not str or not re.fullmatch(r"sha256:[0-9a-f]{64}", request_hash):
+        raise ValueError("review requestHash is invalid")
+    body = {name: command[name] for name in command if name != "requestHash"}
+    if _analysis_command_hash(body) != request_hash:
+        raise ValueError("review request hash drifted")
+    if (
+        command["returnStage"] is not None
+        or command["targetModuleId"] != "ecommerce.content-campaign"
+        or command["sourceSlotId"] != "analyst.solution"
+        or command["targetSlotId"] != "content.plan"
+        or command["markings"] != ["internal"]
+        or type(command["expiresAt"]) is not str
+        or type(command["taskSpec"]) is not dict
+    ):
+        raise ValueError("ACCEPT requires an exact bounded content Handoff")
+    cutoff = datetime.fromisoformat(command["cutoffAt"]) if type(command["cutoffAt"]) is str else None
+    expires = datetime.fromisoformat(command["expiresAt"]) if type(command["expiresAt"]) is str else None
+    if cutoff is None or expires is None or cutoff.utcoffset() is None or expires.utcoffset() is None:
+        raise ValueError("review times must include timezone")
+    if not cutoff < expires <= cutoff + timedelta(days=7):
+        raise ValueError("ACCEPT Handoff expiry drifted")
+    bindings = command["artifactBindings"]
+    if type(bindings) is not list or tuple(item.get("family") for item in bindings if type(item) is dict) != _REVIEW_ARTIFACT_FAMILIES:
+        raise ValueError("review requires four Artifacts in canonical family order")
+    artifacts = []
+    for item in bindings:
+        artifact = InvestigationExactRef.model_validate(item["artifactRef"])
+        if artifact.resource_type != "ArtifactRevision":
+            raise ValueError("review artifact type drifted")
+        artifacts.append(artifact)
+    if len(set((item.resource_type, item.resource_id, item.revision, item.content_hash) for item in artifacts)) != 4:
+        raise ValueError("review Artifact refs must be unique")
+    occurrence_ref = InvestigationExactRef.model_validate(command["occurrenceRef"])
+    case_ref = InvestigationExactRef.model_validate(command["caseRef"])
+    run_ref = InvestigationExactRef.model_validate(command["runRef"])
+    analysis_ref = InvestigationExactRef.model_validate(command["analysisReceiptRef"])
+    if occurrence_ref.resource_type != "AutomationOccurrence":
+        raise ValueError("review occurrence type drifted")
+    if case_ref.resource_type != "BusinessInvestigationCaseRevision":
+        raise ValueError("review case type drifted")
+    if run_ref.resource_type != "BusinessInvestigationRun":
+        raise ValueError("review run type drifted")
+    if analysis_ref.resource_type != "AnalysisRuntimeReceipt":
+        raise ValueError("review analysis receipt type drifted")
+    return key, occurrence_ref, case_ref
+
+
+class _HostReviewReceiptStore:
+    def __init__(self, transaction: HostTransaction, scope: TenantScope) -> None:
+        self._inner = _HostAnalysisReceiptStore(transaction, scope)
+
+    def read(self, key: str) -> dict[str, Any] | None:
+        return BoundEcommerceGrowthRuntimeStore(self._inner._transaction, self._inner._scope).read(
+            operation_id="ecommerce_growth_review_advance",
+            idempotency_key=key,
+        )
+
+    def put(self, key: str, payload: Mapping[str, Any], *, dispatch_ref=None, checked_at=None) -> dict[str, Any]:
+        existing = self.read(key)
+        body = dict(payload)
+        if existing is not None:
+            if existing != body:
+                raise ValueError("review Receipt idempotency content drift")
+            return existing
+        if dispatch_ref is None or checked_at is None:
+            raise ValueError("review Receipt persistence requires dispatch authority")
+        row = self._inner._transaction.execute(
+            """SELECT revision FROM extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s""",
+            (
+                *self._inner._scope.key,
+                UUID(str(dispatch_ref.installation_id)),
+                UUID(str(dispatch_ref.generation)),
+            ),
+        ).fetchone()
+        if row is None:
+            raise ValueError("review runtime binding is missing")
+        snapshot = EcommerceGrowthDispatchSnapshot(
+            operation_id=dispatch_ref.operation_id,
+            dispatch_revision=int(dispatch_ref.dispatch_revision),
+            installation_id=UUID(str(dispatch_ref.installation_id)),
+            generation=UUID(str(dispatch_ref.generation)),
+            execution_epoch=int(dispatch_ref.execution_epoch),
+            cutover_group_id=UUID(str(dispatch_ref.cutover_group_id)),
+            cutover_group_revision=int(dispatch_ref.cutover_group_revision),
+            runtime_revision=int(row["revision"]),
+            checked_at=checked_at,
+        )
+        record = BoundEcommerceGrowthRuntimeStore(self._inner._transaction, self._inner._scope).put(
+            operation_id="ecommerce_growth_review_advance",
+            idempotency_key=key,
+            request_hash=str(body["requestHash"]),
+            dispatch=snapshot,
+            response=body,
+            target_receipt_ref=body["receiptRef"],
+            actor="ecommerce-growth-review-host",
+            occurred_at=checked_at,
+        )
+        return record.response
+
+
+class ReviewAdvanceHostService:
+    """ACCEPT-only review Handoff host; RETURN remains fail-closed."""
+
+    executor_identity = "ecommerce-growth-review-host"
+
+    @staticmethod
+    def _components(transaction, scope):
+        factory = TransactionBoundConnectFactory(transaction, scope)
+        return (
+            lambda occurrence_id: _occurrence_payload(transaction, scope, occurrence_id),
+            BusinessInvestigationCaseStore(factory),
+            _HostReviewReceiptStore(transaction, scope),
+        )
+
+    @staticmethod
+    def _occurrence_content_hash(payload: Mapping[str, Any]) -> str:
+        return budget_canonical_hash(dict(payload), prefixed=True)
+
+    def _review_lineage(self, *, transaction, scope, command, occurred_at):
+        raise ValueError("review ACCEPT requires existing Handoff, Task and Brief authority")
+
+    def _accept_receipt(self, command, lineage, scope, key, decided_at):
+        body = {
+            "requestHash": command["requestHash"],
+            "decision": "ACCEPT",
+            "occurrenceRef": command["occurrenceRef"],
+            "caseRef": command["caseRef"],
+            "runRef": command["runRef"],
+            "analysisReceiptRef": command["analysisReceiptRef"],
+            "currentPlanRef": command["currentPlanRef"],
+            "reviewIssueRef": command["reviewIssueRef"],
+            "evalReportRef": command["evalReportRef"],
+            "growthPlanRef": command["growthPlanRef"],
+            "artifactBindings": command["artifactBindings"],
+            "returnStage": None,
+            "handoffRef": lineage["handoffRef"],
+            "taskRef": lineage["taskRef"],
+            "briefRef": lineage["briefRef"],
+            "cutoffAt": command["cutoffAt"],
+            "decidedAt": decided_at.astimezone(UTC).isoformat(),
+            "replayed": False,
+            "sideEffects": dict(_REVIEW_SIDE_EFFECTS),
+        }
+        receipt_id = str(uuid5(REVIEW_RECEIPT_NAMESPACE, "\x1f".join((*scope.key, key))))
+        return {
+            "receiptRef": {
+                "resourceType": "ReviewDecisionReceipt",
+                "resourceId": receipt_id,
+                "revision": 1,
+                "contentHash": _analysis_command_hash(body),
+                "receiptId": receipt_id,
+            },
+            **body,
+        }
+
+    def revalidate(self, *, transaction, scope, dispatch, command):
+        key, occurrence_ref, case_ref = _strict_review_accept_command(command)
+        if dispatch.operation_id != "ecommerce_growth_review_advance":
+            raise ValueError("review dispatch operation drifted")
+        occurrence_reader, cases, _receipts = self._components(transaction, scope)
+        try:
+            occurrence_id = UUID(str(occurrence_ref.resource_id))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("review occurrence identity is invalid") from exc
+        authority = occurrence_reader(occurrence_id)
+        expected_occurrence = {
+            "resourceType": "AutomationOccurrence",
+            "resourceId": str(authority["occurrenceId"]),
+            "revision": 1,
+            "contentHash": self._occurrence_content_hash(authority),
+        }
+        if command["occurrenceRef"] != expected_occurrence:
+            raise ValueError("review occurrence lineage drifted")
+        case = cases.get(scope, case_ref.resource_id)
+        if _case_ref(case) != command["caseRef"]:
+            raise ValueError("review case lineage drifted")
+        if not key:
+            raise ValueError("review idempotencyKey is invalid")
+
+    def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
+        key, _occurrence_ref, _case_ref_value = _strict_review_accept_command(command)
+        _reader, _cases, receipts = self._components(transaction, scope)
+        existing = receipts.read(key)
+        if existing is not None:
+            replay = dict(existing)
+            replay["replayed"] = True
+            return replay
+        lineage = self._review_lineage(
+            transaction=transaction,
+            scope=scope,
+            command=command,
+            occurred_at=occurred_at or checked_at,
+        )
+        payload = self._accept_receipt(command, lineage, scope, key, occurred_at or checked_at)
+        return receipts.put(key, payload, dispatch_ref=dispatch_ref, checked_at=checked_at)
+
+    def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        key, _occurrence_ref, _case_ref_value = _strict_review_accept_command(command)
+        _reader, _cases, receipts = self._components(transaction, scope)
+        expected = receipts.read(key)
+        if expected is None or type(receipt) is not dict:
+            return {}
+        return expected if dict(receipt) == expected else {}
+
+
 class CasePutHostService:
     """Current-authority Case write in the locked HostPort transaction."""
 
@@ -1506,6 +1760,7 @@ __all__ = [adapter.__name__ for adapter in RUNTIME_ADAPTER_TYPES] + [
     "DataRequirementRequestHostService",
     "DataFulfillHostService",
     "AnalysisAdvanceHostService",
+    "ReviewAdvanceHostService",
     "TransactionBoundConnectFactory",
     "TrustedEcommerceGrowthDomainService",
 ]
