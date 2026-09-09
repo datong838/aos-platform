@@ -34,6 +34,13 @@
 - `InstallationService.uninstall` 的生产 wiring 注入当前 runtime uninstall guard；有 runtime members 时只允许 exact disabled binding、dispatch detached、全部资源 released、无 claimed/running/UNKNOWN 未归宿义务后写 installation `uninstalled` revision。普通内容包和无 runtime member 的既有流程保持原合同。
 - 卸载提交把 binding 推进为 desired `uninstalled` / observed `stopped`，但保留 Case/Receipt/审计只读历史；资源或权限漂移保持 fail-closed，不用删除历史冒充释放。
 
+#### D6B 细化施工卡（2026-09-10）
+
+- D6B1 新增 `extension_runtime/runtime_uninstall.py` 的固定 cleanup executor。每次只处理一个 ownership lease：第一事务锁定 installation、最新 generation binding、成功 disable operation、D6A detach Receipt 和 resource identity，写 cleanup intent checkpoint 后提交；事务外只允许 `CleanupOnlyOciDriver.remove_owned`；第二事务用既有 `ResourceJournal.record_cleanup` 写真实 removed 观察。引擎异常、absent/false 或进程重启一律保持 `uncertain/observed_release=false`，不自动重发未知删除。
+- D6B1 扫描限定 exact installation + generation + engine context，稳定按 resource_id 分页；已 released 幂等跳过。禁止复用“过期 preparation recovery”冒充主动卸载，因为 uninstall cleanup 必须以成功 disable/detach 为当前授权，与 lease expiry 无关。
+- D6B2 新增 `RuntimeUninstallGuard`，由 `InstallationService._append_uninstall` 在既有 installation 锁与同一提交事务内调用。有 runtime binding 才启用门：只接受唯一最新 generation、binding desired=disabled/observed=unknown/enabled=false/fence=true、对应 disable succeeded、D6A lifecycle detached 且 fence/detach Receipt 均可回读、该 generation 所有 lease released、claimed/running/UNKNOWN 义务为零、九项 dispatch 已恢复 legacy 且 gate 已删除；随后同事务把 binding 推进到 desired=uninstalled/observed=stopped，保留 fence 并 revision+1。
+- 普通无 runtime binding 的内容包严格 no-op；存在 runtime 表但 authority 不全时 fail-closed。production `build_runtime_control_plane` 必须注入 concrete guard；测试构造保留可选参数以兼容既有隔离夹具。D6B 不删除 resource lease、operation、Receipt、Case 或 audit 历史。
+
 ### D6C：重装代次与旧权威隔离
 
 - 重装必须创建新的 installation 与 generation，enable 产生新 execution epoch，重新 prepare/cutover 产生更高且独立的 group revision；不得复活旧 installation 的 Approval、claim、DispatchRef 或 idempotency scope。
