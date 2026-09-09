@@ -8,6 +8,7 @@ from typing import Final
 
 from aos_api.ecommerce_growth_host_ports import (
     ConnectFactory,
+    EcommerceGrowthHostBlocked,
     EcommerceGrowthOperationBinding,
     LockedEcommerceGrowthHostPort,
 )
@@ -65,6 +66,17 @@ ECOMMERCE_GROWTH_RECEIPT_KEYS = {
 
 _REGISTRY_TOKEN: Final[object] = object()
 _RUNTIME_WIRING_REQUIRED = "AR2_7D_RUNTIME_WIRING_REQUIRED"
+_RUNTIME_HOST_SERVICES = (
+    ("ecommerce_growth_investigation_describe", "InvestigationDescribeHostService"),
+    ("ecommerce_growth_case_put", "CasePutHostService"),
+    ("ecommerce_growth_schedule_put", "SchedulePutHostService"),
+    ("ecommerce_growth_schedule_trigger", "ScheduleTriggerHostService"),
+    ("ecommerce_growth_data_fulfill", "DataFulfillHostService"),
+    ("ecommerce_growth_analysis_advance", "AnalysisAdvanceHostService"),
+    ("ecommerce_growth_review_advance", "ReviewAdvanceHostService"),
+    ("ecommerce_growth_content_generate", "ContentGenerateHostService"),
+    ("ecommerce_growth_content_review", "ContentReviewHostService"),
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,6 +144,62 @@ def _runtime_wiring_required(**_kwargs):
     raise EcommerceGrowthHostBlocked(_RUNTIME_WIRING_REQUIRED)
 
 
+def _require_runtime_dependencies() -> None:
+    from aos_api.aip_budget_reservation_store import AipBudgetReservationStore
+    from aos_api.ecommerce_growth_feedback_port import BoundEcommerceGrowthFeedbackPort
+    from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
+
+    if not all(
+        callable(dependency)
+        for dependency in (
+            BoundEcommerceGrowthRuntimeStore,
+            BoundEcommerceGrowthFeedbackPort,
+            AipBudgetReservationStore,
+        )
+    ):
+        raise EcommerceGrowthHostBlocked(_RUNTIME_WIRING_REQUIRED)
+
+
+def build_runtime_ecommerce_growth_registry() -> EcommerceGrowthHostAdapterRegistry:
+    """Build the sealed runtime registry only when all nine host services exist."""
+
+    from aos_api import ecommerce_growth_runtime_adapters as adapters
+
+    _require_runtime_dependencies()
+    if tuple(item[0] for item in _RUNTIME_HOST_SERVICES) != ECOMMERCE_GROWTH_OPERATIONS:
+        raise EcommerceGrowthHostBlocked(_RUNTIME_WIRING_REQUIRED)
+    if tuple(adapter.SPEC.operation_id for adapter in adapters.RUNTIME_ADAPTER_TYPES) != ECOMMERCE_GROWTH_OPERATIONS:
+        raise EcommerceGrowthHostBlocked(_RUNTIME_WIRING_REQUIRED)
+    bindings: dict[str, EcommerceGrowthOperationBinding] = {}
+    for adapter_type, (operation_id, class_name) in zip(
+        adapters.RUNTIME_ADAPTER_TYPES,
+        _RUNTIME_HOST_SERVICES,
+        strict=True,
+    ):
+        service_cls = getattr(adapters, class_name, None)
+        if (
+            adapter_type.SPEC.operation_id != operation_id
+            or not isinstance(service_cls, type)
+            or not callable(getattr(service_cls, "revalidate", None))
+            or not callable(getattr(service_cls, "execute", None))
+            or not callable(getattr(service_cls, "verify_receipt", None))
+        ):
+            raise EcommerceGrowthHostBlocked(_RUNTIME_WIRING_REQUIRED)
+        bindings[operation_id] = adapter_type(service_cls()).binding()
+    return EcommerceGrowthHostAdapterRegistry._from_host_factory(_REGISTRY_TOKEN, bindings)
+
+
+def select_ecommerce_growth_registry() -> EcommerceGrowthHostAdapterRegistry:
+    """Use runtime wiring only after the complete nine-service factory succeeds."""
+
+    try:
+        return build_runtime_ecommerce_growth_registry()
+    except EcommerceGrowthHostBlocked as exc:
+        if str(exc) != _RUNTIME_WIRING_REQUIRED:
+            raise
+        return build_registration_only_ecommerce_growth_registry()
+
+
 def build_registration_only_ecommerce_growth_registry() -> EcommerceGrowthHostAdapterRegistry:
     """Build the only production registry allowed before AR2-7D wiring."""
 
@@ -196,5 +264,7 @@ __all__ = [
     "EcommerceGrowthHostAdapterRegistry",
     "EcommerceGrowthHostPorts",
     "build_registration_only_ecommerce_growth_registry",
+    "build_runtime_ecommerce_growth_registry",
+    "select_ecommerce_growth_registry",
     "build_ecommerce_growth_host_ports",
 ]

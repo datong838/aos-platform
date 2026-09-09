@@ -11,7 +11,7 @@ from aos_api.auth import Principal, require_principal
 from aos_api.ecommerce_growth_canonical_router import EcommerceGrowthCanonicalRouter
 from aos_api.ecommerce_growth_host_composition import (
     ECOMMERCE_GROWTH_OPERATIONS,
-    build_registration_only_ecommerce_growth_registry,
+    select_ecommerce_growth_registry,
 )
 from aos_api.ecommerce_growth_host_ports import (
     EcommerceGrowthHostBlocked,
@@ -39,7 +39,7 @@ PrincipalDependency = Annotated[Principal, Depends(require_principal)]
 
 
 def get_canonical_router() -> EcommerceGrowthCanonicalRouter:
-    return EcommerceGrowthCanonicalRouter(build_registration_only_ecommerce_growth_registry())
+    return EcommerceGrowthCanonicalRouter(select_ecommerce_growth_registry())
 
 
 def _scope(principal: Principal) -> TenantScope:
