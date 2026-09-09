@@ -8,6 +8,7 @@ from aos_api.aip_agent_registry_contracts import (
     AgentInstanceStatus,
     CapabilityReadiness,
     TemplateLifecycle,
+    VersionedAssetRef,
 )
 from aos_api.aip_agent_registry_store import AipAgentRegistryStore
 from aos_api.aip_capability_registry import AipCapabilityRegistry
@@ -105,7 +106,12 @@ class Transaction:
             "content_hash": production_contract_canonical_hash(content),
             "lifecycle": "frozen",
         }
-        self.capability_row = {"owner": "capability", "latest_published_revision": 1}
+        self.capability_row = {
+            "owner": "capability",
+            "latest_published_revision": 1,
+            "required_data_refs": [],
+            "required_tool_refs": [],
+        }
 
     def execute(self, query, _params):
         self.queries.append(query)
@@ -160,6 +166,8 @@ def _owners(monkeypatch):
         lifecycle=TemplateLifecycle.PUBLISHED,
         readiness=CapabilityReadiness.AVAILABLE,
         readiness_reasons=[],
+        required_data_refs=[],
+        required_tool_refs=[],
     )
     monkeypatch.setattr(
         AipAgentRegistryStore,
@@ -222,6 +230,8 @@ def test_content_generate_accepts_current_agent_plan_and_capability(monkeypatch)
         "capability_readiness",
         "capability_reasons",
         "capability_latest",
+        "capability_data_bool",
+        "capability_tool_whitespace",
     ],
 )
 def test_content_generate_rejects_agent_plan_or_capability_drift(monkeypatch, drift):
@@ -260,6 +270,20 @@ def test_content_generate_rejects_agent_plan_or_capability_drift(monkeypatch, dr
         capability.readiness_reasons = ["blocked"]
     elif drift == "capability_latest":
         transaction.capability_row["latest_published_revision"] = 2
+    elif drift == "capability_data_bool":
+        transaction.capability_row["required_data_refs"] = [
+            {"assetType": "EvalDatasetRevision", "assetId": "data-1", "revision": True, "contentHash": HASH_A}
+        ]
+        capability.required_data_refs = [
+            VersionedAssetRef(assetType="EvalDatasetRevision", assetId="data-1", revision=1, contentHash=HASH_A)
+        ]
+    elif drift == "capability_tool_whitespace":
+        transaction.capability_row["required_tool_refs"] = [
+            {"assetType": "EvidenceBundleRevision", "assetId": " tool-1 ", "revision": 1, "contentHash": HASH_A}
+        ]
+        capability.required_tool_refs = [
+            VersionedAssetRef(assetType="EvidenceBundleRevision", assetId="tool-1", revision=1, contentHash=HASH_A)
+        ]
 
     with pytest.raises(ValueError):
         ContentGenerateHostService._agent_capability_authority(

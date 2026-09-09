@@ -235,6 +235,11 @@ def test_content_generate_accepts_review_handoff_and_current_task_brief(monkeypa
     monkeypatch.setattr(
         ContentGenerateHostService,
         "_binding_authority",
+        staticmethod(lambda *_args, **_kwargs: (object(), object())),
+    )
+    monkeypatch.setattr(
+        ContentGenerateHostService,
+        "_binding_dependency_authority",
         staticmethod(lambda *_args, **_kwargs: None),
     )
     transaction = Transaction(values)
@@ -307,6 +312,11 @@ def test_content_generate_rejects_review_task_brief_drift(monkeypatch, drift):
     monkeypatch.setattr(
         ContentGenerateHostService,
         "_binding_authority",
+        staticmethod(lambda *_args, **_kwargs: (object(), object())),
+    )
+    monkeypatch.setattr(
+        ContentGenerateHostService,
+        "_binding_dependency_authority",
         staticmethod(lambda *_args, **_kwargs: None),
     )
     if drift == "review_decision":

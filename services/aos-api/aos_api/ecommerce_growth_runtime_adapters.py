@@ -2935,6 +2935,25 @@ class ContentGenerateHostService:
         if capability_row is None:
             raise ValueError("content generate Capability authority is missing")
         capability = AipCapabilityRegistry._from_row(capability_row)
+        for column, values in (
+            ("required_data_refs", capability.required_data_refs),
+            ("required_tool_refs", capability.required_tool_refs),
+        ):
+            raw_values = AipModelRuntimeStore._load(capability_row[column])
+            canonical_values = [
+                item.model_dump(mode="json", by_alias=True) for item in values
+            ]
+            if (
+                not isinstance(raw_values, list)
+                or any(
+                    not isinstance(item, dict)
+                    or type(item.get("revision")) is not int
+                    for item in raw_values
+                )
+                or capacity_pool_canonical_hash(raw_values)
+                != capacity_pool_canonical_hash(canonical_values)
+            ):
+                raise ValueError("content generate Capability dependency refs drifted")
         expected_capability_ref = {
             "resourceType": "CapabilityRevision",
             "resourceId": capability.capability_id,
@@ -3536,6 +3555,172 @@ class ContentGenerateHostService:
             )
         ):
             raise ValueError("content generate CapabilityBinding authority drifted")
+        return dependencies, cap_row
+
+    @staticmethod
+    def _binding_dependency_authority(
+        transaction, scope, capability, dependencies, dependency_row, *, checked_at
+    ) -> None:
+        eval_ref = dependencies.eval_contract_ref
+        if eval_ref is None:
+            raise ValueError("content generate EvalContract dependency is missing")
+        eval_row = transaction.execute(
+            """SELECT h.current_revision,h.version,r.content_hash,r.lifecycle,r.created_at,
+                      r.suite_ref,r.publication_ref,r.release_gate_ref,r.artifact_schema_ref,
+                      r.severity_thresholds,r.gate_policy,r.return_mapping,r.override_policy
+                 FROM public.aip_eval_contract_head h
+                 JOIN public.aip_eval_contract_revision r
+                   ON r.org_id=h.org_id AND r.project_id=h.project_id
+                  AND r.contract_id=h.contract_id AND r.revision=%s
+                WHERE h.org_id=%s AND h.project_id=%s AND h.contract_id=%s
+                FOR SHARE OF h""",
+            (eval_ref.revision, *scope.key, eval_ref.asset_id),
+        ).fetchone()
+        eval_content = None if eval_row is None else {
+            "suiteRef": AipModelRuntimeStore._load(eval_row["suite_ref"]),
+            "publicationRef": AipModelRuntimeStore._load(eval_row["publication_ref"]),
+            "releaseGateRef": AipModelRuntimeStore._load(eval_row["release_gate_ref"]),
+            "artifactSchemaRef": AipModelRuntimeStore._load(eval_row["artifact_schema_ref"]),
+            "severityThresholds": AipModelRuntimeStore._load(eval_row["severity_thresholds"]),
+            "gatePolicy": AipModelRuntimeStore._load(eval_row["gate_policy"]),
+            "returnMapping": AipModelRuntimeStore._load(eval_row["return_mapping"]),
+            "overridePolicy": AipModelRuntimeStore._load(eval_row["override_policy"]),
+        }
+        if (
+            eval_row is None
+            or type(eval_row["current_revision"]) is not int
+            or type(eval_row["version"]) is not int
+            or eval_row["current_revision"] != eval_ref.revision
+            or eval_row["version"] != eval_ref.revision
+            or eval_row["content_hash"] != eval_ref.content_hash
+            or production_contract_canonical_hash(eval_content)
+            != eval_row["content_hash"]
+            or eval_row["lifecycle"] != "frozen"
+            or eval_row["created_at"] > checked_at
+        ):
+            raise ValueError("content generate EvalContract dependency drifted")
+
+        license_refs = AipModelRuntimeStore._load(dependency_row["license_evidence_refs"])
+        if not isinstance(license_refs, list) or not license_refs:
+            raise ValueError("content generate license dependency drifted")
+        parsed_licenses = []
+        for raw in license_refs:
+            if (
+                not isinstance(raw, dict)
+                or not isinstance(raw.get("revision"), str)
+                or not raw["revision"].isdigit()
+                or str(int(raw["revision"])) != raw["revision"]
+            ):
+                raise ValueError("content generate license dependency drifted")
+            try:
+                parsed = ResourceRef.model_validate(raw)
+            except ValueError as exc:
+                raise ValueError("content generate license dependency drifted") from exc
+            canonical = parsed.model_dump(mode="json", by_alias=True, exclude_none=True)
+            if (
+                parsed.resource_type != "EvidenceBundleRevision"
+                or capacity_pool_canonical_hash(raw)
+                != capacity_pool_canonical_hash(canonical)
+            ):
+                raise ValueError("content generate license dependency drifted")
+            parsed_licenses.append(parsed)
+        license_keys = {
+            (item.resource_id, item.revision, item.authority)
+            for item in parsed_licenses
+        }
+        if len(license_keys) != len(parsed_licenses):
+            raise ValueError("content generate license dependency drifted")
+        for item in parsed_licenses:
+            row = transaction.execute(
+                """SELECT lifecycle,license_summary,content_hash,created_at
+                     FROM public.aip_evidence_bundle_revision
+                    WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s
+                    FOR SHARE""",
+                (*scope.key, item.resource_id, int(item.revision)),
+            ).fetchone()
+            if (
+                row is None
+                or row["lifecycle"] != "frozen"
+                or not row["license_summary"]
+                or row["created_at"] > checked_at
+            ):
+                raise ValueError("content generate license dependency drifted")
+            revoked = transaction.execute(
+                """SELECT event_id FROM public.aip_evidence_bundle_revoke_event
+                    WHERE org_id=%s AND project_id=%s AND bundle_id=%s
+                      AND revision=%s AND content_hash=%s AND occurred_at<=%s
+                    LIMIT 1""",
+                (
+                    *scope.key,
+                    item.resource_id,
+                    int(item.revision),
+                    row["content_hash"],
+                    checked_at,
+                ),
+            ).fetchone()
+            if revoked is not None:
+                raise ValueError("content generate license dependency revoked")
+
+        def ref_key(item):
+            return item.asset_type, item.asset_id, item.revision, item.content_hash
+
+        provided_data = {ref_key(item) for item in dependencies.data_dependency_refs}
+        provided_tools = {ref_key(item) for item in dependencies.tool_dependency_refs}
+        if (
+            any(ref_key(item) not in provided_data for item in capability.required_data_refs)
+            or any(ref_key(item) not in provided_tools for item in capability.required_tool_refs)
+        ):
+            raise ValueError("content generate Binding dependency coverage drifted")
+        specs = {
+            "EvalDatasetRevision": (
+                "aip_eval_dataset_revision",
+                "dataset_id",
+                False,
+            ),
+            "EvidenceBundleRevision": (
+                "aip_evidence_bundle_revision",
+                "bundle_id",
+                True,
+            ),
+        }
+        for item in [
+            *dependencies.data_dependency_refs,
+            *dependencies.tool_dependency_refs,
+        ]:
+            spec = specs.get(item.asset_type)
+            if spec is None:
+                raise ValueError("content generate Binding dependency type is unsupported")
+            table, id_column, require_frozen = spec
+            row = transaction.execute(
+                f"""SELECT content_hash,created_at{',lifecycle' if require_frozen else ''}
+                       FROM public.{table}
+                      WHERE org_id=%s AND project_id=%s AND {id_column}=%s AND revision=%s
+                      FOR SHARE""",
+                (*scope.key, item.asset_id, item.revision),
+            ).fetchone()
+            if (
+                row is None
+                or row["content_hash"] != item.content_hash
+                or row["created_at"] > checked_at
+                or (require_frozen and row["lifecycle"] != "frozen")
+            ):
+                raise ValueError("content generate Binding dependency Owner drifted")
+            if require_frozen:
+                revoked = transaction.execute(
+                    """SELECT event_id FROM public.aip_evidence_bundle_revoke_event
+                        WHERE org_id=%s AND project_id=%s AND bundle_id=%s
+                          AND revision=%s AND content_hash=%s AND occurred_at<=%s
+                        LIMIT 1""",
+                    (
+                        *scope.key,
+                        item.asset_id,
+                        item.revision,
+                        item.content_hash,
+                        checked_at,
+                    ),
+                ).fetchone()
+                if revoked is not None:
+                    raise ValueError("content generate Binding dependency revoked")
 
     def revalidate(self, *, transaction, scope, dispatch, command):
         parsed = _strict_content_generate_command(command)
@@ -3576,7 +3761,7 @@ class ContentGenerateHostService:
             max_input_tokens=command["maxInputTokens"],
             max_output_tokens=command["maxOutputTokens"],
         )
-        self._binding_authority(
+        dependencies, dependency_row = self._binding_authority(
             transaction,
             scope,
             parsed["authorities"],
@@ -3585,6 +3770,14 @@ class ContentGenerateHostService:
             policy=policy,
             run=run,
             capability=capability,
+            checked_at=checked_at,
+        )
+        self._binding_dependency_authority(
+            transaction,
+            scope,
+            capability,
+            dependencies,
+            dependency_row,
             checked_at=checked_at,
         )
         return {
