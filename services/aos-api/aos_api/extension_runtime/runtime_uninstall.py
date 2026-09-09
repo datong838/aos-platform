@@ -106,4 +106,42 @@ class RuntimeUninstallCleanupExecutor:
                         conn.execute('SELECT pg_advisory_unlock(%s)',(key,))
 
 
-__all__=['RuntimeUninstallBusy','RuntimeUninstallCleanupExecutor','RuntimeUninstallPage']
+class RuntimeUninstallGuard:
+    """Invoke the only application-role command allowed to terminalize a runtime."""
+
+    @staticmethod
+    def before_uninstall(conn,*,org_id,project_id,installation_id,
+                         expected_installation_revision,actor):
+        if conn.info.transaction_status!=TransactionStatus.INTRANS:
+            raise RuntimeError('runtime uninstall guard requires an explicit transaction')
+        installation_id=UUID(str(installation_id))
+        row=conn.execute('''SELECT applied,receipt_data,content_hash
+            FROM extension_runtime_uninstall_commit_ar2_018(%s,%s,%s)''',
+            (installation_id,expected_installation_revision,actor)).fetchone()
+        if row is None:
+            raise RuntimeError('runtime uninstall command returned no result')
+        applied,receipt,content_hash=_values(row,('applied','receipt_data','content_hash'))
+        if applied is False and receipt is None and content_hash is None:
+            return None
+        authority=receipt.get('authorityData') if isinstance(receipt,dict) else None
+        if (applied is not True or not isinstance(authority,dict)
+                or authority.get('orgId')!=org_id or authority.get('projectId')!=project_id
+                or authority.get('installationId')!=str(installation_id)
+                or authority.get('installationRevision')!=expected_installation_revision
+                or authority.get('actor')!=actor.strip()
+                or not isinstance(receipt.get('receiptId'),str)
+                or not isinstance(content_hash,str)):
+            raise RuntimeError('runtime uninstall Receipt readback differs')
+        verified=conn.execute('''SELECT content_hash=%s
+                AND content_hash='sha256:'||encode(
+                  sha256(convert_to(authority_data::text,'UTF8')),'hex') AS valid
+            FROM extension_runtime_uninstall_receipt
+            WHERE org_id=%s AND project_id=%s AND receipt_id=%s''',
+            (content_hash,org_id,project_id,UUID(receipt['receiptId']))).fetchone()
+        if verified is None or _values(verified,('valid',))[0] is not True:
+            raise RuntimeError('runtime uninstall Receipt integrity failed')
+        return receipt
+
+
+__all__=['RuntimeUninstallBusy','RuntimeUninstallCleanupExecutor','RuntimeUninstallGuard',
+         'RuntimeUninstallPage']

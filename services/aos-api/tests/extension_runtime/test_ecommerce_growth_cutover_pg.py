@@ -38,7 +38,10 @@ from aos_api.extension_runtime.binding_store import RuntimeBindingStore
 from aos_api.extension_runtime.disable_executor import RuntimeDisableExecutor
 from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
 from aos_api.extension_runtime.reconciler import ResourceJournal
-from aos_api.extension_runtime.runtime_uninstall import RuntimeUninstallCleanupExecutor
+from aos_api.extension_runtime.runtime_uninstall import (
+    RuntimeUninstallCleanupExecutor,
+    RuntimeUninstallGuard,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -80,7 +83,20 @@ def _downgrade_ar2_016(database):
     migration.downgrade()
 
 
+def _downgrade_ar2_018(database):
+    spec = importlib.util.spec_from_file_location(
+        "ar2_018_down",
+        database.root / "alembic/versions/ar2_018_runtime_uninstall_authority.py",
+    )
+    migration = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(migration)
+    migration.op = SimpleNamespace(execute=database.owner.execute)
+    migration.downgrade()
+
+
 def _downgrade_ar2_017(database):
+    _downgrade_ar2_018(database)
     spec = importlib.util.spec_from_file_location(
         "ar2_017_down",
         database.root / "alembic/versions/ar2_017_ecommerce_growth_disable_detach.py",
@@ -103,14 +119,27 @@ def database():
     owner.execute(sql.SQL("CREATE ROLE {} LOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT").format(sql.Identifier(role)))
     owner.execute(sql.SQL("GRANT aos_extension_maintainer TO {}").format(sql.Identifier(role)))
     owner.execute(sql.SQL("GRANT aos_runtime TO {}").format(sql.Identifier(role)))
+    owner.execute(sql.SQL("GRANT aos_app TO {}").format(sql.Identifier(role)))
     try:
         owner.execute(sql.SQL("CREATE SCHEMA {}").format(sql.Identifier(schema)))
         owner.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
         owner.execute(
             """CREATE TABLE bundle_installation(
                  org_id text NOT NULL,project_id text NOT NULL,installation_id uuid NOT NULL,
+                 installation_pk uuid NOT NULL DEFAULT gen_random_uuid(),
+                 current_revision bigint NOT NULL DEFAULT 1,
+                 active_revision bigint DEFAULT 1,previous_active_revision bigint,
                  etag_version bigint NOT NULL DEFAULT 1,
-                 PRIMARY KEY(org_id,project_id,installation_id))"""
+                 PRIMARY KEY(org_id,project_id,installation_pk),
+                 UNIQUE(org_id,project_id,installation_id))"""
+        )
+        owner.execute(
+            """CREATE TABLE bundle_installation_revision(
+                 org_id text NOT NULL,project_id text NOT NULL,installation_pk uuid NOT NULL,
+                 revision bigint NOT NULL,state text NOT NULL,
+                 PRIMARY KEY(org_id,project_id,installation_pk,revision),
+                 FOREIGN KEY(org_id,project_id,installation_pk)
+                   REFERENCES bundle_installation(org_id,project_id,installation_pk))"""
         )
         root = Path(__file__).resolve().parents[2]
         _migration(root, "ar1_001_extension_runtime_authority.py", owner)
@@ -160,8 +189,16 @@ def database():
         _migration(root, "ar2_015_ecommerce_growth_cutover_finalize.py", owner, schema=schema)
         _migration(root, "ar2_016_ecommerce_growth_cutover_rollback.py", owner, schema=schema)
         _migration(root, "ar2_017_ecommerce_growth_disable_detach.py", owner, schema=schema)
+        _migration(root, "ar2_018_runtime_uninstall_authority.py", owner, schema=schema)
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_extension_maintainer").format(sql.Identifier(schema)))
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(sql.Identifier(schema)))
+        owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_app").format(sql.Identifier(schema)))
+        owner.execute(
+            sql.SQL("GRANT SELECT,INSERT,UPDATE ON {},{} TO aos_app").format(
+                sql.Identifier(schema, "bundle_installation"),
+                sql.Identifier(schema, "bundle_installation_revision"),
+            )
+        )
         owner.execute(
             sql.SQL("GRANT SELECT,UPDATE ON {}.bundle_installation TO aos_runtime").format(
                 sql.Identifier(schema)
@@ -173,6 +210,7 @@ def database():
         owner.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
         owner.execute(sql.SQL("REVOKE aos_extension_maintainer FROM {}").format(sql.Identifier(role)))
         owner.execute(sql.SQL("REVOKE aos_runtime FROM {}").format(sql.Identifier(role)))
+        owner.execute(sql.SQL("REVOKE aos_app FROM {}").format(sql.Identifier(role)))
         owner.execute(sql.SQL("DROP ROLE {} ").format(sql.Identifier(role)))
         if created_runtime:
             owner.execute("DROP ROLE aos_runtime")
@@ -180,7 +218,8 @@ def database():
 
 
 def _connection(
-    database, *, shadow: bool = False, runtime: bool = False, serializable: bool = True
+    database, *, shadow: bool = False, runtime: bool = False, app: bool = False,
+    serializable: bool = True
 ):
     @contextmanager
     def connect(scope):
@@ -188,7 +227,8 @@ def _connection(
         try:
             if serializable:
                 conn.isolation_level = IsolationLevel.SERIALIZABLE
-            conn.execute("SET ROLE aos_runtime" if runtime else "SET ROLE aos_extension_maintainer")
+            role = "aos_app" if app else ("aos_runtime" if runtime else "aos_extension_maintainer")
+            conn.execute("SET ROLE " + role)
             conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
             conn.execute("SELECT set_config('aos.org_id',%s,true)", (scope.org_id,))
             conn.execute("SELECT set_config('aos.project_id',%s,true)", (scope.project_id,))
@@ -234,6 +274,12 @@ def _seed(
     installation, generation, group = uuid4(), uuid4(), uuid4()
     owner.execute(
         "INSERT INTO bundle_installation(org_id,project_id,installation_id) VALUES(%s,%s,%s)",
+        (*scope.key, installation),
+    )
+    owner.execute(
+        """INSERT INTO bundle_installation_revision(org_id,project_id,installation_pk,revision,state)
+           SELECT org_id,project_id,installation_pk,1,'active' FROM bundle_installation
+           WHERE org_id=%s AND project_id=%s AND installation_id=%s""",
         (*scope.key, installation),
     )
     owner.execute(
@@ -1624,6 +1670,67 @@ def _seed_owned_runtime_resource(database, scope, prepare_request):
     return intent
 
 
+def _detach_and_release_runtime(database, scope):
+    prepare_request, _ = _resumed_activation(database, scope)
+    intent = _seed_owned_runtime_resource(database, scope, prepare_request)
+    operation_id, revision = _begin_runtime_disable(database, scope, prepare_request)
+    _complete_runtime_disable(database, scope, operation_id, revision)
+    with _connection(database, runtime=True)(scope) as conn:
+        EcommerceGrowthDisableDependent(schema=database.schema).after_runtime_disabled(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            runtime_operation_id=operation_id,
+        )
+        conn.commit()
+
+    class Driver:
+        context = "colima-aos-extension"
+
+        @staticmethod
+        def require_isolation():
+            return None
+
+        @staticmethod
+        def remove_owned(name, owner, *, expected_container_id):
+            assert (name, owner) == (intent.identity.name, intent.identity.owner)
+            assert expected_container_id == "b" * 64
+            return True
+
+    state = RuntimeUninstallCleanupExecutor(
+        connect=_idle_runtime_connection(database), driver=Driver()
+    ).run_one(
+        org_id=scope.org_id,
+        project_id=scope.project_id,
+        installation_id=prepare_request.target_installation_id,
+        generation=prepare_request.target_generation,
+        resource_id=intent.resource_id,
+    )
+    assert state == "released"
+    return prepare_request
+
+
+def _append_minimal_uninstalled_revision(conn, scope, installation_id, current_revision):
+    row = conn.execute(
+        """SELECT installation_pk FROM bundle_installation
+           WHERE org_id=%s AND project_id=%s AND installation_id=%s""",
+        (*scope.key, installation_id),
+    ).fetchone()
+    assert row is not None
+    conn.execute(
+        """INSERT INTO bundle_installation_revision(
+             org_id,project_id,installation_pk,revision,state)
+           VALUES(%s,%s,%s,%s,'uninstalled')""",
+        (*scope.key, row["installation_pk"], current_revision + 1),
+    )
+    conn.execute(
+        """UPDATE bundle_installation SET current_revision=%s,etag_version=%s,
+             active_revision=previous_active_revision
+           WHERE org_id=%s AND project_id=%s AND installation_id=%s""",
+        (current_revision + 1, current_revision + 1, *scope.key, installation_id),
+    )
+
+
 def test_resumed_disable_fences_then_detaches_exact_dispatch_group(database):
     scope = TenantScope("org-org", "dev-project")
     prepare_request, _ = _resumed_activation(database, scope)
@@ -2065,3 +2172,140 @@ def test_runtime_uninstall_cleanup_rejects_before_disable_detach(database):
              FROM extension_runtime_resource_lease WHERE resource_id=%s""",
         (intent.resource_id,),
     ).fetchone() == {"cleanup_state": "pending", "observed_release": False}
+
+
+def test_runtime_uninstall_guard_commits_exact_terminal_authority(database):
+    scope = TenantScope("org-org", "dev-project")
+    request = _detach_and_release_runtime(database, scope)
+    with _connection(database, app=True)(scope) as conn:
+        receipt = RuntimeUninstallGuard().before_uninstall(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            installation_id=request.target_installation_id,
+            expected_installation_revision=1,
+            actor="asset-operator",
+        )
+        assert receipt["authorityData"]["releasedResourceCount"] == 1
+        assert receipt["authorityData"]["legacyDispatchCount"] == 9
+        terminal_binding_revision = receipt["authorityData"]["bindingToRevision"]
+        _append_minimal_uninstalled_revision(
+            conn, scope, request.target_installation_id, 1
+        )
+        conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        conn.commit()
+    assert database.owner.execute(
+        """SELECT desired_state,observed_state,enabled,operation_fence,revision
+             FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s
+               AND installation_id=%s AND generation=%s""",
+        (*scope.key, request.target_installation_id, request.target_generation),
+    ).fetchone() == {
+        "desired_state": "uninstalled",
+        "observed_state": "stopped",
+        "enabled": False,
+        "operation_fence": True,
+        "revision": terminal_binding_revision,
+    }
+
+
+def test_runtime_uninstall_guard_rejects_unreleased_resource(database):
+    scope = TenantScope("org-org", "dev-project")
+    request, _ = _resumed_activation(database, scope)
+    _seed_owned_runtime_resource(database, scope, request)
+    operation_id, revision = _begin_runtime_disable(database, scope, request)
+    _complete_runtime_disable(database, scope, operation_id, revision)
+    with _connection(database, runtime=True)(scope) as conn:
+        EcommerceGrowthDisableDependent(schema=database.schema).after_runtime_disabled(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            runtime_operation_id=operation_id,
+        )
+        conn.commit()
+    with pytest.raises(
+        psycopg.errors.ObjectNotInPrerequisiteState,
+        match="resources are not confirmed released",
+    ):
+        with _connection(database, app=True)(scope) as conn:
+            RuntimeUninstallGuard().before_uninstall(
+                conn,
+                org_id=scope.org_id,
+                project_id=scope.project_id,
+                installation_id=request.target_installation_id,
+                expected_installation_revision=1,
+                actor="asset-operator",
+            )
+
+
+def test_runtime_uninstall_guard_requires_same_transaction_installation_revision(database):
+    scope = TenantScope("org-org", "dev-project")
+    request = _detach_and_release_runtime(database, scope)
+    with pytest.raises(
+        psycopg.errors.CheckViolation,
+        match="matching terminal installation Receipt",
+    ):
+        with _connection(database, app=True)(scope) as conn:
+            RuntimeUninstallGuard().before_uninstall(
+                conn,
+                org_id=scope.org_id,
+                project_id=scope.project_id,
+                installation_id=request.target_installation_id,
+                expected_installation_revision=1,
+                actor="asset-operator",
+            )
+            conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+
+
+def test_runtime_uninstall_guard_is_noop_without_runtime_binding(database):
+    scope = TenantScope("org-org", "dev-project")
+    installation_id = uuid4()
+    database.owner.execute(
+        "INSERT INTO bundle_installation(org_id,project_id,installation_id) VALUES(%s,%s,%s)",
+        (*scope.key, installation_id),
+    )
+    database.owner.execute(
+        """INSERT INTO bundle_installation_revision(org_id,project_id,installation_pk,revision,state)
+           SELECT org_id,project_id,installation_pk,1,'active' FROM bundle_installation
+           WHERE org_id=%s AND project_id=%s AND installation_id=%s""",
+        (*scope.key, installation_id),
+    )
+    with _connection(database, app=True)(scope) as conn:
+        assert RuntimeUninstallGuard().before_uninstall(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            installation_id=installation_id,
+            expected_installation_revision=1,
+            actor="asset-operator",
+        ) is None
+        conn.rollback()
+
+
+def test_runtime_role_cannot_call_application_uninstall_command(database):
+    scope = TenantScope("org-org", "dev-project")
+    request = _detach_and_release_runtime(database, scope)
+    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+        with _connection(database, runtime=True)(scope) as conn:
+            conn.execute(
+                "SELECT * FROM extension_runtime_uninstall_commit_ar2_018(%s,1,'runtime')",
+                (request.target_installation_id,),
+            )
+
+
+def test_direct_runtime_uninstall_binding_without_receipt_is_rejected(database):
+    scope = TenantScope("org-org", "dev-project")
+    request = _detach_and_release_runtime(database, scope)
+    owner = database.owner
+    owner.execute("SELECT set_config('aos.org_id',%s,false)", (scope.org_id,))
+    owner.execute("SELECT set_config('aos.project_id',%s,false)", (scope.project_id,))
+    with pytest.raises(
+        psycopg.errors.CheckViolation,
+        match="matching terminal installation Receipt",
+    ):
+        owner.execute(
+            """UPDATE extension_runtime_binding SET desired_state='uninstalled',
+                 observed_state='stopped',revision=revision+1
+               WHERE org_id=%s AND project_id=%s AND installation_id=%s
+                 AND generation=%s""",
+            (*scope.key, request.target_installation_id, request.target_generation),
+        )
