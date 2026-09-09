@@ -818,6 +818,41 @@ _ANALYSIS_START_PRIOR = (
     "fulfillmentRef",
     "checkpointRef",
 )
+_ANALYSIS_RESUME_FIELDS = _ANALYSIS_START_FIELDS | frozenset(
+    {
+        "priorPlanRef",
+        "sourceReadinessRef",
+        "mappingRef",
+        "evidenceRefs",
+        "observedAt",
+    }
+)
+_ANALYSIS_RECEIPT_FIELDS = frozenset(
+    {
+        "receiptRef",
+        "requestHash",
+        "occurrenceRef",
+        "caseRef",
+        "profileRef",
+        "cutoffAt",
+        "runRef",
+        "compilationRef",
+        "planRef",
+        "taskRunRef",
+        "phase",
+        "recoverableAction",
+        "checkpointRef",
+        "priorCheckpointRef",
+        "requirementRef",
+        "fulfillmentRef",
+        "sourceReadinessRef",
+        "mappingRef",
+        "evidenceRefs",
+        "observedAt",
+        "targetReceiptRef",
+        "completed",
+    }
+)
 ANALYSIS_RECEIPT_NAMESPACE = UUID("a31a1c70-7d4e-4b2a-9c18-6e5f4d3c2b1a")
 
 
@@ -836,14 +871,41 @@ def _analysis_plan_ref(plan_ref) -> dict[str, Any]:
     return payload
 
 
-def _strict_analysis_start_command(command: Mapping[str, Any]) -> tuple[str, InvestigationExactRef, InvestigationExactRef, InvestigationExactRef]:
+def _analysis_exact_ref(
+    value: Any,
+    expected_type: str,
+    *,
+    receipt_required: bool = False,
+) -> InvestigationExactRef:
+    if type(value) is not dict:
+        raise ValueError("analysis command needs exact references")
+    ref = InvestigationExactRef.model_validate(value)
+    serialized = ref.model_dump(by_alias=True, mode="json", exclude_none=True)
+    if (
+        ref.resource_type != expected_type
+        or type(ref.revision) is not int
+        or _analysis_command_hash(serialized) != _analysis_command_hash(value)
+        or (receipt_required and (type(ref.receipt_id) is not str or not ref.receipt_id.strip()))
+    ):
+        raise ValueError("analysis command reference drifted")
+    return ref
+
+
+def _strict_analysis_command(command: Mapping[str, Any]) -> dict[str, Any]:
     if type(command) is not dict:
         raise ValueError("analysis command must be a strict mapping")
     operation = command.get("operation")
-    if operation != "runtime.analysis.start":
-        raise ValueError("analysis runtime mode is not wired")
-    if set(command) != _ANALYSIS_START_FIELDS:
-        raise ValueError("analysis start command has an invalid envelope")
+    expected_fields = (
+        _ANALYSIS_RESUME_FIELDS
+        if operation == "runtime.analysis.resume_data"
+        else _ANALYSIS_START_FIELDS
+    )
+    if operation not in {
+        "runtime.analysis.start",
+        "runtime.analysis.resume_data",
+        "runtime.analysis.reconcile_unknown",
+    } or set(command) != expected_fields:
+        raise ValueError("analysis command has an invalid envelope")
     key = command["idempotencyKey"]
     request_hash = command["requestHash"]
     if type(key) is not str or key != key.strip() or not 1 <= len(key) <= 200:
@@ -853,24 +915,188 @@ def _strict_analysis_start_command(command: Mapping[str, Any]) -> tuple[str, Inv
     body = {name: command[name] for name in command if name != "requestHash"}
     if _analysis_command_hash(body) != request_hash:
         raise ValueError("analysis request hash drifted")
-    if any(command[name] is not None for name in _ANALYSIS_START_PRIOR):
-        raise ValueError("START cannot claim prior runtime authority")
     cutoff = command["cutoffAt"]
     if type(cutoff) is not str:
         raise ValueError("analysis cutoffAt must be an ISO datetime")
     parsed = datetime.fromisoformat(cutoff)
     if parsed.utcoffset() is None:
         raise ValueError("analysis cutoffAt must include timezone")
-    occurrence_ref = InvestigationExactRef.model_validate(command["occurrenceRef"])
-    case_ref = InvestigationExactRef.model_validate(command["caseRef"])
-    profile_ref = InvestigationExactRef.model_validate(command["profileRef"])
-    if occurrence_ref.resource_type != "AutomationOccurrence":
-        raise ValueError("analysis occurrence type drifted")
-    if case_ref.resource_type != "BusinessInvestigationCaseRevision":
-        raise ValueError("analysis case type drifted")
-    if profile_ref.resource_type != "InvestigationProfileRevision":
-        raise ValueError("analysis profile type drifted")
-    return key, occurrence_ref, case_ref, profile_ref
+    occurrence_ref = _analysis_exact_ref(command["occurrenceRef"], "AutomationOccurrence")
+    case_ref = _analysis_exact_ref(
+        command["caseRef"], "BusinessInvestigationCaseRevision"
+    )
+    profile_ref = _analysis_exact_ref(
+        command["profileRef"], "InvestigationProfileRevision"
+    )
+    parsed: dict[str, Any] = {
+        "operation": operation,
+        "key": key,
+        "cutoff": parsed,
+        "occurrenceRef": occurrence_ref,
+        "caseRef": case_ref,
+        "profileRef": profile_ref,
+    }
+    if operation == "runtime.analysis.start":
+        if any(command[name] is not None for name in _ANALYSIS_START_PRIOR):
+            raise ValueError("START cannot claim prior runtime authority")
+        return parsed
+    prior = _analysis_exact_ref(
+        command["priorReceiptRef"],
+        "AnalysisRuntimeReceipt",
+        receipt_required=True,
+    )
+    parsed["priorReceiptRef"] = prior
+    if operation == "runtime.analysis.reconcile_unknown":
+        if any(command[name] is not None for name in ("requirementRef", "fulfillmentRef", "checkpointRef")):
+            raise ValueError("RECONCILE_UNKNOWN accepts only prior Receipt authority")
+        return parsed
+    parsed.update(
+        {
+            "requirementRef": _analysis_exact_ref(
+                command["requirementRef"], "DataRequirementRevision"
+            ),
+            "fulfillmentRef": _analysis_exact_ref(
+                command["fulfillmentRef"],
+                "DataFulfillmentReceipt",
+                receipt_required=True,
+            ),
+            "checkpointRef": _analysis_exact_ref(
+                command["checkpointRef"], "CheckpointRevision"
+            ),
+            "priorPlanRef": _analysis_exact_ref(command["priorPlanRef"], "PlanRevision"),
+            "sourceReadinessRef": _analysis_exact_ref(
+                command["sourceReadinessRef"],
+                "SourceReadinessEnvelope",
+                receipt_required=True,
+            ),
+            "mappingRef": _analysis_exact_ref(
+                command["mappingRef"], "SourceMappingRevision"
+            ),
+        }
+    )
+    evidence = command["evidenceRefs"]
+    if type(evidence) is not list or not 1 <= len(evidence) <= 200:
+        raise ValueError("RESUME_DATA requires bounded evidence")
+    evidence_refs = tuple(
+        _analysis_exact_ref(item, item.get("resourceType") if type(item) is dict else "")
+        for item in evidence
+    )
+    if any(
+        item.resource_type not in {"EvidenceBundleRevision", "DatasetRevision"}
+        for item in evidence_refs
+    ) or len({_analysis_command_hash(item) for item in evidence}) != len(evidence):
+        raise ValueError("RESUME_DATA evidence authority drifted")
+    observed = command["observedAt"]
+    if type(observed) is not str:
+        raise ValueError("RESUME_DATA observedAt must be an ISO datetime")
+    observed_at = datetime.fromisoformat(observed)
+    if (
+        observed_at.utcoffset() is None
+        or observed_at < parsed["cutoff"]
+        or observed_at - parsed["cutoff"] > timedelta(hours=24)
+    ):
+        raise ValueError("RESUME_DATA observedAt is outside the bounded window")
+    parsed["evidenceRefs"] = evidence_refs
+    parsed["observedAt"] = observed_at
+    return parsed
+
+
+def _strict_analysis_start_command(command: Mapping[str, Any]) -> tuple[str, InvestigationExactRef, InvestigationExactRef, InvestigationExactRef]:
+    parsed = _strict_analysis_command(command)
+    if parsed["operation"] != "runtime.analysis.start":
+        raise ValueError("analysis runtime mode is not wired")
+    return (
+        parsed["key"],
+        parsed["occurrenceRef"],
+        parsed["caseRef"],
+        parsed["profileRef"],
+    )
+
+
+def _validate_prior_analysis_receipt(
+    command: Mapping[str, Any],
+    parsed: Mapping[str, Any],
+    receipt: Mapping[str, Any] | None,
+) -> None:
+    if type(receipt) is not dict or set(receipt) != _ANALYSIS_RECEIPT_FIELDS:
+        raise ValueError("analysis prior Receipt is missing or malformed")
+    receipt_ref = _analysis_exact_ref(
+        receipt["receiptRef"], "AnalysisRuntimeReceipt", receipt_required=True
+    )
+    if _analysis_command_hash(receipt["receiptRef"]) != _analysis_command_hash(
+        command["priorReceiptRef"]
+    ):
+        raise ValueError("analysis prior Receipt exact ref drifted")
+    body = {name: value for name, value in receipt.items() if name != "receiptRef"}
+    if receipt_ref.content_hash != _analysis_command_hash(body):
+        raise ValueError("analysis prior Receipt content hash drifted")
+    _analysis_exact_ref(receipt["runRef"], "BusinessInvestigationRun")
+    _analysis_exact_ref(
+        receipt["compilationRef"], "BusinessInvestigationCompilationReceipt"
+    )
+    _analysis_exact_ref(receipt["planRef"], "PlanRevision")
+    _analysis_exact_ref(receipt["taskRunRef"], "TaskRun")
+    if (
+        type(receipt["requestHash"]) is not str
+        or not re.fullmatch(r"sha256:[0-9a-f]{64}", receipt["requestHash"])
+        or receipt["completed"] is not False
+        or _analysis_command_hash(receipt["occurrenceRef"])
+        != _analysis_command_hash(command["occurrenceRef"])
+        or _analysis_command_hash(receipt["caseRef"])
+        != _analysis_command_hash(command["caseRef"])
+        or _analysis_command_hash(receipt["profileRef"])
+        != _analysis_command_hash(command["profileRef"])
+        or type(receipt["cutoffAt"]) is not str
+        or datetime.fromisoformat(receipt["cutoffAt"]) != parsed["cutoff"]
+    ):
+        raise ValueError("analysis prior Receipt lineage drifted")
+    if parsed["operation"] == "runtime.analysis.resume_data":
+        if (
+            receipt["phase"] != "WAITING_DATA"
+            or receipt["recoverableAction"] != "WAIT_FOR_DATA"
+            or _analysis_command_hash(receipt["requirementRef"])
+            != _analysis_command_hash(command["requirementRef"])
+            or _analysis_command_hash(receipt["checkpointRef"])
+            != _analysis_command_hash(command["checkpointRef"])
+            or _analysis_command_hash(receipt["planRef"])
+            != _analysis_command_hash(command["priorPlanRef"])
+            or receipt["priorCheckpointRef"] is not None
+            or receipt["fulfillmentRef"] is not None
+            or receipt["sourceReadinessRef"] is not None
+            or receipt["mappingRef"] is not None
+            or receipt["evidenceRefs"] != []
+            or receipt["observedAt"] is not None
+            or receipt["targetReceiptRef"] is not None
+        ):
+            raise ValueError("analysis RESUME_DATA prior authority drifted")
+    elif (
+        receipt["phase"] not in {"UNKNOWN", "RECONCILING"}
+        or receipt["recoverableAction"] != "RECONCILE_RECEIPT"
+        or type(receipt["targetReceiptRef"]) is not dict
+    ):
+        raise ValueError("analysis RECONCILE_UNKNOWN prior authority drifted")
+    else:
+        if (
+            any(
+                receipt[name] is not None
+                for name in (
+                    "checkpointRef",
+                    "priorCheckpointRef",
+                    "requirementRef",
+                    "fulfillmentRef",
+                    "sourceReadinessRef",
+                    "mappingRef",
+                    "observedAt",
+                )
+            )
+            or receipt["evidenceRefs"] != []
+        ):
+            raise ValueError("analysis RECONCILE_UNKNOWN prior lineage drifted")
+        _analysis_exact_ref(
+            receipt["targetReceiptRef"],
+            "RuntimeCommandReceipt",
+            receipt_required=True,
+        )
 
 
 class _HostAnalysisReceiptStore:
@@ -884,6 +1110,14 @@ class _HostAnalysisReceiptStore:
         return BoundEcommerceGrowthRuntimeStore(self._transaction, self._scope).read(
             operation_id="ecommerce_growth_analysis_advance",
             idempotency_key=key,
+        )
+
+    def read_exact(self, receipt_ref: Mapping[str, Any]) -> dict[str, Any] | None:
+        return BoundEcommerceGrowthRuntimeStore(
+            self._transaction, self._scope
+        ).read_exact(
+            operation_id="ecommerce_growth_analysis_advance",
+            receipt_ref=receipt_ref,
         )
 
     def put(
@@ -938,7 +1172,7 @@ class _HostAnalysisReceiptStore:
 
 
 class AnalysisAdvanceHostService:
-    """START-only recoverable analysis host; resume/reconcile remain fail-closed."""
+    """Recoverable analysis host; recovery writes stay closed until all owners are wired."""
 
     executor_identity = "ecommerce-growth-analysis-host"
 
@@ -1046,7 +1280,11 @@ class AnalysisAdvanceHostService:
         }
 
     def revalidate(self, *, transaction, scope, dispatch, command):
-        key, occurrence_ref, case_ref, profile_ref = _strict_analysis_start_command(command)
+        parsed = _strict_analysis_command(command)
+        key = parsed["key"]
+        occurrence_ref = parsed["occurrenceRef"]
+        case_ref = parsed["caseRef"]
+        profile_ref = parsed["profileRef"]
         if dispatch.operation_id != "ecommerce_growth_analysis_advance":
             raise ValueError("analysis dispatch operation drifted")
         occurrence_reader, cases, _receipts = self._components(transaction, scope)
@@ -1071,10 +1309,16 @@ class AnalysisAdvanceHostService:
         )
         if profile != command["profileRef"] or profile_ref.resource_id != profile["resourceId"]:
             raise ValueError("analysis profile lineage drifted")
+        if parsed["operation"] != "runtime.analysis.start":
+            prior = _receipts.read_exact(command["priorReceiptRef"])
+            _validate_prior_analysis_receipt(command, parsed, prior)
         if not key:
             raise ValueError("analysis idempotencyKey is invalid")
 
     def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
+        parsed = _strict_analysis_command(command)
+        if parsed["operation"] != "runtime.analysis.start":
+            raise ValueError("analysis recovery data authority is not wired")
         key, _occurrence_ref, _case_ref_value, _profile_ref = _strict_analysis_start_command(command)
         _reader, _cases, receipts = self._components(transaction, scope)
         existing = receipts.read(key)
@@ -1090,6 +1334,9 @@ class AnalysisAdvanceHostService:
         return receipts.put(key, payload, dispatch_ref=dispatch_ref, checked_at=checked_at)
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        parsed = _strict_analysis_command(command)
+        if parsed["operation"] != "runtime.analysis.start":
+            raise ValueError("analysis recovery data authority is not wired")
         key, _occurrence_ref, _case_ref_value, _profile_ref = _strict_analysis_start_command(command)
         _reader, _cases, receipts = self._components(transaction, scope)
         expected = receipts.read(key)

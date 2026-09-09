@@ -166,6 +166,64 @@ class BoundEcommerceGrowthRuntimeStore:
             raise EcommerceGrowthRuntimeReceiptConflict("persisted runtime Receipt shape drifted")
         return deepcopy(row["response"])
 
+    def read_exact(
+        self,
+        *,
+        operation_id: str,
+        receipt_ref: Mapping[str, Any],
+    ) -> dict[str, Any] | None:
+        """Read one immutable domain Receipt through its complete persisted exact ref."""
+
+        if operation_id not in _OPERATIONS:
+            raise ValueError("runtime Receipt lookup operation is invalid")
+        target = _strict_exact_ref(dict(receipt_ref))
+        rows = self._transaction.execute(
+            """SELECT idempotency_key,request_hash,response,target_receipt_ref
+                 FROM public.ecommerce_growth_runtime_command_receipt
+                WHERE org_id=%s AND project_id=%s AND operation_id=%s
+                  AND target_receipt_ref=%s::jsonb""",
+            (
+                *self._scope.key,
+                operation_id,
+                json.dumps(target, ensure_ascii=False, sort_keys=True),
+            ),
+        ).fetchall()
+        if not rows:
+            return None
+        if len(rows) != 1:
+            raise EcommerceGrowthRuntimeReceiptConflict(
+                "persisted runtime exact Receipt is not unique"
+            )
+        row = rows[0]
+        if (
+            type(row.get("idempotency_key")) is not str
+            or not 1 <= len(row["idempotency_key"].strip()) <= 200
+            or type(row.get("request_hash")) is not str
+            or not _SHA256.fullmatch(row["request_hash"])
+            or type(row.get("target_receipt_ref")) is not dict
+        ):
+            raise EcommerceGrowthRuntimeReceiptConflict(
+                "persisted runtime exact Receipt authority drifted"
+            )
+        persisted_target = _strict_exact_ref(row["target_receipt_ref"])
+        if json.dumps(persisted_target, sort_keys=True, separators=(",", ":")) != json.dumps(
+            target, sort_keys=True, separators=(",", ":")
+        ):
+            raise EcommerceGrowthRuntimeReceiptConflict(
+                "persisted runtime exact Receipt target drifted"
+            )
+        try:
+            response = _strict_response(row.get("response"), target)
+        except (TypeError, ValueError) as exc:
+            raise EcommerceGrowthRuntimeReceiptConflict(
+                "persisted runtime exact Receipt response drifted"
+            ) from exc
+        if "requestHash" in response and response["requestHash"] != row["request_hash"]:
+            raise EcommerceGrowthRuntimeReceiptConflict(
+                "persisted runtime exact Receipt request hash drifted"
+            )
+        return response
+
 
 __all__ = [
     "BoundEcommerceGrowthRuntimeStore",

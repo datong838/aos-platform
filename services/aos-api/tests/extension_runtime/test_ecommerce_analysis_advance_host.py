@@ -55,6 +55,91 @@ def start_command(**changes):
     return body
 
 
+def resume_command(**changes):
+    body = {
+        "operation": "runtime.analysis.resume_data",
+        "occurrenceRef": ref("AutomationOccurrence", str(OCCURRENCE_ID)),
+        "caseRef": ref("BusinessInvestigationCaseRevision", "case-1"),
+        "profileRef": ref("InvestigationProfileRevision", "profile-1"),
+        "cutoffAt": CUTOFF.isoformat(),
+        "idempotencyKey": "resume-data-1",
+        "priorReceiptRef": ref(
+            "AnalysisRuntimeReceipt", "prior-waiting-1", receipt="prior-waiting-1"
+        ),
+        "requirementRef": ref("DataRequirementRevision", "requirement-1"),
+        "fulfillmentRef": ref(
+            "DataFulfillmentReceipt", "fulfillment-1", receipt="fulfillment-1"
+        ),
+        "checkpointRef": ref("CheckpointRevision", "checkpoint-1"),
+        "priorPlanRef": ref("PlanRevision", "plan-1"),
+        "sourceReadinessRef": ref(
+            "SourceReadinessEnvelope", "readiness-1", receipt="readiness-1"
+        ),
+        "mappingRef": ref("SourceMappingRevision", "mapping-1"),
+        "evidenceRefs": [ref("EvidenceBundleRevision", "evidence-1")],
+        "observedAt": CUTOFF.isoformat(),
+    }
+    body.update(changes)
+    if "requestHash" not in body:
+        body["requestHash"] = command_hash(
+            {key: value for key, value in body.items() if key != "requestHash"}
+        )
+    return body
+
+
+def reconcile_command(**changes):
+    body = {
+        "operation": "runtime.analysis.reconcile_unknown",
+        "occurrenceRef": ref("AutomationOccurrence", str(OCCURRENCE_ID)),
+        "caseRef": ref("BusinessInvestigationCaseRevision", "case-1"),
+        "profileRef": ref("InvestigationProfileRevision", "profile-1"),
+        "cutoffAt": CUTOFF.isoformat(),
+        "idempotencyKey": "reconcile-1",
+        "priorReceiptRef": ref(
+            "AnalysisRuntimeReceipt", "prior-unknown-1", receipt="prior-unknown-1"
+        ),
+        "requirementRef": None,
+        "fulfillmentRef": None,
+        "checkpointRef": None,
+    }
+    body.update(changes)
+    if "requestHash" not in body:
+        body["requestHash"] = command_hash(
+            {key: value for key, value in body.items() if key != "requestHash"}
+        )
+    return body
+
+
+def prior_receipt(command, *, phase="WAITING_DATA", action="WAIT_FOR_DATA"):
+    body = {
+        "requestHash": HASH,
+        "occurrenceRef": command["occurrenceRef"],
+        "caseRef": command["caseRef"],
+        "profileRef": command["profileRef"],
+        "cutoffAt": command["cutoffAt"],
+        **lineage_refs(),
+        "phase": phase,
+        "recoverableAction": action,
+        "checkpointRef": command.get("checkpointRef") if phase == "WAITING_DATA" else None,
+        "priorCheckpointRef": None,
+        "requirementRef": command.get("requirementRef") if phase == "WAITING_DATA" else None,
+        "fulfillmentRef": None,
+        "sourceReadinessRef": None,
+        "mappingRef": None,
+        "evidenceRefs": [],
+        "observedAt": None,
+        "targetReceiptRef": (
+            ref("RuntimeCommandReceipt", "target-1", receipt="target-1")
+            if phase in {"UNKNOWN", "RECONCILING"}
+            else None
+        ),
+        "completed": False,
+    }
+    receipt = command["priorReceiptRef"]
+    body_hash = command_hash(body)
+    return {**body, "receiptRef": {**receipt, "contentHash": body_hash}}
+
+
 def lineage_refs():
     return {
         "runRef": ref("BusinessInvestigationRun", "run-1"),
@@ -114,6 +199,9 @@ def wired_host(monkeypatch, *, occurrence_hash=HASH):
 
         def read(self, key):
             return journal.get(key)
+
+        def read_exact(self, receipt_ref):
+            return journal.get(("exact", receipt_ref["resourceId"]))
 
     host = AnalysisAdvanceHostService()
     monkeypatch.setattr(
@@ -215,5 +303,120 @@ def test_resume_and_reconcile_fail_closed_until_wired(monkeypatch):
     dispatch = SimpleNamespace(operation_id="ecommerce_growth_analysis_advance")
     resume = start_command(operation="runtime.analysis.resume_data")
     resume["requestHash"] = command_hash({k: v for k, v in resume.items() if k != "requestHash"})
-    with pytest.raises(ValueError, match="not wired"):
+    with pytest.raises(ValueError, match="invalid envelope"):
         host.revalidate(transaction=transaction, scope=SCOPE, dispatch=dispatch, command=resume)
+
+
+def test_resume_strictly_reads_matching_waiting_prior_receipt_then_stays_execute_blocked(monkeypatch):
+    host, journal = wired_host(monkeypatch)
+    transaction = HostTransaction(SimpleNamespace())
+    dispatch = SimpleNamespace(operation_id="ecommerce_growth_analysis_advance")
+    command = resume_command()
+    saved = prior_receipt(command)
+    command["priorReceiptRef"] = saved["receiptRef"]
+    command["requestHash"] = command_hash(
+        {key: value for key, value in command.items() if key != "requestHash"}
+    )
+    journal[("exact", saved["receiptRef"]["resourceId"])] = saved
+    host.revalidate(
+        transaction=transaction, scope=SCOPE, dispatch=dispatch, command=command
+    )
+    with pytest.raises(ValueError, match="data authority is not wired"):
+        host.execute(
+            transaction=transaction,
+            scope=SCOPE,
+            dispatch_ref=dispatch,
+            command=command,
+            checked_at=NOW,
+            occurred_at=NOW,
+        )
+
+
+@pytest.mark.parametrize(
+    "drift", ["missing", "phase", "lineage", "bool_revision", "plan", "run_shape"]
+)
+def test_resume_prior_receipt_drift_fails_closed(drift, monkeypatch):
+    host, journal = wired_host(monkeypatch)
+    transaction = HostTransaction(SimpleNamespace())
+    dispatch = SimpleNamespace(operation_id="ecommerce_growth_analysis_advance")
+    command = resume_command()
+    saved = prior_receipt(command)
+    command["priorReceiptRef"] = saved["receiptRef"]
+    if drift == "phase":
+        saved = prior_receipt(command, phase="PREPARING", action="CONTINUE")
+        command["priorReceiptRef"] = saved["receiptRef"]
+    elif drift == "lineage":
+        saved["caseRef"] = ref("BusinessInvestigationCaseRevision", "case-other")
+    elif drift == "bool_revision":
+        command["checkpointRef"] = {**command["checkpointRef"], "revision": True}
+    elif drift == "plan":
+        command["priorPlanRef"] = ref("PlanRevision", "plan-other")
+    elif drift == "run_shape":
+        saved["runRef"] = None
+        saved["receiptRef"] = {
+            **saved["receiptRef"],
+            "contentHash": command_hash(
+                {key: value for key, value in saved.items() if key != "receiptRef"}
+            ),
+        }
+        command["priorReceiptRef"] = saved["receiptRef"]
+    command["requestHash"] = command_hash(
+        {key: value for key, value in command.items() if key != "requestHash"}
+    )
+    if drift != "missing":
+        journal[("exact", command["priorReceiptRef"]["resourceId"])] = saved
+    with pytest.raises(ValueError):
+        host.revalidate(
+            transaction=transaction, scope=SCOPE, dispatch=dispatch, command=command
+        )
+
+
+def test_reconcile_reads_same_unknown_target_then_stays_execute_blocked(monkeypatch):
+    host, journal = wired_host(monkeypatch)
+    transaction = HostTransaction(SimpleNamespace())
+    dispatch = SimpleNamespace(operation_id="ecommerce_growth_analysis_advance")
+    command = reconcile_command()
+    saved = prior_receipt(command, phase="UNKNOWN", action="RECONCILE_RECEIPT")
+    command["priorReceiptRef"] = saved["receiptRef"]
+    command["requestHash"] = command_hash(
+        {key: value for key, value in command.items() if key != "requestHash"}
+    )
+    journal[("exact", saved["receiptRef"]["resourceId"])] = saved
+    host.revalidate(
+        transaction=transaction, scope=SCOPE, dispatch=dispatch, command=command
+    )
+    with pytest.raises(ValueError, match="data authority is not wired"):
+        host.execute(
+            transaction=transaction,
+            scope=SCOPE,
+            dispatch_ref=dispatch,
+            command=command,
+            checked_at=NOW,
+            occurred_at=NOW,
+        )
+
+
+@pytest.mark.parametrize("drift", ["late", "duplicate", "wrong_type", "extra"])
+def test_resume_evidence_and_time_bounds_fail_closed(drift, monkeypatch):
+    from datetime import timedelta
+
+    host, _journal = wired_host(monkeypatch)
+    command = resume_command()
+    if drift == "late":
+        command["observedAt"] = (CUTOFF + timedelta(hours=25)).isoformat()
+    elif drift == "duplicate":
+        command["evidenceRefs"] = [command["evidenceRefs"][0]] * 2
+    elif drift == "wrong_type":
+        command["evidenceRefs"] = [ref("FactRevision", "fact-1")]
+    else:
+        command["evidenceRefs"][0]["unexpected"] = "override"
+    command["requestHash"] = command_hash(
+        {key: value for key, value in command.items() if key != "requestHash"}
+    )
+    with pytest.raises(ValueError):
+        host.revalidate(
+            transaction=HostTransaction(SimpleNamespace()),
+            scope=SCOPE,
+            dispatch=SimpleNamespace(operation_id="ecommerce_growth_analysis_advance"),
+            command=command,
+        )

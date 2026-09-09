@@ -147,3 +147,69 @@ def test_read_is_tenant_scoped_and_returns_copy():
         "case-qyh-001",
     )
     assert "public.ecommerce_growth_runtime_command_receipt" in connection.calls[0][0]
+
+
+def test_read_exact_uses_tenant_operation_and_complete_receipt_ref():
+    response = {"receiptRef": TARGET, "requestHash": HASH}
+    connection = Connection(
+        [
+            {
+                "idempotency_key": "analysis-start-1",
+                "request_hash": HASH,
+                "response": response,
+                "target_receipt_ref": TARGET,
+            }
+        ]
+    )
+    connection.execute = lambda query, params=(): (
+        connection.calls.append((query, params))
+        or type("Rows", (), {"fetchall": lambda self: connection.row})()
+    )
+    store = BoundEcommerceGrowthRuntimeStore(
+        HostTransaction(connection), TenantScope("org-org", "dev-project")
+    )
+    observed = store.read_exact(
+        operation_id="ecommerce_growth_analysis_advance", receipt_ref=TARGET
+    )
+    assert observed == response and observed is not response
+    assert connection.calls[0][1][0:3] == (
+        "org-org",
+        "dev-project",
+        "ecommerce_growth_analysis_advance",
+    )
+    import json
+
+    assert json.loads(connection.calls[0][1][3]) == TARGET
+    assert "public.ecommerce_growth_runtime_command_receipt" in connection.calls[0][0]
+
+
+def test_read_exact_rejects_duplicate_or_persisted_drift():
+    base = {
+        "idempotency_key": "analysis-start-1",
+        "request_hash": HASH,
+        "response": {"receiptRef": TARGET, "requestHash": HASH},
+        "target_receipt_ref": TARGET,
+    }
+
+    def store_for(rows):
+        connection = Connection(rows)
+        connection.execute = lambda query, params=(): type(
+            "Rows", (), {"fetchall": lambda self: connection.row}
+        )()
+        return BoundEcommerceGrowthRuntimeStore(
+            HostTransaction(connection), TenantScope("org-org", "dev-project")
+        )
+
+    with pytest.raises(EcommerceGrowthRuntimeReceiptConflict, match="unique"):
+        store_for([base, {**base, "idempotency_key": "analysis-start-2"}]).read_exact(
+            operation_id="ecommerce_growth_analysis_advance", receipt_ref=TARGET
+        )
+    with pytest.raises(EcommerceGrowthRuntimeReceiptConflict, match="request hash"):
+        store_for([{**base, "response": {"receiptRef": TARGET, "requestHash": "sha256:" + "b" * 64}}]).read_exact(
+            operation_id="ecommerce_growth_analysis_advance", receipt_ref=TARGET
+        )
+    with pytest.raises(ValueError, match="exact reference"):
+        store_for([]).read_exact(
+            operation_id="ecommerce_growth_analysis_advance",
+            receipt_ref={**TARGET, "revision": True},
+        )

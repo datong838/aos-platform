@@ -164,8 +164,16 @@ def test_postgres_replay_isolation_drift_and_nonempty_downgrade(database):
         assert put(store, positive_dispatch).replayed is False
         assert put(store, positive_dispatch).replayed is True
         assert store.read(operation_id=positive_dispatch.operation_id, idempotency_key="case-qyh-001")["receiptRef"] == TARGET
+        assert store.read_exact(
+            operation_id=positive_dispatch.operation_id,
+            receipt_ref=TARGET,
+        )["receiptRef"] == TARGET
     with bound(database, canary) as (store, _):
         assert store.read(operation_id=positive_dispatch.operation_id, idempotency_key="case-qyh-001") is None
+        assert store.read_exact(
+            operation_id=positive_dispatch.operation_id,
+            receipt_ref=TARGET,
+        ) is None
     with bound(database, positive) as (store, _):
         with pytest.raises(psycopg.Error, match="drifted"):
             put(store, positive_dispatch, {"receiptRef": TARGET, "businessTitle": "另一份经营分析"})
