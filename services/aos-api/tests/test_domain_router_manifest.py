@@ -37,7 +37,7 @@ DOMAIN_COUNTS = {
     "admin": 8,
     "system": 4,
     "agent": 3,
-    "workshop": 117,
+    "workshop": 118,
     "ontology": 72,
     "aip": 94,
     "data": 201,
@@ -144,6 +144,7 @@ critical_paths = {
     "/v1/ontology/object-types",
     "/v1/aip/agents",
     "/v1/aip/logic/graphs/{graph_id}/dry-run",
+    "/v1/ecommerce-growth/operations/{operation_id}",
     "/v1/pipeline-builder",
     "/api/ontology-geos/",
     "/api/multi-spoke-monitors/",
@@ -216,8 +217,8 @@ class RouterManifestStaticTests(unittest.TestCase):
         cls.routers = cls.generator.load_manifest(MANIFEST_PATH)
 
     def test_manifest_count_order_domains_and_unique_keys(self) -> None:
-        self.assertEqual(548, len(self.routers))
-        self.assertEqual(list(range(548)), [entry["order"] for entry in self.routers])
+        self.assertEqual(549, len(self.routers))
+        self.assertEqual(list(range(549)), [entry["order"] for entry in self.routers])
         self.assertEqual(
             DOMAIN_COUNTS,
             {
@@ -226,7 +227,10 @@ class RouterManifestStaticTests(unittest.TestCase):
             },
         )
         keys = {(entry["module"], entry["attribute"]) for entry in self.routers}
-        self.assertEqual(548, len(keys))
+        self.assertEqual(549, len(keys))
+        self.assertIn(
+            ("aos_api.routers.ecommerce_growth_dispatch", "router"), keys
+        )
 
     def test_main_exposes_control_plane_etag_to_browser_clients(self) -> None:
         tree = ast.parse(MAIN_PATH.read_text(encoding="utf-8"))
@@ -389,12 +393,12 @@ class RouterManifestRuntimeTests(unittest.TestCase):
         # revisions/readiness, Workshop operations and document extraction.
         # Keep both the exact inventory and duplicate set pinned so later drift
         # cannot be hidden by updating only a count.
-        self.assertEqual(4544, result["count"])
+        self.assertEqual(4545, result["count"])
         self.assertEqual(
-            "535adf284c9106b0be8cf8f7165f3064ef0ad2403b0a4d14628923c1f404f0d3",
+            "ccfa3d9d7aaa61ee6deccd2a81e9cc11edf76c7d2c862bceb589e95e603d2a3b",
             result["sha256"],
         )
-        self.assertEqual(2743, result["openapi_paths"])
+        self.assertEqual(2744, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],

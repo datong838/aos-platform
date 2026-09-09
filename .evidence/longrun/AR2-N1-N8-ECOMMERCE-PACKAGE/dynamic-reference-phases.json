@@ -19,8 +19,8 @@
     "ar2-1": {
       "exactHashes": {
         "services/aos-api/aos_api/main.py": "206d335cac09dea1a7a47e8a17c927797e8aaeb212e3e44948309c45872722e2",
-        "services/aos-api/aos_api/routers/domain_manifest.json": "cf68e6fda93f5cecc44f1116d4fe6158ea32269bfae26f9a0ac55a4d5ea1cd12",
-        "services/aos-api/aos_api/routers/domain_aggregates.py": "9113e28b9bb5b2a0e3462ec75d545350fcc9ab217470a69e10746b8e368b37dc",
+        "services/aos-api/aos_api/routers/domain_manifest.json": "88b862a6d4553235cf7939c52619d158685acfe9435dfd8a4a842c3a7f8afa58",
+        "services/aos-api/aos_api/routers/domain_aggregates.py": "aec9f083998f75d5f5cf73743e774dfef0bfddb5bb0ad5da8a818a6e97945d37",
         "services/aos-api/aos_api/routers/ecommerce_business_investigations.py": "ef63dde1f0207982357e59af342e760dfc5ef4c8614d995514db802d2af35953",
         "services/aos-api/aos_api/routers/ecommerce_workshop.py": "acadd20bc140699fe5008794ff69a7d625a925acaa098ef217d12f54c997e469",
         "apps/web/src/App.tsx": "b923a9a3b1540cdec71e16399964a9257be4d712e2481ec8f66f11c8122a2aa7",

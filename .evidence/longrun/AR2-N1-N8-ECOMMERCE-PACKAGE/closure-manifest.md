@@ -103,7 +103,7 @@
 
 | dynamic entry | AR2-0 baseline | AR2-1 target | AR2-7 target | preHash |
 |---|---|---|---|---|
-| `services/aos-api/aos_api/routers/domain_aggregates.py` | 静态聚合两个旧 Router | 保持旧入口，避免骨架期业务漂移 | 只聚合通用 `extension_dispatch` Router | `9113e28b9bb5b2a0e3462ec75d545350fcc9ab217470a69e10746b8e368b37dc` |
+| `services/aos-api/aos_api/routers/domain_aggregates.py` | 静态聚合两个旧 Router | 保持旧入口，并登记 registration-only 的 `ecommerce_growth_dispatch` Canonical Router 壳 | 只聚合通用 `extension_dispatch` Router | `9113e28b9bb5b2a0e3462ec75d545350fcc9ab217470a69e10746b8e368b37dc` |
 | `apps/web/src/App.tsx` | Workshop 通配路由进入 `EcommerceWorkshopEntryRoute` | 保持 | 仍仅进入通用宿主入口，不静态识别八页实现 | `b923a9a3b1540cdec71e16399964a9257be4d712e2481ec8f66f11c8122a2aa7` |
 | `apps/web/src/pages/s2/ecommerce/routes.tsx` | 订单/库存保留静态 LegacyFallback | 保持旧读页，骨架期不切业务 | 删除静态 LegacyFallback，旧 URL 作为安装声明别名只进入 `EcommerceWorkshopHost`；未安装不可执行 | `043860b4796298c02c89b41724ca2c96b126fef5b09c26069cd7a2187e0882e1` |
 | `apps/web/src/components/workshop/InstalledModuleNavigation.tsx` | 无论安装与否都展开八个 `WORKSHOP_ACCEPTANCE_MODULES` | 保持，等待最终切换 | 菜单仅消费当前安装、角色/权限允许的 catalog slots；未安装模块不渲染、不执行 | `700cb9f6d616a826577fe0070bc6434182be0c76aadfe35f5d10521ce000f2af` |

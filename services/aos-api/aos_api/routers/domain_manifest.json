@@ -3288,6 +3288,12 @@
       "module": "aos_api.routers.bundle_runtime_installations",
       "attribute": "router",
       "order": 547
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.ecommerce_growth_dispatch",
+      "attribute": "router",
+      "order": 548
     }
   ]
 }
