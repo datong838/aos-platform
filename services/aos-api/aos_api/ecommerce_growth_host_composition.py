@@ -77,6 +77,16 @@ _RUNTIME_HOST_SERVICES = (
     ("ecommerce_growth_content_generate", "ContentGenerateHostService"),
     ("ecommerce_growth_content_review", "ContentReviewHostService"),
 )
+# Host-owned review seal.  Presence of a class or method shape is not proof that
+# its production authority lineage is wired.  Add an operation only in the
+# implementation commit that closes and verifies that lineage.
+RUNTIME_WIRING_PROVEN_OPERATIONS = (
+    "ecommerce_growth_investigation_describe",
+    "ecommerce_growth_case_put",
+    "ecommerce_growth_schedule_put",
+    "ecommerce_growth_schedule_trigger",
+    "ecommerce_growth_data_fulfill",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,6 +177,8 @@ def build_runtime_ecommerce_growth_registry() -> EcommerceGrowthHostAdapterRegis
 
     _require_runtime_dependencies()
     if tuple(item[0] for item in _RUNTIME_HOST_SERVICES) != ECOMMERCE_GROWTH_OPERATIONS:
+        raise EcommerceGrowthHostBlocked(_RUNTIME_WIRING_REQUIRED)
+    if RUNTIME_WIRING_PROVEN_OPERATIONS != ECOMMERCE_GROWTH_OPERATIONS:
         raise EcommerceGrowthHostBlocked(_RUNTIME_WIRING_REQUIRED)
     if tuple(adapter.SPEC.operation_id for adapter in adapters.RUNTIME_ADAPTER_TYPES) != ECOMMERCE_GROWTH_OPERATIONS:
         raise EcommerceGrowthHostBlocked(_RUNTIME_WIRING_REQUIRED)

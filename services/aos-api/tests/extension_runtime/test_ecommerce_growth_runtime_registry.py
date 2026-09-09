@@ -8,6 +8,7 @@ import pytest
 
 from aos_api.ecommerce_growth_host_composition import (
     ECOMMERCE_GROWTH_OPERATIONS,
+    RUNTIME_WIRING_PROVEN_OPERATIONS,
     build_registration_only_ecommerce_growth_registry,
     build_runtime_ecommerce_growth_registry,
     select_ecommerce_growth_registry,
@@ -57,6 +58,7 @@ def test_runtime_registry_factory_has_no_injection_surface():
 
 
 def test_runtime_registry_fails_closed_while_host_services_are_incomplete():
+    assert RUNTIME_WIRING_PROVEN_OPERATIONS == ECOMMERCE_GROWTH_OPERATIONS[:5]
     with pytest.raises(EcommerceGrowthHostBlocked, match="AR2_7D_RUNTIME_WIRING_REQUIRED"):
         build_runtime_ecommerce_growth_registry()
 
@@ -93,12 +95,27 @@ def test_http_dispatch_selects_production_registry_without_hardcoding_registrati
 
 def test_runtime_registry_builds_exact_nine_when_host_services_exist(monkeypatch):
     import aos_api.ecommerce_growth_runtime_adapters as adapters
+    import aos_api.ecommerce_growth_host_composition as composition
 
     for operation_id, class_name in REQUIRED_HOST_SERVICES:
         monkeypatch.setattr(adapters, class_name, FakeHostService, raising=False)
+    monkeypatch.setattr(
+        composition,
+        "RUNTIME_WIRING_PROVEN_OPERATIONS",
+        ECOMMERCE_GROWTH_OPERATIONS,
+    )
     registry = build_runtime_ecommerce_growth_registry()
     assert registry.operation_ids == ECOMMERCE_GROWTH_OPERATIONS
     assert tuple(adapter.SPEC.operation_id for adapter in RUNTIME_ADAPTER_TYPES) == ECOMMERCE_GROWTH_OPERATIONS
     assert tuple(item[0] for item in REQUIRED_HOST_SERVICES) == ECOMMERCE_GROWTH_OPERATIONS
     execute = registry._binding("ecommerce_growth_case_put").execute
     assert execute.__self__.__class__ is FakeHostService
+
+
+def test_service_shape_cannot_bypass_incomplete_runtime_readiness_seal(monkeypatch):
+    import aos_api.ecommerce_growth_runtime_adapters as adapters
+
+    for _operation_id, class_name in REQUIRED_HOST_SERVICES:
+        monkeypatch.setattr(adapters, class_name, FakeHostService, raising=False)
+    with pytest.raises(EcommerceGrowthHostBlocked, match="AR2_7D_RUNTIME_WIRING_REQUIRED"):
+        build_runtime_ecommerce_growth_registry()
