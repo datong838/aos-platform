@@ -22,6 +22,7 @@
 
 ### D6A：disable 与九项 dispatch detach 原子联动
 
+- D6A1 先交 `ar2_017` 与 `EcommerceGrowthDisableDependent` 的事务内 authority/readback，直接以既有 runtime disable operation 验证 fence/detach、Receipt 和 9/9 CAS；D6A2 再把该 concrete dependent 注入 disable service/executor/consumer/production wiring。两笔都未通过前不声称 disable 已自动联动。
 - 接续迁移 `ar2_017_ecommerce_growth_disable_detach.py`，新增从属于既有 runtime disable operation 的 lifecycle authority、不可变事件/Receipt 与两个受限固定函数。
 - 在通用 disable 的两个既有事务边界加入受信 dependent hook：第一事务先由现有 `RuntimeBindingStore.fence` 关闭 runtime 并 epoch+1，同事务锁定 resumed activation、把 open gate 改为 paused、把 9/9 extension dispatch 整组设 fence；第二事务在既有 generation drain 成功后，把 9/9 整组恢复 activation prepare 的 legacy identity、删除 gate，再允许 disable operation 成功。
 - dependent 只能由 production-owned concrete wiring 注入；没有匹配 resumed cutover 时严格 no-op，既有非电商 disable 行为不变。任一 hook、Receipt、9/9 CAS 或当前权威失败，所在事务整体回滚；第一事务已提交后第二事务失败时继续保持 runtime/gate/dispatch fence。
