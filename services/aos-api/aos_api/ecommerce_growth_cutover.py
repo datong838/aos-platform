@@ -166,6 +166,55 @@ class CutoverCommitPhaseReceipt(AipContractModel):
     created_at: datetime
 
 
+class CutoverFinalizeRequest(AipContractModel):
+    cutover_operation_id: UUID
+    idempotency_key: str = Field(min_length=1, max_length=240)
+    commit_receipt_ref: CutoverExactRef
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def _canonical_key(cls, value: str) -> str:
+        if value != value.strip():
+            raise ValueError("cutover finalize idempotency key must be canonical")
+        return value
+
+    @model_validator(mode="after")
+    def _commit_ref(self) -> "CutoverFinalizeRequest":
+        if self.commit_receipt_ref.resource_type != "CutoverCommitReceipt":
+            raise ValueError("commitReceiptRef must reference CutoverCommitReceipt")
+        try:
+            UUID(self.commit_receipt_ref.resource_id)
+        except ValueError as exc:
+            raise ValueError("commitReceiptRef resourceId must be a UUID") from exc
+        return self
+
+    def request_hash(self) -> str:
+        return canonical_sha256(self.model_dump(mode="json", by_alias=True))
+
+
+class CutoverFinalizeReceipt(AipContractModel):
+    tenant: TenantContext
+    receipt_id: UUID
+    cutover_operation_id: UUID
+    phase: Literal["validate", "resume"]
+    status: Literal["validated", "resumed"]
+    cutover_group_id: UUID
+    operation_ids: tuple[str, ...]
+    dispatch_snapshot: tuple[dict[str, Any], ...]
+    target_runtime_revision: int
+    claim_paused: bool
+    occurrence_watermark: datetime | None
+    claimed_occurrences: tuple[dict[str, Any], ...]
+    claimed_attempts: tuple[dict[str, Any], ...]
+    unknown_attempts: tuple[dict[str, Any], ...]
+    running_runtime_attempts: tuple[dict[str, Any], ...]
+    commit_receipt_ref: CutoverExactRef
+    request_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    replayed: bool = False
+    created_at: datetime
+
+
 def _object(value: Any) -> dict[str, Any]:
     if isinstance(value, str):
         value = json.loads(value)
@@ -561,6 +610,190 @@ class EcommerceGrowthCutoverStore:
             result = self._phase_receipt(scope, row, replayed=False)
             conn.commit()
             return result
+
+    def validate_activation(
+        self,
+        scope: TenantScope,
+        request: CutoverFinalizeRequest,
+        *,
+        actor: str,
+    ) -> CutoverFinalizeReceipt:
+        scope, request, actor = self._validated_finalize_call(scope, request, actor)
+        request_hash = request.request_hash()
+        with self._connect_factory(scope) as conn:
+            self._require_maintainer(conn)
+            operation, prepare = self._load_committed_context(conn, scope, request)
+            existing = self._load_finalize_receipt(
+                conn, scope, request.cutover_operation_id, "validate"
+            )
+            if existing is not None:
+                if existing["request_hash"] != request_hash:
+                    raise EcommerceGrowthCutoverConflict(
+                        "cutover validate idempotency payload drifted"
+                    )
+                return self._finalize_receipt(scope, existing, replayed=True)
+            if operation["status"] != "committed":
+                raise EcommerceGrowthCutoverConflict("cutover operation is not committed")
+            self._lock_final_authority(conn, scope, operation, prepare, resumed=False)
+            facts = self._execution_facts(conn, scope, prepare)
+            if prepare.pending_target_receipt_refs:
+                raise EcommerceGrowthCutoverBlocked(
+                    "pending target Receipt reconciliation remains"
+                )
+            if (
+                facts["claimedOccurrences"]
+                or facts["claimedAttempts"]
+                or facts["runningRuntimeAttempts"]
+            ):
+                raise EcommerceGrowthCutoverBlocked("cutover target execution is not drained")
+            validated_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+            authority = self._finalize_authority(
+                scope,
+                request,
+                prepare,
+                phase="validate",
+                status="validated",
+                runtime_revision=prepare.target_runtime_revision + 1,
+                claim_paused=True,
+                facts=facts,
+                actor=actor,
+                created_at=validated_at,
+            )
+            receipt_id = uuid4()
+            self._insert_phase_history(
+                conn,
+                scope,
+                request.cutover_operation_id,
+                sequence=4,
+                event_type="CUTOVER_VALIDATED",
+                phase="validate",
+                receipt_id=receipt_id,
+                request_hash=request_hash,
+                authority=authority,
+                occurred_at=validated_at,
+            )
+            updated = conn.execute(
+                f"""UPDATE {self._schema}.extension_dispatch_cutover_operation
+                       SET status='validated',updated_at=%s
+                     WHERE org_id=%s AND project_id=%s AND cutover_operation_id=%s
+                       AND status='committed'""",
+                (validated_at, *scope.key, request.cutover_operation_id),
+            ).rowcount
+            if updated != 1:
+                raise EcommerceGrowthCutoverConflict("cutover validate state drifted")
+            row = self._load_finalize_receipt(
+                conn, scope, request.cutover_operation_id, "validate"
+            )
+            if row is None:
+                raise EcommerceGrowthCutoverConflict("cutover validate readback is missing")
+            result = self._finalize_receipt(scope, row, replayed=False)
+            conn.commit()
+            return result
+
+    def resume_activation(
+        self,
+        scope: TenantScope,
+        request: CutoverFinalizeRequest,
+        *,
+        validate_receipt_ref: CutoverExactRef,
+        actor: str,
+    ) -> CutoverFinalizeReceipt:
+        scope, request, actor = self._validated_finalize_call(scope, request, actor)
+        validate_receipt_ref = CutoverExactRef.model_validate(validate_receipt_ref)
+        if validate_receipt_ref.resource_type != "CutoverValidateReceipt":
+            raise ValueError("validateReceiptRef must reference CutoverValidateReceipt")
+        request_hash = request.request_hash()
+        with self._connect_factory(scope) as conn:
+            self._require_maintainer(conn)
+            operation, prepare = self._load_committed_context(conn, scope, request)
+            existing = self._load_finalize_receipt(
+                conn, scope, request.cutover_operation_id, "resume"
+            )
+            if existing is not None:
+                if existing["request_hash"] != request_hash:
+                    raise EcommerceGrowthCutoverConflict(
+                        "cutover resume idempotency payload drifted"
+                    )
+                return self._finalize_receipt(scope, existing, replayed=True)
+            validation_row = self._load_finalize_receipt(
+                conn, scope, request.cutover_operation_id, "validate"
+            )
+            if validation_row is None:
+                raise EcommerceGrowthCutoverBlocked("exact validate Receipt is required")
+            validation = self._finalize_receipt(scope, validation_row, replayed=True)
+            if (
+                validate_receipt_ref.revision != 1
+                or validate_receipt_ref.resource_id != str(validation.receipt_id)
+                or validate_receipt_ref.content_hash != validation.content_hash
+            ):
+                raise EcommerceGrowthCutoverConflict("validate Receipt reference drifted")
+            if operation["status"] != "validated":
+                raise EcommerceGrowthCutoverConflict("cutover operation is not validated")
+            self._lock_final_authority(conn, scope, operation, prepare, resumed=False)
+            facts = self._execution_facts(conn, scope, prepare)
+            if (
+                facts["claimedOccurrences"]
+                or facts["claimedAttempts"]
+                or facts["runningRuntimeAttempts"]
+            ):
+                raise EcommerceGrowthCutoverBlocked("cutover target execution is not drained")
+            try:
+                resumed_at = conn.execute(
+                    f"SELECT {self._schema}.extension_dispatch_cutover_resume_ar2_015(%s,%s) AS resumed_at",
+                    (request.cutover_operation_id, actor),
+                ).fetchone()["resumed_at"]
+            except psycopg.Error as exc:
+                raise EcommerceGrowthCutoverBlocked(str(exc).splitlines()[0]) from exc
+            self._lock_final_authority(conn, scope, operation, prepare, resumed=True)
+            final_facts = self._execution_facts(conn, scope, prepare)
+            authority = self._finalize_authority(
+                scope,
+                request,
+                prepare,
+                phase="resume",
+                status="resumed",
+                runtime_revision=prepare.target_runtime_revision + 2,
+                claim_paused=False,
+                facts=final_facts,
+                actor=actor,
+                created_at=resumed_at,
+            )
+            receipt_id = uuid4()
+            self._insert_phase_history(
+                conn,
+                scope,
+                request.cutover_operation_id,
+                sequence=5,
+                event_type="CUTOVER_RESUMED",
+                phase="resume",
+                receipt_id=receipt_id,
+                request_hash=request_hash,
+                authority=authority,
+                occurred_at=resumed_at,
+            )
+            row = self._load_finalize_receipt(
+                conn, scope, request.cutover_operation_id, "resume"
+            )
+            if row is None:
+                raise EcommerceGrowthCutoverConflict("cutover resume readback is missing")
+            result = self._finalize_receipt(scope, row, replayed=False)
+            conn.commit()
+            return result
+
+    @staticmethod
+    def _validated_finalize_call(
+        scope: TenantScope,
+        request: CutoverFinalizeRequest,
+        actor: str,
+    ) -> tuple[TenantScope, CutoverFinalizeRequest, str]:
+        if type(scope) is not TenantScope or type(request) is not CutoverFinalizeRequest:
+            raise TypeError("trusted TenantScope and CutoverFinalizeRequest are required")
+        request = CutoverFinalizeRequest.model_validate(
+            request.model_dump(mode="python", by_alias=True)
+        )
+        if type(actor) is not str or not actor or actor != actor.strip() or len(actor) > 240:
+            raise ValueError("canonical cutover actor is required")
+        return scope, request, actor
 
     @staticmethod
     def _validated_commit_call(
@@ -961,6 +1194,248 @@ class EcommerceGrowthCutoverStore:
             "createdAt": row["created_at"],
         })
 
+    def _load_committed_context(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        request: CutoverFinalizeRequest,
+    ) -> tuple[dict[str, Any], CutoverPrepareReceipt]:
+        operation = self._load_operation_with_prepare(
+            conn, scope, request.cutover_operation_id
+        )
+        prepare = self._receipt(scope, operation, replayed=True)
+        commit_row = self._load_phase_receipt(
+            conn, scope, request.cutover_operation_id, "commit"
+        )
+        if commit_row is None:
+            raise EcommerceGrowthCutoverBlocked("exact commit Receipt is required")
+        commit = self._phase_receipt(scope, commit_row, replayed=True)
+        if (
+            request.commit_receipt_ref.revision != 1
+            or request.commit_receipt_ref.resource_id != str(commit.receipt_id)
+            or request.commit_receipt_ref.content_hash != commit.content_hash
+        ):
+            raise EcommerceGrowthCutoverConflict("commit Receipt reference drifted")
+        return operation, prepare
+
+    def _lock_final_authority(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        operation: dict[str, Any],
+        prepare: CutoverPrepareReceipt,
+        *,
+        resumed: bool,
+    ) -> None:
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+            (f"{scope.org_id}\x1f{scope.project_id}\x1f{prepare.cutover_group_id}",),
+        )
+        rows = self._dispatch_rows(conn, scope, prepare.cutover_group_id)
+        if canonical_hash([_snapshot(dict(row)) for row in rows]) != canonical_hash(
+            list(prepare.new_dispatch_snapshot)
+        ):
+            raise EcommerceGrowthCutoverConflict("committed dispatch group authority drifted")
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+            (f"{scope.org_id}\x1f{scope.project_id}\x1f{prepare.target_installation_id}",),
+        )
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+            (f"{scope.org_id}\x1f{scope.project_id}\x1f{prepare.target_installation_id}"
+             f"\x1f{prepare.target_generation}",),
+        )
+        runtime = conn.execute(
+            f"""SELECT execution_epoch,desired_state,observed_state,enabled,operation_fence,revision
+                   FROM {self._schema}.extension_runtime_binding
+                  WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s""",
+            (*scope.key, prepare.target_installation_id, prepare.target_generation),
+        ).fetchone()
+        if (
+            runtime is None
+            or runtime["execution_epoch"] != prepare.target_execution_epoch
+            or runtime["revision"] != prepare.target_runtime_revision + (2 if resumed else 1)
+            or runtime["desired_state"] != "enabled"
+            or runtime["observed_state"] != "ready"
+            or runtime["enabled"] is not resumed
+            or runtime["operation_fence"] is resumed
+        ):
+            raise EcommerceGrowthCutoverConflict("target runtime finalization state drifted")
+        gate = conn.execute(
+            f"""SELECT cutover_operation_id,claim_paused,revision
+                   FROM {self._schema}.extension_dispatch_claim_gate
+                  WHERE org_id=%s AND project_id=%s AND cutover_group_id=%s""",
+            (*scope.key, prepare.cutover_group_id),
+        ).fetchone()
+        if (
+            gate is None
+            or gate["cutover_operation_id"] != prepare.cutover_operation_id
+            or gate["claim_paused"] is resumed
+            or int(gate["revision"]) != (2 if resumed else 1)
+        ):
+            raise EcommerceGrowthCutoverConflict("cutover claim gate finalization drifted")
+        conn.execute(
+            f"SELECT {self._schema}.extension_dispatch_cutover_lock_approval_ar2_013(%s)",
+            (prepare.approval_ref.resource_id,),
+        )
+        reconstructed = CutoverPrepareRequest(
+            cutoverOperationId=prepare.cutover_operation_id,
+            idempotencyKey=operation["idempotency_key"],
+            cutoverGroupId=prepare.cutover_group_id,
+            expectedGroupRevision=prepare.expected_group_revision,
+            targetInstallationId=prepare.target_installation_id,
+            targetGeneration=prepare.target_generation,
+            targetExecutionEpoch=prepare.target_execution_epoch,
+            targetRuntimeRevision=prepare.target_runtime_revision,
+            policyRef=prepare.policy_ref,
+            approvalRef=prepare.approval_ref,
+            checkpoint=prepare.checkpoint,
+            occurrenceWatermark=prepare.occurrence_watermark,
+            pendingTargetReceiptRefs=prepare.pending_target_receipt_refs,
+        )
+        self._approval_authority(conn, scope, reconstructed)
+
+    @staticmethod
+    def _finalize_authority(
+        scope: TenantScope,
+        request: CutoverFinalizeRequest,
+        prepare: CutoverPrepareReceipt,
+        *,
+        phase: Literal["validate", "resume"],
+        status: Literal["validated", "resumed"],
+        runtime_revision: int,
+        claim_paused: bool,
+        facts: dict[str, Any],
+        actor: str,
+        created_at: datetime,
+    ) -> dict[str, Any]:
+        return {
+            "schemaVersion": f"aos.ecommerce.dispatch-cutover-{phase}/v1",
+            "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+            "cutoverOperationId": str(request.cutover_operation_id),
+            "phase": phase,
+            "status": status,
+            "cutoverGroupId": str(prepare.cutover_group_id),
+            "operationIds": list(prepare.operation_ids),
+            "dispatchSnapshot": list(prepare.new_dispatch_snapshot),
+            "targetRuntimeRevision": runtime_revision,
+            "claimPaused": claim_paused,
+            **facts,
+            "commitReceiptRef": request.commit_receipt_ref.model_dump(
+                mode="json", by_alias=True
+            ),
+            "finalizeIdempotencyKey": request.idempotency_key,
+            "requestHash": request.request_hash(),
+            "requestedBy": actor,
+            "createdAt": created_at.isoformat(),
+        }
+
+    def _load_finalize_receipt(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        cutover_operation_id: UUID,
+        phase: Literal["validate", "resume"],
+    ) -> dict[str, Any] | None:
+        event_type, sequence = {
+            "validate": ("CUTOVER_VALIDATED", 4),
+            "resume": ("CUTOVER_RESUMED", 5),
+        }[phase]
+        row = conn.execute(
+            f"""SELECT r.*,o.cutover_group_id,o.operation_ids,o.new_dispatch_snapshot,
+                        o.target_runtime_revision,e.payload AS event_payload,
+                        e.payload_hash,e.occurred_at
+                   FROM {self._schema}.extension_dispatch_cutover_receipt r
+                   JOIN {self._schema}.extension_dispatch_cutover_operation o
+                     USING(org_id,project_id,cutover_operation_id)
+                   JOIN {self._schema}.extension_dispatch_cutover_event e
+                     USING(org_id,project_id,cutover_operation_id)
+                  WHERE r.org_id=%s AND r.project_id=%s AND r.cutover_operation_id=%s
+                    AND r.phase=%s AND e.sequence=%s AND e.event_type=%s""",
+            (*scope.key, cutover_operation_id, phase, sequence, event_type),
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    @staticmethod
+    def _finalize_receipt(
+        scope: TenantScope,
+        row: dict[str, Any],
+        *,
+        replayed: bool,
+    ) -> CutoverFinalizeReceipt:
+        authority = _object(row["authority_data"])
+        event = _object(row["event_payload"])
+        phase = row["phase"]
+        expected_status = "validated" if phase == "validate" else "resumed"
+        expected_runtime_revision = int(row["target_runtime_revision"]) + (
+            1 if phase == "validate" else 2
+        )
+        try:
+            finalize_request = CutoverFinalizeRequest(
+                cutoverOperationId=authority.get("cutoverOperationId"),
+                idempotencyKey=authority.get("finalizeIdempotencyKey"),
+                commitReceiptRef=authority.get("commitReceiptRef"),
+            )
+        except (TypeError, ValueError) as exc:
+            raise EcommerceGrowthCutoverConflict(
+                f"cutover {phase} Receipt authority drifted"
+            ) from exc
+        if (
+            phase not in {"validate", "resume"}
+            or canonical_sha256(authority) != row["content_hash"]
+            or canonical_sha256(event) != row["payload_hash"]
+            or event != {
+                "cutoverOperationId": str(row["cutover_operation_id"]),
+                "phase": phase,
+                "receiptId": str(row["receipt_id"]),
+                "contentHash": row["content_hash"],
+            }
+            or authority.get("tenant") != {
+                "orgId": scope.org_id, "projectId": scope.project_id
+            }
+            or authority.get("cutoverOperationId") != str(row["cutover_operation_id"])
+            or authority.get("phase") != phase
+            or authority.get("status") != expected_status
+            or authority.get("cutoverGroupId") != str(row["cutover_group_id"])
+            or canonical_hash(authority.get("operationIds"))
+                != canonical_hash(_array(row["operation_ids"]))
+            or canonical_hash(authority.get("dispatchSnapshot"))
+                != canonical_hash(_array(row["new_dispatch_snapshot"]))
+            or authority.get("targetRuntimeRevision") != expected_runtime_revision
+            or authority.get("claimPaused") is (phase == "resume")
+            or authority.get("requestHash") != row["request_hash"]
+            or finalize_request.request_hash() != row["request_hash"]
+            or authority.get("createdAt") != row["created_at"].isoformat()
+            or row["occurred_at"] != row["created_at"]
+        ):
+            raise EcommerceGrowthCutoverConflict(
+                f"cutover {phase} Receipt authority drifted"
+            )
+        return CutoverFinalizeReceipt.model_validate({
+            "tenant": authority["tenant"],
+            "receiptId": row["receipt_id"],
+            "cutoverOperationId": row["cutover_operation_id"],
+            "phase": phase,
+            "status": expected_status,
+            "cutoverGroupId": authority["cutoverGroupId"],
+            "operationIds": tuple(_array(authority["operationIds"])),
+            "dispatchSnapshot": tuple(_array(authority["dispatchSnapshot"])),
+            "targetRuntimeRevision": authority["targetRuntimeRevision"],
+            "claimPaused": authority["claimPaused"],
+            "occurrenceWatermark": authority.get("occurrenceWatermark"),
+            "claimedOccurrences": tuple(_array(authority.get("claimedOccurrences"))),
+            "claimedAttempts": tuple(_array(authority.get("claimedAttempts"))),
+            "unknownAttempts": tuple(_array(authority.get("unknownAttempts"))),
+            "runningRuntimeAttempts": tuple(
+                _array(authority.get("runningRuntimeAttempts"))
+            ),
+            "commitReceiptRef": authority["commitReceiptRef"],
+            "requestHash": authority["requestHash"],
+            "contentHash": row["content_hash"],
+            "replayed": replayed,
+            "createdAt": row["created_at"],
+        })
+
     def _approval_authority(
         self,
         conn: Any,
@@ -1184,6 +1659,8 @@ __all__ = [
     "CutoverPrepareReceipt",
     "CutoverPrepareRequest",
     "CutoverExactRef",
+    "CutoverFinalizeReceipt",
+    "CutoverFinalizeRequest",
     "EcommerceGrowthCutoverBlocked",
     "EcommerceGrowthCutoverConflict",
     "EcommerceGrowthCutoverError",

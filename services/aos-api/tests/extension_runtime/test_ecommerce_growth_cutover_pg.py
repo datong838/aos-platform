@@ -22,6 +22,7 @@ from aos_api.automation_occurrence_store import AutomationOccurrenceStore
 from aos_api.ecommerce_growth_cutover import (
     CutoverCommitRequest,
     CutoverExactRef,
+    CutoverFinalizeRequest,
     CutoverPrepareRequest,
     EcommerceGrowthCutoverBlocked,
     EcommerceGrowthCutoverConflict,
@@ -122,6 +123,7 @@ def database():
             )
         _migration(root, "ar2_013_ecommerce_growth_cutover.py", owner, schema=schema)
         _migration(root, "ar2_014_ecommerce_growth_cutover_commit.py", owner, schema=schema)
+        _migration(root, "ar2_015_ecommerce_growth_cutover_finalize.py", owner, schema=schema)
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_extension_maintainer").format(sql.Identifier(schema)))
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(sql.Identifier(schema)))
         yield SimpleNamespace(owner=owner, schema=schema, role=role, root=root)
@@ -293,6 +295,28 @@ def _commit_request(prepare_receipt):
             "revision": 1,
             "contentHash": prepare_receipt.content_hash,
         },
+    )
+
+
+def _finalize_request(commit_receipt):
+    return CutoverFinalizeRequest(
+        cutoverOperationId=commit_receipt.cutover_operation_id,
+        idempotencyKey="finalize-cutover-1",
+        commitReceiptRef={
+            "resourceType": "CutoverCommitReceipt",
+            "resourceId": str(commit_receipt.receipt_id),
+            "revision": 1,
+            "contentHash": commit_receipt.content_hash,
+        },
+    )
+
+
+def _validate_ref(receipt):
+    return CutoverExactRef(
+        resourceType="CutoverValidateReceipt",
+        resourceId=str(receipt.receipt_id),
+        revision=1,
+        contentHash=receipt.content_hash,
     )
 
 
@@ -792,6 +816,15 @@ def test_ar2_014_nonempty_gate_blocks_downgrade(database):
 
 
 def test_ar2_014_empty_downgrade_restores_prior_constraints(database):
+    finalize_spec = importlib.util.spec_from_file_location(
+        "ar2_015_empty_down",
+        database.root / "alembic/versions/ar2_015_ecommerce_growth_cutover_finalize.py",
+    )
+    finalize_migration = importlib.util.module_from_spec(finalize_spec)
+    assert finalize_spec.loader is not None
+    finalize_spec.loader.exec_module(finalize_migration)
+    finalize_migration.op = SimpleNamespace(execute=database.owner.execute)
+    finalize_migration.downgrade()
     spec = importlib.util.spec_from_file_location(
         "ar2_014_empty_down",
         database.root / "alembic/versions/ar2_014_ecommerce_growth_cutover_commit.py",
@@ -870,3 +903,135 @@ def test_pause_event_hash_drift_is_rejected_on_replay(database):
     database.owner.execute("ALTER TABLE extension_dispatch_cutover_event ENABLE TRIGGER immutable_history")
     with pytest.raises(EcommerceGrowthCutoverConflict, match="pause Receipt authority drifted"):
         store.begin_activation_commit(scope, request, actor="runtime-owner")
+
+
+def test_validate_then_resume_opens_runtime_and_claim_atomically(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    occurrence_id, now = _seed_pending_occurrence(database, scope, prepare_request)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    request = _finalize_request(committed)
+
+    validated = store.validate_activation(scope, request, actor="runtime-owner")
+    validated_replay = store.validate_activation(scope, request, actor="runtime-owner")
+    assert validated.status == "validated" and validated.claim_paused is True
+    assert validated_replay.receipt_id == validated.receipt_id
+    assert validated_replay.replayed is True
+
+    resumed = store.resume_activation(
+        scope, request, validate_receipt_ref=_validate_ref(validated), actor="runtime-owner"
+    )
+    replay = store.resume_activation(
+        scope, request, validate_receipt_ref=_validate_ref(validated), actor="runtime-owner"
+    )
+    assert resumed.status == "resumed" and resumed.claim_paused is False
+    assert replay.receipt_id == resumed.receipt_id and replay.replayed is True
+    assert database.owner.execute(
+        "SELECT status FROM extension_dispatch_cutover_operation"
+    ).fetchone()["status"] == "resumed"
+    assert database.owner.execute(
+        "SELECT enabled,operation_fence,revision FROM extension_runtime_binding"
+    ).fetchone() == {"enabled": True, "operation_fence": False, "revision": 15}
+    assert database.owner.execute(
+        "SELECT claim_paused,revision FROM extension_dispatch_claim_gate"
+    ).fetchone() == {"claim_paused": False, "revision": 2}
+    claimed = AutomationOccurrenceStore(
+        _connection(database, runtime=True), schema=database.schema
+    ).claim_next(scope, owner="worker-resumed", now=now)
+    assert claimed is not None and claimed.occurrence_id == occurrence_id
+
+
+@pytest.mark.parametrize("drift", ["dispatch", "runtime", "gate"])
+def test_validate_rejects_committed_authority_drift(database, drift):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    if drift == "dispatch":
+        database.owner.execute(
+            """UPDATE extension_operation_dispatch_binding SET revision=revision+1
+                 WHERE operation_id=(SELECT min(operation_id) FROM extension_operation_dispatch_binding)"""
+        )
+    elif drift == "runtime":
+        database.owner.execute("UPDATE extension_runtime_binding SET revision=revision+1")
+    else:
+        database.owner.execute("UPDATE extension_dispatch_claim_gate SET revision=revision+1")
+    with pytest.raises(EcommerceGrowthCutoverConflict, match="authority drifted|state drifted|gate finalization drifted"):
+        store.validate_activation(scope, _finalize_request(committed), actor="runtime-owner")
+
+
+def test_direct_resume_without_receipt_rolls_back_every_entry(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    request = _finalize_request(committed)
+    store.validate_activation(scope, request, actor="runtime-owner")
+    with _connection(database)(scope) as conn:
+        conn.execute(
+            sql.SQL("SELECT {}.extension_dispatch_cutover_resume_ar2_015(%s,%s)").format(
+                sql.Identifier(database.schema)
+            ),
+            (request.cutover_operation_id, "runtime-owner"),
+        )
+        with pytest.raises(psycopg.errors.CheckViolation, match="resume Receipt"):
+            conn.commit()
+        conn.rollback()
+    assert database.owner.execute(
+        "SELECT status FROM extension_dispatch_cutover_operation"
+    ).fetchone()["status"] == "validated"
+    assert database.owner.execute(
+        "SELECT enabled,operation_fence FROM extension_runtime_binding"
+    ).fetchone() == {"enabled": False, "operation_fence": True}
+    assert database.owner.execute(
+        "SELECT claim_paused FROM extension_dispatch_claim_gate"
+    ).fetchone()["claim_paused"] is True
+
+
+def test_finalize_rejects_commit_receipt_reference_drift(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    request = _finalize_request(committed).model_copy(update={
+        "commit_receipt_ref": CutoverExactRef(
+            resourceType="CutoverCommitReceipt", resourceId=str(committed.receipt_id),
+            revision=1, contentHash="sha256:" + "f" * 64,
+        )
+    })
+    with pytest.raises(EcommerceGrowthCutoverConflict, match="commit Receipt reference drifted"):
+        store.validate_activation(scope, request, actor="runtime-owner")
+
+
+def test_ar2_015_empty_and_nonempty_downgrade_guards(database):
+    spec = importlib.util.spec_from_file_location(
+        "ar2_015_down",
+        database.root / "alembic/versions/ar2_015_ecommerce_growth_cutover_finalize.py",
+    )
+    migration = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(migration)
+    migration.op = SimpleNamespace(execute=database.owner.execute)
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    store.validate_activation(scope, _finalize_request(committed), actor="runtime-owner")
+    with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState):
+        migration.downgrade()
