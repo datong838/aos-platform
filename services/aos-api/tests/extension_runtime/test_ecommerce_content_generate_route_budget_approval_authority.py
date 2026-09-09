@@ -147,6 +147,9 @@ def test_content_generate_accepts_current_route_budget_price_and_approval(monkey
         "revision_bool",
         "tenant",
         "lifecycle",
+        "task_type",
+        "strategy",
+        "multiple_candidates",
         "input_modality",
         "output_modality",
         "capability",
@@ -176,6 +179,52 @@ def test_content_generate_rejects_model_route_drift(monkeypatch, drift):
         }
     elif drift == "lifecycle":
         transaction.payload["lifecycle"] = "validated"
+    elif drift == "task_type":
+        transaction.payload["taskTypes"] = ["other"]
+        transaction.payload["contentHash"] = model_runtime_canonical_hash(
+            {
+                name: value
+                for name, value in transaction.payload.items()
+                if name not in {"tenant", "revision", "contentHash", "createdBy", "createdAt"}
+            }
+        )
+        authorities["model_route"] = _ref(
+            "ModelRouteRevision", "route-1", transaction.payload["contentHash"]
+        )
+    elif drift == "strategy":
+        transaction.payload["strategy"] = "weighted"
+        transaction.payload["contentHash"] = model_runtime_canonical_hash(
+            {
+                name: value
+                for name, value in transaction.payload.items()
+                if name not in {"tenant", "revision", "contentHash", "createdBy", "createdAt"}
+            }
+        )
+        authorities["model_route"] = _ref(
+            "ModelRouteRevision", "route-1", transaction.payload["contentHash"]
+        )
+    elif drift == "multiple_candidates":
+        transaction.payload["candidates"].append(
+            {
+                "model": {
+                    "assetType": "RegisteredModelRevision",
+                    "assetId": "model-2",
+                    "revision": 1,
+                    "contentHash": HASH_A,
+                },
+                "weight": 100,
+            }
+        )
+        transaction.payload["contentHash"] = model_runtime_canonical_hash(
+            {
+                name: value
+                for name, value in transaction.payload.items()
+                if name not in {"tenant", "revision", "contentHash", "createdBy", "createdAt"}
+            }
+        )
+        authorities["model_route"] = _ref(
+            "ModelRouteRevision", "route-1", transaction.payload["contentHash"]
+        )
     elif drift == "input_modality":
         transaction.payload["requiredInputModality"] = "image"
     elif drift == "output_modality":

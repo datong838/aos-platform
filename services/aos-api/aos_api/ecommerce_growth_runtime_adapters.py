@@ -41,11 +41,21 @@ from aos_api.aip_model_runtime_contracts import (
     ModelModality,
     ModelRouteRevision,
     ModelRuntimeLifecycle,
+    ProviderInstanceRevision,
+    RegisteredModelRevision,
+    RouteStrategy,
+    RuntimePolicyRevision,
 )
 from aos_api.aip_model_runtime_store import (
     AipModelRuntimeStore,
     canonical_hash as model_runtime_canonical_hash,
+    evaluation_candidate_ref,
 )
+from aos_api.aip_model_capacity_authority import (
+    CapacityPoolRevisionCreate,
+    canonical_hash as capacity_pool_canonical_hash,
+)
+from aos_api.aip_model_capacity_reservation import AipModelCapacityReservationGate
 from aos_api.aip_production_contracts import (
     AssigneeKind,
     BriefLifecycle,
@@ -2940,7 +2950,7 @@ class ContentGenerateHostService:
     @staticmethod
     def _route_budget_approval_authority(
         transaction, scope, authorities, *, upper_bound_fen: int
-    ) -> None:
+    ) -> tuple[ModelRouteRevision, datetime]:
         route_ref = authorities["model_route"]
         route_head = transaction.execute(
             """SELECT current_revision,version FROM public.aip_model_route_head
@@ -2982,6 +2992,9 @@ class ContentGenerateHostService:
             or route_row["lifecycle"] != route.lifecycle.value
             or model_runtime_canonical_hash(route_content) != route.content_hash
             or route.lifecycle is not ModelRuntimeLifecycle.ACTIVE
+            or "content_campaign" not in route.task_types
+            or route.strategy is not RouteStrategy.FAILOVER
+            or len(route.candidates) != 1
             or route.required_input_modality is not ModelModality.TEXT
             or route.required_output_modality is not ModelModality.TEXT
             or authorities["capability"].resource_id
@@ -3023,6 +3036,300 @@ class ContentGenerateHostService:
             )
         except BudgetReservationError as exc:
             raise ValueError("content generate Budget/Approval authority drifted") from exc
+        return route, checked["checked_at"]
+
+    @staticmethod
+    def _resolution_capacity_authority(
+        transaction,
+        scope,
+        authorities,
+        *,
+        route: ModelRouteRevision,
+        checked_at: datetime,
+        max_input_tokens: int,
+        max_output_tokens: int,
+    ) -> None:
+        capacity_ref = authorities["capacity_reservation"]
+        capacity = transaction.execute(
+            """SELECT r.reservation_id,r.pool_id,r.pool_revision,r.agent_run_id,
+                      r.request_hash,r.request_units,r.token_units,r.status,
+                      r.created_at AS reservation_created_at,r.expires_at,
+                      h.current_revision,h.version AS head_version,
+                      p.content_hash AS pool_content_hash,p.route_ref,p.model_ref,p.provider_ref,
+                      p.route_id,p.route_revision,p.route_hash,
+                      p.model_id,p.model_revision,p.model_hash,
+                      p.provider_id,p.provider_revision,p.provider_hash,
+                      p.max_concurrency,p.max_token_units,p.token_unit_per_reservation,
+                      p.lease_seconds,p.lifecycle AS pool_lifecycle
+                 FROM public.aip_model_capacity_reservation r
+                 JOIN public.aip_model_capacity_pool_head h
+                   ON h.org_id=r.org_id AND h.project_id=r.project_id
+                  AND h.pool_id=r.pool_id
+                 JOIN public.aip_model_capacity_pool_revision p
+                   ON p.org_id=r.org_id AND p.project_id=r.project_id
+                  AND p.pool_id=r.pool_id AND p.revision=r.pool_revision
+                WHERE r.org_id=%s AND r.project_id=%s AND r.reservation_id=%s
+                FOR SHARE OF r,h""",
+            (*scope.key, capacity_ref.resource_id),
+        ).fetchone()
+        if capacity is None:
+            raise ValueError("content generate CapacityReservation authority is missing")
+
+        route_ref = authorities["model_route"]
+        pool_refs = {
+            "route": AipModelRuntimeStore._load(capacity["route_ref"]),
+            "model": AipModelRuntimeStore._load(capacity["model_ref"]),
+            "provider": AipModelRuntimeStore._load(capacity["provider_ref"]),
+        }
+        pool_content = {
+            "poolId": capacity["pool_id"],
+            "revision": capacity["pool_revision"],
+            "routeRef": pool_refs["route"],
+            "modelRef": pool_refs["model"],
+            "providerRef": pool_refs["provider"],
+            "maxConcurrency": capacity["max_concurrency"],
+            "maxTokenUnits": capacity["max_token_units"],
+            "tokenUnitPerReservation": capacity["token_unit_per_reservation"],
+            "leaseSeconds": capacity["lease_seconds"],
+            "lifecycle": capacity["pool_lifecycle"],
+        }
+        try:
+            pool = CapacityPoolRevisionCreate.model_validate(pool_content)
+        except ValueError as exc:
+            raise ValueError("content generate CapacityPool authority drifted") from exc
+        selected_model_ref = pool.model_ref
+        selected_provider_ref = pool.provider_ref
+        expected_capacity_ref = {
+            "resourceType": "CapacityReservation",
+            "resourceId": capacity["reservation_id"],
+            "revision": 1,
+            "contentHash": "sha256:" + capacity["request_hash"],
+        }
+        split_refs = {
+            "route": (
+                capacity["route_id"], capacity["route_revision"], capacity["route_hash"]
+            ),
+            "model": (
+                capacity["model_id"], capacity["model_revision"], capacity["model_hash"]
+            ),
+            "provider": (
+                capacity["provider_id"],
+                capacity["provider_revision"],
+                capacity["provider_hash"],
+            ),
+        }
+        expected_split_refs = {
+            "route": (route_ref.resource_id, route_ref.revision, route_ref.content_hash.removeprefix("sha256:")),
+            "model": (selected_model_ref.asset_id, selected_model_ref.revision, selected_model_ref.content_hash),
+            "provider": (selected_provider_ref.asset_id, selected_provider_ref.revision, selected_provider_ref.content_hash),
+        }
+        exact_resolution = tuple(
+            value
+            for name in ("route", "model", "provider")
+            for value in expected_split_refs[name]
+        )
+        expected_request_hash = AipModelCapacityReservationGate._request_hash(
+            capacity["agent_run_id"],
+            exact_resolution,
+            capacity["pool_id"],
+            capacity["pool_revision"],
+            capacity["token_unit_per_reservation"],
+        )
+        if (
+            type(capacity["pool_revision"]) is not int
+            or type(capacity["current_revision"]) is not int
+            or type(capacity["head_version"]) is not int
+            or capacity["current_revision"] != capacity["pool_revision"]
+            or capacity["head_version"] != capacity["pool_revision"]
+            or capacity["pool_lifecycle"] != "active"
+            or capacity_pool_canonical_hash(pool_content) != capacity["pool_content_hash"]
+            or split_refs != expected_split_refs
+            or any(
+                capacity_pool_canonical_hash(pool_refs[name])
+                != capacity_pool_canonical_hash(
+                    {
+                        "assetType": kind,
+                        "assetId": expected_split_refs[name][0],
+                        "revision": expected_split_refs[name][1],
+                        "contentHash": expected_split_refs[name][2],
+                    }
+                )
+                for name, kind in (
+                    ("route", "ModelRouteRevision"),
+                    ("model", "RegisteredModelRevision"),
+                    ("provider", "ProviderInstanceRevision"),
+                )
+            )
+            or capacity["status"] != "reserved"
+            or capacity["reservation_created_at"] > checked_at
+            or capacity["expires_at"] <= checked_at
+            or type(capacity["request_units"]) is not int
+            or capacity["request_units"] != 1
+            or type(capacity["token_units"]) is not int
+            or capacity["token_units"] != capacity["token_unit_per_reservation"]
+            or max_input_tokens + max_output_tokens > capacity["token_units"]
+            or capacity["request_hash"] != expected_request_hash
+            or capacity_ref.model_dump(mode="json", by_alias=True, exclude_none=True)
+            != expected_capacity_ref
+        ):
+            raise ValueError("content generate CapacityReservation authority drifted")
+
+        def read_runtime_asset(table: str, id_column: str, ref, model, id_field: str):
+            row = transaction.execute(
+                f"""SELECT content_hash,lifecycle,payload FROM public.{table}
+                    WHERE org_id=%s AND project_id=%s AND {id_column}=%s AND revision=%s""",
+                (*scope.key, ref.asset_id, ref.revision),
+            ).fetchone()
+            if row is None:
+                raise ValueError("content generate ModelRuntime dependency is missing")
+            payload = AipModelRuntimeStore._load(row["payload"])
+            try:
+                item = model.model_validate(payload)
+            except ValueError as exc:
+                raise ValueError("content generate ModelRuntime dependency drifted") from exc
+            content = {
+                name: value
+                for name, value in payload.items()
+                if name not in AipModelRuntimeStore._META_FIELDS
+            }
+            if (
+                payload.get("tenant")
+                != {"orgId": scope.org_id, "projectId": scope.project_id}
+                or type(payload.get("revision")) is not int
+                or payload.get("revision") != ref.revision
+                or getattr(item, id_field) != ref.asset_id
+                or item.content_hash != ref.content_hash
+                or row["content_hash"] != ref.content_hash
+                or row["lifecycle"] != item.lifecycle.value
+                or model_runtime_canonical_hash(content) != ref.content_hash
+                or item.lifecycle is not ModelRuntimeLifecycle.ACTIVE
+            ):
+                raise ValueError("content generate ModelRuntime dependency drifted")
+            return item
+
+        model = read_runtime_asset(
+            "aip_registered_model_revision",
+            "registered_model_id",
+            selected_model_ref,
+            RegisteredModelRevision,
+            "registered_model_id",
+        )
+        provider = read_runtime_asset(
+            "aip_provider_instance_revision",
+            "provider_instance_id",
+            selected_provider_ref,
+            ProviderInstanceRevision,
+            "provider_instance_id",
+        )
+        policy = read_runtime_asset(
+            "aip_runtime_policy_revision",
+            "policy_id",
+            route.runtime_policy_ref,
+            RuntimePolicyRevision,
+            "policy_id",
+        )
+        first_candidate = route.candidates[0].model
+        pricing_ref = authorities["pricing"]
+        if (
+            len(route.candidates) != 1
+            or selected_model_ref != first_candidate
+            or model.provider != selected_provider_ref
+            or model.price_snapshot_ref.asset_id != pricing_ref.resource_id
+            or model.price_snapshot_ref.revision != pricing_ref.revision
+            or model.price_snapshot_ref.content_hash
+            != pricing_ref.content_hash.removeprefix("sha256:")
+            or route.required_input_modality not in model.input_modalities
+            or route.required_output_modality not in model.output_modalities
+            or not set(route.required_capabilities).issubset(model.capabilities)
+            or max_input_tokens + max_output_tokens > model.context_window
+            or policy.kill_switch_enabled
+        ):
+            raise ValueError("content generate ModelRoute resolution drifted")
+
+        def require_gate(ref, expected_target, target_type: str) -> None:
+            row = transaction.execute(
+                """SELECT target_ref,status,decision_hash,invalidated_by,decided_at,expires_at
+                     FROM public.aip_release_gate_decision
+                    WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                (*scope.key, ref.asset_id),
+            ).fetchone()
+            target = AipModelRuntimeStore._load(row["target_ref"]) if row else None
+            expected = {
+                "assetType": target_type,
+                "assetId": expected_target.asset_id,
+                "revision": str(expected_target.revision),
+                "contentHash": expected_target.content_hash,
+            }
+            if (
+                row is None
+                or ref.revision != 1
+                or row["decision_hash"] != ref.content_hash
+                or row["status"] != "passed"
+                or row["invalidated_by"] is not None
+                or not row["decided_at"] <= checked_at < row["expires_at"]
+                or capacity_pool_canonical_hash(target)
+                != capacity_pool_canonical_hash(expected)
+            ):
+                raise ValueError("content generate EvalGate authority drifted")
+
+        require_gate(
+            route.eval_gate_ref,
+            evaluation_candidate_ref(route),
+            "model_route",
+        )
+        require_gate(
+            model.eval_gate_ref,
+            evaluation_candidate_ref(model),
+            "registered_model",
+        )
+        health = transaction.execute(
+            """SELECT status,provider_ref,observed_at,expires_at
+                 FROM public.aip_provider_health_observation
+                WHERE org_id=%s AND project_id=%s
+                  AND provider_ref->>'assetId'=%s
+                ORDER BY observed_at DESC,observation_id DESC LIMIT 1""",
+            (*scope.key, selected_provider_ref.asset_id),
+        ).fetchone()
+        if (
+            health is None
+            or health["status"] != "healthy"
+            or not health["observed_at"] <= checked_at < health["expires_at"]
+            or capacity_pool_canonical_hash(
+                AipModelRuntimeStore._load(health["provider_ref"])
+            )
+            != capacity_pool_canonical_hash(
+                selected_provider_ref.model_dump(mode="json", by_alias=True)
+            )
+        ):
+            raise ValueError("content generate Provider health authority drifted")
+
+        run = transaction.execute(
+            """SELECT agent_run_id,task_id,instance_id,instance_version,model_route_ref,
+                      policy_ref,status,version
+                 FROM public.aip_agent_run
+                WHERE org_id=%s AND project_id=%s AND agent_run_id=%s FOR SHARE""",
+            (*scope.key, capacity["agent_run_id"]),
+        ).fetchone()
+        agent_ref = authorities["agent_instance"]
+        expected_run_route_ref = {
+            "assetType": "ModelRouteRevision",
+            "assetId": route.route_id,
+            "revision": route.revision,
+            "contentHash": route.content_hash,
+        }
+        if (
+            run is None
+            or run["status"] != "running"
+            or run["task_id"] != authorities["task"].resource_id
+            or run["instance_id"] != agent_ref.resource_id
+            or type(run["instance_version"]) is not int
+            or run["instance_version"] != agent_ref.revision
+            or capacity_pool_canonical_hash(AipModelRuntimeStore._load(run["model_route_ref"]))
+            != capacity_pool_canonical_hash(expected_run_route_ref)
+            or capacity_pool_canonical_hash(AipModelRuntimeStore._load(run["policy_ref"]))
+            != capacity_pool_canonical_hash(route.runtime_policy_ref.model_dump(mode="json", by_alias=True))
+        ):
+            raise ValueError("content generate AgentRun capacity lineage drifted")
 
     def revalidate(self, *, transaction, scope, dispatch, command):
         parsed = _strict_content_generate_command(command)
@@ -3048,11 +3355,20 @@ class ContentGenerateHostService:
         self._agent_capability_authority(
             transaction, scope, parsed["authorities"]
         )
-        self._route_budget_approval_authority(
+        route, checked_at = self._route_budget_approval_authority(
             transaction,
             scope,
             parsed["authorities"],
             upper_bound_fen=command["upperBoundFen"],
+        )
+        self._resolution_capacity_authority(
+            transaction,
+            scope,
+            parsed["authorities"],
+            route=route,
+            checked_at=checked_at,
+            max_input_tokens=command["maxInputTokens"],
+            max_output_tokens=command["maxOutputTokens"],
         )
         return {
             "key": parsed["key"],
