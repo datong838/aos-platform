@@ -1,0 +1,587 @@
+{
+  "schemaVersion": "aos.ar2-7d-asset-control-browser/v1",
+  "target": "http://127.0.0.1:8434/apollo/assets",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "fixtureAuthority": "D6D2 state-shape projection only; not runtime authority evidence",
+  "result": "PASS",
+  "results": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "scrollHeight": 720
+      },
+      "requestCounts": {
+        "assetGet": 11,
+        "assetPost": 0,
+        "list": 3,
+        "currentDetail": 2,
+        "currentRuntime": 2
+      },
+      "observed": {
+        "uninstalledTerminal": true,
+        "stoppedRuntime": true,
+        "currentReadyEnabled": true,
+        "onlyCurrentGenerationInSlot": true,
+        "currentSlotResourceLoaded": true,
+        "currentAllowedAction": "disable",
+        "refreshReadback": true,
+        "registryReturn": true,
+        "sidebarCollapseRestore": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "serverErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/asset-bundles",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations",
+          "search": "?limit=20&offset=0",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/asset-bundles",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations",
+          "search": "?limit=20&offset=0",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations/11111111-1111-4111-8111-111111111111",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-runtime-installations/11111111-1111-4111-8111-111111111111",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-runtime-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/__ar2_7d_slot/index.html",
+          "search": "?contentHash=sha256%3Acccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "orgId": null,
+          "projectId": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations",
+          "search": "?limit=20&offset=0",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-runtime-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/__ar2_7d_slot/index.html",
+          "search": "?contentHash=sha256%3Acccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "orgId": null,
+          "projectId": null
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "scrollHeight": 900
+      },
+      "requestCounts": {
+        "assetGet": 11,
+        "assetPost": 0,
+        "list": 3,
+        "currentDetail": 2,
+        "currentRuntime": 2
+      },
+      "observed": {
+        "uninstalledTerminal": true,
+        "stoppedRuntime": true,
+        "currentReadyEnabled": true,
+        "onlyCurrentGenerationInSlot": true,
+        "currentSlotResourceLoaded": true,
+        "currentAllowedAction": "disable",
+        "refreshReadback": true,
+        "registryReturn": true,
+        "sidebarCollapseRestore": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "serverErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/asset-bundles",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations",
+          "search": "?limit=20&offset=0",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/asset-bundles",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations",
+          "search": "?limit=20&offset=0",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations/11111111-1111-4111-8111-111111111111",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-runtime-installations/11111111-1111-4111-8111-111111111111",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-runtime-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/__ar2_7d_slot/index.html",
+          "search": "?contentHash=sha256%3Acccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "orgId": null,
+          "projectId": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations",
+          "search": "?limit=20&offset=0",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-runtime-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/__ar2_7d_slot/index.html",
+          "search": "?contentHash=sha256%3Acccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "orgId": null,
+          "projectId": null
+        }
+      ]
+    },
+    {
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "scrollHeight": 1080
+      },
+      "requestCounts": {
+        "assetGet": 11,
+        "assetPost": 0,
+        "list": 3,
+        "currentDetail": 2,
+        "currentRuntime": 2
+      },
+      "observed": {
+        "uninstalledTerminal": true,
+        "stoppedRuntime": true,
+        "currentReadyEnabled": true,
+        "onlyCurrentGenerationInSlot": true,
+        "currentSlotResourceLoaded": true,
+        "currentAllowedAction": "disable",
+        "refreshReadback": true,
+        "registryReturn": true,
+        "sidebarCollapseRestore": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "serverErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/asset-bundles",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations",
+          "search": "?limit=20&offset=0",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/asset-bundles",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations",
+          "search": "?limit=20&offset=0",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations/11111111-1111-4111-8111-111111111111",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-runtime-installations/11111111-1111-4111-8111-111111111111",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-runtime-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/__ar2_7d_slot/index.html",
+          "search": "?contentHash=sha256%3Acccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "orgId": null,
+          "projectId": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations",
+          "search": "?limit=20&offset=0",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/bundle-runtime-installations/22222222-2222-4222-8222-222222222222",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/__ar2_7d_slot/index.html",
+          "search": "?contentHash=sha256%3Acccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "orgId": null,
+          "projectId": null
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    "All asset-control API requests were GET; no installation or runtime command was sent.",
+    "The fixture projects states already proven by isolated PostgreSQL and OCI D6D2 evidence.",
+    "No Provider call, real tenant mutation, migration, publication, or push occurred."
+  ]
+}
