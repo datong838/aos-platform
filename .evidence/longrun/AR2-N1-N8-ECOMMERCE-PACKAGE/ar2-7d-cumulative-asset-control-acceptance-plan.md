@@ -35,3 +35,11 @@
 
 - 新增本方案、浏览器验收脚本/JSON/三视口截图、累计验证文档和最终 Delivery Receipt/CAS 证据，均位于 `.evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/`。
 - 只有累计或浏览器验证发现确定性缺陷时，才最小修改对应 `services/aos-api` 或 `apps/web` 文件；修改前先在本方案追加具体缺口、文件和退出条件。
+
+## 6. 资产 Registry 累计红项修订卡（2026-09-10）
+
+- 首轮累计为 `851 passed / 16 failed`。十项失败来自 W1/M5 历史测试仍把当前三包送入 legacy `InstallationService.apply/verify`；AR2 已为 domain/growth/niushop 三包声明 runtime，生产 revalidator 正确要求 isolated lifecycle。测试不得关闭该门。
+- `m5_bundle_support.copy_and_sign_m5_bundles` 增加显式、仅测试使用的 `declarative_only` 选项；`m5_control_runtime` 固定用它构造版本化 legacy 投影夹具，删除复制品的 runtime 描述与 backend 后再签名。默认 copy/sign 路径继续覆盖当前真实 runtime bundle，D6D2 继续作为当前签名安装的权威联合证明。
+- 三项 loader export 失败改为同时接受 manifest exports 与 runtime backend entrypoint 所属目录，仍要求每个声明 export 有制品；boundary 测试从过时的“包内零 Python”改为“可执行源码只能位于 manifest 声明的 backend package，且无网络 endpoint、Secret、SQL/脚本旁路”。候选包含关系检查排除 AR2 新增 backend 与运行缓存，只比较版本化声明资产。
+- `asset_registry/control_wiring.py` 当前直接导入 `EcommerceGrowthDisableDependent`，违反通用 Registry 不依赖领域名的既有边界。最小修正为通用 control plane 接收可选 `disable_dependent` 并保存给 runtime host；`main.py` 作为 production composition root 构造具体 ecommerce dependent 后注入。Router 继续从 app state 使用同一 control plane，不产生第二套 service。
+- 预计修改：`services/aos-api/aos_api/asset_registry/control_wiring.py`、`services/aos-api/aos_api/main.py`、`services/aos-api/tests/asset_registry/{m5_bundle_support.py,m5_control_support.py,test_m5_ecommerce_boundaries.py,test_m5_ecommerce_bundle_contracts.py,test_workshop_module_contracts.py,test_control_wiring.py,test_public_api.py}` 及必要的 startup composition 邻接测试。退出条件为 16 条原失败专项全绿、asset_registry 全量全绿、extension_runtime 邻接全绿、closure/memory/diff check 通过。
