@@ -30,6 +30,12 @@ from aos_api.ecommerce_growth_cutover import (
     EcommerceGrowthCutoverStore,
 )
 from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
+from aos_api.ecommerce_growth_lifecycle import (
+    EcommerceGrowthDisableDependent,
+    EcommerceGrowthLifecycleConflict,
+)
+from aos_api.extension_runtime.binding_store import RuntimeBindingStore
+from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
 from aos_api.tenant_scope import TenantScope
 
 
@@ -63,6 +69,18 @@ def _downgrade_ar2_016(database):
     spec = importlib.util.spec_from_file_location(
         "ar2_016_down",
         database.root / "alembic/versions/ar2_016_ecommerce_growth_cutover_rollback.py",
+    )
+    migration = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(migration)
+    migration.op = SimpleNamespace(execute=database.owner.execute)
+    migration.downgrade()
+
+
+def _downgrade_ar2_017(database):
+    spec = importlib.util.spec_from_file_location(
+        "ar2_017_down",
+        database.root / "alembic/versions/ar2_017_ecommerce_growth_disable_detach.py",
     )
     migration = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
@@ -138,8 +156,14 @@ def database():
         _migration(root, "ar2_014_ecommerce_growth_cutover_commit.py", owner, schema=schema)
         _migration(root, "ar2_015_ecommerce_growth_cutover_finalize.py", owner, schema=schema)
         _migration(root, "ar2_016_ecommerce_growth_cutover_rollback.py", owner, schema=schema)
+        _migration(root, "ar2_017_ecommerce_growth_disable_detach.py", owner, schema=schema)
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_extension_maintainer").format(sql.Identifier(schema)))
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(sql.Identifier(schema)))
+        owner.execute(
+            sql.SQL("GRANT SELECT,UPDATE ON {}.bundle_installation TO aos_runtime").format(
+                sql.Identifier(schema)
+            )
+        )
         yield SimpleNamespace(owner=owner, schema=schema, role=role, root=root)
     finally:
         owner.execute("RESET ROLE")
@@ -923,6 +947,7 @@ def test_ar2_014_nonempty_gate_blocks_downgrade(database):
 
 
 def test_ar2_014_empty_downgrade_restores_prior_constraints(database):
+    _downgrade_ar2_017(database)
     _downgrade_ar2_016(database)
     finalize_spec = importlib.util.spec_from_file_location(
         "ar2_015_empty_down",
@@ -1141,6 +1166,7 @@ def test_ar2_015_empty_and_nonempty_downgrade_guards(database):
     store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
     committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
     store.validate_activation(scope, _finalize_request(committed), actor="runtime-owner")
+    _downgrade_ar2_017(database)
     _downgrade_ar2_016(database)
     with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState):
         migration.downgrade()
@@ -1410,6 +1436,7 @@ def test_rollback_preserves_unknown_attempt_for_reconciliation(database):
 
 
 def test_ar2_016_empty_downgrade_removes_rollback_authority(database):
+    _downgrade_ar2_017(database)
     _downgrade_ar2_016(database)
     assert database.owner.execute(
         """SELECT count(*) AS n FROM information_schema.columns
@@ -1429,5 +1456,306 @@ def test_ar2_016_nonempty_rollback_authority_blocks_downgrade(database):
     committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
     request = _rollback_request(database, scope, prepared, committed)
     store.prepare_validation_rollback(scope, request, actor="rollback-owner")
+    _downgrade_ar2_017(database)
     with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState):
         _downgrade_ar2_016(database)
+
+
+def _resumed_activation(database, scope):
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    finalize_request = _finalize_request(committed)
+    validated = store.validate_activation(scope, finalize_request, actor="runtime-owner")
+    store.resume_activation(
+        scope,
+        finalize_request,
+        validate_receipt_ref=_validate_ref(validated),
+        actor="runtime-owner",
+    )
+    return prepare_request, prepared
+
+
+def _begin_runtime_disable(database, scope, prepare_request):
+    with _connection(database, runtime=True)(scope) as conn:
+        accepted = RuntimeOperationStore().accept(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            installation_id=prepare_request.target_installation_id,
+            kind="disable",
+            idempotency_key="d6-disable",
+            requested_by="runtime-owner",
+            expected_installation_etag=1,
+            deadline=datetime.now(timezone.utc) + timedelta(minutes=5),
+            binding_target={
+                "generation": str(prepare_request.target_generation),
+                "bindingRevision": 15,
+            },
+        )
+        fenced = RuntimeBindingStore().fence(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            installation_id=prepare_request.target_installation_id,
+            generation=prepare_request.target_generation,
+            operation_id=accepted.operation_id,
+            expected_operation_revision=accepted.revision,
+            expected_binding_revision=15,
+        )
+        lifecycle = EcommerceGrowthDisableDependent(schema=database.schema)
+        receipt = lifecycle.after_runtime_fenced(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            runtime_operation_id=accepted.operation_id,
+        )
+        conn.commit()
+    assert receipt is not None and receipt.status == "fenced"
+    return accepted.operation_id, fenced.revision
+
+
+def _complete_runtime_disable(database, scope, operation_id, revision):
+    with _connection(database, runtime=True)(scope) as conn:
+        operations = RuntimeOperationStore()
+        for phase in ("draining", "committing"):
+            revision = operations.advance(
+                conn,
+                org_id=scope.org_id,
+                project_id=scope.project_id,
+                operation_id=operation_id,
+                expected_revision=revision,
+                phase=phase,
+            ).revision
+        conn.execute(
+            """UPDATE extension_runtime_binding
+                  SET desired_state='disabled',observed_state='unknown',revision=revision+1"""
+        )
+        conn.execute(
+            """UPDATE extension_runtime_operation SET revision=revision+1
+                 WHERE org_id=%s AND project_id=%s AND operation_id=%s""",
+            (*scope.key, operation_id),
+        )
+        revision += 1
+        operations._event(
+            conn,
+            *scope.key,
+            operation_id,
+            revision,
+            "disabled_committed",
+            {"resourcesRetained": True},
+        )
+        result = operations.advance(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            operation_id=operation_id,
+            expected_revision=revision,
+            phase="succeeded",
+        )
+        conn.commit()
+    return result
+
+
+def test_resumed_disable_fences_then_detaches_exact_dispatch_group(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request, _ = _resumed_activation(database, scope)
+    operation_id, revision = _begin_runtime_disable(database, scope, prepare_request)
+    assert database.owner.execute(
+        """SELECT count(*) AS n FROM extension_operation_dispatch_binding
+             WHERE handler_kind='extension' AND operation_fence
+               AND revision=7 AND cutover_group_revision=13"""
+    ).fetchone()["n"] == 9
+    assert database.owner.execute(
+        "SELECT claim_paused,revision FROM extension_dispatch_claim_gate"
+    ).fetchone() == {"claim_paused": True, "revision": 3}
+
+    _complete_runtime_disable(database, scope, operation_id, revision)
+    with _connection(database, runtime=True)(scope) as conn:
+        dependent = EcommerceGrowthDisableDependent(schema=database.schema)
+        detached = dependent.after_runtime_disabled(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            runtime_operation_id=operation_id,
+        )
+        replay = dependent.after_runtime_disabled(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            runtime_operation_id=operation_id,
+        )
+        conn.commit()
+    assert detached is not None and detached.status == "detached"
+    assert replay is not None and replay.receipt_id == detached.receipt_id
+    assert replay.replayed is True
+    rows = database.owner.execute(
+        """SELECT handler_kind,installation_id,generation,execution_epoch,
+                  operation_fence,revision,cutover_group_revision
+             FROM extension_operation_dispatch_binding ORDER BY operation_id"""
+    ).fetchall()
+    assert all(
+        row
+        == {
+            "handler_kind": "legacy",
+            "installation_id": None,
+            "generation": None,
+            "execution_epoch": None,
+            "operation_fence": False,
+            "revision": 8,
+            "cutover_group_revision": 14,
+        }
+        for row in rows
+    )
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_dispatch_claim_gate"
+    ).fetchone()["n"] == 0
+
+
+def test_direct_disable_detach_without_receipt_rolls_back(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request, _ = _resumed_activation(database, scope)
+    operation_id, revision = _begin_runtime_disable(database, scope, prepare_request)
+    _complete_runtime_disable(database, scope, operation_id, revision)
+    with _connection(database, runtime=True)(scope) as conn:
+        conn.execute(
+            sql.SQL("SELECT {}.extension_dispatch_lifecycle_detach_ar2_017(%s,%s)").format(
+                sql.Identifier(database.schema)
+            ),
+            (operation_id, "runtime-owner"),
+        )
+        with pytest.raises(psycopg.errors.CheckViolation, match="detach Receipt"):
+            conn.commit()
+        conn.rollback()
+    assert database.owner.execute(
+        "SELECT status FROM extension_dispatch_lifecycle_operation"
+    ).fetchone()["status"] == "fenced"
+    assert database.owner.execute(
+        """SELECT count(*) AS n FROM extension_operation_dispatch_binding
+             WHERE handler_kind='extension' AND operation_fence"""
+    ).fetchone()["n"] == 9
+
+
+def test_ar2_017_empty_and_nonempty_downgrade_guards(database):
+    _downgrade_ar2_017(database)
+    assert database.owner.execute(
+        "SELECT to_regclass('extension_dispatch_lifecycle_operation') AS relation"
+    ).fetchone()["relation"] is None
+
+
+def test_disable_lifecycle_receipt_tamper_is_rejected(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request, _ = _resumed_activation(database, scope)
+    operation_id, _ = _begin_runtime_disable(database, scope, prepare_request)
+    database.owner.execute(
+        "ALTER TABLE extension_dispatch_lifecycle_receipt DISABLE TRIGGER immutable_history"
+    )
+    database.owner.execute(
+        """UPDATE extension_dispatch_lifecycle_receipt
+              SET authority_data=jsonb_set(authority_data,'{requestedBy}','\"tampered\"')
+            WHERE runtime_operation_id=%s AND phase='fence'""",
+        (operation_id,),
+    )
+    database.owner.execute(
+        "ALTER TABLE extension_dispatch_lifecycle_receipt ENABLE TRIGGER immutable_history"
+    )
+    with _connection(database, runtime=True)(scope) as conn:
+        with pytest.raises(
+            EcommerceGrowthLifecycleConflict, match="Receipt authority drifted"
+        ):
+            EcommerceGrowthDisableDependent(schema=database.schema).after_runtime_fenced(
+                conn,
+                org_id=scope.org_id,
+                project_id=scope.project_id,
+                runtime_operation_id=operation_id,
+            )
+
+
+def test_disable_lifecycle_preserves_unknown_attempt_for_reconciliation(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request, _ = _resumed_activation(database, scope)
+    occurrence_id, now = _seed_pending_occurrence(database, scope, prepare_request)
+    attempt_id = uuid4()
+    database.owner.execute(
+        "UPDATE automation_occurrence SET status='needs_attention' WHERE occurrence_id=%s",
+        (occurrence_id,),
+    )
+    database.owner.execute(
+        """INSERT INTO automation_occurrence_dispatch_attempt(
+             org_id,project_id,attempt_id,occurrence_id,claim_owner,target_idempotency_key,
+             status,claimed_at,claim_until,resolved_at)
+           VALUES(%s,%s,%s,%s,'old-worker','unknown-disable-target','unknown',%s,%s,%s)""",
+        (*scope.key, attempt_id, occurrence_id, now, now + timedelta(minutes=5), now),
+    )
+    operation_id, revision = _begin_runtime_disable(database, scope, prepare_request)
+    _complete_runtime_disable(database, scope, operation_id, revision)
+    with _connection(database, runtime=True)(scope) as conn:
+        receipt = EcommerceGrowthDisableDependent(
+            schema=database.schema
+        ).after_runtime_disabled(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            runtime_operation_id=operation_id,
+        )
+        conn.commit()
+    assert receipt is not None
+    assert [item["attemptId"] for item in receipt.unknown_attempts] == [str(attempt_id)]
+    assert database.owner.execute(
+        "SELECT status FROM automation_occurrence_dispatch_attempt WHERE attempt_id=%s",
+        (attempt_id,),
+    ).fetchone()["status"] == "unknown"
+
+
+def test_disable_lifecycle_is_noop_without_resumed_activation(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    with _connection(database, runtime=True)(scope) as conn:
+        accepted = RuntimeOperationStore().accept(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            installation_id=prepare_request.target_installation_id,
+            kind="disable",
+            idempotency_key="d6-unrelated-disable",
+            requested_by="runtime-owner",
+            expected_installation_etag=1,
+            deadline=datetime.now(timezone.utc) + timedelta(minutes=5),
+            binding_target={
+                "generation": str(prepare_request.target_generation),
+                "bindingRevision": 13,
+            },
+        )
+        RuntimeBindingStore().fence(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            installation_id=prepare_request.target_installation_id,
+            generation=prepare_request.target_generation,
+            operation_id=accepted.operation_id,
+            expected_operation_revision=accepted.revision,
+            expected_binding_revision=13,
+        )
+        assert EcommerceGrowthDisableDependent(
+            schema=database.schema
+        ).after_runtime_fenced(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            runtime_operation_id=accepted.operation_id,
+        ) is None
+        conn.commit()
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_dispatch_lifecycle_operation"
+    ).fetchone()["n"] == 0
+
+
+def test_ar2_017_nonempty_lifecycle_authority_blocks_downgrade(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request, _ = _resumed_activation(database, scope)
+    _begin_runtime_disable(database, scope, prepare_request)
+    with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState):
+        _downgrade_ar2_017(database)
