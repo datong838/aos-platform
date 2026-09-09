@@ -243,8 +243,8 @@ def _is_conn_alive(cached: _CachedConn) -> bool:
             return False
 
 
-def _build_ssh_tunnel(config: dict[str, Any]) -> _CachedTunnel:
-    """根据 config 建立一条新 SSH 隧道并返回 _CachedTunnel（内部使用，不加锁）。"""
+def _construct_ssh_tunnel(config: dict[str, Any]) -> SshTunnel:
+    """Construct without opening, so the caller can own failure cleanup."""
     ssh_host = config.get("sshHost")
     ssh_port = int(config.get("sshPort", 22))
     ssh_user = config.get("sshUser") or ""
@@ -272,6 +272,11 @@ def _build_ssh_tunnel(config: dict[str, Any]) -> _CachedTunnel:
             remote_host=db_host,
             remote_port=db_port,
         )
+    return tunnel
+
+
+def _build_ssh_tunnel(config: dict[str, Any]) -> _CachedTunnel:
+    tunnel = _construct_ssh_tunnel(config)
     local_port = tunnel.open()
     return _CachedTunnel(tunnel=tunnel, local_port=local_port)
 
@@ -558,6 +563,15 @@ def prebuild_all_ssh_tunnels_from_meta_source() -> list[dict[str, Any]]:
     return results
 
 
+def _cleanup_preserving_interruption(cleanup, original):
+    try:
+        cleanup()
+    except BaseException:
+        if original is not None and not isinstance(original, Exception):
+            raise original from None
+        raise
+
+
 class SshTunnel:
     """SSH 隧道（subprocess ssh -L 模式）。
 
@@ -607,8 +621,8 @@ class SshTunnel:
             if self.ssh_key_path:
                 return self._open_with_key()
             raise RuntimeError("SSH tunnel: neither ssh_key_path nor ssh_password provided")
-        except Exception:
-            self.close()
+        except BaseException as error:
+            _cleanup_preserving_interruption(self.close, error)
             raise
 
     def _open_with_password(self) -> int:
@@ -634,7 +648,7 @@ echo '{self.ssh_password}'
             "-o", "ExitOnForwardFailure=yes",
             "-p", str(self.ssh_port),
             "-N", "-L",
-            f"127.0.0.1:{self._local_port}:127.0.0.1:{self.remote_port}",
+            f"127.0.0.1:{self._local_port}:{self.remote_host}:{self.remote_port}",
             f"{self.ssh_user}@{self.ssh_host}",
         ]
         env = os.environ.copy()
@@ -710,40 +724,64 @@ echo '{self.ssh_password}'
 
         diagnostic = "NO_STDERR"
         if self._proc is not None:
+            process = self._proc
             try:
-                self._proc.terminate()
-                self._proc.wait(timeout=5)
-                stderr = (
-                    self._proc.stderr.read().decode(errors="replace")
-                    if self._proc.stderr
-                    else ""
-                )
+                self._stop_process()
+                stderr = process.stderr.read().decode(errors="replace") if process.stderr else ""
                 diagnostic = _classify_ssh_stderr(stderr)
             except Exception:
+                # Keep an unreaped process attached so open()/close() can
+                # attempt cleanup again; never read a live pipe here.
                 diagnostic = "SSH_PROCESS_ERROR"
-            finally:
-                self._proc = None
         raise RuntimeError(
             f"SSH tunnel failed to become ready after "
             f"{_TUNNEL_READY_RETRIES} retries; diagnostic={diagnostic}"
         )
 
-    def close(self) -> None:
-        """终止 SSH 隧道进程。"""
-        if self._proc is not None:
+    def _stop_process(self) -> None:
+        process = self._proc
+        if process is None:
+            return
+        interrupted = None
+        try:
+            process.terminate()
+            process.wait(timeout=5)
+        except BaseException as error:
+            log.warning("SSH_TUNNEL_TERMINATE_FAILED")
+            if not isinstance(error, Exception):
+                interrupted = error
             try:
-                self._proc.terminate()
-                self._proc.wait(timeout=5)
-            except Exception as exc:
-                log.warning("SSH tunnel terminate failed: %s", exc)
-            self._proc = None
-        # 清理临时 askpass 脚本
+                process.kill()
+                process.wait(timeout=5)
+            except BaseException as cleanup_error:
+                log.warning("SSH_TUNNEL_REAP_FAILED")
+                # Ownership remains attached until a later successful reap.
+                if interrupted is not None:
+                    raise interrupted from None
+                if not isinstance(cleanup_error, Exception):
+                    raise cleanup_error from None
+                raise RuntimeError("SSH_PROCESS_CLEANUP_FAILED") from None
+        self._proc = None
+        if interrupted is not None:
+            raise interrupted from None
+
+    def close(self) -> None:
+        """Bounded terminate/kill/reap; retain ownership when cleanup fails."""
+        failure = None
+        try:
+            self._stop_process()
+        except BaseException as error:
+            failure = error
         if self._askpass_file and os.path.exists(self._askpass_file):
             try:
                 os.unlink(self._askpass_file)
-            except OSError:
-                pass
-            self._askpass_file = None
+                self._askpass_file = None
+            except BaseException as error:
+                log.warning("SSH_ASKPASS_CLEANUP_FAILED")
+                if failure is None:
+                    failure = error if not isinstance(error, Exception) else RuntimeError("SSH_ASKPASS_CLEANUP_FAILED")
+        if failure is not None:
+            raise failure from None
 
 
 class JdbcConnectorRuntime:
@@ -755,7 +793,11 @@ class JdbcConnectorRuntime:
     3. __exit__：**不关闭**，归还缓存，后续请求复用
     """
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(self, config: dict[str, Any], *, reuse_cache: bool = True) -> None:
+        if type(reuse_cache) is not bool:
+            raise ValueError("reuse_cache must be a boolean")
+        self._reuse_cache = reuse_cache
+        self._private_cleanup_pending = False
         self._config = dict(config)  # 存一份完整配置给缓存层 key 生成使用
         self.ssh_host: str | None = config.get("sshHost")
         self.ssh_port: int = int(config.get("sshPort", 22))
@@ -779,6 +821,20 @@ class JdbcConnectorRuntime:
         self._standalone_lease = threading.RLock()
 
     def __enter__(self) -> "JdbcConnectorRuntime":
+        if not self._reuse_cache:
+            if self._conn is not None or self._ssh_tunnel is not None:
+                raise RuntimeError("private JDBC runtime already entered")
+            try:
+                host, port = self.db_host, self.db_port
+                if self.ssh_host:
+                    self._ssh_tunnel = _construct_ssh_tunnel(self._config)
+                    host, port = "127.0.0.1", self._ssh_tunnel.open()
+                self._cached_conn = _build_db_conn(self._config, host, port)
+                self._conn = self._cached_conn.conn
+                return self
+            except BaseException as error:
+                _cleanup_preserving_interruption(self._close_private_resources, error)
+                raise
         # 1. 从缓存取/建 SSH 隧道
         db_host = self.db_host
         db_port = self.db_port
@@ -819,11 +875,12 @@ class JdbcConnectorRuntime:
     def _read_only_transaction(self) -> Iterator[None]:
         """在缓存连接 lease 内执行一个可恢复的只读事务。
 
-        所有分块共享同一快照；无论成功失败都 rollback 并恢复
-        autocommit。SQL/恢复失败时在释放 lease 后驱逐坏连接。
+        所有分块共用一个只读事务；实际隔离级别与表引擎尚未验证，
+        不据此宣称一致或历史快照。结束 rollback 并恢复 autocommit；
+        失败驱逐缓存连接或关闭本次独占连接。
         """
-        if self._conn is None:
-            raise RuntimeError("JDBC runtime is not connected")
+        if self._conn is None or self._private_cleanup_pending:
+            raise RuntimeError("JDBC runtime is not connected or cleanup is pending")
         cached = self._cached_conn
         lease = cached.lease if cached is not None else self._standalone_lease
         failure: BaseException | None = None
@@ -856,6 +913,8 @@ class JdbcConnectorRuntime:
                 _evict_cached_conn(self._conn_key, cached)
                 self._cached_conn = None
                 self._conn = None
+            elif not self._reuse_cache:
+                _cleanup_preserving_interruption(self._close_private_resources, failure)
             else:
                 try:
                     self._conn.close()
@@ -1080,7 +1139,34 @@ class JdbcConnectorRuntime:
                     rows.extend(cur.fetchall())
         return rows
 
+    def _close_private_resources(self) -> None:
+        conn, tunnel = self._conn, self._ssh_tunnel
+        self._conn = self._cached_conn = self._conn_key = self._ssh_tunnel = None
+        interrupted = None
+        failed = False
+        for resource, attribute, diagnostic in (
+            (conn, "_conn", "PRIVATE_DB_CLOSE_FAILED"),
+            (tunnel, "_ssh_tunnel", "PRIVATE_TUNNEL_CLOSE_FAILED"),
+        ):
+            if resource is not None:
+                try:
+                    resource.close()
+                except BaseException as error:
+                    setattr(self, attribute, resource)
+                    failed = True
+                    log.warning(diagnostic)
+                    if interrupted is None and not isinstance(error, Exception):
+                        interrupted = error
+        self._private_cleanup_pending = failed
+        if interrupted is not None:
+            raise interrupted from None
+        if failed:
+            raise RuntimeError("PRIVATE_RESOURCE_CLEANUP_FAILED") from None
+
     def __exit__(self, *args: Any) -> None:
+        if not self._reuse_cache:
+            _cleanup_preserving_interruption(self._close_private_resources, args[1] if len(args)>1 else None)
+            return
         # 缓存复用模式：__exit__ 不关闭资源，后续请求复用
         # 资源在以下时机才关闭：
         #   - 健康检测发现失效时（重建前清理）

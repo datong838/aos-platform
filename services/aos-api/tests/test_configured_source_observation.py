@@ -19,7 +19,7 @@ def test_configured_read_uses_current_input_and_returns_bound_observation(monkey
         tx = HostTransaction(conn)
         store = SourceConfigurationRevisionStore(tx, SCOPE)
         expected = store.read_current("source-1").ref
-        events, _ = setup(monkeypatch, [{"site_id": 1, "goods_id": 1}])
+        events, _ = setup(monkeypatch, [{"site_id": 1, "goods_id": 1}], expected_private=True)
         def forbid_legacy(*args):
             raise AssertionError("configured path cannot read props on a separate connection")
         monkeypatch.setattr(adapter, "_query_meta_source_props", forbid_legacy)
@@ -73,7 +73,7 @@ def test_missing_configuration_or_unbounded_scope_never_constructs_connector(mon
         upsert(conn, "source-1", {"test": True})
         tx = HostTransaction(conn)
         expected = SourceConfigurationRevisionStore(tx, SCOPE).read_current("source-1").ref
-        events, _ = setup(monkeypatch, [])
+        events, _ = setup(monkeypatch, [], expected_private=True)
         config = {"source_id": "source-1", "table": "ns_goods", "site_filter": "site_id=1"}
         config.update(change)
         node = SimpleNamespace(id="source-node", node_type="source", config=config)
@@ -91,9 +91,10 @@ def test_connector_error_cannot_expose_private_configuration(monkeypatch, phase)
         upsert(conn, "source-1", {"test": True})
         tx = HostTransaction(conn)
         expected = SourceConfigurationRevisionStore(tx, SCOPE).read_current("source-1").ref
-        events, _ = setup(monkeypatch, [], failure=RuntimeError("private-fixture-material"))
+        events, _ = setup(monkeypatch, [], failure=RuntimeError("private-fixture-material"), expected_private=True)
         if phase == "construct":
-            def failed_constructor(props):
+            def failed_constructor(props, *, reuse_cache):
+                assert reuse_cache is False
                 raise RuntimeError("private-fixture-material")
             monkeypatch.setattr(adapter, "JdbcConnectorRuntime", failed_constructor)
         node = SimpleNamespace(id="source-node", node_type="source", config={

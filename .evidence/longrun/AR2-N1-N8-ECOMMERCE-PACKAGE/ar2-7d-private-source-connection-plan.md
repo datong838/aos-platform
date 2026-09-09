@@ -1,0 +1,25 @@
+# AR2-7D D1 配置观察独占连接
+
+基线4b6d2e5f；Rules：沿231-6 D1与当前Task/Lease，m1串行、方案先行、最小更改、替身/隔离自测和本地独立终审，不push，230 L0挂起。
+
+## 已核实问题
+
+jdbc_connector_runtime的隧道缓存不含tenant/source/config revision/认证引用，DB缓存仅endpoint/database/user；命中不重新解析凭证。即使配置Owner单SQL选中了正确props，传入Runtime仍可能使用旧配置建立的缓存连接。当前未实现可重放源快照或Secret版本Owner；不能把START TRANSACTION READ ONLY注释解释为已经验证RR/多块同快照。
+
+## 修改文件与方案
+
+维护services/aos-api/aos_api/jdbc_connector_runtime.py、ec_source_adapter.py；维护tests/test_ec_source_observation.py、test_configured_source_observation.py，新增tests/test_jdbc_private_source_connection.py；test_jdbc_connector_runtime.py仅作回归验证，不修改。
+
+JdbcConnectorRuntime增加显式keyword reuse_cache=True（严格bool）；默认缓存逻辑保持。reuse_cache=False仅用已有_build_ssh_tunnel/_build_db_conn构建本次自有资源，不查写或驱逐全局缓存；同实例已有连接时重复enter拒绝。建连失败清理已建隧道，读取失败关闭自有连接，exit无论成功失败均关闭本次连接和隧道；引用清空后再关闭，避免重复关闭。私有清理日志只用固定错误代码，不输出driver/SSH异常正文。复习SshTunnel.open已有失败close，扩展中断清理；close的终止失败日志改为固定代码，不影响正常功能。
+
+仅fetch_source_rows_configured_observed内部选择reuse_cache=False；普通observed、旧live/发现入口保持默认。props与配置修订仍来自同一次Owner读取，预期ref漂移仍在构造Runtime前拒绝。新模式每次重新建连接、解析当前输入，可阻止旧缓存冒用，但不把connectionIdentityVerified/secretMaterialVersionKnown改true，也不声称认证服务器身份。
+
+密码SSH模式-L目标当前硬编码127.0.0.1，改为self.remote_host；默认远端127.0.0.1行为不变，其余配置按实际目标转发。仅subprocess替身验命令，绝不运行真实SSH。TLS、host-key验证与Secret版本Owner另列未完成；不在此次悄然修改全局连接安全配置或业务授权。
+
+## 验证
+
+预置全局缓存及禁止cache helper替身，证明私有模式不访问/污染/驱逐；两次相同endpoint不同配置均新建；成功、SQL失败、DB构建失败、SSH构建失败、中断和close失败均清理本次资源且日志无异常正文；默认模式原缓存回归。配置观察两个spec均检查keyword=false和单次配置绑定，旧观察仍默认。只读事务SQL/回滚行为不改变；纠正“所有分块同一快照”无根据注释，明确实际隔离/引擎尚未验证。运行新旧Jdbc/源/配置回归，18434仅供配置Owner测试，闭包与独立复核后证据提交。
+
+终审补强：清理须逐资源捕获BaseException并全部尝试后再传播首个中断；正常close错误也不得返回成功观察，统一固定PRIVATE_RESOURCE_CLEANUP_FAILED，保留失败资源引用、禁止再次读取。SSH close与wait_ready共享terminate/wait→kill/wait有界回收；只有成功回收后清空proc，回收失败保持所有权并报固定错误；askpass删除失败同样保留引用并报错。close-interruption及两种terminate-timeout反例先真实失败再修，仍仅替身。
+
+二次终审补强：提取无副作用_construct_ssh_tunnel；独占Runtime先持有对象再open，失败残留仍可二次清理；旧缓存_build继续调用construct+open。所有open/enter/read失败及exit清理保留原KeyboardInterrupt/SystemExit优先级，不被普通cleanup异常替换；额外故障注入覆盖该组合。

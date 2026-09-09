@@ -11,15 +11,16 @@ SCOPE = TenantScope("org-org", "dev-project")
 NOW = datetime(2026, 9, 9, tzinfo=UTC)
 
 
-def setup(monkeypatch, rows, *, config=None, failure=None, spec_id="niushop.product-observation/v1"):
+def setup(monkeypatch, rows, *, config=None, failure=None, spec_id="niushop.product-observation/v1", expected_private=False):
     events = []
     times = iter((NOW, NOW + timedelta(seconds=2)))
     monkeypatch.setattr(adapter, "_read_observation_clock", lambda: (events.append("clock"), next(times))[1])
     monkeypatch.setattr(adapter, "_query_meta_source_props", lambda source, scope: {"test": True})
 
     class Runtime:
-        def __init__(self, props):
+        def __init__(self, props, **options):
             assert props == {"test": True}
+            assert options == ({"reuse_cache": False} if expected_private else {})
         def __enter__(self):
             events.append("connect")
             return self

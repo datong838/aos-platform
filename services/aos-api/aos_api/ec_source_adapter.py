@@ -213,7 +213,7 @@ def fetch_source_rows_configured_observed(
 
     try:
         rows, observation = _fetch_source_rows_observed(nodes=nodes, node_id=node_id, scope=scope,
-            spec_id=spec_id, load_props=load_props)
+            spec_id=spec_id, load_props=load_props, private_connection=True)
     except Exception:
         # Connector errors may embed credentials; never propagate their text.
         raise ValueError("source configuration observation failed") from None
@@ -226,7 +226,7 @@ def fetch_source_rows_configured_observed(
     return rows, bound
 
 
-def _fetch_source_rows_observed(*, nodes, node_id, scope, spec_id, load_props):
+def _fetch_source_rows_observed(*, nodes, node_id, scope, spec_id, load_props, private_connection=False):
     if (type(scope) is not TenantScope or type(spec_id) is not str
         or spec_id not in OBSERVATION_CLEANING_VERSIONS):
         raise ValueError("trusted tenant scope and fixed observation spec required")
@@ -247,7 +247,8 @@ def _fetch_source_rows_observed(*, nodes, node_id, scope, spec_id, load_props):
     ):
         raise ValueError("observation requires the fixed product shop scope without a cursor")
     props = load_props(source_id, scope)
-    with JdbcConnectorRuntime(props) as runtime:
+    runtime_options = {"reuse_cache": False} if private_connection else {}
+    with JdbcConnectorRuntime(props, **runtime_options) as runtime:
         started = _read_observation_clock()
         if not isinstance(started, datetime) or started.utcoffset() is None:
             raise ValueError("observation clock requires timezone")
