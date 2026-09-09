@@ -148,7 +148,7 @@ class BusinessInvestigationCompilationReceiptStore:
         try:
             with self._connect_factory(scope) as conn:
                 row = conn.execute(
-                    """SELECT receipt_data FROM aip_business_investigation_compile_receipt
+                    """SELECT receipt_data FROM public.aip_business_investigation_compile_receipt
                     WHERE org_id=%s AND project_id=%s AND command_id=%s""",
                     (scope.org_id, scope.project_id, command_id),
                 ).fetchone()
@@ -168,7 +168,7 @@ class BusinessInvestigationCompilationReceiptStore:
         try:
             with self._connect_factory(scope) as conn:
                 rows = conn.execute(
-                    """SELECT receipt_data FROM aip_business_investigation_compile_receipt
+                    """SELECT receipt_data FROM public.aip_business_investigation_compile_receipt
                     WHERE org_id=%s AND project_id=%s AND run_id=%s
                       AND run_version=%s AND run_content_hash=%s
                     ORDER BY created_at,receipt_id""",
@@ -182,8 +182,20 @@ class BusinessInvestigationCompilationReceiptStore:
             raise BusinessInvestigationCompileConflict(
                 "exact Run must resolve one compilation Receipt"
             )
-        receipt = BusinessInvestigationCompilationReceipt.model_validate(rows[0]["receipt_data"])
-        if receipt.run_ref != run_ref:
+        raw = rows[0]["receipt_data"]
+        receipt = BusinessInvestigationCompilationReceipt.model_validate(raw)
+        if (
+            json.dumps(raw, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+            != json.dumps(
+                receipt.model_dump(mode="json", by_alias=True),
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            or receipt.tenant.org_id != scope.org_id
+            or receipt.tenant.project_id != scope.project_id
+            or receipt.run_ref != run_ref
+        ):
             raise BusinessInvestigationCompileConflict("compilation Receipt Run lineage drifted")
         return receipt
 

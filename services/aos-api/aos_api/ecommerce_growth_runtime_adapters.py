@@ -72,11 +72,13 @@ from aos_api.aip_model_capacity_reservation import AipModelCapacityReservationGa
 from aos_api.aip_production_contracts import (
     AssigneeKind,
     BriefLifecycle,
+    BuildEvidenceBundleRequest,
     ContractReadiness,
     Coverage,
     CreateBriefRequest,
     ExactArtifactRef,
     ExactRevisionRef,
+    Freshness,
     ReviewIssue,
     ReviewIssueStatus,
 )
@@ -137,6 +139,26 @@ from aos_api.aip_business_investigation_compile_saga import (
     BusinessInvestigationCompilationReceiptStore,
 )
 from aos_api.aip_task_store import AipTaskStore
+from aos_api.aip_business_investigation_fulfillment_saga import (
+    BusinessInvestigationFulfillmentResumeSaga,
+    RESUME_REASON,
+)
+from aos_api.aip_business_investigation_data_saga import (
+    BusinessInvestigationDataRequirementCommandResult,
+)
+from aos_api.aip_business_investigation_evidence import (
+    BusinessInvestigationEvidenceAssessment,
+    BusinessInvestigationEvidenceBuildReceipt,
+    BusinessInvestigationEvidenceBuildResponse,
+    BusinessInvestigationEvidenceBuildSideEffects,
+)
+from aos_api.business_investigation_hydration import BusinessInvestigationHydrationStore
+from aos_api.business_investigation_mapping import BusinessInvestigationMappingStore
+from aos_api.source_readiness_contracts import ExactResourceRef
+from aos_api.source_readiness_receipt_store import (
+    AUTHORITY as SOURCE_READINESS_RECEIPT_AUTHORITY,
+    SourceReadinessReceiptStore,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -863,6 +885,71 @@ def _analysis_command_hash(payload: Mapping[str, Any]) -> str:
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
+def _analysis_json_equal(left: Any, right: Any) -> bool:
+    return (
+        type(left) is dict
+        and type(right) is dict
+        and _analysis_command_hash(left) == _analysis_command_hash(right)
+    )
+
+
+def _strict_resume_control_receipt(payload: Any) -> bool:
+    if type(payload) is not dict or set(payload) != {
+        "operation", "expectedRunVersion", "expectedTaskVersion", "reason", "requestHash"
+    }:
+        return False
+    if (
+        payload["operation"] != "resume"
+        or type(payload["expectedRunVersion"]) is not int
+        or payload["expectedRunVersion"] < 1
+        or type(payload["expectedTaskVersion"]) is not int
+        or payload["expectedTaskVersion"] < 1
+        or type(payload["reason"]) is not str
+        or type(payload["requestHash"]) is not str
+    ):
+        return False
+    body = {key: value for key, value in payload.items() if key != "requestHash"}
+    return payload["requestHash"] == _analysis_command_hash(body)
+
+
+def _analysis_hydration_rows(transaction, scope, mapping_ref, artifact_refs):
+    """Select only hydration authorities that share exact mapping and output refs."""
+    return transaction.execute(
+        """SELECT authority_data
+            FROM public.business_investigation_semantic_hydration_receipt receipt
+            WHERE receipt.org_id=%s AND receipt.project_id=%s
+              AND receipt.authority_data->'mappingRefs' @> %s::jsonb
+              AND EXISTS (
+                SELECT 1
+                FROM jsonb_array_elements(receipt.authority_data->'outputRefs') output_ref
+                JOIN jsonb_array_elements(%s::jsonb) fulfilled_ref
+                  ON output_ref->>'resourceType'=fulfilled_ref->>'resourceType'
+                 AND output_ref->>'resourceId'=fulfilled_ref->>'resourceId'
+                 AND output_ref->'revision'=fulfilled_ref->'revision'
+                 AND output_ref->>'contentHash'=fulfilled_ref->>'contentHash'
+              )
+            ORDER BY created_at DESC LIMIT 201""",
+        (
+            *scope.key,
+            json.dumps(
+                [
+                    mapping_ref.model_dump(
+                        by_alias=True, mode="json", exclude_none=True
+                    )
+                ],
+                ensure_ascii=False,
+            ),
+            json.dumps(
+                [
+                    item.model_dump(by_alias=True, mode="json", exclude_none=True)
+                    for item in artifact_refs
+                ],
+                ensure_ascii=False,
+            ),
+        ),
+    ).fetchall()
+
+
 def _analysis_plan_ref(plan_ref) -> dict[str, Any]:
     payload = plan_ref.model_dump(by_alias=True, mode="json", exclude_none=True)
     content_hash = payload.get("contentHash")
@@ -1131,7 +1218,7 @@ class _HostAnalysisReceiptStore:
         existing = self.read(key)
         body = dict(payload)
         if existing is not None:
-            if existing != body:
+            if not _analysis_json_equal(existing, body):
                 raise ValueError("analysis runtime Receipt idempotency content drift")
             return existing
         if dispatch_ref is None or checked_at is None:
@@ -1171,8 +1258,33 @@ class _HostAnalysisReceiptStore:
         return record.response
 
 
+class _AnalysisRunAndTaskResumer:
+    """Compose both canonical resume owners inside the surrounding host transaction."""
+
+    def __init__(self, run_store, task_store, requirement_ref, run_id, run_version, occurred_at):
+        self._runs = run_store
+        self._tasks = task_store
+        self._requirement_ref = requirement_ref
+        self._run_id = run_id
+        self._run_version = run_version
+        self._occurred_at = occurred_at
+        self.run_state = None
+
+    def resume_run(self, scope, task_run_id, **kwargs):
+        self.run_state = self._runs.resume_after_data(
+            scope,
+            self._run_id,
+            self._requirement_ref,
+            expected_version=self._run_version,
+            idempotency_key=kwargs["idempotency_key"] + ":domain",
+            actor=kwargs["actor"],
+            occurred_at=self._occurred_at,
+        ).authority
+        return self._tasks.resume_run(scope, task_run_id, **kwargs)
+
+
 class AnalysisAdvanceHostService:
-    """Recoverable analysis host; recovery writes stay closed until all owners are wired."""
+    """Recoverable analysis host with exact data-resume authority composition."""
 
     executor_identity = "ecommerce-growth-analysis-host"
 
@@ -1279,6 +1391,400 @@ class AnalysisAdvanceHostService:
             **body,
         }
 
+    @staticmethod
+    def _runtime_binding_for_task_run(scope, compilation, run, tasks, task_run_id):
+        timeline = tasks.timeline(scope, task_run_id)
+        return BusinessInvestigationRuntimeBinder._binding_from_lineage(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            case_ref=BusinessInvestigationRuntimeBinder._aip_ref(
+                run.authority.case_ref,
+                expected_type="BusinessInvestigationCaseRevision",
+            ),
+            run_ref=BusinessInvestigationRuntimeBinder._aip_ref(
+                compilation.run_ref,
+                expected_type="BusinessInvestigationRun",
+            ),
+            compilation_hash=compilation.compilation_hash,
+            task_id=compilation.task_id,
+            expected_plan_ref=compilation.plan_ref,
+            task_run_id=task_run_id,
+            timeline=timeline,
+        )
+
+    def _running_receipt(self, command, prior, runtime, scope, key):
+        binding_hash = runtime.binding_hash
+        if not binding_hash.startswith("sha256:"):
+            binding_hash = "sha256:" + binding_hash
+        body = {
+            "requestHash": command["requestHash"],
+            "occurrenceRef": command["occurrenceRef"],
+            "caseRef": command["caseRef"],
+            "profileRef": command["profileRef"],
+            "cutoffAt": command["cutoffAt"],
+            "runRef": prior["runRef"],
+            "compilationRef": prior["compilationRef"],
+            "planRef": command["priorPlanRef"],
+            "taskRunRef": {
+                "resourceType": "TaskRun",
+                "resourceId": runtime.task_run_ref.resource_id,
+                "revision": runtime.task_run_ref.version,
+                "contentHash": binding_hash,
+            },
+            "phase": "RUNNING",
+            "recoverableAction": "CONTINUE",
+            "checkpointRef": command["checkpointRef"],
+            "priorCheckpointRef": None,
+            "requirementRef": command["requirementRef"],
+            "fulfillmentRef": command["fulfillmentRef"],
+            "sourceReadinessRef": command["sourceReadinessRef"],
+            "mappingRef": command["mappingRef"],
+            "evidenceRefs": command["evidenceRefs"],
+            "observedAt": command["observedAt"],
+            "targetReceiptRef": None,
+            "completed": False,
+        }
+        receipt_id = str(uuid5(ANALYSIS_RECEIPT_NAMESPACE, "\x1f".join((*scope.key, key))))
+        return {
+            "receiptRef": {
+                "resourceType": "AnalysisRuntimeReceipt",
+                "resourceId": receipt_id,
+                "revision": 1,
+                "contentHash": _analysis_command_hash(body),
+                "receiptId": receipt_id,
+            },
+            **body,
+        }
+
+    def _resume_authorities(self, *, transaction, scope, command, parsed, prior=None):
+        factory = TransactionBoundConnectFactory(transaction, scope)
+        runs = BusinessInvestigationRunStore(factory)
+        # RESUME commands intentionally carry Run/Task lineage through the prior Receipt.
+        if prior is None:
+            prior = _HostAnalysisReceiptStore(transaction, scope).read_exact(
+                command["priorReceiptRef"]
+            )
+        if prior is None:
+            raise ValueError("analysis prior Receipt is missing")
+        run_ref = InvestigationExactRef.model_validate(prior["runRef"])
+        run = runs.get(scope, run_ref.resource_id)
+        if (
+            run.authority.version != run_ref.revision
+            or run.authority.content_hash != run_ref.content_hash
+            or run.state.pending_requirement_ref != parsed["requirementRef"]
+        ):
+            raise ValueError("analysis Run resume lineage drifted")
+        requirement = DataRequirementStore(factory).get_exact(scope, parsed["requirementRef"])
+        fulfillment = DataFulfillmentStore(factory).read_exact(scope, parsed["fulfillmentRef"])
+        if fulfillment is None or fulfillment.requirement_ref != parsed["requirementRef"]:
+            raise ValueError("analysis fulfillment authority drifted")
+        readiness_source_ref = ExactResourceRef(
+            resource_type="SourceReadinessEnvelope",
+            resource_id=parsed["sourceReadinessRef"].resource_id,
+            revision=str(parsed["sourceReadinessRef"].revision),
+            content_hash=parsed["sourceReadinessRef"].content_hash.removeprefix("sha256:"),
+            authority=SOURCE_READINESS_RECEIPT_AUTHORITY,
+        )
+        readiness = SourceReadinessReceiptStore(transaction, scope).read_exact(
+            readiness_source_ref
+        )
+        if readiness is None:
+            raise ValueError("analysis source readiness authority is missing")
+        mapping = BusinessInvestigationMappingStore(factory).get_exact(
+            scope, parsed["mappingRef"]
+        )
+        if mapping.status.value != "active":
+            raise ValueError("analysis mapping authority drifted")
+        compilation = BusinessInvestigationCompilationReceiptStore(factory).get_for_run(
+            scope, run_ref
+        )
+        runtime = BusinessInvestigationRuntimeBinder(AipTaskStore(factory)).bind_receipt(
+            scope, compilation, run
+        )
+        prior_task_run = InvestigationExactRef.model_validate(prior["taskRunRef"])
+        runtime_hash = "sha256:" + runtime.binding_hash.removeprefix("sha256:")
+        if (
+            compilation.exact_ref.model_dump(
+                by_alias=True, mode="json", exclude_none=True
+            )
+            != prior["compilationRef"]
+            or _analysis_plan_ref(compilation.plan_ref) != prior["planRef"]
+            or prior["planRef"] != command["priorPlanRef"]
+            or prior_task_run.resource_id != runtime.task_run_ref.resource_id
+            or prior_task_run.revision != runtime.task_run_ref.version
+            or prior_task_run.content_hash != runtime_hash
+            or requirement.run_ref != run_ref
+            or requirement.case_ref != parsed["caseRef"]
+            or requirement.checkpoint_ref != parsed["checkpointRef"]
+            or requirement.cutoff_at != parsed["cutoff"]
+        ):
+            raise ValueError("analysis prior runtime/data authority drifted")
+        checkpoint = runtime.checkpoint_ref
+        if (
+            checkpoint is None
+            or checkpoint.resource_id != parsed["checkpointRef"].resource_id
+            or checkpoint.sequence != parsed["checkpointRef"].revision
+            or "sha256:" + checkpoint.state_hash != parsed["checkpointRef"].content_hash
+        ):
+            raise ValueError("analysis Checkpoint authority drifted")
+        hydration_rows = _analysis_hydration_rows(
+            transaction,
+            scope,
+            parsed["mappingRef"],
+            fulfillment.artifact_refs,
+        )
+        output_keys = {
+            (item.resource_type, item.resource_id, item.revision, item.content_hash)
+            for item in fulfillment.artifact_refs
+        }
+        hydration_candidates = []
+        for row in hydration_rows:
+            try:
+                candidate = BusinessInvestigationHydrationStore(factory).read_receipt_exact(
+                    scope,
+                    InvestigationExactRef.model_validate(
+                        {
+                            "resourceType": "SemanticHydrationReceipt",
+                            "resourceId": row["authority_data"]["hydrationId"],
+                            "revision": 1,
+                            "contentHash": row["authority_data"]["contentHash"],
+                        }
+                    ),
+                )
+            except (KeyError, TypeError, ValueError):
+                continue
+            if candidate and parsed["mappingRef"] in candidate.mapping_refs and any(
+                (ref.resource_type, ref.resource_id, ref.revision, ref.content_hash) in output_keys
+                for ref in candidate.output_refs
+            ):
+                hydration_candidates.append(candidate)
+        if len(hydration_rows) > 200 or len(hydration_candidates) != 1:
+            raise ValueError("analysis hydration authority is not unique")
+        bundle_refs = [
+            item for item in parsed["evidenceRefs"]
+            if item.resource_type == "EvidenceBundleRevision"
+        ]
+        if len(bundle_refs) != 1:
+            raise ValueError("analysis resume requires one EvidenceBundle authority")
+        bundle_ref = bundle_refs[0]
+        production = AipProductionContractStore(factory)
+        bundle = production.get_evidence_bundle(
+            scope, bundle_ref.resource_id, bundle_ref.revision, conn=transaction
+        )
+        brief_row = transaction.execute(
+            """SELECT task_id,content_hash,lifecycle
+                FROM public.aip_task_brief_revision
+                WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=%s""",
+            (*scope.key, bundle.brief_ref.resource_id, bundle.brief_ref.revision),
+        ).fetchone()
+        if (
+            brief_row is None
+            or brief_row["task_id"] != compilation.task_id
+            or brief_row["content_hash"] != bundle.brief_ref.content_hash
+            or brief_row["lifecycle"] != "frozen"
+            or bundle.brief_ref.resource_type != "TaskBriefRevision"
+            or "sha256:" + bundle.content_hash != bundle_ref.content_hash
+            or bundle.lifecycle is not BriefLifecycle.FROZEN
+            or bundle.revoked
+            or bundle.coverage is not Coverage.COMPLETE
+            or bundle.freshness is not Freshness.FRESH
+            or bundle.cutoff_at != requirement.cutoff_at
+            or bundle.missing
+        ):
+            raise ValueError("analysis EvidenceBundle authority drifted")
+        evidence_request = BuildEvidenceBundleRequest(
+            brief_ref=bundle.brief_ref,
+            subject_refs=bundle.subject_refs,
+            cutoff_at=bundle.cutoff_at,
+            item_refs=bundle.item_refs,
+            required_fact_ids=requirement.required_facts,
+            marking=bundle.marking,
+            license_summary=bundle.license_summary,
+        )
+        coverage, missing, conflicts, uncertainties, freshness = (
+            production._compute_evidence_bundle_coverage(
+                transaction, scope, evidence_request
+            )
+        )
+        authority_payload = {
+            **evidence_request.model_dump(mode="json", by_alias=True),
+            "coverage": coverage.value,
+            "missing": missing,
+            "conflicts": conflicts,
+            "uncertainties": uncertainties,
+            "freshness": freshness.value,
+        }
+        if (
+            production_contract_canonical_hash(authority_payload) != bundle.content_hash
+            or coverage is not Coverage.COMPLETE
+            or freshness is not Freshness.FRESH
+            or missing
+            or conflicts != bundle.conflicts
+            or uncertainties != bundle.uncertainties
+        ):
+            raise ValueError("analysis EvidenceBundle coverage authority drifted")
+        bundle_items = {
+            (item.resource_type, item.resource_id, item.revision, "sha256:" + item.content_hash)
+            for item in bundle.item_refs
+        }
+        if any(
+            (
+                (item.resource_type, item.resource_id, item.revision, item.content_hash)
+                not in output_keys
+                or (
+                    item.resource_type == "DatasetRevision"
+                    and (
+                        item.resource_type,
+                        item.resource_id,
+                        item.revision,
+                        item.content_hash,
+                    )
+                    not in bundle_items
+                )
+            )
+            for item in parsed["evidenceRefs"]
+        ):
+            raise ValueError("analysis evidence is outside the fulfillment closure")
+        data_command = BusinessInvestigationDataRequirementCommandResult(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            command_id="analysis-resume:" + requirement.requirement_id,
+            request_hash=requirement.request_hash,
+            compilation_receipt_ref=InvestigationExactRef.model_validate(prior["compilationRef"]),
+            checkpoint_ref=parsed["checkpointRef"],
+            data_requirement_ref=parsed["requirementRef"],
+            replayed=True,
+        )
+        exact_bundle = ExactRevisionRef(
+            resource_type="EvidenceBundleRevision",
+            resource_id=bundle.bundle_id,
+            revision=bundle.revision,
+            content_hash=bundle.content_hash,
+        )
+        assessment = BusinessInvestigationEvidenceAssessment(
+            required_fact_ids=requirement.required_facts,
+            covered_fact_ids=[
+                fact_id
+                for fact_id in requirement.required_facts
+                if fact_id not in {item["factId"] for item in missing}
+            ],
+            missing_fact_ids=[item["factId"] for item in missing],
+            required_count=len(requirement.required_facts),
+            covered_count=len(requirement.required_facts),
+            missing_count=0,
+            coverage=Coverage.COMPLETE,
+            freshness=Freshness.FRESH,
+            conflicts=conflicts,
+            uncertainties=uncertainties,
+            counter_evidence_refs=[],
+        )
+        evidence = BusinessInvestigationEvidenceBuildResponse(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            bundle=bundle,
+            assessment=assessment,
+            receipt=BusinessInvestigationEvidenceBuildReceipt(
+                request_hash=production_contract_canonical_hash(
+                    evidence_request.model_dump(mode="json", by_alias=True)
+                ),
+                runtime_binding_hash=runtime.binding_hash,
+                checkpoint_ref=checkpoint,
+                evidence_bundle_ref=exact_bundle,
+                side_effects=BusinessInvestigationEvidenceBuildSideEffects(),
+            ),
+        )
+        return (
+            runs,
+            run,
+            compilation,
+            runtime,
+            data_command,
+            fulfillment,
+            hydration_candidates[0],
+            readiness,
+            evidence,
+        )
+
+    def _verify_resume_commit(self, *, transaction, scope, command, parsed, receipt):
+        if type(receipt) is not dict or set(receipt) != _ANALYSIS_RECEIPT_FIELDS:
+            raise ValueError("analysis resume Receipt is malformed")
+        factory = TransactionBoundConnectFactory(transaction, scope)
+        prior = _HostAnalysisReceiptStore(transaction, scope).read_exact(
+            command["priorReceiptRef"]
+        )
+        _validate_prior_analysis_receipt(command, parsed, prior)
+        run_ref = InvestigationExactRef.model_validate(prior["runRef"])
+        runs = BusinessInvestigationRunStore(factory)
+        run = runs.get(scope, run_ref.resource_id)
+        state_prior_ref = run.state.prior_ref
+        if (
+            run.authority.version != run_ref.revision
+            or run.authority.content_hash != run_ref.content_hash
+            or state_prior_ref is None
+            or state_prior_ref.resource_type
+            != "BusinessInvestigationRunStateRevision"
+            or state_prior_ref.resource_id != run_ref.resource_id
+            or state_prior_ref.revision != run.state.version - 1
+        ):
+            raise ValueError("analysis resume Run authority drifted")
+        compilation = BusinessInvestigationCompilationReceiptStore(factory).get_for_run(
+            scope, run_ref
+        )
+        prior_task_run = InvestigationExactRef.model_validate(prior["taskRunRef"])
+        tasks = AipTaskStore(factory)
+        timeline = tasks.timeline(scope, prior_task_run.resource_id)
+        if (
+            timeline.run.version != prior_task_run.revision + 1
+            or timeline.run.status.value != "running"
+            or timeline.task.version < 2
+            or timeline.task.status.value != "executing"
+            or timeline.run.plan_revision_id != compilation.plan_ref.resource_id
+        ):
+            raise ValueError("analysis resume AIP successor drifted")
+        expected_control = {
+            "operation": "resume",
+            "expectedRunVersion": prior_task_run.revision,
+            "expectedTaskVersion": timeline.task.version - 1,
+            "reason": RESUME_REASON,
+        }
+        expected_control["requestHash"] = _analysis_command_hash(expected_control)
+        control_rows = transaction.execute(
+            """SELECT source_ref,payload FROM public.aip_evidence
+                WHERE org_id=%s AND project_id=%s AND run_id=%s
+                  AND evidence_type='run.control'
+                  AND source_ref LIKE 'run-control:resume:bi-fulfillment-resume-%%'
+                ORDER BY created_at,evidence_id LIMIT 201""",
+            (*scope.key, prior_task_run.resource_id),
+        ).fetchall()
+        matching = [
+            row
+            for row in control_rows
+            if _strict_resume_control_receipt(row["payload"])
+            and _analysis_json_equal(row["payload"], expected_control)
+        ]
+        if len(control_rows) > 200 or len(matching) != 1:
+            raise ValueError("analysis resume control Receipt is not unique")
+        command_id = matching[0]["source_ref"].removeprefix("run-control:resume:")
+        if not command_id.startswith("bi-fulfillment-resume-"):
+            raise ValueError("analysis resume control Receipt identity drifted")
+        domain_state = runs.read_data_resume_receipt(
+            scope,
+            run_ref.resource_id,
+            parsed["requirementRef"],
+            expected_version=run.state.version - 1,
+            idempotency_key=command_id + ":domain",
+        )
+        if domain_state is None or domain_state != run.state:
+            raise ValueError("analysis resume domain transition Receipt drifted")
+        runtime = self._runtime_binding_for_task_run(
+            scope,
+            compilation,
+            run,
+            tasks,
+            prior_task_run.resource_id,
+        )
+        expected = self._running_receipt(command, prior, runtime, scope, parsed["key"])
+        if not _analysis_json_equal(receipt, expected):
+            raise ValueError("analysis resume unified Receipt drifted")
+        return expected
+
     def revalidate(self, *, transaction, scope, dispatch, command):
         parsed = _strict_analysis_command(command)
         key = parsed["key"]
@@ -1317,13 +1823,82 @@ class AnalysisAdvanceHostService:
 
     def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
         parsed = _strict_analysis_command(command)
-        if parsed["operation"] != "runtime.analysis.start":
+        if parsed["operation"] == "runtime.analysis.reconcile_unknown":
             raise ValueError("analysis recovery data authority is not wired")
-        key, _occurrence_ref, _case_ref_value, _profile_ref = _strict_analysis_start_command(command)
+        key = parsed["key"]
         _reader, _cases, receipts = self._components(transaction, scope)
         existing = receipts.read(key)
         if existing is not None:
+            if parsed["operation"] == "runtime.analysis.resume_data":
+                return self._verify_resume_commit(
+                    transaction=transaction,
+                    scope=scope,
+                    command=command,
+                    parsed=parsed,
+                    receipt=existing,
+                )
             return existing
+        if parsed["operation"] == "runtime.analysis.resume_data":
+            (
+                runs,
+                run,
+                compilation,
+                runtime,
+                data_command,
+                fulfillment,
+                hydration,
+                readiness,
+                evidence,
+            ) = self._resume_authorities(
+                transaction=transaction,
+                scope=scope,
+                command=command,
+                parsed=parsed,
+                prior=receipts.read_exact(command["priorReceiptRef"]),
+            )
+            event_time = occurred_at or checked_at
+            tasks = AipTaskStore(TransactionBoundConnectFactory(transaction, scope))
+            resumer = _AnalysisRunAndTaskResumer(
+                runs,
+                tasks,
+                parsed["requirementRef"],
+                run.authority.run_id,
+                run.state.version,
+                event_time,
+            )
+            result = BusinessInvestigationFulfillmentResumeSaga(resumer).execute(
+                scope,
+                self.executor_identity,
+                data_command,
+                fulfillment,
+                hydration,
+                readiness,
+                evidence,
+                runtime,
+                created_at=event_time,
+            )
+            if resumer.run_state is None:
+                raise ValueError("analysis domain Run was not resumed")
+            resumed_runtime = self._runtime_binding_for_task_run(
+                scope,
+                compilation,
+                run,
+                tasks,
+                result.task_run_ref.resource_id,
+            )
+            prior = receipts.read_exact(command["priorReceiptRef"])
+            payload = self._running_receipt(command, prior, resumed_runtime, scope, key)
+            saved = receipts.put(
+                key, payload, dispatch_ref=dispatch_ref, checked_at=checked_at
+            )
+            return self._verify_resume_commit(
+                transaction=transaction,
+                scope=scope,
+                command=command,
+                parsed=parsed,
+                receipt=saved,
+            )
+        _strict_analysis_start_command(command)
         lineage = self._start_lineage(
             transaction=transaction,
             scope=scope,
@@ -1335,14 +1910,27 @@ class AnalysisAdvanceHostService:
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
         parsed = _strict_analysis_command(command)
-        if parsed["operation"] != "runtime.analysis.start":
+        if parsed["operation"] == "runtime.analysis.reconcile_unknown":
             raise ValueError("analysis recovery data authority is not wired")
-        key, _occurrence_ref, _case_ref_value, _profile_ref = _strict_analysis_start_command(command)
+        key = parsed["key"]
         _reader, _cases, receipts = self._components(transaction, scope)
         expected = receipts.read(key)
         if expected is None or type(receipt) is not dict:
             return {}
-        return expected if dict(receipt) == expected else {}
+        if parsed["operation"] == "runtime.analysis.resume_data":
+            try:
+                verified = self._verify_resume_commit(
+                    transaction=transaction,
+                    scope=scope,
+                    command=command,
+                    parsed=parsed,
+                    receipt=expected,
+                )
+            except (TypeError, ValueError):
+                return {}
+            return verified if _analysis_json_equal(receipt, verified) else {}
+        _strict_analysis_start_command(command)
+        return expected if _analysis_json_equal(receipt, expected) else {}
 
 
 _REVIEW_ACCEPT_FIELDS = frozenset(

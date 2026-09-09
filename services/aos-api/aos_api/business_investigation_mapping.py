@@ -6,6 +6,7 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import datetime
 from enum import StrEnum
+import json
 from typing import Any, Self
 
 import psycopg
@@ -218,6 +219,73 @@ class BusinessInvestigationMappingConflict(BusinessInvestigationMappingError):
 class BusinessInvestigationMappingStore:
     def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
         self._connect_factory = connect_factory or db_connect
+
+    def get_exact(
+        self, scope: TenantScope, ref: InvestigationExactRef
+    ) -> SourceMappingRevision:
+        if (
+            ref.resource_type != "SourceMappingRevision"
+            or type(ref.revision) is not int
+            or ref.revision < 1
+            or ref.receipt_id is not None
+        ):
+            raise BusinessInvestigationMappingValidationError(
+                "exact SourceMappingRevision is required"
+            )
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """SELECT * FROM public.business_investigation_source_mapping_revision
+                    WHERE org_id=%s AND project_id=%s AND mapping_id=%s AND revision=%s""",
+                (*scope.key, ref.resource_id, ref.revision),
+            ).fetchone()
+        if row is None:
+            raise BusinessInvestigationMappingConflict("source mapping revision not found")
+        raw = row["authority_data"]
+        item = SourceMappingRevision.model_validate(raw)
+        canonical = item.model_dump(mode="json", by_alias=True)
+        same_json = json.dumps(
+            raw, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ) == json.dumps(
+            canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+        prior_revision = None if item.prior_ref is None else item.prior_ref.revision
+        prior_hash = None if item.prior_ref is None else item.prior_ref.content_hash
+        checks = (
+            (item.tenant.org_id, item.tenant.project_id) == scope.key,
+            item.mapping_id == row["mapping_id"] == ref.resource_id,
+            item.revision == int(row["revision"]) == ref.revision,
+            item.content_hash == row["content_hash"] == ref.content_hash,
+            prior_revision == row["prior_revision"],
+            prior_hash == row["prior_content_hash"],
+            item.job_ref.resource_id == row["job_id"],
+            item.job_ref.revision == int(row["job_revision"]),
+            item.job_ref.content_hash == row["job_content_hash"],
+            item.profile_ref.resource_id == row["profile_id"],
+            item.profile_ref.revision == int(row["profile_revision"]),
+            item.profile_ref.content_hash == row["profile_content_hash"],
+            item.hypothesis_ref.resource_id == row["hypothesis_id"],
+            item.hypothesis_ref.revision == int(row["hypothesis_revision"]),
+            item.hypothesis_ref.content_hash == row["hypothesis_content_hash"],
+            item.receipt_ref.resource_id == row["receipt_id"],
+            item.observation_ref.resource_id == row["observation_id"],
+            item.source_field == row["source_field"],
+            item.canonical_target_ref.resource_type == row["canonical_target_type"],
+            item.canonical_target_ref.resource_id == row["canonical_target_id"],
+            str(item.canonical_target_ref.revision) == row["canonical_target_revision"],
+            item.canonical_target_ref.content_hash == row["canonical_target_hash"],
+            item.status.value == row["status"],
+            item.confirmation_ref.resource_id == row["confirmation_id"],
+            item.confirmation_ref.revision == int(row["confirmation_revision"]),
+            item.confirmation_ref.content_hash == row["confirmation_hash"],
+            item.confirmed_by == row["confirmed_by"],
+            item.idempotency_key == row["idempotency_key"],
+            item.request_hash == row["request_hash"],
+        )
+        if not same_json or not all(checks):
+            raise BusinessInvestigationMappingConflict(
+                "source mapping exact authority drifted"
+            )
+        return item
 
     def publish(
         self,

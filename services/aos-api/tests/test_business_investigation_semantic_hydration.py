@@ -274,6 +274,22 @@ def test_disposable_database_receipt_first_idempotency_isolation_and_downgrade()
                                              revision=1, content_hash=receipt.content_hash)
         assert store.read_receipt_exact(SCOPE, exact_receipt) == receipt
         assert store.read_receipt_exact(TenantScope("dev-org", "dev-project"), exact_receipt) is None
+        from aos_api.ecommerce_growth_host_ports import HostTransaction
+        from aos_api.ecommerce_growth_runtime_adapters import _analysis_hydration_rows
+
+        with runtime_connect(SCOPE) as conn:
+            selected = _analysis_hydration_rows(
+                HostTransaction(conn),
+                SCOPE,
+                InvestigationExactRef.model_validate(ref("SourceMappingRevision", "mapping-1")),
+                [
+                    InvestigationExactRef.model_validate(
+                        ref("OntologyObjectRevision", "order-1")
+                    )
+                ],
+            )
+            assert len(selected) == 1
+            assert selected[0]["authority_data"]["outputRefs"][0]["receiptId"] is None
         with psycopg.connect(dsn) as conn:
             conn.execute("SET LOCAL ROLE aos_runtime")
             conn.execute("SELECT set_config('aos.org_id','dev-org',true)")

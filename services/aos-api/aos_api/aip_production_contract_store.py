@@ -2849,14 +2849,14 @@ class AipProductionContractStore:
             row = conn.execute(
                 """SELECT evidence_id,content_hash,payload,freshness_at,
                           EXISTS(
-                            SELECT 1 FROM aip_evidence_revoke_event revoked
-                             WHERE revoked.org_id=aip_evidence.org_id
-                               AND revoked.project_id=aip_evidence.project_id
-                               AND revoked.evidence_id=aip_evidence.evidence_id
+                            SELECT 1 FROM public.aip_evidence_revoke_event revoked
+                             WHERE revoked.org_id=public.aip_evidence.org_id
+                               AND revoked.project_id=public.aip_evidence.project_id
+                               AND revoked.evidence_id=public.aip_evidence.evidence_id
                                AND revoked.revision=1
-                               AND revoked.content_hash=aip_evidence.content_hash
+                               AND revoked.content_hash=public.aip_evidence.content_hash
                           ) AS revoked
-                     FROM aip_evidence
+                     FROM public.aip_evidence
                     WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
                 (*scope.key, item.resource_id),
             ).fetchone()
@@ -2927,7 +2927,7 @@ class AipProductionContractStore:
     ) -> EvidenceBundleRevision:
         def read(c: Any):
             row = c.execute(
-                "SELECT * FROM aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s",
+                "SELECT * FROM public.aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s",
                 (*scope.key, bundle_id, revision),
             ).fetchone()
             if not row:
@@ -3950,7 +3950,7 @@ class AipProductionContractStore:
         self, conn: Any, scope: TenantScope, bundle_id: str, revision: int, content_hash: str
     ) -> tuple[bool, str | None]:
         row = conn.execute(
-            """SELECT reason FROM aip_evidence_bundle_revoke_event
+            """SELECT reason FROM public.aip_evidence_bundle_revoke_event
                WHERE org_id=%s AND project_id=%s AND bundle_id=%s
                  AND revision=%s AND content_hash=%s
                ORDER BY occurred_at DESC LIMIT 1""",

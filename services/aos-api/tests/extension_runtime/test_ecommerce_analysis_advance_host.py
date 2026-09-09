@@ -307,7 +307,9 @@ def test_resume_and_reconcile_fail_closed_until_wired(monkeypatch):
         host.revalidate(transaction=transaction, scope=SCOPE, dispatch=dispatch, command=resume)
 
 
-def test_resume_strictly_reads_matching_waiting_prior_receipt_then_stays_execute_blocked(monkeypatch):
+def test_resume_composes_domain_and_aip_then_persists_running_receipt(monkeypatch):
+    import aos_api.ecommerce_growth_runtime_adapters as adapters
+
     host, journal = wired_host(monkeypatch)
     transaction = HostTransaction(SimpleNamespace())
     dispatch = SimpleNamespace(operation_id="ecommerce_growth_analysis_advance")
@@ -321,15 +323,66 @@ def test_resume_strictly_reads_matching_waiting_prior_receipt_then_stays_execute
     host.revalidate(
         transaction=transaction, scope=SCOPE, dispatch=dispatch, command=command
     )
-    with pytest.raises(ValueError, match="data authority is not wired"):
-        host.execute(
-            transaction=transaction,
-            scope=SCOPE,
-            dispatch_ref=dispatch,
-            command=command,
-            checked_at=NOW,
-            occurred_at=NOW,
-        )
+    run = SimpleNamespace(
+        authority=SimpleNamespace(run_id="run-1"),
+        state=SimpleNamespace(version=3),
+    )
+    monkeypatch.setattr(
+        host,
+        "_resume_authorities",
+        lambda **_: (
+            SimpleNamespace(),
+            run,
+            SimpleNamespace(),
+            SimpleNamespace(),
+            None,
+            None,
+            None,
+            None,
+            None,
+        ),
+    )
+    resumed_runtime = SimpleNamespace(
+        binding_hash="b" * 64,
+        task_run_ref=SimpleNamespace(resource_id="task-run-1", version=2),
+    )
+    monkeypatch.setattr(host, "_runtime_binding_for_task_run", lambda *_: resumed_runtime)
+    monkeypatch.setattr(host, "_verify_resume_commit", lambda **values: values["receipt"])
+
+    class FakeSaga:
+        def __init__(self, resumer):
+            self.resumer = resumer
+
+        def execute(self, *_args, **_kwargs):
+            self.resumer.run_state = object()
+            return SimpleNamespace(
+                task_run_ref=SimpleNamespace(resource_id="task-run-1")
+            )
+
+    monkeypatch.setattr(adapters, "BusinessInvestigationFulfillmentResumeSaga", FakeSaga)
+    response = host.execute(
+        transaction=transaction,
+        scope=SCOPE,
+        dispatch_ref=dispatch,
+        command=command,
+        checked_at=NOW,
+        occurred_at=NOW,
+    )
+    assert response["phase"] == "RUNNING"
+    assert response["recoverableAction"] == "CONTINUE"
+    assert response["taskRunRef"]["revision"] == 2
+    assert response["taskRunRef"]["contentHash"] == "sha256:" + "b" * 64
+    assert response["checkpointRef"] == command["checkpointRef"]
+    assert response["priorCheckpointRef"] is None
+    assert response["completed"] is False
+    assert host.execute(
+        transaction=transaction,
+        scope=SCOPE,
+        dispatch_ref=dispatch,
+        command=command,
+        checked_at=NOW,
+        occurred_at=NOW,
+    ) == response
 
 
 @pytest.mark.parametrize(
@@ -420,3 +473,75 @@ def test_resume_evidence_and_time_bounds_fail_closed(drift, monkeypatch):
             dispatch=SimpleNamespace(operation_id="ecommerce_growth_analysis_advance"),
             command=command,
         )
+
+
+def test_run_and_task_resumer_orders_both_owners_and_stops_on_domain_failure():
+    from aos_api.ecommerce_growth_runtime_adapters import _AnalysisRunAndTaskResumer
+
+    calls = []
+
+    class Runs:
+        def resume_after_data(self, *_args, **_kwargs):
+            calls.append("domain")
+            return SimpleNamespace(authority="domain-successor")
+
+    class Tasks:
+        def resume_run(self, *_args, **_kwargs):
+            calls.append("aip")
+            return "aip-successor"
+
+    resumer = _AnalysisRunAndTaskResumer(
+        Runs(), Tasks(), ref("DataRequirementRevision", "requirement-1"),
+        "run-1", 2, NOW,
+    )
+    assert resumer.resume_run(
+        SCOPE,
+        "task-run-1",
+        expected_run_version=3,
+        expected_task_version=2,
+        actor="owner",
+        idempotency_key="resume-1",
+    ) == "aip-successor"
+    assert calls == ["domain", "aip"]
+    assert resumer.run_state == "domain-successor"
+
+    class FailedRuns:
+        def resume_after_data(self, *_args, **_kwargs):
+            calls.append("domain-failed")
+            raise ValueError("domain rejected")
+
+    failed = _AnalysisRunAndTaskResumer(
+        FailedRuns(), Tasks(), ref("DataRequirementRevision", "requirement-1"),
+        "run-1", 2, NOW,
+    )
+    with pytest.raises(ValueError, match="domain rejected"):
+        failed.resume_run(
+            SCOPE,
+            "task-run-1",
+            expected_run_version=3,
+            expected_task_version=2,
+            actor="owner",
+            idempotency_key="resume-2",
+        )
+    assert calls[-1] == "domain-failed"
+
+
+def test_resume_receipt_comparison_preserves_json_boolean_and_integer_types():
+    from aos_api.ecommerce_growth_runtime_adapters import (
+        _analysis_json_equal,
+        _strict_resume_control_receipt,
+    )
+
+    expected = {
+        "operation": "resume",
+        "expectedRunVersion": 3,
+        "expectedTaskVersion": 2,
+        "reason": "bounded resume",
+    }
+    expected["requestHash"] = command_hash(expected)
+    assert _strict_resume_control_receipt(expected)
+    assert _analysis_json_equal({"completed": False}, {"completed": False})
+    assert not _analysis_json_equal({"completed": False}, {"completed": 0})
+    assert not _strict_resume_control_receipt(
+        {**expected, "expectedRunVersion": True}
+    )

@@ -20,6 +20,7 @@ from aos_api.business_investigation_mapping import (
     SourceMappingRevision,
     SourceMappingReviewDecisionRevision,
 )
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.business_investigation_profiling import (
     AdaptiveProfileRevision,
     SemanticHypothesisRevision,
@@ -321,6 +322,23 @@ def test_disposable_database_cas_isolation_unknown_direct_write_and_downgrade() 
         with pytest.raises(BusinessInvestigationMappingConflict):
             store.publish(SCOPE, revision_two, expected_version=0)
         assert not store.publish(SCOPE, revision_two, expected_version=1).replayed
+        mapping_ref = InvestigationExactRef.model_validate(
+            ref("SourceMappingRevision", "mapping-1", content_hash=HASH_A)
+        )
+        assert store.get_exact(SCOPE, mapping_ref) == mapping
+        with runtime_connect(SCOPE) as conn:
+            conn.execute(
+                "CREATE TEMP TABLE business_investigation_source_mapping_revision "
+                "(LIKE public.business_investigation_source_mapping_revision)"
+            )
+
+            @contextmanager
+            def same_connection(_scope):
+                yield conn
+
+            assert BusinessInvestigationMappingStore(same_connection).get_exact(
+                SCOPE, mapping_ref
+            ) == mapping
 
         with psycopg.connect(dsn) as conn:
             conn.execute("SET LOCAL ROLE aos_runtime")
@@ -334,6 +352,17 @@ def test_disposable_database_cas_isolation_unknown_direct_write_and_downgrade() 
                     "INSERT INTO business_investigation_source_mapping_head(org_id,project_id,mapping_id,current_revision,current_content_hash,source_field,canonical_target_type,canonical_target_id,status,version) VALUES('dev-org','dev-project','direct',1,%s,'x','OntologyFieldRevision','X.y','active',1)",
                     (HASH_A,),
                 )
+
+        with psycopg.connect(dsn) as conn:
+            conn.execute(
+                "UPDATE public.business_investigation_source_mapping_revision "
+                "SET authority_data=jsonb_set(authority_data,'{sourceField}',to_jsonb('tampered'::text)) "
+                "WHERE org_id=%s AND project_id=%s AND mapping_id='mapping-1' AND revision=1",
+                SCOPE.key,
+            )
+            conn.commit()
+        with pytest.raises(BusinessInvestigationMappingConflict, match="drifted"):
+            store.get_exact(SCOPE, mapping_ref)
 
         with pytest.raises(Exception, match="cannot downgrade biw3_004"):
             command.downgrade(config, "biw3_003")

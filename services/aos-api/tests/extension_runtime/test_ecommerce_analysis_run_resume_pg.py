@@ -6,7 +6,9 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 from importlib import util
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
+from uuid import uuid4
 
 from alembic import command
 import psycopg
@@ -15,9 +17,22 @@ from psycopg.types.json import Jsonb
 import pytest
 
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+from aos_api.aip_task_models import (
+    CreatePlanRevisionRequest,
+    CreateTaskRequest,
+    CreateTaskRunRequest,
+    PlanStep,
+)
+from aos_api.aip_task_store import AipTaskStore
 from aos_api.ecommerce_business_investigation_case import (
     BusinessInvestigationCaseLifecycle,
     BusinessInvestigationCaseStore,
+)
+from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_runtime_adapters import (
+    TransactionBoundConnectFactory,
+    _AnalysisRunAndTaskResumer,
+    _HostAnalysisReceiptStore,
 )
 from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationRunConflict,
@@ -294,3 +309,311 @@ def test_resume_after_data_replay_history_isolation_and_illegal_transitions() ->
                 )
         with pytest.raises(Exception, match="cannot downgrade ar2_011"):
             command.downgrade(config, "ar2_010")
+
+
+def test_three_resume_owners_commit_replay_and_rollback_as_one_transaction() -> None:
+    with isolated_aip_migration_database(
+        "ar2_analysis_three_owner_resume", migration_target="ar2_011"
+    ) as (_config, dsn):
+        with psycopg.connect(dsn) as conn:
+            conn.execute(
+                "INSERT INTO twa_org(id,name) VALUES('org-org','AR2') ON CONFLICT DO NOTHING"
+            )
+            conn.execute(
+                "INSERT INTO twa_workspace(org_id,project_id,name) "
+                "VALUES('org-org','dev-project','AR2') ON CONFLICT DO NOTHING"
+            )
+            conn.commit()
+
+        @contextmanager
+        def runtime_connect(scope):
+            with psycopg.connect(dsn, row_factory=dict_row) as conn:
+                conn.execute("SET LOCAL ROLE aos_runtime")
+                conn.execute("SELECT set_config('aos.org_id',%s,true)", (scope.org_id,))
+                conn.execute("SELECT set_config('aos.project_id',%s,true)", (scope.project_id,))
+                yield conn
+
+        def seed_waiting_domain(suffix: str):
+            requirement = requirement_ref(f"requirement-{suffix}")
+            with psycopg.connect(dsn) as conn:
+                conn.execute(
+                    "INSERT INTO data_requirement_head(org_id,project_id,requirement_id,"
+                    "current_revision,current_content_hash,status,version,created_by) "
+                    "VALUES(%s,%s,%s,1,%s,'requested',1,'owner')",
+                    (*SCOPE.key, requirement.resource_id, requirement.content_hash[7:]),
+                )
+                conn.execute(
+                    "INSERT INTO data_requirement_revision(org_id,project_id,requirement_id,"
+                    "revision,prior_revision,content_hash,status,operation,idempotency_key,"
+                    "request_hash,case_ref,run_ref,checkpoint_ref,payload,created_by) "
+                    "VALUES(%s,%s,%s,1,NULL,%s,'requested','data_requirement.create',%s,%s,"
+                    "'{}','{}','{}','{}','owner')",
+                    (
+                        *SCOPE.key,
+                        requirement.resource_id,
+                        requirement.content_hash[7:],
+                        f"seed-{suffix}",
+                        requirement.content_hash[7:],
+                    ),
+                )
+                conn.commit()
+            cases = BusinessInvestigationCaseStore(runtime_connect)
+            case = draft_case(f"case-{suffix}")
+            cases.create_draft(SCOPE, case, idempotency_key=f"case-create-{suffix}")
+            active = cases.transition(
+                SCOPE,
+                case.case_id,
+                BusinessInvestigationCaseLifecycle.ACTIVE,
+                expected_version=1,
+                idempotency_key=f"case-active-{suffix}",
+                actor="owner",
+                occurred_at=NOW,
+            ).authority
+            runs = BusinessInvestigationRunStore(runtime_connect)
+            domain = requested_run(active, f"domain-run-{suffix}")
+            runs.request(SCOPE, domain, idempotency_key=f"run-create-{suffix}")
+            waiting = runs.request_data(
+                SCOPE,
+                domain.run_id,
+                requirement,
+                expected_version=1,
+                idempotency_key=f"request-data-{suffix}",
+                actor="owner",
+                occurred_at=NOW,
+            ).authority
+            return requirement, waiting
+
+        def seed_paused_task(suffix: str):
+            tasks = AipTaskStore(runtime_connect)
+            task = tasks.create_task(
+                SCOPE,
+                "owner",
+                f"task-{suffix}",
+                CreateTaskRequest(title=f"AR2 three owner {suffix}"),
+            )
+            plan = tasks.create_plan(
+                SCOPE,
+                "owner",
+                task.id,
+                f"plan-{suffix}",
+                CreatePlanRevisionRequest(
+                    expected_task_version=task.version,
+                    steps=[PlanStep(step_key="analysis", title="经营分析")],
+                ),
+            )
+            tasks.approve_plan(
+                SCOPE,
+                "owner",
+                task.id,
+                plan.revision,
+                task.version + 1,
+                plan.content_hash,
+            )
+            task_run = tasks.create_run(
+                SCOPE,
+                "owner",
+                task.id,
+                f"task-run-{suffix}",
+                CreateTaskRunRequest(
+                    plan_revision_id=plan.id,
+                    expected_task_version=task.version + 2,
+                ),
+            )
+            started = tasks.start_run(
+                SCOPE,
+                task_run.id,
+                expected_run_version=task_run.version,
+                expected_task_version=task.version + 2,
+                actor="owner",
+                idempotency_key=f"start-{suffix}",
+            )
+            paused = tasks.pause_run(
+                SCOPE,
+                task_run.id,
+                expected_run_version=started.run.version,
+                expected_task_version=started.task.version,
+                actor="owner",
+                idempotency_key=f"pause-{suffix}",
+                reason="WAITING_DATA",
+            )
+            return paused
+
+        installation_id = uuid4()
+        generation = uuid4()
+        cutover_group_id = uuid4()
+        with psycopg.connect(dsn) as conn:
+            conn.execute("SET LOCAL session_replication_role=replica")
+            conn.execute(
+                "INSERT INTO bundle_installation(org_id,project_id,installation_pk,"
+                "installation_id,display_name,current_revision,etag_version,created_by) "
+                "VALUES(%s,%s,%s,%s,'AR2 analysis runtime',1,1,'test')",
+                (*SCOPE.key, installation_id, installation_id),
+            )
+            conn.execute(
+                "INSERT INTO extension_runtime_binding(org_id,project_id,installation_id,"
+                "generation,installation_revision,package_lock_ref,profile_ref,execution_epoch,"
+                "desired_state,observed_state,enabled,operation_fence,config_ref) "
+                "VALUES(%s,%s,%s,%s,1,'{}','internal-python-v1',3,'enabled','ready',true,false,'{}')",
+                (*SCOPE.key, installation_id, generation),
+            )
+            conn.execute(
+                "INSERT INTO extension_operation_dispatch_binding(org_id,project_id,operation_id,"
+                "handler_kind,installation_id,generation,execution_epoch,operation_fence,revision,"
+                "cutover_group_id,cutover_group_revision,updated_by) "
+                "VALUES(%s,%s,'ecommerce_growth_analysis_advance','extension',%s,%s,3,false,5,%s,11,'test')",
+                (*SCOPE.key, installation_id, generation, cutover_group_id),
+            )
+            conn.commit()
+        dispatch = SimpleNamespace(
+            operation_id="ecommerce_growth_analysis_advance",
+            dispatch_revision=5,
+            installation_id=installation_id,
+            generation=generation,
+            execution_epoch=3,
+            cutover_group_id=cutover_group_id,
+            cutover_group_revision=11,
+        )
+
+        def compose(suffix: str, *, commit: bool, invalid_dispatch: bool = False):
+            requirement, waiting = seed_waiting_domain(suffix)
+            paused = seed_paused_task(suffix)
+            receipt_id = f"analysis-receipt-{suffix}"
+            receipt_ref = {
+                "resourceType": "AnalysisRuntimeReceipt",
+                "resourceId": receipt_id,
+                "revision": 1,
+                "contentHash": HASH_A,
+                "receiptId": receipt_id,
+            }
+            payload = {
+                "receiptRef": receipt_ref,
+                "requestHash": HASH_A,
+                "phase": "RUNNING",
+            }
+            conn = psycopg.connect(dsn, row_factory=dict_row)
+            conn.execute("SET LOCAL ROLE aos_runtime")
+            conn.execute("SELECT set_config('aos.org_id',%s,true)", (SCOPE.org_id,))
+            conn.execute("SELECT set_config('aos.project_id',%s,true)", (SCOPE.project_id,))
+            transaction = HostTransaction(conn)
+            factory = TransactionBoundConnectFactory(transaction, SCOPE)
+            resumer = _AnalysisRunAndTaskResumer(
+                BusinessInvestigationRunStore(factory),
+                AipTaskStore(factory),
+                requirement,
+                waiting.run_id,
+                waiting.version,
+                NOW,
+            )
+            result = resumer.resume_run(
+                SCOPE,
+                paused.run.id,
+                expected_run_version=paused.run.version,
+                expected_task_version=paused.task.version,
+                actor="ecommerce-growth-analysis-host",
+                idempotency_key=f"resume-{suffix}",
+                reason="DATA_FULFILLED_AND_EVIDENCE_COMPLETE",
+            )
+            selected_dispatch = (
+                SimpleNamespace(**{**dispatch.__dict__, "generation": uuid4()})
+                if invalid_dispatch
+                else dispatch
+            )
+            try:
+                saved = _HostAnalysisReceiptStore(transaction, SCOPE).put(
+                    f"resume-key-{suffix}",
+                    payload,
+                    dispatch_ref=selected_dispatch,
+                    checked_at=NOW,
+                )
+                if commit:
+                    conn.commit()
+                return waiting, paused, result, saved
+            except Exception:
+                conn.rollback()
+                raise
+            finally:
+                conn.close()
+
+        waiting, paused, result, saved = compose("commit", commit=True)
+        assert result.run.version == paused.run.version + 1
+        assert result.task.version == paused.task.version + 1
+        assert saved["phase"] == "RUNNING"
+
+        with psycopg.connect(dsn, row_factory=dict_row) as conn:
+            conn.execute("SET LOCAL ROLE aos_runtime")
+            conn.execute("SELECT set_config('aos.org_id',%s,true)", (SCOPE.org_id,))
+            conn.execute("SELECT set_config('aos.project_id',%s,true)", (SCOPE.project_id,))
+            transaction = HostTransaction(conn)
+            factory = TransactionBoundConnectFactory(transaction, SCOPE)
+            replay_resumer = _AnalysisRunAndTaskResumer(
+                BusinessInvestigationRunStore(factory),
+                AipTaskStore(factory),
+                requirement_ref("requirement-commit"),
+                waiting.run_id,
+                waiting.version,
+                NOW,
+            )
+            replay = replay_resumer.resume_run(
+                SCOPE,
+                paused.run.id,
+                expected_run_version=paused.run.version,
+                expected_task_version=paused.task.version,
+                actor="ecommerce-growth-analysis-host",
+                idempotency_key="resume-commit",
+                reason="DATA_FULFILLED_AND_EVIDENCE_COMPLETE",
+            )
+            reread = _HostAnalysisReceiptStore(transaction, SCOPE).put(
+                "resume-key-commit", saved
+            )
+            conn.commit()
+        assert replay == result and reread == saved
+
+        with psycopg.connect(dsn, row_factory=dict_row) as conn:
+            conn.execute("SET LOCAL ROLE aos_runtime")
+            conn.execute("SELECT set_config('aos.org_id',%s,true)", (SCOPE.org_id,))
+            conn.execute("SELECT set_config('aos.project_id',%s,true)", (SCOPE.project_id,))
+            assert conn.execute(
+                "SELECT count(*) AS n FROM ecommerce_investigation_run_state_transition_receipt "
+                "WHERE run_id=%s "
+                "AND operation='business_investigation_run.resume_after_data'",
+                (waiting.run_id,),
+            ).fetchone()["n"] == 1
+            assert conn.execute(
+                "SELECT count(*) AS n FROM aip_evidence WHERE run_id=%s "
+                "AND evidence_type='run.control' "
+                "AND source_ref=%s",
+                (paused.run.id, "run-control:resume:resume-commit"),
+            ).fetchone()["n"] == 1
+            assert conn.execute(
+                "SELECT count(*) AS n FROM ecommerce_growth_runtime_command_receipt "
+                "WHERE operation_id='ecommerce_growth_analysis_advance' "
+                "AND idempotency_key='resume-key-commit'"
+            ).fetchone()["n"] == 1
+            assert conn.execute(
+                "SELECT count(*) AS n FROM aip_checkpoint WHERE run_id=%s",
+                (paused.run.id,),
+            ).fetchone()["n"] == 0
+
+        with pytest.raises(ValueError, match="binding"):
+            compose("rollback", commit=False, invalid_dispatch=True)
+        with runtime_connect(SCOPE) as conn:
+            assert conn.execute(
+                "SELECT lifecycle FROM ecommerce_investigation_run_state_head "
+                "WHERE run_id='domain-run-rollback'"
+            ).fetchone()["lifecycle"] == "WAITING_DATA"
+            assert conn.execute(
+                "SELECT status FROM aip_task_run WHERE idempotency_key='task-run-rollback'"
+            ).fetchone()["status"] == "paused"
+            assert conn.execute(
+                "SELECT count(*) AS n FROM ecommerce_growth_runtime_command_receipt "
+                "WHERE idempotency_key='resume-key-rollback'"
+            ).fetchone()["n"] == 0
+            assert conn.execute(
+                "SELECT count(*) AS n FROM ecommerce_investigation_run_state_transition_receipt "
+                "WHERE run_id='domain-run-rollback' "
+                "AND operation='business_investigation_run.resume_after_data'"
+            ).fetchone()["n"] == 0
+            assert conn.execute(
+                "SELECT count(*) AS n FROM aip_evidence WHERE evidence_type='run.control' "
+                "AND source_ref='run-control:resume:resume-rollback'"
+            ).fetchone()["n"] == 0
