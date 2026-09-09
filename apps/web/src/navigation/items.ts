@@ -63,6 +63,8 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "inbox",
     status: "live",
     crumbs: ["工作台", "订单管理"],
+    // 旧深链仅由已安装模块的 legacyRoutes 解析；静态导航不得泄漏入口。
+    hidden: true,
   },
   {
     id: "workshop-inventory",
@@ -71,6 +73,8 @@ export const NAV_ITEMS: NavItem[] = [
     icon: "layers",
     status: "live",
     crumbs: ["工作台", "商品库存管理"],
+    // 旧深链仅由已安装模块的 legacyRoutes 解析；静态导航不得泄漏入口。
+    hidden: true,
   },
   {
     id: "workshop-inbox",

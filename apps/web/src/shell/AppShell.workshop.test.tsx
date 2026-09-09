@@ -156,6 +156,30 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(hostState?.textContent).toContain("电商工作台");
     expect(hostState?.textContent).toContain("模块未安装");
     expect(hostState?.textContent).not.toContain("订单管理");
+    expect(host.querySelector('a[href="/workshop/orders"]')).toBeNull();
+    expect(host.querySelector('a[href="/workshop/inventory"]')).toBeNull();
+    expect(host.querySelectorAll("[data-workshop-module-id]")).toHaveLength(0);
+  });
+
+  it("目录读取失败时全壳不回退旧电商链接或静态模块入口", async () => {
+    const client = { listModules: async () => { throw new Error("catalog unavailable"); } };
+    await act(async () => root.render(
+      <MemoryRouter initialEntries={["/workshop/operations"]}>
+        <EcommerceWorkshopCatalogProvider client={client}>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="workshop/:workshopModule/*" element={<EcommerceWorkshopEntryRoute />} />
+            </Route>
+          </Routes>
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+
+    expect(host.querySelector(".ecommerce-workshop-host-state")?.textContent).toContain("读取失败");
+    expect(host.querySelector('a[href="/workshop/orders"]')).toBeNull();
+    expect(host.querySelector('a[href="/workshop/inventory"]')).toBeNull();
+    expect(host.querySelectorAll("[data-workshop-module-id]")).toHaveLength(0);
   });
 
   it("canonical 深层路径保持在同一 Module Shell 与唯一 active 导航中", async () => {
