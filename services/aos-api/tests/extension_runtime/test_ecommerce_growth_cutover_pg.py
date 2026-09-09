@@ -24,6 +24,7 @@ from aos_api.ecommerce_growth_cutover import (
     CutoverExactRef,
     CutoverFinalizeRequest,
     CutoverPrepareRequest,
+    CutoverRollbackRequest,
     EcommerceGrowthCutoverBlocked,
     EcommerceGrowthCutoverConflict,
     EcommerceGrowthCutoverStore,
@@ -56,6 +57,18 @@ def _migration(root: Path, filename: str, owner, *, schema: str | None = None) -
         return owner.execute(statement)
     migration.op = SimpleNamespace(execute=execute)
     migration.upgrade()
+
+
+def _downgrade_ar2_016(database):
+    spec = importlib.util.spec_from_file_location(
+        "ar2_016_down",
+        database.root / "alembic/versions/ar2_016_ecommerce_growth_cutover_rollback.py",
+    )
+    migration = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(migration)
+    migration.op = SimpleNamespace(execute=database.owner.execute)
+    migration.downgrade()
 
 
 @pytest.fixture
@@ -124,6 +137,7 @@ def database():
         _migration(root, "ar2_013_ecommerce_growth_cutover.py", owner, schema=schema)
         _migration(root, "ar2_014_ecommerce_growth_cutover_commit.py", owner, schema=schema)
         _migration(root, "ar2_015_ecommerce_growth_cutover_finalize.py", owner, schema=schema)
+        _migration(root, "ar2_016_ecommerce_growth_cutover_rollback.py", owner, schema=schema)
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_extension_maintainer").format(sql.Identifier(schema)))
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(sql.Identifier(schema)))
         yield SimpleNamespace(owner=owner, schema=schema, role=role, root=root)
@@ -317,6 +331,99 @@ def _validate_ref(receipt):
         resourceId=str(receipt.receipt_id),
         revision=1,
         contentHash=receipt.content_hash,
+    )
+
+
+def _rollback_request(database, scope, prepare_receipt, commit_receipt):
+    owner = database.owner
+    rollback_operation_id = uuid4()
+    commit_ref = {
+        "resourceType": "CutoverCommitReceipt",
+        "resourceId": str(commit_receipt.receipt_id),
+        "revision": 1,
+        "contentHash": commit_receipt.content_hash,
+    }
+    payload = {
+        "activationOperationId": str(prepare_receipt.cutover_operation_id),
+        "commitReceiptRef": commit_ref,
+        "cutoverGroupId": str(prepare_receipt.cutover_group_id),
+        "expectedGroupRevision": prepare_receipt.target_group_revision,
+        "targetInstallationId": str(prepare_receipt.target_installation_id),
+        "targetGeneration": str(prepare_receipt.target_generation),
+        "targetExecutionEpoch": prepare_receipt.target_execution_epoch,
+        "operationIds": list(prepare_receipt.operation_ids),
+    }
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(hours=1)
+    action_type = {
+        "id": "ecommerce_growth_cutover_rollback",
+        "revisionHash": "sha256:" + "a" * 64,
+    }
+    policy = {"mode": "manual-reviewed-rollback"}
+    stable = {
+        "tenantScope": {"orgId": scope.org_id, "projectId": scope.project_id},
+        "actionType": action_type,
+        "taskId": None,
+        "runId": None,
+        "objectRef": None,
+        "purpose": "验证失败后回滚经营参谋九项宿主入口",
+        "riskLevel": "R3",
+        "policy": policy,
+        "payload": payload,
+        "diff": {},
+        "evidenceRefs": [],
+        "approvalPolicyHash": "sha256:" + "b" * 64,
+        "actionBindingHash": "sha256:" + "c" * 64,
+        "impactPreviewRef": None,
+        "sourceDraftRef": None,
+        "expiresAt": expires_at.isoformat(),
+        "createdBy": "rollback-operator",
+    }
+    proposal_hash = canonical_hash(stable)
+    owner.execute(
+        """INSERT INTO aip_action_proposal(
+             org_id,project_id,proposal_id,action_type_id,action_type_snapshot,task_id,run_id,
+             object_ref,purpose,risk_level,policy_snapshot,payload,diff,evidence_refs,
+             action_binding_hash,approval_policy_hash,proposal_hash,status,version,expires_at,created_by)
+           VALUES(%s,%s,'proposal-rollback','ecommerce_growth_cutover_rollback',%s,NULL,NULL,NULL,
+             %s,'R3',%s,%s,'{}','[]',%s,%s,%s,'approved',1,%s,'rollback-operator')""",
+        (*scope.key, psycopg.types.json.Jsonb(action_type), stable["purpose"],
+         psycopg.types.json.Jsonb(policy), psycopg.types.json.Jsonb(payload),
+         stable["actionBindingHash"], stable["approvalPolicyHash"], proposal_hash,
+         expires_at),
+    )
+    owner.execute(
+        """INSERT INTO aip_action_draft(org_id,project_id,proposal_id,proposal_hash,snapshot)
+           VALUES(%s,%s,'proposal-rollback',%s,%s)""",
+        (*scope.key, proposal_hash, psycopg.types.json.Jsonb(stable)),
+    )
+    owner.execute(
+        """INSERT INTO aip_action_approval_event(
+             org_id,project_id,approval_event_id,proposal_id,proposal_version,proposal_hash,
+             decision,actor_id,reason,expires_at,created_at,action_binding_hash)
+           VALUES(%s,%s,'approval-rollback','proposal-rollback',1,%s,'approved',
+             'rollback-reviewer','approved rollback',%s,%s,%s)""",
+        (*scope.key, proposal_hash, expires_at, now, stable["actionBindingHash"]),
+    )
+    approval = owner.execute(
+        """SELECT approval_event_id,proposal_id,proposal_version,proposal_hash,decision,
+                  actor_id,reason,expires_at,created_at,action_binding_hash
+             FROM aip_action_approval_event
+            WHERE org_id=%s AND project_id=%s AND approval_event_id='approval-rollback'""",
+        scope.key,
+    ).fetchone()
+    return CutoverRollbackRequest(
+        rollbackOperationId=rollback_operation_id,
+        idempotencyKey="rollback-cutover-1",
+        activationOperationId=prepare_receipt.cutover_operation_id,
+        commitReceiptRef=commit_ref,
+        approvalRef={
+            "resourceType": "ActionApprovalEvent",
+            "resourceId": "approval-rollback",
+            "revision": 1,
+            "contentHash": canonical_hash(dict(approval), prefixed=True),
+        },
+        failureReason="D5C structural validation failed",
     )
 
 
@@ -816,6 +923,7 @@ def test_ar2_014_nonempty_gate_blocks_downgrade(database):
 
 
 def test_ar2_014_empty_downgrade_restores_prior_constraints(database):
+    _downgrade_ar2_016(database)
     finalize_spec = importlib.util.spec_from_file_location(
         "ar2_015_empty_down",
         database.root / "alembic/versions/ar2_015_ecommerce_growth_cutover_finalize.py",
@@ -1033,5 +1141,293 @@ def test_ar2_015_empty_and_nonempty_downgrade_guards(database):
     store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
     committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
     store.validate_activation(scope, _finalize_request(committed), actor="runtime-owner")
+    _downgrade_ar2_016(database)
     with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState):
         migration.downgrade()
+
+
+def test_validation_window_rollback_fences_then_restores_exact_legacy_group(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    request = _rollback_request(database, scope, prepared, committed)
+
+    fenced = store.prepare_validation_rollback(scope, request, actor="rollback-owner")
+    fenced_replay = store.prepare_validation_rollback(scope, request, actor="rollback-owner")
+    assert fenced.status == "draining" and fenced.phase == "fence"
+    assert fenced_replay.receipt_id == fenced.receipt_id and fenced_replay.replayed is True
+    fenced_rows = database.owner.execute(
+        """SELECT handler_kind,operation_fence,revision,cutover_group_revision
+             FROM extension_operation_dispatch_binding ORDER BY operation_id"""
+    ).fetchall()
+    assert all(row == {
+        "handler_kind": "extension", "operation_fence": True,
+        "revision": 7, "cutover_group_revision": 13,
+    } for row in fenced_rows)
+    assert database.owner.execute(
+        "SELECT cutover_operation_id,claim_paused,revision FROM extension_dispatch_claim_gate"
+    ).fetchone() == {
+        "cutover_operation_id": request.rollback_operation_id,
+        "claim_paused": True,
+        "revision": 2,
+    }
+
+    rolled = store.commit_validation_rollback(scope, request, actor="rollback-owner")
+    replay = store.commit_validation_rollback(scope, request, actor="rollback-owner")
+    assert rolled.status == "rolled_back" and rolled.phase == "rollback"
+    assert rolled.drain_receipt_ref is not None
+    assert replay.receipt_id == rolled.receipt_id and replay.replayed is True
+    rows = database.owner.execute(
+        """SELECT handler_kind,installation_id,generation,execution_epoch,
+                  operation_fence,revision,cutover_group_revision
+             FROM extension_operation_dispatch_binding ORDER BY operation_id"""
+    ).fetchall()
+    assert all(row == {
+        "handler_kind": "legacy", "installation_id": None, "generation": None,
+        "execution_epoch": None, "operation_fence": False,
+        "revision": 8, "cutover_group_revision": 14,
+    } for row in rows)
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_dispatch_claim_gate"
+    ).fetchone()["n"] == 0
+    assert database.owner.execute(
+        "SELECT enabled,operation_fence,revision FROM extension_runtime_binding"
+    ).fetchone() == {"enabled": False, "operation_fence": True, "revision": 14}
+    states = database.owner.execute(
+        "SELECT kind,status FROM extension_dispatch_cutover_operation ORDER BY kind"
+    ).fetchall()
+    assert states == [
+        {"kind": "activate", "status": "committed"},
+        {"kind": "rollback", "status": "rolled_back"},
+    ]
+
+
+@pytest.mark.parametrize("drift", ["dispatch", "runtime", "gate", "approval"])
+def test_rollback_fence_rejects_current_authority_drift(database, drift):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    request = _rollback_request(database, scope, prepared, committed)
+    if drift == "dispatch":
+        database.owner.execute(
+            """UPDATE extension_operation_dispatch_binding SET revision=revision+1
+                 WHERE operation_id=(SELECT min(operation_id) FROM extension_operation_dispatch_binding)"""
+        )
+    elif drift == "runtime":
+        database.owner.execute("UPDATE extension_runtime_binding SET revision=revision+1")
+    elif drift == "gate":
+        database.owner.execute("UPDATE extension_dispatch_claim_gate SET revision=revision+1")
+    else:
+        database.owner.execute(
+            "UPDATE aip_action_proposal SET status='expired' WHERE proposal_id='proposal-rollback'"
+        )
+    with pytest.raises(
+        (EcommerceGrowthCutoverBlocked, EcommerceGrowthCutoverConflict),
+        match="drifted|not bound",
+    ):
+        store.prepare_validation_rollback(scope, request, actor="rollback-owner")
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_dispatch_cutover_operation WHERE kind='rollback'"
+    ).fetchone()["n"] == 0
+
+
+def test_rollback_is_closed_after_resume(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    finalize_request = _finalize_request(committed)
+    validated = store.validate_activation(scope, finalize_request, actor="runtime-owner")
+    store.resume_activation(
+        scope,
+        finalize_request,
+        validate_receipt_ref=_validate_ref(validated),
+        actor="runtime-owner",
+    )
+    request = _rollback_request(database, scope, prepared, committed)
+    with pytest.raises(EcommerceGrowthCutoverBlocked, match="outside validation rollback window"):
+        store.prepare_validation_rollback(scope, request, actor="rollback-owner")
+
+
+def test_rollback_commit_rechecks_approval_and_running_attempt(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    request = _rollback_request(database, scope, prepared, committed)
+    store.prepare_validation_rollback(scope, request, actor="rollback-owner")
+    database.owner.execute(
+        "UPDATE aip_action_proposal SET status='expired' WHERE proposal_id='proposal-rollback'"
+    )
+    with pytest.raises(EcommerceGrowthCutoverBlocked, match="approval is not bound"):
+        store.commit_validation_rollback(scope, request, actor="rollback-owner")
+    database.owner.execute(
+        "UPDATE aip_action_proposal SET status='approved' WHERE proposal_id='proposal-rollback'"
+    )
+    attempt_id = uuid4()
+    now = datetime.now(timezone.utc)
+    database.owner.execute("SELECT set_config('aos.org_id',%s,false)", (scope.org_id,))
+    database.owner.execute("SELECT set_config('aos.project_id',%s,false)", (scope.project_id,))
+    database.owner.execute(
+        "ALTER TABLE extension_runtime_execution_attempt DISABLE TRIGGER attempt_insert_guard"
+    )
+    database.owner.execute(
+        """INSERT INTO extension_runtime_execution_attempt(
+             org_id,project_id,attempt_id,installation_id,generation,execution_epoch,
+             operation_kind,operation_key,idempotency_key,request_hash,owner_token_hash,
+             state,lease_until)
+           VALUES(%s,%s,%s,%s,%s,%s,'signed_read','rollback-read','rollback-running',%s,%s,
+             'running',%s)""",
+        (*scope.key, attempt_id, prepare_request.target_installation_id,
+         prepare_request.target_generation, prepare_request.target_execution_epoch,
+         "sha256:" + "7" * 64, "sha256:" + "8" * 64, now + timedelta(minutes=5)),
+    )
+    database.owner.execute(
+        "ALTER TABLE extension_runtime_execution_attempt ENABLE TRIGGER attempt_insert_guard"
+    )
+    with pytest.raises(EcommerceGrowthCutoverBlocked, match="not drained"):
+        store.commit_validation_rollback(scope, request, actor="rollback-owner")
+    database.owner.execute(
+        """UPDATE extension_runtime_execution_attempt
+              SET state='abandoned',revision=2,completed_at=%s WHERE attempt_id=%s""",
+        (now + timedelta(minutes=1), attempt_id),
+    )
+    assert store.commit_validation_rollback(
+        scope, request, actor="rollback-owner"
+    ).status == "rolled_back"
+
+
+def test_direct_rollback_without_receipts_rolls_back_every_entry(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    request = _rollback_request(database, scope, prepared, committed)
+    store.prepare_validation_rollback(scope, request, actor="rollback-owner")
+    with _connection(database, runtime=True)(scope) as conn:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            conn.execute(
+                sql.SQL("SELECT {}.extension_dispatch_cutover_rollback_ar2_016(%s,%s)").format(
+                    sql.Identifier(database.schema)
+                ),
+                (request.rollback_operation_id, "runtime"),
+            )
+        conn.rollback()
+    with _connection(database)(scope) as conn:
+        conn.execute(
+            sql.SQL("SELECT {}.extension_dispatch_cutover_rollback_ar2_016(%s,%s)").format(
+                sql.Identifier(database.schema)
+            ),
+            (request.rollback_operation_id, "rollback-owner"),
+        )
+        with pytest.raises(psycopg.errors.CheckViolation, match="rollback Receipt"):
+            conn.commit()
+        conn.rollback()
+    assert database.owner.execute(
+        "SELECT status FROM extension_dispatch_cutover_operation WHERE kind='rollback'"
+    ).fetchone()["status"] == "draining"
+    assert database.owner.execute(
+        """SELECT count(*) AS n FROM extension_operation_dispatch_binding
+             WHERE handler_kind='extension' AND operation_fence"""
+    ).fetchone()["n"] == 9
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_dispatch_claim_gate"
+    ).fetchone()["n"] == 1
+
+
+def test_rollback_receipt_tamper_is_rejected(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    request = _rollback_request(database, scope, prepared, committed)
+    store.prepare_validation_rollback(scope, request, actor="rollback-owner")
+    database.owner.execute(
+        "ALTER TABLE extension_dispatch_cutover_receipt DISABLE TRIGGER immutable_history"
+    )
+    database.owner.execute(
+        """UPDATE extension_dispatch_cutover_receipt
+              SET authority_data=jsonb_set(authority_data,'{failureReason}','\"tampered\"')
+            WHERE phase='fence'"""
+    )
+    database.owner.execute(
+        "ALTER TABLE extension_dispatch_cutover_receipt ENABLE TRIGGER immutable_history"
+    )
+    with pytest.raises(EcommerceGrowthCutoverConflict, match="fence Receipt authority drifted"):
+        store.commit_validation_rollback(scope, request, actor="rollback-owner")
+
+
+def test_rollback_preserves_unknown_attempt_for_reconciliation(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    occurrence_id, now = _seed_pending_occurrence(database, scope, prepare_request)
+    attempt_id = uuid4()
+    database.owner.execute(
+        """UPDATE automation_occurrence SET status='needs_attention'
+             WHERE occurrence_id=%s""",
+        (occurrence_id,),
+    )
+    database.owner.execute(
+        """INSERT INTO automation_occurrence_dispatch_attempt(
+             org_id,project_id,attempt_id,occurrence_id,claim_owner,target_idempotency_key,
+             status,claimed_at,claim_until,resolved_at)
+           VALUES(%s,%s,%s,%s,'old-worker','unknown-target','unknown',%s,%s,%s)""",
+        (*scope.key, attempt_id, occurrence_id, now, now + timedelta(minutes=5), now),
+    )
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    request = _rollback_request(database, scope, prepared, committed)
+    store.prepare_validation_rollback(scope, request, actor="rollback-owner")
+    rolled = store.commit_validation_rollback(scope, request, actor="rollback-owner")
+    assert [item["attemptId"] for item in rolled.unknown_attempts] == [str(attempt_id)]
+    assert database.owner.execute(
+        "SELECT status FROM automation_occurrence_dispatch_attempt WHERE attempt_id=%s",
+        (attempt_id,),
+    ).fetchone()["status"] == "unknown"
+
+
+def test_ar2_016_empty_downgrade_removes_rollback_authority(database):
+    _downgrade_ar2_016(database)
+    assert database.owner.execute(
+        """SELECT count(*) AS n FROM information_schema.columns
+             WHERE table_schema=current_schema()
+               AND table_name='extension_dispatch_cutover_operation'
+               AND column_name='parent_cutover_operation_id'"""
+    ).fetchone()["n"] == 0
+
+
+def test_ar2_016_nonempty_rollback_authority_blocks_downgrade(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    request = _rollback_request(database, scope, prepared, committed)
+    store.prepare_validation_rollback(scope, request, actor="rollback-owner")
+    with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState):
+        _downgrade_ar2_016(database)

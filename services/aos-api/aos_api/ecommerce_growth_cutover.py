@@ -215,6 +215,58 @@ class CutoverFinalizeReceipt(AipContractModel):
     created_at: datetime
 
 
+class CutoverRollbackRequest(AipContractModel):
+    rollback_operation_id: UUID
+    idempotency_key: str = Field(min_length=1, max_length=240)
+    activation_operation_id: UUID
+    commit_receipt_ref: CutoverExactRef
+    approval_ref: CutoverExactRef
+    failure_reason: str = Field(min_length=1, max_length=1000)
+
+    @field_validator("idempotency_key", "failure_reason")
+    @classmethod
+    def _canonical_text(cls, value: str) -> str:
+        if value != value.strip():
+            raise ValueError("rollback text must be canonical")
+        return value
+
+    @model_validator(mode="after")
+    def _refs(self) -> "CutoverRollbackRequest":
+        if self.commit_receipt_ref.resource_type != "CutoverCommitReceipt":
+            raise ValueError("commitReceiptRef must reference CutoverCommitReceipt")
+        if self.approval_ref.resource_type != "ActionApprovalEvent":
+            raise ValueError("approvalRef must reference ActionApprovalEvent")
+        return self
+
+    def request_hash(self) -> str:
+        return canonical_sha256(self.model_dump(mode="json", by_alias=True))
+
+
+class CutoverRollbackReceipt(AipContractModel):
+    tenant: TenantContext
+    receipt_id: UUID
+    rollback_operation_id: UUID
+    activation_operation_id: UUID
+    phase: Literal["fence", "drain", "rollback"]
+    status: Literal["draining", "rolled_back"]
+    cutover_group_id: UUID
+    operation_ids: tuple[str, ...]
+    dispatch_snapshot: tuple[dict[str, Any], ...]
+    occurrence_watermark: datetime | None
+    claimed_occurrences: tuple[dict[str, Any], ...]
+    claimed_attempts: tuple[dict[str, Any], ...]
+    unknown_attempts: tuple[dict[str, Any], ...]
+    running_runtime_attempts: tuple[dict[str, Any], ...]
+    commit_receipt_ref: CutoverExactRef
+    approval_ref: CutoverExactRef
+    failure_reason: str
+    drain_receipt_ref: CutoverExactRef | None = None
+    request_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    replayed: bool = False
+    created_at: datetime
+
+
 def _object(value: Any) -> dict[str, Any]:
     if isinstance(value, str):
         value = json.loads(value)
@@ -780,6 +832,241 @@ class EcommerceGrowthCutoverStore:
             conn.commit()
             return result
 
+    def prepare_validation_rollback(
+        self,
+        scope: TenantScope,
+        request: CutoverRollbackRequest,
+        *,
+        actor: str,
+    ) -> CutoverRollbackReceipt:
+        scope, request, actor = self._validated_rollback_call(scope, request, actor)
+        request_hash = request.request_hash()
+        with self._connect_factory(scope) as conn:
+            self._require_maintainer(conn)
+            existing = self._load_rollback_receipt(
+                conn, scope, request.rollback_operation_id, "fence"
+            )
+            if existing is not None:
+                if existing["request_hash"] != request_hash:
+                    raise EcommerceGrowthCutoverConflict(
+                        "cutover rollback idempotency payload drifted"
+                    )
+                return self._rollback_receipt(scope, existing, replayed=True)
+            duplicate = conn.execute(
+                f"""SELECT cutover_operation_id,request_hash
+                       FROM {self._schema}.extension_dispatch_cutover_operation
+                      WHERE org_id=%s AND project_id=%s AND idempotency_key=%s""",
+                (*scope.key, request.idempotency_key),
+            ).fetchone()
+            if duplicate is not None:
+                raise EcommerceGrowthCutoverConflict(
+                    "cutover rollback idempotency payload drifted"
+                )
+            parent_request = CutoverFinalizeRequest(
+                cutoverOperationId=request.activation_operation_id,
+                idempotencyKey=request.idempotency_key,
+                commitReceiptRef=request.commit_receipt_ref,
+            )
+            parent, prepare = self._load_committed_context(
+                conn, scope, parent_request
+            )
+            if parent["status"] not in {"committed", "validated"}:
+                raise EcommerceGrowthCutoverBlocked(
+                    "activation is outside validation rollback window"
+                )
+            self._lock_final_authority(
+                conn,
+                scope,
+                parent,
+                prepare,
+                resumed=False,
+                check_activation_approval=False,
+            )
+            expected_payload = self._rollback_expected_payload(request, prepare)
+            conn.execute(
+                f"SELECT {self._schema}.extension_dispatch_cutover_lock_approval_ar2_013(%s)",
+                (request.approval_ref.resource_id,),
+            )
+            self._approval_authority(
+                conn,
+                scope,
+                request,
+                action_type_id="ecommerce_growth_cutover_rollback",
+                expected_payload=expected_payload,
+            )
+            current = [_snapshot(dict(row)) for row in self._dispatch_rows(
+                conn, scope, prepare.cutover_group_id
+            )]
+            fenced = [
+                {
+                    **item,
+                    "operationFence": True,
+                    "revision": int(item["revision"]) + 1,
+                    "cutoverGroupRevision": prepare.target_group_revision + 1,
+                }
+                for item in current
+            ]
+            checked_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+            conn.execute(
+                f"""INSERT INTO {self._schema}.extension_dispatch_cutover_operation(
+                     org_id,project_id,cutover_operation_id,kind,idempotency_key,request_hash,status,
+                     cutover_group_id,expected_group_revision,target_group_revision,
+                     target_installation_id,target_generation,target_execution_epoch,target_runtime_revision,
+                     operation_ids,old_dispatch_snapshot,new_dispatch_snapshot,checkpoint,
+                     occurrence_watermark,pending_target_receipt_refs,policy_ref,approval_ref,
+                     requested_by,created_at,updated_at,parent_cutover_operation_id,parent_receipt_ref,
+                     failure_reason)
+                   VALUES(%s,%s,%s,'rollback',%s,%s,'fencing',%s,%s,%s,%s,%s,%s,%s,
+                     %s,%s,%s,%s,%s,'[]'::jsonb,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (
+                    *scope.key, request.rollback_operation_id, request.idempotency_key,
+                    request_hash, prepare.cutover_group_id, prepare.target_group_revision,
+                    prepare.target_group_revision + 1, prepare.target_installation_id,
+                    prepare.target_generation, prepare.target_execution_epoch,
+                    prepare.target_runtime_revision, Jsonb(list(prepare.operation_ids)),
+                    Jsonb(current), Jsonb(fenced), Jsonb(prepare.checkpoint),
+                    prepare.occurrence_watermark,
+                    Jsonb(prepare.policy_ref.model_dump(mode="json", by_alias=True)),
+                    Jsonb(request.approval_ref.model_dump(mode="json", by_alias=True)),
+                    actor, checked_at, checked_at, request.activation_operation_id,
+                    Jsonb(request.commit_receipt_ref.model_dump(mode="json", by_alias=True)),
+                    request.failure_reason,
+                ),
+            )
+            try:
+                updated = conn.execute(
+                    f"SELECT {self._schema}.extension_dispatch_cutover_fence_rollback_ar2_016(%s,%s) AS updated",
+                    (request.rollback_operation_id, actor),
+                ).fetchone()["updated"]
+            except psycopg.Error as exc:
+                raise EcommerceGrowthCutoverBlocked(str(exc).splitlines()[0]) from exc
+            if int(updated) != len(ECOMMERCE_GROWTH_OPERATIONS):
+                raise EcommerceGrowthCutoverConflict("rollback fence update was not exact")
+            facts = self._execution_facts(conn, scope, prepare)
+            authority = self._rollback_authority(
+                scope, request, prepare, phase="fence", status="draining",
+                dispatch_snapshot=fenced, facts=facts, actor=actor, created_at=checked_at,
+            )
+            receipt_id = uuid4()
+            self._insert_phase_history(
+                conn, scope, request.rollback_operation_id, sequence=1,
+                event_type="CUTOVER_FENCED", phase="fence", receipt_id=receipt_id,
+                request_hash=request_hash, authority=authority, occurred_at=checked_at,
+            )
+            row = self._load_rollback_receipt(
+                conn, scope, request.rollback_operation_id, "fence"
+            )
+            if row is None:
+                raise EcommerceGrowthCutoverConflict("rollback fence readback is missing")
+            result = self._rollback_receipt(scope, row, replayed=False)
+            conn.commit()
+            return result
+
+    def commit_validation_rollback(
+        self,
+        scope: TenantScope,
+        request: CutoverRollbackRequest,
+        *,
+        actor: str,
+    ) -> CutoverRollbackReceipt:
+        scope, request, actor = self._validated_rollback_call(scope, request, actor)
+        request_hash = request.request_hash()
+        with self._connect_factory(scope) as conn:
+            self._require_maintainer(conn)
+            existing = self._load_rollback_receipt(
+                conn, scope, request.rollback_operation_id, "rollback"
+            )
+            if existing is not None:
+                if existing["request_hash"] != request_hash:
+                    raise EcommerceGrowthCutoverConflict(
+                        "cutover rollback idempotency payload drifted"
+                    )
+                return self._rollback_receipt(scope, existing, replayed=True)
+            operation = conn.execute(
+                f"""SELECT * FROM {self._schema}.extension_dispatch_cutover_operation
+                      WHERE org_id=%s AND project_id=%s AND cutover_operation_id=%s FOR SHARE""",
+                (*scope.key, request.rollback_operation_id),
+            ).fetchone()
+            fence_row = self._load_rollback_receipt(
+                conn, scope, request.rollback_operation_id, "fence"
+            )
+            if operation is None or fence_row is None:
+                raise EcommerceGrowthCutoverBlocked("rollback fence authority is unavailable")
+            if operation["request_hash"] != request_hash or operation["status"] != "draining":
+                raise EcommerceGrowthCutoverConflict("rollback operation authority drifted")
+            self._rollback_receipt(scope, fence_row, replayed=True)
+            parent_request = CutoverFinalizeRequest(
+                cutoverOperationId=request.activation_operation_id,
+                idempotencyKey=request.idempotency_key,
+                commitReceiptRef=request.commit_receipt_ref,
+            )
+            parent, prepare = self._load_committed_context(conn, scope, parent_request)
+            conn.execute(
+                f"SELECT {self._schema}.extension_dispatch_cutover_lock_approval_ar2_013(%s)",
+                (request.approval_ref.resource_id,),
+            )
+            self._approval_authority(
+                conn,
+                scope,
+                request,
+                action_type_id="ecommerce_growth_cutover_rollback",
+                expected_payload=self._rollback_expected_payload(request, prepare),
+            )
+            facts = self._execution_facts(conn, scope, prepare)
+            if (
+                facts["claimedOccurrences"] or facts["claimedAttempts"]
+                or facts["runningRuntimeAttempts"]
+            ):
+                raise EcommerceGrowthCutoverBlocked("rollback target execution is not drained")
+            try:
+                updated = conn.execute(
+                    f"SELECT {self._schema}.extension_dispatch_cutover_rollback_ar2_016(%s,%s) AS updated",
+                    (request.rollback_operation_id, actor),
+                ).fetchone()["updated"]
+            except psycopg.Error as exc:
+                raise EcommerceGrowthCutoverBlocked(str(exc).splitlines()[0]) from exc
+            if int(updated) != len(ECOMMERCE_GROWTH_OPERATIONS):
+                raise EcommerceGrowthCutoverConflict("rollback group update was not exact")
+            completed_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+            drain_authority = self._rollback_authority(
+                scope, request, prepare, phase="drain", status="draining",
+                dispatch_snapshot=list(_array(operation["new_dispatch_snapshot"])),
+                facts=facts, actor=actor, created_at=completed_at,
+            )
+            drain_receipt_id = uuid4()
+            self._insert_phase_history(
+                conn, scope, request.rollback_operation_id, sequence=2,
+                event_type="CUTOVER_DRAINED", phase="drain", receipt_id=drain_receipt_id,
+                request_hash=request_hash, authority=drain_authority, occurred_at=completed_at,
+            )
+            rows = [_snapshot(dict(row)) for row in self._dispatch_rows(
+                conn, scope, prepare.cutover_group_id
+            )]
+            drain_ref = CutoverExactRef(
+                resourceType="CutoverDrainReceipt", resourceId=str(drain_receipt_id), revision=1,
+                contentHash=canonical_sha256(drain_authority),
+            )
+            rollback_authority = self._rollback_authority(
+                scope, request, prepare, phase="rollback", status="rolled_back",
+                dispatch_snapshot=rows, facts=facts, actor=actor, created_at=completed_at,
+                drain_receipt_ref=drain_ref,
+            )
+            receipt_id = uuid4()
+            self._insert_phase_history(
+                conn, scope, request.rollback_operation_id, sequence=3,
+                event_type="CUTOVER_ROLLED_BACK", phase="rollback", receipt_id=receipt_id,
+                request_hash=request_hash, authority=rollback_authority,
+                occurred_at=completed_at,
+            )
+            row = self._load_rollback_receipt(
+                conn, scope, request.rollback_operation_id, "rollback"
+            )
+            if row is None:
+                raise EcommerceGrowthCutoverConflict("rollback readback is missing")
+            result = self._rollback_receipt(scope, row, replayed=False)
+            conn.commit()
+            return result
+
     @staticmethod
     def _validated_finalize_call(
         scope: TenantScope,
@@ -794,6 +1081,39 @@ class EcommerceGrowthCutoverStore:
         if type(actor) is not str or not actor or actor != actor.strip() or len(actor) > 240:
             raise ValueError("canonical cutover actor is required")
         return scope, request, actor
+
+    @staticmethod
+    def _validated_rollback_call(
+        scope: TenantScope,
+        request: CutoverRollbackRequest,
+        actor: str,
+    ) -> tuple[TenantScope, CutoverRollbackRequest, str]:
+        if type(scope) is not TenantScope or type(request) is not CutoverRollbackRequest:
+            raise TypeError("trusted TenantScope and CutoverRollbackRequest are required")
+        request = CutoverRollbackRequest.model_validate(
+            request.model_dump(mode="python", by_alias=True)
+        )
+        if type(actor) is not str or not actor or actor != actor.strip() or len(actor) > 240:
+            raise ValueError("canonical cutover actor is required")
+        return scope, request, actor
+
+    @staticmethod
+    def _rollback_expected_payload(
+        request: CutoverRollbackRequest,
+        prepare: CutoverPrepareReceipt,
+    ) -> dict[str, Any]:
+        return {
+            "activationOperationId": str(request.activation_operation_id),
+            "commitReceiptRef": request.commit_receipt_ref.model_dump(
+                mode="json", by_alias=True
+            ),
+            "cutoverGroupId": str(prepare.cutover_group_id),
+            "expectedGroupRevision": prepare.target_group_revision,
+            "targetInstallationId": str(prepare.target_installation_id),
+            "targetGeneration": str(prepare.target_generation),
+            "targetExecutionEpoch": prepare.target_execution_epoch,
+            "operationIds": list(prepare.operation_ids),
+        }
 
     @staticmethod
     def _validated_commit_call(
@@ -1226,6 +1546,7 @@ class EcommerceGrowthCutoverStore:
         prepare: CutoverPrepareReceipt,
         *,
         resumed: bool,
+        check_activation_approval: bool = True,
     ) -> None:
         conn.execute(
             "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
@@ -1274,6 +1595,8 @@ class EcommerceGrowthCutoverStore:
             or int(gate["revision"]) != (2 if resumed else 1)
         ):
             raise EcommerceGrowthCutoverConflict("cutover claim gate finalization drifted")
+        if not check_activation_approval:
+            return
         conn.execute(
             f"SELECT {self._schema}.extension_dispatch_cutover_lock_approval_ar2_013(%s)",
             (prepare.approval_ref.resource_id,),
@@ -1436,11 +1759,202 @@ class EcommerceGrowthCutoverStore:
             "createdAt": row["created_at"],
         })
 
+    @staticmethod
+    def _rollback_authority(
+        scope: TenantScope,
+        request: CutoverRollbackRequest,
+        prepare: CutoverPrepareReceipt,
+        *,
+        phase: Literal["fence", "drain", "rollback"],
+        status: Literal["draining", "rolled_back"],
+        dispatch_snapshot: list[dict[str, Any]],
+        facts: dict[str, Any],
+        actor: str,
+        created_at: datetime,
+        drain_receipt_ref: CutoverExactRef | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "schemaVersion": f"aos.ecommerce.dispatch-cutover-rollback-{phase}/v1",
+            "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+            "rollbackOperationId": str(request.rollback_operation_id),
+            "activationOperationId": str(request.activation_operation_id),
+            "phase": phase,
+            "status": status,
+            "cutoverGroupId": str(prepare.cutover_group_id),
+            "operationIds": list(prepare.operation_ids),
+            "dispatchSnapshot": dispatch_snapshot,
+            **facts,
+            "commitReceiptRef": request.commit_receipt_ref.model_dump(
+                mode="json", by_alias=True
+            ),
+            "approvalRef": request.approval_ref.model_dump(mode="json", by_alias=True),
+            "failureReason": request.failure_reason,
+            "drainReceiptRef": (
+                None if drain_receipt_ref is None else drain_receipt_ref.model_dump(
+                    mode="json", by_alias=True
+                )
+            ),
+            "rollbackIdempotencyKey": request.idempotency_key,
+            "requestHash": request.request_hash(),
+            "requestedBy": actor,
+            "createdAt": created_at.isoformat(),
+        }
+
+    def _load_rollback_receipt(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        rollback_operation_id: UUID,
+        phase: Literal["fence", "drain", "rollback"],
+    ) -> dict[str, Any] | None:
+        event_type, sequence = {
+            "fence": ("CUTOVER_FENCED", 1),
+            "drain": ("CUTOVER_DRAINED", 2),
+            "rollback": ("CUTOVER_ROLLED_BACK", 3),
+        }[phase]
+        row = conn.execute(
+            f"""SELECT r.*,o.operation_ids,o.old_dispatch_snapshot,o.new_dispatch_snapshot,
+                        o.cutover_group_id,o.parent_cutover_operation_id,o.parent_receipt_ref,
+                        o.approval_ref,o.failure_reason,o.idempotency_key,o.requested_by,
+                        p.old_dispatch_snapshot AS parent_old_dispatch_snapshot,
+                        e.payload AS event_payload,e.payload_hash,e.occurred_at,
+                        dr.receipt_id AS drain_receipt_id,dr.content_hash AS drain_content_hash
+                   FROM {self._schema}.extension_dispatch_cutover_receipt r
+                   JOIN {self._schema}.extension_dispatch_cutover_operation o
+                     ON o.org_id=r.org_id AND o.project_id=r.project_id
+                    AND o.cutover_operation_id=r.cutover_operation_id
+                   JOIN {self._schema}.extension_dispatch_cutover_operation p
+                     ON p.org_id=o.org_id AND p.project_id=o.project_id
+                    AND p.cutover_operation_id=o.parent_cutover_operation_id
+                   JOIN {self._schema}.extension_dispatch_cutover_event e
+                     ON e.org_id=r.org_id AND e.project_id=r.project_id
+                    AND e.cutover_operation_id=r.cutover_operation_id
+                   LEFT JOIN {self._schema}.extension_dispatch_cutover_receipt dr
+                     ON dr.org_id=o.org_id AND dr.project_id=o.project_id
+                    AND dr.cutover_operation_id=o.cutover_operation_id AND dr.phase='drain'
+                  WHERE r.org_id=%s AND r.project_id=%s AND r.cutover_operation_id=%s
+                    AND r.phase=%s AND e.sequence=%s AND e.event_type=%s""",
+            (*scope.key, rollback_operation_id, phase, sequence, event_type),
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    @staticmethod
+    def _rollback_receipt(
+        scope: TenantScope,
+        row: dict[str, Any],
+        *,
+        replayed: bool,
+    ) -> CutoverRollbackReceipt:
+        authority = _object(row["authority_data"])
+        event = _object(row["event_payload"])
+        phase = row["phase"]
+        expected_status = "rolled_back" if phase == "rollback" else "draining"
+        if phase == "rollback":
+            expected_snapshot = [
+                {
+                    **item,
+                    "revision": int(item["revision"]) + 3,
+                    "cutoverGroupRevision": int(item["cutoverGroupRevision"]) + 3,
+                }
+                for item in _array(row["parent_old_dispatch_snapshot"])
+            ]
+            expected_drain_ref: dict[str, Any] | None = {
+                "resourceType": "CutoverDrainReceipt",
+                "resourceId": str(row["drain_receipt_id"]),
+                "revision": 1,
+                "contentHash": row["drain_content_hash"],
+            }
+        else:
+            expected_snapshot = _array(row["new_dispatch_snapshot"])
+            expected_drain_ref = None
+        try:
+            rollback_request = CutoverRollbackRequest(
+                rollbackOperationId=authority.get("rollbackOperationId"),
+                idempotencyKey=authority.get("rollbackIdempotencyKey"),
+                activationOperationId=authority.get("activationOperationId"),
+                commitReceiptRef=authority.get("commitReceiptRef"),
+                approvalRef=authority.get("approvalRef"),
+                failureReason=authority.get("failureReason"),
+            )
+        except (TypeError, ValueError) as exc:
+            raise EcommerceGrowthCutoverConflict(
+                f"cutover rollback {phase} Receipt authority drifted"
+            ) from exc
+        if (
+            phase not in {"fence", "drain", "rollback"}
+            or canonical_sha256(authority) != row["content_hash"]
+            or canonical_sha256(event) != row["payload_hash"]
+            or event != {
+                "cutoverOperationId": str(row["cutover_operation_id"]),
+                "phase": phase,
+                "receiptId": str(row["receipt_id"]),
+                "contentHash": row["content_hash"],
+            }
+            or authority.get("tenant") != {
+                "orgId": scope.org_id, "projectId": scope.project_id
+            }
+            or authority.get("rollbackOperationId") != str(row["cutover_operation_id"])
+            or authority.get("activationOperationId")
+                != str(row["parent_cutover_operation_id"])
+            or authority.get("phase") != phase
+            or authority.get("status") != expected_status
+            or authority.get("cutoverGroupId") != str(row["cutover_group_id"])
+            or canonical_hash(authority.get("operationIds"))
+                != canonical_hash(_array(row["operation_ids"]))
+            or canonical_hash(authority.get("dispatchSnapshot"))
+                != canonical_hash(expected_snapshot)
+            or canonical_hash(authority.get("commitReceiptRef"))
+                != canonical_hash(_object(row["parent_receipt_ref"]))
+            or canonical_hash(authority.get("approvalRef"))
+                != canonical_hash(_object(row["approval_ref"]))
+            or authority.get("failureReason") != row["failure_reason"]
+            or canonical_hash(authority.get("drainReceiptRef"))
+                != canonical_hash(expected_drain_ref)
+            or authority.get("rollbackIdempotencyKey") != row["idempotency_key"]
+            or authority.get("requestHash") != row["request_hash"]
+            or rollback_request.request_hash() != row["request_hash"]
+            or authority.get("requestedBy") != row["requested_by"]
+            or authority.get("createdAt") != row["created_at"].isoformat()
+            or row["occurred_at"] != row["created_at"]
+        ):
+            raise EcommerceGrowthCutoverConflict(
+                f"cutover rollback {phase} Receipt authority drifted"
+            )
+        return CutoverRollbackReceipt.model_validate({
+            "tenant": authority["tenant"],
+            "receiptId": row["receipt_id"],
+            "rollbackOperationId": row["cutover_operation_id"],
+            "activationOperationId": row["parent_cutover_operation_id"],
+            "phase": phase,
+            "status": expected_status,
+            "cutoverGroupId": authority["cutoverGroupId"],
+            "operationIds": tuple(_array(authority["operationIds"])),
+            "dispatchSnapshot": tuple(_array(authority["dispatchSnapshot"])),
+            "occurrenceWatermark": authority.get("occurrenceWatermark"),
+            "claimedOccurrences": tuple(_array(authority.get("claimedOccurrences"))),
+            "claimedAttempts": tuple(_array(authority.get("claimedAttempts"))),
+            "unknownAttempts": tuple(_array(authority.get("unknownAttempts"))),
+            "runningRuntimeAttempts": tuple(
+                _array(authority.get("runningRuntimeAttempts"))
+            ),
+            "commitReceiptRef": authority["commitReceiptRef"],
+            "approvalRef": authority["approvalRef"],
+            "failureReason": authority["failureReason"],
+            "drainReceiptRef": authority.get("drainReceiptRef"),
+            "requestHash": authority["requestHash"],
+            "contentHash": row["content_hash"],
+            "replayed": replayed,
+            "createdAt": row["created_at"],
+        })
+
     def _approval_authority(
         self,
         conn: Any,
         scope: TenantScope,
-        request: CutoverPrepareRequest,
+        request: Any,
+        *,
+        action_type_id: str = "ecommerce_growth_cutover",
+        expected_payload: dict[str, Any] | None = None,
     ) -> datetime:
         approval = conn.execute(
             f"""SELECT approval_event_id,proposal_id,proposal_version,proposal_hash,decision,
@@ -1501,7 +2015,7 @@ class EcommerceGrowthCutoverStore:
             raise EcommerceGrowthCutoverBlocked(
                 "active exact cutover ActionApprovalEvent is required"
             )
-        expected = {
+        expected = expected_payload or {
             "cutoverGroupId": str(request.cutover_group_id),
             "expectedGroupRevision": request.expected_group_revision,
             "targetInstallationId": str(request.target_installation_id),
@@ -1513,7 +2027,7 @@ class EcommerceGrowthCutoverStore:
         }
         if (
             proposal is None
-            or proposal["action_type_id"] != "ecommerce_growth_cutover"
+            or proposal["action_type_id"] != action_type_id
             or draft is None
             or proposal["status"] != "approved"
             or proposal["proposal_hash"] != approval["proposal_hash"]
@@ -1658,6 +2172,8 @@ __all__ = [
     "CutoverCommitRequest",
     "CutoverPrepareReceipt",
     "CutoverPrepareRequest",
+    "CutoverRollbackReceipt",
+    "CutoverRollbackRequest",
     "CutoverExactRef",
     "CutoverFinalizeReceipt",
     "CutoverFinalizeRequest",
