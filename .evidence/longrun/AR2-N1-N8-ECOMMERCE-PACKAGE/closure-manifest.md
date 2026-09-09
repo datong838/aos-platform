@@ -158,6 +158,7 @@ AR2-7 只通过数据库 CAS 切换这个 handler 指针，不再声称 Python �
 | sourcePath | target | decision | 接续基线摘要（非 AR2-0 preHash） |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py` | 原路径 | platform host port；既有 AR2-7D 宿主事务适配，切换前不注册未完成服务 | 48a51c177c506b56355d4b6d14810ff471ca5feb6dd2538b32a03a3a49629727 |
+| `services/aos-api/aos_api/ecommerce_growth_cutover.py` | 原路径 | platform host control port；D5 整组 prepare/commit/rollback 权威，不导入领域 bundle | NEW |
 | `services/aos-api/aos_api/ecommerce_canonical_population.py` | 原路径 | data query port；本次新增当前规范库全集身份读取，仅由受信宿主使用 | NEW |
 | `services/aos-api/aos_api/ecommerce_product_observation_comparison.py` | 原路径 | data query port；受信宿主有界商品观察与规范版本比较，不生成业务事实或履约 | NEW |
 | `services/aos-api/aos_api/ecommerce_product_comparison_query.py` | 原路径 | data query port；固定比较复用MetricDefinition和QueryResult真实Owner，partial不代表履约 | NEW |
