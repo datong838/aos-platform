@@ -8,7 +8,7 @@ from aos_api.aip_analyst_contracts import (
 )
 from aos_api.aip_analyst_query_store import AipAnalystQueryStore
 from aos_api.aip_contracts import ResourceRef
-from aos_api.aip_eval_authority_store import AipEvalAuthorityStore
+from aos_api.ecommerce_fixed_metric import fixed_metric
 from aos_api.aip_eval_contracts import MetricDefinitionRevision
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.configured_source_observation_evidence import ConfiguredObservationEvidenceStore
@@ -55,30 +55,8 @@ class ProductComparisonQueryService:
         self._evidence=ConfiguredObservationEvidenceStore(transaction,scope)
 
     def _metric(self, *, ensure=False):
-        expected=_definition()
-        row=self._transaction.execute("""SELECT * FROM public.aip_metric_definition_revision
-            WHERE org_id=%s AND project_id=%s AND metric_id=%s AND revision=1""",
-            (*self._scope.key,expected.metric_id)).fetchone()
-        if row is None and ensure:
-            owner=AipEvalAuthorityStore(self._connect)
-            owner._append_contract(self._scope,table="public.aip_metric_definition_revision",
-                id_column="metric_id",identifier=expected.metric_id,
-                columns=("metric_id","revision","content_hash","definition","actor"),
-                values=(expected.metric_id,expected.revision,expected.content_hash,
-                    owner._json(expected),"system:product-comparison-query"),
-                expected=expected,parser=lambda row:MetricDefinitionRevision.model_validate(row["definition"]),
-                extra_lookup=("revision",expected.revision))
-            return self._metric()
-        if row is None:
-            raise ValueError("fixed comparison metric unavailable")
-        body=expected.model_dump(mode="json",by_alias=True)
-        if (row["definition"]!=body or canonical_hash(row["definition"])!=canonical_hash(body)
-            or row["content_hash"]!=expected.content_hash or row["metric_id"]!=expected.metric_id
-            or type(row["revision"]) is not int or row["revision"]!=1
-            or (row["org_id"],row["project_id"])!=self._scope.key):
-            raise ValueError("fixed comparison metric drifted")
-        return ResourceRef(resource_type="MetricDefinitionRevision",resource_id=expected.metric_id,
-            revision="1",authority="postgres:aip_metric_definition_revision")
+        return fixed_metric(self._transaction, self._scope, _definition(),
+            actor="system:product-comparison-query", ensure=ensure)
 
     def _request(self,saved,evidence_ref,selection):
         observed=saved.observation.observation

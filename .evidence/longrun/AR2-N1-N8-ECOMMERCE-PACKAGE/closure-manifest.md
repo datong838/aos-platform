@@ -170,3 +170,5 @@ AR2-7 只通过数据库 CAS 切换这个 handler 指针，不再声称 Python �
 
 | `services/aos-api/aos_api/ecommerce_data_requirement_query_applicability.py` | 原路径 | data query port；真实需求与固定查询只读缺口诊断，不产生履约权威 | NEW |
 | `services/aos-api/aos_api/ecommerce_product_joint_quality.py` | 原路径 | data query port；验证观察后的固定逐商品联合字段计量，不产生业务事实 | NEW |
+| `services/aos-api/aos_api/ecommerce_fixed_metric.py` | 原路径 | data query port；两个固定查询共用真实Metric Owner写读 | NEW |
+| `services/aos-api/aos_api/ecommerce_joint_quality_query.py` | 原路径 | data query port；固定联合字段计量QueryResult持久化，partial不代表履约 | NEW |
