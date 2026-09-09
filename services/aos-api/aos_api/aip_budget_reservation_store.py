@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
@@ -61,8 +62,16 @@ def _stored_hash(value: str) -> str:
 class AipBudgetReservationStore:
     """Keep all three bucket movements in one serializable tenant transaction."""
 
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(
+        self,
+        connect_factory: ConnectFactory | None = None,
+        *,
+        authority_schema: str = "public",
+    ) -> None:
+        if re.fullmatch(r"[a-z_][a-z0-9_]*", authority_schema) is None:
+            raise ValueError("authority schema is invalid")
         self._connect_factory = connect_factory or connect_serializable
+        self._authority_schema = authority_schema
 
     def reserve(
         self,
@@ -915,8 +924,8 @@ class AipBudgetReservationStore:
         self, conn: Any, scope: TenantScope, ref: BudgetExactRef, checked_at: datetime
     ) -> Any:
         row = conn.execute(
-            """SELECT revision,content_hash,lifecycle,daily_limit_minor,monthly_limit_minor,
-            effective_from,effective_until FROM aip_budget_revision
+            f"""SELECT revision,content_hash,lifecycle,daily_limit_minor,monthly_limit_minor,
+            effective_from,effective_until FROM {self._authority_schema}.aip_budget_revision
             WHERE org_id=%s AND project_id=%s AND budget_id=%s AND revision=%s""",
             (*scope.key, ref.resource_id, ref.revision),
         ).fetchone()
@@ -933,32 +942,53 @@ class AipBudgetReservationStore:
         self, conn: Any, scope: TenantScope, ref: BudgetExactRef, checked_at: datetime
     ) -> None:
         row = conn.execute(
-            """SELECT content_hash,lifecycle,payload FROM aip_model_price_snapshot_revision
+            f"""SELECT content_hash,lifecycle,payload FROM {self._authority_schema}.aip_model_price_snapshot_revision
             WHERE org_id=%s AND project_id=%s AND model_price_snapshot_id=%s AND revision=%s""",
             (*scope.key, ref.resource_id, ref.revision),
         ).fetchone()
         payload = self._load(row["payload"]) if row else {}
         effective_from = payload.get("effectiveFrom")
         effective_until = payload.get("effectiveUntil")
+        price_content = {
+            name: value
+            for name, value in payload.items()
+            if name not in {"tenant", "revision", "contentHash", "createdBy", "createdAt"}
+        }
+        try:
+            parsed_effective_from = datetime.fromisoformat(
+                str(effective_from).replace("Z", "+00:00")
+            )
+            parsed_effective_until = (
+                datetime.fromisoformat(str(effective_until).replace("Z", "+00:00"))
+                if effective_until
+                else None
+            )
+        except (TypeError, ValueError):
+            parsed_effective_from = None
+            parsed_effective_until = None
         if (
             row is None
             or row["lifecycle"] != "active"
             or row["content_hash"] != _stored_hash(ref.content_hash)
+            or payload.get("tenant")
+            != {"orgId": scope.org_id, "projectId": scope.project_id}
+            or payload.get("priceSnapshotId") != ref.resource_id
+            or type(payload.get("revision")) is not int
+            or payload.get("revision") != ref.revision
+            or payload.get("contentHash") != row["content_hash"]
+            or payload.get("lifecycle") != row["lifecycle"]
+            or canonical_hash(price_content) != row["content_hash"]
             or payload.get("currency") != "CNY"
-            or not effective_from
-            or datetime.fromisoformat(str(effective_from).replace("Z", "+00:00")) > checked_at
-            or (
-                effective_until
-                and datetime.fromisoformat(str(effective_until).replace("Z", "+00:00"))
-                <= checked_at
-            )
+            or parsed_effective_from is None
+            or parsed_effective_from > checked_at
+            or (parsed_effective_until is not None and parsed_effective_until <= checked_at)
         ):
             raise BudgetReservationBlocked("active exact ModelPriceSnapshotRevision required")
 
     def _task_authority(self, conn: Any, scope: TenantScope, ref: BudgetExactRef) -> None:
         row = conn.execute(
-            """SELECT task_id,task_type,title,description,status,priority,goal,selection_ref,
-            policy_revision,version,created_by,created_at FROM aip_task
+            f"""SELECT task_id,task_type,title,description,status,priority,goal,selection_ref,
+            policy_revision,version,created_by,created_at FROM {self._authority_schema}.aip_task
             WHERE org_id=%s AND project_id=%s AND task_id=%s""",
             (*scope.key, ref.resource_id),
         ).fetchone()
@@ -979,9 +1009,9 @@ class AipBudgetReservationStore:
         upper_bound_minor: int,
     ) -> None:
         row = conn.execute(
-            """SELECT approval_event_id,proposal_id,proposal_version,proposal_hash,decision,
+            f"""SELECT approval_event_id,proposal_id,proposal_version,proposal_hash,decision,
             actor_id,reason,expires_at,created_at,action_binding_hash
-            FROM aip_action_approval_event
+            FROM {self._authority_schema}.aip_action_approval_event
             WHERE org_id=%s AND project_id=%s AND approval_event_id=%s""",
             (*scope.key, ref.resource_id),
         ).fetchone()
@@ -995,21 +1025,93 @@ class AipBudgetReservationStore:
         if canonical_hash(dict(row), prefixed=True) != ref.content_hash:
             raise BudgetReservationConflict("ActionApprovalEvent exact hash drifted")
         proposal = conn.execute(
-            """SELECT proposal_id,action_type_id,task_id,payload,proposal_hash,status,
-            action_binding_hash FROM aip_action_proposal
+            f"""SELECT proposal_id,action_type_id,action_type_snapshot,task_id,run_id,
+            object_ref,purpose,risk_level,policy_snapshot,payload,diff,evidence_refs,
+            impact_preview_id,impact_preview_revision,impact_preview_hash,
+            action_binding_hash,source_draft_id,source_draft_revision,source_draft_hash,
+            approval_policy_hash,proposal_hash,status,expires_at,created_by
+            FROM {self._authority_schema}.aip_action_proposal
             WHERE org_id=%s AND project_id=%s AND proposal_id=%s""",
             (*scope.key, row["proposal_id"]),
         ).fetchone()
         payload = self._load(proposal["payload"]) if proposal else {}
-        approved_upper_bound = payload.get("budgetUpperBoundMinor")
+        draft = conn.execute(
+            f"""SELECT proposal_hash,snapshot FROM {self._authority_schema}.aip_action_draft
+            WHERE org_id=%s AND project_id=%s AND proposal_id=%s""",
+            (*scope.key, row["proposal_id"]),
+        ).fetchone()
+        stable = self._load(draft["snapshot"]) if draft else {}
+        approved_payload = stable.get("payload") if isinstance(stable, dict) else None
+        approved_upper_bound = (
+            approved_payload.get("budgetUpperBoundMinor")
+            if isinstance(approved_payload, dict)
+            else None
+        )
+        impact_preview_ref = (
+            {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": proposal["impact_preview_id"],
+                "revision": proposal["impact_preview_revision"],
+                "contentHash": proposal["impact_preview_hash"],
+            }
+            if proposal and proposal["impact_preview_id"] is not None
+            else None
+        )
+        source_draft_ref = (
+            {
+                "resourceType": "ActionDraftRevision",
+                "resourceId": proposal["source_draft_id"],
+                "revision": proposal["source_draft_revision"],
+                "contentHash": proposal["source_draft_hash"],
+            }
+            if proposal and proposal["source_draft_id"] is not None
+            else None
+        )
+        stable_expires_at = stable.get("expiresAt")
+        try:
+            parsed_stable_expiry = (
+                datetime.fromisoformat(str(stable_expires_at).replace("Z", "+00:00"))
+                if stable_expires_at
+                else None
+            )
+        except ValueError:
+            parsed_stable_expiry = None
         if (
             proposal is None
+            or draft is None
             or proposal["proposal_hash"] != row["proposal_hash"]
+            or draft["proposal_hash"] != proposal["proposal_hash"]
+            or canonical_hash(stable) != proposal["proposal_hash"]
             or proposal["status"] != "approved"
             or proposal["task_id"] != task_ref.resource_id
             or proposal["action_type_id"] != operation_id
             or not proposal["action_binding_hash"]
             or proposal["action_binding_hash"] != row["action_binding_hash"]
+            or stable.get("tenantScope")
+            != {"orgId": scope.org_id, "projectId": scope.project_id}
+            or stable.get("createdBy") != proposal["created_by"]
+            or canonical_hash(stable.get("actionType"))
+            != canonical_hash(self._load(proposal["action_type_snapshot"]))
+            or stable.get("taskId") != proposal["task_id"]
+            or stable.get("runId") != proposal["run_id"]
+            or canonical_hash(stable.get("objectRef"))
+            != canonical_hash(self._load(proposal["object_ref"]))
+            or stable.get("purpose") != proposal["purpose"]
+            or stable.get("riskLevel") != proposal["risk_level"]
+            or canonical_hash(stable.get("policy"))
+            != canonical_hash(self._load(proposal["policy_snapshot"]))
+            or stable.get("approvalPolicyHash") != proposal["approval_policy_hash"]
+            or canonical_hash(approved_payload) != canonical_hash(payload)
+            or canonical_hash(stable.get("diff"))
+            != canonical_hash(self._load(proposal["diff"]))
+            or canonical_hash(stable.get("evidenceRefs"))
+            != canonical_hash(self._load(proposal["evidence_refs"]))
+            or canonical_hash(stable.get("impactPreviewRef"))
+            != canonical_hash(impact_preview_ref)
+            or stable.get("actionBindingHash") != proposal["action_binding_hash"]
+            or canonical_hash(stable.get("sourceDraftRef"))
+            != canonical_hash(source_draft_ref)
+            or parsed_stable_expiry != proposal["expires_at"]
             or type(approved_upper_bound) is not int
             or approved_upper_bound != upper_bound_minor
         ):

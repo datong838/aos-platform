@@ -30,7 +30,12 @@ pytestmark = pytest.mark.skipif(
     reason="dedicated PostgreSQL opt-in required",
 )
 
-PG = {"host": "127.0.0.1", "port": 18432, "user": "postgres", "dbname": "postgres"}
+PG = {
+    "host": os.getenv("AOS_EXTENSION_PG_HOST", "127.0.0.1"),
+    "port": int(os.getenv("AOS_EXTENSION_PG_PORT", "18432")),
+    "user": os.getenv("AOS_EXTENSION_PG_USER", "postgres"),
+    "dbname": os.getenv("AOS_EXTENSION_PG_DATABASE", "postgres"),
+}
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -69,7 +74,17 @@ def database():
         owner.execute(
             """CREATE TABLE aip_action_proposal(
             org_id text,project_id text,proposal_id text,action_type_id text,task_id text,
-            payload jsonb,proposal_hash text,status text,action_binding_hash text,
+            action_type_snapshot jsonb,run_id text,object_ref jsonb,purpose text,risk_level text,
+            policy_snapshot jsonb,payload jsonb,diff jsonb,evidence_refs jsonb,
+            impact_preview_id text,impact_preview_revision bigint,impact_preview_hash text,
+            action_binding_hash text,source_draft_id text,source_draft_revision bigint,
+            source_draft_hash text,approval_policy_hash text,proposal_hash text,status text,
+            expires_at timestamptz,created_by text,
+            PRIMARY KEY(org_id,project_id,proposal_id))"""
+        )
+        owner.execute(
+            """CREATE TABLE aip_action_draft(
+            org_id text,project_id text,proposal_id text,proposal_hash text,snapshot jsonb,
             PRIMARY KEY(org_id,project_id,proposal_id))"""
         )
         owner.execute(
@@ -106,6 +121,7 @@ def database():
             "aip_model_price_snapshot_revision",
             "aip_task",
             "aip_action_proposal",
+            "aip_action_draft",
             "aip_action_approval_event",
             "aip_provider_instance_revision",
             "aip_usage_receipt",
@@ -162,7 +178,26 @@ def seed(database, scope: TenantScope, *, task_id: str, upper: int = 400):
     owner = database.owner
     owner.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
     budget_hash = "1" * 64
-    price_hash = "2" * 64
+    price_content = {
+        "priceSnapshotId": "price-1",
+        "currency": "CNY",
+        "inputTokenPrice": 0.0025,
+        "outputTokenPrice": 0.005,
+        "cachedTokenPrice": 0.001,
+        "tokenUnit": 1000,
+        "effectiveFrom": "2026-09-01T00:00:00+00:00",
+        "effectiveUntil": "2026-10-31T00:00:00+00:00",
+        "lifecycle": "active",
+    }
+    price_hash = canonical_hash(price_content)
+    price_payload = {
+        "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+        "revision": 1,
+        "contentHash": price_hash,
+        **price_content,
+        "createdBy": "tester",
+        "createdAt": "2026-09-08T02:00:00+00:00",
+    }
     provider_hash = "3" * 64
     owner.execute(
         """INSERT INTO aip_budget_revision VALUES(%s,%s,'budget-1',1,%s,'active',
@@ -175,10 +210,7 @@ def seed(database, scope: TenantScope, *, task_id: str, upper: int = 400):
         (
             *scope.key,
             price_hash,
-            '{"effectiveFrom":"2026-09-01T00:00:00+00:00",'
-            '"effectiveUntil":"2026-10-31T00:00:00+00:00",'
-            '"inputTokenPrice":"0.0025","outputTokenPrice":"0.005",'
-            '"cachedTokenPrice":"0.001","tokenUnit":1000,"currency":"CNY"}',
+            AipBudgetReservationStore._json(price_payload),
         ),
     )
     owner.execute(
@@ -200,19 +232,54 @@ def seed(database, scope: TenantScope, *, task_id: str, upper: int = 400):
     ).fetchone()
     approval_id = f"approval-{task_id}"
     proposal_id = f"proposal-{task_id}"
-    proposal_hash = "4" * 64
     action_binding_hash = "5" * 64
+    proposal_expires_at = now + timedelta(days=7)
+    action_type_snapshot = {"id": "ecommerce_growth_content_generate"}
+    policy_snapshot = {"minimumApprovals": 1}
+    approval_policy_hash = canonical_hash(policy_snapshot)
+    proposal_payload = {"budgetUpperBoundMinor": upper}
+    stable = {
+        "tenantScope": {"orgId": scope.org_id, "projectId": scope.project_id},
+        "createdBy": "tester",
+        "actionType": action_type_snapshot,
+        "taskId": task_id,
+        "runId": None,
+        "objectRef": None,
+        "purpose": "receipt-first content generation",
+        "riskLevel": "R1",
+        "policy": policy_snapshot,
+        "approvalPolicyHash": approval_policy_hash,
+        "payload": proposal_payload,
+        "diff": {},
+        "evidenceRefs": [],
+        "impactPreviewRef": None,
+        "actionBindingHash": action_binding_hash,
+        "sourceDraftRef": None,
+        "expiresAt": proposal_expires_at.isoformat(),
+    }
+    proposal_hash = canonical_hash(stable)
     owner.execute(
         """INSERT INTO aip_action_proposal VALUES(
-        %s,%s,%s,'ecommerce_growth_content_generate',%s,%s::jsonb,%s,'approved',%s)""",
+        %s,%s,%s,'ecommerce_growth_content_generate',%s,%s::jsonb,NULL,NULL,
+        'receipt-first content generation','R1',%s::jsonb,%s::jsonb,'{}'::jsonb,'[]'::jsonb,
+        NULL,NULL,NULL,%s,NULL,NULL,NULL,%s,%s,'approved',%s,%s)""",
         (
             *scope.key,
             proposal_id,
             task_id,
-            '{"budgetUpperBoundMinor":' + str(upper) + '}',
-            proposal_hash,
+            AipBudgetReservationStore._json(action_type_snapshot),
+            AipBudgetReservationStore._json(policy_snapshot),
+            AipBudgetReservationStore._json(proposal_payload),
             action_binding_hash,
+            approval_policy_hash,
+            proposal_hash,
+            proposal_expires_at,
+            "tester",
         ),
+    )
+    owner.execute(
+        """INSERT INTO aip_action_draft VALUES(%s,%s,%s,%s,%s::jsonb)""",
+        (*scope.key, proposal_id, proposal_hash, AipBudgetReservationStore._json(stable)),
     )
     owner.execute(
         """INSERT INTO aip_action_approval_event VALUES(
@@ -299,7 +366,9 @@ def test_rls_state_machine_unknown_reconcile_and_nonempty_downgrade(database):
     positive = TenantScope("org-org", "dev-project")
     canary = TenantScope("dev-org", "dev-project")
     request, refs, _ = seed(database, positive, task_id="task-1")
-    store = AipBudgetReservationStore(runtime_connection(database))
+    store = AipBudgetReservationStore(
+        runtime_connection(database), authority_schema=database.schema
+    )
     held = store.reserve(positive, request, actor="tester")
     assert held.state == "held" and not held.replayed
     invocation = database.owner.execute(
@@ -372,7 +441,9 @@ def test_same_bucket_concurrency_allows_only_one_reservation(database):
     def reserve(request):
         barrier.wait()
         try:
-            AipBudgetReservationStore(runtime_connection(database)).reserve(
+            AipBudgetReservationStore(
+                runtime_connection(database), authority_schema=database.schema
+            ).reserve(
                 scope, request, actor="tester"
             )
             return "held"
@@ -391,7 +462,9 @@ def test_same_invocation_concurrency_returns_one_exact_authority(database):
 
     def reserve_same(_index):
         barrier.wait()
-        return AipBudgetReservationStore(runtime_connection(database)).reserve(
+        return AipBudgetReservationStore(
+            runtime_connection(database), authority_schema=database.schema
+        ).reserve(
             scope, request, actor="tester"
         )
 
@@ -405,7 +478,9 @@ def test_settlement_is_derived_from_exact_usage_and_is_unique(database):
     scope = TenantScope("org-org", "dev-project")
     request, refs, _ = seed(database, scope, task_id="task-settle")
     provider_result_hash = "9" * 64
-    store = AipBudgetReservationStore(runtime_connection(database))
+    store = AipBudgetReservationStore(
+        runtime_connection(database), authority_schema=database.schema
+    )
     held = store.reserve(scope, request, actor="tester")
     store.submit(
         scope, held.reservation_ref.resource_id, provider_ref=refs["provider"],
@@ -458,15 +533,32 @@ def test_usage_approval_price_and_runtime_privileges_fail_closed(database):
     canary = TenantScope("dev-org", "dev-project")
     first, first_refs, _ = seed(database, scope, task_id="task-bind-a", upper=200)
     second, second_refs, _ = seed(database, scope, task_id="task-bind-b", upper=200)
-    store = AipBudgetReservationStore(runtime_connection(database))
+    store = AipBudgetReservationStore(
+        runtime_connection(database), authority_schema=database.schema
+    )
 
     wrong_approval = second.model_copy(update={"approval_ref": first_refs["approval"]})
     with pytest.raises(BudgetReservationBlocked, match="approval must bind"):
         store.reserve(scope, wrong_approval, actor="tester")
 
     database.owner.execute(
+        """UPDATE aip_action_proposal
+        SET payload=jsonb_set(payload,'{budgetUpperBoundMinor}','300'::jsonb)
+        WHERE org_id=%s AND project_id=%s AND proposal_id=%s""",
+        (*scope.key, "proposal-task-bind-a"),
+    )
+    with pytest.raises(BudgetReservationBlocked, match="approval must bind"):
+        store.reserve(scope, first, actor="tester")
+    database.owner.execute(
+        """UPDATE aip_action_proposal
+        SET payload=jsonb_set(payload,'{budgetUpperBoundMinor}','200'::jsonb)
+        WHERE org_id=%s AND project_id=%s AND proposal_id=%s""",
+        (*scope.key, "proposal-task-bind-a"),
+    )
+
+    database.owner.execute(
         """UPDATE aip_model_price_snapshot_revision
-        SET payload=jsonb_set(payload,'{currency}','\"USD\"'::jsonb)
+        SET payload=jsonb_set(payload,'{inputTokenPrice}','0.003'::jsonb)
         WHERE org_id=%s AND project_id=%s AND model_price_snapshot_id='price-1'""",
         scope.key,
     )
@@ -474,7 +566,7 @@ def test_usage_approval_price_and_runtime_privileges_fail_closed(database):
         store.reserve(scope, first, actor="tester")
     database.owner.execute(
         """UPDATE aip_model_price_snapshot_revision
-        SET payload=jsonb_set(payload,'{currency}','\"CNY\"'::jsonb)
+        SET payload=jsonb_set(payload,'{inputTokenPrice}','0.0025'::jsonb)
         WHERE org_id=%s AND project_id=%s AND model_price_snapshot_id='price-1'""",
         scope.key,
     )

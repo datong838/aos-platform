@@ -27,10 +27,24 @@ from aos_api.aip_production_contract_store import (
 )
 from aos_api.aip_agent_registry_store import AipAgentRegistryStore
 from aos_api.aip_capability_registry import AipCapabilityRegistry
+from aos_api.aip_budget_reservation_contracts import BudgetExactRef
+from aos_api.aip_budget_reservation_store import (
+    AipBudgetReservationStore,
+    BudgetReservationError,
+)
 from aos_api.aip_agent_registry_contracts import (
     AgentInstanceStatus,
     CapabilityReadiness,
     TemplateLifecycle,
+)
+from aos_api.aip_model_runtime_contracts import (
+    ModelModality,
+    ModelRouteRevision,
+    ModelRuntimeLifecycle,
+)
+from aos_api.aip_model_runtime_store import (
+    AipModelRuntimeStore,
+    canonical_hash as model_runtime_canonical_hash,
 )
 from aos_api.aip_production_contracts import (
     AssigneeKind,
@@ -2923,6 +2937,93 @@ class ContentGenerateHostService:
         ):
             raise ValueError("content generate Capability authority drifted")
 
+    @staticmethod
+    def _route_budget_approval_authority(
+        transaction, scope, authorities, *, upper_bound_fen: int
+    ) -> None:
+        route_ref = authorities["model_route"]
+        route_head = transaction.execute(
+            """SELECT current_revision,version FROM public.aip_model_route_head
+                WHERE org_id=%s AND project_id=%s AND model_route_id=%s FOR SHARE""",
+            (*scope.key, route_ref.resource_id),
+        ).fetchone()
+        route_row = transaction.execute(
+            """SELECT content_hash,lifecycle,payload
+                 FROM public.aip_model_route_revision
+                WHERE org_id=%s AND project_id=%s AND model_route_id=%s AND revision=%s""",
+            (*scope.key, route_ref.resource_id, route_ref.revision),
+        ).fetchone()
+        if route_head is None or route_row is None:
+            raise ValueError("content generate ModelRoute authority is missing")
+        route_payload = AipModelRuntimeStore._load(route_row["payload"])
+        route = ModelRouteRevision.model_validate(route_payload)
+        route_content = {
+            name: value
+            for name, value in route_payload.items()
+            if name not in AipModelRuntimeStore._META_FIELDS
+        }
+        expected_route_ref = {
+            "resourceType": "ModelRouteRevision",
+            "resourceId": route.route_id,
+            "revision": route.revision,
+            "contentHash": "sha256:" + route.content_hash,
+        }
+        if (
+            type(route_head["current_revision"]) is not int
+            or type(route_head["version"]) is not int
+            or type(route_payload.get("revision")) is not int
+            or route_payload.get("revision") != route_ref.revision
+            or route_payload.get("tenant")
+            != {"orgId": scope.org_id, "projectId": scope.project_id}
+            or (route.tenant.org_id, route.tenant.project_id) != scope.key
+            or route_head["current_revision"] != route_ref.revision
+            or route_head["version"] != route_ref.revision
+            or route_row["content_hash"] != route.content_hash
+            or route_row["lifecycle"] != route.lifecycle.value
+            or model_runtime_canonical_hash(route_content) != route.content_hash
+            or route.lifecycle is not ModelRuntimeLifecycle.ACTIVE
+            or route.required_input_modality is not ModelModality.TEXT
+            or route.required_output_modality is not ModelModality.TEXT
+            or authorities["capability"].resource_id
+            not in route.required_capabilities
+            or route_ref.model_dump(mode="json", by_alias=True, exclude_none=True)
+            != expected_route_ref
+        ):
+            raise ValueError("content generate ModelRoute authority drifted")
+
+        checked = transaction.execute(
+            "SELECT clock_timestamp() AS checked_at"
+        ).fetchone()
+        if checked is None or not isinstance(checked.get("checked_at"), datetime):
+            raise ValueError("content generate authority cutoff is unavailable")
+        budget = AipBudgetReservationStore()
+        refs = {
+            name: BudgetExactRef.model_validate(
+                authorities[name].model_dump(
+                    mode="json", by_alias=True, exclude_none=True
+                )
+            )
+            for name in ("task", "budget", "pricing", "approval")
+        }
+        try:
+            budget._budget_authority(
+                transaction, scope, refs["budget"], checked["checked_at"]
+            )
+            budget._price_authority(
+                transaction, scope, refs["pricing"], checked["checked_at"]
+            )
+            budget._approval_authority(
+                transaction,
+                scope,
+                refs["approval"],
+                checked["checked_at"],
+                task_ref=refs["task"],
+                operation_id="ecommerce_growth_content_generate",
+                upper_bound_minor=upper_bound_fen,
+            )
+        except BudgetReservationError as exc:
+            raise ValueError("content generate Budget/Approval authority drifted") from exc
+
     def revalidate(self, *, transaction, scope, dispatch, command):
         parsed = _strict_content_generate_command(command)
         if dispatch.operation_id != "ecommerce_growth_content_generate":
@@ -2946,6 +3047,12 @@ class ContentGenerateHostService:
         )
         self._agent_capability_authority(
             transaction, scope, parsed["authorities"]
+        )
+        self._route_budget_approval_authority(
+            transaction,
+            scope,
+            parsed["authorities"],
+            upper_bound_fen=command["upperBoundFen"],
         )
         return {
             "key": parsed["key"],
