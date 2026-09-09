@@ -86,6 +86,10 @@ RUNTIME_WIRING_PROVEN_OPERATIONS = (
     "ecommerce_growth_schedule_put",
     "ecommerce_growth_schedule_trigger",
     "ecommerce_growth_data_fulfill",
+    "ecommerce_growth_analysis_advance",
+    "ecommerce_growth_review_advance",
+    "ecommerce_growth_content_generate",
+    "ecommerce_growth_content_review",
 )
 
 

@@ -9,7 +9,6 @@ import pytest
 from aos_api.ecommerce_growth_host_composition import (
     ECOMMERCE_GROWTH_OPERATIONS,
     RUNTIME_WIRING_PROVEN_OPERATIONS,
-    build_registration_only_ecommerce_growth_registry,
     build_runtime_ecommerce_growth_registry,
     select_ecommerce_growth_registry,
 )
@@ -57,25 +56,22 @@ def test_runtime_registry_factory_has_no_injection_surface():
         build_runtime_ecommerce_growth_registry(services={})
 
 
-def test_runtime_registry_fails_closed_while_host_services_are_incomplete():
-    assert RUNTIME_WIRING_PROVEN_OPERATIONS == ECOMMERCE_GROWTH_OPERATIONS[:5]
-    with pytest.raises(EcommerceGrowthHostBlocked, match="AR2_7D_RUNTIME_WIRING_REQUIRED"):
-        build_runtime_ecommerce_growth_registry()
+def test_runtime_registry_seals_the_actual_nine_host_services():
+    registry = build_runtime_ecommerce_growth_registry()
+    assert RUNTIME_WIRING_PROVEN_OPERATIONS == ECOMMERCE_GROWTH_OPERATIONS
+    assert registry.operation_ids == ECOMMERCE_GROWTH_OPERATIONS
+    for operation_id, class_name in REQUIRED_HOST_SERVICES:
+        execute = registry._binding(operation_id).execute
+        assert execute.__self__.__class__.__name__ == class_name
 
 
-def test_production_selector_stays_registration_only_until_nine_services_exist():
+def test_production_selector_uses_the_complete_runtime_registry():
     selected = select_ecommerce_growth_registry()
-    baseline = build_registration_only_ecommerce_growth_registry()
     assert selected.operation_ids == ECOMMERCE_GROWTH_OPERATIONS
-    assert type(selected) is type(baseline)
-    with pytest.raises(EcommerceGrowthHostBlocked, match="AR2_7D_RUNTIME_WIRING_REQUIRED"):
-        selected._binding("ecommerce_growth_case_put").execute(
-            transaction=None,
-            scope=None,
-            dispatch_ref=None,
-            command={},
-            checked_at=None,
-            occurred_at=None,
+    for operation_id, class_name in REQUIRED_HOST_SERVICES:
+        assert (
+            selected._binding(operation_id).execute.__self__.__class__.__name__
+            == class_name
         )
 
 
@@ -112,10 +108,33 @@ def test_runtime_registry_builds_exact_nine_when_host_services_exist(monkeypatch
     assert execute.__self__.__class__ is FakeHostService
 
 
-def test_service_shape_cannot_bypass_incomplete_runtime_readiness_seal(monkeypatch):
+def test_missing_service_fails_the_complete_registry_closed(monkeypatch):
     import aos_api.ecommerce_growth_runtime_adapters as adapters
 
-    for _operation_id, class_name in REQUIRED_HOST_SERVICES:
-        monkeypatch.setattr(adapters, class_name, FakeHostService, raising=False)
+    monkeypatch.setattr(adapters, "ContentReviewHostService", None)
+    with pytest.raises(EcommerceGrowthHostBlocked, match="AR2_7D_RUNTIME_WIRING_REQUIRED"):
+        build_runtime_ecommerce_growth_registry()
+    fallback = select_ecommerce_growth_registry()
+    assert fallback.operation_ids == ECOMMERCE_GROWTH_OPERATIONS
+    assert all(
+        fallback._binding(operation_id).execute.__name__ == "_runtime_wiring_required"
+        for operation_id in ECOMMERCE_GROWTH_OPERATIONS
+    )
+
+
+def test_dependency_or_operation_order_drift_fails_the_complete_registry_closed(monkeypatch):
+    import aos_api.ecommerce_growth_host_composition as composition
+    import aos_api.ecommerce_growth_runtime_store as runtime_store
+
+    monkeypatch.setattr(runtime_store, "BoundEcommerceGrowthRuntimeStore", None)
+    with pytest.raises(EcommerceGrowthHostBlocked, match="AR2_7D_RUNTIME_WIRING_REQUIRED"):
+        build_runtime_ecommerce_growth_registry()
+
+    monkeypatch.undo()
+    monkeypatch.setattr(
+        composition,
+        "_RUNTIME_HOST_SERVICES",
+        tuple(reversed(REQUIRED_HOST_SERVICES)),
+    )
     with pytest.raises(EcommerceGrowthHostBlocked, match="AR2_7D_RUNTIME_WIRING_REQUIRED"):
         build_runtime_ecommerce_growth_registry()
