@@ -16,6 +16,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 PRODUCTION_ROOTS = (
@@ -182,14 +183,24 @@ def test_bundle_content_contains_declarative_text_assets_only() -> None:
     )
 
 
-def test_m5_targets_contain_no_executable_platform_assets() -> None:
+def test_executable_bundle_assets_stay_within_declared_runtime_backends() -> None:
+    allowed_roots: set[Path] = set()
+    for manifest_path in BUNDLE_ROOT.glob("**/bundle.yaml"):
+        manifest = yaml.safe_load(_read_text(manifest_path))
+        runtime = manifest.get("spec", {}).get("runtime")
+        if runtime is None:
+            continue
+        entrypoint = runtime["backend"]["entrypoint"].split(":", 1)[0]
+        allowed_roots.add((manifest_path.parent / Path(entrypoint).parent).resolve())
     violations = [
         path.relative_to(REPO_ROOT).as_posix()
         for target in M5_SCAN_TARGETS
         for path in _files_under(target, suffixes=_EXECUTABLE_SUFFIXES)
+        if path.suffix.lower() != ".py"
+        or not any(path.resolve().is_relative_to(root) for root in allowed_roots)
     ]
     assert violations == [], (
-        f"executable SQL/Connector/Pipeline/Action assets found: {violations}"
+        f"executable assets escaped declared runtime backends: {violations}"
     )
 
 

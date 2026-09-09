@@ -37,7 +37,7 @@ def test_lifespan_installs_and_clears_runtime_control_plane(
     sentinel = object()
     import aos_api.asset_registry.control_wiring as wiring
 
-    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda: sentinel)
+    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda **_: sentinel)
 
     async def probe() -> None:
         async with main.lifespan(main.app):
@@ -53,7 +53,7 @@ def test_lifespan_fails_closed_when_runtime_control_cannot_be_assembled(
     _quiet_startup(monkeypatch)
     import aos_api.asset_registry.control_wiring as wiring
 
-    def fail():
+    def fail(**_):
         raise RuntimeError("runtime-control-assembly-failed")
 
     monkeypatch.setattr(wiring, "build_runtime_control_plane", fail)
@@ -74,7 +74,7 @@ def test_lifespan_body_failure_still_clears_runtime_control_plane(
     sentinel = object()
     import aos_api.asset_registry.control_wiring as wiring
 
-    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda: sentinel)
+    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda **_: sentinel)
 
     async def probe() -> None:
         with pytest.raises(RuntimeError, match="request-failed"):
@@ -95,7 +95,7 @@ def test_lifespan_startup_failure_cancels_an_already_created_background_task(
     sentinel = object()
     import aos_api.asset_registry.control_wiring as wiring
 
-    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda: sentinel)
+    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda **_: sentinel)
     monkeypatch.setattr(main, "_qyh_cron_worker_enabled", lambda: True)
 
     def fail_after_cron_started():
@@ -132,7 +132,7 @@ def test_inactive_runtime_host_selection_creates_no_background_task(
     sentinel = object()
     import aos_api.asset_registry.control_wiring as wiring
 
-    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda: sentinel)
+    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda **_: sentinel)
     seen: list[object] = []
 
     def select(*, control_plane):
@@ -161,7 +161,7 @@ def test_active_runtime_host_is_unique_and_stops_gracefully(
     _quiet_startup(monkeypatch)
     import aos_api.asset_registry.control_wiring as wiring
 
-    monkeypatch.setattr(wiring, "build_runtime_control_plane", object)
+    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda **_: object())
     entered = asyncio.Event()
     stopped = asyncio.Event()
 
@@ -202,7 +202,7 @@ def test_runtime_host_immediate_failure_fails_startup_and_is_observed(
     _quiet_startup(monkeypatch)
     import aos_api.asset_registry.control_wiring as wiring
 
-    monkeypatch.setattr(wiring, "build_runtime_control_plane", object)
+    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda **_: object())
 
     class Host:
         async def serve(self, stop_event: asyncio.Event) -> None:
@@ -236,7 +236,7 @@ def test_runtime_host_failure_after_startup_marks_health_failed_closed(
     _quiet_startup(monkeypatch)
     import aos_api.asset_registry.control_wiring as wiring
 
-    monkeypatch.setattr(wiring, "build_runtime_control_plane", object)
+    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda **_: object())
     release = asyncio.Event()
 
     class Host:
@@ -272,7 +272,7 @@ def test_active_runtime_host_stops_when_lifespan_body_fails(
     _quiet_startup(monkeypatch)
     import aos_api.asset_registry.control_wiring as wiring
 
-    monkeypatch.setattr(wiring, "build_runtime_control_plane", object)
+    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda **_: object())
     stopped = asyncio.Event()
 
     class Host:
@@ -306,7 +306,7 @@ def test_selector_failure_uses_the_same_cleanup_path(
     _quiet_startup(monkeypatch)
     import aos_api.asset_registry.control_wiring as wiring
 
-    monkeypatch.setattr(wiring, "build_runtime_control_plane", object)
+    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda **_: object())
 
     def fail(*, control_plane):
         raise RuntimeError("selector-failed")

@@ -18,7 +18,7 @@
     },
     "ar2-1": {
       "exactHashes": {
-        "services/aos-api/aos_api/main.py": "206d335cac09dea1a7a47e8a17c927797e8aaeb212e3e44948309c45872722e2",
+        "services/aos-api/aos_api/main.py": "5f0d43ceeab2daa400f073eab627d4e2aacb422374b9e2ee9b503ede33f96bfc",
         "services/aos-api/aos_api/routers/domain_manifest.json": "88b862a6d4553235cf7939c52619d158685acfe9435dfd8a4a842c3a7f8afa58",
         "services/aos-api/aos_api/routers/domain_aggregates.py": "aec9f083998f75d5f5cf73743e774dfef0bfddb5bb0ad5da8a818a6e97945d37",
         "services/aos-api/aos_api/routers/ecommerce_business_investigations.py": "ef63dde1f0207982357e59af342e760dfc5ef4c8614d995514db802d2af35953",

@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import yaml
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
@@ -106,6 +108,7 @@ def copy_and_sign_m5_bundles(
     destination: Path,
     *,
     signed_at: datetime | None = None,
+    declarative_only: bool = False,
 ) -> RuntimeSignedM5BundleSet:
     """Copy and runtime-sign all M5 bundles without persisting signing material."""
 
@@ -116,6 +119,17 @@ def copy_and_sign_m5_bundles(
         raise ValueError("M5 runtime signing time must include a timezone")
 
     shutil.copytree(M5_SOURCE_ROOT, destination)
+    if declarative_only:
+        for fixture in M5_BUNDLE_FIXTURES:
+            bundle_root = destination / fixture.relative_path
+            manifest_path = bundle_root / "bundle.yaml"
+            manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+            manifest["spec"].pop("runtime", None)
+            manifest_path.write_text(
+                yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True),
+                encoding="utf-8",
+            )
+            shutil.rmtree(bundle_root / "backend", ignore_errors=True)
     unsigned_loader = ManifestLoader({M5_ALLOWLIST_ALIAS: destination})
     unsigned_bundles = tuple(
         unsigned_loader.load(fixture.source_ref) for fixture in M5_BUNDLE_FIXTURES

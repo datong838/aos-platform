@@ -291,15 +291,23 @@ def test_real_loader_accepts_unsigned_bundle_with_stable_exported_artifacts(
     export_prefixes = tuple(
         path for paths in case.exports.values() for path in paths
     )
+    runtime = first.manifest.spec.runtime
+    runtime_prefixes = (
+        (runtime.backend.entrypoint.split(":", 1)[0].rsplit("/", 1)[0] + "/",)
+        if runtime is not None
+        else ()
+    )
     content_paths = [
         path for path in artifact_paths if not path.startswith("evidence/")
     ]
     assert content_paths
-    assert all(path.startswith(export_prefixes) for path in content_paths)
+    assert all(path.startswith(export_prefixes + runtime_prefixes) for path in content_paths)
     assert all(
         any(path.startswith(prefix) for path in content_paths)
         for prefix in export_prefixes
     )
+    if runtime_prefixes:
+        assert any(path.startswith(runtime_prefixes) for path in content_paths)
     assert all(item.size > 0 for item in first.artifacts)
     assert {(item.type.value, item.status.value) for item in first.evidence} == {
         ("manifest_validation", "valid"),

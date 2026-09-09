@@ -311,7 +311,9 @@ def m5_control_runtime(destination: Path) -> Iterator[M5ControlRuntime]:
 
     try:
         signed_at = _database_clock(scoped_connect)
-        prepared = copy_and_sign_m5_bundles(destination, signed_at=signed_at)
+        prepared = copy_and_sign_m5_bundles(
+            destination, signed_at=signed_at, declarative_only=True
+        )
         registry_store = PostgresRegistryStore(scoped_connect)
         registry_service = _publish_four_bundles(
             store=registry_store,

@@ -331,8 +331,10 @@ def test_environment_wiring_constructs_exact_dependencies_without_starting(monke
             installation_store=PostgresInstallationStore()
         )
     )
+    dependent = EcommerceGrowthDisableDependent()
     plane = RuntimeControlPlane(
-        PostgresInstallationStore(), None, None, None, None, authorize
+        PostgresInstallationStore(), None, None, None, None, authorize,
+        disable_dependent=dependent,
     )
     selected = build_production_runtime_host_selection(control_plane=plane)
     assert selected.error_code == "TEST_CAPTURE"
@@ -342,4 +344,4 @@ def test_environment_wiring_constructs_exact_dependencies_without_starting(monke
     assert dependencies.configuration_authorize is authorize
     assert type(dependencies.drain_reader) is GenerationDrainReader
     assert type(dependencies.cleanup_driver) is CleanupOnlyOciDriver
-    assert type(dependencies.disable_dependent) is EcommerceGrowthDisableDependent
+    assert dependencies.disable_dependent is dependent

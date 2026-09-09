@@ -40,6 +40,7 @@ class RuntimeControlPlane:
     configuration_authorize: Any
     disable_service: Any = None
     view_reader: Any = None
+    disable_dependent: Any = None
 
 
 class _LazyRuntimeViewReader:
@@ -80,7 +81,6 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
         runtime_web_identity_connection,
         runtime_worker_connection,
     )
-    from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
 
     enabled = os.getenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "").strip() == "1"
     runtime_dsn = os.getenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "").strip()
@@ -103,7 +103,7 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
                 ),
                 drain_reader=GenerationDrainReader(),
                 cleanup_driver=CleanupOnlyOciDriver(OciDriver(context=oci_context)),
-                disable_dependent=EcommerceGrowthDisableDependent(),
+                disable_dependent=control_plane.disable_dependent,
             )
         except (TypeError, ValueError):
             dependencies = None
@@ -238,7 +238,7 @@ def build_runtime_view_reader():
     return _LazyRuntimeViewReader()
 
 
-def build_runtime_control_plane() -> RuntimeControlPlane:
+def build_runtime_control_plane(*, disable_dependent: Any = None) -> RuntimeControlPlane:
     """Assemble current runtime controls without connecting or starting workers."""
     from aos_api.aip_runtime_configuration_sources import (
         build_current_configuration_authorization,
@@ -264,7 +264,6 @@ def build_runtime_control_plane() -> RuntimeControlPlane:
     from aos_api.extension_runtime.release_revalidation import (
         RuntimeReleaseRevalidator,
     )
-    from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
     from aos_api.extension_runtime.runtime_uninstall import RuntimeUninstallGuard
 
     store = PostgresInstallationStore()
@@ -284,7 +283,7 @@ def build_runtime_control_plane() -> RuntimeControlPlane:
         check_current_permission=CurrentControlPermission(
             operation=DISABLE_RUNTIME_OPERATION
         ),
-        dependent=EcommerceGrowthDisableDependent(),
+        dependent=disable_dependent,
     )
     authorize = build_current_configuration_authorization(
         permission=CurrentConfigurationPermission(installation_store=store)
@@ -312,6 +311,7 @@ def build_runtime_control_plane() -> RuntimeControlPlane:
             ui_session_resolver=_build_runtime_ui_session_resolver(),
         ),
         configuration_authorize=authorize,
+        disable_dependent=disable_dependent,
     )
 
 

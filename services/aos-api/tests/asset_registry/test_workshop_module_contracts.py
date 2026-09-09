@@ -245,6 +245,8 @@ def test_ecommerce_source_bundles_publish_eight_typed_non_placeholder_profiles()
             path.relative_to(historical).as_posix()
             for path in historical.rglob("*")
             if path.is_file()
+            and "backend" not in path.relative_to(historical).parts
+            and "__pycache__" not in path.relative_to(historical).parts
         }
         candidate_paths = {
             path.relative_to(candidate).as_posix()

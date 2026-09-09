@@ -89,6 +89,21 @@ def test_runtime_key_and_signatures_are_new_for_each_preparation(
     ]
 
 
+def test_declarative_control_fixture_removes_runtime_without_changing_sources(
+    tmp_path: Path,
+) -> None:
+    prepared = copy_and_sign_m5_bundles(
+        tmp_path / "declarative-bundles", declarative_only=True
+    )
+
+    for item in prepared.bundles:
+        assert item.signed.manifest.spec.runtime is None
+        assert not (item.bundle_path / "backend").exists()
+        source = M5_SOURCE_ROOT / item.fixture.relative_path
+        if (source / "backend").exists():
+            assert (source / "backend").is_dir()
+
+
 def test_tampered_controlled_content_fails_signature_verification(
     tmp_path: Path,
 ) -> None:

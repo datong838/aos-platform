@@ -334,7 +334,8 @@ def test_runtime_control_plane_uses_one_store_and_formal_configuration_sources()
     from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
     from aos_api.extension_runtime.runtime_uninstall import RuntimeUninstallGuard
 
-    plane = control_wiring.build_runtime_control_plane()
+    dependent = EcommerceGrowthDisableDependent()
+    plane = control_wiring.build_runtime_control_plane(disable_dependent=dependent)
     canonical_installation = control_wiring.build_installation_service()
 
     assert plane.lifecycle_service._store is plane.installation_store
@@ -344,7 +345,8 @@ def test_runtime_control_plane_uses_one_store_and_formal_configuration_sources()
     assert plane.lifecycle_service._revalidator is plane.revalidator
     assert plane.configuration_service._revalidator is plane.revalidator
     assert plane.configuration_service._authorize is plane.configuration_authorize
-    assert type(plane.disable_service._dependent) is EcommerceGrowthDisableDependent
+    assert plane.disable_service._dependent is dependent
+    assert plane.disable_dependent is dependent
     assert type(plane.installation_reader._runtime_uninstall_guard) is RuntimeUninstallGuard
     assert type(canonical_installation._runtime_uninstall_guard) is RuntimeUninstallGuard
     assert set(plane.configuration_authorize._readers) == {
