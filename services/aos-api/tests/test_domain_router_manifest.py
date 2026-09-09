@@ -37,7 +37,7 @@ DOMAIN_COUNTS = {
     "admin": 8,
     "system": 4,
     "agent": 3,
-    "workshop": 118,
+    "workshop": 116,
     "ontology": 72,
     "aip": 94,
     "data": 201,
@@ -217,8 +217,8 @@ class RouterManifestStaticTests(unittest.TestCase):
         cls.routers = cls.generator.load_manifest(MANIFEST_PATH)
 
     def test_manifest_count_order_domains_and_unique_keys(self) -> None:
-        self.assertEqual(549, len(self.routers))
-        self.assertEqual(list(range(549)), [entry["order"] for entry in self.routers])
+        self.assertEqual(547, len(self.routers))
+        self.assertEqual(list(range(547)), [entry["order"] for entry in self.routers])
         self.assertEqual(
             DOMAIN_COUNTS,
             {
@@ -227,9 +227,9 @@ class RouterManifestStaticTests(unittest.TestCase):
             },
         )
         keys = {(entry["module"], entry["attribute"]) for entry in self.routers}
-        self.assertEqual(549, len(keys))
+        self.assertEqual(547, len(keys))
         self.assertIn(
-            ("aos_api.routers.ecommerce_growth_dispatch", "router"), keys
+            ("aos_api.routers.extension_dispatch", "router"), keys
         )
 
     def test_main_exposes_control_plane_etag_to_browser_clients(self) -> None:
@@ -393,12 +393,12 @@ class RouterManifestRuntimeTests(unittest.TestCase):
         # revisions/readiness, Workshop operations and document extraction.
         # Keep both the exact inventory and duplicate set pinned so later drift
         # cannot be hidden by updating only a count.
-        self.assertEqual(4545, result["count"])
+        self.assertEqual(4479, result["count"])
         self.assertEqual(
-            "ccfa3d9d7aaa61ee6deccd2a81e9cc11edf76c7d2c862bceb589e95e603d2a3b",
+            "656ad39ec4b29fde3f867e370808761b812cbbe4b22df61fb7ca4a95e73c0d00",
             result["sha256"],
         )
-        self.assertEqual(2744, result["openapi_paths"])
+        self.assertEqual(2680, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],

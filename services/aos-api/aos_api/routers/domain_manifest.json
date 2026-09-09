@@ -3087,7 +3087,7 @@
     },
     {
       "domain": "workshop",
-      "module": "aos_api.routers.ecommerce_workshop",
+      "module": "aos_api.routers.extension_dispatch",
       "attribute": "router",
       "order": 514
     },
@@ -3266,34 +3266,22 @@
       "order": 543
     },
     {
-      "domain": "workshop",
-      "module": "aos_api.routers.ecommerce_business_investigations",
+      "domain": "aip",
+      "module": "aos_api.routers.aip_logic_automations",
       "attribute": "router",
       "order": 544
     },
     {
       "domain": "aip",
       "module": "aos_api.routers.aip_logic_automations",
-      "attribute": "router",
-      "order": 545
-    },
-    {
-      "domain": "aip",
-      "module": "aos_api.routers.aip_logic_automations",
       "attribute": "summary_router",
-      "order": 546
+      "order": 545
     },
     {
       "domain": "infra",
       "module": "aos_api.routers.bundle_runtime_installations",
       "attribute": "router",
-      "order": 547
-    },
-    {
-      "domain": "workshop",
-      "module": "aos_api.routers.ecommerce_growth_dispatch",
-      "attribute": "router",
-      "order": 548
+      "order": 546
     }
   ]
 }

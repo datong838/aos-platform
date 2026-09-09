@@ -135,7 +135,7 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelectorAll("main")).toHaveLength(1);
   });
 
-  it("没有 active replacement 与显式退役 Receipt 时继续保留旧只读入口", async () => {
+  it("没有 active replacement 时旧入口只显示未安装宿主状态", async () => {
     const client = { listModules: async () => workshopCatalogFixture({ items: [] }) };
     await act(async () => root.render(
       <MemoryRouter initialEntries={["/workshop/orders"]}>
@@ -152,7 +152,10 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     await flush();
 
     expect(host.querySelector("[data-testid='location']")?.textContent).toBe("/workshop/orders");
-    expect(host.textContent).toContain("订单管理");
+    const hostState = host.querySelector(".ecommerce-workshop-host-state");
+    expect(hostState?.textContent).toContain("电商工作台");
+    expect(hostState?.textContent).toContain("模块未安装");
+    expect(hostState?.textContent).not.toContain("订单管理");
   });
 
   it("canonical 深层路径保持在同一 Module Shell 与唯一 active 导航中", async () => {
