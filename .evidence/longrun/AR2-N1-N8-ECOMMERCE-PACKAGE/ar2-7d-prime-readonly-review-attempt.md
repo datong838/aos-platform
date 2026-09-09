@@ -17,13 +17,14 @@
 3. 以 `--no-tools --no-session --no-context-files` 注入 7D 复核包，要求核对 Canonical POST 唯一性、legacy 写路由不可达、GET/HEAD 保留、`catalog.modules` 唯一导航来源、证据一致性和 no-effect 边界。
 4. 默认提供方返回 `401 无效的令牌`；显式 `openai-codex` 提供方返回 `No API key found for openai-codex`。两次均在生成任何审查正文之前结束。
 5. 用户随后明确要求继续 Loop，并授权上一条已说明的 Prime ChatGPT OAuth 登录。浏览器使用既有登录会话完成 workspace 选择和 consent，回调页显示认证流程完成；Prime 在 token exchange 阶段收到 `403 unsupported_country_region_territory`，未写入 `openai-codex` 凭据，仍未生成审查正文。记录中不保存授权码、token、邮箱或其他认证材料。
+6. `m1@9e6734b6` 关闭独立 Codex 首轮发现后，再次枚举 Prime model：当前只暴露 AGnes 的三个模型，认证文件也只有 `agnes` provider。使用 `agnes-2.5-pro` 和同一 `--no-tools --no-session --no-context-files` 只读包新鲜重试，仍在生成审查正文前返回 `401 无效的令牌`；未修改认证文件，未尝试未经授权的其他 OAuth provider。
 
 ## 3. 结论与处置
 
 - 本记录不是 Prime 复核结论；没有 `VERDICT: PASS` 或 `VERDICT: BLOCK` 可引用。
 - 7D 代码与确定性验证仍保持通过：`verify_closure.py --phase ar2-7` 为 1711 scanned / 93 classified / 57 migrated，五类错误为空；memory validate 为 GREEN；隔离 PostgreSQL 容器可用。
 - 由于 231-6 明确把 Prime 复核列为 7D 退出条件，当前不写 `AR2_7D_RUNTIME_WIRING_CANONICAL_ROUTER_GREEN` authority CAS，也不把 7E 记为已进入。
-- 下一动作固定为在合法可用的 Prime 提供方恢复后重放同一只读复核包；认证恢复前只允许整理 7E 输入与确定性只读检查，不修改 7E 产品代码。独立 Codex 只读复核可作为缺陷扫描补充，但不得冒充 Prime PASS 或解除 231-6 门禁。
+- 下一动作固定为取得一项可用的 Prime provider 授权后重放同一只读复核包；现有 AGnes 和已授权的 ChatGPT OAuth 两条路径均已失败。认证恢复前只允许整理 7E 输入与确定性只读检查，不修改 7E 产品代码。独立 Codex 只读复核可作为缺陷扫描补充，但不得冒充 Prime PASS 或解除 231-6 门禁。
 
 ## 4. 外部效果
 
