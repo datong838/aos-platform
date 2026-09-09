@@ -1,0 +1,31 @@
+# AR2-7D D1 固定商品比较 QueryResult 施工卡
+
+基线58f39af8/AOS-000571，m1同一Task/Lease。复习231-6 D1真实Owner和Query质量分支，现场确认已有aip_metric_definition_revision、AipEvalAuthorityStore.create_metric_definition及AipAnalystQueryStore.create/record_result/read_result_exact，可复用，不另造QueryResult表或假MetricRef。
+
+## 实现文件
+
+新增services/aos-api/aos_api/ecommerce_product_comparison_query.py及tests/test_ecommerce_product_comparison_query.py。
+
+- 固定指标定义niushop.product-observation-comparison/v1保存到已有MetricDefinitionRevision Owner，名称中文、unit=count、source为配置观察与当前规范商品、window明确读取区间对照当前快照、aggregation为三字段分区计数。完整正文自算hash，写后按tenant/id/revision回读所有定义字段和原JSON哈希；不接受调用方提供公式、定义或SQL。
+- 新服务只接受HostTransaction/TenantScope和原组合Evidence/公开行/Channel/Entity/Binding refs/idempotencyKey/actor。在同事务按tenant+固定operation+key串行锁；由固定definition构建MetricQueryRequest，窗口严格等于观察实际读取区间（零时长显式不支持，不伪造窗口），cutoff为观察结束；filters保存三个选择exact refs用于内部固定比较解释，不交给通用SQL编译器。deadline固定cutoff+1天，首次过期拒绝；历史已完成按Receipt回读。
+- 两个Store使用已有TransactionBoundConnectFactory，内部commit不提交外层。create后get当前QueryJob；已有结果只exact回读、不重算规范库、不再次连接源；输入/key漂移由稳定requestHash拒绝。首次调用实际比较器，构建3行title/price/stock分区数及完整两个总体，来源99规范refs+1观察Evidence至多100；所有freshness=unknown，status=partial且列明仅当前快照比较、无历史重建/源快照/业务履约声明，confidence不造评分。写入已有QueryResult后exact回读。
+- 对read_exact除原QueryOwner校验外，核验固定definition、原request种类/metric/window/选择refs、固定列与行分区、来源和lineage、固定unknown/confidence/uncertainties；回读原组合Evidence，撤销/缺失则失败。历史规范变化不重新计算旧结果；不把已保存计数冒充可重建旧规范数据。
+- 对aip_analyst_query_store.py仅将四个表引用public限定；对aip_eval_authority_store.py仅将create_metric_definition表名public限定，避免同名临时表改变Owner，不改变旧哈希算法/通用业务逻辑。
+
+## 验收与边界
+
+真PG：固定Metric+Query写读、外层回滚、同key重放且比较器不再调用、输入漂移、双连接串行竞争、跨tenant、观察撤销、旧规范变化保持历史结果、空人口仍partial统计不报成功、原JSON/置信度/计数篡改拒绝。现有Query/Metric邻接回归与闭包检查，所有PG测试串行在18434一次性库。无新迁移、真实源、Provider、外部发布、push；230 L0挂起。QueryResult持久化不等于Requirement满足，随后再接固定Requirement事实策略。
+
+## 复核补充
+
+固定request的filters含组合Evidence完整exact ref（与三个选择ref一起），同window也不能换观察；重放先复验rows hash。SERIALIZABLE等待锁后的旧快照可能40001，必须整个外层事务退出、由上层以新事务重试，不在本服务原事务内重试。通用QueryJob的SUCCEEDED只表示计算结束，QueryResult保持partial/unknown，不能转译成质量/履约成功。
+
+## 实测补强
+
+旧SERIALIZABLE快照等待后，现场表现可为23505/aip_analyst_query_job_pkey而非40001；原生错误向外传播、整个事务退出后才能新事务reconcile，本服务不吞异常或原事务重试。并发fixture必须finally删除其自建Shop/Product，避免失败污染同一临时测试库。
+
+固定read_exact再取原result_json/request_json，与固定生成器规范JSON分别复算摘要，拒绝revision:true归一为1绕过旧QueryResult哈希的情况；保留通用旧哈希算法。
+
+## 邻接回归纠偏
+
+旧Metric Store测试支持自定义schema；直接修改通用create_metric_definition为public导致该用法父租户FK失败。撤销该通用修改，保持其原行为；新固定服务复用同一Owner的_append_contract辅助写入，使用固定public.aip_metric_definition_revision表名及原列/值/冲突规则，然后执行本服务完整exact回读。无任意table输入，无新表，也不改变旧Store的schema行为。

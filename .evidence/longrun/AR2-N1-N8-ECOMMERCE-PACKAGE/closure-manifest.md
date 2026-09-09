@@ -160,6 +160,7 @@ AR2-7 只通过数据库 CAS 切换这个 handler 指针，不再声称 Python �
 | `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py` | 原路径 | platform host port；既有 AR2-7D 宿主事务适配，切换前不注册未完成服务 | 48a51c177c506b56355d4b6d14810ff471ca5feb6dd2538b32a03a3a49629727 |
 | `services/aos-api/aos_api/ecommerce_canonical_population.py` | 原路径 | data query port；本次新增当前规范库全集身份读取，仅由受信宿主使用 | NEW |
 | `services/aos-api/aos_api/ecommerce_product_observation_comparison.py` | 原路径 | data query port；受信宿主有界商品观察与规范版本比较，不生成业务事实或履约 | NEW |
+| `services/aos-api/aos_api/ecommerce_product_comparison_query.py` | 原路径 | data query port；固定比较复用MetricDefinition和QueryResult真实Owner，partial不代表履约 | NEW |
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analysis_runtime.py` | 原路径 | solution package；既有包内纯编排节点；公共权威仅经 SDK ports | aebddd199ba97397b053946dee54a082c2c897ed8a80406653f5e9badc6904da |
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/audit_projection.py` | 原路径 | solution package；既有包内纯编排节点；公共权威仅经 SDK ports | 8b7221e60fc6a5787dafcc0ff98ea14fc842c91fe9b5c0a07d4d63bb7b3736bc |
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/content_artifact_review.py` | 原路径 | solution package；既有包内纯编排节点；公共权威仅经 SDK ports | d7eb9b15ee97a51b122c083ed52a70f47139f1fdcc55e8c80728b04d7921e9d2 |

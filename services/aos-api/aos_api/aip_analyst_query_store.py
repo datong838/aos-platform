@@ -70,7 +70,7 @@ class AipAnalystQueryStore:
             if replay:
                 return QueryJobSnapshot.model_validate(replay)
             conn.execute(
-                """INSERT INTO aip_analyst_query_job(
+                """INSERT INTO public.aip_analyst_query_job(
                   org_id,project_id,query_id,kind,request_json,request_hash,
                   cutoff_at,deadline_at,idempotency_key,created_by,created_at)
                   VALUES (%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s)""",
@@ -113,7 +113,7 @@ class AipAnalystQueryStore:
         limit = max(1, min(int(limit), 200))
         with self._connect(scope) as conn:
             rows = conn.execute(
-                """SELECT query_id FROM aip_analyst_query_job
+                """SELECT query_id FROM public.aip_analyst_query_job
                    WHERE org_id=%s AND project_id=%s
                    ORDER BY created_at DESC, query_id DESC
                    LIMIT %s""",
@@ -232,7 +232,7 @@ class AipAnalystQueryStore:
                 self._conflict("terminal query jobs reject results")
             job = conn.execute(
                 """SELECT kind,request_json,cutoff_at,created_at
-                FROM aip_analyst_query_job
+                FROM public.aip_analyst_query_job
                 WHERE org_id=%s AND project_id=%s AND query_id=%s""",
                 (*scope.key, query_id),
             ).fetchone()
@@ -256,14 +256,14 @@ class AipAnalystQueryStore:
                 )
             latest_revision = conn.execute(
                 """SELECT COALESCE(MAX(revision),0) AS revision
-                FROM aip_analyst_query_result_revision
+                FROM public.aip_analyst_query_result_revision
                 WHERE org_id=%s AND project_id=%s AND query_id=%s""",
                 (*scope.key, query_id),
             ).fetchone()["revision"]
             if result.revision != int(latest_revision) + 1:
                 self._conflict("result revision must be contiguous")
             conn.execute(
-                """INSERT INTO aip_analyst_query_result_revision(
+                """INSERT INTO public.aip_analyst_query_result_revision(
                   org_id,project_id,query_id,revision,status,result_json,
                   content_hash,cutoff_at,created_by,created_at)
                   VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s,%s,%s,%s)""",
@@ -319,7 +319,7 @@ class AipAnalystQueryStore:
         with self._connect(scope) as conn:
             row = conn.execute("""SELECT r.*,j.kind AS job_kind,j.request_json,
                 j.cutoff_at AS job_cutoff,j.created_at AS job_created
-                FROM aip_analyst_query_result_revision r JOIN aip_analyst_query_job j
+                FROM public.aip_analyst_query_result_revision r JOIN public.aip_analyst_query_job j
                 ON j.org_id=r.org_id AND j.project_id=r.project_id AND j.query_id=r.query_id
                 WHERE r.org_id=%s AND r.project_id=%s AND r.query_id=%s AND r.revision=%s""",
                 (*scope.key, ref.resource_id, ref.revision)).fetchone()
@@ -344,15 +344,15 @@ class AipAnalystQueryStore:
         row = conn.execute(
             """SELECT j.*,e.sequence,e.event_kind,e.status,e.reason_code,
               e.actor,e.observed_at,r.result_json
-              FROM aip_analyst_query_job j
+              FROM public.aip_analyst_query_job j
               JOIN LATERAL (
-                SELECT * FROM aip_analyst_query_event
+                SELECT * FROM public.aip_analyst_query_event
                 WHERE org_id=j.org_id AND project_id=j.project_id
                   AND query_id=j.query_id
                 ORDER BY sequence DESC LIMIT 1
               ) e ON true
               LEFT JOIN LATERAL (
-                SELECT result_json FROM aip_analyst_query_result_revision
+                SELECT result_json FROM public.aip_analyst_query_result_revision
                 WHERE org_id=j.org_id AND project_id=j.project_id
                   AND query_id=j.query_id
                 ORDER BY revision DESC LIMIT 1
@@ -390,7 +390,7 @@ class AipAnalystQueryStore:
 
     def _latest_for_update(self, conn: Any, scope: TenantScope, query_id: str) -> Any:
         row = conn.execute(
-            """SELECT * FROM aip_analyst_query_event
+            """SELECT * FROM public.aip_analyst_query_event
             WHERE org_id=%s AND project_id=%s AND query_id=%s
             ORDER BY sequence DESC LIMIT 1 FOR UPDATE""",
             (*scope.key, query_id),
@@ -442,7 +442,7 @@ class AipAnalystQueryStore:
             ]
         )
         conn.execute(
-            """INSERT INTO aip_analyst_query_event(
+            """INSERT INTO public.aip_analyst_query_event(
               org_id,project_id,event_id,query_id,sequence,event_kind,status,
               reason_code,event_hash,actor,observed_at)
               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
@@ -470,7 +470,7 @@ class AipAnalystQueryStore:
     ) -> dict[str, Any] | None:
         row = conn.execute(
             """SELECT request_hash,response_json
-            FROM aip_analyst_query_receipt
+            FROM public.aip_analyst_query_receipt
             WHERE org_id=%s AND project_id=%s
               AND operation=%s AND idempotency_key=%s""",
             (*scope.key, operation, key),
@@ -497,7 +497,7 @@ class AipAnalystQueryStore:
         created_at: datetime,
     ) -> None:
         conn.execute(
-            """INSERT INTO aip_analyst_query_receipt(
+            """INSERT INTO public.aip_analyst_query_receipt(
               org_id,project_id,operation,idempotency_key,request_hash,query_id,
               resulting_sequence,resulting_revision,response_json,actor,created_at)
               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)""",
