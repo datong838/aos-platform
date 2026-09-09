@@ -1,7 +1,7 @@
 # AR2-7D D5C2 验证窗口失败回滚权威验证
 
-日期：2026-09-10  
-基线：`m1@3d6641a4`  
+日期：2026-09-10
+基线：`m1@3d6641a4`
 结论：`AR2_7D_VALIDATION_WINDOW_ROLLBACK_GREEN`
 
 ## Rules 与实现结论
