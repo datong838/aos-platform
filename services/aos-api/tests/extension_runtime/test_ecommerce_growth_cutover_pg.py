@@ -30,6 +30,11 @@ from aos_api.ecommerce_growth_cutover import (
     EcommerceGrowthCutoverStore,
 )
 from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
+from aos_api.ecommerce_growth_canonical_router import IssuedDispatchRef
+from aos_api.ecommerce_growth_host_ports import (
+    EcommerceGrowthHostConflict,
+    LockedEcommerceGrowthHostPort,
+)
 from aos_api.ecommerce_growth_lifecycle import (
     EcommerceGrowthDisableDependent,
     EcommerceGrowthLifecycleConflict,
@@ -268,10 +273,16 @@ def _seed(
     database, scope: TenantScope, *, complete: bool = True, ready: bool = True,
     pending_receipt: bool = True,
     approval_lifetime: timedelta = timedelta(hours=1),
+    suffix: str = "",
+    existing_group=None,
+    expected_group_revision: int = 11,
+    target_execution_epoch: int = 7,
+    target_runtime_revision: int = 13,
 ):
     owner = database.owner
     owner.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
-    installation, generation, group = uuid4(), uuid4(), uuid4()
+    installation, generation = uuid4(), uuid4()
+    group = existing_group or uuid4()
     owner.execute(
         "INSERT INTO bundle_installation(org_id,project_id,installation_id) VALUES(%s,%s,%s)",
         (*scope.key, installation),
@@ -287,31 +298,33 @@ def _seed(
              org_id,project_id,installation_id,generation,installation_revision,package_lock_ref,
              profile_ref,config_ref,execution_epoch,desired_state,observed_state,enabled,
              operation_fence,revision)
-           VALUES(%s,%s,%s,%s,2,'{}','internal-python-v1','{}',7,'enabled',%s,%s,false,13)""",
-        (*scope.key, installation, generation, "ready" if ready else "unknown", ready),
+           VALUES(%s,%s,%s,%s,2,'{}','internal-python-v1','{}',%s,'enabled',%s,%s,false,%s)""",
+        (*scope.key, installation, generation, target_execution_epoch,
+         "ready" if ready else "unknown", ready, target_runtime_revision),
     )
     operations = sorted(ECOMMERCE_GROWTH_OPERATIONS)
     if not complete:
         operations = operations[:-1]
-    for operation_id in operations:
-        owner.execute(
-            """INSERT INTO extension_operation_dispatch_binding(
-                 org_id,project_id,operation_id,handler_kind,operation_fence,revision,
-                 cutover_group_id,cutover_group_revision,updated_by)
-               VALUES(%s,%s,%s,'legacy',false,5,%s,11,'legacy-owner')""",
-            (*scope.key, operation_id, group),
-        )
+    if existing_group is None:
+        for operation_id in operations:
+            owner.execute(
+                """INSERT INTO extension_operation_dispatch_binding(
+                     org_id,project_id,operation_id,handler_kind,operation_fence,revision,
+                     cutover_group_id,cutover_group_revision,updated_by)
+                   VALUES(%s,%s,%s,'legacy',false,5,%s,%s,'legacy-owner')""",
+                (*scope.key, operation_id, group, expected_group_revision),
+            )
     policy_ref = CutoverExactRef(
         resourceType="RuntimeCutoverPolicyRevision", resourceId="cutover-policy", revision=4,
         contentHash="sha256:" + "1" * 64,
     )
     payload = {
         "cutoverGroupId": str(group),
-        "expectedGroupRevision": 11,
+        "expectedGroupRevision": expected_group_revision,
         "targetInstallationId": str(installation),
         "targetGeneration": str(generation),
-        "targetExecutionEpoch": 7,
-        "targetRuntimeRevision": 13,
+        "targetExecutionEpoch": target_execution_epoch,
+        "targetRuntimeRevision": target_runtime_revision,
         "operationIds": sorted(ECOMMERCE_GROWTH_OPERATIONS),
         "policyRef": policy_ref.model_dump(mode="json", by_alias=True),
     }
@@ -344,42 +357,46 @@ def _seed(
              org_id,project_id,proposal_id,action_type_id,action_type_snapshot,task_id,run_id,
              object_ref,purpose,risk_level,policy_snapshot,payload,diff,evidence_refs,
              action_binding_hash,approval_policy_hash,proposal_hash,status,version,expires_at,created_by)
-           VALUES(%s,%s,'proposal-cutover','ecommerce_growth_cutover',%s,NULL,NULL,NULL,%s,'R3',
+           VALUES(%s,%s,%s,'ecommerce_growth_cutover',%s,NULL,NULL,NULL,%s,'R3',
              %s,%s,'{}','[]',%s,%s,%s,'approved',3,%s,'operator')""",
-        (*scope.key, psycopg.types.json.Jsonb(action_type), stable["purpose"],
+        (*scope.key, f"proposal-cutover{suffix}", psycopg.types.json.Jsonb(action_type), stable["purpose"],
          psycopg.types.json.Jsonb(policy), psycopg.types.json.Jsonb(payload),
          stable["actionBindingHash"], stable["approvalPolicyHash"], proposal_hash,
          expires_at),
     )
     owner.execute(
         """INSERT INTO aip_action_draft(org_id,project_id,proposal_id,proposal_hash,snapshot)
-           VALUES(%s,%s,'proposal-cutover',%s,%s)""",
-        (*scope.key, proposal_hash, psycopg.types.json.Jsonb(stable)),
+           VALUES(%s,%s,%s,%s,%s)""",
+        (*scope.key, f"proposal-cutover{suffix}", proposal_hash,
+         psycopg.types.json.Jsonb(stable)),
     )
     owner.execute(
         """INSERT INTO aip_action_approval_event(
              org_id,project_id,approval_event_id,proposal_id,proposal_version,proposal_hash,
              decision,actor_id,reason,expires_at,created_at,action_binding_hash)
-           VALUES(%s,%s,'approval-cutover','proposal-cutover',3,%s,
+           VALUES(%s,%s,%s,%s,3,%s,
              'approved','reviewer','approved',%s,%s,%s)""",
-        (*scope.key, proposal_hash, expires_at, now,
+        (*scope.key, f"approval-cutover{suffix}", f"proposal-cutover{suffix}",
+         proposal_hash, expires_at, now,
          stable["actionBindingHash"]),
     )
     approval = owner.execute(
         """SELECT approval_event_id,proposal_id,proposal_version,proposal_hash,decision,
                   actor_id,reason,expires_at,created_at,action_binding_hash
-             FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s""",
-        scope.key,
+             FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s
+              AND approval_event_id=%s""",
+        (*scope.key, f"approval-cutover{suffix}"),
     ).fetchone()
     approval_ref = CutoverExactRef(
-        resourceType="ActionApprovalEvent", resourceId="approval-cutover", revision=3,
+        resourceType="ActionApprovalEvent", resourceId=f"approval-cutover{suffix}", revision=3,
         contentHash=canonical_hash(dict(approval), prefixed=True),
     )
     request = CutoverPrepareRequest(
-        cutoverOperationId=uuid4(), idempotencyKey="prepare-cutover-1",
-        cutoverGroupId=group, expectedGroupRevision=11,
+        cutoverOperationId=uuid4(), idempotencyKey=f"prepare-cutover-1{suffix}",
+        cutoverGroupId=group, expectedGroupRevision=expected_group_revision,
         targetInstallationId=installation, targetGeneration=generation,
-        targetExecutionEpoch=7, targetRuntimeRevision=13,
+        targetExecutionEpoch=target_execution_epoch,
+        targetRuntimeRevision=target_runtime_revision,
         policyRef=policy_ref, approvalRef=approval_ref,
         checkpoint={"legacyEntry": "canonical-router", "version": 1},
         occurrenceWatermark=now,
@@ -391,10 +408,10 @@ def _seed(
     return request
 
 
-def _commit_request(prepare_receipt):
+def _commit_request(prepare_receipt, *, suffix: str = ""):
     return CutoverCommitRequest(
         cutoverOperationId=prepare_receipt.cutover_operation_id,
-        idempotencyKey="commit-cutover-1",
+        idempotencyKey=f"commit-cutover-1{suffix}",
         prepareReceiptRef={
             "resourceType": "CutoverPrepareReceipt",
             "resourceId": str(prepare_receipt.receipt_id),
@@ -404,10 +421,10 @@ def _commit_request(prepare_receipt):
     )
 
 
-def _finalize_request(commit_receipt):
+def _finalize_request(commit_receipt, *, suffix: str = ""):
     return CutoverFinalizeRequest(
         cutoverOperationId=commit_receipt.cutover_operation_id,
-        idempotencyKey="finalize-cutover-1",
+        idempotencyKey=f"finalize-cutover-1{suffix}",
         commitReceiptRef={
             "resourceType": "CutoverCommitReceipt",
             "resourceId": str(commit_receipt.receipt_id),
@@ -1670,8 +1687,7 @@ def _seed_owned_runtime_resource(database, scope, prepare_request):
     return intent
 
 
-def _detach_and_release_runtime(database, scope):
-    prepare_request, _ = _resumed_activation(database, scope)
+def _detach_and_release_existing_runtime(database, scope, prepare_request):
     intent = _seed_owned_runtime_resource(database, scope, prepare_request)
     operation_id, revision = _begin_runtime_disable(database, scope, prepare_request)
     _complete_runtime_disable(database, scope, operation_id, revision)
@@ -1707,6 +1723,12 @@ def _detach_and_release_runtime(database, scope):
         resource_id=intent.resource_id,
     )
     assert state == "released"
+    return intent
+
+
+def _detach_and_release_runtime(database, scope):
+    prepare_request, _ = _resumed_activation(database, scope)
+    _detach_and_release_existing_runtime(database, scope, prepare_request)
     return prepare_request
 
 
@@ -2206,6 +2228,194 @@ def test_runtime_uninstall_guard_commits_exact_terminal_authority(database):
         "operation_fence": True,
         "revision": terminal_binding_revision,
     }
+
+
+def test_reinstall_uses_new_authority_and_preserves_old_audit_history(database):
+    scope = TenantScope("org-org", "dev-project")
+    old_request, _ = _resumed_activation(database, scope)
+    old_dispatch = database.owner.execute(
+        """SELECT operation_id,handler_kind,revision,installation_id,generation,
+                  execution_epoch,cutover_group_id,cutover_group_revision
+             FROM extension_operation_dispatch_binding
+            WHERE org_id=%s AND project_id=%s AND operation_id=%s""",
+        (*scope.key, "ecommerce_growth_analysis_advance"),
+    ).fetchone()
+    old_dispatch_ref = IssuedDispatchRef(
+        org_id=scope.org_id,
+        project_id=scope.project_id,
+        operation_id=old_dispatch["operation_id"],
+        handler_kind=old_dispatch["handler_kind"],
+        dispatch_revision=old_dispatch["revision"],
+        installation_id=str(old_dispatch["installation_id"]),
+        generation=str(old_dispatch["generation"]),
+        execution_epoch=old_dispatch["execution_epoch"],
+        cutover_group_id=str(old_dispatch["cutover_group_id"]),
+        cutover_group_revision=old_dispatch["cutover_group_revision"],
+    )
+    old_validate = database.owner.execute(
+        """SELECT receipt_id,content_hash FROM extension_dispatch_cutover_receipt
+            WHERE org_id=%s AND project_id=%s AND cutover_operation_id=%s
+              AND phase='validate'""",
+        (*scope.key, old_request.cutover_operation_id),
+    ).fetchone()
+    old_validate_ref = CutoverExactRef(
+        resourceType="CutoverValidateReceipt",
+        resourceId=str(old_validate["receipt_id"]),
+        revision=1,
+        contentHash=old_validate["content_hash"],
+    )
+
+    old_intent = _detach_and_release_existing_runtime(database, scope, old_request)
+    with _connection(database, app=True)(scope) as conn:
+        uninstall_receipt = RuntimeUninstallGuard().before_uninstall(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            installation_id=old_request.target_installation_id,
+            expected_installation_revision=1,
+            actor="asset-operator",
+        )
+        _append_minimal_uninstalled_revision(
+            conn, scope, old_request.target_installation_id, 1
+        )
+        conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        conn.commit()
+
+    legacy_group_revision = database.owner.execute(
+        """SELECT min(cutover_group_revision) AS revision
+             FROM extension_operation_dispatch_binding
+            WHERE org_id=%s AND project_id=%s AND cutover_group_id=%s
+              AND handler_kind='legacy'""",
+        (*scope.key, old_request.cutover_group_id),
+    ).fetchone()["revision"]
+    new_request = _seed(
+        database,
+        scope,
+        pending_receipt=False,
+        suffix="-reinstall",
+        existing_group=old_request.cutover_group_id,
+        expected_group_revision=legacy_group_revision,
+        target_execution_epoch=1,
+        target_runtime_revision=13,
+    )
+    new_intent = _seed_owned_runtime_resource(database, scope, new_request)
+    assert new_request.target_installation_id != old_request.target_installation_id
+    assert new_request.target_generation != old_request.target_generation
+    assert new_request.target_execution_epoch != old_request.target_execution_epoch
+    package_hashes = database.owner.execute(
+        """SELECT resource_id,package_hash FROM extension_runtime_resource_lease
+            WHERE org_id=%s AND project_id=%s AND resource_id IN (%s,%s)""",
+        (*scope.key, old_intent.resource_id, new_intent.resource_id),
+    ).fetchall()
+    assert len(package_hashes) == 2
+    assert {row["package_hash"] for row in package_hashes} == {
+        "sha256:" + "a" * 64
+    }
+
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    stale_approval_request = new_request.model_copy(
+        update={
+            "cutover_operation_id": uuid4(),
+            "idempotency_key": "prepare-cutover-old-approval",
+            "approval_ref": old_request.approval_ref,
+        }
+    )
+    with pytest.raises(
+        EcommerceGrowthCutoverBlocked, match="approval is not bound to this exact group"
+    ):
+        store.prepare_activation(scope, stale_approval_request, actor="runtime-owner")
+
+    prepared = store.prepare_activation(scope, new_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared, suffix="-reinstall")
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+    finalize_request = _finalize_request(committed, suffix="-reinstall")
+    validated = store.validate_activation(scope, finalize_request, actor="runtime-owner")
+    with pytest.raises(
+        EcommerceGrowthCutoverConflict, match="validate Receipt reference drifted"
+    ):
+        store.resume_activation(
+            scope,
+            finalize_request,
+            validate_receipt_ref=old_validate_ref,
+            actor="runtime-owner",
+        )
+    store.resume_activation(
+        scope,
+        finalize_request,
+        validate_receipt_ref=_validate_ref(validated),
+        actor="runtime-owner",
+    )
+
+    current_dispatch = database.owner.execute(
+        """SELECT handler_kind,installation_id,generation,execution_epoch,
+                  operation_fence,cutover_group_id,cutover_group_revision
+             FROM extension_operation_dispatch_binding
+            WHERE org_id=%s AND project_id=%s
+            ORDER BY operation_id""",
+        scope.key,
+    ).fetchall()
+    assert len(current_dispatch) == len(ECOMMERCE_GROWTH_OPERATIONS)
+    assert all(
+        row["handler_kind"] == "extension"
+        and row["installation_id"] == new_request.target_installation_id
+        and row["generation"] == new_request.target_generation
+        and row["execution_epoch"] == new_request.target_execution_epoch
+        and row["operation_fence"] is False
+        and row["cutover_group_id"] == old_request.cutover_group_id
+        and row["cutover_group_revision"] > old_dispatch_ref.cutover_group_revision
+        for row in current_dispatch
+    )
+    with psycopg.connect(
+        **PG, autocommit=False, row_factory=dict_row
+    ) as conn:
+        conn.isolation_level = IsolationLevel.SERIALIZABLE
+        conn.execute(
+            sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema))
+        )
+        conn.execute("SELECT set_config('aos.org_id',%s,true)", (scope.org_id,))
+        conn.execute("SELECT set_config('aos.project_id',%s,true)", (scope.project_id,))
+        with pytest.raises(
+            EcommerceGrowthHostConflict, match="exact dispatch authority drifted"
+        ):
+            LockedEcommerceGrowthHostPort._lock_and_revalidate(
+                conn, scope, old_dispatch_ref
+            )
+
+    same_key_operations = database.owner.execute(
+        """SELECT installation_id,operation_id FROM extension_runtime_operation
+            WHERE org_id=%s AND project_id=%s AND kind='runtime-apply'
+              AND idempotency_key='d6-owned-resource'
+            ORDER BY installation_id""",
+        scope.key,
+    ).fetchall()
+    assert len(same_key_operations) == 2
+    assert len({row["installation_id"] for row in same_key_operations}) == 2
+    assert len({row["operation_id"] for row in same_key_operations}) == 2
+    assert database.owner.execute(
+        """SELECT count(*) AS n FROM extension_runtime_uninstall_receipt
+            WHERE org_id=%s AND project_id=%s AND installation_id=%s
+              AND receipt_id=%s""",
+        (*scope.key, old_request.target_installation_id,
+         uninstall_receipt["receiptId"]),
+    ).fetchone()["n"] == 1
+    assert database.owner.execute(
+        """SELECT count(*) AS n FROM extension_dispatch_lifecycle_receipt receipt
+            JOIN extension_runtime_operation operation
+              ON operation.org_id=receipt.org_id
+             AND operation.project_id=receipt.project_id
+             AND operation.operation_id=receipt.runtime_operation_id
+            WHERE receipt.org_id=%s AND receipt.project_id=%s
+              AND operation.installation_id=%s""",
+        (*scope.key, old_request.target_installation_id),
+    ).fetchone()["n"] == 2
+    assert database.owner.execute(
+        """SELECT count(*) AS n FROM bundle_installation_revision r
+            JOIN bundle_installation i USING(org_id,project_id,installation_pk)
+            WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s
+              AND r.state='uninstalled'""",
+        (*scope.key, old_request.target_installation_id),
+    ).fetchone()["n"] == 1
 
 
 def test_runtime_uninstall_guard_rejects_unreleased_resource(database):
