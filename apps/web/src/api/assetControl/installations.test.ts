@@ -96,4 +96,49 @@ describe("M3-2 installation read contracts", () => {
       "decision identity is inconsistent",
     );
   });
+
+  it("accepts active to uninstalled history and rejects skipping active", () => {
+    const uninstalled = structuredClone(INSTALLATION_DETAIL_FIXTURE);
+    uninstalled.state = "uninstalled";
+    uninstalled.currentRevision = 6;
+    uninstalled.activeRevision = null;
+    uninstalled.previousActiveRevision = 5;
+    uninstalled.etagVersion = 6;
+    uninstalled.updatedAt = "2026-08-03T08:05:00+00:00";
+    uninstalled.current = {
+      ...uninstalled.current,
+      revision: 6,
+      parentRevision: 5,
+      state: "uninstalled",
+      createdAt: "2026-08-03T08:05:00+00:00",
+    };
+    uninstalled.events.push({
+      sequence: 6,
+      fromRevision: 5,
+      toRevision: 6,
+      fromState: "active",
+      toState: "uninstalled",
+      actor: "installer@example.test",
+      reason: "retired after verified resource cleanup",
+      evidence: null,
+      createdAt: "2026-08-03T08:05:00+00:00",
+    });
+
+    expect(parseInstallationDetail(uninstalled)).toBe(uninstalled);
+
+    const skippedActive = structuredClone(INSTALLATION_DETAIL_FIXTURE);
+    skippedActive.state = "uninstalled";
+    skippedActive.activeRevision = null;
+    skippedActive.current.state = "uninstalled";
+    skippedActive.events[4] = {
+      ...skippedActive.events[4],
+      fromState: "applied",
+      toState: "uninstalled",
+      reason: "invalid direct uninstall",
+      evidence: null,
+    };
+    expect(() => parseInstallationDetail(skippedActive)).toThrow(
+      "event history is not continuous",
+    );
+  });
 });

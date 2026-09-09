@@ -44,3 +44,9 @@
 - `asset_registry/control_wiring.py` 当前直接导入 `EcommerceGrowthDisableDependent`，违反通用 Registry 不依赖领域名的既有边界。最小修正为通用 control plane 接收可选 `disable_dependent` 并保存给 runtime host；`main.py` 作为 production composition root 构造具体 ecommerce dependent 后注入。Router 继续从 app state 使用同一 control plane，不产生第二套 service。
 - 预计修改：`services/aos-api/aos_api/asset_registry/control_wiring.py`、`services/aos-api/aos_api/main.py`、`services/aos-api/tests/asset_registry/{m5_bundle_support.py,m5_control_support.py,test_m5_ecommerce_bundle_loader.py,test_m5_ecommerce_boundaries.py,test_m5_ecommerce_bundle_contracts.py,test_workshop_module_contracts.py,test_control_wiring.py,test_public_api.py}` 及必要的 startup composition 邻接测试。退出条件为 16 条原失败专项全绿、asset_registry 全量全绿、extension_runtime 邻接全绿、closure/memory/diff check 通过。
 - `main.py` 的合法组合根注入会改变 `ar2-1` 当前态精确哈希；只更新 `dynamic-reference-phases.json` 中 `ar2-1` 的该项哈希，保留 `ar2-0` 冻结基线不动。`ar2-7` 当前十项 Router/Web 最终切换红项必须继续保持可见，留给后续受控切换切片消除，不能用本次哈希更新掩盖。
+
+## 7. 资产控制卸载历史解析红项（2026-09-10）
+
+- 浏览器夹具准备回读发现：API `InstallationState`、服务端卸载动作和 Web 动作模型均使用 `uninstalled`，但 `apps/web/src/api/assetControl/installations.ts` 的事件连续性集合缺少唯一合法的 `active:uninstalled`。真实 D6D2 第一代卸载详情会被严格解析器误拒绝，资产控制页无法展示旧审计与零动作终态。
+- 最小修复只增加 `active → uninstalled` 合法迁移，并在 `installations.test.ts` 构造完整六 revision 卸载历史正例；另加 `applied → uninstalled` 负例，确保不能跳过 active、disable/detach/resource-release 等服务端权威步骤。前端不自行判断资源已释放，仍只解析服务端已提交历史。
+- 修改文件限定为 `apps/web/src/api/assetControl/installations.ts`、`apps/web/src/api/assetControl/installations.test.ts` 及本方案；退出条件为安装解析专项、资产控制相关专项、Web 全量和生产 build 全绿，然后才生成三视口浏览器证据。
