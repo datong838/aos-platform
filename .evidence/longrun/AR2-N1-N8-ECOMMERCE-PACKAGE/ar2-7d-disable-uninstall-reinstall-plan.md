@@ -2,7 +2,7 @@
 
 日期：2026-09-10
 基线：`aos-platform/m1@b6589cd7`、`docs/m1@682b0ab`
-状态：`REVIEWED_IMPLEMENTATION_PLAN_D6B2A_NEXT`
+状态：`REVIEWED_IMPLEMENTATION_PLAN_D6C_NEXT`
 
 ## 1. Rules 与边界
 
@@ -45,6 +45,13 @@
 
 - 重装必须创建新的 installation 与 generation，enable 产生新 execution epoch，重新 prepare/cutover 产生更高且独立的 group revision；不得复活旧 installation 的 Approval、claim、DispatchRef 或 idempotency scope。
 - 联合测试证明旧页面请求、旧 epoch/generation、旧 approval/ref 和旧 target Receipt 全部拒绝；旧 Case/Run/Receipt/审计仍按原 tenant 只读，新代次只有经完整签名、配置、健康、cutover validate/resume 后才可派发。
+
+#### D6C 细化施工卡（2026-09-10）
+
+- 当前 generation 由 `build_plan` 服务端生成，RuntimeOperation 唯一键包含 installation，运行接纳和九项 HostPort 均复核 installation/generation/epoch，cutover 对共享九项 dispatch 使用单调 group revision；D6C 先以同租户、同 package digest 的联合 PostgreSQL 证明复用这些既有权威，不先新增第二套重装状态或迁移。
+- 旧 installation 完成 D6B 终态后，创建全新 installation 与 generation，按新 binding 独立产生 epoch；在原 cutover group 的 9/9 legacy 行上以更高 expected/target group revision 重新 prepare→commit→validate→resume。新 cutover 必须使用绑定新 target 的新 Approval；旧 Approval 因 proposal payload/target/hash 不同而拒绝。
+- 固定保存旧 DispatchRef 后再切新代：旧 installation/generation/epoch/dispatch revision/group revision 任一复用都必须被 HostPort 当前事务校验拒绝；旧 operation/idempotency Receipt 只能在旧 installation scope 回读，不能驱动新 installation。新代九项必须全部指向同一新 installation/generation/epoch/group revision，不允许半组。
+- 卸载前后的旧 runtime operation、disable/detach/uninstall Receipt 与 installation revision 保留且同 tenant 可读，跨租户继续不可见。若联合反证发现既有锁或 hash 未覆盖某一旧权威，再新增最窄 guard；若全部通过，D6C 只提交测试、证据与必要的可复用测试夹具，不为“有代码量”修改生产路径。
 
 ### D6D：同 digest 隔离联合验收
 
