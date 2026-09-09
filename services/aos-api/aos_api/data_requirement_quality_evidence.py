@@ -85,7 +85,7 @@ class QualityEvidenceStore:
         item = QualityEvidenceInput.model_validate(body["input"])
         ref = InvestigationExactRef(resource_type="Evidence", resource_id="evidence-quality-" + digest,
                                     revision=1, content_hash="sha256:" + digest)
-        self._transaction.execute("""INSERT INTO aip_evidence
+        self._transaction.execute("""INSERT INTO public.aip_evidence
             (org_id,project_id,evidence_id,run_id,evidence_type,subject_ref,source_type,source_ref,
              observed_at,freshness_at,content_hash,redaction,payload,created_by,created_at)
             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'{}'::jsonb,%s,%s,%s)
@@ -104,10 +104,10 @@ class QualityEvidenceStore:
             or ref.receipt_id is not None or ref.resource_id != "evidence-quality-" + ref.content_hash[7:]):
             raise ValueError("exact quality evidence reference required")
         row = self._transaction.execute("""SELECT e.*, EXISTS(
-            SELECT 1 FROM aip_evidence_revoke_event r WHERE r.org_id=e.org_id
+            SELECT 1 FROM public.aip_evidence_revoke_event r WHERE r.org_id=e.org_id
             AND r.project_id=e.project_id AND r.evidence_id=e.evidence_id
             AND r.revision=1 AND r.content_hash=e.content_hash) AS revoked
-            FROM aip_evidence e WHERE e.org_id=%s AND e.project_id=%s AND e.evidence_id=%s""",
+            FROM public.aip_evidence e WHERE e.org_id=%s AND e.project_id=%s AND e.evidence_id=%s""",
             (*self._scope.key, ref.resource_id)).fetchone()
         if row is None:
             return None
@@ -123,7 +123,7 @@ class QualityEvidenceStore:
             subject_ref=_subject(item), source_type=TYPE, source_ref=item.requirement.requirement_id,
             observed_at=item.measurement.measured_at, freshness_at=item.measurement.source_observed_at,
             content_hash=digest, redaction={}, created_by=item.actor, created_at=item.evaluated_at)
-        if (body != raw or ref.content_hash != "sha256:" + digest
+        if (canonical_hash(raw) != digest or body != raw or ref.content_hash != "sha256:" + digest
             or any(row.get(key) != value for key, value in expected.items())):
             raise ValueError("quality evidence authority drifted")
         return item

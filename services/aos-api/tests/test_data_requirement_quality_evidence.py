@@ -54,7 +54,7 @@ def test_original_requirement_timezone_and_hash_are_not_rewritten():
     assert canonical_quality_evidence(SCOPE, QualityEvidenceInput.model_validate(body["input"])) == (body, digest)
 
 
-@pytest.mark.parametrize("defect", ["tenant", "hash", "actor", "source", "freshness", "body", "ref"])
+@pytest.mark.parametrize("defect", ["tenant", "hash", "actor", "source", "freshness", "body", "ref", "raw_type"])
 def test_exact_read_rejects_column_and_payload_drift_without_writes(defect):
     value = evidence_input()
     body, digest = canonical_quality_evidence(SCOPE, value)
@@ -73,6 +73,7 @@ def test_exact_read_rejects_column_and_payload_drift_without_writes(defect):
     if defect == "freshness": row["freshness_at"] = NOW + timedelta(seconds=1)
     if defect == "body": row["payload"]["factIds"] = ["Order"]
     if defect == "ref": ref.revision = "1"
+    if defect == "raw_type": row["payload"]["input"]["requirement"]["piiAllowed"] = 0
     conn = Connection(row)
     with pytest.raises(ValueError): QualityEvidenceStore(HostTransaction(conn), SCOPE).read_exact(ref)
     assert conn.commits == 0 and all(sql.startswith("SELECT") for sql, _ in conn.calls)
@@ -119,3 +120,27 @@ def test_isolated_postgres_replay_rollback_canary_and_revocation():
         with runtime() as (_, store):
             with pytest.raises(ValueError, match="revoked"): store.read_exact(ref)
             with pytest.raises(ValueError, match="revoked"): store.put(value)
+
+
+def test_temporary_tables_cannot_shadow_quality_owner_or_revocation():
+    with isolated_aip_migration_database("ar2_quality_shadow") as (_, dsn):
+        with psycopg.connect(dsn, row_factory=dict_row) as conn:
+            conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)", SCOPE.key)
+            conn.execute("CREATE TEMP TABLE aip_evidence (LIKE public.aip_evidence INCLUDING ALL)")
+            conn.execute("CREATE TEMP TABLE aip_evidence_revoke_event (LIKE public.aip_evidence_revoke_event INCLUDING ALL)")
+            store = QualityEvidenceStore(HostTransaction(conn), SCOPE)
+            ref = store.put(evidence_input())
+            assert conn.execute("SELECT count(*) AS n FROM public.aip_evidence WHERE evidence_id=%s", (ref.resource_id,)).fetchone()["n"] == 1
+            assert conn.execute("SELECT count(*) AS n FROM pg_temp.aip_evidence").fetchone()["n"] == 0
+            params = (*SCOPE.key, ref.resource_id, ref.content_hash[7:])
+            conn.execute("""INSERT INTO pg_temp.aip_evidence_revoke_event
+                (org_id,project_id,event_id,evidence_id,content_hash,reason,actor)
+                VALUES(%s,%s,'shadow-revoke',%s,%s,'fake revocation','user:test')""", params)
+            assert store.read_exact(ref) is not None
+            conn.execute("DELETE FROM pg_temp.aip_evidence_revoke_event")
+            conn.execute("""INSERT INTO public.aip_evidence_revoke_event
+                (org_id,project_id,event_id,evidence_id,content_hash,reason,actor)
+                VALUES(%s,%s,'actual-revoke',%s,%s,'actual revocation','user:test')""", params)
+            with pytest.raises(ValueError, match="revoked"):
+                store.read_exact(ref)
+            conn.rollback()
