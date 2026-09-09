@@ -2,7 +2,7 @@
 
 日期：2026-09-10
 基线：`aos-platform/m1@b6589cd7`、`docs/m1@682b0ab`
-状态：`REVIEWED_IMPLEMENTATION_PLAN_D6C_NEXT`
+状态：`AR2_7D_DISABLE_UNINSTALL_REINSTALL_GREEN`
 
 ## 1. Rules 与边界
 
@@ -82,3 +82,10 @@
 - 每切片：新 PostgreSQL 专项、既有 disable/lifecycle/production host/asset uninstall 邻接、compile、diff check、Alembic 单头、closure、memory validate。
 - D6A 后运行完整 `tests/extension_runtime`；D6B/C 增加 asset registry uninstall/replacement 全量；D6D 增加真实隔离 OCI 观察。
 - D6 退出必须同时具备：同 digest 安装启用、九项派发、停用先围栏、排空后 9/9 legacy detach、资源确认释放、卸载、重装新代次、旧权威拒绝和历史只读。唯一切片结论为 `AR2_7D_DISABLE_UNINSTALL_REINSTALL_GREEN`，随后进入 AR2-7D 剩余可插拔累计验收；不提前宣布 AR2-7 或 7E 完成。
+
+## 6. 施工结果（2026-09-10）
+
+- D6A 已完成 disable fence、claim gate pause、9/9 dispatch fence/detach 的事务联动与生产接线；D6B 已完成 exact ownership cleanup、uninstall 数据库权威与 InstallationService 双入口接线；D6C 已完成新 installation/generation/epoch 与旧 Approval、DispatchRef、Receipt 的隔离证明。
+- D6D1 已用真实 OCI 验证同 digest 两代实体创建、独立 readback、exact owner/container-id 删除与 lease released；D6D2 已在同一 tenant/schema 串联仓内签名 Registry、PreparationWorker、verify/configure/enable、两轮 9/9 cutover、disable/detach、物理释放、正式 uninstall 与第二代重装。
+- 专项最终为 `1 passed`，完整 ecommerce cutover 为 `65 passed`，完整 extension runtime 为 `1280 passed`；测试后 OCI owner、测试容器与临时 PostgreSQL schema 均无残留。D6 唯一结论为 `AR2_7D_DISABLE_UNINSTALL_REINSTALL_GREEN`。
+- 本结果不前推 AR2-7 或 7E，不授权真实租户装卸、Provider、费用、共享/生产迁移、外部发布或 push；下一步按清册进入 AR2-7D 剩余可插拔累计验收。

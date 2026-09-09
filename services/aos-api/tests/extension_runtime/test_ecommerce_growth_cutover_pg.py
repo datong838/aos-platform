@@ -281,30 +281,50 @@ def _seed(
     expected_group_revision: int = 11,
     target_execution_epoch: int = 7,
     target_runtime_revision: int = 13,
+    target_installation_id=None,
+    target_generation=None,
 ):
     owner = database.owner
     owner.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
-    installation, generation = uuid4(), uuid4()
+    if (target_installation_id is None) != (target_generation is None):
+        raise ValueError("target installation and generation must be supplied together")
+    installation = target_installation_id or uuid4()
+    generation = target_generation or uuid4()
     group = existing_group or uuid4()
-    owner.execute(
-        "INSERT INTO bundle_installation(org_id,project_id,installation_id) VALUES(%s,%s,%s)",
-        (*scope.key, installation),
-    )
-    owner.execute(
-        """INSERT INTO bundle_installation_revision(org_id,project_id,installation_pk,revision,state)
-           SELECT org_id,project_id,installation_pk,1,'active' FROM bundle_installation
-           WHERE org_id=%s AND project_id=%s AND installation_id=%s""",
-        (*scope.key, installation),
-    )
-    owner.execute(
-        """INSERT INTO extension_runtime_binding(
-             org_id,project_id,installation_id,generation,installation_revision,package_lock_ref,
-             profile_ref,config_ref,execution_epoch,desired_state,observed_state,enabled,
-             operation_fence,revision)
-           VALUES(%s,%s,%s,%s,2,'{}','internal-python-v1','{}',%s,'enabled',%s,%s,false,%s)""",
-        (*scope.key, installation, generation, target_execution_epoch,
-         "ready" if ready else "unknown", ready, target_runtime_revision),
-    )
+    if target_installation_id is None:
+        owner.execute(
+            "INSERT INTO bundle_installation(org_id,project_id,installation_id) VALUES(%s,%s,%s)",
+            (*scope.key, installation),
+        )
+        owner.execute(
+            """INSERT INTO bundle_installation_revision(org_id,project_id,installation_pk,revision,state)
+               SELECT org_id,project_id,installation_pk,1,'active' FROM bundle_installation
+               WHERE org_id=%s AND project_id=%s AND installation_id=%s""",
+            (*scope.key, installation),
+        )
+        owner.execute(
+            """INSERT INTO extension_runtime_binding(
+                 org_id,project_id,installation_id,generation,installation_revision,package_lock_ref,
+                 profile_ref,config_ref,execution_epoch,desired_state,observed_state,enabled,
+                 operation_fence,revision)
+               VALUES(%s,%s,%s,%s,2,'{}','internal-python-v1','{}',%s,'enabled',%s,%s,false,%s)""",
+            (*scope.key, installation, generation, target_execution_epoch,
+             "ready" if ready else "unknown", ready, target_runtime_revision),
+        )
+    else:
+        bound = owner.execute(
+            """SELECT execution_epoch,revision,enabled,operation_fence,observed_state
+                 FROM extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s""",
+            (*scope.key, installation, generation),
+        ).fetchone()
+        assert bound == {
+            "execution_epoch": target_execution_epoch,
+            "revision": target_runtime_revision,
+            "enabled": ready,
+            "operation_fence": not ready,
+            "observed_state": "ready" if ready else "unknown",
+        }
     operations = sorted(ECOMMERCE_GROWTH_OPERATIONS)
     if not complete:
         operations = operations[:-1]

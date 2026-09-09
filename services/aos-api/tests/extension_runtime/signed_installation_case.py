@@ -37,7 +37,9 @@ from aos_api.extension_runtime.oci_driver import OciDriver
 SCHEMA_PROBE_SQL='CREATE TABLE runtime_schema_probe (id bigint)'
 
 
-def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,planned=False,worker_mode=None,schema_setup=None,lifecycle_probe=None):
+def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,planned=False,
+                            worker_mode=None,schema_setup=None,lifecycle_probe=None,
+                            package_probe=None):
     from test_admission import fixture
     from test_persistent_supervisor import build_session_image,CONTEXT
     from offline_registry import cached_registry_image
@@ -93,6 +95,13 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
         fresh=RuntimeReleaseRevalidator(release_policy=policy)
         legacy=InstallationService(store=store,composition_store=composition_store,
             revalidator=InstallationRevalidator(release_policy=policy),planning_revalidator=fresh)
+        service=RuntimeLifecycleService(installation_store=store,installation_reader=legacy,revalidator=fresh)
+        if package_probe is not None:
+            return package_probe(connect=connect,record=record,read_artifact=args['read_artifact'],
+                platform=args['platform'],policy=policy,lock=lock,store=store,legacy=legacy,
+                composition_store=composition_store,revalidator=fresh,lifecycle=service,
+                scope=scope,selected=lock.payload.resolved[0],
+                manifest_digest=manifest_digest,config_digest=config_digest)
         draft=store.create_draft(**scope,request=CreateInstallationRequest(compositionId=lock.composition_id,
             lockRevision=lock.revision,overlayRevision='isolated-test',displayName='签名运行准备联合测试'),requested_by='test-author')
         action=dict(**scope,installation_id=draft.installation_id,markings=[],roles=['asset-installer'],actor='test-author')
@@ -103,7 +112,6 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                 migrationPlanHash=lock.migration_plan_hash,contributionDiffHash=lock.contribution_diff_hash),
             idempotency_key='signed-approve',if_match=f'"{submitted.etag_version}"')
         approved=store.get_installation(**scope,installation_id=draft.installation_id)
-        service=RuntimeLifecycleService(installation_store=store,installation_reader=legacy,revalidator=fresh)
         accepted=service.request_preparation(**action,kind='runtime-apply',idempotency_key='signed-prepare',
             if_match=f'"{approved.etag_version}"')
         operation=accepted.response_json['operationId']
