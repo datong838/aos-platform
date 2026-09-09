@@ -58,6 +58,14 @@
 - 以一个仓内签名 ecommerce-growth 制品，在允许的隔离 OCI 完成 install → verify/configure/enable → 9 项可派发 → disable 禁入 → 9 项拒绝 → resource release → uninstall 不可见 → reinstall 新代次可派发。
 - 固定记录 image/package digest、installation/generation/epoch/group revision、每阶段 Receipt、OCI 资源观测和失败注入；不得用 mock 容器结果冒充物理释放。若当前引擎不满足 userns/seccomp，代码与 PostgreSQL 切片继续完成，D6D 明确保持 blocked，不降低隔离门。
 
+#### D6D 细化施工卡（2026-09-10）
+
+- 预检固定使用 `colima-aos-extension`；必须由 `OciDriver.require_isolation()` 实测 Linux、userns、seccomp，并先通过真实 registration/cleanup/seccomp 用例。任何一项不满足即停止 OCI 动作并记录 blocked，不切到默认 Docker、不取消安全参数。
+- D6D1 在 D6C 完整 PostgreSQL authority 链上把 mock resource 替换为真实 `OciDriver.create_session` 结果：持久化 exact image/config digest、平台生成 name/owner 和 64 位 container id，先独立 readback 运行/ownership/security 参数，再走 disable/detach 与 `RuntimeUninstallCleanupExecutor(CleanupOnlyOciDriver)`。删除后必须由独立 `docker inspect` 得到 absent，lease 同时为 `released/observed_release=true`；unknown、owner 或 container-id 漂移均不重发且不得进入 uninstall。
+- D6D2 新增专用 `test_ecommerce_growth_signed_lifecycle_pg.py`，复用现有仓内签名 Registry、offline registry、PreparationWorker、verify/configure/enable 和完整 AR2 cutover authority。第一代必须在同一 tenant/schema 内完成签名 install、真实 OCI running、9/9 extension resume、disable fence 后拒绝、9/9 legacy detach、物理 release、runtime/installation uninstall；随后用完全相同的 signed package/image digest 创建第二个 installation/generation，重新 verify/configure/enable/cutover 并证明 9/9 可派发。
+- 全链保存第一代 Approval、DispatchRef、validate Receipt、operation idempotency key 与 container id，在第二代逐项反证旧 authority；同时回读第一代 installation revision、runtime operation、cutover、disable/detach/uninstall Receipt。测试 teardown 必须按 exact owner/container id 清理所有 OCI container、临时 registry/image/schema，并独立确认无 `aos.extension.owner` 残留。
+- D6D1 与 D6D2 都通过后才允许结论 `AR2_7D_DISABLE_UNINSTALL_REINSTALL_GREEN`。若 D6D2 需要扩大 production 数据库角色或复制生命周期实现，先停止编码、更新本卡并拆出最窄实现方案；不得在测试里给 production role 补临时通用权限后声称完成。
+
 ## 4. 文件上限
 
 - 新增：`services/aos-api/alembic/versions/ar2_017_ecommerce_growth_disable_detach.py`、`services/aos-api/alembic/versions/ar2_018_runtime_uninstall_authority.py`、`services/aos-api/aos_api/ecommerce_growth_lifecycle.py`、`services/aos-api/aos_api/extension_runtime/runtime_uninstall.py`、`services/aos-api/tests/extension_runtime/test_ecommerce_growth_signed_lifecycle_pg.py`。
