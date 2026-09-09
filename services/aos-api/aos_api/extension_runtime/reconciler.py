@@ -21,6 +21,74 @@ class ResourceStillLive(RuntimeConflict):
 
 
 class ResourceJournal:
+    def uninstall_candidates(self,conn,*,org_id,project_id,installation_id,generation,
+                             engine_context,limit=100,after=None):
+        """Stable exact-generation cleanup scan; authority is rechecked per row."""
+        _require_transaction(conn)
+        if type(limit) is not int or not 1<=limit<=100:
+            raise ValueError('resource scan limit must be 1..100')
+        installation_id=UUID(str(installation_id));generation=UUID(str(generation))
+        after=UUID(str(after)) if after is not None else UUID(int=0)
+        rows=conn.execute('''SELECT r.resource_id FROM extension_runtime_resource_lease r
+            JOIN extension_runtime_operation o USING(org_id,project_id,operation_id)
+            WHERE r.org_id=%s AND r.project_id=%s AND o.installation_id=%s
+            AND r.generation=%s AND r.engine_context=%s AND NOT r.observed_release
+            AND r.resource_id>%s ORDER BY r.resource_id LIMIT %s''',
+            (org_id,project_id,installation_id,generation,engine_context,after,limit)).fetchall()
+        return [_values(row,('resource_id',))[0] for row in rows]
+
+    def begin_uninstall_cleanup(self,conn,*,org_id,project_id,installation_id,
+                                generation,resource_id,engine_context):
+        """Persist an unknown-outcome checkpoint before one authorized OCI removal."""
+        _require_transaction(conn)
+        installation_id=UUID(str(installation_id));generation=UUID(str(generation))
+        resource_id=UUID(str(resource_id))
+        target=(org_id,project_id,resource_id)
+        row=conn.execute('''SELECT r.owner_token_ref,r.resource_name,r.engine_context,
+                   r.container_id,r.create_claimed_at,r.cleanup_state,r.observed_release,
+                   o.installation_id,r.generation
+              FROM extension_runtime_resource_lease r
+              JOIN extension_runtime_operation o USING(org_id,project_id,operation_id)
+             WHERE r.org_id=%s AND r.project_id=%s AND r.resource_id=%s''',target).fetchone()
+        if row is None:raise LookupError('uninstall resource not found')
+        owner,name,context,container,claimed,state,released,actual_installation,actual_generation=_values(
+            row,('owner_token_ref','resource_name','engine_context','container_id','create_claimed_at',
+                 'cleanup_state','observed_release','installation_id','generation'))
+        intent=ResourceIntent(resource_id,ResourceIdentity(owner),context,True)
+        if (actual_installation,actual_generation,context,name)!=(
+                installation_id,generation,engine_context,intent.identity.name):
+            raise RuntimeConflict('uninstall resource identity mismatch')
+        if released and state=='released':return intent,container,'released'
+        if released or state=='released':raise RuntimeConflict('uninstall release authority differs')
+        if state=='uncertain':return intent,container,'uncertain'
+        if state!='pending' or claimed is None or container is None:
+            raise RuntimeConflict('uninstall resource has no exact creation observation')
+        binding=conn.execute('''SELECT desired_state,observed_state,enabled,operation_fence
+            FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s
+            AND installation_id=%s AND generation=%s FOR UPDATE''',
+            (org_id,project_id,installation_id,generation)).fetchone()
+        if binding is None or _values(binding,('desired_state','observed_state','enabled','operation_fence'))!=(
+                'disabled','unknown',False,True):
+            raise RuntimeConflict('runtime is not disabled for uninstall cleanup')
+        detached=conn.execute('''SELECT l.runtime_operation_id
+            FROM extension_dispatch_lifecycle_operation l
+            JOIN extension_runtime_operation d ON d.org_id=l.org_id AND d.project_id=l.project_id
+             AND d.operation_id=l.runtime_operation_id
+            JOIN extension_dispatch_cutover_operation c ON c.org_id=l.org_id AND c.project_id=l.project_id
+             AND c.cutover_operation_id=l.activation_operation_id
+            WHERE l.org_id=%s AND l.project_id=%s AND d.installation_id=%s
+              AND c.target_generation=%s AND l.status='detached'
+              AND d.kind='disable' AND d.status='succeeded' AND d.phase='succeeded'
+              AND (SELECT count(*) FROM extension_dispatch_lifecycle_receipt x
+                   WHERE x.org_id=l.org_id AND x.project_id=l.project_id
+                     AND x.runtime_operation_id=l.runtime_operation_id
+                     AND x.phase IN ('fence','detach'))=2
+            ORDER BY l.updated_at DESC LIMIT 1 FOR UPDATE OF l,d''',
+            (org_id,project_id,installation_id,generation)).fetchone()
+        if detached is None:raise RuntimeConflict('disable detach authority is unavailable')
+        self.record_cleanup(conn,org_id=org_id,project_id=project_id,intent=intent,removed=False)
+        return intent,container,'claimed'
+
     def expired(self,conn,*,org_id,project_id,engine_context,limit=100,after=None):
         """Bounded routing only. Recheck each candidate under locks before action."""
         _require_transaction(conn)

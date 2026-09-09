@@ -37,6 +37,8 @@ from aos_api.ecommerce_growth_lifecycle import (
 from aos_api.extension_runtime.binding_store import RuntimeBindingStore
 from aos_api.extension_runtime.disable_executor import RuntimeDisableExecutor
 from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
+from aos_api.extension_runtime.reconciler import ResourceJournal
+from aos_api.extension_runtime.runtime_uninstall import RuntimeUninstallCleanupExecutor
 from aos_api.tenant_scope import TenantScope
 
 
@@ -1580,6 +1582,48 @@ def _complete_runtime_disable(database, scope, operation_id, revision):
     return result
 
 
+def _seed_owned_runtime_resource(database, scope, prepare_request):
+    with _connection(database, runtime=True)(scope) as conn:
+        operation = RuntimeOperationStore().accept(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            installation_id=prepare_request.target_installation_id,
+            kind="runtime-apply",
+            idempotency_key="d6-owned-resource",
+            requested_by="runtime-owner",
+            expected_installation_etag=1,
+            deadline=datetime.now(timezone.utc) + timedelta(minutes=5),
+        )
+        journal = ResourceJournal()
+        intent = journal.prepare(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            operation_id=operation.operation_id,
+            generation=prepare_request.target_generation,
+            package_id="ecommerce-growth",
+            package_hash="sha256:" + "a" * 64,
+            engine_context="colima-aos-extension",
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        )
+        claimed = journal.claim_create(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            resource_id=intent.resource_id,
+        )
+        journal.record_created(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            intent=claimed,
+            container_id="b" * 64,
+        )
+        conn.commit()
+    return intent
+
+
 def test_resumed_disable_fences_then_detaches_exact_dispatch_group(database):
     scope = TenantScope("org-org", "dev-project")
     prepare_request, _ = _resumed_activation(database, scope)
@@ -1925,3 +1969,99 @@ def test_ar2_017_nonempty_lifecycle_authority_blocks_downgrade(database):
     _begin_runtime_disable(database, scope, prepare_request)
     with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState):
         _downgrade_ar2_017(database)
+
+
+@pytest.mark.parametrize("removed", [True, False])
+def test_runtime_uninstall_cleanup_is_one_shot_after_exact_detach(database, removed):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request, _ = _resumed_activation(database, scope)
+    intent = _seed_owned_runtime_resource(database, scope, prepare_request)
+    operation_id, revision = _begin_runtime_disable(database, scope, prepare_request)
+    _complete_runtime_disable(database, scope, operation_id, revision)
+    with _connection(database, runtime=True)(scope) as conn:
+        EcommerceGrowthDisableDependent(schema=database.schema).after_runtime_disabled(
+            conn,
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            runtime_operation_id=operation_id,
+        )
+        conn.commit()
+
+    class Driver:
+        context = "colima-aos-extension"
+
+        def __init__(self):
+            self.calls = 0
+
+        def require_isolation(self):
+            return None
+
+        def remove_owned(self, name, owner, *, expected_container_id):
+            self.calls += 1
+            assert (name, owner) == (intent.identity.name, intent.identity.owner)
+            assert expected_container_id == "b" * 64
+            return removed
+
+    driver = Driver()
+    executor = RuntimeUninstallCleanupExecutor(
+        connect=_idle_runtime_connection(database), driver=driver
+    )
+    first = executor.run_one(
+        org_id=scope.org_id,
+        project_id=scope.project_id,
+        installation_id=prepare_request.target_installation_id,
+        generation=prepare_request.target_generation,
+        resource_id=intent.resource_id,
+    )
+    second = executor.run_one(
+        org_id=scope.org_id,
+        project_id=scope.project_id,
+        installation_id=prepare_request.target_installation_id,
+        generation=prepare_request.target_generation,
+        resource_id=intent.resource_id,
+    )
+    assert first == ("released" if removed else "uncertain")
+    assert second == first
+    assert driver.calls == 1
+    assert database.owner.execute(
+        """SELECT cleanup_state,observed_release
+             FROM extension_runtime_resource_lease WHERE resource_id=%s""",
+        (intent.resource_id,),
+    ).fetchone() == {
+        "cleanup_state": first,
+        "observed_release": removed,
+    }
+
+
+def test_runtime_uninstall_cleanup_rejects_before_disable_detach(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request, _ = _resumed_activation(database, scope)
+    intent = _seed_owned_runtime_resource(database, scope, prepare_request)
+
+    class Driver:
+        context = "colima-aos-extension"
+
+        @staticmethod
+        def require_isolation():
+            raise AssertionError("unauthorized cleanup touched OCI")
+
+        @staticmethod
+        def remove_owned(*_args, **_kwargs):
+            raise AssertionError("unauthorized cleanup touched OCI")
+
+    executor = RuntimeUninstallCleanupExecutor(
+        connect=_idle_runtime_connection(database), driver=Driver()
+    )
+    with pytest.raises(ValueError, match="runtime is not disabled"):
+        executor.run_one(
+            org_id=scope.org_id,
+            project_id=scope.project_id,
+            installation_id=prepare_request.target_installation_id,
+            generation=prepare_request.target_generation,
+            resource_id=intent.resource_id,
+        )
+    assert database.owner.execute(
+        """SELECT cleanup_state,observed_release
+             FROM extension_runtime_resource_lease WHERE resource_id=%s""",
+        (intent.resource_id,),
+    ).fetchone() == {"cleanup_state": "pending", "observed_release": False}
