@@ -169,3 +169,4 @@ AR2-7 只通过数据库 CAS 切换这个 handler 指针，不再声称 Python �
 | `bundles/platforms/ecommerce-niushop/backend/ecommerce_niushop/connector.py` | 原路径 | adapter package；既有 Niushop 类型化 connector，只由受控宿主承载读取 | 5c53d528df282609d0c2cda7bf1d848f266cf69d45933fb1fc7a49c4310db5bc |
 
 | `services/aos-api/aos_api/ecommerce_data_requirement_query_applicability.py` | 原路径 | data query port；真实需求与固定查询只读缺口诊断，不产生履约权威 | NEW |
+| `services/aos-api/aos_api/ecommerce_product_joint_quality.py` | 原路径 | data query port；验证观察后的固定逐商品联合字段计量，不产生业务事实 | NEW |
