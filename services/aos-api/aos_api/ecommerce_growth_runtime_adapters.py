@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 import hashlib
 import json
+import math
+import re
 from typing import Any, Mapping, Protocol
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -46,6 +48,8 @@ from aos_api.ecommerce_investigation_description_store import (
 )
 from aos_api.source_readiness import PostgresSourceReadinessFactSource, SourceReadinessService
 from aos_api.data_requirement_store import DataRequirementStore
+from aos_api.data_fulfillment_store import DataFulfillmentStore, canonical_fulfillment_content_hash
+from aos_api.data_requirement_contracts import DataFulfillmentReceiptRecord
 from aos_api.ecommerce_business_investigation_data_command import (
     EcommerceBusinessInvestigationDataCommandService,
     RequestBusinessInvestigationMissingDataCommand,
@@ -470,6 +474,44 @@ def _strict_data_request(command):
     return key, version, refs, request
 
 
+def _strict_data_bind(command):
+    expected = {
+        "operation", "idempotencyKey", "requirementRef", "sourceReadinessRef",
+        "artifactRefs", "factRefs", "cutoffAt", "qualityScore", "sourceSummaryHash",
+    }
+    if type(command) is not dict or set(command) != expected or command["operation"] != "data.fulfillment.bind":
+        raise ValueError("data fulfillment command has an invalid envelope")
+    key = command["idempotencyKey"]
+    if type(key) is not str or key != key.strip() or not 1 <= len(key) <= 200:
+        raise ValueError("data fulfillment idempotencyKey is invalid")
+    requirement = command["requirementRef"]
+    readiness = command["sourceReadinessRef"]
+    artifacts = command["artifactRefs"]
+    facts = command["factRefs"]
+    cutoff = command["cutoffAt"]
+    quality = command["qualityScore"]
+    summary = command["sourceSummaryHash"]
+    if type(cutoff) is not str or not cutoff.strip():
+        raise ValueError("data fulfillment cutoffAt is invalid")
+    if type(quality) not in {int, float} or not math.isfinite(float(quality)) or not 0 < float(quality) <= 1:
+        raise ValueError("data fulfillment qualityScore is invalid")
+    if type(summary) is not str or not re.fullmatch(r"sha256:[0-9a-f]{64}", summary):
+        raise ValueError("data fulfillment sourceSummaryHash is invalid")
+    if type(artifacts) is not list or not artifacts or type(facts) is not list or not facts:
+        raise ValueError("data fulfillment requires exact artifacts and facts")
+    requirement_ref = InvestigationExactRef.model_validate(requirement)
+    readiness_ref = InvestigationExactRef.model_validate(readiness)
+    if requirement_ref.resource_type != "DataRequirementRevision":
+        raise ValueError("data fulfillment requirement type drifted")
+    if readiness_ref.resource_type != "SourceReadinessEnvelope" or readiness_ref.receipt_id is None:
+        raise ValueError("data fulfillment source readiness drifted")
+    artifact_refs = tuple(InvestigationExactRef.model_validate(item) for item in artifacts)
+    fact_refs = tuple(InvestigationExactRef.model_validate(item) for item in facts)
+    if any(item.resource_type != "FactRevision" for item in fact_refs):
+        raise ValueError("data fulfillment fact type drifted")
+    return key, requirement_ref, readiness_ref, artifact_refs, fact_refs, cutoff
+
+
 class DataRequirementRequestHostService:
     """Request-only slice; registered DataFulfill awaits observation/bind wiring."""
 
@@ -559,6 +601,120 @@ class DataRequirementRequestHostService:
         if expected is None:
             return {}
         expected["replayed"] = bool(receipt.get("replayed"))
+        return expected if dict(receipt) == expected else {}
+
+
+class DataFulfillHostService:
+    """Request plus fulfillment bind; client qualityScore never becomes Receipt authority."""
+
+    executor_identity = DataRequirementRequestHostService.executor_identity
+
+    def __init__(self) -> None:
+        self._request = DataRequirementRequestHostService()
+
+    @staticmethod
+    def _bind_components(transaction, scope):
+        factory = TransactionBoundConnectFactory(transaction, scope)
+        return DataRequirementStore(factory), DataFulfillmentStore(factory)
+
+    def revalidate(self, *, transaction, scope, dispatch, command):
+        if type(command) is dict and command.get("operation") == "data.requirement.request":
+            return self._request.revalidate(
+                transaction=transaction, scope=scope, dispatch=dispatch, command=command
+            )
+        key, requirement_ref, _readiness, _artifacts, _facts, cutoff = _strict_data_bind(command)
+        if dispatch.operation_id != "ecommerce_growth_data_fulfill":
+            raise ValueError("data fulfillment dispatch operation drifted")
+        data, _store = self._bind_components(transaction, scope)
+        requirement = data.get_exact(scope, requirement_ref)
+        if requirement.cutoff_at.astimezone(UTC).isoformat() != cutoff:
+            raise ValueError("fulfillment cutoff drifted from requirement")
+        if not key:
+            raise ValueError("data fulfillment idempotencyKey is invalid")
+
+    def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
+        if type(command) is dict and command.get("operation") == "data.requirement.request":
+            return self._request.execute(
+                transaction=transaction,
+                scope=scope,
+                dispatch_ref=dispatch_ref,
+                command=command,
+                checked_at=checked_at,
+                occurred_at=occurred_at,
+            )
+        key, requirement_ref, readiness_ref, artifacts, _facts, cutoff = _strict_data_bind(command)
+        data, store = self._bind_components(transaction, scope)
+        requirement = data.get_exact(scope, requirement_ref)
+        if requirement.cutoff_at.astimezone(UTC).isoformat() != cutoff:
+            raise ValueError("fulfillment cutoff drifted from requirement")
+        fulfilled_at = occurred_at or checked_at
+        record = DataFulfillmentReceiptRecord.model_validate(
+            {
+                "schemaVersion": "aos.data-fulfillment-authority-receipt/v1",
+                "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+                "fulfillmentId": key,
+                "receiptId": key,
+                "requirementRef": requirement_ref.model_dump(by_alias=True, exclude_none=True),
+                "status": "fulfilled",
+                "artifactRefs": [item.model_dump(by_alias=True, exclude_none=True) for item in artifacts],
+                "sourceReadinessRef": readiness_ref.model_dump(by_alias=True, exclude_none=True),
+                "cutoffAt": requirement.cutoff_at,
+                "fulfilledAt": fulfilled_at,
+                "contentHash": "sha256:" + "0" * 64,
+                "createdBy": self.executor_identity,
+                "blockers": [],
+            }
+        )
+        record = record.model_copy(update={"content_hash": canonical_fulfillment_content_hash(record)})
+        result = store.bind(scope, self.executor_identity, key, record)
+        saved = store.read_exact(
+            scope,
+            InvestigationExactRef(
+                resource_type="DataFulfillmentReceipt",
+                resource_id=result.receipt_id,
+                revision=1,
+                content_hash=result.etag,
+                receipt_id=result.receipt_id,
+            ),
+        )
+        if saved is None:
+            return {}
+        return {
+            "fulfillmentRef": {
+                "resourceType": "DataFulfillmentReceipt",
+                "resourceId": saved.receipt_id,
+                "revision": 1,
+                "contentHash": saved.content_hash,
+                "receiptId": saved.receipt_id,
+            }
+        }
+
+    def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        if type(command) is dict and command.get("operation") == "data.requirement.request":
+            return self._request.verify_receipt(
+                transaction=transaction,
+                scope=scope,
+                dispatch=dispatch,
+                command=command,
+                receipt=receipt,
+            )
+        _key, _requirement_ref, _readiness, _artifacts, _facts, _cutoff = _strict_data_bind(command)
+        ref = receipt.get("fulfillmentRef") if type(receipt) is dict else None
+        if type(ref) is not dict:
+            return {}
+        _data, store = self._bind_components(transaction, scope)
+        saved = store.read_exact(scope, InvestigationExactRef.model_validate(ref))
+        if saved is None:
+            return {}
+        expected = {
+            "fulfillmentRef": {
+                "resourceType": "DataFulfillmentReceipt",
+                "resourceId": saved.receipt_id,
+                "revision": 1,
+                "contentHash": saved.content_hash,
+                "receiptId": saved.receipt_id,
+            }
+        }
         return expected if dict(receipt) == expected else {}
 
 
@@ -1042,6 +1198,8 @@ __all__ = [adapter.__name__ for adapter in RUNTIME_ADAPTER_TYPES] + [
     "CasePutHostService",
     "SchedulePutHostService",
     "ScheduleTriggerHostService",
+    "DataRequirementRequestHostService",
+    "DataFulfillHostService",
     "TransactionBoundConnectFactory",
     "TrustedEcommerceGrowthDomainService",
 ]
