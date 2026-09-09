@@ -22,6 +22,12 @@ from aos_api.aip_budget_reservation_store import (
     BudgetReservationConflict,
     canonical_hash,
 )
+from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_runtime_adapters import (
+    ContentGenerateHostService,
+    TransactionBoundConnectFactory,
+    _analysis_command_hash,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -360,6 +366,208 @@ def seed_usage(
         resourceType="UsageReceipt", resourceId=receipt_id, revision=1,
         contentHash=canonical_hash(dict(row), prefixed=True),
     )
+
+
+def content_generate_command(request: ReserveBudgetRequest) -> dict[str, object]:
+    extra = {
+        "handoff": "HandoffReceipt",
+        "brief": "TaskBriefRevision",
+        "growth_plan": "GrowthPlanRevision",
+        "agent_instance": "AgentInstanceRevision",
+        "responsibility_plan": "ResponsibilityPlanRevision",
+        "capability": "CapabilityRevision",
+        "model_route": "ModelRouteRevision",
+        "capacity_reservation": "CapacityReservation",
+    }
+
+    def ref(kind: str, identity: str, digit: str) -> dict[str, object]:
+        return {
+            "resourceType": kind,
+            "resourceId": identity,
+            "revision": 1,
+            "contentHash": "sha256:" + digit * 64,
+        }
+
+    authorities = {
+        name: ref(kind, name, format(index + 6, "x")[-1])
+        for index, (name, kind) in enumerate(extra.items())
+    }
+    authorities.update(
+        {
+            "task": request.task_ref.model_dump(mode="json", by_alias=True),
+            "budget": request.policy_ref.model_dump(mode="json", by_alias=True),
+            "pricing": request.pricing_ref.model_dump(mode="json", by_alias=True),
+            "approval": request.approval_ref.model_dump(mode="json", by_alias=True),
+        }
+    )
+    command = {
+        "operation": "content.generate",
+        "authorityRefs": authorities,
+        "sourceArtifactRefs": [
+            ref("ArtifactRevision", f"artifact-{digit}", digit)
+            for digit in ("a", "b", "c", "d")
+        ],
+        "factSourceRefs": [ref("EvidenceBundleRevision", "facts", "e")],
+        "currency": "CNY",
+        "upperBoundFen": request.upper_bound_minor,
+        "maxInputTokens": 1000,
+        "maxOutputTokens": 500,
+        "idempotencyKey": request.invocation_key,
+    }
+    command["requestHash"] = _analysis_command_hash(command)
+    return command
+
+
+def test_content_generate_host_persists_and_replays_no_provider_receipt(
+    database, monkeypatch
+):
+    scope = TenantScope("org-org", "dev-project")
+    request, _refs, _now = seed(database, scope, task_id="task-content-host")
+    command = content_generate_command(request)
+
+    def store_for(transaction, bound_scope):
+        return AipBudgetReservationStore(
+            TransactionBoundConnectFactory(transaction, bound_scope),
+            authority_schema=database.schema,
+        )
+
+    monkeypatch.setattr(
+        ContentGenerateHostService,
+        "_budget_store",
+        staticmethod(store_for),
+    )
+    monkeypatch.setattr(
+        ContentGenerateHostService,
+        "_runtime_command_authority",
+        staticmethod(lambda *_args: None),
+    )
+    with runtime_connection(database)(scope) as conn:
+        transaction = HostTransaction(conn)
+        service = ContentGenerateHostService()
+        first = service.execute(
+            transaction=transaction,
+            scope=scope,
+            dispatch_ref=object(),
+            command=command,
+            checked_at=None,
+            occurred_at=None,
+        )
+        assert service.verify_receipt(
+            transaction=transaction,
+            scope=scope,
+            dispatch=object(),
+            command=command,
+            receipt=first,
+        ) == first
+        replay = service.execute(
+            transaction=transaction,
+            scope=scope,
+            dispatch_ref=object(),
+            command=command,
+            checked_at=None,
+            occurred_at=None,
+        )
+
+    assert first["state"] == "FAILED_NO_EFFECT" and first["replayed"] is False
+    assert replay == {**first, "replayed": True}
+    reservation = database.owner.execute(
+        """SELECT state,provider_request_receipt_ref,provider_receipt_ref,
+                  usage_receipt_refs,actual_minor,reconciliation_evidence_ref
+             FROM aip_budget_reservation
+            WHERE org_id=%s AND project_id=%s AND invocation_key=%s""",
+        (*scope.key, request.invocation_key),
+    ).fetchone()
+    invocation = database.owner.execute(
+        """SELECT state FROM aip_capability_invocation
+            WHERE org_id=%s AND project_id=%s AND invocation_key=%s""",
+        (*scope.key, request.invocation_key),
+    ).fetchone()
+    buckets = database.owner.execute(
+        """SELECT held_minor,submitted_minor,unknown_minor
+             FROM aip_budget_bucket WHERE org_id=%s AND project_id=%s""",
+        scope.key,
+    ).fetchall()
+    assert reservation == {
+        "state": "released",
+        "provider_request_receipt_ref": None,
+        "provider_receipt_ref": None,
+        "usage_receipt_refs": [],
+        "actual_minor": None,
+        "reconciliation_evidence_ref": None,
+    }
+    assert invocation == {"state": "failed"}
+    assert len(buckets) == 3
+    assert all(
+        row["held_minor"] == row["submitted_minor"] == row["unknown_minor"] == 0
+        for row in buckets
+    )
+    assert database.owner.execute(
+        """SELECT count(*) AS total FROM aip_capability_provider_request_receipt
+            WHERE org_id=%s AND project_id=%s""",
+        scope.key,
+    ).fetchone()["total"] == 0
+
+
+def test_budget_store_ignores_same_name_temp_storage_shadow(database):
+    scope = TenantScope("org-org", "dev-project")
+    request, _refs, _now = seed(database, scope, task_id="task-storage-shadow")
+    with runtime_connection(database)(scope) as conn:
+        conn.execute("CREATE TEMP TABLE aip_budget_reservation(dummy text)")
+
+        @contextmanager
+        def bound_connection(_scope):
+            yield conn
+
+        store = AipBudgetReservationStore(
+            bound_connection,
+            authority_schema=database.schema,
+        )
+        held = store.reserve(scope, request, actor="tester")
+    assert held.state == "held"
+
+
+def test_budget_get_rejects_tampered_invocation_owner(database):
+    scope = TenantScope("org-org", "dev-project")
+    request, _refs, _now = seed(database, scope, task_id="task-owner-tamper")
+    store = AipBudgetReservationStore(
+        runtime_connection(database), authority_schema=database.schema
+    )
+    held = store.reserve(scope, request, actor="tester")
+    database.owner.execute("ALTER TABLE aip_capability_invocation DISABLE TRIGGER ALL")
+    try:
+        database.owner.execute(
+            """UPDATE aip_capability_invocation SET state='submitted'
+                WHERE org_id=%s AND project_id=%s AND invocation_id=%s""",
+            (*scope.key, held.invocation_ref.resource_id),
+        )
+    finally:
+        database.owner.execute("ALTER TABLE aip_capability_invocation ENABLE TRIGGER ALL")
+    with pytest.raises(BudgetReservationConflict, match="Owner authority drifted"):
+        store.get(scope, held.reservation_ref.resource_id)
+
+
+def test_budget_get_rejects_raw_bool_ref_drift_after_release(database):
+    scope = TenantScope("org-org", "dev-project")
+    request, _refs, _now = seed(database, scope, task_id="task-ref-bool-tamper")
+    store = AipBudgetReservationStore(
+        runtime_connection(database), authority_schema=database.schema
+    )
+    held = store.reserve(scope, request, actor="tester")
+    released = store.release_no_effect(
+        scope, held.reservation_ref.resource_id, actor="tester"
+    )
+    database.owner.execute("ALTER TABLE aip_budget_reservation DISABLE TRIGGER ALL")
+    try:
+        database.owner.execute(
+            """UPDATE aip_budget_reservation
+                  SET task_ref=jsonb_set(task_ref,'{revision}','true'::jsonb)
+                WHERE org_id=%s AND project_id=%s AND reservation_id=%s""",
+            (*scope.key, released.reservation_ref.resource_id),
+        )
+    finally:
+        database.owner.execute("ALTER TABLE aip_budget_reservation ENABLE TRIGGER ALL")
+    with pytest.raises(BudgetReservationConflict, match="Owner authority drifted"):
+        store.get(scope, released.reservation_ref.resource_id)
 
 
 def test_rls_state_machine_unknown_reconcile_and_nonempty_downgrade(database):

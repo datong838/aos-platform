@@ -249,8 +249,7 @@ def test_content_generate_accepts_review_handoff_and_current_task_brief(monkeypa
         dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
         command=values["command"],
     )
-    assert result["key"] == "content-generate-1"
-    assert result["reviewReceiptRef"]["resourceType"] == "ReviewDecisionReceipt"
+    assert result is None
     assert sum("FOR SHARE" in query for query in transaction.queries) == 2
 
 

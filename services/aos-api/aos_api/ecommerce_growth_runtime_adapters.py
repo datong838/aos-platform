@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 import hashlib
@@ -31,7 +32,13 @@ from aos_api.aip_binding_readiness_service import AipBindingReadinessService
 from aos_api.aip_capability_binding_service import AipCapabilityBindingService
 from aos_api.aip_skill_binding_readiness_service import AipSkillBindingReadinessService
 from aos_api.aip_skill_registry import AipSkillRegistry
-from aos_api.aip_budget_reservation_contracts import BudgetExactRef
+from aos_api.aip_budget_reservation_contracts import (
+    BudgetExactRef,
+    BudgetReservationRevision,
+    BudgetReservationState,
+    ReserveBudgetRequest,
+    exact_ref_payload as budget_exact_ref_payload,
+)
 from aos_api.aip_budget_reservation_store import (
     AipBudgetReservationStore,
     BudgetReservationError,
@@ -2634,9 +2641,111 @@ def _strict_content_generate_command(command: Mapping[str, Any]) -> dict[str, An
 
 
 class ContentGenerateHostService:
-    """Incomplete content capability host: exact input lineage only."""
+    """Current-authority content capability with a receipt-first no-effect result."""
 
     executor_identity = "ecommerce-growth-content-generate-host"
+
+    @staticmethod
+    def _budget_request(command: Mapping[str, Any]) -> ReserveBudgetRequest:
+        parsed = _strict_content_generate_command(command)
+        authorities = parsed["authorities"]
+        return ReserveBudgetRequest(
+            operationId="ecommerce_growth_content_generate",
+            invocationKey=parsed["key"],
+            taskRef=BudgetExactRef.model_validate(
+                authorities["task"].model_dump(
+                    mode="json", by_alias=True, exclude_none=True
+                )
+            ),
+            policyRef=BudgetExactRef.model_validate(
+                authorities["budget"].model_dump(
+                    mode="json", by_alias=True, exclude_none=True
+                )
+            ),
+            pricingRef=BudgetExactRef.model_validate(
+                authorities["pricing"].model_dump(
+                    mode="json", by_alias=True, exclude_none=True
+                )
+            ),
+            approvalRef=BudgetExactRef.model_validate(
+                authorities["approval"].model_dump(
+                    mode="json", by_alias=True, exclude_none=True
+                )
+            ),
+            currency="CNY",
+            upperBoundMinor=command["upperBoundFen"],
+        )
+
+    @staticmethod
+    def _budget_store(transaction, scope) -> AipBudgetReservationStore:
+        return AipBudgetReservationStore(
+            TransactionBoundConnectFactory(transaction, scope)
+        )
+
+    @staticmethod
+    def _runtime_command_authority(transaction, scope, command):
+        row = transaction.execute(
+            """SELECT request_hash,response
+                 FROM public.ecommerce_growth_runtime_command_receipt
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_generate'
+                  AND idempotency_key=%s""",
+            (*scope.key, command["idempotencyKey"]),
+        ).fetchone()
+        if row is None:
+            return None
+        response = row.get("response")
+        if (
+            row.get("request_hash") != _request_hash(command)
+            or type(response) is not dict
+            or response.get("requestHash") != command["requestHash"]
+        ):
+            raise ValueError("content generate full command replay drifted")
+        return deepcopy(response)
+
+    @staticmethod
+    def _no_effect_receipt(
+        command: Mapping[str, Any],
+        reservation: BudgetReservationRevision,
+        *,
+        replayed: bool,
+    ) -> dict[str, Any]:
+        if (
+            reservation.state is not BudgetReservationState.RELEASED
+            or reservation.provider_request_receipt_ref is not None
+            or reservation.provider_receipt_ref is not None
+            or reservation.usage_receipt_refs
+            or reservation.actual_minor is not None
+            or reservation.reconciliation_evidence_ref is not None
+        ):
+            raise ValueError("content generate no-effect budget state drifted")
+        return {
+            "receiptRef": budget_exact_ref_payload(reservation.invocation_ref),
+            "requestHash": command["requestHash"],
+            "state": "FAILED_NO_EFFECT",
+            "authorityRefs": deepcopy(command["authorityRefs"]),
+            "sourceArtifactRefs": deepcopy(command["sourceArtifactRefs"]),
+            "budgetReservationRef": budget_exact_ref_payload(
+                reservation.reservation_ref
+            ),
+            "budgetState": "RELEASED",
+            "providerRequestReceiptRef": None,
+            "providerReceiptRef": None,
+            "usageReceiptRefs": [],
+            "artifact": None,
+            "currency": "CNY",
+            "upperBoundFen": command["upperBoundFen"],
+            "actualFen": None,
+            "retryDirective": "RETRYABLE_NO_EFFECT",
+            "replayed": replayed,
+            "sideEffects": {
+                "providerInvocationCount": 0,
+                "approvalCreatedCount": 0,
+                "taskRunCreatedCount": 0,
+                "externalPublicationCount": 0,
+                "externalBusinessMutationCount": 0,
+            },
+        }
 
     @staticmethod
     def _review_receipt(transaction, scope, authorities, source_values):
@@ -3780,10 +3889,87 @@ class ContentGenerateHostService:
             dependency_row,
             checked_at=checked_at,
         )
-        return {
-            "key": parsed["key"],
-            "reviewReceiptRef": review["receiptRef"],
-        }
+        if review["receiptRef"]["resourceType"] != "ReviewDecisionReceipt":
+            raise ValueError("content generate Review Receipt authority drifted")
+
+    def execute(
+        self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at
+    ):
+        persisted = self._runtime_command_authority(transaction, scope, command)
+        if persisted is not None:
+            verified = self.verify_receipt(
+                transaction=transaction,
+                scope=scope,
+                dispatch=None,
+                command=command,
+                receipt=persisted,
+            )
+            if verified != persisted:
+                raise ValueError("content generate persisted Receipt drifted")
+            return persisted
+        request = self._budget_request(command)
+        store = self._budget_store(transaction, scope)
+        reservation = store.reserve(scope, request, actor=self.executor_identity)
+        if reservation.state not in {
+            BudgetReservationState.HELD,
+            BudgetReservationState.RELEASED,
+        }:
+            raise ValueError("content generate invocation already crossed Provider boundary")
+        released = store.release_no_effect(
+            scope,
+            reservation.reservation_ref.resource_id,
+            actor=self.executor_identity,
+        )
+        return self._no_effect_receipt(
+            command,
+            released,
+            replayed=released.replayed,
+        )
+
+    def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        if type(receipt) is not dict or type(receipt.get("replayed")) is not bool:
+            return {}
+        request = self._budget_request(command)
+        raw_reservation_ref = receipt.get("budgetReservationRef")
+        if type(raw_reservation_ref) is not dict:
+            return {}
+        try:
+            strict_reservation_ref = _content_exact_ref(
+                raw_reservation_ref, "BudgetReservationRevision"
+            )
+            reservation_ref = BudgetExactRef.model_validate(
+                strict_reservation_ref.model_dump(
+                    mode="json", by_alias=True, exclude_none=True
+                )
+            )
+            reservation = self._budget_store(transaction, scope).get(
+                scope, reservation_ref.resource_id
+            )
+        except (BudgetReservationError, ValueError):
+            return {}
+        if (
+            reservation.operation_id != request.operation_id
+            or reservation.invocation_key != request.invocation_key
+            or reservation.task_ref != request.task_ref
+            or reservation.policy_ref != request.policy_ref
+            or reservation.pricing_ref != request.pricing_ref
+            or reservation.approval_ref != request.approval_ref
+            or reservation.currency != request.currency
+            or reservation.upper_bound_minor != request.upper_bound_minor
+            or reservation.request_hash != request.request_hash()
+            or _request_hash(budget_exact_ref_payload(reservation.reservation_ref))
+            != _request_hash(raw_reservation_ref)
+        ):
+            return {}
+        expected = self._no_effect_receipt(
+            command,
+            reservation,
+            replayed=receipt["replayed"],
+        )
+        try:
+            return expected if _request_hash(receipt) == _request_hash(expected) else {}
+        except (TypeError, ValueError):
+            return {}
 
 
 class InvestigationDescribeAdapter(_ExplicitRuntimeAdapter):

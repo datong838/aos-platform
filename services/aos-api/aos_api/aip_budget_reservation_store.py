@@ -67,11 +67,17 @@ class AipBudgetReservationStore:
         connect_factory: ConnectFactory | None = None,
         *,
         authority_schema: str = "public",
+        storage_schema: str | None = None,
     ) -> None:
-        if re.fullmatch(r"[a-z_][a-z0-9_]*", authority_schema) is None:
+        storage_schema = authority_schema if storage_schema is None else storage_schema
+        if any(
+            re.fullmatch(r"[a-z_][a-z0-9_]*", value) is None
+            for value in (authority_schema, storage_schema)
+        ):
             raise ValueError("authority schema is invalid")
         self._connect_factory = connect_factory or connect_serializable
         self._authority_schema = authority_schema
+        self._storage_schema = storage_schema
 
     def reserve(
         self,
@@ -160,7 +166,7 @@ class AipBudgetReservationStore:
                 {**immutable, "state": "held", "revision": 1}, prefixed=True
             )
             conn.execute(
-                """INSERT INTO aip_capability_invocation(
+                f"""INSERT INTO {self._storage_schema}.aip_capability_invocation(
                 org_id,project_id,invocation_id,operation_id,invocation_key,request_hash,
                 task_ref,policy_ref,approval_ref,pricing_ref,currency,upper_bound_minor,state,
                 revision,content_hash,created_at,updated_at)
@@ -184,7 +190,7 @@ class AipBudgetReservationStore:
                 ),
             )
             conn.execute(
-                """INSERT INTO aip_budget_reservation(
+                f"""INSERT INTO {self._storage_schema}.aip_budget_reservation(
                 org_id,project_id,reservation_id,invocation_id,operation_id,invocation_key,
                 task_ref,policy_ref,pricing_ref,approval_ref,currency,upper_bound_minor,
                 state,request_hash,revision,content_hash,created_at,updated_at)
@@ -210,7 +216,7 @@ class AipBudgetReservationStore:
             )
             for bucket in buckets:
                 conn.execute(
-                    """UPDATE aip_budget_bucket SET held_minor=held_minor+%s,
+                    f"""UPDATE {self._storage_schema}.aip_budget_bucket SET held_minor=held_minor+%s,
                     version=version+1,updated_at=clock_timestamp()
                     WHERE org_id=%s AND project_id=%s AND bucket_kind=%s
                     AND account_id=%s AND period_start=%s AND currency=%s""",
@@ -224,7 +230,7 @@ class AipBudgetReservationStore:
                     ),
                 )
                 conn.execute(
-                    """INSERT INTO aip_budget_reservation_bucket(
+                    f"""INSERT INTO {self._storage_schema}.aip_budget_reservation_bucket(
                     org_id,project_id,reservation_id,bucket_kind,account_id,period_start,
                     currency,reserved_minor) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
                     (
@@ -272,8 +278,8 @@ class AipBudgetReservationStore:
         with self._connect_factory(scope) as conn:
             row = self._reservation_by_id(conn, scope, reservation_id, lock=True)
             stored = conn.execute(
-                """SELECT provider_ref,provider_idempotency_hash
-                FROM aip_capability_provider_request_receipt
+                f"""SELECT provider_ref,provider_idempotency_hash
+                FROM {self._storage_schema}.aip_capability_provider_request_receipt
                 WHERE org_id=%s AND project_id=%s AND invocation_id=%s""",
                 (*scope.key, row["invocation_id"]),
             ).fetchone()
@@ -302,7 +308,7 @@ class AipBudgetReservationStore:
                 contentHash=canonical_hash(receipt_payload, prefixed=True),
             )
             conn.execute(
-                """INSERT INTO aip_capability_provider_request_receipt(
+                f"""INSERT INTO {self._storage_schema}.aip_capability_provider_request_receipt(
                 org_id,project_id,request_receipt_id,invocation_id,request_hash,
                 provider_ref,provider_idempotency_hash,revision,content_hash,submitted_at)
                 VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s,1,%s,%s)""",
@@ -489,7 +495,7 @@ class AipBudgetReservationStore:
             )
             for ref in usage_receipt_refs:
                 conn.execute(
-                    """INSERT INTO aip_budget_usage_settlement(
+                    f"""INSERT INTO {self._storage_schema}.aip_budget_usage_settlement(
                     org_id,project_id,usage_receipt_id,reservation_id,usage_receipt_ref,
                     actual_minor,created_at) VALUES(%s,%s,%s,%s,%s::jsonb,%s,%s)""",
                     (
@@ -533,7 +539,7 @@ class AipBudgetReservationStore:
             buckets, key=lambda item: (item.kind, item.account_id, item.period_start)
         ):
             conn.execute(
-                """INSERT INTO aip_budget_bucket(
+                f"""INSERT INTO {self._storage_schema}.aip_budget_bucket(
                 org_id,project_id,bucket_kind,account_id,period_start,period_end,
                 currency,limit_minor) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)
                 ON CONFLICT(org_id,project_id,bucket_kind,account_id,period_start,currency)
@@ -565,8 +571,8 @@ class AipBudgetReservationStore:
         if from_column not in allowed or (to_column is not None and to_column not in allowed):
             raise ValueError("unsupported budget bucket movement")
         links = conn.execute(
-            """SELECT bucket_kind,account_id,period_start,currency,reserved_minor
-            FROM aip_budget_reservation_bucket
+            f"""SELECT bucket_kind,account_id,period_start,currency,reserved_minor
+            FROM {self._storage_schema}.aip_budget_reservation_bucket
             WHERE org_id=%s AND project_id=%s AND reservation_id=%s
             ORDER BY bucket_kind,account_id,period_start""",
             (*scope.key, reservation_id),
@@ -589,7 +595,7 @@ class AipBudgetReservationStore:
                 ]
             )
             cursor = conn.execute(
-                f"""UPDATE aip_budget_bucket SET {from_column}={from_column}-%s
+                f"""UPDATE {self._storage_schema}.aip_budget_bucket SET {from_column}={from_column}-%s
                 {target_sql}, version=version+1,updated_at=clock_timestamp()
                 WHERE org_id=%s AND project_id=%s AND bucket_kind=%s
                 AND account_id=%s AND period_start=%s AND currency=%s
@@ -632,7 +638,7 @@ class AipBudgetReservationStore:
             "reconciliationEvidenceRef": exact_ref_payload(reconciliation_ref),
         }
         cursor = conn.execute(
-            """UPDATE aip_budget_reservation SET state=%s,actual_minor=%s,
+            f"""UPDATE {self._storage_schema}.aip_budget_reservation SET state=%s,actual_minor=%s,
             provider_request_receipt_ref=COALESCE(%s::jsonb,provider_request_receipt_ref),
             provider_receipt_ref=%s::jsonb,usage_receipt_refs=%s::jsonb,
             reconciliation_evidence_ref=%s::jsonb,revision=%s,content_hash=%s,updated_at=%s
@@ -696,7 +702,7 @@ class AipBudgetReservationStore:
             contentHash=canonical_hash(payload, prefixed=True),
         )
         conn.execute(
-            """INSERT INTO aip_capability_provider_receipt(
+            f"""INSERT INTO {self._storage_schema}.aip_capability_provider_receipt(
             org_id,project_id,provider_receipt_id,invocation_id,request_receipt_id,
             outcome,provider_result_hash,evidence_refs,revision,content_hash,observed_at)
             VALUES(%s,%s,%s,%s,%s,%s,%s,%s::jsonb,1,%s,%s)""",
@@ -737,8 +743,8 @@ class AipBudgetReservationStore:
         normalized_hash = self._digest(provider_result_hash, "provider result hash")
         stored_ref = BudgetExactRef.model_validate(stored_ref_payload)
         stored = conn.execute(
-            """SELECT invocation_id,request_receipt_id,outcome,provider_result_hash,
-            evidence_refs,revision,content_hash FROM aip_capability_provider_receipt
+            f"""SELECT invocation_id,request_receipt_id,outcome,provider_result_hash,
+            evidence_refs,revision,content_hash FROM {self._storage_schema}.aip_capability_provider_receipt
             WHERE org_id=%s AND project_id=%s AND provider_receipt_id=%s""",
             (*scope.key, stored_ref.resource_id),
         ).fetchone()
@@ -764,7 +770,7 @@ class AipBudgetReservationStore:
         self, conn: Any, scope: TenantScope, ref: BudgetExactRef
     ) -> None:
         row = conn.execute(
-            """SELECT content_hash,lifecycle FROM aip_provider_instance_revision
+            f"""SELECT content_hash,lifecycle FROM {self._authority_schema}.aip_provider_instance_revision
             WHERE org_id=%s AND project_id=%s AND provider_instance_id=%s AND revision=%s""",
             (*scope.key, ref.resource_id, ref.revision),
         ).fetchone()
@@ -775,9 +781,8 @@ class AipBudgetReservationStore:
         ):
             raise BudgetReservationBlocked("active exact ProviderInstanceRevision required")
 
-    @classmethod
     def _update_invocation_state(
-        cls,
+        self,
         conn: Any,
         scope: TenantScope,
         invocation_id: uuid.UUID,
@@ -785,16 +790,16 @@ class AipBudgetReservationStore:
         now: datetime,
     ) -> None:
         row = conn.execute(
-            """SELECT * FROM aip_capability_invocation
+            f"""SELECT * FROM {self._storage_schema}.aip_capability_invocation
             WHERE org_id=%s AND project_id=%s AND invocation_id=%s FOR UPDATE""",
             (*scope.key, invocation_id),
         ).fetchone()
         if row is None:
             raise BudgetReservationConflict("capability invocation authority missing")
         revision = int(row["revision"]) + 1
-        content_hash = canonical_hash(cls._invocation_payload(row, state, revision), prefixed=True)
+        content_hash = canonical_hash(self._invocation_payload(row, state, revision), prefixed=True)
         conn.execute(
-            """UPDATE aip_capability_invocation SET state=%s,revision=%s,
+            f"""UPDATE {self._storage_schema}.aip_capability_invocation SET state=%s,revision=%s,
             content_hash=%s,updated_at=%s WHERE org_id=%s AND project_id=%s
             AND invocation_id=%s""",
             (state, revision, content_hash, now, *scope.key, invocation_id),
@@ -817,6 +822,45 @@ class AipBudgetReservationStore:
             "revision": revision,
         }
 
+    @staticmethod
+    def _reservation_payload(row: Any) -> dict[str, Any]:
+        revision = int(row["revision"])
+        if revision == 1:
+            return {
+                "operationId": row["operation_id"],
+                "invocationKey": row["invocation_key"],
+                "requestHash": row["request_hash"],
+                "taskRef": AipBudgetReservationStore._load(row["task_ref"]),
+                "policyRef": AipBudgetReservationStore._load(row["policy_ref"]),
+                "pricingRef": AipBudgetReservationStore._load(row["pricing_ref"]),
+                "approvalRef": AipBudgetReservationStore._load(row["approval_ref"]),
+                "currency": row["currency"],
+                "upperBoundMinor": int(row["upper_bound_minor"]),
+                "state": row["state"],
+                "revision": revision,
+            }
+        return {
+            "reservationId": str(row["reservation_id"]),
+            "operationId": row["operation_id"],
+            "invocationKey": row["invocation_key"],
+            "requestHash": row["request_hash"],
+            "state": row["state"],
+            "revision": revision,
+            "actualMinor": row["actual_minor"],
+            "providerRequestReceiptRef": AipBudgetReservationStore._load(
+                row["provider_request_receipt_ref"]
+            ),
+            "providerReceiptRef": AipBudgetReservationStore._load(
+                row["provider_receipt_ref"]
+            ),
+            "usageReceiptRefs": AipBudgetReservationStore._load(
+                row["usage_receipt_refs"]
+            ),
+            "reconciliationEvidenceRef": AipBudgetReservationStore._load(
+                row["reconciliation_evidence_ref"]
+            ),
+        }
+
     def _usage_authority(
         self,
         conn: Any,
@@ -829,9 +873,10 @@ class AipBudgetReservationStore:
         if ref.resource_type != "UsageReceipt":
             raise ValueError("usage receipt ref must reference UsageReceipt")
         row = conn.execute(
-            """SELECT receipt_id,provider,provider_receipt_id,lineage_id,usage_kind,
+            f"""SELECT receipt_id,provider,provider_receipt_id,lineage_id,usage_kind,
             quantity,unit,currency,quality,source_hash,observed_at
-            FROM aip_usage_receipt WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
+            FROM {self._authority_schema}.aip_usage_receipt
+            WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
             (*scope.key, ref.resource_id),
         ).fetchone()
         if row is None or ref.revision != 1:
@@ -839,7 +884,7 @@ class AipBudgetReservationStore:
         if canonical_hash(dict(row), prefixed=True) != ref.content_hash:
             raise BudgetReservationConflict("UsageReceipt exact hash drifted")
         request_receipt = conn.execute(
-            """SELECT provider_ref FROM aip_capability_provider_request_receipt
+            f"""SELECT provider_ref FROM {self._storage_schema}.aip_capability_provider_request_receipt
             WHERE org_id=%s AND project_id=%s AND invocation_id=%s""",
             (*scope.key, reservation["invocation_id"]),
         ).fetchone()
@@ -872,7 +917,7 @@ class AipBudgetReservationStore:
     ) -> int:
         price_ref = BudgetExactRef.model_validate(self._load(reservation["pricing_ref"]))
         price_row = conn.execute(
-            """SELECT payload FROM aip_model_price_snapshot_revision
+            f"""SELECT payload FROM {self._authority_schema}.aip_model_price_snapshot_revision
             WHERE org_id=%s AND project_id=%s AND model_price_snapshot_id=%s AND revision=%s""",
             (*scope.key, price_ref.resource_id, price_ref.revision),
         ).fetchone()
@@ -888,7 +933,8 @@ class AipBudgetReservationStore:
         total = 0
         for ref in refs:
             usage = conn.execute(
-                """SELECT usage_kind,quantity,currency,quality,unit FROM aip_usage_receipt
+                f"""SELECT usage_kind,quantity,currency,quality,unit
+                FROM {self._authority_schema}.aip_usage_receipt
                 WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
                 (*scope.key, ref.resource_id),
             ).fetchone()
@@ -905,8 +951,8 @@ class AipBudgetReservationStore:
             )
         return total
 
-    @staticmethod
     def _bucket_row(
+        self,
         conn: Any,
         scope: TenantScope,
         bucket: BudgetBucketAuthority,
@@ -914,7 +960,7 @@ class AipBudgetReservationStore:
         lock: bool = False,
     ) -> Any:
         return conn.execute(
-            """SELECT * FROM aip_budget_bucket WHERE org_id=%s AND project_id=%s
+            f"""SELECT * FROM {self._storage_schema}.aip_budget_bucket WHERE org_id=%s AND project_id=%s
             AND bucket_kind=%s AND account_id=%s AND period_start=%s AND currency=%s"""
             + (" FOR UPDATE" if lock else ""),
             (*scope.key, bucket.kind, bucket.account_id, bucket.period_start, bucket.currency),
@@ -1128,8 +1174,8 @@ class AipBudgetReservationStore:
             (f"{scope.org_id}\x1f{scope.project_id}\x1f{operation_id}\x1f{invocation_key}",),
         )
 
-    @staticmethod
     def _reservation_by_key(
+        self,
         conn: Any,
         scope: TenantScope,
         operation_id: str,
@@ -1138,18 +1184,17 @@ class AipBudgetReservationStore:
         lock: bool,
     ) -> Any:
         return conn.execute(
-            """SELECT * FROM aip_budget_reservation WHERE org_id=%s AND project_id=%s
+            f"""SELECT * FROM {self._storage_schema}.aip_budget_reservation WHERE org_id=%s AND project_id=%s
             AND operation_id=%s AND invocation_key=%s"""
             + (" FOR UPDATE" if lock else ""),
             (*scope.key, operation_id, invocation_key),
         ).fetchone()
 
-    @staticmethod
     def _reservation_by_id(
-        conn: Any, scope: TenantScope, reservation_id: str | uuid.UUID, *, lock: bool
+        self, conn: Any, scope: TenantScope, reservation_id: str | uuid.UUID, *, lock: bool
     ) -> Any:
         row = conn.execute(
-            """SELECT * FROM aip_budget_reservation WHERE org_id=%s AND project_id=%s
+            f"""SELECT * FROM {self._storage_schema}.aip_budget_reservation WHERE org_id=%s AND project_id=%s
             AND reservation_id=%s"""
             + (" FOR UPDATE" if lock else ""),
             (*scope.key, reservation_id),
@@ -1162,15 +1207,67 @@ class AipBudgetReservationStore:
         self, conn: Any, scope: TenantScope, row: Any, *, replayed: bool
     ) -> BudgetReservationRevision:
         invocation = conn.execute(
-            """SELECT revision,content_hash FROM aip_capability_invocation
+            f"""SELECT * FROM {self._storage_schema}.aip_capability_invocation
             WHERE org_id=%s AND project_id=%s AND invocation_id=%s""",
             (*scope.key, row["invocation_id"]),
         ).fetchone()
         if invocation is None:
             raise BudgetReservationConflict("capability invocation authority missing")
+        expected_invocation_state = {
+            "held": "prepared",
+            "submitted": "submitted",
+            "unknown": "unknown",
+            "settled": "completed",
+            "released": "failed",
+        }.get(row["state"])
+        if (
+            expected_invocation_state is None
+            or invocation["state"] != expected_invocation_state
+            or invocation["operation_id"] != row["operation_id"]
+            or invocation["invocation_key"] != row["invocation_key"]
+            or invocation["request_hash"] != row["request_hash"]
+            or any(
+                canonical_hash(invocation[name]) != canonical_hash(row[name])
+                for name in ("task_ref", "policy_ref", "pricing_ref", "approval_ref")
+            )
+            or invocation["currency"] != row["currency"]
+            or int(invocation["upper_bound_minor"]) != int(row["upper_bound_minor"])
+            or invocation["content_hash"]
+            != canonical_hash(
+                self._invocation_payload(
+                    invocation, invocation["state"], int(invocation["revision"])
+                ),
+                prefixed=True,
+            )
+            or row["content_hash"]
+            != canonical_hash(self._reservation_payload(row), prefixed=True)
+        ):
+            raise BudgetReservationConflict("budget reservation Owner authority drifted")
+        provider_request_count = conn.execute(
+            f"""SELECT count(*) AS total
+                  FROM {self._storage_schema}.aip_capability_provider_request_receipt
+                 WHERE org_id=%s AND project_id=%s AND invocation_id=%s""",
+            (*scope.key, row["invocation_id"]),
+        ).fetchone()["total"]
+        provider_receipt_count = conn.execute(
+            f"""SELECT count(*) AS total
+                  FROM {self._storage_schema}.aip_capability_provider_receipt
+                 WHERE org_id=%s AND project_id=%s AND invocation_id=%s""",
+            (*scope.key, row["invocation_id"]),
+        ).fetchone()["total"]
+        expects_request = row["provider_request_receipt_ref"] is not None
+        expects_receipt = (
+            row["provider_receipt_ref"] is not None
+            or row["reconciliation_evidence_ref"] is not None
+        )
+        if (
+            provider_request_count != int(expects_request)
+            or provider_receipt_count != int(expects_receipt)
+        ):
+            raise BudgetReservationConflict("Provider Receipt Owner authority drifted")
         bucket_rows = conn.execute(
-            """SELECT b.* FROM aip_budget_reservation_bucket rb
-            JOIN aip_budget_bucket b ON b.org_id=rb.org_id AND b.project_id=rb.project_id
+            f"""SELECT b.* FROM {self._storage_schema}.aip_budget_reservation_bucket rb
+            JOIN {self._storage_schema}.aip_budget_bucket b ON b.org_id=rb.org_id AND b.project_id=rb.project_id
              AND b.bucket_kind=rb.bucket_kind AND b.account_id=rb.account_id
              AND b.period_start=rb.period_start AND b.currency=rb.currency
             WHERE rb.org_id=%s AND rb.project_id=%s AND rb.reservation_id=%s
@@ -1228,8 +1325,8 @@ class AipBudgetReservationStore:
             }
         )
 
-    @staticmethod
     def _event(
+        self,
         conn: Any,
         scope: TenantScope,
         reservation_id: uuid.UUID,
@@ -1251,7 +1348,7 @@ class AipBudgetReservationStore:
             "occurredAt": occurred_at,
         }
         conn.execute(
-            """INSERT INTO aip_budget_reservation_event(
+            f"""INSERT INTO {self._storage_schema}.aip_budget_reservation_event(
             org_id,project_id,event_id,reservation_id,sequence,from_state,to_state,
             actor,evidence_ref,event_hash,created_at)
             VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)""",
