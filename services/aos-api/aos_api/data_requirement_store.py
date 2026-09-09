@@ -201,11 +201,12 @@ class DataRequirementStore:
         self, scope: TenantScope, ref: InvestigationExactRef
     ) -> DataRequirementRevisionRecord:
         """Read an immutable historical revision without consulting current head."""
-        if ref.resource_type != "DataRequirementRevision":
+        if (ref.resource_type != "DataRequirementRevision" or type(ref.revision) is not int
+                or ref.revision < 1 or ref.receipt_id is not None):
             raise DataRequirementValidationError("exact DataRequirementRevision is required")
         with self._connect_factory(scope) as conn:
             row = conn.execute(
-                """SELECT payload,content_hash FROM data_requirement_revision
+                """SELECT payload,content_hash FROM public.data_requirement_revision
                     WHERE org_id=%s AND project_id=%s AND requirement_id=%s AND revision=%s""",
                 (*scope.key, ref.resource_id, ref.revision),
             ).fetchone()
@@ -218,6 +219,7 @@ class DataRequirementStore:
             or item.content_hash != ref.content_hash
             or "sha256:" + str(row["content_hash"]).strip() != ref.content_hash
             or canonical_revision_content_hash(item) != ref.content_hash
+            or canonical_hash(row["payload"]) != canonical_hash(item.model_dump(mode="json", by_alias=True))
         ):
             raise DataRequirementStoreError("DataRequirement exact revision drifted")
         return item

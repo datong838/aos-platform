@@ -167,3 +167,5 @@ AR2-7 只通过数据库 CAS 切换这个 handler 指针，不再声称 Python �
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/content_capability_runtime.py` | 原路径 | solution package；既有包内纯编排节点；公共权威仅经 SDK ports | ca149ec75b9578cf2f1691db79507aa145f56b7ad73295f6e1a117ca6c687095 |
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/result_feedback.py` | 原路径 | solution package；既有包内纯编排节点；公共权威仅经 SDK ports | 88be9cac4f9d89a56beed20be301540481ba76c196c15f8c41d62b32bdfa12f4 |
 | `bundles/platforms/ecommerce-niushop/backend/ecommerce_niushop/connector.py` | 原路径 | adapter package；既有 Niushop 类型化 connector，只由受控宿主承载读取 | 5c53d528df282609d0c2cda7bf1d848f266cf69d45933fb1fc7a49c4310db5bc |
+
+| `services/aos-api/aos_api/ecommerce_data_requirement_query_applicability.py` | 原路径 | data query port；真实需求与固定查询只读缺口诊断，不产生履约权威 | NEW |

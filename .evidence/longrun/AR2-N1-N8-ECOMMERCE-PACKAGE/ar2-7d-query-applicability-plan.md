@@ -1,0 +1,17 @@
+# AR2-7D D1 Requirement 与固定 Query 适用性诊断
+
+基线575c5e7e。复习231-6 D1、231-5事实链以及实际DataRequirement、L1 Profile、source-quality.v1和Fulfillment Saga。现有Product Query的三字段边际匹配数量不能恢复联合有效商品数，不能覆盖Product，更不能覆盖全店P01-P12；grain不是样本单位，业务窗口不是读取区间，metadata PASS不是行级质量。沿当前Task/Lease继续，无新授权要求。
+
+## 文件和实现
+
+新增services/aos-api/aos_api/ecommerce_data_requirement_query_applicability.py及tests/test_ecommerce_data_requirement_query_applicability.py；维护data_requirement_store.py及其原测试；登记closure-manifest.md新host读取节点。
+
+内部诊断入口仅HostTransaction/TenantScope、Requirement exact ref及固定QueryResult exact ref；必须REPEATABLE READ或SERIALIZABLE同一快照。复用DataRequirementStore.get_exact和ProductComparisonQueryService.read_exact，读取实际不可变需求与查询，后者验证Metric和观察撤销；再通过原QueryStore读取已验证request。不存在/篡改/跨租户或Channel/Entity不一致直接拒绝，不生成可使用结果。诊断不查当前Requirement头，因此仅针对明确历史修订，不作当前调度准入。
+
+DataRequirementStore.get_exact本次只补该方法public限定、严格ref revision/receipt检查、原payload与既有序列化DTO摘要对照；保持原合法写入/内容hash及其他Store方法行为。旧时区表达以现有model_dump(json)写入格式对照，不改变需求hash算法。
+
+返回不可变诊断（检查时刻来自数据库、固定not_applicable、原因tuple）；无satisfied/score字段，不保存新Evidence、不写Receipt、不注册DataFulfill、不连接源、不重复比较。按原需求状态/有效期/创建时间标明不可用；读取区间与业务窗口、cutoff分别对照。对所有requiredFact明确FACT_RULE_UNRESOLVED，固定POPULATION_POLICY_UNRESOLVED、SOURCE_FRESHNESS_UNKNOWN、HISTORICAL_SNAPSHOT_UNAVAILABLE、QUERY_PARTIAL；对每个requestedOutput明确OUTPUT_ARTIFACT_NOT_PRODUCED（包括EvidenceBundle，Query自身不是Bundle）。不按计数/阈值/acceptableDegradation偷渡通过。后续策略实现须以新明确政策替换缺口，不能把诊断改成空壳success。
+
+## 验证
+
+真实PG创建现有Owner需求和固定Query；即使Product三字段全部匹配，仍报告上述缺口。包含完全相同窗口、不同历史窗口、过期/取消/检查前创建、跨渠道/实体/tenant、错ref、观察撤销、外层回滚及read-only SELECT反证；历史规范变化不能导致重算。需求原JSON bool/int篡改拒绝；空临时需求表不能隐藏public权威。查询和需求邻接回归、闭包、独立本地只读复核；全部18434一次性库串行。230 L0挂起，不push，不前推AOS-000571或整波GREEN。

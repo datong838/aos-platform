@@ -160,12 +160,14 @@ def test_command_receipt_revalidates_payload_hash_and_tenant(tamper):
         assert store.find_command_receipt(SCOPE, "request", "request-1").authority == item
 
 
-@pytest.mark.parametrize("tamper", [None, "tenant", "payload", "revision", "identity"])
+@pytest.mark.parametrize("tamper", [None, "tenant", "payload", "revision", "identity", "raw_type"])
 def test_historical_requirement_readback_is_exact(tamper):
     item = requirement(org_id="dev-org" if tamper == "tenant" else "org-org")
     payload = item.model_dump(mode="json", by_alias=True)
     if tamper == "payload":
         payload["budgetMinor"] += 1
+    if tamper == "raw_type":
+        payload["piiAllowed"] = 0
     exact = InvestigationExactRef(resource_type="DataRequirementRevision",
         resource_id="another" if tamper == "identity" else item.requirement_id,
         revision=2 if tamper == "revision" else item.revision, content_hash=item.content_hash)
