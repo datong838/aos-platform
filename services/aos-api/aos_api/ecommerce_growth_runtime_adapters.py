@@ -130,8 +130,12 @@ from aos_api.ecommerce_business_investigation_data_command import (
     RequestBusinessInvestigationMissingDataCommand,
 )
 from aos_api.ecommerce_business_investigation_run import (
+    BusinessInvestigationRunControl,
     BusinessInvestigationRunStore,
     BusinessInvestigationTriggerKind,
+)
+from aos_api.aip_business_investigation_reconcile_saga import (
+    BusinessInvestigationReconciliationCoordinator,
 )
 from aos_api.aip_business_investigation_runtime import BusinessInvestigationRuntimeBinder
 from aos_api.aip_business_investigation_compile_saga import (
@@ -1455,6 +1459,118 @@ class AnalysisAdvanceHostService:
             **body,
         }
 
+    def _reconciling_receipt(self, command, prior, scope, key):
+        body = {
+            "requestHash": command["requestHash"],
+            "occurrenceRef": command["occurrenceRef"],
+            "caseRef": command["caseRef"],
+            "profileRef": command["profileRef"],
+            "cutoffAt": command["cutoffAt"],
+            "runRef": prior["runRef"],
+            "compilationRef": prior["compilationRef"],
+            "planRef": prior["planRef"],
+            "taskRunRef": prior["taskRunRef"],
+            "phase": "RECONCILING",
+            "recoverableAction": "RECONCILE_RECEIPT",
+            "checkpointRef": None,
+            "priorCheckpointRef": None,
+            "requirementRef": None,
+            "fulfillmentRef": None,
+            "sourceReadinessRef": None,
+            "mappingRef": None,
+            "evidenceRefs": [],
+            "observedAt": None,
+            "targetReceiptRef": prior["targetReceiptRef"],
+            "completed": False,
+        }
+        receipt_id = str(uuid5(ANALYSIS_RECEIPT_NAMESPACE, "\x1f".join((*scope.key, key))))
+        return {
+            "receiptRef": {
+                "resourceType": "AnalysisRuntimeReceipt",
+                "resourceId": receipt_id,
+                "revision": 1,
+                "contentHash": _analysis_command_hash(body),
+                "receiptId": receipt_id,
+            },
+            **body,
+        }
+
+    def _reconcile_authorities(self, *, transaction, scope, command, parsed, prior=None):
+        factory = TransactionBoundConnectFactory(transaction, scope)
+        receipts = _HostAnalysisReceiptStore(transaction, scope)
+        prior = prior or receipts.read_exact(command["priorReceiptRef"])
+        _validate_prior_analysis_receipt(command, parsed, prior)
+        run_ref = InvestigationExactRef.model_validate(prior["runRef"])
+        runs = BusinessInvestigationRunStore(factory)
+        run = runs.get(scope, run_ref.resource_id)
+        if (
+            run.authority.version != run_ref.revision
+            or run.authority.content_hash != run_ref.content_hash
+        ):
+            raise ValueError("analysis reconcile Run authority drifted")
+        current = run.state
+        if current.control is BusinessInvestigationRunControl.UNKNOWN:
+            observed_unknown = current
+        elif (
+            current.control is BusinessInvestigationRunControl.RECONCILING
+            and current.prior_ref is not None
+        ):
+            observed_unknown = runs.read_state_exact(scope, current.prior_ref)
+            if observed_unknown is None:
+                raise ValueError("analysis reconcile UNKNOWN predecessor is missing")
+        else:
+            raise ValueError("analysis reconcile requires UNKNOWN Run authority")
+        target = InvestigationExactRef.model_validate(prior["targetReceiptRef"])
+        uncertain = observed_unknown.uncertain_command
+        if (
+            observed_unknown.control is not BusinessInvestigationRunControl.UNKNOWN
+            or uncertain is None
+            or current.uncertain_command != uncertain
+            or uncertain.command_id != target.resource_id
+            or uncertain.request_hash != target.content_hash
+            or target.receipt_id != target.resource_id
+        ):
+            raise ValueError("analysis reconcile target authority drifted")
+        observed_ref = InvestigationExactRef(
+            resource_type="BusinessInvestigationRunStateRevision",
+            resource_id=observed_unknown.run_id,
+            revision=observed_unknown.version,
+            content_hash=observed_unknown.content_hash,
+        )
+        reconcile_key = BusinessInvestigationReconciliationCoordinator._idempotency_key(
+            scope, "reconciling", observed_ref, uncertain
+        )
+        return runs, prior, run, observed_unknown, observed_ref, uncertain, reconcile_key
+
+    def _verify_reconcile_commit(self, *, transaction, scope, command, parsed, receipt):
+        if type(receipt) is not dict or set(receipt) != _ANALYSIS_RECEIPT_FIELDS:
+            raise ValueError("analysis reconcile Receipt is malformed")
+        (
+            runs,
+            prior,
+            run,
+            observed_unknown,
+            _observed_ref,
+            _uncertain,
+            reconcile_key,
+        ) = self._reconcile_authorities(
+            transaction=transaction,
+            scope=scope,
+            command=command,
+            parsed=parsed,
+        )
+        successor = runs.read_reconcile_receipt(
+            scope, observed_unknown, idempotency_key=reconcile_key
+        )
+        if successor is None or successor != run.state:
+            raise ValueError("analysis reconcile domain transition Receipt drifted")
+        expected = self._reconciling_receipt(
+            command, prior, scope, parsed["key"]
+        )
+        if not _analysis_json_equal(receipt, expected):
+            raise ValueError("analysis reconcile unified Receipt drifted")
+        return expected
+
     def _resume_authorities(self, *, transaction, scope, command, parsed, prior=None):
         factory = TransactionBoundConnectFactory(transaction, scope)
         runs = BusinessInvestigationRunStore(factory)
@@ -1823,12 +1939,18 @@ class AnalysisAdvanceHostService:
 
     def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
         parsed = _strict_analysis_command(command)
-        if parsed["operation"] == "runtime.analysis.reconcile_unknown":
-            raise ValueError("analysis recovery data authority is not wired")
         key = parsed["key"]
         _reader, _cases, receipts = self._components(transaction, scope)
         existing = receipts.read(key)
         if existing is not None:
+            if parsed["operation"] == "runtime.analysis.reconcile_unknown":
+                return self._verify_reconcile_commit(
+                    transaction=transaction,
+                    scope=scope,
+                    command=command,
+                    parsed=parsed,
+                    receipt=existing,
+                )
             if parsed["operation"] == "runtime.analysis.resume_data":
                 return self._verify_resume_commit(
                     transaction=transaction,
@@ -1898,6 +2020,42 @@ class AnalysisAdvanceHostService:
                 parsed=parsed,
                 receipt=saved,
             )
+        if parsed["operation"] == "runtime.analysis.reconcile_unknown":
+            (
+                _runs,
+                prior,
+                _run,
+                _observed_unknown,
+                observed_ref,
+                uncertain,
+                _reconcile_key,
+            ) = self._reconcile_authorities(
+                transaction=transaction,
+                scope=scope,
+                command=command,
+                parsed=parsed,
+                prior=receipts.read_exact(command["priorReceiptRef"]),
+            )
+            event_time = occurred_at or checked_at
+            BusinessInvestigationReconciliationCoordinator(_runs).begin_reconcile(
+                scope,
+                observed_ref.resource_id,
+                observed_ref,
+                uncertain,
+                actor=self.executor_identity,
+                occurred_at=event_time,
+            )
+            payload = self._reconciling_receipt(command, prior, scope, key)
+            saved = receipts.put(
+                key, payload, dispatch_ref=dispatch_ref, checked_at=checked_at
+            )
+            return self._verify_reconcile_commit(
+                transaction=transaction,
+                scope=scope,
+                command=command,
+                parsed=parsed,
+                receipt=saved,
+            )
         _strict_analysis_start_command(command)
         lineage = self._start_lineage(
             transaction=transaction,
@@ -1910,13 +2068,23 @@ class AnalysisAdvanceHostService:
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
         parsed = _strict_analysis_command(command)
-        if parsed["operation"] == "runtime.analysis.reconcile_unknown":
-            raise ValueError("analysis recovery data authority is not wired")
         key = parsed["key"]
         _reader, _cases, receipts = self._components(transaction, scope)
         expected = receipts.read(key)
         if expected is None or type(receipt) is not dict:
             return {}
+        if parsed["operation"] == "runtime.analysis.reconcile_unknown":
+            try:
+                verified = self._verify_reconcile_commit(
+                    transaction=transaction,
+                    scope=scope,
+                    command=command,
+                    parsed=parsed,
+                    receipt=expected,
+                )
+            except (TypeError, ValueError):
+                return {}
+            return verified if _analysis_json_equal(receipt, verified) else {}
         if parsed["operation"] == "runtime.analysis.resume_data":
             try:
                 verified = self._verify_resume_commit(

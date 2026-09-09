@@ -230,6 +230,42 @@ def _strict_state_authority(
     return authority
 
 
+def _strict_legacy_state_authority(
+    raw: Any, *, error: str
+) -> BusinessInvestigationRunStateRevision:
+    """Validate BIW4 state JSON with its two known serialization differences."""
+    if (
+        type(raw) is not dict
+        or type(raw.get("version")) is not int
+        or type(raw.get("eventSequence")) is not int
+    ):
+        raise BusinessInvestigationRunConflict(error)
+    authority = BusinessInvestigationRunStateRevision.model_validate(raw)
+    canonical = authority.model_dump(by_alias=True, mode="json")
+    normalized_raw = {**raw, "createdAt": canonical["createdAt"]}
+    normalized_canonical = canonical
+    raw_prior = raw.get("priorRef")
+    if (
+        type(raw_prior) is dict
+        and "receiptId" not in raw_prior
+        and canonical.get("priorRef", {}).get("receiptId") is None
+    ):
+        normalized_canonical = {
+            **canonical,
+            "priorRef": {
+                key: value
+                for key, value in canonical["priorRef"].items()
+                if key != "receiptId"
+            },
+        }
+    if (
+        _canonical_hash(normalized_raw) != _canonical_hash(normalized_canonical)
+        or authority.calculated_content_hash() != authority.content_hash
+    ):
+        raise BusinessInvestigationRunConflict(error)
+    return authority
+
+
 class BusinessInvestigationRunStore:
     def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
         self._connect_factory = connect_factory or db_connect
@@ -271,8 +307,8 @@ class BusinessInvestigationRunStore:
             with self._connect_factory(scope) as conn:
                 row = conn.execute(
                     """SELECT r.authority_data AS run_authority,s.authority_data AS state_authority
-                    FROM ecommerce_investigation_run r
-                    JOIN ecommerce_investigation_run_state_head s
+                    FROM public.ecommerce_investigation_run r
+                    JOIN public.ecommerce_investigation_run_state_head s
                       ON s.org_id=r.org_id AND s.project_id=r.project_id AND s.run_id=r.run_id
                     WHERE r.org_id=%s AND r.project_id=%s AND r.run_id=%s""",
                     (*scope.key, run_id),
@@ -285,6 +321,37 @@ class BusinessInvestigationRunStore:
             authority=BusinessInvestigationRunRecord.model_validate(row["run_authority"]),
             state=BusinessInvestigationRunStateRevision.model_validate(row["state_authority"]),
         )
+
+    def read_state_exact(
+        self, scope: TenantScope, state_ref: InvestigationExactRef
+    ) -> BusinessInvestigationRunStateRevision | None:
+        """Read one immutable Run state revision and recompute its authority hash."""
+        if (
+            state_ref.resource_type != "BusinessInvestigationRunStateRevision"
+            or type(state_ref.revision) is not int
+        ):
+            raise BusinessInvestigationRunConflict("exact Run state ref is required")
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """SELECT authority_data FROM public.ecommerce_investigation_run_state_revision
+                    WHERE org_id=%s AND project_id=%s AND run_id=%s AND version=%s""",
+                (*scope.key, state_ref.resource_id, state_ref.revision),
+            ).fetchone()
+        if row is None:
+            return None
+        authority = _strict_legacy_state_authority(
+            row["authority_data"], error="historical Run state authority drifted"
+        )
+        if (
+            (authority.tenant.org_id, authority.tenant.project_id) != scope.key
+            or authority.run_id != state_ref.resource_id
+            or authority.version != state_ref.revision
+            or authority.content_hash != state_ref.content_hash
+        ):
+            raise BusinessInvestigationRunConflict(
+                "historical Run state exact ref drifted"
+            )
+        return authority
 
     def list_for_case(
         self,
@@ -408,7 +475,7 @@ class BusinessInvestigationRunStore:
         with self._connect_factory(scope) as conn:
             row = conn.execute(
                 """SELECT run_id,expected_version,authority_data
-                    FROM ecommerce_investigation_run_state_transition_receipt
+                    FROM public.ecommerce_investigation_run_state_transition_receipt
                     WHERE org_id=%s AND project_id=%s
                       AND operation='business_investigation_run.request_data' AND idempotency_key=%s""",
                 (*scope.key, idempotency_key),
@@ -660,6 +727,83 @@ class BusinessInvestigationRunStore:
             previous=previous,
         )
 
+    def read_reconcile_receipt(
+        self,
+        scope: TenantScope,
+        observed_unknown: BusinessInvestigationRunStateRevision,
+        *,
+        idempotency_key: str,
+    ) -> BusinessInvestigationRunStateRevision | None:
+        """Verify the immutable UNKNOWN -> RECONCILING transition Receipt."""
+        if (
+            (observed_unknown.tenant.org_id, observed_unknown.tenant.project_id)
+            != scope.key
+            or observed_unknown.control is not BusinessInvestigationRunControl.UNKNOWN
+            or observed_unknown.uncertain_command is None
+            or observed_unknown.calculated_content_hash()
+            != observed_unknown.content_hash
+            or not idempotency_key.strip()
+            or len(idempotency_key) > 200
+        ):
+            raise BusinessInvestigationRunConflict(
+                "historical reconcile predecessor drifted"
+            )
+        expected_request_hash = _canonical_hash(
+            {
+                "runId": observed_unknown.run_id,
+                "expectedVersion": observed_unknown.version,
+                "operation": "business_investigation_run.begin_reconcile",
+                "pendingRequirementRef": (
+                    observed_unknown.pending_requirement_ref.model_dump(
+                        by_alias=True, mode="json"
+                    )
+                    if observed_unknown.pending_requirement_ref
+                    else None
+                ),
+                "uncertainCommand": observed_unknown.uncertain_command.model_dump(
+                    by_alias=True, mode="json"
+                ),
+            }
+        )
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """SELECT run_id,expected_version,request_hash,authority_data
+                    FROM public.ecommerce_investigation_run_state_transition_receipt
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation='business_investigation_run.begin_reconcile'
+                      AND idempotency_key=%s""",
+                (*scope.key, idempotency_key),
+            ).fetchone()
+        if row is None:
+            return None
+        authority = _strict_legacy_state_authority(
+            row["authority_data"], error="historical reconcile Receipt drifted"
+        )
+        expected_prior = InvestigationExactRef(
+            resource_type="BusinessInvestigationRunStateRevision",
+            resource_id=observed_unknown.run_id,
+            revision=observed_unknown.version,
+            content_hash=observed_unknown.content_hash,
+        )
+        if (
+            row["run_id"] != observed_unknown.run_id
+            or int(row["expected_version"]) != observed_unknown.version
+            or row["request_hash"] != expected_request_hash
+            or (authority.tenant.org_id, authority.tenant.project_id) != scope.key
+            or authority.run_id != observed_unknown.run_id
+            or authority.version != observed_unknown.version + 1
+            or authority.prior_ref != expected_prior
+            or authority.lifecycle is not observed_unknown.lifecycle
+            or authority.control is not BusinessInvestigationRunControl.RECONCILING
+            or authority.pending_requirement_ref
+            != observed_unknown.pending_requirement_ref
+            or authority.uncertain_command != observed_unknown.uncertain_command
+        ):
+            raise BusinessInvestigationRunConflict(
+                "historical reconcile Receipt drifted"
+            )
+        return authority
+
     def _transition_extended(
         self,
         scope: TenantScope,
@@ -684,7 +828,7 @@ class BusinessInvestigationRunStore:
             with self._connect_factory(scope) as conn:
                 replay = conn.execute(
                     """SELECT run_id,expected_version,authority_data
-                    FROM ecommerce_investigation_run_state_transition_receipt
+                    FROM public.ecommerce_investigation_run_state_transition_receipt
                     WHERE org_id=%s AND project_id=%s AND operation=%s AND idempotency_key=%s""",
                     (*scope.key, operation, idempotency_key),
                 ).fetchone()
@@ -752,7 +896,7 @@ class BusinessInvestigationRunStore:
             with self._connect_factory(scope) as conn:
                 row = conn.execute(
                     """SELECT authority_data,replayed
-                    FROM ecommerce_investigation_run_state_transition_biw4_007(%s,%s,%s,%s,%s,%s)""",
+                    FROM public.ecommerce_investigation_run_state_transition_biw4_007(%s,%s,%s,%s,%s,%s)""",
                     (
                         run_id,
                         expected_version,

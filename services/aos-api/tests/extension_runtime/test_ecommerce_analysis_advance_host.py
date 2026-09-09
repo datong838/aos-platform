@@ -424,7 +424,9 @@ def test_resume_prior_receipt_drift_fails_closed(drift, monkeypatch):
         )
 
 
-def test_reconcile_reads_same_unknown_target_then_stays_execute_blocked(monkeypatch):
+def test_reconcile_reads_same_unknown_target_and_persists_reconciling(monkeypatch):
+    import aos_api.ecommerce_growth_runtime_adapters as adapters
+
     host, journal = wired_host(monkeypatch)
     transaction = HostTransaction(SimpleNamespace())
     dispatch = SimpleNamespace(operation_id="ecommerce_growth_analysis_advance")
@@ -438,15 +440,55 @@ def test_reconcile_reads_same_unknown_target_then_stays_execute_blocked(monkeypa
     host.revalidate(
         transaction=transaction, scope=SCOPE, dispatch=dispatch, command=command
     )
-    with pytest.raises(ValueError, match="data authority is not wired"):
-        host.execute(
-            transaction=transaction,
-            scope=SCOPE,
-            dispatch_ref=dispatch,
-            command=command,
-            checked_at=NOW,
-            occurred_at=NOW,
-        )
+    calls = []
+    observed_ref = SimpleNamespace(resource_id="run-1")
+    uncertain = SimpleNamespace()
+    runs = SimpleNamespace()
+    monkeypatch.setattr(
+        host,
+        "_reconcile_authorities",
+        lambda **_: (
+            runs,
+            saved,
+            SimpleNamespace(),
+            SimpleNamespace(),
+            observed_ref,
+            uncertain,
+            "domain-key",
+        ),
+    )
+
+    class Coordinator:
+        def __init__(self, owner):
+            assert owner is runs
+
+        def begin_reconcile(self, *args, **kwargs):
+            calls.append((args, kwargs))
+
+    monkeypatch.setattr(adapters, "BusinessInvestigationReconciliationCoordinator", Coordinator)
+    monkeypatch.setattr(host, "_verify_reconcile_commit", lambda **values: values["receipt"])
+    response = host.execute(
+        transaction=transaction,
+        scope=SCOPE,
+        dispatch_ref=dispatch,
+        command=command,
+        checked_at=NOW,
+        occurred_at=NOW,
+    )
+    assert response["phase"] == "RECONCILING"
+    assert response["recoverableAction"] == "RECONCILE_RECEIPT"
+    assert response["targetReceiptRef"] == saved["targetReceiptRef"]
+    assert response["completed"] is False
+    assert len(calls) == 1
+    assert host.execute(
+        transaction=transaction,
+        scope=SCOPE,
+        dispatch_ref=dispatch,
+        command=command,
+        checked_at=NOW,
+        occurred_at=NOW,
+    ) == response
+    assert len(calls) == 1
 
 
 @pytest.mark.parametrize("drift", ["late", "duplicate", "wrong_type", "extra"])

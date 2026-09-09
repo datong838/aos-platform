@@ -8,7 +8,7 @@ from importlib import util
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
-from uuid import uuid4
+from uuid import uuid4, uuid5
 
 from alembic import command
 import psycopg
@@ -30,16 +30,25 @@ from aos_api.ecommerce_business_investigation_case import (
 )
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
+    ANALYSIS_RECEIPT_NAMESPACE,
+    AnalysisAdvanceHostService,
     TransactionBoundConnectFactory,
     _AnalysisRunAndTaskResumer,
     _HostAnalysisReceiptStore,
+    _analysis_command_hash,
 )
 from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationRunConflict,
+    BusinessInvestigationRunControl,
     BusinessInvestigationRunLifecycle,
     BusinessInvestigationRunNotFound,
     BusinessInvestigationRunStore,
+    BusinessInvestigationUncertainCommand,
     _canonical_hash,
+    _strict_legacy_state_authority,
+)
+from aos_api.aip_business_investigation_reconcile_saga import (
+    BusinessInvestigationReconciliationCoordinator,
 )
 from aos_api.tenant_scope import TenantScope
 from tests.aip._migration_test_support import isolated_aip_migration_database
@@ -47,6 +56,10 @@ from tests.test_ecommerce_business_investigation_lifecycle import draft_case, re
 
 
 MIGRATION = Path(__file__).parents[2] / "alembic/versions/ar2_011_ecommerce_analysis_resume.py"
+RECONCILE_MIGRATION = (
+    Path(__file__).parents[2]
+    / "alembic/versions/ar2_012_ecommerce_analysis_reconcile_search_path.py"
+)
 SCOPE = TenantScope("org-org", "dev-project")
 OTHER_SCOPE = TenantScope("dev-org", "dev-project")
 NOW = datetime(2026, 9, 9, 2, tzinfo=UTC)
@@ -72,6 +85,14 @@ def _migration():
     return module
 
 
+def _reconcile_migration():
+    spec = util.spec_from_file_location("ar2_012", RECONCILE_MIGRATION)
+    assert spec and spec.loader
+    module = util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_migration_is_linear_rls_bounded_and_fail_closed() -> None:
     module = _migration()
     assert module.revision == "ar2_011" and module.down_revision == "ar2_010"
@@ -88,12 +109,35 @@ def test_migration_is_linear_rls_bounded_and_fail_closed() -> None:
     assert "search_path=pg_catalog,public,pg_temp" in sql
 
 
+def test_reconcile_migration_pins_public_before_temporary_schema() -> None:
+    module = _reconcile_migration()
+    assert module.revision == "ar2_012" and module.down_revision == "ar2_011"
+    statements: list[str] = []
+    with patch.object(module.op, "execute", statements.append):
+        module.upgrade()
+        module.downgrade()
+    assert statements == [
+        "ALTER FUNCTION public.ecommerce_investigation_run_state_transition_biw4_007"
+        "(text,bigint,text,text,text,jsonb) SET search_path = pg_catalog, public, pg_temp",
+        "ALTER FUNCTION public.ecommerce_investigation_run_state_transition_biw4_007"
+        "(text,bigint,text,text,text,jsonb) SET search_path = pg_catalog, public",
+    ]
+
+
 def test_empty_upgrade_downgrade_round_trip() -> None:
     with isolated_aip_migration_database(
         "ar2_analysis_resume_empty", migration_target="ar2_011"
     ) as (config, _dsn):
         command.downgrade(config, "ar2_010")
         command.upgrade(config, "ar2_011")
+
+
+def test_reconcile_search_path_upgrade_downgrade_round_trip() -> None:
+    with isolated_aip_migration_database(
+        "ar2_analysis_reconcile_search_path_empty", migration_target="ar2_012"
+    ) as (config, _dsn):
+        command.downgrade(config, "ar2_011")
+        command.upgrade(config, "ar2_012")
 
 
 def test_resume_after_data_replay_history_isolation_and_illegal_transitions() -> None:
@@ -616,4 +660,317 @@ def test_three_resume_owners_commit_replay_and_rollback_as_one_transaction() -> 
             assert conn.execute(
                 "SELECT count(*) AS n FROM aip_evidence WHERE evidence_type='run.control' "
                 "AND source_ref='run-control:resume:resume-rollback'"
+            ).fetchone()["n"] == 0
+
+
+def test_reconcile_host_commits_domain_and_unified_receipts_atomically() -> None:
+    with isolated_aip_migration_database(
+        "ar2_analysis_reconcile_host", migration_target="ar2_012"
+    ) as (_config, dsn):
+        with psycopg.connect(dsn) as conn:
+            conn.execute(
+                "INSERT INTO twa_org(id,name) VALUES('org-org','AR2') ON CONFLICT DO NOTHING"
+            )
+            conn.execute(
+                "INSERT INTO twa_workspace(org_id,project_id,name) "
+                "VALUES('org-org','dev-project','AR2'),('dev-org','dev-project','canary') "
+                "ON CONFLICT DO NOTHING"
+            )
+            conn.commit()
+
+        @contextmanager
+        def runtime_connect(scope):
+            with psycopg.connect(dsn, row_factory=dict_row) as conn:
+                conn.execute("SET LOCAL ROLE aos_runtime")
+                conn.execute("SELECT set_config('aos.org_id',%s,true)", (scope.org_id,))
+                conn.execute("SELECT set_config('aos.project_id',%s,true)", (scope.project_id,))
+                yield conn
+
+        installation_id = uuid4()
+        generation = uuid4()
+        cutover_group_id = uuid4()
+        with psycopg.connect(dsn) as conn:
+            conn.execute("SET LOCAL session_replication_role=replica")
+            conn.execute(
+                "INSERT INTO bundle_installation(org_id,project_id,installation_pk,"
+                "installation_id,display_name,current_revision,etag_version,created_by) "
+                "VALUES(%s,%s,%s,%s,'AR2 reconcile runtime',1,1,'test')",
+                (*SCOPE.key, installation_id, installation_id),
+            )
+            conn.execute(
+                "INSERT INTO extension_runtime_binding(org_id,project_id,installation_id,"
+                "generation,installation_revision,package_lock_ref,profile_ref,execution_epoch,"
+                "desired_state,observed_state,enabled,operation_fence,config_ref) "
+                "VALUES(%s,%s,%s,%s,1,'{}','internal-python-v1',3,'enabled','ready',true,false,'{}')",
+                (*SCOPE.key, installation_id, generation),
+            )
+            conn.execute(
+                "INSERT INTO extension_operation_dispatch_binding(org_id,project_id,operation_id,"
+                "handler_kind,installation_id,generation,execution_epoch,operation_fence,revision,"
+                "cutover_group_id,cutover_group_revision,updated_by) "
+                "VALUES(%s,%s,'ecommerce_growth_analysis_advance','extension',%s,%s,3,false,5,%s,11,'test')",
+                (*SCOPE.key, installation_id, generation, cutover_group_id),
+            )
+            conn.commit()
+        dispatch = SimpleNamespace(
+            operation_id="ecommerce_growth_analysis_advance",
+            dispatch_revision=5,
+            installation_id=installation_id,
+            generation=generation,
+            execution_epoch=3,
+            cutover_group_id=cutover_group_id,
+            cutover_group_revision=11,
+        )
+
+        def seed_unknown(suffix: str, *, target_hash: str = HASH_A):
+            cases = BusinessInvestigationCaseStore(runtime_connect)
+            case = draft_case(f"case-reconcile-{suffix}")
+            cases.create_draft(SCOPE, case, idempotency_key=f"case-create-{suffix}")
+            active = cases.transition(
+                SCOPE,
+                case.case_id,
+                BusinessInvestigationCaseLifecycle.ACTIVE,
+                expected_version=1,
+                idempotency_key=f"case-active-{suffix}",
+                actor="owner",
+                occurred_at=NOW,
+            ).authority
+            runs = BusinessInvestigationRunStore(runtime_connect)
+            domain = requested_run(active, f"domain-reconcile-{suffix}")
+            run = runs.request(SCOPE, domain, idempotency_key=f"run-create-{suffix}").authority
+            target_id = f"target-{suffix}"
+            uncertain = BusinessInvestigationUncertainCommand(
+                command_id=target_id,
+                operation="business_investigation.compile",
+                request_hash=HASH_A,
+            )
+            unknown = BusinessInvestigationReconciliationCoordinator(runs).record_timeout(
+                SCOPE,
+                run.run_id,
+                InvestigationExactRef(
+                    resource_type="BusinessInvestigationRunStateRevision",
+                    resource_id=run.run_id,
+                    revision=1,
+                    content_hash=runs.get(SCOPE, run.run_id).state.content_hash,
+                ),
+                uncertain,
+                actor="owner",
+                occurred_at=NOW,
+            )
+            target = {
+                "resourceType": "RuntimeCommandReceipt",
+                "resourceId": target_id,
+                "revision": 1,
+                "contentHash": target_hash,
+                "receiptId": target_id,
+            }
+            receipt_id = f"analysis-unknown-{suffix}"
+            body = {
+                "requestHash": HASH_A,
+                "occurrenceRef": {
+                    "resourceType": "AutomationOccurrence",
+                    "resourceId": str(uuid4()),
+                    "revision": 1,
+                    "contentHash": HASH_A,
+                },
+                "caseRef": {
+                    "resourceType": "BusinessInvestigationCaseRevision",
+                    "resourceId": active.case_id,
+                    "revision": active.revision,
+                    "contentHash": active.content_hash,
+                },
+                "profileRef": active.investigation_profile_ref.model_dump(
+                    by_alias=True, mode="json", exclude_none=True
+                ),
+                "cutoffAt": NOW.isoformat(),
+                "runRef": {
+                    "resourceType": "BusinessInvestigationRun",
+                    "resourceId": run.run_id,
+                    "revision": run.version,
+                    "contentHash": run.content_hash,
+                },
+                "compilationRef": {
+                    "resourceType": "BusinessInvestigationCompilationReceipt",
+                    "resourceId": f"compilation-{suffix}",
+                    "revision": 1,
+                    "contentHash": HASH_A,
+                },
+                "planRef": {
+                    "resourceType": "PlanRevision",
+                    "resourceId": f"plan-{suffix}",
+                    "revision": 1,
+                    "contentHash": HASH_A,
+                },
+                "taskRunRef": {
+                    "resourceType": "TaskRun",
+                    "resourceId": f"task-run-{suffix}",
+                    "revision": 1,
+                    "contentHash": HASH_A,
+                },
+                "phase": "UNKNOWN",
+                "recoverableAction": "RECONCILE_RECEIPT",
+                "checkpointRef": None,
+                "priorCheckpointRef": None,
+                "requirementRef": None,
+                "fulfillmentRef": None,
+                "sourceReadinessRef": None,
+                "mappingRef": None,
+                "evidenceRefs": [],
+                "observedAt": None,
+                "targetReceiptRef": target,
+                "completed": False,
+            }
+            prior_ref = {
+                "resourceType": "AnalysisRuntimeReceipt",
+                "resourceId": receipt_id,
+                "revision": 1,
+                "contentHash": _analysis_command_hash(body),
+                "receiptId": receipt_id,
+            }
+            prior = {"receiptRef": prior_ref, **body}
+            with psycopg.connect(dsn, row_factory=dict_row) as conn:
+                conn.execute("SET LOCAL ROLE aos_runtime")
+                conn.execute("SELECT set_config('aos.org_id',%s,true)", (SCOPE.org_id,))
+                conn.execute("SELECT set_config('aos.project_id',%s,true)", (SCOPE.project_id,))
+                _HostAnalysisReceiptStore(HostTransaction(conn), SCOPE).put(
+                    f"unknown-{suffix}", prior, dispatch_ref=dispatch, checked_at=NOW
+                )
+                conn.commit()
+            command_body = {
+                "operation": "runtime.analysis.reconcile_unknown",
+                "occurrenceRef": body["occurrenceRef"],
+                "caseRef": body["caseRef"],
+                "profileRef": body["profileRef"],
+                "cutoffAt": body["cutoffAt"],
+                "idempotencyKey": f"reconcile-{suffix}",
+                "priorReceiptRef": prior_ref,
+                "requirementRef": None,
+                "fulfillmentRef": None,
+                "checkpointRef": None,
+            }
+            command_body["requestHash"] = _analysis_command_hash(command_body)
+            return runs, unknown, command_body
+
+        runs, unknown, reconcile = seed_unknown("commit")
+        with psycopg.connect(dsn, row_factory=dict_row) as conn:
+            conn.execute("SET LOCAL ROLE aos_runtime")
+            conn.execute("SELECT set_config('aos.org_id',%s,true)", (SCOPE.org_id,))
+            conn.execute("SELECT set_config('aos.project_id',%s,true)", (SCOPE.project_id,))
+            conn.execute(
+                "CREATE TEMP TABLE ecommerce_investigation_run AS "
+                "SELECT * FROM public.ecommerce_investigation_run WITH NO DATA"
+            )
+            conn.execute(
+                "CREATE TEMP TABLE ecommerce_investigation_run_state_head AS "
+                "SELECT * FROM public.ecommerce_investigation_run_state_head WITH NO DATA"
+            )
+            conn.execute(
+                "CREATE TEMP TABLE ecommerce_investigation_run_state_revision AS "
+                "SELECT * FROM public.ecommerce_investigation_run_state_revision WITH NO DATA"
+            )
+            conn.execute(
+                "CREATE TEMP TABLE ecommerce_investigation_run_state_transition_receipt AS "
+                "SELECT * FROM public.ecommerce_investigation_run_state_transition_receipt "
+                "WITH NO DATA"
+            )
+            transaction = HostTransaction(conn)
+            response = AnalysisAdvanceHostService().execute(
+                transaction=transaction,
+                scope=SCOPE,
+                dispatch_ref=dispatch,
+                command=reconcile,
+                checked_at=NOW,
+                occurred_at=NOW,
+            )
+            conn.commit()
+        assert response["phase"] == "RECONCILING"
+        assert response["targetReceiptRef"]["resourceId"] == "target-commit"
+        current = runs.get(SCOPE, "domain-reconcile-commit").state
+        assert current.control is BusinessInvestigationRunControl.RECONCILING
+        predecessor = runs.read_state_exact(SCOPE, current.prior_ref)
+        assert predecessor is not None and predecessor.version == unknown.current_state_ref.revision
+        key = BusinessInvestigationReconciliationCoordinator._idempotency_key(
+            SCOPE, "reconciling", unknown.current_state_ref, predecessor.uncertain_command
+        )
+        assert runs.read_reconcile_receipt(
+            SCOPE, predecessor, idempotency_key=key
+        ) == current
+
+        with psycopg.connect(dsn, row_factory=dict_row) as conn:
+            conn.execute("SET LOCAL ROLE aos_runtime")
+            conn.execute("SELECT set_config('aos.org_id',%s,true)", (SCOPE.org_id,))
+            conn.execute("SELECT set_config('aos.project_id',%s,true)", (SCOPE.project_id,))
+            transaction = HostTransaction(conn)
+            replay = AnalysisAdvanceHostService().execute(
+                transaction=transaction,
+                scope=SCOPE,
+                dispatch_ref=dispatch,
+                command=reconcile,
+                checked_at=NOW,
+                occurred_at=NOW,
+            )
+            conn.commit()
+        assert replay == response
+        assert runs.read_state_exact(OTHER_SCOPE, current.prior_ref) is None
+
+        drifted_raw = predecessor.model_dump(by_alias=True, mode="json")
+        drifted_raw["createdAt"] = predecessor.created_at.isoformat()
+        drifted_raw["priorRef"].pop("receiptId")
+        drifted_raw["priorRef"]["resourceId"] = "  domain-reconcile-commit  "
+        with pytest.raises(BusinessInvestigationRunConflict, match="authority drifted"):
+            _strict_legacy_state_authority(
+                drifted_raw, error="historical Run state authority drifted"
+            )
+
+        drift_runs, _drift_unknown, drift_command = seed_unknown(
+            "target-drift", target_hash=f"sha256:{'b' * 64}"
+        )
+        with psycopg.connect(dsn, row_factory=dict_row) as conn:
+            conn.execute("SET LOCAL ROLE aos_runtime")
+            conn.execute("SELECT set_config('aos.org_id',%s,true)", (SCOPE.org_id,))
+            conn.execute("SELECT set_config('aos.project_id',%s,true)", (SCOPE.project_id,))
+            with pytest.raises(ValueError, match="target authority drifted"):
+                AnalysisAdvanceHostService().execute(
+                    transaction=HostTransaction(conn),
+                    scope=SCOPE,
+                    dispatch_ref=dispatch,
+                    command=drift_command,
+                    checked_at=NOW,
+                    occurred_at=NOW,
+                )
+            conn.rollback()
+        assert (
+            drift_runs.get(SCOPE, "domain-reconcile-target-drift").state.control
+            is BusinessInvestigationRunControl.UNKNOWN
+        )
+
+        _rollback_runs, _rollback_unknown, rollback_command = seed_unknown("rollback")
+        with psycopg.connect(dsn, row_factory=dict_row) as conn:
+            conn.execute("SET LOCAL ROLE aos_runtime")
+            conn.execute("SELECT set_config('aos.org_id',%s,true)", (SCOPE.org_id,))
+            conn.execute("SELECT set_config('aos.project_id',%s,true)", (SCOPE.project_id,))
+            transaction = HostTransaction(conn)
+            with pytest.raises(ValueError, match="binding"):
+                AnalysisAdvanceHostService().execute(
+                    transaction=transaction,
+                    scope=SCOPE,
+                    dispatch_ref=SimpleNamespace(
+                        **{**dispatch.__dict__, "generation": uuid4()}
+                    ),
+                    command=rollback_command,
+                    checked_at=NOW,
+                    occurred_at=NOW,
+                )
+            conn.rollback()
+        rollback_state = _rollback_runs.get(SCOPE, "domain-reconcile-rollback").state
+        assert rollback_state.control is BusinessInvestigationRunControl.UNKNOWN
+        with runtime_connect(SCOPE) as conn:
+            assert conn.execute(
+                "SELECT count(*) AS n FROM public.ecommerce_growth_runtime_command_receipt "
+                "WHERE idempotency_key='reconcile-rollback'"
+            ).fetchone()["n"] == 0
+            assert conn.execute(
+                "SELECT count(*) AS n FROM public.ecommerce_investigation_run_state_transition_receipt "
+                "WHERE run_id='domain-reconcile-rollback' "
+                "AND operation='business_investigation_run.begin_reconcile'"
             ).fetchone()["n"] == 0
