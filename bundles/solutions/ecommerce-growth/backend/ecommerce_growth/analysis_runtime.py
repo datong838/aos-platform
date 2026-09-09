@@ -343,10 +343,9 @@ class AnalysisRuntimeReceipt:
                 or self.evidence_refs != request.evidence_refs
                 or self.observed_at != request.observed_at
                 or self.plan_ref != request.prior_plan_ref
-                or self.prior_checkpoint_ref != request.checkpoint_ref
+                or self.prior_checkpoint_ref is not None
                 or self.target_receipt_ref is not None
-                or self.checkpoint_ref is None
-                or self.checkpoint_ref.revision != request.checkpoint_ref.revision + 1
+                or self.checkpoint_ref != request.checkpoint_ref
             ):
                 raise ValueError("resumed runtime data lineage drifted")
             if request.mode == "START" and any(

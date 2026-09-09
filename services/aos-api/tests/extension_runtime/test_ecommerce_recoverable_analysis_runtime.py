@@ -214,8 +214,8 @@ def test_resume_data_binds_same_requirement_fulfillment_and_checkpoint() -> None
             action="CONTINUE",
             requirementRef=command["requirementRef"],
             fulfillmentRef=command["fulfillmentRef"],
-            checkpointRef=exact_payload(ref("CheckpointRevision", "checkpoint-2", revision=2)),
-            priorCheckpointRef=command["checkpointRef"],
+            checkpointRef=command["checkpointRef"],
+            priorCheckpointRef=None,
             sourceReadinessRef=command["sourceReadinessRef"],
             mappingRef=command["mappingRef"],
             evidenceRefs=command["evidenceRefs"],
@@ -225,7 +225,8 @@ def test_resume_data_binds_same_requirement_fulfillment_and_checkpoint() -> None
     result = advance_analysis_runtime(RuntimePort(resumed), dispatch_ref=dispatch(), request=request)
     assert result.phase.value == "RUNNING"
     assert result.fulfillment_ref == request.fulfillment_ref
-    assert result.checkpoint_ref.revision == 2
+    assert result.checkpoint_ref == request.checkpoint_ref
+    assert result.prior_checkpoint_ref is None
 
 
 def test_unknown_only_reconciles_target_receipt_and_never_restarts() -> None:
@@ -359,7 +360,7 @@ def test_exact_response_rejects_extra_receipt_fields_and_coerced_timestamps() ->
         advance_analysis_runtime(RuntimePort(coerced), dispatch_ref=dispatch(), request=start_request())
 
 
-def test_resume_requires_complete_evidence_and_checkpoint_successor() -> None:
+def test_resume_requires_complete_evidence_and_reuses_exact_checkpoint() -> None:
     base = dict(
         occurrence_ref=ref("AutomationOccurrence", "occurrence-1"),
         case_ref=ref("BusinessInvestigationCaseRevision", "case-1"),
@@ -383,14 +384,14 @@ def test_resume_requires_complete_evidence_and_checkpoint_successor() -> None:
         evidence_refs=(ref("EvidenceBundleRevision", "evidence-1"),),
     )
 
-    def stale_checkpoint(command):
+    def invented_checkpoint(command):
         return receipt_payload(
             command,
             phase="RUNNING",
             action="CONTINUE",
             requirementRef=command["requirementRef"],
             fulfillmentRef=command["fulfillmentRef"],
-            checkpointRef=command["checkpointRef"],
+            checkpointRef=exact_payload(ref("CheckpointRevision", "checkpoint-2", revision=2)),
             priorCheckpointRef=command["checkpointRef"],
             sourceReadinessRef=command["sourceReadinessRef"],
             mappingRef=command["mappingRef"],
@@ -399,7 +400,7 @@ def test_resume_requires_complete_evidence_and_checkpoint_successor() -> None:
         )
 
     with pytest.raises(ValueError, match="data lineage drifted"):
-        advance_analysis_runtime(RuntimePort(stale_checkpoint), dispatch_ref=dispatch(), request=request)
+        advance_analysis_runtime(RuntimePort(invented_checkpoint), dispatch_ref=dispatch(), request=request)
 
 
 def test_resume_rejects_mutable_excess_or_late_evidence_and_accepts_dataset() -> None:

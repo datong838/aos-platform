@@ -217,6 +217,19 @@ class BusinessInvestigationRunNotFound(RuntimeError):
     pass
 
 
+def _strict_state_authority(
+    raw: Any, *, error: str
+) -> BusinessInvestigationRunStateRevision:
+    authority = BusinessInvestigationRunStateRevision.model_validate(raw)
+    if (
+        _canonical_hash(raw)
+        != _canonical_hash(authority.model_dump(by_alias=True, mode="json"))
+        or authority.calculated_content_hash() != authority.content_hash
+    ):
+        raise BusinessInvestigationRunConflict(error)
+    return authority
+
+
 class BusinessInvestigationRunStore:
     def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
         self._connect_factory = connect_factory or db_connect
@@ -444,6 +457,152 @@ class BusinessInvestigationRunStore:
             idempotency_key=idempotency_key,
             actor=actor,
             occurred_at=occurred_at,
+        )
+
+    def read_data_resume_receipt(
+        self, scope: TenantScope, run_id: str, requirement_ref: InvestigationExactRef,
+        *, expected_version: int, idempotency_key: str,
+    ) -> BusinessInvestigationRunStateRevision | None:
+        """Verify a historical data-resume transition without consulting the head."""
+        expected_request_hash = _canonical_hash(
+            {
+                "runId": run_id,
+                "expectedVersion": expected_version,
+                "operation": "business_investigation_run.resume_after_data",
+                "requirementRef": requirement_ref.model_dump(by_alias=True, mode="json"),
+            }
+        )
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """SELECT run_id,expected_version,request_hash,authority_data
+                    FROM public.ecommerce_investigation_run_state_transition_receipt
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation='business_investigation_run.resume_after_data'
+                      AND idempotency_key=%s""",
+                (*scope.key, idempotency_key),
+            ).fetchone()
+        if row is None:
+            return None
+        authority = _strict_state_authority(
+            row["authority_data"], error="historical data-resume Receipt drifted"
+        )
+        if (
+            row["run_id"] != run_id
+            or int(row["expected_version"]) != expected_version
+            or row["request_hash"] != expected_request_hash
+            or (authority.tenant.org_id, authority.tenant.project_id) != scope.key
+            or authority.run_id != run_id
+            or authority.version != expected_version + 1
+            or authority.lifecycle is not BusinessInvestigationRunLifecycle.PREPARING
+            or authority.control is not BusinessInvestigationRunControl.RUNNING
+            or authority.pending_requirement_ref is not None
+            or authority.uncertain_command is not None
+        ):
+            raise BusinessInvestigationRunConflict("historical data-resume Receipt drifted")
+        return authority
+
+    def resume_after_data(
+        self,
+        scope: TenantScope,
+        run_id: str,
+        requirement_ref: InvestigationExactRef,
+        *,
+        expected_version: int,
+        idempotency_key: str,
+        actor: str,
+        occurred_at: datetime,
+    ) -> BusinessInvestigationRunStateWrite:
+        if (
+            requirement_ref.resource_type != "DataRequirementRevision"
+            or type(requirement_ref.revision) is not int
+        ):
+            raise BusinessInvestigationRunConflict(
+                "data resume requires exact DataRequirementRevision"
+            )
+        if expected_version < 1:
+            raise BusinessInvestigationRunConflict("expected version must be positive")
+        if not idempotency_key.strip() or len(idempotency_key) > 200:
+            raise BusinessInvestigationRunConflict("idempotency key must be non-empty and bounded")
+        replay = self.read_data_resume_receipt(
+            scope,
+            run_id,
+            requirement_ref,
+            expected_version=expected_version,
+            idempotency_key=idempotency_key,
+        )
+        if replay is not None:
+            return BusinessInvestigationRunStateWrite(authority=replay, replayed=True)
+        previous = self.get(scope, run_id).state
+        if previous.version != expected_version:
+            raise BusinessInvestigationRunConflict("Run expected version conflict")
+        if (
+            previous.lifecycle is not BusinessInvestigationRunLifecycle.WAITING_DATA
+            or previous.control is not BusinessInvestigationRunControl.RUNNING
+            or previous.pending_requirement_ref != requirement_ref
+            or previous.uncertain_command is not None
+        ):
+            raise BusinessInvestigationRunConflict("Run data-resume authority rejected")
+        requirement_payload = requirement_ref.model_dump(by_alias=True, mode="json")
+        payload = {
+            "schemaVersion": "aos.ecommerce.business-investigation-run-state/v1",
+            "tenant": previous.tenant.model_dump(by_alias=True, mode="json"),
+            "runId": run_id,
+            "version": expected_version + 1,
+            "priorRef": {
+                "resourceType": "BusinessInvestigationRunStateRevision",
+                "resourceId": run_id,
+                "revision": expected_version,
+                "contentHash": previous.content_hash,
+            },
+            "lifecycle": BusinessInvestigationRunLifecycle.PREPARING.value,
+            "control": BusinessInvestigationRunControl.RUNNING.value,
+            "eventSequence": previous.event_sequence + 1,
+            "contentHash": "sha256:" + "0" * 64,
+            "pendingRequirementRef": None,
+            "uncertainCommand": None,
+            "createdBy": actor,
+            "createdAt": occurred_at.isoformat(),
+        }
+        successor = BusinessInvestigationRunStateRevision.model_validate(payload)
+        payload = successor.model_dump(by_alias=True, mode="json")
+        payload["contentHash"] = successor.calculated_content_hash()
+        request_hash = _canonical_hash(
+            {
+                "runId": run_id,
+                "expectedVersion": expected_version,
+                "operation": "business_investigation_run.resume_after_data",
+                "requirementRef": requirement_payload,
+            }
+        )
+        try:
+            with self._connect_factory(scope) as conn:
+                row = conn.execute(
+                    """SELECT authority_data,replayed
+                    FROM public.ecommerce_investigation_run_data_resume_ar2_011(%s,%s,%s,%s,%s,%s)""",
+                    (
+                        run_id,
+                        expected_version,
+                        idempotency_key,
+                        request_hash,
+                        Jsonb(requirement_payload),
+                        Jsonb(payload),
+                    ),
+                ).fetchone()
+                if row is None:
+                    raise BusinessInvestigationRunConflict(
+                        "canonical Run data resume returned no Receipt"
+                    )
+                authority = _strict_state_authority(
+                    row["authority_data"], error="canonical Run data resume drifted"
+                )
+                conn.commit()
+        except psycopg.Error as exc:
+            raise BusinessInvestigationRunConflict(
+                "canonical Run data resume failed closed"
+            ) from exc
+        return BusinessInvestigationRunStateWrite(
+            authority=authority,
+            replayed=bool(row["replayed"]),
         )
 
     def mark_unknown(
