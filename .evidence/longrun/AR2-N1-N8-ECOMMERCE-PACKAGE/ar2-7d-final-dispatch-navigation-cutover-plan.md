@@ -13,7 +13,7 @@
 ## 2. 目标行为
 
 1. 生产 Router manifest 只登记 `aos_api.routers.extension_dispatch`，不再直接登记 `ecommerce_workshop`、`ecommerce_business_investigations` 或 `ecommerce_growth_dispatch`。
-2. `extension_dispatch` 挂载已经封存的九项 Canonical POST 路由；旧电商 Router 只复制 GET/HEAD 路由对象以保留现有目录和只读页面投影，任何旧 POST/PUT/PATCH/DELETE 都不得进入生产路由表。
+2. `extension_dispatch` 挂载已经封存的单一参数化 Canonical POST 路径，由九个固定 `operation_id` 选择对应 HostService；旧电商 Router 只复制 GET/HEAD 路由对象以保留现有目录和只读页面投影，任何旧 POST/PUT/PATCH/DELETE 都不得进入生产路由表。
 3. 九项写请求继续由 `EcommerceGrowthCanonicalRouter` 签发并重验 DispatchRef；本切片不增加第二个写服务、数据库写入或兼容直写。
 4. Web 所有 `/workshop/*` 入口只进入 `EcommerceWorkshopHost`。旧 URL 仅由当前安装目录的 `legacyRoutes` 解析；未安装时显示宿主的不可用状态，不再静态加载订单或库存页面。
 5. Workshop 侧栏严格按 API 已做租户、角色、权限和当前安装过滤后的 `catalog.modules` 排序渲染。目录为空、禁止或失败时不得伪造八个入口。
@@ -39,7 +39,7 @@
 
 ## 4. 验证门
 
-1. Router 专项静态检查：新入口源文件只能组合路由，不能包含领域 SQL；生产有效路由包含九项 Canonical path 和旧 GET，只读之外的旧方法均不存在。
+1. Router 专项静态检查：新入口源文件只能组合路由，不能包含领域 SQL；生产有效路由包含一个承载九个固定 `operation_id` 的 Canonical POST path 和旧 GET，只读之外的旧方法均不存在。
 2. Manifest/生成一致性：count、连续 order、domain count、生成 diff、运行路由库存与 OpenAPI 重复检查全部通过。
 3. Web 专项：动态模块按 catalog 顺序显示；空目录与读取失败均为零 Workshop 菜单；旧 URL 有安装别名时跳转 canonical，无安装时不出现旧页面正文。
 4. 受影响后端与 Web 累计回归、Web build、`verify_closure.py --phase ar2-7` 全部通过。
@@ -50,3 +50,10 @@
 - 新入口若暴露任何旧写方法、Canonical path 重复或只读投影丢失，立即停止，不提交代码。
 - 相同验证阶段连续两次出现同根因失败时，回到本方案补充根因与修正，不跨阶段绕过。
 - 本切片以独立提交保存方案；代码和验证证据分别形成可回滚提交，不 push。
+
+## 6. 独立复核红项修订卡（2026-09-10）
+
+- 独立 Codex 只读复核确认：`apps/web/src/navigation/items.ts` 仍把 `/workshop/orders` 与 `/workshop/inventory` 登记为可见静态页面。`AppShell` 只在当前 `catalog.modules` 声明 replacement 时过滤；目录为空、403 或读取失败时 modules 为空，两个旧链接反而继续显示，违反本方案“空/失败零 Workshop 菜单”的退出条件。
+- 既有无安装测试只把“订单管理”断言限定到 `.ecommerce-workshop-host-state`，没有覆盖全壳侧栏；验证文档也记录了因全局侧栏存在该文本而缩窄断言，不能视为通过。
+- 最小修正：保留两条旧路由定义供深链兼容和目录声明的 legacy redirect 使用，但在静态导航源把它们标记为 `hidden`；当前安装的 canonical 模块入口仍只由 `InstalledModuleNavigation` 渲染。新增 AppShell 正反测试：已安装时只有 canonical 动态链接、没有两个旧静态链接；空目录与目录失败时全壳均无旧链接或任何动态 Workshop 模块链接。
+- 新增修改文件：`apps/web/src/navigation/items.ts`、`apps/web/src/shell/AppShell.workshop.test.tsx`，并回写本方案与验证证据。退出条件为新增专项先红后绿、AppShell/导航聚焦测试、Web 全量、build、closure 与独立只读复核全部通过。
