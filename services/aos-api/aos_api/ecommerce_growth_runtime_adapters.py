@@ -1369,7 +1369,7 @@ class ReviewAdvanceHostService:
             raise ValueError("review GrowthPlan must be current and APPROVED")
 
     @staticmethod
-    def _revalidate_issue_eval(*, transaction, scope, command) -> None:
+    def _revalidate_issue_eval(*, transaction, scope, command) -> ReviewIssue:
         supplied_issue = InvestigationExactRef.model_validate(command["reviewIssueRef"])
         supplied_eval = InvestigationExactRef.model_validate(command["evalReportRef"])
         if (
@@ -1475,6 +1475,54 @@ class ReviewAdvanceHostService:
             )
         except RuntimeError as exc:
             raise ValueError("review Issue/Eval/Artifact lineage drifted") from exc
+        return issue
+
+    @staticmethod
+    def _revalidate_artifacts(*, transaction, scope, command, issue: ReviewIssue) -> None:
+        bindings = command["artifactBindings"]
+        artifact_ids = [item["artifactRef"]["resourceId"] for item in bindings]
+        rows = transaction.execute(
+            """SELECT artifact_id,run_id,artifact_type,content_hash,family_revision
+                FROM public.aip_artifact
+                WHERE org_id=%s AND project_id=%s AND artifact_id=ANY(%s)""",
+            (*scope.key, artifact_ids),
+        ).fetchall()
+        by_id = {row["artifact_id"]: row for row in rows}
+        expected_refs = []
+        run_ids = set()
+        for binding in bindings:
+            family = binding["family"]
+            supplied = binding["artifactRef"]
+            row = by_id.get(supplied["resourceId"])
+            if (
+                row is None
+                or row["artifact_type"] != family
+                or type(row["run_id"]) is not str
+                or not row["run_id"]
+                or row["run_id"] != row["run_id"].strip()
+            ):
+                raise ValueError("review Artifact family authority drifted")
+            revision = (
+                1 if row["family_revision"] is None else int(row["family_revision"])
+            )
+            expected = {
+                "resourceType": "ArtifactRevision",
+                "resourceId": row["artifact_id"],
+                "revision": revision,
+                "contentHash": "sha256:" + row["content_hash"],
+            }
+            if supplied != expected:
+                raise ValueError("review Artifact exact authority drifted")
+            expected_refs.append(expected)
+            run_ids.add(row["run_id"])
+        if len(rows) != 4 or len(run_ids) != 1:
+            raise ValueError("review Artifacts must share one AIP TaskRun authority")
+        if not any(
+            ref["resourceId"] == issue.artifact_ref.artifact_id
+            and ref["contentHash"] == "sha256:" + issue.artifact_ref.content_hash
+            for ref in expected_refs
+        ):
+            raise ValueError("review Issue subject is outside the Artifact bindings")
 
     def _review_lineage(self, *, transaction, scope, command, occurred_at):
         if not isinstance(occurred_at, datetime) or occurred_at.utcoffset() is None:
@@ -1734,10 +1782,16 @@ class ReviewAdvanceHostService:
             scope=scope,
             command=command,
         )
-        self._revalidate_issue_eval(
+        issue = self._revalidate_issue_eval(
             transaction=transaction,
             scope=scope,
             command=command,
+        )
+        self._revalidate_artifacts(
+            transaction=transaction,
+            scope=scope,
+            command=command,
+            issue=issue,
         )
         if not key:
             raise ValueError("review idempotencyKey is invalid")
