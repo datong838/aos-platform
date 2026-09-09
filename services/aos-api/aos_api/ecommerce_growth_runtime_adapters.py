@@ -2410,7 +2410,11 @@ class _ExplicitRuntimeAdapter:
         )
         if not isinstance(persisted, Mapping) or dict(persisted) != dict(receipt):
             return persisted
-        targets = [receipt.get(key) for key in self.SPEC.receipt_keys if receipt.get(key) is not None]
+        targets = [
+            receipt.get(key)
+            for key in self.SPEC.receipt_keys
+            if receipt.get(key) is not None
+        ]
         if len(targets) != 1 or type(targets[0]) is not dict:
             return {}
         request_hash = _request_hash(command)
@@ -2428,6 +2432,384 @@ class _ExplicitRuntimeAdapter:
             occurred_at=dispatch.checked_at,
         )
         return record.response
+
+
+_CONTENT_GENERATE_AUTHORITY_TYPES = {
+    "handoff": "HandoffReceipt",
+    "task": "Task",
+    "brief": "TaskBriefRevision",
+    "growth_plan": "GrowthPlanRevision",
+    "agent_instance": "AgentInstanceRevision",
+    "responsibility_plan": "ResponsibilityPlanRevision",
+    "capability": "CapabilityRevision",
+    "model_route": "ModelRouteRevision",
+    "budget": "BudgetRevision",
+    "pricing": "ModelPriceSnapshotRevision",
+    "approval": "ActionApprovalEvent",
+    "capacity_reservation": "CapacityReservation",
+}
+_CONTENT_GENERATE_FIELDS = frozenset(
+    {
+        "operation",
+        "authorityRefs",
+        "sourceArtifactRefs",
+        "factSourceRefs",
+        "currency",
+        "upperBoundFen",
+        "maxInputTokens",
+        "maxOutputTokens",
+        "idempotencyKey",
+        "requestHash",
+    }
+)
+_CONTENT_REVIEW_RECEIPT_FIELDS = frozenset(
+    {
+        "receiptRef",
+        "requestHash",
+        "decision",
+        "occurrenceRef",
+        "caseRef",
+        "runRef",
+        "analysisReceiptRef",
+        "currentPlanRef",
+        "reviewIssueRef",
+        "evalReportRef",
+        "growthPlanRef",
+        "artifactBindings",
+        "returnStage",
+        "handoffRef",
+        "taskRef",
+        "briefRef",
+        "cutoffAt",
+        "decidedAt",
+        "replayed",
+        "sideEffects",
+    }
+)
+_CONTENT_BRIEF_SPEC_FIELDS = frozenset(
+    {
+        "sourceHandoffRef",
+        "taskRef",
+        "growthPlanRef",
+        "artifactRefs",
+        "objective",
+        "channels",
+        "audience",
+        "timeWindow",
+        "constraints",
+        "externalPublicationRequested",
+    }
+)
+
+
+def _content_exact_ref(value: Any, expected_type: str) -> InvestigationExactRef:
+    base_fields = {"resourceType", "resourceId", "revision", "contentHash"}
+    if type(value) is not dict or set(value) not in {
+        frozenset(base_fields),
+        frozenset(base_fields | {"receiptId"}),
+    }:
+        raise ValueError("content generate exact ref fields drifted")
+    ref = InvestigationExactRef.model_validate(value)
+    if (
+        ref.resource_type != expected_type
+        or type(ref.revision) is not int
+        or ref.model_dump(mode="json", by_alias=True, exclude_none=True) != value
+    ):
+        raise ValueError("content generate exact ref drifted")
+    return ref
+
+
+def _strict_content_generate_command(command: Mapping[str, Any]) -> dict[str, Any]:
+    if type(command) is not dict or set(command) != _CONTENT_GENERATE_FIELDS:
+        raise ValueError("content generate command envelope drifted")
+    if command["operation"] != "content.generate":
+        raise ValueError("content generate operation drifted")
+    key = command["idempotencyKey"]
+    request_hash = command["requestHash"]
+    if (
+        type(key) is not str
+        or key != key.strip()
+        or not 1 <= len(key) <= 200
+        or type(request_hash) is not str
+        or not re.fullmatch(r"sha256:[0-9a-f]{64}", request_hash)
+        or _analysis_command_hash(
+            {name: value for name, value in command.items() if name != "requestHash"}
+        )
+        != request_hash
+    ):
+        raise ValueError("content generate command identity drifted")
+    authorities = command["authorityRefs"]
+    if type(authorities) is not dict or set(authorities) != set(
+        _CONTENT_GENERATE_AUTHORITY_TYPES
+    ):
+        raise ValueError("content generate authority set drifted")
+    parsed_authorities = {
+        name: _content_exact_ref(authorities[name], kind)
+        for name, kind in _CONTENT_GENERATE_AUTHORITY_TYPES.items()
+    }
+    source_values = command["sourceArtifactRefs"]
+    fact_values = command["factSourceRefs"]
+    if (
+        type(source_values) is not list
+        or len(source_values) != 4
+        or type(fact_values) is not list
+        or not 1 <= len(fact_values) <= 200
+    ):
+        raise ValueError("content generate source closure is invalid")
+    source_refs = [_content_exact_ref(value, "ArtifactRevision") for value in source_values]
+    fact_refs = []
+    for value in fact_values:
+        if type(value) is not dict or value.get("resourceType") not in {
+            "EvidenceBundleRevision",
+            "DatasetRevision",
+            "DataFulfillmentReceipt",
+        }:
+            raise ValueError("content generate fact source type drifted")
+        fact_refs.append(_content_exact_ref(value, value["resourceType"]))
+    identities = lambda refs: {
+        (ref.resource_type, ref.resource_id, ref.revision, ref.content_hash)
+        for ref in refs
+    }
+    if len(identities(source_refs)) != 4 or len(identities(fact_refs)) != len(fact_refs):
+        raise ValueError("content generate source refs must be unique")
+    numeric = (
+        (command["upperBoundFen"], 1, 100_000_000),
+        (command["maxInputTokens"], 1, 1_000_000),
+        (command["maxOutputTokens"], 1, 1_000_000),
+    )
+    if command["currency"] != "CNY" or any(
+        type(value) is not int or not lower <= value <= upper
+        for value, lower, upper in numeric
+    ):
+        raise ValueError("content generate bounded execution values drifted")
+    return {
+        "key": key,
+        "authorities": parsed_authorities,
+        "sourceRefs": source_refs,
+        "factRefs": fact_refs,
+    }
+
+
+class ContentGenerateHostService:
+    """Incomplete content capability host: exact input lineage only."""
+
+    executor_identity = "ecommerce-growth-content-generate-host"
+
+    @staticmethod
+    def _review_receipt(transaction, scope, authorities, source_values):
+        handoff_ref = authorities["handoff"]
+        rows = transaction.execute(
+            """SELECT request_hash,response,target_receipt_ref
+                FROM public.ecommerce_growth_runtime_command_receipt
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_review_advance'
+                  AND response->'handoffRef'->>'resourceId'=%s""",
+            (*scope.key, handoff_ref.resource_id),
+        ).fetchall()
+        if len(rows) != 1:
+            raise ValueError("content generate Review authority is not unique")
+        response = rows[0]["response"]
+        if type(response) is not dict or set(response) != _CONTENT_REVIEW_RECEIPT_FIELDS:
+            raise ValueError("content generate Review Receipt shape drifted")
+        response_ref = InvestigationExactRef.model_validate(response["receiptRef"])
+        target_ref = InvestigationExactRef.model_validate(rows[0]["target_receipt_ref"])
+        for raw_ref, parsed_ref in (
+            (response["receiptRef"], response_ref),
+            (rows[0]["target_receipt_ref"], target_ref),
+        ):
+            if (
+                parsed_ref.resource_type != "ReviewDecisionReceipt"
+                or type(parsed_ref.revision) is not int
+                or parsed_ref.receipt_id != parsed_ref.resource_id
+                or parsed_ref.model_dump(
+                    mode="json", by_alias=True, exclude_none=True
+                )
+                != raw_ref
+            ):
+                raise ValueError("content generate Review Receipt exact ref drifted")
+        body = {name: value for name, value in response.items() if name != "receiptRef"}
+        expected_receipt_ref = {
+            "resourceType": "ReviewDecisionReceipt",
+            "resourceId": rows[0]["target_receipt_ref"]["resourceId"],
+            "revision": 1,
+            "contentHash": _analysis_command_hash(body),
+            "receiptId": rows[0]["target_receipt_ref"]["resourceId"],
+        }
+        expected_artifacts = [item["artifactRef"] for item in response.get("artifactBindings", [])]
+        if (
+            response.get("receiptRef") != expected_receipt_ref
+            or rows[0]["target_receipt_ref"] != expected_receipt_ref
+            or response.get("requestHash") != rows[0]["request_hash"]
+            or response.get("decision") != "ACCEPT"
+            or response.get("returnStage") is not None
+            or type(response.get("replayed")) is not bool
+            or response.get("sideEffects") != _REVIEW_SIDE_EFFECTS
+            or type(response["sideEffects"].get("externalEffectsAllowed")) is not bool
+            or any(
+                type(response["sideEffects"].get(name)) is not int
+                for name in _REVIEW_SIDE_EFFECTS
+                if name != "externalEffectsAllowed"
+            )
+            or response.get("handoffRef")
+            != handoff_ref.model_dump(mode="json", by_alias=True, exclude_none=True)
+            or response.get("taskRef")
+            != authorities["task"].model_dump(mode="json", by_alias=True, exclude_none=True)
+            or response.get("briefRef")
+            != authorities["brief"].model_dump(mode="json", by_alias=True, exclude_none=True)
+            or response.get("growthPlanRef")
+            != authorities["growth_plan"].model_dump(
+                mode="json", by_alias=True, exclude_none=True
+            )
+            or expected_artifacts != source_values
+        ):
+            raise ValueError("content generate Review exact lineage drifted")
+        return response
+
+    @staticmethod
+    def _task_brief(transaction, scope, authorities, source_values) -> None:
+        task_ref = authorities["task"]
+        brief_ref = authorities["brief"]
+        task = transaction.execute(
+            """SELECT task_type,title,description,priority,goal,selection_ref,
+                       policy_revision,request_hash
+                FROM public.aip_task
+                WHERE org_id=%s AND project_id=%s AND task_id=%s FOR SHARE""",
+            (*scope.key, task_ref.resource_id),
+        ).fetchone()
+        head = transaction.execute(
+            """SELECT task_id,current_revision,version FROM public.aip_task_brief_head
+                WHERE org_id=%s AND project_id=%s AND brief_id=%s FOR SHARE""",
+            (*scope.key, brief_ref.resource_id),
+        ).fetchone()
+        brief = transaction.execute(
+            """SELECT task_id,brief_type,schema_ref,spec,content_hash,lifecycle,created_by
+                FROM public.aip_task_brief_revision
+                WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=%s""",
+            (*scope.key, brief_ref.resource_id, brief_ref.revision),
+        ).fetchone()
+        receipt = transaction.execute(
+            """SELECT request_hash,result_ref,created_by
+                FROM public.aip_production_contract_receipt
+                WHERE org_id=%s AND project_id=%s AND operation='task_brief.create'
+                  AND result_ref->>'resourceId'=%s""",
+            (*scope.key, brief_ref.resource_id),
+        ).fetchone()
+        if task is None or head is None or brief is None or receipt is None:
+            raise ValueError("content generate Task/Brief authority is missing")
+        task_payload = {
+            "type": task["task_type"],
+            "title": task["title"],
+            "description": task["description"],
+            "priority": int(task["priority"]),
+            "goal": task["goal"],
+            "selectionRef": task["selection_ref"],
+            "policyRevision": task["policy_revision"],
+        }
+        expected_task_ref = {
+            "resourceType": "Task",
+            "resourceId": task_ref.resource_id,
+            "revision": 1,
+            "contentHash": "sha256:" + _analysis_command_hash(task_payload).removeprefix("sha256:"),
+        }
+        expected_brief_hash = _analysis_command_hash(
+            {
+                "briefType": brief["brief_type"],
+                "schemaRef": brief["schema_ref"],
+                "spec": brief["spec"],
+            }
+        ).removeprefix("sha256:")
+        expected_brief_ref = {
+            "resourceType": "TaskBriefRevision",
+            "resourceId": brief_ref.resource_id,
+            "revision": brief_ref.revision,
+            "contentHash": expected_brief_hash,
+        }
+        goal = task["goal"]
+        spec = brief["spec"]
+        expected_handoff = authorities["handoff"].model_dump(
+            mode="json", by_alias=True, exclude_none=True
+        )
+        expected_growth_plan = authorities["growth_plan"].model_dump(
+            mode="json", by_alias=True, exclude_none=True
+        )
+        owner_result_ref = receipt["result_ref"]
+        owner_result_ref_valid = (
+            type(owner_result_ref) is dict
+            and set(owner_result_ref)
+            == {"resourceType", "resourceId", "revision", "contentHash"}
+            and owner_result_ref.get("resourceType") == "TaskBriefRevision"
+            and type(owner_result_ref.get("resourceId")) is str
+            and type(owner_result_ref.get("revision")) is int
+            and type(owner_result_ref.get("contentHash")) is str
+            and re.fullmatch(r"[0-9a-f]{64}", owner_result_ref["contentHash"])
+            is not None
+            and budget_canonical_hash(owner_result_ref)
+            == budget_canonical_hash(expected_brief_ref)
+        )
+        if (
+            task_ref.model_dump(mode="json", by_alias=True, exclude_none=True)
+            != expected_task_ref
+            or task["request_hash"] != expected_task_ref["contentHash"].removeprefix("sha256:")
+            or int(head["current_revision"]) != brief_ref.revision
+            or int(head["version"]) != brief_ref.revision
+            or head["task_id"] != task_ref.resource_id
+            or brief["task_id"] != task_ref.resource_id
+            or brief["brief_type"] != "content_campaign"
+            or brief["lifecycle"] != "draft"
+            or brief["content_hash"] != expected_brief_hash
+            or brief_ref.content_hash != "sha256:" + expected_brief_hash
+            or brief["created_by"] != "ecommerce-growth-review-host"
+            or not owner_result_ref_valid
+            or receipt["created_by"] != "ecommerce-growth-review-host"
+            or receipt["request_hash"]
+            != _analysis_command_hash(
+                {
+                    "taskId": task_ref.resource_id,
+                    "briefType": brief["brief_type"],
+                    "schemaRef": brief["schema_ref"],
+                    "spec": spec,
+                }
+            ).removeprefix("sha256:")
+            or type(goal) is not dict
+            or type(spec) is not dict
+            or set(spec) != _CONTENT_BRIEF_SPEC_FIELDS
+            or goal.get("sourceHandoffRef") != expected_handoff
+            or spec.get("sourceHandoffRef") != expected_handoff
+            or goal.get("growthPlanRef") != expected_growth_plan
+            or spec.get("growthPlanRef") != expected_growth_plan
+            or goal.get("artifactRefs") != source_values
+            or spec.get("artifactRefs") != source_values
+            or spec.get("taskRef")
+            != task_ref.model_dump(mode="json", by_alias=True, exclude_none=True)
+            or spec.get("externalPublicationRequested") is not False
+        ):
+            raise ValueError("content generate Task/Brief exact lineage drifted")
+
+    def revalidate(self, *, transaction, scope, dispatch, command):
+        parsed = _strict_content_generate_command(command)
+        if dispatch.operation_id != "ecommerce_growth_content_generate":
+            raise ValueError("content generate dispatch operation drifted")
+        source_values = [
+            ref.model_dump(mode="json", by_alias=True, exclude_none=True)
+            for ref in parsed["sourceRefs"]
+        ]
+        review = self._review_receipt(
+            transaction, scope, parsed["authorities"], source_values
+        )
+        self._task_brief(transaction, scope, parsed["authorities"], source_values)
+        ReviewAdvanceHostService._revalidate_growth_plan(
+            transaction=transaction,
+            scope=scope,
+            command={
+                "growthPlanRef": parsed["authorities"]["growth_plan"].model_dump(
+                    mode="json", by_alias=True, exclude_none=True
+                )
+            },
+        )
+        return {
+            "key": parsed["key"],
+            "reviewReceiptRef": review["receiptRef"],
+        }
 
 
 class InvestigationDescribeAdapter(_ExplicitRuntimeAdapter):
