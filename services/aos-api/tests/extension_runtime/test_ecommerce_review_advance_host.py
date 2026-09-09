@@ -148,7 +148,8 @@ def wired_host(monkeypatch, *, occurrence_hash=HASH):
             )
         ),
     )
-    monkeypatch.setattr(host, "_revalidate_artifacts", lambda **_: None)
+    monkeypatch.setattr(host, "_revalidate_artifacts", lambda **_: "task-run-1")
+    monkeypatch.setattr(host, "_revalidate_analysis_runtime", lambda **_: None)
     monkeypatch.setattr(
         host,
         "_review_lineage",

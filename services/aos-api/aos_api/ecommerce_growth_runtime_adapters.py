@@ -30,8 +30,8 @@ from aos_api.aip_production_contracts import (
     ReviewIssueStatus,
 )
 from aos_api.aip_eval_runner import AipEvalRunner, compute_eval_report_hash
-from aos_api.aip_task_models import CreateTaskRequest
-from aos_api.aip_contracts import ResourceRef
+from aos_api.aip_task_models import CreateTaskRequest, TaskTimeline
+from aos_api.aip_contracts import ResourceRef, TaskRunStatus, TenantContext
 from aos_api.ecommerce_analyst_authority_contracts import (
     AnalystExactRef,
     GrowthPlanRevision,
@@ -81,7 +81,10 @@ from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationTriggerKind,
 )
 from aos_api.aip_business_investigation_runtime import BusinessInvestigationRuntimeBinder
-from aos_api.aip_business_investigation_compile_saga import BusinessInvestigationCompilationReceiptStore
+from aos_api.aip_business_investigation_compile_saga import (
+    BusinessInvestigationCompilationReceipt,
+    BusinessInvestigationCompilationReceiptStore,
+)
 from aos_api.aip_task_store import AipTaskStore
 from aos_api.tenant_scope import TenantScope
 
@@ -1478,7 +1481,7 @@ class ReviewAdvanceHostService:
         return issue
 
     @staticmethod
-    def _revalidate_artifacts(*, transaction, scope, command, issue: ReviewIssue) -> None:
+    def _revalidate_artifacts(*, transaction, scope, command, issue: ReviewIssue) -> str:
         bindings = command["artifactBindings"]
         artifact_ids = [item["artifactRef"]["resourceId"] for item in bindings]
         rows = transaction.execute(
@@ -1523,6 +1526,180 @@ class ReviewAdvanceHostService:
             for ref in expected_refs
         ):
             raise ValueError("review Issue subject is outside the Artifact bindings")
+        return next(iter(run_ids))
+
+    @staticmethod
+    def _revalidate_analysis_runtime(
+        *, transaction, scope, command, artifact_task_run_id: str
+    ) -> None:
+        supplied = command["analysisReceiptRef"]
+        receipt_rows = transaction.execute(
+            """SELECT request_hash,response,target_receipt_ref
+                FROM public.ecommerce_growth_runtime_command_receipt
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_analysis_advance'
+                  AND target_receipt_ref->>'resourceId'=%s""",
+            (*scope.key, supplied["resourceId"]),
+        ).fetchall()
+        if len(receipt_rows) != 1:
+            raise ValueError("review AnalysisRuntimeReceipt authority is not unique")
+        receipt_row = receipt_rows[0]
+        response = receipt_row["response"]
+        body = {key: value for key, value in response.items() if key != "receiptRef"}
+        expected_analysis_ref = {
+            "resourceType": "AnalysisRuntimeReceipt",
+            "resourceId": supplied["resourceId"],
+            "revision": 1,
+            "contentHash": _analysis_command_hash(body),
+            "receiptId": supplied["resourceId"],
+        }
+        if (
+            supplied != expected_analysis_ref
+            or response.get("receiptRef") != expected_analysis_ref
+            or receipt_row["target_receipt_ref"] != expected_analysis_ref
+            or response.get("requestHash") != receipt_row["request_hash"]
+            or response.get("completed") is not False
+            or response.get("runRef") != command["runRef"]
+            or response.get("planRef") != command["currentPlanRef"]
+            or type(response.get("compilationRef")) is not dict
+            or type(response.get("taskRunRef")) is not dict
+        ):
+            raise ValueError("review AnalysisRuntimeReceipt exact lineage drifted")
+        run_row = transaction.execute(
+            """SELECT run.authority_data AS run_authority,
+                       state.authority_data AS state_authority
+                FROM public.ecommerce_investigation_run run
+                JOIN public.ecommerce_investigation_run_state_head state
+                  ON state.org_id=run.org_id AND state.project_id=run.project_id
+                 AND state.run_id=run.run_id
+                WHERE run.org_id=%s AND run.project_id=%s AND run.run_id=%s
+                FOR SHARE OF state""",
+            (*scope.key, command["runRef"]["resourceId"]),
+        ).fetchone()
+        if run_row is None:
+            raise ValueError("review BusinessInvestigationRun authority is missing")
+        from aos_api.ecommerce_business_investigation_run import (
+            BusinessInvestigationRunRecord,
+            BusinessInvestigationRunStateRevision,
+        )
+
+        domain_run = BusinessInvestigationRunRecord.model_validate(run_row["run_authority"])
+        domain_state = BusinessInvestigationRunStateRevision.model_validate(
+            run_row["state_authority"]
+        )
+        canonical_run = domain_run.model_dump(mode="json", by_alias=True)
+        canonical_state = domain_state.model_dump(mode="json", by_alias=True)
+        actual_run_ref = {
+            "resourceType": "BusinessInvestigationRun",
+            "resourceId": domain_run.run_id,
+            "revision": domain_run.version,
+            "contentHash": domain_run.content_hash,
+        }
+        if (
+            command["runRef"] != actual_run_ref
+            or budget_canonical_hash(run_row["run_authority"])
+            != budget_canonical_hash(canonical_run)
+            or domain_run.calculated_content_hash() != domain_run.content_hash
+            or (domain_run.tenant.org_id, domain_run.tenant.project_id) != scope.key
+            or domain_run.case_ref.model_dump(
+                mode="json", by_alias=True, exclude_none=True
+            )
+            != command["caseRef"]
+            or budget_canonical_hash(run_row["state_authority"])
+            != budget_canonical_hash(canonical_state)
+            or domain_state.calculated_content_hash() != domain_state.content_hash
+            or domain_state.run_id != domain_run.run_id
+            or (domain_state.tenant.org_id, domain_state.tenant.project_id) != scope.key
+            or domain_state.control.value not in {"RUNNING", "PAUSED"}
+        ):
+            raise ValueError("review BusinessInvestigationRun exact authority drifted")
+        compilation_ref = response["compilationRef"]
+        compilation_row = transaction.execute(
+            """SELECT receipt_data FROM public.aip_business_investigation_compile_receipt
+                WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
+            (*scope.key, compilation_ref["resourceId"]),
+        ).fetchone()
+        if compilation_row is None:
+            raise ValueError("review compilation Receipt authority is missing")
+        raw_compilation = compilation_row["receipt_data"]
+        compilation = BusinessInvestigationCompilationReceipt.model_validate(raw_compilation)
+        canonical_compilation = compilation.model_dump(mode="json", by_alias=True)
+        if (
+            budget_canonical_hash(raw_compilation) != budget_canonical_hash(canonical_compilation)
+            or (compilation.tenant.org_id, compilation.tenant.project_id) != scope.key
+            or compilation.exact_ref.model_dump(
+                mode="json", by_alias=True, exclude_none=True
+            )
+            != compilation_ref
+            or compilation.run_ref.model_dump(
+                mode="json", by_alias=True, exclude_none=True
+            )
+            != command["runRef"]
+            or _analysis_plan_ref(compilation.plan_ref) != command["currentPlanRef"]
+        ):
+            raise ValueError("review compilation Receipt exact lineage drifted")
+        task_run_ref = response["taskRunRef"]
+        historical_task_run_ref = InvestigationExactRef.model_validate(task_run_ref)
+        if (
+            historical_task_run_ref.model_dump(
+                mode="json", by_alias=True, exclude_none=True
+            )
+            != task_run_ref
+            or historical_task_run_ref.resource_type != "TaskRun"
+            or type(historical_task_run_ref.revision) is not int
+        ):
+            raise ValueError("review historical TaskRun exact ref drifted")
+        runtime_row = transaction.execute(
+            """SELECT * FROM public.aip_task_run
+                WHERE org_id=%s AND project_id=%s AND run_id=%s FOR SHARE""",
+            (*scope.key, task_run_ref["resourceId"]),
+        ).fetchone()
+        if runtime_row is None:
+            raise ValueError("review AIP runtime authority is missing")
+        task_row = transaction.execute(
+            """SELECT * FROM public.aip_task
+                WHERE org_id=%s AND project_id=%s AND task_id=%s FOR SHARE""",
+            (*scope.key, runtime_row["task_id"]),
+        ).fetchone()
+        plan_row = transaction.execute(
+            """SELECT * FROM public.aip_plan_revision
+                WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s""",
+            (*scope.key, runtime_row["plan_revision_id"]),
+        ).fetchone()
+        if task_row is None or plan_row is None:
+            raise ValueError("review AIP Task/Plan authority is missing")
+        checkpoints = transaction.execute(
+            """SELECT * FROM public.aip_checkpoint
+                WHERE org_id=%s AND project_id=%s AND run_id=%s ORDER BY sequence""",
+            (*scope.key, task_run_ref["resourceId"]),
+        ).fetchall()
+        timeline = TaskTimeline(
+            task=AipTaskStore._task(task_row),
+            plan=AipTaskStore._plan(plan_row),
+            run=AipTaskStore._run(runtime_row),
+            checkpoints=[dict(row) for row in checkpoints],
+        )
+        binding = BusinessInvestigationRuntimeBinder._binding_from_lineage(
+            tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+            case_ref=BusinessInvestigationRuntimeBinder._aip_ref(
+                domain_run.case_ref, expected_type="BusinessInvestigationCaseRevision"
+            ),
+            run_ref=BusinessInvestigationRuntimeBinder._aip_ref(
+                compilation.run_ref, expected_type="BusinessInvestigationRun"
+            ),
+            compilation_hash=compilation.compilation_hash,
+            task_id=compilation.task_id,
+            expected_plan_ref=compilation.plan_ref,
+            task_run_id=task_run_ref["resourceId"],
+            timeline=timeline,
+        )
+        if (
+            historical_task_run_ref.resource_id != binding.task_run_ref.resource_id
+            or historical_task_run_ref.revision > binding.task_run_ref.version
+            or binding.task_run_status is not TaskRunStatus.SUCCEEDED
+            or artifact_task_run_id != binding.task_run_ref.resource_id
+        ):
+            raise ValueError("review Analysis/Plan/TaskRun/Artifact lineage drifted")
 
     def _review_lineage(self, *, transaction, scope, command, occurred_at):
         if not isinstance(occurred_at, datetime) or occurred_at.utcoffset() is None:
@@ -1787,11 +1964,17 @@ class ReviewAdvanceHostService:
             scope=scope,
             command=command,
         )
-        self._revalidate_artifacts(
+        artifact_task_run_id = self._revalidate_artifacts(
             transaction=transaction,
             scope=scope,
             command=command,
             issue=issue,
+        )
+        self._revalidate_analysis_runtime(
+            transaction=transaction,
+            scope=scope,
+            command=command,
+            artifact_task_run_id=artifact_task_run_id,
         )
         if not key:
             raise ValueError("review idempotencyKey is invalid")
