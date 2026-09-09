@@ -15,6 +15,7 @@ export interface InstallationPanelProps {
   onStateChange: (state: InstallationState | undefined) => void;
   onPageChange: (offset: number) => void;
   onSelect: (installationId: string) => void;
+  onRefresh: () => void;
   onNavigateToRegistry?: () => void;
 }
 
@@ -49,6 +50,7 @@ export function InstallationPanel({
   onStateChange,
   onPageChange,
   onSelect,
+  onRefresh,
   onNavigateToRegistry,
 }: InstallationPanelProps) {
   const response = state.data;
@@ -69,11 +71,16 @@ export function InstallationPanel({
           <h3 style={{ margin: 0 }}>安装列表</h3>
           <p style={{ color: "var(--aos-muted)", fontSize: "0.75rem" }}>列表数量与翻页均采用服务端 total、limit、offset。</p>
         </div>
-        {onNavigateToRegistry && (
-          <button type="button" className="btn btn-primary" onClick={onNavigateToRegistry}>
-            新建安装
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" className="btn" disabled={state.refreshing} onClick={onRefresh}>
+            {state.refreshing ? "正在刷新…" : "刷新安装状态"}
           </button>
-        )}
+          {onNavigateToRegistry && (
+            <button type="button" className="btn btn-primary" onClick={onNavigateToRegistry}>
+              新建安装
+            </button>
+          )}
+        </div>
       </header>
 
       <label>

@@ -50,3 +50,9 @@
 - 浏览器夹具准备回读发现：API `InstallationState`、服务端卸载动作和 Web 动作模型均使用 `uninstalled`，但 `apps/web/src/api/assetControl/installations.ts` 的事件连续性集合缺少唯一合法的 `active:uninstalled`。真实 D6D2 第一代卸载详情会被严格解析器误拒绝，资产控制页无法展示旧审计与零动作终态。
 - 最小修复只增加 `active → uninstalled` 合法迁移，并在 `installations.test.ts` 构造完整六 revision 卸载历史正例；另加 `applied → uninstalled` 负例，确保不能跳过 active、disable/detach/resource-release 等服务端权威步骤。前端不自行判断资源已释放，仍只解析服务端已提交历史。
 - 修改文件限定为 `apps/web/src/api/assetControl/installations.ts`、`apps/web/src/api/assetControl/installations.test.ts` 及本方案；退出条件为安装解析专项、资产控制相关专项、Web 全量和生产 build 全绿，然后才生成三视口浏览器证据。
+
+## 8. 安装管理正常态刷新红项（2026-09-10）
+
+- 当前安装列表只在错误/空态提供“重试读取”，正常态没有明确刷新入口；无法完成 231-6 的状态变化后刷新回读，也不能用浏览器整页重载冒充产品动作。
+- 在 `InstallationPanel` 标题区增加“刷新安装状态”，由 `AssetBundlesPage` 的单一回调依次触发列表、当前已选详情和当前 runtime 的只读 reload；刷新中禁用，未选择详情时对应 hook 保持 idle、不产生伪请求。按钮不触发安装或 runtime command。
+- 修改文件限定为 `apps/web/src/pages/s2/AssetBundlesPage.tsx`、`apps/web/src/pages/s2/assetBundles/InstallationPanel.tsx` 和对应现有组件测试；退出条件为组件测试证明回调/禁用行为，Web 全量和 build 全绿，浏览器网络记录证明点击后只有 GET、没有 POST。

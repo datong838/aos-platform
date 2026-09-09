@@ -58,6 +58,7 @@ describe("InstallationPanel", () => {
         onStateChange={vi.fn()}
         onPageChange={vi.fn()}
         onSelect={vi.fn()}
+        onRefresh={vi.fn()}
         {...props}
       />,
     ));
@@ -92,6 +93,16 @@ describe("InstallationPanel", () => {
     await act(async () => button(host, "下一页").click());
     expect(onPageChange).toHaveBeenNthCalledWith(1, 0);
     expect(onPageChange).toHaveBeenNthCalledWith(2, 40);
+  });
+
+  it("正常态提供显式刷新并在刷新中禁用", async () => {
+    const onRefresh = vi.fn();
+    await render({ onRefresh });
+    await act(async () => button(host, "刷新安装状态").click());
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+
+    await render({ state: readState({ refreshing: true }), onRefresh });
+    expect(button(host, "正在刷新").disabled).toBe(true);
   });
 
   it("空列表与旧数据均明确呈现且不产生 mutation 入口", async () => {

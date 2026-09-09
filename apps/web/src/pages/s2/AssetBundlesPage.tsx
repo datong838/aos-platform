@@ -453,6 +453,11 @@ export function AssetBundlesPage() {
               !actionPending && setInstallationRequest((current) => ({ ...current, offset }))
             }
             onSelect={selectInstallation}
+            onRefresh={() => {
+              installationsState.reload();
+              installationDetailState.reload();
+              runtimeInstallationState.reload();
+            }}
             onNavigateToRegistry={() => setActiveView("registry")}
           />
           <InstallationDetail state={installationDetailState} />
