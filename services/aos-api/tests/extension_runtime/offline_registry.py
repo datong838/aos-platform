@@ -36,6 +36,16 @@ def cleanup(docker,name,ref,helper):
 def cached_registry_image(directory, image_id, context):
     directory.mkdir()
     docker=['docker','--context',context]
+    # The user's global Docker config may point at a credential helper owned by
+    # a stopped desktop engine.  Registry fixtures must not depend on that
+    # unrelated process or mutate the user's config, so pull through the exact
+    # selected daemon endpoint with a fixture-local config containing no auth.
+    endpoint=json.loads(subprocess.check_output(
+        ['docker','context','inspect',context,'--format','{{json .Endpoints.docker.Host}}'],
+        text=True,timeout=15))
+    docker_config=directory/'docker-config';docker_config.mkdir()
+    (docker_config/'config.json').write_text('{"auths":{}}\n')
+    pull_docker=['docker','--config',str(docker_config),'--host',endpoint]
     archive=directory/'image.tar'
     subprocess.run([*docker,'image','save','-o',str(archive),image_id],check=True,timeout=60,capture_output=True)
     data=directory/'fixture';(data/'blobs').mkdir(parents=True)
@@ -73,7 +83,11 @@ def cached_registry_image(directory, image_id, context):
             except OSError:
                 if time.monotonic()>end:raise
                 time.sleep(.1)
-        subprocess.run([*docker,'pull',ref],check=True,capture_output=True,timeout=60)
+        try:
+            subprocess.run([*pull_docker,'pull',ref],check=True,capture_output=True,timeout=60)
+        except subprocess.TimeoutExpired as exc:
+            logs=subprocess.run([*docker,'logs',name],capture_output=True,text=True,timeout=15)
+            raise RuntimeError('offline registry pull timed out; requests:\n'+logs.stderr[-8000:]) from exc
         yield digest,config['digest']
     finally:
         cleanup(docker,name,ref,helper)
