@@ -8,10 +8,17 @@ import math
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Literal, Self
+from types import MappingProxyType
 
 from pydantic import ConfigDict, Field, StrictInt, field_validator, model_validator
 
 from aos_api.aip_contracts import AipContractModel, TenantContext
+
+
+OBSERVATION_CLEANING_VERSIONS = MappingProxyType({
+    "niushop.product-observation/v1": "niushop.product-public-fields/v1",
+    "niushop.product-quality-observation/v1": "niushop.product-quality-fields/v1",
+})
 
 
 def _typed(value: Any) -> Any:
@@ -56,7 +63,7 @@ class SourceReadObservation(AipContractModel):
     schema_version: Literal["aos.source-read-observation/v1"] = "aos.source-read-observation/v1"
     tenant: _ObservationTenant
     source_id: str = Field(min_length=1, max_length=240)
-    spec_id: Literal["niushop.product-observation/v1"]
+    spec_id: Literal["niushop.product-observation/v1", "niushop.product-quality-observation/v1"]
     site_id: StrictInt = Field(gt=0)
     read_started_at: datetime
     read_finished_at: datetime
@@ -64,7 +71,7 @@ class SourceReadObservation(AipContractModel):
     excluded_count: StrictInt = Field(ge=0, le=100)
     retained_count: StrictInt = Field(ge=0, le=100)
     rows_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
-    cleaning_version: Literal["niushop.product-public-fields/v1"] = "niushop.product-public-fields/v1"
+    cleaning_version: Literal["niushop.product-public-fields/v1", "niushop.product-quality-fields/v1"] = "niushop.product-public-fields/v1"
     source_configuration_ref: None = None
     upstream_snapshot_at: None = None
 
@@ -84,6 +91,10 @@ class SourceReadObservation(AipContractModel):
 
     @model_validator(mode="after")
     def _interval_and_counts(self) -> Self:
+        if self.cleaning_version != OBSERVATION_CLEANING_VERSIONS[self.spec_id]:
+            raise ValueError("observation specification and cleaning version mismatch")
+        if self.spec_id == "niushop.product-quality-observation/v1" and self.excluded_count != 0:
+            raise ValueError("quality input observation must retain all projected rows")
         if self.read_finished_at < self.read_started_at:
             raise ValueError("observation clock moved backwards")
         if self.fetched_count != self.excluded_count + self.retained_count:

@@ -30,7 +30,7 @@ from aos_api.source_configuration_revision import SourceConfigurationRevisionSto
 from aos_api.db import connect
 from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime
 from aos_api.logging_facade import get_logger
-from aos_api.source_read_observation import SourceReadObservation, observed_rows_hash
+from aos_api.source_read_observation import OBSERVATION_CLEANING_VERSIONS, SourceReadObservation, observed_rows_hash
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.ec-source")
@@ -168,6 +168,11 @@ _PRODUCT_OBSERVATION_FIELDS = frozenset({
 })
 
 
+_PRODUCT_QUALITY_OBSERVATION_FIELDS = (_PRODUCT_OBSERVATION_FIELDS - {"state"}) | {
+    "goods_state", "category_id",
+}
+
+
 def _read_observation_clock() -> datetime:
     return datetime.now(UTC)
 
@@ -222,7 +227,8 @@ def fetch_source_rows_configured_observed(
 
 
 def _fetch_source_rows_observed(*, nodes, node_id, scope, spec_id, load_props):
-    if type(scope) is not TenantScope or spec_id != "niushop.product-observation/v1":
+    if (type(scope) is not TenantScope or type(spec_id) is not str
+        or spec_id not in OBSERVATION_CLEANING_VERSIONS):
         raise ValueError("trusted tenant scope and fixed observation spec required")
     config = _resolve_source_node_config(nodes, node_id)
     if config is None:
@@ -252,13 +258,16 @@ def _fetch_source_rows_observed(*, nodes, node_id, scope, spec_id, load_props):
     if any(type(row) is not dict or type(row.get("site_id")) is not int
            or row["site_id"] != filters["site_id"] for row in rows):
         raise ValueError("observation returned rows outside the fixed shop scope")
-    public_rows = [{key: value for key, value in row.items() if key in _PRODUCT_OBSERVATION_FIELDS}
+    quality_input = spec_id == "niushop.product-quality-observation/v1"
+    fields = _PRODUCT_QUALITY_OBSERVATION_FIELDS if quality_input else _PRODUCT_OBSERVATION_FIELDS
+    public_rows = [{key: value for key, value in row.items() if key in fields}
                    for row in rows]
     # Empty identifiers deliberately avoid modifying live pipeline DLQ state.
-    cleaned = _clean_rows(public_rows, pipeline_id="", node_id="", table="ns_goods")
+    cleaned = public_rows if quality_input else _clean_rows(public_rows, pipeline_id="", node_id="", table="ns_goods")
     observation = SourceReadObservation(
         tenant={"orgId": scope.org_id, "projectId": scope.project_id},
         sourceId=source_id, specId=spec_id, siteId=filters["site_id"],
+        cleaningVersion=OBSERVATION_CLEANING_VERSIONS[spec_id],
         readStartedAt=started, readFinishedAt=finished,
         fetchedCount=len(rows), excludedCount=len(rows) - len(cleaned), retainedCount=len(cleaned),
         rowsHash=observed_rows_hash(cleaned),

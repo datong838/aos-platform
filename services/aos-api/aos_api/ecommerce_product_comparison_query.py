@@ -82,6 +82,8 @@ class ProductComparisonQueryService:
 
     def _request(self,saved,evidence_ref,selection):
         observed=saved.observation.observation
+        if observed.spec_id!="niushop.product-observation/v1":
+            raise ValueError("fixed comparison observation specification unsupported")
         if observed.site_id!=1:
             raise ValueError("fixed comparison query shop unsupported")
         if observed.read_started_at>=observed.read_finished_at:

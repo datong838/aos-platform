@@ -11,7 +11,7 @@ SCOPE = TenantScope("org-org", "dev-project")
 NOW = datetime(2026, 9, 9, tzinfo=UTC)
 
 
-def setup(monkeypatch, rows, *, config=None, failure=None):
+def setup(monkeypatch, rows, *, config=None, failure=None, spec_id="niushop.product-observation/v1"):
     events = []
     times = iter((NOW, NOW + timedelta(seconds=2)))
     monkeypatch.setattr(adapter, "_read_observation_clock", lambda: (events.append("clock"), next(times))[1])
@@ -38,7 +38,7 @@ def setup(monkeypatch, rows, *, config=None, failure=None):
     node = SimpleNamespace(id="source-node", node_type="source", config=cfg)
     return events, lambda: adapter.fetch_source_rows_observed(
         nodes=[node], node_id="source-node", scope=SCOPE,
-        spec_id="niushop.product-observation/v1")
+        spec_id=spec_id)
 
 
 def test_actual_interval_public_projection_and_local_counts(monkeypatch):
@@ -110,3 +110,45 @@ def test_backwards_clock_returns_no_observation(monkeypatch):
     monkeypatch.setattr(adapter, "_read_observation_clock", lambda: next(times))
     with pytest.raises(ValueError, match="backwards"):
         fetch()
+
+
+def test_quality_projection_preserves_raw_invalid_deleted_and_duplicate_rows(monkeypatch):
+    original = [
+        {"goods_id": 1, "site_id": 1, "goods_name": "", "price": -2, "goods_stock": "invalid",
+         "goods_state": 0, "state": "not-an-authority", "category_id": None, "create_time": 0,
+         "mobile": "private", "secret": "never-return"},
+        {"goods_id": 1, "site_id": 1, "is_delete": 1, "goods_state": 1, "modify_time": 0},
+        {"site_id": 1, "price": None},
+    ]
+    events, fetch = setup(monkeypatch, original, spec_id="niushop.product-quality-observation/v1")
+    before = dict(adapter._SOFT_DELETE_COUNTS)
+    rows, item = fetch()
+    assert rows == [
+        {"goods_id": 1, "site_id": 1, "goods_name": "", "price": -2, "goods_stock": "invalid",
+         "goods_state": 0, "category_id": None, "create_time": 0},
+        original[1], original[2],
+    ]
+    assert item.cleaning_version == "niushop.product-quality-fields/v1"
+    assert (item.fetched_count, item.excluded_count, item.retained_count) == (3, 0, 3)
+    assert events == ["connect", "clock", "read", "clock", "close"]
+    assert adapter._SOFT_DELETE_COUNTS == before
+    assert original[0]["state"] == "not-an-authority"
+    item.verify_rows(rows)
+
+
+@pytest.mark.parametrize("count", [0, 100, 101])
+def test_quality_spec_retains_complete_bound_before_any_business_filter(monkeypatch, count):
+    _, fetch = setup(monkeypatch, [{"site_id": 1, "is_delete": 1} for _ in range(count)],
+        spec_id="niushop.product-quality-observation/v1")
+    if count == 101:
+        with pytest.raises(ValueError, match="limit"): fetch()
+    else:
+        rows, item = fetch()
+        assert len(rows) == item.retained_count == item.fetched_count == count
+        assert item.excluded_count == 0
+
+
+@pytest.mark.parametrize("row", [{"site_id": 2}, {"site_id": 1, "price": float("nan")}])
+def test_quality_spec_never_drops_scope_or_unhashable_values_to_succeed(monkeypatch, row):
+    _, fetch = setup(monkeypatch, [row], spec_id="niushop.product-quality-observation/v1")
+    with pytest.raises(ValueError): fetch()

@@ -215,3 +215,19 @@ def test_fixed_owners_ignore_temporary_metric_and_query_tables():
         assert conn.execute("SELECT count(*) AS n FROM pg_temp.aip_metric_definition_revision").fetchone()["n"]==0
         assert conn.execute("SELECT count(*) AS n FROM pg_temp.aip_analyst_query_job").fetchone()["n"]==0
         conn.rollback()
+
+
+def test_old_comparison_and_query_reject_new_quality_input_policy():
+    with connect_serializable(SCOPE) as conn:
+        kwargs = inputs(conn)
+        store = ConfiguredObservationEvidenceStore(HostTransaction(conn), SCOPE)
+        raw = store.read_exact(kwargs["evidence_ref"]).observation.model_dump()
+        raw["observation"].update(spec_id="niushop.product-quality-observation/v1",
+            cleaning_version="niushop.product-quality-fields/v1")
+        kwargs["evidence_ref"] = store.put(ConfiguredSourceObservation.model_validate(raw), ROWS, actor="user:fixture")
+        with pytest.raises(ValueError, match="specification"):
+            ProductComparisonQueryService(HostTransaction(conn), SCOPE).execute(**kwargs)
+        comparison_args = {key: value for key, value in kwargs.items() if key not in {"idempotency_key", "actor"}}
+        with pytest.raises(ValueError, match="specification"):
+            ProductObservationComparisonReader(HostTransaction(conn), SCOPE).compare(**comparison_args)
+        conn.rollback()

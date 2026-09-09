@@ -56,3 +56,25 @@ def test_unsupported_or_ambiguous_rows_rejected(value):
 def test_invalid_observation_cannot_be_revalidated(changes):
     with pytest.raises(ValueError):
         SourceReadObservation.model_validate(observation().model_copy(update=changes).model_dump())
+
+
+@pytest.mark.parametrize("changes", [
+    {"spec_id": "niushop.product-quality-observation/v1"},
+    {"cleaning_version": "niushop.product-quality-fields/v1"},
+    {"spec_id": "niushop.product-quality-observation/v1", "cleaning_version": "niushop.product-quality-fields/v1"},
+])
+def test_quality_spec_must_pair_its_version_and_retain_all_rows(changes):
+    with pytest.raises(ValueError):
+        SourceReadObservation.model_validate(observation().model_copy(update=changes).model_dump())
+
+
+def test_quality_contract_preserves_old_default_and_has_explicit_new_pair():
+    original = observation()
+    assert original.spec_id == "niushop.product-observation/v1"
+    assert original.cleaning_version == "niushop.product-public-fields/v1"
+    raw = original.model_dump()
+    raw.update(spec_id="niushop.product-quality-observation/v1", cleaning_version="niushop.product-quality-fields/v1",
+        fetched_count=1, excluded_count=0)
+    item = SourceReadObservation.model_validate(raw)
+    item.verify_rows([{"goods_id": 1}])
+    assert item.upstream_snapshot_at is None

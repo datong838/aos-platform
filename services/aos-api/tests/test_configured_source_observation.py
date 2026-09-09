@@ -12,7 +12,8 @@ from tests.test_source_configuration_revision import SCOPE, upsert
 from tests.test_ec_source_observation import setup
 
 
-def test_configured_read_uses_current_input_and_returns_bound_observation(monkeypatch):
+@pytest.mark.parametrize("spec_id", ["niushop.product-observation/v1", "niushop.product-quality-observation/v1"])
+def test_configured_read_uses_current_input_and_returns_bound_observation(monkeypatch, spec_id):
     with connect(SCOPE) as conn:
         upsert(conn, "source-1", {"test": True})
         tx = HostTransaction(conn)
@@ -26,7 +27,7 @@ def test_configured_read_uses_current_input_and_returns_bound_observation(monkey
             "source_id": "source-1", "table": "ns_goods", "site_filter": "site_id=1"})
         rows, bound = adapter.fetch_source_rows_configured_observed(
             nodes=[node], node_id="source-node", scope=SCOPE, transaction=tx,
-            expected_configuration_ref=expected, spec_id="niushop.product-observation/v1")
+            expected_configuration_ref=expected, spec_id=spec_id)
         assert bound.source_configuration_ref.model_dump() == expected.model_dump()
         assert bound.observation.source_configuration_ref is None
         assert bound.secret_material_version_known is False and bound.connection_identity_verified is False
@@ -45,7 +46,7 @@ def test_configured_read_uses_current_input_and_returns_bound_observation(monkey
         with pytest.raises(ValueError, match="configuration"):
             adapter.fetch_source_rows_configured_observed(
                 nodes=[node], node_id="source-node", scope=SCOPE, transaction=tx,
-                expected_configuration_ref=expected, spec_id="niushop.product-observation/v1")
+                expected_configuration_ref=expected, spec_id=spec_id)
         assert events == before
         conn.rollback()
 

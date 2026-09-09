@@ -143,3 +143,29 @@ def test_parent_split_column_drift_is_rejected(field, value):
         with pytest.raises(ValueError):
             ConfiguredObservationEvidenceStore(HostTransaction(Intercept()), SCOPE).read_exact(ref)
         conn.rollback()
+
+
+def test_quality_input_observation_roundtrips_without_claiming_facts():
+    from aos_api.source_read_observation import observed_rows_hash
+    rows = [{"goods_id": 1, "site_id": 1, "goods_state": 0, "category_id": None, "create_time": 0},
+            {"goods_id": 1, "site_id": 1, "is_delete": 1}]
+    with connect(SCOPE) as conn:
+        raw = bound(conn, "quality-input-" + uuid4().hex).model_dump()
+        raw["observation"].update(spec_id="niushop.product-quality-observation/v1",
+            cleaning_version="niushop.product-quality-fields/v1", fetched_count=2, excluded_count=0,
+            retained_count=2, rows_hash=observed_rows_hash(rows))
+        item = ConfiguredSourceObservation.model_validate(raw)
+        store = ConfiguredObservationEvidenceStore(HostTransaction(conn), SCOPE)
+        ref = store.put(item, rows, actor="user:fixture")
+        assert store.read_exact(ref).observation == item
+        payload = conn.execute("SELECT payload FROM public.aip_evidence WHERE evidence_id=%s", (ref.resource_id,)).fetchone()["payload"]
+        assert payload["factIds"] == [] and "category_id" not in str(payload)
+        child = store.read_exact(ref).observation_evidence_ref
+        conn.execute("""INSERT INTO public.aip_evidence_revoke_event
+            (org_id,project_id,event_id,evidence_id,content_hash,reason,actor)
+            VALUES(%s,%s,%s,%s,%s,'fixture revoke','user:fixture')""",
+            (*SCOPE.key,"revoke-"+uuid4().hex,child.resource_id,child.content_hash[7:]))
+        with pytest.raises(ValueError, match="revoked"): store.read_exact(ref)
+        conn.rollback()
+    with connect(SCOPE) as conn:
+        assert ConfiguredObservationEvidenceStore(HostTransaction(conn), SCOPE).read_exact(ref) is None

@@ -55,6 +55,8 @@ class ProductObservationComparisonReader:
             raise ValueError("configured observation unavailable")
         saved.observation.verify_rows(rows)
         observation = saved.observation.observation
+        if observation.spec_id != "niushop.product-observation/v1":
+            raise ValueError("product comparison observation specification unsupported")
         bound = PostgresCanonicalShopSelectionSource(
             TransactionBoundConnectFactory(self._transaction,self._scope)).read_bound(self._scope)
         if (observation.site_id != 1 or bound is None or bound.platform != "niushop"
