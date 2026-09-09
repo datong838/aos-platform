@@ -1,7 +1,7 @@
 # AR2-7E 八工作台入口矩阵 · 入场前施工清单
 
-日期：2026-09-10  
-基线：`m1@03048e86`  
+日期：2026-09-10
+基线：`m1@9e6734b6`
 状态：`PRE_ENTRY_ONLY_WAITING_FOR_AR2_7D_PRIME_REVIEW`
 
 ## 1. Rules 与进入条件
@@ -18,6 +18,7 @@
 - 导航：`InstalledModuleNavigation.tsx` 只遍历 `catalog.modules`；空目录或读取失败时没有静态八菜单旁路。
 - 八个页面组件已经存在：Task Cockpit、Operations、Content Campaign、Creator Growth、Media Studio、Analyst、Price Governance、Customer。
 - 组件测试已覆盖八条主路由的完整共享侧栏、唯一 active、折叠恢复、路由切换滚动复位、页面顶部语义以及未接通动作的原生禁用；这些测试不能代替三视口真实浏览器逐页点击。
+- 已登记的确定性首项缺口：`AppShell.tsx` 当前按 pathname 静态选择八页专用视觉模式与页头；空目录、403、读取失败或模块未安装时，Host 正文虽失败关闭，壳层仍会显示静态页头、`栖月汇微商城` 文案以及日历／方案／筛选／内部草稿等按钮。它违反“页面能力只来自当前安装、权限和 slot registry”，但 231-6 第 160 条尚未满足，因此这里只登记，不提前修改 7E 产品代码。
 
 ## 3. 7E 浏览器矩阵
 
@@ -57,7 +58,14 @@
 ## 6. 执行与退出顺序
 
 1. 7D Prime PASS 后写 7D 最终证据并执行 AOS-000571 的 authority CAS；保持同一 AR2-7 Task/Lease。
-2. 固定 7E HEAD、目录/权限/slot fixture、视口、浏览器主路径和零副作用断言；先运行 Web 专项/全量/build。
+2. 固定 7E HEAD、目录/权限/slot fixture、视口、浏览器主路径和零副作用断言；先增加 AppShell RED：八条 canonical URL 在空目录、403、读取失败和未安装态不得出现专用视觉类、静态业务页头或业务动作；ready/stale 只有存在匹配的当前模块时才显示对应专用壳层。
 3. 执行 24 单元八页矩阵、空目录、403/失败、旧入口、跨租户 canary；失败最多修复后重跑受影响单元与全量，不切换控制通道。
 4. 回读截图、JSON、网络记录、console/page error、按钮和浮层结果；运行 closure/memory/diff check 与 Prime 增量复核。
 5. 只有 7D+7E 累计条件全部满足，才写唯一整波退出标记 `AR2_HOST_WIRING_CUTOVER_PLUGGABILITY_BROWSER_ACCEPTANCE_GREEN`，完成同一 Task/Lease 的最终 Delivery Receipt/CAS，并自动进入 A0-V。
+
+## 7. 首项缺口的最小实现上限
+
+- `apps/web/src/shell/AppShell.tsx`：专用视觉模式、页头和业务动作均以 `activeWorkshop` 的当前目录匹配为前置；页面标题继续由已安装 module 和页面组件表达，不能由 URL 单独授予能力。
+- `apps/web/src/shell/AppShell.workshop.test.tsx`：补齐 ready、empty、forbidden、failed、tenant mismatch 的全壳断言；保留 canonical 深链、legacy redirect、唯一 active 与现有八页 ready 行为。
+- 若 RED 证明专用 Header 的动作还缺少 module readiness、permission 或 slot 粒度，不在 AppShell 猜测权限；先确认 catalog 合同是否已有字段，缺字段则登记后端 Owner 和合同退出条件，再扩方案。
+- 退出：失败态静态业务能力为 0，ready/stale 匹配模块不回归，Web 专项／全量／build 和 24 单元矩阵全部通过，且无真实租户业务读取或外部效果。
