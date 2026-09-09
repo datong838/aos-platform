@@ -177,6 +177,7 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.wk_embedded_copilot_router', 'router'),
         ('aos_api.routers.ecommerce_workshop', 'router'),
         ('aos_api.routers.ecommerce_business_investigations', 'router'),
+        ('aos_api.routers.ecommerce_growth_dispatch', 'router'),
     ),
     "ontology": (
         ('aos_api.routers.object_sets', 'router'),
