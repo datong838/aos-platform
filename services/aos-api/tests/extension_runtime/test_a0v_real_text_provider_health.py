@@ -49,7 +49,7 @@ def test_attempt_journal_is_atomic_private_and_contains_no_bodies(tmp_path):
     }
     HEALTH._write_journal(tmp_path, payload)
 
-    path = tmp_path / "attempt.json"
+    path = tmp_path / "attempt-v2.json"
     assert HEALTH._read_journal(tmp_path) == payload
     assert stat.S_IMODE(path.stat().st_mode) == 0o600
     assert "prompt" not in path.read_text(encoding="utf-8").lower()
@@ -58,7 +58,7 @@ def test_attempt_journal_is_atomic_private_and_contains_no_bodies(tmp_path):
 
 def test_invalid_or_foreign_attempt_journal_fails_closed(tmp_path):
     tmp_path.mkdir(exist_ok=True)
-    (tmp_path / "attempt.json").write_text(
+    (tmp_path / "attempt-v2.json").write_text(
         '{"attemptId":"other","status":"submitted"}\n', encoding="utf-8"
     )
     with pytest.raises(HEALTH.ProviderHealthBlocked) as captured:

@@ -30,7 +30,7 @@ NETWORK_ID = "a0v-ecommerce-network-v1"
 NETWORK_REVISION = 1
 PROVIDER_MODEL_ID = "agnes-2.5-flash"
 PROMPT = "请仅回复：健康检查通过。"
-ATTEMPT_ID = "a0v-provider-health-attempt-v1"
+ATTEMPT_ID = "a0v-provider-health-attempt-v2"
 
 
 class ProviderHealthBlocked(RuntimeError):
@@ -82,7 +82,7 @@ def _exact_ref(asset_type: str, item: Any, identity: str) -> Any:
 
 
 def _journal_path(state_dir: Path) -> Path:
-    return state_dir.resolve() / "attempt.json"
+    return state_dir.resolve() / "attempt-v2.json"
 
 
 def _read_journal(state_dir: Path) -> dict[str, Any] | None:
@@ -194,6 +194,7 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
             R1BootstrapProbeBlocked,
             R1BootstrapProbeRequest,
         )
+        from aos_api.aip_secret_backend import ExactSecretResolver, SecretBackendError
         from aos_api.tenant_scope import TenantScope
         from aos_api.aip_runtime_guard_policy_store import AipRuntimeGuardPolicyStore
 
@@ -222,6 +223,14 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
             journal = _read_journal(args.state_dir)
             if journal is not None:
                 raise ProviderHealthBlocked("HEALTH_ATTEMPT_ALREADY_CONSUMED")
+            secret_resolver = ExactSecretResolver()
+            try:
+                secret = secret_resolver.resolve(scope, provider)
+            except SecretBackendError as exc:
+                raise ProviderHealthBlocked(f"secret_{exc.code}") from None
+            if not secret:
+                raise ProviderHealthBlocked("secret_keychain_empty")
+            del secret
             _write_journal(
                 args.state_dir,
                 {
@@ -239,6 +248,7 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
                 model_store=store,
                 guard_store=AipRuntimeGuardPolicyStore(factory),
                 network_store=AipNetworkPolicyStore(factory),
+                secret_resolver=secret_resolver,
                 allowed_approval_refs=frozenset({APPROVAL_REF}),
             )
             try:

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
 import importlib.util
 import json
 import subprocess
@@ -128,34 +129,97 @@ def _keychain_exists(*, runner: Any = subprocess.run) -> bool:
     raise ProviderAuthorityBlocked("KEYCHAIN_PROBE_FAILED")
 
 
-def _install_keychain_secret(secret: str, *, runner: Any = subprocess.run) -> None:
+def _load_security_frameworks() -> tuple[Any, Any]:
+    try:
+        security = ctypes.CDLL(
+            "/System/Library/Frameworks/Security.framework/Security"
+        )
+        core = ctypes.CDLL(
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+        )
+    except OSError:
+        raise ProviderAuthorityBlocked("KEYCHAIN_FRAMEWORK_UNAVAILABLE") from None
+    return security, core
+
+
+def _install_keychain_secret(
+    secret: str, *, frameworks: tuple[Any, Any] | None = None
+) -> None:
     if not secret:
         raise ProviderAuthorityBlocked("AGNES_API_KEY_UNAVAILABLE")
-    argv = [
-        "/usr/bin/security",
-        "add-generic-password",
-        "-a",
-        SECRET_ACCOUNT,
-        "-s",
-        SECRET_SERVICE,
-        "-l",
-        "AOS A0-V Agnes Text Provider",
-        "-w",
+    security, core = frameworks or _load_security_frameworks()
+    security.SecKeychainFindGenericPassword.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_uint32,
+        ctypes.c_char_p,
+        ctypes.c_uint32,
+        ctypes.c_char_p,
+        ctypes.c_void_p,
+        ctypes.c_void_p,
+        ctypes.POINTER(ctypes.c_void_p),
     ]
+    security.SecKeychainFindGenericPassword.restype = ctypes.c_int32
+    security.SecKeychainItemModifyAttributesAndData.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_void_p,
+        ctypes.c_uint32,
+        ctypes.c_char_p,
+    ]
+    security.SecKeychainItemModifyAttributesAndData.restype = ctypes.c_int32
+    security.SecKeychainAddGenericPassword.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_uint32,
+        ctypes.c_char_p,
+        ctypes.c_uint32,
+        ctypes.c_char_p,
+        ctypes.c_uint32,
+        ctypes.c_char_p,
+        ctypes.POINTER(ctypes.c_void_p),
+    ]
+    security.SecKeychainAddGenericPassword.restype = ctypes.c_int32
+    core.CFRelease.argtypes = [ctypes.c_void_p]
+    core.CFRelease.restype = None
+    service = SECRET_SERVICE.encode("utf-8")
+    account = SECRET_ACCOUNT.encode("utf-8")
+    payload = secret.encode("utf-8")
+    item = ctypes.c_void_p()
     try:
-        completed = runner(
-            argv,
-            input=secret + "\n",
-            text=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=False,
-            shell=False,
-            timeout=10.0,
+        status = security.SecKeychainFindGenericPassword(
+            None,
+            len(service),
+            service,
+            len(account),
+            account,
+            None,
+            None,
+            ctypes.byref(item),
         )
-    except (OSError, subprocess.TimeoutExpired):
+        if status == 0:
+            status = security.SecKeychainItemModifyAttributesAndData(
+                item, None, len(payload), payload
+            )
+        elif status == -25300:
+            status = security.SecKeychainAddGenericPassword(
+                None,
+                len(service),
+                service,
+                len(account),
+                account,
+                len(payload),
+                payload,
+                ctypes.byref(item),
+            )
+        else:
+            raise ProviderAuthorityBlocked("KEYCHAIN_WRITE_FAILED")
+    except (AttributeError, OSError):
         raise ProviderAuthorityBlocked("KEYCHAIN_WRITE_FAILED") from None
-    if completed.returncode != 0:
+    finally:
+        if item.value:
+            try:
+                core.CFRelease(item)
+            except (AttributeError, OSError):
+                pass
+    if status != 0:
         raise ProviderAuthorityBlocked("KEYCHAIN_WRITE_FAILED")
 
 
@@ -309,17 +373,30 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
     sys.path.insert(0, str(API_ROOT))
     try:
         from aos_api.aip_model_runtime_store import AipModelRuntimeStore, ModelRuntimeNotFound
-        from aos_api.aip_secret_backend import ExactSecretResolver
+        from aos_api.aip_secret_backend import ExactSecretResolver, SecretBackendError
         from aos_api.tenant_scope import TenantScope
 
         scope = TenantScope(ORG_ID, PROJECT_ID)
         desired = _desired_provider(connect)
-        keychain_before = _keychain_exists()
-        if not keychain_before:
+        resolver = ExactSecretResolver()
+        keychain_before = False
+        try:
+            resolver.resolve(scope, desired)
+            keychain_before = True
+        except SecretBackendError as exc:
+            code = exc.code
+            if code not in {"keychain_item_unavailable", "keychain_empty"}:
+                raise ProviderAuthorityBlocked("KEYCHAIN_EXACT_SECRET_UNAVAILABLE") from None
             _install_keychain_secret(settings["AGNES_API_KEY"])
         if not _keychain_exists():
             raise ProviderAuthorityBlocked("KEYCHAIN_ITEM_UNAVAILABLE_AFTER_WRITE")
-        resolver = ExactSecretResolver()
+        try:
+            resolved = resolver.resolve(scope, desired)
+        except SecretBackendError:
+            raise ProviderAuthorityBlocked("KEYCHAIN_EXACT_SECRET_UNAVAILABLE") from None
+        if not resolved:
+            raise ProviderAuthorityBlocked("KEYCHAIN_EXACT_SECRET_UNAVAILABLE")
+        del resolved
         probe = resolver.probe(scope, desired)
         if not probe.exists or probe.secret_version != SECRET_VERSION:
             raise ProviderAuthorityBlocked("KEYCHAIN_EXACT_SECRET_UNAVAILABLE")

@@ -69,24 +69,47 @@ def test_env_validation_returns_settings_only_in_process_and_blocks_drift(tmp_pa
     assert secret not in str(captured.value)
 
 
-def test_keychain_write_uses_stdin_and_never_places_secret_in_argv():
-    calls = []
+class _FakeFunction:
+    def __init__(self, result):
+        self.result = result
+        self.calls = []
+
+    def __call__(self, *args):
+        self.calls.append(args)
+        return self.result
+
+
+class _FakeSecurity:
+    def __init__(self, find_status):
+        self.SecKeychainFindGenericPassword = _FakeFunction(find_status)
+        self.SecKeychainItemModifyAttributesAndData = _FakeFunction(0)
+        self.SecKeychainAddGenericPassword = _FakeFunction(0)
+
+
+class _FakeCore:
+    def __init__(self):
+        self.CFRelease = _FakeFunction(None)
+
+
+def test_keychain_write_uses_security_framework_memory_not_subprocess():
     secret = "never-place-in-process-list"
+    security = _FakeSecurity(-25300)
+    core = _FakeCore()
 
-    def runner(argv, **kwargs):
-        calls.append((argv, kwargs))
-        return subprocess.CompletedProcess(argv, 0)
+    AUTHORITY._install_keychain_secret(secret, frameworks=(security, core))
 
-    AUTHORITY._install_keychain_secret(secret, runner=runner)
+    assert not security.SecKeychainItemModifyAttributesAndData.calls
+    call = security.SecKeychainAddGenericPassword.calls[0]
+    assert call[6] == secret.encode("utf-8")
+    assert not any(isinstance(value, str) and secret in value for value in call)
 
-    assert len(calls) == 1
-    argv, kwargs = calls[0]
-    assert argv[-1] == "-w"
-    assert secret not in argv
-    assert kwargs["input"] == secret + "\n"
-    assert kwargs["shell"] is False
-    assert kwargs["stdout"] is subprocess.DEVNULL
-    assert kwargs["stderr"] is subprocess.DEVNULL
+
+def test_keychain_write_repairs_same_identity_item_in_place():
+    security = _FakeSecurity(0)
+    core = _FakeCore()
+    AUTHORITY._install_keychain_secret("replacement", frameworks=(security, core))
+    assert security.SecKeychainItemModifyAttributesAndData.calls
+    assert not security.SecKeychainAddGenericPassword.calls
 
 
 @pytest.mark.parametrize(("returncode", "expected"), [(0, True), (44, False)])
