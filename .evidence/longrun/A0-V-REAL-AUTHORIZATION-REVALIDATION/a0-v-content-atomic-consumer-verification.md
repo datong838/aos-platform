@@ -1,0 +1,11 @@
+# 内容结果原子消费验证
+
+基线8352b00c，Task A0V-CONTENT-ATOMIC-CONSUMER。新增内部ContentResultConsumer：保存点内锁reservation、校验原command预算hash、run属于原Task、中文可读正文来自journal；上下文reader提供商品/渠道/检查说明；来源refs保持原命令；稳定ID+正文hash由消费者确定，再经既有Owner写Usage/Artifact/预算终态。
+
+已知价按Budget既有算法计算并settle；明确developmentCostAuthorization走complete_cost_pending，金额保持null。重放走既有产物和预算exact replay；失败整体回滚本次lineage/Usage/Artifact，之前独立保存的Provider结果日志不受影响。
+
+隔离PG共9项通过（4项消费者settled/pending×成功/注入失败，5项worker回归），进程exit0。正常重放只一份Artifact/两条Usage，费用失败后二者及lineage均零、原结果日志保留且reservation仍submitted。diff check通过。
+
+测试边界：Provider/上下文reader为替身；业务run为最小fixture、产物和lineage克隆public结构，fixture单独授权Owner追加权限；pending ACTIVE价格使用SQL fixture，不代表合同已可发布。仅随机schema应用迁移且结束清理，public未升级、真实Provider调用0。现有startup/pytest warnings仍在。
+
+下一入口：真实业务上下文/来源读取器、当前安装和dispatch发送前复验、Host enqueue与等待/结果回执协议、进程运行注册；随后新候选包升级、正式模型路由及真实首链。此消费者返回内部结果，尚未接评审页面/自动任务状态，不把消费测试当整链完成。

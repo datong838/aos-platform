@@ -1,0 +1,9 @@
+# 内容结果原子消费
+
+基线8352b00c。新增services/aos-api/aos_api/ecommerce_content_result_consumer.py，复用journal、Usage Owner、Task Artifact Owner、Budget Owner。新增tests/aip/test_a0v_content_result_consumer_pg.py。
+
+同一事务/保存点：锁reservation并读取journal；校验完整命令与reservation的预算request hash；内部current context reader提供runId和基于当前来源的productNames/channels/constraintChecks，消费者校验run属于原Task、正文来自保存结果且是业务文本、所有来源引用来自原命令。此reader尚需真实装配，不接外部调用参数。稳定Artifact ID由invocation推导，metadata保存严格自引用hash和全部lineage；写用量、Artifact、settle或complete_cost_pending。任何失败回滚本消费产生的记录，Provider结果日志保留以便重试消费，不重复模型调用。
+
+已终结回放仍校验同一产物与用量，不能覆盖；已知价格使用Budget现有计算，明确开发price授权才走pending，缺价不默认为免费。费用已完成/待核算不会阻断产物消费；不在本步做人工审批或任务成功标记。
+
+PG测试真实Owner及隔离schema，验证成功回读/重放一份Artifact两条Usage、预算失败整笔回滚、已保存结果保留。不升级public，不调用真实Provider。上下文reader和invoke均明确测试替身；真实Host/当前来源reader/包升级仍待接，不能据本切片宣布首链完成。

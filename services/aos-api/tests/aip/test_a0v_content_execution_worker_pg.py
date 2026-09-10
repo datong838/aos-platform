@@ -16,22 +16,23 @@ from aos_api.tenant_scope import TenantScope
 pytestmark = pytest.mark.skipif(os.getenv('AOS_EXTENSION_PG_TEST') != '1', reason='isolated PostgreSQL opt-in')
 
 
-def setup(database):
+def setup(database, command_factory=None, request_transform=None):
     spec=importlib.util.spec_from_file_location('journal_migration',ROOT/'alembic/versions/a0v_003_content_execution_journal.py')
     migration=importlib.util.module_from_spec(spec);spec.loader.exec_module(migration)
     migration.op=SimpleNamespace(execute=database.owner.execute);migration.upgrade()
     scope=TenantScope('org-org','dev-project'); factory=runtime_connection(database)
     request,refs,_=seed(database,scope,task_id='worker',now=datetime.now(UTC))
+    if request_transform is not None: request=request_transform(request)
     store=AipBudgetReservationStore(factory,authority_schema=database.schema)
     held=store.reserve(scope,request,actor='test'); rid=held.reservation_ref.resource_id
     with factory(scope) as conn:
-        ContentExecutionJournal(storage_schema=database.schema).enqueue(conn,scope,rid,budget_request_hash=request.request_hash(),command={'requestHash':'a'*64})
+        ContentExecutionJournal(storage_schema=database.schema).enqueue(conn,scope,rid,budget_request_hash=request.request_hash(),command=command_factory(request) if command_factory else {'requestHash':'a'*64})
     def ref(kind,identity,digest='a'*64):
         return dict(assetType=kind,assetId=identity,revision=1,contentHash=digest)
     resolution=ModelRouteResolution(tenant={'orgId':scope.org_id,'projectId':scope.project_id},
         route=ref('ModelRouteRevision','route'),policy=ref('RuntimePolicyRevision','policy'),readiness='ready',
         selectedModel=ref('RegisteredModelRevision','model'),selectedProvider=ref('ProviderInstanceRevision',refs['provider'].resource_id,refs['provider'].content_hash.removeprefix('sha256:')),
-        selectedPriceSnapshot=ref('ModelPriceSnapshotRevision',refs['price'].resource_id,refs['price'].content_hash.removeprefix('sha256:')),resolvedAt=datetime.now(UTC))
+        selectedPriceSnapshot=ref('ModelPriceSnapshotRevision',request.pricing_ref.resource_id,request.pricing_ref.content_hash.removeprefix('sha256:')),resolvedAt=datetime.now(UTC))
     prepare=lambda *_:PreparedContentInvocation(resolution,'approved public facts','public_catalog')
     return scope,factory,store,rid,prepare
 
