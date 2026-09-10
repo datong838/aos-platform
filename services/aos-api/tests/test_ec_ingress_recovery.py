@@ -20,7 +20,7 @@ def prepared(store):
                     pipelineHash='a'*64,command=command.model_dump(mode='json'))
     journal = Mock()
     journal.read.return_value = envelope
-    journal.read_derived.return_value = {'commands': [_derived_command().model_dump(mode='json')]}
+    journal.read_derived.return_value = {'commands': [_derived_command().model_copy(update={'input_revision':1}).model_dump(mode='json')]}
     conn = Mock()
     conn.transaction.return_value = nullcontext()
     return command, journal, conn
@@ -87,6 +87,8 @@ def test_partial_submission_resumes_original_commands(store,prepared):
     journal.read.return_value['command'] = command.model_dump(mode='json')
     derived2 = _derived_command(key='metric-2').model_copy(update={'identity':ident('payment-2')})
     journal.read_derived.return_value['commands'].append(derived2.model_dump(mode='json'))
+    for item in journal.read_derived.return_value['commands']:
+        item['input_revision'] = 2
     store.apply_batch(command)
     original = store.update_derived_metrics
     calls = 0
@@ -104,3 +106,65 @@ def test_partial_submission_resumes_original_commands(store,prepared):
     assert [r.replayed for r in results] == [True,False]
     with store._engine.connect() as c:
         assert c.execute(select(func.count()).select_from(ecom_derived_receipt)).scalar_one() == 2
+
+
+def test_recovery_saves_before_submitting_and_does_not_reprepare_on_retry(store):
+    from contextlib import contextmanager
+    from test_ec_ingress_input import prepared as prepare_input
+    from aos_api.ec_ingress_recovery import recover_saved_authoritative_stages
+    tenant,pipeline,row,command,_ = prepare_input()
+    journal = Mock()
+    journal.read.return_value = dict(runId='run',pipelineId=pipeline.id,sourceId='source',sourceRevision='revision',pipelineHash='a'*64,
+                                    command=command.model_dump(mode='json'),outputRows=[row])
+    journal.read_derived.return_value = None
+    committed = False
+    pending = None
+    @contextmanager
+    def connect(scope):
+        nonlocal committed,pending
+        conn=Mock()
+        conn.transaction.return_value=nullcontext()
+        yield conn
+        if pending is not None:
+            journal.read_derived.return_value=pending
+            pending=None
+            committed=True
+    def save(conn,scope,run_id,commands):
+        nonlocal pending
+        pending={'commands':[c.model_dump(mode='json') for c in commands]}
+        return pending
+    journal.save_derived.side_effect=save
+    original=store.update_derived_metrics
+    def submit(command):
+        assert committed
+        return original(command)
+    store.update_derived_metrics=submit
+    first=recover_saved_authoritative_stages(connect,tenant,'run',journal=journal,store=store)
+    assert first[0].updated
+    second=recover_saved_authoritative_stages(connect,tenant,'run',journal=journal,store=store)
+    assert second[0].replayed
+    assert journal.save_derived.call_count == 1
+
+
+def test_saved_wrong_watermark_never_submits(store,prepared):
+    command,journal,_=prepared
+    store.apply_batch(command)
+    journal.read_derived.return_value['commands'][0]['input_revision']=999
+    store.update_derived_metrics=Mock()
+    with pytest.raises(IngressJournalConflict,match='INGRESS_DERIVED_WATERMARK_DRIFT'):
+        resume(store,prepared)
+    store.update_derived_metrics.assert_not_called()
+
+
+def test_old_unprepared_batch_without_input_never_applies_base(store,prepared):
+    from contextlib import contextmanager
+    from aos_api.ec_ingress_recovery import recover_saved_authoritative_stages
+    _,journal,conn=prepared
+    journal.read_derived.return_value=None
+    @contextmanager
+    def factory(scope):
+        yield conn
+    store.apply_batch=Mock()
+    with pytest.raises(IngressJournalConflict,match='INGRESS_OUTPUT_REQUIRED'):
+        recover_saved_authoritative_stages(factory,TenantScope('org-a','workspace-a'),'run-1',journal=journal,store=store)
+    store.apply_batch.assert_not_called()

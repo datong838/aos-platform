@@ -121,3 +121,70 @@ def test_derived_commands_are_durable_and_bound_to_original_objects(database):
     with factory(TenantScope('dev-org','dev-project')) as conn:
         assert journal.read_derived(conn,scope,'run') is None
     with pytest.raises(errors.RaiseException), database.owner.transaction(): migration.downgrade()
+
+
+def test_recovery_cross_connection_commit_before_derived_submission(database,monkeypatch):
+    """Real PG journal/binding transactions plus real SQLite consistency owner."""
+    import json
+    from sqlalchemy import create_engine,select,func
+    from sqlalchemy.pool import StaticPool
+    from aos_api.ecom_consistency_store import EcomConsistencyStore,metadata,ecom_ingest_receipt,ecom_derived_receipt
+    from aos_api.ec_ingress_journal import IngressJournal,IngressJournalConflict,_digest
+    from aos_api.ec_ingress_recovery import recover_saved_authoritative_stages
+    from test_ec_ingress_input import prepared
+    scope,pipeline,row,command,_ = prepared()
+    revision = str(uuid4())
+    database.owner.execute('CREATE TABLE data_source_configuration_revision(org_id text,project_id text,source_id text,revision_id uuid,PRIMARY KEY(org_id,project_id,source_id,revision_id))')
+    database.owner.execute("INSERT INTO data_source_configuration_revision VALUES('org-org','dev-project','source',%s)",(revision,))
+    for filename in ('a0v_005_ingress_command_journal.py','a0v_006_ingress_derived_journal.py'):
+        spec=importlib.util.spec_from_file_location('migration',ROOT/'alembic/versions'/filename)
+        migration=importlib.util.module_from_spec(spec);spec.loader.exec_module(migration)
+        migration.op=SimpleNamespace(execute=database.owner.execute);migration.upgrade()
+    database.owner.execute('CREATE TABLE meta_schedule_run(org_id text,project_id text,id text,schedule_id text,status text)')
+    database.owner.execute('CREATE TABLE meta_schedule(org_id text,project_id text,id text,pipeline_id text,enabled boolean,ingest jsonb)')
+    database.owner.execute('CREATE TABLE phase5_pipeline_graph(org_id text,project_id text,pipeline_id text,payload jsonb)')
+    database.owner.execute('CREATE TABLE meta_source(org_id text,project_id text,id text,type text,status text,configuration_revision uuid)')
+    graph={'pipeline_id':pipeline.id,'nodes':[{'node_type':'source','config':{'source_id':'source'}}]}
+    database.owner.execute("INSERT INTO meta_schedule_run VALUES('org-org','dev-project','run','schedule','running')")
+    database.owner.execute("INSERT INTO meta_schedule VALUES('org-org','dev-project','schedule',%s,true,%s::jsonb)",(pipeline.id,json.dumps({'kind':'pipeline-live-v1','pipelineId':pipeline.id})))
+    database.owner.execute("INSERT INTO phase5_pipeline_graph VALUES('org-org','dev-project',%s,%s::jsonb)",(pipeline.id,json.dumps(graph)))
+    database.owner.execute("INSERT INTO meta_source VALUES('org-org','dev-project','source','jdbc-mysql-ssh','registered',%s)",(revision,))
+    for table in ('meta_schedule_run','meta_schedule','phase5_pipeline_graph','meta_source'):
+        database.owner.execute(f'GRANT SELECT,UPDATE ON {table} TO aos_runtime')
+    factory=runtime_connection(database)
+    journal=IngressJournal(storage_schema=database.schema)
+    with factory(scope) as conn:
+        journal.save_for_running_schedule(conn,scope,run_id='run',pipeline_id=pipeline.id,source_id='source',
+            source_revision=revision,pipeline_hash=_digest(graph),command=command,output_rows=[row])
+    engine=create_engine('sqlite+pysqlite:///:memory:',poolclass=StaticPool)
+    metadata.create_all(engine)
+    store=EcomConsistencyStore(engine)
+    try:
+        original_save=journal.save_derived
+        def fail_save(*args):
+            raise RuntimeError('SIMULATED_SAVE_FAILURE')
+        monkeypatch.setattr(journal,'save_derived',fail_save)
+        with pytest.raises(RuntimeError,match='SIMULATED_SAVE_FAILURE'):
+            recover_saved_authoritative_stages(factory,scope,'run',journal=journal,store=store)
+        assert store.read_committed_batch(command) is not None
+        with factory(scope) as conn:
+            assert journal.read_derived(conn,scope,'run') is None
+        with engine.connect() as conn:
+            assert conn.execute(select(func.count()).select_from(ecom_derived_receipt)).scalar_one()==0
+        monkeypatch.setattr(journal,'save_derived',original_save)
+        original_submit=store.update_derived_metrics
+        def verify_committed_then_submit(item):
+            with factory(scope) as conn:
+                assert journal.read_derived(conn,scope,'run') is not None
+            return original_submit(item)
+        monkeypatch.setattr(store,'update_derived_metrics',verify_committed_then_submit)
+        assert recover_saved_authoritative_stages(factory,scope,'run',journal=journal,store=store)[0].updated
+        assert recover_saved_authoritative_stages(factory,scope,'run',journal=journal,store=store)[0].replayed
+        with engine.connect() as conn:
+            assert conn.execute(select(func.count()).select_from(ecom_ingest_receipt)).scalar_one()==1
+            assert conn.execute(select(func.count()).select_from(ecom_derived_receipt)).scalar_one()==1
+        database.owner.execute("UPDATE meta_source SET status='disabled'")
+        with pytest.raises(IngressJournalConflict,match='INGRESS_SOURCE_CONFIGURATION_DRIFT'):
+            recover_saved_authoritative_stages(factory,scope,'run',journal=journal,store=store)
+    finally:
+        engine.dispose()

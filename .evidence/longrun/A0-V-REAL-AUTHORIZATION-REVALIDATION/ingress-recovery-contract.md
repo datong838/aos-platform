@@ -49,3 +49,9 @@
 ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipeline与基础命令，再用规范outputRows及原批水位准备；原prepare/sink保持行为。此水位是本批提交边界，不等同逐个关联聚合输入的完整来源证明；辅助输入已保存但来源版本仍需补齐。实际恢复claim/原子派生准备仍未接入，不能声称完整恢复。
 
 文件：services/aos-api/aos_api/ecom_consistency_store.py、ec_ot_writer.py；tests/test_ecom_consistency_store.py、test_ec_derived_prepare.py。测试无关后续批次不会改变水位、缺失Outbox/缺Receipt/ignored拒绝、exact冲突、规范派生命令使用本批水位。仅通过既有Store写入，测试SQLite；非真实源/PG组合证明。
+
+## 基础与派生权威阶段恢复装配
+
+2026-09-11，基线359e1e54。新增recover_saved_authoritative_stages内部入口，调用方提供既有租户连接工厂（成功退出提交事务）及Store。第一连接：原run事务锁→当前绑定核验→原基础命令Receipt-first apply→核验原批水位→若无派生命令则从保存outputRows准备并保存→退出提交。第二连接：再锁原run/核验当前绑定与原水位→只执行已保存派生命令。无输出快照且未准备的旧批次在基础写入前拒绝；已保存的派生命令不重新准备。派生中断不回滚已提交基础或派生前缀，重试复用原命令。
+
+文件：ec_ingress_journal.py增加scope/run事务锁；ec_ingress_recovery.py装配并核验saved派生水位；test_ec_ingress_recovery.py与tests/aip/test_a0v_ingress_journal_pg.py。验证跨连接保存后执行、重复重放、保存故障不派生、来源漂移拒绝。锁用于本run阶段串行，不替代调度claim/真实授权；仍不接HTTP、不自动标记DLQ/运行成功，投影Dataset阶段未完成。

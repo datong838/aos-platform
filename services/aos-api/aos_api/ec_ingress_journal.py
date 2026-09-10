@@ -77,6 +77,12 @@ class IngressJournal:
         self.schema = storage_schema
         self.table = sql.Identifier(storage_schema, 'ecommerce_ingress_command')
 
+    def lock_run(self, conn, scope, run_id):
+        """Serialize preparation/submission of one immutable run in this transaction."""
+        material = json.dumps([*scope.key,run_id],ensure_ascii=False,separators=(',',':')).encode()
+        key = int.from_bytes(hashlib.sha256(material).digest()[:8],'big',signed=True)
+        conn.execute('SELECT pg_advisory_xact_lock(%s)',(key,))
+
     def read(self, conn, scope, run_id):
         row = conn.execute(sql.SQL('SELECT * FROM {} WHERE org_id=%s AND project_id=%s AND run_id=%s').format(self.table), (*scope.key, run_id)).fetchone()
         if row is None:
