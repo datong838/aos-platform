@@ -1,0 +1,108 @@
+{
+  "after": {
+    "canaryCounts": {
+      "budget": 0,
+      "budgetPolicy": 0,
+      "data": 0,
+      "egress": 0,
+      "network": 0,
+      "quota": 0,
+      "runtimePolicy": 0
+    },
+    "counts": {
+      "budget": 1,
+      "budgetPolicy": 1,
+      "data": 1,
+      "egress": 1,
+      "frozenResponsibilityPlan": 0,
+      "network": 1,
+      "quota": 1,
+      "runtimePolicy": 1
+    }
+  },
+  "backup": {
+    "path": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/state/a0v-current-runtime-configuration-authority/backups/aos_meta_head-pre-canonical-first-install.dump",
+    "sha256": "sha256:acc8b3e841b0421755919a35f646d77faaa1a618f2f44deec85a90e63d6f8595",
+    "size": 4346482
+  },
+  "before": {
+    "canaryCounts": {
+      "budget": 0,
+      "budgetPolicy": 0,
+      "data": 0,
+      "egress": 0,
+      "network": 0,
+      "quota": 0,
+      "runtimePolicy": 0
+    },
+    "counts": {
+      "budget": 1,
+      "budgetPolicy": 1,
+      "data": 1,
+      "egress": 1,
+      "frozenResponsibilityPlan": 0,
+      "network": 1,
+      "quota": 1,
+      "runtimePolicy": 1
+    }
+  },
+  "effects": {
+    "externalPublicationCount": 0,
+    "providerInvocationCount": 0
+  },
+  "investigationAuthority": {
+    "blocker": "active digital coworker versions missing: ecommerce.campaign_planner.default,ecommerce.content_officer.default,ecommerce.customer_service.default,ecommerce.data_advisor.default,ecommerce.private_domain_manager.default,ecommerce.shopping_advisor.default",
+    "ready": false
+  },
+  "mode": "apply",
+  "mutationCount": 0,
+  "outcome": "A0V_CURRENT_RUNTIME_CONFIGURATION_AUTHORITY_BLOCKED",
+  "policies": {
+    "budget": {
+      "contentHash": "6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126",
+      "id": "a0v-ecommerce-hard-stop-budget-v1",
+      "lifecycle": "active",
+      "revision": 1
+    },
+    "budgetPolicy": {
+      "contentHash": "daaae18523eaa5520934c43f7fad4896fc5bbcdd58947b39e77c1ed9fcad338b",
+      "id": "a0v-ecommerce-budget-policy-v1",
+      "lifecycle": "active",
+      "revision": 1
+    },
+    "data": {
+      "contentHash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+      "id": "a0v-ecommerce-public-catalog-v1",
+      "lifecycle": "active",
+      "revision": 1
+    },
+    "egress": {
+      "contentHash": "c896eedb60d538552f1ee7a93b4130c2f87e8e90635328594f454a0c75864b8e",
+      "id": "a0v-ecommerce-egress-v1",
+      "lifecycle": "active",
+      "revision": 1
+    },
+    "network": {
+      "contentHash": "c9a51ac325d19145f4554f670becedf43d8227b83db51e6c237e8576b9249d7f",
+      "id": "a0v-ecommerce-network-v1",
+      "lifecycle": "active",
+      "revision": 1
+    },
+    "quota": {
+      "contentHash": "5e1566ba09ed56e130afe5222c47978228d9bc05d77ef0d4c9771cbf94c54c66",
+      "id": "a0v-ecommerce-quota-v1",
+      "lifecycle": "active",
+      "revision": 1
+    },
+    "runtimePolicy": {
+      "contentHash": "1a7ea2ac369fb57cfb83008c9e9a3854ddb089c2cb0e8cd0ef64c4cf533a2f47",
+      "id": "a0v-ecommerce-runtime-policy-v1",
+      "lifecycle": "active",
+      "revision": 1
+    }
+  },
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  }
+}
