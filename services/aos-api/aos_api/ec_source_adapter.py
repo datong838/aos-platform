@@ -162,6 +162,31 @@ def fetch_source_rows(
     )
 
 
+def fetch_source_rows_versioned(
+    *, pipeline: Any, nodes: list[Any], node_id: str | None,
+    scope: TenantScope, transaction: HostTransaction,
+) -> tuple[list[dict[str, Any]], InvestigationExactRef]:
+    """Return the configuration identity actually used; not freshness authority."""
+    from aos_api.source_connection_config import SOURCE_CONNECTION_FIELDS, normalize_source_connection_config
+    try:
+        config = _resolve_source_node_config(nodes, node_id)
+        if not config or not config.get('source_id'):
+            raise ValueError('source required')
+        loaded = SourceConfigurationRevisionStore(transaction, scope).read_connection_input(config['source_id'])
+        if (loaded is None or loaded.revision.source_id != config['source_id']
+            or loaded.revision.source_type != 'jdbc-mysql-ssh'
+            or loaded.revision.status not in {'registered', 'active', 'ready'}
+            or loaded.props.get('runtimeMode') != 'direct'):
+            raise ValueError('source configuration unavailable')
+        connection = normalize_source_connection_config('jdbc-mysql-ssh',
+            {key:value for key,value in loaded.props.items() if key in SOURCE_CONNECTION_FIELDS})
+        rows = _fetch_from_jdbc_ssh(pipeline=pipeline, node_id=node_id or '',
+            node_config=config, props=connection, private_connection=True)
+        return rows, loaded.revision.ref
+    except Exception:
+        raise ValueError('SOURCE_VERSIONED_READ_FAILED') from None
+
+
 _PRODUCT_OBSERVATION_FIELDS = frozenset({
     "goods_id", "site_id", "goods_name", "price", "goods_stock", "state",
     "is_delete", "modify_time", "create_time",
@@ -396,6 +421,7 @@ def _fetch_from_jdbc_ssh(
     node_id: str,
     node_config: dict[str, Any],
     props: dict[str, Any],
+    private_connection: bool = False,
 ) -> list[dict[str, Any]]:
     """D2.6: 从通用 JDBC SSH 连接器读取行流。
 
@@ -412,7 +438,8 @@ def _fetch_from_jdbc_ssh(
     where_equals = _parse_site_filter(node_config.get("site_filter"))
 
     # 通用 JDBC SSH 运行时（with 上下文管理 SSH 隧道 + JDBC 连接生命周期）
-    with JdbcConnectorRuntime(props) as rt:
+    runtime = JdbcConnectorRuntime(props, reuse_cache=False) if private_connection else JdbcConnectorRuntime(props)
+    with runtime as rt:
         # 游标增量：如有 cursor 则 (watermark, pk) 二元组；初装传 None
         composite_cursor = None
         if cursor and not initial:

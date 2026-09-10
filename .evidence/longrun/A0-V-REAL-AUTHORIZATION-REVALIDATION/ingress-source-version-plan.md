@@ -1,0 +1,5 @@
+# 读取批次携带实际配置版本
+
+基线0ab3df34。新增ec_source_adapter.fetch_source_rows_versioned，复用SourceConfigurationRevisionStore.read_connection_input同一SQL快照取得props与版本；只允许jdbc-mysql-ssh可用状态、direct模式。用现有严格config解析器校验，不输出凭据；独立Jdbc连接，返回清洗后rows和配置ref。读取后若配置变化，写前save_for_running_schedule仍按旧ref拒绝，不用新版本冒充本次来源。
+
+_fetch_from_jdbc_ssh增加private_connection选项，默认旧行为不变；新入口强制不复用全局缓存。测试模拟Owner与runtime，检查返回版本/独立连接、配置缺失/禁用/agent模式拒绝、连接异常脱敏。文件ec_source_adapter.py、tests/test_ec_source_versioned.py。不在本轮切换executor；现有正常源读取行为保持，下一步接批次准备。
