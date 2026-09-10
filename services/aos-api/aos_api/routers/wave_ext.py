@@ -1242,7 +1242,9 @@ def _public_source(item: dict[str, Any]) -> dict[str, Any]:
 @router.post("/v1/sources")
 def create_source(body: ConnectorIn, principal: Principal = Depends(require_principal)):
     from aos_api.connector_registry import assert_type_installed
-    from aos_api.source_connection_config import normalize_source_connection_config
+    from aos_api.source_connection_config import (
+        SOURCE_CONNECTION_FIELDS, normalize_source_connection_config,
+    )
 
     try:
         plugin_id = assert_type_installed(body.type)
@@ -1265,7 +1267,18 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
     _assert_mutation_scope(
         _connectors.get(body.id), scope, resource="source", resource_id=body.id
     )
+    previous = dict(_connectors.get(body.id) or {})
+    if previous and previous.get("type") != plugin_id:
+        raise ApiError(
+            code="SOURCE_CONNECTOR_CHANGE_CONFLICT",
+            message="已有数据源不能通过重新登记更换连接器类型",
+            status_code=409,
+        )
+    if body.config is not None:
+        previous = {key: value for key, value in previous.items()
+                    if key not in SOURCE_CONNECTION_FIELDS}
     item = {
+        **previous,
         **body.model_dump(exclude_none=True),
         **connection,
         "type": plugin_id,

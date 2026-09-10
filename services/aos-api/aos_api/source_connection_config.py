@@ -1,7 +1,7 @@
 """Strict executable source configuration; never performs a connection or logs inputs."""
 from typing import Any
 
-_FIELDS = frozenset({
+SOURCE_CONNECTION_FIELDS = frozenset({
     'sshHost', 'sshPort', 'sshUser', 'sshPassword', 'sshKeyRef',
     'dbHost', 'dbPort', 'database', 'username', 'password', 'secretRef',
 })
@@ -15,7 +15,7 @@ def normalize_source_connection_config(connector: str, value: Any) -> dict[str, 
 
     if connector != 'jdbc-mysql-ssh' or type(value) is not dict:
         invalid()
-    if any(type(key) is not str or key not in _FIELDS for key in value):
+    if any(type(key) is not str or key not in SOURCE_CONNECTION_FIELDS for key in value):
         invalid()
     result = dict(value)
     for key in _REQUIRED:

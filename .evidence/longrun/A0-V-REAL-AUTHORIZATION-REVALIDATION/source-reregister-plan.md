@@ -1,0 +1,5 @@
+# 源重复登记配置保留
+
+基线00b730ab，端到端配置方案B补充。create_source重建item后persist_source全量替换props，配置好的源再以元数据方式登记会丢失连接参数。先校验原scope，随后同type从已有item继承配置，再覆盖显式元数据；显式新config替换所有已知连接字段，避免旧password和新secretRef并存。已有type不同拒绝，不自动迁移凭据到另一连接器。
+
+文件wave_ext.py、test_source_registration_persistence.py。验证元数据重放不丢密码、新配置轮换删除旧认证字段、异type失败不写入。持久化失败依旧不更新cache。合成输入，不访问真实源；无迁移。配置观察入口已设reuse_cache=False，不误将其当全局缓存复用；其他入口缓存隔离仍待验证。
