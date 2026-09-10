@@ -1,0 +1,221 @@
+{
+  "schemaVersion": "ar2-7e-cumulative-closure/v1",
+  "generatedAt": "2026-09-10T09:42:27.274623+00:00",
+  "authority": "AOS-000572",
+  "head": "5314f53a7b17721fe80de36c0570fc251bd18ee8",
+  "result": "PASS",
+  "failures": [],
+  "summary": {
+    "entryMatrix": {
+      "passed": 37,
+      "total": 37
+    },
+    "readyMatrix": {
+      "passed": 24,
+      "total": 24,
+      "screenshots": 24
+    },
+    "richPages": {
+      "task-cockpit": {
+        "passed": 3,
+        "total": 3,
+        "viewports": [
+          "1280x720",
+          "1440x900",
+          "1920x1080"
+        ],
+        "zeroEffects": {},
+        "screenshots": [
+          "ar2-7e-task-cockpit-rich-1280x720.png",
+          "ar2-7e-task-cockpit-rich-1440x900.png",
+          "ar2-7e-task-cockpit-rich-1920x1080.png"
+        ]
+      },
+      "content-campaign": {
+        "passed": 3,
+        "total": 3,
+        "viewports": [
+          "1280x720",
+          "1440x900",
+          "1920x1080"
+        ],
+        "zeroEffects": {
+          "providerInvocationCount": 0,
+          "approvalCreatedCount": 0,
+          "taskRunCreatedCount": 0,
+          "externalPublicationCount": 0,
+          "externalBusinessMutationCount": 0
+        },
+        "screenshots": [
+          "ar2-7e-content-campaign-rich-1280x720.png",
+          "ar2-7e-content-campaign-rich-1440x900.png",
+          "ar2-7e-content-campaign-rich-1920x1080.png"
+        ]
+      },
+      "operations": {
+        "passed": 3,
+        "total": 3,
+        "viewports": [
+          "1280x720",
+          "1440x900",
+          "1920x1080"
+        ],
+        "zeroEffects": {
+          "approvalCount": 0,
+          "leaseCount": 0,
+          "executionCount": 0,
+          "refundCount": 0,
+          "shipmentMutationCount": 0,
+          "providerInvocationCount": 0,
+          "externalPublicationCount": 0,
+          "externalBusinessMutationCount": 0
+        },
+        "screenshots": [
+          "ar2-7e-operations-rich-1280x720.png",
+          "ar2-7e-operations-rich-1440x900.png",
+          "ar2-7e-operations-rich-1920x1080.png"
+        ]
+      },
+      "creator-growth": {
+        "passed": 3,
+        "total": 3,
+        "viewports": [
+          "1280x720",
+          "1440x900",
+          "1920x1080"
+        ],
+        "zeroEffects": {
+          "providerInvocationCount": 0,
+          "externalOutreachCount": 0,
+          "contractSignatureCount": 0,
+          "shipmentCount": 0,
+          "paymentCount": 0,
+          "commissionMutationCount": 0,
+          "businessMutationCount": 0
+        },
+        "screenshots": [
+          "ar2-7e-creator-growth-rich-1280x720.png",
+          "ar2-7e-creator-growth-rich-1440x900.png",
+          "ar2-7e-creator-growth-rich-1920x1080.png"
+        ]
+      },
+      "media-studio": {
+        "passed": 3,
+        "total": 3,
+        "viewports": [
+          "1280x720",
+          "1440x900",
+          "1920x1080"
+        ],
+        "zeroEffects": {
+          "providerInvocationCount": 0,
+          "externalGenerationCount": 0,
+          "feeChargeCount": 0,
+          "publicationCount": 0,
+          "businessMutationCount": 0
+        },
+        "screenshots": [
+          "ar2-7e-media-studio-rich-1280x720.png",
+          "ar2-7e-media-studio-rich-1440x900.png",
+          "ar2-7e-media-studio-rich-1920x1080.png"
+        ]
+      },
+      "analyst": {
+        "passed": 3,
+        "total": 3,
+        "viewports": [
+          "1280x720",
+          "1440x900",
+          "1920x1080"
+        ],
+        "zeroEffects": {
+          "sourceReads": 0,
+          "agentRunsStarted": 0,
+          "providerInvocations": 0,
+          "handoffsIssued": 0,
+          "handoffsConsumed": 0,
+          "handoffDecisions": 0,
+          "tasksMaterialized": 0,
+          "plansMaterialized": 0,
+          "externalBusinessMutations": 0
+        },
+        "screenshots": [
+          "ar2-7e-analyst-rich-1280x720.png",
+          "ar2-7e-analyst-rich-1440x900.png",
+          "ar2-7e-analyst-rich-1920x1080.png"
+        ]
+      },
+      "price-governance": {
+        "passed": 3,
+        "total": 3,
+        "viewports": [
+          "1280x720",
+          "1440x900",
+          "1920x1080"
+        ],
+        "zeroEffects": {
+          "approvalCount": 0,
+          "leaseCount": 0,
+          "executionCount": 0,
+          "repricingCount": 0,
+          "researchJobCount": 0,
+          "notificationCount": 0,
+          "providerInvocationCount": 0,
+          "externalPublicationCount": 0,
+          "externalBusinessMutationCount": 0
+        },
+        "screenshots": [
+          "ar2-7e-price-governance-rich-1280x720.png",
+          "ar2-7e-price-governance-rich-1440x900.png",
+          "ar2-7e-price-governance-rich-1920x1080.png"
+        ]
+      },
+      "customer": {
+        "passed": 3,
+        "total": 3,
+        "viewports": [
+          "1280x720",
+          "1440x900",
+          "1920x1080"
+        ],
+        "zeroEffects": {
+          "approvalCount": 0,
+          "leaseCount": 0,
+          "permitRedemptionCount": 0,
+          "contactResolutionCount": 0,
+          "providerDispatchCount": 0,
+          "sendCount": 0,
+          "importCount": 0,
+          "customerMutationCount": 0,
+          "externalBusinessMutationCount": 0
+        },
+        "screenshots": [
+          "ar2-7e-customer-rich-1280x720.png",
+          "ar2-7e-customer-rich-1440x900.png",
+          "ar2-7e-customer-rich-1920x1080.png"
+        ]
+      }
+    }
+  },
+  "checkedEvidenceCount": 70,
+  "productHashes": {
+    "apps/web/src/components/workshop/TaskCockpitPage.tsx": "85e40a06a7bc06194c10382c8ab600f910dd82d528bf1a8021b9e9d4c81217a5",
+    "apps/web/src/components/workshop/ContentCampaignPage.tsx": "872a27c9cec6cd2a30b703a5fef8fdeb65c8d5f82bb3f46e28c755968251a5ed",
+    "apps/web/src/components/workshop/OperationsPage.tsx": "90d44887145102539c9dbf044ec573903dfc04fb5bb9043d76ace2f6dd2a53e4",
+    "apps/web/src/components/workshop/CreatorGrowthPage.tsx": "c336dae28979516b88746ff0e8cd3f1212b31422d760f7e8b4b9595aba9e46c7",
+    "apps/web/src/components/workshop/MediaStudioPage.tsx": "ed1b92079ef49f675ad0f3c0437c9e027b66ebe4a5745f643bd91c10b060c766",
+    "apps/web/src/components/workshop/AnalystPage.tsx": "abfc9cc9ebb860afa951e1b20e9aa723b75797e71af5bceb3b21a238ce2e13e8",
+    "apps/web/src/components/workshop/BusinessInvestigationTab.tsx": "fed6e97850fb6ac98bcacfa1f244dc2f2c2e23f32931048586d1edf8a0abcbc4",
+    "apps/web/src/components/workshop/PriceGovernancePage.tsx": "49f622ca5660deb70560a3d195642de5b3a7b4567cd4cc33e198283f71d02916",
+    "apps/web/src/components/workshop/CustomerPage.tsx": "7f3fca164e10a8e4f3aeb8fd512428879b670923562cf7af4d8b371798e6c1ee"
+  },
+  "boundaries": {
+    "fixtureOnly": true,
+    "realProviderCalls": 0,
+    "realTenantBusinessMutations": 0,
+    "productionOrSharedMigrations": 0,
+    "externalPublications": 0,
+    "pushes": 0,
+    "l0_230": "SUSPENDED"
+  }
+}
