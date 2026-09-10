@@ -14,7 +14,7 @@
 - 七类 A0-V configuration policy/head 已存在且 exact 计数为 7。
 - active ProviderInstance、current healthy Provider observation、active ModelRoute、frozen EvalContract、current passed EvalGate、LogicPublication、fresh CapabilityBinding、fresh SkillBinding、active AgentInstance、frozen ResponsibilityPlan 当前均为 0。
 
-这说明 Agent 激活不是当前可直接执行节点。应先复用 W-D1～W-D3 正式 Store/合同建立 EvalPack 与 W0B authority；Provider/route 两项在其后独立重验，不能用 Prime 的 GitHub OAuth、环境变量或人工说明代替。
+这说明 Agent 激活不是当前可直接执行节点。应先以正式 Eval Registry 建立与签名 v4 制品同源的 EvalPack，并按 21 号 ADR 验真 W0B 八类公共生产对象；旧 W-D1～W-D3 脚本当前缺少模板 Binding/EvidenceBundle 前置，只作历史线索，不直接执行。Provider/route 两项在其后独立重验，不能用 Prime 的 GitHub OAuth、环境变量或人工说明代替。
 
 ## 验证
 
@@ -26,4 +26,4 @@
 
 ## 边界与风险
 
-本阶段只读，无数据库 mutation、无 Provider 调用、无外部发布。审计 GREEN 仅代表依赖全部存在；当前仍是 BLOCKED，不是 Agent runtime ready、A0-V GREEN 或首条真实业务链完成。下一阶段写入前必须复核 W-D1～W-D3 脚本是否能绑定当前 10 个 canonical capability revision，并保持固定租户、隔离库、幂等重放与 canary 零污染。
+本阶段只读，无数据库 mutation、无 Provider 调用、无外部发布。审计 GREEN 仅代表依赖全部存在；当前仍是 BLOCKED，不是 Agent runtime ready、A0-V GREEN 或首条真实业务链完成。下一阶段必须保持固定租户、隔离库、幂等重放与 canary 零污染，并在 Provider/route 可用前不创建 CapabilityBinding。

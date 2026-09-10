@@ -26,7 +26,7 @@ Canonical 电商安装已经批准，七类 Runtime 配置策略已通过正式 
 ## 4. 依赖顺序与诚实门
 
 1. 安装与七类配置权威必须保持 exact/current；缺失时停止后续写入。
-2. Capability definition 的 `eval_pack_unavailable` 与 `w0b_contracts_unavailable` 只能由已有 W-D1～W-D3 正式资产和新 immutable revision 消除。
+2. Capability definition 的 `eval_pack_unavailable` 只能由正式 Eval Registry 中与当前签名制品同源的 exact EvalPack 消除；`w0b_contracts_unavailable` 只能在 21 号 ADR 的八类公共生产对象关系、RLS/FORCE RLS 与唯一 Store 边界验真后，由新 immutable revision 消除。旧 W-D1～W-D3 脚本仅作历史实现线索，当前库缺少它们依赖的模板 Binding 和 EvidenceBundle，不能直接运行。
 3. `provider_unknown` 与 `aip7_route_authority_unavailable` 只能在真实 ProviderInstance、当前健康观察、active ModelRoute、RuntimePolicy 和 exact Eval gate 全部成立后消除；Prime 的 GitHub OAuth 不属于这些权威。
 4. 37 个 SkillTemplate 只能通过 `AipSkillPublicationService` 从 exact evaluated revision 发布，必须引用 passed release gate、PublicationEvent、active route/policy 和已发布 LogicRevision。
 5. CapabilityBinding 必须经正式 readiness service 形成短时、exact 依赖快照，再激活为 healthy；SkillBinding 必须绑定 published skill 与这些 CapabilityBinding，并独立评估/激活。
