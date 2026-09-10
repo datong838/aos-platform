@@ -392,6 +392,18 @@ class EcomConsistencyStore:
                 "a concurrent write changed the consistency state",
             ) from exc
 
+    def read_committed_batch(self, command: BatchCommand) -> BatchResult | None:
+        """Read exact committed evidence without replaying a batch or advancing it."""
+        command = BatchCommand.model_validate(command.model_dump(mode="python"))
+        with self._engine.begin() as conn:
+            _apply_transaction_scope(conn, org_id=command.scope.org_id, workspace_id=command.scope.workspace_id)
+            receipt = self._get_receipt(conn, command, for_update=False)
+            if receipt is None:
+                return None
+            if not self._receipt_matches_request(command=command, receipt=receipt, request_hash=command.request_hash()):
+                raise EcomConsistencyError("IDEMPOTENCY_CONFLICT", "stored receipt does not match the original command")
+            return BatchResult.model_validate(receipt["result"])
+
     def get_derived_revision(
         self, identity: StorageIdentity, object_type: str
     ) -> int:
@@ -666,22 +678,14 @@ class EcomConsistencyStore:
             )
 
     @staticmethod
-    def _get_receipt(conn: Connection, command: BatchCommand):
-        return (
-            conn.execute(
-                select(ecom_ingest_receipt)
-                .where(
-                    and_(
-                        _scope_clause(ecom_ingest_receipt, command),
-                        ecom_ingest_receipt.c.idempotency_key
-                        == command.idempotency_key,
-                    )
-                )
-                .with_for_update()
-            )
-            .mappings()
-            .first()
+    def _get_receipt(conn: Connection, command: BatchCommand, *, for_update: bool = True):
+        query = select(ecom_ingest_receipt).where(
+            and_(_scope_clause(ecom_ingest_receipt, command),
+                 ecom_ingest_receipt.c.idempotency_key == command.idempotency_key)
         )
+        if for_update:
+            query = query.with_for_update()
+        return conn.execute(query).mappings().first()
 
     @staticmethod
     def _receipt_matches_request(

@@ -1,0 +1,5 @@
+# 基础批次已提交回执只读核验
+
+基线2a4f2f7b。在ecom_consistency_store新增read_committed_batch，先重新验证BatchCommand、按其scope读取exact idempotency receipt，复用_receipt_matches_request匹配语义（含历史兼容），返回原BatchResult或None；冲突抛既有IDEMPOTENCY_CONFLICT。不触发apply_batch、对象更新或checkpoint前移。
+
+_get_receipt增加可选for_update默认True保持原提交锁语义；只读入口False。测试test_ecom_consistency_store.py覆盖缺失、已提交匹配、改变内容冲突、读取后checkpoint/receipt/outbox不增。使用既有SQLite内核测试，不宣称PG/RLS证明。后续恢复服务必须检查结果含ignored/dangling等语义，不以有Receipt等同于全业务履约。

@@ -753,3 +753,21 @@ def test_apply_revalidates_mutated_nested_batch_before_transaction(
     with pytest.raises(ValidationError, match="outside the batch scope"):
         store.apply_batch(command)
     assert store.get_object(ident("product-1"), "Product") is None
+
+
+def test_read_committed_batch_requires_exact_receipt_without_writing(store):
+    command = batch(obj('Product', 'product-1'))
+    assert store.read_committed_batch(command) is None
+    first = store.apply_batch(command)
+    with store._engine.connect() as conn:
+        before = [conn.execute(select(table)).all() for table in (ecom_ingest_receipt, projection_outbox)]
+    assert store.read_committed_batch(command) == first
+    assert store.read_committed_batch(command.model_copy(update={'expected_checkpoint_version': 99})) == first
+    changed = command.model_copy(update={'next_checkpoint':StableCursor(source_updated_at_utc=NOW+timedelta(seconds=1),external_id='product-1')})
+    with pytest.raises(EcomConsistencyError) as exc:
+        store.read_committed_batch(changed)
+    assert exc.value.code == 'IDEMPOTENCY_CONFLICT'
+    assert store.get_checkpoint(command)['version'] == 1
+    with store._engine.connect() as conn:
+        after = [conn.execute(select(table)).all() for table in (ecom_ingest_receipt, projection_outbox)]
+    assert after == before
