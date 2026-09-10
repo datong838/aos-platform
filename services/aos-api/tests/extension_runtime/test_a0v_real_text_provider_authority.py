@@ -69,47 +69,29 @@ def test_env_validation_returns_settings_only_in_process_and_blocks_drift(tmp_pa
     assert secret not in str(captured.value)
 
 
-class _FakeFunction:
-    def __init__(self, result):
-        self.result = result
-        self.calls = []
-
-    def __call__(self, *args):
-        self.calls.append(args)
-        return self.result
-
-
-class _FakeSecurity:
-    def __init__(self, find_status):
-        self.SecKeychainFindGenericPassword = _FakeFunction(find_status)
-        self.SecKeychainItemModifyAttributesAndData = _FakeFunction(0)
-        self.SecKeychainAddGenericPassword = _FakeFunction(0)
-
-
-class _FakeCore:
-    def __init__(self):
-        self.CFRelease = _FakeFunction(None)
-
-
-def test_keychain_write_uses_security_framework_memory_not_subprocess():
+def test_keychain_write_uses_private_input_and_never_places_secret_in_argv():
     secret = "never-place-in-process-list"
-    security = _FakeSecurity(-25300)
-    core = _FakeCore()
+    received = []
 
-    AUTHORITY._install_keychain_secret(secret, frameworks=(security, core))
+    AUTHORITY._install_keychain_secret(secret, writer=received.append)
 
-    assert not security.SecKeychainItemModifyAttributesAndData.calls
-    call = security.SecKeychainAddGenericPassword.calls[0]
-    assert call[6] == secret.encode("utf-8")
-    assert not any(isinstance(value, str) and secret in value for value in call)
+    assert received == [secret]
+    argv = AUTHORITY._keychain_write_argv()
+    assert argv[-1] == "-w"
+    assert "-U" in argv
+    assert secret not in argv
 
 
-def test_keychain_write_repairs_same_identity_item_in_place():
-    security = _FakeSecurity(0)
-    core = _FakeCore()
-    AUTHORITY._install_keychain_secret("replacement", frameworks=(security, core))
-    assert security.SecKeychainItemModifyAttributesAndData.calls
-    assert not security.SecKeychainAddGenericPassword.calls
+def test_keychain_write_maps_private_tty_failure_without_secret():
+    secret = "never-report-this"
+
+    def blocked(_secret):
+        raise AUTHORITY.ProviderAuthorityBlocked("KEYCHAIN_WRITE_TIMEOUT")
+
+    with pytest.raises(AUTHORITY.ProviderAuthorityBlocked) as captured:
+        AUTHORITY._install_keychain_secret(secret, writer=blocked)
+    assert captured.value.code == "KEYCHAIN_WRITE_TIMEOUT"
+    assert secret not in str(captured.value)
 
 
 @pytest.mark.parametrize(("returncode", "expected"), [(0, True), (44, False)])

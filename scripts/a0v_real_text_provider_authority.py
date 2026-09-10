@@ -4,11 +4,15 @@
 from __future__ import annotations
 
 import argparse
-import ctypes
 import importlib.util
 import json
+import os
+import pty
+import select
 import subprocess
 import sys
+import termios
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Sequence
@@ -84,7 +88,7 @@ def _load_env(path: Path) -> dict[str, str]:
     values: dict[str, str] = {}
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:
+    except (OSError, ProviderAuthorityBlocked) as exc:
         raise ProviderAuthorityBlocked("AGNES_ENV_FILE_UNAVAILABLE") from None
     for raw in lines:
         line = raw.strip()
@@ -129,98 +133,104 @@ def _keychain_exists(*, runner: Any = subprocess.run) -> bool:
     raise ProviderAuthorityBlocked("KEYCHAIN_PROBE_FAILED")
 
 
-def _load_security_frameworks() -> tuple[Any, Any]:
-    try:
-        security = ctypes.CDLL(
-            "/System/Library/Frameworks/Security.framework/Security"
-        )
-        core = ctypes.CDLL(
-            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
-        )
-    except OSError:
-        raise ProviderAuthorityBlocked("KEYCHAIN_FRAMEWORK_UNAVAILABLE") from None
-    return security, core
+def _keychain_write_argv() -> list[str]:
+    return [
+        "/usr/bin/security",
+        "add-generic-password",
+        "-U",
+        "-a",
+        SECRET_ACCOUNT,
+        "-s",
+        SECRET_SERVICE,
+        "-l",
+        "AOS A0-V Agnes Text Provider",
+        "-w",
+    ]
 
 
-def _install_keychain_secret(
-    secret: str, *, frameworks: tuple[Any, Any] | None = None
+def _write_keychain_with_private_tty(
+    secret: str, *, timeout: float = 10.0, command_argv: list[str] | None = None
 ) -> None:
-    if not secret:
-        raise ProviderAuthorityBlocked("AGNES_API_KEY_UNAVAILABLE")
-    security, core = frameworks or _load_security_frameworks()
-    security.SecKeychainFindGenericPassword.argtypes = [
-        ctypes.c_void_p,
-        ctypes.c_uint32,
-        ctypes.c_char_p,
-        ctypes.c_uint32,
-        ctypes.c_char_p,
-        ctypes.c_void_p,
-        ctypes.c_void_p,
-        ctypes.POINTER(ctypes.c_void_p),
-    ]
-    security.SecKeychainFindGenericPassword.restype = ctypes.c_int32
-    security.SecKeychainItemModifyAttributesAndData.argtypes = [
-        ctypes.c_void_p,
-        ctypes.c_void_p,
-        ctypes.c_uint32,
-        ctypes.c_char_p,
-    ]
-    security.SecKeychainItemModifyAttributesAndData.restype = ctypes.c_int32
-    security.SecKeychainAddGenericPassword.argtypes = [
-        ctypes.c_void_p,
-        ctypes.c_uint32,
-        ctypes.c_char_p,
-        ctypes.c_uint32,
-        ctypes.c_char_p,
-        ctypes.c_uint32,
-        ctypes.c_char_p,
-        ctypes.POINTER(ctypes.c_void_p),
-    ]
-    security.SecKeychainAddGenericPassword.restype = ctypes.c_int32
-    core.CFRelease.argtypes = [ctypes.c_void_p]
-    core.CFRelease.restype = None
-    service = SECRET_SERVICE.encode("utf-8")
-    account = SECRET_ACCOUNT.encode("utf-8")
-    payload = secret.encode("utf-8")
-    item = ctypes.c_void_p()
+    """Give security(1) a no-echo controlling tty without argv/env disclosure."""
+    argv = command_argv or _keychain_write_argv()
+    if not argv or argv[0] != "/usr/bin/security" or argv[-1] != "-w":
+        raise ProviderAuthorityBlocked("KEYCHAIN_WRITE_COMMAND_INVALID")
+    pid, descriptor = pty.fork()
+    if pid == 0:
+        try:
+            os.execv("/usr/bin/security", argv)
+        except BaseException:
+            os._exit(127)
     try:
-        status = security.SecKeychainFindGenericPassword(
-            None,
-            len(service),
-            service,
-            len(account),
-            account,
-            None,
-            None,
-            ctypes.byref(item),
-        )
-        if status == 0:
-            status = security.SecKeychainItemModifyAttributesAndData(
-                item, None, len(payload), payload
-            )
-        elif status == -25300:
-            status = security.SecKeychainAddGenericPassword(
-                None,
-                len(service),
-                service,
-                len(account),
-                account,
-                len(payload),
-                payload,
-                ctypes.byref(item),
-            )
-        else:
-            raise ProviderAuthorityBlocked("KEYCHAIN_WRITE_FAILED")
-    except (AttributeError, OSError):
+        prompt_deadline = time.monotonic() + min(timeout, 5.0)
+        prompt_seen = False
+        while time.monotonic() < prompt_deadline:
+            readable, _, _ = select.select([descriptor], [], [], 0.1)
+            if not readable:
+                continue
+            try:
+                chunk = os.read(descriptor, 4096)
+            except OSError:
+                chunk = b""
+            if b"password" in chunk.lower():
+                prompt_seen = True
+                break
+        if not prompt_seen:
+            raise ProviderAuthorityBlocked("KEYCHAIN_WRITE_PROMPT_UNAVAILABLE")
+        attributes = termios.tcgetattr(descriptor)
+        attributes[3] &= ~termios.ECHO
+        termios.tcsetattr(descriptor, termios.TCSANOW, attributes)
+        encoded = (secret + "\r").encode("utf-8")
+
+        def write_secret() -> None:
+            offset = 0
+            while offset < len(encoded):
+                offset += os.write(descriptor, encoded[offset:])
+
+        write_secret()
+        deadline = time.monotonic() + timeout
+        status = None
+        retyped = False
+        while time.monotonic() < deadline:
+            waited, raw_status = os.waitpid(pid, os.WNOHANG)
+            if waited == pid:
+                status = os.waitstatus_to_exitcode(raw_status)
+                break
+            readable, _, _ = select.select([descriptor], [], [], 0.1)
+            if readable:
+                try:
+                    chunk = os.read(descriptor, 4096)
+                except OSError:
+                    chunk = b""
+                if b"retype password" in chunk.lower() and not retyped:
+                    write_secret()
+                    retyped = True
+        if status is None:
+            os.kill(pid, 9)
+            os.waitpid(pid, 0)
+            raise ProviderAuthorityBlocked("KEYCHAIN_WRITE_TIMEOUT")
+    except OSError:
+        try:
+            os.kill(pid, 9)
+        except OSError:
+            pass
+        try:
+            os.waitpid(pid, 0)
+        except (ChildProcessError, OSError):
+            pass
+        if isinstance(exc, ProviderAuthorityBlocked):
+            raise
         raise ProviderAuthorityBlocked("KEYCHAIN_WRITE_FAILED") from None
     finally:
-        if item.value:
-            try:
-                core.CFRelease(item)
-            except (AttributeError, OSError):
-                pass
+        os.close(descriptor)
     if status != 0:
         raise ProviderAuthorityBlocked("KEYCHAIN_WRITE_FAILED")
+
+
+def _install_keychain_secret(secret: str, *, writer: Any = None) -> None:
+    if not secret:
+        raise ProviderAuthorityBlocked("AGNES_API_KEY_UNAVAILABLE")
+    (writer or _write_keychain_with_private_tty)(secret)
 
 
 def _scoped_factory(connect: Any):
