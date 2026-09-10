@@ -68,6 +68,11 @@ class IngressJournal:
 
 
     def save_for_running_schedule(self, conn, scope, **args):
+        self.verify_running_schedule(conn, scope, **args)
+        return self.save(conn, scope, **args)
+
+    def verify_running_schedule(self, conn, scope, **args):
+        """Lock and validate current binding; caller retains the transaction."""
         def read(table, identity_column, identity, columns):
             return conn.execute(sql.SQL('SELECT {} FROM {} WHERE org_id=%s AND project_id=%s AND {}=%s FOR SHARE').format(
                 sql.SQL(columns), sql.Identifier(self.schema, table), sql.Identifier(identity_column)),
@@ -95,7 +100,6 @@ class IngressJournal:
         if (source is None or source['type'] != 'jdbc-mysql-ssh' or source['status'] not in {'registered','active','ready'}
             or str(source['configuration_revision']) != args['source_revision']):
             raise IngressJournalConflict('INGRESS_SOURCE_CONFIGURATION_DRIFT')
-        return self.save(conn, scope, **args)
 
     def _derived_payload(self, parent, commands):
         from aos_api.ecom_core_models import DerivedMetricCommand

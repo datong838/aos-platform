@@ -25,3 +25,11 @@
 计划涉及 services/aos-api/aos_api/ec_live_executor.py、ec_ot_writer.py、ec_dlq_store.py、新接入批次Owner、Alembic迁移及专项PG测试；先核对当前migration head与既有权限模板，再写DDL。沿用现有失败队列及Receipt，不创建平行审批权威。
 
 退出条件是原输入跨进程恢复证据，而非新表/测试绿。保留单写者、租户隔离、真实数据权限、无凭据输出。不push，230 L0挂起。本文件为核查与施工合同，尚未实现批次Owner/工作器；完整经营首链和八工作台未完成。
+
+## 已准备派生阶段恢复入口（本轮实施）
+
+新增 ec_ingress_recovery.py 内部函数，仅处理原基础命令已提交且原派生命令已保存的运行。复用Journal当前running schedule/source/graph绑定检查，持有调用方事务行锁直至返回；不开放HTTP，不伪造DLQ成功，不做未准备阶段的推断。基础exact Receipt不存在或存在ignored对象/关系时拒绝，必须另行对账。派生命令只反序列化原记录，复用ConsistencyStore幂等与CAS；中途失败不回滚已提交项，下次同命令续跑。
+
+文件：services/aos-api/aos_api/ec_ingress_journal.py 提取可复用绑定检查；同目录新增ec_ingress_recovery.py；tests/test_ec_ingress_recovery.py验证部分提交后重放、缺失/不完整基础回执、绑定拒绝与命令缺失。SQLite验证真实ConsistencyStore写入；Journal/绑定用测试替身，PG绑定另有专项。不得以这些测试声称真实源或完整恢复已通。
+
+仍缺原始辅助输入持久化、恢复claim/worker、当前执行授权、精确输入revision来源、投影完成和Dataset接续；该函数只有内部已授权执行者可以装配。回滚移除新入口及还原提取，不变更现有executor行为或数据。
