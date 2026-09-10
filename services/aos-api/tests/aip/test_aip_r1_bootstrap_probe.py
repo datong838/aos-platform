@@ -159,6 +159,28 @@ def test_probe_validates_exact_authority_and_returns_metadata_only():
     assert "top-secret" not in repr(result)
     assert "pong" not in repr(result)
     assert transport.calls[0]["url"] == "https://apihub.agnes-ai.com/v1/chat/completions"
+    assert transport.calls[0]["payload"]["max_tokens"] == 32
+
+
+def test_probe_accepts_only_explicitly_injected_approval_refs():
+    assets, request = assembly()
+    a0v_approval = "approval:AOS-000573:A0-V-local-readonly"
+    request = request.model_copy(update={"approval_ref": a0v_approval})
+
+    with pytest.raises(R1BootstrapProbeBlocked, match="r1_probe_approval_blocked"):
+        probe(assets).run(TenantScope("org-org", "dev-project"), request)
+
+    controlled = AipR1BootstrapProbe(
+        model_store=ModelStore(assets.provider),
+        guard_store=GuardStore(assets),
+        network_store=NetworkStore(assets),
+        plugin_authority=PluginAuthority(assets.plugin),
+        secret_resolver=SecretResolver(),
+        transport=Transport(),
+        clock=lambda: NOW,
+        allowed_approval_refs=frozenset({a0v_approval}),
+    )
+    assert controlled.run(TenantScope("org-org", "dev-project"), request).status == "healthy"
 
 
 def test_probe_fails_closed_when_expected_response_contract_is_missing():

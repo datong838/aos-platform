@@ -47,6 +47,7 @@ class R1BootstrapProbeRequest(AipContractModel):
     prompt: str = Field(min_length=1, max_length=4000, repr=False)
     expected_response_behavior: Literal["non_empty", "refusal"] | None = None
     approval_ref: str = Field(min_length=1, max_length=240)
+    max_output_tokens: int = Field(default=32, ge=1, le=256)
 
 
 class R1BootstrapProbeResult(AipContractModel):
@@ -79,6 +80,7 @@ class AipR1BootstrapProbe:
         secret_resolver: Any | None = None,
         transport: ProviderTransport | None = None,
         clock: Callable[[], datetime] | None = None,
+        allowed_approval_refs: frozenset[str] | None = None,
     ) -> None:
         self._model_store = model_store or AipModelRuntimeStore()
         self._guard_store = guard_store or AipRuntimeGuardPolicyStore()
@@ -87,6 +89,7 @@ class AipR1BootstrapProbe:
         self._secret_resolver = secret_resolver or ExactSecretResolver()
         self._transport = transport or HttpxProviderTransport()
         self._clock = clock or (lambda: datetime.now(UTC))
+        self._allowed_approval_refs = allowed_approval_refs or frozenset({"35-R1-C"})
 
     def run(
         self,
@@ -95,7 +98,7 @@ class AipR1BootstrapProbe:
     ) -> R1BootstrapProbeResult:
         if scope.key != ("org-org", "dev-project"):
             raise R1BootstrapProbeBlocked("provider_tenant_mismatch")
-        if request.approval_ref != "35-R1-C":
+        if request.approval_ref not in self._allowed_approval_refs:
             raise R1BootstrapProbeBlocked("r1_probe_approval_blocked")
         if request.provider.asset_type != "ProviderInstanceRevision":
             raise R1BootstrapProbeBlocked("provider_ref_invalid")
@@ -159,6 +162,7 @@ class AipR1BootstrapProbe:
                     payload={
                         "model": request.provider_model_id,
                         "messages": [{"role": "user", "content": request.prompt}],
+                        "max_tokens": request.max_output_tokens,
                     },
                     timeout_ms=min(60_000, int(provider.endpoint_profile.timeout_ms)),
                 )
