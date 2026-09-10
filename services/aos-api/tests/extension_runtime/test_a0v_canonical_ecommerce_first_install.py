@@ -235,3 +235,51 @@ def test_existing_registry_version_drift_fails_closed() -> None:
             {**expected, "contentHash": "sha256:" + "4" * 64}, expected
         )
     assert captured.value.reason_code == "EXISTING_VERSION_DRIFT"
+
+
+def test_runtime_configuration_authority_reports_every_missing_source() -> None:
+    class Connection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def execute(self, _query, params):
+            assert params == (INSTALLER.ORG_ID, INSTALLER.PROJECT_ID) * 8
+            return self
+
+        def fetchone(self):
+            return {
+                "responsibility_plans": 1,
+                "runtime_policies": 0,
+                "data_policies": 0,
+                "egress_policies": 2,
+                "network_policies": 0,
+                "quota_policies": 0,
+                "budget_policies": 0,
+                "budgets": 0,
+            }
+
+    result = INSTALLER.inspect_runtime_configuration_authority(lambda: Connection())
+    assert result == {
+        "counts": {
+            "responsibility_plans": 1,
+            "runtime_policies": 0,
+            "data_policies": 0,
+            "egress_policies": 2,
+            "network_policies": 0,
+            "quota_policies": 0,
+            "budget_policies": 0,
+            "budgets": 0,
+        },
+        "blockers": [
+            "runtime_policies",
+            "data_policies",
+            "network_policies",
+            "quota_policies",
+            "budget_policies",
+            "budgets",
+        ],
+        "ready": False,
+    }

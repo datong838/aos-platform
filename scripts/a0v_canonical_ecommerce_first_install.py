@@ -345,6 +345,87 @@ def inspect_isolated_database(connect_factory: Any) -> dict[str, Any]:
         }
 
 
+def inspect_runtime_configuration_authority(connect_factory: Any) -> dict[str, Any]:
+    """Read potential current four-source authority before runtime ownership starts."""
+    with connect_factory() as conn:
+        row = conn.execute(
+            """
+            SELECT
+              (SELECT count(*) FROM aip_responsibility_plan_head h
+                 JOIN aip_responsibility_plan_revision r
+                   ON r.org_id=h.org_id AND r.project_id=h.project_id
+                  AND r.plan_id=h.plan_id AND r.revision=h.current_revision
+                WHERE h.org_id=%s AND h.project_id=%s
+                  AND r.lifecycle='frozen') AS responsibility_plans,
+              (SELECT count(*) FROM aip_runtime_policy_head h
+                 JOIN aip_runtime_policy_revision r
+                   ON r.org_id=h.org_id AND r.project_id=h.project_id
+                  AND r.runtime_policy_id=h.runtime_policy_id
+                  AND r.revision=h.current_revision
+                WHERE h.org_id=%s AND h.project_id=%s
+                  AND r.lifecycle='active') AS runtime_policies,
+              (SELECT count(*) FROM aip_runtime_guard_policy_head h
+                 JOIN aip_runtime_guard_policy_revision r
+                   ON r.org_id=h.org_id AND r.project_id=h.project_id
+                  AND r.policy_kind=h.policy_kind AND r.policy_id=h.policy_id
+                  AND r.revision=h.current_revision
+                WHERE h.org_id=%s AND h.project_id=%s
+                  AND h.policy_kind='data_classification' AND r.lifecycle='active'
+                  AND r.effective_from<=clock_timestamp()
+                  AND r.effective_until>clock_timestamp()) AS data_policies,
+              (SELECT count(*) FROM aip_runtime_guard_policy_head h
+                 JOIN aip_runtime_guard_policy_revision r
+                   ON r.org_id=h.org_id AND r.project_id=h.project_id
+                  AND r.policy_kind=h.policy_kind AND r.policy_id=h.policy_id
+                  AND r.revision=h.current_revision
+                WHERE h.org_id=%s AND h.project_id=%s
+                  AND h.policy_kind='egress' AND r.lifecycle='active'
+                  AND r.effective_from<=clock_timestamp()
+                  AND r.effective_until>clock_timestamp()) AS egress_policies,
+              (SELECT count(*) FROM aip_network_policy_head h
+                 JOIN aip_network_policy_revision r
+                   ON r.org_id=h.org_id AND r.project_id=h.project_id
+                  AND r.policy_id=h.policy_id AND r.revision=h.current_revision
+                WHERE h.org_id=%s AND h.project_id=%s
+                  AND r.lifecycle='active' AND r.effective_from<=clock_timestamp()
+                  AND r.effective_until>clock_timestamp()) AS network_policies,
+              (SELECT count(*) FROM aip_model_governance_policy_head h
+                 JOIN aip_model_governance_policy_revision r
+                   ON r.org_id=h.org_id AND r.project_id=h.project_id
+                  AND r.policy_kind=h.policy_kind AND r.policy_id=h.policy_id
+                  AND r.revision=h.current_revision
+                WHERE h.org_id=%s AND h.project_id=%s
+                  AND h.policy_kind='quota' AND r.lifecycle='active'
+                  AND r.effective_from<=clock_timestamp()
+                  AND r.effective_until>clock_timestamp()) AS quota_policies,
+              (SELECT count(*) FROM aip_model_governance_policy_head h
+                 JOIN aip_model_governance_policy_revision r
+                   ON r.org_id=h.org_id AND r.project_id=h.project_id
+                  AND r.policy_kind=h.policy_kind AND r.policy_id=h.policy_id
+                  AND r.revision=h.current_revision
+                WHERE h.org_id=%s AND h.project_id=%s
+                  AND h.policy_kind='budget' AND r.lifecycle='active'
+                  AND r.effective_from<=clock_timestamp()
+                  AND r.effective_until>clock_timestamp()) AS budget_policies,
+              (SELECT count(*) FROM aip_budget_head h
+                 JOIN aip_budget_revision r
+                   ON r.org_id=h.org_id AND r.project_id=h.project_id
+                  AND r.budget_id=h.budget_id AND r.revision=h.current_revision
+                WHERE h.org_id=%s AND h.project_id=%s
+                  AND r.lifecycle='active' AND r.effective_from<=clock_timestamp()
+                  AND r.effective_until>clock_timestamp()) AS budgets
+            """,
+            (ORG_ID, PROJECT_ID) * 8,
+        ).fetchone()
+    if row is None:
+        raise FirstInstallBlocked(
+            "RUNTIME_CONFIGURATION_AUTHORITY_INSPECTION_FAILED", "empty authority result"
+        )
+    counts = {key: int(row[key]) for key in row.keys()}
+    blockers = [key for key, count in counts.items() if count < 1]
+    return {"counts": counts, "blockers": blockers, "ready": not blockers}
+
+
 def container_database_connect_factory(
     *, context: str, container: str, database_name: str
 ) -> Any:
@@ -1042,6 +1123,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     evidence["effects"]["installationMutationCount"] = len(
         evidence["installation"]["transitions"]
     ) + (1 if prior_installation_count == 0 else 0)
+    evidence["runtimeConfigurationAuthority"] = inspect_runtime_configuration_authority(
+        connect
+    )
+    if not evidence["runtimeConfigurationAuthority"]["ready"]:
+        evidence["mode"] = "apply-runtime-configuration-precondition"
+        evidence["outcome"] = "RUNTIME_CONFIGURATION_AUTHORITY_BLOCKED"
+        return evidence
     evidence["mode"] = "apply-installation-approved"
     evidence["outcome"] = "CANONICAL_INSTALLATION_APPROVED"
     return evidence
