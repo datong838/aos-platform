@@ -1094,9 +1094,18 @@ class AipTaskStore:
         actor: str,
         artifact_type: str,
         payload: dict[str, Any],
+        *,
+        artifact_id: str | None = None,
     ) -> str:
-        """Persist an artifact reference without storing opaque provider state or credentials."""
-        artifact_id = f"artifact-{uuid.uuid4().hex[:20]}"
+        """Persist an artifact; an explicit identity enables exact, immutable replay."""
+        stable_identity = artifact_id is not None
+        if stable_identity and not (
+            isinstance(artifact_id, str) and artifact_id.startswith("artifact-")
+            and len(artifact_id) == 29
+            and all(c in "0123456789abcdef" for c in artifact_id[9:])
+        ):
+            raise AipTaskTransitionBlocked("explicit artifact identity must be artifact plus 20 hex digits")
+        artifact_id = artifact_id or f"artifact-{uuid.uuid4().hex[:20]}"
         content_ref = payload.get("contentRef")
         schema_ref = payload.get("schemaRef")
         metadata = payload.get("metadata", {})
@@ -1168,6 +1177,26 @@ class AipTaskStore:
             ).fetchone()
             if exists is None:
                 raise AipTaskNotFound("task run not found in scope")
+            if stable_identity:
+                conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+                             (self._json(["artifact", *scope.key, artifact_id]),))
+                existing = conn.execute(
+                    "SELECT * FROM aip_artifact WHERE org_id=%s AND project_id=%s AND artifact_id=%s",
+                    (*scope.key, artifact_id),
+                ).fetchone()
+                if existing is not None:
+                    expected = {
+                        "run_id": run_id, "artifact_type": artifact_type, "content_ref": content_ref,
+                        "schema_ref": schema_ref, "source": source, "evidence_refs": evidence_refs,
+                        "marking": marking, "content_hash": content_hash, "metadata": metadata,
+                        "created_by": actor, "family_id": family_id, "family_revision": family_revision,
+                        "family_role": family_role, "profile": profile, "platform": platform,
+                        "rendition_spec": rendition_spec, "rendition_spec_hash": rendition_spec_hash,
+                        "lineage_refs": lineage_refs,
+                    }
+                    if _canonical_hash({key: existing[key] for key in expected}) != _canonical_hash(expected):
+                        raise AipTaskTransitionBlocked("artifact identity replay content drifted")
+                    return artifact_id
             conn.execute(
                 """INSERT INTO aip_artifact (
                      org_id,project_id,artifact_id,run_id,artifact_type,content_ref,schema_ref,

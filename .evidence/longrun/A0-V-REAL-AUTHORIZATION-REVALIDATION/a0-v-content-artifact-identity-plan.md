@@ -1,0 +1,7 @@
+# 可评审产物的稳定身份
+
+基线da1b5972。AipTaskStore.record_artifact现每次随机ID；电商ReadableContentArtifact元数据要求artifactRef含自身ID/hash，恢复还必须不重复创建。扩展既有Owner，不平行写aip_artifact。
+
+修改services/aos-api/aos_api/aip_task_store.py：record_artifact新增可选keyword artifact_id，保持原随机路径；显式ID限制artifact-加20位小写hex。写前按租户/id事务advisory lock，已有ID时校验run/type/content/schema/source/evidence/marking/hash/metadata/actor精确一致，匹配返回同ID，不匹配拒绝。仍验证任务run存在；不同租户独立。新编号允许调用方在写前构造自引用，内容hash由现有规则检查。无外部API字段新增。
+
+新增services/aos-api/tests/aip/test_a0v_content_artifact_identity_pg.py：隔离schema克隆真实aip_artifact结构，使用已有Owner验证并发一次、跨连接回放、正文及run漂移拒绝、缺run不写、原随机接口仍不同ID。public不写，真实Provider调用0。后续内容消费者用invocation推导稳定ID，再同事务写Usage/Artifact/费用完成状态。
