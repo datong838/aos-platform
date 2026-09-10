@@ -1,0 +1,61 @@
+{
+  "buildReceipt": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/logs/a0v-ecommerce-runtime-candidate-build-v3.json",
+  "buildReceiptHash": "sha256:894e9812c21a9fae455419b3219c8e30a85f957bc1a63450ef6655d34d717333",
+  "effects": {
+    "externalPublicationCount": 0,
+    "installationMutationCount": 0,
+    "providerInvocationCount": 0,
+    "registryPublishCount": 0
+  },
+  "ephemeralSignaturePersisted": false,
+  "gitHead": "ae395e4bbdf898b703edf26fe4876d13f6cdc5a4",
+  "mode": "qualification",
+  "moduleCount": 8,
+  "outcome": "QUALIFICATION_GREEN",
+  "outputTreeHash": "sha256:dedfae13faa85c7a506f834aed50afb6d502b952df73796766df1fa37cd1f49e",
+  "resolved": [
+    {
+      "id": "domain.ecommerce.core",
+      "reason": "dependency",
+      "version": "1.1.0"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "reason": "requested",
+      "version": "1.1.0"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "reason": "requested",
+      "version": "1.4.0"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "reason": "requested",
+      "version": "1.2.0"
+    }
+  ],
+  "runtimeAdmissions": {
+    "domain.ecommerce.core": {
+      "imageId": "sha256:60be70024308005902d799a295d1d000f65333da3cab65c702b92dd13b7f188f",
+      "packageHash": "sha256:927174308b3353e0f2685f1423b515733de39b13e7878c5bdbbf93c9cf17dc93"
+    },
+    "platform.ecommerce.niushop": {
+      "imageId": "sha256:9c7f9fe391126b7c4028743a52c9779d4ce7ff754bbed470a6abd0617a284c70",
+      "packageHash": "sha256:d20c3864ee8c2d10b6e4cf2ace8253857bd66d2a80742eb1bb0aeadc80bac49f"
+    },
+    "solution.ecommerce.growth": {
+      "imageId": "sha256:d532ab5fc519661d96b3c1893bc2b1bf9f9a1cfbf62935ee2a24742bb73d5555",
+      "packageHash": "sha256:a3a1ab89e02b259316e4a52534429a2463ec8669d394b81372f011929a7b991e"
+    }
+  },
+  "runtimeMemberCount": 3,
+  "snapshotHash": "sha256:9bcb9905c530484d79f36539b29fb2d5fb22abf4446776b4b611b124a06d88f7",
+  "tamperRejections": [
+    "imageIndexBytes",
+    "imageDigest",
+    "dependencyLock",
+    "sbom",
+    "backend"
+  ]
+}
