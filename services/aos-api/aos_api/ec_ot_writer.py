@@ -86,13 +86,29 @@ def sink_to_ot(
     }
 
 
-def sink_derived_metrics(
+def prepare_derived_commands(eng: Any, scope: Any, pipeline: Any, output_rows: list[dict[str, Any]]) -> tuple[DerivedMetricCommand, ...]:
+    """Prepare without writing; persist these exact commands before recovery execution."""
+    return tuple(_iter_derived_commands(eng, scope, pipeline, output_rows))
+
+
+def sink_derived_metrics(eng: Any, scope: Any, pipeline: Any, output_rows: list[dict[str, Any]]) -> dict[str, int]:
+    """Retain existing per-row preparation and submission through the CAS Owner."""
+    updated = 0
+    replayed = 0
+    for command in _iter_derived_commands(eng, scope, pipeline, output_rows):
+        result = eng.ecom_consistency_store.update_derived_metrics(command)
+        updated += int(result.updated)
+        replayed += int(result.replayed)
+    return {"derived_updated": updated, "derived_replayed": replayed}
+
+
+def _iter_derived_commands(
     eng: Any,
     scope: Any,
     pipeline: Any,
     output_rows: list[dict[str, Any]],
-) -> dict[str, int]:
-    """O1 §5.2.10：基础 batch 成功后通过独立 CAS 命令写派生属性。"""
+):
+    """Build commands lazily so the legacy sink retains per-row CAS reads."""
     candidates: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for row in output_rows:
         object_type = str(row.get("ot") or "")
@@ -108,15 +124,13 @@ def sink_derived_metrics(
         if derived:
             candidates.append((row, derived))
     if not candidates:
-        return {"derived_updated": 0, "derived_replayed": 0}
+        return
     store = getattr(eng, "ecom_consistency_store", None)
     if store is None:
         raise RuntimeError("sink_derived_metrics: authoritative store is required")
 
     calculator_version = "ec-derived-v1"
     computed_at = max(_parse_datetime(row["source_updated_at"]) for row, _ in candidates)
-    updated = 0
-    replayed = 0
     for row, derived in candidates:
         identity = ExternalIdentityKey(
             org_id=scope.org_id,
@@ -157,10 +171,7 @@ def sink_derived_metrics(
             ),
             actor="ec-live-v1",
         )
-        result = store.update_derived_metrics(command)
-        updated += int(result.updated)
-        replayed += int(result.replayed)
-    return {"derived_updated": updated, "derived_replayed": replayed}
+        yield command
 
 
 def _build_sync_scope(scope: Any, pipeline: Any) -> SyncScope:

@@ -1,0 +1,5 @@
+# 派生命令准备与提交分离
+
+基线9ecf9d5e。原sink_derived_metrics读取当前revision并立即逐项提交，恢复无法保存exact命令。抽取_iter_derived_commands负责生成；原sink逐个获取并提交以保持既有多行时序。新增prepare_derived_commands一次返回tuple，不写Owner，供后续不可变保存。
+
+修改ec_ot_writer.py、新增test_ec_derived_prepare.py。验证准备无update、命令JSON往返保留hash/CAS/computed_at、准备后改变输入行不影响命令；原P08专项保持。此轮不声称版本读取原子或全流程恢复；真正执行保存命令前仍由现有CAS/Receipt阻断过期，禁止重试时重新prepare覆盖旧命令。
