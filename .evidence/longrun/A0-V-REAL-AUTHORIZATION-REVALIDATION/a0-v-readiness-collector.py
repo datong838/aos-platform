@@ -333,6 +333,43 @@ def _runtime_installation_readiness(
     return []
 
 
+def _runtime_installation_outcome(
+    *,
+    installation_id: str,
+    installation_revision: int,
+    positive_exact: dict[str, Any] | None,
+    canary_exact: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    blockers: list[dict[str, Any]] = []
+    positive = positive_exact or {}
+    canary = canary_exact or {}
+    if positive.get("httpStatus") != 200:
+        blockers.append(
+            {
+                "gate": "bundleRuntimeInstallation.positive",
+                "reason": "EXPECTED_200",
+                "httpStatus": positive.get("httpStatus"),
+            }
+        )
+    else:
+        blockers.extend(
+            _runtime_installation_readiness(
+                positive.get("body"),
+                installation_id=installation_id,
+                installation_revision=installation_revision,
+            )
+        )
+    if canary.get("httpStatus") != 404:
+        blockers.append(
+            {
+                "gate": "bundleRuntimeInstallation.canary",
+                "reason": "EXPECTED_404",
+                "httpStatus": canary.get("httpStatus"),
+            }
+        )
+    return blockers
+
+
 def _exact_isolation_outcome(
     instance_id: str | None,
     positive_exact: dict[str, Any] | None,
@@ -700,32 +737,14 @@ def collect(base_url: str, repo: Path) -> dict[str, Any]:
     if positive["workshopModules"].get("httpStatus") == 200:
         blockers.extend(_workshop_module_readiness(positive["workshopModules"].get("body")))
     if active_installation_id is not None and active_installation_revision is not None:
-        positive_runtime = runtime.get("positiveInstallation") or {}
-        canary_runtime = runtime.get("canaryInstallation") or {}
-        if positive_runtime.get("httpStatus") != 200:
-            blockers.append(
-                {
-                    "gate": "bundleRuntimeInstallation.positive",
-                    "reason": "EXPECTED_200",
-                    "httpStatus": positive_runtime.get("httpStatus"),
-                }
+        blockers.extend(
+            _runtime_installation_outcome(
+                installation_id=active_installation_id,
+                installation_revision=active_installation_revision,
+                positive_exact=runtime.get("positiveInstallation"),
+                canary_exact=runtime.get("canaryInstallation"),
             )
-        else:
-            blockers.extend(
-                _runtime_installation_readiness(
-                    positive_runtime.get("body"),
-                    installation_id=active_installation_id,
-                    installation_revision=active_installation_revision,
-                )
-            )
-        if canary_runtime.get("httpStatus") != 404:
-            blockers.append(
-                {
-                    "gate": "bundleRuntimeInstallation.canary",
-                    "reason": "EXPECTED_404",
-                    "httpStatus": canary_runtime.get("httpStatus"),
-                }
-            )
+        )
 
     model_counts: dict[str, dict[str, int]] = {}
     for name in ("modelRuntime", "modelChain", "modelCost"):

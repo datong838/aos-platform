@@ -390,6 +390,31 @@ class SemanticReadinessTests(unittest.TestCase):
             "RUNTIME_NOT_READY",
         )
 
+    def test_runtime_exact_id_requires_positive_200_and_canary_404(self):
+        self.assertEqual(
+            COLLECTOR._runtime_installation_outcome(
+                installation_id=INSTALLATION_ID,
+                installation_revision=7,
+                positive_exact=observation(ready_runtime_installation()),
+                canary_exact={"httpStatus": 404, "body": {"code": "RUNTIME_NOT_FOUND"}},
+            ),
+            [],
+        )
+        blockers = COLLECTOR._runtime_installation_outcome(
+            installation_id=INSTALLATION_ID,
+            installation_revision=7,
+            positive_exact=observation(ready_runtime_installation()),
+            canary_exact=observation(ready_runtime_installation()),
+        )
+        self.assertIn(
+            {
+                "gate": "bundleRuntimeInstallation.canary",
+                "reason": "EXPECTED_404",
+                "httpStatus": 200,
+            },
+            blockers,
+        )
+
     def test_workshop_requires_exact_eight_available_modules(self):
         self.assertEqual(COLLECTOR._workshop_module_readiness(ready_workshop_modules()), [])
 
@@ -408,6 +433,12 @@ class SemanticReadinessTests(unittest.TestCase):
         self.assertEqual(
             COLLECTOR._workshop_module_readiness(degraded)[0]["reason"],
             "MODULE_NOT_AVAILABLE",
+        )
+        duplicate = ready_workshop_modules()
+        duplicate["items"][0]["moduleId"] = duplicate["items"][1]["moduleId"]
+        self.assertEqual(
+            COLLECTOR._workshop_module_readiness(duplicate)[0]["reason"],
+            "EXPECTED_EXACT_EIGHT_MODULES",
         )
 
 
