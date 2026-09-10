@@ -261,8 +261,15 @@ class ContentCapabilityReceipt:
         ):
             raise ValueError("capability Receipt exact request lineage drifted")
         if self.state == "COMPLETED":
+            cost_accounted = (
+                self.budget_state == "SETTLED"
+                and type(self.actual_fen) is int
+                and 0 <= self.actual_fen <= request.upper_bound_fen
+            ) or (
+                self.budget_state == "COST_PENDING" and self.actual_fen is None
+            )
             if (
-                self.budget_state != "SETTLED"
+                not cost_accounted
                 or self.provider_request_receipt_ref is None
                 or self.provider_receipt_ref is None
                 or not self.usage_receipt_refs
@@ -272,8 +279,6 @@ class ContentCapabilityReceipt:
                 or self.artifact.growth_plan_ref != request.growth_plan_ref
                 or self.artifact.source_artifact_refs != request.source_artifact_refs
                 or self.artifact.fact_source_refs != request.fact_source_refs
-                or type(self.actual_fen) is not int
-                or not 0 <= self.actual_fen <= request.upper_bound_fen
                 or self.retry_directive != "NONE"
                 or self.provider_invocation_count != 1
             ):

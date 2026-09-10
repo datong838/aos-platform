@@ -529,3 +529,28 @@ def test_n7_package_files_have_no_platform_network_secret_or_provider_implementa
             "providerUrl",
         ):
             assert forbidden not in source
+
+
+def test_completed_cost_pending_preserves_readable_artifact_without_resubmission():
+    port = CapabilityPort(lambda command: capability_receipt(command, budgetState='COST_PENDING', actualFen=None))
+    item = capability_request()
+    first = execute_content_capability(port, dispatch_ref=dispatch(), request=item)
+    replay = execute_content_capability(port, dispatch_ref=dispatch(), request=item)
+    assert first.state == 'COMPLETED'
+    assert first.budget_state == 'COST_PENDING' and first.actual_fen is None
+    assert first.artifact == replay.artifact and first.artifact is not None
+    assert first.provider_receipt_ref and first.usage_receipt_refs
+    assert replay.replayed and len(port.commands) == port.provider_calls == 1
+
+
+@pytest.mark.parametrize('drift', [
+    {'actualFen': 0}, {'actualFen': 10}, {'artifact': None},
+    {'providerRequestReceiptRef': None}, {'providerReceiptRef': None},
+    {'usageReceiptRefs': []}, {'retryDirective': 'RETRYABLE_NO_EFFECT'},
+    {'budgetState': 'UNKNOWN'},
+])
+def test_completed_cost_pending_still_requires_execution_proof(drift):
+    def respond(command):
+        return capability_receipt(command, **({'budgetState':'COST_PENDING', 'actualFen':None} | drift))
+    with pytest.raises(ValueError):
+        execute_content_capability(CapabilityPort(respond), dispatch_ref=dispatch(), request=capability_request())
