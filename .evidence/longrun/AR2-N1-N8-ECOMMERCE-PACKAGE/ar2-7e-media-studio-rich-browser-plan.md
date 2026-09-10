@@ -45,3 +45,9 @@
 - 三视口 `3/3 PASS`；每视口 12 次 workflow、1 次 export、1 次 publish Proposal，外部副作用计数全部为 0。
 - Media Studio 定向现有测试、Web 全量、production build、`verify_closure.py --phase ar2-7` 与 `git diff --check` 全绿；产品代码 hash 不变。
 - 本切片通过后富浏览器进度 `7/8`，继续 Analyst，不前推 AR2-7E 总体标记。
+
+## 6. 首轮诊断与 root-stage 修正（2026-09-10）
+
+- `1280×720` 与 `1440×900` 均在任何写入前失败关闭；请求全部命中并返回 200，页面保持 failed boundary。
+- 严格 parser 要求 `brief_profile` 阶段包含 exact `rootBriefRef`，`compile_start` 阶段包含 exact `taskRunRef`。首版 fixture 在两个阶段使用了另造 Artifact ref，触发 root-stage drift。
+- 修正只把前两阶段 exactRefs 绑定到既有根引用；数量守恒、后续阻断和全部零副作用边界不变，产品代码不改。
