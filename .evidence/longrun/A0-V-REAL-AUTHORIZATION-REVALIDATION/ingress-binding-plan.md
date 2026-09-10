@@ -1,0 +1,5 @@
+# 原命令写前实际绑定
+
+基线1f668ed8。新增IngressJournal.save_for_running_schedule，在同一事务中共享锁读取scope/run(running)/schedule(enabled且live pipeline绑定)/persisted graph/当前source。图hash须等于命令envelope pipelineHash；图须仅一个source节点且source_id一致；source当前UUID/type/status须匹配。全部通过后调用已有save。未传secret，不读source.props，不授予模型或外部写权限。
+
+文件ec_ingress_journal.py及test_a0v_ingress_journal_pg.py。图hash约定为本模块稳定JSON hash，后续executor必须对同一完整持久图计算，不能只hash节点。验证有效保存、已完成run/disabled schedule/graph hash/source UUID漂移拒绝。该入口尚未接executor；原save作为内部持久原语保留，不可作为执行授权。锁只保护保存事务，不宣称整个外部执行期间配置冻结。

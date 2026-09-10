@@ -43,3 +43,43 @@ def test_ingress_command_survives_connections_and_rejects_replacement(database):
         database.owner.execute('DELETE FROM ecommerce_ingress_command')
     with pytest.raises(errors.RaiseException), database.owner.transaction():
         migration.downgrade()
+
+
+def test_running_schedule_binding_blocks_drift(database):
+    from aos_api.ec_ingress_journal import IngressJournal, IngressJournalConflict, _digest
+    from unittest.mock import Mock
+    import json
+    database.owner.execute('CREATE TABLE meta_schedule_run(org_id text, project_id text,id text,schedule_id text,status text)')
+    database.owner.execute('CREATE TABLE meta_schedule(org_id text,project_id text,id text,pipeline_id text,enabled boolean,ingest jsonb)')
+    database.owner.execute('CREATE TABLE phase5_pipeline_graph(org_id text,project_id text,pipeline_id text,payload jsonb)')
+    database.owner.execute('CREATE TABLE meta_source(org_id text,project_id text,id text,type text,status text,configuration_revision uuid)')
+    scope = TenantScope('org-org','dev-project')
+    revision = str(uuid4())
+    graph = {'pipeline_id':'p01','nodes':[{'node_type':'source','config':{'source_id':'source'}}]}
+    database.owner.execute("INSERT INTO meta_schedule_run VALUES('org-org','dev-project','run','schedule','running')")
+    database.owner.execute("INSERT INTO meta_schedule VALUES('org-org','dev-project','schedule','p01',true,%s::jsonb)", (json.dumps({'kind':'pipeline-live-v1','pipelineId':'p01'}),))
+    database.owner.execute("INSERT INTO phase5_pipeline_graph VALUES('org-org','dev-project','p01',%s::jsonb)", (json.dumps(graph),))
+    database.owner.execute("INSERT INTO meta_source VALUES('org-org','dev-project','source','jdbc-mysql-ssh','registered',%s)", (revision,))
+    for table in ('meta_schedule_run','meta_schedule','phase5_pipeline_graph','meta_source'):
+        database.owner.execute(f'GRANT SELECT,UPDATE ON {table} TO aos_runtime')
+    journal = IngressJournal(storage_schema=database.schema)
+    journal.save = Mock(return_value='saved')
+    args = dict(run_id='run',pipeline_id='p01',source_id='source',source_revision=revision,pipeline_hash=_digest(graph),command=None)
+    factory = runtime_connection(database)
+    with factory(scope) as conn:
+        assert journal.save_for_running_schedule(conn, scope, **args) == 'saved'
+    changes = [
+        ("UPDATE meta_schedule_run SET status='failed'", "UPDATE meta_schedule_run SET status='running'"),
+        ("UPDATE meta_schedule SET enabled=false", "UPDATE meta_schedule SET enabled=true"),
+        ("UPDATE meta_source SET status='disabled'", "UPDATE meta_source SET status='registered'"),
+    ]
+    for change, restore in changes:
+        database.owner.execute(change)
+        journal.save.reset_mock()
+        with factory(scope) as conn, pytest.raises(IngressJournalConflict):
+            journal.save_for_running_schedule(conn, scope, **args)
+        journal.save.assert_not_called()
+        database.owner.execute(restore)
+    for mismatch in ({'pipeline_hash':'b'*64}, {'source_revision':str(uuid4())}):
+        with factory(scope) as conn, pytest.raises(IngressJournalConflict):
+            journal.save_for_running_schedule(conn, scope, **dict(args, **mismatch))

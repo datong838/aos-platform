@@ -40,6 +40,7 @@ def _validate(scope, envelope):
 
 class IngressJournal:
     def __init__(self, *, storage_schema='public'):
+        self.schema = storage_schema
         self.table = sql.Identifier(storage_schema, 'ecommerce_ingress_command')
 
     def read(self, conn, scope, run_id):
@@ -64,3 +65,34 @@ class IngressJournal:
         if saved is None or _digest(saved) != digest:
             raise IngressJournalConflict('INGRESS_COMMAND_CONFLICT')
         return saved
+
+
+    def save_for_running_schedule(self, conn, scope, **args):
+        def read(table, identity_column, identity, columns):
+            return conn.execute(sql.SQL('SELECT {} FROM {} WHERE org_id=%s AND project_id=%s AND {}=%s FOR SHARE').format(
+                sql.SQL(columns), sql.Identifier(self.schema, table), sql.Identifier(identity_column)),
+                (*scope.key, identity)).fetchone()
+        run = read('meta_schedule_run', 'id', args['run_id'], 'schedule_id,status')
+        if run is None or run['status'] != 'running':
+            raise IngressJournalConflict('INGRESS_RUNNING_SCHEDULE_REQUIRED')
+        schedule = read('meta_schedule', 'id', run['schedule_id'], 'pipeline_id,enabled,ingest')
+        if (schedule is None or schedule['enabled'] is not True or schedule['pipeline_id'] != args['pipeline_id']
+            or type(schedule['ingest']) is not dict or schedule['ingest'].get('kind') != 'pipeline-live-v1'
+            or schedule['ingest'].get('pipelineId') != args['pipeline_id']):
+            raise IngressJournalConflict('INGRESS_SCHEDULE_BINDING_DRIFT')
+        graph = read('phase5_pipeline_graph', 'pipeline_id', args['pipeline_id'], 'payload')
+        if graph is None or type(graph['payload']) is not dict or _digest(graph['payload']) != args['pipeline_hash']:
+            raise IngressJournalConflict('INGRESS_GRAPH_DRIFT')
+        payload = graph['payload']
+        nodes = payload.get('nodes')
+        if payload.get('pipeline_id') != args['pipeline_id'] or type(nodes) is not list or any(type(n) is not dict for n in nodes):
+            raise IngressJournalConflict('INGRESS_GRAPH_INVALID')
+        sources = [n for n in nodes if str(n.get('node_type', '')).lower() == 'source']
+        if (len(sources) != 1 or type(sources[0].get('config')) is not dict
+            or sources[0]['config'].get('source_id') != args['source_id']):
+            raise IngressJournalConflict('INGRESS_SOURCE_BINDING_DRIFT')
+        source = read('meta_source', 'id', args['source_id'], 'type,status,configuration_revision')
+        if (source is None or source['type'] != 'jdbc-mysql-ssh' or source['status'] not in {'registered','active','ready'}
+            or str(source['configuration_revision']) != args['source_revision']):
+            raise IngressJournalConflict('INGRESS_SOURCE_CONFIGURATION_DRIFT')
+        return self.save(conn, scope, **args)
