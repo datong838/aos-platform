@@ -58,3 +58,9 @@
 - 第二轮两个视口均完成 pause、resume、DataRequirement request/confirm 四次受控写，并按 state v1→v5 完成 exact GET 回读；其他写、未知 GET、页面错误和控制台错误均为 0。
 - 阶段评审 fixture 使用了旧测试中的具体产物类型，当前严格解析器要求 ReviewIssue 的 `evidenceRefs.resourceType=Evidence`，StageReview 的 `artifactRef.resourceType=Artifact`。页面因此进入“阶段评审读取失败”并隐藏决定按钮，符合 fail-closed 产品行为。
 - 固定执行器改用当前 strict parser 类型，不修改产品解析器或降低校验；下一轮仍从全新浏览器 context 和 state v1 开始。
+
+## 7. 第三轮 Handoff hash 诊断
+
+- 第三轮已完成六次预期 POST，Run/DataRequirement/ReviewIssue 全部 exact 回读闭合；Handoff compile 响应在客户端 strict parser 被拒绝，页面显示“处理失败”且没有签发入口。
+- 原因是 module handoff 内的 `ResponsibilityPlanRevision.contentHash` 合同要求 64 位 raw SHA-256，fixture 误用了带 `sha256:` 前缀的通用 exact-ref helper。
+- 只把该字段改为 raw hash；BusinessInvestigation 外层 exact refs 继续保持原合同形式，不放宽任何产品校验。
