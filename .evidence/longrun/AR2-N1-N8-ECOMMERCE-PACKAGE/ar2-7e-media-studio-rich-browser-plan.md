@@ -51,3 +51,9 @@
 - `1280×720` 与 `1440×900` 均在任何写入前失败关闭；请求全部命中并返回 200，页面保持 failed boundary。
 - 严格 parser 要求 `brief_profile` 阶段包含 exact `rootBriefRef`，`compile_start` 阶段包含 exact `taskRunRef`。首版 fixture 在两个阶段使用了另造 Artifact ref，触发 root-stage drift。
 - 修正只把前两阶段 exactRefs 绑定到既有根引用；数量守恒、后续阻断和全部零副作用边界不变，产品代码不改。
+
+## 7. 二轮诊断与折叠区/hash 修正（2026-09-10）
+
+- root-stage 修正后两个视口均完成 12 次 workflow、1 次 export 和 1 次 publish Proposal 请求；其他写入、受禁写入、unknown GET、页面与控制台错误为 0。
+- 完整视频场景与 authority ref 位于默认折叠的治理/数据审计区；执行器改为显式展开对应 details 后回读，不要求隐藏文本在初始可见区出现。
+- Proposal fixture 的 `proposalHash` 使用了非十六进制字符，严格 parser 拒绝回执；改为合法 64 位小写十六进制 SHA-256。产品代码和副作用边界不变。
