@@ -9,6 +9,31 @@ from aos_api.extension_runtime.oci_driver import CleanupUncertainError
 from aos_api.extension_runtime.preparation_worker import PreparedJob, PreparationWorker
 
 
+def test_worker_binds_artifact_reader_to_each_member_and_preserves_legacy_reader():
+    legacy_calls=[]
+    member_calls=[]
+    legacy=lambda path,limit:legacy_calls.append((path,limit)) or b'legacy'
+    worker=PreparationWorker(connect=None,driver=None,installation_store=None,revalidator=None,
+        check_current_permission=None,load_record=None,read_artifact=legacy,policy=None,platform=None,
+        read_member_artifact=lambda selected,path,limit:
+            member_calls.append((selected,path,limit)) or selected.encode())
+    first=SimpleNamespace(selected='bundle-a')
+    second=SimpleNamespace(selected='bundle-b')
+    assert worker._artifact_reader(first)('artifacts/backend-runtime.json',65536)==b'bundle-a'
+    assert worker._artifact_reader(second)('artifacts/backend-runtime.json',65536)==b'bundle-b'
+    assert member_calls==[
+        ('bundle-a','artifacts/backend-runtime.json',65536),
+        ('bundle-b','artifacts/backend-runtime.json',65536),
+    ]
+    assert legacy_calls==[]
+
+    compatible=PreparationWorker(connect=None,driver=None,installation_store=None,revalidator=None,
+        check_current_permission=None,load_record=None,read_artifact=legacy,policy=None,platform=None)
+    assert compatible._artifact_reader(first) is legacy
+    assert compatible._artifact_reader(first)('artifact.json',17)==b'legacy'
+    assert legacy_calls==[('artifact.json',17)]
+
+
 def test_job_verification_settles_thread_on_owner_cancellation():
     async def run():
         started,release=threading.Event(),threading.Event()

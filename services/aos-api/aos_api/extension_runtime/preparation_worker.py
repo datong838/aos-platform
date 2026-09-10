@@ -109,7 +109,8 @@ class PreparationWorker:
     def __init__(self, *, connect, driver, installation_store, revalidator,
                  check_current_permission, load_record, read_artifact, policy, platform,
                  check_current_conditions=None, check_verification_permission=None,
-                 configuration_authorize=None, check_enable_permission=None):
+                 configuration_authorize=None, check_enable_permission=None,
+                 read_member_artifact=None):
         self.connect=connect
         self.driver=driver
         self.store=installation_store
@@ -117,12 +118,18 @@ class PreparationWorker:
         self.permission=check_current_permission
         self.load_record=load_record
         self.read_artifact=read_artifact
+        self.read_member_artifact=read_member_artifact
         self.policy=policy
         self.platform=platform
         self.conditions=check_current_conditions
         self.verification_permission=check_verification_permission
         self.configuration_authorize=configuration_authorize
         self.enable_permission=check_enable_permission
+
+    def _artifact_reader(self, member):
+        if callable(self.read_member_artifact):
+            return lambda path,limit:self.read_member_artifact(member.selected,path,limit)
+        return self.read_artifact
 
     @contextmanager
     def _connection(self, scope):
@@ -209,7 +216,7 @@ class PreparationWorker:
                     record=await asyncio.to_thread(self.load_record,member.selected)
                     async with open_signed_session(driver=self.driver,connect=lambda:self._connection(scope),**scope,
                         resource_id=member.intent.resource_id,record=record,selected=member.selected,
-                        policy=self.policy,checked_at=datetime.now(timezone.utc),read_artifact=self.read_artifact,
+                        policy=self.policy,checked_at=datetime.now(timezone.utc),read_artifact=self._artifact_reader(member),
                         platform=self.platform) as session:
                         yield session
                 return open_member
