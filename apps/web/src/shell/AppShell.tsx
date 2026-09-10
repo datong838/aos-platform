@@ -306,7 +306,7 @@ function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
   const navigate = useNavigate();
   const searchRef = useRef<HTMLInputElement>(null);
   if (!spec) return null;
-  const isExecutableAction = (label: string) => label === "筛选" || label === "查看内容计划" || pathname === "/workshop/creator-growth" || pathname === "/workshop/media-studio" || (pathname === "/workshop/operations" && label === "＋ 新建处理");
+  const isExecutableAction = (label: string) => label === "筛选" || label === "查看内容计划";
   const runHeaderAction = (label: string) => {
     if (label === "筛选") { searchRef.current?.focus(); if (pathname === "/workshop/operations") window.dispatchEvent(new CustomEvent("aos-workshop-operation-search", { detail: { value: searchRef.current?.value ?? "" } })); return; }
     if (label === "＋ 新建处理" && pathname === "/workshop/operations") { window.dispatchEvent(new CustomEvent("aos-workshop-operation-new")); return; }
