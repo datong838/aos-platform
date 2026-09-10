@@ -18,6 +18,8 @@
 
 ## 分步实施与退出
 
+第一施工切片新增 `services/aos-api/aos_api/aip_development_cost_authorization.py` 和 `services/aos-api/tests/aip/test_aip_development_cost_authorization.py`：只定义嵌入现有策略的授权值对象与纯判定器，不新增表或路由，不激活运行豁免。字段包括正租户、exact Provider、Provider model ID、批准依据和有时区的有效期；检查时重新匹配全部范围。该对象不绑定 RegisteredModelRevision，避免 Model 引用策略而策略再引用 Model 的哈希循环。待核价用量 DTO 明确 amountMinor=null、costStatus=deferred，保留输入输出 token，总量严格求和，不能用零金额代表未知。该合同自身不是持久化授权；下一切片必须由现有策略 Owner 发布并在每次调用中回读，不能信任调用方自行提供的对象。
+
 1. 明确开发执行授权合同：固定 scope、exact Provider/model 和批准事实、有效期。授权的含义仅为承担开发调用费用，不声明价格。沿用既有策略 Revision Owner，不新建平行审批库。新增字段必须仅在 opt-in 时序列化，保持旧不可变 payload hash。
 2. 模型及策略合同支持明确 deferred 状态；商业默认及缺授权负例仍拒绝。开发用量质量始终 measured，金额 unknown，不能转成 estimated=0。
 3. 预算状态机新增 execution-complete/cost-pending 语义，保留 UsageReceipt 与调用幂等键；SQL/Python/事件投影同步，费用后核算只结账，不重新调用 Provider。租户隔离、恢复、重复结算及撤销测试必须覆盖。
