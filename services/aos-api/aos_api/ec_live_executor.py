@@ -147,9 +147,9 @@ def ec_live_executor(
 
         # O1-R2: 兼容 obj_instance/graph_edge 仅由单一 Projector 消费权威
         # Outbox 后写入；executor 禁止双写或制造事后伪 Outbox。
-        from aos_api.ecom_projector import project_pending
+        from aos_api.ecom_projector import project_until_caught_up
 
-        projection = project_pending(scope)
+        projection = project_until_caught_up(scope, deadline=deadline, cancel_event=cancel_event)
 
         # Publish this run's Dataset success only after authoritative stages return.
         ds = sink_to_dataset(eng, scope, pipeline, output_rows)

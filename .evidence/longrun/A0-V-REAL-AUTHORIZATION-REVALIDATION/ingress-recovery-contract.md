@@ -55,3 +55,11 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 2026-09-11，基线359e1e54。新增recover_saved_authoritative_stages内部入口，调用方提供既有租户连接工厂（成功退出提交事务）及Store。第一连接：原run事务锁→当前绑定核验→原基础命令Receipt-first apply→核验原批水位→若无派生命令则从保存outputRows准备并保存→退出提交。第二连接：再锁原run/核验当前绑定与原水位→只执行已保存派生命令。无输出快照且未准备的旧批次在基础写入前拒绝；已保存的派生命令不重新准备。派生中断不回滚已提交基础或派生前缀，重试复用原命令。
 
 文件：ec_ingress_journal.py增加scope/run事务锁；ec_ingress_recovery.py装配并核验saved派生水位；test_ec_ingress_recovery.py与tests/aip/test_a0v_ingress_journal_pg.py。验证跨连接保存后执行、重复重放、保存故障不派生、来源漂移拒绝。锁用于本run阶段串行，不替代调度claim/真实授权；仍不接HTTP、不自动标记DLQ/运行成功，投影Dataset阶段未完成。
+
+## 实际投影完成门修正
+
+2026-09-11，基线548fefad。检查实际接线发现project_pending返回len(rows)-projected，事务成功时恒为0，不能代表队列剩余。改为同事务查询本scope真实未投影authoritative_store计数。新增project_until_caught_up按既有500行事务批量处理，使用实际executor monotonic deadline/cancel_event；无可租用行但pending>0时短等待，超时/取消抛固定错误，禁止Dataset成功发布。ec_live_executor改用该入口，不改写Outbox Owner，不双写。
+
+文件：services/aos-api/aos_api/ecom_projector.py、ec_live_executor.py；tests/test_ec_ingress_preflight.py、新test_ec_projection_drain.py、tests/aip/test_a0v_projection_pending_pg.py。真实PG隔离schema验证跨批剩余与租户隔离；模拟时钟验证续批、取消、期限及无效结果；实际executor的阶段顺序专项覆盖Dataset阻断。
+
+这仍是scope队列清空门，不是exact原批逐对象证明；持续其他写入可能导致保守超时，后续恢复需精确批次完成门。另纠正前述Dataset raw全列缺失推断：当前sink_to_dataset只取len(output_rows)写元数据/历史，并不持久化raw行，因此当前恢复Dataset计数无需全部raw列；需解决的是成功记录幂等和阶段对账。

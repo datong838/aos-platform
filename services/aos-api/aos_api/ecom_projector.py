@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
 from typing import Any
 
 from aos_api.db import connect
@@ -115,4 +116,34 @@ def project_pending(scope: TenantScope, *, limit: int = 500) -> dict[str, int]:
                 (*scope.key, row["outbox_id"]),
             )
             projected += 1
-    return {"projected": projected, "pending": max(0, len(rows) - projected)}
+        pending = conn.execute(
+            "SELECT count(*) AS pending FROM projection_outbox WHERE org_id=%s AND project_id=%s "
+            "AND event_source='authoritative_store' AND projected=FALSE", scope.key,
+        ).fetchone()['pending']
+    return {"projected": projected, "pending": int(pending)}
+
+
+def project_until_caught_up(scope: TenantScope, *, deadline: float, cancel_event=None) -> dict[str, int]:
+    """Drain committed batches within the executor deadline before Dataset success."""
+    def check():
+        if cancel_event is not None and cancel_event.is_set():
+            raise RuntimeError('PROJECTION_CANCELLED')
+        if time.monotonic() >= deadline:
+            raise RuntimeError('PROJECTION_DEADLINE_EXCEEDED')
+    total = 0
+    while True:
+        check()
+        result = project_pending(scope)
+        check()
+        if (type(result) is not dict or any(type(result.get(key)) is not int or result[key] < 0
+                                          for key in ('projected','pending'))):
+            raise RuntimeError('PROJECTION_RESULT_INVALID')
+        total += result['projected']
+        if result['pending'] == 0:
+            return {'projected':total,'pending':0}
+        if result['projected'] == 0:
+            delay = min(0.05,max(0,deadline-time.monotonic()))
+            if cancel_event is not None:
+                cancel_event.wait(delay)
+            else:
+                time.sleep(delay)

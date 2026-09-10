@@ -19,7 +19,7 @@ def test_invalid_output_rejected_before_either_sink(rows):
             stack.enter_context(patch.object(executor, name, return_value=rows))
         dataset = stack.enter_context(patch.object(executor, 'sink_to_dataset'))
         ot = stack.enter_context(patch.object(executor, 'sink_to_ot'))
-        stack.enter_context(patch('aos_api.ecom_projector.project_pending'))
+        stack.enter_context(patch('aos_api.ecom_projector.project_until_caught_up'))
         with pytest.raises((ValueError, KeyError)):
             executor.ec_live_executor(pipeline=SimpleNamespace(id='p02-test'), nodes=[],
                 node_id=None, sample_input=None, execution_kind='live', cancel_event=None,
@@ -47,7 +47,7 @@ def test_dataset_published_only_after_authoritative_stages(failure):
             stack.enter_context(patch.object(executor, name, return_value=[]))
         stack.enter_context(patch.object(executor, 'sink_to_ot', side_effect=stage('ot')))
         stack.enter_context(patch.object(executor, 'sink_derived_metrics', side_effect=stage('derived', {})))
-        stack.enter_context(patch('aos_api.ecom_projector.project_pending', side_effect=stage('projection', {})))
+        stack.enter_context(patch('aos_api.ecom_projector.project_until_caught_up', side_effect=stage('projection', {})))
         stack.enter_context(patch.object(executor, 'sink_to_dataset', side_effect=stage('dataset', SimpleNamespace(id='saved'))))
         def execute():
             return executor.ec_live_executor(pipeline=SimpleNamespace(id='p02-test'), nodes=[],
