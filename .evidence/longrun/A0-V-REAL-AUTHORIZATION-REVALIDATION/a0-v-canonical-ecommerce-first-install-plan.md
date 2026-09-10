@@ -6,11 +6,12 @@
 
 因此当前是无 baseline 的 canonical 首装，不是 successor 升级。`workshop_w1_10_successor_install.py` 要求一个已有 effective active installation，并且固定历史 1.0/1.1/1.3 版本；继续复用会以 `EFFECTIVE_INSTALLATION_AMBIGUOUS` 或 release drift 阻断，不能改库伪造 baseline。
 
-输入制品固定为 `A0V_RUNNABLE_ECOMMERCE_CANDIDATE_QUALIFICATION_GREEN` 的同一份 staging tree：
+输入制品固定为结构兼容修正后的 `A0V_RUNTIME_SCHEMA_COMPATIBILITY_QUALIFICATION_GREEN` v4 staging tree：
 
-- 源提交：`ae395e4bbdf898b703edf26fe4876d13f6cdc5a4`
-- staging tree：`sha256:dedfae13faa85c7a506f834aed50afb6d502b952df73796766df1fa37cd1f49e`
-- build receipt：`sha256:894e9812c21a9fae455419b3219c8e30a85f957bc1a63450ef6655d34d717333`
+- 源提交：`4f9eee9f4480a2b589409116eda221fe618bbbe9`
+- staging tree：`sha256:26a5942e8087252df8f72e5430e4c4c6e42c906a8f814fe2df428d33c1293950`
+- build receipt：`sha256:b473385f353d28dfe5cd6a04cf4c8610c7b77496c7558e4f429271fa8a510638`
+- qualification receipt：`sha256:e8574f6b3bf2d7eb4d22bf811dc06174ffce18fe8f7f091a0bbebfd93f592da0`
 - 版本：core 1.1.0、niushop 1.1.0、growth 1.4.0、operations-base 1.2.0
 
 ## 2. 施工范围

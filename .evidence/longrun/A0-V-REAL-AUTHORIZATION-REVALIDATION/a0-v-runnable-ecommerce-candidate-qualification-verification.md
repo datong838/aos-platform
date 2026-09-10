@@ -4,6 +4,8 @@
 
 `A0V_RUNNABLE_ECOMMERCE_CANDIDATE_QUALIFICATION_GREEN`。
 
+后续 runtime verify 复核发现，v3 尚未携带宿主强制的签名结构要求。该结论仍有效地证明 OCI admission 和组合解析，但 v3 已被 v4 结构兼容资格证据取代，不能作为 canonical 首装输入。
+
 该标记仅证明四个版本化 Candidate 可以形成确定性 OCI、通过临时签名后的正式 ReleasePolicy 与 runtime admission，并可解析为预期组合。它不表示这些版本已经 canonical publish、安装、启用或获得真实业务执行权；A0-V 仍保持阻断，后续 publish/install 必须另立受控方案。
 
 ## 2. 实现与提交
