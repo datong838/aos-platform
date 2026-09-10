@@ -28,6 +28,11 @@ def test_default_preflight_never_calls_docker(monkeypatch) -> None:
     assert result["outcome"] == "PREFLIGHT_GREEN"
     assert (result["bundleCount"], result["runtimeMemberCount"]) == (4, 3)
     assert (result["moduleCount"], result["operationCount"]) == (8, 12)
+    assert all(
+        item["schemaCompatibilityHash"].startswith("sha256:")
+        for item in result["bundles"]
+        if item["runtimeOperations"]
+    )
 
 
 def test_build_rejects_repository_output_before_engine_access(monkeypatch) -> None:
@@ -184,12 +189,23 @@ def test_qualification_uses_ephemeral_signing_policy_admission_and_resolver(
     ]
     assert result["moduleCount"] == 8
     assert result["runtimeMemberCount"] == 3
+    assert len(result["schemaRequirements"]) == 3
+    for bundle_id, requirement in result["schemaRequirements"].items():
+        assert requirement["packageId"].startswith("bundle-")
+        assert requirement["schemaVersion"] == "aos-platform-a0v-001"
+        assert requirement["migrationHash"] == next(
+            item["schemaCompatibilityHash"]
+            for item in BUILDER.preflight()["bundles"]
+            if item["id"] == bundle_id
+        )
     assert result["tamperRejections"] == [
         "imageIndexBytes",
         "imageDigest",
         "dependencyLock",
         "sbom",
         "backend",
+        "schemaCompatibility",
+        "schemaRequirements",
     ]
     assert result["ephemeralSignaturePersisted"] is False
     assert not list(output.rglob("bundle.signature.json"))

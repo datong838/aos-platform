@@ -35,6 +35,23 @@ BASE_IMAGE = "python:3.11-alpine"
 PLATFORM = "linux/arm64"
 RUNTIME_LOCK = b"aos-extension-sdk=repository-source-tree\n"
 QUALIFICATION_KEY_ID = "a0v-ephemeral-candidate-qualification"
+SCHEMA_REQUIREMENT_VERSION = "aos-platform-a0v-001"
+SCHEMA_COMPATIBILITY_REVISION = "a0v_001"
+SCHEMA_COMPATIBILITY_RELATIONS = (
+    "public.asset_bundle",
+    "public.asset_bundle_artifact",
+    "public.asset_bundle_evidence",
+    "public.asset_bundle_version",
+    "public.bundle_composition",
+    "public.bundle_composition_lock",
+    "public.bundle_installation",
+    "public.bundle_installation_revision",
+    "public.extension_operation_dispatch_binding",
+    "public.extension_runtime_binding",
+    "public.extension_runtime_operation",
+    "public.extension_runtime_resource_lease",
+    "public.extension_schema_installation",
+)
 RUNTIME_CASES = (
     ("domain.ecommerce.core/1.1.0", "domain.ecommerce.core", "1.1.0", "ecommerce_core"),
     (
@@ -138,6 +155,37 @@ def _runtime_registration(path: Path, package: str) -> tuple[str, ...]:
     return operations
 
 
+def _schema_compatibility(path: Path, bundle_id: str) -> str:
+    compatibility_path = path / "artifacts/schema-compatibility.json"
+    requirements_path = path / "artifacts/schema-requirements.json"
+    try:
+        compatibility_raw = compatibility_path.read_bytes()
+        compatibility = json.loads(compatibility_raw)
+        requirements = json.loads(requirements_path.read_bytes())
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CandidateBuildBlocked("SCHEMA_COMPATIBILITY_MISSING", bundle_id) from exc
+    if compatibility != {
+        "schemaVersion": 1,
+        "bundleId": bundle_id,
+        "alembicRevision": SCHEMA_COMPATIBILITY_REVISION,
+        "noPackageOwnedMigration": True,
+        "requiredRelations": list(SCHEMA_COMPATIBILITY_RELATIONS),
+    }:
+        raise CandidateBuildBlocked("SCHEMA_COMPATIBILITY_DRIFT", bundle_id)
+    compatibility_hash = _sha256(compatibility_raw)
+    if requirements != {
+        "schemaVersion": 1,
+        "requirements": [
+            {
+                "version": SCHEMA_REQUIREMENT_VERSION,
+                "migrationHash": compatibility_hash,
+            }
+        ],
+    }:
+        raise CandidateBuildBlocked("SCHEMA_REQUIREMENT_DRIFT", bundle_id)
+    return compatibility_hash
+
+
 def preflight() -> dict[str, Any]:
     bundles: list[dict[str, Any]] = []
     operation_ids: set[str] = set()
@@ -151,6 +199,7 @@ def preflight() -> dict[str, Any]:
             raise CandidateBuildBlocked("CANDIDATE_COORDINATE_DRIFT", relative)
         runtime = (manifest.get("spec") or {}).get("runtime")
         operations: tuple[str, ...] = ()
+        schema_compatibility_hash: str | None = None
         if package is None:
             if runtime is not None:
                 raise CandidateBuildBlocked("UNEXPECTED_RUNTIME", relative)
@@ -166,6 +215,7 @@ def preflight() -> dict[str, Any]:
             ):
                 raise CandidateBuildBlocked("RUNTIME_DECLARATION_DRIFT", relative)
             operations = _runtime_registration(root, package)
+            schema_compatibility_hash = _schema_compatibility(root, expected_id)
             if operation_ids.intersection(operations):
                 raise CandidateBuildBlocked("DUPLICATE_RUNTIME_OPERATION", relative)
             operation_ids.update(operations)
@@ -186,6 +236,7 @@ def preflight() -> dict[str, Any]:
                 "version": expected_version,
                 "sourceTreeHash": _tree_hash(root),
                 "runtimeOperations": list(operations),
+                "schemaCompatibilityHash": schema_compatibility_hash,
             }
         )
     if len(module_ids) != 8 or len(routes) != 8 or len(operation_ids) != 12:
@@ -721,6 +772,14 @@ def _assert_signed_tampering_rejected(
             "domain.ecommerce.core/1.1.0/backend/ecommerce_core/__init__.py",
             lambda raw: raw + b"\n# tampered\n",
         ),
+        "schemaCompatibility": (
+            "domain.ecommerce.core/1.1.0/artifacts/schema-compatibility.json",
+            lambda raw: raw + b" ",
+        ),
+        "schemaRequirements": (
+            "domain.ecommerce.core/1.1.0/artifacts/schema-requirements.json",
+            lambda raw: raw + b" ",
+        ),
     }
     rejected: list[str] = []
     for label, (relative, transform) in cases.items():
@@ -760,6 +819,9 @@ def qualify(
         from aos_api.asset_registry.resolver import resolve
         from aos_api.extension_runtime.admission import admit_runtime_artifact
         from aos_api.extension_runtime.oci_driver import OciDriver
+        from aos_api.extension_runtime.schema_conditions import (
+            admit_schema_requirements,
+        )
 
         shutil.rmtree(signed_root)
         shutil.copytree(output, signed_root)
@@ -800,10 +862,29 @@ def qualify(
         resolved_by_id = {item.id: item for item in composition.resolved}
         actual_driver = driver or OciDriver(context=context)
         admitted = {}
+        schema_requirements = {}
         for relative, bundle_id, _version, _package in RUNTIME_CASES:
             root = signed_root / relative
+            record = _release_record(bundles[bundle_id])
+            requirements = admit_schema_requirements(
+                record=record,
+                selected=resolved_by_id[bundle_id],
+                policy=policy,
+                checked_at=checked_at,
+                read_artifact=lambda path, limit, root=root: (root / path).read_bytes(),
+            )
+            if len(requirements) != 1:
+                raise CandidateBuildBlocked(
+                    "SCHEMA_REQUIREMENT_COUNT_MISMATCH", bundle_id
+                )
+            requirement = requirements[0]
+            schema_requirements[bundle_id] = {
+                "packageId": requirement.package_id,
+                "schemaVersion": requirement.schema_version,
+                "migrationHash": requirement.migration_hash,
+            }
             artifact = admit_runtime_artifact(
-                record=_release_record(bundles[bundle_id]),
+                record=record,
                 selected=resolved_by_id[bundle_id],
                 policy=policy,
                 checked_at=checked_at,
@@ -861,6 +942,7 @@ def qualify(
                 for item in composition.resolved
             ],
             "runtimeAdmissions": admitted,
+            "schemaRequirements": schema_requirements,
             "moduleCount": len(module_ids),
             "runtimeMemberCount": len(admitted),
             "tamperRejections": tamper_rejections,
