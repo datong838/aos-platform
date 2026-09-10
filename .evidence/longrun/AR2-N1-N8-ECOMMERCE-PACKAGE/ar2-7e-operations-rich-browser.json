@@ -1,0 +1,1972 @@
+{
+  "schemaVersion": "aos.ar2-7e-operations-rich-browser/v1",
+  "generatedAt": "2026-09-10T06:23:27.334Z",
+  "baseUrl": "http://127.0.0.1:8434",
+  "authority": "AOS-000572 / AR2_7D_RUNTIME_WIRING_CANONICAL_ROUTER_GREEN",
+  "fixtureBoundary": "isolated contract records; five internal Action Proposal writes per viewport intercepted before backend transport",
+  "result": "PASS",
+  "counts": {
+    "passed": 3,
+    "total": 3,
+    "actionWrites": 15,
+    "observationReads": 3,
+    "otherWrites": 0,
+    "forbiddenWrites": 0,
+    "unknownGets": 0,
+    "pageErrors": 0,
+    "consoleErrors": 0,
+    "stoppedEarly": false
+  },
+  "zeroEffects": {
+    "approvalCount": 0,
+    "leaseCount": 0,
+    "executionCount": 0,
+    "refundCount": 0,
+    "shipmentMutationCount": 0,
+    "providerInvocationCount": 0,
+    "externalPublicationCount": 0,
+    "externalBusinessMutationCount": 0
+  },
+  "results": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "filters": [
+          "全部",
+          "订单与履约",
+          "库存与告警",
+          "售后与工单"
+        ],
+        "searches": [
+          "order-hit",
+          "no-match",
+          "cleared"
+        ],
+        "details": [
+          "order-source",
+          "order-log",
+          "aftersale-source",
+          "aftersale-log"
+        ],
+        "workflow": [
+          "new",
+          "adopt",
+          "create",
+          "timeline",
+          "revise",
+          "withdraw"
+        ],
+        "proposalVersions": [
+          1,
+          2
+        ],
+        "approvalPreview": true,
+        "receiptReadback": true,
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-4d03c6cb-28f5-42fb-a0ee-d24a4653107d",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "隔离 SKU 的数量差异需要内部核对。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "priority": {
+                "from": null,
+                "to": "high"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "expiresAt": "2026-09-11T06:23:22.826Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-396ebfd5-6442-47cf-8fea-2c9e37bcb180",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v1/timeline",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-62a9a9a5-3c60-44f1-9294-26a687594103",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "核对正式来源，确认差异后再决定内部处置路径。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "priority": {
+                "from": "high",
+                "to": "normal"
+              },
+              "summary": {
+                "from": "核对正式来源，确认差异后再决定内部处置路径。",
+                "to": "隔离替代版本：继续核对正式来源。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T06:23:22.975Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-e677ebe6-360a-42b4-8d54-a4568a3727aa",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-405189df-52b5-4413-8a12-4953b97d75a1",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回当前内部处理提案"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/observations/proposal-isolated-observation/leases/lease-isolated-observation",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v1/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v1/timeline",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v2/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v2/withdraw",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/observations/proposal-isolated-observation/leases/lease-isolated-observation",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "actionWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-4d03c6cb-28f5-42fb-a0ee-d24a4653107d",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "隔离 SKU 的数量差异需要内部核对。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "priority": {
+                "from": null,
+                "to": "high"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "expiresAt": "2026-09-11T06:23:22.826Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-396ebfd5-6442-47cf-8fea-2c9e37bcb180",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-62a9a9a5-3c60-44f1-9294-26a687594103",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "核对正式来源，确认差异后再决定内部处置路径。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "priority": {
+                "from": "high",
+                "to": "normal"
+              },
+              "summary": {
+                "from": "核对正式来源，确认差异后再决定内部处置路径。",
+                "to": "隔离替代版本：继续核对正式来源。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T06:23:22.975Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-e677ebe6-360a-42b4-8d54-a4568a3727aa",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-405189df-52b5-4413-8a12-4953b97d75a1",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回当前内部处理提案"
+          }
+        }
+      ],
+      "viewReads": 3,
+      "workspaceReads": 3,
+      "readinessReads": 3,
+      "observationReads": 1
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "filters": [
+          "全部",
+          "订单与履约",
+          "库存与告警",
+          "售后与工单"
+        ],
+        "searches": [
+          "order-hit",
+          "no-match",
+          "cleared"
+        ],
+        "details": [
+          "order-source",
+          "order-log",
+          "aftersale-source",
+          "aftersale-log"
+        ],
+        "workflow": [
+          "new",
+          "adopt",
+          "create",
+          "timeline",
+          "revise",
+          "withdraw"
+        ],
+        "proposalVersions": [
+          1,
+          2
+        ],
+        "approvalPreview": true,
+        "receiptReadback": true,
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-58cbc51f-34c8-46e6-8679-19eb5e59c5a2",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "隔离 SKU 的数量差异需要内部核对。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "priority": {
+                "from": null,
+                "to": "high"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "expiresAt": "2026-09-11T06:23:24.668Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-222abdb9-25ed-4c73-8b3a-323942ae1c98",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v1/timeline",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-cf57b839-1d11-4aa1-b4d7-445d6727d6c4",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "核对正式来源，确认差异后再决定内部处置路径。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "priority": {
+                "from": "high",
+                "to": "normal"
+              },
+              "summary": {
+                "from": "核对正式来源，确认差异后再决定内部处置路径。",
+                "to": "隔离替代版本：继续核对正式来源。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T06:23:24.820Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-70368c41-b4bb-42ba-b1c7-c2c738d31f4a",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-647449d2-8569-436e-a7ce-90d12932c6cd",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回当前内部处理提案"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/observations/proposal-isolated-observation/leases/lease-isolated-observation",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v1/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v1/timeline",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v2/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v2/withdraw",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/observations/proposal-isolated-observation/leases/lease-isolated-observation",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "actionWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-58cbc51f-34c8-46e6-8679-19eb5e59c5a2",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "隔离 SKU 的数量差异需要内部核对。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "priority": {
+                "from": null,
+                "to": "high"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "expiresAt": "2026-09-11T06:23:24.668Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-222abdb9-25ed-4c73-8b3a-323942ae1c98",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-cf57b839-1d11-4aa1-b4d7-445d6727d6c4",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "核对正式来源，确认差异后再决定内部处置路径。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "priority": {
+                "from": "high",
+                "to": "normal"
+              },
+              "summary": {
+                "from": "核对正式来源，确认差异后再决定内部处置路径。",
+                "to": "隔离替代版本：继续核对正式来源。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T06:23:24.820Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-70368c41-b4bb-42ba-b1c7-c2c738d31f4a",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-647449d2-8569-436e-a7ce-90d12932c6cd",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回当前内部处理提案"
+          }
+        }
+      ],
+      "viewReads": 3,
+      "workspaceReads": 3,
+      "readinessReads": 3,
+      "observationReads": 1
+    },
+    {
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "filters": [
+          "全部",
+          "订单与履约",
+          "库存与告警",
+          "售后与工单"
+        ],
+        "searches": [
+          "order-hit",
+          "no-match",
+          "cleared"
+        ],
+        "details": [
+          "order-source",
+          "order-log",
+          "aftersale-source",
+          "aftersale-log"
+        ],
+        "workflow": [
+          "new",
+          "adopt",
+          "create",
+          "timeline",
+          "revise",
+          "withdraw"
+        ],
+        "proposalVersions": [
+          1,
+          2
+        ],
+        "approvalPreview": true,
+        "receiptReadback": true,
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-5b0d1c26-d76b-4a28-8134-3ad7ac468d92",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "隔离 SKU 的数量差异需要内部核对。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "priority": {
+                "from": null,
+                "to": "high"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "expiresAt": "2026-09-11T06:23:26.519Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-16e3d90e-1447-4270-8c81-b1db0be0c379",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v1/timeline",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-68e0cff4-cb43-4e61-914d-ac2fb210c2d5",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "核对正式来源，确认差异后再决定内部处置路径。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "priority": {
+                "from": "high",
+                "to": "normal"
+              },
+              "summary": {
+                "from": "核对正式来源，确认差异后再决定内部处置路径。",
+                "to": "隔离替代版本：继续核对正式来源。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T06:23:26.669Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-ddcf8f2d-190e-40f6-921b-24fef6965af0",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-1549920d-1407-4818-b7fa-ea67c88bbb46",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回当前内部处理提案"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/observations/proposal-isolated-observation/leases/lease-isolated-observation",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v1/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v1/timeline",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v2/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v2/withdraw",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/observations/proposal-isolated-observation/leases/lease-isolated-observation",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "actionWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-5b0d1c26-d76b-4a28-8134-3ad7ac468d92",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "隔离 SKU 的数量差异需要内部核对。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "priority": {
+                "from": null,
+                "to": "high"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "expiresAt": "2026-09-11T06:23:26.519Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-16e3d90e-1447-4270-8c81-b1db0be0c379",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-68e0cff4-cb43-4e61-914d-ac2fb210c2d5",
+          "body": {
+            "actionTypeId": "ecommerce.operation.create-case",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "ProductSku",
+              "resourceId": "isolated:sku:74",
+              "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "authority": "ecommerce-workshop.operation-case-workspace"
+            },
+            "purpose": "隔离库存资料待核对",
+            "riskHint": "R2",
+            "payload": {
+              "candidateId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "priority": "high",
+              "summary": "核对正式来源，确认差异后再决定内部处置路径。",
+              "memberRefs": [
+                {
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "resourceType": "ProductSku",
+                  "resourceId": "isolated:sku:74",
+                  "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "sourceUpdatedAt": "2026-08-24T13:00:00Z"
+                }
+              ],
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "priority": {
+                "from": "high",
+                "to": "normal"
+              },
+              "summary": {
+                "from": "核对正式来源，确认差异后再决定内部处置路径。",
+                "to": "隔离替代版本：继续核对正式来源。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "ProductSku",
+                "resourceId": "isolated:sku:74",
+                "revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                "authority": "ecommerce-workshop.operation-case-workspace"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T06:23:26.669Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/draft-isolated-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-ddcf8f2d-190e-40f6-921b-24fef6965af0",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/proposal-isolated-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-1549920d-1407-4818-b7fa-ea67c88bbb46",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回当前内部处理提案"
+          }
+        }
+      ],
+      "viewReads": 3,
+      "workspaceReads": 3,
+      "readinessReads": 3,
+      "observationReads": 1
+    }
+  ],
+  "boundaries": [
+    "Formal operations facts, command readiness, candidates, and observations remained GET-only.",
+    "Approval preview was local text only; no approval, lease, execution, refund, or shipment request was made.",
+    "No Provider, customer contact, payment, production migration, release, push, or real business mutation was attempted."
+  ]
+}

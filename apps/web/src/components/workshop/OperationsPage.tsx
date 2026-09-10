@@ -156,7 +156,12 @@ export function OperationsPage({ client = ecommerceWorkshopClient, actions = aip
     const id = ++request.current; setPhase("loading"); setResponse(null); setCommandReadiness(null); setObservation(null); setObservationState("idle"); setObservationError(""); setDetailPanel(null);
     void Promise.all([client.getOperationsView(), client.getOperationCommandReadiness(), client.getOperationCaseWorkspace ? client.getOperationCaseWorkspace() : Promise.resolve(null)]).then(([next, nextCommands, nextWorkspace]) => { if (id !== request.current) return; if (next.tenant.orgId !== nextCommands.tenant.orgId || next.tenant.projectId !== nextCommands.tenant.projectId || (nextWorkspace && (next.tenant.orgId !== nextWorkspace.tenant.orgId || next.tenant.projectId !== nextWorkspace.tenant.projectId))) throw new TypeError("operations dependency tenant 漂移"); const firstCandidate = nextWorkspace?.candidates[0]; setResponse(next); setCommandReadiness(nextCommands); setWorkspace(nextWorkspace); setSelectedCandidateId(firstCandidate?.candidateId ?? null); setSelected(sliceForCandidate(firstCandidate) ?? pickDefaultOperationsSlice(next.slices)?.sliceId ?? "orders"); setPhase(deriveWorkshopViewState(next.slices, next.page.count)); }, (error: unknown) => { if (id === request.current) setPhase(phaseFor(error)); });
   };
-  useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
+  useEffect(() => {
+    const refresh = () => load();
+    load();
+    window.addEventListener("aos-workshop-operation-refresh", refresh);
+    return () => { window.removeEventListener("aos-workshop-operation-refresh", refresh); request.current += 1; };
+  }, [client]);
   useEffect(() => { const search = (event: Event) => setQuery(String((event as CustomEvent).detail?.value ?? "")); window.addEventListener("aos-workshop-operation-search", search); return () => window.removeEventListener("aos-workshop-operation-search", search); }, []);
   const readObservation = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

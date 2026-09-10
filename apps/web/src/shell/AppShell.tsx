@@ -293,7 +293,7 @@ type WorkshopVisualHeaderSpec = {
 };
 
 const WORKSHOP_VISUAL_HEADERS: Record<string, WorkshopVisualHeaderSpec> = {
-  "/workshop/operations": { brand: "栖月汇微商城", title: "统一运营驾驶舱", search: "搜索订单号、SKU、告警关键词…", actions: ["筛选", "＋ 新建处理"] },
+  "/workshop/operations": { brand: "栖月汇微商城", title: "统一运营驾驶舱", search: "搜索订单号、SKU、告警关键词…", actions: ["筛选", "重新读取", "＋ 新建处理"] },
   "/workshop/content-campaign": { brand: "栖月汇微商城", title: "内容与活动工作台", search: "搜索活动、内容、商品…", actions: ["保存草稿", "批准并发布"] },
   "/workshop/creator-growth": { brand: "栖月汇微商城", title: "达人邀约驾驶舱", search: "搜索达人、机构、邀约记录…", actions: ["导入达人", "＋ 新建邀约批次"] },
   "/workshop/media-studio": { brand: "栖月汇微商城", title: "多媒体内容生产", search: "搜索文案、视频、直播任务…", context: "栖月汇微商城", actions: ["查看内容计划", "＋ 新建内容任务"] },
@@ -306,9 +306,10 @@ function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
   const navigate = useNavigate();
   const searchRef = useRef<HTMLInputElement>(null);
   if (!spec) return null;
-  const isExecutableAction = (label: string) => label === "筛选" || label === "查看内容计划";
+  const isExecutableAction = (label: string) => label === "筛选" || label === "重新读取" || label === "查看内容计划";
   const runHeaderAction = (label: string) => {
     if (label === "筛选") { searchRef.current?.focus(); if (pathname === "/workshop/operations") window.dispatchEvent(new CustomEvent("aos-workshop-operation-search", { detail: { value: searchRef.current?.value ?? "" } })); return; }
+    if (label === "重新读取" && pathname === "/workshop/operations") { window.dispatchEvent(new CustomEvent("aos-workshop-operation-refresh")); return; }
     if (label === "＋ 新建处理" && pathname === "/workshop/operations") { window.dispatchEvent(new CustomEvent("aos-workshop-operation-new")); return; }
     if (label === "导入达人" && pathname === "/workshop/creator-growth") { window.dispatchEvent(new CustomEvent("aos-workshop-creator-import")); return; }
     if (label === "＋ 新建邀约批次" && pathname === "/workshop/creator-growth") { window.dispatchEvent(new CustomEvent("aos-workshop-creator-new-batch")); return; }
@@ -329,7 +330,7 @@ function WorkshopPrimaryVisualHeader({ pathname }: { pathname: string }) {
       {spec.context ? <span>{spec.context}</span> : null}
       {spec.actions.map((label, index) => {
         const executable = isExecutableAction(label);
-        return <button key={label} type="button" className={index === spec.actions.length - 1 ? "is-primary" : ""} disabled={!executable} title={label === "筛选" ? "聚焦当前页业务检索" : label === "查看内容计划" ? "打开内容与活动工作台" : label === "＋ 新建处理" ? "从当前正式业务对象创建内部处理提案" : label === "导入达人" ? "打开候选来源与筛选条件准备" : label === "＋ 新建邀约批次" ? "打开邀约批次条件准备" : label === "＋ 新建内容任务" ? "打开内部生产任务准备" : "需要当前页正式业务数据与内部工作流就绪"} onClick={() => runHeaderAction(label)}>{label}</button>;
+        return <button key={label} type="button" className={index === spec.actions.length - 1 ? "is-primary" : ""} disabled={!executable} title={label === "筛选" ? "聚焦当前页业务检索" : label === "重新读取" ? "重新读取当前租户的正式运营数据" : label === "查看内容计划" ? "打开内容与活动工作台" : label === "＋ 新建处理" ? "从当前正式业务对象创建内部处理提案" : label === "导入达人" ? "打开候选来源与筛选条件准备" : label === "＋ 新建邀约批次" ? "打开邀约批次条件准备" : label === "＋ 新建内容任务" ? "打开内部生产任务准备" : "需要当前页正式业务数据与内部工作流就绪"} onClick={() => runHeaderAction(label)}>{label}</button>;
       })}
     </div>
   </>;

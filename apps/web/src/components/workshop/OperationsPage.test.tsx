@@ -157,4 +157,15 @@ describe("OperationsPage", () => {
     expect(actions.withdraw).toHaveBeenCalled();
     expect(host.textContent).toContain("未触发业务执行");
   });
+  it("收到主视觉刷新动作后重新读取三个正式只读依赖", async () => {
+    const client = { getOperationsView: vi.fn().mockResolvedValue(response), getOperationCommandReadiness: vi.fn().mockResolvedValue(commands), getOperationCaseWorkspace: vi.fn().mockResolvedValue(workspace), getOperationCommandObservation: vi.fn().mockResolvedValue(observation) };
+    await act(async () => root.render(<OperationsPage client={client} />));
+    expect(client.getOperationsView).toHaveBeenCalledTimes(1);
+    expect(client.getOperationCommandReadiness).toHaveBeenCalledTimes(1);
+    expect(client.getOperationCaseWorkspace).toHaveBeenCalledTimes(1);
+    await act(async () => window.dispatchEvent(new CustomEvent("aos-workshop-operation-refresh")));
+    expect(client.getOperationsView).toHaveBeenCalledTimes(2);
+    expect(client.getOperationCommandReadiness).toHaveBeenCalledTimes(2);
+    expect(client.getOperationCaseWorkspace).toHaveBeenCalledTimes(2);
+  });
 });
