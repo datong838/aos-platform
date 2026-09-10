@@ -114,7 +114,19 @@ class AipModelGovernancePolicyStore:
 
     def require_model_dependencies(self, scope: TenantScope, model: Any) -> None:
         self.require_exact_active(scope, model.quota_policy_ref)
-        self.require_exact_active(scope, model.budget_policy_ref)
+        budget = self.require_exact_active(scope, model.budget_policy_ref)
+        authorization = getattr(budget, 'development_cost_authorization', None)
+        if authorization is not None:
+            try:
+                authorization.require_scope(
+                    scope=scope, provider=model.provider,
+                    provider_model_id=model.provider_model_id,
+                    approval_ref=budget.approval_ref, now=datetime.now(UTC),
+                )
+            except ValueError:
+                raise ModelGovernancePolicyDependencyBlocked(
+                    'development cost authorization does not cover model'
+                ) from None
 
     def require_runtime_policy_dependencies(self, scope: TenantScope, policy: Any) -> None:
         self.require_exact_active(scope, policy.quota_policy_ref)
