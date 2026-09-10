@@ -71,3 +71,13 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 文件：services/aos-api/aos_api/ecom_consistency_store.py和tests/test_ecom_consistency_store.py；测试基础/派生后未投影、逐步投影完成、缺派生Receipt、不同请求同key、无关队列不影响、事件缺失与无变化派生零事件。该读取作为Dataset持久幂等记录下一步前置，尚未接实际Dataset，不算全链完成。
 
 同轮补充ec_ingress_recovery.read_saved_projection_completion：从Journal完整保存清单读取，不接受外部传入派生子集；当前绑定/原run锁沿用。Store低层接口只证明所传命令集合，Dataset应使用Journal包装入口。
+
+## Dataset不可变结果回执与稳定Build
+
+2026-09-11，基线6841d170。新增a0v007 ecommerce_ingress_dataset_receipt，scope/run唯一、父Ingress FK、payload hash、不可变UPDATE/DELETE/TRUNCATE和FORCE RLS；复用a0v005不可变触发函数。data_os_store将既有Dataset+历史写入提取为调用方事务内部函数，原入口保持提交行为。新finalize_saved_dataset先锁run/核验当前绑定，从Journal完整清单核验基础派生及原事件pending=0，再同事务写Dataset元数据/历史和不可变回执。回执包含父/派生hash、固定完成时间、确定性Build ID与行数，连接成功退出后才发布内存。重试回读回执，不重写DB；Build使用同一ID/时间，内存丢失可恢复。
+
+文件：services/aos-api/alembic/versions/a0v_007_ingress_dataset_receipt.py；aos_api/data_os_store.py、ec_ingress_recovery.py、新ec_ingress_dataset.py；tests/aip/test_a0v_ingress_journal_pg.py扩展真实PG组合。测试receipt失败使Dataset与历史回滚、投影未完成拒绝、成功后重复不新增Build、内存发布故障后从回执恢复、canary及不可变。既有Dataset事务专项回归。
+
+不自动改变调度/DLQ状态；旧Dataset历史替换语义保持，运行回执单独永久保存，不以可覆盖历史作权威。调用方工厂须成功退出commit；public不迁移，实际调度/初始保存后续接入。Dataset当前展示可有后续批次，旧run重放不得回写旧元数据覆盖新批。
+
+本轮最终核查修正无变化派生完成门：无新事件不代表有效派生视图已投影。通过相同身份/derived_revision/input_revision/input_hash/payload_hash的updated=true前序Receipt定位有效派生事件，必须计入pending；原“零事件即可”结论撤回。新增修改ecom_consistency_store.py及相应专项，避免Dataset先于有效派生视图成功。

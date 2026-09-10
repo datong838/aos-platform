@@ -352,6 +352,15 @@ def persist_dataset(
 ) -> None:
     scope = _require_scope(scope)
     ensure_data_os_schema()
+    with connect(scope) as conn:
+        _persist_dataset_in_transaction(conn,scope,item,history_entries=history_entries)
+        conn.commit()
+
+
+def _persist_dataset_in_transaction(conn, scope: TenantScope, item: dict[str, Any], *,
+                                    history_entries: list[dict[str, Any]] | None = None) -> None:
+    """Existing Dataset owner SQL, with commit retained by the caller."""
+    scope = _require_scope(scope)
     props = {
         k: v
         for k, v in item.items()
@@ -370,40 +379,38 @@ def persist_dataset(
             "projectId",
         }
     }
-    with connect(scope) as conn:
-        row = conn.execute(
-            """
-            INSERT INTO meta_dataset
-              (rid, name, display_name, pipeline_id, source_id, status, object_type_hint,
-               created_at, updated_at, props, org_id, project_id)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)
-            ON CONFLICT (org_id, project_id, rid) DO UPDATE SET
-              name=EXCLUDED.name, display_name=EXCLUDED.display_name,
-              pipeline_id=EXCLUDED.pipeline_id, source_id=EXCLUDED.source_id,
-              status=EXCLUDED.status, object_type_hint=EXCLUDED.object_type_hint,
-              updated_at=EXCLUDED.updated_at, props=EXCLUDED.props
-            WHERE meta_dataset.org_id=EXCLUDED.org_id
-              AND meta_dataset.project_id=EXCLUDED.project_id
-            RETURNING rid
-            """,
-            (
-                item["rid"],
-                item.get("name") or item["rid"],
-                item.get("displayName"),
-                item.get("pipelineId"),
-                item.get("sourceId"),
-                item.get("status") or "READY",
-                item.get("objectTypeHint"),
-                item.get("createdAt"),
-                item.get("updatedAt"),
-                json.dumps(props, ensure_ascii=False, default=str),
-                *scope.key,
-            ),
-        ).fetchone()
-        _assert_scoped_upsert(row, resource="dataset", resource_id=str(item["rid"]))
-        if history_entries is not None:
-            _replace_dataset_history(conn, scope, str(item["rid"]), history_entries)
-        conn.commit()
+    row = conn.execute(
+        """
+        INSERT INTO meta_dataset
+          (rid, name, display_name, pipeline_id, source_id, status, object_type_hint,
+           created_at, updated_at, props, org_id, project_id)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)
+        ON CONFLICT (org_id, project_id, rid) DO UPDATE SET
+          name=EXCLUDED.name, display_name=EXCLUDED.display_name,
+          pipeline_id=EXCLUDED.pipeline_id, source_id=EXCLUDED.source_id,
+          status=EXCLUDED.status, object_type_hint=EXCLUDED.object_type_hint,
+          updated_at=EXCLUDED.updated_at, props=EXCLUDED.props
+        WHERE meta_dataset.org_id=EXCLUDED.org_id
+          AND meta_dataset.project_id=EXCLUDED.project_id
+        RETURNING rid
+        """,
+        (
+            item["rid"],
+            item.get("name") or item["rid"],
+            item.get("displayName"),
+            item.get("pipelineId"),
+            item.get("sourceId"),
+            item.get("status") or "READY",
+            item.get("objectTypeHint"),
+            item.get("createdAt"),
+            item.get("updatedAt"),
+            json.dumps(props, ensure_ascii=False, default=str),
+            *scope.key,
+        ),
+    ).fetchone()
+    _assert_scoped_upsert(row, resource="dataset", resource_id=str(item["rid"]))
+    if history_entries is not None:
+        _replace_dataset_history(conn, scope, str(item["rid"]), history_entries)
 
 
 def persist_sync(scope: TenantScope, item: dict[str, Any]) -> None:

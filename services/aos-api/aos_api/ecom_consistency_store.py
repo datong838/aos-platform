@@ -513,13 +513,31 @@ class EcomConsistencyStore:
                 raise EcomConsistencyError('BASE_RECEIPT_REQUIRED','exact base receipt required')
             result = BatchResult.model_validate(base['result'])
             expected = result.objects_written+result.objects_tombstoned+result.links_written+result.links_tombstoned
-            groups = [(base['request_hash'],expected)]
+            groups = [((base['request_hash'],),expected)]
             for item in derived:
                 receipt = self._read_derived_receipt(conn,item)
                 if receipt is None:
                     raise EcomConsistencyError('DERIVED_RECEIPT_REQUIRED','committed derived receipt required')
                 saved = DerivedMetricResult.model_validate(receipt['result_json'])
-                groups.append((receipt['request_hash'],int(saved.updated)))
+                if saved.updated:
+                    groups.append(((receipt['request_hash'],),1))
+                else:
+                    # A no-change receipt has no new event, but the effective
+                    # prior derived write must still have reached projection.
+                    candidates = conn.execute(select(ecom_derived_receipt.c.request_hash,ecom_derived_receipt.c.result_json).where(
+                        ecom_derived_receipt.c.org_id == item.identity.org_id,
+                        ecom_derived_receipt.c.project_id == item.identity.workspace_id,
+                        ecom_derived_receipt.c.object_type == item.object_type,
+                        ecom_derived_receipt.c.external_id == item.identity.external_id,
+                        ecom_derived_receipt.c.derived_revision == saved.resulting_revision,
+                        ecom_derived_receipt.c.input_revision == item.input_revision,
+                        ecom_derived_receipt.c.input_hash == item.input_hash,
+                        ecom_derived_receipt.c.payload_hash == saved.payload_hash,
+                    )).mappings().all()
+                    hashes = tuple(row['request_hash'] for row in candidates if row['result_json'].get('updated') is True)
+                    if not hashes:
+                        raise EcomConsistencyError('DERIVED_PREDECESSOR_REQUIRED','effective derived write receipt required')
+                    groups.append((hashes,1))
             total = projected = 0
             for authority,count in groups:
                 events = conn.execute(select(projection_outbox.c.projected).where(
@@ -528,7 +546,7 @@ class EcomConsistencyStore:
                     projection_outbox.c.platform == command.scope.platform,
                     projection_outbox.c.shop_or_marketplace_id == command.scope.shop_or_marketplace_id,
                     projection_outbox.c.event_source == 'authoritative_store',
-                    projection_outbox.c.authority_tx_id == authority,
+                    projection_outbox.c.authority_tx_id.in_(authority),
                 )).scalars().all()
                 if len(events) != count:
                     raise EcomConsistencyError('OUTBOX_INCOMPLETE','original command outbox evidence is incomplete')

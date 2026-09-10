@@ -136,10 +136,12 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
     revision = str(uuid4())
     database.owner.execute('CREATE TABLE data_source_configuration_revision(org_id text,project_id text,source_id text,revision_id uuid,PRIMARY KEY(org_id,project_id,source_id,revision_id))')
     database.owner.execute("INSERT INTO data_source_configuration_revision VALUES('org-org','dev-project','source',%s)",(revision,))
-    for filename in ('a0v_005_ingress_command_journal.py','a0v_006_ingress_derived_journal.py'):
+    for filename in ('a0v_005_ingress_command_journal.py','a0v_006_ingress_derived_journal.py','a0v_007_ingress_dataset_receipt.py'):
         spec=importlib.util.spec_from_file_location('migration',ROOT/'alembic/versions'/filename)
         migration=importlib.util.module_from_spec(spec);spec.loader.exec_module(migration)
         migration.op=SimpleNamespace(execute=database.owner.execute);migration.upgrade()
+        if filename.startswith('a0v_007'):
+            migration.downgrade();migration.upgrade()
     database.owner.execute('CREATE TABLE meta_schedule_run(org_id text,project_id text,id text,schedule_id text,status text)')
     database.owner.execute('CREATE TABLE meta_schedule(org_id text,project_id text,id text,pipeline_id text,enabled boolean,ingest jsonb)')
     database.owner.execute('CREATE TABLE phase5_pipeline_graph(org_id text,project_id text,pipeline_id text,payload jsonb)')
@@ -183,6 +185,53 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
         with engine.connect() as conn:
             assert conn.execute(select(func.count()).select_from(ecom_ingest_receipt)).scalar_one()==1
             assert conn.execute(select(func.count()).select_from(ecom_derived_receipt)).scalar_one()==1
+        from aos_api.ec_ingress_dataset import finalize_saved_dataset
+        from aos_api.phase5_pipeline_engine import PipelineEngine
+        from sqlalchemy import update
+        from aos_api.ecom_consistency_store import projection_outbox
+        for table in ('meta_dataset','meta_dataset_history'):
+            database.owner.execute(f'CREATE TABLE {table} (LIKE public.{table} INCLUDING ALL)')
+            database.owner.execute(f'GRANT SELECT,INSERT,UPDATE,DELETE ON {table} TO aos_runtime')
+        database.owner.execute('CREATE SEQUENCE local_dataset_history_id')
+        database.owner.execute("ALTER TABLE meta_dataset_history ALTER COLUMN id SET DEFAULT nextval('local_dataset_history_id')")
+        database.owner.execute('GRANT USAGE ON SEQUENCE local_dataset_history_id TO aos_runtime')
+        eng=object.__new__(PipelineEngine);eng._datasets={};eng._builds={}
+        with pytest.raises(IngressJournalConflict,match='INGRESS_PROJECTION_PENDING'):
+            finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)
+        with engine.begin() as conn:
+            conn.execute(update(projection_outbox).values(projected=True))
+        database.owner.execute('ALTER TABLE ecommerce_ingress_dataset_receipt ADD CONSTRAINT reject_test CHECK(false)')
+        with pytest.raises(errors.CheckViolation):
+            finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)
+        assert database.owner.execute('SELECT count(*) AS n FROM meta_dataset').fetchone()['n']==0
+        assert database.owner.execute('SELECT count(*) AS n FROM meta_dataset_history').fetchone()['n']==0
+        assert eng._datasets=={}
+        database.owner.execute('ALTER TABLE ecommerce_ingress_dataset_receipt DROP CONSTRAINT reject_test')
+        real_add=eng.add_build
+        def fail_publish(*args,**kwargs):
+            raise RuntimeError('SIMULATED_MEMORY_PUBLISH_FAILURE')
+        monkeypatch.setattr(eng,'add_build',fail_publish)
+        with pytest.raises(RuntimeError,match='SIMULATED_MEMORY_PUBLISH_FAILURE'):
+            finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)
+        committed=database.owner.execute('SELECT payload FROM ecommerce_ingress_dataset_receipt').fetchone()['payload']
+        monkeypatch.setattr(eng,'add_build',real_add)
+        first=finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)
+        assert first==committed
+        assert finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)==first
+        assert len(eng.list_builds(scope,first['dataset']['rid']))==1
+        eng.create_dataset(scope,id=first['dataset']['rid'],name='newer',updated_at=first['dataset']['updatedAt']+10)
+        database.owner.execute("UPDATE meta_dataset SET name='newer'")
+        assert finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)==first
+        assert eng.get_dataset(scope,first['dataset']['rid']).name=='newer'
+        assert database.owner.execute('SELECT name FROM meta_dataset').fetchone()['name']=='newer'
+
+        assert database.owner.execute('SELECT count(*) AS n FROM ecommerce_ingress_dataset_receipt').fetchone()['n']==1
+        with factory(TenantScope('dev-org','dev-project')) as conn:
+            assert conn.execute('SELECT * FROM ecommerce_ingress_dataset_receipt').fetchone() is None
+        with pytest.raises(errors.RaiseException),database.owner.transaction():
+            database.owner.execute('DELETE FROM ecommerce_ingress_dataset_receipt')
+        with pytest.raises(errors.RaiseException),database.owner.transaction():
+            migration.downgrade()
         database.owner.execute("UPDATE meta_source SET status='disabled'")
         with pytest.raises(IngressJournalConflict,match='INGRESS_SOURCE_CONFIGURATION_DRIFT'):
             recover_saved_authoritative_stages(factory,scope,'run',journal=journal,store=store)

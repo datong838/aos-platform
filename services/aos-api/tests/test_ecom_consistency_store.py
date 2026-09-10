@@ -848,7 +848,7 @@ def test_exact_completion_rejects_duplicate_or_unrelated_derived(store):
             store.read_batch_projection_completion(base,commands)
 
 
-def test_no_change_derived_receipt_requires_no_new_projection_event(store):
+def test_no_change_derived_receipt_requires_prior_effective_event_projection(store):
     payment={'orderId':'o-1','outTradeNo':'t-1','payStatus':'1','updatedAt':NOW}
     base=batch(obj('Payment','payment-1',properties=payment),batch_scope=scope(stream='P12-payment'))
     store.apply_batch(base)
@@ -856,7 +856,10 @@ def test_no_change_derived_receipt_requires_no_new_projection_event(store):
     store.update_derived_metrics(first)
     unchanged=first.model_copy(update={'idempotency_key':'unchanged','expected_derived_revision':1})
     assert store.update_derived_metrics(unchanged).updated is False
-    assert store.read_batch_projection_completion(base,[unchanged])=={'expected':1,'projected':0,'pending':1}
+    assert store.read_batch_projection_completion(base,[unchanged])=={'expected':2,'projected':0,'pending':2}
+    with store._engine.begin() as conn:
+        conn.execute(update(projection_outbox).where(projection_outbox.c.authority_tx_id==base.request_hash()).values(projected=True))
+    assert store.read_batch_projection_completion(base,[unchanged])=={'expected':2,'projected':1,'pending':1}
     with store._engine.begin() as conn:
         conn.execute(update(projection_outbox).values(projected=True))
-    assert store.read_batch_projection_completion(base,[unchanged])=={'expected':1,'projected':1,'pending':0}
+    assert store.read_batch_projection_completion(base,[unchanged])=={'expected':2,'projected':2,'pending':0}
