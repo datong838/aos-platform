@@ -3270,6 +3270,78 @@ class AipProductionContractStore:
         with self._connect_factory(scope) as c:
             return read(c)
 
+    def read_disclosed_evidence_source(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        actor: str,
+        decision_id: str,
+        body: ResolveEvidenceDisclosureRequest,
+        *,
+        markings: list[str],
+    ) -> dict[str, Any]:
+        """Materialize a current L3 decision; this is not a Provider dispatch grant."""
+        decision = self.get_evidence_disclosure(scope, decision_id, conn=conn)
+        denied = "EVIDENCE_SOURCE_DISCLOSURE_DENIED"
+        if (
+            decision.created_by != actor
+            or decision.status is not DisclosureStatus.ALLOWED
+            or decision.granted_level is not DisclosureLevel.L3
+            or decision.requested_level is not DisclosureLevel.L3
+            or body.requested_level is not DisclosureLevel.L3
+            or body.purpose.value not in {"source", "audit"}
+            or decision.purpose != body.purpose.value
+            or decision.evidence_ref.model_dump() != body.evidence_ref.model_dump()
+            or decision.expires_at is None
+            or decision.expires_at <= datetime.now(timezone.utc)
+        ):
+            raise ProductionContractDependencyBlocked(denied)
+        decision_ref = {
+            "resourceType": "EvidenceDisclosureDecision",
+            "resourceId": decision_id,
+            "revision": 1,
+            "contentHash": decision.decision_hash,
+        }
+        receipt = conn.execute(
+            """SELECT receipt_id FROM aip_production_contract_receipt
+               WHERE org_id=%s AND project_id=%s
+                 AND operation='evidence_disclosure.resolve' AND created_by=%s
+                 AND request_hash=%s AND result_ref=%s::jsonb""",
+            (*scope.key, actor,
+             canonical_hash(body.model_dump(mode="json", by_alias=True)),
+             self._json(decision_ref)),
+        ).fetchone()
+        if receipt is None:
+            raise ProductionContractDependencyBlocked(denied)
+
+        def check_current() -> None:
+            current = self._evaluate_disclosure(conn, scope, actor, body, markings=markings)
+            if (
+                current.status is not DisclosureStatus.ALLOWED
+                or current.granted_level is not DisclosureLevel.L3
+                or decision.expires_at <= datetime.now(timezone.utc)
+            ):
+                raise ProductionContractDependencyBlocked(denied)
+
+        check_current()
+        row = conn.execute(
+            """SELECT content_hash,payload FROM aip_evidence
+               WHERE org_id=%s AND project_id=%s AND evidence_id=%s""",
+            (*scope.key, body.evidence_ref.resource_id),
+        ).fetchone()
+        if row is None or row["content_hash"] != body.evidence_ref.content_hash:
+            raise ProductionContractDependencyBlocked(denied)
+        payload = self._load(row["payload"])
+        if not isinstance(payload, dict):
+            raise ProductionContractDependencyBlocked(denied)
+        check_current()
+        return {
+            "evidenceRef": body.evidence_ref.model_dump(mode="json", by_alias=True),
+            "disclosureRef": decision_ref,
+            "expiresAt": decision.expires_at.isoformat(),
+            "payload": payload,
+        }
+
     def freeze_production_context(
         self,
         scope: TenantScope,

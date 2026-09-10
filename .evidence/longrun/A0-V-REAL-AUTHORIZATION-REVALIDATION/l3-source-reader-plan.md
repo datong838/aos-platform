@@ -1,0 +1,9 @@
+# 受控L3来源正文读取
+
+基线93768a1e；231-6真实经营首链前置，原目标不变。现有L3返回短期句柄，缺少获取完整Evidence payload的Owner方法。新增内部read_disclosed_evidence_source，暂不注册HTTP/API或接Provider。
+
+输入：现有连接、tenant、actor、decisionId、原ResolveEvidenceDisclosureRequest和当前principal markings。使用持久Decision限定ALLOWED/L3/source或audit/未到期/相同actor与Evidence；以现有resolve Receipt的完整request_hash与exact result_ref绑定原taskId及subjectRef。调用共享policy评估复验撤销、marking、license、适用性、freshness；回读exact正文并在返回前复验有效期及policy。返回原payload、EvidenceRef、decisionRef、有效期，不获取任意URL、不打印正文、不推断商品字段。
+
+修改services/aos-api/aos_api/aip_production_contract_store.py；测试services/aos-api/tests/aip/test_evidence_disclosed_source.py。验证成功正文不截断，主体/请求/层级/有效期/当前策略/正文hash漂移拒绝；不生成新的披露授权以延长旧lease。
+
+风险与后续：这是读取边界检查，不是持有到模型发送的授权。读取结束后仍可发生撤销，真正发送边界必须结合worker当前authority复验；禁止仅凭返回payload缓存调用Provider。并发PG及实际source映射仍需后续验证；不声称本项已接通真实首链。无迁移，不改变现有接口，不写业务数据；独立revert可回滚。
