@@ -1,0 +1,1007 @@
+{
+  "collectedAt": "2026-09-10T10:56:47.234368+00:00",
+  "observations": {
+    "canary": {
+      "agentRegistry": {
+        "body": {
+          "code": "AIP_ECOMMERCE_CATALOG_INVALID",
+          "details": null,
+          "message": "ecommerce agent definitions differ from 6-role authority",
+          "traceId": "feb8e7d7-2619-4773-8046-a1c9cb144ced"
+        },
+        "bodySha256": "ce78ee6e06d1dd2a97419a75e0a5822b4a8440a1ea78f94db511ab7c05e9497f",
+        "httpStatus": 409,
+        "method": "GET",
+        "path": "/v1/aip/agent-registry"
+      },
+      "agentRuntimeReadiness": {
+        "body": {
+          "code": "AIP_ECOMMERCE_CATALOG_INVALID",
+          "details": null,
+          "message": "ecommerce agent definitions differ from 6-role authority",
+          "traceId": "d16e59cf-b15f-4256-8753-642e90a0db03"
+        },
+        "bodySha256": "04646d0973cfc1883549d066cda2188fa884f5ee10581a5733bc6041ca761704",
+        "httpStatus": 409,
+        "method": "GET",
+        "path": "/v1/aip/agent-registry/runtime-readiness"
+      },
+      "bundleInstallations": {
+        "body": {
+          "items": [],
+          "limit": 100,
+          "offset": 0,
+          "total": 0
+        },
+        "bodySha256": "c5fb109584e651b55dea36c077a25c3fb84bd1fa60edf98a43496ee995c92840",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/bundle-installations?limit=100&offset=0"
+      },
+      "capabilityCatalog": {
+        "body": {
+          "code": "AIP_ECOMMERCE_CATALOG_INVALID",
+          "details": null,
+          "message": "ecommerce agent definitions differ from 6-role authority",
+          "traceId": "ad733ac9-b910-4441-9176-3f867ee87b13"
+        },
+        "bodySha256": "632439c9911052f816c9e78ac007fdeb30bb376e68fc4693a8d7de38626d0901",
+        "httpStatus": 409,
+        "method": "GET",
+        "path": "/v1/aip/capability-catalog"
+      },
+      "modelChain": {
+        "body": {
+          "chains": [],
+          "generatedAt": "2026-09-10T10:56:47.007419Z",
+          "modelImpacts": [],
+          "taskTraces": [],
+          "tenant": {
+            "orgId": "dev-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "67b078fcd45eae078694cee27cabb90f60cf9c281be01233cdd1b06fba7aace4",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/model-runtime/chain-overview"
+      },
+      "modelCost": {
+        "body": {
+          "budgets": [],
+          "generatedAt": "2026-09-10T10:56:47.048628Z",
+          "modelPrices": [],
+          "quotas": [],
+          "tenant": {
+            "orgId": "dev-org",
+            "projectId": "dev-project"
+          },
+          "usage": {
+            "adjustmentCount": 0,
+            "costTotals": {},
+            "estimatedCount": 0,
+            "latestObservedAt": null,
+            "measuredCount": 0,
+            "periods": [
+              {
+                "attributionDimensions": [
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "tenant",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "tenant_scope"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "task",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "lineage"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "agent",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "logic",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "model",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  }
+                ],
+                "endsAt": "2026-09-10T10:56:47.048628Z",
+                "estimatedCount": 0,
+                "measuredCount": 0,
+                "period": "today",
+                "providerCounts": {},
+                "quantityTotals": {},
+                "receiptCount": 0,
+                "startsAt": "2026-09-09T16:00:00Z",
+                "timeZone": "Asia/Shanghai",
+                "unknownCount": 0
+              },
+              {
+                "attributionDimensions": [
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "tenant",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "tenant_scope"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "task",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "lineage"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "agent",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "logic",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "model",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  }
+                ],
+                "endsAt": "2026-09-10T10:56:47.048628Z",
+                "estimatedCount": 0,
+                "measuredCount": 0,
+                "period": "week",
+                "providerCounts": {},
+                "quantityTotals": {},
+                "receiptCount": 0,
+                "startsAt": "2026-09-03T10:56:47.048628Z",
+                "timeZone": "Asia/Shanghai",
+                "unknownCount": 0
+              },
+              {
+                "attributionDimensions": [
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "tenant",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "tenant_scope"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "task",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "lineage"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "agent",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "logic",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "model",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  }
+                ],
+                "endsAt": "2026-09-10T10:56:47.048628Z",
+                "estimatedCount": 0,
+                "measuredCount": 0,
+                "period": "month",
+                "providerCounts": {},
+                "quantityTotals": {},
+                "receiptCount": 0,
+                "startsAt": "2026-08-11T10:56:47.048628Z",
+                "timeZone": "Asia/Shanghai",
+                "unknownCount": 0
+              }
+            ],
+            "receiptCount": 0,
+            "state": "unobserved",
+            "truncated": false,
+            "unknownCount": 0
+          }
+        },
+        "bodySha256": "4ab361ee18b448a5cb222a92745d5a500e7ede0ab4d2fbb03413d52cedb05dd7",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/model-runtime/cost-overview"
+      },
+      "modelRuntime": {
+        "body": {
+          "capacityPools": [],
+          "evalGates": [],
+          "generatedAt": "2026-09-10T10:56:46.993467Z",
+          "healthObservations": [],
+          "models": [],
+          "policies": [],
+          "priceSnapshots": [],
+          "providers": [],
+          "resolutions": [],
+          "routes": [],
+          "tenant": {
+            "orgId": "dev-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "01ce8569db36aa6ced94485c01c344c40f945bc00fbd7c1206dea867ed313f7d",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/model-runtime/overview"
+      },
+      "productionContexts": {
+        "body": {
+          "count": 0,
+          "items": [],
+          "tenant": {
+            "orgId": "dev-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "416640cb11d092f669601f1bf996b88056d5548cd5725cad187d7bd30d4bb237",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/production-contracts/production-contexts"
+      },
+      "productionStartDecisions": {
+        "body": {
+          "count": 0,
+          "items": [],
+          "tenant": {
+            "orgId": "dev-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "416640cb11d092f669601f1bf996b88056d5548cd5725cad187d7bd30d4bb237",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/production-contracts/production-start-decisions"
+      },
+      "responsibilityPlans": {
+        "body": {
+          "count": 0,
+          "items": [],
+          "tenant": {
+            "orgId": "dev-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "416640cb11d092f669601f1bf996b88056d5548cd5725cad187d7bd30d4bb237",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/production-contracts/responsibility-plans"
+      },
+      "sourceReadiness": {
+        "body": {
+          "code": "INTERNAL",
+          "details": null,
+          "message": "internal error",
+          "traceId": "c708dc6b-0f74-445a-a3ff-dfb65b7c7be5"
+        },
+        "bodySha256": "d8ece26ca951ae1a6d183a463b6bff81f86c3b30d8eaac1c16fc894dbde26c39",
+        "httpStatus": 500,
+        "method": "GET",
+        "path": "/v1/data/source-readiness"
+      },
+      "stageTemplates": {
+        "body": {
+          "count": 0,
+          "items": [],
+          "tenant": {
+            "orgId": "dev-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "416640cb11d092f669601f1bf996b88056d5548cd5725cad187d7bd30d4bb237",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/production-contracts/stage-templates"
+      },
+      "taskBriefs": {
+        "body": {
+          "count": 0,
+          "items": [],
+          "tenant": {
+            "orgId": "dev-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "416640cb11d092f669601f1bf996b88056d5548cd5725cad187d7bd30d4bb237",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/production-contracts/task-briefs"
+      },
+      "workshopSourceReadiness": {
+        "body": {
+          "code": "WORKSHOP_NOT_INSTALLED",
+          "details": null,
+          "message": "No active ecommerce Workshop module is visible",
+          "traceId": "1d1718ab-5f57-40fa-861e-f4bb690be15d"
+        },
+        "bodySha256": "3a510186316b6e7efd34ba0e8acd47fc84c6011e7c362cbd0ab93d54dee8eeb5",
+        "httpStatus": 404,
+        "method": "GET",
+        "path": "/v1/ecommerce-workshop/source-readiness"
+      }
+    },
+    "health": {
+      "body": {
+        "status": "ok"
+      },
+      "bodySha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+      "httpStatus": 200,
+      "method": "GET",
+      "path": "/v1/health"
+    },
+    "negative": {
+      "invalidLimit": {
+        "body": {
+          "code": "VALIDATION",
+          "details": {
+            "errors": [
+              {
+                "ctx": {
+                  "le": 100
+                },
+                "input": "101",
+                "loc": [
+                  "query",
+                  "limit"
+                ],
+                "msg": "Input should be less than or equal to 100",
+                "type": "less_than_equal"
+              }
+            ]
+          },
+          "message": "request validation failed",
+          "traceId": "b0423dcd-5acd-4ae4-ad2d-bc4f4834b691"
+        },
+        "bodySha256": "d4c4a4e69b09a4ef6e1c2b59434e5f84b5943c0476b8b1616b4257b69938c4d0",
+        "httpStatus": 400,
+        "method": "GET",
+        "path": "/v1/bundle-installations?limit=101&offset=0"
+      },
+      "missingBearer": {
+        "body": {
+          "code": "AUTH_REQUIRED",
+          "details": null,
+          "message": "Bearer [REDACTED] required",
+          "traceId": "c7188064-57bb-47f6-9f5a-29eac418214e"
+        },
+        "bodySha256": "63c67445dc22cb131f3d8f9f00083c43c63f9dd11a7da74cc16cb672976913df",
+        "httpStatus": 401,
+        "method": "GET",
+        "path": "/v1/aip/model-runtime/overview"
+      }
+    },
+    "positive": {
+      "agentRegistry": {
+        "body": {
+          "code": "AIP_ECOMMERCE_CATALOG_INVALID",
+          "details": null,
+          "message": "ecommerce agent definitions differ from 6-role authority",
+          "traceId": "85c752f3-61a7-41aa-9f88-f1c6b632b668"
+        },
+        "bodySha256": "9f9a0b3515a18f2017e4245e18eeba519e10b99ad1fbc093d1ccfa98cf107b0a",
+        "httpStatus": 409,
+        "method": "GET",
+        "path": "/v1/aip/agent-registry"
+      },
+      "agentRuntimeReadiness": {
+        "body": {
+          "code": "AIP_ECOMMERCE_CATALOG_INVALID",
+          "details": null,
+          "message": "ecommerce agent definitions differ from 6-role authority",
+          "traceId": "b4b03062-9dc5-4b06-b8fa-0e28e74539d8"
+        },
+        "bodySha256": "63d00897ef7be33ea5ca9fa25ba964d8e5a005c0caa41c61d8671b22cd635325",
+        "httpStatus": 409,
+        "method": "GET",
+        "path": "/v1/aip/agent-registry/runtime-readiness"
+      },
+      "bundleInstallations": {
+        "body": {
+          "items": [],
+          "limit": 100,
+          "offset": 0,
+          "total": 0
+        },
+        "bodySha256": "c5fb109584e651b55dea36c077a25c3fb84bd1fa60edf98a43496ee995c92840",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/bundle-installations?limit=100&offset=0"
+      },
+      "capabilityCatalog": {
+        "body": {
+          "code": "AIP_ECOMMERCE_CATALOG_INVALID",
+          "details": null,
+          "message": "ecommerce agent definitions differ from 6-role authority",
+          "traceId": "6bf128ef-8eae-45ed-9d86-7455f721b788"
+        },
+        "bodySha256": "c1c97d79d12f522ff453104bf902f9251959975c74a07937fd93250dff56220e",
+        "httpStatus": 409,
+        "method": "GET",
+        "path": "/v1/aip/capability-catalog"
+      },
+      "modelChain": {
+        "body": {
+          "chains": [],
+          "generatedAt": "2026-09-10T10:56:46.509854Z",
+          "modelImpacts": [],
+          "taskTraces": [],
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "ac421934f23084fa2e479875ce7a60e4dfffb5d22894eb9b01ee644c38bc8a94",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/model-runtime/chain-overview"
+      },
+      "modelCost": {
+        "body": {
+          "budgets": [],
+          "generatedAt": "2026-09-10T10:56:46.549306Z",
+          "modelPrices": [],
+          "quotas": [],
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          },
+          "usage": {
+            "adjustmentCount": 0,
+            "costTotals": {},
+            "estimatedCount": 0,
+            "latestObservedAt": null,
+            "measuredCount": 0,
+            "periods": [
+              {
+                "attributionDimensions": [
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "tenant",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "tenant_scope"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "task",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "lineage"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "agent",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "logic",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "model",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  }
+                ],
+                "endsAt": "2026-09-10T10:56:46.549306Z",
+                "estimatedCount": 0,
+                "measuredCount": 0,
+                "period": "today",
+                "providerCounts": {},
+                "quantityTotals": {},
+                "receiptCount": 0,
+                "startsAt": "2026-09-09T16:00:00Z",
+                "timeZone": "Asia/Shanghai",
+                "unknownCount": 0
+              },
+              {
+                "attributionDimensions": [
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "tenant",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "tenant_scope"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "task",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "lineage"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "agent",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "logic",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "model",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  }
+                ],
+                "endsAt": "2026-09-10T10:56:46.549306Z",
+                "estimatedCount": 0,
+                "measuredCount": 0,
+                "period": "week",
+                "providerCounts": {},
+                "quantityTotals": {},
+                "receiptCount": 0,
+                "startsAt": "2026-09-03T10:56:46.549306Z",
+                "timeZone": "Asia/Shanghai",
+                "unknownCount": 0
+              },
+              {
+                "attributionDimensions": [
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "tenant",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "tenant_scope"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "task",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "lineage"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "agent",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "logic",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  },
+                  {
+                    "attributedReceiptCount": 0,
+                    "dimension": "model",
+                    "entries": [],
+                    "missingReceiptCount": 0,
+                    "source": "explicit"
+                  }
+                ],
+                "endsAt": "2026-09-10T10:56:46.549306Z",
+                "estimatedCount": 0,
+                "measuredCount": 0,
+                "period": "month",
+                "providerCounts": {},
+                "quantityTotals": {},
+                "receiptCount": 0,
+                "startsAt": "2026-08-11T10:56:46.549306Z",
+                "timeZone": "Asia/Shanghai",
+                "unknownCount": 0
+              }
+            ],
+            "receiptCount": 0,
+            "state": "unobserved",
+            "truncated": false,
+            "unknownCount": 0
+          }
+        },
+        "bodySha256": "98d9b5238f4c38dbb0c1b30fd3e5e42d59d9d8e34f213b5494c330c7d5e7da39",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/model-runtime/cost-overview"
+      },
+      "modelRuntime": {
+        "body": {
+          "capacityPools": [],
+          "evalGates": [],
+          "generatedAt": "2026-09-10T10:56:46.495731Z",
+          "healthObservations": [],
+          "models": [],
+          "policies": [],
+          "priceSnapshots": [],
+          "providers": [],
+          "resolutions": [],
+          "routes": [],
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "687cc190c20dd5767888322ac796d6120ea8d7de0d41ac390b252d76721c6ba1",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/model-runtime/overview"
+      },
+      "productionContexts": {
+        "body": {
+          "count": 0,
+          "items": [],
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "14adb4b21310e92f6b37735fbf9ae80781da33b428da47dddc49fc20018a0cdd",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/production-contracts/production-contexts"
+      },
+      "productionStartDecisions": {
+        "body": {
+          "count": 0,
+          "items": [],
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "14adb4b21310e92f6b37735fbf9ae80781da33b428da47dddc49fc20018a0cdd",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/production-contracts/production-start-decisions"
+      },
+      "responsibilityPlans": {
+        "body": {
+          "count": 0,
+          "items": [],
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "14adb4b21310e92f6b37735fbf9ae80781da33b428da47dddc49fc20018a0cdd",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/production-contracts/responsibility-plans"
+      },
+      "sourceReadiness": {
+        "body": {
+          "code": "INTERNAL",
+          "details": null,
+          "message": "internal error",
+          "traceId": "18a6b5ab-cd09-4324-855a-0eb4450e10a9"
+        },
+        "bodySha256": "9f7bbb0737a1acd7bbede2f19c3aee7b32d04bfe3001fd0dec969230d10785b9",
+        "httpStatus": 500,
+        "method": "GET",
+        "path": "/v1/data/source-readiness"
+      },
+      "stageTemplates": {
+        "body": {
+          "count": 0,
+          "items": [],
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "14adb4b21310e92f6b37735fbf9ae80781da33b428da47dddc49fc20018a0cdd",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/production-contracts/stage-templates"
+      },
+      "taskBriefs": {
+        "body": {
+          "count": 0,
+          "items": [],
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "14adb4b21310e92f6b37735fbf9ae80781da33b428da47dddc49fc20018a0cdd",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/production-contracts/task-briefs"
+      },
+      "workshopSourceReadiness": {
+        "body": {
+          "code": "WORKSHOP_NOT_INSTALLED",
+          "details": null,
+          "message": "No active ecommerce Workshop module is visible",
+          "traceId": "3bbb4b09-eb1b-4320-a9b5-b5dda7e1a57d"
+        },
+        "bodySha256": "30046b58ab8fcd0953e2ba324ef004e1d8a76cc4423bc73c3ec8b333e8cda986",
+        "httpStatus": 404,
+        "method": "GET",
+        "path": "/v1/ecommerce-workshop/source-readiness"
+      }
+    }
+  },
+  "result": "A0_V_BLOCKED_WITH_ACTIONABLE_GAPS",
+  "schemaVersion": 1,
+  "scope": {
+    "baseUrl": "http://127.0.0.1:18181",
+    "canary": {
+      "orgId": "dev-org",
+      "projectId": "dev-project"
+    },
+    "databaseEvidenceClass": "HISTORICAL_BACKUP_RECOVERED_THEN_MIGRATED_TO_HEAD",
+    "databaseOriginalDataCutoff": "2026-08-05T05:02:48+08:00",
+    "gitHead": "eb1b084e1e1021a008053375b8f2675e5d9a0d97",
+    "httpMethods": [
+      "GET"
+    ],
+    "positive": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "runtimeGuards": {
+      "extensionRuntimeHost": "inactive",
+      "logicAutomation": "disabled",
+      "migrationMode": "disabled",
+      "providerHealthMaintenance": "disabled",
+      "qyhCron": "disabled"
+    }
+  },
+  "summary": {
+    "blockerCount": 17,
+    "blockers": [
+      {
+        "gate": "sourceReadiness",
+        "httpStatus": 500,
+        "reason": "INTERNAL"
+      },
+      {
+        "gate": "workshopSourceReadiness",
+        "httpStatus": 404,
+        "reason": "WORKSHOP_NOT_INSTALLED"
+      },
+      {
+        "gate": "agentRegistry",
+        "httpStatus": 409,
+        "reason": "AIP_ECOMMERCE_CATALOG_INVALID"
+      },
+      {
+        "gate": "agentRuntimeReadiness",
+        "httpStatus": 409,
+        "reason": "AIP_ECOMMERCE_CATALOG_INVALID"
+      },
+      {
+        "gate": "capabilityCatalog",
+        "httpStatus": 409,
+        "reason": "AIP_ECOMMERCE_CATALOG_INVALID"
+      },
+      {
+        "gate": "bundleInstallations",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      },
+      {
+        "gate": "productionContexts",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      },
+      {
+        "gate": "productionStartDecisions",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      },
+      {
+        "gate": "responsibilityPlans",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      },
+      {
+        "gate": "stageTemplates",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      },
+      {
+        "gate": "taskBriefs",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      },
+      {
+        "gate": "modelRuntime.providers",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      },
+      {
+        "gate": "modelRuntime.models",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      },
+      {
+        "gate": "modelRuntime.routes",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      },
+      {
+        "gate": "modelRuntime.healthObservations",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      },
+      {
+        "gate": "modelChain.chains",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      },
+      {
+        "gate": "modelCost.budgets",
+        "reason": "REQUIRED_COLLECTION_EMPTY"
+      }
+    ],
+    "modelCollectionCounts": {
+      "modelChain": {
+        "chains": 0
+      },
+      "modelCost": {
+        "budgets": 0,
+        "quotas": 0
+      },
+      "modelRuntime": {
+        "capacityPools": 0,
+        "evalGates": 0,
+        "healthObservations": 0,
+        "models": 0,
+        "priceSnapshots": 0,
+        "providers": 0,
+        "resolutions": 0,
+        "routes": 0
+      }
+    },
+    "tenantClaims": {
+      "agentRegistry": {
+        "canary": null,
+        "positive": null
+      },
+      "agentRuntimeReadiness": {
+        "canary": null,
+        "positive": null
+      },
+      "bundleInstallations": {
+        "canary": null,
+        "positive": null
+      },
+      "capabilityCatalog": {
+        "canary": null,
+        "positive": null
+      },
+      "modelChain": {
+        "canary": [
+          "dev-org",
+          "dev-project"
+        ],
+        "positive": [
+          "org-org",
+          "dev-project"
+        ]
+      },
+      "modelCost": {
+        "canary": [
+          "dev-org",
+          "dev-project"
+        ],
+        "positive": [
+          "org-org",
+          "dev-project"
+        ]
+      },
+      "modelRuntime": {
+        "canary": [
+          "dev-org",
+          "dev-project"
+        ],
+        "positive": [
+          "org-org",
+          "dev-project"
+        ]
+      },
+      "productionContexts": {
+        "canary": [
+          "dev-org",
+          "dev-project"
+        ],
+        "positive": [
+          "org-org",
+          "dev-project"
+        ]
+      },
+      "productionStartDecisions": {
+        "canary": [
+          "dev-org",
+          "dev-project"
+        ],
+        "positive": [
+          "org-org",
+          "dev-project"
+        ]
+      },
+      "responsibilityPlans": {
+        "canary": [
+          "dev-org",
+          "dev-project"
+        ],
+        "positive": [
+          "org-org",
+          "dev-project"
+        ]
+      },
+      "sourceReadiness": {
+        "canary": null,
+        "positive": null
+      },
+      "stageTemplates": {
+        "canary": [
+          "dev-org",
+          "dev-project"
+        ],
+        "positive": [
+          "org-org",
+          "dev-project"
+        ]
+      },
+      "taskBriefs": {
+        "canary": [
+          "dev-org",
+          "dev-project"
+        ],
+        "positive": [
+          "org-org",
+          "dev-project"
+        ]
+      },
+      "workshopSourceReadiness": {
+        "canary": null,
+        "positive": null
+      }
+    },
+    "unverified": [
+      {
+        "gate": "crossTenantResourceIsolation",
+        "reason": "NO_POSITIVE_RESOURCE_AVAILABLE_FOR_CANARY_COMPARISON"
+      }
+    ],
+    "unverifiedCount": 1
+  }
+}
