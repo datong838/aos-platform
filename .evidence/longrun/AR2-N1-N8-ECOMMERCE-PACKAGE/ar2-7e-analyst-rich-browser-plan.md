@@ -45,3 +45,10 @@
 - Handoff issued/consumed/decision、AgentRun、Provider、真实源读取、Task/Plan 物化及全部外部业务副作用为 0。
 - Analyst/BusinessInvestigation 定向测试、Web 全量测试、production build、`verify_closure.py --phase ar2-7` 与 `git diff --check` 全绿。
 - 本切片通过后，八工作台富浏览器进度为 `8/8`；随后按 closure manifest 补齐 AR2-7E 总体证据和阶段退出标记，不前推 230 L0。
+
+## 5. 首轮诊断与固定修正
+
+- 首轮在 `1280×720`、`1440×900` 连续失败后按规则停止，写请求为 0；失败来自执行器定位和 fixture 覆盖，不是产品缺陷。
+- Workshop 顶栏和生意探究面板均有 `aria-label="渠道视角"`，三级选择动作必须限定在 `#analyst-panel-investigation` 内，避免把顶栏租户选择误当业务渠道。
+- 七视图的可信空语义按各自结构验证：总览/驱动/诊断/计划/证据检查“未知”或待补证，效果复盘检查三段结果保持未知，质量检查账本为“未知”；不再要求每个面板正文都恰好包含同一字面量。
+- `AsyncJobDrawer` 会读取 `/api/v1/aip/async-jobs?limit=50`，隔离 fixture 增加当前租户可信空响应；仍禁止任何 async job 写入。
