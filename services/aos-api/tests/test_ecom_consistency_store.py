@@ -900,3 +900,21 @@ def test_duplicate_links_require_existing_exact_relation_event(store):
         conn.execute(delete(projection_outbox).where(projection_outbox.c.change_kind=='links_written'))
     with pytest.raises(EcomConsistencyError,match='outbox evidence'):
         store.read_committed_batch_revision(repeated)
+
+
+def test_derived_write_checks_expected_base_inside_write_transaction(store):
+    payment={'orderId':'o-1','outTradeNo':'t-1','payStatus':'1','updatedAt':NOW}
+    base=obj('Payment','payment-1',properties=payment)
+    store.apply_batch(batch(base))
+    command=_derived_command()
+    assert store.read_committed_batch(batch(base)) is not None
+    newer=base.model_copy(update={'source_updated_at':NOW+timedelta(seconds=1)})
+    store.apply_batch(batch(newer,key='newer',expected=1))
+    with pytest.raises(EcomConsistencyError,match='expected base payload'):
+        store.update_derived_metrics(command,expected_base=base)
+    assert store.read_committed_derived(command) is None
+    assert store.update_derived_metrics(command,expected_base=newer).updated
+    assert store.update_derived_metrics(command,expected_base=newer).replayed
+    wrong=newer.model_copy(update={'identity':ident('other')})
+    with pytest.raises(EcomConsistencyError,match='base identity'):
+        store.update_derived_metrics(command,expected_base=wrong)

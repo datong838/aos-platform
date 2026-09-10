@@ -37,10 +37,11 @@ def resume_prepared_derived(conn, scope: TenantScope, run_id: str, *,
         revision = store.read_committed_batch_revision(command)
         if any(item.input_revision != revision for item in commands):
             raise IngressJournalConflict('INGRESS_DERIVED_WATERMARK_DRIFT')
+        bases = {(item.object_type,item.identity.scoped_key()):item for item in command.objects}
         results = []
         for item in commands:
             _check_active(deadline,cancel_event)
-            results.append(store.update_derived_metrics(item))
+            results.append(store.update_derived_metrics(item,expected_base=bases[(item.object_type,item.identity.scoped_key())]))
         return tuple(results)
 
 

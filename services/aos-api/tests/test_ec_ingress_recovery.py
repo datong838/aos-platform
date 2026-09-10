@@ -94,12 +94,12 @@ def test_partial_submission_resumes_original_commands(store,prepared):
     store.apply_batch(command)
     original = store.update_derived_metrics
     calls = 0
-    def fail_second(cmd):
+    def fail_second(cmd,**kwargs):
         nonlocal calls
         calls += 1
         if calls == 2:
             raise RuntimeError('SIMULATED_INTERRUPTION')
-        return original(cmd)
+        return original(cmd,**kwargs)
     store.update_derived_metrics = fail_second
     with pytest.raises(RuntimeError,match='SIMULATED_INTERRUPTION'):
         resume(store,prepared)
@@ -137,9 +137,9 @@ def test_recovery_saves_before_submitting_and_does_not_reprepare_on_retry(store)
         return pending
     journal.save_derived.side_effect=save
     original=store.update_derived_metrics
-    def submit(command):
+    def submit(command,**kwargs):
         assert committed
-        return original(command)
+        return original(command,**kwargs)
     store.update_derived_metrics=submit
     first=recover_saved_authoritative_stages(connect,tenant,'run',journal=journal,store=store)
     assert first[0].updated
@@ -179,3 +179,21 @@ def test_completion_reads_full_saved_preparation(store,prepared):
     store.apply_batch(command)
     store.update_derived_metrics(DerivedMetricCommand.model_validate(journal.read_derived.return_value['commands'][0]))
     assert read_saved_projection_completion(conn,TenantScope('org-a','workspace-a'),'run-1',journal=journal,store=store)=={'expected':2,'projected':0,'pending':2}
+
+
+def test_recovery_passes_original_base_when_data_changes_after_check(store,prepared):
+    from datetime import timedelta
+    from aos_api.ecom_core_models import EcomConsistencyError,DerivedMetricCommand
+    command,journal,_=prepared
+    store.apply_batch(command)
+    read_revision=store.read_committed_batch_revision
+    def check_then_change(base):
+        revision=read_revision(base)
+        newer=base.objects[0].model_copy(update={'source_updated_at':NOW+timedelta(seconds=1)})
+        store.apply_batch(batch(newer,batch_scope=base.scope,key='changed-after-check',expected=1))
+        return revision
+    store.read_committed_batch_revision=check_then_change
+    with pytest.raises(EcomConsistencyError,match='expected base payload'):
+        resume(store,prepared)
+    saved=DerivedMetricCommand.model_validate(journal.read_derived.return_value['commands'][0])
+    assert store.read_committed_derived(saved) is None

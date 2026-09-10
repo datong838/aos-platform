@@ -101,3 +101,11 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 文件：services/aos-api/aos_api/ecom_consistency_store.py、ec_ingress_recovery.py与对应专项。新增正常重复、全重复仍待旧投影、混合新旧、过旧/缺Outbox/悬挂负例；SQLite先证据，PG组合后续。实际source为空的无变更合同仍单独实现。
 
 实现核查：基础request_hash不包含idempotency_key，相同内容不同key可共享request_hash。改以既有event_key（含scope/stream/key/identity/outcome）统计本批实际写入，提取生成函数供原writer和对账共用；不得把request_hash当唯一事务身份。
+
+## 派生写事务内基础版本门
+
+2026-09-11，基线a277f15b。update_derived_metrics增加内部可选expected_base，验证其身份/type与派生命令相同且未删除；在既有对象FOR UPDATE之后、任何派生写入之前比较基础payload_hash。恢复入口从原父命令取对应对象传入，不接受调用者另造基础对象。已提交exact派生Receipt仍优先回读，不追加副作用；该前提属于事务执行门，不改变既有派生命令哈希/历史Receipt协议。
+
+文件：services/aos-api/aos_api/ecom_consistency_store.py、ec_ingress_recovery.py；SQLite专项及新的tests/aip/test_a0v_ecom_store_pg.py隔离PG owner组合。验证外部预检后基础被更新时拒绝且无新派生Receipt/事件，匹配基础可写及exact重复回读，身份错配拒绝。恢复测试包装提交器透传expected_base，避免测试替身吞掉新门。
+
+旧非恢复派生调用暂维持原接口；其他关联输入来源版本不由本对象hash替代。空批、重新claim、全运行验收仍待完成。不push，230 L0挂起。

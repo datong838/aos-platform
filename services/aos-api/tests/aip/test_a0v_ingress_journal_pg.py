@@ -175,10 +175,10 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
             assert conn.execute(select(func.count()).select_from(ecom_derived_receipt)).scalar_one()==0
         monkeypatch.setattr(journal,'save_derived',original_save)
         original_submit=store.update_derived_metrics
-        def verify_committed_then_submit(item):
+        def verify_committed_then_submit(item,**kwargs):
             with factory(scope) as conn:
                 assert journal.read_derived(conn,scope,'run') is not None
-            return original_submit(item)
+            return original_submit(item,**kwargs)
         monkeypatch.setattr(store,'update_derived_metrics',verify_committed_then_submit)
         assert recover_saved_authoritative_stages(factory,scope,'run',journal=journal,store=store)[0].updated
         assert recover_saved_authoritative_stages(factory,scope,'run',journal=journal,store=store)[0].replayed

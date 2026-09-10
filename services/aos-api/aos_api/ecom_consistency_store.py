@@ -595,11 +595,15 @@ class EcomConsistencyStore:
             return {'expected':total,'projected':projected,'pending':total-projected}
 
     def update_derived_metrics(
-        self, command: DerivedMetricCommand
+        self, command: DerivedMetricCommand, *, expected_base: CoreObjectRecord | None = None
     ) -> DerivedMetricResult:
         """O1 §5.2.10：CAS、Receipt 和 Outbox 同事务的派生更新。"""
         command = DerivedMetricCommand.model_validate(command.model_dump(mode="python"))
         identity = command.identity
+        if expected_base is not None:
+            expected_base = CoreObjectRecord.model_validate(expected_base.model_dump(mode='python'))
+            if expected_base.identity != identity or expected_base.object_type != command.object_type or expected_base.is_deleted:
+                raise EcomConsistencyError('DERIVED_BASE_BINDING_MISMATCH','expected base identity does not match derived target')
         request_hash = command.request_hash()
         receipt_id = self._derived_receipt_id(command)
         lock_key = int.from_bytes(bytes.fromhex(receipt_id[:16]), byteorder="big", signed=True)
@@ -639,6 +643,9 @@ class EcomConsistencyStore:
                 raise EcomConsistencyError("OBJECT_NOT_FOUND", "derived target not found")
             if stored["deleted_at"] is not None:
                 raise EcomConsistencyError("OBJECT_TOMBSTONED", "derived target is deleted")
+
+            if expected_base is not None and stored['payload_hash'] != expected_base.payload_hash():
+                raise EcomConsistencyError('DERIVED_BASE_VERSION_DRIFT','expected base payload changed before derived write')
 
             current_revision = int(stored["derived_revision"] or 0)
             if current_revision != command.expected_derived_revision:
