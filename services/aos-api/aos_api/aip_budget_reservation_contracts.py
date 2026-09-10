@@ -19,6 +19,7 @@ class BudgetReservationState(StrEnum):
     HELD = "held"
     SUBMITTED = "submitted"
     SETTLED = "settled"
+    COST_PENDING = "cost_pending"
     RELEASED = "released"
     UNKNOWN = "unknown"
 
@@ -195,6 +196,18 @@ class BudgetReservationRevision(AipContractModel):
                 and not self.usage_receipt_refs
                 and self.actual_minor is None
                 and self.reconciliation_evidence_ref is None
+            )
+        elif self.state == BudgetReservationState.COST_PENDING:
+            identities = {
+                (ref.resource_type, ref.resource_id, ref.revision, ref.content_hash)
+                for ref in self.usage_receipt_refs
+            }
+            valid = (
+                self.provider_request_receipt_ref is not None
+                and self.provider_receipt_ref is not None
+                and bool(self.usage_receipt_refs)
+                and len(identities) == len(self.usage_receipt_refs)
+                and self.actual_minor is None
             )
         elif self.state == BudgetReservationState.SETTLED:
             valid = (

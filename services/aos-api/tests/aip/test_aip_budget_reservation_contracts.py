@@ -18,6 +18,21 @@ NOW = datetime(2026, 9, 8, tzinfo=UTC)
 HASH = "sha256:" + "a" * 64
 
 
+def test_cost_pending_requires_completed_execution_but_no_amount():
+    body = dict(state='cost_pending',
+        providerRequestReceiptRef=ref('CapabilityProviderRequestReceipt', 'request'),
+        providerReceiptRef=ref('CapabilityProviderReceipt', 'result'),
+        usageReceiptRefs=[ref('UsageReceipt', 'usage')])
+    value = revision(**body)
+    assert value.actual_minor is None
+    assert value.state.value == 'cost_pending'
+    for patch in ({'actualMinor': 0}, {'providerRequestReceiptRef': None},
+                  {'providerReceiptRef': None}, {'usageReceiptRefs': []},
+                  {'usageReceiptRefs': [ref('UsageReceipt', 'usage')]*2}):
+        with pytest.raises(ValidationError):
+            revision(**(body | patch))
+
+
 def ref(kind: str, identity: str) -> BudgetExactRef:
     return BudgetExactRef(
         resourceType=kind,
