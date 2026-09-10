@@ -113,3 +113,24 @@ def test_keychain_probe_has_exact_non_secret_coordinates(returncode, expected):
         "agnes-text/org-org/dev-project/a0v-agnes-text-readonly-dev/api-key/a0v-v1",
     ]
     assert kwargs["shell"] is False
+
+
+@pytest.mark.parametrize("returncode", [0, 44])
+def test_exact_keychain_delete_accepts_deleted_or_already_absent(returncode):
+    calls = []
+
+    def runner(argv, **kwargs):
+        calls.append((argv, kwargs))
+        return subprocess.CompletedProcess(argv, returncode)
+
+    AUTHORITY._delete_keychain_item(runner=runner)
+    argv, kwargs = calls[0]
+    assert argv == [
+        "/usr/bin/security",
+        "delete-generic-password",
+        "-s",
+        "com.aos.llm",
+        "-a",
+        "agnes-text/org-org/dev-project/a0v-agnes-text-readonly-dev/api-key/a0v-v1",
+    ]
+    assert kwargs["shell"] is False

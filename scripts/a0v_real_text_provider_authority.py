@@ -65,6 +65,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--docker-context", default="colima-aos-extension")
     parser.add_argument("--database-container", default="aos-a0v-recovery-pg")
     parser.add_argument("--env-file", type=Path, default=ENV_FILE)
+    parser.add_argument("--repair-keychain-item", action="store_true")
     parser.add_argument(
         "--state-dir",
         type=Path,
@@ -131,6 +132,29 @@ def _keychain_exists(*, runner: Any = subprocess.run) -> bool:
     if completed.returncode == 44:
         return False
     raise ProviderAuthorityBlocked("KEYCHAIN_PROBE_FAILED")
+
+
+def _delete_keychain_item(*, runner: Any = subprocess.run) -> None:
+    try:
+        completed = runner(
+            [
+                "/usr/bin/security",
+                "delete-generic-password",
+                "-s",
+                SECRET_SERVICE,
+                "-a",
+                SECRET_ACCOUNT,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            shell=False,
+            timeout=5.0,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        raise ProviderAuthorityBlocked("KEYCHAIN_DELETE_FAILED") from None
+    if completed.returncode not in {0, 44}:
+        raise ProviderAuthorityBlocked("KEYCHAIN_DELETE_FAILED")
 
 
 def _keychain_write_argv() -> list[str]:
@@ -395,7 +419,14 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
             keychain_before = True
         except SecretBackendError as exc:
             code = exc.code
-            if code not in {"keychain_item_unavailable", "keychain_empty"}:
+            if args.repair_keychain_item and code in {
+                "keychain_item_unavailable",
+                "keychain_empty",
+                "keychain_timeout",
+                "keychain_probe_failed",
+            }:
+                _delete_keychain_item()
+            elif code != "keychain_item_unavailable":
                 raise ProviderAuthorityBlocked("KEYCHAIN_EXACT_SECRET_UNAVAILABLE") from None
             _install_keychain_secret(settings["AGNES_API_KEY"])
         if not _keychain_exists():
@@ -450,6 +481,7 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
         "backup": backup,
         "mutationCount": mutation_count,
         "keychainMutationCount": 0 if keychain_before else 1,
+        "keychainRepairMode": bool(args.repair_keychain_item),
         "effects": {
             "providerInvocationCount": 0,
             "businessMutationCount": 0,
