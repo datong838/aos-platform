@@ -47,7 +47,8 @@
         ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-cumulative-closure-plan.md",
         ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-cumulative-closure.py",
         ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-cumulative-closure.json",
-        ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-prime-final-readonly-review.md"
+        ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-prime-final-readonly-review.md",
+        ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-final-verification.md"
       ],
       "contains": {
         "bundles/domains/ecommerce-core/bundle.yaml": ["runtime:", "backend/ecommerce_core/__init__.py:register"],
@@ -57,7 +58,8 @@
         "services/aos-api/aos_api/routers/domain_aggregates.py": ["aos_api.routers.extension_dispatch"],
         "apps/web/src/App.tsx": ["EcommerceWorkshopEntryRoute"],
         "apps/web/src/pages/s2/ecommerce/routes.tsx": ["EcommerceWorkshopHost"],
-        "apps/web/src/components/workshop/InstalledModuleNavigation.tsx": ["catalog.modules"]
+        "apps/web/src/components/workshop/InstalledModuleNavigation.tsx": ["catalog.modules"],
+        ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/closure-manifest.md": ["AR2_HOST_WIRING_CUTOVER_PLUGGABILITY_BROWSER_ACCEPTANCE_GREEN"]
       },
       "notContains": {
         "services/aos-api/aos_api/routers/domain_manifest.json": ["aos_api.routers.ecommerce_workshop", "aos_api.routers.ecommerce_business_investigations"],

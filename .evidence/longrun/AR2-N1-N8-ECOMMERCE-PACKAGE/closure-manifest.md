@@ -185,4 +185,8 @@ AR2-7 只通过数据库 CAS 切换这个 handler 指针，不再声称 Python �
 - `ar2-7e-cumulative-closure.py` 对账 70 份 Git 跟踪证据、9 个产品页面哈希、三视口、租户/请求/页面/控制台错误和零副作用边界，失败集为空；
 - Prime 对 `m1@e52ec81a` 做最终增量只读复核，首行 `VERDICT: PASS`。
 
-本登记仍处于最终 CAS 前：只有 Web 测试/构建、`verify_closure.py --phase ar2-7`、共享记忆 CAS 与回读全部通过后，才可在本节写入唯一退出标记。AR2 的 fixture 证据不代表真实经营数据接入、真实 Provider、业务 mutation、230 L0、A0-V 或发布完成；下一安全阶段仍为 A0-V。
+最终 Web 测试/构建、`verify_closure.py --phase ar2-7`、共享记忆 CAS 与写后回读均已通过；Delivery Receipt 为 `AR2-HOST-WIRING-CUTOVER-PLUGGABILITY-BROWSER-ACCEPTANCE.json`，authority 已推进到 `AOS-000573`，文档提交为 `docs/palantier/m1@9239332`，总 Task Lease 已释放。
+
+唯一退出标记：`AR2_HOST_WIRING_CUTOVER_PLUGGABILITY_BROWSER_ACCEPTANCE_GREEN`
+
+AR2 的 fixture 证据不代表真实经营数据接入、真实 Provider、业务 mutation、230 L0、A0-V 或发布完成；下一安全阶段为 A0-V 真实授权复验。
