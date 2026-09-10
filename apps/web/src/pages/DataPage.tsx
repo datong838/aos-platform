@@ -1,3 +1,4 @@
+import { executableConfig, verifySaved, verifyDiscovery, type Discovery } from "./s2/sourceSetup";
 import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost } from "../api/client";
@@ -233,6 +234,13 @@ export function DataPage() {
   const [schedules, setSchedules] = useState<ScheduleRow[]>([]);
   const [edgeAgent, setEdgeAgent] = useState<EdgeAgent | null>(null);
   const [mediaCount, setMediaCount] = useState(0);
+  const [automaticSourceId] = useState(() => `source-${crypto.randomUUID()}`);
+  const [savedConnection, setSavedConnection] = useState<{id:string; configurationRevision:string} | null>(null);
+  const [sourceBusy, setSourceBusy] = useState(false);
+  const [sourceDiscovery, setSourceDiscovery] = useState<Discovery | null>(null);
+  const [sshHost, setSshHost] = useState("");
+  const [sshUser, setSshUser] = useState("");
+  const [sshPassword, setSshPassword] = useState("");
   const [newSourceId, setNewSourceId] = useState("");
   const [connectorType, setConnectorType] = useState("file-local");
   const [runtimeMode, setRuntimeMode] = useState<RuntimeMode>("agent");
@@ -290,16 +298,39 @@ export function DataPage() {
   }, [connectorPlugins, createRequested, requestedConnector]);
 
   async function createSource() {
-    const id = newSourceId.trim() || `src-${Date.now().toString(36)}`;
+    if (sourceBusy) return;
+    const id = newSourceId.trim() || automaticSourceId;
+    setSourceBusy(true);
+    setSourceDiscovery(null);
     setErr(null);
     try {
-      const created = await apiPost<SourceRow>("/v1/sources", sourceCreatePayload(id, connectorType, runtimeMode));
+      const connection = connectorType === "jdbc-mysql-ssh" ? executableConfig(connectorType, {
+        sshHost, sshUser, sshPassword, sshPort: "22", dbHost: connHost,
+        dbPort: connPort || "3306", database: connDatabase, username: connUsername, password: connPassword,
+      }) : null;
+      const created = await apiPost<SourceRow & { id: string; configurationRevision: string }>("/v1/sources", {
+        ...sourceCreatePayload(id, connectorType, runtimeMode),
+        ...(connection ? { config: connection } : {}),
+        ...(savedConnection?.id === id ? { expectedConfigurationRevision: savedConnection.configurationRevision } : {}),
+      });
+      if (connection) setSavedConnection(verifySaved(created, id));
       if (created.id !== id || created.runtimeMode !== runtimeMode) {
         throw new Error("创建响应与请求的数据源或运行时不一致");
       }
       const verified = await apiGet<{ items: SourceRow[] }>("/v1/sources");
       if (!verifyCreatedSource(verified.items || [], id, runtimeMode)) {
         throw new Error("服务端重读未找到运行时一致的数据源，已停止跳转");
+      }
+      if (connection) {
+        const saved = verifySaved(created, id);
+        const current = verified.items.find(item => item.id === id) as (SourceRow & {configurationRevision?:string}) | undefined;
+        if (current?.configurationRevision !== saved.configurationRevision) throw new Error("配置版本回读不一致");
+        const discovery = verifyDiscovery(await apiPost<Discovery>(`/v1/sources/${encodeURIComponent(id)}/test`, {
+          expectedConfigurationRevision: saved.configurationRevision,
+        }), saved);
+        setSourceDiscovery(discovery);
+        setMsg(`配置已保存并通过连接测试，发现 ${discovery.tables.length} 张表，尚未执行同步`);
+        return;
       }
       setMsg(`已创建并验证数据源 ${id}`);
       setNewSourceId("");
@@ -308,9 +339,10 @@ export function DataPage() {
       setSourceView("list");
       setTab("sources");
       navigate(`/data/sources/${encodeURIComponent(id)}`);
-    } catch (e) {
-      setErr(String((e as Error).message || e));
+    } catch {
+      setErr("保存或测试未确认成功，请检查配置并重新读取数据源状态");
     }
+    finally { setSourceBusy(false); }
   }
 
   async function installConnector(pluginId: string) {
@@ -646,6 +678,11 @@ export function DataPage() {
                 连接器：{connectorLabel(connectorType, connectorPlugins)} · 运行时：
                 {runtimeMode === "direct" ? "直接连接" : runtimeMode === "agent" ? "代理连接" : "代理工作者"}
               </p>
+              {connectorType === "jdbc-mysql-ssh" && <div>
+                <label>SSH 主机<input value={sshHost} onChange={e => setSshHost(e.target.value)} /></label>
+                <label>SSH 用户名<input value={sshUser} onChange={e => setSshUser(e.target.value)} /></label>
+                <label>SSH 密码<input type="password" value={sshPassword} onChange={e => setSshPassword(e.target.value)} /></label>
+              </div>}
               {(() => {
                 const cat = inferConnectorCategory(connectorType);
                 if (cat === "database") {
@@ -816,10 +853,16 @@ export function DataPage() {
             </>
           )}
 
+          {sourceDiscovery && <div className="card">
+            <h3>连接测试通过</h3>
+            <p>发现 {sourceDiscovery.tables.length} 张表，尚未执行数据同步。</p>
+            {sourceDiscovery.truncated && <p>仅显示前 500 张表。</p>}
+            {sourceDiscovery.tables.map(table => <div key={table.name}>{table.name}</div>)}
+          </div>}
           {wizardStep === 4 && (
             <>
               <div className="bp-ws-section-title">凭证</div>
-              <BpBanner tone="info">凭证走密钥引用（vault ref）· 不落明文。</BpBanner>
+              <BpBanner tone="info">连接凭据仅用于服务端连接配置，列表不会显示密码。</BpBanner>
               {(() => {
                 const cat = inferConnectorCategory(connectorType);
                 if (cat === "database") {
@@ -867,8 +910,8 @@ export function DataPage() {
                 <button type="button" className="btn" onClick={() => setWizardStep(3)}>
                   上一步
                 </button>
-                <button type="button" className="btn-primary" onClick={() => void createSource()}>
-                  创建数据源
+                <button type="button" className="btn-primary" disabled={sourceBusy} onClick={() => void createSource()}>
+                  {sourceBusy ? "正在保存并测试…" : "创建数据源"}
                 </button>
               </BpToolbar>
             </>
