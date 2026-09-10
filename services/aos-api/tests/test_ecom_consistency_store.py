@@ -804,3 +804,59 @@ def test_ignored_base_requires_reconciliation_before_revision(store):
     assert store.apply_batch(ignored).objects_ignored == 1
     with pytest.raises(EcomConsistencyError,match='reconciliation'):
         store.read_committed_batch_revision(ignored)
+
+
+def test_exact_derived_receipt_read_is_read_only_and_rejects_conflicts(store):
+    command=_derived_command()
+    assert store.read_committed_derived(command) is None
+    payment={'orderId':'o-1','outTradeNo':'t-1','payStatus':'1','updatedAt':NOW}
+    store.apply_batch(batch(obj('Payment','payment-1',properties=payment)))
+    original=store.update_derived_metrics(command)
+    assert store.read_committed_derived(command)==original
+    with pytest.raises(EcomConsistencyError,match='different request'):
+        store.read_committed_derived(command.model_copy(update={'derived_props':{'pay_duration_min':8}}))
+
+
+def test_exact_completion_tracks_only_original_events(store):
+    from sqlalchemy import delete
+    payment={'orderId':'o-1','outTradeNo':'t-1','payStatus':'1','updatedAt':NOW}
+    base=batch(obj('Payment','payment-1',properties=payment),batch_scope=scope(stream='P12-payment'))
+    store.apply_batch(base)
+    derived=_derived_command().model_copy(update={'input_revision':store.read_committed_batch_revision(base)})
+    with pytest.raises(EcomConsistencyError,match='derived receipt required'):
+        store.read_batch_projection_completion(base,[derived])
+    store.update_derived_metrics(derived)
+    assert store.read_batch_projection_completion(base,[derived])=={'expected':2,'projected':0,'pending':2}
+    with store._engine.begin() as conn:
+        conn.execute(update(projection_outbox).values(projected=True))
+    store.apply_batch(batch(obj('Shop','later'),batch_scope=scope(stream='other'),key='other'))
+    assert store.read_batch_projection_completion(base,[derived])=={'expected':2,'projected':2,'pending':0}
+    with store._engine.begin() as conn:
+        conn.execute(delete(projection_outbox).where(projection_outbox.c.authority_tx_id==derived.request_hash()))
+    with pytest.raises(EcomConsistencyError,match='outbox evidence'):
+        store.read_batch_projection_completion(base,[derived])
+
+
+def test_exact_completion_rejects_duplicate_or_unrelated_derived(store):
+    payment={'orderId':'o-1','outTradeNo':'t-1','payStatus':'1','updatedAt':NOW}
+    base=batch(obj('Payment','payment-1',properties=payment),batch_scope=scope(stream='P12-payment'))
+    store.apply_batch(base)
+    derived=_derived_command().model_copy(update={'input_revision':store.read_committed_batch_revision(base)})
+    store.update_derived_metrics(derived)
+    for commands in ([derived,derived],[derived.model_copy(update={'identity':ident('unrelated')})]):
+        with pytest.raises(EcomConsistencyError,match='derived command binding'):
+            store.read_batch_projection_completion(base,commands)
+
+
+def test_no_change_derived_receipt_requires_no_new_projection_event(store):
+    payment={'orderId':'o-1','outTradeNo':'t-1','payStatus':'1','updatedAt':NOW}
+    base=batch(obj('Payment','payment-1',properties=payment),batch_scope=scope(stream='P12-payment'))
+    store.apply_batch(base)
+    first=_derived_command().model_copy(update={'input_revision':store.read_committed_batch_revision(base)})
+    store.update_derived_metrics(first)
+    unchanged=first.model_copy(update={'idempotency_key':'unchanged','expected_derived_revision':1})
+    assert store.update_derived_metrics(unchanged).updated is False
+    assert store.read_batch_projection_completion(base,[unchanged])=={'expected':1,'projected':0,'pending':1}
+    with store._engine.begin() as conn:
+        conn.execute(update(projection_outbox).values(projected=True))
+    assert store.read_batch_projection_completion(base,[unchanged])=={'expected':1,'projected':1,'pending':0}

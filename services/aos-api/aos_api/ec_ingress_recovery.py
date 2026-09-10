@@ -72,3 +72,17 @@ def recover_saved_authoritative_stages(connection_factory, scope: TenantScope, r
                 journal.save_derived(conn, scope, run_id, commands)
     with connection_factory(scope) as conn:
         return resume_prepared_derived(conn, scope, run_id, journal=journal, store=store)
+
+
+def read_saved_projection_completion(conn, scope: TenantScope, run_id: str, *,
+                                     journal: IngressJournal, store: EcomConsistencyStore):
+    """Read completion for the complete saved preparation, never a caller subset."""
+    with conn.transaction():
+        journal.lock_run(conn, scope, run_id)
+        parent = _bound_parent(conn, scope, run_id, journal)
+        saved = journal.read_derived(conn, scope, run_id)
+        if saved is None:
+            raise IngressJournalConflict('INGRESS_DERIVED_PREPARATION_REQUIRED')
+        return store.read_batch_projection_completion(
+            BatchCommand.model_validate(parent['command']),
+            [DerivedMetricCommand.model_validate(raw) for raw in saved['commands']])

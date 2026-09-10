@@ -469,6 +469,73 @@ class EcomConsistencyStore:
             ).scalar_one()
             return int(value)
 
+    @staticmethod
+    def _derived_receipt_id(command: DerivedMetricCommand) -> str:
+        identity = command.identity
+        return hashlib.sha256("\x1f".join((identity.org_id,identity.workspace_id,identity.platform,
+            identity.shop_or_marketplace_id,command.stream,command.idempotency_key)).encode("utf-8")).hexdigest()
+
+    @classmethod
+    def _read_derived_receipt(cls, conn, command):
+        row = conn.execute(select(ecom_derived_receipt).where(
+            ecom_derived_receipt.c.org_id == command.identity.org_id,
+            ecom_derived_receipt.c.project_id == command.identity.workspace_id,
+            ecom_derived_receipt.c.receipt_id == cls._derived_receipt_id(command),
+        )).mappings().first()
+        if row is not None and row['request_hash'] != command.request_hash():
+            raise EcomConsistencyError('IDEMPOTENCY_CONFLICT','derived idempotency key was reused with a different request')
+        return row
+
+    def read_committed_derived(self, command: DerivedMetricCommand) -> DerivedMetricResult | None:
+        """Read exact evidence without advancing derived CAS or creating an event."""
+        command = DerivedMetricCommand.model_validate(command.model_dump(mode='python'))
+        with self._engine.begin() as conn:
+            _apply_transaction_scope(conn,org_id=command.identity.org_id,workspace_id=command.identity.workspace_id)
+            row = self._read_derived_receipt(conn,command)
+            return None if row is None else DerivedMetricResult.model_validate(row['result_json'])
+
+    def read_batch_projection_completion(self, command: BatchCommand, derived_commands) -> dict[str,int]:
+        """Verify supplied exact commands; caller must pass the full saved derived list."""
+        command = BatchCommand.model_validate(command.model_dump(mode='python'))
+        derived = [DerivedMetricCommand.model_validate(item.model_dump(mode='python')) for item in derived_commands]
+        revision = self.read_committed_batch_revision(command)
+        allowed = {(item.object_type,item.identity.scoped_key()) for item in command.objects if not item.is_deleted}
+        seen = set()
+        for item in derived:
+            key = (item.object_type,item.identity.scoped_key())
+            if key not in allowed or key in seen or item.stream != command.scope.stream or item.input_revision != revision:
+                raise EcomConsistencyError('DERIVED_BINDING_DRIFT','derived command binding does not match original batch')
+            seen.add(key)
+        with self._engine.begin() as conn:
+            _apply_transaction_scope(conn,org_id=command.scope.org_id,workspace_id=command.scope.workspace_id)
+            base = self._get_receipt(conn,command,for_update=False)
+            if base is None or not self._receipt_matches_request(command=command,receipt=base,request_hash=command.request_hash()):
+                raise EcomConsistencyError('BASE_RECEIPT_REQUIRED','exact base receipt required')
+            result = BatchResult.model_validate(base['result'])
+            expected = result.objects_written+result.objects_tombstoned+result.links_written+result.links_tombstoned
+            groups = [(base['request_hash'],expected)]
+            for item in derived:
+                receipt = self._read_derived_receipt(conn,item)
+                if receipt is None:
+                    raise EcomConsistencyError('DERIVED_RECEIPT_REQUIRED','committed derived receipt required')
+                saved = DerivedMetricResult.model_validate(receipt['result_json'])
+                groups.append((receipt['request_hash'],int(saved.updated)))
+            total = projected = 0
+            for authority,count in groups:
+                events = conn.execute(select(projection_outbox.c.projected).where(
+                    projection_outbox.c.org_id == command.scope.org_id,
+                    projection_outbox.c.workspace_id == command.scope.workspace_id,
+                    projection_outbox.c.platform == command.scope.platform,
+                    projection_outbox.c.shop_or_marketplace_id == command.scope.shop_or_marketplace_id,
+                    projection_outbox.c.event_source == 'authoritative_store',
+                    projection_outbox.c.authority_tx_id == authority,
+                )).scalars().all()
+                if len(events) != count:
+                    raise EcomConsistencyError('OUTBOX_INCOMPLETE','original command outbox evidence is incomplete')
+                total += count
+                projected += sum(value is True for value in events)
+            return {'expected':total,'projected':projected,'pending':total-projected}
+
     def update_derived_metrics(
         self, command: DerivedMetricCommand
     ) -> DerivedMetricResult:
@@ -476,18 +543,7 @@ class EcomConsistencyStore:
         command = DerivedMetricCommand.model_validate(command.model_dump(mode="python"))
         identity = command.identity
         request_hash = command.request_hash()
-        receipt_id = hashlib.sha256(
-            "\x1f".join(
-                (
-                    identity.org_id,
-                    identity.workspace_id,
-                    identity.platform,
-                    identity.shop_or_marketplace_id,
-                    command.stream,
-                    command.idempotency_key,
-                )
-            ).encode("utf-8")
-        ).hexdigest()
+        receipt_id = self._derived_receipt_id(command)
         lock_key = int.from_bytes(bytes.fromhex(receipt_id[:16]), byteorder="big", signed=True)
         process_lock = _PROCESS_IDEMPOTENCY_LOCKS[
             lock_key % len(_PROCESS_IDEMPOTENCY_LOCKS)

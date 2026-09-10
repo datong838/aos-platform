@@ -63,3 +63,11 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 文件：services/aos-api/aos_api/ecom_projector.py、ec_live_executor.py；tests/test_ec_ingress_preflight.py、新test_ec_projection_drain.py、tests/aip/test_a0v_projection_pending_pg.py。真实PG隔离schema验证跨批剩余与租户隔离；模拟时钟验证续批、取消、期限及无效结果；实际executor的阶段顺序专项覆盖Dataset阻断。
 
 这仍是scope队列清空门，不是exact原批逐对象证明；持续其他写入可能导致保守超时，后续恢复需精确批次完成门。另纠正前述Dataset raw全列缺失推断：当前sink_to_dataset只取len(output_rows)写元数据/历史，并不持久化raw行，因此当前恢复Dataset计数无需全部raw列；需解决的是成功记录幂等和阶段对账。
+
+## Dataset前exact权威完成核验
+
+2026-09-11，基线eddd874e。Dataset历史会替换且Build随机ID，不能当持久恢复Receipt。先在ConsistencyStore增加只读派生Receipt核验，复用原receipt_id/hash算法；增加原批完成读取：exact基础Receipt/水位、保存派生对应基础身份且唯一、派生input_revision等于原批水位、每项exact派生Receipt、每个authority_tx_id的Outbox数量与Receipt结果匹配，汇总projected/pending。缺Receipt/事件数量错误拒绝；未投影返回pending，不冒充完成。无重放写入、无全租户最新值替代。
+
+文件：services/aos-api/aos_api/ecom_consistency_store.py和tests/test_ecom_consistency_store.py；测试基础/派生后未投影、逐步投影完成、缺派生Receipt、不同请求同key、无关队列不影响、事件缺失与无变化派生零事件。该读取作为Dataset持久幂等记录下一步前置，尚未接实际Dataset，不算全链完成。
+
+同轮补充ec_ingress_recovery.read_saved_projection_completion：从Journal完整保存清单读取，不接受外部传入派生子集；当前绑定/原run锁沿用。Store低层接口只证明所传命令集合，Dataset应使用Journal包装入口。

@@ -168,3 +168,12 @@ def test_old_unprepared_batch_without_input_never_applies_base(store,prepared):
     with pytest.raises(IngressJournalConflict,match='INGRESS_OUTPUT_REQUIRED'):
         recover_saved_authoritative_stages(factory,TenantScope('org-a','workspace-a'),'run-1',journal=journal,store=store)
     store.apply_batch.assert_not_called()
+
+
+def test_completion_reads_full_saved_preparation(store,prepared):
+    from aos_api.ec_ingress_recovery import read_saved_projection_completion
+    from aos_api.ecom_core_models import DerivedMetricCommand
+    command,journal,conn=prepared
+    store.apply_batch(command)
+    store.update_derived_metrics(DerivedMetricCommand.model_validate(journal.read_derived.return_value['commands'][0]))
+    assert read_saved_projection_completion(conn,TenantScope('org-a','workspace-a'),'run-1',journal=journal,store=store)=={'expected':2,'projected':0,'pending':2}
