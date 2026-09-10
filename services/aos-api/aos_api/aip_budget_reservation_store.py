@@ -427,6 +427,69 @@ class AipBudgetReservationStore:
             updated = self._reservation_by_id(conn, scope, row["reservation_id"], lock=False)
             return self._view(conn, scope, updated, replayed=False)
 
+    def complete_cost_pending(
+        self, scope: TenantScope, reservation_id: str, *,
+        provider_result_hash: str, usage_receipt_refs: tuple[BudgetExactRef, ...],
+        evidence_refs: tuple[BudgetExactRef, ...], actor: str,
+    ) -> BudgetReservationRevision:
+        """Record known execution and measured usage without inventing a cost."""
+        identities = {(r.resource_type, r.resource_id, r.revision, r.content_hash) for r in usage_receipt_refs}
+        if not identities or len(identities) != len(usage_receipt_refs):
+            raise ValueError('unique UsageReceipt refs are required')
+        actor = self._identity(actor, 'actor')
+        provider_result_hash = self._digest(provider_result_hash, 'provider result hash')
+        with self._connect_factory(scope) as conn:
+            row = self._reservation_by_id(conn, scope, reservation_id, lock=True)
+            if row['state'] == 'cost_pending':
+                if self._load(row['usage_receipt_refs']) != [exact_ref_payload(r) for r in usage_receipt_refs]:
+                    raise BudgetReservationConflict('pending cost replay drifted')
+                self._assert_provider_receipt_replay(conn, scope, row, outcome='completed',
+                    provider_result_hash=provider_result_hash, evidence_refs=evidence_refs)
+                return self._view(conn, scope, row, replayed=True)
+            if row['state'] not in {'submitted', 'unknown'}:
+                raise BudgetReservationConflict('only submitted or unknown may defer cost')
+            now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+            self._require_deferred_cost_authority(conn, scope, row, now)
+            for ref in usage_receipt_refs:
+                self._usage_authority(conn, scope, ref, reservation=row, provider_result_hash=provider_result_hash)
+            provider_ref = self._record_provider_receipt(conn, scope, row, outcome='completed',
+                provider_result_hash=provider_result_hash, evidence_refs=evidence_refs, observed_at=now)
+            self._transition_reservation(conn, scope, row, state='cost_pending', now=now, actor=actor,
+                evidence_ref=provider_ref, provider_receipt_ref=provider_ref, usage_receipt_refs=usage_receipt_refs,
+                reconciliation_ref=provider_ref if row['state'] == 'unknown' else None)
+            self._update_invocation_state(conn, scope, row['invocation_id'], 'completed', now)
+            updated = self._reservation_by_id(conn, scope, reservation_id, lock=False)
+            return self._view(conn, scope, updated, replayed=False)
+
+    def _require_deferred_cost_authority(self, conn, scope, reservation, now):
+        from aos_api.aip_development_cost_authorization import DevelopmentCostAuthorization
+        from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+
+        price_ref = BudgetExactRef.model_validate(self._load(reservation['pricing_ref']))
+        self._price_authority(conn, scope, price_ref, now)
+        price = conn.execute(
+            f'SELECT payload FROM {self._authority_schema}.aip_model_price_snapshot_revision '
+            'WHERE org_id=%s AND project_id=%s AND model_price_snapshot_id=%s AND revision=%s',
+            (*scope.key, price_ref.resource_id, price_ref.revision),
+        ).fetchone()
+        request = conn.execute(
+            f'SELECT provider_ref FROM {self._storage_schema}.aip_capability_provider_request_receipt '
+            'WHERE org_id=%s AND project_id=%s AND invocation_id=%s',
+            (*scope.key, reservation['invocation_id']),
+        ).fetchone()
+        try:
+            payload = self._load(price['payload']) if price else {}
+            authorization = DevelopmentCostAuthorization.model_validate(payload.get('developmentCostAuthorization'))
+            if any(payload.get(k) is not None for k in ('inputTokenPrice', 'outputTokenPrice', 'cachedTokenPrice')):
+                raise ValueError('deferred price must be unknown')
+            submitted = BudgetExactRef.model_validate(self._load(request['provider_ref']) if request else None)
+            provider = VersionedAssetRef(assetType=submitted.resource_type, assetId=submitted.resource_id,
+                revision=submitted.revision, contentHash=submitted.content_hash.removeprefix('sha256:'))
+            authorization.require_scope(scope=scope, provider=provider,
+                provider_model_id=authorization.provider_model_id, approval_ref=authorization.approval_ref, now=now)
+        except (ValueError, TypeError, KeyError):
+            raise BudgetReservationBlocked('exact development cost authorization required') from None
+
     def settle(
         self,
         scope: TenantScope,
