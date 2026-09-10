@@ -4,13 +4,24 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import importlib.util
 import json
+import os
+import shutil
+import stat
 import subprocess
 import sys
+import tempfile
+import uuid
+from contextlib import contextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Sequence
+
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +50,12 @@ CANARY_ORG_ID = "dev-org"
 CANARY_PROJECT_ID = "dev-project"
 EXPECTED_DATABASE = "aos_meta_head"
 PLATFORM = "linux/arm64"
+DOCKER_CONTEXT = "colima-aos-extension"
+DATABASE_CONTAINER = "aos-a0v-recovery-pg"
+STATE_ROOT = RECOVERY_ROOT / "state/a0v-canonical-ecommerce-first-install"
+SIGNING_KEY_ID = "a0v-local-ecommerce-canonical-v1"
+SIGNING_NOT_BEFORE = datetime(2026, 1, 1, tzinfo=UTC)
+SIGNING_NOT_AFTER = datetime(2036, 1, 1, tzinfo=UTC)
 EXPECTED_EFFECTS = {
     "registryPublishCount": 0,
     "installationMutationCount": 0,
@@ -66,6 +83,9 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--database-name")
+    parser.add_argument("--docker-context", default=DOCKER_CONTEXT)
+    parser.add_argument("--database-container", default=DATABASE_CONTAINER)
+    parser.add_argument("--state-dir", type=Path, default=STATE_ROOT)
     parser.add_argument("--build-dir", type=Path, default=DEFAULT_BUILD_DIR)
     parser.add_argument("--build-receipt", type=Path, default=DEFAULT_BUILD_RECEIPT)
     parser.add_argument(
@@ -217,6 +237,372 @@ def verify_v4_inputs(
     }
 
 
+def inspect_isolated_database(connect_factory: Any) -> dict[str, Any]:
+    builder = _load_builder()
+    with connect_factory() as conn:
+        identity = conn.execute(
+            "SELECT current_database() AS database_name, current_user AS database_user"
+        ).fetchone()
+        if identity is None or identity["database_name"] != EXPECTED_DATABASE:
+            raise FirstInstallBlocked(
+                "DATABASE_IDENTITY_MISMATCH", str((identity or {}).get("database_name"))
+            )
+        revision_rows = conn.execute(
+            "SELECT version_num FROM alembic_version ORDER BY version_num"
+        ).fetchall()
+        revisions = [row["version_num"] for row in revision_rows]
+        if revisions != [builder.SCHEMA_COMPATIBILITY_REVISION]:
+            raise FirstInstallBlocked("ALEMBIC_REVISION_MISMATCH", str(revisions))
+        relation_rows = conn.execute(
+            """
+            SELECT table_schema || '.' || table_name AS relation
+              FROM information_schema.tables
+             WHERE table_schema = 'public'
+            """
+        ).fetchall()
+        relations = {row["relation"] for row in relation_rows}
+        missing = sorted(set(builder.SCHEMA_COMPATIBILITY_RELATIONS) - relations)
+        if missing:
+            raise FirstInstallBlocked("REQUIRED_RELATION_MISSING", ",".join(missing))
+        roles = {}
+        for role in ("aos_app", "aos_runtime", "aos_extension_maintainer"):
+            row = conn.execute(
+                """
+                SELECT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=%s) AS exists,
+                       pg_has_role(current_user,%s,'MEMBER') AS member
+                """,
+                (role, role),
+            ).fetchone()
+            roles[role] = {"exists": bool(row["exists"]), "member": bool(row["member"])}
+        if not all(item["exists"] and item["member"] for item in roles.values()):
+            raise FirstInstallBlocked("DATABASE_CONTROL_ROLE_UNAVAILABLE", str(roles))
+        target_versions = conn.execute(
+            """
+            SELECT b.bundle_id, v.version, v.status, v.content_hash
+              FROM asset_bundle b
+              JOIN asset_bundle_version v ON v.bundle_pk=b.bundle_pk
+             WHERE b.publisher='aos' AND (
+                   (b.bundle_id='domain.ecommerce.core' AND v.version='1.1.0') OR
+                   (b.bundle_id='platform.ecommerce.niushop' AND v.version='1.1.0') OR
+                   (b.bundle_id='solution.ecommerce.growth' AND v.version='1.4.0') OR
+                   (b.bundle_id='solution.ecommerce.operations-base' AND v.version='1.2.0'))
+             ORDER BY b.bundle_id
+            """
+        ).fetchall()
+        tenant = conn.execute(
+            """
+            SELECT
+              (SELECT count(*) FROM bundle_composition
+                WHERE org_id=%s AND project_id=%s) AS compositions,
+              (SELECT count(*) FROM bundle_installation
+                WHERE org_id=%s AND project_id=%s) AS installations,
+              (SELECT count(*) FROM bundle_installation_revision
+                WHERE org_id=%s AND project_id=%s AND state='active') AS active_revisions,
+              (SELECT count(*) FROM extension_runtime_operation
+                WHERE org_id=%s AND project_id=%s) AS runtime_operations,
+              (SELECT count(*) FROM extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s) AS runtime_bindings
+            """,
+            (ORG_ID, PROJECT_ID) * 5,
+        ).fetchone()
+        canary = conn.execute(
+            """
+            SELECT
+              (SELECT count(*) FROM bundle_installation
+                WHERE org_id=%s AND project_id=%s) AS installations,
+              (SELECT count(*) FROM extension_runtime_operation
+                WHERE org_id=%s AND project_id=%s) AS runtime_operations,
+              (SELECT count(*) FROM extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s) AS runtime_bindings
+            """,
+            (CANARY_ORG_ID, CANARY_PROJECT_ID) * 3,
+        ).fetchone()
+        if any(int(canary[key]) for key in canary.keys()):
+            raise FirstInstallBlocked("CANARY_TENANT_NOT_EMPTY", str(dict(canary)))
+        if int(tenant["active_revisions"]) != 0:
+            raise FirstInstallBlocked("UNKNOWN_ACTIVE_INSTALLATION", str(dict(tenant)))
+        if len(target_versions) not in {0, 4}:
+            raise FirstInstallBlocked(
+                "PARTIAL_CANONICAL_REGISTRY_BASELINE", str(len(target_versions))
+            )
+        return {
+            "databaseName": identity["database_name"],
+            "alembicRevisions": revisions,
+            "requiredRelationCount": len(builder.SCHEMA_COMPATIBILITY_RELATIONS),
+            "controlRoles": roles,
+            "targetVersions": [dict(row) for row in target_versions],
+            "tenantCounts": dict(tenant),
+            "canaryCounts": dict(canary),
+        }
+
+
+def container_database_connect_factory(
+    *, context: str, container: str, database_name: str
+) -> Any:
+    if (context, container, database_name) != (
+        DOCKER_CONTEXT,
+        DATABASE_CONTAINER,
+        EXPECTED_DATABASE,
+    ):
+        raise FirstInstallBlocked("DATABASE_TARGET_MISMATCH", "database target is not exact")
+    try:
+        raw = subprocess.check_output(
+            [
+                "docker",
+                "--context",
+                context,
+                "inspect",
+                "--format",
+                "{{json .}}",
+                container,
+            ],
+            text=True,
+            stderr=subprocess.PIPE,
+            timeout=15,
+        )
+        inspected = json.loads(raw)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+        raise FirstInstallBlocked("DATABASE_CONTAINER_UNAVAILABLE", container) from exc
+    if (
+        inspected.get("Name") != "/" + container
+        or not (inspected.get("State") or {}).get("Running")
+    ):
+        raise FirstInstallBlocked("DATABASE_CONTAINER_IDENTITY_MISMATCH", container)
+    bindings = ((inspected.get("NetworkSettings") or {}).get("Ports") or {}).get(
+        "5432/tcp"
+    )
+    if not isinstance(bindings, list) or len(bindings) != 1:
+        raise FirstInstallBlocked("DATABASE_PORT_BINDING_INVALID", container)
+    host_port = bindings[0].get("HostPort")
+    if not isinstance(host_port, str) or not host_port.isdigit():
+        raise FirstInstallBlocked("DATABASE_PORT_BINDING_INVALID", container)
+    environment = {}
+    for entry in (inspected.get("Config") or {}).get("Env") or ():
+        if isinstance(entry, str) and "=" in entry:
+            name, value = entry.split("=", 1)
+            environment[name] = value
+    user = environment.get("POSTGRES_USER", "postgres")
+    password = environment.get("POSTGRES_PASSWORD")
+    if not password:
+        raise FirstInstallBlocked("DATABASE_CREDENTIAL_UNAVAILABLE", container)
+
+    @contextmanager
+    def connect():
+        import psycopg
+        from psycopg.rows import dict_row
+
+        try:
+            with psycopg.connect(
+                host="127.0.0.1",
+                port=int(host_port),
+                dbname=database_name,
+                user=user,
+                password=password,
+                row_factory=dict_row,
+            ) as connection:
+                yield connection
+        except psycopg.Error as exc:
+            raise FirstInstallBlocked(
+                "DATABASE_CONNECTION_FAILED", "isolated database connection failed"
+            ) from exc
+
+    return connect
+
+
+def create_pre_mutation_backup(
+    *, context: str, container: str, database_name: str, state_dir: Path
+) -> dict[str, Any]:
+    if (context, container, database_name) != (
+        DOCKER_CONTEXT,
+        DATABASE_CONTAINER,
+        EXPECTED_DATABASE,
+    ):
+        raise FirstInstallBlocked("BACKUP_TARGET_MISMATCH", "backup target is not exact")
+    backup_dir = state_dir.resolve() / "backups"
+    backup_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(backup_dir, 0o700)
+    try:
+        inspected = json.loads(
+            subprocess.check_output(
+                [
+                    "docker",
+                    "--context",
+                    context,
+                    "inspect",
+                    "--format",
+                    "{{json .}}",
+                    container,
+                ],
+                text=True,
+                stderr=subprocess.PIPE,
+                timeout=15,
+            )
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+        raise FirstInstallBlocked("DATABASE_CONTAINER_UNAVAILABLE", container) from exc
+    environment = {}
+    for entry in (inspected.get("Config") or {}).get("Env") or ():
+        if isinstance(entry, str) and "=" in entry:
+            name, value = entry.split("=", 1)
+            environment[name] = value
+    database_user = environment.get("POSTGRES_USER", "postgres")
+    target = backup_dir / "aos_meta_head-pre-canonical-first-install.dump"
+    if not target.exists():
+        temporary = target.with_name(target.name + ".tmp-" + uuid.uuid4().hex)
+        try:
+            with temporary.open("xb") as handle:
+                completed = subprocess.run(
+                    [
+                        "docker",
+                        "--context",
+                        context,
+                        "exec",
+                        container,
+                        "pg_dump",
+                        "-U",
+                        database_user,
+                        "--dbname",
+                        database_name,
+                        "--format=custom",
+                        "--no-owner",
+                        "--no-privileges",
+                    ],
+                    stdout=handle,
+                    stderr=subprocess.PIPE,
+                    timeout=120,
+                    check=False,
+                )
+            if completed.returncode != 0:
+                raise FirstInstallBlocked("DATABASE_BACKUP_FAILED", "pg_dump failed")
+            if temporary.stat().st_size <= 0:
+                raise FirstInstallBlocked("DATABASE_BACKUP_EMPTY", str(temporary))
+            temporary.replace(target)
+        finally:
+            temporary.unlink(missing_ok=True)
+    raw_hash = _sha256(target.read_bytes())
+    if target.stat().st_size <= 0:
+        raise FirstInstallBlocked("DATABASE_BACKUP_EMPTY", str(target))
+    return {"path": str(target), "size": target.stat().st_size, "sha256": raw_hash}
+
+
+def _private_key(path: Path) -> Ed25519PrivateKey:
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(path.parent, 0o700)
+    if not path.exists():
+        key = Ed25519PrivateKey.generate()
+        raw = key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(raw)
+    mode = stat.S_IMODE(path.stat().st_mode)
+    if mode != 0o600 or not path.is_file() or path.is_symlink():
+        raise FirstInstallBlocked("SIGNING_KEY_PERMISSIONS_INVALID", oct(mode))
+    try:
+        key = serialization.load_pem_private_key(path.read_bytes(), password=None)
+    except (OSError, ValueError, TypeError) as exc:
+        raise FirstInstallBlocked("SIGNING_KEY_INVALID", str(path)) from exc
+    if not isinstance(key, Ed25519PrivateKey):
+        raise FirstInstallBlocked("SIGNING_KEY_INVALID", str(path))
+    return key
+
+
+def prepare_persistent_signed_tree(*, build_dir: Path, state_dir: Path) -> dict[str, Any]:
+    sys.path.insert(0, str(API_ROOT))
+    builder = _load_builder()
+    try:
+        from aos_api.asset_registry.canonical_json import canonical_sha256
+        from aos_api.asset_registry.manifest_loader import ManifestLoader
+        from aos_api.asset_registry.release_policy import ReleasePolicy
+        from aos_api.asset_registry.signature import FileTrustRootProvider
+
+        signing_dir = state_dir.resolve() / "signing"
+        key_path = signing_dir / "registry-ed25519.pem"
+        trust_path = signing_dir / "trust-roots.json"
+        signed_root = state_dir.resolve() / "signed-bundles-v4"
+        key = _private_key(key_path)
+        public = key.public_key().public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw,
+        )
+        root_fields = {
+            "publisher": "aos",
+            "keyId": SIGNING_KEY_ID,
+            "algorithm": "Ed25519",
+            "publicKey": base64.b64encode(public).decode("ascii"),
+            "notBefore": SIGNING_NOT_BEFORE.isoformat(),
+            "notAfter": SIGNING_NOT_AFTER.isoformat(),
+            "revokedAt": None,
+        }
+        root_fields["revision"] = canonical_sha256(root_fields)
+        trust_document = {"trustRoots": [root_fields]}
+        trust_raw = (
+            json.dumps(trust_document, sort_keys=True, separators=(",", ":")) + "\n"
+        ).encode()
+        if trust_path.exists() and trust_path.read_bytes() != trust_raw:
+            raise FirstInstallBlocked("TRUST_ROOT_DRIFT", str(trust_path))
+        if not trust_path.exists():
+            trust_path.write_bytes(trust_raw)
+            os.chmod(trust_path, 0o600)
+        provider = FileTrustRootProvider(trust_path).snapshot()
+        if not signed_root.exists():
+            temporary = Path(
+                tempfile.mkdtemp(prefix="signed-bundles-v4-", dir=state_dir.resolve())
+            )
+            try:
+                shutil.copytree(build_dir, temporary, dirs_exist_ok=True)
+                unsigned = ManifestLoader({"a0v-canonical": temporary})
+                signed_at = datetime.now(UTC).isoformat()
+                for relative, bundle_id, _version, _package in builder.ALL_CASES:
+                    loaded = unsigned.load(f"bundle://a0v-canonical/{relative}")
+                    signature = {
+                        "algorithm": "Ed25519",
+                        "keyId": SIGNING_KEY_ID,
+                        "signature": base64.b64encode(
+                            key.sign(builder._signature_payload(loaded))
+                        ).decode("ascii"),
+                        "signedAt": signed_at,
+                    }
+                    (temporary / relative / "bundle.signature.json").write_text(
+                        json.dumps(signature, sort_keys=True, separators=(",", ":"))
+                        + "\n",
+                        encoding="utf-8",
+                    )
+                temporary.replace(signed_root)
+            finally:
+                if temporary.exists():
+                    shutil.rmtree(temporary, ignore_errors=True)
+        loader = ManifestLoader({"a0v-canonical": signed_root}, trust_roots=provider)
+        policy = ReleasePolicy(trust_roots=provider)
+        loaded_bundles = [
+            loader.load(f"bundle://a0v-canonical/{relative}")
+            for relative, _bundle_id, _version, _package in builder.ALL_CASES
+        ]
+        content_hashes = {}
+        checked_at = datetime.now(UTC)
+        for loaded, (_relative, bundle_id, _version, _package) in zip(
+            loaded_bundles, builder.ALL_CASES, strict=True
+        ):
+            policy.evaluate(builder._release_record(loaded), checked_at=checked_at)
+            content_hashes[bundle_id] = loaded.content_hash
+        if content_hashes != builder._content_hashes(build_dir):
+            raise FirstInstallBlocked("SIGNED_TREE_CONTENT_MISMATCH", str(signed_root))
+        return {
+            "keyId": SIGNING_KEY_ID,
+            "trustRootRevision": root_fields["revision"],
+            "privateKeyPath": str(key_path),
+            "privateKeyMode": "0600",
+            "trustRootsPath": str(trust_path),
+            "signedBundleRoot": str(signed_root),
+            "contentHashes": content_hashes,
+        }
+    finally:
+        sys.path.remove(str(API_ROOT))
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     evidence = verify_v4_inputs(
         build_dir=args.build_dir,
@@ -229,10 +615,24 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         raise FirstInstallBlocked(
             "EXPLICIT_ISOLATED_DATABASE_REQUIRED", EXPECTED_DATABASE
         )
-    raise FirstInstallBlocked(
-        "APPLY_NOT_IMPLEMENTED",
-        "canonical apply remains closed until database, signing and lifecycle stages are wired",
+    connect = container_database_connect_factory(
+        context=args.docker_context,
+        container=args.database_container,
+        database_name=args.database_name,
     )
+    evidence["database"] = inspect_isolated_database(connect)
+    evidence["backup"] = create_pre_mutation_backup(
+        context=args.docker_context,
+        container=args.database_container,
+        database_name=args.database_name,
+        state_dir=args.state_dir,
+    )
+    evidence["signing"] = prepare_persistent_signed_tree(
+        build_dir=args.build_dir.resolve(strict=True), state_dir=args.state_dir
+    )
+    evidence["mode"] = "apply-prepared"
+    evidence["outcome"] = "CANONICAL_WRITE_PREREQUISITES_GREEN"
+    return evidence
 
 
 def main(argv: Sequence[str] | None = None) -> int:

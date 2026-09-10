@@ -22,7 +22,41 @@ SPEC.loader.exec_module(INSTALLER)
 def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     builder = INSTALLER._load_builder()
     output = tmp_path / "built"
-    shutil.copytree(builder.CANDIDATE_ROOT, output)
+    output.mkdir()
+    for index, (relative, bundle_id, _version, package) in enumerate(
+        builder.ALL_CASES, start=1
+    ):
+        target = output / relative
+        shutil.copytree(builder.CANDIDATE_ROOT / relative, target)
+        if package is None:
+            continue
+        artifacts = target / "artifacts"
+        (artifacts / "python-dependencies.lock").write_bytes(builder.RUNTIME_LOCK)
+        builder._augment_sbom(
+            target,
+            sdk_hash="sha256:" + "d" * 64,
+            base_config_digest="sha256:" + "e" * 64,
+        )
+        (artifacts / "runtime-image-index.json").write_text(
+            json.dumps(
+                {
+                    "schemaVersion": 1,
+                    "images": [
+                        {
+                            "platform": builder.PLATFORM,
+                            "imageDigest": "sha256:" + f"{index:064x}",
+                            "configDigest": "sha256:" + f"{index + 10:064x}",
+                            "dependencyLockHash": builder._sha256(builder.RUNTIME_LOCK),
+                            "sbomPath": "evidence/sbom.json",
+                        }
+                    ],
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n",
+            encoding="utf-8",
+        )
     build = {
         "outcome": "BUILD_GREEN",
         "gitHead": subprocess.check_output(
@@ -133,3 +167,50 @@ def test_tampered_build_tree_is_rejected(tmp_path: Path, monkeypatch: pytest.Mon
             qualification_receipt_path=qualification,
         )
     assert captured.value.reason_code == "BUILD_RECEIPT_MISMATCH"
+
+
+def test_persistent_signing_tree_replays_with_same_key_and_revision(tmp_path: Path) -> None:
+    output, _build, _qualification = _fixture(tmp_path)
+    state = tmp_path / "state"
+    first = INSTALLER.prepare_persistent_signed_tree(build_dir=output, state_dir=state)
+    second = INSTALLER.prepare_persistent_signed_tree(build_dir=output, state_dir=state)
+    assert second == first
+    assert first["privateKeyMode"] == "0600"
+    assert Path(first["privateKeyPath"]).stat().st_mode & 0o777 == 0o600
+    assert not list(output.rglob("bundle.signature.json"))
+    assert len(list(Path(first["signedBundleRoot"]).rglob("bundle.signature.json"))) == 4
+
+
+def test_backup_rejects_noncanonical_target_before_subprocess(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        INSTALLER.subprocess,
+        "run",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("called")),
+    )
+    with pytest.raises(INSTALLER.FirstInstallBlocked) as captured:
+        INSTALLER.create_pre_mutation_backup(
+            context=INSTALLER.DOCKER_CONTEXT,
+            container=INSTALLER.DATABASE_CONTAINER,
+            database_name="aos_meta",
+            state_dir=tmp_path,
+        )
+    assert captured.value.reason_code == "BACKUP_TARGET_MISMATCH"
+
+
+def test_container_connection_rejects_noncanonical_target_before_inspect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        INSTALLER.subprocess,
+        "check_output",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("called")),
+    )
+    with pytest.raises(INSTALLER.FirstInstallBlocked) as captured:
+        INSTALLER.container_database_connect_factory(
+            context=INSTALLER.DOCKER_CONTEXT,
+            container=INSTALLER.DATABASE_CONTAINER,
+            database_name="aos_meta",
+        )
+    assert captured.value.reason_code == "DATABASE_TARGET_MISMATCH"
