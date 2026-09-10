@@ -26,6 +26,46 @@ def budget_body() -> dict:
             "unknownPriceBehavior": "block", "allowZeroPrice": False}
 
 
+def development_body():
+    body = budget_body()
+    body['developmentCostAuthorization'] = {
+        'tenant': {'orgId': 'org-org', 'projectId': 'dev-project'},
+        'provider': {'assetType': 'ProviderInstanceRevision', 'assetId': 'provider', 'revision': 1, 'contentHash': 'b' * 64},
+        'providerModelId': 'model', 'approvalRef': body['approvalRef'],
+        'effectiveFrom': body['effectiveFrom'], 'effectiveUntil': body['effectiveUntil'],
+    }
+    return body
+
+
+def test_development_authorization_is_owned_by_policy_and_changes_hash():
+    from aos_api.aip_model_governance_policy_store import materialize_policy
+    from aos_api.tenant_scope import TenantScope
+    legacy = BudgetPolicyRevisionCreate.model_validate(budget_body())
+    assert 'developmentCostAuthorization' not in legacy.model_dump(by_alias=True)
+    development = BudgetPolicyRevisionCreate.model_validate(development_body())
+    scope = TenantScope('org-org', 'dev-project')
+    old = materialize_policy(scope, 'test', legacy, created_at=NOW)
+    new = materialize_policy(scope, 'test', development, created_at=NOW)
+    assert new.content_hash != old.content_hash
+    assert new.development_cost_authorization.provider_model_id == 'model'
+    assert type(new).model_validate(new.model_dump()).model_dump() == new.model_dump()
+    with pytest.raises(ValidationError):
+        materialize_policy(TenantScope('dev-org', 'dev-project'), 'test', development, created_at=NOW)
+
+
+@pytest.mark.parametrize('change', ['approval', 'window', 'zero'])
+def test_development_policy_rejects_conflicting_authorization(change):
+    body = development_body()
+    if change == 'approval':
+        body['approvalRef'] = 'different'
+    elif change == 'window':
+        body['effectiveUntil'] = (NOW + timedelta(days=31)).isoformat()
+    else:
+        body.update(allowZeroPrice=True, zeroPriceApprovalRef='zero')
+    with pytest.raises(ValidationError):
+        BudgetPolicyRevisionCreate.model_validate(body)
+
+
 def test_approved_quota_and_budget_policy_contracts_are_fail_closed() -> None:
     quota = QuotaPolicyRevisionCreate.model_validate(quota_body())
     budget = BudgetPolicyRevisionCreate.model_validate(budget_body())

@@ -5,10 +5,11 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator, model_serializer
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.aip_development_cost_authorization import DevelopmentCostAuthorization
 
 
 class ModelGovernancePolicyLifecycle(StrEnum):
@@ -70,6 +71,7 @@ class QuotaPolicyRevisionCreate(ModelGovernancePolicyCreate):
 
 
 class BudgetPolicyRevisionCreate(ModelGovernancePolicyCreate):
+    development_cost_authorization: DevelopmentCostAuthorization | None = None
     budget_revision_ref: VersionedAssetRef
     currency: Literal["CNY"] = "CNY"
     hard_stop: Literal[True] = True
@@ -78,8 +80,24 @@ class BudgetPolicyRevisionCreate(ModelGovernancePolicyCreate):
     allow_zero_price: bool = False
     zero_price_approval_ref: str | None = Field(default=None, max_length=240)
 
+    @model_serializer(mode='wrap')
+    def preserve_legacy_payload(self, handler):
+        value = handler(self)
+        if self.development_cost_authorization is None:
+            value.pop('developmentCostAuthorization', None)
+            value.pop('development_cost_authorization', None)
+        return value
+
     @model_validator(mode="after")
     def _safe_budget_policy(self) -> "BudgetPolicyRevisionCreate":
+        authorization = self.development_cost_authorization
+        if authorization is not None:
+            if self.allow_zero_price:
+                raise ValueError('development cost deferral is not zero pricing')
+            if self.approval_ref != authorization.approval_ref:
+                raise ValueError('development cost approval must match policy approval')
+            if self.effective_from < authorization.effective_from or self.effective_until > authorization.effective_until:
+                raise ValueError('policy window exceeds development cost authorization')
         if self.budget_revision_ref.asset_type != "BudgetRevision":
             raise ValueError("budgetRevisionRef must reference BudgetRevision")
         if self.zero_price_approval_ref is not None:
@@ -103,3 +121,10 @@ class BudgetPolicyRevision(BudgetPolicyRevisionCreate):
     content_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     created_by: str = Field(min_length=1, max_length=200)
     created_at: datetime
+
+    @model_validator(mode='after')
+    def development_tenant_matches_owner(self):
+        authorization = self.development_cost_authorization
+        if authorization is not None and authorization.tenant != self.tenant:
+            raise ValueError('development cost tenant must match policy Owner')
+        return self
