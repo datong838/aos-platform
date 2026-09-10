@@ -1306,6 +1306,18 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
     return _public_source(item)
 
 
+class SourceProbeIn(BaseModel):
+    expectedConfigurationRevision: uuid.UUID
+
+
+@router.post("/v1/sources/{source_id}/test")
+def test_saved_source(source_id: str, body: SourceProbeIn,
+                      principal: Principal = Depends(require_principal)):
+    from aos_api.source_connection_probe import probe_source_tables
+    return probe_source_tables(_mutation_scope(principal), source_id,
+                               str(body.expectedConfigurationRevision))
+
+
 @router.get("/v1/sources")
 def list_sources(principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
