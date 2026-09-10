@@ -29,6 +29,6 @@
 
 ## 4. A0-V 影响
 
-发布前的 `AIP_ECOMMERCE_CATALOG_INVALID` 三个 HTTP 409 已消失。当前 19 个 blocker、1 个 unverified 中，目录缺口被替换为更精确的 installed/runnable/available 与 binding 未就绪事实；总数增加不代表回退，而是 API 可读后暴露出细粒度准入状态。
+发布前的 `AIP_ECOMMERCE_CATALOG_INVALID` 三个 HTTP 409 已消失。本阶段重采的 19 个 blocker、1 个 unverified 中，目录缺口被替换为更精确的 installed/runnable/available 与 binding 未就绪事实；总数增加不代表回退，而是 API 可读后暴露出细粒度准入状态。后续租户安装已继续推进，最新总数以 `a0-v-readiness-result.json` 为准。
 
 本阶段未关闭 Workshop/Bundle 安装、租户 Agent 安装、调查 StageTemplate/ResponsibilityPlan、SourceReadiness、Model/Route/Health/Chain/Budget 或跨租户 exact-id 反查。恢复库来源仍是 2026-08-05 历史备份，目录状态必须标注为本次隔离重建结果。

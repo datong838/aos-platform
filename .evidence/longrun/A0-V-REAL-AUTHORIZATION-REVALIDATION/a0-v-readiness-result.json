@@ -1,5 +1,5 @@
 {
-  "collectedAt": "2026-09-10T11:58:01.631569+00:00",
+  "collectedAt": "2026-09-10T12:03:37.030282+00:00",
   "observations": {
     "canary": {
       "agentInstances": {
@@ -5977,14 +5977,14 @@
               "projectId": "dev-project"
             }
           },
-          "evaluatedAt": "2026-09-10T11:58:01.252469Z",
+          "evaluatedAt": "2026-09-10T12:03:36.608250Z",
           "skillBindings": [],
           "tenant": {
             "orgId": "dev-org",
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "c42bc3e130ff0f8db38a83effa55db4b02967d2f19a463b383f453cae15b4199",
+        "bodySha256": "aae14e3b4a966e4be01e4f694c1c2bbdc1eb950df2eda5574bdd9d6acbf38e65",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/agent-registry/runtime-readiness"
@@ -6782,7 +6782,7 @@
       "modelChain": {
         "body": {
           "chains": [],
-          "generatedAt": "2026-09-10T11:58:01.408130Z",
+          "generatedAt": "2026-09-10T12:03:36.765193Z",
           "modelImpacts": [],
           "taskTraces": [],
           "tenant": {
@@ -6790,7 +6790,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "d218bd74c1ea4d5663a05c45489dd93bafaa5d357fce02a6a2105a4d4f00adf7",
+        "bodySha256": "86be8c5d2e15e043c8ecc7b7a8fecba683293af4dc1c8da939b5bed9b8f5f3ad",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/chain-overview"
@@ -6798,7 +6798,7 @@
       "modelCost": {
         "body": {
           "budgets": [],
-          "generatedAt": "2026-09-10T11:58:01.446099Z",
+          "generatedAt": "2026-09-10T12:03:36.802526Z",
           "modelPrices": [],
           "quotas": [],
           "tenant": {
@@ -6850,7 +6850,7 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:58:01.446099Z",
+                "endsAt": "2026-09-10T12:03:36.802526Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "today",
@@ -6899,14 +6899,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:58:01.446099Z",
+                "endsAt": "2026-09-10T12:03:36.802526Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "week",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-09-03T11:58:01.446099Z",
+                "startsAt": "2026-09-03T12:03:36.802526Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               },
@@ -6948,14 +6948,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:58:01.446099Z",
+                "endsAt": "2026-09-10T12:03:36.802526Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "month",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-08-11T11:58:01.446099Z",
+                "startsAt": "2026-08-11T12:03:36.802526Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               }
@@ -6966,7 +6966,7 @@
             "unknownCount": 0
           }
         },
-        "bodySha256": "ee56a16dd93665daeb29315f97f987c2a62e82ee4bac1141badb39e71b4ab3a9",
+        "bodySha256": "d7fde67b35f04d88da96ab93bd1eedad57cdc57d556c8c25f52b2410c90cfb0f",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/cost-overview"
@@ -6975,7 +6975,7 @@
         "body": {
           "capacityPools": [],
           "evalGates": [],
-          "generatedAt": "2026-09-10T11:58:01.394602Z",
+          "generatedAt": "2026-09-10T12:03:36.751483Z",
           "healthObservations": [],
           "models": [],
           "policies": [],
@@ -6988,7 +6988,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "4621afd952fc28da7b21360604d4141c9d33532db56c87cb6d8227a3983feecb",
+        "bodySha256": "9fb023f73b3e81f6736c09a9c1c75ab2689199c42d6a9760ca358a5fd4c6ff0c",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -7037,8 +7037,8 @@
       },
       "sourceReadiness": {
         "body": {
-          "checkedAt": "2026-09-10T11:58:01.031293Z",
-          "cutoffAt": "2026-09-10T11:58:01.031293Z",
+          "checkedAt": "2026-09-10T12:03:36.390507Z",
+          "cutoffAt": "2026-09-10T12:03:36.390507Z",
           "investigation": null,
           "receiptRef": null,
           "schemaVersion": "aos.source-readiness/v1",
@@ -7055,7 +7055,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7178,7 +7178,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7301,7 +7301,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7424,7 +7424,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7547,7 +7547,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7670,7 +7670,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7793,7 +7793,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7916,7 +7916,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -8039,7 +8039,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -8162,7 +8162,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -8285,7 +8285,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -8408,7 +8408,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:01.031293Z",
+              "checkedAt": "2026-09-10T12:03:36.390507Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -8526,7 +8526,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "66f2a4ec7dfb6cdd57ad2c05f271718b94b48244d4dce4ef1ae0c2b980e30066",
+        "bodySha256": "6bb60ad53fe9e5c06b40ddbaafa62dec2696de87a9016b396b162e88fc20ffe4",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/data/source-readiness"
@@ -8564,9 +8564,9 @@
           "code": "WORKSHOP_NOT_INSTALLED",
           "details": null,
           "message": "No active ecommerce Workshop module is visible",
-          "traceId": "cdd3e41e-e5e4-47a8-ad78-84616501ff8d"
+          "traceId": "df0e0556-2b28-4b77-a2b1-4616bbb636c5"
         },
-        "bodySha256": "0370d5184e093a4cada3b67dbc0effc077196895f07f004a05c00d4dbdc2a743",
+        "bodySha256": "576ebfcdffd8e052126135819fede5baa3aa99efdacacb866089ad567ea1f5fd",
         "httpStatus": 404,
         "method": "GET",
         "path": "/v1/ecommerce-workshop/source-readiness"
@@ -8581,7 +8581,57 @@
       "method": "GET",
       "path": "/v1/health"
     },
-    "isolation": {},
+    "isolation": {
+      "canaryAgentInstance": {
+        "body": {
+          "code": "AIP_AGENT_REGISTRY_NOT_FOUND",
+          "details": null,
+          "message": "agent instance not found",
+          "traceId": "185d7bc0-56cf-4805-9dfa-addbe0df39da"
+        },
+        "bodySha256": "898a6be09ece6bf2c360eb7c51da418ac7564a94dea0aea9d7a9792069b9dfc7",
+        "httpStatus": 404,
+        "method": "GET",
+        "path": "/v1/aip/agents/ecommerce.campaign_planner.default"
+      },
+      "positiveAgentInstance": {
+        "body": {
+          "createdAt": "2026-09-10T12:03:12.984093Z",
+          "createdBy": "user:dev",
+          "instanceId": "ecommerce.campaign_planner.default",
+          "instanceRef": {
+            "assetId": "ecommerce.campaign_planner.default",
+            "assetType": "AgentInstance",
+            "contentHash": "08ed9347bddc1ba2cf113944086bd900da1d5b6c7d896730b33b4dacc67e4804",
+            "revision": 1
+          },
+          "overlay": {
+            "allowedCapabilityIds": [],
+            "displayName": "活动策划师",
+            "monthlyBudgetMinor": null,
+            "policyRevision": null,
+            "promptRevision": null
+          },
+          "status": "provisioning",
+          "template": {
+            "assetId": "ecommerce.campaign_planner",
+            "assetType": "AgentTemplate",
+            "contentHash": "0146065b98b5ef0e5c74c7bcebf237ce45073801d7783ec29bc180f428ee432f",
+            "revision": 1
+          },
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          },
+          "updatedAt": "2026-09-10T12:03:12.984093Z",
+          "version": 1
+        },
+        "bodySha256": "c722e3d16e83717f9242848de699dc23649e02f54aea206123f343fa1ab91486",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/aip/agents/ecommerce.campaign_planner.default"
+      }
+    },
     "negative": {
       "invalidLimit": {
         "body": {
@@ -8603,9 +8653,9 @@
             ]
           },
           "message": "request validation failed",
-          "traceId": "5f65fe35-9a55-46b5-af9f-3d42003e4f33"
+          "traceId": "9c788266-a10c-43db-988a-f606020b7470"
         },
-        "bodySha256": "cde8c12c8c8a9886a8a60d0205de2667e049e368559398c5b1393a48c7b6c084",
+        "bodySha256": "884328cd51bcde09e43c436de202228894970980cee6f2fddd3feff11a7187ab",
         "httpStatus": 400,
         "method": "GET",
         "path": "/v1/bundle-installations?limit=101&offset=0"
@@ -8615,9 +8665,9 @@
           "code": "AUTH_REQUIRED",
           "details": null,
           "message": "Bearer [REDACTED] required",
-          "traceId": "79f71103-7a95-4c7b-bf35-a416f95d6c6a"
+          "traceId": "7d0cdaa2-0c36-4791-9dc2-34d10421b2cb"
         },
-        "bodySha256": "bfb84c1092e3a634e32e1d56095849fd4258bbbae2bcdef92d884f0fb6768245",
+        "bodySha256": "7b86339462845add169e074e0ad87012910f14a0d087e950096edbdff7bfbe8c",
         "httpStatus": 401,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -8626,14 +8676,201 @@
     "positive": {
       "agentInstances": {
         "body": {
-          "count": 0,
-          "items": [],
+          "count": 6,
+          "items": [
+            {
+              "createdAt": "2026-09-10T12:03:13.094850Z",
+              "createdBy": "user:dev",
+              "instanceId": "ecommerce.shopping_advisor.default",
+              "instanceRef": {
+                "assetId": "ecommerce.shopping_advisor.default",
+                "assetType": "AgentInstance",
+                "contentHash": "64e5905de255857d3574bc57db3dee7c6895ef51f96db2e34ab44984541d3c6a",
+                "revision": 1
+              },
+              "overlay": {
+                "allowedCapabilityIds": [],
+                "displayName": "导购顾问",
+                "monthlyBudgetMinor": null,
+                "policyRevision": null,
+                "promptRevision": null
+              },
+              "status": "provisioning",
+              "template": {
+                "assetId": "ecommerce.shopping_advisor",
+                "assetType": "AgentTemplate",
+                "contentHash": "cf9b1c17d5a80ac47123a9ad1cec54f2f2e025d2ed7ee2c62c9e65c0a3fdebd8",
+                "revision": 1
+              },
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              },
+              "updatedAt": "2026-09-10T12:03:13.094850Z",
+              "version": 1
+            },
+            {
+              "createdAt": "2026-09-10T12:03:13.074396Z",
+              "createdBy": "user:dev",
+              "instanceId": "ecommerce.private_domain_manager.default",
+              "instanceRef": {
+                "assetId": "ecommerce.private_domain_manager.default",
+                "assetType": "AgentInstance",
+                "contentHash": "ec8cf66d40508c3900824684e966d8bad82b138e3d1a5e218423350b8776f264",
+                "revision": 1
+              },
+              "overlay": {
+                "allowedCapabilityIds": [],
+                "displayName": "私域管家",
+                "monthlyBudgetMinor": null,
+                "policyRevision": null,
+                "promptRevision": null
+              },
+              "status": "provisioning",
+              "template": {
+                "assetId": "ecommerce.private_domain_manager",
+                "assetType": "AgentTemplate",
+                "contentHash": "bbc2da81658582a2ff0eabd90a24d3f43dff5ab0d599f32a5ebf73db6b18ef6c",
+                "revision": 1
+              },
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              },
+              "updatedAt": "2026-09-10T12:03:13.074396Z",
+              "version": 1
+            },
+            {
+              "createdAt": "2026-09-10T12:03:13.053959Z",
+              "createdBy": "user:dev",
+              "instanceId": "ecommerce.data_advisor.default",
+              "instanceRef": {
+                "assetId": "ecommerce.data_advisor.default",
+                "assetType": "AgentInstance",
+                "contentHash": "8b6ace9fbd536bf35ca73cd2941c4247b6729fd6f61dc9f6cffad94c169d2f52",
+                "revision": 1
+              },
+              "overlay": {
+                "allowedCapabilityIds": [],
+                "displayName": "数据参谋",
+                "monthlyBudgetMinor": null,
+                "policyRevision": null,
+                "promptRevision": null
+              },
+              "status": "provisioning",
+              "template": {
+                "assetId": "ecommerce.data_advisor",
+                "assetType": "AgentTemplate",
+                "contentHash": "c03f530fe9fec8b473291d3c19eeef2986a595cad7a3123986e24e156d2b7736",
+                "revision": 1
+              },
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              },
+              "updatedAt": "2026-09-10T12:03:13.053959Z",
+              "version": 1
+            },
+            {
+              "createdAt": "2026-09-10T12:03:13.031395Z",
+              "createdBy": "user:dev",
+              "instanceId": "ecommerce.customer_service.default",
+              "instanceRef": {
+                "assetId": "ecommerce.customer_service.default",
+                "assetType": "AgentInstance",
+                "contentHash": "e5a06ffa6b4ede1edf4af53e349cb567b28150f0b70e1aff3a6d0b9ad5ee33e8",
+                "revision": 1
+              },
+              "overlay": {
+                "allowedCapabilityIds": [],
+                "displayName": "客服专员",
+                "monthlyBudgetMinor": null,
+                "policyRevision": null,
+                "promptRevision": null
+              },
+              "status": "provisioning",
+              "template": {
+                "assetId": "ecommerce.customer_service",
+                "assetType": "AgentTemplate",
+                "contentHash": "79bd9a4dc1e84e0c8d2ab9bb36ecdebdc87444970637b96d7f8eb882401ea86e",
+                "revision": 1
+              },
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              },
+              "updatedAt": "2026-09-10T12:03:13.031395Z",
+              "version": 1
+            },
+            {
+              "createdAt": "2026-09-10T12:03:13.007628Z",
+              "createdBy": "user:dev",
+              "instanceId": "ecommerce.content_officer.default",
+              "instanceRef": {
+                "assetId": "ecommerce.content_officer.default",
+                "assetType": "AgentInstance",
+                "contentHash": "d236bf26403726d96c5d0bfcdc67d459da83d330c3eb051bc0f76dfd913d9d58",
+                "revision": 1
+              },
+              "overlay": {
+                "allowedCapabilityIds": [],
+                "displayName": "内容官",
+                "monthlyBudgetMinor": null,
+                "policyRevision": null,
+                "promptRevision": null
+              },
+              "status": "provisioning",
+              "template": {
+                "assetId": "ecommerce.content_officer",
+                "assetType": "AgentTemplate",
+                "contentHash": "9c73efeedc8573292af86f45b4aa0343418a89c81b4db7f09cd05bb4ee760e8b",
+                "revision": 1
+              },
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              },
+              "updatedAt": "2026-09-10T12:03:13.007628Z",
+              "version": 1
+            },
+            {
+              "createdAt": "2026-09-10T12:03:12.984093Z",
+              "createdBy": "user:dev",
+              "instanceId": "ecommerce.campaign_planner.default",
+              "instanceRef": {
+                "assetId": "ecommerce.campaign_planner.default",
+                "assetType": "AgentInstance",
+                "contentHash": "08ed9347bddc1ba2cf113944086bd900da1d5b6c7d896730b33b4dacc67e4804",
+                "revision": 1
+              },
+              "overlay": {
+                "allowedCapabilityIds": [],
+                "displayName": "活动策划师",
+                "monthlyBudgetMinor": null,
+                "policyRevision": null,
+                "promptRevision": null
+              },
+              "status": "provisioning",
+              "template": {
+                "assetId": "ecommerce.campaign_planner",
+                "assetType": "AgentTemplate",
+                "contentHash": "0146065b98b5ef0e5c74c7bcebf237ce45073801d7783ec29bc180f428ee432f",
+                "revision": 1
+              },
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              },
+              "updatedAt": "2026-09-10T12:03:12.984093Z",
+              "version": 1
+            }
+          ],
           "tenant": {
             "orgId": "org-org",
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "14adb4b21310e92f6b37735fbf9ae80781da33b428da47dddc49fc20018a0cdd",
+        "bodySha256": "1d6ac7e6f337d6cf0f0a6ceafeec23266e5a24ead2b9d7da1ec8231676a89da1",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/agents"
@@ -8643,12 +8880,42 @@
           "items": [
             {
               "blockers": [
-                "agent_instance_not_installed",
+                "agent_instance_not_active",
                 "capability_bindings_unavailable",
                 "skill_binding_unavailable",
                 "skill_templates_not_published"
               ],
-              "instance": null,
+              "instance": {
+                "createdAt": "2026-09-10T12:03:12.984093Z",
+                "createdBy": "user:dev",
+                "instanceId": "ecommerce.campaign_planner.default",
+                "instanceRef": {
+                  "assetId": "ecommerce.campaign_planner.default",
+                  "assetType": "AgentInstance",
+                  "contentHash": "08ed9347bddc1ba2cf113944086bd900da1d5b6c7d896730b33b4dacc67e4804",
+                  "revision": 1
+                },
+                "overlay": {
+                  "allowedCapabilityIds": [],
+                  "displayName": "活动策划师",
+                  "monthlyBudgetMinor": null,
+                  "policyRevision": null,
+                  "promptRevision": null
+                },
+                "status": "provisioning",
+                "template": {
+                  "assetId": "ecommerce.campaign_planner",
+                  "assetType": "AgentTemplate",
+                  "contentHash": "0146065b98b5ef0e5c74c7bcebf237ce45073801d7783ec29bc180f428ee432f",
+                  "revision": 1
+                },
+                "tenant": {
+                  "orgId": "org-org",
+                  "projectId": "dev-project"
+                },
+                "updatedAt": "2026-09-10T12:03:12.984093Z",
+                "version": 1
+              },
               "requiredCapabilityIds": [
                 "material.collect",
                 "performance.review",
@@ -9123,12 +9390,42 @@
             },
             {
               "blockers": [
-                "agent_instance_not_installed",
+                "agent_instance_not_active",
                 "capability_bindings_unavailable",
                 "skill_binding_unavailable",
                 "skill_templates_not_published"
               ],
-              "instance": null,
+              "instance": {
+                "createdAt": "2026-09-10T12:03:13.007628Z",
+                "createdBy": "user:dev",
+                "instanceId": "ecommerce.content_officer.default",
+                "instanceRef": {
+                  "assetId": "ecommerce.content_officer.default",
+                  "assetType": "AgentInstance",
+                  "contentHash": "d236bf26403726d96c5d0bfcdc67d459da83d330c3eb051bc0f76dfd913d9d58",
+                  "revision": 1
+                },
+                "overlay": {
+                  "allowedCapabilityIds": [],
+                  "displayName": "内容官",
+                  "monthlyBudgetMinor": null,
+                  "policyRevision": null,
+                  "promptRevision": null
+                },
+                "status": "provisioning",
+                "template": {
+                  "assetId": "ecommerce.content_officer",
+                  "assetType": "AgentTemplate",
+                  "contentHash": "9c73efeedc8573292af86f45b4aa0343418a89c81b4db7f09cd05bb4ee760e8b",
+                  "revision": 1
+                },
+                "tenant": {
+                  "orgId": "org-org",
+                  "projectId": "dev-project"
+                },
+                "updatedAt": "2026-09-10T12:03:13.007628Z",
+                "version": 1
+              },
               "requiredCapabilityIds": [
                 "content.review",
                 "copy.generate",
@@ -9752,12 +10049,42 @@
             },
             {
               "blockers": [
-                "agent_instance_not_installed",
+                "agent_instance_not_active",
                 "capability_bindings_unavailable",
                 "skill_binding_unavailable",
                 "skill_templates_not_published"
               ],
-              "instance": null,
+              "instance": {
+                "createdAt": "2026-09-10T12:03:13.031395Z",
+                "createdBy": "user:dev",
+                "instanceId": "ecommerce.customer_service.default",
+                "instanceRef": {
+                  "assetId": "ecommerce.customer_service.default",
+                  "assetType": "AgentInstance",
+                  "contentHash": "e5a06ffa6b4ede1edf4af53e349cb567b28150f0b70e1aff3a6d0b9ad5ee33e8",
+                  "revision": 1
+                },
+                "overlay": {
+                  "allowedCapabilityIds": [],
+                  "displayName": "客服专员",
+                  "monthlyBudgetMinor": null,
+                  "policyRevision": null,
+                  "promptRevision": null
+                },
+                "status": "provisioning",
+                "template": {
+                  "assetId": "ecommerce.customer_service",
+                  "assetType": "AgentTemplate",
+                  "contentHash": "79bd9a4dc1e84e0c8d2ab9bb36ecdebdc87444970637b96d7f8eb882401ea86e",
+                  "revision": 1
+                },
+                "tenant": {
+                  "orgId": "org-org",
+                  "projectId": "dev-project"
+                },
+                "updatedAt": "2026-09-10T12:03:13.031395Z",
+                "version": 1
+              },
               "requiredCapabilityIds": [
                 "copy.generate",
                 "material.collect",
@@ -10233,12 +10560,42 @@
             },
             {
               "blockers": [
-                "agent_instance_not_installed",
+                "agent_instance_not_active",
                 "capability_bindings_unavailable",
                 "skill_binding_unavailable",
                 "skill_templates_not_published"
               ],
-              "instance": null,
+              "instance": {
+                "createdAt": "2026-09-10T12:03:13.053959Z",
+                "createdBy": "user:dev",
+                "instanceId": "ecommerce.data_advisor.default",
+                "instanceRef": {
+                  "assetId": "ecommerce.data_advisor.default",
+                  "assetType": "AgentInstance",
+                  "contentHash": "8b6ace9fbd536bf35ca73cd2941c4247b6729fd6f61dc9f6cffad94c169d2f52",
+                  "revision": 1
+                },
+                "overlay": {
+                  "allowedCapabilityIds": [],
+                  "displayName": "数据参谋",
+                  "monthlyBudgetMinor": null,
+                  "policyRevision": null,
+                  "promptRevision": null
+                },
+                "status": "provisioning",
+                "template": {
+                  "assetId": "ecommerce.data_advisor",
+                  "assetType": "AgentTemplate",
+                  "contentHash": "c03f530fe9fec8b473291d3c19eeef2986a595cad7a3123986e24e156d2b7736",
+                  "revision": 1
+                },
+                "tenant": {
+                  "orgId": "org-org",
+                  "projectId": "dev-project"
+                },
+                "updatedAt": "2026-09-10T12:03:13.053959Z",
+                "version": 1
+              },
               "requiredCapabilityIds": [
                 "material.collect",
                 "performance.review",
@@ -10711,12 +11068,42 @@
             },
             {
               "blockers": [
-                "agent_instance_not_installed",
+                "agent_instance_not_active",
                 "capability_bindings_unavailable",
                 "skill_binding_unavailable",
                 "skill_templates_not_published"
               ],
-              "instance": null,
+              "instance": {
+                "createdAt": "2026-09-10T12:03:13.074396Z",
+                "createdBy": "user:dev",
+                "instanceId": "ecommerce.private_domain_manager.default",
+                "instanceRef": {
+                  "assetId": "ecommerce.private_domain_manager.default",
+                  "assetType": "AgentInstance",
+                  "contentHash": "ec8cf66d40508c3900824684e966d8bad82b138e3d1a5e218423350b8776f264",
+                  "revision": 1
+                },
+                "overlay": {
+                  "allowedCapabilityIds": [],
+                  "displayName": "私域管家",
+                  "monthlyBudgetMinor": null,
+                  "policyRevision": null,
+                  "promptRevision": null
+                },
+                "status": "provisioning",
+                "template": {
+                  "assetId": "ecommerce.private_domain_manager",
+                  "assetType": "AgentTemplate",
+                  "contentHash": "bbc2da81658582a2ff0eabd90a24d3f43dff5ab0d599f32a5ebf73db6b18ef6c",
+                  "revision": 1
+                },
+                "tenant": {
+                  "orgId": "org-org",
+                  "projectId": "dev-project"
+                },
+                "updatedAt": "2026-09-10T12:03:13.074396Z",
+                "version": 1
+              },
               "requiredCapabilityIds": [
                 "copy.generate",
                 "material.collect",
@@ -11120,12 +11507,42 @@
             },
             {
               "blockers": [
-                "agent_instance_not_installed",
+                "agent_instance_not_active",
                 "capability_bindings_unavailable",
                 "skill_binding_unavailable",
                 "skill_templates_not_published"
               ],
-              "instance": null,
+              "instance": {
+                "createdAt": "2026-09-10T12:03:13.094850Z",
+                "createdBy": "user:dev",
+                "instanceId": "ecommerce.shopping_advisor.default",
+                "instanceRef": {
+                  "assetId": "ecommerce.shopping_advisor.default",
+                  "assetType": "AgentInstance",
+                  "contentHash": "64e5905de255857d3574bc57db3dee7c6895ef51f96db2e34ab44984541d3c6a",
+                  "revision": 1
+                },
+                "overlay": {
+                  "allowedCapabilityIds": [],
+                  "displayName": "导购顾问",
+                  "monthlyBudgetMinor": null,
+                  "policyRevision": null,
+                  "promptRevision": null
+                },
+                "status": "provisioning",
+                "template": {
+                  "assetId": "ecommerce.shopping_advisor",
+                  "assetType": "AgentTemplate",
+                  "contentHash": "cf9b1c17d5a80ac47123a9ad1cec54f2f2e025d2ed7ee2c62c9e65c0a3fdebd8",
+                  "revision": 1
+                },
+                "tenant": {
+                  "orgId": "org-org",
+                  "projectId": "dev-project"
+                },
+                "updatedAt": "2026-09-10T12:03:13.094850Z",
+                "version": 1
+              },
               "requiredCapabilityIds": [
                 "copy.generate",
                 "material.collect",
@@ -11603,7 +12020,7 @@
           "stats": {
             "capabilityDefinitionCount": 10,
             "definitionCount": 6,
-            "installedCount": 0,
+            "installedCount": 6,
             "runnableCount": 0,
             "skillDefinitionCount": 37
           },
@@ -11612,7 +12029,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "f0305e18650022c66ca88b68fbb499dc49e65601a6683ea6dd558ac441807b0b",
+        "bodySha256": "07d649b426cfa543bbf79bb3d2b7460abdc55a1aa80f0552541c2627919def1d",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/agent-registry"
@@ -11630,12 +12047,42 @@
             "items": [
               {
                 "blockers": [
-                  "agent_instance_not_installed",
+                  "agent_instance_not_active",
                   "capability_bindings_unavailable",
                   "skill_binding_unavailable",
                   "skill_templates_not_published"
                 ],
-                "instance": null,
+                "instance": {
+                  "createdAt": "2026-09-10T12:03:12.984093Z",
+                  "createdBy": "user:dev",
+                  "instanceId": "ecommerce.campaign_planner.default",
+                  "instanceRef": {
+                    "assetId": "ecommerce.campaign_planner.default",
+                    "assetType": "AgentInstance",
+                    "contentHash": "08ed9347bddc1ba2cf113944086bd900da1d5b6c7d896730b33b4dacc67e4804",
+                    "revision": 1
+                  },
+                  "overlay": {
+                    "allowedCapabilityIds": [],
+                    "displayName": "活动策划师",
+                    "monthlyBudgetMinor": null,
+                    "policyRevision": null,
+                    "promptRevision": null
+                  },
+                  "status": "provisioning",
+                  "template": {
+                    "assetId": "ecommerce.campaign_planner",
+                    "assetType": "AgentTemplate",
+                    "contentHash": "0146065b98b5ef0e5c74c7bcebf237ce45073801d7783ec29bc180f428ee432f",
+                    "revision": 1
+                  },
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "updatedAt": "2026-09-10T12:03:12.984093Z",
+                  "version": 1
+                },
                 "requiredCapabilityIds": [
                   "material.collect",
                   "performance.review",
@@ -12110,12 +12557,42 @@
               },
               {
                 "blockers": [
-                  "agent_instance_not_installed",
+                  "agent_instance_not_active",
                   "capability_bindings_unavailable",
                   "skill_binding_unavailable",
                   "skill_templates_not_published"
                 ],
-                "instance": null,
+                "instance": {
+                  "createdAt": "2026-09-10T12:03:13.007628Z",
+                  "createdBy": "user:dev",
+                  "instanceId": "ecommerce.content_officer.default",
+                  "instanceRef": {
+                    "assetId": "ecommerce.content_officer.default",
+                    "assetType": "AgentInstance",
+                    "contentHash": "d236bf26403726d96c5d0bfcdc67d459da83d330c3eb051bc0f76dfd913d9d58",
+                    "revision": 1
+                  },
+                  "overlay": {
+                    "allowedCapabilityIds": [],
+                    "displayName": "内容官",
+                    "monthlyBudgetMinor": null,
+                    "policyRevision": null,
+                    "promptRevision": null
+                  },
+                  "status": "provisioning",
+                  "template": {
+                    "assetId": "ecommerce.content_officer",
+                    "assetType": "AgentTemplate",
+                    "contentHash": "9c73efeedc8573292af86f45b4aa0343418a89c81b4db7f09cd05bb4ee760e8b",
+                    "revision": 1
+                  },
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "updatedAt": "2026-09-10T12:03:13.007628Z",
+                  "version": 1
+                },
                 "requiredCapabilityIds": [
                   "content.review",
                   "copy.generate",
@@ -12739,12 +13216,42 @@
               },
               {
                 "blockers": [
-                  "agent_instance_not_installed",
+                  "agent_instance_not_active",
                   "capability_bindings_unavailable",
                   "skill_binding_unavailable",
                   "skill_templates_not_published"
                 ],
-                "instance": null,
+                "instance": {
+                  "createdAt": "2026-09-10T12:03:13.031395Z",
+                  "createdBy": "user:dev",
+                  "instanceId": "ecommerce.customer_service.default",
+                  "instanceRef": {
+                    "assetId": "ecommerce.customer_service.default",
+                    "assetType": "AgentInstance",
+                    "contentHash": "e5a06ffa6b4ede1edf4af53e349cb567b28150f0b70e1aff3a6d0b9ad5ee33e8",
+                    "revision": 1
+                  },
+                  "overlay": {
+                    "allowedCapabilityIds": [],
+                    "displayName": "客服专员",
+                    "monthlyBudgetMinor": null,
+                    "policyRevision": null,
+                    "promptRevision": null
+                  },
+                  "status": "provisioning",
+                  "template": {
+                    "assetId": "ecommerce.customer_service",
+                    "assetType": "AgentTemplate",
+                    "contentHash": "79bd9a4dc1e84e0c8d2ab9bb36ecdebdc87444970637b96d7f8eb882401ea86e",
+                    "revision": 1
+                  },
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "updatedAt": "2026-09-10T12:03:13.031395Z",
+                  "version": 1
+                },
                 "requiredCapabilityIds": [
                   "copy.generate",
                   "material.collect",
@@ -13220,12 +13727,42 @@
               },
               {
                 "blockers": [
-                  "agent_instance_not_installed",
+                  "agent_instance_not_active",
                   "capability_bindings_unavailable",
                   "skill_binding_unavailable",
                   "skill_templates_not_published"
                 ],
-                "instance": null,
+                "instance": {
+                  "createdAt": "2026-09-10T12:03:13.053959Z",
+                  "createdBy": "user:dev",
+                  "instanceId": "ecommerce.data_advisor.default",
+                  "instanceRef": {
+                    "assetId": "ecommerce.data_advisor.default",
+                    "assetType": "AgentInstance",
+                    "contentHash": "8b6ace9fbd536bf35ca73cd2941c4247b6729fd6f61dc9f6cffad94c169d2f52",
+                    "revision": 1
+                  },
+                  "overlay": {
+                    "allowedCapabilityIds": [],
+                    "displayName": "数据参谋",
+                    "monthlyBudgetMinor": null,
+                    "policyRevision": null,
+                    "promptRevision": null
+                  },
+                  "status": "provisioning",
+                  "template": {
+                    "assetId": "ecommerce.data_advisor",
+                    "assetType": "AgentTemplate",
+                    "contentHash": "c03f530fe9fec8b473291d3c19eeef2986a595cad7a3123986e24e156d2b7736",
+                    "revision": 1
+                  },
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "updatedAt": "2026-09-10T12:03:13.053959Z",
+                  "version": 1
+                },
                 "requiredCapabilityIds": [
                   "material.collect",
                   "performance.review",
@@ -13698,12 +14235,42 @@
               },
               {
                 "blockers": [
-                  "agent_instance_not_installed",
+                  "agent_instance_not_active",
                   "capability_bindings_unavailable",
                   "skill_binding_unavailable",
                   "skill_templates_not_published"
                 ],
-                "instance": null,
+                "instance": {
+                  "createdAt": "2026-09-10T12:03:13.074396Z",
+                  "createdBy": "user:dev",
+                  "instanceId": "ecommerce.private_domain_manager.default",
+                  "instanceRef": {
+                    "assetId": "ecommerce.private_domain_manager.default",
+                    "assetType": "AgentInstance",
+                    "contentHash": "ec8cf66d40508c3900824684e966d8bad82b138e3d1a5e218423350b8776f264",
+                    "revision": 1
+                  },
+                  "overlay": {
+                    "allowedCapabilityIds": [],
+                    "displayName": "私域管家",
+                    "monthlyBudgetMinor": null,
+                    "policyRevision": null,
+                    "promptRevision": null
+                  },
+                  "status": "provisioning",
+                  "template": {
+                    "assetId": "ecommerce.private_domain_manager",
+                    "assetType": "AgentTemplate",
+                    "contentHash": "bbc2da81658582a2ff0eabd90a24d3f43dff5ab0d599f32a5ebf73db6b18ef6c",
+                    "revision": 1
+                  },
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "updatedAt": "2026-09-10T12:03:13.074396Z",
+                  "version": 1
+                },
                 "requiredCapabilityIds": [
                   "copy.generate",
                   "material.collect",
@@ -14107,12 +14674,42 @@
               },
               {
                 "blockers": [
-                  "agent_instance_not_installed",
+                  "agent_instance_not_active",
                   "capability_bindings_unavailable",
                   "skill_binding_unavailable",
                   "skill_templates_not_published"
                 ],
-                "instance": null,
+                "instance": {
+                  "createdAt": "2026-09-10T12:03:13.094850Z",
+                  "createdBy": "user:dev",
+                  "instanceId": "ecommerce.shopping_advisor.default",
+                  "instanceRef": {
+                    "assetId": "ecommerce.shopping_advisor.default",
+                    "assetType": "AgentInstance",
+                    "contentHash": "64e5905de255857d3574bc57db3dee7c6895ef51f96db2e34ab44984541d3c6a",
+                    "revision": 1
+                  },
+                  "overlay": {
+                    "allowedCapabilityIds": [],
+                    "displayName": "导购顾问",
+                    "monthlyBudgetMinor": null,
+                    "policyRevision": null,
+                    "promptRevision": null
+                  },
+                  "status": "provisioning",
+                  "template": {
+                    "assetId": "ecommerce.shopping_advisor",
+                    "assetType": "AgentTemplate",
+                    "contentHash": "cf9b1c17d5a80ac47123a9ad1cec54f2f2e025d2ed7ee2c62c9e65c0a3fdebd8",
+                    "revision": 1
+                  },
+                  "tenant": {
+                    "orgId": "org-org",
+                    "projectId": "dev-project"
+                  },
+                  "updatedAt": "2026-09-10T12:03:13.094850Z",
+                  "version": 1
+                },
                 "requiredCapabilityIds": [
                   "copy.generate",
                   "material.collect",
@@ -14590,7 +15187,7 @@
             "stats": {
               "capabilityDefinitionCount": 10,
               "definitionCount": 6,
-              "installedCount": 0,
+              "installedCount": 6,
               "runnableCount": 0,
               "skillDefinitionCount": 37
             },
@@ -14599,14 +15196,14 @@
               "projectId": "dev-project"
             }
           },
-          "evaluatedAt": "2026-09-10T11:58:00.648234Z",
+          "evaluatedAt": "2026-09-10T12:03:36.009903Z",
           "skillBindings": [],
           "tenant": {
             "orgId": "org-org",
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "c8756663d9739ec9c1c655879a66aade79087b69eec7a254819df54df1864588",
+        "bodySha256": "59d8de259c4534823fe1f0b273d58b29a55eebbbade3e0b8b8752f4010a94bf6",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/agent-registry/runtime-readiness"
@@ -15404,7 +16001,7 @@
       "modelChain": {
         "body": {
           "chains": [],
-          "generatedAt": "2026-09-10T11:58:00.805742Z",
+          "generatedAt": "2026-09-10T12:03:36.168197Z",
           "modelImpacts": [],
           "taskTraces": [],
           "tenant": {
@@ -15412,7 +16009,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "cf42d794ea9a88d5aecdee5bb5da61a3125c844bed703604edef8213273be6fe",
+        "bodySha256": "367aad9869f3e87b4133692dd65f2635793ff2c54ee3253cca9b50b6e9644b94",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/chain-overview"
@@ -15420,7 +16017,7 @@
       "modelCost": {
         "body": {
           "budgets": [],
-          "generatedAt": "2026-09-10T11:58:00.843411Z",
+          "generatedAt": "2026-09-10T12:03:36.206200Z",
           "modelPrices": [],
           "quotas": [],
           "tenant": {
@@ -15472,7 +16069,7 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:58:00.843411Z",
+                "endsAt": "2026-09-10T12:03:36.206200Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "today",
@@ -15521,14 +16118,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:58:00.843411Z",
+                "endsAt": "2026-09-10T12:03:36.206200Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "week",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-09-03T11:58:00.843411Z",
+                "startsAt": "2026-09-03T12:03:36.206200Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               },
@@ -15570,14 +16167,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:58:00.843411Z",
+                "endsAt": "2026-09-10T12:03:36.206200Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "month",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-08-11T11:58:00.843411Z",
+                "startsAt": "2026-08-11T12:03:36.206200Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               }
@@ -15588,7 +16185,7 @@
             "unknownCount": 0
           }
         },
-        "bodySha256": "b5cc5a1e432cf11d411ef23c8467a6a2f3d4cac01b11a5e4265810ed2211d109",
+        "bodySha256": "3d9869308eb9c3bdb41766c46e11f7e8310919b720ab6efaa678b1c022e34faa",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/cost-overview"
@@ -15597,7 +16194,7 @@
         "body": {
           "capacityPools": [],
           "evalGates": [],
-          "generatedAt": "2026-09-10T11:58:00.791978Z",
+          "generatedAt": "2026-09-10T12:03:36.154619Z",
           "healthObservations": [],
           "models": [],
           "policies": [],
@@ -15610,7 +16207,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "761fc66e5163c654fc1fdefb7cdb9a47afdb9e0578d32ec507a96f4cbe71606f",
+        "bodySha256": "05bd5c02c14c59300f4c3567adb926af84e11a3e1e6f359649c5ef22344c051a",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -15659,8 +16256,8 @@
       },
       "sourceReadiness": {
         "body": {
-          "checkedAt": "2026-09-10T11:58:00.416623Z",
-          "cutoffAt": "2026-09-10T11:58:00.416623Z",
+          "checkedAt": "2026-09-10T12:03:35.778972Z",
+          "cutoffAt": "2026-09-10T12:03:35.778972Z",
           "investigation": null,
           "receiptRef": null,
           "schemaVersion": "aos.source-readiness/v1",
@@ -15677,7 +16274,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -15800,7 +16397,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -15923,7 +16520,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16046,7 +16643,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16169,7 +16766,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16292,7 +16889,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16415,7 +17012,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16538,7 +17135,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16661,7 +17258,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16784,7 +17381,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16907,7 +17504,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -17030,7 +17627,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:58:00.416623Z",
+              "checkedAt": "2026-09-10T12:03:35.778972Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -17148,7 +17745,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "ccb48edddb4b7afafaefb45fc3aab34ec0fe37de6bb4093337e106e84bc27676",
+        "bodySha256": "6e94f508d230729a5b5931d9728901fcd4840f3928ac22ce8908360cb44efabd",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/data/source-readiness"
@@ -17186,9 +17783,9 @@
           "code": "WORKSHOP_NOT_INSTALLED",
           "details": null,
           "message": "No active ecommerce Workshop module is visible",
-          "traceId": "0256b8d8-8aa9-46a9-b34b-175f96672b77"
+          "traceId": "b9e6aa1b-1583-4af4-950a-de109c71820e"
         },
-        "bodySha256": "bdd1ddebfe172967f93f31d64c0c954432470a943a0e980301f517c49f21d6c6",
+        "bodySha256": "1015f6b26039292d8f083d80a745db73ffe06dd8520a98190d57602962702378",
         "httpStatus": 404,
         "method": "GET",
         "path": "/v1/ecommerce-workshop/source-readiness"
@@ -17205,7 +17802,7 @@
     },
     "databaseEvidenceClass": "HISTORICAL_BACKUP_RECOVERED_THEN_MIGRATED_TO_HEAD",
     "databaseOriginalDataCutoff": "2026-08-05T05:02:48+08:00",
-    "gitHead": "bdd837596bcdcc087e465dab45b1685eca81c1e1",
+    "gitHead": "ecfc1baed99263d0945a4e6f01e7c0c1bfee04e9",
     "httpMethods": [
       "GET"
     ],
@@ -17222,7 +17819,7 @@
     }
   },
   "summary": {
-    "blockerCount": 19,
+    "blockerCount": 17,
     "blockers": [
       {
         "gate": "workshopSourceReadiness",
@@ -17239,19 +17836,7 @@
       },
       {
         "expected": 6,
-        "gate": "agentRegistry.stats.installedCount",
-        "observed": 0,
-        "reason": "COUNT_MISMATCH"
-      },
-      {
-        "expected": 6,
         "gate": "agentRegistry.stats.runnableCount",
-        "observed": 0,
-        "reason": "COUNT_MISMATCH"
-      },
-      {
-        "expected": 6,
-        "gate": "agentRuntimeReadiness.stats.installedCount",
         "observed": 0,
         "reason": "COUNT_MISMATCH"
       },
@@ -17471,12 +18056,7 @@
         "positive": null
       }
     },
-    "unverified": [
-      {
-        "gate": "crossTenantResourceIsolation",
-        "reason": "NO_POSITIVE_RESOURCE_AVAILABLE_FOR_CANARY_COMPARISON"
-      }
-    ],
-    "unverifiedCount": 1
+    "unverified": [],
+    "unverifiedCount": 0
   }
 }

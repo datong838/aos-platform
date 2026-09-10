@@ -28,8 +28,8 @@
 
 采集器新增 `/v1/aip/agents` 正向/canary GET；只有正向实例存在时才生成 URL-encoded exact-id 反查。当前 `observations.isolation={}` 与 unverified 一致，没有伪造验证请求。
 
-## 4. 当前证据
+## 4. 修复阶段证据
 
 `a0-v-readiness-result.json` 于 `2026-09-10T11:58:01.631569+00:00` 对提交 `bdd837596bcdcc087e465dab45b1685eca81c1e1` 采集，SHA-256=`050390a6dd65610e6eacf55193d6ccf25b86a3375b67e578bd8ba9ea5b69f95a`。
 
-当前结论仍为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`：19 个 blocker、1 个 unverified。隔离 unverified 只能在后续合法租户安装产生实例后，以真实 exact ID 的 200/404 双向证据关闭。
+修复阶段结论仍为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`：19 个 blocker、1 个 unverified。后续 canonical 租户安装已产生实例并取得真实 exact ID 的 200/404 双向证据；最新总数以 `a0-v-readiness-result.json` 为准。
