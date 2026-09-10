@@ -94,6 +94,7 @@ class PublicationEventType(StrEnum):
 
 
 class LineageRootType(StrEnum):
+    CAPABILITY_INVOCATION = "capability_invocation"
     TASK_RUN = "task_run"
     ACTION = "action"
     EVAL_RUN = "eval_run"
@@ -120,6 +121,7 @@ class LineageEventType(StrEnum):
 
 
 class LineageSourceKind(StrEnum):
+    CAPABILITY_PROVIDER_RESULT = "capability_provider_result"
     TASK_RUN = "task_run"
     STEP_RUN = "step_run"
     CHECKPOINT = "checkpoint"

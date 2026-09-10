@@ -1,0 +1,11 @@
+# 内容结果到用量Owner验证
+
+Task A0V-CONTENT-USAGE-OWNER，基线8321be22。通过既有AipEvalAuthorityStore写capability_invocation lineage、AipTelemetryUsageService写实测Usage；预算引用从数据库回读行计算，未直接INSERT Usage。原始Invoker各项hash保留在journal，新导出Usage的sourceHash指向整笔结果，来源链准确命名capability_provider_result。
+
+新增a0v_004只扩展root/source CHECK；旧值保留，存在新来源链时禁止降级。桥接仅文本两项实测token，严格整数、总和、单位、质量、时区及provider归属；图片/估算/布尔quantity/总量漂移拒绝，失败前不写部分lineage/usage。
+
+隔离PG首测因预算fixture将aip_usage_receipt视为只读依赖、未授权INSERT而失败。只在随机schema的测试fixture补充Owner追加权限，再跑实际Owner；没有修改正式角色权限。未来生产装配须核验其数据库身份对lineage/usage有相应权能，不能据测试授权宣称运行角色已就绪。
+
+最终10项PG测试通过，包含5项新桥接场景及5项执行器回归：重复消费仅一条lineage/两条Usage；exact Usage经BudgetStore现有校验通过；负租户不可消费；新记录禁止downgrade。命令exit0、diff check通过。传输为显式替身，真实Provider调用0，public未迁移，随机schema清理。既有startup/pytest warnings保留。
+
+本步只产出用量权威引用；Artifact、费用状态终结、真实prepare/Host enqueue/运行生命周期及媒体原job查询仍待接。首链与八工作台尚未完成，authority未推进。

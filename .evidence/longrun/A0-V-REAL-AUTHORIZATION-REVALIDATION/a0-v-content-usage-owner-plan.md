@@ -1,0 +1,9 @@
+# 持久化结果到用量Owner
+
+基线8321be22。journal保留Invoker原始各项sourceHash；另通过既有AipEvalAuthorityStore/AipTelemetryUsageService导出实测用量，其sourceHash绑定整笔journal结果，不修改原始日志。
+
+新增ecommerce_content_usage.py（services/aos-api/aos_api）：同一调用方事务锁reservation、读不可变journal，验证provider/请求归属、文本token两项严格整数总和/时间/质量；创建确定性的capability_invocation来源链，来源capability_provider_result指向reservation/result hash；Owner登记两项UsageReceipt，读取数据库行生成exact引用供预算核验。无Artifact或settle，未来消费事务接续。
+
+修改aip_eval_contracts.py新增真实语义root/source枚举；新增alembic/versions/a0v_004_content_usage_lineage.py只扩展两项CHECK，旧枚举保留，已有新记录不得降级。新增tests/aip/test_a0v_content_usage_pg.py，隔离schema克隆真实lineage结构，通过实际Owner写入/回放，再用BudgetStore._usage_authority核验引用。覆盖跨租户、质量/token漂移，失败无部分写入。无真实Provider，public不升级。
+
+此桥接只消费可信执行日志，日志尚未公开API或实际Host装配。原始Provider id与用量项证据保留在不可变结果中；新来源链不能伪装TaskRun或ActionReceipt。下一步在同一事务写可读Artifact并完成费用状态，再装配真实输入准备和运行入口。
