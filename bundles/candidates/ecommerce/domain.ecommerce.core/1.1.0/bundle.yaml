@@ -8,6 +8,14 @@ metadata:
   license: internal
 spec:
   platformApi: ">=1.7.0 <2.0.0"
+  runtime:
+    apiVersion: aos.dev/bundle-runtime/v1alpha1
+    backend:
+      entrypoint: backend/ecommerce_core/__init__.py:register
+      pythonPackage: ecommerce_core
+      schemaNamespace: ecommerce_core
+      profileId: internal-python-v1
+      imageIndex: artifacts/runtime-image-index.json
   dependencies: []
   optionalDependencies: []
   conflicts: []
