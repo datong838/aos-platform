@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from typing import Any, Callable, Literal
 from urllib.parse import urlsplit
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_contracts import AipContractModel
@@ -45,9 +45,19 @@ class R1BootstrapProbeRequest(AipContractModel):
     provider_model_id: str = Field(min_length=1, max_length=240)
     data_classification: str = Field(min_length=1, max_length=120)
     prompt: str = Field(min_length=1, max_length=4000, repr=False)
-    expected_response_behavior: Literal["non_empty", "refusal"] | None = None
+    expected_response_behavior: Literal["non_empty", "refusal", "exact_text"] | None = None
+    expected_text: str | None = Field(default=None, min_length=1, max_length=4000, repr=False)
     approval_ref: str = Field(min_length=1, max_length=240)
     max_output_tokens: int = Field(default=32, ge=1, le=256)
+
+    @model_validator(mode="after")
+    def _exact_text_contract(self):
+        if self.expected_response_behavior == "exact_text":
+            if self.expected_text is None or not self.expected_text.strip():
+                raise ValueError("exact_text requires expected_text")
+        elif self.expected_text is not None:
+            raise ValueError("expected_text requires exact_text behavior")
+        return self
 
 
 class R1BootstrapProbeResult(AipContractModel):
@@ -109,6 +119,12 @@ class AipR1BootstrapProbe:
 
         provider = self._provider(scope, request.provider)
         plugin = self._plugin(scope, provider)
+        if request.expected_response_behavior == "exact_text" and (
+            "text" not in plugin.modalities
+            or ("image" in plugin.modalities and "image" in plugin.approved_capabilities)
+            or ("video" in plugin.modalities and "video" in plugin.approved_capabilities)
+        ):
+            raise R1BootstrapProbeBlocked("provider_response_contract_modality_blocked")
         egress, data_policy = self._guard_dependencies(scope, provider)
         network = self._network(scope, request.network_policy)
         self._validate_request(
@@ -395,11 +411,15 @@ class AipR1BootstrapProbe:
                 "无法",
                 "拒绝",
             )
-            contract_passed = (
-                bool(answer.strip())
-                if request.expected_response_behavior == "non_empty"
-                else any(marker in normalized for marker in refusal_markers)
-            )
+            if request.expected_response_behavior == "exact_text":
+                contract_passed = (
+                    request.expected_text is not None
+                    and answer.strip() == request.expected_text.strip()
+                )
+            elif request.expected_response_behavior == "non_empty":
+                contract_passed = bool(answer.strip())
+            else:
+                contract_passed = any(marker in normalized for marker in refusal_markers)
             if not contract_passed:
                 raise R1BootstrapProbeBlocked("provider_response_contract_failed")
         usage = body.get("usage")

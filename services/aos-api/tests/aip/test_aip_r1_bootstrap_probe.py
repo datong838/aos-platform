@@ -20,6 +20,53 @@ NOW = datetime(2026, 8, 17, tzinfo=UTC)
 HASH = "a" * 64
 
 
+@pytest.mark.parametrize("answer,passed", [("来源 S1", True), (" 来源 S1\n", True), ("来源 S2", False), ("来源 S1，另有说明", False)])
+def test_exact_text_contract_checks_content_without_returning_it(answer, passed):
+    assets, base = assembly()
+    request = R1BootstrapProbeRequest.model_validate({
+        **base.model_dump(), "expected_response_behavior": "exact_text", "expected_text": "来源 S1",
+    })
+    transport = Transport(ProviderTransportResponse(status_code=200, payload={
+        "model": request.provider_model_id,
+        "choices": [{"message": {"content": answer}}],
+        "usage": {"prompt_tokens": 2, "completion_tokens": 1, "total_tokens": 3},
+    }))
+    if not passed:
+        with pytest.raises(R1BootstrapProbeBlocked, match="provider_response_contract_failed"):
+            probe(assets, transport=transport).run(TenantScope("org-org", "dev-project"), request)
+    else:
+        result = probe(assets, transport=transport).run(TenantScope("org-org", "dev-project"), request)
+        assert result.response_contract_passed is True
+        assert "来源" not in result.model_dump_json()
+        assert "来源" not in repr(request)
+
+
+@pytest.mark.parametrize("behavior,expected", [("exact_text", None), ("exact_text", "  "), ("non_empty", "answer"), (None, "answer")])
+def test_exact_text_expected_value_must_match_behavior(behavior, expected):
+    from pydantic import ValidationError
+    _, base = assembly()
+    with pytest.raises(ValidationError):
+        R1BootstrapProbeRequest.model_validate({
+            **base.model_dump(), "expected_response_behavior": behavior, "expected_text": expected,
+        })
+
+
+def test_exact_text_rejects_media_before_secret_and_transport():
+    assets, base = assembly()
+    assets.plugin.modalities = ["text", "image"]
+    assets.plugin.approved_capabilities = ["llm", "chat", "image"]
+    request = R1BootstrapProbeRequest.model_validate({
+        **base.model_dump(), "expected_response_behavior": "exact_text", "expected_text": "pong",
+    })
+    transport = Transport()
+    class ForbiddenSecret:
+        def resolve(self, *_args):
+            pytest.fail("unsupported contract must not resolve secret")
+    with pytest.raises(R1BootstrapProbeBlocked, match="provider_response_contract_modality_blocked"):
+        probe(assets, transport=transport, secret=ForbiddenSecret()).run(TenantScope("org-org", "dev-project"), request)
+    assert transport.calls == []
+
+
 def ref(kind: str, asset_id: str, digest: str = HASH) -> VersionedAssetRef:
     return VersionedAssetRef(assetType=kind, assetId=asset_id, revision=1, contentHash=digest)
 
