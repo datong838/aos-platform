@@ -15,6 +15,21 @@
 
 ## 2. 施工范围
 
+### 2.1 runtime verify 前置修正
+
+首装路径复核发现，三个已资格化 runtime Candidate 均缺少 `artifacts/schema-requirements.json`。当前 `CurrentSchemaConditions` 对带 `exports.schemas` 的 runtime 明确禁止空要求；因此 v3 只能证明 OCI admission，不能证明 runtime verify。
+
+在编写首装执行器前，先为三个 runtime Candidate 各增加签名内的：
+
+- `artifacts/schema-compatibility.json`：固定 `alembicRevision=a0v_001`、该包依赖的现有平台 relation 清单和 `noPackageOwnedMigration=true`；它声明包只通过 host ports 使用已经由 AOS Alembic 管理的平台 schema，不创建包私有表。
+- `artifacts/schema-requirements.json`：唯一 requirement 的 version 固定为 `aos-platform-a0v-001`，`migrationHash` 精确等于上述 compatibility artifact 的 SHA-256。
+
+首装维护步骤只在目标库确认为 `aos_meta_head`、Alembic revision 为 `a0v_001` 且全部 relation 存在后，使用 `SchemaRequirement + apply_once` 登记“已安装平台兼容性”Receipt；callback 只执行只读断言，不运行 DDL。该 Receipt 不是伪造迁移成功：其签名 artifact、实际数据库 revision 和 relation 集必须三者一致，任何缺项都阻断。
+
+完成修正后重新生成 v4 build/qualification receipt；v3 保留为前一时点 OCI 资格证据，但不得作为首装最终输入。
+
+### 2.2 首装执行器
+
 新增 `scripts/a0v_canonical_ecommerce_first_install.py`，默认只做 preflight，显式 `--apply` 才允许连接指定隔离数据库。脚本按以下阶段串行执行：
 
 1. **输入与目标预检**：核对 git HEAD、build/qualification receipt、staging tree、四包 content hash、三 OCI identity、Docker 隔离条件、目标数据库名 `aos_meta_head`、Alembic head、目标租户和零/可重放基线。数据库不是显式隔离名称、存在未知 active 安装、摘要漂移或 Docker cache 缺失时失败关闭。
