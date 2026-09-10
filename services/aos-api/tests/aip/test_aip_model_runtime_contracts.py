@@ -210,6 +210,26 @@ def test_price_snapshot_requires_honest_currency_prices_and_effective_range() ->
         ModelPriceSnapshotRevision(**{**snapshot.model_dump(), "input_token_price": None, "output_token_price": None})
 
 
+def test_deferred_price_cannot_pretend_to_be_free_or_active():
+    from datetime import UTC, datetime, timedelta
+    now = datetime(2026, 9, 11, tzinfo=UTC)
+    authorization = dict(tenant={'orgId': 'org-org', 'projectId': 'dev-project'},
+        provider={'assetType': 'ProviderInstanceRevision', 'assetId': 'p', 'revision': 1, 'contentHash': 'b' * 64},
+        providerModelId='m', approvalRef='approved-development',
+        effectiveFrom=now, effectiveUntil=now + timedelta(days=1))
+    body = dict(tenant=authorization['tenant'], priceSnapshotId='deferred', revision=1,
+        contentHash='a' * 64, currency='CNY', lifecycle='validated',
+        effectiveFrom=now, effectiveUntil=now + timedelta(days=1), createdBy='m1', createdAt=now,
+        developmentCostAuthorization=authorization)
+    snapshot = ModelPriceSnapshotRevision(**body)
+    assert snapshot.input_token_price is None and snapshot.output_token_price is None
+    for change in ({'inputTokenPrice': 0}, {'cachedTokenPrice': 0}, {'lifecycle': 'active'},
+                   {'currency': 'USD'}, {'effectiveUntil': now + timedelta(days=2)},
+                   {'tenant': {'orgId': 'dev-org', 'projectId': 'dev-project'}}):
+        with pytest.raises(ValueError):
+            ModelPriceSnapshotRevision(**(body | change))
+
+
 def test_contracts_reject_tenant_payload_extensions() -> None:
     with pytest.raises(ValidationError, match="Extra inputs"):
         ModelRouteRevision(**route().model_dump(), org_id="dev-org")

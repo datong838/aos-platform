@@ -9,10 +9,11 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator, model_serializer
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_contracts import AipContractModel, TenantContext
+from aos_api.aip_development_cost_authorization import DevelopmentCostAuthorization
 
 SECRET_REF_PREFIXES = ("vault://", "secret://", "keychain://")
 
@@ -170,6 +171,7 @@ class RegisteredModelRevision(AipContractModel):
 
 
 class ModelPriceSnapshotRevision(AipContractModel):
+    development_cost_authorization: DevelopmentCostAuthorization | None = None
     tenant: TenantContext
     price_snapshot_id: str = Field(min_length=1, max_length=200)
     revision: int = Field(ge=1)
@@ -185,9 +187,29 @@ class ModelPriceSnapshotRevision(AipContractModel):
     created_by: str = Field(min_length=1, max_length=200)
     created_at: datetime
 
+    @model_serializer(mode='wrap')
+    def preserve_legacy_price_payload(self, handler):
+        value = handler(self)
+        if self.development_cost_authorization is None:
+            value.pop('developmentCostAuthorization', None)
+            value.pop('development_cost_authorization', None)
+        return value
+
     @model_validator(mode="after")
     def _price_snapshot_is_usable(self) -> ModelPriceSnapshotRevision:
-        if self.input_token_price is None and self.output_token_price is None:
+        authorization = self.development_cost_authorization
+        if authorization is not None:
+            if any(price is not None for price in (self.input_token_price, self.output_token_price, self.cached_token_price)):
+                raise ValueError('deferred cost cannot declare numeric prices')
+            if self.tenant != authorization.tenant or self.currency != 'CNY':
+                raise ValueError('deferred cost tenant or currency mismatch')
+            if self.lifecycle not in {ModelRuntimeLifecycle.DRAFT, ModelRuntimeLifecycle.VALIDATED}:
+                raise ValueError('deferred price runtime activation is not wired')
+            if self.effective_from.utcoffset() is None or self.effective_until is None or self.effective_until.utcoffset() is None:
+                raise ValueError('deferred cost requires bounded timezone-aware window')
+            if self.effective_from < authorization.effective_from or self.effective_until > authorization.effective_until:
+                raise ValueError('deferred price exceeds authorization window')
+        elif self.input_token_price is None and self.output_token_price is None:
             raise ValueError("price snapshot requires an input or output token price")
         if self.effective_until is not None and self.effective_until <= self.effective_from:
             raise ValueError("price snapshot effective range is invalid")
