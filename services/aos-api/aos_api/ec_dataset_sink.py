@@ -88,7 +88,7 @@ def sink_to_dataset(
     """将输出行落地为 Dataset，返回 dataset 对象。
 
     先完成 Dataset 与历史持久化，再发布内存 Dataset 与成功 Build。
-    持久化失败必须传播；两次 Owner 调用尚不构成一个数据库事务。
+    持久化失败必须传播；Dataset 与历史由同一事务保存。
     """
     rid = _resolve_stable_rid(pipeline)
     rows_written = max(0, len(output_rows))
@@ -109,11 +109,9 @@ def sink_to_dataset(
         "updatedAt": now,
     }
     try:
-        data_os_store.persist_dataset(scope, item)
-        data_os_store.persist_dataset_history(
-            scope,
-            rid,
-            [{"version": 1, "status": "SUCCEEDED", "at": now, "rowsWritten": rows_written}],
+        data_os_store.persist_dataset(
+            scope, item,
+            history_entries=[{"version": 1, "status": "SUCCEEDED", "at": now, "rowsWritten": rows_written}],
         )
     except Exception:
         raise RuntimeError("DATASET_PERSISTENCE_FAILED") from None

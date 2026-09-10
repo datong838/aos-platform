@@ -346,7 +346,10 @@ def delete_phase5_pipeline_graph(scope: TenantScope, pipeline_id: str) -> None:
         conn.commit()
 
 
-def persist_dataset(scope: TenantScope, item: dict[str, Any]) -> None:
+def persist_dataset(
+    scope: TenantScope, item: dict[str, Any], *,
+    history_entries: list[dict[str, Any]] | None = None,
+) -> None:
     scope = _require_scope(scope)
     ensure_data_os_schema()
     props = {
@@ -398,6 +401,8 @@ def persist_dataset(scope: TenantScope, item: dict[str, Any]) -> None:
             ),
         ).fetchone()
         _assert_scoped_upsert(row, resource="dataset", resource_id=str(item["rid"]))
+        if history_entries is not None:
+            _replace_dataset_history(conn, scope, str(item["rid"]), history_entries)
         conn.commit()
 
 
@@ -475,25 +480,29 @@ def persist_dataset_history(
     scope = _require_scope(scope)
     ensure_data_os_schema()
     with connect(scope) as conn:
-        conn.execute(
-            "DELETE FROM meta_dataset_history "
-            "WHERE dataset_rid=%s AND org_id=%s AND project_id=%s",
-            (dataset_rid, *scope.key),
-        )
-        for e in entries:
-            conn.execute(
-                """
-                INSERT INTO meta_dataset_history
-                  (dataset_rid, payload, org_id, project_id)
-                VALUES (%s,%s::jsonb,%s,%s)
-                """,
-                (
-                    dataset_rid,
-                    json.dumps(e, ensure_ascii=False, default=str),
-                    *scope.key,
-                ),
-            )
+        _replace_dataset_history(conn, scope, dataset_rid, entries)
         conn.commit()
+
+
+def _replace_dataset_history(conn, scope: TenantScope, dataset_rid: str, entries: list[dict[str, Any]]) -> None:
+    conn.execute(
+        "DELETE FROM meta_dataset_history "
+        "WHERE dataset_rid=%s AND org_id=%s AND project_id=%s",
+        (dataset_rid, *scope.key),
+    )
+    for e in entries:
+        conn.execute(
+            """
+            INSERT INTO meta_dataset_history
+              (dataset_rid, payload, org_id, project_id)
+            VALUES (%s,%s::jsonb,%s,%s)
+            """,
+            (
+                dataset_rid,
+                json.dumps(e, ensure_ascii=False, default=str),
+                *scope.key,
+            ),
+        )
 
 
 def delete_source(scope: TenantScope, source_id: str) -> None:

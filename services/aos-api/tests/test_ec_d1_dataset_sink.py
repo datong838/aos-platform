@@ -45,7 +45,7 @@ def test_sink_calls_persist_dataset_with_scope():
     pl = _make_pipeline()
     captured = {}
 
-    def fake_persist_dataset(scope, item):
+    def fake_persist_dataset(scope, item, **kwargs):
         captured["scope"] = scope
         captured["item"] = item
 
@@ -72,13 +72,13 @@ def test_sink_calls_persist_dataset_history():
     pl = _make_pipeline()
     captured = {}
 
-    def fake_history(scope, dataset_rid, entries):
-        captured["rid"] = dataset_rid
-        captured["entries"] = entries
+    def fake_history(scope, item, *, history_entries):
+        captured["rid"] = item["rid"]
+        captured["entries"] = history_entries
 
     monkey = pytest.MonkeyPatch()
     monkey.setattr(data_os_store, "persist_dataset", lambda *a, **kw: None)
-    monkey.setattr(data_os_store, "persist_dataset_history", fake_history)
+    monkey.setattr(data_os_store, "persist_dataset", fake_history)
     try:
         ds = sink_to_dataset(eng, TEST_SCOPE, pl, [{"a": 1}])
     finally:
@@ -186,8 +186,7 @@ def test_sink_rid_is_idempotent_per_pipeline():
     assert ds1.id == ds2.id == f"ri.aos.main.dataset.{pl.id}"
 
 
-@pytest.mark.parametrize("failed_owner", ["persist_dataset", "persist_dataset_history"])
-def test_persistence_failure_does_not_publish_success(monkeypatch, failed_owner):
+def test_persistence_failure_does_not_publish_success(monkeypatch):
     from unittest.mock import Mock
     eng = get_engine()
     pl = _make_pipeline()
@@ -197,7 +196,7 @@ def test_persistence_failure_does_not_publish_success(monkeypatch, failed_owner)
     monkeypatch.setattr(eng, "add_build", build)
     def fail(*args, **kwargs):
         raise OSError("private connection details")
-    monkeypatch.setattr(data_os_store, failed_owner, fail)
+    monkeypatch.setattr(data_os_store, "persist_dataset", fail)
     with pytest.raises(RuntimeError, match="^DATASET_PERSISTENCE_FAILED$"):
         sink_to_dataset(eng, TEST_SCOPE, pl, [{"a": 1}])
     create.assert_not_called()
