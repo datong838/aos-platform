@@ -24,7 +24,7 @@ from aos_api.logging_facade import get_logger
 from aos_api.phase5_pipeline_engine import get_engine
 from aos_api.ec_source_adapter import batch_read_public, fetch_source_rows
 from aos_api.ec_dataset_sink import sink_to_dataset
-from aos_api.ec_ot_writer import sink_derived_metrics, sink_to_ot
+from aos_api.ec_ot_writer import sink_derived_metrics, sink_to_ot, validate_ot_output
 from aos_api.ec_dlq_handler import handle_failure
 from aos_api.ec_derived_metrics import apply_derived_metrics
 from aos_api.ec_link_builder import build_link_rows
@@ -135,6 +135,9 @@ def ec_live_executor(
         aggregator = _make_link_aggregator(eng, scope)
         output_rows = apply_derived_metrics(output_rows, pipeline, link_aggregator=aggregator)
         output_rows = build_link_rows(output_rows, pipeline)
+
+        # Reject malformed canonical output before publishing a Dataset success.
+        validate_ot_output(scope, pipeline, output_rows)
 
         # sink: Dataset（G4，W2 实现）
         ds = sink_to_dataset(eng, scope, pipeline, output_rows)

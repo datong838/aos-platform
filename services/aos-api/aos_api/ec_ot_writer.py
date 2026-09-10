@@ -37,6 +37,12 @@ _DEFAULT_SCHEMA_VERSION = 1
 _STATUS_MAPPING = {"ACTIVE": "active", "DELETED": "deleted"}
 
 
+def validate_ot_output(scope: Any, pipeline: Any, output_rows: list[dict[str, Any]]) -> None:
+    """Validate canonical records before other sinks write, without store I/O."""
+    if output_rows:
+        _normalize_rows(output_rows, _build_sync_scope(scope, pipeline))
+
+
 def sink_to_ot(
     eng: Any,
     scope: Any,
