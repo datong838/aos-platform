@@ -673,7 +673,7 @@ def assert_registry_version_exact(
         )
 
 
-def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> list[dict[str, Any]]:
+def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> dict[str, Any]:
     sys.path.insert(0, str(API_ROOT))
     builder = _load_builder()
     try:
@@ -697,6 +697,12 @@ def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> list
             store=store, loader=loader, clock=database_clock, trust_roots=trust
         )
         published = []
+        mutations = {
+            "bundleCreateCount": 0,
+            "versionCreateCount": 0,
+            "validateCount": 0,
+            "publishCount": 0,
+        }
         for relative, bundle_id, version, _package in builder.ALL_CASES:
             source_ref = f"bundle://a0v-canonical/{relative}"
             loaded = loader.load(source_ref)
@@ -713,6 +719,7 @@ def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> list
                     roles=REGISTRY_CREATE_ROLES,
                     publisher_scopes=PUBLISHER_SCOPES,
                 )
+                mutations["bundleCreateCount"] += 1
             if (
                 bundle.get("publisher") != "aos"
                 or bundle.get("bundleId") != bundle_id
@@ -732,6 +739,7 @@ def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> list
                     roles=REGISTRY_CREATE_ROLES,
                     publisher_scopes=PUBLISHER_SCOPES,
                 )
+                mutations["versionCreateCount"] += 1
             assert_registry_version_exact(current, expected)
             status = str(current.get("status", "")).lower()
             if status == "draft":
@@ -743,6 +751,7 @@ def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> list
                     roles=REGISTRY_CREATE_ROLES,
                     publisher_scopes=PUBLISHER_SCOPES,
                 )
+                mutations["validateCount"] += 1
                 status = str(current.get("status", "")).lower()
             if status == "validated":
                 current = service.publish(
@@ -753,6 +762,7 @@ def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> list
                     roles=REGISTRY_PUBLISH_ROLES,
                     publisher_scopes=PUBLISHER_SCOPES,
                 )
+                mutations["publishCount"] += 1
                 status = str(current.get("status", "")).lower()
             if status != "published":
                 raise FirstInstallBlocked("CANONICAL_VERSION_NOT_PUBLISHED", bundle_id)
@@ -766,7 +776,7 @@ def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> list
                     "contentHash": loaded.content_hash,
                 }
             )
-        return published
+        return {"versions": published, "mutations": mutations}
     finally:
         sys.path.remove(str(API_ROOT))
 
@@ -798,9 +808,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     evidence["signing"] = prepare_persistent_signed_tree(
         build_dir=args.build_dir.resolve(strict=True), state_dir=args.state_dir
     )
-    evidence["published"] = publish_canonical_releases(
+    registry = publish_canonical_releases(
         connect_factory=connect, state_dir=args.state_dir
     )
+    evidence["candidateBuildEffects"] = evidence.pop("effects")
+    evidence["published"] = registry["versions"]
+    evidence["effects"] = {
+        "canonicalRegistry": registry["mutations"],
+        "installationMutationCount": 0,
+        "providerInvocationCount": 0,
+        "externalPublicationCount": 0,
+    }
     evidence["mode"] = "apply-registry"
     evidence["outcome"] = "CANONICAL_REGISTRY_PUBLISHED"
     return evidence
