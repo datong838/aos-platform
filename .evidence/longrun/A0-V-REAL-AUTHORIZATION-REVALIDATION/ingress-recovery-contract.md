@@ -41,3 +41,11 @@
 文件：services/aos-api/aos_api/ec_ingress_journal.py（可选字段、规范化、完整性验证），tests/test_ec_ingress_input.py与tests/aip/test_a0v_ingress_journal_pg.py。验证datetime往返、计算辅助字段保留、基础漂移拒绝、幂等冲突及跨连接/跨租户读取。既有派生命令parentHash自然覆盖此字段。
 
 此规范快照用于恢复计算，不保证旧Dataset全部raw列可重建；Dataset完整输出合同另行接续。实际executor暂不切换，精确输入revision及claim仍需实现；该变更不得被称为完整可恢复。
+
+## 原批次派生版本水位
+
+2026-09-11，基线6d4ae1b7。现有get_latest_authoritative_revision按租户全局max读取，恢复时会纳入后续无关写入。新增ConsistencyStore.read_committed_batch_revision：同事务exact核验基础Receipt，拒绝ignored，限定scope/platform/shop/authority_tx_id及authoritative_store非派生事件，核对Outbox数量与Receipt实际写入/删除数量，再返回该批max revision；缺失/残缺拒绝，不借用最新全局值。保留旧接口，不改变现有未切换executor。
+
+ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipeline与基础命令，再用规范outputRows及原批水位准备；原prepare/sink保持行为。此水位是本批提交边界，不等同逐个关联聚合输入的完整来源证明；辅助输入已保存但来源版本仍需补齐。实际恢复claim/原子派生准备仍未接入，不能声称完整恢复。
+
+文件：services/aos-api/aos_api/ecom_consistency_store.py、ec_ot_writer.py；tests/test_ecom_consistency_store.py、test_ec_derived_prepare.py。测试无关后续批次不会改变水位、缺失Outbox/缺Receipt/ignored拒绝、exact冲突、规范派生命令使用本批水位。仅通过既有Store写入，测试SQLite；非真实源/PG组合证明。

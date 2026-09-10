@@ -771,3 +771,36 @@ def test_read_committed_batch_requires_exact_receipt_without_writing(store):
     with store._engine.connect() as conn:
         after = [conn.execute(select(table)).all() for table in (ecom_ingest_receipt, projection_outbox)]
     assert after == before
+
+
+def test_exact_batch_revision_does_not_follow_unrelated_later_writes(store):
+    original = batch(obj('Shop','shop-1'))
+    store.apply_batch(original)
+    revision = store.read_committed_batch_revision(original)
+    later = batch(obj('Shop','shop-2',when=NOW+timedelta(seconds=1)),key='later',expected=1)
+    store.apply_batch(later)
+    assert store.get_latest_authoritative_revision(ident('shop-1')) > revision
+    assert store.read_committed_batch_revision(original) == revision
+    with pytest.raises(EcomConsistencyError,match='stored receipt'):
+        store.read_committed_batch_revision(original.model_copy(update={'objects':[obj('Shop','other')]}))
+
+
+def test_batch_revision_requires_receipt_and_complete_outbox(store):
+    from sqlalchemy import delete
+    original = batch(obj('Shop','shop-1'))
+    with pytest.raises(EcomConsistencyError,match='receipt required'):
+        store.read_committed_batch_revision(original)
+    store.apply_batch(original)
+    with store._engine.begin() as conn:
+        conn.execute(delete(projection_outbox))
+    with pytest.raises(EcomConsistencyError,match='outbox evidence'):
+        store.read_committed_batch_revision(original)
+
+
+def test_ignored_base_requires_reconciliation_before_revision(store):
+    original = batch(obj('Shop','shop-1'))
+    store.apply_batch(original)
+    ignored = batch(obj('Shop','shop-1'),key='ignored',expected=1)
+    assert store.apply_batch(ignored).objects_ignored == 1
+    with pytest.raises(EcomConsistencyError,match='reconciliation'):
+        store.read_committed_batch_revision(ignored)

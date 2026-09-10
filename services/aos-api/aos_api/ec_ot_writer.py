@@ -91,6 +91,21 @@ def prepare_derived_commands(eng: Any, scope: Any, pipeline: Any, output_rows: l
     return tuple(_iter_derived_commands(eng, scope, pipeline, output_rows))
 
 
+def prepare_derived_commands_for_batch(eng: Any, scope: Any, pipeline: Any, command: BatchCommand,
+                                      output_rows: list[dict[str, Any]]) -> tuple[DerivedMetricCommand, ...]:
+    """Prepare using the original committed batch boundary and fixed input."""
+    from aos_api.ec_ingress_journal import canonical_output_rows
+    command = BatchCommand.model_validate(command.model_dump(mode='python'))
+    if command.scope != _build_sync_scope(scope,pipeline):
+        raise ValueError('INGRESS_SCOPE_MISMATCH')
+    rows = canonical_output_rows(command,output_rows)
+    store = getattr(eng,'ecom_consistency_store',None)
+    if store is None:
+        raise RuntimeError('authoritative store is required')
+    revision = store.read_committed_batch_revision(command)
+    return tuple(_iter_derived_commands(eng,scope,pipeline,rows,input_revision=revision))
+
+
 def sink_derived_metrics(eng: Any, scope: Any, pipeline: Any, output_rows: list[dict[str, Any]]) -> dict[str, int]:
     """Retain existing per-row preparation and submission through the CAS Owner."""
     updated = 0
@@ -107,6 +122,7 @@ def _iter_derived_commands(
     scope: Any,
     pipeline: Any,
     output_rows: list[dict[str, Any]],
+    *, input_revision: int | None = None,
 ):
     """Build commands lazily so the legacy sink retains per-row CAS reads."""
     candidates: list[tuple[dict[str, Any], dict[str, Any]]] = []
@@ -139,7 +155,8 @@ def _iter_derived_commands(
             shop_or_marketplace_id=_NIUSHOP_SITE_ID,
             external_id=row.get("external_id") or _format_external_id(str(row["source_pk"])),
         )
-        input_revision = store.get_latest_authoritative_revision(identity)
+        effective_input_revision = (store.get_latest_authoritative_revision(identity)
+                                    if input_revision is None else input_revision)
         input_hash = deterministic_hash(
             {
                 "calculatorVersion": calculator_version,
@@ -159,14 +176,14 @@ def _iter_derived_commands(
             object_type=str(row["ot"]),
             stream=str(pipeline.id),
             expected_derived_revision=expected_derived_revision,
-            input_revision=input_revision,
+            input_revision=effective_input_revision,
             input_hash=input_hash,
             calculator_version=calculator_version,
             derived_props=derived,
             computed_at=computed_at,
             idempotency_key=(
                 f"{pipeline.id}:{row['ot']}:{identity.external_id}:"
-                f"{calculator_version}:{input_revision}:"
+                f"{calculator_version}:{effective_input_revision}:"
                 f"{expected_derived_revision}:{input_hash}"
             ),
             actor="ec-live-v1",

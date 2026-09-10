@@ -404,6 +404,35 @@ class EcomConsistencyStore:
                 raise EcomConsistencyError("IDEMPOTENCY_CONFLICT", "stored receipt does not match the original command")
             return BatchResult.model_validate(receipt["result"])
 
+    def read_committed_batch_revision(self, command: BatchCommand) -> int:
+        """Return the original batch outbox boundary, never the latest tenant revision."""
+        command = BatchCommand.model_validate(command.model_dump(mode="python"))
+        with self._engine.begin() as conn:
+            _apply_transaction_scope(conn, org_id=command.scope.org_id, workspace_id=command.scope.workspace_id)
+            receipt = self._get_receipt(conn, command, for_update=False)
+            if receipt is None:
+                raise EcomConsistencyError("BASE_RECEIPT_REQUIRED", "committed base receipt required")
+            if not self._receipt_matches_request(command=command, receipt=receipt, request_hash=command.request_hash()):
+                raise EcomConsistencyError("IDEMPOTENCY_CONFLICT", "stored receipt does not match the original command")
+            result = BatchResult.model_validate(receipt["result"])
+            if result.objects_ignored or result.links_ignored:
+                raise EcomConsistencyError("BASE_RECONCILIATION_REQUIRED", "ignored base records require reconciliation")
+            expected = result.objects_written + result.objects_tombstoned + result.links_written + result.links_tombstoned
+            count, revision = conn.execute(
+                select(func.count(), func.max(projection_outbox.c.input_revision)).where(
+                    projection_outbox.c.org_id == command.scope.org_id,
+                    projection_outbox.c.workspace_id == command.scope.workspace_id,
+                    projection_outbox.c.platform == command.scope.platform,
+                    projection_outbox.c.shop_or_marketplace_id == command.scope.shop_or_marketplace_id,
+                    projection_outbox.c.authority_tx_id == receipt["request_hash"],
+                    projection_outbox.c.event_source == "authoritative_store",
+                    projection_outbox.c.change_kind.in_(("objects_written", "objects_tombstoned", "links_written", "links_tombstoned")),
+                )
+            ).one()
+            if expected <= 0 or count != expected or revision is None or int(revision) <= 0:
+                raise EcomConsistencyError("BASE_OUTBOX_INCOMPLETE", "base outbox evidence is incomplete")
+            return int(revision)
+
     def get_derived_revision(
         self, identity: StorageIdentity, object_type: str
     ) -> int:
