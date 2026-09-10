@@ -38,6 +38,7 @@ Canonical 电商安装已批准，但 runtime mutation 前置检查确认 `org-o
 ## 5. 幂等与失败关闭
 
 - 每个 Store 使用固定 idempotency key 和固定 revision=1；首次创建后重放必须返回相同 resource id/revision/content hash。
+- 首次 policy mutation 前为当前 `aos_meta_head` 创建本阶段独立 custom-format 逻辑备份；不得覆盖首装阶段备份。回执只记录仓库外路径、大小和 SHA-256。
 - 既有同 id 对象、Receipt 或 head 与固定 payload 不一致时停止，不更新或覆盖。
 - 任一依赖 Store 拒绝，保留已成功的不可变前置资产并从其 Receipt 续跑。
 - ResponsibilityPlan 未 frozen 时不生成可消费的 role ref；首装仍保持 approved、runtime operation/binding 为 0。
