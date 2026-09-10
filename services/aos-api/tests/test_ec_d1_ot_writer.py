@@ -351,3 +351,17 @@ def test_snapshot_batch_keeps_existing_checkpoint_when_source_time_is_older():
     command = store.calls[0]
     assert command.expected_checkpoint_version == 3
     assert command.next_checkpoint == cursor
+
+
+@pytest.mark.parametrize('invalid', [{}, {'ot': ''}, {'link_type': ''}])
+@pytest.mark.parametrize('mixed', [False, True])
+def test_invalid_output_rejects_entire_batch_before_checkpoint(invalid, mixed):
+    store = FakeStore()
+    def unexpected_checkpoint(command):
+        pytest.fail('invalid batch must not read or advance checkpoint')
+    store.get_checkpoint = unexpected_checkpoint
+    rows = [shop_row(), invalid] if mixed else [invalid]
+    with pytest.raises(ValueError, match='OT_OUTPUT_ROW_TYPE_REQUIRED'):
+        sink_to_ot(FakeEngine(store), TEST_SCOPE, FakePipeline(), rows)
+    assert store.calls == []
+    assert store._checkpoints == {}

@@ -1,6 +1,5 @@
 """D1-W3: G5 OTWriter — executor 输出落地到 ecom_object + ecom_link。
 
-骨架阶段：空实现（返回零计数），不落地 OT。
 Worker W3 实现：调用 ecom_consistency_store.apply_batch（BatchCommand 单事务：
 upsert→link→checkpoint→receipt）。
 
@@ -66,10 +65,6 @@ def sink_to_ot(
 
     sync_scope = _build_sync_scope(scope, pipeline)
     objects, links = _normalize_rows(output_rows, sync_scope)
-
-    # 全部行既不是合法 object 也不是合法 link 时，退化为零计数
-    if not objects and not links:
-        return {"objects_written": 0, "links_written": 0}
 
     command = _build_batch_command(
         sync_scope=sync_scope,
@@ -189,12 +184,14 @@ def _normalize_rows(
     for row in rows:
         if "link_type" in row:
             link = _build_link(row, sync_scope)
-            if link is not None:
-                links.append(link)
+            if link is None:
+                raise ValueError("OT_OUTPUT_ROW_TYPE_REQUIRED")
+            links.append(link)
         else:
             obj = _build_object(row, sync_scope)
-            if obj is not None:
-                objects.append(obj)
+            if obj is None:
+                raise ValueError("OT_OUTPUT_ROW_TYPE_REQUIRED")
+            objects.append(obj)
     return objects, links
 
 
