@@ -46,6 +46,9 @@ class EmptyRuntimeStore:
 
 
 class ReadyRuntimeStore(EmptyRuntimeStore):
+    def require_model_governance(self, scope, model, price, *, now=None):
+        pass
+
     def get_route(self, scope, route_id):
         return super().get_route(scope, route_id).model_copy(update={"lifecycle": ModelRuntimeLifecycle.ACTIVE})
 

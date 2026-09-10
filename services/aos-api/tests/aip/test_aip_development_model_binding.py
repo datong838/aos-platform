@@ -19,7 +19,7 @@ def assembly():
     model = SimpleNamespace(quota_policy_ref='quota', budget_policy_ref='budget', provider=provider, provider_model_id='m')
     store = object.__new__(AipModelGovernancePolicyStore)
     reads = []
-    def read(scope, ref):
+    def read(scope, ref, *, now=None):
         reads.append((scope.key, ref))
         return budget if ref == 'budget' else SimpleNamespace()
     store.require_exact_active = read

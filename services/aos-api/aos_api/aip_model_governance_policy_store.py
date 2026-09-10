@@ -112,9 +112,10 @@ class AipModelGovernancePolicyStore:
             self._require_budget_revision(scope, item, now=instant)
         return item
 
-    def require_model_dependencies(self, scope: TenantScope, model: Any, *, price: Any = None) -> None:
-        self.require_exact_active(scope, model.quota_policy_ref)
-        budget = self.require_exact_active(scope, model.budget_policy_ref)
+    def require_model_dependencies(self, scope: TenantScope, model: Any, *, price: Any = None, now: datetime | None = None) -> None:
+        instant = now or datetime.now(UTC)
+        self.require_exact_active(scope, model.quota_policy_ref, now=instant)
+        budget = self.require_exact_active(scope, model.budget_policy_ref, now=instant)
         authorization = getattr(budget, 'development_cost_authorization', None)
         price_authorization = getattr(price, 'development_cost_authorization', None)
         if price_authorization is not None and price_authorization != authorization:
@@ -126,7 +127,7 @@ class AipModelGovernancePolicyStore:
                 authorization.require_scope(
                     scope=scope, provider=model.provider,
                     provider_model_id=model.provider_model_id,
-                    approval_ref=budget.approval_ref, now=datetime.now(UTC),
+                    approval_ref=budget.approval_ref, now=instant,
                 )
             except ValueError:
                 raise ModelGovernancePolicyDependencyBlocked(

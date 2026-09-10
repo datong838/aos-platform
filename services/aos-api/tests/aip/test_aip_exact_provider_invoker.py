@@ -431,7 +431,7 @@ def test_owned_deferred_authorization_mismatch_stops_real_invoker_path():
     owner, _, budget, _ = governance_assembly()
     assets.price.development_cost_authorization = budget.development_cost_authorization
     budget.development_cost_authorization = None
-    owner.require_exact_active = lambda *_: budget
+    owner.require_exact_active = lambda *_args, **_kwargs: budget
     invoker._governance_store = owner
     with pytest.raises(ExactProviderInvocationError, match='model_governance_policy_blocked'):
         invoker(resolution, 'approved facts', 'approved_internal_knowledge')

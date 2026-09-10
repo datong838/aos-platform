@@ -111,6 +111,11 @@ class AipModelRuntimeResolver:
                 price.effective_until is not None and price.effective_until <= now
             ):
                 blockers.append("model_price_snapshot_not_effective")
+            else:
+                try:
+                    self._store.require_model_governance(scope, model, price, now=now)
+                except ModelRuntimeStoreError:
+                    blockers.append("model_governance_policy_blocked")
         except ModelRuntimeStoreError:
             blockers.append("model_price_snapshot_unavailable")
         provider_ref = model.provider

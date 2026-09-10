@@ -140,16 +140,36 @@ class AipModelRuntimeStore:
 
     def publish_model(self, scope: TenantScope, actor: str, key: str, item: RegisteredModelRevision, *, expected_version: int = 0) -> RegisteredModelRevision:
         try:
-            self._governance_policy_store.require_model_dependencies(scope, item)
             if item.lifecycle.value == "active":
                 self._eval_authority_store.require_exact_passed(
                     scope,
                     item.eval_gate_ref,
                     expected_target=evaluation_candidate_ref(item),
                 )
+            price = self.get_price_snapshot(scope, item.price_snapshot_ref.asset_id, item.price_snapshot_ref.revision)
+            self.require_model_governance(scope, item, price)
         except (ModelGovernancePolicyDependencyBlocked, AipEvalGateDependencyBlocked) as exc:
             raise ModelRuntimeDependencyBlocked(str(exc)) from None
         return self._publish("registered_model", scope, actor, key, item, expected_version)
+
+    def require_model_governance(self, scope: TenantScope, model: RegisteredModelRevision, price: ModelPriceSnapshotRevision, *, now: datetime | None = None) -> None:
+        """Validate exact model/price binding through the current governance Owner."""
+        self._check_scope(scope, model)
+        self._check_scope(scope, price)
+        ref = model.price_snapshot_ref
+        if (price.price_snapshot_id, price.revision, price.content_hash) != (ref.asset_id, ref.revision, ref.content_hash):
+            raise ModelRuntimeDependencyBlocked("model price snapshot exact ref drifted")
+        instant = now or datetime.now(UTC)
+        if model.lifecycle.value == "active" and (
+            price.lifecycle.value != "active"
+            or price.effective_from > instant
+            or (price.effective_until is not None and price.effective_until <= instant)
+        ):
+            raise ModelRuntimeDependencyBlocked("active model price snapshot is not effective")
+        try:
+            self._governance_policy_store.require_model_dependencies(scope, model, price=price, now=instant)
+        except ModelGovernancePolicyDependencyBlocked as exc:
+            raise ModelRuntimeDependencyBlocked(str(exc)) from None
 
     def publish_policy(self, scope: TenantScope, actor: str, key: str, item: RuntimePolicyRevision, *, expected_version: int = 0) -> RuntimePolicyRevision:
         try:
