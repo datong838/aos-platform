@@ -16,7 +16,7 @@
 
 - 默认 preflight；`--apply --database-name aos_meta_head` 才可调用。
 - 固定 Provider exact ref、NetworkPolicy `a0v-ecommerce-network-v1@1`、插件 `agnes-text@3`、模型 `agnes-2.5-flash` 与当前批准。
-- 调用前重新验证数据库身份、Provider lifecycle/hash/Secret exact ref、network/egress/data policy、canary 为 0，且当前 Provider 尚无未过期 healthy observation。
+- 调用前重新验证数据库身份、Provider lifecycle/hash/Secret exact ref（并完成一次不输出内容的 Secret resolve）、network/egress/data policy、canary 为 0，且当前 Provider 尚无未过期 healthy observation。只有这些调用前检查全部通过后才能写 `submitted` attempt journal。
 - 最多 1 次 Provider 请求、每次最多 1 个 transport attempt、timeout 10 秒、max output tokens 32、无 fallback。
 - 只输出 HTTP 合同通过后的 metadata：latency、token count、response model、answer present；禁止输出 prompt、answer、headers、Secret、response body。
 - 成功后记录 15 分钟健康观察；Provider 请求失败或结果合同失败时，不写健康观察、不重试、不换 Provider。
@@ -27,3 +27,5 @@
 首次成功标记 `A0V_REAL_TEXT_PROVIDER_HEALTH_GREEN`，要求 Provider call=1、健康观察 mutation=1、canary=0；有效期内重放要求 Provider call=0、mutation=0、观察 exact ref 不变。随后总依赖审计首门应推进到 `modelRoutes`。
 
 如果端点、凭据、模型、响应合同、token metadata 或时限有任何异常，标记 `SAFE_BLOCKED` 并记录稳定 reason code。网络结果未知时不得自动重试；后续只能先读取 Provider 侧或持久 Receipt 进行人工判定。本切片不使用 Prime OAuth，不产生电商业务 mutation，不执行 230 L0。
+
+首次实现的 `a0v-provider-health-attempt-v1` 已在 Secret resolve 阶段以 `secret_keychain_empty` 阻塞；代码路径证明 transport 尚未调用。该 journal 保留为不可变故障证据。修复 Keychain 后使用新 ID `a0v-provider-health-attempt-v2`，并把 Secret resolve 移到 `submitted` journal 之前；因此 v2 是首次 Provider 调用资格，不是对未知 Provider 结果的重发。
