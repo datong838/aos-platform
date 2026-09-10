@@ -25,7 +25,9 @@ TEST_SCOPE = TenantScope("dev-org", "dev-project")
 
 
 @pytest.fixture(autouse=True)
-def reset_engine():
+def reset_engine(monkeypatch):
+    monkeypatch.setattr(data_os_store, "persist_dataset", lambda *a, **kw: None)
+    monkeypatch.setattr(data_os_store, "persist_dataset_history", lambda *a, **kw: None)
     eng = get_engine()
     eng.reset_all_for_tests()
     yield
@@ -182,3 +184,31 @@ def test_sink_rid_is_idempotent_per_pipeline():
         monkey.undo()
 
     assert ds1.id == ds2.id == f"ri.aos.main.dataset.{pl.id}"
+
+
+@pytest.mark.parametrize("failed_owner", ["persist_dataset", "persist_dataset_history"])
+def test_persistence_failure_does_not_publish_success(monkeypatch, failed_owner):
+    from unittest.mock import Mock
+    eng = get_engine()
+    pl = _make_pipeline()
+    create = Mock(wraps=eng.create_dataset)
+    build = Mock(wraps=eng.add_build)
+    monkeypatch.setattr(eng, "create_dataset", create)
+    monkeypatch.setattr(eng, "add_build", build)
+    def fail(*args, **kwargs):
+        raise OSError("private connection details")
+    monkeypatch.setattr(data_os_store, failed_owner, fail)
+    with pytest.raises(RuntimeError, match="^DATASET_PERSISTENCE_FAILED$"):
+        sink_to_dataset(eng, TEST_SCOPE, pl, [{"a": 1}])
+    create.assert_not_called()
+    build.assert_not_called()
+
+
+def test_build_failure_propagates(monkeypatch):
+    eng = get_engine()
+    pl = _make_pipeline()
+    def fail(*args, **kwargs):
+        raise RuntimeError("BUILD_RECORD_FAILED")
+    monkeypatch.setattr(eng, "add_build", fail)
+    with pytest.raises(RuntimeError, match="BUILD_RECORD_FAILED"):
+        sink_to_dataset(eng, TEST_SCOPE, pl, [])
