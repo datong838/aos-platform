@@ -1,0 +1,5 @@
+# 数据源配置更新CAS
+
+基线3cc47b7b。显式config更新必须携带expectedConfigurationRevision；新建配置不携带，已存在则缺失/旧version拒绝。persist_source在tenant/id事务advisory锁及现有行FOR UPDATE后比对数据库configuration_revision，再进行原子upsert。所有persist_source调用参加同一锁，缺失行并发创建也串行。metadata-only合并不要求CAS。
+
+公开响应/重启load_all携带非敏感configurationRevision，客户端版本不进入props；客户端不得赋值数据库版本。路由版本用UUID类型。改data_os_store.py/wave_ext.py及PG专项。PG克隆表挂实际public.source_configuration_token_ar2_010触发器验证真实token轮换（无history触发器，不写public历史）。验证旧版本/缺失版本/删除后expected拒绝、正确版本成功。完整history与浏览器随后验证。

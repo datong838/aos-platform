@@ -10,8 +10,8 @@ pytestmark=pytest.mark.skipif(os.getenv('AOS_EXTENSION_PG_TEST')!='1',reason='is
 
 def test_registration_merges_current_database_configuration(database,monkeypatch):
     database.owner.execute('CREATE TABLE meta_source (LIKE public.meta_source INCLUDING ALL)')
-    # LIKE does not copy the public revision trigger; this fixture tests merge SQL only.
-    database.owner.execute('ALTER TABLE meta_source ALTER COLUMN configuration_revision SET DEFAULT gen_random_uuid()')
+    # Use the production token trigger, without its public history-writing trigger.
+    database.owner.execute('CREATE TRIGGER source_configuration_token BEFORE INSERT OR UPDATE ON meta_source FOR EACH ROW EXECUTE FUNCTION public.source_configuration_token_ar2_010()')
     database.owner.execute('GRANT SELECT,INSERT,UPDATE ON meta_source TO aos_runtime')
     database.owner.execute('ALTER TABLE meta_source ENABLE ROW LEVEL SECURITY')
     database.owner.execute("CREATE POLICY scope ON meta_source TO aos_runtime USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true)) WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))")
@@ -22,7 +22,11 @@ def test_registration_merges_current_database_configuration(database,monkeypatch
     first=store.persist_source(scope,dict(base,password='synthetic-original',database='shop'),merge_existing=True)
     result=store.persist_source(scope,base,merge_existing=True)
     assert result['password']==first['password']
-    rotated=store.persist_source(scope,dict(base,secretRef='vault://secrets/test',database='shop'),merge_existing=True,replace_fields=tuple(SOURCE_CONNECTION_FIELDS))
+    rotated=store.persist_source(scope,dict(base,secretRef='vault://secrets/test',database='shop'),merge_existing=True,replace_fields=tuple(SOURCE_CONNECTION_FIELDS),expected_configuration_revision=first['configurationRevision'])
+    assert rotated['configurationRevision'] != first['configurationRevision']
+    for expected in (None, first['configurationRevision']):
+        with pytest.raises(store.ApiError):
+            store.persist_source(scope,dict(base,password='synthetic-stale'),merge_existing=True,replace_fields=tuple(SOURCE_CONNECTION_FIELDS),expected_configuration_revision=expected)
     assert 'password' not in rotated
     assert store.persist_source(scope,base,merge_existing=True)['secretRef']==rotated['secretRef']
     with pytest.raises(store.ApiError):

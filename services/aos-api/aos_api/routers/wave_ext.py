@@ -242,6 +242,7 @@ class ConnectorIn(BaseModel):
     type: str = "file"
     runtimeMode: Literal["direct", "agent", "worker"] | None = None
     config: Any = Field(default=None, repr=False, exclude=True)
+    expectedConfigurationRevision: uuid.UUID | None = Field(default=None, exclude=True)
 
 
 class PipelineIn(BaseModel):
@@ -1223,6 +1224,7 @@ _PUBLIC_SOURCE_FIELDS = frozenset(
         "connector_type",
         "pluginId",
         "runtimeMode",
+        "configurationRevision",
         "status",
         "name",
         "displayName",
@@ -1289,6 +1291,7 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
         item = persist_source(
             scope, item, merge_existing=True,
             replace_fields=tuple(sorted(SOURCE_CONNECTION_FIELDS)) if body.config is not None else (),
+            expected_configuration_revision=str(body.expectedConfigurationRevision) if body.expectedConfigurationRevision else None,
         )
     except ApiError:
         raise

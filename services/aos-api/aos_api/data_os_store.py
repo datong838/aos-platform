@@ -152,11 +152,23 @@ def _require_scope(scope: TenantScope | None) -> TenantScope:
 def persist_source(
     scope: TenantScope, item: dict[str, Any], *,
     merge_existing: bool = False, replace_fields: tuple[str, ...] = (),
+    expected_configuration_revision: str | None = None,
 ) -> dict[str, Any]:
     scope = _require_scope(scope)
     ensure_data_os_schema()
-    props = {k: v for k, v in item.items() if k not in {"id", "type", "status", "pluginId", "orgId", "projectId"}}
+    props = {k: v for k, v in item.items() if k not in {"id", "type", "status", "pluginId", "orgId", "projectId", "configurationRevision"}}
     with connect(scope) as conn:
+        conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+                     (json.dumps(["source-registration", *scope.key, item["id"]]),))
+        if replace_fields or expected_configuration_revision is not None:
+            current = conn.execute(
+                "SELECT configuration_revision FROM meta_source WHERE org_id=%s AND project_id=%s AND id=%s FOR UPDATE",
+                (*scope.key, item["id"]),
+            ).fetchone()
+            actual = str(current["configuration_revision"]) if current else None
+            if actual != expected_configuration_revision:
+                raise ApiError(code="SOURCE_CONFIGURATION_CONFLICT",
+                    message="数据源配置已变化，请重新读取后再修改", status_code=409)
         row = conn.execute(
             """
             INSERT INTO meta_source (id, type, status, plugin_id, org_id, project_id, props, updated_at)
@@ -186,7 +198,8 @@ def persist_source(
         conn.commit()
         return {**dict(row["props"]), "id": row["id"], "type": row["type"],
                 "status": row["status"], "pluginId": row["plugin_id"],
-                "orgId": row["org_id"], "projectId": row["project_id"]}
+                "orgId": row["org_id"], "projectId": row["project_id"],
+                "configurationRevision": str(row["configuration_revision"])}
 
 
 def persist_pipeline(scope: TenantScope, item: dict[str, Any]) -> None:
@@ -571,6 +584,7 @@ def load_all(scope: TenantScope) -> dict[str, Any]:
                     "pluginId": r["plugin_id"],
                     "orgId": r["org_id"],
                     "projectId": r["project_id"],
+                    "configurationRevision": str(r["configuration_revision"]),
                 }
             )
             out["connectors"][r["id"]] = item

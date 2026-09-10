@@ -1,0 +1,7 @@
+# 源配置CAS验证
+
+基线3cc47b7b；persist_source按tenant/id取得事务advisory锁，显式config在FOR UPDATE读取后比对expected配置UUID，冲突409。新配置必须不存在或版本匹配，元数据合并仍不带旧配置。RETURNING及load_all提供非敏感configurationRevision，expected字段不存入props。
+
+PG随机schema使用现有public.source_configuration_token_ar2_010触发器，真实更新生成不同版本。正确版本轮换成功；无版本/旧版本更新拒绝。两单元专项+PG共23 passed；git diff --check通过。测试未挂写public历史的触发器，因此只证明token/CAS及此前合并，不证明完整配置历史；未执行删除后expected场景或并发线程测试，不扩大结论。测试命令复用安全进程内连接引导，未暴露凭据。
+
+方案符合，代码先于本轮测试扩展，无本轮红阶段证明。后续仍需配置历史回读、列表缓存刷新与HTTP/浏览器验收；真实连接配置位置问题待用户回复。旧启动和pytest警告保留。无真实源/Provider调用，无public写入、未push，230 L0挂起。完整首链与八工作台未完成。
